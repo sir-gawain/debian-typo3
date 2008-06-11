@@ -1,0 +1,51 @@
+Source: typo3-src
+Section: web
+Priority: optional
+Maintainer: Christian Welzel <gawain@camlann.de>
+Build-Depends: debhelper (>= 4), dpatch
+Standards-Version: 3.7.3
+
+Package: typo3
+Architecture: all
+Depends: exim4 | mail-transport-agent, graphicsmagick, php4-gd | php5-gd, typo3-dummy, typo3-src-4.0 | typo3-src-4.1
+Recommends: mysql-server, ghostscript
+Suggests: catdoc, httrack, ppthtml, unrtf, webhttrack, xpdf-utils, xlhtml
+Description: Powerful content management framework (Meta package)
+ This metapackage ease the full installation of TYPO3, if you want to run all
+ server components from one machine. In addition it depends on the latest
+ packages to smooth the update process.
+ .
+ TYPO3 is a Web content management system which features automatic  creation of
+ navigational menus, headlines, and other dynamic graphical elements, automatic
+ conversion and scaling of images, the ability to present different templates
+ based on variables such as client browser or country code, support for multiple
+ templates on a site, and a built-in password-protection option.
+ .
+ Pages can be timed to be shown on a certain date, be hidden on a certain date
+ or just temporarily hidden. TYPO3 supports search in SQL-databases and
+ redesigning of a website at once is just a matter of creating a single new
+ template.
+ .
+  Homepage: <http://www.typo3.com/>
+
+Package: typo3-src-4.1
+Architecture: all
+Depends: ttf-dejavu, libapache2-mod-php4 | libapache-mod-php4 | libapache2-mod-php5 | libapache-mod-php5 | php4-cgi | php5-cgi, php4-cli | php5-cli
+Recommends: catdoc, exim4 | mail-transport-agent, graphicsmagick, ghostscript, mysql-server, php4-gd | php5-gd, php4-mysql | php5-mysql, php4-xcache | php5-xcache, typo3-dummy, xpdf-utils
+Suggests: logcheck, php4-curl | php5-curl, ppthtml, xlhtml, unrtf
+Provides: typo3-src
+Description: Powerful content management framework (Core)
+ This package provides the core engine of TYPO3, often called the source.
+ .
+ TYPO3 is a Web content management system which features automatic creation of
+ navigational menus, headlines, and other dynamic graphical elements, automatic
+ conversion and scaling of images, the ability to present different templates
+ based on variables such as client browser or country code, support for multiple
+ templates on a site, and a built-in password-protection option.
+ .
+ Pages can be timed to be shown on a certain date, be hidden on a certain date
+ or just temporarily hidden. TYPO3 supports search in SQL-databases and
+ redesigning of a website at once is just a matter of creating a single new
+ template.
+ .
+  Homepage: <http://www.typo3.com/>

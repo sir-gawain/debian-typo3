@@ -1,0 +1,19 @@
+#!/bin/sh /usr/share/dpatch/dpatch-run
+## 01-fontsreadme.dpatch by Christian Welzel <gawain@camlann.de>
+##
+## DP: Adds debian copyright notice to readme.txt of t3lib/fonts.
+
+@DPATCH@
+
+--- typo3-src-4.1.2/t3lib/fonts/readme.txt	2007-07-16 01:31:20.000000000 +0200
++++ typo3-src-4.1.2_orig/t3lib/fonts/readme.txt	2007-08-18 20:18:06.000000000 +0200
+@@ -32,6 +32,9 @@
+ 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ 	02110-1301, USA.
+ 
++On Debian systems, the complete text of the GNU General
++Public License can be found in `/usr/share/common-licenses/GPL'.
++
+ 
+ 
+ *******************************************************************************

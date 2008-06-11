@@ -1,0 +1,207 @@
+TYPO3 for Debian
+----------------
+
+This package is the master package to install TYPO3 for Debian.
+
+The following eight steps are necessary to get started with TYPO3 with
+the provided Debian packages:
+
+1 Install typo3-dummy 
+
+2 Check that the PHP itself and the extensions gd and mysql are enabled.
+
+  To load php_mod check that the following symlinks are set:
+
+  # cd /etc/apache2/mods-enabled; ls -l php4*
+  php4.conf -> /etc/apache2/mods-available/php4.conf
+  php4.load -> /etc/apache2/mods-available/php4.load
+
+
+  The PHP configuration file php.ini (/etc/php4/apache[2]/php.ini)
+  should contain the following lines:
+
+  # grep -v '\;' /etc/php4/apache2/php.ini | grep 'extension='
+  extension=gd.so
+  extension=mysql.so
+
+  Please note: newer versions of php packages in debian handle the addition
+  of modules through the directory /etc/php{4,5}/conf.d. So make sure, gd.ini
+  and mysql.ini are in that directory if you cannot find the above two lines
+  in your php.ini.
+
+3 Enabling the webserver to use the provided directories.
+
+  The database packages builds a directory that can be used as
+  DocumentRoot within a (virtual)host or as directory within an
+  existing host. An example configuration for the Apache is located in
+  /etc/typo3-dummy/apache.conf.
+
+  WARNING: The configuration that will be enabled through the
+  following steps is meant for the configuration of TYPO3 and not for a
+  production environment.  It is necessary to disable the TYPO3 1-2-3
+  install tool standard login before going into production.  The 1-2-3
+  install tool gives appropriate advice.
+
+  For Apache 1.3.x the configuration can be enabled through:
+  # cd /etc/apache/conf.d
+  # ln -s /etc/typo3-dummy/apache.conf typo3-dummy
+
+  For Apache 2.x this may be achieved through:
+  # cd /etc/apache2/sites-available
+  # ln -s /etc/typo3-dummy/apache.conf typo3-dummy
+  # cd /etc/apache2/sites-enabled
+  # ln -s ../sites-available/typo3-dummy .
+  
+  Please check that the configuration meets your needs. Don't forget
+  to reload the apache configuration, e.g. through:
+  # /etc/init.d/apache2 reload
+
+
+4 Fix permissions
+
+  The provided example configuration for the apache uses the PHP safe
+  mode. Therefor it is necessary to change the ownership of the used
+  files to WWWUSER/WWWGROUP.  In Debian standard configuration these
+  are set to www-data/www-data.
+
+
+5 Prepare the MySQL access
+
+  Create empty databases for the packages, e.g.
+  # mysqladmin create typo3-dummy
+
+  Grants access to these databases for a local user, e.g.
+  # mysql --exec="GRANT ALL PRIVILEGES ON \
+     \`typo3-dummy\`.* TO 'typo3'@'localhost' IDENTIFIED BY 'mypass' ; "
+
+
+6 Using a browser, visit http://[your.site.name]/<this_site_name>/
+
+  Using the standard Debian configuration access to the 1-2-3 install
+  tool is gotten by pointing the browser to
+  http://localhost/typo3/
+
+  The standard password for the install tool is joh316. Be sure to
+  change it, before connecting to the Internet!
+
+  If a normal page is delivered, the 1-2-3 install tool may be accessed
+  directly
+  http://localhost/typo3/typo3/install/
+
+
+7 Following the instructions in the 1-2-3 install tool will lead
+  quickly to the TPYO3 site.
+
+
+8 From this point, you can access the backend through
+  http://[your.site.name]/<this_site_name>/typo3/
+  with the username "admin" and password "password".
+  
+  For example:
+  http://localhost/typo3/typo3/
+
+  Remember to change the admin password and to protect the install
+  tool access mentioned above.
+
+That's it :-)
+
+
+AND NOW ?
+=========
+
+There are two packages on typo3.org website that are provided to demonstrate
+the ablities of typo3: quickstart and testside.
+It's proposed to deliver these packages through EM in the near future but in 
+the meantime you have to install them manually.
+Take a look on <http://typo3.org/download/packages/> for more information.
+
+
+WHAT SHOULD YOU DO IF YOU HAVE A PROBLEM?
+=========================================
+
+Here are some typical pitfalls:
+
+1 - Error message '/var/lib/typo3*/typo3conf/localconf.php is missing'
+    is displayed in your browser
+
+    This is normally a symptom for not setting all the file to the
+    right user and group. Execute the typo3-site-installer to fix the
+    permissions at it is described above.
+
+2 - Check the symlink "typo3_src" in the directory which should point to
+    the source directory, e.g.
+
+    # file /var/lib/typo3-dummy/typo3_src
+    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3_src-4.1'
+
+3 - The EM displays a blank page or does not import new extensions
+
+    The EM of typo3 4.0.x is a real monster. Probably your PHP installation does not
+	have enough RAM to parse the XML. Take a look in /etc/typo3-dummy/apache.conf
+	and set the lines
+	    php_admin_value memory_limit 48M
+        php_admin_value max_execution_time 90
+	to higher values.
+    There is this line in /etc/typo3-dummy/localconf.php:
+		$TYPO3_CONF_VARS['SYS']['setMemoryLimit'] = '48';
+	You should adjust this value accordingly.
+
+
+WHAT SHOULD YOU DO IF PROBLEM STILL REMAINS?
+============================================
+
+TYPO3 is a powerful and complex professional application. When you start
+out there will be many things you don't understand, or that don't seem to
+make sense. There is a widely used mailing list (more information on
+typo3.com & typo3.org) where many experienced users and developers
+lurk... they are always willing to help, provided you followed these steps
+BEFORE you ask your question:
+
+1 - Read all available documentation carefully
+
+2 - Read all available documentation again
+
+3 - Search the mailing list archive carefully
+
+4 - If you still can't figure it out - ask the list...:
+      - Debian specific: news://news.netfielders.de/typo3.install.debian
+      - Newsgroup:       news://news.netfielders.de/
+      - Mailing lists:   http://lists.netfielders.de/
+
+    When posting to one of the lists, see the following guidelines...
+      - Be polite
+         Always include the version of used TYPO3 and server environment
+         (phpinfo())... note that this is available within the TYPO3
+         Install Tool
+      - Be as specific and clear as possible - questions like "my TYPO3
+         installation does not work - what can I do???" will be ignored.
+	 Although English may not be your first language, if those reading
+	 your posting can't understand it, you won't get the help you need
+      - If you are really having a tough time getting something working,
+         stay cool and don't criticise or flame. Problems are normally
+         caused by lack of research into the documentation, or
+         misunderstanding, not because of bugs. Be logical about your
+         troubleshooting, and you'll get there
+
+5 - If you have identified a bug, related to the packing report it to
+    Debian Bug Tracking System, e.g. using a tool like reportbug.
+
+6 - If you have identified a genuine new bug, report it at
+    http://bugs.typo3.org/ ...do not post to the list about it
+
+Please be aware that if you ask questions that are answered in the
+available documentation, you may not get a reply, or any help from the
+developers or any experienced users!
+
+We are aware that there is still some work to be done on the
+documentation, and the platform for user support... please forgive us for
+not having all these gaps filled. If you feel that some information is
+missing, hard to find or just plain wrong, or you have a suggestion on
+improving TYPO3 or the "support services", please let us know so that we
+can do what is necessary. You could also volunteer to help with the work!
+
+(c) Nigel Jackson, Ingmar Schlecht
+    Unix related additions made by Michael Stucki
+    Debian specific additions mady by Christian Leutloff
+
+ -- Christian Leutloff <leutloff@debian.org>, Fri May  6 20:32:49 2005
