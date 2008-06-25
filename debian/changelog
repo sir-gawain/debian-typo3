@@ -1,3 +1,9 @@
+typo3-src (4.2.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 25 Jun 2008 20:00:00 +0100
+
 typo3-src (4.2.1-3) unstable; urgency=low
 
   * Fixed versioned dependency on libjs-prototype
