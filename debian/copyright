@@ -5,8 +5,9 @@ It was downloaded from <http://http://typo3.org/download/packages/>.
 
 Copyright Holder: Kasper Skaarhoj (kasperYYYY@typo3.com)
 
-License (except typo3/sysext/adodb/adodb and typo3/sysext/rtehtmlarea/rtehtmlarea, 
-		 t3lib/fonts/nimbus.ttf):
+License (except typo3/sysext/adodb/adodb and typo3/sysext/rtehtmlarea/rtehtmlarea,
+		 t3lib/fonts/nimbus.ttf, typo3/sysext/t3editor,
+		 typo3/sysext/t3editor/jslib/codemirror):
 
 	Copyright (C) 2003-2006 Kaspar Skaarhoj <http://typo3.org/>
 
@@ -144,3 +145,55 @@ nimbus.sfd.gz was downladed as NimbusSansL-Regu.sfd from
 
 On Debian systems, the complete text of the GNU General
 Public License can be found in `/usr/share/common-licenses/GPL'.
+
+License (typo3/sysext/t3editor):
+
+	t3editor is written by Tobias Liebig (mail(at)etobi.de)
+
+	Many thanks for help on the conceptual work, testing, feedback and providing
+	several patches to Vitaly Dutchak, Thomas Hempel and all the other people.
+
+	t3editor uses the CodeMirror by Marijn Haverbeke 
+	(http://marijn.haverbeke.de/codemirror/)
+
+    Copyright (C) 2007-2008  Tobias Liebig
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+On Debian systems, the complete text of the GNU General Public License
+can be found in /usr/share/common-licenses/GPL file.
+
+License (typo3/sysext/t3editor/jslib/codemirror):
+
+	Copyright (c) 2007 Marijn Haverbeke
+
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any
+	damages arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any
+	purpose, including commercial applications, and to alter it and
+	redistribute it freely, subject to the following restrictions:
+
+	1. The origin of this software must not be misrepresented; you must
+	   not claim that you wrote the original software. If you use this
+	   software in a product, an acknowledgment in the product
+	   documentation would be appreciated but is not required.
+
+	2. Altered source versions must be plainly marked as such, and must
+	   not be misrepresented as being the original software.
+
+	3. This notice may not be removed or altered from any source
+	   distribution.

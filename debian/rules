@@ -5,7 +5,7 @@
 
 include /usr/share/dpatch/dpatch.make
 
-SOURCEVERSION=4.1
+SOURCEVERSION=4.2
 PACKAGENAME=typo3_src-$(SOURCEVERSION)
 SOURCEPACKAGE=typo3-src-$(SOURCEVERSION)
 T3PACKAGE=typo3
@@ -27,20 +27,23 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	dh_installdirs -A $(T3SRCDIR) 
+	dh_installdirs -p $(SOURCEPACKAGE) $(T3SRCDIR)
 	dh_installdirs -p $(SOURCEPACKAGE) $(T3EXTDIR)
 	cp -r index.php misc t3lib typo3 $(SOURCEINSTALLDIR)
 	perl -ne 'print(unpack "u", $$_);' debian/nimbus.sfd.gz.uuencoded > $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/jslib/codemirror/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
 
 binary-indep: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs -A ChangeLog
-	dh_installdocs -A debian/TODO.Debian RELEASE_NOTES.txt README.txt
+	dh_installdocs -A RELEASE_NOTES.txt README.txt NEWS.txt
 	dh_installexamples -p $(SOURCEPACKAGE) misc/advanced.htaccess
 	dh_link
 	dh_strip

@@ -8,10 +8,11 @@ You should get the 'typo3' package and follow the guideline in its
 /usr/share/doc/typo3/README.Debian.
 
 When you're done, change the symlink 'typo3_src' to point to
-/usr/share/typo3/typo3_src-4.1/ - that's it!
+/usr/share/typo3/typo3_src-4.2/ - that's it!
 
 (Of course, you still can create your site structure manually. Just set up
-symlinks and directories according to http://typo3.org/doc+M56c41aa1af4.0.html)
+symlinks and directories according to
+http://typo3.org/documentation/document-library/installation/doc_inst_upgr/current/ )
 
 Note: You may want to copy the localconf.php file in the examples dir which is
 a good base for Debian installations.

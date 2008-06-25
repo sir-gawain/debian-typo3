@@ -3,11 +3,11 @@ Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
 Build-Depends: debhelper (>= 4), dpatch
-Standards-Version: 3.7.3
+Standards-Version: 3.8.0
 
 Package: typo3
 Architecture: all
-Depends: exim4 | mail-transport-agent, graphicsmagick, php4-gd | php5-gd, typo3-dummy, typo3-src-4.0 | typo3-src-4.1
+Depends: exim4 | mail-transport-agent, graphicsmagick, php5-gd, typo3-dummy, typo3-src-4.2 | typo3-src-4.1
 Recommends: mysql-server, ghostscript
 Suggests: catdoc, httrack, ppthtml, unrtf, webhttrack, xpdf-utils, xlhtml
 Description: Powerful content management framework (Meta package)
@@ -28,11 +28,11 @@ Description: Powerful content management framework (Meta package)
  .
   Homepage: <http://www.typo3.com/>
 
-Package: typo3-src-4.1
+Package: typo3-src-4.2
 Architecture: all
-Depends: ttf-dejavu, libapache2-mod-php4 | libapache-mod-php4 | libapache2-mod-php5 | libapache-mod-php5 | php4-cgi | php5-cgi, php4-cli | php5-cli
-Recommends: catdoc, exim4 | mail-transport-agent, graphicsmagick, ghostscript, mysql-server, php4-gd | php5-gd, php4-mysql | php5-mysql, php4-xcache | php5-xcache, typo3-dummy, xpdf-utils
-Suggests: logcheck, php4-curl | php5-curl, ppthtml, xlhtml, unrtf
+Depends: ttf-dejavu, libapache2-mod-php5 | libapache-mod-php5 | php5-cgi, php5-cli, libjs-prototype (>1.6.0)
+Recommends: catdoc, exim4 | mail-transport-agent, graphicsmagick, ghostscript, mysql-server, php5-gd, php5-mysql, php5-xcache, typo3-dummy, xpdf-utils
+Suggests: logcheck, php5-curl, ppthtml, xlhtml, unrtf
 Provides: typo3-src
 Description: Powerful content management framework (Core)
  This package provides the core engine of TYPO3, often called the source.

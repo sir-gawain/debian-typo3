@@ -1,14 +1,37 @@
+typo3-src (4.2.1-3) unstable; urgency=low
+
+  * Fixed versioned dependency on libjs-prototype
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 25 Jun 2008 20:00:00 +0100
+
+typo3-src (4.2.1-2) unstable; urgency=low
+
+  * Moved libjs-prototype from Recommends-field do Depends-field.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 22 Jun 2008 11:00:00 +0100
+
+typo3-src (4.2.1-1) unstable; urgency=low
+
+  * New upstream release.
+    - Support for php4 has been dropped.
+  * cleaned typo3.README.Debian and typo3-src-4.2.README.Debian
+  * some fixes to debian/rules
+  * Depend on libjs-prototype for prototype.js (Closes: 475282)
+  * Raised stardards version to 3.8.0
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 20 Jun 2008 22:00:00 +0100
+
 typo3-src (4.1.7-1) unstable; urgency=high
 
   [ Christian Welzel ]
   * New upstream release
-    - fixes TYPO3-20080611-1: Multiple vulnerabilities in TYPO3 Core 
-      (Closes: #485814)  
+    - fixes TYPO3-20080611-1: Multiple vulnerabilities in TYPO3 Core
+      (Closes: #485814)
 
   [ Holger Levsen ]
   * Change recommends from gs to ghostscript.
-  * Remove obsolete overrides for linda, which is obsolete itself. 
-  * Fix spelling error in description. 
+  * Remove obsolete overrides for linda, which is obsolete itself.
+  * Fix spelling error in description.
 
  -- Christian Welzel <gawain@camlann.de>  Wed, 11 Jun 2008 15:00:00 +0100
 
