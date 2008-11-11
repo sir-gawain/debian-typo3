@@ -30,7 +30,7 @@ Description: Powerful content management framework (Meta package)
 
 Package: typo3-src-4.2
 Architecture: all
-Depends: ttf-dejavu, libapache2-mod-php5 | libapache-mod-php5 | php5-cgi, php5-cli, libjs-prototype (>1.6.0)
+Depends: ttf-dejavu, libapache2-mod-php5 | libapache-mod-php5 | php5-cgi, php5-cli, libjs-prototype (>1.6.0), libjs-scriptaculous (>1.8.1)
 Recommends: catdoc, exim4 | mail-transport-agent, graphicsmagick, ghostscript, mysql-server, php5-gd, php5-mysql, php5-xcache, typo3-dummy, xpdf-utils
 Suggests: logcheck, php5-curl, ppthtml, xlhtml, unrtf
 Provides: typo3-src

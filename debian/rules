@@ -38,6 +38,7 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/jslib/codemirror/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
+	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 
 binary-indep: build install
 	dh_testdir
