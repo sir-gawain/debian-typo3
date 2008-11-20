@@ -1,0 +1,11 @@
+t3lib/stddb/tables.sql
+typo3/sysext/cms/ext_tables.sql
+typo3/sysext/felogin/ext_tables.sql
+typo3/sysext/tsconfig_help/ext_tables_static+adt.sql
+typo3/sysext/openid/ext_tables.sql
+typo3/sysext/dbal/ext_tables.sql
+typo3/sysext/impexp/ext_tables.sql
+typo3/sysext/sys_note/ext_tables.sql
+typo3/sysext/indexed_search/ext_tables.sql
+typo3/sysext/rtehtmlarea/ext_tables.sql
+typo3/sysext/sys_action/ext_tables.sql

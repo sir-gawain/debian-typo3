@@ -1,47 +1,15 @@
-typo3-src (4.2.10-1) unstable; urgency=high
+typo3-src (4.3.0~alpha1-1) experimental; urgency=low
 
   * New upstream release.
-    - fixes "TYPO3 Security Bulletin TYPO3-SA-2009-016: Multiple
-      vulnerabilities in TYPO3 Core" (Closes: 552020)
+  * Dropped binary package typo3.
+  * Added new binary package typo3-database.
+  * Dependency cleanup for the binary package typo3-src.
+  * Some cleanup in README files.
+  * Added small code snippet to rules to build an overall-sql-file for use
+    in typo3-database.
+  * Rewritten long description.
 
- -- Christian Welzel <gawain@camlann.de>  Thu, 22 Oct 2009 22:00:00 +0100
-
-typo3-src (4.2.9-1) unstable; urgency=low
-
-  * New upstream release.
-
- -- Christian Welzel <gawain@camlann.de>  Mon, 12 Oct 2009 22:00:00 +0100
-
-typo3-src (4.2.8-1) unstable; urgency=low
-
-  * New upstream release.
-
- -- Christian Welzel <gawain@camlann.de>  Sat, 04 Jul 2009 17:00:00 +0100
-
-typo3-src (4.2.6-1) unstable; urgency=high
-
-  * New upstream release.
-    - fixes TYPO3 Security Bulletin TYPO3-SA-2009-002: Information
-      disclosure and XSS vulnerabilities in TYPO3 (Closes: 514713)
-
- -- Christian Welzel <gawain@camlann.de>  Mon, 10 Feb 2009 12:00:00 +0100
-
-typo3-src (4.2.5-1) unstable; urgency=medium
-
-  * New upstream release.
-    - fixes a serious bug in session handling with not logged in FE-Users.
-
- -- Christian Welzel <gawain@camlann.de>  Mon, 26 Jan 2009 20:00:00 +0100
-
-typo3-src (4.2.4-1) unstable; urgency=high
-
-  * New upstream release.
-    - fixes TYPO3 Security Bulletin TYPO3-SA-2009-001: Multiple vulnerabilities
-      in TYPO3 Core (Closes: 512608)
-  * Updated package description.
-  * Updated copyright file to list the license of two icons.
-
- -- Christian Welzel <gawain@camlann.de>  Thu, 22 Jan 2009 12:00:00 +0100
+ -- Christian Welzel <gawain@camlann.de>  Thu, 20 Nov 2008 20:00:00 +0100
 
 typo3-src (4.2.3-1) unstable; urgency=high
 

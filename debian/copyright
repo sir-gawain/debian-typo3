@@ -198,9 +198,11 @@ License (typo3/sysext/t3editor/jslib/codemirror):
 	3. This notice may not be removed or altered from any source
 	   distribution.
 
-License (typo3/gfx/magnifier.png,typo3/gfx/lightning.png)
+License (typo3/sysext/openid/lib/php-openid)
 
-	These icons are retrieved from the "Silk" icon set of Mark James, which 
-	can be found at http://famfamfam.com/lab/icons/silk/.
-	This set is distributed under a Creative Commons Attribution 3.0 License.
-	The license can be found at http://creativecommons.org/licenses/by/3.0/.
+	Apache License
+	Version 2.0, January 2004
+	http://www.apache.org/licenses/
+
+On Debian systems, the complete text of the Apache License 2.0
+can be found in /usr/share/common-licenses/Apache-2.0 file.

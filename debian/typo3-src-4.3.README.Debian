@@ -128,7 +128,7 @@ Here are some typical pitfalls:
     the source directory, e.g.
 
     # file /var/lib/typo3-dummy/typo3_src
-    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3_src-4.2'
+    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3_src-4.3'
 
 
 WHAT SHOULD YOU DO IF PROBLEM STILL REMAINS?
@@ -159,8 +159,8 @@ BEFORE you ask your question:
          Install Tool
       - Be as specific and clear as possible - questions like "my TYPO3
          installation does not work - what can I do???" will be ignored.
-	 Although English may not be your first language, if those reading
-	 your posting can't understand it, you won't get the help you need
+         Although English may not be your first language, if those reading
+         your posting can't understand it, you won't get the help you need
       - If you are really having a tough time getting something working,
          stay cool and don't criticise or flame. Problems are normally
          caused by lack of research into the documentation, or
@@ -188,5 +188,4 @@ can do what is necessary. You could also volunteer to help with the work!
     Unix related additions made by Michael Stucki
     Debian specific additions mady by Christian Leutloff
 
- -- Christian Leutloff <leutloff@debian.org>, Fri May  6 20:32:49 2005
  -- Christian Welzel <gawain@camlann.de>, Fri, 20 Jun 2008 23:00:00

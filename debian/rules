@@ -5,23 +5,32 @@
 
 include /usr/share/dpatch/dpatch.make
 
-SOURCEVERSION=4.2
+SOURCEVERSION=4.3
 PACKAGENAME=typo3_src-$(SOURCEVERSION)
 SOURCEPACKAGE=typo3-src-$(SOURCEVERSION)
-T3PACKAGE=typo3
+DBASEPACKAGE=typo3-database
 
 T3SRCDIR=usr/share/typo3/$(PACKAGENAME)
 T3EXTDIR=usr/share/typo3/$(PACKAGENAME)/typo3/ext
+TABLESQLDIR=usr/share/typo3
 
 SOURCEINSTALLDIR=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
+SQLINSTALLDIR=debian/$(SOURCEPACKAGE)/$(TABLESQLDIR)
 
-build: patch-stamp
+build-stamp:
+	for i in $$(cat debian/sql_locations.txt); do cat $$i >> debian/table.sql; done
+	gzip -9 debian/table.sql
+	touch build-stamp
+
+build: patch-stamp build-stamp
 
 clean: unpatch
 	dh_testdir
 	dh_testroot
 	dh_clean
+	rm -f build-stamp
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
+	rm -f debian/table.sql
 
 install: build
 	dh_testdir
@@ -31,11 +40,13 @@ install: build
 	dh_installdirs -p $(SOURCEPACKAGE) $(T3EXTDIR)
 	cp -r index.php misc t3lib typo3 $(SOURCEINSTALLDIR)
 	perl -ne 'print(unpack "u", $$_);' debian/nimbus.sfd.gz.uuencoded > $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
+	mv debian/table.sql.gz $(SQLINSTALLDIR)/$(PACKAGENAME).sql.gz
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/jslib/codemirror/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
@@ -44,7 +55,7 @@ binary-indep: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs -A ChangeLog
-	dh_installdocs -A RELEASE_NOTES.txt README.txt NEWS.txt
+	dh_installdocs -A RELEASE_NOTES.txt README.txt NEWS.txt INSTALL.txt
 	dh_installexamples -p $(SOURCEPACKAGE) misc/advanced.htaccess
 	dh_link
 	dh_strip
