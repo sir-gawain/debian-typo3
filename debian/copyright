@@ -197,3 +197,10 @@ License (typo3/sysext/t3editor/jslib/codemirror):
 
 	3. This notice may not be removed or altered from any source
 	   distribution.
+
+License (typo3/gfx/magnifier.png,typo3/gfx/lightning.png)
+
+	These icons are retrieved from the "Silk" icon set of Mark James, which 
+	can be found at http://famfamfam.com/lab/icons/silk/.
+	This set is distributed under a Creative Commons Attribution 3.0 License.
+	The license can be found at http://creativecommons.org/licenses/by/3.0/.

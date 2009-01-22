@@ -1,3 +1,13 @@
+typo3-src (4.2.4-1) unstable; urgency=high
+
+  * New upstream release.
+    - fixes TYPO3 Security Bulletin TYPO3-SA-2009-001: Multiple vulnerabilities
+      in TYPO3 Core (Closes: 512608)
+  * Updated package description.
+  * Updated copyright file to list the license of two icons.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 22 Jan 2009 12:00:00 +0100
+
 typo3-src (4.2.3-1) unstable; urgency=high
 
   * New upstream release.

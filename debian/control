@@ -11,20 +11,23 @@ Depends: exim4 | mail-transport-agent, graphicsmagick, php5-gd, typo3-dummy, typ
 Recommends: mysql-server, ghostscript
 Suggests: catdoc, httrack, ppthtml, unrtf, webhttrack, xpdf-utils, xlhtml
 Description: Powerful content management framework (Meta package)
- This metapackage ease the full installation of TYPO3, if you want to run all
- server components from one machine. In addition it depends on the latest
- packages to smooth the update process.
+ TYPO3 is a free Open Source content management system for enterprise purposes
+ on the web and in intranets. It offers full flexibility and extendability while
+ featuring an accomplished set of ready-made interfaces, functions and modules.
  .
- TYPO3 is a Web content management system which features automatic  creation of
- navigational menus, headlines, and other dynamic graphical elements, automatic
- conversion and scaling of images, the ability to present different templates
- based on variables such as client browser or country code, support for multiple
- templates on a site, and a built-in password-protection option.
+ The most important key features of TYPO3 are:
+  * Simple creation of multi language websites with fallback to a default
+    language
+  * Handling of multi domain websites within a single page tree
+  * Multi user backend editing with complete GUI customisation using an
+    advanced ACL system
+  * An integrated workflow management system based on an multi step architecture
+    with editor and supervisor privileges
+  * Unlimited redefinition of the rendering process using the build-in
+    TypoScript configuration interface or the plugin API
+  * Thousands of plugins are available in the online TYPO3 extension repository
  .
- Pages can be timed to be shown on a certain date, be hidden on a certain date
- or just temporarily hidden. TYPO3 supports search in SQL-databases and
- redesigning of a website at once is just a matter of creating a single new
- template.
+ This package provides the core engine of TYPO3, often called The Source.
  .
   Homepage: <http://www.typo3.com/>
 
@@ -35,17 +38,22 @@ Recommends: catdoc, exim4 | mail-transport-agent, graphicsmagick, ghostscript, m
 Suggests: logcheck, php5-curl, ppthtml, xlhtml, unrtf
 Provides: typo3-src
 Description: Powerful content management framework (Core)
- This package provides the core engine of TYPO3, often called the source.
+ TYPO3 is a free Open Source content management system for enterprise purposes
+ on the web and in intranets. It offers full flexibility and extendability while
+ featuring an accomplished set of ready-made interfaces, functions and modules.
  .
- TYPO3 is a Web content management system which features automatic creation of
- navigational menus, headlines, and other dynamic graphical elements, automatic
- conversion and scaling of images, the ability to present different templates
- based on variables such as client browser or country code, support for multiple
- templates on a site, and a built-in password-protection option.
+ The most important key features of TYPO3 are:
+  * Simple creation of multi language websites with fallback to a default
+    language
+  * Handling of multi domain websites within a single page tree
+  * Multi user backend editing with complete GUI customisation using an
+    advanced ACL system
+  * An integrated workflow management system based on an multi step architecture
+    with editor and supervisor privileges
+  * Unlimited redefinition of the rendering process using the build-in
+    TypoScript configuration interface or the plugin API
+  * Thousands of plugins are available in the online TYPO3 extension repository
  .
- Pages can be timed to be shown on a certain date, be hidden on a certain date
- or just temporarily hidden. TYPO3 supports search in SQL-databases and
- redesigning of a website at once is just a matter of creating a single new
- template.
+ This package provides the core engine of TYPO3, often called The Source.
  .
   Homepage: <http://www.typo3.com/>
