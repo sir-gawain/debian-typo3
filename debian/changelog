@@ -1,3 +1,9 @@
+typo3-src (4.2.9-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 12 Oct 2009 22:00:00 +0100
+
 typo3-src (4.2.8-1) unstable; urgency=low
 
   * New upstream release.
