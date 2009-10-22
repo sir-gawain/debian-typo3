@@ -1,15 +1,93 @@
-typo3-src (4.3.0~alpha1-1) experimental; urgency=low
+typo3-src (4.3.0~beta2-1) experimental; urgency=high
 
   * New upstream release.
-  * Dropped binary package typo3.
+    - fixes "TYPO3 Security Bulletin TYPO3-SA-2009-016: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 552020)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 22 Oct 2009 22:00:00 +0100
+
+typo3-src (4.3.0~beta1-1) experimental; urgency=low
+
+  * New upstream release.
+  * Raised standards version to 3.8.3.
+  * Added lintian override for non-free-flash error. The flvplayer.swf is
+    based on the GPL licensed anarchy player.
+  * Added README.source. Texts points to dpatchs README.source.
+  * Added version mangling to watch file (Closes: 539489)
+  * Added license of typo3/contrib/flashmedia/player.swf to "copyright".
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 12 Oct 2009 22:00:00 +0100
+
+typo3-src (4.3.0~alpha3-1) experimental; urgency=low
+
+  * New upstream release.
+  * Raised standards version to 3.8.1.
+  * Raised compat version to 5.
+  * Added dephelper depends.
+  * Moved homepage to header field.
+  * Added lintian override for embedded-php-library in open-id (the 
+    version shipped is a stripped down and patched version for TYPO3).
+  * Added README file for typo3-database.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 07 Jun 2009 20:00:00 +0100
+
+typo3-src (4.3.0~alpha2-1) experimental; urgency=low
+
+  * New upstream release.
+  * Degraded binary package typo3 to a meta package.
   * Added new binary package typo3-database.
   * Dependency cleanup for the binary package typo3-src.
   * Some cleanup in README files.
-  * Added small code snippet to rules to build an overall-sql-file for use
-    in typo3-database.
   * Rewritten long description.
+  * Added debian/mysql, a manually created database dump of an empty TYPO3 DB.
+  * Integrated dbconfig-common in maintenance mode.
 
- -- Christian Welzel <gawain@camlann.de>  Thu, 20 Nov 2008 20:00:00 +0100
+ -- Christian Welzel <gawain@camlann.de>  Sun, 22 Mar 2009 20:00:00 +0100
+
+typo3-src (4.2.10-1) unstable; urgency=high
+
+  * New upstream release.
+    - fixes "TYPO3 Security Bulletin TYPO3-SA-2009-016: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 552020)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 22 Oct 2009 22:00:00 +0100
+
+typo3-src (4.2.9-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 12 Oct 2009 22:00:00 +0100
+
+typo3-src (4.2.8-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 04 Jul 2009 17:00:00 +0100
+
+typo3-src (4.2.6-1) unstable; urgency=high
+
+  * New upstream release.
+    - fixes TYPO3 Security Bulletin TYPO3-SA-2009-002: Information
+      disclosure and XSS vulnerabilities in TYPO3 (Closes: 514713)
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 10 Feb 2009 12:00:00 +0100
+
+typo3-src (4.2.5-1) unstable; urgency=medium
+
+  * New upstream release.
+    - fixes a serious bug in session handling with not logged in FE-Users.
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 26 Jan 2009 20:00:00 +0100
+
+typo3-src (4.2.4-1) unstable; urgency=high
+
+  * New upstream release.
+    - fixes TYPO3 Security Bulletin TYPO3-SA-2009-001: Multiple vulnerabilities
+      in TYPO3 Core (Closes: 512608)
+  * Updated package description.
+  * Updated copyright file to list the license of two icons.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 22 Jan 2009 12:00:00 +0100
 
 typo3-src (4.2.3-1) unstable; urgency=high
 

@@ -1,15 +1,79 @@
 TYPO3 for Debian
 -----------------
 
-This package contains an empty TYPO3 database structure.
+WHAT IS THIS PACKAGE FOR?
+=========================
+
+This package contains an empty TYPO3 database structure and provides a 
+dependency to the mysql server package.
+
+Q: Why did you make another package and didn't use typo3-dummy as before?
+
+A: The problem with integrating the database dependency into typo3-dummy is
+that all people who want to use this package are forced to install a full 
+mysql server. But as everyone knows the database can/should be installed on a
+separate server to get some level of load balancing. Thats why typo3-database
+was created and typo3-dummy only suggests its installation. This way the
+packages can be installed on different machines without pulling too much into
+the systems.
+
+Q: Why do you provide an empty database? TYPO3 can create that itself.
+
+A: Yeah, i know. But using the mechanisms of TYPO3 means, that the user does
+not have a working installation of TYPO3 after installing this packages. He
+has to enter the install tool and to configure the database by hand.
+This can be a bit challanging for new users, so i want to make the installation
+of TYPO3 as simple as possible and provide an empty database.
 
 
+LOCAL INSTALLATION
+==================
+
+The local installation is really trival:
+
+* first step: install this package before typo3-dummy and answer the questions
+during installation like this:
+1) Configure the database typo3-database with dbconfig-common? YES.
+2) Enter the password for the database system administration account.
+3) Choose a new password for the TYPO3 database account.
+
+Thats all.
+The install script now creates a new database user "typo3-database" with
+your chosen password and imports the database dump into the database.
+
+* second step: install the package typo3-dummy and anwser the only question
+for the password with your chosen one from above.
+
+The install script now checks whether the password is correct or not, and 
+if it is correct the connection parameters are saved for later use.
+
+You are done.
 
 
+REMOTE INSTALLATION
+===================
+
+The remote installation is similar to the local one but has a third step 
+to accomplish.
+
+* first step: install this package on the remote (database) machine, before
+you install typo3-dummy. Follow the steps 1-3 from above.
+
+* second step: install the package typo3-dummy and anwser the only question
+for the password with your chosen one from above. Note, that you cannot 
+choose the database host here, this is done next.
+
+* third step: reconfigure typo3-dummy using the priority "low":
+> dpkg-reconfigure --priority=low --force typo3-dummy
+Now you can answer a lot of question regarding your remote machine.
+
+You are done.
+
+PS: Make sure, your firewalls let you access the remote database!
 
 
 Feel free to send me your package-specific comments or suggestions.
 
 Have fun!
 
- -- Christian Welzel <gawain@camlann.de>, Fri, 20 Jun 2008 23:00:00
+ -- Christian Welzel <gawain@camlann.de>, Sun, 07 Jun 2009 23:00:00
