@@ -4,4 +4,5 @@ version=3
 # If your package is located on sourceforge, use the following format
 # to automatically use the qa.debian.org redirector, avoiding SF's
 # difficult mirror system.
-http://sf.net/typo3/typo3_src-(.*)\.tar\.gz
+opts="dversionmangle=s/~//" \
+  http://sf.net/typo3/typo3_src-(.*)\.tar\.gz

@@ -1,3 +1,11 @@
+typo3-src (4.2.10-1) unstable; urgency=high
+
+  * New upstream release.
+    - fixes "TYPO3 Security Bulletin TYPO3-SA-2009-016: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 552020)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 22 Oct 2009 22:00:00 +0100
+
 typo3-src (4.2.9-1) unstable; urgency=low
 
   * New upstream release.
