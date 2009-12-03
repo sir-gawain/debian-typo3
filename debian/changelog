@@ -1,3 +1,15 @@
+typo3-src (4.3.0-1) unstable; urgency=low
+
+  * New upstream release.
+  * Fixed "dpkg-gencontrol: Warnung: relation > is deprecated: use >> or >=".
+  * debian/rules: Added target find-sql to get a list of important sql-files.
+    (needed for maintainance only)
+  * debian/mysql: SQL commands for populating mysql don't include help texts
+    anymore, to make the package smaller. They can be imported with the TYPO3
+    database-assistant.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 03 Dec 2009 22:00:00 +0100
+
 typo3-src (4.3.0~beta2-1) experimental; urgency=high
 
   * New upstream release.

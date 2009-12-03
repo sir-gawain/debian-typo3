@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+#set -x
+
+. /usr/share/debconf/confmodule
+. /usr/share/dbconfig-common/dpkg/postinst.mysql 
+#dbc_generate_include_owner=www-data:www-data
+dbc_first_version=4.3.0
+dbc_generate_include=php:/etc/typo3-database/debian-db.php
+dbc_go typo3-database $@
+
+#DEBHELPER#

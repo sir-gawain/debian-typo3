@@ -1,0 +1,1317 @@
+#
+# TYPO3 SVN ID: $Id: tables.sql 6525 2009-11-25 11:27:34Z steffenk $
+#
+
+#
+# Table structure for table 'be_groups'
+#
+CREATE TABLE be_groups (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(50) DEFAULT '' NOT NULL,
+  non_exclude_fields text,
+  explicit_allowdeny text,
+  allowed_languages varchar(255) DEFAULT '' NOT NULL,
+  custom_options text,
+  db_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  pagetypes_select varchar(255) DEFAULT '' NOT NULL,
+  tables_select text,
+  tables_modify text,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  groupMods text,
+  file_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  fileoper_perms tinyint(4) DEFAULT '0' NOT NULL,
+  hidden tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  inc_access_lists tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  description text,
+  lockToDomain varchar(50) DEFAULT '' NOT NULL,
+  deleted tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  TSconfig text,
+  subgroup varchar(255) DEFAULT '' NOT NULL,
+  hide_in_lists tinyint(4) DEFAULT '0' NOT NULL,
+  workspace_perms tinyint(3) DEFAULT '1' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+#
+# Table structure for table 'be_sessions'
+#
+CREATE TABLE be_sessions (
+  ses_id varchar(32) DEFAULT '' NOT NULL,
+  ses_name varchar(32) DEFAULT '' NOT NULL,
+  ses_iplock varchar(39) DEFAULT '' NOT NULL,
+  ses_hashlock int(11) DEFAULT '0' NOT NULL,
+  ses_userid int(11) unsigned DEFAULT '0' NOT NULL,
+  ses_tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  ses_data longtext,
+  ses_backuserid int(11) NOT NULL default '0',
+  PRIMARY KEY (ses_id,ses_name)
+);
+
+#
+# Table structure for table 'be_users'
+#
+CREATE TABLE be_users (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  username varchar(50) DEFAULT '' NOT NULL,
+  password varchar(60) DEFAULT '' NOT NULL,
+  admin tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  usergroup varchar(255) DEFAULT '' NOT NULL,
+  disable tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  lang char(2) DEFAULT '' NOT NULL,
+  email varchar(80) DEFAULT '' NOT NULL,
+  db_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  options tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  realName varchar(80) DEFAULT '' NOT NULL,
+  userMods varchar(255) DEFAULT '' NOT NULL,
+  allowed_languages varchar(255) DEFAULT '' NOT NULL,
+  uc text,
+  file_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  fileoper_perms tinyint(4) DEFAULT '0' NOT NULL,
+  workspace_perms tinyint(3) DEFAULT '1' NOT NULL,
+  lockToDomain varchar(50) DEFAULT '' NOT NULL,
+  disableIPlock tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  TSconfig text,
+  lastlogin int(10) unsigned DEFAULT '0' NOT NULL,
+  createdByAction int(11) DEFAULT '0' NOT NULL,
+  usergroup_cached_list varchar(255) DEFAULT '' NOT NULL,
+  workspace_id int(11) DEFAULT '0' NOT NULL,
+  workspace_preview tinyint(3) DEFAULT '1' NOT NULL,
+  tx_openid_openid varchar(255) DEFAULT '' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY parent (pid),
+  KEY username (username)
+);
+
+#
+# Table structure for table 'cache_extensions'
+#
+CREATE TABLE cache_extensions (
+  extkey varchar(60) NOT NULL default '',
+  version varchar(10) NOT NULL default '',
+  alldownloadcounter int(11) unsigned NOT NULL default '0',
+  downloadcounter int(11) unsigned NOT NULL default '0',
+  title varchar(150) NOT NULL default '',
+  description mediumtext,
+  state int(4) NOT NULL default '0',
+  reviewstate int(4) NOT NULL default '0',
+  category int(4) NOT NULL default '0',
+  lastuploaddate int(11) unsigned NOT NULL default '0',
+  dependencies mediumtext,
+  authorname varchar(100) NOT NULL default '',
+  authoremail varchar(100) NOT NULL default '',
+  ownerusername varchar(50) NOT NULL default '',
+  t3xfilemd5 varchar(35) NOT NULL default '',
+  uploadcomment mediumtext,
+  authorcompany varchar(100) NOT NULL default '',
+  intversion int(11) NOT NULL default '0',
+  lastversion int(3) NOT NULL default '0',
+  lastreviewedversion int(3) NOT NULL default '0',
+  PRIMARY KEY (extkey,version)
+);
+
+#
+# Table structure for table 'cache_hash'
+#
+CREATE TABLE cache_hash (
+  id int(11) unsigned NOT NULL auto_increment,
+  hash varchar(32) DEFAULT '' NOT NULL,
+  content mediumblob,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  ident varchar(32) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY hash (hash)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_hash'
+#
+CREATE TABLE cachingframework_cache_hash (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_hash_tags'
+#
+CREATE TABLE cachingframework_cache_hash_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_imagesizes'
+#
+CREATE TABLE cache_imagesizes (
+  md5hash varchar(32) DEFAULT '' NOT NULL,
+  md5filename varchar(32) DEFAULT '' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  filename varchar(255) DEFAULT '' NOT NULL,
+  imagewidth mediumint(11) unsigned DEFAULT '0' NOT NULL,
+  imageheight mediumint(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (md5filename)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'sys_registry'
+#
+CREATE TABLE sys_registry (
+  uid int(11) unsigned NOT NULL auto_increment,
+  entry_namespace varchar(128) DEFAULT '' NOT NULL,
+  entry_key varchar(128) DEFAULT '' NOT NULL,
+  entry_value blob,
+  PRIMARY KEY (uid),
+  UNIQUE KEY entry_identifier (entry_namespace,entry_key)
+);
+
+#
+# Table structure for table 'sys_be_shortcuts'
+#
+CREATE TABLE sys_be_shortcuts (
+  uid int(11) unsigned NOT NULL auto_increment,
+  userid int(11) unsigned DEFAULT '0' NOT NULL,
+  module_name varchar(255) DEFAULT '' NOT NULL,
+  url text,
+  description varchar(255) DEFAULT '' NOT NULL,
+  sorting int(11) DEFAULT '0' NOT NULL,
+  sc_group tinyint(4) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY event (userid)
+);
+
+
+#
+# Table structure for table 'sys_preview'
+#
+CREATE TABLE sys_preview (
+  keyword varchar(32) DEFAULT '' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  endtime int(11) DEFAULT '0' NOT NULL,
+  config text,
+  PRIMARY KEY (keyword)
+);
+
+
+#
+# Table structure for table 'sys_filemounts'
+#
+CREATE TABLE sys_filemounts (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(30) DEFAULT '' NOT NULL,
+  path varchar(120) DEFAULT '' NOT NULL,
+  base tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+#
+# Table structure for table 'sys_workspace'
+#
+CREATE TABLE sys_workspace (
+  uid int(11) NOT NULL auto_increment,
+  pid int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  deleted tinyint(1) DEFAULT '0' NOT NULL,
+  title varchar(30) DEFAULT '' NOT NULL,
+  description varchar(255) DEFAULT '' NOT NULL,
+  adminusers varchar(255) DEFAULT '' NOT NULL,
+  members text,
+  reviewers text,
+  db_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  file_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  publish_time int(11) DEFAULT '0' NOT NULL,
+  unpublish_time int(11) DEFAULT '0' NOT NULL,
+  freeze tinyint(3) DEFAULT '0' NOT NULL,
+  live_edit tinyint(3) DEFAULT '0' NOT NULL,
+  review_stage_edit tinyint(3) DEFAULT '0' NOT NULL,
+  vtypes tinyint(3) DEFAULT '0' NOT NULL,
+  disable_autocreate tinyint(1) DEFAULT '0' NOT NULL,
+  swap_modes tinyint(3) DEFAULT '0' NOT NULL,
+  publish_access tinyint(3) DEFAULT '0' NOT NULL,
+  stagechg_notification tinyint(3) DEFAULT '0' NOT NULL,
+
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+#
+# Table structure for table 'sys_history'
+#
+CREATE TABLE sys_history (
+  uid int(11) unsigned NOT NULL auto_increment,
+  sys_log_uid int(11) DEFAULT '0' NOT NULL,
+  history_data mediumtext,
+  fieldlist text,
+  recuid int(11) DEFAULT '0' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  history_files mediumtext,
+  snapshot tinyint(4) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY recordident (tablename,recuid,tstamp),
+  KEY sys_log_uid (sys_log_uid)
+);
+
+#
+# Table structure for table 'sys_lockedrecords'
+#
+CREATE TABLE sys_lockedrecords (
+  uid int(11) unsigned NOT NULL auto_increment,
+  userid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  record_table varchar(255) DEFAULT '' NOT NULL,
+  record_uid int(11) DEFAULT '0' NOT NULL,
+  record_pid int(11) DEFAULT '0' NOT NULL,
+  username varchar(20) DEFAULT '' NOT NULL,
+  feuserid int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY event (userid,tstamp)
+);
+
+#
+# Table structure for table 'sys_refindex'
+#
+CREATE TABLE sys_refindex (
+  hash varchar(32) DEFAULT '' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
+  recuid int(11) DEFAULT '0' NOT NULL,
+  field varchar(40) DEFAULT '' NOT NULL,
+  flexpointer varchar(255) DEFAULT '' NOT NULL,
+  softref_key varchar(30) DEFAULT '' NOT NULL,
+  softref_id varchar(40) DEFAULT '' NOT NULL,
+  sorting int(11) DEFAULT '0' NOT NULL,
+  deleted tinyint(1) DEFAULT '0' NOT NULL,
+  ref_table varchar(255) DEFAULT '' NOT NULL,
+  ref_uid int(11) DEFAULT '0' NOT NULL,
+  ref_string varchar(200) DEFAULT '' NOT NULL,
+
+  PRIMARY KEY (hash),
+  KEY lookup_rec (tablename,recuid),
+  KEY lookup_uid (ref_table,ref_uid),
+  KEY lookup_string (ref_string)
+);
+
+#
+# Table structure for table 'sys_refindex_words'
+#
+CREATE TABLE sys_refindex_words (
+  wid int(11) DEFAULT '0' NOT NULL,
+  baseword varchar(60) DEFAULT '' NOT NULL,
+  PRIMARY KEY (wid)
+);
+
+#
+# Table structure for table 'sys_refindex_rel'
+#
+CREATE TABLE sys_refindex_rel (
+  rid int(11) DEFAULT '0' NOT NULL,
+  wid int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (rid,wid)
+);
+
+
+#
+# Table structure for table 'sys_refindex_res'
+#
+CREATE TABLE sys_refindex_res (
+  rid int(11) DEFAULT '0' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
+  recuid int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (rid)
+);
+
+#
+# Table structure for table 'sys_log'
+#
+CREATE TABLE sys_log (
+  uid int(11) unsigned NOT NULL auto_increment,
+  userid int(11) unsigned DEFAULT '0' NOT NULL,
+  action tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  recuid int(11) unsigned DEFAULT '0' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
+  recpid int(11) DEFAULT '0' NOT NULL,
+  error tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  details varchar(255) DEFAULT '' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  type tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  details_nr tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  IP varchar(39) DEFAULT '' NOT NULL,
+  log_data varchar(255) DEFAULT '' NOT NULL,
+  event_pid int(11) DEFAULT '-1' NOT NULL,
+  workspace int(11) DEFAULT '0' NOT NULL,
+  NEWid varchar(20) DEFAULT '' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY event (userid,event_pid),
+  KEY recuidIdx (recuid,uid)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'sys_language'
+#
+CREATE TABLE sys_language (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  title varchar(80) DEFAULT '' NOT NULL,
+  flag varchar(20) DEFAULT '' NOT NULL,
+  static_lang_isocode int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+#
+# Table structure for table 'sys_note'
+#
+CREATE TABLE sys_note (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser int(11) unsigned DEFAULT '0' NOT NULL,
+  author varchar(80) DEFAULT '' NOT NULL,
+  email varchar(80) DEFAULT '' NOT NULL,
+  subject varchar(255) DEFAULT '' NOT NULL,
+  message text,
+  personal tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  category tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+#
+# Table structure for table 'tx_extbase_cache_reflection'
+#
+CREATE TABLE tx_extbase_cache_reflection (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(250) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  tags mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'tx_extbase_cache_reflection_tags'
+#
+CREATE TABLE tx_extbase_cache_reflection_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;#
+# Table structure for table 'static_tsconfig_help'
+#
+CREATE TABLE static_tsconfig_help (
+  uid int(11) NOT NULL auto_increment,
+  guide int(11) DEFAULT '0' NOT NULL,
+  md5hash varchar(32) DEFAULT '' NOT NULL,
+  description text,
+  obj_string varchar(255) DEFAULT '' NOT NULL,
+  appdata blob,
+  title varchar(255) DEFAULT '' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY guide (guide,md5hash)
+);
+
+#
+# Table structure for table 'sys_action'
+#
+CREATE TABLE sys_action (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  sorting int(10) DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  description text,
+  type tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  t1_userprefix varchar(20) DEFAULT '' NOT NULL,
+  t1_copy_of_user int(11) DEFAULT '0' NOT NULL,
+  t1_allowed_groups tinytext,
+  t2_data blob,
+  assign_to_groups int(11) DEFAULT '0' NOT NULL,
+  hidden tinyint(4) DEFAULT '0' NOT NULL,
+  t1_create_user_dir tinyint(4) DEFAULT '0' NOT NULL,
+  t3_listPid int(11) DEFAULT '0' NOT NULL,
+  t3_tables varchar(255) DEFAULT '' NOT NULL,
+  t4_recordsToEdit text,
+
+  PRIMARY KEY (uid),
+  KEY cruser_id (cruser_id),
+  KEY parent (pid)
+);
+
+#
+# Table structure for table 'sys_action_asgr_mm'
+#
+CREATE TABLE sys_action_asgr_mm (
+  uid_local int(11) unsigned DEFAULT '0' NOT NULL,
+  uid_foreign int(11) unsigned DEFAULT '0' NOT NULL,
+  sorting int(11) unsigned DEFAULT '0' NOT NULL,
+  KEY uid_local (uid_local),
+  KEY uid_foreign (uid_foreign)
+);
+
+
+#
+# Table structure for table 'tx_dbal_debuglog'
+#
+CREATE TABLE tx_dbal_debuglog (
+	uid int(11) unsigned NOT NULL auto_increment,
+	tstamp int(11) unsigned DEFAULT '0',
+	beuser_id int(11) unsigned DEFAULT '0',
+	script varchar(255) DEFAULT '' NOT NULL,
+	exec_time int(11) unsigned DEFAULT '0',
+	table_join varchar(255) DEFAULT '' NOT NULL,
+	serdata blob,
+	query text,
+	errorFlag int(11) unsigned DEFAULT '0',
+
+	PRIMARY KEY (uid),
+	KEY tstamp (tstamp)
+);
+
+#
+# Table structure for table 'tx_dbal_debuglog_where'
+#
+CREATE TABLE tx_dbal_debuglog_where (
+	uid int(11) unsigned NOT NULL auto_increment,
+	tstamp int(11) unsigned DEFAULT '0',
+	beuser_id int(11) unsigned DEFAULT '0',
+	script varchar(255) DEFAULT '' NOT NULL,
+	tablename varchar(255) DEFAULT '' NOT NULL,
+	whereclause text,
+
+	PRIMARY KEY (uid),
+	KEY tstamp (tstamp)
+);
+
+#
+# Table structure for table 'tx_openid_assoc_store'.
+#
+CREATE TABLE tx_openid_assoc_store (
+	uid int(11) unsigned NOT NULL auto_increment,
+	pid int(11) unsigned DEFAULT '0' NOT NULL,
+	crdate int(11) unsigned DEFAULT '0' NOT NULL,
+	tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+	expires int(11) unsigned DEFAULT '0' NOT NULL,
+	server_url varchar(2047) DEFAULT '' NOT NULL,
+	assoc_handle varchar(255) DEFAULT '' NOT NULL,
+	content blob,
+
+	PRIMARY KEY (uid),
+	KEY assoc_handle (assoc_handle(8)),
+	KEY expires (expires)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'tx_openid_nonce_store'.
+#
+CREATE TABLE tx_openid_nonce_store (
+	uid int(11) unsigned NOT NULL auto_increment,
+	pid int(11) unsigned DEFAULT '0' NOT NULL,
+	crdate int(11) unsigned DEFAULT '0' NOT NULL,
+	tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+	server_url varchar(2047) DEFAULT '' NOT NULL,
+	salt char(40) DEFAULT '' NOT NULL,
+
+	PRIMARY KEY (uid),
+	UNIQUE KEY nonce (server_url(255),tstamp,salt),
+	KEY crdate (crdate)
+) ENGINE=InnoDB;
+#
+# Table structure for table 'tx_rsauth_keys'
+#
+CREATE TABLE tx_rsaauth_keys (
+	uid int(11) NOT NULL auto_increment,
+	pid int(11) DEFAULT '0' NOT NULL,
+	crdate int(11) DEFAULT '0' NOT NULL,
+	key_value text,
+
+	PRIMARY KEY (uid),
+	KEY crdate (crdate)
+);
+#
+# Table structure for extension 'rtehtmlarea'
+#
+
+CREATE TABLE tx_rtehtmlarea_acronym (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  sorting int(11) unsigned DEFAULT '0' NOT NULL,
+  sys_language_uid int(11) DEFAULT '0' NOT NULL,
+  type tinyint(3) unsigned DEFAULT '1' NOT NULL,
+  term varchar(255) DEFAULT '' NOT NULL,
+  acronym varchar(255) DEFAULT '' NOT NULL,
+  static_lang_isocode int(11) unsigned DEFAULT '0' NOT NULL,
+
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+
+#
+# Table structure for table 'tx_impexp_presets'
+#
+CREATE TABLE tx_impexp_presets (
+  uid int(11) NOT NULL auto_increment,
+  user_uid int(11) DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  public tinyint(3) DEFAULT '0' NOT NULL,
+  item_uid int(11) DEFAULT '0' NOT NULL,
+  preset_data blob,
+  PRIMARY KEY (uid),
+  KEY lookup (item_uid)
+);
+#
+# TYPO3 SVN ID: $Id: ext_tables.sql 6525 2009-11-25 11:27:34Z steffenk $
+#
+
+
+#
+# Table structure for table 'cache_pages'
+#
+CREATE TABLE cache_pages (
+  id int(11) unsigned NOT NULL auto_increment,
+  hash varchar(32) DEFAULT '' NOT NULL,
+  page_id int(11) unsigned DEFAULT '0' NOT NULL,
+  reg1 int(11) unsigned DEFAULT '0' NOT NULL,
+  HTML mediumblob,
+  temp_content int(1) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  expires int(10) unsigned DEFAULT '0' NOT NULL,
+  cache_data mediumblob,
+  KEY page_id (page_id),
+  KEY sel (hash,page_id),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_pagesection'
+#
+CREATE TABLE cache_pagesection (
+  page_id int(11) unsigned DEFAULT '0' NOT NULL,
+  mpvar_hash int(11) unsigned DEFAULT '0' NOT NULL,
+  content blob,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (page_id,mpvar_hash)
+) ENGINE=InnoDB;
+
+
+
+
+#
+# Table structure for table 'cachingframework_cache_pages'
+#
+CREATE TABLE cachingframework_cache_pages (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pages_tags'
+#
+CREATE TABLE cachingframework_cache_pages_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pagesection'
+#
+CREATE TABLE cachingframework_cache_pagesection (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pagesection_tags'
+#
+CREATE TABLE cachingframework_cache_pagesection_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_typo3temp_log'
+#
+CREATE TABLE cache_typo3temp_log (
+  md5hash varchar(32) DEFAULT '' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  filename varchar(255) DEFAULT '' NOT NULL,
+  orig_filename varchar(255) DEFAULT '' NOT NULL,
+  PRIMARY KEY (md5hash)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_md5params'
+#
+CREATE TABLE cache_md5params (
+  md5hash varchar(20) DEFAULT '' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  type tinyint(3) DEFAULT '0' NOT NULL,
+  params text,
+  PRIMARY KEY (md5hash)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_treelist'
+#
+CREATE TABLE cache_treelist (
+  md5hash char(32) DEFAULT '' NOT NULL,
+  pid int(11) DEFAULT '0' NOT NULL,
+  treelist text,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  expires int(11) unsigned  DEFAULT '0' NOT NULL,
+  PRIMARY KEY (md5hash)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'fe_groups'
+#
+CREATE TABLE fe_groups (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(50) DEFAULT '' NOT NULL,
+  hidden tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  lockToDomain varchar(50) DEFAULT '' NOT NULL,
+  deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  description text,
+  subgroup tinytext,
+  TSconfig text,
+  felogin_redirectPid  tinytext,
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+
+#
+# Table structure for table 'fe_session_data'
+#
+CREATE TABLE fe_session_data (
+  hash varchar(32) DEFAULT '' NOT NULL,
+  content mediumblob,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (hash)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'fe_sessions'
+#
+CREATE TABLE fe_sessions (
+  ses_id varchar(32) DEFAULT '' NOT NULL,
+  ses_name varchar(32) DEFAULT '' NOT NULL,
+  ses_iplock varchar(39) DEFAULT '' NOT NULL,
+  ses_hashlock int(11) DEFAULT '0' NOT NULL,
+  ses_userid int(11) unsigned DEFAULT '0' NOT NULL,
+  ses_tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  ses_data blob,
+  ses_permanent tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (ses_id,ses_name)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'fe_users'
+#
+CREATE TABLE fe_users (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  username varchar(50) DEFAULT '' NOT NULL,
+  password varchar(60) DEFAULT '' NOT NULL,
+  usergroup tinytext,
+  disable tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  name varchar(80) DEFAULT '' NOT NULL,
+  address varchar(255) DEFAULT '' NOT NULL,
+  telephone varchar(20) DEFAULT '' NOT NULL,
+  fax varchar(20) DEFAULT '' NOT NULL,
+  email varchar(80) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  lockToDomain varchar(50) DEFAULT '' NOT NULL,
+  deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  uc blob,
+  title varchar(40) DEFAULT '' NOT NULL,
+  zip varchar(10) DEFAULT '' NOT NULL,
+  city varchar(50) DEFAULT '' NOT NULL,
+  country varchar(40) DEFAULT '' NOT NULL,
+  www varchar(80) DEFAULT '' NOT NULL,
+  company varchar(80) DEFAULT '' NOT NULL,
+  image tinytext,
+  TSconfig text,
+  fe_cruser_id int(10) unsigned DEFAULT '0' NOT NULL,
+  lastlogin int(10) unsigned DEFAULT '0' NOT NULL,
+  is_online int(10) unsigned DEFAULT '0' NOT NULL,
+  felogin_redirectPid  tinytext,
+  felogin_forgotHash  varchar(80) default '',
+  tx_openid_openid varchar(255) DEFAULT '' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY parent (pid,username),
+  KEY username (username),
+  KEY is_online (is_online)
+);
+
+
+#
+# Table structure for table 'pages_language_overlay'
+#
+CREATE TABLE pages_language_overlay (
+  uid int(11) NOT NULL auto_increment,
+  pid int(11) DEFAULT '0' NOT NULL,
+  doktype tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  t3ver_oid int(11) DEFAULT '0' NOT NULL,
+  t3ver_id int(11) DEFAULT '0' NOT NULL,
+  t3ver_wsid int(11) DEFAULT '0' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
+  t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_count int(11) DEFAULT '0' NOT NULL,
+  t3ver_tstamp int(11) DEFAULT '0' NOT NULL,
+  t3_origuid int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  sys_language_uid int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  subtitle varchar(255) DEFAULT '' NOT NULL,
+  nav_title varchar(255) DEFAULT '' NOT NULL,
+  media tinytext,
+  keywords text,
+  description text,
+  abstract text,
+  author varchar(255) DEFAULT '' NOT NULL,
+  author_email varchar(80) DEFAULT '' NOT NULL,
+  tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
+  l18n_diffsource mediumblob,
+  url varchar(255) DEFAULT '' NOT NULL,
+  urltype tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  shortcut int(10) unsigned DEFAULT '0' NOT NULL,
+  shortcut_mode int(10) unsigned DEFAULT '0' NOT NULL,
+
+  PRIMARY KEY (uid),
+  KEY t3ver_oid (t3ver_oid,t3ver_wsid),
+  KEY parent (pid,sys_language_uid)
+);
+
+
+#
+# Table structure for table 'static_template'
+#
+CREATE TABLE static_template (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  include_static tinytext,
+  constants text,
+  config text,
+  editorcfg text,
+  description text,
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+
+#
+# Table structure for table 'sys_domain'
+#
+CREATE TABLE sys_domain (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  domainName varchar(80) DEFAULT '' NOT NULL,
+  redirectTo varchar(120) DEFAULT '' NOT NULL,
+  redirectHttpStatusCode int(4) unsigned DEFAULT '301' NOT NULL,
+  sorting int(10) unsigned DEFAULT '0' NOT NULL,
+  prepend_params int(10) DEFAULT '0' NOT NULL,
+  forced tinyint(3) unsigned DEFAULT '0' NOT NULL,
+
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+
+
+#
+# Table structure for table 'sys_template'
+#
+CREATE TABLE sys_template (
+  uid int(11) NOT NULL auto_increment,
+  pid int(11) DEFAULT '0' NOT NULL,
+  t3ver_oid int(11) DEFAULT '0' NOT NULL,
+  t3ver_id int(11) DEFAULT '0' NOT NULL,
+  t3ver_wsid int(11) DEFAULT '0' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
+  t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_count int(11) DEFAULT '0' NOT NULL,
+  t3ver_tstamp int(11) DEFAULT '0' NOT NULL,
+  t3_origuid int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  sorting int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  sitetitle varchar(255) DEFAULT '' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  root tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  clear tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  include_static tinytext,
+  include_static_file text,
+  constants text,
+  config text,
+  editorcfg text,
+  resources text,
+  nextLevel varchar(5) DEFAULT '' NOT NULL,
+  description text,
+  basedOn tinytext,
+  deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  includeStaticAfterBasedOn tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  static_file_mode tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY t3ver_oid (t3ver_oid,t3ver_wsid),
+  KEY parent (pid,sorting,deleted,hidden)
+);
+
+
+#
+# Table structure for table 'tt_content'
+#
+CREATE TABLE tt_content (
+  uid int(11) NOT NULL auto_increment,
+  pid int(11) DEFAULT '0' NOT NULL,
+  t3ver_oid int(11) DEFAULT '0' NOT NULL,
+  t3ver_id int(11) DEFAULT '0' NOT NULL,
+  t3ver_wsid int(11) DEFAULT '0' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
+  t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_count int(11) DEFAULT '0' NOT NULL,
+  t3ver_tstamp int(11) DEFAULT '0' NOT NULL,
+  t3ver_move_id int(11) DEFAULT '0' NOT NULL,
+  t3_origuid int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  sorting int(11) unsigned DEFAULT '0' NOT NULL,
+  CType varchar(30) DEFAULT '' NOT NULL,
+  header varchar(255) DEFAULT '' NOT NULL,
+  header_position varchar(6) DEFAULT '' NOT NULL,
+  bodytext mediumtext,
+  image text,
+  imagewidth mediumint(11) unsigned DEFAULT '0' NOT NULL,
+  imageorient tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  imagecaption text,
+  imagecols tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  imageborder tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  media text,
+  layout tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  cols tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  records text,
+  pages tinytext,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  colPos tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  subheader varchar(255) DEFAULT '' NOT NULL,
+  spaceBefore tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  spaceAfter tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  fe_group varchar(100) DEFAULT '0' NOT NULL,
+  header_link varchar(255) DEFAULT '' NOT NULL,
+  imagecaption_position varchar(6) DEFAULT '' NOT NULL,
+  image_link varchar(255) DEFAULT '' NOT NULL,
+  image_zoom tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  image_noRows tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  image_effects tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  image_compression tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  altText text,
+  titleText text,
+  longdescURL text,
+  header_layout varchar(30) DEFAULT '0' NOT NULL,
+  text_align varchar(6) DEFAULT '' NOT NULL,
+  text_face tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  text_size tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  text_color tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  text_properties tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  menu_type varchar(30) DEFAULT '0' NOT NULL,
+  list_type varchar(36) DEFAULT '0' NOT NULL,
+  table_border tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  table_cellspacing tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  table_cellpadding tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  table_bgColor tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  select_key varchar(80) DEFAULT '' NOT NULL,
+  sectionIndex tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  linkToTop tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  filelink_size tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  section_frame tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  date int(10) unsigned DEFAULT '0' NOT NULL,
+  splash_layout varchar(30) DEFAULT '0' NOT NULL,
+  multimedia tinytext,
+  image_frames tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  recursive tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  imageheight mediumint(8) unsigned DEFAULT '0' NOT NULL,
+  rte_enabled tinyint(4) DEFAULT '0' NOT NULL,
+  sys_language_uid int(11) DEFAULT '0' NOT NULL,
+  tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
+  pi_flexform mediumtext,
+  l18n_parent int(11) DEFAULT '0' NOT NULL,
+  l18n_diffsource mediumblob,
+
+  PRIMARY KEY (uid),
+  KEY t3ver_oid (t3ver_oid,t3ver_wsid),
+  KEY parent (pid,sorting)
+);
+
+
+#
+# Table structure for table 'pages'
+#
+CREATE TABLE pages (
+  url varchar(255) DEFAULT '' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  urltype tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  shortcut int(10) unsigned DEFAULT '0' NOT NULL,
+  shortcut_mode int(10) unsigned DEFAULT '0' NOT NULL,
+  no_cache int(10) unsigned DEFAULT '0' NOT NULL,
+  fe_group varchar(100) DEFAULT '0' NOT NULL,
+  subtitle varchar(255) DEFAULT '' NOT NULL,
+  layout tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  target varchar(80) DEFAULT '' NOT NULL,
+  media text,
+  lastUpdated int(10) unsigned DEFAULT '0' NOT NULL,
+  keywords text,
+  cache_timeout int(10) unsigned DEFAULT '0' NOT NULL,
+  newUntil int(10) unsigned DEFAULT '0' NOT NULL,
+  description text,
+  no_search tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  SYS_LASTCHANGED int(10) unsigned DEFAULT '0' NOT NULL,
+  abstract text,
+  module varchar(10) DEFAULT '' NOT NULL,
+  extendToSubpages tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  author varchar(255) DEFAULT '' NOT NULL,
+  author_email varchar(80) DEFAULT '' NOT NULL,
+  nav_title varchar(255) DEFAULT '' NOT NULL,
+  nav_hide tinyint(4) DEFAULT '0' NOT NULL,
+  content_from_pid int(10) unsigned DEFAULT '0' NOT NULL,
+  mount_pid int(10) unsigned DEFAULT '0' NOT NULL,
+  mount_pid_ol tinyint(4) DEFAULT '0' NOT NULL,
+  alias varchar(32) DEFAULT '' NOT NULL,
+  l18n_cfg tinyint(4) DEFAULT '0' NOT NULL,
+  fe_login_mode tinyint(4) DEFAULT '0' NOT NULL,
+  uid int(11) NOT NULL auto_increment,
+  pid int(11) DEFAULT '0' NOT NULL,
+  t3ver_oid int(11) DEFAULT '0' NOT NULL,
+  t3ver_id int(11) DEFAULT '0' NOT NULL,
+  t3ver_wsid int(11) DEFAULT '0' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
+  t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_count int(11) DEFAULT '0' NOT NULL,
+  t3ver_tstamp int(11) DEFAULT '0' NOT NULL,
+  t3ver_swapmode tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_move_id int(11) DEFAULT '0' NOT NULL,
+  t3_origuid int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  sorting int(11) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(1) unsigned DEFAULT '0' NOT NULL,
+  perms_userid int(11) unsigned DEFAULT '0' NOT NULL,
+  perms_groupid int(11) unsigned DEFAULT '0' NOT NULL,
+  perms_user tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  perms_group tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  perms_everybody tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  editlock tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  doktype tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  TSconfig text,
+  storage_pid int(11) DEFAULT '0' NOT NULL,
+  is_siteroot tinyint(4) DEFAULT '0' NOT NULL,
+  php_tree_stop tinyint(4) DEFAULT '0' NOT NULL,
+  tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY t3ver_oid (t3ver_oid,t3ver_wsid),
+  KEY parent (pid,sorting,deleted,hidden),
+  KEY alias (alias)
+);
+#
+# Table structure for table 'tx_scheduler_task'
+#
+CREATE TABLE tx_scheduler_task (
+	uid int(11) unsigned NOT NULL auto_increment,
+	crdate int(11) unsigned DEFAULT '0' NOT NULL,
+	disable tinyint(4) unsigned DEFAULT '0' NOT NULL,
+	classname varchar(255) DEFAULT '' NOT NULL,
+	nextexecution int(11) unsigned DEFAULT '0' NOT NULL,
+	lastexecution_time int(11) unsigned DEFAULT '0' NOT NULL,
+	lastexecution_failure text NOT NULL,
+	lastexecution_context char(3) DEFAULT '' NOT NULL,
+	serialized_task_object blob,
+	serialized_executions blob,
+	PRIMARY KEY (uid),
+	KEY index_nextexecution (nextexecution)
+);
+
+#
+# Table structure for table 'index_phash'
+#
+CREATE TABLE index_phash (
+  phash int(11) DEFAULT '0' NOT NULL,
+  phash_grouping int(11) DEFAULT '0' NOT NULL,
+  cHashParams tinyblob,
+  data_filename varchar(255) DEFAULT '' NOT NULL,
+  data_page_id int(11) unsigned DEFAULT '0' NOT NULL,
+  data_page_reg1 int(11) unsigned DEFAULT '0' NOT NULL,
+  data_page_type tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  data_page_mp varchar(255) DEFAULT '' NOT NULL,
+  gr_list varchar(255) DEFAULT '' NOT NULL,
+  item_type varchar(5) DEFAULT '' NOT NULL,
+  item_title varchar(255) DEFAULT '' NOT NULL,
+  item_description varchar(255) DEFAULT '' NOT NULL,
+  item_mtime int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  item_size int(11) DEFAULT '0' NOT NULL,
+  contentHash int(11) DEFAULT '0' NOT NULL,
+  crdate int(11) DEFAULT '0' NOT NULL,
+  parsetime int(11) DEFAULT '0' NOT NULL,
+  sys_language_uid int(11) DEFAULT '0' NOT NULL,
+  item_crdate int(11) DEFAULT '0' NOT NULL,
+  externalUrl tinyint(3) DEFAULT '0' NOT NULL,
+  recordUid int(11) DEFAULT '0' NOT NULL,
+  freeIndexUid int(11) DEFAULT '0' NOT NULL,
+  freeIndexSetId int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (phash),
+  KEY phash_grouping (phash_grouping),
+  KEY freeIndexUid (freeIndexUid)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_fulltext'
+#
+CREATE TABLE index_fulltext (
+  phash int(11) DEFAULT '0' NOT NULL,
+  fulltextdata mediumtext,
+  PRIMARY KEY (phash)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_rel'
+#
+CREATE TABLE index_rel (
+  phash int(11) DEFAULT '0' NOT NULL,
+  wid int(11) DEFAULT '0' NOT NULL,
+  count tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  first tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  freq smallint(5) unsigned DEFAULT '0' NOT NULL,
+  flags tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (phash,wid),
+  KEY wid (wid,phash)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_words'
+#
+CREATE TABLE index_words (
+  wid int(11) DEFAULT '0' NOT NULL,
+  baseword varchar(60) DEFAULT '' NOT NULL,
+  metaphone int(11) DEFAULT '0' NOT NULL,
+  is_stopword tinyint(3) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (wid),
+  KEY baseword (baseword,wid),
+  KEY metaphone (metaphone,wid)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_section'
+#
+CREATE TABLE index_section (
+  phash int(11) DEFAULT '0' NOT NULL,
+  phash_t3 int(11) DEFAULT '0' NOT NULL,
+  rl0 int(11) unsigned DEFAULT '0' NOT NULL,
+  rl1 int(11) unsigned DEFAULT '0' NOT NULL,
+  rl2 int(11) unsigned DEFAULT '0' NOT NULL,
+  page_id int(11) DEFAULT '0' NOT NULL,
+  uniqid int(11) NOT NULL auto_increment,
+  PRIMARY KEY (uniqid),
+  KEY joinkey (phash,rl0),
+#  KEY phash_pid (phash,page_id),
+  KEY page_id (page_id),
+  KEY rl0 (rl0,rl1,phash),
+  KEY rl0_2 (rl0,phash)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_grlist'
+#
+CREATE TABLE index_grlist (
+  phash int(11) DEFAULT '0' NOT NULL,
+  phash_x int(11) DEFAULT '0' NOT NULL,
+  hash_gr_list int(11) DEFAULT '0' NOT NULL,
+  gr_list varchar(255) DEFAULT '' NOT NULL,
+  uniqid int(11) NOT NULL auto_increment,
+  PRIMARY KEY (uniqid),
+  KEY joinkey (phash,hash_gr_list),
+  KEY phash_grouping (phash_x,hash_gr_list)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_stat_search'
+#
+CREATE TABLE index_stat_search (
+  uid int(11) NOT NULL auto_increment,
+  searchstring varchar(255) DEFAULT '' NOT NULL,
+  searchoptions blob,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  feuser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  cookie varchar(10) DEFAULT '' NOT NULL,
+  IP varchar(255) DEFAULT '' NOT NULL,
+  hits int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB;
+
+#
+# Table structure for table 'index_debug'
+#
+CREATE TABLE index_debug (
+  phash int(11) DEFAULT '0' NOT NULL,
+  debuginfo mediumtext,
+  PRIMARY KEY (phash)
+);
+
+#
+# Table structure for table 'index_config'
+#
+CREATE TABLE index_config (
+  uid int(11) NOT NULL auto_increment,
+  pid int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  crdate int(11) DEFAULT '0' NOT NULL,
+  cruser_id int(11) DEFAULT '0' NOT NULL,
+  hidden tinyint(4) DEFAULT '0' NOT NULL,
+  starttime int(11) DEFAULT '0' NOT NULL,
+
+  set_id int(11) DEFAULT '0' NOT NULL,
+  session_data mediumtext,
+
+  title varchar(255) DEFAULT '' NOT NULL,
+  description text,
+  type varchar(30) DEFAULT '' NOT NULL,
+  depth int(11) unsigned DEFAULT '0' NOT NULL,
+  table2index varchar(255) DEFAULT '' NOT NULL,
+  alternative_source_pid int(11) unsigned DEFAULT '0' NOT NULL,
+  get_params varchar(255) DEFAULT '' NOT NULL,
+  fieldlist varchar(255) DEFAULT '' NOT NULL,
+  externalUrl varchar(255) DEFAULT '' NOT NULL,
+  indexcfgs text,
+  chashcalc tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  filepath varchar(255) DEFAULT '' NOT NULL,
+  extensions varchar(255) DEFAULT '' NOT NULL,
+
+  timer_next_indexing int(11) DEFAULT '0' NOT NULL,
+  timer_frequency int(11) DEFAULT '0' NOT NULL,
+  timer_offset int(11) DEFAULT '0' NOT NULL,
+  url_deny text,
+  recordsbatch int(11) DEFAULT '0' NOT NULL,
+  records_indexonchange tinyint(4) DEFAULT '0' NOT NULL,
+
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+
+#
+# Table structure for table 'index_stat_word'
+#
+CREATE TABLE index_stat_word (
+  uid int(11) NOT NULL auto_increment,
+  word varchar(30) DEFAULT '' NOT NULL,
+  index_stat_search_id int(11) DEFAULT '0' NOT NULL,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  pageid int(11) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (uid),
+  KEY tstamp (tstamp,word)
+) ENGINE=InnoDB;

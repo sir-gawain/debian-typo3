@@ -69,6 +69,15 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
+# Note to me: how to find all sql files:
+find-sql:
+	cat ../t3lib/stddb/tables.sql ../typo3/sysext/sys_note/ext_tables.sql ../typo3/sysext/extbase/ext_tables.sql \
+		../typo3/sysext/tsconfig_help/ext_tables.sql ../typo3/sysext/sys_action/ext_tables.sql ../typo3/sysext/felogin/ext_tables.sql \
+		../typo3/sysext/dbal/ext_tables.sql ../typo3/sysext/saltedpasswords/ext_tables.sql ../typo3/sysext/openid/ext_tables.sql \
+		../typo3/sysext/rsaauth/ext_tables.sql ../typo3/sysext/rtehtmlarea/ext_tables.sql ../typo3/sysext/impexp/ext_tables.sql \
+		../typo3/sysext/cms/ext_tables.sql ../typo3/sysext/scheduler/ext_tables.sql ../typo3/sysext/indexed_search/ext_tables.sql \
+	> mysql_raw.sql
+
 # Build architecture-dependent files here.
 binary-arch: build install
 
