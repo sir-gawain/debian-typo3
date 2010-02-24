@@ -20,7 +20,7 @@ the systems.
 Q: Why do you provide an empty database? TYPO3 can create that itself.
 
 A: Yeah, i know. But using the mechanisms of TYPO3 means, that the user does
-not have a working installation of TYPO3 after installing this packages. He
+not have a working installation of TYPO3 after installing these packages. He
 has to enter the install tool and to configure the database by hand.
 This can be a bit challanging for new users, so i want to make the installation
 of TYPO3 as simple as possible and provide an empty database.
