@@ -1,3 +1,12 @@
+typo3-src (4.3.3-1) unstable; urgency=medium
+
+  * New upstream release:
+    - fixes "TYPO3 Security Bulletin TYPO3-SA-2010-008:
+      Remote Command Execution in TYPO3 Core" (Closes: 577993)
+  * Added file debian/source/format with "1.0" as content.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 22 Apr 2010 22:00:00 +0100
+
 typo3-src (4.3.2-1) unstable; urgency=high
 
   * New upstream release:

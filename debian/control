@@ -3,7 +3,7 @@ Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
 Build-Depends: debhelper (>= 6.0.7), dpatch
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 
 Package: typo3-src-4.3
 Architecture: all
