@@ -147,7 +147,7 @@ AND NOW ?
 =========
 
 There are two packages on typo3.org website that are provided to demonstrate
-the ablities of typo3: quickstart and testside.
+the abilities of typo3: quickstart and testside.
 It's proposed to deliver these packages through EM in the near future but in 
 the meantime you have to install them manually.
 Take a look on <http://typo3.org/download/packages/> for more information.
@@ -232,3 +232,4 @@ can do what is necessary. You could also volunteer to help with the work!
     Welzel
 
  -- Christian Welzel <gawain@camlann.de>, Fri, 20 Jun 2008 23:00:00
+

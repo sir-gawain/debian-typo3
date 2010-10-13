@@ -1,3 +1,50 @@
+typo3-src (4.3.8-1) unstable; urgency=medium
+
+  * New upstream release:
+    - fixes a regression introduced during last upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 13 Oct 2010 22:00:00 +0200
+
+typo3-src (4.3.7-1) unstable; urgency=high
+
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-SA-2010-020: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 599334)
+  * raised standards version to 3.9.1
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 08 Oct 2010 22:00:00 +0200
+
+typo3-src (4.3.5-1) unstable; urgency=high
+
+  * New upstream release:
+    - Fixes some regressions introduced in 4.3.4
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 06 Aug 2010 22:00:00 +0200
+
+typo3-src (4.3.4-1) unstable; urgency=high
+
+  * New upstream release:
+    - fixes "TYPO3 Security Bulletin TYPO3-SA-2010-012: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 590719)
+  * fixed spelling error in typo3-src-4.3.README.Debian (Closes: 588518)
+  * added debian/source/include-binaries with content "nimbus.sfd.gz".
+  * raised standards version to 3.9.0
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 28 Jul 2010 22:00:00 +0200
+
+typo3-src (4.3.3-2) unstable; urgency=low
+
+  * Moved source format from "1.0" to "3.0 (quilt)".
+  * Removed README.source.
+  * Removed dpatch system.
+  * Moved debian/patches/00list to debian/patches/series, modified it.
+  * Moved debian/patches/*.dpatch to debian/patches/*.patch, removed
+    dpatch specific code.
+  * Changed dependency "libapache2-mod-php5 | php5-cgi" to "php5"
+  * Moved nimbus.sfd.gz.uuencoded to nimbus.sfd.gz.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 05 May 2010 17:27:41 +0200
+
 typo3-src (4.3.3-1) unstable; urgency=medium
 
   * New upstream release:
@@ -518,3 +565,4 @@ typo3-src (3.5b5-1) experimental; urgency=low
   * Initial Release.
 
  -- Michael Stucki <mundaun@gmx.ch>  Fri, 31 Jan 2003 12:31:54 +0100
+

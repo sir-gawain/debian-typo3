@@ -8,3 +8,4 @@ set -e
 dbc_go typo3-database $@
 
 #DEBHELPER#
+

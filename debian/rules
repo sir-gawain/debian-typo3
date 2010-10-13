@@ -3,8 +3,6 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-include /usr/share/dpatch/dpatch.make
-
 SOURCEVERSION=4.3
 PACKAGENAME=typo3_src-$(SOURCEVERSION)
 SOURCEPACKAGE=typo3-src-$(SOURCEVERSION)
@@ -17,9 +15,7 @@ SQLDIR=usr/share/dbconfig-common/data/$(DBASEPACKAGE)/install
 SOURCEINSTALLDIR=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 SQLINSTALLDIR=debian/$(DBASEPACKAGE)/$(SQLDIR)
 
-build: patch-stamp
-
-clean: unpatch
+clean:
 	dh_testdir
 	dh_testroot
 	dh_clean
@@ -33,7 +29,7 @@ install: build
 	dh_installdirs -p $(SOURCEPACKAGE) $(T3EXTDIR)
 	dh_installdirs -p $(DBASEPACKAGE) $(SQLDIR) etc/$(DBASEPACKAGE)
 	cp -r index.php misc t3lib typo3 $(SOURCEINSTALLDIR)
-	perl -ne 'print(unpack "u", $$_);' debian/nimbus.sfd.gz.uuencoded > $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
+	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
 	cp debian/mysql $(SQLINSTALLDIR)
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
@@ -83,3 +79,4 @@ binary-arch: build install
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
+

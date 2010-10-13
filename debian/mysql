@@ -1315,3 +1315,4 @@ CREATE TABLE index_stat_word (
   PRIMARY KEY (uid),
   KEY tstamp (tstamp,word)
 ) ENGINE=InnoDB;
+
