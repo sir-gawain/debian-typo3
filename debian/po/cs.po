@@ -1,0 +1,119 @@
+# Czech translation of PO debconf template for package typo3-dummy.
+# Copyright (C) 2010 Michal Simunek
+# This file is distributed under the same license as the typo3-dummy package.
+# Michal Simunek <michal.simunek@gmail.com>, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: typo3-dummy 4.3.0-4\n"
+"Report-Msgid-Bugs-To: typo3-dummy@packages.debian.org\n"
+"POT-Creation-Date: 2010-06-20 22:03+0200\n"
+"PO-Revision-Date: 2010-06-26 17:04+0200\n"
+"Last-Translator: Michal Simunek <michal.simunek@gmail.com>\n"
+"Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
+"Language: cs\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "vhost"
+msgstr "vhost"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "directory"
+msgstr "adresář"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "none"
+msgstr "žádný"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid "Apache integration mode:"
+msgstr "Režim začlenění do Apache:"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+"Please choose the method that should be used for integrating the TYPO3 "
+"installation with the apache2 web server:"
+msgstr ""
+"Zvolte si prosím způsob, který se má použít pro začlenění instalace TYPO3 do "
+"webového serveru apache2:"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+" vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
+"            as http://typo3.example.com/;\n"
+" directory: fits TYPO3 within the existing site, making it available\n"
+"            at an address like http://www.example.com/cms/;\n"
+" none:      does not configure TYPO3 automatically. The server will\n"
+"            need manual configuration. Choose this option if you are\n"
+"            using a web server other than apache2."
+msgstr ""
+" vhost:     vytvoří URL adresy s TYPO3 jako částí domény, jako\n"
+"            je http://typo3.example.com/;\n"
+" adresář:   připojí TYPO3 k existujícímu webu, bude dostupný\n"
+"            na adrese, jako je http://www.example.com/cms/;\n"
+" žádný:     TYPO3 se automaticky nenastaví. Server bude\n"
+"            třeba nastavit ručně. Tuto možnost zvolte, pokud\n"
+"            používáte jiný webový server než apache2."
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid "Should apache2 be restarted after installation?"
+msgstr "Má se po instalaci restartovat apache2?"
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid ""
+"Apache's configuration has been changed to include TYPO3 and activate the "
+"rewrite module. For these changes to take effect, apache2 must be reloaded."
+msgstr ""
+"Nastavení Apache bylo změněno, aby zahrnovalo TYPO3 a byl aktivován modul "
+"rewrite. Aby se tyto změny projevili, apache2 musí být restartován."
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid "Old symlink in /etc/apache2/conf.d/"
+msgstr "Původní symbolický odkaz v /etc/apache2/conf.d/"
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
+"configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
+msgstr ""
+"Starší verze typo3-dummy (před 4.3.0-3) instalovaly symbolický odkaz pro "
+"nastavení apache2 do /etc/apache2/conf.d/typo3-dummy.conf."
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"This has been changed and newer versions place two new symlinks into /etc/"
+"apache2/sites-available/. To prevent failures due to overlapping "
+"configuration directives you should remove the symlink typo3-dummy.conf "
+"from /etc/apache2/conf.d/ and merge its contents into one of the new "
+"configuration files."
+msgstr ""
+"To bylo změněno a novější verze přidávají dva nové symbolické odkazy do /etc/"
+"apache2/sites-available/. Abyste předešli selháním v důsledku souběžných "
+"direktiv nastavení, měli byste z /etc/apache2/conf.d/ odstranit symbolický "
+"odkaz typo3-dummy.conf a jeho obsah připojit do jednoho z nových souborů s "
+"nastavením."

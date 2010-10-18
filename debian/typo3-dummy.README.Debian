@@ -1,0 +1,66 @@
+typo3-dummy for Debian
+----------------------
+
+The required steps to install this database with TYPO3 is described in
+/usr/share/doc/typo3/README.Debian. That file contains additional
+information, too.
+
+Situations of time out or out-of-memory
+---------------------------------------
+
+If you encounter situations during work where TYPO3/PHP complains about a
+skript timeout or insufficient memory, you can tune the following parameters
+to fix the problems:
+
+* In /etc/typo3-dummy/localconf.php look for the line
+  $TYPO3_CONF_VARS['SYS']['setMemoryLimit'] = '48';
+  and adjust the memory limit to a higher value.
+* In /etc/typo3-dummy/apache-*.conf look for the line
+  php_admin_value memory_limit 48M
+  and adjust the memory limit to a higher value.
+
+* In /etc/typo3-dummy/apache-*.conf look for the line
+  # php_admin_value max_execution_time 90
+  and remove the '#' and adjust the time limit to a higher value.
+
+Don't forget to restart your apache to make the changes active.
+
+
+TYPO3-Scheduler
+---------------
+
+The new TYPO3 scheduler extension is based on a cron task.
+You can find the task in /etc/cron.d/typo3-dummy.
+Adjust the interval of the task to your own needs. The default is 5 minutes.
+See the scheduler extension manual for futher information.
+
+
+Enable the usage of cache framework
+-----------------------------------
+
+To make use of the new cache framework change the following line in
+/etc/typo3-dummy/localconf.php:
+$TYPO3_CONF_VARS['SYS']['useCachingFramework'] = '0';
+to
+$TYPO3_CONF_VARS['SYS']['useCachingFramework'] = '1';
+
+
+Better performance for memcached
+--------------------------------
+
+In his blog Dmitry Dulepov proposed this settings for memcached to get
+some more performance out of memcached:
+
+memcache.allow_failover         1
+memcache.chunk_size             32768
+memcache.default_port           11211
+memcache.hash_function          fnv
+memcache.hash_strategy          consistent
+memcache.max_failover_attempts  20
+
+See http://dmitry-dulepov.com/article/how-to-enable-memcached-cache-in-typo3-43.html
+for the original post.
+
+
+ -- Christian Welzel <gawain@camlann.de>, Mon, 05 Dec 2009 23:00:00
+

@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: typo3-dummy@packages.debian.org\n"
+"POT-Creation-Date: 2010-06-20 22:03+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "vhost"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "directory"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "none"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid "Apache integration mode:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+"Please choose the method that should be used for integrating the TYPO3 "
+"installation with the apache2 web server:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+" vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
+"            as http://typo3.example.com/;\n"
+" directory: fits TYPO3 within the existing site, making it available\n"
+"            at an address like http://www.example.com/cms/;\n"
+" none:      does not configure TYPO3 automatically. The server will\n"
+"            need manual configuration. Choose this option if you are\n"
+"            using a web server other than apache2."
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid "Should apache2 be restarted after installation?"
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid ""
+"Apache's configuration has been changed to include TYPO3 and activate the "
+"rewrite module. For these changes to take effect, apache2 must be reloaded."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid "Old symlink in /etc/apache2/conf.d/"
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
+"configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"This has been changed and newer versions place two new symlinks into /etc/"
+"apache2/sites-available/. To prevent failures due to overlapping "
+"configuration directives you should remove the symlink typo3-dummy.conf "
+"from /etc/apache2/conf.d/ and merge its contents into one of the new "
+"configuration files."
+msgstr ""

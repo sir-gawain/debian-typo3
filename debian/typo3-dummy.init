@@ -1,0 +1,44 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          typo3-dummy
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Creates /var/run/typo3-dummy
+# Description:       Creates /var/run/typo3-dummy which is used as temporary
+#                    file upload folder for PHP and TYPO3
+### END INIT INFO
+
+# Author: Christian Welzel <gawain@camlann.de>
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/bin:/usr/bin
+DESC="Typo3 upload directory creation"
+NAME=typo3-dummy
+SCRIPTNAME=/etc/init.d/$NAME
+
+TMPDIR=/var/run/typo3-dummy
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	if [ ! -d $TMPDIR ]; then
+		mkdir $TMPDIR
+		chown -hR www-data:www-data $TMPDIR
+		chmod -R 0750 $TMPDIR
+	fi
+	;;
+  stop|restart|force-reload|*)
+	;;
+esac
+
+:
+

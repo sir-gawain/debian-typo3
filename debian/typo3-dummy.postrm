@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -e
+#set -x
+
+PACKAGE=typo3-dummy
+T3CONFDIR=/var/lib/$PACKAGE/typo3conf
+APCONFDIR=sites-available
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
+if [ -f /usr/share/dbconfig-common/dpkg/frontend.postrm.mysql ]; then
+    . /usr/share/dbconfig-common/dpkg/frontend.postrm.mysql
+    dbc_go typo3-dummy $@
+fi
+
+
+if [ "$1" = "purge" ]; then
+	rm -f /etc/typo3-dummy/debian-db.php
+	if which ucf >/dev/null 2>&1; then
+		ucf --purge /etc/typo3-dummy/debian-db.php
+	fi
+
+	if [ -d $T3CONFDIR ] ; then
+		rm -f $T3CONFDIR/temp_CACHED*
+	fi
+fi
+
+case "$1" in "remove"|"purge" )
+	for webserver in apache apache2; do
+		if [ -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory -o -h /etc/$webserver/$APCONFDIR/typo3-dummy-directory ]; then
+			a2dissite typo3-dummy-directory
+			rm -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory
+		fi
+		if [ -f /etc/$webserver/$APCONFDIR/typo3-dummy-vhost -o -h /etc/$webserver/$APCONFDIR/typo3-dummy-vhost ]; then
+			a2dissite typo3-dummy-vhost
+			rm -f /etc/$webserver/$APCONFDIR/typo3-dummy-vhost
+		fi
+	done
+	;;
+esac
+
+#DEBHELPER#
+

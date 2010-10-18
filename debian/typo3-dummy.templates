@@ -1,0 +1,43 @@
+# These templates have been reviewed by the debian-l10n-english
+# team
+#
+# If modifications/additions/rewording are needed, please ask
+# debian-l10n-english@lists.debian.org for advice.
+#
+# Even minor modifications require translation updates and such
+# changes should be coordinated with translators and reviewers.
+
+Template: typo3-dummy/apache_mode
+Type: select
+__Choices: vhost, directory, none
+Default: directory
+_Description: Apache integration mode:
+ Please choose the method that should be used for integrating the
+ TYPO3 installation with the apache2 web server:
+ .
+  vhost:     generates URLs with TYPO3 as part of the domain name, such
+             as http://typo3.example.com/; 
+  directory: fits TYPO3 within the existing site, making it available
+             at an address like http://www.example.com/cms/;
+  none:      does not configure TYPO3 automatically. The server will
+             need manual configuration. Choose this option if you are
+             using a web server other than apache2.
+
+Template: typo3-dummy/apache_restart
+Type: boolean
+_Description: Should apache2 be restarted after installation?
+ Apache's configuration has been changed to include TYPO3 and
+ activate the rewrite module. For these changes to take effect,
+ apache2 must be reloaded.
+
+Template: typo3-dummy/old_symlink
+Type: note
+_Description: Old symlink in /etc/apache2/conf.d/
+ Older versions (before 4.3.0-3) of typo3-dummy installed the apache2
+ configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf.
+ .
+ This has been changed and newer versions place two new symlinks into
+ /etc/apache2/sites-available/. To prevent failures due to
+ overlapping configuration directives you should remove the
+ symlink typo3-dummy.conf from /etc/apache2/conf.d/ and merge its
+ contents into one of the new configuration files.

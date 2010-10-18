@@ -2,10 +2,10 @@ Source: typo3-src
 Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
-Build-Depends: debhelper (>= 6.0.7)
+Build-Depends: debhelper (>= 6.0.7), po-debconf
 Standards-Version: 3.9.1
 
-Package: typo3-src-4.3
+Package: typo3-src-4.5
 Architecture: all
 Depends: ttf-dejavu, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libphp-adodb (>=5.07), ${misc:Depends}
 Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache, typo3-database, typo3-dummy
@@ -33,7 +33,7 @@ Description: TYPO3 - The enterprise level open source WebCMS (Core)
 Package: typo3-database
 Architecture: all
 Depends: mysql-server, dbconfig-common (>= 1.8.39), debconf, ${misc:Depends}
-Recommends: typo3-dummy, typo3-src-4.3
+Recommends: typo3-dummy, typo3-src-4.5
 Homepage: http://www.typo3.com
 Description: TYPO3 - The enterprise level open source WebCMS (Database)
  TYPO3 is a free Open Source content management system for enterprise purposes
@@ -56,9 +56,36 @@ Description: TYPO3 - The enterprise level open source WebCMS (Database)
  TYPO3 database. You should install this package on the host you intend to
  run the TYPO3 database on.
 
+Package: typo3-dummy
+Architecture: all
+Depends: exim4 | mail-transport-agent, dbconfig-common, debconf, graphicsmagick, lsb-base (>= 3.0-6), php5, php5-cli, php5-gd, php5-mysql, php5-xcache, typo3-src-4.5, ${misc:Depends}
+Recommends: catdoc, ghostscript, memcached, php5-curl, php5-memcache, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
+Description: web content management system
+ TYPO3 is an enterprise-level content management system for use on the web
+ and in intranets. It is flexible, extensible, and well supplied with
+ ready-made interfaces, functions, and modules.
+ .
+ Its key features are:
+  * simple creation of multi-language websites with fallback to a default
+    language;
+  * handling of multi-domain websites within a single page tree;
+  * multi-user backend editing via a completely customizable GUI using an
+    advanced ACL system;
+  * an integrated workflow management system based on a multi-tier
+    architecture with editor and supervisor privileges;
+  * unlimited redefinition of the rendering process using the built-in
+    TypoScript configuration interface or the plugin API;
+  * thousands of plugins available in the online TYPO3 extension repository.
+ .
+ This package provides the basic directory structure to start a fresh
+ website based on TYPO3. It includes scripts to register the site in
+ Apache, with a default configuration intended for single vhost
+ installations. TYPO3 can also be configured to work with several vhosts
+ and a single src-dir, but such setups require some manual configuration.
+
 Package: typo3
 Architecture: all
-Depends: typo3-database, typo3-dummy, typo3-src-4.3, ${misc:Depends}
+Depends: typo3-database, typo3-dummy, typo3-src-4.5, ${misc:Depends}
 Homepage: http://www.typo3.com
 Description: The enterprise level open source WebCMS (Meta)
  TYPO3 is a free Open Source content management system for enterprise purposes
@@ -79,4 +106,3 @@ Description: The enterprise level open source WebCMS (Meta)
  .
  This package depends on all TYPO3 packages that are neccassary to build a local
  running TYPO3 installation.
-

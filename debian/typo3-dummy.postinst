@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -e
+#set -x
+
+PACKAGE=typo3-dummy
+T3CONFDIR=/var/lib/$PACKAGE/typo3conf
+APCONFDIR=sites-available
+
+if [ "$1" = "configure" ] ; then
+	if [ -d $T3CONFDIR ] ; then
+		rm -f $T3CONFDIR/temp_CACHED*
+	fi
+
+	for webserver in apache apache2; do
+		if [ -d /etc/$webserver/$APCONFDIR -a ! -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory -a ! -h /etc/$webserver/$APCONFDIR/typo3-dummy-directory ]; then
+			ln -s /etc/typo3-dummy/apache-directory.conf /etc/$webserver/$APCONFDIR/typo3-dummy-directory
+		fi
+		if [ -d /etc/$webserver/$APCONFDIR -a ! -f /etc/$webserver/$APCONFDIR/typo3-dummy-vhost -a ! -h /etc/$webserver/$APCONFDIR/typo3-dummy-vhost ]; then
+			ln -s /etc/typo3-dummy/apache-vhost.conf   /etc/$webserver/$APCONFDIR/typo3-dummy-vhost
+		fi
+	done
+fi
+
+
+. /usr/share/debconf/confmodule
+. /usr/share/dbconfig-common/dpkg/frontend.postinst.mysql
+dbc_first_version=4.3.0
+dbc_generate_include_owner=www-data:www-data
+dbc_generate_include=php:/etc/typo3-dummy/debian-db.php
+dbc_go typo3-dummy $@
+
+db_get typo3-dummy/apache_mode
+if [ "$RET" = "vhost" ]; then
+	a2ensite typo3-dummy-vhost
+fi
+if [ "$RET" = "directory" ]; then
+	a2ensite typo3-dummy-directory
+fi
+
+if [ "$RET" = "vhost" -o "$RET" = "directory" ]; then
+	a2enmod rewrite
+
+	db_get typo3-dummy/apache_restart
+	if [ "$RET" = "true" ]; then
+		apache2ctl restart
+	fi
+fi
+
+#DEBHELPER#
+

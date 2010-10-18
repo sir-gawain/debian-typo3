@@ -1,0 +1,123 @@
+# Translation of typo3-dummy debconf templates to French
+# Copyright (C) 2010 Debian French l10n team <debian-l10n-french@lists.debian.org>
+# This file is distributed under the same license as the typo3-dummy package.
+#
+# David Prévot <david@tilapin.org>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: typo3-dummy 4.0.2-2\n"
+"Report-Msgid-Bugs-To: typo3-dummy@packages.debian.org\n"
+"POT-Creation-Date: 2010-06-20 11:47-0400\n"
+"PO-Revision-Date: 2010-06-17 17:20-0400\n"
+"Last-Translator: David Prévot <david@tilapin.org>\n"
+"Language-Team: French <debian-l10n-french@lists.debian.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "vhost"
+msgstr "hôte virtuel"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "directory"
+msgstr "répertoire"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "none"
+msgstr "aucune"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid "Apache integration mode:"
+msgstr "Méthode d'intégration à Apache :"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+"Please choose the method that should be used for integrating the TYPO3 "
+"installation with the apache2 web server:"
+msgstr ""
+"Veuillez choisir la méthode à utiliser pour intégrer l'installation de TYPO3 "
+"au serveur web Apache 2 :"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+" vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
+"            as http://typo3.example.com/;\n"
+" directory: fits TYPO3 within the existing site, making it available\n"
+"            at an address like http://www.example.com/cms/;\n"
+" none:      does not configure TYPO3 automatically. The server will\n"
+"            need manual configuration. Choose this option if you are\n"
+"            using a web server other than apache2."
+msgstr ""
+"hôte virtuel : crée des URL avec TYPO3 dans le nom de domaine,\n"
+"               comme http://typo3.example.com/ ;\n"
+"  répertoire : intègre TYPO3 au site existant, le rendant accessible\n"
+"               à une adresse comme http://www.example.com/cms/ ;\n"
+"      aucune : ne configure pas TYPO3 automatiquement. Le serveur\n"
+"               devra être configuré manuellement. Choisir cette option\n"
+"               pour utiliser un serveur web différent d'Apache 2."
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid "Should apache2 be restarted after installation?"
+msgstr "Apache 2 doit-il être redémarré après l'installation ?"
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid ""
+"Apache's configuration has been changed to include TYPO3 and activate the "
+"rewrite module. For these changes to take effect, apache2 must be reloaded."
+msgstr ""
+"TYPO3 a été intégré à la configuration d'Apache 2, et le module rewrite a "
+"été activé. Pour rendre ces modifications effectives, la configuration "
+"d'Apache 2 doit être rechargée."
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid "Old symlink in /etc/apache2/conf.d/"
+msgstr "Ancien lien symbolique dans /etc/apache2/conf.d/"
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
+"configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
+msgstr ""
+"Les anciennes versions (antérieures à 4.3.0-3) de typo3-dummy ajoutaient le "
+"lien symbolique /etc/apache2/conf.d/typo3-dummy.conf à la configuration "
+"d'Apache 2."
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"This has been changed and newer versions place two new symlinks into /etc/"
+"apache2/sites-available/. To prevent failures due to overlapping "
+"configuration directives you should remove the symlink typo3-dummy.conf "
+"from /etc/apache2/conf.d/ and merge its contents into one of the new "
+"configuration files."
+msgstr ""
+"Ce comportement a été modifié et les dernières versions ajoutent deux liens "
+"symboliques à /etc/apache2/sites-available/. Pour éviter les erreurs dues au "
+"chevauchement des instructions de configuration, vous devriez enlever le "
+"lien symbolique typo3-dummy.conf de /etc/apache2/conf.d/ et fusionner son "
+"contenu dans l'un des nouveaux fichiers de configuration."

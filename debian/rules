@@ -3,14 +3,20 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-SOURCEVERSION=4.3
+SOURCEVERSION=4.5
 PACKAGENAME=typo3_src-$(SOURCEVERSION)
 SOURCEPACKAGE=typo3-src-$(SOURCEVERSION)
 DBASEPACKAGE=typo3-database
+DUMMYPACKAGE=typo3-dummy
 
 T3SRCDIR=usr/share/typo3/$(PACKAGENAME)
 T3EXTDIR=usr/share/typo3/$(PACKAGENAME)/typo3/ext
 SQLDIR=usr/share/dbconfig-common/data/$(DBASEPACKAGE)/install
+
+INSTALLDIR=debian/$(DUMMYPACKAGE)
+DBSRCDIR=usr/share/$(DUMMYPACKAGE)
+DOCROOTDIR=var/lib/$(DUMMYPACKAGE)
+ETCDIR=etc/$(DUMMYPACKAGE)
 
 SOURCEINSTALLDIR=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 SQLINSTALLDIR=debian/$(DBASEPACKAGE)/$(SQLDIR)
@@ -19,15 +25,25 @@ clean:
 	dh_testdir
 	dh_testroot
 	dh_clean
+	debconf-updatepo
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
 
 install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
+	dh_installdirs -p $(DUMMYPACKAGE) $(DOCROOTDIR) $(ETCDIR)
 	dh_installdirs -p $(SOURCEPACKAGE) $(T3SRCDIR)
 	dh_installdirs -p $(SOURCEPACKAGE) $(T3EXTDIR)
 	dh_installdirs -p $(DBASEPACKAGE) $(SQLDIR) etc/$(DBASEPACKAGE)
+	dh_install -p $(DUMMYPACKAGE) dummy/index.php dummy/clear.gif $(DOCROOTDIR)
+	dh_install -p $(DUMMYPACKAGE) dummy/fileadmin/ $(DOCROOTDIR)
+	dh_install -p $(DUMMYPACKAGE) dummy/typo3temp/ $(DOCROOTDIR)
+	dh_install -p $(DUMMYPACKAGE) dummy/uploads/ $(DOCROOTDIR)
+	dh_install -p $(DUMMYPACKAGE) dummy/typo3conf/ $(DOCROOTDIR)
+	dh_install -p $(DUMMYPACKAGE) dummy/typo3conf/localconf.php $(ETCDIR)
+	dh_install -p $(DUMMYPACKAGE) debian/apache-directory.conf $(ETCDIR)
+	dh_install -p $(DUMMYPACKAGE) debian/apache-vhost.conf $(ETCDIR)
 	cp -r index.php misc t3lib typo3 $(SOURCEINSTALLDIR)
 	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
 	cp debian/mysql $(SQLINSTALLDIR)
@@ -53,12 +69,31 @@ binary-indep: build install
 	dh_lintian
 	dh_installdebconf
 	dh_installchangelogs -Ntypo3 -A ChangeLog
+	dh_installcron
+	dh_installdocs -p $(DUMMYPACKAGE) RELEASE_NOTES.txt README.txt --exclude INSTALL.txt
 	dh_installdocs -Ntypo3 -A RELEASE_NOTES.txt README.txt NEWS.txt
 	dh_installexamples -p $(SOURCEPACKAGE) misc/advanced.htaccess
-	dh_link
+	dh_installexamples -p $(DUMMYPACKAGE) dummy/_.htaccess
+	dh_link -N$(DUMMYPACKAGE)
+	dh_installinit
+	dh_link -p $(DUMMYPACKAGE) \
+		$(DOCROOTDIR)/typo3_src/t3lib $(DOCROOTDIR)/t3lib \
+		$(DOCROOTDIR)/typo3_src/typo3 $(DOCROOTDIR)/typo3 \
+		usr/share/typo3/$(PACKAGENAME) $(DOCROOTDIR)/typo3_src \
+		$(ETCDIR)/localconf.php $(DOCROOTDIR)/typo3conf/localconf.php \
+		/usr/bin/convert  $(DOCROOTDIR)/execdir/convert \
+		/usr/bin/composite  $(DOCROOTDIR)/execdir/composite \
+		/usr/bin/identify  $(DOCROOTDIR)/execdir/identify \
+		/usr/bin/gm  $(DOCROOTDIR)/execdir/gm \
+		/usr/sbin/sendmail  $(DOCROOTDIR)/execdir/sendmail
 	dh_compress -Ntypo3
 	dh_fixperms
 	chown -hR root:www-data $(SOURCEINSTALLDIR)
+	chown -hR www-data:www-data $(INSTALLDIR)/$(DOCROOTDIR)
+	find $(INSTALLDIR)/$(DOCROOTDIR) -type d -print0 | xargs -0 chmod 0750
+	find $(INSTALLDIR)/$(DOCROOTDIR) -type f -print0 | xargs -0 chmod 0640
+	chown www-data:www-data $(INSTALLDIR)/$(ETCDIR)/localconf.php
+	chmod 600 $(INSTALLDIR)/$(ETCDIR)/localconf.php
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
@@ -79,4 +114,3 @@ binary-arch: build install
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
-

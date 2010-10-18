@@ -1,0 +1,162 @@
+## 03-dummy-addindexpages.patch by Christian Welzel <gawain@camlann.de>
+##
+## DP: add some missing html pages to protect against directory listing
+
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/fileadmin/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- typo3-dummy-4.3.0.orig/dummy/fileadmin/_temp_/index.html
++++ typo3-dummy-4.3.0/dummy/fileadmin/_temp_/index.html
+@@ -4,4 +4,4 @@
+ 	<TITLE></TITLE>
+ <META http-equiv=Refresh Content="0; Url=/">
+ </HEAD>
+-</HTML>
+\ No newline at end of file
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/fileadmin/user_upload/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/fileadmin/user_upload/_temp_/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3conf/ext/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3conf/l10n/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3temp/cs/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3temp/GB/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3temp/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3temp/llxml/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3temp/pics/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/typo3temp/temp/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- typo3-dummy-4.3.0.orig/dummy/uploads/index.html
++++ typo3-dummy-4.3.0/dummy/uploads/index.html
+@@ -4,4 +4,4 @@
+ 	<TITLE></TITLE>
+ <META http-equiv=Refresh Content="0; Url=../">
+ </HEAD>
+-</HTML>
+\ No newline at end of file
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/uploads/media/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/uploads/pics/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
+--- /dev/null
++++ typo3-dummy-4.3.0/dummy/uploads/tf/index.html
+@@ -0,0 +1,7 @@
++<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
++<HTML>
++<HEAD>
++	<TITLE></TITLE>
++<META http-equiv=Refresh Content="0; Url=/">
++</HEAD>
++</HTML>
