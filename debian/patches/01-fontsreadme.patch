@@ -2,8 +2,8 @@
 ##
 ## DP: Adds debian copyright notice to readme.txt of t3lib/fonts.
 
---- typo3-src-4.3.4.orig/t3lib/fonts/readme.txt
-+++ typo3-src-4.3.4/t3lib/fonts/readme.txt
+--- typo3-src-4.3.8.orig/t3lib/fonts/readme.txt
++++ typo3-src-4.3.8/t3lib/fonts/readme.txt
 @@ -32,6 +32,9 @@
  	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  	02110-1301, USA.

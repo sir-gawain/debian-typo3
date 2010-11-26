@@ -258,6 +258,13 @@ License (typo3/contrib/swfupload/plugins/)
 	Copyright (c) 2007 Geoff Stearns, Michael Williams, and Bobby van der Sluis
 	This software is released under the MIT License <http://www.opensource.org/licenses/mit-license.php>
 
+License (typo3/contrib/flashmedia/qtobject/)
+
+	Copyright (c) 2004 Geoff Stearns
+	This software is released under the MIT License <http://www.opensource.org/licenses/mit-license.php>
+
+	For futher information take a look into http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=602250
+
 License (typo3/contrib/swfupload/)
 
 	SWFUpload: http://www.swfupload.org, http://swfupload.googlecode.com

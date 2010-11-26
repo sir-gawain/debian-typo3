@@ -1,0 +1,39 @@
+--- typo3-src-4.3.8.orig/t3lib/class.t3lib_div.php
++++ typo3-src-4.3.8/t3lib/class.t3lib_div.php
+@@ -2751,17 +2751,18 @@
+ 	 * @return	string	Minified script or source string if error happened
+ 	 */
+ 	public static function minifyJavaScript($script, &$error = '') {
+-		require_once(PATH_typo3 . 'contrib/jsmin/jsmin.php');
+-		try {
+-			$error = '';
+-			$script = trim(JSMin::minify(str_replace(chr(13), '', $script)));
+-		}
+-		catch(JSMinException $e) {
+-			$error = 'Error while minifying JavaScript: ' . $e->getMessage();
+-			self::devLog($error, 't3lib_div', 2,
+-				array('JavaScript' => $script, 'Stack trace' => $e->getTrace()));
+-		}
+-		return $script;
++#		require_once(PATH_typo3 . 'contrib/jsmin/jsmin.php');
++#		try {
++#			$error = '';
++#			$script = trim(JSMin::minify(str_replace(chr(13), '', $script)));
++			$script = trim($script);
++#		}
++#		catch(JSMinException $e) {
++#			$error = 'Error while minifying JavaScript: ' . $e->getMessage();
++#			self::devLog($error, 't3lib_div', 2,
++#				array('JavaScript' => $script, 'Stack trace' => $e->getTrace()));
++#		}
++#		return $script;
+ 	}
+ 
+ 
+@@ -5802,4 +5803,4 @@
+ 	}
+ }
+ 
+-?>
+\ No newline at end of file
++?>

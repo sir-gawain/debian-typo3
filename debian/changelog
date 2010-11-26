@@ -1,3 +1,12 @@
+typo3-src (4.3.8+dfsg1-1) unstable; urgency=low
+
+  * Removed typo3/contrib/jsmin/jsmin.php because of non free license
+    (Closes: 602250)
+  * Added notice about license of qtobject.js to copyright file.
+  * Added README.source.
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 26 Nov 2010 22:00:00 +0200
+
 typo3-src (4.3.8-1) unstable; urgency=medium
 
   * New upstream release:
