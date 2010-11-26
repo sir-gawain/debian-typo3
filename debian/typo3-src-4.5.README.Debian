@@ -169,7 +169,7 @@ Here are some typical pitfalls:
     the source directory, e.g.
 
     # file /var/lib/typo3-dummy/typo3_src
-    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3_src-4.3'
+    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3_src-4.5'
 
 
 WHAT SHOULD YOU DO IF PROBLEM STILL REMAINS?

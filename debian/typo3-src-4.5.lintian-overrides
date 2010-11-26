@@ -1,4 +1,4 @@
-typo3-src-4.3: embedded-php-library usr/share/typo3/typo3_src-4.3/typo3/sysext/openid/lib/php-openid/Auth/OpenID.php
-typo3-src-4.3: embedded-php-library usr/share/typo3/typo3_src-4.3/typo3/sysext/openid/lib/php-openid/Auth/Yadis/Yadis.php
-typo3-src-4.3: non-free-flash usr/share/typo3/typo3_src-4.3/typo3/contrib/flashmedia/flvplayer.swf
-
+typo3-src-4.5: embedded-php-library usr/share/typo3/typo3_src-4.5/typo3/sysext/openid/lib/php-openid/Auth/OpenID.php
+typo3-src-4.5: embedded-php-library usr/share/typo3/typo3_src-4.5/typo3/sysext/openid/lib/php-openid/Auth/Yadis/Yadis.php
+typo3-src-4.5: non-free-flash usr/share/typo3/typo3_src-4.5/typo3/contrib/flashmedia/flvplayer.swf
+typo3-src-4.5: embedded-php-library usr/share/typo3/typo3_src-4.5/typo3/sysext/em/mod1/class.nusoap.php

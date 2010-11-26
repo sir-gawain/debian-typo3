@@ -2,7 +2,7 @@ Source: typo3-src
 Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
-Build-Depends: debhelper (>= 6.0.7), po-debconf
+Build-Depends: debhelper (>= 7), po-debconf
 Standards-Version: 3.9.1
 
 Package: typo3-src-4.5
@@ -104,5 +104,5 @@ Description: The enterprise level open source WebCMS (Meta)
     TypoScript configuration interface or the plugin API
   * Thousands of plugins are available in the online TYPO3 extension repository
  .
- This package depends on all TYPO3 packages that are neccassary to build a local
+ This package depends on all TYPO3 packages that are necassary to build a local
  running TYPO3 installation.

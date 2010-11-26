@@ -1,9 +1,33 @@
-typo3-src (4.5.0~alpha2-1) experimental; urgency=low
+typo3-src (4.5.0+dfsg1~beta1-1) experimental; urgency=low
+
+  * Removed typo3/contrib/jsmin/jsmin.php because of non free license
+    (Closes: 602250)
+  * Added notice about license of qtobject.js to copyright file.
+  * Added README.source.
+  * Corrected watch file.
+  * Added rule "dfsg" to rules to remove non free files.
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 26 Nov 2010 22:00:00 +0200
+
+typo3-src (4.5.0~beta1-1) experimental; urgency=low
 
   * New upstream release.
-  * Merged typo3_src and typo3_dummy source packages.
+  * Merged typo3-src and typo3-dummy source packages.
+  * Fixed spelling error in control (Closes: 598816)
+  * Added lintian override for "embedded-php-library" on "libnusoap-php"
+    because of customized nusoap in these packages (see 529581)
+  * Added japanese translation (Closes: 599088)
+  * Reorganized and updated changelog. Uses DEP-5 format now.
+  * localconf.php:
+    - raised memory limit to 64MB
+    - disabled donation window
+    - set search path for binaries
+    - disabled deprecation logging
+  * Moved mysql sql file to own directory and added upgrade sql to 4.5.
+  * Added backend user "admin"/"password" to mysql/mysql.
+  * Added generation of encryption key to typo3-dummy.postinst.
 
- -- Christian Welzel <gawain@camlann.de>  Mon, 18 Oct 2010 22:00:00 +0200
+ -- Christian Welzel <gawain@camlann.de>  Mon, 18 Nov 2010 22:00:00 +0200
 
 typo3-src (4.3.8-1) unstable; urgency=medium
 

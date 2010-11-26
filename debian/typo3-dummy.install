@@ -1,0 +1,2 @@
+dummy/index.php dummy/clear.gif dummy/fileadmin/ dummy/typo3temp/ dummy/uploads/ dummy/typo3conf/ var/lib/typo3-dummy
+dummy/typo3conf/localconf.php debian/apache-directory.conf debian/apache-vhost.conf etc/typo3-dummy

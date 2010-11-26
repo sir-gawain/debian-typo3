@@ -1,0 +1,30 @@
+ALTER TABLE pages ADD url_scheme tinyint(3) unsigned NOT NULL default '0';
+ALTER TABLE sys_filemounts ADD sorting int(11) unsigned NOT NULL default '0';
+ALTER TABLE fe_session_data ADD KEY tstamp (tstamp);
+ALTER TABLE fe_users ADD first_name varchar(50) NOT NULL default '';
+ALTER TABLE fe_users ADD middle_name varchar(50) NOT NULL default '';
+ALTER TABLE fe_users ADD last_name varchar(50) NOT NULL default '';
+ALTER TABLE tt_content ADD KEY language (l18n_parent,sys_language_uid); 
+
+ALTER TABLE cachingframework_cache_hash CHANGE content content mediumblob;
+ALTER TABLE sys_lockedrecords CHANGE username username varchar(50) default '';
+ALTER TABLE sys_log CHANGE details details text;
+ALTER TABLE cachingframework_cache_pages CHANGE content content mediumblob;
+ALTER TABLE cachingframework_cache_pagesection CHANGE content content mediumblob;
+
+CREATE TABLE sys_news ( 
+    uid int(11) unsigned NOT NULL auto_increment,
+    pid int(11) unsigned NOT NULL default '0',
+    tstamp int(11) unsigned NOT NULL default '0',
+    crdate int(11) unsigned NOT NULL default '0',
+    cruser_id int(11) unsigned NOT NULL default '0',
+    deleted tinyint(3) unsigned NOT NULL default '0',
+    hidden tinyint(4) unsigned NOT NULL default '0',
+    starttime int(11) unsigned NOT NULL default '0',
+    endtime int(11) unsigned NOT NULL default '0',
+    title varchar(255) NOT NULL default '',
+    content mediumtext,
+
+    PRIMARY KEY (uid),
+    KEY parent (pid)
+);

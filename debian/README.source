@@ -1,0 +1,9 @@
+typo3-src (4.3.8+dfsg1-1)
+
+  * typo3/contrib/jsmin/jsmin.php contains code that is under a non free
+    license -> DFSG #6 "No Discrimination Against Fields of Endeavor".
+    This file has been removed from orig.tgz and the only file refencing it
+    (typo3-src-4.3.8/t3lib/class.t3lib_div.php) has been patched to not
+    use it anymore.
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 26 Nov 2010 22:00:00 +0200

@@ -22,7 +22,11 @@ if [ "$1" = "configure" ] ; then
 	done
 fi
 
+# genarate a random encryption key and set in into localconf.php
+KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
+sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/localconf.php
 
+# do database handling
 . /usr/share/debconf/confmodule
 . /usr/share/dbconfig-common/dpkg/frontend.postinst.mysql
 dbc_first_version=4.3.0

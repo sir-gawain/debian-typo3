@@ -1,0 +1,9 @@
+var/lib/typo3-dummy/typo3_src/t3lib  var/lib/typo3-dummy/t3lib
+var/lib/typo3-dummy/typo3_src/typo3  var/lib/typo3-dummy/typo3
+usr/share/typo3/typo3_src-4.5        var/lib/typo3-dummy/typo3_src
+etc/typo3-dummy/localconf.php        var/lib/typo3-dummy/typo3conf/localconf.php
+/usr/bin/convert                     var/lib/typo3-dummy/execdir/convert
+/usr/bin/composite                   var/lib/typo3-dummy/execdir/composite
+/usr/bin/identify                    var/lib/typo3-dummy/execdir/identify
+/usr/bin/gm                          var/lib/typo3-dummy/execdir/gm
+/usr/sbin/sendmail                   var/lib/typo3-dummy/execdir/sendmail

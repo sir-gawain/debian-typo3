@@ -6,20 +6,16 @@
 SOURCEVERSION=4.5
 PACKAGENAME=typo3_src-$(SOURCEVERSION)
 SOURCEPACKAGE=typo3-src-$(SOURCEVERSION)
-DBASEPACKAGE=typo3-database
-DUMMYPACKAGE=typo3-dummy
 
 T3SRCDIR=usr/share/typo3/$(PACKAGENAME)
-T3EXTDIR=usr/share/typo3/$(PACKAGENAME)/typo3/ext
-SQLDIR=usr/share/dbconfig-common/data/$(DBASEPACKAGE)/install
-
-INSTALLDIR=debian/$(DUMMYPACKAGE)
-DBSRCDIR=usr/share/$(DUMMYPACKAGE)
-DOCROOTDIR=var/lib/$(DUMMYPACKAGE)
-ETCDIR=etc/$(DUMMYPACKAGE)
 
 SOURCEINSTALLDIR=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
-SQLINSTALLDIR=debian/$(DBASEPACKAGE)/$(SQLDIR)
+
+DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
+ETCDIR=debian/typo3-dummy/etc/typo3-dummy
+
+TGZVERSION=$(shell dpkg-parsechangelog | sed -n 's/^Version: //p' | cut -d "-" -f 1)
+ORIGTAR=typo3-src_$(VERSION).orig.tar
 
 clean:
 	dh_testdir
@@ -31,37 +27,40 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
-	dh_installdirs -p $(DUMMYPACKAGE) $(DOCROOTDIR) $(ETCDIR)
-	dh_installdirs -p $(SOURCEPACKAGE) $(T3SRCDIR)
-	dh_installdirs -p $(SOURCEPACKAGE) $(T3EXTDIR)
-	dh_installdirs -p $(DBASEPACKAGE) $(SQLDIR) etc/$(DBASEPACKAGE)
-	dh_install -p $(DUMMYPACKAGE) dummy/index.php dummy/clear.gif $(DOCROOTDIR)
-	dh_install -p $(DUMMYPACKAGE) dummy/fileadmin/ $(DOCROOTDIR)
-	dh_install -p $(DUMMYPACKAGE) dummy/typo3temp/ $(DOCROOTDIR)
-	dh_install -p $(DUMMYPACKAGE) dummy/uploads/ $(DOCROOTDIR)
-	dh_install -p $(DUMMYPACKAGE) dummy/typo3conf/ $(DOCROOTDIR)
-	dh_install -p $(DUMMYPACKAGE) dummy/typo3conf/localconf.php $(ETCDIR)
-	dh_install -p $(DUMMYPACKAGE) debian/apache-directory.conf $(ETCDIR)
-	dh_install -p $(DUMMYPACKAGE) debian/apache-vhost.conf $(ETCDIR)
+	dh_prep
+	dh_installdirs
+	dh_install
 	cp -r index.php misc t3lib typo3 $(SOURCEINSTALLDIR)
 	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
-	cp debian/mysql $(SQLINSTALLDIR)
+#remove additional license files
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/jslib/codemirror/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/lua/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/ometa/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/php/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/plsql/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/python/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/plugins/swfobject_license.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
+# remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
+# delete some mac os x fork files introduced in alpha3
+	find $(SOURCEINSTALLDIR) -name "._*" -print0 | xargs -0 rm
 
 binary-indep: build install
 	dh_testdir
@@ -70,30 +69,18 @@ binary-indep: build install
 	dh_installdebconf
 	dh_installchangelogs -Ntypo3 -A ChangeLog
 	dh_installcron
-	dh_installdocs -p $(DUMMYPACKAGE) RELEASE_NOTES.txt README.txt --exclude INSTALL.txt
 	dh_installdocs -Ntypo3 -A RELEASE_NOTES.txt README.txt NEWS.txt
-	dh_installexamples -p $(SOURCEPACKAGE) misc/advanced.htaccess
-	dh_installexamples -p $(DUMMYPACKAGE) dummy/_.htaccess
-	dh_link -N$(DUMMYPACKAGE)
+	dh_installexamples
 	dh_installinit
-	dh_link -p $(DUMMYPACKAGE) \
-		$(DOCROOTDIR)/typo3_src/t3lib $(DOCROOTDIR)/t3lib \
-		$(DOCROOTDIR)/typo3_src/typo3 $(DOCROOTDIR)/typo3 \
-		usr/share/typo3/$(PACKAGENAME) $(DOCROOTDIR)/typo3_src \
-		$(ETCDIR)/localconf.php $(DOCROOTDIR)/typo3conf/localconf.php \
-		/usr/bin/convert  $(DOCROOTDIR)/execdir/convert \
-		/usr/bin/composite  $(DOCROOTDIR)/execdir/composite \
-		/usr/bin/identify  $(DOCROOTDIR)/execdir/identify \
-		/usr/bin/gm  $(DOCROOTDIR)/execdir/gm \
-		/usr/sbin/sendmail  $(DOCROOTDIR)/execdir/sendmail
+	dh_link
 	dh_compress -Ntypo3
 	dh_fixperms
 	chown -hR root:www-data $(SOURCEINSTALLDIR)
-	chown -hR www-data:www-data $(INSTALLDIR)/$(DOCROOTDIR)
-	find $(INSTALLDIR)/$(DOCROOTDIR) -type d -print0 | xargs -0 chmod 0750
-	find $(INSTALLDIR)/$(DOCROOTDIR) -type f -print0 | xargs -0 chmod 0640
-	chown www-data:www-data $(INSTALLDIR)/$(ETCDIR)/localconf.php
-	chmod 600 $(INSTALLDIR)/$(ETCDIR)/localconf.php
+	chown -hR www-data:www-data $(DOCROOTDIR)
+	chown     www-data:www-data $(ETCDIR)/localconf.php
+	find $(DOCROOTDIR) -type d -print0 | xargs -0 chmod 0750
+	find $(DOCROOTDIR) -type f -print0 | xargs -0 chmod 0640
+	chmod 600 $(ETCDIR)/localconf.php
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
@@ -108,6 +95,11 @@ find-sql:
 		../typo3/sysext/rsaauth/ext_tables.sql ../typo3/sysext/rtehtmlarea/ext_tables.sql ../typo3/sysext/impexp/ext_tables.sql \
 		../typo3/sysext/cms/ext_tables.sql ../typo3/sysext/scheduler/ext_tables.sql ../typo3/sysext/indexed_search/ext_tables.sql \
 	> mysql_raw.sql
+
+dfsg:
+	gunzip -f $(ORIGTAR).gz
+	tar --delete --wildcards -f $(ORIGTAR) typo3_src-*/typo3/contrib/jsmin/jsmin.php
+	gzip $(ORIGTAR)
 
 # Build architecture-dependent files here.
 binary-arch: build install
