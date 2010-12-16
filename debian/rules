@@ -15,6 +15,9 @@ SQLDIR=usr/share/dbconfig-common/data/$(DBASEPACKAGE)/install
 SOURCEINSTALLDIR=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 SQLINSTALLDIR=debian/$(DBASEPACKAGE)/$(SQLDIR)
 
+TGZVERSION=$(shell dpkg-parsechangelog | sed -n 's/^Version: //p' | cut -d "-" -f 1)
+ORIGTAR=../typo3-src_$(TGZVERSION).orig.tar
+
 clean:
 	dh_testdir
 	dh_testroot
@@ -78,5 +81,11 @@ find-sql:
 binary-arch: build install
 
 binary: binary-indep binary-arch
+
+dfsg:
+	gunzip -f $(ORIGTAR).gz
+	tar --delete --wildcards -f $(ORIGTAR) typo3_src-*/typo3/contrib/jsmin/jsmin.php
+	gzip $(ORIGTAR)
+
 .PHONY: build clean binary-indep binary-arch binary install
 

@@ -1,3 +1,20 @@
+typo3-src (4.3.9+dfsg1-1) unstable; urgency=high
+
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-SA-2010-022: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 607286)
+  * Added source for player.swf and flvplayer.swf (see #591969).
+  * Corrected watch file.
+  * Added rule "dfsg" to rules to remove non free files.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 16 Dec 2010 22:00:00 +0100
+
+typo3-src (4.3.8+dfsg1-2) unstable; urgency=low
+
+  * Fixed wrong code removal from last version.
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 28 Nov 2010 22:00:00 +0200
+
 typo3-src (4.3.8+dfsg1-1) unstable; urgency=low
 
   * Removed typo3/contrib/jsmin/jsmin.php because of non free license
