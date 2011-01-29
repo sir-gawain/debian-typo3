@@ -2,3 +2,5 @@
 02-dummy-defaults.patch
 03-dummy-addindexpages.patch
 04-remove-jsmin-dfsg.patch
+05-add-source-for-mediaplayer-swfs.patch
+06-fix-im-command.patch

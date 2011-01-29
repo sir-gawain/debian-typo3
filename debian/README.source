@@ -1,3 +1,12 @@
+typo3-src (4.5.0+dfsg1~beta2-1)
+
+  * added source of player.swf and flvplayer.swf.
+    Source was taken from:
+    - player.swf:    http://tools.assembla.com/svn/1pixelout/audio-player/tags/1.2.3/source/
+    - flvplayer.swf: http://forge.typo3.org/projects/typo3v4-core/repository/show/trunk/typo3/contrib/flashmedia/src/
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 02 Dec 2010 22:00:00 +0200
+
 typo3-src (4.3.8+dfsg1-1)
 
   * typo3/contrib/jsmin/jsmin.php contains code that is under a non free

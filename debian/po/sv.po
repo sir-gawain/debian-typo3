@@ -40,7 +40,7 @@ msgstr "ingen"
 #. Description
 #: ../typo3-dummy.templates:2002
 msgid "Apache integration mode:"
-msgstr "L??ge f??r integrering med Apache:"
+msgstr "Läge för integrering med Apache:"
 
 #. Type: select
 #. Description
@@ -49,8 +49,8 @@ msgid ""
 "Please choose the method that should be used for integrating the TYPO3 "
 "installation with the apache2 web server:"
 msgstr ""
-"Ange vilken metod som ska anv??ndas f??r integreringen av TYPO3-"
-"installationen med webbservern apache2."
+"Ange vilken metod som ska användas för integreringen av TYPO3-installationen "
+"med webbservern apache2."
 
 #. Type: select
 #. Description
@@ -64,14 +64,13 @@ msgid ""
 "            need manual configuration. Choose this option if you are\n"
 "            using a web server other than apache2."
 msgstr ""
-" vhost:     skapar URL:ar med TYPO3 som en del av dom??n-\n"
+" vhost:     skapar URL:ar med TYPO3 som en del av domän-\n"
 "            namnet, ex. http://typo3.example.com/.\n"
-" katalog:  placerar TYPO3 i en existerande webbplats, tillg??ngligg??r\n"
-"            den p?? en adress likt http://www.example.com/cms/.\n"
-" ingen:     g??r inga automatiska inst??llningar f??r TYPO3 alls. Servern\n"
-"            kommer att beh??va manuell handp??l??ggning f??r inst??"
-"llningar.\n"
-"            V??lj detta alternativ om du anv??nder en annan webbserver ??n\n"
+" katalog:  placerar TYPO3 i en existerande webbplats, tillgängliggör\n"
+"            den på en adress likt http://www.example.com/cms/.\n"
+" ingen:     gör inga automatiska inställningar för TYPO3 alls. Servern\n"
+"            kommer att behöva manuell handpåläggning för inställningar.\n"
+"            Välj detta alternativ om du använder en annan webbserver än\n"
 "            apache2."
 
 #. Type: boolean
@@ -87,15 +86,14 @@ msgid ""
 "Apache's configuration has been changed to include TYPO3 and activate the "
 "rewrite module. For these changes to take effect, apache2 must be reloaded."
 msgstr ""
-"TYPO3-inst??llningarna och modulen \"rewrite\" f??r apache2 har "
-"installerats. F??r att tillse att dessa ??ndringar aktiveras m??ste apache2 "
-"laddas om."
+"TYPO3-inställningarna och modulen \"rewrite\" för apache2 har installerats. "
+"För att tillse att dessa ändringar aktiveras måste apache2 laddas om."
 
 #. Type: note
 #. Description
 #: ../typo3-dummy.templates:4001
 msgid "Old symlink in /etc/apache2/conf.d/"
-msgstr "Gammal syml??nk i /etc/apache2/conf.d/"
+msgstr "Gammal symlänk i /etc/apache2/conf.d/"
 
 #. Type: note
 #. Description
@@ -104,8 +102,8 @@ msgid ""
 "Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
 "configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
 msgstr ""
-"??ldre versioner (f??re 4.3.0-3) av typo3-dummy installerade apache2-inst??"
-"llningarna som en syml??nk via etc/apache2/conf.d/typo3-dummy.conf."
+"Äldre versioner (före 4.3.0-3) av typo3-dummy installerade apache2-"
+"inställningarna som en symlänk via etc/apache2/conf.d/typo3-dummy.conf."
 
 #. Type: note
 #. Description
@@ -117,8 +115,8 @@ msgid ""
 "from /etc/apache2/conf.d/ and merge its contents into one of the new "
 "configuration files."
 msgstr ""
-"Detta har ??ndrats och nyare versioner placerar tv?? nya syml??nkar i /etc/"
-"apache2/sites-available/. F??r att f??rhindra fel p?? grund av ??verlappande "
-"direktiv ska du ta bort den ??ldre syml??nken typo3-dummy.conf fr??n /etc/"
-"apache2/conf.d/ och ??verf??ra dess inneh??ll i en av de nya inst??"
-"llningsfilerna."
+"Detta har ändrats och nyare versioner placerar två nya symlänkar i /etc/"
+"apache2/sites-available/. För att förhindra fel på grund av överlappande "
+"direktiv ska du ta bort den äldre symlänken typo3-dummy.conf från /etc/"
+"apache2/conf.d/ och överföra dess innehåll i en av de nya "
+"inställningsfilerna."

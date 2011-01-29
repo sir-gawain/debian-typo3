@@ -59,7 +59,7 @@ Description: TYPO3 - The enterprise level open source WebCMS (Database)
 Package: typo3-dummy
 Architecture: all
 Depends: exim4 | mail-transport-agent, dbconfig-common, debconf, graphicsmagick, lsb-base (>= 3.0-6), php5, php5-cli, php5-gd, php5-mysql, php5-xcache, typo3-src-4.5, ${misc:Depends}
-Recommends: catdoc, ghostscript, memcached, php5-curl, php5-memcache, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
+Recommends: apache2.2-common, catdoc, ghostscript, memcached, php5-curl, php5-memcache, php5-suhosin, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
 Description: web content management system
  TYPO3 is an enterprise-level content management system for use on the web
  and in intranets. It is flexible, extensible, and well supplied with

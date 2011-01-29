@@ -1,0 +1,9 @@
+ALTER TABLE pages CHANGE t3ver_stage t3ver_stage int(11) default '0';
+
+ALTER TABLE pages_language_overlay CHANGE t3ver_stage t3ver_stage int(11) default '0';
+
+ALTER TABLE sys_template CHANGE t3ver_stage t3ver_stage int(11) default '0';
+
+ALTER TABLE tt_content CHANGE t3ver_stage t3ver_stage int(11) default '0';
+
+ALTER TABLE be_layouts CHANGE t3ver_stage t3ver_stage int(11) default '0';

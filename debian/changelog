@@ -1,3 +1,52 @@
+typo3-src (4.5.0+dfsg1-2) unstable; urgency=low
+
+  * Fix encoding of Swedish debconf translation
+    (Christian Perrier <bubulle@debian.org>).
+  * Removed mistakenly doubled content in mysql file (Closes: 611386).
+  * Add apache2.2-common to recommends. (Closes: #611387)
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 29 Jan 2011 14:00:00 +0100
+
+typo3-src (4.5.0+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Removed dummy/misc from rules and typo3-src.examples  because its missing
+    in upstream.
+  * Removed plupload from copyright and rules (removed by upstream).
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 15 Jan 2011 14:00:00 +0100
+
+typo3-src (4.5.0+dfsg1~beta3-1) experimental; urgency=low
+
+  * New upstream release.
+  * Removed patch for TYPO3-SA-2010-022 (fixed by upstream now).
+  * Added patch 06-fix-im-command.patch to fix a wrong command quoting
+    (Closes: 606738)
+  * Added php5-suhosin to Recommends.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 05 Jan 2011 22:00:00 +0100
+
+typo3-src (4.5.0+dfsg1~beta2-3) experimental; urgency=high
+
+  * Fixed regression bug imported by last version. (Closes: 607577)
+
+ -- Christian Welzel <gawain@camlann.de>  Tue, 21 Dec 2010 22:00:00 +0100
+
+typo3-src (4.5.0+dfsg1~beta2-2) experimental; urgency=high
+
+  * Ported some security fixes from TYPO3 4.4.5 to this version
+    - fixes: "TYPO3 Security Bulletin TYPO3-SA-2010-022: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 607286)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 16 Dec 2010 22:00:00 +0100
+
+typo3-src (4.5.0+dfsg1~beta2-1) experimental; urgency=low
+
+  * New upstream release.
+  * Added source for player.swf and flvplayer.swf (see #591969).
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 02 Dec 2010 22:00:00 +0200
+
 typo3-src (4.5.0+dfsg1~beta1-1) experimental; urgency=low
 
   * Removed typo3/contrib/jsmin/jsmin.php because of non free license

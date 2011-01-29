@@ -15,7 +15,7 @@ DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
 ETCDIR=debian/typo3-dummy/etc/typo3-dummy
 
 TGZVERSION=$(shell dpkg-parsechangelog | sed -n 's/^Version: //p' | cut -d "-" -f 1)
-ORIGTAR=typo3-src_$(VERSION).orig.tar
+ORIGTAR=../typo3-src_$(TGZVERSION).orig.tar
 
 clean:
 	dh_testdir
@@ -30,7 +30,7 @@ install: build
 	dh_prep
 	dh_installdirs
 	dh_install
-	cp -r index.php misc t3lib typo3 $(SOURCEINSTALLDIR)
+	cp -r index.php t3lib typo3 $(SOURCEINSTALLDIR)
 	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
 #remove additional license files
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
@@ -59,8 +59,6 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
-# delete some mac os x fork files introduced in alpha3
-	find $(SOURCEINSTALLDIR) -name "._*" -print0 | xargs -0 rm
 
 binary-indep: build install
 	dh_testdir
@@ -97,9 +95,11 @@ find-sql:
 	> mysql_raw.sql
 
 dfsg:
+	dh_testdir
 	gunzip -f $(ORIGTAR).gz
 	tar --delete --wildcards -f $(ORIGTAR) typo3_src-*/typo3/contrib/jsmin/jsmin.php
 	gzip $(ORIGTAR)
+	rm -f typo3/contrib/jsmin/jsmin.php
 
 # Build architecture-dependent files here.
 binary-arch: build install

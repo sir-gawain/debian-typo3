@@ -1,0 +1,76 @@
+CREATE TABLE tx_linkvalidator_links (
+    uid int(11) NOT NULL auto_increment,
+    recuid int(11) NOT NULL default '0',
+    recpid int(11) NOT NULL default '0',
+    headline varchar(255) NOT NULL default '',
+    field varchar(255) NOT NULL default '',
+    tablename varchar(255) NOT NULL default '',
+    linktitle text,
+    url text,
+    urlresponse text,
+    lastcheck int(11) NOT NULL default '0',
+    typelinks varchar(50) NOT NULL default '',
+    PRIMARY KEY (uid)
+);
+
+ALTER TABLE tt_content ADD image_rel int(11) NOT NULL default '0';
+ALTER TABLE tt_content ADD media_rel int(11) NOT NULL default '0';
+ALTER TABLE pages ADD media_rel int(11) NOT NULL default '0';
+ALTER TABLE pages_language_overlay ADD media_rel int(11) NOT NULL default '0';
+
+CREATE TABLE sys_files (
+    uid int(11) NOT NULL auto_increment,
+    pid int(11) NOT NULL default '0',
+    tstamp int(11) NOT NULL default '0',
+    crdate int(11) NOT NULL default '0',
+    cruser_id int(11) NOT NULL default '0',
+    sys_language_uid int(11) NOT NULL default '0',
+    l10n_parent int(11) NOT NULL default '0',
+    l10n_diffsource mediumtext,
+    mount int(11) NOT NULL default '0',
+    deleted tinyint(4) NOT NULL default '0',
+    hidden tinyint(4) NOT NULL default '0',
+    starttime int(11) NOT NULL default '0',
+    endtime int(11) NOT NULL default '0',
+    fe_group int(11) NOT NULL default '0',
+    file_name tinytext,
+    file_path tinytext,
+    file_size int(11) NOT NULL default '0',
+    file_mtime int(11) NOT NULL default '0',
+    file_inode int(11) NOT NULL default '0',
+    file_ctime int(11) NOT NULL default '0',
+    file_hash tinytext,
+    file_mime_type tinytext,
+    file_mime_subtype tinytext,
+    file_type tinytext,
+    file_type_version tinytext,
+    file_usage int(11) NOT NULL default '0',
+    PRIMARY KEY (uid),
+    KEY parent (pid)
+);
+CREATE TABLE sys_files_mounts (
+    uid int(11) NOT NULL auto_increment,
+    pid int(11) NOT NULL default '0',
+    tstamp int(11) NOT NULL default '0',
+    crdate int(11) NOT NULL default '0',
+    cruser_id int(11) NOT NULL default '0',
+    deleted tinyint(4) NOT NULL default '0',
+    hidden tinyint(4) NOT NULL default '0',
+    title varchar(50) NOT NULL default '',
+    alias varchar(20) NOT NULL default '',
+    storage_backend varchar(50) NOT NULL default '',
+    backend_configuration mediumtext,
+    PRIMARY KEY (uid),
+    KEY parent (pid)
+);
+CREATE TABLE sys_files_usage_mm (
+    uid_local int(11) NOT NULL default '0',
+    uid_foreign int(11) NOT NULL default '0',
+    tablenames varchar(30) NOT NULL default '',
+    ident varchar(255) NOT NULL default '',
+    structure_path varchar(255) NOT NULL default '',
+    sorting int(11) NOT NULL default '0',
+    sorting_foreign int(11) NOT NULL default '0',
+    KEY uid_local (uid_local),
+    KEY uid_foreign (uid_foreign)
+);

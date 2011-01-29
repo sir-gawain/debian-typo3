@@ -1,6 +1,6 @@
---- typo3-src-4.5.0~beta1.orig/t3lib/class.t3lib_div.php
-+++ typo3-src-4.5.0~beta1/t3lib/class.t3lib_div.php
-@@ -2812,16 +2812,17 @@
+--- typo3-src-4.5.0+dfsg1~beta2.orig/t3lib/class.t3lib_div.php
++++ typo3-src-4.5.0+dfsg1~beta2/t3lib/class.t3lib_div.php
+@@ -2880,16 +2880,17 @@
  	 * @return	string	Minified script or source string if error happened
  	 */
  	public static function minifyJavaScript($script, &$error = '') {
@@ -9,7 +9,7 @@
 -			$error = '';
 -			$script = trim(JSMin::minify(str_replace(CR, '', $script)));
 -		}
--		catch(JSMinException $e) {
+-		catch (JSMinException $e) {
 -			$error = 'Error while minifying JavaScript: ' . $e->getMessage();
 -			self::devLog($error, 't3lib_div', 2,
 -				array('JavaScript' => $script, 'Stack trace' => $e->getTrace()));
@@ -20,7 +20,7 @@
 +#			$script = trim(JSMin::minify(str_replace(CR, '', $script)));
 +			$script = trim($script);
 +#		}
-+#		catch(JSMinException $e) {
++#		catch (JSMinException $e) {
 +#			$error = 'Error while minifying JavaScript: ' . $e->getMessage();
 +#			self::devLog($error, 't3lib_div', 2,
 +#				array('JavaScript' => $script, 'Stack trace' => $e->getTrace()));
