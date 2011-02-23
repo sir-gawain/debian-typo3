@@ -1,3 +1,18 @@
+typo3-src (4.5.1+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Moved php5-xcache to Recommends and added php-apc as alternative.
+  * Removed 07-fix-beforeWrap-of-TMENU.patch (now included in upstream).
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 23 Feb 2011 22:00:00 +0100
+
+typo3-src (4.5.0+dfsg1-3) unstable; urgency=low
+
+  * Fix spelling error (Closes: 611482)
+  * Add patch to enable beforeWrap on TMENU (Closes: 606740)
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 30 Jan 2011 22:00:00 +0100
+
 typo3-src (4.5.0+dfsg1-2) unstable; urgency=low
 
   * Fix encoding of Swedish debconf translation
