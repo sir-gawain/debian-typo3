@@ -1,5 +1,5 @@
-/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf usr/share/typo3/typo3_src-4.5/t3lib/fonts/vera.ttf
-/usr/share/javascript/prototype/prototype-1.6.js  usr/share/typo3/typo3_src-4.5/typo3/contrib/prototype/prototype.js
-/usr/share/javascript/scriptaculous  usr/share/typo3/typo3_src-4.5/typo3/contrib/scriptaculous
-/usr/share/php/adodb usr/share/typo3/typo3_src-4.5/typo3/sysext/adodb/adodb
-
+/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf  usr/share/typo3/typo3_src-4.5/t3lib/fonts/vera.ttf
+/usr/share/javascript/prototype/prototype-1.6.js     usr/share/typo3/typo3_src-4.5/typo3/contrib/prototype/prototype.js
+/usr/share/javascript/scriptaculous                  usr/share/typo3/typo3_src-4.5/typo3/contrib/scriptaculous
+/usr/share/php/adodb                                 usr/share/typo3/typo3_src-4.5/typo3/sysext/adodb/adodb
+/usr/share/php/Swift                                 usr/share/typo3/typo3_src-4.5/typo3/contrib/swiftmailer

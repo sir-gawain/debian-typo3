@@ -32,6 +32,8 @@ install: build
 	dh_install
 	cp -r index.php t3lib typo3 $(SOURCEINSTALLDIR)
 	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
+#set correct permissions for cron script
+	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh $(SOURCEINSTALLDIR)/typo3/cli_dispatch.phpsh
 #remove additional license files
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
@@ -59,6 +61,7 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
+	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer
 
 binary-indep: build install
 	dh_testdir

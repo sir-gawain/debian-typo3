@@ -1,10 +1,20 @@
-typo3-src (4.5.1+dfsg1-1) unstable; urgency=low
+typo3-src (4.5.3+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Patches refreshed.
+  * debian/rules: set correct permissions for cron script.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 1 Jun 2011 22:00:00 +0100
+
+typo3-src (4.5.2+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
   * Moved php5-xcache to Recommends and added php-apc as alternative.
   * Removed 07-fix-beforeWrap-of-TMENU.patch (now included in upstream).
+  * Removed swiftmailer from typo3/contrib, added depend on libphp-swiftmailer.
+  * Added /usr/share/php/Swift/ to open_basedir in apache config.
 
- -- Christian Welzel <gawain@camlann.de>  Wed, 23 Feb 2011 22:00:00 +0100
+ -- Christian Welzel <gawain@camlann.de>  Wed, 2 Mar 2011 22:00:00 +0100
 
 typo3-src (4.5.0+dfsg1-3) unstable; urgency=low
 

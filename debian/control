@@ -7,7 +7,7 @@ Standards-Version: 3.9.1
 
 Package: typo3-src-4.5
 Architecture: all
-Depends: ttf-dejavu, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libphp-adodb (>=5.07), ${misc:Depends}
+Depends: ttf-dejavu, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libphp-adodb (>=5.07), libphp-swiftmailer (>=4.0.6), ${misc:Depends}
 Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache | php-apc, typo3-database, typo3-dummy
 Suggests: catdoc, ghostscript, php5-curl, ppthtml, unrtf, xlhtml, xpdf-utils
 Homepage: http://www.typo3.com
