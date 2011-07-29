@@ -1,3 +1,13 @@
+typo3-src (4.5.4+dfsg1-1) unstable; urgency=high
+
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2011-001: Multiple
+      vulnerabilities in TYPO3 Core" (Closes: 635937)
+  * Adopted patch 02-dummy-defaults.patch to new localconf.php.
+  * Removed typo3-dummy.examples, because its empty now.
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 29 Jul 2011 20:00:00 +0100
+
 typo3-src (4.5.3+dfsg1-1) unstable; urgency=low
 
   * New upstream release.

@@ -2,13 +2,13 @@
 ##
 ## DP: provide some default values for Debian systems
 
---- typo3-src-4.5.0+dfsg1~beta2.orig/dummy/typo3conf/localconf.php
-+++ typo3-src-4.5.0+dfsg1~beta2/dummy/typo3conf/localconf.php
+--- typo3-src-4.5.4+dfsg1.orig/dummy/typo3conf/localconf.php
++++ typo3-src-4.5.4+dfsg1/dummy/typo3conf/localconf.php
 @@ -4,10 +4,145 @@
  	// Default password is "joh316" :
  $TYPO3_CONF_VARS['BE']['installToolPassword'] = 'bacb98acf97e0b6112b1d1b650b84971';
  
--$TYPO3_CONF_VARS['EXT']['extList'] = 'info,perm,func,filelist,about,version,tsconfig_help,context_help,extra_page_cm_options,impexp,sys_note,tstemplate,tstemplate_ceditor,tstemplate_info,tstemplate_objbrowser,tstemplate_analyzer,func_wizards,wizard_crpages,wizard_sortpages,lowlevel,install,belog,beuser,aboutmodules,setup,taskcenter,info_pagetsconfig,viewpage,rtehtmlarea,css_styled_content,t3skin,t3editor,reports,felogin,extbase,fluid,workspaces,linkvalidator,scheduler';
+-$TYPO3_CONF_VARS['EXT']['extList'] = 'info,perm,func,filelist,about,tsconfig_help,context_help,extra_page_cm_options,impexp,sys_note,tstemplate,tstemplate_ceditor,tstemplate_info,tstemplate_objbrowser,tstemplate_analyzer,func_wizards,wizard_crpages,wizard_sortpages,lowlevel,install,belog,beuser,aboutmodules,setup,taskcenter,info_pagetsconfig,viewpage,rtehtmlarea,css_styled_content,t3skin,t3editor,reports,felogin';
 +$TYPO3_CONF_VARS['EXT']['extList'] = 'cms,lang,sv,em,fal,list,tsconfig_help,context_help,extra_page_cm_options,impexp,sys_note,tstemplate,tstemplate_ceditor,tstemplate_info,tstemplate_objbrowser,tstemplate_analyzer,func_wizards,wizard_crpages,wizard_sortpages,lowlevel,install,belog,beuser,aboutmodules,setup,taskcenter,info_pagetsconfig,viewpage,rtehtmlarea,css_styled_content,t3skin,t3editor,reports,info,perm,func,filelist,about,cshmanual,opendocs,recycler,scheduler,linkvalidator,pagetree';
  
  $typo_db_extTableDef_script = 'extTables.php';
