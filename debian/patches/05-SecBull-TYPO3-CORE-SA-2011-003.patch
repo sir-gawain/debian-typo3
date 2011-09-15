@@ -1,0 +1,40 @@
+From 99d993a3fcda2713fbdf22122db074267dff910a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Daniel=20P=C3=B6tzinger?= <poetzinger@aoemedia.de>
+Date: Tue, 30 Aug 2011 22:40:31 +0200
+Subject: [PATCH] [BUGFIX] Disabling the cache does not work on invalid cHash value
+
+Change-Id: I01184ebda0f8667b431f371db155f06e9f0ed898
+Releases: 4.6, 4.5, 4.4, 4.3
+Resolves: #29366
+Reviewed-on: http://review.typo3.org/4944
+Reviewed-by: Oliver Hader
+Tested-by: Oliver Hader
+---
+ typo3/sysext/cms/tslib/class.tslib_fe.php |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/typo3/sysext/cms/tslib/class.tslib_fe.php b/typo3/sysext/cms/tslib/class.tslib_fe.php
+index f9448fc..8355180 100644
+--- a/typo3/sysext/cms/tslib/class.tslib_fe.php
++++ b/typo3/sysext/cms/tslib/class.tslib_fe.php
+@@ -1784,7 +1784,7 @@
+ 				if ($this->TYPO3_CONF_VARS['FE']['pageNotFoundOnCHashError']) {
+ 					$this->pageNotFoundAndExit('Request parameters could not be validated (&cHash comparison failed)');
+ 				} else {
+-					$this->set_no_cache();
++					$this->disableCache();
+ 					$GLOBALS['TT']->setTSlogMessage('The incoming cHash "'.$this->cHash.'" and calculated cHash "'.$cHash_calc.'" did not match, so caching was disabled. The fieldlist used was "'.implode(',',array_keys($this->cHash_array)).'"',2);
+ 				}
+ 			}
+@@ -1804,7 +1804,7 @@
+ 				if ($this->tempContent)	{ $this->clearPageCacheContent(); }
+ 				$this->pageNotFoundAndExit('Request parameters could not be validated (&cHash empty)');
+ 			} else {
+-				$this->set_no_cache();
++				$this->disableCache();
+ 				$GLOBALS['TT']->setTSlogMessage('TSFE->reqCHash(): No &cHash parameter was sent for GET vars though required so caching is disabled',2);
+ 			}
+ 		}
+-- 
+1.7.2.5
+

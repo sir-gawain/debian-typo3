@@ -1,3 +1,5 @@
 01-fontsreadme.patch
 02-remove-jsmin-dfsg.patch
 03-add-source-for-mediaplayer-swfs.patch
+04-SecBull-TYPO3-CORE-SA-2011-001.patch
+05-SecBull-TYPO3-CORE-SA-2011-003.patch

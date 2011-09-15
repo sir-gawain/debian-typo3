@@ -1,0 +1,404 @@
+## DP: Fixes SecBull-TYPO3-SA-2011-001 (taken from Core.git
+## DP: tags TYPO3_4-3-11 -> TYPO3_4-3-12)
+
+--- typo3-src-4.3.9+dfsg1.orig/t3lib/class.t3lib_befunc.php
++++ typo3-src-4.3.9+dfsg1/t3lib/class.t3lib_befunc.php
+@@ -2269,19 +2269,28 @@
+ 					}
+ 				break;
+ 				case 'input':
++						// hide value 0 for dates, but show it for everything else
+ 					if (isset($value)) {
+ 						if (t3lib_div::inList($theColConf['eval'], 'date')) {
+-							$l = t3lib_BEfunc::date($value) .
+-								' (' .
+-								($GLOBALS['EXEC_TIME'] - $value > 0 ? '-' : '') .
+-								t3lib_BEfunc::calcAge(abs($GLOBALS['EXEC_TIME'] - $value), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')) .
+-								')';
++							if (!empty($value)) {
++								$l = t3lib_BEfunc::date($value) .
++									' (' .
++									($GLOBALS['EXEC_TIME'] - $value > 0 ? '-' : '') .
++									t3lib_BEfunc::calcAge(abs($GLOBALS['EXEC_TIME'] - $value), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')) .
++									')';
++							}
+ 						} elseif (t3lib_div::inList($theColConf['eval'], 'time')) {
+-							$l = t3lib_BEfunc::time($value, FALSE);
++							if (!empty($value)) {
++								$l = t3lib_BEfunc::time($value, FALSE);
++							}
+ 						} elseif (t3lib_div::inList($theColConf['eval'], 'timesec')) {
+-							$l = t3lib_BEfunc::time($value);
++							if (!empty($value)) {
++								$l = t3lib_BEfunc::time($value);
++							}
+ 						} elseif (t3lib_div::inList($theColConf['eval'], 'datetime')) {
+-							$l = t3lib_BEfunc::datetime($value);
++							if (!empty($value)) {
++								$l = t3lib_BEfunc::datetime($value);
++							}
+ 						} else {
+ 							$l = $value;
+ 						}
+--- typo3-src-4.3.9+dfsg1.orig/t3lib/class.t3lib_lock.php
++++ typo3-src-4.3.9+dfsg1/t3lib/class.t3lib_lock.php
+@@ -212,8 +212,10 @@
+ 		$success = TRUE;
+ 		switch ($this->method) {
+ 			case 'simple':
+-				if (unlink($this->resource) == FALSE) {
+-					$success = FALSE;
++				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/locks/')) {
++					if (unlink($this->resource) == FALSE) {
++						$success = FALSE;
++					}
+ 				}
+ 			break;
+ 			case 'flock':
+@@ -221,7 +223,9 @@
+ 					$success = FALSE;
+ 				}
+ 				fclose($this->filepointer);
+-				unlink($this->resource);
++				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/locks/')) {
++					unlink($this->resource);
++				}
+ 			break;
+ 			case 'semaphore':
+ 				if (@sem_release($this->resource)) {
+--- typo3-src-4.3.9+dfsg1.orig/t3lib/class.t3lib_tcemain.php
++++ typo3-src-4.3.9+dfsg1/t3lib/class.t3lib_tcemain.php
+@@ -7579,7 +7579,7 @@
+ 			$msg = $row['error'] . ': ' . sprintf($row['details'], $log_data[0], $log_data[1], $log_data[2], $log_data[3], $log_data[4]);
+ 			$flashMessage = t3lib_div::makeInstance(
+ 						't3lib_FlashMessage',
+-						$msg,
++						htmlspecialchars($msg),
+ 						'',
+ 						t3lib_FlashMessage::ERROR,
+ 						TRUE
+--- typo3-src-4.3.9+dfsg1.orig/t3lib/class.t3lib_tstemplate.php
++++ typo3-src-4.3.9+dfsg1/t3lib/class.t3lib_tstemplate.php
+@@ -1470,7 +1470,7 @@
+ 			// linkVars
+ 		if ($GLOBALS['TSFE']->config['config']['uniqueLinkVars']) {
+ 			if ($addParams) {
+-				$LD['linkVars'] = t3lib_div::implodeArrayForUrl('',t3lib_div::explodeUrl2Array($GLOBALS['TSFE']->linkVars.$addParams));
++				$LD['linkVars'] = t3lib_div::implodeArrayForUrl('', t3lib_div::explodeUrl2Array($GLOBALS['TSFE']->linkVars . $addParams), '', FALSE, TRUE);
+ 			} else {
+ 				$LD['linkVars'] = $GLOBALS['TSFE']->linkVars;
+ 			}
+--- typo3-src-4.3.9+dfsg1.orig/t3lib/class.t3lib_userauth.php
++++ typo3-src-4.3.9+dfsg1/t3lib/class.t3lib_userauth.php
+@@ -252,6 +252,9 @@
+ 			// Make certain that NO user is set initially
+ 		$this->user = '';
+ 
++			// We need a PHP session session for most login levels
++		session_start();
++
+ 			// Check to see if anyone has submitted login-information and if so register the user with the session. $this->user[uid] may be used to write log...
+ 		$this->checkAuthentication();
+ 
+@@ -1205,7 +1208,6 @@
+ 
+ 					// Check challenge stored in cookie:
+ 				if ($this->challengeStoredInCookie)	{
+-					session_start();
+ 					if ($_SESSION['login_challenge'] !== $loginData['chalvalue']) {
+ 						if ($this->writeDevLog) 	t3lib_div::devLog('PHP Session stored challenge "'.$_SESSION['login_challenge'].'" and submitted challenge "'.$loginData['chalvalue'].'" did not match, so authentication failed!', 't3lib_userAuth', 2);
+ 						$this->logoff();
+--- typo3-src-4.3.9+dfsg1.orig/typo3/class.browse_links.php
++++ typo3-src-4.3.9+dfsg1/typo3/class.browse_links.php
+@@ -872,16 +872,16 @@
+ 		}
+ 
+ 			// Initializing the target value (RTE)
+-		$this->setTarget = ($this->curUrlArray['target'] != '-') ? $this->curUrlArray['target'] : '';
++		$this->setTarget = ($this->curUrlArray['target'] != '-') ? rawurlencode($this->curUrlArray['target']) : '';
+ 		if ($this->thisConfig['defaultLinkTarget'] && !isset($this->curUrlArray['target']))	{
+ 			$this->setTarget=$this->thisConfig['defaultLinkTarget'];
+ 		}
+ 
+ 			// Initializing the class value (RTE)
+-		$this->setClass = ($this->curUrlArray['class'] != '-') ? $this->curUrlArray['class'] : '';
++		$this->setClass = ($this->curUrlArray['class'] != '-') ? rawurlencode($this->curUrlArray['class']) : '';
+ 
+ 			// Initializing the title value (RTE)
+-		$this->setTitle = ($this->curUrlArray['title'] != '-') ? $this->curUrlArray['title'] : '';
++		$this->setTitle = ($this->curUrlArray['title'] != '-') ? rawurlencode($this->curUrlArray['title']) : '';
+ 
+ 			// BEGIN accumulation of header JavaScript:
+ 		$JScode = '
+@@ -892,7 +892,7 @@
+ 			var add_title="'.($this->setTitle?'&curUrl[title]='.rawurlencode($this->setTitle):'').'";
+ 			var add_params="'.($this->bparams?'&bparams='.rawurlencode($this->bparams):'').'";
+ 
+-			var cur_href="'.($this->curUrlArray['href']?$this->curUrlArray['href']:'').'";
++			var cur_href="' . ($this->curUrlArray['href'] ? rawurlencode($this->curUrlArray['href']) : '') . '";
+ 			var cur_target="'.($this->setTarget?$this->setTarget:'').'";
+ 			var cur_class = "'.($this->setClass ? $this->setClass : '-').'";
+ 			var cur_title="'.($this->setTitle?$this->setTitle:'').'";
+--- typo3-src-4.3.9+dfsg1.orig/typo3/contrib/RemoveXSS/RemoveXSS.php
++++ typo3-src-4.3.9+dfsg1/typo3/contrib/RemoveXSS/RemoveXSS.php
+@@ -73,7 +73,7 @@
+ 		$ra_protocol = array('javascript', 'vbscript', 'expression');
+ 
+ 		//remove the potential &#xxx; stuff for testing
+-		$val2 = preg_replace('/(&#[xX]?0{0,8}(9|10|13|a|b);)*\s*/i', '', $val);
++		$val2 = preg_replace('/(&#[xX]?0{0,8}(9|10|13|a|b);?)*\s*/i', '', $val);
+ 		$ra = array();
+ 
+ 		foreach ($ra1 as $ra1word) {
+@@ -105,7 +105,7 @@
+ 					$pattern = '';
+ 					for ($j = 0; $j < strlen($ra[$i][0]); $j++) {
+ 						if ($j > 0) {
+-							$pattern .= '((&#[xX]0{0,8}([9ab]);)|(&#0{0,8}(9|10|13);)|\s)*';
++							$pattern .= '((&#[xX]0{0,8}([9ab]);?)|(&#0{0,8}(9|10|13);?)|\s)*';
+ 						}
+ 						$pattern .= $ra[$i][0][$j];
+ 					}
+@@ -113,11 +113,11 @@
+ 					switch ($ra[$i][1]) {
+ 						case 'ra_protocol':
+ 							//these take the form of e.g. 'javascript:'
+-							$pattern .= '((&#[xX]0{0,8}([9ab]);)|(&#0{0,8}(9|10|13);)|\s)*(?=:)';
++							$pattern .= '((&#[xX]0{0,8}([9ab]);?)|(&#0{0,8}(9|10|13);?)|\s)*(?=:)';
+ 							break;
+ 						case 'ra_tag':
+ 							//these take the form of e.g. '<SCRIPT[^\da-z] ....';
+-							$pattern = '(?<=<)' . $pattern . '((&#[xX]0{0,8}([9ab]);)|(&#0{0,8}(9|10|13);)|\s)*(?=[^\da-z])';
++							$pattern = '(?<=<)' . $pattern . '((&#[xX]0{0,8}([9ab]);?)|(&#0{0,8}(9|10|13);?)|\s)*(?=[^\da-z])';
+ 							break;
+ 						case 'ra_attribute':
+ 							//these take the form of e.g. 'onload='  Beware that a lot of characters are allowed
+--- typo3-src-4.3.9+dfsg1.orig/typo3/index.php
++++ typo3-src-4.3.9+dfsg1/typo3/index.php
+@@ -313,7 +313,7 @@
+ 			'FORM'             => $content,
+ 			'NEWS'             => $this->makeLoginNews(),
+ 			'COPYRIGHT'        => $this->makeCopyrightNotice(),
+-			'CSS_ERRORCLASS'   => ($this->commandLI ? ' class="error"' : ''),
++			'CSS_ERRORCLASS'   => ($this->isLoginInProgress() ? ' class="error"' : ''),
+ 			'CSS_OPENIDCLASS'  => 't3-login-openid-' . (t3lib_extMgm::isLoaded('openid') ? 'enabled' : 'disabled'),
+ 
+ 				// the labels will be replaced later on, thus the other parts above
+@@ -354,8 +354,8 @@
+ 		global $BE_USER,$TBE_TEMPLATE;
+ 
+ 			// Do redirect:
+-			// If a user is logged in AND a) if either the login is just done (commandLI) or b) a loginRefresh is done or c) the interface-selector is NOT enabled (If it is on the other hand, it should not just load an interface, because people has to choose then...)
+-		if ($BE_USER->user['uid'] && ($this->commandLI || $this->loginRefresh || !$this->interfaceSelector))	{
++			// If a user is logged in AND a) if either the login is just done (isLoginInProgress) or b) a loginRefresh is done or c) the interface-selector is NOT enabled (If it is on the other hand, it should not just load an interface, because people has to choose then...)
++		if ($BE_USER->user['uid'] && ($this->isLoginInProgress() || $this->loginRefresh || !$this->interfaceSelector))	{
+ 
+ 				// If no cookie has been set previously we tell people that this is a problem. This assumes that a cookie-setting script (like this one) has been hit at least once prior to this instance.
+ 			if (!$_COOKIE[$BE_USER->name]) {
+@@ -407,7 +407,7 @@
+ 					}
+ 				');
+ 			}
+-		} elseif (!$BE_USER->user['uid'] && $this->commandLI) {
++		} elseif (!$BE_USER->user['uid'] && $this->isLoginInProgress()) {
+ 			sleep(5);	// Wrong password, wait for 5 seconds
+ 		}
+ 	}
+@@ -426,7 +426,7 @@
+ 		$this->interfaceSelector_jump = '';
+ 
+ 			// If interfaces are defined AND no input redirect URL in GET vars:
+-		if ($TYPO3_CONF_VARS['BE']['interfaces'] && ($this->commandLI || !$this->redirect_url))	{
++		if ($TYPO3_CONF_VARS['BE']['interfaces'] && ($this->isLoginInProgress() || !$this->redirect_url))	{
+ 			$parts = t3lib_div::trimExplode(',',$TYPO3_CONF_VARS['BE']['interfaces']);
+ 			if (count($parts)>1)	{	// Only if more than one interface is defined will we show the selector:
+ 
+@@ -765,6 +765,15 @@
+ 			}
+ 		}
+ 	}
++	/**
++	 * Checks if login credentials are currently submitted
++	 *
++	 * @return	boolean
++	 */
++	protected function isLoginInProgress() {
++		$username = t3lib_div::_GP('username');
++		return !(empty($username) && empty($this->commandLI));
++	}
+ }
+ 
+ 
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/cms/tslib/class.tslib_adminpanel.php
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/cms/tslib/class.tslib_adminpanel.php
+@@ -303,7 +303,7 @@
+ 		$row = '<img src="' . TYPO3_mainDir . 'gfx/ol/blank.gif" width="18" height="16" align="absmiddle" border="0" alt="" />';
+ 		$row .= '<img src="' . TYPO3_mainDir . 'gfx/ol/' . ($GLOBALS['BE_USER']->uc['TSFE_adminConfig']['display_top']?'minus':'plus') . 'bullet.gif" width="18" height="16" align="absmiddle" border="0" alt="" />';
+ 		$row .= '<strong>' . $this->extFw($this->extGetLL('adminOptions')) . '</strong>';
+-		$row .= $this->extFw(': ' . $GLOBALS['BE_USER']->user['username']);
++		$row .= $this->extFw(': ' . htmlspecialchars($GLOBALS['BE_USER']->user['username']));
+ 
+ 		$header = '
+ 			<tr class="typo3-adminPanel-hRow" style="background-color: #9ba1a8; cursor: move;">
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/cms/tslib/class.tslib_content.php
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/cms/tslib/class.tslib_content.php
+@@ -6231,7 +6231,8 @@
+ 					$target = '';
+ 				}
+ 
+-				$onClick="vHWin=window.open('".$GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url'])."','FEopenLink','".$JSwindowParams."');vHWin.focus();return false;";
++				$onClick="vHWin=window.open(" . t3lib_div::quoteJSvalue($GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url'])) .
++					",'FEopenLink','" . $JSwindowParams . "');vHWin.focus();return false;";
+ 				$res = '<a href="'.htmlspecialchars($finalTagParts['url']).'"'. $target .' onclick="'.htmlspecialchars($onClick).'"'.($title?' title="'.$title.'"':'').($linkClass?' class="'.$linkClass.'"':'').$finalTagParts['aTagParams'].'>';
+ 			} else {
+ 				if ($GLOBALS['TSFE']->spamProtectEmailAddresses === 'ascii' && $finalTagParts['TYPE'] === 'mailto') {
+@@ -6501,7 +6502,7 @@
+ 			$newQueryArray = t3lib_div::array_merge_recursive_overrule($newQueryArray, $overruleQueryArguments, TRUE);
+ 		}
+ 
+-		return t3lib_div::implodeArrayForUrl('', $newQueryArray);
++		return t3lib_div::implodeArrayForUrl('', $newQueryArray, '', FALSE, TRUE);
+ 	}
+ 
+ 
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/cms/tslib/class.tslib_fe.php
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/cms/tslib/class.tslib_fe.php
+@@ -2257,7 +2257,7 @@
+ 			$TCA = Array();
+ 			include (TYPO3_tables_script ? PATH_typo3conf.TYPO3_tables_script : PATH_t3lib.'stddb/tables.php');
+ 				// Extension additions
+-			if ($GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'])	{
++			if ($GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'] && file_exists(PATH_typo3conf . $GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'] . '_ext_tables.php')) {
+ 				include(PATH_typo3conf.$GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'].'_ext_tables.php');
+ 			} else {
+ 				include(PATH_t3lib.'stddb/load_ext_tables.php');
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/cms/tslib/showpic.php
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/cms/tslib/showpic.php
+@@ -162,7 +162,7 @@
+ 			)
+ 		);
+ 
+-		if ($md5_value!=$this->md5) {
++		if ($md5_value !== $this->md5) {
+ 			die('Parameter Error: Wrong parameters sent.');
+ 		}
+ 
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/css_styled_content/static/setup.txt
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/css_styled_content/static/setup.txt
+@@ -177,20 +177,19 @@
+ 
+ 	10.1 = TEXT
+ 	10.1.current = 1
+-	10.1.insertData = 1
+-	10.1.fontTag = <h1{register:headerStyle}{register:headerClass}>|</h1>
++	10.1.dataWrap = <h1{register:headerStyle}{register:headerClass}>|</h1>
+ 
+ 	10.2 < .10.1
+-	10.2.fontTag = <h2{register:headerStyle}{register:headerClass}>|</h2>
++	10.2.dataWrap = <h2{register:headerStyle}{register:headerClass}>|</h2>
+ 
+ 	10.3 < .10.1
+-	10.3.fontTag = <h3{register:headerStyle}{register:headerClass}>|</h3>
++	10.3.dataWrap = <h3{register:headerStyle}{register:headerClass}>|</h3>
+ 
+ 	10.4 < .10.1
+-	10.4.fontTag = <h4{register:headerStyle}{register:headerClass}>|</h4>
++	10.4.dataWrap = <h4{register:headerStyle}{register:headerClass}>|</h4>
+ 
+ 	10.5 < .10.1
+-	10.5.fontTag = <h5{register:headerStyle}{register:headerClass}>|</h5>
++	10.5.dataWrap = <h5{register:headerStyle}{register:headerClass}>|</h5>
+ 
+ 	# Pops the used registers off the stack:
+ 	98 = RESTORE_REGISTER
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/felogin/flexform.xml
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/felogin/flexform.xml
+@@ -323,7 +323,7 @@
+ 							</config>
+ 						</TCEforms>
+ 					</forgot_header>
+-					<forgot_message>
++					<forgot_reset_message>
+ 						<TCEforms>
+ 							<label>LLL:EXT:felogin/locallang_db.xml:tt_content.pi_flexform.forgot_message</label>
+ 							<config>
+@@ -332,7 +332,7 @@
+ 								<rows>5</rows>
+ 							</config>
+ 						</TCEforms>
+-					</forgot_message>
++					</forgot_reset_message>
+ 				</el>
+ 			</ROOT>
+ 		</s_messages>
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/felogin/pi1/locallang.xml
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/felogin/pi1/locallang.xml
+@@ -55,7 +55,7 @@
+ 			<label index="ll_forgot_validate_reset_password">Your new password
+ Dear %s,
+ 
+-This email was sent in response to your request to reset your password. Please click on the link below. 
++This email was sent in response to your request to reset your password. Please click on the link below.
+ %s
+ 
+ For security reasons, this link is only active until %s. If you do not visit the link before then, you will need to repeat the password reset steps.
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/recycler/classes/helper/class.tx_recycler_helper.php
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/recycler/classes/helper/class.tx_recycler_helper.php
+@@ -118,13 +118,13 @@
+ 						$output = ' [#VEP#]' . $output;		// Adding visual token - Versioning Entry Point - that tells that THIS position was where the versionized branch got connected to the main tree. I will have to find a better name or something...
+ 					}
+ 					$uid = $row['pid'];
+-					$output = '/' . t3lib_div::fixed_lgd_cs(strip_tags($row['title']), $titleLimit) . $output;
++					$output = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title']), $titleLimit) . $output;
+ 
+ 					if ($row['deleted']) {
+ 						$output = '<span class="deletedPath">' . $output . '</span>';
+ 					}
+ 
+-					if ($fullTitleLimit) $fullOutput = '/' . t3lib_div::fixed_lgd_cs(strip_tags($row['title']), $fullTitleLimit) . $fullOutput;
++					if ($fullTitleLimit) $fullOutput = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title']), $fullTitleLimit) . $fullOutput;
+ 				} else {
+ 					break;
+ 				}
+--- typo3-src-4.3.9+dfsg1.orig/typo3/sysext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php
++++ typo3-src-4.3.9+dfsg1/typo3/sysext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php
+@@ -62,14 +62,14 @@
+ 						'table'	=> $table,
+ 						'crdate' => date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $row[$GLOBALS['TCA'][$table]['ctrl']['crdate']]),
+ 						'tstamp' => date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $row[$GLOBALS['TCA'][$table]['ctrl']['tstamp']]),
+-						'owner' => $feuser['username'],
++						'owner' => htmlspecialchars($feuser['username']),
+ 						'owner_uid' => $row[$GLOBALS['TCA'][$table]['ctrl']['cruser_id']],
+ 						'tableTitle' => tx_recycler_helper::getUtf8String(
+ 							$GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title'])
+ 						),
+-						'title'	=> tx_recycler_helper::getUtf8String(
++						'title'	=> htmlspecialchars(tx_recycler_helper::getUtf8String(
+ 							t3lib_BEfunc::getRecordTitle($table, $row)
+-						),
++						)),
+ 						'path'	=> tx_recycler_helper::getRecordPath($row['pid']),
+ 					);
+ 				}
+--- typo3-src-4.3.9+dfsg1.orig/typo3/wizard_colorpicker.php
++++ typo3-src-4.3.9+dfsg1/typo3/wizard_colorpicker.php
+@@ -448,7 +448,7 @@
+ 	protected function areFieldChangeFunctionsValid() {
+ 		return (
+ 			$this->fieldChangeFunc && $this->fieldChangeFuncHash
+-			&& $this->fieldChangeFuncHash == t3lib_div::hmac($this->fieldChangeFunc)
++			&& $this->fieldChangeFuncHash === t3lib_div::hmac($this->fieldChangeFunc)
+ 		);
+ 	}
+ }
+--- typo3-src-4.3.9+dfsg1.orig/typo3/wizard_tsconfig.php
++++ typo3-src-4.3.9+dfsg1/typo3/wizard_tsconfig.php
+@@ -640,7 +640,7 @@
+ 	protected function areFieldChangeFunctionsValid() {
+ 		return (
+ 			isset($this->P['fieldChangeFunc']) && is_array($this->P['fieldChangeFunc']) && isset($this->P['fieldChangeFuncHash'])
+-			&& $this->P['fieldChangeFuncHash'] == t3lib_div::hmac(serialize($this->P['fieldChangeFunc']))
++			&& $this->P['fieldChangeFuncHash'] === t3lib_div::hmac(serialize($this->P['fieldChangeFunc']))
+ 		);
+ 	}
+ }
