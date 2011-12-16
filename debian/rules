@@ -88,6 +88,9 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
+build-arch: build
+build-indep: build
+
 # Note to me: how to find all sql files:
 find-sql:
 	cat ../t3lib/stddb/tables.sql ../typo3/sysext/sys_note/ext_tables.sql ../typo3/sysext/extbase/ext_tables.sql \
