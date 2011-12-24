@@ -1,3 +1,10 @@
+typo3-src (4.5.10+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release:
+   - fixes regression introduced with last update.
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 24 Dec 2011 14:00:00 +0100
+
 typo3-src (4.5.9+dfsg1-1) unstable; urgency=high
 
   * New upstream release:
