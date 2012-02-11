@@ -1,3 +1,11 @@
+typo3-src (4.5.11+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Changed symlink of prototype.js to point to prototype-1.js instead
+    of prototype-1.6.js (Closes: 651128)
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 11 Feb 2012 21:51:10 +0100
+
 typo3-src (4.5.10+dfsg1-1) unstable; urgency=medium
 
   * New upstream release:
