@@ -1,0 +1,12 @@
+/* Selectors for the LanguageMarks plugin of htmlArea RTE */
+/* TYPO3 SVN ID: $Id: htmlarea.css 6539 2009-11-25 14:49:14Z stucki $ */
+
+.htmlarea .toolbar .LeftToRight {
+	background-image:url("images/left_to_right.gif");
+}
+.htmlarea .toolbar .RightToLeft {
+	background-image:url("images/right_to_left.gif");
+}
+.htmlarea .toolbar .ShowLanguageMarks {
+	background-image:url("images/show-language-marks.gif");
+}

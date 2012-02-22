@@ -1,0 +1,4 @@
+/* Selectors for the TYPO3Color plugin of htmlArea RTE */
+/* TYPO3 SVN ID: $Id: htmlarea.css 6539 2009-11-25 14:49:14Z stucki $ */
+.htmlarea .toolbar .ForeColor {background-image:url("images/forecolor.gif");}
+.htmlarea .toolbar .HiliteColor {background-image:url("images/hilitecolor.gif");}

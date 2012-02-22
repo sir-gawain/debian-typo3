@@ -1,0 +1,4 @@
+/* Selectors for the Image plugin of htmlArea RTE */
+/* TYPO3 SVN ID: $Id: htmlarea.css 6539 2009-11-25 14:49:14Z stucki $ */
+.htmlarea .toolbar .Image {background-image:url("images/image.gif");}
+

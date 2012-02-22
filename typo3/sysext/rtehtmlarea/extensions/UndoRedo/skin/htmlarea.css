@@ -1,0 +1,4 @@
+/* Selectors for the Undo Redo plugin of htmlArea RTE */
+/* TYPO3 SVN ID: $Id: htmlarea.css 6539 2009-11-25 14:49:14Z stucki $ */
+.htmlarea .toolbar .Undo {background-image:url("images/undo.gif");}
+.htmlarea .toolbar .Redo {background-image:url("images/redo.gif");}
