@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /*
  * DefinitionList Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: definition-list.js 7856 2010-06-09 17:49:29Z stan $
+ * TYPO3 SVN ID: $Id$
  */
-DefinitionList = BlockElements.extend({
+HTMLArea.DefinitionList = HTMLArea.BlockElements.extend({
 		
 	constructor : function(editor, pluginName) {
 		this.base(editor, pluginName);
@@ -51,12 +51,14 @@ DefinitionList = BlockElements.extend({
 		this.useAlignAttribute = parentPlugin.useAlignAttribute;
 		this.allowedBlockElements = parentPlugin.allowedBlockElements;
 		this.indentedList = null;
+		this.standardBlockElements = parentPlugin.standardBlockElements;
+		this.formatBlockItems = parentPlugin.formatBlockItems;
 		
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "0.4",
+			version		: "1.0",
 			developer	: "Stanislas Rolland",
 			developerUrl	: "http://www.sjbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
@@ -65,54 +67,58 @@ DefinitionList = BlockElements.extend({
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
-		
 		/*
 		 * Registering the buttons
 		 */
-		for (var buttonId in this.buttonList) {
-			if (this.buttonList.hasOwnProperty(buttonId)) {
-				var button = this.buttonList[buttonId];
-				var buttonConfiguration = {
-					id		: buttonId,
-					tooltip		: this.localize(buttonId + "-Tooltip"),
-					action		: "onButtonPress",
-					context		: button[0],
-					hotKey		: ((this.buttonsConfiguration[button[2]] && this.buttonsConfiguration[button[2]].hotKey) ? this.buttonsConfiguration[button[2]].hotKey : (button[1] ? button[1] : null))
-				};
-				this.registerButton(buttonConfiguration);
-			}
-		}
-		
+		Ext.each(this.buttonList, function (button) {
+			var buttonId = button[0];
+			var buttonConfiguration = {
+				id		: buttonId,
+				tooltip		: this.localize(buttonId + '-Tooltip'),
+				contextMenuTitle: this.localize(buttonId + '-contextMenuTitle'),
+				helpText	: this.localize(buttonId + '-helpText'),
+				iconCls		: 'htmlarea-action-' + button[5],
+				action		: 'onButtonPress',
+				context		: button[1],
+				hotKey		: ((this.buttonsConfiguration[button[3]] && this.buttonsConfiguration[button[3]].hotKey) ? this.buttonsConfiguration[button[3]].hotKey : (button[2] ? button[2] : null)),
+				noAutoUpdate	: button[4]
+			};
+			this.registerButton(buttonConfiguration);
+		}, this);
 		return true;
-	 },
-	 
+	},
 	/*
 	 * The list of buttons added by this plugin
 	 */
-	buttonList : {
-		Indent			: [null, "TAB", "indent"],
-		Outdent			: [null, "SHIFT-TAB", "outdent"],
-		DefinitionList		: [null, null, "definitionlist"],
-		DefinitionItem		: ["dd,dt", null, "definitionitem"]
-	},
-	
+	buttonList: [
+		['Indent', null, 'TAB', 'indent', false, 'indent'],
+		['Outdent', null, 'SHIFT-TAB', 'outdent', false, 'outdent'],
+		['DefinitionList', null, null, 'definitionlist', true, 'definition-list'],
+		['DefinitionItem', 'dd,dt', null, 'definitionitem', false, 'definition-list-item']
+	 ],
+	/*
+	 * This function gets called when the plugin is generated
+	 * Avoid re-execution of the base function
+	 */
+	onGenerate: Ext.emptyFn,
 	/*
 	 * This function gets called when a button was pressed.
 	 *
 	 * @param	object		editor: the editor instance
 	 * @param	string		id: the button id or the key
 	 * @param	object		target: the target element of the contextmenu event, when invoked from the context menu
+	 * @param	string		className: the className to be assigned to the element
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function (editor, id, target) {
+	onButtonPress : function (editor, id, target, className) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		this.editor.focusEditor();
+		this.editor.focus();
 		var selection = editor._getSelection();
 		var range = editor._createRange(selection);
-		var statusBarSelection = editor.getPluginInstance("StatusBar") ? editor.getPluginInstance("StatusBar").getSelection() : null;
+		var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
 		var parentElement = statusBarSelection ? statusBarSelection : this.editor.getParentElement(selection, range);
 		if (target) {
 			parentElement = target;
@@ -126,14 +132,14 @@ DefinitionList = BlockElements.extend({
 				if (/^(dd|dt)$/i.test(parentElement.nodeName) && this.indentDefinitionList(parentElement, range)) {
 					break;
 				} else {
-					this.base(editor, id, target);
+					this.base(editor, id, target, className);
 				}
 				break;
 			case "Outdent" :
 				if (/^(dt)$/i.test(parentElement.nodeName) && this.outdentDefinitionList(selection, range)) {
 					break;
 				} else {
-					this.base(editor, id, target);
+					this.base(editor, id, target, className);
 				}
 				break;
 			case "DefinitionList":
@@ -147,7 +153,7 @@ DefinitionList = BlockElements.extend({
 				this.editor.selectRange(this.editor.moveToBookmark(bookmark));
 				break;
 			default:
-				this.base(editor, id, target);
+				this.base(editor, id, target, className);
 		}
 		return false;
 	},
@@ -164,7 +170,7 @@ DefinitionList = BlockElements.extend({
 			if (attributeValue) newNode.setAttribute(attributeName, attributeValue);
 		}
 			// In IE, the above fails to update the classname and style attributes.
-		if (HTMLArea.is_ie) {
+		if (Ext.isIE) {
 			if (node.style.cssText) {
 				newNode.style.cssText = node.style.cssText;
 			}
@@ -236,8 +242,8 @@ DefinitionList = BlockElements.extend({
 		if (this.editor._selectionEmpty(selection) && /^dd$/i.test(parentElement.nodeName)) {
 			var list = parentElement.appendChild(this.editor._doc.createElement("dl"));
 			var term = list.appendChild(this.editor._doc.createElement("dt"));
-			if (HTMLArea.is_gecko) {
-				if (HTMLArea.is_safari) {
+			if (!Ext.isIE) {
+				if (Ext.isWebKit) {
 					term.innerHTML = "<br />";
 				} else {
 					term.appendChild(this.editor._doc.createTextNode(""));
@@ -308,48 +314,33 @@ DefinitionList = BlockElements.extend({
 	/*
 	 * This function gets called when the toolbar is updated
 	 */
-	onUpdateToolbar : function () {
-		if (this.getEditorMode() === "textmode" || !this.editor.isEditable()) {
-			return false;
-		}
-		var statusBarSelection = this.editor.getPluginInstance("StatusBar") ? this.editor.getPluginInstance("StatusBar").getSelection() : null;
-		var parentElement = statusBarSelection ? statusBarSelection : this.editor.getParentElement();
-		if (parentElement.nodeName.toLowerCase() === "body") {
-				// The selection is not contained in any block
-			for (var buttonId in this.buttonList) {
-				if (this.buttonList.hasOwnProperty(buttonId) && this.isButtonInToolbar(buttonId)) {
-					switch (buttonId) {
-						case 'Outdent':
-							this.base();
-							break;
-					}
-				}
-			}
-			return false;
-		}
-		while (parentElement && (!HTMLArea.isBlockElement(parentElement) || /^(li)$/i.test(parentElement.nodeName))) {
-			parentElement = parentElement.parentNode;
-		}
-		var blockAncestors = this.getBlockAncestors(parentElement);
-		var selection = this.editor._getSelection();
-		var endBlocks = this.editor.getEndBlocks(selection);
-		for (var buttonId in this.buttonList) {
-			commandState = false;
-			if (this.buttonList.hasOwnProperty(buttonId) && this.isButtonInToolbar(buttonId)) {
-				switch (buttonId) {
-					case "Outdent" :
+	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
+		var editor = this.editor;
+		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+			var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
+			var parentElement = statusBarSelection ? statusBarSelection : editor.getParentElement();
+			if (!/^(body)$/i.test(parentElement.nodeName)) {
+				var endBlocks = editor.getEndBlocks(editor._getSelection());
+				switch (button.itemId) {
+					case 'Outdent':
 						if (/^(dt)$/i.test(endBlocks.start.nodeName)
 								&& /^(dl)$/i.test(endBlocks.start.parentNode.nodeName)
 								&& /^(dd)$/i.test(endBlocks.start.parentNode.parentNode.nodeName)
 								&& !endBlocks.end.nextSibling) {
-							this.editor._toolbarObjects[buttonId].state("enabled", true);
+							button.setDisabled(false);
 						} else {
-							this.base();
+							this.base(button, mode, selectionEmpty, ancestors);
 						}
 						break;
-					case "DefinitionList" :
-						this.editor._toolbarObjects[buttonId].state("enabled", (this.editor._selectionEmpty() && /^(p|div|address|pre|blockquote|h[1-6]|li|td|dd)$/i.test(endBlocks.start.nodeName))
-													|| (endBlocks.start != endBlocks.end && /^(p|h[1-6])$/i.test(endBlocks.start.nodeName)));
+					case 'DefinitionList':
+						button.setDisabled(!(selectionEmpty && /^(p|div|address|pre|blockquote|h[1-6]|li|td|dd)$/i.test(endBlocks.start.nodeName))
+													&& !(endBlocks.start != endBlocks.end && /^(p|h[1-6])$/i.test(endBlocks.start.nodeName)));
+						break;
+				}
+			} else {
+				switch (button.itemId) {
+					case 'Outdent':
+						this.base(button, mode, selectionEmpty, ancestors);
 						break;
 				}
 			}

@@ -12,7 +12,7 @@
 			<label index=".details">For most people TYPO3 is equivalent to a CMS providing a backend for management of the content and a frontend engine for website display. However TYPO3s core is natively designed to be a general purpose framework for management of database content. The core of TYPO3 delivers a set of principles for storage of this content, user access management, editing of the content, uploading and managing files etc. Many of these principles are expressed as an API (Application Programmers Interface) for use in the &lt;em&gt;extensions&lt;/em&gt; which ultimately adds most of the real functionality.</label>
 			<label index="_.seeAlso">Inside TYPO3 | http://typo3.org/documentation/document-library/doc_core_inside/This_document-1/</label>
 			<label index="_.image">EXT:lang/cshimages/login.png</label>
-			<label index=".image_descr">TYPO3 backend login screen summer 2004 (version 3.6.1).</label>
+			<label index=".image_descr">TYPO3 backend login screen.</label>
 			<label index="menu_modules.alttitle">Backend modules</label>
 			<label index="menu_modules.description">The Backend menu reflects the hierarchy of main- and sub-modules in TYPO3. Click a menu item to access the corresponding module.</label>
 			<label index="menu_modules.details">Backend Users might see different menu items depending on their access permissions. The &quot;Admin&quot; user on a system will always see all modules available.
@@ -91,6 +91,12 @@ EXT:lang/cshimages/core_10.png</label>
 			<label index="filetree.image_descr">The Folder Tree of the &quot;fileadmin/&quot; folder. This is mounted by default for &quot;Admin&quot;-users. Other users will have to have a file mount configured for them first.
 Clicking the icon of a folder displays the context menu of the folder.
 If you click the folder title in the Folder Tree you will see the sub-module loaded in the right frame. Here it is the File &gt; Filelist module that will display files and folders inside. Clicking the icon of a file will display a context menu for the file.</label>
+			<label index="tcatree.collapseAll">Collapse All</label>
+			<label index="tcatree">TYPO3 TCA tree</label>
+			<label index="tcatree.expandAll">Expand All</label>
+			<label index="tcatree.findItem">Find Item</label>
+			<label index="tcatree.filter.startsWith">starts with</label>
+			<label index="tcatree.filter.contains">contains</label>
 			<label index="list_module.alttitle">The Web&gt;List module</label>
 			<label index="list_module.description">Listing records located on a page. From here you can copy/cut/paste records around in the system. You can edit records, access the change history of elements etc.</label>
 			<label index="list_module.details">The list module is like the file manager in an Operating System; it provides basic access to all &quot;elements&quot; available in the system. In TYPO3 almost all information is stored in the database and managed after the same principles internally. For instance Content Elements representing page content are database records just like backend users are. The Web&gt;List module allows us to create, modify and delete both kinds of records after the same principles.
@@ -141,7 +147,7 @@ If you select one of the numeric clipboard pads you will be able to store more t
 			<label index="_list_searchbox.seeAlso">xMOD_csh_corebe:list_module</label>
 			<label index="_list_searchbox.image">EXT:lang/cshimages/core_15.png,</label>
 			<label index="list_options.alttitle">List module options</label>
-			<label index="list_options.description">Enable the &quot;Extended view&quot; mode to see additional control buttons for each record in the listing. Enable the &quot;Clipboard&quot; to see the clipboard and its content.</label>
+			<label index="list_options.description">Enable additional options like the &quot;Extended view&quot; mode to see additional control buttons for each record in the listing or the &quot;Clipboard&quot; to see the clipboard and its content.</label>
 			<label index="_list_options.seeAlso">xMOD_csh_corebe:list_module,
 xMOD_csh_corebe:list_clipboard,
 xMOD_csh_corebe:filelist_options</label>
@@ -439,6 +445,18 @@ EXT:lang/cshimages/core_68.png,</label>
 You will have to confirm the creation of the shortcut. It is nothing dangerous - only annoying to clean up if you happen to create shortcuts against your own will. Just answer &quot;OK&quot; here.
 When you answer &quot;OK&quot; you should immediately see the shortcut frame reload and a new icon (the module icon) appear. If you click this icon you will now jump to the page you created the shortcut from!
 You can name shortcuts, you can even group them and share them. If you want to edit or delete a shortcut you select the &quot;Edit&quot; checkbox and then click the shortcut icon. This will reload the shortcut frame so you get a field for entering a title. You can also delete all shortcuts in a &quot;group&quot; - here, just click the &quot;0&quot; (zero) to the left of the icons and you will remove all shortcuts in the group.</label>
+			<label index="bookmarks.alttitle">Backend Bookmarks</label>
+			<label index="bookmarks.description">You can create bookmarks to modules in TYPO3 quite easily. The treat is that you can jump between screens in TYPO3 in &lt;em&gt;one&lt;/em&gt; click rather than multiple clicks through backend modules etc. The frame also contains a field for entering a page or record id to edit or just search records.</label>
+			<label index="bookmarks.details">In order to create a bookmark it must be supported by the module you want to create the bookmark to. Whether bookmarks are supported can be seen in the top of a module. If there is a small star icon you can click it to create the bookmark.</label>
+			<label index="_bookmarks.seeAlso">User TSconfig -&gt;SETUP | http://typo3.org/documentation/document-library/doc_core_tsconfig/OPTIONS/</label>
+			<label index="_bookmarks.image">EXT:lang/cshimages/core_64.png,
+EXT:lang/cshimages/core_65.png,
+EXT:lang/cshimages/core_67.png,
+EXT:lang/cshimages/core_68.png,</label>
+			<label index="bookmarks.image_descr">To create a bookmark to a page, just click the star icon usually found in the top of pages.
+You will have to confirm the creation of the bookmark. It is nothing dangerous - only annoying to clean up if you happen to create bookmarks against your own will. Just answer &quot;OK&quot; here.
+When you answer &quot;OK&quot; you should immediately see the bookmark icon in the toolbar reloading and, after opening the menu, the new entry appear. If you click this entry, you will now jump to the page you created the bookmark from!
+You can name bookmarks, you can even group them and share them. If you want to edit or delete a bookmark you select the &quot;Edit&quot; checkbox and then click the bookmark icon.</label>
 			<label index="workspaceSelector.alttitle">Workspace Selector</label>
 			<label index="workspaceSelector.description">By this selectorbox you can switch between the workspaces available to you. When you switch workspace the whole backend will reload.</label>
 			<label index="workspaceSelector.details">There are two basic workspace types in TYPO3: The &quot;Live&quot; workspace and a number of &quot;Draft&quot; workspaces.

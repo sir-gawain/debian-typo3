@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Property\Exception
- * @version $Id: InvalidSource.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  */
 class Tx_Extbase_Property_Exception_InvalidSource extends Tx_Extbase_Property_Exception {
 

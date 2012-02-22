@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,7 +24,7 @@
 /**
  * Module extension (addition to function menu) 'Indexed search' for the 'indexed_search' extension.
  *
- * @author    Kasper Sk�rh�j <kasperYYYY@typo3.com>
+ * @author    Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -87,7 +87,7 @@ require_once(t3lib_extMgm::extPath('indexed_search').'class.indexer.php');
 /**
  * Indexing class for TYPO3 frontend
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_indexedsearch
  */
@@ -366,7 +366,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 		while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
 			$out.='
 				<tr class="typo3-red">
-					<td colspan="'.$this->returnNumberOfColumns().'"><b>Warning:</b> phash-row "'.$row['phash'].'" didn\'t have a representation in the index_section table!</td>
+					<td colspan="'.$this->returnNumberOfColumns().'"><strong>Warning:</strong> phash-row "'.$row['phash'].'" didn\'t have a representation in the index_section table!</td>
 				</tr>';
 			$this->allPhashListed[] = $row['phash'];
 		}
@@ -467,14 +467,14 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 				$lines[] = '<td>'.$cmdLinks.'</td>';
 
 					// Query:
-				$ftrows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+				$ftrow = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 							'*',
 							'index_fulltext',
 							'phash = '.intval($row['phash'])
 						);
 				$lines[] = '<td style="white-space: normal;">'.
-							htmlspecialchars(t3lib_div::fixed_lgd_cs($this->utf8_to_currentCharset($ftrows[0]['fulltextdata']),3000)).
-							'<hr/><em>Size: '.strlen($ftrows[0]['fulltextdata']).'</em>'.
+							htmlspecialchars(t3lib_div::fixed_lgd_cs($this->utf8_to_currentCharset($ftrow['fulltextdata']), 3000)) .
+							'<hr/><em>Size: ' . strlen($ftrow['fulltextdata']) . '</em>' .
 							'</td>';
 
 					// Query:
@@ -623,12 +623,11 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 		$content = '';
 
 			// Selects the result row:
-		$ftrows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+		$phashRecord = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'*',
 					'index_phash',
 					'phash = '.intval($phash)
 				);
-		$phashRecord = $ftrows[0];
 
 			// If found, display:
 		if (is_array($phashRecord))	{
@@ -650,9 +649,9 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 						$this->utf8_to_currentCharset(t3lib_div::view_array($debugInfo));
 
 				$content.= '<h4>Debug information / lexer splitting:</h4>'.
-						'<hr/><b>'.
+						'<hr/><strong>'.
 						$this->utf8_to_currentCharset($lexer).
-						'</b><hr/>';
+						'</strong><hr/>';
 			}
 
 
@@ -1008,9 +1007,9 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 	 * @return	string		HTML img-tag with link around.
 	 */
 	function printRemoveIndexed($phash,$alt)	{
-		return '<a href="'.htmlspecialchars(t3lib_div::linkThisScript(array('deletePhash'=>$phash))).'">'.
-				'<img '.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/garbage.gif', 'width="11" height="12"') . ' hspace="1" vspace="2" border="0" title="'.htmlspecialchars($alt).'" alt="" />'.
-				'</a>';
+		return '<a href="'.htmlspecialchars(t3lib_div::linkThisScript(array('deletePhash'=>$phash))).'" title="' . htmlspecialchars($alt) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-edit-delete') .
+			'</a>';
 	}
 
 	/**
@@ -1067,9 +1066,8 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 	 */
 	function printExtraGrListRows($extraGrListRows)	{
 		if (count($extraGrListRows))	{
-			reset($extraGrListRows);
 			$lines=array();
-			while(list(,$r)=each($extraGrListRows))	{
+			foreach ($extraGrListRows as $r) {
 				$lines[] = $r['gr_list'];
 			}
 			return '<br />' . $GLOBALS['TBE_TEMPLATE']->dfw(implode('<br />', $lines));
@@ -1176,7 +1174,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 	function reindexPhash($phash, $pageId)	{
 
 			// Query:
-		list($resultRow) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+		$resultRow = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'ISEC.*, IP.*',
 					'index_phash IP, index_section ISEC',
 					'IP.phash = ISEC.phash
@@ -1390,8 +1388,8 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc1/class.tx_indexedsearch_modfunc1.php'])    {
-    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc1/class.tx_indexedsearch_modfunc1.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc1/class.tx_indexedsearch_modfunc1.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc1/class.tx_indexedsearch_modfunc1.php']);
 }
 
 ?>

@@ -27,7 +27,7 @@
  *
  * @package Extbase
  * @subpackage Reflection
- * @version $Id: DocCommentParser.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  */
 class Tx_Extbase_Reflection_DocCommentParser {
 

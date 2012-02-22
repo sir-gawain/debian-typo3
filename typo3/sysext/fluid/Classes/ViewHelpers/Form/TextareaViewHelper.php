@@ -27,18 +27,14 @@
  * = Examples =
  *
  * <code title="Example">
- * <f:textarea name="myTextArea" value="This is shown inside the textarea" />
+ * <f:form.textarea name="myTextArea" value="This is shown inside the textarea" />
  * </code>
- *
- * Output:
+ * <output>
  * <textarea name="myTextArea">This is shown inside the textarea</textarea>
+ * </output>
  *
- * @version $Id: TextareaViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Form
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Form_TextareaViewHelper extends Tx_Fluid_ViewHelpers_Form_AbstractFormFieldViewHelper {
 

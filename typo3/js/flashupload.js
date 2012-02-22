@@ -4,7 +4,7 @@
  *
  * For proper use see file_list.php or the doc_core_api manual
  *
- * (c) 2009 Benjamin Mack
+ * (c) 2009-2011 Benjamin Mack <benni@typo3.org>
  * All rights reserved
  *
  * This script is part of TYPO3 by
@@ -248,7 +248,7 @@ Ext.onReady(function() {
 				if (swfConfig.file_upload_limit) {
 					txt += String.format(TYPO3.LLL.fileUpload.infoComponentFileUploadLimit, swfConfig.file_upload_limit) + '<br/>';
 				}
-				if (swfConfig.file_types != '*.*') {
+				if (swfConfig.file_types !== '*.*') {
 					txt += String.format(TYPO3.LLL.fileUpload.infoComponentFileTypeLimit, swfConfig.file_types);
 				}
 				this.insert(0, new Ext.Panel({
@@ -291,11 +291,11 @@ Ext.onReady(function() {
 		 * SWFupload needs it to be (*.jpg;*.gif) and also adds deny file patterns
 		 */
 		setFileTypeRestrictions: function(typo3FileTypes) {
-			if (typo3FileTypes.allow && typo3FileTypes.allow != '' && typo3FileTypes.allow != '*') {
+			if (typo3FileTypes.allow && typo3FileTypes.allow !== '' && typo3FileTypes.allow !== '*') {
 				var allowedFiles = typo3FileTypes.allow.split(',');
 				this.swfDefaultConfig.file_types = '*.' + allowedFiles.join(';*.');
 			}
-			if (typo3FileTypes.deny && typo3FileTypes.deny != '') {
+			if (typo3FileTypes.deny && typo3FileTypes.deny !== '') {
 				this.deniedFileTypes = typo3FileTypes.deny;
 			}
 		},
@@ -312,7 +312,7 @@ Ext.onReady(function() {
 				denyTypes += (denyTypes.length ? ',' : '') + TS.denyFileTypes;
 				denyTypes = ',' + denyTypes + ',';
 				var reg = new RegExp(',' + ext + ',', 'i');
-				if (denyTypes.search(reg) == -1) {
+				if (denyTypes.search(reg) === -1) {
 					return true;
 				}
 			}
@@ -435,7 +435,7 @@ Ext.onReady(function() {
 		// private
 		// this handler is only called by totalComplete, not by swfupload itself
 		totalError: function() {
-			if (this.lastError == null) {
+			if (this.lastError === null) {
 				return;
 			}
 
@@ -501,12 +501,12 @@ Ext.onReady(function() {
 	 		TYPO3.addInstance('FileUploadWindow', instance);
 	 	}
  		return instance;
-	}
+	};
 
 	// This function checks through the SWFObject if the required flash player is available
 	TYPO3.FileUploadWindow.isFlashAvailable = function() {
 		return swfobject.hasFlashPlayerVersion(TYPO3.FileUploadWindow.prototype.swfDefaultConfig.minimum_flash_version);
-	}
+	};
 
 	/**
 	 * This class includes one instance of an upload

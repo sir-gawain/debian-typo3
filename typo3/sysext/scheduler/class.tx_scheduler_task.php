@@ -28,13 +28,13 @@
  * It's an abstract class, not designed to be instantiated directly
  * All Scheduler tasks should inherit from this class
  *
- * @author	Francois Suter <francois@typo3.org>
+ * @author	François Suter <francois@typo3.org>
  * @author	Christian Jul Jensen <julle@typo3.org>
  *
  * @package		TYPO3
  * @subpackage	tx_scheduler
  *
- * $Id: class.tx_scheduler_task.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 abstract class tx_scheduler_Task {
 
@@ -325,7 +325,7 @@ abstract class tx_scheduler_Task {
 
 			// Define the context in which the script is running
 		$context = 'BE';
-		if (defined('TYPO3_cliMode') && TYPO3_cliMode) {
+		if (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_CLI) {
 			$context = 'CLI';
 		}
 
@@ -445,8 +445,8 @@ abstract class tx_scheduler_Task {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_task.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_task.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_task.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_task.php']);
 }
 
 

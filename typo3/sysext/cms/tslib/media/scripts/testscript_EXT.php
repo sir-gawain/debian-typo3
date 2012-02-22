@@ -1,5 +1,5 @@
 <?php
-# TYPO3 SVN ID: $Id: testscript_EXT.php 3437 2008-03-16 16:22:11Z flyguide $
+# TYPO3 SVN ID: $Id$
 
 if (!is_object($TSFE)) die ('Error: No parent object present.');
 

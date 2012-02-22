@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,11 +27,11 @@
 /**
  * Contains the GMENU_LAYERS extension class, tslib_gmenu_layers
  *
- * $Id: gmenu_layers.php 9036 2010-10-11 20:47:04Z steffenk $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -75,10 +75,9 @@
  * Class extending tslib_gmenu for the creation of DHTML menus
  * NOTICE: The contents of this class is made so that it can be copied EXACTLY AS IS to the tmenu_layers class! See notes in class (for BEGIN/END) and also "diff.xmenu_layers.txt"
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=385&cHash=648519dd66
  * @see diff.xmenu_layers.txt
  */
 class tslib_gmenu_layers extends tslib_gmenu {
@@ -337,8 +336,7 @@ GL'.$this->WMid.'_out("");';
 
 		$TEST='';
 		if (count($GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid']))	{
-			reset($GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid']);
-			while(list(,$mIdStr)=each($GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid']))	{
+			foreach ($GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid'] as $mIdStr) {
 				$this->WMhideCode.='
 GL_hideAll("'.$mIdStr.'");';
 				$this->WMrestoreScript.='
@@ -375,7 +373,7 @@ GLV_date = new Date();
 GLV_timeout["'.$this->WMid.'"] = GLV_date.getTime();
 GLV_timeoutRef["'.$this->WMid.'"] = '.t3lib_div::intInRange($this->mconf['hideMenuTimer'],0,20000).';
 GLV_menuXY["'.$this->WMid.'"] = new Array();
-'.implode(chr(10),$this->WMxyArray).'
+'.implode(LF,$this->WMxyArray).'
 '.$this->WMrestoreVars;
 
 		if ($this->mconf['freezeMouseover'])	{
@@ -384,14 +382,14 @@ GLV_menuXY["'.$this->WMid.'"] = new Array();
 function GL'.$this->WMid.'_over(mitm_id)	{
 	GL'.$this->WMid.'_out("");	// removes any old roll over state of an item. Needed for alwaysKeep and Opera browsers.
 	switch(mitm_id)	{
-'.implode(chr(10),$this->VMmouseoverActions).'
+'.implode(LF,$this->VMmouseoverActions).'
 	}
 	GLV_currentROitem["'.$this->WMid.'"]=mitm_id;
 }
 function GL'.$this->WMid.'_out(mitm_id)	{
 	if (!mitm_id)	mitm_id=GLV_currentROitem["'.$this->WMid.'"];
 	switch(mitm_id)	{
-'.implode(chr(10),$this->VMmouseoutActions).'
+'.implode(LF,$this->VMmouseoutActions).'
 	}
 }
 ';
@@ -399,7 +397,7 @@ function GL'.$this->WMid.'_out(mitm_id)	{
 		$GLOBALS["TSFE"]->JSCode.= '
 function GL'.$this->WMid.'_getMouse(e) {
 	if (GLV_menuOn["'.$this->WMid.'"]!=null && !GLV_dontFollowMouse["'.$this->WMid.'"]){
-'.implode(chr(10),$GLV_menuOn).'
+'.implode(LF,$GLV_menuOn).'
 	}
 	GL_mouseMoveEvaluate("'.$this->WMid.'");
 }
@@ -407,7 +405,7 @@ function GL'.$this->WMid.'_hideCode() {
 '.$this->WMhideCode.'
 }
 function GL'.$this->WMid.'_doTop(WMid,id) {
-'.trim(implode(chr(10),$DoTop)).'
+'.trim(implode(LF,$DoTop)).'
 }
 function GL'.$this->WMid.'_restoreMenu() {
 '.$this->WMrestoreScript.'
@@ -430,7 +428,7 @@ GLV_timeout_count++;
 		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove'][$this->WMid]= 'try{GL'.$this->WMid.'_getMouse(e);}catch(ex){};';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onmouseup'][$this->WMid]= 'GL_mouseUp(\''.$this->WMid.'\',e);';
 
-		$GLOBALS['TSFE']->divSection.=implode($this->divLayers,chr(10)).chr(10);
+		$GLOBALS['TSFE']->divSection.=implode($this->divLayers,LF).LF;
 
 		return parent::extProc_finish();
 	}
@@ -467,8 +465,8 @@ GLV_timeout_count++;
 
 $GLOBALS['TSFE']->tmpl->menuclasses.=',gmenu_layers';
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/gmenu_layers.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/gmenu_layers.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/gmenu_layers.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/gmenu_layers.php']);
 }
 
 ?>

@@ -3,7 +3,7 @@
 *
 *  (c) 2002-2004 interactivetools.com, inc.
 *  (c) 2003-2004 dynarch.com
-*  (c) 2004-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,62 +29,15 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /*
- * TYPO3 SVN ID: $Id: htmlarea-gecko.js 9155 2010-10-18 23:16:42Z stan $
+ * TYPO3 SVN ID: $Id$
  */
 
 /***************************************************
  *  GECKO-SPECIFIC FUNCTIONS
  ***************************************************/
-HTMLArea.prototype.isEditable = function() {
+HTMLArea.Editor.prototype.isEditable = function() {
 	return (this._doc.designMode === "on");
 };
-
-/***************************************************
- *  MOZILLA/FIREFOX EDIT MODE INITILIZATION
- ***************************************************/
-
-HTMLArea.prototype._initEditMode = function () {
-		// We can't set designMode when we are in a hidden TYPO3 tab
-		// Then we will set it when the tab comes in the front.
-	var isNested = false;
-	var allDisplayed = true;
-
-	if (this.nested.sorted && this.nested.sorted.length) {
-		isNested = true;
-		allDisplayed = HTMLArea.allElementsAreDisplayed(this.nested.sorted);
-	}
-	if (!isNested || allDisplayed) {
-		try {
-			this._iframe.style.display = "block";
-			this._doc.designMode = "on";
-			if (this._doc.queryCommandEnabled("insertbronreturn")) this._doc.execCommand("insertbronreturn", false, this.config.disableEnterParagraphs);
-			if (this._doc.queryCommandEnabled("enableObjectResizing")) this._doc.execCommand("enableObjectResizing", false, !this.config.disableObjectResizing);
-			if (this._doc.queryCommandEnabled("enableInlineTableEditing")) this._doc.execCommand("enableInlineTableEditing", false, (this.config.buttons.table && this.config.buttons.table.enableHandles) ? true : false);
-			if (this._doc.queryCommandEnabled("styleWithCSS")) this._doc.execCommand("styleWithCSS", false, this.config.useCSS);
-				else if (this._doc.queryCommandEnabled("useCSS")) this._doc.execCommand("useCSS", false, !this.config.useCSS);
-		} catch(e) {
-			if (HTMLArea.is_wamcom) {
-				this._doc.open();
-				this._doc.close();
-				this._initIframeTimer = window.setTimeout("HTMLArea.initIframe(\'" + this._editorNumber + "\');", 500);
-				return false;
-			}
-		}
-	}
-		// When the TYPO3 TCA feature div2tab is used, the editor iframe may become hidden with style.display = "none"
-		// This breaks the editor in Mozilla/Firefox browsers: the designMode attribute needs to be resetted after the style.display of the containing div is resetted to "block"
-		// Here we rely on TYPO3 naming conventions for the div id and class name
-	if (this.nested.sorted && this.nested.sorted.length) {
-		var nestedObj, listenerFunction;
-		for (var i=0, length=this.nested.sorted.length; i < length; i++) {
-			nestedObj = document.getElementById(this.nested.sorted[i]);
-			listenerFunction = HTMLArea.NestedListener(this, nestedObj, false);
-			HTMLArea._addEvent(nestedObj, 'DOMAttrModified', listenerFunction);
-		}
-	}
-	return true;
-};
-
 /***************************************************
  *  SELECTIONS AND RANGES
  ***************************************************/
@@ -92,30 +45,38 @@ HTMLArea.prototype._initEditMode = function () {
 /*
  * Get the current selection object
  */
-HTMLArea.prototype._getSelection = function() {
+HTMLArea.Editor.prototype._getSelection = function() {
 	return this._iframe.contentWindow.getSelection();
 };
 
 /*
  * Empty the selection object
  */
-HTMLArea.prototype.emptySelection = function(selection) {
-	if (HTMLArea.is_safari) {
-		selection.empty();
+HTMLArea.Editor.prototype.emptySelection = function(selection) {
+	if (Ext.isWebKit) {
+		if (Ext.isFunction(selection.removeAllRanges)) {
+			selection.removeAllRanges();
+		} else {
+			selection.empty();
+		}
 	} else {
 		selection.removeAllRanges();
 	}
-	if (HTMLArea.is_opera) {
-		this._iframe.focus();
+	if (Ext.isOpera) {
+		this.focus();
 	}
 };
 
 /*
  * Add a range to the selection
  */
-HTMLArea.prototype.addRangeToSelection = function(selection, range) {
-	if (HTMLArea.is_safari) {
-		selection.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+HTMLArea.Editor.prototype.addRangeToSelection = function(selection, range) {
+	if (Ext.isWebKit) {
+		if (Ext.isFunction(selection.addRange)) {
+			selection.addRange(range);
+		} else {
+			selection.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+		}
 	} else {
 		selection.addRange(range);
 	}
@@ -124,8 +85,12 @@ HTMLArea.prototype.addRangeToSelection = function(selection, range) {
 /*
  * Create a range for the current selection
  */
-HTMLArea.prototype._createRange = function(sel) {
-	if (HTMLArea.is_safari) {
+HTMLArea.Editor.prototype._createRange = function(sel) {
+	if (Ext.isEmpty(sel)) {
+		return this._doc.createRange();
+	}
+		// Older versions of WebKit did not support getRangeAt
+	if (Ext.isWebKit && !sel.getRangeAt) {
 		var range = this._doc.createRange();
 		if (typeof(sel) == "undefined") {
 			return range;
@@ -143,7 +108,6 @@ HTMLArea.prototype._createRange = function(sel) {
 			return range;
 		}
 	}
-	if (typeof(sel) == "undefined") return this._doc.createRange();
 	try {
 		return sel.getRangeAt(0);
 	} catch(e) {
@@ -154,75 +118,134 @@ HTMLArea.prototype._createRange = function(sel) {
 /*
  * Select a node AND the contents inside the node
  */
-HTMLArea.prototype.selectNode = function(node, endPoint) {
-	this.focusEditor();
+HTMLArea.Editor.prototype.selectNode = function(node, endPoint) {
+	this.focus();
 	var selection = this._getSelection();
-	var range = this._doc.createRange();
-	if (node.nodeType == 1 && node.nodeName.toLowerCase() == "body") {
-		range.selectNodeContents(node);
+	if (Ext.isWebKit && /^(img)$/i.test(node.nodeName)) {
+		this._getSelection().setBaseAndExtent(node, 0, node, 1);
 	} else {
-		range.selectNode(node);
+		var range = this._doc.createRange();
+		if (node.nodeType == 1 && node.nodeName.toLowerCase() == "body") {
+			if (Ext.isWebKit) {
+				range.setStart(node, 0);
+				range.setEnd(node, node.childNodes.length);
+			} else {
+				range.selectNodeContents(node);
+			}
+		} else {
+			range.selectNode(node);
+		}
+		if (typeof(endPoint) != "undefined") {
+			range.collapse(endPoint);
+		}
+		this.emptySelection(selection);
+		this.addRangeToSelection(selection, range);
 	}
-	if (typeof(endPoint) != "undefined") {
-		range.collapse(endPoint);
-	}
-	this.emptySelection(selection);
-	this.addRangeToSelection(selection, range);
 };
-
 /*
  * Select ONLY the contents inside the given node
  */
-HTMLArea.prototype.selectNodeContents = function(node, endPoint) {
-	this.focusEditor();
+HTMLArea.Editor.prototype.selectNodeContents = function(node, endPoint) {
+	this.focus();
 	var selection = this._getSelection();
 	var range = this._doc.createRange();
-	range.selectNodeContents(node);
+	if (Ext.isWebKit) {
+		range.setStart(node, 0);
+		if (node.nodeType == 3 || node.nodeType == 8 || node.nodeType == 4) {
+			range.setEnd(node, node.textContent.length);
+		} else {
+			range.setEnd(node, node.childNodes.length);
+		}
+	} else {
+		range.selectNodeContents(node);
+	}
 	if (typeof(endPoint) !== "undefined") {
 		range.collapse(endPoint);
 	}
 	this.emptySelection(selection);
 	this.addRangeToSelection(selection, range);
 };
-
-HTMLArea.prototype.rangeIntersectsNode = function(range, node) {
+HTMLArea.Editor.prototype.rangeIntersectsNode = function(range, node) {
 	var nodeRange = this._doc.createRange();
 	try {
 		nodeRange.selectNode(node);
 	} catch (e) {
-		nodeRange.selectNodeContents(node);
+		if (Ext.isWebKit) {
+			nodeRange.setStart(node, 0);
+			if (node.nodeType == 3 || node.nodeType == 8 || node.nodeType == 4) {
+				nodeRange.setEnd(node, node.textContent.length);
+			} else {
+				nodeRange.setEnd(node, node.childNodes.length);
+			}
+		} else {
+			nodeRange.selectNodeContents(node);
+		}
 	}
-		// Note: sometimes Safari inverts the end points
+		// Note: sometimes WebKit inverts the end points
 	return (range.compareBoundaryPoints(range.END_TO_START, nodeRange) == -1 && range.compareBoundaryPoints(range.START_TO_END, nodeRange) == 1) ||
 		(range.compareBoundaryPoints(range.END_TO_START, nodeRange) == 1 && range.compareBoundaryPoints(range.START_TO_END, nodeRange) == -1);
 };
-
 /*
  * Get the selection type
  */
-HTMLArea.prototype.getSelectionType = function(selection) {
+HTMLArea.Editor.prototype.getSelectionType = function(selection) {
 		// By default set the type to "Text".
-	var type = "Text";
+	var type = 'Text';
 	if (!selection) {
 		var selection = this._getSelection();
 	}
 			// Check if the actual selection is a Control
 	if (selection && selection.rangeCount == 1) {
-		var range = selection.getRangeAt(0) ;
-		if (range.startContainer == range.endContainer
-				&& (range.endOffset - range.startOffset) == 1
-				&& range.startContainer.nodeType == 1
-				&& /^(img|hr|li|table|tr|td|embed|object|ol|ul)$/i.test(range.startContainer.childNodes[range.startOffset].nodeName)) {
-			type = "Control";
+		var range = selection.getRangeAt(0);
+		if (range.startContainer.nodeType == 1) {
+			if (
+					// Gecko
+				(range.startContainer == range.endContainer && (range.endOffset - range.startOffset) == 1) ||
+					// Opera and WebKit
+				(range.endContainer.nodeType == 3 && range.endOffset == 0 && range.startContainer.childNodes[range.startOffset].nextSibling == range.endContainer)
+			) {
+				if (/^(img|hr|li|table|tr|td|embed|object|ol|ul|dl)$/i.test(range.startContainer.childNodes[range.startOffset].nodeName)) {
+					type = 'Control';
+				}
+			}
 		}
 	}
 	return type;
 };
-
+/*
+ * Return the ranges of the selection
+ */
+HTMLArea.Editor.prototype.getSelectionRanges = function(selection) {
+	if (!selection) {
+		var selection = this._getSelection();
+	}
+	var ranges = [];
+		// Older versions of WebKit did not support getRangeAt
+	if (selection.getRangeAt) {
+		for (var i = selection.rangeCount; --i >= 0;) {
+			ranges.push(selection.getRangeAt(i));
+		}
+	}
+	return ranges;
+};
+/*
+ * Add ranges to the selection
+ */
+HTMLArea.Editor.prototype.setSelectionRanges = function(ranges, selection) {
+	if (!selection) {
+		var selection = this._getSelection();
+	}
+	if (selection.getRangeAt) {
+		this.emptySelection(selection);
+		for (var i = ranges.length; --i >= 0;) {
+			this.addRangeToSelection(selection, ranges[i]);
+		}
+	}
+};
 /*
  * Retrieves the selected element (if any), just in the case that a single element (object like and image or a table) is selected.
  */
-HTMLArea.prototype.getSelectedElement = function(selection) {
+HTMLArea.Editor.prototype.getSelectedElement = function(selection) {
 	var selectedElement = null;
 	if (!selection) {
 		var selection = this._getSelection();
@@ -244,7 +267,7 @@ HTMLArea.prototype.getSelectedElement = function(selection) {
 /*
  * Retrieve the HTML contents of selected block
  */
-HTMLArea.prototype.getSelectedHTML = function() {
+HTMLArea.Editor.prototype.getSelectedHTML = function() {
 	var range = this._createRange(this._getSelection());
 	if (range.collapsed) return "";
 	var cloneContents = range.cloneContents();
@@ -257,14 +280,14 @@ HTMLArea.prototype.getSelectedHTML = function() {
 /*
  * Retrieve simply HTML contents of the selected block, IE ignoring control ranges
  */
-HTMLArea.prototype.getSelectedHTMLContents = function() {
+HTMLArea.Editor.prototype.getSelectedHTMLContents = function() {
 	return this.getSelectedHTML();
 };
 
 /*
  * Get the deepest node that contains both endpoints of the current selection.
  */
-HTMLArea.prototype.getParentElement = function(selection, range) {
+HTMLArea.Editor.prototype.getParentElement = function(selection, range) {
 	if (!selection) {
 		var selection = this._getSelection();
 	}
@@ -290,7 +313,7 @@ HTMLArea.prototype.getParentElement = function(selection, range) {
  * @returns null | element
  * Borrowed from Xinha (is not htmlArea) - http://xinha.gogo.co.nz/
  */
-HTMLArea.prototype._activeElement = function(selection) {
+HTMLArea.Editor.prototype._activeElement = function(selection) {
 	if (this._selectionEmpty(selection)) {
 		return null;
 	}
@@ -305,7 +328,7 @@ HTMLArea.prototype._activeElement = function(selection) {
 /*
  * Determine if the current selection is empty or not.
  */
-HTMLArea.prototype._selectionEmpty = function(sel) {
+HTMLArea.Editor.prototype._selectionEmpty = function(sel) {
 	if (!sel) return true;
 	return sel.isCollapsed;
 };
@@ -317,7 +340,7 @@ HTMLArea.prototype._selectionEmpty = function(sel) {
  * in the range boundaries. The advantage of it is that it is possible to
  * handle DOM mutations when moving back to the bookmark.
  */
-HTMLArea.prototype.getBookmark = function (range) {
+HTMLArea.Editor.prototype.getBookmark = function (range) {
 		// Create the bookmark info (random IDs).
 	var bookmark = {
 		startId : (new Date()).valueOf() + Math.floor(Math.random()*1000) + 'S',
@@ -364,7 +387,7 @@ HTMLArea.prototype.getBookmark = function (range) {
  * Get the end point of the bookmark
  * Adapted from FCKeditor
  */
-HTMLArea.prototype.getBookmarkNode = function(bookmark, endPoint) {
+HTMLArea.Editor.prototype.getBookmarkNode = function(bookmark, endPoint) {
 	if (endPoint) {
 		return this._doc.getElementById(bookmark.startId);
 	} else {
@@ -376,7 +399,7 @@ HTMLArea.prototype.getBookmarkNode = function(bookmark, endPoint) {
  * Move the range to the bookmark
  * Adapted from FCKeditor
  */
-HTMLArea.prototype.moveToBookmark = function (bookmark) {
+HTMLArea.Editor.prototype.moveToBookmark = function (bookmark) {
 	var startSpan  = this.getBookmarkNode(bookmark, true);
 	var endSpan    = this.getBookmarkNode(bookmark, false);
 	var parent;
@@ -411,7 +434,7 @@ HTMLArea.prototype.moveToBookmark = function (bookmark) {
 /*
  * Select range
  */
-HTMLArea.prototype.selectRange = function (range) {
+HTMLArea.Editor.prototype.selectRange = function (range) {
 	var selection = this._getSelection();
 	this.emptySelection(selection);
 	this.addRangeToSelection(selection, range);
@@ -426,8 +449,8 @@ HTMLArea.prototype.selectRange = function (range) {
  * Delete the current selection, if any.
  * Split the text node, if needed.
  */
-HTMLArea.prototype.insertNodeAtSelection = function(toBeInserted) {
-	this.focusEditor();
+HTMLArea.Editor.prototype.insertNodeAtSelection = function(toBeInserted) {
+	this.focus();
 	var range = this._createRange(this._getSelection());
 	range.deleteContents();
 	var toBeSelected = (toBeInserted.nodeType === 11) ? toBeInserted.lastChild : toBeInserted;
@@ -439,8 +462,8 @@ HTMLArea.prototype.insertNodeAtSelection = function(toBeInserted) {
  * Insert HTML source code at the current position.
  * Delete the current selection, if any.
  */
-HTMLArea.prototype.insertHTML = function(html) {
-	this.focusEditor();
+HTMLArea.Editor.prototype.insertHTML = function(html) {
+	this.focus();
 	var fragment = this._doc.createDocumentFragment();
 	var div = this._doc.createElement("div");
 	div.innerHTML = html;
@@ -459,7 +482,7 @@ HTMLArea.prototype.insertHTML = function(html) {
  *
  * @return	void
  */
-HTMLArea.prototype.wrapWithInlineElement = function(element, selection, range) {
+HTMLArea.Editor.prototype.wrapWithInlineElement = function(element, selection, range) {
 	element.appendChild(range.extractContents());
 	range.insertNode(element);
 	element.normalize();
@@ -482,8 +505,8 @@ HTMLArea.prototype.wrapWithInlineElement = function(element, selection, range) {
  *
  * @return	void
  */
-HTMLArea.prototype.cleanAppleStyleSpans = function(node) {
-	if (HTMLArea.is_safari) {
+HTMLArea.Editor.prototype.cleanAppleStyleSpans = function(node) {
+	if (Ext.isWebKit) {
 		if (node.getElementsByClassName) {
 			var spans = node.getElementsByClassName("Apple-style-span");
 			for (var i = spans.length; --i >= 0;) {
@@ -492,13 +515,13 @@ HTMLArea.prototype.cleanAppleStyleSpans = function(node) {
 		} else {
 			var spans = node.getElementsByTagName("span");
 			for (var i = spans.length; --i >= 0;) {
-				if (HTMLArea._hasClass(spans[i], "Apple-style-span")) {
+				if (HTMLArea.DOM.hasClass(spans[i], "Apple-style-span")) {
 					this.removeMarkup(spans[i]);
 				}
 			}
 			var fonts = node.getElementsByTagName("font");
 			for (i = fonts.length; --i >= 0;) {
-				if (HTMLArea._hasClass(fonts[i], "Apple-style-span")) {
+				if (HTMLArea.DOM.hasClass(fonts[i], "Apple-style-span")) {
 					this.removeMarkup(fonts[i]);
 				}
 			}
@@ -509,114 +532,60 @@ HTMLArea.prototype.cleanAppleStyleSpans = function(node) {
 /***************************************************
  *  EVENTS HANDLERS
  ***************************************************/
-
-/*
- * TYPO3 hidden tab and inline event listener (gets event calls)
- */
-HTMLArea.NestedListener = function (editor,nestedObj,noOpenCloseAction) {
-	return (function(ev) {
-		if(!ev) var ev = window.event;
-		HTMLArea.NestedHandler(ev,editor,nestedObj,noOpenCloseAction);
-	});
-};
-
-/*
- * TYPO3 hidden tab and inline event handler (performs actions on event calls)
- */
-HTMLArea.NestedHandler = function(ev,editor,nestedObj,noOpenCloseAction) {
-	window.setTimeout(function() {
-		var target = (ev.target) ? ev.target : ev.srcElement, styleEvent = true;
-			// In older versions of Mozilla ev.attrName is not yet set and refering to it causes a non-catchable crash
-			// We are assuming that this was fixed in Firefox 2.0.0.11
-		if (navigator.productSub > 20071127) {
-			styleEvent = (ev.attrName == "style");
-		}
-		if (target == nestedObj && editor.getMode() == "wysiwyg" && styleEvent && (target.style.display == "" || target.style.display == "block")) {
-				// Check if all affected nested elements are displayed (style.display!='none'):
-			if (HTMLArea.allElementsAreDisplayed(editor.nested.sorted)) {
-				window.setTimeout(function() {
-					try {
-						editor._doc.designMode = "on";
-						if (editor.config.sizeIncludesToolbar && editor._initialToolbarOffsetHeight != editor._toolbar.offsetHeight) {
-							editor.sizeIframe(2);
-						}
-						if (editor._doc.queryCommandEnabled("insertbronreturn")) editor._doc.execCommand("insertbronreturn", false, editor.config.disableEnterParagraphs);
-						if (editor._doc.queryCommandEnabled("enableObjectResizing")) editor._doc.execCommand("enableObjectResizing", false, !editor.config.disableObjectResizing);
-						if (editor._doc.queryCommandEnabled("enableInlineTableEditing")) editor._doc.execCommand("enableInlineTableEditing", false, (editor.config.buttons.table && editor.config.buttons.table.enableHandles) ? true : false);
-						if (editor._doc.queryCommandEnabled("styleWithCSS")) editor._doc.execCommand("styleWithCSS", false, editor.config.useCSS);
-							else if (editor._doc.queryCommandEnabled("useCSS")) editor._doc.execCommand("useCSS", false, !editor.config.useCSS);
-					} catch(e) {
-							// If an event of a parent tab ("nested tabs") is triggered, the following lines should not be
-							// processed, because this causes some trouble on all event handlers...
-						if (!noOpenCloseAction) {
-							editor._doc.open();
-							editor._doc.close();
-						}
-						editor.initIframe();
-					}
-				}, 50);
-			}
-			HTMLArea._stopEvent(ev);
-		}
-	}, 50);
-};
-
 /*
  * Backspace event handler
  */
-HTMLArea.prototype._checkBackspace = function() {
-	if (!HTMLArea.is_safari && !HTMLArea.is_opera) {
-		var self = this;
-		window.setTimeout(function() {
-			var selection = self._getSelection();
-			var range = self._createRange(selection);
-			var startContainer = range.startContainer;
-			var startOffset = range.startOffset;
-				// If the selection is collapsed...
-			if (self._selectionEmpty()) {
-					// ... and the cursor lies in a direct child of body...
-				if (/^(body)$/i.test(startContainer.nodeName)) {
-					var node = startContainer.childNodes[startOffset];
-				} else if (/^(body)$/i.test(startContainer.parentNode.nodeName)) {
-					var node = startContainer;
-				} else {
-					return false;
+HTMLArea.Editor.prototype._checkBackspace = function() {
+	var self = this;
+	window.setTimeout(function() {
+		var selection = self._getSelection();
+		var range = self._createRange(selection);
+		var startContainer = range.startContainer;
+		var startOffset = range.startOffset;
+			// If the selection is collapsed...
+		if (self._selectionEmpty()) {
+				// ... and the cursor lies in a direct child of body...
+			if (/^(body)$/i.test(startContainer.nodeName)) {
+				var node = startContainer.childNodes[startOffset];
+			} else if (/^(body)$/i.test(startContainer.parentNode.nodeName)) {
+				var node = startContainer;
+			} else {
+				return false;
+			}
+				// ... which is a br or text node containing no non-whitespace character
+			if (/^(br|#text)$/i.test(node.nodeName) && !/\S/.test(node.textContent)) {
+					// Get a meaningful previous sibling in which to reposition de cursor
+				var previousSibling = node.previousSibling;
+				while (previousSibling && /^(br|#text)$/i.test(previousSibling.nodeName) && !/\S/.test(previousSibling.textContent)) {
+					previousSibling = previousSibling.previousSibling;
 				}
-					// ... which is a br or text node containing no non-whitespace character
-				if (/^(br|#text)$/i.test(node.nodeName) && !/\S/.test(node.textContent)) {
-						// Get a meaningful previous sibling in which to reposition de cursor
-					var previousSibling = node.previousSibling;
-					while (previousSibling && /^(br|#text)$/i.test(previousSibling.nodeName) && !/\S/.test(previousSibling.textContent)) {
-						previousSibling = previousSibling.previousSibling;
-					}
-						// If there is no meaningful previous sibling, the cursor is at the start of body
-					if (previousSibling) {
-							// Remove the node
-						HTMLArea.removeFromParent(node);
-							// Position the cursor
-						if (/^(ol|ul|dl)$/i.test(previousSibling.nodeName)) {
-							self.selectNodeContents(previousSibling.lastChild, false);
-						} else if (/^(table)$/i.test(previousSibling.nodeName)) {
-							self.selectNodeContents(previousSibling.rows[previousSibling.rows.length-1].cells[previousSibling.rows[previousSibling.rows.length-1].cells.length-1], false);
-						} else if (!/\S/.test(previousSibling.textContent) && previousSibling.firstChild) {
-							self.selectNode(previousSibling.firstChild, true);
-						} else {
-							self.selectNodeContents(previousSibling, false);
-						}
+					// If there is no meaningful previous sibling, the cursor is at the start of body
+				if (previousSibling) {
+						// Remove the node
+					HTMLArea.removeFromParent(node);
+						// Position the cursor
+					if (/^(ol|ul|dl)$/i.test(previousSibling.nodeName)) {
+						self.selectNodeContents(previousSibling.lastChild, false);
+					} else if (/^(table)$/i.test(previousSibling.nodeName)) {
+						self.selectNodeContents(previousSibling.rows[previousSibling.rows.length-1].cells[previousSibling.rows[previousSibling.rows.length-1].cells.length-1], false);
+					} else if (!/\S/.test(previousSibling.textContent) && previousSibling.firstChild) {
+						self.selectNode(previousSibling.firstChild, true);
+					} else {
+						self.selectNodeContents(previousSibling, false);
 					}
 				}
 			}
-		}, 10);
-	}
+		}
+	}, 10);
 	return false;
 };
 
 /*
  * Enter event handler
  */
-HTMLArea.prototype._checkInsertP = function() {
+HTMLArea.Editor.prototype._checkInsertP = function() {
 	var editor = this;
-	this.focusEditor();
+	this.focus();
 	var i, left, right, rangeClone,
 		sel	= this._getSelection(),
 		range	= this._createRange(sel),
@@ -715,7 +684,7 @@ HTMLArea.prototype._checkInsertP = function() {
 				block.removeChild(first);
 			}
 			right = doc.createElement("p");
-			if (HTMLArea.is_safari || HTMLArea.is_opera) {
+			if (Ext.isWebKit || Ext.isOpera) {
 				right.innerHTML = "<br />";
 			}
 			right = block.appendChild(right);
@@ -725,7 +694,7 @@ HTMLArea.prototype._checkInsertP = function() {
 		range.setEndAfter(block);
 		var df = range.extractContents(), left_empty = false;
 		if (!/\S/.test(block.innerHTML) || (!/\S/.test(block.textContent) && !/<(img|hr|table)/i.test(block.innerHTML))) {
-			if (!HTMLArea.is_opera) {
+			if (!Ext.isOpera) {
 				block.innerHTML = "<br />";
 			}
 			left_empty = true;
@@ -739,7 +708,7 @@ HTMLArea.prototype._checkInsertP = function() {
 				if (/^(dt|dd)$/i.test(p.nodeName)) {
 					 p = this.convertNode(p, (p.nodeName.toLowerCase() === "dt") ? "dd" : "dt");
 				}
-				if (!HTMLArea.is_opera) {
+				if (!Ext.isOpera) {
 					p.innerHTML = "<br />";
 				}
 				if (/^li$/i.test(p.nodeName) && left_empty && (!block.nextSibling || !/^li$/i.test(block.nextSibling.nodeName))) {
@@ -779,7 +748,7 @@ HTMLArea.prototype._checkInsertP = function() {
 			} else {
 				p = doc.createElement("p");
 			}
-			if (!HTMLArea.is_opera) {
+			if (!Ext.isOpera) {
 				p.innerHTML = "<br />";
 			}
 			if (block.nextSibling) {
@@ -798,7 +767,8 @@ HTMLArea.prototype._checkInsertP = function() {
  * Detect emails and urls as they are typed in Mozilla
  * Borrowed from Xinha (is not htmlArea) - http://xinha.gogo.co.nz/
  */
-HTMLArea.prototype._detectURL = function(ev) {
+HTMLArea.Editor.prototype._detectURL = function(event) {
+	var ev = event.browserEvent;
 	var editor = this;
 	var s = this._getSelection();
 	if (this.getParentElement(s).nodeName.toLowerCase() != 'a') {
@@ -810,7 +780,7 @@ HTMLArea.prototype._detectURL = function(ev) {
 			a.appendChild(textNode);
 			s.collapse(rightText, 0);
 			rightText.parentNode.normalize();
-
+	
 			editor._unLink = function() {
 				var t = a.firstChild;
 				a.removeChild(t);
@@ -827,9 +797,7 @@ HTMLArea.prototype._detectURL = function(ev) {
 	
 		switch(ev.which) {
 				// Space or Enter or >, see if the text just typed looks like a URL, or email address and link it accordingly
-			case 13:	// Enter
-				if(ev.shiftKey || editor.config.disableEnterParagraphs) break;
-					//Space
+			case 13:
 			case 32:
 				if(s && s.isCollapsed && s.anchorNode.nodeType == 3 && s.anchorNode.data.length > 3 && s.anchorNode.data.indexOf('.') >= 0) {
 					var midStart = s.anchorNode.data.substring(0,s.anchorOffset).search(/[a-zA-Z0-9]+\S{3,}$/);
@@ -864,7 +832,7 @@ HTMLArea.prototype._detectURL = function(ev) {
 				if(ev.keyCode == 27 || (editor._unlinkOnUndo && ev.ctrlKey && ev.which == 122) ) {
 					if(this._unLink) {
 						this._unLink();
-						HTMLArea._stopEvent(ev);
+						event.stopEvent();
 					}
 					break;
 				} else if(ev.which || ev.keyCode == 8 || ev.keyCode == 46) {

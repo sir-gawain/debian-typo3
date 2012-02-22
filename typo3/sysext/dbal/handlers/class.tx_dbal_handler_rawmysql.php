@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2009 Kasper Skaarhoj (kasper@typo3.com)
+*  (c) 2004-2009 Kasper Skårhøj (kasper@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /**
  * Contains an example DBAL handler class
  *
- * $Id: class.tx_dbal_handler_rawmysql.php 35525 2010-07-11 14:05:40Z xperseguers $
+ * $Id$
  *
- * @author	Kasper Skaarhoj <kasper@typo3.com>
+ * @author	Kasper Skårhøj <kasper@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -79,7 +79,7 @@
  * Example DBAL userdefined handler class
  * It simply makes pass-through of MySQL
  *
- * @author	Kasper Skaarhoj <kasper@typo3.com>
+ * @author	Kasper Skårhøj <kasper@typo3.com>
  * @package TYPO3
  * @subpackage tx_dbal
  */
@@ -303,7 +303,7 @@ class tx_dbal_handler_rawmysql extends tx_dbal_sqlengine {
 /**
  * Result object for this MySQL userdefined handler
  *
- * @author	Kasper Skaarhoj <kasper@typo3.com>
+ * @author	Kasper Skårhøj <kasper@typo3.com>
  * @package TYPO3
  * @subpackage tx_dbal
  */
@@ -350,7 +350,7 @@ class tx_dbal_handler_rawmysql_sqlObj extends tx_dbal_sqlengine_resultobj {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/handlers/class.tx_dbal_handler_rawmysql.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/handlers/class.tx_dbal_handler_rawmysql.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/handlers/class.tx_dbal_handler_rawmysql.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/handlers/class.tx_dbal_handler_rawmysql.php']);
 }
 ?>

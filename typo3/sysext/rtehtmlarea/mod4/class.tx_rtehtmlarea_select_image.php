@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasper@typo3.com)
-*  (c) 2004-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 1999-2011 Kasper Skårhøj (kasper@typo3.com)
+*  (c) 2004-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,17 +28,17 @@
 /**
  * Displays image selector for the RTE
  *
- * @author	Kasper Skaarhoj <kasper@typo3.com>
+ * @author	Kasper Skårhøj <kasper@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * $Id: class.tx_rtehtmlarea_select_image.php 8316 2010-07-28 08:51:24Z ohader $  *
+ * $Id$  *
  */
 require_once(PATH_typo3.'class.browse_links.php');
 
 /**
  * Local Folder Tree
  *
- * @author	Kasper Skaarhoj <kasper@typo3.com>
+ * @author	Kasper Skårhøj <kasper@typo3.com>
  * @package TYPO3
  * @subpackage tx_rte
  */
@@ -127,7 +127,7 @@ class tx_rtehtmlarea_image_folderTree extends t3lib_folderTree {
 /**
  * Script Class
  *
- * @author	Kasper Skaarhoj <kasper@typo3.com>
+ * @author	Kasper Skårhøj <kasper@typo3.com>
  * @package TYPO3
  * @subpackage tx_rte
  */
@@ -168,7 +168,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		$this->fileProcessor = t3lib_div::makeInstance('t3lib_basicFileFunctions');
 		$this->fileProcessor->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
 
-		$this->allowedItems = $this->getAllowedItems('dragdrop,magic,plain,image', $this->buttonConfig);
+		$this->allowedItems = $this->getAllowedItems('magic,plain,image', $this->buttonConfig);
 		reset($this->allowedItems);
 		if (!in_array($this->act,$this->allowedItems))	{
 			$this->act = current($this->allowedItems);
@@ -261,7 +261,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	string		the body tag additions
 	 */
 	public function getBodyTagAdditions() {
-		return 'onLoad="initDialog();"';
+		return 'onload="initEventListeners();"';
 	}
 
 	/**
@@ -329,33 +329,43 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	void
 	 */
 	public function insertMagicImage($filepath, $imgInfo, $altText='', $titleText='', $additionalParams='') {
-		if (is_array($imgInfo) && count($imgInfo)==4 && $this->RTEImageStorageDir)	{
-			$fI = pathinfo($imgInfo[3]);
-			$fileFunc = t3lib_div::makeInstance('t3lib_basicFileFunctions');
-			$basename = $fileFunc->cleanFileName('RTEmagicP_'.$fI['basename']);
-			$destPath =PATH_site.$this->RTEImageStorageDir;
-			if (@is_dir($destPath))	{
-				$destName = $fileFunc->getUniqueName($basename,$destPath);
-				@copy($imgInfo[3],$destName);
-				t3lib_div::fixPermissions($destName);
-				$cWidth = t3lib_div::intInRange(t3lib_div::_GP('cWidth'), 0, $this->magicMaxWidth);
-				$cHeight = t3lib_div::intInRange(t3lib_div::_GP('cHeight'), 0, $this->magicMaxHeight);
-				if (!$cWidth)	$cWidth = $this->magicMaxWidth;
-				if (!$cHeight)	$cHeight = $this->magicMaxHeight;
-
-				$imgI = $this->imgObj->imageMagickConvert($filepath,'WEB',$cWidth.'m',$cHeight.'m');	// ($imagefile,$newExt,$w,$h,$params,$frame,$options,$mustCreate=0)
-				if ($imgI[3])	{
-					$fI=pathinfo($imgI[3]);
-					$mainBase='RTEmagicC_'.substr(basename($destName),10).'.'.$fI['extension'];
-					$destName = $fileFunc->getUniqueName($mainBase,$destPath);
-					@copy($imgI[3],$destName);
+		if (is_array($imgInfo) && count($imgInfo) == 4) {
+			if ($this->RTEImageStorageDir) {
+				$fI = pathinfo($imgInfo[3]);
+				$fileFunc = t3lib_div::makeInstance('t3lib_basicFileFunctions');
+				$basename = $fileFunc->cleanFileName('RTEmagicP_'.$fI['basename']);
+				$destPath =PATH_site.$this->RTEImageStorageDir;
+				if (@is_dir($destPath))	{
+					$destName = $fileFunc->getUniqueName($basename,$destPath);
+					@copy($imgInfo[3],$destName);
 					t3lib_div::fixPermissions($destName);
-					$destName = dirname($destName).'/'.rawurlencode(basename($destName));
-					$iurl = $this->siteURL.substr($destName,strlen(PATH_site));
-					$this->imageInsertJS($iurl, $imgI[0], $imgI[1], $altText, $titleText, $additionalParams);
+					$cWidth = t3lib_div::intInRange(t3lib_div::_GP('cWidth'), 0, $this->magicMaxWidth);
+					$cHeight = t3lib_div::intInRange(t3lib_div::_GP('cHeight'), 0, $this->magicMaxHeight);
+					if (!$cWidth)	$cWidth = $this->magicMaxWidth;
+					if (!$cHeight)	$cHeight = $this->magicMaxHeight;
+	
+					$imgI = $this->imgObj->imageMagickConvert($filepath,'WEB',$cWidth.'m',$cHeight.'m');	// ($imagefile,$newExt,$w,$h,$params,$frame,$options,$mustCreate=0)
+					if ($imgI[3])	{
+						$fI=pathinfo($imgI[3]);
+						$mainBase='RTEmagicC_'.substr(basename($destName),10).'.'.$fI['extension'];
+						$destName = $fileFunc->getUniqueName($mainBase,$destPath);
+						@copy($imgI[3],$destName);
+						t3lib_div::fixPermissions($destName);
+						$destName = dirname($destName).'/'.rawurlencode(basename($destName));
+						$iurl = $this->siteURL.substr($destName,strlen(PATH_site));
+						$this->imageInsertJS($iurl, $imgI[0], $imgI[1], $altText, $titleText, $additionalParams);
+					} else {
+						t3lib_div::sysLog('Attempt at creating a magic image failed due to error converting image: "' . $filepath . '".', $this->extKey . '/tx_rtehtmlarea_select_image', t3lib_div::SYSLOG_SEVERITY_ERROR);
+					}
+				} else {
+					t3lib_div::sysLog('Attempt at creating a magic image failed due to incorrect destination path: "' . $destPath . '".', $this->extKey . '/tx_rtehtmlarea_select_image', t3lib_div::SYSLOG_SEVERITY_ERROR);
 				}
+			} else {
+				t3lib_div::sysLog('Attempt at creating a magic image failed due to absent RTE_imageStorageDir', $this->extKey . '/tx_rtehtmlarea_select_image', t3lib_div::SYSLOG_SEVERITY_ERROR);
 			}
-		}
+		} else {
+			t3lib_div::sysLog('Attempt at creating a magic image failed due to missing image file info.', $this->extKey . '/tx_rtehtmlarea_select_image', t3lib_div::SYSLOG_SEVERITY_ERROR);
+		}	
 	}
 
 	/**
@@ -391,17 +401,16 @@ class tx_rtehtmlarea_select_image extends browse_links {
 <html>
 <head>
 	<title>Untitled</title>
+	<script type="text/javascript">
+	/*<![CDATA[*/
+		var plugin = window.parent.RTEarea["' . $this->editorNo . '"].editor.getPlugin("TYPO3Image");
+		function insertImage(file,width,height,alt,title,additionalParams)	{
+			plugin.insertImage(\'<img src="\'+file+\'" width="\'+parseInt(width)+\'" height="\'+parseInt(height)+\'"\''  . ($this->defaultClass?('+\' class="'.$this->defaultClass.'"\''):'') .
+				'+(alt?\' alt="\'+alt+\'"\':\'\')+(title?\' title="\'+title+\'"\':\'\')+(additionalParams?\' \'+additionalParams:\'\')+\' />\');
+		}
+	/*]]>*/
+	</script>
 </head>
-<script type="text/javascript">
-/*<![CDATA[*/
-	var dialog = window.opener.HTMLArea.Dialog.TYPO3Image;
-	var plugin = dialog.plugin;
-	function insertImage(file,width,height,alt,title,additionalParams)	{
-		plugin.insertImage(\'<img src="\'+file+\'" width="\'+parseInt(width)+\'" height="\'+parseInt(height)+\'"\''  . ($this->defaultClass?('+\' class="'.$this->defaultClass.'"\''):'') .
-			'+(alt?\' alt="\'+alt+\'"\':\'\')+(title?\' title="\'+title+\'"\':\'\')+(additionalParams?\' \'+additionalParams:\'\')+\' />\');
-	}
-/*]]>*/
-</script>
 <body>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -448,17 +457,13 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		}
 
 		$JScode='
-			var dialog = window.opener.HTMLArea.Dialog.TYPO3Image;
-			var plugin = dialog.plugin;
-			var HTMLArea = window.opener.HTMLArea;
-
-			function initDialog() {
-				window.dialog = window.opener.HTMLArea.Dialog.TYPO3Image;
-				window.plugin = dialog.plugin;
-				window.HTMLArea = window.opener.HTMLArea;
-				dialog.captureEvents("skipUnload");
+			var plugin = window.parent.RTEarea["' . $editorNo . '"].editor.getPlugin("TYPO3Image");
+			var HTMLArea = window.parent.HTMLArea;
+			function initEventListeners() {
+				if (Ext.isWebKit) {
+					Ext.EventManager.addListener(window.document.body, "dragend", plugin.onDrop, plugin, { single: true });
+				}
 			}
-
 			function jumpToUrl(URL,anchor)	{
 				var add_act = URL.indexOf("act=")==-1 ? "&act='.$act.'" : "";
 				var add_editorNo = URL.indexOf("editorNo=")==-1 ? "&editorNo='.$editorNo.'" : "";
@@ -493,19 +498,16 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				var classesImage = ' . ($this->thisConfig['classesImage']?'true':'false') . ';
 				if (classesImage) var styleSelector=\'<select id="iClass" name="iClass" style="width:140px;">' . $classesImageJSOptions  . '</select>\';
 				var floatSelector=\'<select id="iFloat" name="iFloat"><option value="">' . $LANG->getLL('notSet') . '</option><option value="none">' . $LANG->getLL('nonFloating') . '</option><option value="left">' . $LANG->getLL('left') . '</option><option value="right">' . $LANG->getLL('right') . '</option></select>\';
-				if (plugin.isButtonInToolbar("Language")) {
-					var languageOptions = plugin.getDropDownConfiguration("Language").options;
+				if (plugin.getButton("Language")) {
 					var languageSelector = \'<select id="iLang" name="iLang">\';
-					for (var option in languageOptions) {
-						if (languageOptions.hasOwnProperty(option)) {
-							languageSelector +=\'<option value="\' + languageOptions[option] + \'">\' + option + \'</option>\';
-						}
-					}
+					plugin.getButton("Language").getStore().each(function (record) {
+						languageSelector +=\'<option value="\' + record.get("value") + \'">\' + record.get("text") + \'</option>\';
+					});
 					languageSelector += \'</select>\';
 				}
 				var bgColor=\' class="bgColor4"\';
 				var sz="";
-				sz+=\'<table border=0 cellpadding=1 cellspacing=1><form action="" name="imageData">\';
+				sz+=\'<table border="0" cellpadding="1" cellspacing="1"><form action="" name="imageData">\';
 				'.(in_array('class', $removedProperties)?'':'
 				if(classesImage) {
 					sz+=\'<tr><td\'+bgColor+\'><label for="iClass">'.$LANG->getLL('class').': </label></td><td>\'+styleSelector+\'</td></tr>\';
@@ -535,8 +537,8 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				.(in_array('alt', $removedProperties)?'':'
 				sz+=\'<tr><td\'+bgColor+\'><label for="iAlt">'.$LANG->getLL('alt').': </label></td><td><input type="text" id="iAlt" name="iAlt"'.$GLOBALS['TBE_TEMPLATE']->formWidth(20).' /></td></tr>\';')
 				.(in_array('lang', $removedProperties)?'':'
-				if (plugin.isButtonInToolbar("Language")) {
-					sz+=\'<tr><td\'+bgColor+\'><label for="iLang">\' + plugin.getPluginInstance("Language").localize(\'Language-Tooltip\') + \': </label></td><td>\' + languageSelector + \'</td></tr>\';
+				if (plugin.getButton("Language")) {
+					sz+=\'<tr><td\'+bgColor+\'><label for="iLang">\' + plugin.editor.getPlugin("Language").localize(\'Language-Tooltip\') + \': </label></td><td>\' + languageSelector + \'</td></tr>\';
 				}')
 				.(in_array('clickenlarge', $removedProperties)?'':'
 				sz+=\'<tr><td\'+bgColor+\'><label for="iClickEnlarge">'.$LANG->sL('LLL:EXT:cms/locallang_ttc.php:image_zoom',1).' </label></td><td><input type="checkbox" name="iClickEnlarge" id="iClickEnlarge" value="0" /></td></tr>\';').'
@@ -629,7 +631,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 					}
 					if (document.imageData.iLang) {
 						var iLang = document.imageData.iLang.options[document.imageData.iLang.selectedIndex].value;
-						var languageObject = plugin.getPluginInstance("Language");
+						var languageObject = plugin.editor.getPlugin("Language");
 						if (iLang || languageObject.getLanguageAttribute(selectedImageRef)) {
 							languageObject.setLanguageAttributes(selectedImageRef, iLang);
 						} else {
@@ -643,7 +645,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 							selectedImageRef.removeAttribute("clickenlarge");
 						}
 					}
-					dialog.close();
+					plugin.close();
 				}
 				return false;
 			}
@@ -722,12 +724,12 @@ class tx_rtehtmlarea_select_image extends browse_links {
 					}
 					if (document.imageData.iLang) {
 						var fObj=document.imageData.iLang;
-						var value=plugin.getPluginInstance("Language").getLanguageAttribute(selectedImageRef);
+						var value=plugin.editor.getPlugin("Language").getLanguageAttribute(selectedImageRef);
 						for (var i = 0, n = fObj.length; i < n; i++) {
 							if (fObj.options[i].value == value) {
 								fObj.selectedIndex = i;
 								if (i) {
-									fObj.options[0].text = plugin.getPluginInstance("Language").localize("Remove language mark");
+									fObj.options[0].text = plugin.editor.getPlugin("Language").localize("Remove language mark");
 								}
 							}
 						}
@@ -849,11 +851,11 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				$tree = $foldertree->getBrowsableTree();
 				list(,,$specUid) = explode('_',t3lib_div::_GP('PM'));
 				$files = $this->expandFolder($foldertree->specUIDmap[$specUid],$this->act=='plain',$noThumbs?$noThumbs:!$_MOD_SETTINGS['displayThumbs']);
-				$this->content.= '<table border=0 cellpadding=0 cellspacing=0>
+				$this->content.= '<table border="0" cellpadding="0" cellspacing="0">
 				<tr>
-					<td valign=top>'.$this->barheader($LANG->getLL('folderTree').':').$tree.'</td>
+					<td style="vertical-align: top;">'.$this->barheader($LANG->getLL('folderTree').':').$tree.'</td>
 					<td>&nbsp;</td>
-					<td valign=top>'.$files.'</td>
+					<td style="vertical-align: top;">'.$files.'</td>
 				</tr>
 				</table>
 				<br />'.$thumbNailCheck;
@@ -870,11 +872,11 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				$tree = $foldertree->getBrowsableTree();
 				list(,,$specUid) = explode('_',t3lib_div::_GP('PM'));
 				$files = $this->TBE_dragNDrop($foldertree->specUIDmap[$specUid], implode(',', $this->allowedFileTypes));
-				$this->content.= '<table border=0 cellpadding=0 cellspacing=0>
+				$this->content.= '<table border="0" cellpadding="0" cellspacing="0">
 				<tr>
-					<td valign=top>'.$this->barheader($LANG->getLL('folderTree').':').$tree.'</td>
+					<td style="vertical-align: top;">'.$this->barheader($LANG->getLL('folderTree').':').$tree.'</td>
 					<td>&nbsp;</td>
-					<td valign=top>'.$files.'</td>
+					<td style="vertical-align: top;">'.$files.'</td>
 				</tr>
 				</table>';
 				break;
@@ -940,8 +942,6 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		if ($expandFolder && $this->checkFolder($expandFolder))	{
 			$files = t3lib_div::getFilesInDir($expandFolder,($plainFlag?'jpg,jpeg,gif,png':$GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']),1,1);	// $extensionList="",$prependPath=0,$order="")
 			if (is_array($files))	{
-				reset($files);
-
 				$out.=$this->barheader(sprintf($LANG->getLL('images').' (%s):',count($files)));
 
 				$titleLen = intval($BE_USER->uc['titleLen']);
@@ -955,7 +955,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				$imgObj->tempPath=PATH_site.$imgObj->tempPath;
 
 				$lines=array();
-				while(list(,$filepath)=each($files))	{
+				foreach ($files as $filepath) {
 					$fI=pathinfo($filepath);
 
 					$origFile = t3lib_div::rawUrlEncodeFP(substr($filepath,strlen(PATH_site)));
@@ -1003,7 +1003,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	function TBE_dragNDrop($expandFolder=0,$extensionList='')	{
 		global $BACK_PATH;
 
-		$expandFolder = $expandFolder ? $expandFolder : $this->expandFolder;
+		$expandFolder = $expandFolder ? $expandFolder : t3lib_div::_GP('expandFolder');
 		$out='';
 		if ($expandFolder && $this->checkFolder($expandFolder))	{
 			if ($this->isWebFolder($expandFolder))	{
@@ -1028,7 +1028,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 						</tr>';
 
 						// Traverse files:
-					while(list(,$filepath)=each($files))	{
+					foreach ($files as $filepath) {
 						$fI = pathinfo($filepath);
 
 							// URL of image:
@@ -1076,7 +1076,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 								// Add default class for images
 							$lines[]='
 								<tr>
-									<td colspan="2"><img src="'.$iurl.'" width="'.$IW.'" height="'.$IH.'" alt=""' . ($this->defaultClass?(' class="'.$this->defaultClass.'"'):''). ' /></td>
+									<td colspan="2"><img src="'.$iurl.'" width="'.$IW.'" height="'.$IH.'" alt=""' . ($this->defaultClass?(' class="'.$this->defaultClass.'"'):''). ' style="cursor:move;" /></td>
 								</tr>';
 							$lines[]='
 								<tr>
@@ -1237,8 +1237,8 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod4/class.tx_rtehtmlarea_select_image.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod4/class.tx_rtehtmlarea_select_image.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod4/class.tx_rtehtmlarea_select_image.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod4/class.tx_rtehtmlarea_select_image.php']);
 }
 
 ?>

@@ -26,14 +26,14 @@
 /**
  * This class manages the logic of a particular execution of a task
  *
- * @author	Francois Suter <francois@typo3.org>
+ * @author	François Suter <francois@typo3.org>
  * @author	Christian Jul Jensen <julle@typo3.org>
  * @author	Markus Friedrich <markus.friedrich@dkd.de>
  *
  * @package		TYPO3
  * @subpackage	tx_scheduler
  *
- * $Id: class.tx_scheduler_execution.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 class tx_scheduler_Execution {
 
@@ -263,9 +263,9 @@ class tx_scheduler_Execution {
 	 */
 	public function getNextCronExecution() {
 		$cronCmd = t3lib_div::makeInstance('tx_scheduler_CronCmd', $this->getCronCmd());
-		$cronCmd->calculateNextValue(0);
+		$cronCmd->calculateNextValue();
 
-		return $cronCmd->getTstamp();
+		return $cronCmd->getTimestamp();
 	}
 
 	/**
@@ -295,8 +295,8 @@ class tx_scheduler_Execution {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_execution.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_execution.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_execution.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_execution.php']);
 }
 
 ?>

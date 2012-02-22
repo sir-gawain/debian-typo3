@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 /**
  * Class, adding extra context menu options
  *
- * $Id: class.tx_extrapagecmoptions.php 5165 2009-03-09 18:28:59Z ohader $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -60,7 +60,7 @@
 /**
  * Class, adding extra context menu options
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_extrapagecmoptions
  */
@@ -107,10 +107,9 @@ class tx_extrapagecmoptions {
 			}
 
 				// Find delete element among the input menu items and insert the local items just before that:
-			reset($menuItems);
 			$c=0;
 			$deleteFound = FALSE;
-			while(list($k)=each($menuItems))	{
+			foreach ($menuItems as $k => $value) {
 				$c++;
 				if (!strcmp($k,'delete'))	{
 					$deleteFound = TRUE;
@@ -163,8 +162,8 @@ class tx_extrapagecmoptions {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
 }
 
 ?>

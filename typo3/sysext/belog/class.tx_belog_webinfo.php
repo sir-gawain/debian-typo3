@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Extension classes for log display in Web > Info and Tools > Log modules
  *
- * @author	Kasper Sk�rh�j <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -53,7 +53,7 @@
 /**
  * Extending for Tools > Log. Just setting labels correctly
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_belog
  */
@@ -83,7 +83,7 @@ class logFunctions_ext extends t3lib_BEDisplayLog {
 /**
  * Extending for Web>Info
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_belog
  */
@@ -217,7 +217,7 @@ class tx_belog_webinfo extends t3lib_extobjbase {
 			}
 
 			if (is_array($this->pObj->be_user_Array))	{
-				while(list(,$val)=each($this->pObj->be_user_Array))	{
+				foreach ($this->pObj->be_user_Array as $val) {
 					$selectUsers[]=$val['uid'];
 				}
 			}
@@ -267,8 +267,8 @@ class tx_belog_webinfo extends t3lib_extobjbase {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/belog/class.tx_belog_webinfo.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/belog/class.tx_belog_webinfo.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/belog/class.tx_belog_webinfo.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/belog/class.tx_belog_webinfo.php']);
 }
 
 ?>

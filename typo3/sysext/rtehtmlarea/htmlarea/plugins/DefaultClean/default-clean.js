@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,48 +26,43 @@
 /**
  * Default Clean Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: default-clean.js 6539 2009-11-25 14:49:14Z stucki $
+ * TYPO3 SVN ID: $Id$
  */
-DefaultClean = HTMLArea.Plugin.extend({
-	
-	constructor : function(editor, pluginName) {
+HTMLArea.DefaultClean = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
 		this.base(editor, pluginName);
 	},
-	
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin : function(editor) {
-		
+	configurePlugin: function(editor) {
 		this.pageTSConfiguration = this.editorConfiguration.buttons.cleanword;
-		
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.2",
-			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.sjbr.ca/",
-			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "SJBR",
-			sponsorUrl	: "http://www.sjbr.ca/",
-			license		: "GPL"
+			version		: '2.0',
+			developer	: 'Stanislas Rolland',
+			developerUrl	: 'http://www.sjbr.ca/',
+			copyrightOwner	: 'Stanislas Rolland',
+			sponsor		: 'SJBR',
+			sponsorUrl	: 'http://www.sjbr.ca/',
+			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		
 		/*
 		 * Registering the (hidden) button
 		 */
-		var buttonId = "CleanWord";
+		var buttonId = 'CleanWord';
 		var buttonConfiguration = {
 			id		: buttonId,
-			tooltip		: this.localize(buttonId + "-Tooltip"),
-			action		: "onButtonPress",
-			hide		: true
+			tooltip		: this.localize(buttonId + '-Tooltip'),
+			action		: 'onButtonPress',
+			hide		: true,
+			hideInContextMenu: true
 		};
 		this.registerButton(buttonConfiguration);
 	},
-	
 	/*
 	 * This function gets called when the button was pressed.
 	 *
@@ -76,32 +71,36 @@ DefaultClean = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function (editor, id, target) {
+	onButtonPress: function (editor, id, target) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		
 		this.clean();
 		return false;
 	},
-	
-	onGenerate : function () {
-		var doc = this.editor._doc;
-			// Function reference used on paste with older versions of Mozilla/Firefox in which onPaste is not fired
-		this.cleanLaterFunctRef = this.makeFunctionReference("clean");
-		HTMLArea._addEvents((HTMLArea.is_ie ? doc.body : doc), ["paste","dragdrop","drop"], DefaultClean.wordCleanHandler, true);
+	/*
+	 * This function gets called when the editor is generated
+	 */
+	onGenerate: function () {
+		this.editor.iframe.mon(Ext.get(Ext.isIE ? this.editor.document.body : this.editor.document.documentElement), 'paste', this.wordCleanHandler, this);
 	},
-	
-	clean : function () {
+	/*
+	 * This function cleans all nodes in the node tree below the input node
+	 *
+	 * @param	object	node: the root of the node tree to clean
+	 *
+	 * @return 	void
+	 */
+	clean: function () {
 		function clearClass(node) {
 			var newc = node.className.replace(/(^|\s)mso.*?(\s|$)/ig,' ');
 			if(newc != node.className) {
 				node.className = newc;
 				if(!/\S/.test(node.className)) {
 					if (!HTMLArea.is_opera) {
-						node.removeAttribute("class");
+						node.removeAttribute('class');
 						if (HTMLArea.is_ie) {
-							node.removeAttribute("className");
+							node.removeAttribute('className');
 						}
 					} else {
 						node.className = '';
@@ -111,13 +110,13 @@ DefaultClean = HTMLArea.Plugin.extend({
 		}
 		function clearStyle(node) {
 			if (HTMLArea.is_ie) var style = node.style.cssText;
-				else var style = node.getAttribute("style");
+				else var style = node.getAttribute('style');
 			if (style) {
 				var declarations = style.split(/\s*;\s*/);
 				for (var i = declarations.length; --i >= 0;) {
 					if(/^mso|^tab-stops/i.test(declarations[i]) || /^margin\s*:\s*0..\s+0..\s+0../i.test(declarations[i])) declarations.splice(i,1);
 				}
-				node.setAttribute("style", declarations.join("; "));
+				node.setAttribute('style', declarations.join('; '));
 			}
 		}
 		function stripTag(el) {
@@ -167,34 +166,11 @@ DefaultClean = HTMLArea.Plugin.extend({
 		if (HTMLArea.is_safari) {
 			this.editor.cleanAppleStyleSpans(this.editor._doc.body);
 		}
+	},
+	/*
+	 * Handler for paste, dragdrop and drop events
+	 */
+	wordCleanHandler: function (event) {
+		this.clean.defer(250, this);
 	}
 });
-
-/*
- * Closure avoidance for IE
- */
-DefaultClean.cleanLater = function (editorNumber) {
-	var editor = RTEarea[editorNumber].editor;
-	editor.getPluginInstance("DefaultClean").clean();
-};
-
-/*
- * Handler for paste, dragdrop and drop events
- */
-DefaultClean.wordCleanHandler = function (ev) {
-	if (!ev) var ev = window.event;
-	var target = ev.target ? ev.target : ev.srcElement;
-	var owner = target.ownerDocument ? target.ownerDocument : target;
-	if (HTMLArea.is_ie) { // IE5.5 does not report any ownerDocument
-		while (owner.parentElement) { owner = owner.parentElement; }
-	}
-	var editor = RTEarea[owner._editorNo].editor;
-
-		// If we dropped an image dragged from the TYPO3 Image plugin, let's close the dialog window
-	if (typeof(HTMLArea.Dialog) != "undefined" && HTMLArea.Dialog.TYPO3Image) {
-		HTMLArea.Dialog.TYPO3Image.close();
-	} else {
-		window.setTimeout("DefaultClean.cleanLater(\'" + editor._editorNumber + "\');", 250);
-	}
-};
-

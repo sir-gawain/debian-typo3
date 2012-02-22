@@ -27,39 +27,52 @@
  *
  * <code title="Output error messages as a list">
  * <ul class="errors">
- *   <f:errors>
+ *   <f:form.errors>
  *     <li>{error.code}: {error.message}</li>
- *   </f:errors>
+ *   </f:form.errors>
  * </ul>
  * </code>
- *
- * Output:
+ * <output>
  * <ul>
  *   <li>1234567890: Validation errors for argument "newBlog"</li>
  * </ul>
+ * </output>
  *
- * @version $Id: ErrorsViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Form
+ * <code title="Output error messages for a single property">
+ * <f:form.errors for="someProperty">
+ *   <div class="error">
+ *     <strong>{error.propertyName}</strong>: <f:for each="{error.errors}" as="errorDetail">{errorDetail.message}</f:for>
+ *   </div>
+ * </f:form.errors>
+ * </code>
+ * <output>
+ * <div class="error>
+ *   <strong>someProperty:</strong> errorMessage1 errorMessage2
+ * </div>
+ * </output>
+ *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Form_ErrorsViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
 	/**
 	 * Iterates through selected errors of the request.
 	 *
-	 * @param string $for The name of the error name (e.g. argument name or property name)
+	 * @param string $for The name of the error name (e.g. argument name or property name). This can also be a property path (like blog.title), and will then only display the validation errors of that property.
 	 * @param string $as The name of the variable to store the current error
 	 * @return string Rendered string
 	 * @author Christopher Hlubek <hlubek@networkteam.com>
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function render($for = '', $as = 'error') {
 		$errors = $this->controllerContext->getRequest()->getErrors();
 		if ($for !== '') {
-			$errors = $this->getErrorsForProperty($for, $errors);
+			$propertyPath = explode('.', $for);
+			foreach ($propertyPath as $currentPropertyName) {
+				$errors = $this->getErrorsForProperty($currentPropertyName, $errors);
+			}
 		}
 		$output = '';
 		foreach ($errors as $errorKey => $error) {

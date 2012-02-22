@@ -21,18 +21,14 @@
  * <code title="link to the show-action of the current controller">
  * <f:link.action action="show">action link</f:link.action>
  * </code>
- *
- * Output:
+ * <output>
  * <a href="index.php?id=123&tx_myextension_plugin[action]=show&tx_myextension_plugin[controller]=Standard&cHash=xyz">action link</f:link.action>
  * (depending on the current page and your TS configuration)
+ * </output>
  *
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: ActionViewHelper.php 1492 2009-10-21 16:02:16Z bwaidelich $
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
- * @scope prototype
  */
-class Tx_Fluid_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_Core_ViewHelper_TagBasedViewHelper {
+class Tx_Fluid_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractTagBasedViewHelper {
 
 	/**
 	 * @var string

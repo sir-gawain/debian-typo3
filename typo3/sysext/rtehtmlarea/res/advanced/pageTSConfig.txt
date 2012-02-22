@@ -5,7 +5,7 @@
 #
 # @author	Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 #
-# TYPO3 SVN ID: $Id: pageTSConfig.txt 3437 2008-03-16 16:22:11Z flyguide $
+# TYPO3 SVN ID: $Id$
 # ***************************************************************************************
 
 RTE.default {

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,11 +29,11 @@
  * Used to generate search queries for TypoScript.
  * The class is included from "class.tslib_pagegen.php" based on whether there has been detected content in the GPvar "sword"
  *
- * $Id: class.tslib_search.php 5424 2009-05-15 23:12:32Z k-fish $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
- * @author	Rene Fritz	<r.fritz@colorcube.de>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	René Fritz	<r.fritz@colorcube.de>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -80,7 +80,7 @@
 /**
  * Search class used for the content object SEARCHRESULT
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
  * @see	tslib_cObj::SEARCHRESULT()
@@ -168,12 +168,12 @@ class tslib_search {
 	function explodeCols($in)	{
 		$theArray = explode(':',$in);
 		$out = Array();
-		while(list(,$val)=each($theArray))	{
+		foreach ($theArray as $val) {
 			$val=trim($val);
 			$parts = explode('.',$val);
 			if ($parts[0] && $parts[1])	{
 				$subparts = explode('-',$parts[1]);
-				while(list(,$piece)=each($subparts))	{
+				foreach ($subparts as $piece) {
 					$piece=trim($piece);
 					if ($piece)		$out[]=$parts[0].'.'.$piece;
 				}
@@ -198,8 +198,7 @@ class tslib_search {
 			if (is_array($components))	{
 				$i=0;
 				$lastoper = '';
-				reset($components);
-				while (list($key,$val) = each ($components))	{
+				foreach ($components as $key => $val) {
 					$operator=$this->get_operator($val);
 					if ($operator)	{
 						$lastoper = $operator;
@@ -412,11 +411,10 @@ class tslib_search {
 	function get_operator($operator)	{
 		$operator = trim($operator);
 		$op_array = $this->operator_translate_table;
-		reset ($op_array);
 		if ($this->operator_translate_table_caseinsensitive)	{
 			$operator = strtolower($operator);	// case-conversion is charset insensitive, but it doesn't spoil anything if input string AND operator table is already converted
 		}
-		while (list($key,$val) = each($op_array))	{
+		foreach ($op_array as $key => $val) {
 			$item = $op_array[$key][0];
 			if ($this->operator_translate_table_caseinsensitive)	{
 				$item = strtolower($item);	// See note above.
@@ -486,8 +484,8 @@ class tslib_search {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_search.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_search.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_search.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_search.php']);
 }
 
 ?>

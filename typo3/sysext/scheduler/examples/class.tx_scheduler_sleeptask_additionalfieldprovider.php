@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Francois Suter <francois@typo3.org>
+*  (c) 2009-2011 François Suter <francois@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,11 +25,11 @@
 /**
  * Aditional fields provider class for usage with the Scheduler's sleep task
  *
- * @author		Francois Suter <francois@typo3.org>
+ * @author		François Suter <francois@typo3.org>
  * @package		TYPO3
  * @subpackage	tx_scheduler
  *
- * $Id: class.tx_scheduler_sleeptask_additionalfieldprovider.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 class tx_scheduler_SleepTask_AdditionalFieldProvider implements tx_scheduler_AdditionalFieldProvider {
 
@@ -111,8 +111,8 @@ class tx_scheduler_SleepTask_AdditionalFieldProvider implements tx_scheduler_Add
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_sleeptask_additionalfieldprovider.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_sleeptask_additionalfieldprovider.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_sleeptask_additionalfieldprovider.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_sleeptask_additionalfieldprovider.php']);
 }
 
 ?>

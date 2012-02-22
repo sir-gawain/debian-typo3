@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext "t3editor".
 #
-# Auto generated 01-04-2010 18:06
+# Auto generated 23-02-2011 11:00
 #
 # Manual updates:
 # Only the data in the array - everything else is removed by next
@@ -12,7 +12,7 @@
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Editor with syntax highlighting',
-	'description' => 'JavaScript-driven editor with syntax highlighting and codecompletion for TS. Based on CodeMirror.',
+	'description' => 'JavaScript-driven editor with syntax highlighting and codecompletion. Based on CodeMirror.',
 	'category' => 'be',
 	'shy' => 0,
 	'dependencies' => '',
@@ -21,7 +21,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'loadOrder' => '',
 	'module' => '',
 	'doNotLoadInFE' => 1,
-	'state' => 'alpha',
+	'state' => 'beta',
 	'internal' => 0,
 	'uploadfolder' => 0,
 	'createDirs' => '',
@@ -33,12 +33,12 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => '',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '1.0.1',
-	'_md5_values_when_last_written' => 'a:35:{s:7:"LICENSE";s:4:"c17d";s:21:"class.tx_t3editor.php";s:4:"fd42";s:17:"ext_localconf.php";s:4:"5241";s:14:"ext_tables.php";s:4:"7918";s:13:"locallang.xml";s:4:"78cc";s:16:"css/t3editor.css";s:4:"524b";s:22:"css/t3editor_inner.css";s:4:"c37c";s:23:"icons/loader_eeeeee.gif";s:4:"83a4";s:17:"jslib/t3editor.js";s:4:"fed9";s:24:"jslib/codemirror/LICENSE";s:4:"2c10";s:23:"jslib/codemirror/README";s:4:"dbd2";s:30:"jslib/codemirror/codemirror.js";s:4:"3e40";s:26:"jslib/codemirror/editor.js";s:4:"4546";s:31:"jslib/codemirror/mirrorframe.js";s:4:"9944";s:28:"jslib/codemirror/parsecss.js";s:4:"beb3";s:34:"jslib/codemirror/parsehtmlmixed.js";s:4:"8cd8";s:35:"jslib/codemirror/parsejavascript.js";s:4:"664b";s:31:"jslib/codemirror/parsesparql.js";s:4:"8286";s:35:"jslib/codemirror/parsetyposcript.js";s:4:"4808";s:28:"jslib/codemirror/parsexml.js";s:4:"a842";s:26:"jslib/codemirror/select.js";s:4:"a9d4";s:32:"jslib/codemirror/stringstream.js";s:4:"c2a6";s:28:"jslib/codemirror/tokenize.js";s:4:"c008";s:38:"jslib/codemirror/tokenizejavascript.js";s:4:"8219";s:38:"jslib/codemirror/tokenizetyposcript.js";s:4:"9f7c";s:24:"jslib/codemirror/undo.js";s:4:"0a32";s:24:"jslib/codemirror/util.js";s:4:"373e";s:43:"jslib/ts_codecompletion/completionresult.js";s:4:"46a9";s:44:"jslib/ts_codecompletion/descriptionPlugin.js";s:4:"5e86";s:43:"jslib/ts_codecompletion/tscodecompletion.js";s:4:"b6ab";s:35:"jslib/ts_codecompletion/tsparser.js";s:4:"5c80";s:32:"jslib/ts_codecompletion/tsref.js";s:4:"41b2";s:58:"lib/ts_codecompletion/class.tx_t3editor_codecompletion.php";s:4:"19c8";s:55:"lib/ts_codecompletion/class.tx_t3editor_tsrefloader.php";s:4:"372a";s:15:"tsref/tsref.xml";s:4:"3bb5";}',
+	'version' => '1.5.1',
+	'_md5_values_when_last_written' => 'a:29:{s:7:"LICENSE";s:4:"c17d";s:12:"ext_icon.gif";s:4:"7eb5";s:17:"ext_localconf.php";s:4:"3b52";s:14:"ext_tables.php";s:4:"7dff";s:13:"locallang.xml";s:4:"fa0e";s:29:"classes/class.tx_t3editor.php";s:4:"6573";s:44:"classes/class.tx_t3editor_hooks_fileedit.php";s:4:"ab8c";s:50:"classes/class.tx_t3editor_hooks_tstemplateinfo.php";s:4:"2d87";s:62:"classes/ts_codecompletion/class.tx_t3editor_codecompletion.php";s:4:"baa9";s:59:"classes/ts_codecompletion/class.tx_t3editor_tsrefloader.php";s:4:"94f6";s:23:"icons/loader_eeeeee.gif";s:4:"83a4";s:21:"res/css/csscolors.css";s:4:"3845";s:20:"res/css/jscolors.css";s:4:"e5a0";s:24:"res/css/sparqlcolors.css";s:4:"40ba";s:20:"res/css/t3editor.css";s:4:"454d";s:26:"res/css/t3editor_inner.css";s:4:"7b52";s:28:"res/css/typoscriptcolors.css";s:4:"e060";s:21:"res/css/xmlcolors.css";s:4:"847a";s:21:"res/jslib/fileedit.js";s:4:"e87e";s:21:"res/jslib/t3editor.js";s:4:"079a";s:45:"res/jslib/parse_typoscript/parsetyposcript.js";s:4:"c8af";s:48:"res/jslib/parse_typoscript/tokenizetyposcript.js";s:4:"dce5";s:47:"res/jslib/ts_codecompletion/completionresult.js";s:4:"ba5f";s:48:"res/jslib/ts_codecompletion/descriptionPlugin.js";s:4:"1df2";s:47:"res/jslib/ts_codecompletion/tscodecompletion.js";s:4:"a603";s:39:"res/jslib/ts_codecompletion/tsparser.js";s:4:"ab5c";s:36:"res/jslib/ts_codecompletion/tsref.js";s:4:"969e";s:27:"res/templates/t3editor.html";s:4:"4133";s:19:"res/tsref/tsref.xml";s:4:"69fc";}',
 	'constraints' => array(
 		'depends' => array(
 			'php' => '5.1.0-0.0.0',
-			'typo3' => '4.3.0-4.3.99',
+			'typo3' => '4.4.0-0.0.0',
 		),
 		'conflicts' => array(
 		),

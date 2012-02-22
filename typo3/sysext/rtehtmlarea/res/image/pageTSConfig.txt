@@ -5,7 +5,7 @@
 # Note that all these settings are already included in the "Demo" default configuration
 # However, this will update the "Minimal" and "Typical" default configurations
 #
-# TYPO3 SVN ID: $Id: pageTSConfig.txt 3437 2008-03-16 16:22:11Z flyguide $
+# TYPO3 SVN ID: $Id$
 # ***************************************************************************************
 
 	## Default RTE configuration

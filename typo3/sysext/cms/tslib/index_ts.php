@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,10 +30,10 @@
  * The script configures constants, includes libraries and does a little logic here and there in order to instantiate the right classes to create the webpage.
  * All the real data processing goes on in the "tslib/" classes which this script will include and use as needed.
  *
- * $Id: index_ts.php 7263 2010-04-09 08:46:26Z stucki $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
  */
@@ -60,7 +60,14 @@ $TYPO3_MISC['microtime_start'] = microtime(true);
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','FE');
 
-if (!defined('PATH_thisScript')) 	define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (PHP_SAPI=='cgi'||PHP_SAPI=='isapi' ||PHP_SAPI=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
+if(!defined('PATH_thisScript')) {
+	define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
+		(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
+		($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
+}
+
 if (!defined('PATH_site')) 			define('PATH_site', dirname(PATH_thisScript).'/');
 if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
 
@@ -204,7 +211,7 @@ $TSFE = t3lib_div::makeInstance('tslib_fe',
 	t3lib_div::_GP('MP'),
 	t3lib_div::_GP('RDCT')
 );
-/* @var $TSFE tslib_fe */
+/** @var $TSFE tslib_fe */
 
 if($TYPO3_CONF_VARS['FE']['pageUnavailable_force'] &&
 	!t3lib_div::cmpIP(t3lib_div::getIndpEnv('REMOTE_ADDR'), $TYPO3_CONF_VARS['SYS']['devIPmask'])) {
@@ -268,6 +275,7 @@ if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preBeUser']))
 // BE_USER
 // *********
 $BE_USER = NULL;
+/** @var $BE_USER t3lib_tsfeBeUserAuth */
 if ($_COOKIE['be_typo_user']) {		// If the backend cookie is set, we proceed and checks if a backend user is logged in.
 	$TYPO3_MISC['microtime_BE_USER_start'] = microtime(true);
 	$TT->push('Back End user initialized','');
@@ -345,6 +353,10 @@ $TT->pull();
 // Admin Panel & Frontend editing
 // *****************************************
 if ($TSFE->beUserLogin) {
+		// if a BE User is present load, the sprite manager for frontend-editing
+	$spriteManager = t3lib_div::makeInstance('t3lib_SpriteManager', FALSE);
+	$spriteManager->loadCacheFile();
+
 	$BE_USER->initializeFrontendEdit();
  	if ($BE_USER->adminPanel instanceof tslib_AdminPanel) {
 		$LANG = t3lib_div::makeInstance('language');
@@ -457,6 +469,7 @@ if ($TSFE->isINTincScript())		{
 // ***************
 // Output content
 // ***************
+$sendTSFEContent = false;
 if ($TSFE->isOutputting())	{
 	$TT->push('Print Content','');
 	$TSFE->processOutput();
@@ -471,16 +484,14 @@ if ($TSFE->isOutputting())	{
 			$EXTiS_splitC = explode('<!--EXT_SCRIPT.',$TSFE->content);	// Splits content with the key
 
 				// Special feature: Include libraries
-			reset($EXTiS_config);
-			while(list(,$EXTiS_cPart)=each($EXTiS_config))	{
+			foreach ($EXTiS_config as $EXTiS_cPart) {
 				if (isset($EXTiS_cPart['conf']['includeLibs']) && $EXTiS_cPart['conf']['includeLibs']) {
 					$EXTiS_resourceList = t3lib_div::trimExplode(',',$EXTiS_cPart['conf']['includeLibs'], true);
 					$TSFE->includeLibraries($EXTiS_resourceList);
 				}
 			}
 
-			reset($EXTiS_splitC);
-			while(list($EXTiS_c,$EXTiS_cPart)=each($EXTiS_splitC))	{
+			foreach ($EXTiS_splitC as $EXTiS_c => $EXTiS_cPart) {
 				if (substr($EXTiS_cPart,32,3)=='-->')	{	// If the split had a comment-end after 32 characters it's probably a split-string
 					$EXTiS_key = 'EXT_SCRIPT.'.substr($EXTiS_cPart,0,32);
 					if (is_array($EXTiS_config[$EXTiS_key]))	{
@@ -498,7 +509,7 @@ if ($TSFE->isOutputting())	{
 
 		$TT->pull();
 	} else {
-		echo $TSFE->content;
+		$sendTSFEContent = true;
 	}
 	$TT->pull();
 }
@@ -515,9 +526,8 @@ $TSFE->storeSessionData();
 // ***********
 $TYPO3_MISC['microtime_end'] = microtime(true);
 $TSFE->setParseTime();
-if ($TSFE->isOutputting() && ($TSFE->TYPO3_CONF_VARS['FE']['debug'] || $TSFE->config['config']['debug']))	{
-	echo '
-<!-- Parsetime: '.$TSFE->scriptParseTime.' ms-->';
+if ($TSFE->isOutputting() && (!empty($TSFE->TYPO3_CONF_VARS['FE']['debug']) || !empty($TSFE->config['config']['debug']))) {
+	$TSFE->content .=  LF . '<!-- Parsetime: ' . $TSFE->scriptParseTime . 'ms -->';
 }
 $TSFE->statistics();
 
@@ -531,7 +541,7 @@ $TSFE->jumpurl();
 // *************
 // Preview info
 // *************
-$TSFE->previewInfo();
+$TSFE->content = str_ireplace('</body>', $TSFE->previewInfo() . '</body>', $TSFE->content);
 
 
 // ******************
@@ -566,13 +576,18 @@ echo $TSFE->beLoginLinkIPList();
 // Admin panel
 // *************
 if (is_object($BE_USER) && $BE_USER->isAdminPanelVisible() && $TSFE->beUserLogin) {
-	echo $BE_USER->displayAdminPanel();
+	$TSFE->content = str_ireplace('</head>',  $BE_USER->adminPanel->getAdminPanelHeaderData() . '</head>', $TSFE->content);
+	$TSFE->content = str_ireplace('</body>',  $BE_USER->displayAdminPanel() . '</body>', $TSFE->content);
+}
+
+if ($sendTSFEContent) {
+	echo $TSFE->content;
 }
 
 // *************
 // Debugging Output
 // *************
-if(is_object($error) && @is_callable(array($error,'debugOutput'))) {
+if(isset($error) && is_object($error) && @is_callable(array($error,'debugOutput'))) {
 	$error->debugOutput();
 }
 if (TYPO3_DLOG) {

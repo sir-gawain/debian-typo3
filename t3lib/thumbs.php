@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Sk√•rh√∏j (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 /**
  * Generates a thumbnail and returns an image stream, either GIF/PNG or JPG
  *
- * $Id: thumbs.php 6951 2010-02-21 19:46:37Z benni $
- * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 July/2003 by Kasper Sk√•rh√∏j
  *
- * @author		Kasper Skaarhoj	<kasperYYYY@typo3.com>
+ * @author		Kasper Sk√•rh√∏j	<kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -68,7 +68,15 @@ if (defined('E_DEPRECATED')) {
 // ******************
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','BE');
-if(!defined('PATH_thisScript')) define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (php_sapi_name()=='cgi'||php_sapi_name()=='isapi' ||php_sapi_name()=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
+
+if(!defined('PATH_thisScript')) {
+	define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
+		(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
+		($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
+}
+
 if(!defined('PATH_site'))  		define('PATH_site', preg_replace('/[^\/]*.[^\/]*$/','',PATH_thisScript));		// the path to the website folder (see init.php)
 if(!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
 define('PATH_typo3conf', PATH_site.'typo3conf/');
@@ -110,7 +118,7 @@ if (!$TYPO3_CONF_VARS['GFX']['image_processing'])	die ('ImageProcessing was disa
  *
  * Relative paths MUST BE the first two characters ONLY: eg: '../dir/file.gif', otherwise it is expect to be absolute
  *
- * @author		Kasper Skaarhoj	<kasperYYYY@typo3.com>
+ * @author		Kasper Sk√•rh√∏j	<kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -174,7 +182,15 @@ class SC_t3lib_thumbs {
 			$this->size = $size;
 			$this->mtime = $mtime;
 		} else {
-			die('Error: Image does not exist and/or MD5 checksum did not match.');
+				// hide the path to the document root;
+			$publicFilename = substr($file, strlen(PATH_site));
+			throw new RuntimeException(
+				'TYPO3 Fatal Error: Image \'' . $publicFilename . '\' does not exist and/or MD5 checksum did not match. ' .
+					'If the target file exists and its file name contains special characters, the setting of ' .
+					'$TYPO3_CONF_VARS[SYS][systemLocale] might be wrong.'
+				,
+				1270853950
+			);
 		}
 	}
 
@@ -217,7 +233,7 @@ class SC_t3lib_thumbs {
 			$outpath = PATH_site.$this->outdir;
 
 				// Should be - ? 'png' : 'gif' - , but doesn't work (ImageMagick prob.?)
-				// RenÈ: png work for me
+				// Ren√©: png work for me
 			$thmMode = t3lib_div::intInRange($TYPO3_CONF_VARS['GFX']['thumbnails_png'],0);
 			$outext = ($ext!='jpg' || ($thmMode & 2)) ? ($thmMode & 1 ? 'png' : 'gif') : 'jpg';
 
@@ -229,9 +245,11 @@ class SC_t3lib_thumbs {
 				if (!file_exists($this->output))	{
 					$parameters = '-sample ' . $this->size . ' ' . $this->wrapFileName($this->input) . '[0] ' . $this->wrapFileName($this->output);
 					$cmd = t3lib_div::imageMagickCommand('convert', $parameters);
-					exec($cmd);
+					t3lib_utility_Command::exec($cmd);
 					if (!file_exists($this->output))	{
 						$this->errorGif('No thumb','generated!',basename($this->input));
+					} else {
+						t3lib_div::fixPermissions($this->output);
 					}
 				}
 					// The thumbnail is read and output to the browser
@@ -277,7 +295,12 @@ class SC_t3lib_thumbs {
 	function errorGif($l1,$l2,$l3)	{
 		global $TYPO3_CONF_VARS;
 
-		if (!$TYPO3_CONF_VARS['GFX']['gdlib'])	die($l1.' '.$l2.' '.$l3);
+		if (!$TYPO3_CONF_VARS['GFX']['gdlib']) {
+			throw new RuntimeException(
+				'TYPO3 Fatal Error: No gdlib. ' . $l1 . ' ' . $l2 . ' ' . $l3,
+				1270853952
+			);
+		}
 
 			// Creates the basis for the error image
 		if ($TYPO3_CONF_VARS['GFX']['gdlib_png'])	{
@@ -329,7 +352,12 @@ class SC_t3lib_thumbs {
 	function fontGif($font)	{
 		global $TYPO3_CONF_VARS;
 
-		if (!$TYPO3_CONF_VARS['GFX']['gdlib'])	die('');
+		if (!$TYPO3_CONF_VARS['GFX']['gdlib']) {
+			throw new RuntimeException(
+				'TYPO3 Fatal Error: No gdlib.',
+				1270853953
+			);
+		}
 
 			// Create image and set background color to white.
 		$im = imageCreate(250,76);
@@ -337,7 +365,7 @@ class SC_t3lib_thumbs {
 		$col = imageColorAllocate($im, 0,0,0);
 
 			// The test string and offset in x-axis.
-		$string = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz∆Êÿ¯≈Âƒ‰÷ˆ‹¸ﬂ';
+		$string = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz√Ü√¶√ò√∏√Ö√•√Ñ√§√ñ√∂√ú√º√ü';
 		$x=13;
 
 			// Print (with non-ttf font) the size displayed
@@ -374,12 +402,20 @@ class SC_t3lib_thumbs {
 	 * @return string $inputName escaped as needed
 	 */
 	protected function wrapFileName($inputName) {
-		return escapeshellarg($inputName);
+		if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+			$currentLocale = setlocale(LC_CTYPE, 0);
+			setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
+		}
+		$escapedInputName = escapeshellarg($inputName);
+		if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+			setlocale(LC_CTYPE, $currentLocale);
+		}
+		return $escapedInputName;
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/thumbs.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/thumbs.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/thumbs.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/thumbs.php']);
 }
 
 

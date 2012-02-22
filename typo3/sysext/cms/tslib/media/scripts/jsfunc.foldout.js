@@ -2,13 +2,13 @@
 *
 *  JavaScript DHTML foldout menu
 *
-* $Id: jsfunc.foldout.js 5165 2009-03-09 18:28:59Z ohader $
+* $Id$
 *
 *
 *
 *  Copyright notice
 *
-*  (c) 1998-2009 Kasper Skårhøj
+*  (c) 1998-2010 Kasper Skårhøj
 *  All rights reserved
 *
 *  This script is part of the TYPO3 tslib/ library provided by

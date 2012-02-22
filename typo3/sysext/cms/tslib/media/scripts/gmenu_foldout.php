@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,11 +27,11 @@
 /**
  * Contains the GMENU_FOLDOUT extension class, tslib_gmenu_foldout
  *
- * $Id: gmenu_foldout.php 5165 2009-03-09 18:28:59Z ohader $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -72,10 +72,9 @@
 /**
  * Class extension tslib_gmenu for the creation of DHTML foldout menus
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=386&cHash=f69ab462e2
  */
 class tslib_gmenu_foldout extends tslib_gmenu {
 	var $GMENU_fixKey='foldout';
@@ -242,8 +241,8 @@ GFV_exImg.src="'.$GLOBALS['TSFE']->absRefPrefix.$this->WMarrowACT[3].'";   //...
 $GLOBALS['TSFE']->tmpl->menuclasses.=',gmenu_foldout';
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/gmenu_foldout.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/gmenu_foldout.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/gmenu_foldout.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/gmenu_foldout.php']);
 }
 
 ?>

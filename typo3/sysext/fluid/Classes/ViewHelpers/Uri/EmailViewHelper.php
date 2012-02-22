@@ -22,14 +22,11 @@
  * <code title="basic email URI">
  * <f:uri.email email="foo@bar.tld" />
  * </code>
- *
- * Output:
+ * <output>
  * javascript:linkTo_UnCryptMailto('ocknvq,hqqBdct0vnf');
  * (depending on your spamProtectEmailAddresses-settings)
+ * </output>
  *
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: EmailViewHelper.php 1347 2009-09-23 15:33:06Z bwaidelich $
  */
 class Tx_Fluid_ViewHelpers_Uri_EmailViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 

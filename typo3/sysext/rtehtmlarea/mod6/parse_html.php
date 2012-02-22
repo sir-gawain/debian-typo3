@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2005-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /**
  * Content parsing for htmlArea RTE
  *
- * @author	Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+ * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * $Id: parse_html.php 5165 2009-03-09 18:28:59Z ohader $  *
+ * $Id$  *
  */
 
 error_reporting (E_ALL ^ E_NOTICE);
@@ -37,7 +37,6 @@ unset($MCONF);
 require ('conf.php');
 require ($BACK_PATH.'init.php');
 require ($BACK_PATH.'template.php');
-require_once ('class.tx_rtehtmlarea_parse_html.php');
 
 
 // Make instance:

@@ -26,13 +26,13 @@
  * TYPO3 Scheduler. This class handles scheduling and execution of tasks.
  * Formerly known as "Gabriel TYPO3 arch angel"
  *
- * @author	Francois Suter <francois@typo3.org>
+ * @author	François Suter <francois@typo3.org>
  * @author	Christian Jul Jensen <julle@typo3.org>
  *
  * @package		TYPO3
  * @subpackage	tx_scheduler
  *
- * $Id: class.tx_scheduler.php 6702 2009-12-26 20:28:28Z francois $
+ * $Id$
  */
 
 class tx_scheduler implements t3lib_Singleton {
@@ -398,7 +398,7 @@ class tx_scheduler implements t3lib_Singleton {
 	/**
 	 * This is a utility method that writes some message to the BE Log
 	 * It could be expanded to write to some other log
-	 * 
+	 *
 	 * @param	string		The message to write to the log
 	 * @param	integer		Status (0 = message, 1 = error)
 	 * @param	mixed		Key for the message
@@ -419,8 +419,8 @@ class tx_scheduler implements t3lib_Singleton {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler.php']);
 }
 
 

@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Steffen Kamper <info@sk-typo3.de>
-*  Based on Newloginbox (c) 2002-2004 Kasper Skaarhoj <kasper@typo3.com>
+*  (c) 2007-2011 Steffen Kamper <info@sk-typo3.de>
+*  Based on Newloginbox (c) 2002-2004 Kasper Skårhøj <kasper@typo3.com>
 *
 *  All rights reserved
 *
@@ -128,16 +128,25 @@ class tx_felogin_pi1 extends tslib_pibase {
 			}
 		}
 
-
-
 			// Process the redirect
 		if (($this->logintype === 'login' || $this->logintype === 'logout') && $this->redirectUrl && !$this->noRedirect) {
 			if (!$GLOBALS['TSFE']->fe_user->cookieId) {
-				$content .= '<p style="color:red; font-weight:bold;">' . $this->pi_getLL('cookie_warning', '', 1) . '</p>';
+				$content .= $this->cObj->stdWrap($this->pi_getLL('cookie_warning', '', 1), $this->conf['cookieWarning_stdWrap.']);
 			} else {
 				t3lib_utility_Http::redirect($this->redirectUrl);
 			}
 		}
+
+			// Adds hook for processing of extra item markers / special
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['postProcContent']) && is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['postProcContent'])) {
+			$_params = array(
+				'content' => $content
+			);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['postProcContent'] as $_funcRef) {
+				$content = t3lib_div::callUserFunction($_funcRef, $_params, $this);
+			}
+		}
+
 		return $this->conf['wrapContentInBaseClass'] ? $this->pi_wrapInBaseClass($content) : $content;
 
 	}
@@ -340,25 +349,31 @@ class tx_felogin_pi1 extends tslib_pibase {
 		$isBaseURL  = !empty($GLOBALS['TSFE']->baseUrl);
 		$isFeloginBaseURL = !empty($this->conf['feloginBaseURL']);
 
-		if ($isFeloginBaseURL) {
-				// first priority
-			$this->conf['linkPrefix'] = $this->conf['feloginBaseURL'];
-		} else {
-			if ($isBaseURL) {
-					// 3rd priority
-				$this->conf['linkPrefix'] = $GLOBALS['TSFE']->baseUrl;
-			}
-		}
-
-		if ($this->conf['linkPrefix'] == -1 && !$isAbsRelPrefix) {
-				// no preix is set, return the error
-			return $this->pi_getLL('ll_change_password_nolinkprefix_message');
-		}
-
-		$link = ($isAbsRelPrefix ? '' : $this->conf['linkPrefix']) . $this->pi_getPageLink($GLOBALS['TSFE']->id, '', array(
+		$link = $this->pi_getPageLink($GLOBALS['TSFE']->id, '', array(
 			$this->prefixId . '[user]' => $user['uid'],
 			$this->prefixId . '[forgothash]' => $randHash
 		));
+
+			// Prefix link if necessary
+		if ($isFeloginBaseURL) {
+				// First priority, use specific base URL
+				// "absRefPrefix" must be removed first, otherwise URL will be prepended twice
+			if (!empty($GLOBALS['TSFE']->absRefPrefix)) {
+				$link = substr($link, strlen($GLOBALS['TSFE']->absRefPrefix));
+			}
+			$link = $this->conf['feloginBaseURL'] . $link;
+		} elseif ($isAbsRelPrefix) {
+			// Second priority
+			// absRefPrefix must not necessarily contain a hostname and URL scheme, so add it if needed
+			$link = t3lib_div::locationHeaderUrl($link);
+		} elseif ($isBaseURL) {
+				// Third priority
+				// Add the global base URL to the link
+			$link = $GLOBALS['TSFE']->baseUrlWrap($link);
+		} else {
+				// no prefix is set, return the error
+			return $this->pi_getLL('ll_change_password_nolinkprefix_message');
+		}
 
 		$msg = sprintf($this->pi_getLL('ll_forgot_validate_reset_password', '', 0), $user['username'], $link, $validEndString);
 
@@ -434,7 +449,11 @@ class tx_felogin_pi1 extends tslib_pibase {
 						}
 					}
 				}
-
+					// show logout form directly
+				if ($this->conf['showLogoutFormAfterLogin']) {
+					$this->redirectUrl = '';
+					return $this->showLogout();
+				}
 			} else {
 					// login error
 				$markerArray['###STATUS_HEADER###'] = $this->getDisplayText('error_header',$this->conf['errorHeader_stdWrap.']);
@@ -466,7 +485,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 		if (t3lib_div::inList($this->conf['redirectMode'], 'referer') || t3lib_div::inList($this->conf['redirectMode'], 'refererDomains')) {
 			$referer = $this->referer ? $this->referer : t3lib_div::getIndpEnv('HTTP_REFERER');
 			if ($referer) {
-				$extraHiddenAr[] = '<input type="hidden" name="referer" value="' . rawurlencode($referer) . '" />';
+				$extraHiddenAr[] = '<input type="hidden" name="referer" value="' . htmlspecialchars($referer) . '" />';
 			}
 		}
 
@@ -482,7 +501,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 			$onSubmit = implode('; ', $onSubmitAr).'; return true;';
 		}
 		if (count($extraHiddenAr)) {
-			$extraHidden = implode(chr(10), $extraHiddenAr);
+			$extraHidden = implode(LF, $extraHiddenAr);
 		}
 
 		if (!$gpRedirectUrl && $this->redirectUrl) {
@@ -511,7 +530,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 		}
 
 
-			// Permanent Login is only possible if permalogin is not deactivated (-1) and lifetime is greater than 0
+			// The permanent login checkbox should only be shown if permalogin is not deactivated (-1), not forced to be always active (2) and lifetime is greater than 0
 		if ($this->conf['showPermaLogin'] && t3lib_div::inList('0,1', $GLOBALS['TYPO3_CONF_VARS']['FE']['permalogin']) && $GLOBALS['TYPO3_CONF_VARS']['FE']['lifetime'] > 0) {
 			$markerArray['###PERMALOGIN###'] = $this->pi_getLL('permalogin', '', 1);
 			if($GLOBALS['TYPO3_CONF_VARS']['FE']['permalogin'] == 1) {
@@ -585,7 +604,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 								if (preg_match('/^http://([[:alnum:]._-]+)//', $url, $match)) {
 									$redirect_domain = $match[1];
 									$found = false;
-									foreach(split(',', $this->conf['domains']) as $d) {
+									foreach(t3lib_div::trimExplode(',', $this->conf['domains'], TRUE) as $d) {
 										if (preg_match('/(^|\.)/'.$d.'$', $redirect_domain)) {
 											$found = true;
 											break;
@@ -675,6 +694,10 @@ class tx_felogin_pi1 extends tslib_pibase {
 
 		if ($this->flexFormValue('showPermaLogin', 'sDEF')) {
 			$flex['showPermaLogin'] = $this->flexFormValue('showPermaLogin', 'sDEF');
+		}
+
+		if ($this->flexFormValue('showLogoutFormAfterLogin', 'sDEF')) {
+			$flex['showLogoutFormAfterLogin'] = $this->flexFormValue('showLogoutFormAfterLogin', 'sDEF');
 		}
 
 		if ($this->flexFormValue('pages', 'sDEF')) {
@@ -947,8 +970,8 @@ class tx_felogin_pi1 extends tslib_pibase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/felogin/pi1/class.tx_felogin_pi1.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/felogin/pi1/class.tx_felogin_pi1.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/felogin/pi1/class.tx_felogin_pi1.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/felogin/pi1/class.tx_felogin_pi1.php']);
 }
 
 ?>

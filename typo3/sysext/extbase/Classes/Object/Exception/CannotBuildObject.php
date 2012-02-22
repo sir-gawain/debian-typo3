@@ -30,9 +30,9 @@
  *
  * @package Extbase
  * @subpackage Object\Exception
- * @version $Id: CannotBuildObject.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
-class Tx_Extbase_Object_CannotBuildObject extends Tx_Extbase_Object_Exception {
+class Tx_Extbase_Object_Exception_CannotBuildObject extends Tx_Extbase_Object_Exception {
 
 }
 

@@ -29,23 +29,19 @@
  * <code title="Defaults">
  * <f:format.padding padLength="10">TYPO3</f:format.padding>
  * </code>
- *
- * Output:
+ * <output>
  * TYPO3     (note the trailing whitespace)
+ * <output>
  *
  * <code title="Specify padding string">
  * <f:format.padding padLength="10" padString="-=">TYPO3</f:format.padding>
  * </code>
- *
- * Output:
+ * <output>
  * TYPO3-=-=-
+ * </output>
  *
- * @version $Id: PaddingViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Format
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Format_PaddingViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 

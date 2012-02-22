@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Dmitry Dulepov <dmitry@typo3.org>
+*  (c) 2008-2011 Dmitry Dulepov <dmitry@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,7 +37,7 @@
 /**
  * This class is the OpenID return script for the TYPO3 Frontend.
  *
- * $Id: class.tx_openid_eid.php 6469 2009-11-17 23:56:35Z benni $
+ * $Id$
  *
  * @author	Dmitry Dulepov <dmitry@typo3.org>
  */
@@ -65,8 +65,8 @@ class tx_openid_eID {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_eid.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_eid.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_eid.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_eid.php']);
 }
 
 $module = t3lib_div::makeInstance('tx_openid_eID');

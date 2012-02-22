@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,11 +30,11 @@
  * This script lets users choose a new database element to create.
  * Includes a wizard mode for visually pointing out the position of new pages
  *
- * $Id: db_new.php 8428 2010-07-28 09:18:27Z ohader $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -73,7 +73,7 @@ $LANG->includeLLFile('EXT:lang/locallang_misc.xml');
 /**
  * Extension for the tree class that generates the tree of pages in the page-wizard mode
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -111,7 +111,7 @@ class localPageTree extends t3lib_pageTree {
 /**
  * Script class for 'db_new'
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -247,10 +247,10 @@ class SC_db_new {
 
 				// Set header-HTML and return_url
 			if (is_array($this->pageinfo) && $this->pageinfo['uid'])	{
-				$iconImgTag = t3lib_iconWorks::getIconImage('pages', $this->pageinfo, $this->backPath, 'title="' . htmlspecialchars($this->pageinfo['_thePath']) . '"');
+				$iconImgTag = t3lib_iconWorks::getSpriteIconForRecord('pages', $this->pageinfo, array('title' => htmlspecialchars($this->pageinfo['_thePath'])));
 				$title = strip_tags($this->pageinfo[$GLOBALS['TCA']['pages']['ctrl']['label']]);
 			} else {
-				$iconImgTag = '<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/i/_icon_website.gif') . ' title="' . htmlspecialchars($this->pageinfo['_thePath']) . '" alt="" />';
+				$iconImgTag = t3lib_iconWorks::getSpriteIcon('apps-pagetree-root', array('title' => htmlspecialchars($this->pageinfo['_thePath'])));
 				$title = $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'];
 			}
 
@@ -302,8 +302,8 @@ class SC_db_new {
 		if (!$this->pagesOnly)	{	// Regular new element:
 				// New page
 			if ($this->showNewRecLink('pages'))	{
-				$buttons['new_page'] = '<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array('pagesOnly' => '1'))) . '">' .
-					'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/new_page.gif') . ' alt="" />' .
+				$buttons['new_page'] = '<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array('pagesOnly' => '1'))) . '" title="' . $LANG->sL('LLL:EXT:cms/layout/locallang.xml:newPage', 1) . '">' .
+						t3lib_iconWorks::getSpriteIcon('actions-page-new') .
 					'</a>';
 			}
 				// CSH
@@ -315,24 +315,26 @@ class SC_db_new {
 
 			// Back
 		if ($this->R_URI) {
-			$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack">' .
-				'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/goback.gif') . ' alt="" />' .
+			$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.goBack', 1) . '">' .
+					t3lib_iconWorks::getSpriteIcon('actions-view-go-back') .
 				'</a>';
 		}
 
 		if (is_array($this->pageinfo) && $this->pageinfo['uid']) {
 				// View
-			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick($this->pageinfo['uid'], $this->backPath, t3lib_BEfunc::BEgetRootLine($this->pageinfo['uid']))) . '">' .
-				'<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/zoom.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '" alt="" />' .
+			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick($this->pageinfo['uid'], $this->backPath, t3lib_BEfunc::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '">' .
+					t3lib_iconWorks::getSpriteIcon('actions-document-view') .
 				'</a>';
 
 				// Record list
-			if ($GLOBALS['BE_USER']->check('modules', 'web_list')) {
-				$href = $this->backPath . 'db_list.php?id=' . $this->pageinfo['uid'] . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
-				$buttons['record_list'] = '<a href="' . htmlspecialchars($href) . '">' .
-					'<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/list.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showList', 1) . '" alt="" />' .
-					'</a>';
-			}
+				// If access to Web>List for user, then link to that module.
+			$buttons['record_list'] = t3lib_BEfunc::getListViewLink(
+				array(
+					'id' => $this->pageinfo['uid'],
+					'returnUrl' => t3lib_div::getIndpEnv('REQUEST_URI'),
+				),
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showList')
+			);
 		}
 
 
@@ -380,8 +382,9 @@ class SC_db_new {
 			// New Page
 		$table = 'pages';
 		$v = $GLOBALS['TCA'][$table];
-		$pageIcon = t3lib_iconWorks::getIconImage($table, array(), $this->doc->backPath, '');
-		$newPageIcon = '<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/new_page.gif', 'width="13" height="12"') . ' alt="" />';
+		$pageIcon = t3lib_iconWorks::getSpriteIconForRecord($table,array());
+
+		$newPageIcon = t3lib_iconWorks::getSpriteIcon('actions-page-new');
 		$rowContent = $firstLevel . $newPageIcon . '&nbsp;<strong>' . $GLOBALS['LANG']->getLL('createNewPage') . '</strong>';
 
 			// New pages INSIDE this pages
@@ -394,7 +397,7 @@ class SC_db_new {
 				// Create link to new page inside:
 
 			$rowContent .= '<br />' . $secondLevel . $this->linkWrap(
-						'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/i/' . ($v['ctrl']['iconfile'] ? $v['ctrl']['iconfile'] : $table . '.gif'), 'width="18" height="16"') . ' alt="" />' .
+						t3lib_iconWorks::getSpriteIconForRecord($table, array()) .
 						$GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:db_new.php.inside', 1) . ')',
 						$table,
 						$this->id);
@@ -433,7 +436,7 @@ class SC_db_new {
 			$startRows[] = '
 				<tr>
 					<td nowrap="nowrap">' . $rowContent . '</td>
-					<td>' . t3lib_BEfunc::cshItem($table, '', $this->doc->backPath, '', $doNotShowFullDescr) . '</td>
+					<td>' . t3lib_BEfunc::wrapInHelp($table, '') . '</td>
 				</tr>
 			';
 		}
@@ -441,7 +444,7 @@ class SC_db_new {
 
 			// New tables (but not pages) INSIDE this pages
 		$isAdmin = $GLOBALS['BE_USER']->isAdmin();
-		$newContentIcon = '<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/new_record.gif', 'width="16" height="12"') . ' alt="" />';
+		$newContentIcon = t3lib_iconWorks::getSpriteIcon('actions-document-new');
 		if ($this->newContentInto)	{
 			if (is_array($GLOBALS['TCA']))	{
 				$groupName = '';
@@ -456,7 +459,7 @@ class SC_db_new {
 							&& $GLOBALS['BE_USER']->workspaceCreateNewRecord($this->pageinfo['_ORIG_uid'] ? $this->pageinfo['_ORIG_uid'] : $this->id, $table)
 							)	{
 
-						$newRecordIcon = t3lib_iconWorks::getIconImage($table ,array(), $this->doc->backPath, '');
+						$newRecordIcon = t3lib_iconWorks::getSpriteIconForRecord($table, array());
 						$rowContent = '';
 
 							// Create new link for record:
@@ -519,7 +522,7 @@ class SC_db_new {
 							} else {
 								$_EXTKEY = 'system';
 								$thisTitle = $GLOBALS['LANG']->getLL('system_records');
-								$iconFile['system'] = '<img src="gfx/typo3.png" />';
+								$iconFile['system'] = t3lib_iconWorks::getSpriteIcon('apps-pagetree-root');
 							}
 
 							if($groupName == '' || $groupName != $_EXTKEY) {
@@ -537,7 +540,7 @@ class SC_db_new {
 							$startRows[] = '
 								<tr>
 									<td nowrap="nowrap">' . $rowContent . '</td>
-									<td>' . t3lib_BEfunc::cshItem($table, '', $this->doc->backPath, '', $doNotShowFullDescr) . '</td>
+									<td>' . t3lib_BEfunc::wrapInHelp($table, '') . '</td>
 								</tr>';
 						} else {
 							$this->tRows[$groupName]['title'] = $thisTitle;
@@ -563,14 +566,14 @@ class SC_db_new {
 			$row = '<tr>
 						<td nowrap="nowrap">' . $halfLine . '<br />' .
 						$firstLevel . '' . $iconFile[$key] . '&nbsp;<strong>' . $value['title'] . '</strong>' .
-						'</td><td>'.t3lib_BEfunc::cshItem($t,'',$this->doc->backPath,'',$doNotShowFullDescr).'</td>
+						'</td><td>&nbsp;<br />' . t3lib_BEfunc::wrapInHelp($key, '') . '</td>
 						</tr>';
 			$count = count($value['html']) - 1;
 			foreach ($value['html'] as $recordKey => $record) {
 				$row .= '
 					<tr>
 						<td nowrap="nowrap">' . ($recordKey < $count ? $secondLevel : $secondLevelLast) . $record . '</td>
-						<td>'.t3lib_BEfunc::cshItem($value['table'][$recordKey], '', $this->doc->backPath, '', $doNotShowFullDescr) . '</td>
+						<td>' . t3lib_BEfunc::wrapInHelp($value['table'][$recordKey], '') . '</td>
 					</tr>';
 			}
 			$finalRows[] = $row;
@@ -719,8 +722,8 @@ class SC_db_new {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/db_new.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/db_new.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/db_new.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/db_new.php']);
 }
 
 

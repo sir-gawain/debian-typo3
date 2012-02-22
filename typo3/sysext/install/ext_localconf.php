@@ -1,6 +1,9 @@
 <?php
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
+	// TYPO3 4.5 - Check the database to be utf-8 compliant
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['charsetDefaults'] = 'tx_coreupdates_charsetdefaults';
+
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['changeCompatibilityVersion'] = 'tx_coreupdates_compatversion';
 
 	// manage split includes of css_styled_contents since TYPO3 4.3
@@ -26,7 +29,25 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['changeImagecolsValue'] 
 	// register eID script for install tool AJAX calls
 $TYPO3_CONF_VARS['FE']['eID_include']['tx_install_ajax'] = 'EXT:install/mod/class.tx_install_ajax.php';
 
-	// install versioning since TYPO3 4.3
-$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['installVersioning'] = 'tx_coreupdates_installversioning';
+	// add static_template if needed (since TYPO3 4.4 this table is not standard)
+	// if needed, sysext statictables is loaded, which gives back functionality
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForStaticTypoScriptTemplates'] = 'tx_coreupdates_statictemplates';
 
+	// warn for t3skin installed in Version 4.4
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForT3SkinInstalled'] = 'tx_coreupdates_t3skin';
+
+	// Version 4.4: warn for set CompressionLevel and warn user to update his .htaccess
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForCompressionLevel'] = 'tx_coreupdates_compressionlevel';
+
+	// Version 4.5: migrate workspaces to use custom stages and install the required extensions
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['migrateWorkspaces'] = 'tx_coreupdates_migrateworkspaces';
+
+	// Version 4.5: Removes the ".gif" suffix from entries in sys_language
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['flagsFromSprites'] = 'tx_coreupdates_flagsfromsprite';
+
+	// Version 4.5: Adds excludeable FlexForm fields to Backend group access lists (ACL)
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['addFlexformsToAcl'] = 'tx_coreupdates_addflexformstoacl';
+
+	// Version 4.5: Split tt_content image_link to newline by comma
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['imagelink'] = 'tx_coreupdates_imagelink';
 ?>

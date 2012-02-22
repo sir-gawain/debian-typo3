@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Utility
- * @version $Id: Arrays.php 2469 2010-07-26 09:30:14Z jocrau $
+ * @version $Id$
  (robert) I'm not sure yet if we should use this library statically or as a singleton. The latter might be problematic if we use it from the Core classes.
  * @api
  */

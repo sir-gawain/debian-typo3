@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,19 +29,16 @@
 /*
  * Undo Redo Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: undo-redo.js 7392 2010-04-19 16:19:41Z stan $
+ * TYPO3 SVN ID: $Id$
  */
-UndoRedo = HTMLArea.Plugin.extend({
-	
-	constructor : function (editor, pluginName) {
+HTMLArea.UndoRedo = HTMLArea.Plugin.extend({
+	constructor: function (editor, pluginName) {
 		this.base(editor, pluginName);
 	},
-	
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin : function (editor) {
-		
+	configurePlugin: function (editor) {
 		this.pageTSconfiguration = this.editorConfiguration.buttons.undo;
 		this.customUndo = true;
 		this.undoQueue = new Array();
@@ -50,22 +47,19 @@ UndoRedo = HTMLArea.Plugin.extend({
 		this.undoSteps = 25;
 			// The time interval at which undo samples are taken: 1/2 sec.
 		this.undoTimeout = 500;
-		this.undoTimer;
-		
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.0",
-			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.sjbr.ca",
-			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "SJBR",
-			sponsorUrl	: "http://www.sjbr.ca",
-			license		: "GPL"
+			version		: '2.0',
+			developer	: 'Stanislas Rolland',
+			developerUrl	: 'http://www.sjbr.ca',
+			copyrightOwner	: 'Stanislas Rolland',
+			sponsor		: 'SJBR',
+			sponsorUrl	: 'http://www.sjbr.ca',
+			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		
 		/*
 		 * Registering the buttons
 		 */
@@ -76,49 +70,56 @@ UndoRedo = HTMLArea.Plugin.extend({
 			var buttonConfiguration = {
 				id		: buttonId,
 				tooltip		: this.localize(buttonId.toLowerCase()),
-				action		: "onButtonPress",
-				context		: button[1],
-				hotKey		: ((this.editorConfiguration.buttons[buttonId.toLowerCase()] && this.editorConfiguration.buttons[buttonId.toLowerCase()].hotKey) ? this.editorConfiguration.buttons[buttonId.toLowerCase()].hotKey : button[2])
+				iconCls		: 'htmlarea-action-' + button[3],
+				action		: 'onButtonPress',
+				hotKey		: ((this.editorConfiguration.buttons[buttonId.toLowerCase()] && this.editorConfiguration.buttons[buttonId.toLowerCase()].hotKey) ? this.editorConfiguration.buttons[buttonId.toLowerCase()].hotKey : button[2]),
+				noAutoUpdate	: true
 			};
 			this.registerButton(buttonConfiguration);
 		}
-		
 		return true;
 	},
-	
 	/*
 	 * The list of buttons added by this plugin
 	 */
-	buttonList : [
-		["Undo", null, "z"],
-		["Redo", null, "y"]
+	buttonList: [
+		['Undo', null, 'z', 'undo'],
+		['Redo', null, 'y', 'redo']
 	],
-	
 	/*
 	 * This function gets called when the editor is generated
 	 */
-	onGenerate : function () {
+	onGenerate: function () {
 			// Start undo snapshots
 		if (this.customUndo) {
-			var takeSnapshotFunctRef = this.makeFunctionReference("takeSnapshot");
-			this.undoTimer = window.setInterval(takeSnapshotFunctRef, this.undoTimeout);
+			this.task = {
+				run: this.takeSnapshot,
+				scope: this,
+				interval: this.undoTimeout
+			};
+			this.start();
 		}
 	},
-	
 	/*
-	 * This function gets called when the editor is closing
+	 * Start the undo/redo snapshot task
 	 */
-	onClose : function () {
-			// Clear snapshot interval
-		window.clearInterval(this.undoTimer);
-			// Release undo/redo snapshots
-		this.undoQueue = null;
+	start: function () {
+		if (this.customUndo) {
+			Ext.TaskMgr.start(this.task);
+		}
 	},
-	
+	/*
+	 * Start the undo/redo snapshot task
+	 */
+	stop: function () {
+		if (this.customUndo) {
+			Ext.TaskMgr.stop(this.task);
+		}
+	},
 	/*
 	 * Take a snapshot of the current contents for undo
 	 */
-	takeSnapshot : function () {
+	takeSnapshot: function () {
 		var currentTime = (new Date()).getTime();
 		var newSnapshot = false;
 		if (this.undoPosition >= this.undoSteps) {
@@ -132,7 +133,7 @@ UndoRedo = HTMLArea.Plugin.extend({
 			newSnapshot = true;
 		}
 			// Get the html text
-		var text = this.getPluginInstance("EditorMode").getInnerHTML();
+		var text = this.editor.getInnerHTML();
 		
 		if (newSnapshot) {
 				// If previous slot contains the same text, a new one should not be used
@@ -154,7 +155,6 @@ UndoRedo = HTMLArea.Plugin.extend({
 			}
 		}
 	},
-
 	/*
 	 * Build the snapshot entry
 	 *
@@ -163,45 +163,40 @@ UndoRedo = HTMLArea.Plugin.extend({
 	 *				- bookmark (the bookmark),
 	 *				- bookmarkedText (the content of the RTE including the bookmark)
 	 */
-	buildSnapshot : function () {
+	buildSnapshot: function () {
 		var bookmark = null, bookmarkedText = null;
 			// Insert a bookmark
-		if (this.editor.getMode() == "wysiwyg" && this.editor.isEditable()) {
+		if (this.editor.getMode() == 'wysiwyg' && this.editor.isEditable()) {
 			var selection = this.editor._getSelection();
-			if ((HTMLArea.is_gecko && !HTMLArea.is_opera9) || (HTMLArea.is_ie && selection.type.toLowerCase() != "control")) {
+			if ((!Ext.isIE && !(Ext.isOpera && navigator.userAgent.toLowerCase().indexOf('presto/2.1') != -1)) || (Ext.isIE && selection.type.toLowerCase() != 'control')) {
 					// Catch error in FF when the selection contains no usable range
 				try {
-						// Work around IE8 bug: can't create a range correctly if the selection is empty and the focus is not on the editor window
-						// But we cannot grab focus from an opened window just for the sake of taking this bookmark
-					if (!HTMLArea.is_ie || !this.editor.hasOpenedWindow() || selection.type.toLowerCase() != "none") {
-						bookmark = this.editor.getBookmark(this.editor._createRange(selection));
-					}
+					bookmark = this.editor.getBookmark(this.editor._createRange(selection));
 				} catch (e) {
 					bookmark = null;
 				}
 			}
 				// Get the bookmarked html text and remove the bookmark
 			if (bookmark) {
-				bookmarkedText = this.getPluginInstance("EditorMode").getInnerHTML();
+				bookmarkedText = this.editor.getInnerHTML();
 				var range = this.editor.moveToBookmark(bookmark);
 					// Restore Firefox selection
-				if (HTMLArea.is_gecko && !HTMLArea.is_opera && !HTMLArea.is_safari) {
+				if (Ext.isGecko) {
 					this.editor.emptySelection(selection);
 					this.editor.addRangeToSelection(selection, range);
 				}
 			}
 		}
 		return {
-			text		: this.getPluginInstance("EditorMode").getInnerHTML(),
+			text		: this.editor.getInnerHTML(),
 			bookmark	: bookmark,
 			bookmarkedText	: bookmarkedText
 		};
 	},
-	
 	/*
 	 * Execute the undo request
 	 */
-	undo : function () {
+	undo: function () {
 		if (this.undoPosition > 0) {
 				// Make sure we would not loose any changes
 			this.takeSnapshot();
@@ -209,11 +204,10 @@ UndoRedo = HTMLArea.Plugin.extend({
 			this.updateButtonsState();
 		}
 	},
-	
 	/*
 	 * Execute the redo request
 	 */
-	redo : function () {
+	redo: function () {
 		if (this.undoPosition < this.undoQueue.length - 1) {
 				// Make sure we would not loose any changes
 			this.takeSnapshot();
@@ -224,61 +218,65 @@ UndoRedo = HTMLArea.Plugin.extend({
 			}
 		}
 	},
-	
 	/*
 	 * Set content using undo queue position
 	 */
-	setContent : function (undoPosition) {
+	setContent: function (undoPosition) {
 		var bookmark = this.undoQueue[undoPosition].bookmark;
 		if (bookmark) {
-			this.getPluginInstance("EditorMode").setHTML(this.undoQueue[undoPosition].bookmarkedText);
-			this.editor.focusEditor();
+			this.editor.setHTML(this.undoQueue[undoPosition].bookmarkedText);
+			this.editor.focus();
 			this.editor.selectRange(this.editor.moveToBookmark(bookmark));
 			this.editor.scrollToCaret();
 		} else {
-			this.getPluginInstance("EditorMode").setHTML(this.undoQueue[undoPosition].text);
+			this.editor.setHTML(this.undoQueue[undoPosition].text);
 		}
 	},
-	
 	/*
 	 * This function gets called when the toolbar is updated
 	 */
-	onUpdateToolbar : function () {
-		this.updateButtonsState();
-	},
-	
-	/*
-	 * Update the state of the undo/redo buttons
-	 */
-	updateButtonsState : function () {
-		if (this.editor.getMode() == "wysiwyg" && this.editor.isEditable()) {
+	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
+		if (mode == 'wysiwyg' && this.editor.isEditable()) {
 			if (this.customUndo) {
-				if (this.isButtonInToolbar("Undo")) {
-					this.editor._toolbarObjects.Undo.state("enabled", this.undoPosition > 0);
-				}
-				if (this.isButtonInToolbar("Redo")) {
-					this.editor._toolbarObjects.Redo.state("enabled", this.undoPosition < this.undoQueue.length-1);
+				switch (button.itemId) {
+					case 'Undo':
+						button.setDisabled(this.undoPosition == 0);
+						break;
+					case 'Redo':
+						button.setDisabled(this.undoPosition >= this.undoQueue.length-1);
+						break;
 				}
 			} else {
 				try {
-					if (this.isButtonInToolbar("Undo")) {
-						this.editor._toolbarObjects.Undo.state("enabled", this.editor._doc.queryCommandEnabled("Undo"));
-					}
-					if (this.isButtonInToolbar("Redo")) {
-						this.editor._toolbarObjects.Redo.state("enabled", this.editor._doc.queryCommandEnabled("Redo"));
-					}
+					button.setDisabled(!this.editor._doc.queryCommandEnabled(button.itemId));
 				} catch (e) {
-					if (this.isButtonInToolbar("Undo")) {
-						this.editor._toolbarObjects.Undo.state("enabled", false);
-					}
-					if (this.isButtonInToolbar("Redo")) {
-						this.editor._toolbarObjects.Redo.state("enabled", false);
-					}
+					button.setDisabled(true);
 				}
 			}
+		} else {
+			button.setDisabled(!button.textMode);
 		}
 	},
-	
+	/*
+	 * Update the state of the undo/redo buttons
+	 */
+	updateButtonsState: function () {
+		var mode = this.getEditorMode(),
+			selectionEmpty = true,
+			ancestors = null;
+		if (mode === 'wysiwyg') {
+			selectionEmpty = this.editor._selectionEmpty(this.editor._getSelection());
+			ancestors = this.editor.getAllAncestors();
+		}
+		var button = this.getButton('Undo');
+		if (button) {
+			this.onUpdateToolbar(button, mode, selectionEmpty, ancestors)
+		}
+		var button = this.getButton('Redo');
+		if (button) {
+			this.onUpdateToolbar(button, mode, selectionEmpty, ancestors)
+		}
+	},
 	/*
 	 * This function gets called when the button was pressed.
 	 *
@@ -287,11 +285,11 @@ UndoRedo = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function (editor, id) {
+	onButtonPress: function (editor, id) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		if (this.isButtonInToolbar(buttonId) && !this.editor._toolbarObjects[buttonId].disabled) {
+		if (this.getButton(buttonId) && !this.getButton(buttonId).disabled) {
 			if (this.customUndo) {
 				this[buttonId.toLowerCase()]();
 			} else {

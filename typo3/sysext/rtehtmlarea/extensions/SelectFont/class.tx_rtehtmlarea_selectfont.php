@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,13 +26,10 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_selectfont.php 5489 2009-05-23 15:26:20Z ohader $
+ * TYPO3 SVN ID: $Id$
  *
  */
-
-require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlareaapi.php');
-
-class tx_rtehtmlarea_selectfont extends tx_rtehtmlareaapi {
+class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 
 	protected $extensionKey = 'rtehtmlarea';	// The key of the extension that is extending htmlArea RTE
 	protected $pluginName = 'SelectFont';	// The name of the plugin registered by the extension
@@ -133,13 +130,9 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlareaapi {
 			// Initializing the items array
 		$items = array();
 		if ($this->htmlAreaRTE->is_FE()) {
-			$items['none'] = '
-			"' . $GLOBALS['TSFE']->getLLL((($buttonId == 'fontstyle') ? 'Default font' : 'Default size'), $this->LOCAL_LANG) . '" : ""';
+			$items['none'] = array($GLOBALS['TSFE']->getLLL((($buttonId == 'fontstyle') ? 'Default font' : 'Default size'), $this->LOCAL_LANG), 'none');
 		} else {
-			$items['none'] = '
-			"' . ($this->htmlAreaRTE->TCEform->inline->isAjaxCall
-					? $GLOBALS['LANG']->csConvObj->utf8_encode($GLOBALS['LANG']->getLL(($buttonId == 'fontstyle') ? 'Default font' : 'Default size'), $GLOBALS['LANG']->charSet)
-					: $GLOBALS['LANG']->getLL(($buttonId == 'fontstyle') ? 'Default font' : 'Default size')) . '" : ""';
+			$items['none'] = array(($GLOBALS['LANG']->getLL(($buttonId == 'fontstyle') ? 'Default font' : 'Default size')), 'none');
 		}
 			// Inserting and localizing default items
 		if ($hideItems != '*') {
@@ -153,10 +146,8 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlareaapi {
 						if (!$label) {
 							$label = $name;
 						}
-						$label = $this->htmlAreaRTE->TCEform->inline->isAjaxCall ? $GLOBALS['LANG']->csConvObj->utf8_encode($label, $GLOBALS['LANG']->charSet) : $label;
 					}
-					$items[$name] = '
-				"' . $label . '" : "' . $this->htmlAreaRTE->cleanList($value) . '"';
+					$items[$name] = array($label, $this->htmlAreaRTE->cleanList($value));
 				}
 				$index++;
 			}
@@ -167,41 +158,37 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlareaapi {
 				$name = substr($name,0,-1);
 				if (in_array($name, $addItems)) {
 					$label = $this->htmlAreaRTE->getPageConfigLabel($conf['name'],0);
-					$label = (!$this->htmlAreaRTE->is_FE() && $this->htmlAreaRTE->TCEform->inline->isAjaxCall) ? $GLOBALS['LANG']->csConvObj->utf8_encode($label, $GLOBALS['LANG']->charSet) : $label;
-					$items[$name] = '
-				"' . $label . '" : "' . $this->htmlAreaRTE->cleanList($conf['value']) . '"';
+					$items[$name] = array($label, $this->htmlAreaRTE->cleanList($conf['value']));
 				}
 			}
 		}
 			// Seting default item
 		if ($this->thisConfig['buttons.'][$buttonId . '.']['defaultItem'] && $items[$this->thisConfig['buttons.'][$buttonId . '.']['defaultItem']]) {
-			$items['none'] = $items[$this->thisConfig['buttons.'][$buttonId . '.']['defaultItem']];
+			$items['none'] = array($items[$this->thisConfig['buttons.'][$buttonId . '.']['defaultItem']][0], 'none');
 			unset($items[$this->thisConfig['buttons.'][$buttonId . '.']['defaultItem']]);
 		}
 			// Setting the JS list of options
-		$JSOptions = '';
-		$index = 0;
-		foreach ($items as $option) {
-			$JSOptions .= ($index ? ',' : '') . $option;
-			$index++;
+		$itemsJSArray = array();
+		foreach ($items as $name => $option) {
+			$itemsJSArray[] = array('text' => $option[0], 'value' => $option[1]);
 		}
-		$JSOptions = '{'
-			. $JSOptions . '
-		};';
-
+		if ($this->htmlAreaRTE->is_FE()) {
+			$GLOBALS['TSFE']->csConvObj->convArray($itemsJSArray, $this->htmlAreaRTE->OutputCharset, 'utf-8');
+		} else {
+			$GLOBALS['LANG']->csConvObj->convArray($itemsJSArray, $GLOBALS['LANG']->charSet, 'utf-8');
+		}
+		$itemsJSArray = json_encode(array('options' => $itemsJSArray));
 			// Adding to button JS configuration
 		if (!is_array( $this->thisConfig['buttons.']) || !is_array($this->thisConfig['buttons.'][$buttonId . '.'])) {
 			$configureRTEInJavascriptString .= '
 			RTEarea['.$RTEcounter.'].buttons.'. $buttonId .' = new Object();';
 		}
 		$configureRTEInJavascriptString .= '
-			RTEarea['.$RTEcounter.'].buttons.'. $buttonId .'.options = '. $JSOptions;
-
+			RTEarea['.$RTEcounter.'].buttons.'. $buttonId . '.dataUrl = \'' . $this->htmlAreaRTE->writeTemporaryFile('', $buttonId . '_'. $this->htmlAreaRTE->contentLanguageUid, 'js', $itemsJSArray) . '\';';
 		return $configureRTEInJavascriptString;
 	}
-} // end of class
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php']);
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php']);
 }
 ?>

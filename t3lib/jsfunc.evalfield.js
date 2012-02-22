@@ -2,13 +2,13 @@
 *
 *  Evaluation of TYPO3 form field content
 *
-* $Id: jsfunc.evalfield.js 8885 2010-09-24 22:36:48Z stephenking $
+* $Id$
 *
 *
 *
 *  Copyright notice
 *
-*  (c) 1998-2009 Kasper Skaarhoj
+*  (c) 1998-2011 Kasper Skaarhoj
 *  All rights reserved
 *
 *  This script is part of the TYPO3 t3lib/ library provided by
@@ -64,7 +64,7 @@ function evalFunc_evalObjValue(FObj,value)	{
 	var theEvalType = (FObj.evallist) ? this.split(evallist, ",", index) : false;
 	var newValue=value;
 	while (theEvalType) {
-		if (theEvalType.slice(0, 3) == 'tx_') {
+		if (theEvalType.slice(0, 3) == 'tx_' || theEvalType.slice(0, 3) == 'Tx_') {
 			if(typeof window[theEvalType] == 'function') {
 				newValue = window[theEvalType](newValue);	// variable function call, calling functions like tx_myext_myeval(value)
 			}

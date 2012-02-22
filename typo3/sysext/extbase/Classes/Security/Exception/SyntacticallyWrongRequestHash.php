@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Security\Exception
- * @version $Id: SyntacticallyWrongRequestHash.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 class Tx_Extbase_Security_Exception_SyntacticallyWrongRequestHash extends Tx_Extbase_Security_Exception {
 }

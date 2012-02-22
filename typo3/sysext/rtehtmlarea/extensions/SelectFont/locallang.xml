@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<!-- TYPO3 SVN ID: $Id: locallang.xml 5140 2009-03-08 05:07:16Z stan $ -->
+<!-- TYPO3 SVN ID: $Id$ -->
 <T3locallang>
 	<meta type="array">
 		<description>Labels for SelectFont plugin of htmlArea RTE</description>
@@ -18,6 +18,15 @@
 			<label index="Large">Large</label>
 			<label index="Very large">Very large</label>
 			<label index="Extra large">Extra large</label>
+			<label index="Arial">Arial</label>
+			<label index="Arial Black">Arial Black</label>
+			<label index="Verdana">Verdana</label>
+			<label index="Times New Roman">Times New Roman</label>
+			<label index="Garamond">Garamond</label>
+			<label index="Lucida Handwriting">Lucida Handwriting</label>
+			<label index="Courier">Courier</label>
+			<label index="Webdings">Webdings</label>
+			<label index="Wingdings">Wingdings</label>
 		</languageKey>
 	</data>
 	<orig_hash type="array">

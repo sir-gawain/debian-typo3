@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  *
  * This module lets you view the config variables around TYPO3.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -65,7 +65,7 @@ $BE_USER->modAccess($MCONF,1);
 /**
  * Script class for the Config module
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -177,45 +177,55 @@ class SC_mod_tools_config_index {
 		switch($this->MOD_SETTINGS['function'])	{
 			case 0:
 				$theVar = $GLOBALS['TYPO3_CONF_VARS'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TYPO3_CONF_VARS';
 			break;
 			case 1:
-				foreach ($GLOBALS['TCA'] as $table => $config)	{
+				foreach ($GLOBALS['TCA'] as $table => $config) {
 					t3lib_div::loadTCA($table);
 				}
 				$theVar = $GLOBALS['TCA'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TCA';
 			break;
 			case 2:
 				$theVar = $GLOBALS['TCA_DESCR'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TCA_DESCR';
 			break;
 			case 3:
 				$theVar = $GLOBALS['TYPO3_LOADED_EXT'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TYPO3_LOADED_EXT';
 			break;
 			case 4:
 				$theVar = $GLOBALS['T3_SERVICES'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$T3_SERVICES';
 			break;
 			case 5:
 				$theVar = $GLOBALS['TBE_MODULES'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TBE_MODULES';
 			break;
 			case 6:
 				$theVar = $GLOBALS['TBE_MODULES_EXT'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TBE_MODULES_EXT';
 			break;
 			case 7:
 				$theVar = $GLOBALS['TBE_STYLES'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TBE_STYLES';
 			break;
 			case 8:
 				$theVar = $GLOBALS['BE_USER']->uc;
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$BE_USER->uc';
 			break;
 			case 9:
 				$theVar = $GLOBALS['TYPO3_USER_SETTINGS'];
+				t3lib_div::naturalKeySortRecursive($theVar);
 				$arrayBrowser->varName = '$TYPO3_USER_SETTINGS';
 			break;
 			default:
@@ -253,26 +263,70 @@ class SC_mod_tools_config_index {
 
 			// Variable name:
 		if (t3lib_div::_GP('varname'))	{
+			$line = t3lib_div::_GP('_') ? t3lib_div::_GP('_') : t3lib_div::_GP('varname');
+			if (t3lib_div::_GP('writetoexttables')) { // Write the line to extTables.php
+					// change value to $GLOBALS
+				$length = strpos($line, '[');
+				$var = substr($line, 0, $length);
+				$changedLine = '$GLOBALS[\'' . substr($line, 1, $length - 1) . '\']' . substr($line, $length);
+					// load current extTables.php
+				$extTables = t3lib_div::getURL(PATH_typo3conf . TYPO3_extTableDef_script);
+				if ($var === '$TCA') {
+						// check if we are editing the TCA
+					preg_match_all('/\[\'([^\']+)\'\]/', $line, $parts);
+					if ($parts[1][1] !== 'ctrl') {
+							// anything else than ctrl section requires to load TCA
+						$loadTCA = 't3lib_div::loadTCA(\'' . $parts[1][0] . '\');';
+						if (strpos($extTables, $loadTCA) === FALSE) {
+								// check if the loadTCA statement is not already present in the file
+							$changedLine = $loadTCA . LF . $changedLine;
+						}
+					}
+				}
+
+					// insert line in extTables.php
+				$extTables = preg_replace('/<\?php|\?>/is', '', $extTables);
+				$extTables = '<?php' . (empty($extTables) ? LF : '') . $extTables . $changedLine . LF . '?>';
+				$success = t3lib_div::writeFile(PATH_typo3conf . TYPO3_extTableDef_script, $extTables);
+				if ($success) {
+						// show flash message
+					$flashMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						'',
+						sprintf($GLOBALS['LANG']->getLL('writeMessage', TRUE), TYPO3_extTableDef_script,  '<br />', '<strong>' . nl2br($changedLine) . '</strong>'),
+						t3lib_FlashMessage::OK
+					);
+				} else {
+					// Error: show flash message
+					$flashMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						'',
+						sprintf($GLOBALS['LANG']->getLL('writeMessageFailed', TRUE), TYPO3_extTableDef_script),
+						t3lib_FlashMessage::ERROR
+					);
+				}
+				$this->content .= $flashMessage->render();
+			}
 			$this->content .= '<div id="lowlevel-config-var">
-			<strong>' . $GLOBALS['LANG']->getLL('variable', true) . '</strong><br />
-				<input type="text" name="_" value="' . trim(htmlspecialchars(t3lib_div::_GP('varname'))) . '" size="120" /><br />
-				' . $GLOBALS['LANG']->getLL('copyPaste', true) . '
-			</div>
-			';
+				<strong>' . $GLOBALS['LANG']->getLL('variable', TRUE) . '</strong><br />
+				<input type="text" name="_" value="'.trim(htmlspecialchars($line)).'" size="120" /><br/>';
+
+			if (TYPO3_extTableDef_script !== '' && ($this->MOD_SETTINGS['function'] === '1' || $this->MOD_SETTINGS['function'] === '4')) {
+					// write only for $TCA and TBE_STYLES if  TYPO3_extTableDef_script is defined
+				$this->content .= '<br /><input type="submit" name="writetoexttables" value="' .
+					$GLOBALS['LANG']->getLL('writeValue', TRUE) . '" /></div>';
+			} else {
+				$this->content .= $GLOBALS['LANG']->getLL('copyPaste', TRUE) . LF . '</div>';
+			}
+
 		}
 
-		$this->content.= '<br /><table border="0" cellpadding="1" cellspacing="0">';
+		$this->content.= '<br /><table border="0" cellpadding="0" cellspacing="0" class="t3-tree t3-tree-config">';
 		$this->content.= '<tr>
-					<td><img src="clear.gif" width="1" height="1" alt="" /></td>
-					<td class="bgColor2">
-						<table border="0" cellpadding="0" cellspacing="0" class="bgColor5" width="100%"><tr><td nowrap="nowrap"><b>'.$label.'</b></td></tr></table>
-					</td>
-				</tr>';
-		$this->content.='<tr>
-					<td></td>
-					<td class="bgColor2">
-						<table border="0" cellpadding="0" cellspacing="0" class="bgColor4" width="100%"><tr><td nowrap="nowrap">'.$tree.'</td></tr></table>' .
-								'<img src="clear.gif" width="465" height="1" alt="" /></td>
+					<th class="t3-row-header t3-tree-config-header">' . $label . '</th>
+				</tr>
+				<tr>
+					<td>' . $tree . '</td>
 				</tr>
 			</table>
 		';
@@ -287,11 +341,12 @@ class SC_mod_tools_config_index {
 		);
 
 			// Build the <body> for the module
-		$this->content = $this->doc->startPage('Configuration');
-
-		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
-		$this->content.= $this->doc->endPage();
-		$this->content = $this->doc->insertStylesAndJS($this->content);
+		$this->content = $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+			// Renders the module page
+		$this->content = $this->doc->render(
+			'Configuration',
+			$this->content
+		);
 	}
 
 	/**
@@ -336,8 +391,8 @@ class SC_mod_tools_config_index {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php']);
 }
 
 

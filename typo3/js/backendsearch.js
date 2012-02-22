@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * class to handle the backend search
  *
- * $Id: backendsearch.js 6539 2009-11-25 14:49:14Z stucki $
+ * $Id$
  */
 var BackendSearch = Class.create({
 
@@ -35,59 +35,36 @@ var BackendSearch = Class.create({
 	 * registers for resize event listener and executes on DOM ready
 	 */
 	initialize: function() {
-		Event.observe(window, 'resize', this.positionMenu);
-
-		Event.observe(window, 'load', function(){
-			this.positionMenu();
-			this.toolbarItemIcon = $$('#backend-search-menu .toolbar-item img')[0].src;
+		Ext.onReady(function() {
+			Event.observe(
+				window, 'resize',
+				function() { TYPO3BackendToolbarManager.positionMenu('backend-search-menu'); }
+			);
+			TYPO3BackendToolbarManager.positionMenu('backend-search-menu');
+			this.toolbarItemIcon = $$('#backend-search-menu .toolbar-item span.t3-icon')[0];
 
 			$('search-query').observe('keypress', function(event) {
 				var keyCode;
 
-				if(!event) {
+				if (!event) {
 					var event = window.event;
 				}
 
-				if(event.keyCode) {
+				if (event.keyCode) {
 					keyCode = event.keyCode;
-				} else if(event.which) {
+				} else if (event.which) {
 					keyCode = event.which;
 				}
 
-				if(keyCode == Event.KEY_RETURN) {
-					this.invokeSearch();
+				if (keyCode === Event.KEY_RETURN) {
+					TYPO3BackendSearchMenu.invokeSearch();
 				}
-			}.bindAsEventListener(this));
+			});
 
 			$$('#backend-search-menu .toolbar-item')[0].observe('click', this.toggleMenu)
 		}.bindAsEventListener(this));
 	},
 
-	/**
-	 * positions the menu below the toolbar icon, let's do some math!
-	 */
-	positionMenu: function() {
-		var calculatedOffset = 0;
-		var parentWidth      = $('backend-search-menu').getWidth();
-		var ownWidth         = $$('#backend-search-menu div')[0].getWidth();
-		var parentSiblings   = $('backend-search-menu').previousSiblings();
-
-		parentSiblings.each(function(toolbarItem) {
-			calculatedOffset += toolbarItem.getWidth() - 1;
-			// -1 to compensate for the margin-right -1px of the list items,
-			// which itself is necessary for overlaying the separator with the active state background
-
-			if(toolbarItem.down().hasClassName('no-separator')) {
-				calculatedOffset -= 1;
-			}
-		});
-		calculatedOffset = calculatedOffset - ownWidth + parentWidth;
-
-
-		$$('#backend-search-menu div')[0].setStyle({
-			left: calculatedOffset + 'px'
-		});
-	},
 
 	/**
 	 * toggles the visibility of the menu and places it under the toolbar icon
@@ -97,7 +74,7 @@ var BackendSearch = Class.create({
 		var menu        = $$('#backend-search-menu .toolbar-item-menu')[0];
 		toolbarItem.blur();
 
-		if(!toolbarItem.hasClassName('toolbar-item-active')) {
+		if (!toolbarItem.hasClassName('toolbar-item-active')) {
 			toolbarItem.addClassName('toolbar-item-active');
 			Effect.Appear(menu, {duration: 0.2});
 			TYPO3BackendToolbarManager.hideOthers(toolbarItem);
@@ -134,7 +111,7 @@ var BackendSearch = Class.create({
 						top.loadEditId(jsonResponse.editRecord);
 						break;
 					case 'alternative':
-						this.jump( 
+						this.jump(
 							unescape('alt_doc.php?returnUrl=dummy.php&edit[' + jsonResponse.alternativeTable + '][' + jsonResponse.alternativeUid + ']=edit'),
 							'web_list',
 							'web'
@@ -142,7 +119,7 @@ var BackendSearch = Class.create({
 						break;
 					case 'search':
 						this.jump(
-							unescape('db_list.php?id=' + jsonResponse.firstMountPoint + '&search_field=' + jsonResponse.searchFor + '&search_levels=4'),
+							unescape(TYPO3.configuration.listModulePath + 'db_list.php?id=' + jsonResponse.firstMountPoint + '&search_field=' + jsonResponse.searchFor + '&search_levels=4'),
 							'web_list',
 							'web'
 						);
@@ -165,7 +142,7 @@ var BackendSearch = Class.create({
 	jump: function(url, modName, mainModName) {
 			// Clear information about which entry in nav. tree that might have been highlighted.
 		top.fsMod.navFrameHighlightedID = new Array();
-		if(top.content && top.content.nav_frame && top.content.nav_frame.refresh_nav) {
+		if (top.content && top.content.nav_frame && top.content.nav_frame.refresh_nav) {
 			top.content.nav_frame.refresh_nav();
 		}
 

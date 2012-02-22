@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  *
  * This module lets you view the changelog.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper SkÃ¥rhÃ¸j <kasperYYYY@typo3.com>
  */
 
 
@@ -43,7 +43,7 @@ $BE_USER->modAccess($MCONF,1);
 /**
  * Tools log script class
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_belog
  */
@@ -65,6 +65,7 @@ class SC_mod_tools_log_index {
 
 	var $theTime = 0;
 	var $theTime_end = 0;
+	protected $dateFormat;
 
 	/**
 	 * Initialize module
@@ -76,13 +77,26 @@ class SC_mod_tools_log_index {
 		$this->MCONF = $GLOBALS['MCONF'];
 
 		$this->lF = t3lib_div::makeInstance('t3lib_BEDisplayLog');
-		$this->menuConfig();
 
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/belog.html');
 
-				// JavaScript
+			// Load necessary JavaScript
+		/** @var $pageRenderer t3lib_PageRenderer */
+		$pageRenderer = $this->doc->getPageRenderer();
+		$pageRenderer->loadExtJS();
+		$pageRenderer->addJsFile($this->backPath . '../t3lib/js/extjs/tceforms.js');
+
+			// Define settings for Date Picker
+		$dateFormat = $GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'];
+		$this->dateFormat = $dateFormat . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'];
+		$typo3Settings = array(
+			'datePickerUSmode' => 0,
+			'dateFormat'       => array($dateFormat, $this->dateFormat),
+		);
+		$pageRenderer->addInlineSettingArray('', $typo3Settings);
+
 		$this->doc->JScode = '
 		<script language="javascript" type="text/javascript">
 			script_ended = 0;
@@ -94,7 +108,7 @@ class SC_mod_tools_log_index {
 
 		$this->doc->tableLayout = Array (
 			'0' => Array (
-				'defCol' => Array('<td valign="top" class="c-headLineTable"><b>', '</b></td><td class="c-headLineTable"><img src="' . $this->doc->backPath . 'clear.gif" width="10" height="1" alt="" /></td>')
+				'defCol' => array('<td valign="top" class="t3-row-header"><strong>', '</strong></td><td class="t3-row-header"><img src="' . $this->doc->backPath . 'clear.gif" width="10" height="1" alt="" /></td>')
 			),
 			'defRow' => Array (
 				'0' => Array('<td valign="top">','</td>'),
@@ -104,6 +118,7 @@ class SC_mod_tools_log_index {
 		$this->doc->table_TABLE = '<table border="0" cellspacing="0" cellpadding="0" class="typo3-dblist">';
 		$this->doc->form = '<form action="" method="post">';
 
+		$this->menuConfig();
 		$this->be_user_Array = t3lib_BEfunc::getUserNames();
 		$this->lF->be_user_Array = &$this->be_user_Array;
 	}
@@ -137,7 +152,8 @@ class SC_mod_tools_log_index {
 				10 => $GLOBALS['LANG']->getLL('thisMonth'),
 				11 => $GLOBALS['LANG']->getLL('lastMonth'),
 				12 => $GLOBALS['LANG']->getLL('last31Days'),
-				20 => $GLOBALS['LANG']->getLL('noLimit')
+				20 => $GLOBALS['LANG']->getLL('noLimit'),
+				30 => $GLOBALS['LANG']->getLL('userdefined')
 			),
 			'max' => array(
 				20 => $GLOBALS['LANG']->getLL('20'),
@@ -152,6 +168,7 @@ class SC_mod_tools_log_index {
 				0 => $GLOBALS['LANG']->getLL('any'),
 				1 => $GLOBALS['LANG']->getLL('actionDatabase'),
 				2 => $GLOBALS['LANG']->getLL('actionFile'),
+				3 => $GLOBALS['LANG']->getLL('actionCache'),
 				254 => $GLOBALS['LANG']->getLL('actionSettings'),
 				255 => $GLOBALS['LANG']->getLL('actionLogin'),
 				'-1' => $GLOBALS['LANG']->getLL('actionErrors')
@@ -162,46 +179,56 @@ class SC_mod_tools_log_index {
 		);
 
 		// Add custom workspaces (selecting all, filtering by BE_USER check):
-		$workspaces = $TYPO3_DB->exec_SELECTgetRows('uid,title','sys_workspace','pid=0'.t3lib_BEfunc::deleteClause('sys_workspace'),'','title');
-		if (count($workspaces))	{
-			foreach ($workspaces as $rec)	{
-				$this->MOD_MENU['workspaces'][$rec['uid']] = $rec['uid'].': '.$rec['title'];
+		if (t3lib_extMgm::isLoaded('workspaces')) {
+			$workspaces = $TYPO3_DB->exec_SELECTgetRows('uid,title','sys_workspace','pid=0'.t3lib_BEfunc::deleteClause('sys_workspace'),'','title');
+			if (count($workspaces))	{
+				foreach ($workspaces as $rec)	{
+					$this->MOD_MENU['workspaces'][$rec['uid']] = $rec['uid'].': '.$rec['title'];
+				}
 			}
 		}
 
 		// Adding groups to the users_array
 		$groups = t3lib_BEfunc::getGroupNames();
-			if (is_array($groups))	{
-			while(list(,$grVals)=each($groups))	{
-				$this->MOD_MENU['users']['gr-'.$grVals['uid']] = 'Group: '.$grVals['title'];
+		if (is_array($groups))	{
+			foreach ($groups as $grVals) {
+				$this->MOD_MENU['users']['gr-' . $grVals['uid']] = $GLOBALS['LANG']->getLL('group') . ' ' . $grVals['title'];
 			}
 		}
 
 		$users = t3lib_BEfunc::getUserNames();
 		if (is_array($users))	{
-			while(list(,$grVals)=each($users))	{
-				$this->MOD_MENU['users']['us-'.$grVals['uid']] = 'User: '.$grVals['username'];
+			foreach ($users as $grVals) {
+				$this->MOD_MENU['users']['us-' . $grVals['uid']] = $GLOBALS['LANG']->getLL('user') . ' ' . $grVals['username'];
 			}
 		}
 
 			// CLEANSE SETTINGS
 		$this->MOD_SETTINGS = t3lib_BEfunc::getModuleData($this->MOD_MENU, t3lib_div::_GP('SET'), $this->MCONF['name']);
 
-			//
-		if (!trim($this->MOD_SETTINGS['manualdate']))	{
-			$this->MOD_SETTINGS['manualdate'] = 'YYYY-MM-DD';//"-HH-MM-SS";
-		} else {
-			$parts = t3lib_div::trimExplode('-',trim($this->MOD_SETTINGS['manualdate']));
-			$this->theTime = mktime((int)$parts[3],(int)$parts[4],(int)$parts[5],$parts[1]?(int)$parts[1]:1,$parts[2]?(int)$parts[2]:1,(int)$parts[0]);
-			$this->MOD_SETTINGS['manualdate'] = date('Y-m-d-H-i-s',$this->theTime);
-		}
+			// manual dates
+		if ($this->MOD_SETTINGS['time'] == 30) {
+			if (!trim($this->MOD_SETTINGS['manualdate']))	{
+				$this->theTime = $this->MOD_SETTINGS['manualdate'] = 0;
+			} else {
+				$this->theTime = $this->parseDate($this->MOD_SETTINGS['manualdate']);
+				if (!$this->theTime) {
+					$this->MOD_SETTINGS['manualdate'] = '';
+				} else {
+					$this->MOD_SETTINGS['manualdate'] = date($this->dateFormat, $this->theTime);
+				}
+			}
 
-		if (!trim($this->MOD_SETTINGS['manualdate_end']))	{
-			$this->MOD_SETTINGS['manualdate_end'] = 'YYYY-MM-DD';//"-HH-MM-SS";
-		} else {
-			$parts = t3lib_div::trimExplode('-',trim($this->MOD_SETTINGS['manualdate_end']));
-			$this->theTime_end = mktime((int)$parts[3],(int)$parts[4],(int)$parts[5],$parts[1]?(int)$parts[1]:1,$parts[2]?(int)$parts[2]:1,(int)$parts[0]);
-			$this->MOD_SETTINGS['manualdate_end'] = date('Y-m-d-H-i-s',$this->theTime_end);
+			if (!trim($this->MOD_SETTINGS['manualdate_end']))	{
+				$this->theTime_end = $this->MOD_SETTINGS['manualdate_end'] = 0;
+			} else {
+				$this->theTime_end = $this->parseDate($this->MOD_SETTINGS['manualdate_end']);
+				if (!$this->theTime_end) {
+					$this->MOD_SETTINGS['manualdate_end'] = '';
+				} else {
+					$this->MOD_SETTINGS['manualdate_end'] = date($this->dateFormat, $this->theTime_end);
+				}
+			}
 		}
 	}
 
@@ -224,26 +251,45 @@ class SC_mod_tools_log_index {
 		$menuA= t3lib_BEfunc::getFuncMenu(0,'SET[action]',$this->MOD_SETTINGS['action'],$this->MOD_MENU['action']);
 		$menuW= t3lib_BEfunc::getFuncMenu(0,'SET[workspaces]',$this->MOD_SETTINGS['workspaces'],$this->MOD_MENU['workspaces']);
 
-		$groupByPage= t3lib_BEfunc::getFuncCheck(0,'SET[groupByPage]',$this->MOD_SETTINGS['groupByPage']);
-		$inputDate= t3lib_BEfunc::getFuncInput(0,'SET[manualdate]',$this->MOD_SETTINGS['manualdate'],20);
-		$inputDate_end= t3lib_BEfunc::getFuncInput(0,'SET[manualdate_end]',$this->MOD_SETTINGS['manualdate_end'],20);
+		$groupByPage= t3lib_BEfunc::getFuncCheck(0, 'SET[groupByPage]',$this->MOD_SETTINGS['groupByPage']);
+		$style = ' style="margin:4px 2px;padding:1px;vertical-align:middle;width: 115px;"';
 
+		$inputDate = '<input type="text" value="' . ($this->MOD_SETTINGS['manualdate'] ? $this->MOD_SETTINGS['manualdate'] : '') .'" name="SET[manualdate]" id="tceforms-datetimefield-manualdate"' . $style . ' />';
+		$pickerInputDate = t3lib_iconWorks::getSpriteIcon(
+			'actions-edit-pick-date',
+			array(
+				'style' => 'cursor:pointer;',
+				'id' => 'picker-tceforms-datetimefield-manualdate'
+			)
+		);
+
+		$inputDate_end = '<input type="text" value="' . ($this->MOD_SETTINGS['manualdate_end'] ? $this->MOD_SETTINGS['manualdate_end'] : '') .'" name="SET[manualdate]" id="tceforms-datetimefield-manualdate_end"' . $style . ' />';
+		$pickerInputDate_end = t3lib_iconWorks::getSpriteIcon(
+			'actions-edit-pick-date',
+			array(
+				'style' => 'cursor:pointer;',
+				'id' => 'picker-tceforms-datetimefield-manualdate_end'
+			)
+		);
+
+		$setButton = '<input type="button" value="' . $GLOBALS['LANG']->getLL('set') . '" onclick="jumpToUrl(\'mod.php?&amp;id=0&amp;M=tools_log&amp;SET[manualdate]=\'+escape($(\'tceforms-datetimefield-manualdate\').value)+\'&amp;SET[manualdate_end]=\'+escape($(\'tceforms-datetimefield-manualdate_end\').value),this);" />';
 
 		$this->content.=$this->doc->section('',$this->doc->menuTable(
 			array(
 				array($GLOBALS['LANG']->getLL('users'), $menuU),
-				array($GLOBALS['LANG']->getLL('time'), ($this->MOD_SETTINGS['manualdate'] == 'YYYY-MM-DD' ? $menuT : '') . $inputDate . ($this->MOD_SETTINGS['manualdate'] != 'YYYY-MM-DD' ? '<br /> - ' . $inputDate_end : ''))
+				array($GLOBALS['LANG']->getLL('time'), $menuT . ($this->MOD_SETTINGS['time'] == 30 ?
+				'<br />' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:from', true) . ' ' . $inputDate . $pickerInputDate .
+				' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:to', true) . ' ' . $inputDate_end . $pickerInputDate_end . '&nbsp;' . $setButton : ''))
 			),
 			array(
 				array($GLOBALS['LANG']->getLL('max'), $menuM),
 				array($GLOBALS['LANG']->getLL('action'), $menuA)
 			),
 			array(
-				$GLOBALS['BE_USER']->workspace!==0 ? array('Workspace:','<b>'.$GLOBALS['BE_USER']->workspace.'</b>') : array('Workspace:',$menuW),
-				array('Group by page:',$groupByPage)
+				$GLOBALS['BE_USER']->workspace !== 0 ? array($GLOBALS['LANG']->getLL('workspace'), '<strong>'.$GLOBALS['BE_USER']->workspace . '</strong>') : array($GLOBALS['LANG']->getLL('workspace'), $menuW),
+				array($GLOBALS['LANG']->getLL('groupByPage'), $groupByPage)
 			)
 		));
-		#$this->content.=$this->doc->divider(5);
 
 
 		$codeArr = $this->lF->initArray();
@@ -262,46 +308,45 @@ class SC_mod_tools_log_index {
 		$starttime=0;
 		$endtime = $GLOBALS['EXEC_TIME'];
 
-		// Time:
-		if ($this->theTime)	{
-			$starttime = $this->theTime;
-			if ($this->theTime_end)	{
-				$endtime = $this->theTime_end;
-			} else {
-				$endtime = $GLOBALS['EXEC_TIME'];
-			}
-		} else {
-			switch($this->MOD_SETTINGS['time'])		{
-				case 0:
-					// This week
-					$week = (date('w') ? date('w') : 7)-1;
-					$starttime = mktime (0,0,0)-$week*3600*24;
-				break;
-				case 1:
-					// Last week
-					$week = (date('w') ? date('w') : 7)-1;
-					$starttime = mktime (0,0,0)-($week+7)*3600*24;
-					$endtime = mktime (0,0,0)-$week*3600*24;
-				break;
-				case 2:
-					// Last 7 days
-					$starttime = mktime (0,0,0)-7*3600*24;
-				break;
-				case 10:
-					// This month
-					$starttime = mktime (0,0,0, date('m'),1);
-				break;
-				case 11:
-					// Last month
-					$starttime = mktime (0,0,0, date('m')-1,1);
-					$endtime = mktime (0,0,0, date('m'),1);
-				break;
-				case 12:
-					// Last 31 days
-					$starttime = mktime (0,0,0)-31*3600*24;
-				break;
-			}
+			// Time:
+		switch($this->MOD_SETTINGS['time']) {
+			case 0:
+				// This week
+				$week = (date('w') ? date('w') : 7)-1;
+				$starttime = mktime (0,0,0)-$week*3600*24;
+			break;
+			case 1:
+				// Last week
+				$week = (date('w') ? date('w') : 7)-1;
+				$starttime = mktime (0,0,0)-($week+7)*3600*24;
+				$endtime = mktime (0,0,0)-$week*3600*24;
+			break;
+			case 2:
+				// Last 7 days
+				$starttime = mktime (0,0,0)-7*3600*24;
+			break;
+			case 10:
+				// This month
+				$starttime = mktime (0,0,0, date('m'),1);
+			break;
+			case 11:
+				// Last month
+				$starttime = mktime (0,0,0, date('m')-1,1);
+				$endtime = mktime (0,0,0, date('m'),1);
+			break;
+			case 12:
+				// Last 31 days
+				$starttime = mktime (0,0,0)-31*3600*24;
+			break;
+			case 30:
+				$starttime = $this->theTime;
+				if ($this->theTime_end)	{
+					$endtime = $this->theTime_end;
+				} else {
+					$endtime = $GLOBALS['EXEC_TIME'];
+				}
 		}
+
 		if ($starttime)	{
 			$where_part.=' AND tstamp>='.$starttime.' AND tstamp<'.$endtime;
 		}
@@ -312,7 +357,7 @@ class SC_mod_tools_log_index {
 		if (substr($this->MOD_SETTINGS['users'],0,3) == "gr-")	{	// All users
 			$this->be_user_Array = t3lib_BEfunc::blindUserNames($this->be_user_Array,array(substr($this->MOD_SETTINGS['users'],3)),1);
 			if (is_array($this->be_user_Array))	{
-				while(list(,$val)=each($this->be_user_Array))	{
+				foreach ($this->be_user_Array as $val) {
 					if ($val['uid']!=$BE_USER->user['uid'])	{
 						$selectUsers[]=$val['uid'];
 					}
@@ -346,12 +391,26 @@ class SC_mod_tools_log_index {
 			$overviewList = array();
 			foreach($logPids as $pid)	{
 				if ((int)$pid>0)	{
-					$overviewList[]= htmlspecialchars(t3lib_BEfunc::getRecordPath($pid,'',20).'" [UID:'.$pid.']');
+					$overviewList[]= htmlspecialchars(
+						sprintf(
+							$GLOBALS['LANG']->getLL('pagenameWithUID'),
+							t3lib_BEfunc::getRecordPath($pid, '', 20),
+							$pid
+						)
+					);
 				}
 			}
 			sort($overviewList);
 			$this->content.=$this->doc->divider(5);
-			$this->content.= $this->doc->section('Overview', 'These pages have log messages from ' . date('Y-m-d H:i:s', $starttime) . ' to ' . date('Y-m-d H:i:s', $endtime) . '<br /><br /><br />' . implode('<br />', $overviewList), 1, 1, 0);
+			$this->content.= $this->doc->section(
+				$GLOBALS['LANG']->getLL('overview'),
+				sprintf($GLOBALS['LANG']->getLL('timeInfo'),
+					date($this->dateFormat, $starttime),
+					date($this->dateFormat, $endtime)) .
+				'<br /><br /><br />' . implode('<br />', $overviewList),
+				1, 1, 0
+			);
+
 			$this->content.=$this->doc->spacer(30);
 		} else $logPids[] = '_SINGLE';
 
@@ -367,16 +426,23 @@ class SC_mod_tools_log_index {
 					$insertMsg = '';
 				break;
 				case '-1':
-					$insertMsg = ' for NON-PAGE related actions ';
+					$insertMsg = ' ' . $GLOBALS['LANG']->getLL('forNonPageRelatedActions') . ' ';
 				break;
 				case '0':
-					$insertMsg = ' for ROOT LEVEL ';
+					$insertMsg = ' ' . $GLOBALS['LANG']->getLL('forRootLevel') . ' ';
 				break;
 				default:
-					$insertMsg = ' for PAGE "'.t3lib_BEfunc::getRecordPath($pid,'',20).'" ('.$pid.') ';
+					$insertMsg = ' ' . sprintf($GLOBALS['LANG']->getLL('forPage'), t3lib_BEfunc::getRecordPath($pid, '', 20), $pid) . ' ';
 				break;
 			}
-			$this->content.=$this->doc->section('Log '.$insertMsg.'from '.date('Y-m-d H:i:s',$starttime).' to '.date('Y-m-d H:i:s',$endtime),'',1,1,0);
+			$this->content .= $this->doc->section(
+				sprintf($GLOBALS['LANG']->getLL('logForNonPageRelatedActionsOrRootLevelOrPage'),
+					$insertMsg,
+					date($this->dateFormat, $starttime),
+					date($this->dateFormat, $endtime)
+				),
+				'', 1, 1, 0
+			);
 
 			$log = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'sys_log', '1=1'.$where_part.($pid!='_SINGLE'?' AND event_pid='.intval($pid):''), '', 'uid DESC', intval($this->MOD_SETTINGS['max']));
 
@@ -412,10 +478,33 @@ class SC_mod_tools_log_index {
 		$markers['CONTENT'] = $this->content;
 
 			// Build the <body> for the module
-		$this->content = $this->doc->startPage('Administration log');
-		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
-		$this->content.= $this->doc->endPage();
-		$this->content = $this->doc->insertStylesAndJS($this->content);
+		$this->content = $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+			// Renders the module page
+		$this->content = $this->doc->render(
+			$GLOBALS['LANG']->getLL('adminLog'),
+			$this->content
+		);
+
+	}
+
+	/**
+	 * Parse the manual date
+	 *
+	 * @param string $date
+	 * @return int timestamp
+	 */
+	function parseDate($date) {
+		if (strpos($date, ' ') === FALSE) {
+			$date .= ' 0:00';
+		}
+		$parts = t3lib_div::trimExplode(' ', $date, TRUE);
+
+		$dateParts = preg_split('/[-\.\/]/', $parts[0]);
+		if (count($dateParts) < 3) {
+			return 0;
+		}
+		$timeParts = preg_split('/[\.:]/', $parts[1]);
+		return mktime($timeParts[0], $timeParts[1], 0, $dateParts[1], $dateParts[0], $dateParts[2]);
 	}
 
 	/**
@@ -451,8 +540,8 @@ class SC_mod_tools_log_index {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/belog/mod/index.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/belog/mod/index.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/belog/mod/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/belog/mod/index.php']);
 }
 
 

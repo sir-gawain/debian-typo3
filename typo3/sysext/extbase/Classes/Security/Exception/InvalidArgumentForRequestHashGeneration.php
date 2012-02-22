@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Security\Exception
- * @version $Id: InvalidArgumentForRequestHashGeneration.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 class Tx_Extbase_Security_Exception_InvalidArgumentForRequestHashGeneration extends Tx_Extbase_Security_Exception {
 }

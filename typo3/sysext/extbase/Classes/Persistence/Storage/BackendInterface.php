@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\Storage
- * @version $Id: BackendInterface.php 1971 2010-03-08 16:59:04Z jocrau $
+ * @version $Id$
  */
 interface Tx_Extbase_Persistence_Storage_BackendInterface {
 

@@ -29,16 +29,12 @@
  * <code title="Example">
  * <f:form.upload name="file" />
  * </code>
- *
- * Output:
+ * <output>
  * <input type="file" name="file" />
+ * </output>
  *
- * @version $Id: UploadViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Form
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Form_UploadViewHelper extends Tx_Fluid_ViewHelpers_Form_AbstractFormFieldViewHelper {
 

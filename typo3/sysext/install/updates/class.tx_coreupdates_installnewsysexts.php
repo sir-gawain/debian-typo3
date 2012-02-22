@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Benjamin Mack <benni@typo3.org>
-*  (c) 2008-2009 Steffen Kamper <info@sk-typo3.de>
+*  (c) 2008-2011 Benjamin Mack <benni@typo3.org>
+*  (c) 2008-2011 Steffen Kamper <info@sk-typo3.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,23 +29,14 @@
 /**
  * Contains the update class for adding the system extension "simulate static".
  *
- * $Id: class.tx_coreupdates_installnewsysexts.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  *
  * @author  Benjamin Mack <benni@typo3.org>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
-class tx_coreupdates_installnewsysexts {
-	public $versionNumber;	// version number coming from t3lib_div::int_from_ver()
+class tx_coreupdates_installnewsysexts extends Tx_Install_Updates_Base {
+	protected $title = 'Install New System Extensions';
 	protected $newSystemExtensions = array('recycler', 't3editor', 'reports', 'scheduler');
-
-	/**
-	 * parent object
-	 *
-	 * @var tx_install
-	 */
-	public $pObj;
-	public $userInput;	// user input
-
 
 	/**
 	 * Checks if an update is needed
@@ -54,8 +45,17 @@ class tx_coreupdates_installnewsysexts {
 	 * @return	boolean		whether an update is needed (true) or not (false)
 	 */
 	public function checkForUpdate(&$description) {
-		$result = false;
-		$description = 'Install the following system extensions that are new in TYPO3 4.3:<br />';
+		$result = FALSE;
+		$description = '
+			<p>
+				Install the following system extensions that are new since TYPO3
+				4.3:
+			</p>
+		';
+
+		$description .= '
+			<ul>
+		';
 
 		foreach($this->newSystemExtensions as $_EXTKEY) {
 			if (!t3lib_extMgm::isLoaded($_EXTKEY)) {
@@ -63,11 +63,24 @@ class tx_coreupdates_installnewsysexts {
 					// extension may not been loaded at this point, so we can't use an API function from t3lib_extmgm
 				require (PATH_site . 'typo3/sysext/' . $_EXTKEY . '/ext_emconf.php');
 				$description .= '
-					<strong>' . $EM_CONF[$_EXTKEY]['title'] . ' [' . $_EXTKEY . ']</strong>
-					' . $EM_CONF[$_EXTKEY]['description'] . '<br />';
+					<li>
+						<strong>
+							' . $EM_CONF[$_EXTKEY]['title'] . ' [' . $_EXTKEY . ']
+						</strong>
+						<br />
+						' . $EM_CONF[$_EXTKEY]['description'] . '
+					</li>
+				';
 
-				$result = true;
+				$result = TRUE;
 			}
+		}
+
+		$description .= '
+			</ul>
+		';
+		if ($this->isWizardDone()) {
+			$result = FALSE;
 		}
 
 		return $result;
@@ -80,16 +93,38 @@ class tx_coreupdates_installnewsysexts {
 	 * @return	string		HTML output
 	 */
 	public function getUserInput($inputPrefix) {
-		$content = '<strong>Install the following system extensions that are new in TYPO3 4.3:</strong><br />';
+		$content = '
+			<p>
+				<strong>
+					Install the following system extensions that are new in
+					TYPO3 4.3:
+				</strong>
+			</p>
+		';
+
+		$content .= '
+			<fieldset>
+				<ol>
+		';
+
 		foreach($this->newSystemExtensions as $_EXTKEY) {
 			if (!t3lib_extMgm::isLoaded($_EXTKEY)) {
 				$EM_CONF = FALSE;
 					// extension may not been loaded at this point, so we can't use an API function from t3lib_extmgm
 				require (PATH_site . 'typo3/sysext/' . $_EXTKEY . '/ext_emconf.php');
 				$content .= '
-					<input type="checkbox" id="' . $_EXTKEY . '" name="' . $inputPrefix . '[sysext][' . $_EXTKEY . ']" value="1" checked="checked" /><label for="' . $_EXTKEY . '">' . $EM_CONF[$_EXTKEY]['title'] . ' [' . $_EXTKEY . ']</label><br />';
+					<li class="labelAfter">
+						<input type="checkbox" id="' . $_EXTKEY . '" name="' . $inputPrefix . '[sysext][' . $_EXTKEY . ']" value="1" checked="checked" />
+						<label for="' . $_EXTKEY . '">' . $EM_CONF[$_EXTKEY]['title'] . ' [' . $_EXTKEY . ']</label>
+					</li>
+				';
 			}
 		}
+
+		$content .= '
+				</ol>
+			</fieldset>
+		';
 
 		return $content;
 	}
@@ -102,22 +137,20 @@ class tx_coreupdates_installnewsysexts {
 	 * @return	boolean		whether it worked (true) or not (false)
 	 */
 	public function performUpdate(&$dbQueries, &$customMessages) {
-		$result = false;
 
-		// Get extension keys that were submitted by the used to be installed and that are valid for this update wizard:
+			// Get extension keys that were submitted by the user to be installed and that are valid for this update wizard
 		if (is_array($this->pObj->INSTALL['update']['installNewSystemExtensions']['sysext'])) {
 			$extArray = array_intersect(
 				$this->newSystemExtensions,
 				array_keys($this->pObj->INSTALL['update']['installNewSystemExtensions']['sysext'])
 			);
-			$extList = $this->addExtToList($extArray);
-			if ($extList) {
-				$this->writeNewExtensionList($extList);
-				$result = true;
-			}
+			$this->installExtensions($extArray);
 		}
 
-		return $result;
+			// Never show this wizard again
+		$this->markWizardAsDone();
+
+		return TRUE;
 	}
 
 
@@ -127,8 +160,10 @@ class tx_coreupdates_installnewsysexts {
 	 *
 	 * @param	array		Extension keys to add
 	 * @return	string		New list of installed extensions or -1 if error
+	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7 - Should not be needed anymore. Extensions should be installed directly by calling Tx_Install_Updates_Base::installExtensions()
 	 */
 	function addExtToList(array $extKeys) {
+		t3lib_div::logDeprecatedFunction();
 			// Get list of installed extensions and add this one.
 		$tmpLoadedExt = $GLOBALS['TYPO3_LOADED_EXT'];
 		if (isset($tmpLoadedExt['_CACHEFILE'])) {
@@ -149,8 +184,10 @@ class tx_coreupdates_installnewsysexts {
 	 *
 	 * @param	string		List of extensions
 	 * @return	void
+	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7 - Use Tx_Install_Updates_Base::installExtensions() instead
 	 */
-	protected function writeNewExtensionList($newExtList)	{
+	protected function writeNewExtensionList($newExtList) {
+		t3lib_div::logDeprecatedFunction();
 			// Instance of install tool
 		$instObj = new t3lib_install;
 		$instObj->allowUpdateLocalConf = 1;

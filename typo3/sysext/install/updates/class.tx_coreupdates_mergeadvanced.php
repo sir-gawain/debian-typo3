@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Steffen Kamper <info@sk-typo3.de>
+*  (c) 2008-2011 Steffen Kamper <info@sk-typo3.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,19 +29,10 @@
  * Contains the update class for merging advanced and normal pagetype.
  *
  * @author Steffen Kamper <info@sk-typo3.de>
- * @version $Id: class.tx_coreupdates_mergeadvanced.php 5489 2009-05-23 15:26:20Z ohader $
+ * @version $Id$
  */
-class tx_coreupdates_mergeadvanced {
-	var $versionNumber;	// version number coming from t3lib_div::int_from_ver()
-
-	/**
-	 * parent object
-	 *
-	 * @var tx_install
-	 */
-	var $pObj;
-	var $userInput;	// user input
-
+class tx_coreupdates_mergeadvanced extends Tx_Install_Updates_Base {
+	protected $title = 'Update Pages with Pagetype "Advanced"';
 
 	/**
 	 * Checks if an update is needed

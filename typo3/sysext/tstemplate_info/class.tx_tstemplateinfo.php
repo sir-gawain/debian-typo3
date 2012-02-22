@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -46,14 +46,14 @@ $GLOBALS['LANG']->includeLLFile('EXT:tstemplate_info/locallang.xml');
 /**
  * This class displays the Info/Modify screen of the Web > Template module
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  *
- * $Id: class.tx_tstemplateinfo.php 6137 2009-10-11 14:40:00Z steffenk $
+ * $Id$
  */
 class tx_tstemplateinfo extends t3lib_extobjbase {
 
 	public $tce_processed = false;  // indicator for t3editor, whether data is stored
-
+	
 	/**
 	 * Creates a row for a HTML table
 	 *
@@ -63,9 +63,10 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 	 * @return	string		A row for a HTML table
 	 */
 	function tableRow($label, $data, $field)	{
-		$ret = '<tr><td class="bgColor4" width="1%">';
-		$ret.= '<a href="index.php?id='.$this->pObj->id.'&e['.$field.']=1"><img '.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif').' width=11 height=12 hspace=3 border=0 title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:editField', true) . '"></a>';
-		$ret.= '</td><td class="bgColor4" width="1%"><b>'.$label.'&nbsp;&nbsp;</b></td><td class="bgColor4" width="99%">'.$data.'&nbsp;</td></tr>';
+		$ret = '<tr><td>';
+		$ret.= '<a href="index.php?id=' . $this->pObj->id . '&e[' . $field . ']=1">' .
+			t3lib_iconWorks::getSpriteIcon('actions-document-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:editField', true))) . '<strong>' . $label . '&nbsp;&nbsp;</strong></a>';
+		$ret .= '</td><td width="80%" class="bgColor4">' . $data . '&nbsp;</td></tr>';
 		return $ret;
 	}
 
@@ -84,26 +85,26 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 			$path = PATH_site.$GLOBALS['TCA']['sys_template']['columns']['resources']['config']['uploadfolder'].'/'.$v;
 			$functions = '';
 			if ($func)	{
-				$functions = '<td bgcolor=red nowrap>' . $GLOBALS['LANG']->getLL('delete') . ' <input type="Checkbox" name="data[remove_resource]['.$k.']" value="'.htmlspecialchars($v).'"></td>';
-				$functions.= '<td'.$bgcol.' nowrap>' . $GLOBALS['LANG']->getLL('toTop') . ' <input type="Checkbox" name="data[totop_resource]['.$k.']" value="'.htmlspecialchars($v).'"></td>';
-				$functions.= '<td'.$bgcol.' nowrap>';
+				$functions = '<td bgcolor="red" nowrap="nowrap">' . $GLOBALS['LANG']->getLL('delete') . ' <input type="checkbox" name="data[remove_resource][' . $k . ']" value="' . htmlspecialchars($v) . '" /></td>';
+				$functions .= '<td' . $bgcol . ' nowrap="nowrap">' . $GLOBALS['LANG']->getLL('toTop') . ' <input type="checkbox" name="data[totop_resource][' . $k . ']" value="' . htmlspecialchars($v) . '" /></td>';
+				$functions .= '<td' . $bgcol . ' nowrap="nowrap">';
 				$fI = t3lib_div::split_fileref($v);
 				if (t3lib_div::inList($this->pObj->textExtensions,$fI['fileext']))	{
-					$functions.= '<a href="index.php?id='.$this->pObj->id.'&e[file]='.rawurlencode($v).'"><img '.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif').' width=11 height=12 hspace=3 border=0 title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:editFile', true) . '"></a>';
+					$functions.= '<a href="index.php?id='.$this->pObj->id.'&e[file]='.rawurlencode($v).'">'.t3lib_iconWorks::getSpriteIcon('actions-document-open',array('title'=> $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:editFile', true))) . '</a>';
 				}
 				$functions.= '</td>';
 			}
 			$thumb = t3lib_BEfunc::thumbCode(array('resources' => $v), 'sys_template', 'resources', $GLOBALS['BACK_PATH'], '');
-			$out.= '<tr><td'.$bgcol.' nowrap>'.$v.'&nbsp;&nbsp;</td><td'.$bgcol.' nowrap>&nbsp;'.t3lib_div::formatSize(@filesize($path)).'&nbsp;</td>'.$functions.'<td'.$bgcol.'>'.trim($thumb).'</td></tr>';
+			$out .= '<tr><td' . $bgcol . ' nowrap="nowrap">' . $v . '&nbsp;&nbsp;</td><td' . $bgcol . ' nowrap="nowrap">&nbsp;' . t3lib_div::formatSize(@filesize($path)) . '&nbsp;</td>' . $functions . '<td' . $bgcol . '>' . trim($thumb) . '</td></tr>';
 		}
 		if ($out)	{
 			if ($func)	{
-				$out = '<table border=0 cellpadding=1 cellspacing=1 width="100%">'.$out.'</table>';
-				$out = '<table border=0 cellpadding=0 cellspacing=0>
-					<tr><td class="bgColor2">'.$out.'<img src=clear.gif width=465 height=1></td></tr>
+				$out = '<table border="0" cellpadding="1" cellspacing="1" width="100%">' . $out . '</table>';
+				$out = '<table border="0" cellpadding="0" cellspacing="0">
+					<tr><td class="bgColor2">' . $out . '<img src="clear.gif" width="465px" height="1px"></td></tr>
 				</table>';
 			} else {
-				$out = '<table border=0 cellpadding=0 cellspacing=0>'.$out.'</table>';
+				$out = '<table border="0" cellpadding="0" cellspacing="0">' . $out . '</table>';
 			}
 		}
 		return $out;
@@ -127,10 +128,10 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 			if (t3lib_div::inList($this->pObj->textExtensions,strtolower($fI['extension'])))	{
 				$path = PATH_site.$GLOBALS['TCA']['sys_template']['columns']['resources']['config']['uploadfolder'].'/'.$v;
 				$thumb = t3lib_BEfunc::thumbCode(array('resources' => $v), 'sys_template', 'resources', $GLOBALS['BACK_PATH'], '');
-				$out.= '<tr><td'.$bgcol.' nowrap>'.$v.'&nbsp;&nbsp;</td><td'.$bgcol.' nowrap>&nbsp;'.t3lib_div::formatSize(@filesize($path)).'&nbsp;</td><td'.$bgcol.'>'.trim($thumb).'</td><td><input type="Checkbox" name="data[makecopy_resource]['.$k.']" value="'.htmlspecialchars($v).'"></td></tr>';
+				$out .= '<tr><td' . $bgcol . ' nowrap="nowrap">' . $v . '&nbsp;&nbsp;</td><td' . $bgcol . ' nowrap="nowrap">&nbsp;' . t3lib_div::formatSize(@filesize($path)) . '&nbsp;</td><td' . $bgcol . '>' . trim($thumb) . '</td><td><input type="Checkbox" name="data[makecopy_resource][' . $k . ']" value="' . htmlspecialchars($v) . '"></td></tr>';
 			}
 		}
-		$out = ($out ? '<table border=0 cellpadding=0 cellspacing=0>'.$out.'</table>' : '');
+		$out = ($out ? '<table border="0" cellpadding="0" cellspacing="0">' . $out . '</table>' : '');
 		return $out;
 	}
 
@@ -150,8 +151,44 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 		$tmpl->tt_track = 0;	// Do not log time-performance information
 		$tmpl->init();
 
-		$tplRow = $tmpl->ext_getFirstTemplate($pageId, $template_uid);	// Get the row of the first VISIBLE template of the page. whereclause like the frontend.
-		return (is_array($tplRow) ? true : false);
+			// Get the row of the first VISIBLE template of the page. whereclause like the frontend.
+		$tplRow = $tmpl->ext_getFirstTemplate($pageId, $template_uid);
+		if (is_array($tplRow)) {
+			$tplRow = $this->processTemplateRowAfterLoading($tplRow);
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	/**
+	 * Process template row after loading
+	 * 
+	 * @param 	array 	$tplRow: template row
+	 * @return 	array	preprocessed template row
+	 * @author	Fabrizio Branca <typo3@fabrizio-branca.de>
+	 */
+	function processTemplateRowAfterLoading(array $tplRow) {
+		if ($this->pObj->MOD_SETTINGS['includeTypoScriptFileContent']) {
+				// Let the recursion detection counter start at 91, so that only 10 recursive calls will be resolved
+				// Otherwise the editor will be bloated with way to many lines making it hard the break the cyclic recursion.
+			$tplRow['config'] = t3lib_TSparser::checkIncludeLines($tplRow['config'], 91);
+			$tplRow['constants'] = t3lib_TSparser::checkIncludeLines($tplRow['constants'], 91);
+		}
+		return $tplRow;
+	}
+	
+	/**
+	 * Process template row before saving
+	 * 
+	 * @param 	array 	$tplRow: template row
+	 * @return 	array	preprocessed template row
+	 * @author	Fabrizio Branca <typo3@fabrizio-branca.de>
+	 */
+	function processTemplateRowBeforeSaving(array $tplRow) {
+		if ($this->pObj->MOD_SETTINGS['includeTypoScriptFileContent']) {
+			$tplRow = t3lib_TSparser::extractIncludes_array($tplRow);
+		}
+		return $tplRow;
 	}
 
 	/**
@@ -162,6 +199,8 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 	function main()	{
 		global $SOBE,$BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
 		global $tmpl,$tplRow,$theConstants;
+		
+		$this->pObj->MOD_MENU['includeTypoScriptFileContent'] = true;
 
 		$edit = $this->pObj->edit;
 		$e = $this->pObj->e;
@@ -195,7 +234,7 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 		$newId = $this->pObj->createTemplate($this->pObj->id, $saveId);
 		if($newId) {
 			// switch to new template
-			header('location: index.php?id=' . $this->pObj->id. '&SET[templatesOnPage]=' . $newId);
+			t3lib_utility_Http::redirect('index.php?id=' . $this->pObj->id. '&SET[templatesOnPage]=' . $newId);
 		}
 
 		if ($existTemplate)	{
@@ -273,6 +312,9 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 					$recData['sys_template'][$saveId]['resources'] = $resList;
 				}
 				if (count($recData))	{
+					
+					$recData['sys_template'][$saveId] = $this->processTemplateRowBeforeSaving($recData['sys_template'][$saveId]);
+					
 						// Create new  tce-object
 					$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 					$tce->stripslashes_values=0;
@@ -339,7 +381,7 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 			}
 
 			$theOutput.= $this->pObj->doc->spacer(5);
-			$theOutput.= $this->pObj->doc->section($GLOBALS['LANG']->getLL('templateInformation'), '<img '.t3lib_iconWorks::skinImg($BACK_PATH, t3lib_iconWorks::getIcon('sys_template', $tplRow)).' align="top" /> <b>'.htmlspecialchars($tplRow['title']).'</b>'.htmlspecialchars(trim($tplRow['sitetitle'])?' - ('.$tplRow['sitetitle'].')':''), 0, 1);
+			$theOutput.= $this->pObj->doc->section($GLOBALS['LANG']->getLL('templateInformation'), t3lib_iconWorks::getSpriteIconForRecord('sys_template', $tplRow).'<strong>'.htmlspecialchars($tplRow['title']).'</strong>'.htmlspecialchars(trim($tplRow['sitetitle'])?' - ('.$tplRow['sitetitle'].')':''), 0, 1);
 			if ($manyTemplatesMenu)	{
 				$theOutput.= $this->pObj->doc->section('', $manyTemplatesMenu);
 				$theOutput.= $this->pObj->doc->divider(5);
@@ -378,8 +420,8 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 				$outCode = '<input type="File" name="resources"'.$this->pObj->doc->formWidth().' size="50">';
 				$outCode.= '<input type="Hidden" name="data[resources]" value="1">';
 				$outCode.= '<input type="Hidden" name="e[resources]" value="1">';
-				$outCode.= '<BR>' . $GLOBALS['LANG']->getLL('allowedExtensions') . ' <b>' . $TCA['sys_template']['columns']['resources']['config']['allowed'] . '</b>';
-				$outCode.= '<BR>' . $GLOBALS['LANG']->getLL('maxFilesize') . ' <b>' . t3lib_div::formatSize($TCA['sys_template']['columns']['resources']['config']['max_size']*1024) . '</b>';
+				$outCode.= '<BR>' . $GLOBALS['LANG']->getLL('allowedExtensions') . ' <strong>' . $TCA['sys_template']['columns']['resources']['config']['allowed'] . '</strong>';
+				$outCode.= '<BR>' . $GLOBALS['LANG']->getLL('maxFilesize') . ' <strong>' . t3lib_div::formatSize($TCA['sys_template']['columns']['resources']['config']['max_size']*1024) . '</strong>';
 				$theOutput.= $this->pObj->doc->spacer(15);
 				$theOutput.= $this->pObj->doc->section($GLOBALS['LANG']->getLL('uploadResource'), $outCode);
 
@@ -412,6 +454,19 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 			if ($e['constants'])	{
 				$outCode = '<textarea name="data[constants]" rows="'.$numberOfRows.'" wrap="off" class="fixed-font enable-tab"'.$this->pObj->doc->formWidthText(48, 'width:98%;height:70%', 'off').' class="fixed-font">'.t3lib_div::formatForTextarea($tplRow['constants']).'</textarea>';
 				$outCode.= '<input type="Hidden" name="e[constants]" value="1">';
+				
+					// Display "Include TypoScript file content?" checkbox
+				$outCode .= t3lib_BEfunc::getFuncCheck(
+					$this->pObj->id, 
+					'SET[includeTypoScriptFileContent]', 
+					$this->pObj->MOD_SETTINGS['includeTypoScriptFileContent'], 
+					'index.php', 
+					'&e[constants]=1', 
+					'id="checkIncludeTypoScriptFileContent"'
+				);
+				$outCode .= '<label for="checkIncludeTypoScriptFileContent">' . $GLOBALS['LANG']->getLL('includeTypoScriptFileContent') . '</label><br />';
+				
+				
 				$theOutput.= $this->pObj->doc->spacer(15);
 				$theOutput.= $this->pObj->doc->section($GLOBALS['LANG']->getLL('constants'), '');
 				$theOutput.= $this->pObj->doc->sectionEnd().$outCode;
@@ -423,7 +478,7 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 				if (@is_file($path) && t3lib_div::inList($this->pObj->textExtensions, $fI['fileext']))	{
 					if (filesize($path) < $TCA['sys_template']['columns']['resources']['config']['max_size']*1024)	{
 						$fileContent = t3lib_div::getUrl($path);
-						$outCode = $GLOBALS['LANG']->getLL('file'). ' <b>' . $e[file] . '</b><BR>';
+						$outCode = $GLOBALS['LANG']->getLL('file'). ' <strong>' . $e[file] . '</strong><BR>';
 						$outCode.= '<textarea name="edit[file]" rows="'.$numberOfRows.'" wrap="off" class="fixed-font enable-tab"'.$this->pObj->doc->formWidthText(48, 'width:98%;height:70%', 'off').' class="fixed-font">'.t3lib_div::formatForTextarea($fileContent).'</textarea>';
 						$outCode.= '<input type="Hidden" name="edit[filename]" value="'.$e[file].'">';
 						$outCode.= '<input type="Hidden" name="e[file]" value="'.htmlspecialchars($e[file]).'">';
@@ -444,6 +499,18 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 			}
 			if ($e['config'])	{
 				$outCode='<textarea name="data[config]" rows="'.$numberOfRows.'" wrap="off" class="fixed-font enable-tab"'.$this->pObj->doc->formWidthText(48,"width:98%;height:70%","off").' class="fixed-font">'.t3lib_div::formatForTextarea($tplRow["config"]).'</textarea>';
+				$outCode.= '<input type="Hidden" name="e[config]" value="1">';
+				
+					// Display "Include TypoScript file content?" checkbox
+				$outCode .= t3lib_BEfunc::getFuncCheck(
+					$this->pObj->id, 
+					'SET[includeTypoScriptFileContent]', 
+					$this->pObj->MOD_SETTINGS['includeTypoScriptFileContent'], 
+					'index.php', 
+					'&e[config]=1', 
+					'id="checkIncludeTypoScriptFileContent"'
+				);
+				$outCode .= '<label for="checkIncludeTypoScriptFileContent">' . $GLOBALS['LANG']->getLL('includeTypoScriptFileContent') . '</label><br />';
 
 				if (t3lib_extMgm::isLoaded('tsconfig_help'))	{
 					$url = $BACK_PATH.'wizard_tsconfig.php?mode=tsref';
@@ -451,15 +518,14 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 						'formName' => 'editForm',
 						'itemName' => 'data[config]',
 					);
-					$outCode.= '<a href="#" onClick="vHWin=window.open(\''.$url.t3lib_div::implodeArrayForUrl('', array('P' => $params)).'\',\'popUp'.$md5ID.'\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;"><img '.t3lib_iconWorks::skinImg($BACK_PATH, 'gfx/wizard_tsconfig.gif').' width="22" height="27" border="0" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:tsRef', true) . '"></a>';
+					$outCode.= '<a href="#" onClick="vHWin=window.open(\''.$url.t3lib_div::implodeArrayForUrl('', array('P' => $params)).'\',\'popUp'.$md5ID.'\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;">'.t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open', array('title'=> $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:tsRef', true))) . '</a>';
 				}
 
-				$outCode.= '<input type="Hidden" name="e[config]" value="1">';
 				$theOutput.= $this->pObj->doc->spacer(15);
 				$theOutput.= $this->pObj->doc->section($GLOBALS['LANG']->getLL('setup'), '');
 				$theOutput.= $this->pObj->doc->sectionEnd().$outCode;
 			}
-
+			
 				// Processing:
 			$outCode = '';
 			$outCode.= $this->tableRow(
@@ -484,26 +550,21 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 			);
 			$outCode.= $this->tableRow(
 				$GLOBALS['LANG']->getLL('constants'),
-				sprintf($GLOBALS['LANG']->getLL('editToView'), (trim($tplRow[constants]) ? count(explode(chr(10), $tplRow[constants])) : 0)),
+				sprintf($GLOBALS['LANG']->getLL('editToView'), (trim($tplRow[constants]) ? count(explode(LF, $tplRow[constants])) : 0)),
 				'constants'
 			);
 			$outCode.= $this->tableRow(
 				$GLOBALS['LANG']->getLL('setup'),
-				sprintf($GLOBALS['LANG']->getLL('editToView'), (trim($tplRow[config]) ? count(explode(chr(10), $tplRow[config])) : 0)),
+				sprintf($GLOBALS['LANG']->getLL('editToView'), (trim($tplRow[config]) ? count(explode(LF, $tplRow[config])) : 0)),
 				'config'
 			);
-			$outCode = '<table border=0 cellpadding=1 cellspacing=1 width="100%">'.$outCode.'</table>';
-
-			$outCode = '<table border=0 cellpadding=0 cellspacing=0>
-				<tr><td class="bgColor2">'.$outCode.'<img src=clear.gif width=465 height=1></td></tr>
-			</table>';
+			$outCode = '<br /><br /><table class="t3-table-info">' . $outCode . '</table>';
 
 				// Edit all icon:
 			$outCode.= '<br /><a href="#" onClick="' . t3lib_BEfunc::editOnClick(rawurlencode('&createExtension=0') .
-				'&amp;edit[sys_template][' . $tplRow['uid'] . ']=edit', $BACK_PATH, '') . '"><strong><img ' .
-				t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif') .' width="11" height="12" hspace="3" border="0" title="' .
-				$GLOBALS['LANG']->getLL('editTemplateRecord') . '">' . $GLOBALS['LANG']->getLL('editTemplateRecord') . '</strong></a>';
-			$theOutput.= $this->pObj->doc->spacer(25);
+				'&amp;edit[sys_template][' . $tplRow['uid'] . ']=edit', $BACK_PATH, '') . '"><strong>' .
+				t3lib_iconWorks::getSpriteIcon('actions-document-open', array('title'=>
+				$GLOBALS['LANG']->getLL('editTemplateRecord') ))  . $GLOBALS['LANG']->getLL('editTemplateRecord') . '</strong></a>';
 			$theOutput.= $this->pObj->doc->section('', $outCode);
 
 
@@ -533,8 +594,8 @@ class tx_tstemplateinfo extends t3lib_extobjbase {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/tstemplate_info/class.tx_tstemplateinfo.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/tstemplate_info/class.tx_tstemplateinfo.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']);
 }
 
 ?>

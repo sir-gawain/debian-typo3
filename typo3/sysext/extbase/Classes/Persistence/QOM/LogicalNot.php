@@ -32,7 +32,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\QOM
- * @version $Id: LogicalNot.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @scope prototype
  */
 class Tx_Extbase_Persistence_QOM_LogicalNot implements Tx_Extbase_Persistence_QOM_NotInterface {

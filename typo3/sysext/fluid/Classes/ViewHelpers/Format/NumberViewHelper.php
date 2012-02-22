@@ -29,23 +29,19 @@
  * <code title="Defaults">
  * <f:format.number>423423.234</f:format.number>
  * </code>
- *
- * Output:
+ * <output>
  * 423,423.20
+ * </output>
  *
  * <code title="With all parameters">
  * <f:format.number decimals="1" decimalSeparator="," thousandsSeparator=".">423423.234</f:format.number>
  * </code>
- *
- * Output:
+ * <output>
  * 423.423,2
+ * </output>
  *
- * @version $Id: NumberViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Format
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Format_NumberViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 

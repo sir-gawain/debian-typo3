@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Import / Export module
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -123,7 +123,7 @@ t3lib_extMgm::isLoaded('impexp',1);
 /**
  * Extension of the page tree class. Used to get the tree of pages to export.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_impexp
  */
@@ -221,7 +221,7 @@ class localPageTree extends t3lib_browseTree {
 
 		if ($pid>0)	{
 			$rootRec = t3lib_befunc::getRecordWSOL('pages',$pid);
-			$firstHtml.= $this->wrapIcon(t3lib_iconWorks::getIconImage('pages',$rootRec,$this->backPath,'align="top"'),$rootRec);
+			$firstHtml.= $this->wrapIcon(t3lib_iconWorks::getSpriteIconForRecord('pages', $rootRec), $rootRec);
 		} else {
 			$rootRec = array(
 				'title' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'],
@@ -266,7 +266,7 @@ class localPageTree extends t3lib_browseTree {
 /**
  * Main script class for the Import / Export facility
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_impexp
  */
@@ -298,9 +298,6 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 				window.location.href = URL;
 			}
 		');
-
-			// Set up JS for dynamic tab menu
-		$this->doc->JScode .= $this->doc->getDynTabMenuJScode();
 
 		// Setting up the context sensitive menu:
 		$this->doc->getContextMenuCode();
@@ -387,17 +384,19 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 			if (($this->id && is_array($this->pageinfo)) || ($GLOBALS['BE_USER']->user['admin'] && !$this->id))	{
 				if (is_array($this->pageinfo) && $this->pageinfo['uid']) {
 					// View
-					$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick($this->pageinfo['uid'], $this->doc->backPath, t3lib_BEfunc::BEgetRootLine($this->pageinfo['uid']))) . '">' .
-						'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/zoom.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '" alt="" />' .
-						'</a>';
+					$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick($this->pageinfo['uid'], $this->doc->backPath, t3lib_BEfunc::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', TRUE) . '">' .
+						t3lib_iconWorks::getSpriteIcon('actions-document-view') .
+				  '</a>';
 
-					// Record list
-					if ($GLOBALS['BE_USER']->check('modules', 'web_list')) {
-						$href = $this->doc->backPath . 'db_list.php?id=' . $this->pageinfo['uid'] . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
-						$buttons['record_list'] = '<a href="' . htmlspecialchars($href) . '">' .
-							'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/list.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showList', 1) . '" alt="" />' .
-							'</a>';
-					}
+						// Record list
+						// If access to Web>List for user, then link to that module.
+					$buttons['record_list'] = t3lib_BEfunc::getListViewLink(
+						array(
+							'id' => $this->pageinfo['uid'],
+							'returnUrl' => t3lib_div::getIndpEnv('REQUEST_URI'),
+						),
+						$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showList')
+					);
 				}
 			}
 		}
@@ -537,7 +536,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 					$tree = t3lib_div::makeInstance('t3lib_pageTree');
 					$tree->init('AND '.$this->perms_clause.$this->filterPageIds($this->export->excludeMap));
 
-					$HTML = t3lib_iconWorks::getIconImage('pages',$sPage,$GLOBALS['BACK_PATH'],'align="top"');
+					$HTML = t3lib_iconWorks::getSpriteIconForRecord('pages', $sPage);
 					$tree->tree[] = Array('row'=>$sPage,'HTML'=>$HTML);
 					$tree->buffer_idH = array();
 					if ($inData['pagetree']['levels']>0)	{
@@ -557,8 +556,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 				// In any case we should have a multi-level array, $idH, with the page structure here (and the HTML-code loaded into memory for nice display...)
 			if (is_array($idH))	{
 				$flatList = $this->export->setPageTree($idH);	// Sets the pagetree and gets a 1-dim array in return with the pages (in correct submission order BTW...)
-				reset($flatList);
-				while(list($k)=each($flatList))	{
+				foreach ($flatList as $k => $value) {
 					$this->export->export_addRecord('pages',t3lib_BEfunc::getRecord('pages',$k));
 					$this->addRecordsForPid($k,$inData['pagetree']['tables'],$inData['pagetree']['maxNumber']);
 				}
@@ -695,8 +693,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 		global $TCA;
 
 		if (is_array($tables))	{
-			reset($TCA);
-			while(list($table)=each($TCA))	{
+			foreach ($TCA as $table => $value) {
 				if ($table!='pages' && (in_array($table,$tables) || in_array('_ALL',$tables)))	{
 					if ($GLOBALS['BE_USER']->check('tables_select',$table) && !$TCA[$table]['ctrl']['is_static'])	{
 						$res = $this->exec_listQueryPid($table,$k,t3lib_div::intInRange($maxNumber,1));
@@ -817,7 +814,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 				$row[] = '
 				<tr class="bgColor4">
 					<td><strong>'.$LANG->getLL('makeconfig_record',1).'</strong></td>
-					<td>'.t3lib_iconworks::getIconImage($tName,$rec,$GLOBALS['BACK_PATH'],' align="top"').
+					<td>' . t3lib_iconworks::getSpriteIconForRecord($tName, $rec) .
 						t3lib_BEfunc::getRecordTitle($tName,$rec,TRUE).
 						'<input type="hidden" name="tx_impexp[record][]" value="'.htmlspecialchars($tName.':'.$rUid).'" /></td>
 				</tr>';
@@ -831,16 +828,23 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 					<td colspan="2">'.$LANG->getLL('makeconfig_exportTablesFromPages',1).'</td>
 				</tr>';
 
+				// Display information about pages from which the export takes place
 			$tblList = '';
-			foreach($inData['list'] as $ref)	{
-				$rParts = explode(':', $ref);
-				$tName = $rParts[0];
+			foreach ($inData['list'] as $reference) {
+				$referenceParts = explode(':', $reference);
+				$tableName = $referenceParts[0];
 
-				if ($GLOBALS['BE_USER']->check('tables_select',$tName))	{
-					$rec = t3lib_BEfunc::getRecordWSOL('pages', $rParts[1]);
-					$tblList.='Table "'.$tName.'" from '.t3lib_iconworks::getIconImage('pages',$rec,$GLOBALS['BACK_PATH'],' align="top"').
-					t3lib_BEfunc::getRecordTitle('pages',$rec,TRUE).
-					'<input type="hidden" name="tx_impexp[list][]" value="'.htmlspecialchars($ref).'" /><br/>';
+				if ($GLOBALS['BE_USER']->check('tables_select', $tableName)) {
+						// If the page is actually the root, handle it differently
+						// NOTE: we don't compare integers, because the number actually comes from the split string above
+					if ($referenceParts[1] === '0') {
+						$iconAndTitle = t3lib_iconWorks::getSpriteIcon('apps-pagetree-root') . $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'];
+					} else {
+						$record = t3lib_BEfunc::getRecordWSOL('pages', $referenceParts[1]);
+						$iconAndTitle = t3lib_iconworks::getSpriteIconForRecord('pages', $record) . t3lib_BEfunc::getRecordTitle('pages', $record, TRUE);
+					}
+					$tblList .= 'Table "' . $tableName . '" from ' . $iconAndTitle .
+					'<input type="hidden" name="tx_impexp[list][]" value="' . htmlspecialchars($reference) . '" /><br/>';
 				}
 			}
 			$row[] = '
@@ -1292,7 +1296,8 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 						unset($passParams['import_file']);
 
 						$thisScriptUrl = t3lib_div::getIndpEnv('REQUEST_URI').'?M=xMOD_tximpexp&id='.$this->id.t3lib_div::implodeArrayForUrl('tx_impexp',$passParams);
-						$emURL = $this->doc->backPath.'mod/tools/em/index.php?CMD[requestInstallExtensions]='.implode(',',$extKeysToInstall).'&returnUrl='.rawurlencode($thisScriptUrl);
+						$emURL = $this->doc->backPath . t3lib_extMgm::extRelPath('em') . 'classes/index.php?CMD[requestInstallExtensions]=' .
+							implode(',', $extKeysToInstall) . '&returnUrl=' . rawurlencode($thisScriptUrl);
 						$extensionInstallationMessage = 'Before you can install this T3D file you need to install the extensions "'.implode('", "',$extKeysToInstall).'". Clicking Import will first take you to the Extension Manager so these dependencies can be resolved.';
 					}
 
@@ -1519,7 +1524,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 	 * @return	array		Preset record, if any (otherwise false)
 	 */
 	function getPreset($uid)	{
-		list($preset) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*','tx_impexp_presets','uid='.intval($uid));
+		$preset = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', 'tx_impexp_presets', 'uid=' . intval($uid));
 		return $preset;
 	}
 
@@ -1616,8 +1621,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 	function renderSelectBox($prefix,$value,$optValues)	{
 		$opt = array();
 		$isSelFlag = 0;
-		reset($optValues);
-		while(list($k,$v) = each($optValues))	{
+		foreach ($optValues as $k => $v) {
 			$sel = (!strcmp($k,$value) ? ' selected="selected"' : '');
 			if ($sel)	$isSelFlag++;
 			$opt[] = '<option value="'.htmlspecialchars($k).'"'.$sel.'>'.htmlspecialchars($v).'</option>';
@@ -1639,14 +1643,13 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 	function tableSelector($prefix,$value,$excludeList='')	{
 		global $TCA, $LANG;
 
-		reset($TCA);
 		$optValues = array();
 
 		if (!t3lib_div::inList($excludeList,'_ALL'))	{
 			$optValues['_ALL'] = '['.$LANG->getLL('ALL_tables').']';
 		}
 
-		while(list($table) = each($TCA))	{
+		foreach ($TCA as $table => $_) {
 			if ($GLOBALS['BE_USER']->check('tables_select',$table) && !t3lib_div::inList($excludeList,$table))	{
 				$optValues[$table] = $table;
 			}
@@ -1655,8 +1658,7 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 			// make box:
 		$opt = array();
 		$opt[] = '<option value=""></option>';
-		reset($optValues);
-		while(list($k,$v)=each($optValues))	{
+		foreach ($optValues as $k => $v) {
 			if (is_array($value))	{
 				$sel = in_array($k,$value)?' selected="selected"':'';
 			}
@@ -1719,8 +1721,8 @@ class SC_mod_tools_log_index extends t3lib_SCbase {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/impexp/app/index.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/impexp/app/index.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/app/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/app/index.php']);
 }
 
 

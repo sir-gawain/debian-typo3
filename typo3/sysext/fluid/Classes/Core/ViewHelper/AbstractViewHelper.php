@@ -23,14 +23,10 @@
 /**
  * The abstract base class for all view helpers.
  *
- * @version $Id: AbstractViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage Core\ViewHelper
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
-abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_Core_ViewHelper_ViewHelperInterface {
+abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
 	/**
 	 * TRUE if arguments have already been initialized
@@ -72,6 +68,11 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	protected $controllerContext;
 
 	/**
+	 * @var Tx_Fluid_Core_Rendering_RenderingContextInterface
+	 */
+	private $renderingContext;
+
+	/**
 	 * ViewHelper Variable Container
 	 * @var Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer
 	 * @api
@@ -79,18 +80,18 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	protected $viewHelperVariableContainer;
 
 	/**
-	 * If the ObjectAccessorPostProcessor should be disabled inside this ViewHelper, then set this value to FALSE.
-	 * This is internal and NO part of the API. It is very likely to change.
-	 *
-	 * @var boolean
-	 */
-	protected $objectAccessorPostProcessorEnabled = TRUE;
-
-	/**
 	 * Reflection service
 	 * @var Tx_Extbase_Reflection_Service
 	 */
 	private $reflectionService;
+
+	/**
+	 * With this flag, you can disable the escaping interceptor inside this ViewHelper.
+	 * THIS MIGHT CHANGE WITHOUT NOTICE, NO PUBLIC API!
+	 * @var boolean
+	 * @internal
+	 */
+	protected $escapingInterceptorEnabled = TRUE;
 
 	/**
 	 * @param Tx_Fluid_Core_ViewHelper_Arguments $arguments
@@ -120,6 +121,16 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	}
 
 	/**
+	 * @param Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext
+	 * @return void
+	 * @author Robert Lemke <robert@typo3.org>
+	 */
+	public function setRenderingContext(Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext) {
+	 $this->renderingContext = $renderingContext;
+	}
+
+
+	/**
 	 * @param Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer $viewHelperVariableContainer
 	 * @return void
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
@@ -138,14 +149,15 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	}
 
 	/**
-	 * Returns TRUE if the object accessor post processor should be disabled inside this ViewHelper.
-	 * This is internal and NO part of the API. It is very likely to change.
+	 * Returns whether the escaping interceptor should be disabled or enabled inside the tags contents.
 	 *
-	 * @return boolean TRUE if Object accessor post processor is enabled, FALSE if disabled
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * THIS METHOD MIGHT CHANGE WITHOUT NOTICE; NO PUBLIC API!
+	 *
+	 * @internal
+	 * @return boolean
 	 */
-	public function isObjectAccessorPostProcessorEnabled() {
-		return $this->objectAccessorPostProcessorEnabled;
+	public function isEscapingInterceptorEnabled() {
+		return $this->escapingInterceptorEnabled;
 	}
 
 	/**
@@ -171,6 +183,29 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	}
 
 	/**
+	 * Overrides a registered argument. Call this method from your ViewHelper subclass
+	 * inside the initializeArguments() method if you want to override a previously registered argument.
+	 * @see registerArgument()
+	 *
+	 * @param string $name Name of the argument
+	 * @param string $type Type of the argument
+	 * @param string $description Description of the argument
+	 * @param boolean $required If TRUE, argument is required. Defaults to FALSE.
+	 * @param mixed $defaultValue Default value of argument
+	 * @return Tx_Fluid_Core_ViewHelper_AbstractViewHelper $this, to allow chaining.
+	 * @author Bastian Waidelich <bastian@typo3.org>
+	 * @todo Object Factory usage!
+	 * @api
+	 */
+	protected function overrideArgument($name, $type, $description, $required = FALSE, $defaultValue = NULL) {
+		if (!array_key_exists($name, $this->argumentDefinitions)) {
+			throw new Tx_Fluid_Core_ViewHelper_Exception('Argument "' . $name . '" has not been defined, thus it can\'t be overridden.', 1279212461);
+		}
+		$this->argumentDefinitions[$name] = new Tx_Fluid_Core_ViewHelper_ArgumentDefinition($name, $type, $description, $required, $defaultValue);
+		return $this;
+	}
+
+	/**
 	 * Sets all needed attributes needed for the rendering. Called by the
 	 * framework. Populates $this->viewHelperNode.
 	 * This is PURELY INTERNAL! Never override this method!!
@@ -181,6 +216,35 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	 */
 	public function setViewHelperNode(Tx_Fluid_Core_Parser_SyntaxTree_ViewHelperNode $node) {
 		$this->viewHelperNode = $node;
+	}
+
+	/**
+	 * Initialize the arguments of the ViewHelper, and call the render() method of the ViewHelper.
+	 *
+	 * @param array $renderMethodParameters the parameters of the render() method.
+	 * @return string the rendered ViewHelper.
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 */
+	public function initializeArgumentsAndRender(array $renderMethodParameters) {
+		$this->validateArguments();
+		$this->initialize();
+		return $this->callRenderMethod($renderMethodParameters);
+	}
+
+	/**
+	 * Call the render() method and handle errors.
+	 *
+	 * @param array $renderMethodParameters the parameters of the render() method.
+	 * @return string the rendered ViewHelper
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 */
+	protected function callRenderMethod(array $renderMethodParameters) {
+		try {
+			return call_user_func_array(array($this, 'render'), $renderMethodParameters);
+		} catch (Tx_Fluid_Core_ViewHelper_Exception $exception) {
+				// @todo [BW] rethrow exception, log, ignore.. depending on the current context
+			return $exception->getMessage();
+		}
 	}
 
 	/**
@@ -205,7 +269,7 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	 * @api
 	 */
 	protected function renderChildren() {
-		return $this->viewHelperNode->evaluateChildNodes();
+		return $this->viewHelperNode->evaluateChildNodes($this->renderingContext);
 	}
 
 	/**
@@ -291,18 +355,18 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 
 				if ($type === 'array') {
 					if (!is_array($this->arguments[$argumentName]) && !$this->arguments[$argumentName] instanceof ArrayAccess && !$this->arguments[$argumentName] instanceof Traversable) {
-						throw new RuntimeException('The argument "' . $argumentName . '" was registered with type "array", but is of type "' . gettype($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '". Value of argument: "' . strval($this->arguments[$argumentName]) . '"', 1237900529);
+						throw new InvalidArgumentException('The argument "' . $argumentName . '" was registered with type "array", but is of type "' . gettype($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '"', 1237900529);
 					}
 				} elseif ($type === 'boolean') {
 					if (!is_bool($this->arguments[$argumentName])) {
-						throw new RuntimeException('The argument "' . $argumentName . '" was registered with type "boolean", but is of type "' . gettype($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '".', 1240227732);
+						throw new InvalidArgumentException('The argument "' . $argumentName . '" was registered with type "boolean", but is of type "' . gettype($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '".', 1240227732);
 					}
-				} elseif (class_exists($type)) {
+				} elseif (class_exists($type, FALSE)) {
 					if (! ($this->arguments[$argumentName] instanceof $type)) {
 						if (is_object($this->arguments[$argumentName])) {
-							throw new RuntimeException('The argument "' . $argumentName . '" was registered with type "' . $type . '", but is of type "' . get_class($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '".', 1256475114);
+							throw new InvalidArgumentException('The argument "' . $argumentName . '" was registered with type "' . $type . '", but is of type "' . get_class($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '".', 1256475114);
 						} else {
-							throw new RuntimeException('The argument "' . $argumentName . '" was registered with type "' . $type . '", but is of type "' . gettype($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '".', 1256475113);
+							throw new InvalidArgumentException('The argument "' . $argumentName . '" was registered with type "' . $type . '", but is of type "' . gettype($this->arguments[$argumentName]) . '" in view helper "' . get_class($this) . '".', 1256475113);
 						}
 					}
 				}
@@ -332,6 +396,21 @@ abstract class Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_C
 	 * @api
 	 */
 	//abstract public function render();
+
+	/**
+	 * Get the rendering context interface.
+	 * THIS METHOD IS NO PUBLIC API AND ONLY CALLABLE INSIDE THE FRAMEWORK!
+	 *
+	 * @return Tx_Fluid_Core_Rendering_RenderingContextInterface
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 */
+	public function getRenderingContext() {
+		if ($this instanceof Tx_Fluid_Core_ViewHelper_Facets_ChildNodeAccessInterface) {
+			return $this->renderingContext;
+		} else {
+			throw new Tx_Fluid_Core_ViewHelper_Exception_RenderingContextNotAccessibleException('It is forbidden to call getRenderingContext() if you do not implement Tx_Fluid_Core_ViewHelper_Facets_ChildNodeAccessInterface. But beware, this interface is NO PUBLIC API! If you want to implement conditions, you should subclass Tx_Fluid_Core_ViewHelper_AbstractConditionViewHelper.', 127895038);
+		}
+	}
 }
 
 ?>

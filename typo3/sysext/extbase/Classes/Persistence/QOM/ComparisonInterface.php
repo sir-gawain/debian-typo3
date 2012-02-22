@@ -70,7 +70,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\QOM
- * @version $Id: ComparisonInterface.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 interface Tx_Extbase_Persistence_QOM_ComparisonInterface extends Tx_Extbase_Persistence_QOM_ConstraintInterface {

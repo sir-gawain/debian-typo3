@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2009 René Fritz <r.fritz@colorcube.de>
+*  (c) 2004-2011 RenÃ© Fritz <r.fritz@colorcube.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Service 'User authentication' for the 'sv' extension.
  *
- * @author	René Fritz <r.fritz@colorcube.de>
+ * @author	RenÃ© Fritz <r.fritz@colorcube.de>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -49,7 +49,7 @@
 /**
  * Authentication services class
  *
- * @author	René Fritz <r.fritz@colorcube.de>
+ * @author	RenÃ© Fritz <r.fritz@colorcube.de>
  * @package TYPO3
  * @subpackage tx_sv
  */
@@ -64,22 +64,53 @@ class tx_sv_auth extends tx_sv_authbase 	{
 	function getUser()	{
 		$user = false;
 
-		if ($this->login['status']=='login' && $this->login['uident'])	{
+		if ($this->login['status'] == 'login') {
+			if ($this->login['uident']) {
 
-			$user = $this->fetchUserRecord($this->login['uname']);
+				$user = $this->fetchUserRecord($this->login['uname']);
 
-			if(!is_array($user)) {
-					// Failed login attempt (no username found)
-				$this->writelog(255,3,3,2,
-					"Login-attempt from %s (%s), username '%s' not found!!",
-					Array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname']));	// Logout written to log
+				if(!is_array($user)) {
+						// Failed login attempt (no username found)
+					$this->writelog(255, 3, 3, 2,
+						'Login-attempt from %s (%s), username \'%s\' not found!!',
+						array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname'])
+					);	// Logout written to log
+					t3lib_div::sysLog(
+						sprintf(
+							'Login-attempt from %s (%s), username \'%s\' not found!',
+							$this->authInfo['REMOTE_ADDR'],
+							$this->authInfo['REMOTE_HOST'],
+							$this->login['uname']
+						),
+						'Core',
+						0
+					);
+				} else {
+					if ($this->writeDevLog) {
+						t3lib_div::devLog(
+							'User found: ' . t3lib_div::arrayToLogString(
+								$user, array($this->db_user['userid_column'], $this->db_user['username_column'])
+							),
+							'tx_sv_auth'
+						);
+					}
+				}
+			} else {
+					// Failed Login attempt (no password given)
+				$this->writelog(255, 3, 3, 2,
+					'Login-attempt from %s (%s) for username \'%s\' with an empty password!',
+					array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname'])
+				);
 				t3lib_div::sysLog(
-					sprintf( "Login-attempt from %s (%s), username '%s' not found!", $this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname'] ),
+					sprintf(
+						'Login-attempt from %s (%s), for username \'%s\' with an empty password!',
+						$this->authInfo['REMOTE_ADDR'],
+						$this->authInfo['REMOTE_HOST'],
+						$this->login['uname']
+					),
 					'Core',
 					0
 				);
-			} else {
-				if ($this->writeDevLog) 	t3lib_div::devLog('User found: '.t3lib_div::arrayToLogString($user, array($this->db_user['userid_column'],$this->db_user['username_column'])), 'tx_sv_auth');
 			}
 		}
 		return $user;
@@ -233,7 +264,7 @@ class tx_sv_auth extends tx_sv_authbase 	{
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_auth.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_auth.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_auth.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_auth.php']);
 }
 ?>

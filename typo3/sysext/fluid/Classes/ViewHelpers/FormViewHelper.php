@@ -21,9 +21,6 @@
  *                                                                        */
 
 /**
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: FormViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
  */
 
 /**
@@ -53,11 +50,7 @@
  * </code>
  * This automatically inserts the value of {customer.name} inside the textbox and adjusts the name of the textbox accordingly.
  *
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: FormViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License, version 2
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_AbstractFormViewHelper {
 
@@ -70,6 +63,14 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 	 * @var Tx_Extbase_Security_Channel_RequestHashService
 	 */
 	protected $requestHashService;
+
+	/**
+	 * We need the arguments of the formActionUri on requesthash calculation
+	 * therefore we will store them in here right after calling uriBuilder
+	 *
+	 * @var array
+	 */
+	protected $formActionUriArguments;
 
 	/**
 	 * Inject a request hash service
@@ -108,11 +109,20 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 	 * @param integer $pageUid Target page uid
 	 * @param mixed $object Object to use for the form. Use in conjunction with the "property" attribute on the sub tags
 	 * @param integer $pageType Target page type
+	 * @param boolean $noCache set this to disable caching for the target page. You should not need this.
+	 * @param boolean $noCacheHash set this to supress the cHash query parameter created by TypoLink. You should not need this.
+	 * @param string $section The anchor to be added to the action URI (only active if $actionUri is not set)
+	 * @param string $format The requested format (e.g. ".html") of the target page (only active if $actionUri is not set)
+	 * @param array $additionalParams additional action URI query parameters that won't be prefixed like $arguments (overrule $arguments) (only active if $actionUri is not set)
+	 * @param boolean $absolute If set, an absolute action URI is rendered (only active if $actionUri is not set)
+	 * @param boolean $addQueryString If set, the current query parameters will be kept in the action URI (only active if $actionUri is not set)
+	 * @param array $argumentsToBeExcludedFromQueryString arguments to be removed from the action URI. Only active if $addQueryString = TRUE and $actionUri is not set
 	 * @param string $fieldNamePrefix Prefix that will be added to all field names within this form. If not set the prefix will be tx_yourExtension_plugin
 	 * @param string $actionUri can be used to overwrite the "action" attribute of the form tag
+	 * @param string $objectName name of the object that is bound to this form. If this argument is not specified, the name attribute of this form is used to determine the FormObjectName
 	 * @return string rendered form
 	 */
-	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $pageUid = NULL, $object = NULL, $pageType = 0, $fieldNamePrefix = NULL, $actionUri = NULL) {
+	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $pageUid = NULL, $object = NULL, $pageType = 0, $noCache = FALSE, $noCacheHash = FALSE, $section = '', $format = '', array $additionalParams = array(), $absolute = FALSE, $addQueryString = FALSE, array $argumentsToBeExcludedFromQueryString = array(), $fieldNamePrefix = NULL, $actionUri = NULL, $objectName = NULL) {
 		$this->setFormActionUri();
 
 		if (strtolower($this->arguments['method']) === 'get') {
@@ -121,25 +131,28 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 			$this->tag->addAttribute('method', 'post');
 		}
 
-		$this->addFormNameToViewHelperVariableContainer();
+		$this->addFormObjectNameToViewHelperVariableContainer();
 		$this->addFormObjectToViewHelperVariableContainer();
 		$this->addFieldNamePrefixToViewHelperVariableContainer();
 		$this->addFormFieldNamesToViewHelperVariableContainer();
 
 		$formContent = $this->renderChildren();
 
-		$content = $this->renderHiddenIdentityField($this->arguments['object'], $this->arguments['name']);
+		$content = chr(10) . '<div style="display: none">';
+		$content .= $this->renderHiddenIdentityField($this->arguments['object'], $this->getFormObjectName());
 		$content .= $this->renderAdditionalIdentityFields();
 		$content .= $this->renderHiddenReferrerFields();
 		$content .= $this->renderRequestHashField(); // Render hmac after everything else has been rendered
+		$content .= chr(10) . '</div>' . chr(10);
 		$content .= $formContent;
 
 		$this->tag->setContent($content);
 
 		$this->removeFieldNamePrefixFromViewHelperVariableContainer();
 		$this->removeFormObjectFromViewHelperVariableContainer();
-		$this->removeFormNameFromViewHelperVariableContainer();
+		$this->removeFormObjectNameFromViewHelperVariableContainer();
 		$this->removeFormFieldNamesFromViewHelperVariableContainer();
+		$this->removeCheckboxFieldNamesFromViewHelperVariableContainer();
 
 		return $this->tag->render();
 	}
@@ -158,7 +171,16 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 				->reset()
 				->setTargetPageUid($this->arguments['pageUid'])
 				->setTargetPageType($this->arguments['pageType'])
+				->setNoCache($this->arguments['noCache'])
+				->setUseCacheHash(!$this->arguments['noCacheHash'])
+				->setSection($this->arguments['section'])
+				->setCreateAbsoluteUri($this->arguments['absolute'])
+				->setArguments((array)$this->arguments['additionalParams'])
+				->setAddQueryString($this->arguments['addQueryString'])
+				->setArgumentsToBeExcludedFromQueryString((array)$this->arguments['argumentsToBeExcludedFromQueryString'])
+				->setFormat($this->arguments['format'])
 				->uriFor($this->arguments['action'], $this->arguments['arguments'], $this->arguments['controller'], $this->arguments['extensionName'], $this->arguments['pluginName']);
+			$this->formActionUriArguments = $uriBuilder->getArguments();
 		}
 		$this->tag->addAttribute('action', $formActionUri);
 	}
@@ -203,13 +225,14 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 	}
 
 	/**
-	 * Adds the form name to the ViewHelperVariableContainer if the name attribute is specified.
+	 * Adds the form object name to the ViewHelperVariableContainer if "objectName" argument or "name" attribute is specified.
 	 *
 	 * @return void
 	 */
-	protected function addFormNameToViewHelperVariableContainer() {
-		if ($this->arguments->hasArgument('name')) {
-			$this->viewHelperVariableContainer->add('Tx_Fluid_ViewHelpers_FormViewHelper', 'formName', $this->arguments['name']);
+	protected function addFormObjectNameToViewHelperVariableContainer() {
+		$formObjectName = $this->getFormObjectName();
+		if ($formObjectName !== NULL) {
+			$this->viewHelperVariableContainer->add('Tx_Fluid_ViewHelpers_FormViewHelper', 'formObjectName', $formObjectName);
 		}
 	}
 
@@ -218,12 +241,30 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 	 *
 	 * @return void
 	 */
-	protected function removeFormNameFromViewHelperVariableContainer() {
-		if ($this->arguments->hasArgument('name')) {
-			$this->viewHelperVariableContainer->remove('Tx_Fluid_ViewHelpers_FormViewHelper', 'formName');
+	protected function removeFormObjectNameFromViewHelperVariableContainer() {
+		$formObjectName = $this->getFormObjectName();
+		if ($formObjectName !== NULL) {
+			$this->viewHelperVariableContainer->remove('Tx_Fluid_ViewHelpers_FormViewHelper', 'formObjectName');
 		}
 	}
 
+	/**
+	 * Returns the name of the object that is bound to this form.
+	 * If the "objectName" argument has been specified, this is returned. Otherwise the name attribute of this form.
+	 * If neither objectName nor name arguments have been set, NULL is returned.
+	 *
+	 * @return string specified Form name or NULL if neither $objectName nor $name arguments have been specified
+	 * @author Bastian Waidelich <bastian@typo3.org>
+	 */
+	protected function getFormObjectName() {
+		$formObjectName = NULL;
+		if ($this->arguments->hasArgument('objectName')) {
+			$formObjectName = $this->arguments['objectName'];
+		} elseif ($this->arguments->hasArgument('name')) {
+			$formObjectName = $this->arguments['name'];
+		}
+		return $formObjectName;
+	}
 	/**
 	 * Adds the object that is bound to this form to the ViewHelperVariableContainer if the formObject attribute is specified.
 	 *
@@ -308,7 +349,7 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 	 */
 	protected function renderRequestHashField() {
 		$formFieldNames = $this->viewHelperVariableContainer->get('Tx_Fluid_ViewHelpers_FormViewHelper', 'formFieldNames');
-		$this->postProcessUriArgumentsForRequesthash($this->controllerContext->getUriBuilder()->getLastArguments(), $formFieldNames);
+		$this->postProcessUriArgumentsForRequesthash($this->formActionUriArguments, $formFieldNames);
 		$requestHash = $this->requestHashService->generateRequestHash($formFieldNames, $this->getFieldNamePrefix());
 		// in v4, we need to prefix __hmac as well to make it show up in the request object.
 		return '<input type="hidden" name="' . $this->prefixFieldName('__hmac') . '" value="' . htmlspecialchars($requestHash) . '" />';
@@ -347,7 +388,16 @@ class Tx_Fluid_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Form_Abst
 			$pluginName = $request->getPluginName();
 		}
 
-		return 'tx_' . strtolower($extensionName) . '_' . strtolower($pluginName);
+		return Tx_Extbase_Utility_Extension::getPluginNamespace($extensionName, $pluginName);
+	}
+
+	/**
+	 * Remove Checkbox field names from ViewHelper variable container, to start from scratch when a new form starts.
+	 */
+	protected function removeCheckboxFieldNamesFromViewHelperVariableContainer() {
+		if ($this->viewHelperVariableContainer->exists('Tx_Fluid_ViewHelpers_Form_CheckboxViewHelper', 'checkboxFieldNames')) {
+			$this->viewHelperVariableContainer->remove('Tx_Fluid_ViewHelpers_Form_CheckboxViewHelper', 'checkboxFieldNames');
+		}
 	}
 }
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Dmitry Dulepov <dmitry@typo3.org>
+*  (c) 2009-2011 Dmitry Dulepov <dmitry@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,7 +25,7 @@
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
  *
- * $Id: class.tx_rsaauth_cmdline_backend.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 
 require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/backends/class.tx_rsaauth_abstract_backend.php'));
@@ -95,7 +95,7 @@ class tx_rsaauth_cmdline_backend extends tx_rsaauth_abstract_backend {
 		// secure.
 		$command = $this->opensslPath . ' genrsa -out ' .
 			escapeshellarg($privateKeyFile) . ' 1024';
-		exec($command);
+		t3lib_utility_Command::exec($command);
 
 		// Test that we got a private key
 		$privateKey = file_get_contents($privateKeyFile);
@@ -103,7 +103,7 @@ class tx_rsaauth_cmdline_backend extends tx_rsaauth_abstract_backend {
 			// Ok, we got the private key. Get the modulus.
 			$command = $this->opensslPath . ' rsa -noout -modulus -in ' .
 				escapeshellarg($privateKeyFile);
-			$value = exec($command);
+			$value = t3lib_utility_Command::exec($command);
 			if (substr($value, 0, 8) === 'Modulus=') {
 				$publicKey = substr($value, 8);
 
@@ -144,13 +144,13 @@ class tx_rsaauth_cmdline_backend extends tx_rsaauth_abstract_backend {
 
 		// Execute the command and capture the result
 		$output = array();
-		exec($command, $output);
+		t3lib_utility_Command::exec($command, $output);
 
 		// Remove the file
 		@unlink($privateKeyFile);
 		@unlink($dataFile);
 
-		return implode(chr(10), $output);
+		return implode(LF, $output);
 	}
 
 	/**
@@ -164,15 +164,15 @@ class tx_rsaauth_cmdline_backend extends tx_rsaauth_abstract_backend {
 		$result = false;
 		if ($this->opensslPath) {
 			// If path exists, test that command runs and can produce output
-			$test = exec($this->opensslPath . ' version');
+			$test = t3lib_utility_Command::exec($this->opensslPath . ' version');
 			$result = (substr($test, 0, 8) == 'OpenSSL ');
 		}
 		return $result;
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backends/class.tx_rsaauth_cmdline_backend.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backends/class.tx_rsaauth_cmdline_backend.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backends/class.tx_rsaauth_cmdline_backend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backends/class.tx_rsaauth_cmdline_backend.php']);
 }
 
 ?>

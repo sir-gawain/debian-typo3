@@ -29,16 +29,19 @@
  * <code title="Example">
  * <f:format.nl2br>{text_with_linebreaks}</f:format.nl2br>
  * </code>
- *
- * Output:
+ * <output>
  * text with line breaks replaced by <br />
+ * </output>
  *
- * @version $Id: Nl2brViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Format
+ * <code title="Inline notation">
+ * {text_with_linebreaks -> f:format.nl2br()}
+ * </code>
+ * <output>
+ * text with line breaks replaced by <br />
+ * </output>
+ *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Format_Nl2brViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 

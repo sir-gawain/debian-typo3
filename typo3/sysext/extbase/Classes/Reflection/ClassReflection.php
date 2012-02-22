@@ -27,7 +27,7 @@
  *
  * @package Extbase
  * @subpackage Reflection
- * @version $Id: ClassReflection.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  */
 class Tx_Extbase_Reflection_ClassReflection extends ReflectionClass {
 
@@ -143,7 +143,7 @@ class Tx_Extbase_Reflection_ClassReflection extends ReflectionClass {
 	 */
 	public function getParentClass() {
 		$parentClass = parent::getParentClass();
-		return ($parentClass === NULL) ? NULL : new Tx_Extbase_Reflection_ClassReflection($parentClass->getName());
+		return ($parentClass === FALSE) ? FALSE : new Tx_Extbase_Reflection_ClassReflection($parentClass->getName());
 	}
 
 	/**

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,11 +28,11 @@
  * Front End session user. Login and session data
  * Included from index_ts.php
  *
- * $Id: class.tslib_feuserauth.php 6804 2010-01-18 16:06:31Z benni $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
- * @author	Ren� Fritz <r.fritz@colorcube.de>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	René Fritz <r.fritz@colorcube.de>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -71,8 +71,8 @@
 /**
  * Extension class for Front End User Authentication.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
- * @author	Ren� Fritz <r.fritz@colorcube.de>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	René Fritz <r.fritz@colorcube.de>
  * @package TYPO3
  * @subpackage tslib
  */
@@ -326,7 +326,7 @@ class tslib_feUserAuth extends t3lib_userAuth {
 		if (!$this->userTSUpdated) {
 				// Parsing the user TS (or getting from cache)
 			$this->TSdataArray = t3lib_TSparser::checkIncludeLines_array($this->TSdataArray);
-			$userTS = implode(chr(10).'[GLOBAL]'.chr(10),$this->TSdataArray);
+			$userTS = implode(LF.'[GLOBAL]'.LF,$this->TSdataArray);
 			$parseObj = t3lib_div::makeInstance('t3lib_TSparser');
 			$parseObj->parse($userTS);
 			$this->userTS = $parseObj->setup;
@@ -370,12 +370,17 @@ class tslib_feUserAuth extends t3lib_userAuth {
 	function fetchSessionData()	{
 			// Gets SesData if any AND if not already selected by session fixation check in ->isExistingSessionRecord()
 		if ($this->id && !count($this->sesData)) {
-			$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'fe_session_data', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, 'fe_session_data'));
-			if ($sesDataRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($dbres))	{
+			$statement = $GLOBALS['TYPO3_DB']->prepare_SELECTquery(
+				'*',
+				'fe_session_data',
+				'hash = :hash'
+			);
+			$statement->execute(array(':hash' => $this->id));
+			if (($sesDataRow = $statement->fetch()) !== FALSE) {
 				$this->sesData = unserialize($sesDataRow['content']);
 				$this->sessionDataTimestamp = $sesDataRow['tstamp'];
 			}
-			$GLOBALS['TYPO3_DB']->sql_free_result($dbres);
+			$statement->free();
 		}
 	}
 
@@ -481,6 +486,31 @@ class tslib_feUserAuth extends t3lib_userAuth {
 	}
 
 	/**
+	 * Returns the session data stored for $key.
+	 * The data will last only for this login session since it is stored in the session table.
+	 *
+	 * @param  string  $key
+	 * @return mixed
+	 */
+	public function getSessionData($key) {
+		return $this->getKey('ses', $key);
+	}
+
+	/**
+	 * Saves the tokens so that they can be used by a later incarnation of this class.
+	 *
+	 * @param  string  $key
+	 * @param  mixed   $data
+	 * @return void
+	 */
+	public function setAndSaveSessionData($key, $data) {
+		$this->setKey('ses', $key, $data);
+		$this->storeSessionData();
+	}
+
+
+
+	/**
 	 * Registration of records/"shopping basket" in session data
 	 * This will take the input array, $recs, and merge into the current "recs" array found in the session data.
 	 * If a change in the recs storage happens (which it probably does) the function setKey() is called in order to store the array again.
@@ -491,7 +521,7 @@ class tslib_feUserAuth extends t3lib_userAuth {
 	 */
 	function record_registration($recs,$maxSizeOfSessionData=0)	{
 
-			// Storing value ONLY if there is a confirmed cookie set (->cookieID), 
+			// Storing value ONLY if there is a confirmed cookie set (->cookieID),
 			// otherwise a shellscript could easily be spamming the fe_sessions table
 			// with bogus content and thus bloat the database
 		if (!$maxSizeOfSessionData || $this->cookieId) {
@@ -500,11 +530,9 @@ class tslib_feUserAuth extends t3lib_userAuth {
 			}
 			$change=0;
 			$recs_array=$this->getKey('ses','recs');
-			reset($recs);
-			while(list($table,$data)=each($recs))	{
+			foreach ($recs as $table => $data) {
 				if (is_array($data))	{
-					reset($data);
-					while(list($rec_id,$value)=each($data))	{
+					foreach ($data as $rec_id => $value) {
 						if ($value != $recs_array[$table][$rec_id])	{
 							$recs_array[$table][$rec_id] = $value;
 							$change=1;
@@ -533,23 +561,26 @@ class tslib_feUserAuth extends t3lib_userAuth {
 
 			// Check if there are any fe_session_data records for the session ID the client claims to have
 		if ($count == false) {
-			$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-							'content',
-							'fe_session_data',
-							'hash=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($id, 'fe_session_data')
-						);
-			if ($dbres !== false) {
-				if ($sesDataRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($dbres)) {
+			$statement = $GLOBALS['TYPO3_DB']->prepare_SELECTquery(
+				'content',
+				'fe_session_data',
+				'hash = :hash'
+			);
+			$res = $statement->execute(array(':hash' => $id));
+			if ($res !== FALSE) {
+				if ($sesDataRow = $statement->fetch()) {
 					$count = true;
 					$this->sesData = unserialize($sesDataRow['content']);
 				}
-				$GLOBALS['TYPO3_DB']->sql_free_result($dbres);
+				$statement->free();
 			}
 		}
 
 			// @deprecated: Check for commerce basket records. The following lines should be removed once a fixed commerce version is released.
 			// Extensions like commerce which have their own session table should just put some small bit of data into fe_session_data using $GLOBALS['TSFE']->fe_user->setKey('ses', ...) to make the session stable.
 		if ($count == false && t3lib_extMgm::isLoaded('commerce')) {
+			t3lib_div::deprecationLog("EXT:commerce specific code in tslib_feuserauth::isExistingSessionRecord() is deprecated. Will be removed in 4.6");
+
 			$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 							'*',
 							'tx_commerce_baskets',
@@ -568,8 +599,8 @@ class tslib_feUserAuth extends t3lib_userAuth {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_feuserauth.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_feuserauth.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_feuserauth.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_feuserauth.php']);
 }
 
 ?>

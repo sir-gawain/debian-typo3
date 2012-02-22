@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Object\Exception
- * @version $Id: UnknownClass.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 class Tx_Extbase_Object_UnknownClass extends Tx_Extbase_Object_Exception {
 

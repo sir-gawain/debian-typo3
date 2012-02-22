@@ -14,9 +14,6 @@
  *                                                                        */
 
 /**
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: HtmlViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
  */
 
 /**
@@ -24,26 +21,32 @@
  * You can either specify a path to the TypoScript setting or set the parseFunc options directly.
  * By default lib.parseFunc_RTE is used to parse the string.
  *
- * Example:
+ * == Examples ==
  *
- * (1) default parameters:
+ * <code title="Default parameters">
  * <f:format.html>foo <b>bar</b>. Some <LINK 1>link</LINK>.</f:format.html>
- *
- * Result:
+ * </code>
+ * <output>
  * <p class="bodytext">foo <b>bar</b>. Some <a href="index.php?id=1" >link</a>.</p>
  * (depending on your TYPO3 setup)
+ * </output>
  *
- * (2) custom parseFunc
+ * <code title="Custom parseFunc">
  * <f:format.html parseFuncTSPath="lib.parseFunc">foo <b>bar</b>. Some <LINK 1>link</LINK>.</f:format.html>
- *
- * Output:
+ * </code>
+ * <output>
  * foo <b>bar</b>. Some <a href="index.php?id=1" >link</a>.
+ * </output>
+ *
+ * <code title="Inline notation">
+ * {someText -> f:format.html(parseFuncTSPath: 'lib.parseFunc')}
+ * </code>
+ * <output>
+ * foo <b>bar</b>. Some <a href="index.php?id=1" >link</a>.
+ * </output>
  *
  * @see http://typo3.org/documentation/document-library/references/doc_core_tsref/4.2.0/view/1/5/#id4198758
  *
- * @package
- * @subpackage
- * @version $Id: HtmlViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
  */
 class Tx_Fluid_ViewHelpers_Format_HtmlViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
@@ -53,21 +56,31 @@ class Tx_Fluid_ViewHelpers_Format_HtmlViewHelper extends Tx_Fluid_Core_ViewHelpe
 	protected $contentObject;
 
 	/**
-	 * If the ObjectAccessorPostProcessor should be disabled inside this ViewHelper, then set this value to FALSE.
+	 * @var	t3lib_fe contains a backup of the current $GLOBALS['TSFE'] if used in BE mode
+	 */
+	protected $tsfeBackup;
+
+	/**
+	 * If the escaping interceptor should be disabled inside this ViewHelper, then set this value to FALSE.
 	 * This is internal and NO part of the API. It is very likely to change.
 	 *
 	 * @var boolean
 	 * @internal
 	 */
-	protected $objectAccessorPostProcessorEnabled = FALSE;
+	protected $escapingInterceptorEnabled = FALSE;
 
 	/**
-	 * Constructor. Used to create an instance of tslib_cObj used by the render() method.
-	 * @param tslib_cObj $contentObject injector for tslib_cObj (optional)
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
+
+	/**
+	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function __construct($contentObject = NULL) {
-		$this->contentObject = $contentObject !== NULL ? $contentObject : t3lib_div::makeInstance('tslib_cObj');
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+		$this->contentObject = $this->configurationManager->getContentObject();
 	}
 
 	/**
@@ -77,8 +90,41 @@ class Tx_Fluid_ViewHelpers_Format_HtmlViewHelper extends Tx_Fluid_Core_ViewHelpe
 	 * @author Niels Pardon <mail@niels-pardon.de>
 	 */
 	public function render($parseFuncTSPath = 'lib.parseFunc_RTE') {
+		if (TYPO3_MODE === 'BE') {
+			$this->simulateFrontendEnvironment();
+		}
+
 		$value = $this->renderChildren();
-		return $this->contentObject->parseFunc($value, array(), '< ' . $parseFuncTSPath);
+		$content = $this->contentObject->parseFunc($value, array(), '< ' . $parseFuncTSPath);
+
+		if (TYPO3_MODE === 'BE') {
+			$this->resetFrontendEnvironment();
+		}
+		return $content;
+	}
+
+	/**
+	 * Copies the specified parseFunc configuration to $GLOBALS['TSFE']->tmpl->setup in Backend mode
+	 * This somewhat hacky work around is currently needed because the parseFunc() function of tslib_cObj relies on those variables to be set
+	 *
+	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
+	 */
+	protected function simulateFrontendEnvironment() {
+		$this->tsfeBackup = isset($GLOBALS['TSFE']) ? $GLOBALS['TSFE'] : NULL;
+		$GLOBALS['TSFE'] = new stdClass();
+		$GLOBALS['TSFE']->tmpl->setup = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
+	}
+
+	/**
+	 * Resets $GLOBALS['TSFE'] if it was previously changed by simulateFrontendEnvironment()
+	 *
+	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
+	 * @see simulateFrontendEnvironment()
+	 */
+	protected function resetFrontendEnvironment() {
+		$GLOBALS['TSFE'] = $this->tsfeBackup;
 	}
 }
 

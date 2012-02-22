@@ -25,11 +25,7 @@
  * and the current stack of open nodes (nodeStack) and a variable container used
  * for PostParseFacets.
  *
- * @version $Id: ParsingState.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage Core\Parser
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
- * @scope prototype
  */
 class Tx_Fluid_Core_Parser_ParsingState implements Tx_Fluid_Core_Parser_ParsedTemplateInterface {
 
@@ -60,7 +56,7 @@ class Tx_Fluid_Core_Parser_ParsingState implements Tx_Fluid_Core_Parser_ParsedTe
 	 * @return void
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
-	public function injectVariableContainer(Tx_Fluid_Core_ViewHelper_TemplateVariableContainer $variableContainer) {
+	public function setVariableContainer(Tx_Fluid_Core_ViewHelper_TemplateVariableContainer $variableContainer) {
 		$this->variableContainer = $variableContainer;
 	}
 
@@ -88,12 +84,11 @@ class Tx_Fluid_Core_Parser_ParsingState implements Tx_Fluid_Core_Parser_ParsedTe
 	/**
 	 * Render the parsed template with rendering context
 	 *
-	 * @param Tx_Fluid_Core_Rendering_RenderingContext $renderingContext The rendering context to use
+	 * @param Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext The rendering context to use
 	 * @return Rendered string
 	 */
-	public function render(Tx_Fluid_Core_Rendering_RenderingContext $renderingContext) {
-		$this->rootNode->setRenderingContext($renderingContext);
-		return $this->rootNode->evaluate();
+	public function render(Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext) {
+		return $this->rootNode->evaluate($renderingContext);
 	}
 
 	/**

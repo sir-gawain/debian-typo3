@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Julian Kleinhans <typo3@kj187.de>
+*  (c) 2009-2011 Julian Kleinhans <typo3@kj187.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@ $BE_USER->modAccess($MCONF, 1);	// This checks permissions and exits if the user
  * @author	Julian Kleinhans <typo3@kj187.de>
  * @package	TYPO3
  * @subpackage	tx_recycler
- * @version $Id: index.php 6582 2009-11-29 15:44:50Z ohader $
+ * @version $Id$
  */
 class  tx_recycler_module1 extends t3lib_SCbase {
 	/**
@@ -47,6 +47,11 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 	protected $recordsPageLimit = 50;
 
 	/**
+	 * @var t3lib_pageRenderer
+	 */
+	protected $pageRenderer;
+
+	/**
 	 * Initializes the Module
 	 *
 	 * @return	void
@@ -56,6 +61,9 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->setModuleTemplate(t3lib_extMgm::extPath('recycler') . 'mod1/mod_template.html');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->setExtDirectStateProvider();
+
+		$this->pageRenderer = $this->doc->getPageRenderer();
 
 		$this->relativePath = t3lib_extMgm::extRelPath('recycler');
 		$this->pageRecord = t3lib_BEfunc::readPageAccess($this->id, $this->perms_clause);
@@ -105,13 +113,16 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 	 * @return	void
 	 */
 	public function flush() {
-		$content = $this->doc->startPage($GLOBALS['LANG']->getLL('title'));
-		$content.= $this->doc->moduleBody(
+		$content = $this->doc->moduleBody(
 			$this->pageRecord,
 			$this->getDocHeaderButtons(),
 			$this->getTemplateMarkers()
 		);
-		$content.= $this->doc->endPage();
+			// Renders the module page
+		$content = $this->doc->render(
+			$GLOBALS['LANG']->getLL('title'),
+			$content
+		);
 
 		$this->content = null;
 		$this->doc = null;
@@ -135,41 +146,31 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 	 */
 	protected function loadHeaderData() {
 			// Load CSS Stylesheets:
-		$this->loadStylesheet($this->relativePath . 'res/css/customExtJs.css');
+		$this->pageRenderer->addCssFile($this->relativePath . 'res/css/customExtJs.css');
+
 			// Load Ext JS:
-		$this->doc->getPageRenderer()->loadExtJS();
+		$this->pageRenderer->loadExtJS();
+		$this->pageRenderer->enableExtJSQuickTips();
+
 			// Integrate dynamic JavaScript such as configuration or lables:
-		$this->doc->JScode.= t3lib_div::wrapJS('
-			Ext.namespace("Recycler");
-			Recycler.statics = ' . json_encode($this->getJavaScriptConfiguration()) . ';
-			Recycler.lang = ' . json_encode($this->getJavaScriptLabels()) . ';'
+		$this->pageRenderer->addInlineSettingArray(
+			'Recycler',
+			$this->getJavaScriptConfiguration()
 		);
+		$this->pageRenderer->addInlineLanguageLabelArray(
+			$this->getJavaScriptLabels()
+		);
+
+
 			// Load Recycler JavaScript:
-		$this->loadJavaScript($this->relativePath . 'res/js/ext_expander.js');
-		$this->loadJavaScript($this->relativePath . 'res/js/search_field.js');
-		$this->loadJavaScript($this->relativePath . 'res/js/t3_recycler.js');
-	}
 
-	/**
-	 * Loads a stylesheet by adding it to the HTML head section.
-	 *
-	 * @param	string		$fileName: Name of the file to be loaded
-	 * @return	void
-	 */
-	protected function loadStylesheet($fileName) {
-		$fileName = t3lib_div::resolveBackPath($this->doc->backPath . $fileName);
-		$this->doc->JScode.= "\t" . '<link rel="stylesheet" type="text/css" href="' . $fileName . '" />' . "\n";
-	}
-
-	/**
-	 * Loads a JavaScript file.
-	 *
-	 * @param	string		$fileName: Name of the file to be loaded
-	 * @return	void
-	 */
-	protected function loadJavaScript($fileName) {
-		$fileName = t3lib_div::resolveBackPath($this->doc->backPath . $fileName);
-		$this->doc->JScode.= "\t" . '<script language="javascript" type="text/javascript" src="' . $fileName . '"></script>' . "\n";
+			// Load Plugins
+		$uxPath = $this->doc->backpath . '../t3lib/js/extjs/ux/';
+		$this->pageRenderer->addJsFile($uxPath . 'Ext.grid.RowExpander.js');
+		$this->pageRenderer->addJsFile($uxPath . 'Ext.app.SearchField.js');
+		$this->pageRenderer->addJsFile($uxPath . 'Ext.ux.FitToParent.js');
+			// Load main script
+		$this->pageRenderer->addJsFile($this->relativePath . 'res/js/t3_recycler.js');
 	}
 
 	/**
@@ -189,6 +190,7 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 			'deleteDisable' => $this->allowDelete ? 0 : 1,
 			'depthSelection' => $this->getDataFromSession('depthSelection', 0),
 			'tableSelection' => $this->getDataFromSession('tableSelection', 'pages'),
+			'States' => $GLOBALS['BE_USER']->uc['moduleData']['web_recycler']['States'],
 		);
 		return $configuration;
 	}
@@ -328,8 +330,8 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/mod1/index.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/mod1/index.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/mod1/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/mod1/index.php']);
 }
 
 

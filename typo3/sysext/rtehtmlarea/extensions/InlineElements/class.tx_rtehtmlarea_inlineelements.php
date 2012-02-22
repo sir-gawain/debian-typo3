@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,13 +26,10 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_inlineelements.php 6917 2010-02-19 20:29:04Z stan $
+ * TYPO3 SVN ID: $Id$
  *
  */
-
-require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlareaapi.php');
-
-class tx_rtehtmlarea_inlineelements extends tx_rtehtmlareaapi {
+class tx_rtehtmlarea_inlineelements extends tx_rtehtmlarea_api {
 
 	protected $extensionKey = 'rtehtmlarea';			// The key of the extension that is extending htmlArea RTE
 	protected $pluginName = 'InlineElements';			// The name of the plugin registered by the extension
@@ -195,32 +192,24 @@ class tx_rtehtmlarea_inlineelements extends tx_rtehtmlareaapi {
 			if (!is_array($this->thisConfig['buttons.']) || !is_array($this->thisConfig['buttons.']['formattext.']) || !$this->thisConfig['buttons.']['formattext.']['orderItems']) {
 				asort($inlineElementsOptions);
 			}
-				// utf8-encode labels if we are responding to an IRRE ajax call
-			if (!$this->htmlAreaRTE->is_FE() && $this->htmlAreaRTE->TCEform->inline->isAjaxCall) {
-				foreach ($inlineElementsOptions as $item => $label) {
-					$inlineElementsOptions[$item] = $GLOBALS['LANG']->csConvObj->utf8_encode($label, $GLOBALS['LANG']->charSet);
-				}
-			}
 				// Generating the javascript options
-			$JSInlineElements = '{
-			"'. $first.'" : "none"';
+			$JSInlineElements = array();
+			$JSInlineElements[] = array($first, 'none');
 			foreach ($inlineElementsOptions as $item => $label) {
-				$JSInlineElements .= ',
-			"' . $label . '" : "' . $item . '"';
+				$JSInlineElements[] = array($label, $item);
 			}
-			$JSInlineElements .= '};';
-
+			if ($this->htmlAreaRTE->is_FE()) {
+				$GLOBALS['TSFE']->csConvObj->convArray($JSInlineElements, $this->htmlAreaRTE->OutputCharset, 'utf-8');
+			} else {
+				$GLOBALS['LANG']->csConvObj->convArray($JSInlineElements, $GLOBALS['LANG']->charSet, 'utf-8');
+			}
 			$registerRTEinJavascriptString .= '
-			RTEarea['.$RTEcounter.'].buttons.formattext.dropDownOptions = '. $JSInlineElements;
+			RTEarea['.$RTEcounter.'].buttons.formattext.options = ' . json_encode($JSInlineElements) . ';';
 		}
 		return $registerRTEinJavascriptString;
 	 }
-
-
-} // end of class
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/InlineElements/class.tx_rtehtmlarea_inlineelements.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/InlineElements/class.tx_rtehtmlarea_inlineelements.php']);
 }
-
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/InlineElements/class.tx_rtehtmlarea_inlineelements.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/InlineElements/class.tx_rtehtmlarea_inlineelements.php']);
+}
 ?>

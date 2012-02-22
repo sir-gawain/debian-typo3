@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Property
- * @version $Id: MappingResults.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  * @scope prototype
  */
 class Tx_Extbase_Property_MappingResults {

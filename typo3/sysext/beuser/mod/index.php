@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Backend User Administration Module
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -114,7 +114,7 @@ $BE_USER->modAccess($MCONF,1);
 /**
  * Base Extension class for printing a page tree (non-browsable though)
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -214,7 +214,7 @@ $BE_USER->modAccess($MCONF,1);
 /**
  * Extension class for printing a page tree: All pages of a mount point.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -271,7 +271,7 @@ class printAllPageTree extends localPageTree {
 /**
  * Extension class for printing a page tree: Printing all pages, with permissions.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -315,7 +315,7 @@ class printAllPageTree_perms extends printAllPageTree {
 				<td nowrap="nowrap">'.$be_group_Array[$row['perms_groupid']]['title'].' &nbsp;</td>
 				<td nowrap="nowrap">'.$this->ext_printPerms($row['perms_group']).' &nbsp;</td>
 				<td nowrap="nowrap" align="center" '.$col1.'>'.$this->ext_printPerms($row['perms_everybody']).' &nbsp;</td>
-				<td nowrap="nowrap" align="center">' . ($row['editlock'] ? '<img ' . t3lib_iconWorks::skinImg($this->backPath,'gfx/recordlock_warning2.gif') . ' title="' . $GLOBALS['LANG']->getLL('editLock', true) . '" alt="" />' : $this->ext_printPerms($this->BE_USER->calcPerms($row))) . ' &nbsp;</td>
+				<td nowrap="nowrap" align="center">' . ($row['editlock'] ? t3lib_iconWorks::getSpriteIcon('status-warning-in-use', array('title' => $GLOBALS['LANG']->getLL('editLock', true))) : $this->ext_printPerms($this->BE_USER->calcPerms($row))) . ' &nbsp;</td>
 				<td nowrap="nowrap" align="center">'.$this->ext_printPerms($this->ext_groupPerms($row,$be_group_Array[$this->BE_USER->firstMainGroup])).' &nbsp;</td>
 			</tr>';
 		}
@@ -336,7 +336,7 @@ class printAllPageTree_perms extends printAllPageTree {
 		$str.= (($int&4)?'*':'<font color="red">x</font>');
 		$str.= (($int&8)?'*':'<font color="red">x</font>');
 
-		return '<b><font color="green">'.$str.'</font></b>';
+		return '<strong style="color:green;">'.$str.'</strong>';
 	}
 
 	/**
@@ -370,7 +370,7 @@ class printAllPageTree_perms extends printAllPageTree {
 /**
  * Base Extension class for printing a folder tree (non-browsable though)
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -463,7 +463,7 @@ class printAllPageTree_perms extends printAllPageTree {
 /**
  * Extension class for printing a folder tree: All folders
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -497,7 +497,7 @@ class printAllFolderTree extends localFolderTree {
 /**
  * Extension class of beuserauth class.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -649,7 +649,7 @@ class local_beUserAuth extends t3lib_beUserAuth {
 						$tables = explode(',',$v);
 						foreach ($tables as &$vv) {
 							if ($vv) {
-								$vv = '<span class="nobr">'.t3lib_iconWorks::getIconImage($vv,array(),$GLOBALS['BACK_PATH'],'align="top"').$GLOBALS['LANG']->sL($GLOBALS['TCA'][$vv]['ctrl']['title']).'</span>';
+								$vv = '<span class="nobr">'.t3lib_iconWorks::getSpriteIconForRecord($vv,array()).$GLOBALS['LANG']->sL($GLOBALS['TCA'][$vv]['ctrl']['title']).'</span>';
 							}
 						}
 						$out[$k] = implode('<br />',$tables);
@@ -664,7 +664,7 @@ class local_beUserAuth extends t3lib_beUserAuth {
 								if ($thisTable!=$table)	{
 									$table=$thisTable;
 									t3lib_div::loadTCA($table);
-									$pout[]='<span class="nobr">'.t3lib_iconWorks::getIconImage($table,array(),$GLOBALS['BACK_PATH'],'align="top"').$GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title']).'</span>';
+									$pout[]='<span class="nobr">'.t3lib_iconWorks::getSpriteIconForRecord($table,array()).$GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title']).'</span>';
 								}
 								if ($GLOBALS['TCA'][$table]['columns'][$field])	{
 									$pout[]='<span class="nobr"> - '.rtrim($GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$field]['label']), ':').'</span>';
@@ -681,7 +681,10 @@ class local_beUserAuth extends t3lib_beUserAuth {
 						foreach ($uGroups as $vv) {
 							if ($vv) {
 								$uGRow = t3lib_BEfunc::getRecord('be_groups',$vv);
-								$pout[]='<tr><td nowrap="nowrap">'.t3lib_iconWorks::getIconImage('be_groups',$uGRow,$GLOBALS['BACK_PATH'],'align="top"').'&nbsp;'.htmlspecialchars($uGRow['title']).'&nbsp;&nbsp;</td><td width=1% nowrap="nowrap">'.$GLOBALS['SOBE']->elementLinks('be_groups',$uGRow).'</td></tr>';
+								$title = t3lib_BEfunc::getRecordTitle('be_groups', $uGRow);
+								$pout[] = '<tr><td nowrap="nowrap">' . t3lib_iconWorks::getSpriteIconForRecord('be_groups', $uGRow) .
+									'&nbsp;' . htmlspecialchars($title) . '&nbsp;&nbsp;</td><td width="1%" nowrap="nowrap">' .
+									$GLOBALS['SOBE']->elementLinks('be_groups', $uGRow) . '</td></tr>';
 							}
 						}
 						$out[$k] = '<table border="0" cellpadding="0" cellspacing="0" width="100%">'.implode('',$pout).'</table>';
@@ -731,14 +734,14 @@ class local_beUserAuth extends t3lib_beUserAuth {
 
 								// Icons:
 						$icons = array(
-							'ALLOW' => '<img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/icon_ok2.gif','').' class="absmiddle" alt="" />',
-							'DENY' => '<img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/icon_fatalerror.gif','').' class="absmiddle" alt="" />',
+							'ALLOW' => t3lib_iconWorks::getSpriteIcon('status-dialog-ok'),
+							'DENY'  => t3lib_iconWorks::getSpriteIcon('status-dialog-error'),
 						);
 
 							// Traverse types:
 						foreach ($theTypes as $tableFieldKey => $theTypeArrays)	{
 							if (is_array($theTypeArrays['items']))	{
-								$pout[] = '<b>'.$theTypeArrays['tableFieldLabel'].'</b>';
+								$pout[] = '<strong>'.$theTypeArrays['tableFieldLabel'].'</strong>';
 									// Traverse options for this field:
 								foreach ($theTypeArrays['items'] as $itemValue => $itemContent)	{
 									$v = $tableFieldKey.':'.$itemValue.':'.$itemContent[0];
@@ -774,7 +777,9 @@ class local_beUserAuth extends t3lib_beUserAuth {
 						foreach ($items as $iCfg)	{
 							if (isset($nef[$iCfg[1]]))	{
 								unset($nef[$iCfg[1]]);
-								if (strlen($iCfg[2]))	{
+								if (strpos($iCfg[2], '.gif') === FALSE) {
+									$icon = t3lib_iconWorks::getSpriteIcon($iCfg[2]) . '&nbsp;';
+								} elseif (strlen($iCfg[2]))	{
 									$icon = '<img '.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/'.$iCfg[2]).' class="absmiddle" style="margin-right: 5px;" alt="" />';
 								} else {
 									$icon = '';
@@ -860,7 +865,7 @@ class local_beUserAuth extends t3lib_beUserAuth {
 		while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
 			$dat[] = array(
 				'row'=>$row,
-				'HTML'=>t3lib_iconWorks::getIconImage('pages',$row,$GLOBALS['BACK_PATH'],'align="top" title="['.$row['uid'].']"')	// .htmlspecialchars($row['title'])
+				'HTML'=>t3lib_iconWorks::getSpriteIconForRecord('pages',$row,array('title'=>'['.$row['uid'].']'))
 			);
 		}
 		$pp = t3lib_div::makeInstance('printAllPageTree_perms', $this);
@@ -881,7 +886,7 @@ class local_beUserAuth extends t3lib_beUserAuth {
 		$str.= (($int&4)?'*':'<font color="red">x</font>');
 		$str.= (($int&8)?'*':'<font color="red">x</font>');
 
-		return '<b><font color="green">'.$str.'</font></b>';
+		return '<strong style="color:green;">'.$str.'</strong>';
 	}
 
 	/**
@@ -1046,18 +1051,20 @@ class local_beUserAuth extends t3lib_beUserAuth {
 		}
 
 			// Add custom workspaces (selecting all, filtering by BE_USER check):
-		$workspaces = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,title,adminusers,members,reviewers,db_mountpoints','sys_workspace','pid=0'.t3lib_BEfunc::deleteClause('sys_workspace'),'','title');
-		if (count($workspaces))	{
-			foreach ($workspaces as $rec)	{
-				if ($this->checkWorkspace($rec))	{
-					$options[$rec['uid']] = $rec['uid'].': '.$rec['title'];
+		if (t3lib_extMgm::isLoaded('workspaces')) {
+			$workspaces = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,title,adminusers,members,reviewers,db_mountpoints','sys_workspace','pid=0'.t3lib_BEfunc::deleteClause('sys_workspace'),'','title');
+			if (count($workspaces))	{
+				foreach ($workspaces as $rec)	{
+					if ($this->checkWorkspace($rec))	{
+						$options[$rec['uid']] = $rec['uid'].': '.htmlspecialchars($rec['title']);
 
-						// Check if all mount points are accessible, otherwise show error:
-					if (trim($rec['db_mountpoints'])!=='')	{
-						$mountPoints = t3lib_div::intExplode(',',$this->workspaceRec['db_mountpoints'],1);
-						foreach ($mountPoints as $mpId)	{
-							if (!$this->isInWebMount($mpId,'1=1'))	{
-								$options[$rec['uid']].= '<br> \- ' . $GLOBALS['LANG']->getLL('notAccessible', true) . ' ' . $mpId;
+							// Check if all mount points are accessible, otherwise show error:
+						if (trim($rec['db_mountpoints'])!=='')	{
+							$mountPoints = t3lib_div::intExplode(',',$this->workspaceRec['db_mountpoints'],1);
+							foreach ($mountPoints as $mpId)	{
+								if (!$this->isInWebMount($mpId,'1=1'))	{
+									$options[$rec['uid']].= '<br> \- ' . $GLOBALS['LANG']->getLL('notAccessible', true) . ' ' . $mpId;
+								}
 							}
 						}
 					}
@@ -1083,7 +1090,7 @@ class local_beUserAuth extends t3lib_beUserAuth {
 /**
  * Main script class
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -1184,10 +1191,12 @@ class SC_mod_tools_be_user_index {
 		$markers['CONTENT'] = $this->content;
 
 			// Build the <body> for the module
-		$this->content = $this->doc->startPage('Backend User Administration');
-		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
-		$this->content.= $this->doc->endPage();
-		$this->content = $this->doc->insertStylesAndJS($this->content);
+		$this->content = $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+			// Renders the module page
+		$this->content = $this->doc->render(
+			'Backend User Administration',
+			$this->content
+		);
 	}
 
 	/**
@@ -1295,7 +1304,7 @@ class SC_mod_tools_be_user_index {
 
 			$email = htmlspecialchars($tempBE_USER->user['email']);
 			$realname = htmlspecialchars($tempBE_USER->user['realName']);
-			$outTable = '<table border="0" cellpadding="1" cellspacing="1"><tr class="bgColor5"><td>'.t3lib_iconWorks::getIconImage('be_users',$tempBE_USER->user,$GLOBALS['BACK_PATH'],'class="absmiddle" title="'.$tempBE_USER->user['uid'].'"').htmlspecialchars($tempBE_USER->user['username']).'</td>';
+			$outTable = '<table border="0" cellpadding="1" cellspacing="1"><tr class="bgColor5"><td>'.t3lib_iconWorks::getSpriteIconForRecord('be_users',$tempBE_USER->user,array('title'=>$tempBE_USER->user['uid'])).htmlspecialchars($tempBE_USER->user['username']).'</td>';
 			$outTable.= '<td>'.($realname?$realname.', ':'').($email ? '<a href="mailto:'.$email.'">'.$email.'</a>' : '').'</td>';
 			$outTable.= '<td>'.$this->elementLinks('be_users',$tempBE_USER->user).'</td></tr></table>';
 			$outTable.= '<strong><a href="'.htmlspecialchars($this->MCONF['_']).'">' . $GLOBALS['LANG']->getLL('backToOverview', true) . '</a></strong><br />';
@@ -1375,15 +1384,15 @@ class SC_mod_tools_be_user_index {
 				// Header:
 			$allCells = array();
 
-			$link_createNewUser='<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick('&edit[be_users][0]=new',$this->doc->backPath,-1)).'">'.
-				'<img' . t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/new_el.gif') . ' title="' . $GLOBALS['LANG']->getLL('newUser', true) . '" alt="" />'.
+			$link_createNewUser='<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick('&edit[be_users][0]=new',$this->doc->backPath,-1)).'" title="' . $GLOBALS['LANG']->getLL('newUser', true) . '">'.
+					t3lib_iconWorks::getSpriteIcon('actions-document-new') .
 				'</a>';
 
-			$allCells['USERS'] = '<table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td><b>' . $GLOBALS['LANG']->getLL('usernames', TRUE) . '</b></td><td width="12">' . $link_createNewUser . '</td></tr></table>';
+			$allCells['USERS'] = '<table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td><strong>' . $GLOBALS['LANG']->getLL('usernames', TRUE) . '</strong></td><td width="12">' . $link_createNewUser . '</td></tr></table>';
 
 			foreach ($options as $kk => $vv) {
 				if ($compareFlags[$kk])	{
-					$allCells[$kk] = '<b>'.$vv.':</b>';
+					$allCells[$kk] = '<strong>'.$vv.':</strong>';
 				}
 			}
 			$allGroups[]=$allCells;
@@ -1395,12 +1404,16 @@ class SC_mod_tools_be_user_index {
 				$uListArr=array();
 
 				foreach ($dat['users'] as $uDat) {
-					$uItem = '<tr><td width="130">' . t3lib_iconWorks::getIconImage('be_users',$uDat,$GLOBALS['BACK_PATH'],'align="top" title="' . $uDat['uid'] . '"') . $this->linkUser($uDat['username'],$uDat) . '&nbsp;&nbsp;</td><td nowrap="nowrap">' . $this->elementLinks('be_users',$uDat);
+					$uItem = '<tr><td width="130">' . t3lib_iconWorks::getSpriteIconForRecord('be_users',$uDat,array('title'=> $uDat['uid'] )) . $this->linkUser($uDat['username'],$uDat) . '&nbsp;&nbsp;</td><td nowrap="nowrap">' . $this->elementLinks('be_users',$uDat);
 					if ($curUid != $uDat['uid'] && !$uDat['disable'] && ($uDat['starttime'] == 0 ||
 						$uDat['starttime'] < $GLOBALS['EXEC_TIME']) && ($uDat['endtime'] == 0 ||
 						$uDat['endtime'] > $GLOBALS['EXEC_TIME'])) {
-						$uItem .= '<a href="' . t3lib_div::linkThisScript(array('SwitchUser'=>$uDat['uid'])) . '" target="_top"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/su.gif') . ' border="0" align="top" title="' . htmlspecialchars($GLOBALS['LANG']->getLL('switchUserTo', true) . ' ' . $uDat['username']) . ' ' . $GLOBALS['LANG']->getLL('changeToMode', true) . '" alt="" /></a>'.
-							'<a href="' . t3lib_div::linkThisScript(array('SwitchUser'=>$uDat['uid'], 'switchBackUser' => 1)) . '" target="_top"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/su_back.gif') . ' border="0" align="top" title="' . htmlspecialchars($GLOBALS['LANG']->getLL('switchUserTo', true) . ' ' . $uDat['username']) . ' ' . $GLOBALS['LANG']->getLL('switchBackMode', true) . '" alt="" /></a>';
+						$uItem .= '<a href="' . t3lib_div::linkThisScript(array('SwitchUser'=>$uDat['uid'])) . '" target="_top" title="' . htmlspecialchars($GLOBALS['LANG']->getLL('switchUserTo', true) . ' ' . $uDat['username']) . ' ' . $GLOBALS['LANG']->getLL('changeToMode', TRUE) . '">' .
+								t3lib_iconWorks::getSpriteIcon('actions-system-backend-user-switch') .
+							'</a>'.
+							'<a href="' . t3lib_div::linkThisScript(array('SwitchUser'=>$uDat['uid'], 'switchBackUser' => 1)) . '" target="_top" title="' . htmlspecialchars($GLOBALS['LANG']->getLL('switchUserTo', true) . ' ' . $uDat['username']) . ' ' . $GLOBALS['LANG']->getLL('switchBackMode', TRUE) . '">' .
+								t3lib_iconWorks::getSpriteIcon('actions-system-backend-user-emulate') .
+							'</a>';
 					}
 					$uItem .= '</td></tr>';
 					$uListArr[] = $uItem;
@@ -1424,7 +1437,7 @@ class SC_mod_tools_be_user_index {
 				$TDparams=' nowrap="nowrap" class="'.($i++ % 2 == 0 ? 'bgColor4' : 'bgColor6').'" valign="top"';
 			}
 			$outTable='<table border="0" cellpadding="2" cellspacing="2">' . $outTable . '</table>';
-			$outTable.=fw('<br /><br />' . $GLOBALS['LANG']->getLL('cachedGrouplistsUpdated', true) . '');
+			$outTable .= '<br /><br />' . $GLOBALS['LANG']->getLL('cachedGrouplistsUpdated', true);
 			$outTable.=$tooManyUsers?'<br /><br /><strong><span class="typo3-red">' . $tooManyUsers . '</span></strong>':'';
 			$content.= $this->doc->spacer(10);
 			$content.= $this->doc->section($GLOBALS['LANG']->getLL('result', true),$outTable,0,1);
@@ -1454,25 +1467,35 @@ class SC_mod_tools_be_user_index {
 	 */
 	function elementLinks($table,$row)	{
 			// Info:
-		$cells[]='<a href="#" onclick="top.launchView(\'' . $table . '\', \'' . $row['uid'] . '\',\'' . $GLOBALS['BACK_PATH'] . '\'); return false;"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/zoom2.gif') . ' border="0" align="top" title="' . $GLOBALS['LANG']->getLL('showInformation', true) . '" alt="" /></a>';
+		$cells[]='<a href="#" onclick="top.launchView(\'' . $table . '\', \'' . $row['uid'] . '\',\'' . $GLOBALS['BACK_PATH'] . '\'); return false;" title="' . $GLOBALS['LANG']->getLL('showInformation', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-document-info') .
+			'</a>';
 
 			// Edit:
 		$params='&edit[' . $table . '][' . $row['uid'] . ']=edit';
-		$cells[]='<a href="#" onclick="' . t3lib_BEfunc::editOnClick($params,$GLOBALS['BACK_PATH'],'') . '"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/edit2.gif') . ' border="0" align="top" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:edit', true) . '" alt="" /></a>';
+		$cells[]='<a href="#" onclick="' . t3lib_BEfunc::editOnClick($params,$GLOBALS['BACK_PATH'],'') . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:edit', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-document-open') .
+			'</a>';
 
 			// Hide:
 		$hiddenField = $GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'];
 		if ($row[$hiddenField])	{
 			$params='&data[' . $table . '][' . $row['uid'] . '][' . $hiddenField . ']=0';
-			$cells[]='<a href="' . $this->doc->issueCommand($params) . '"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/button_unhide.gif') . ' border="0" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:enable', true) . '" align="top" alt="" /></a>';
+			$cells[]='<a href="' . $this->doc->issueCommand($params) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:enable', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-edit-unhide') .
+			'</a>';
 		} else {
 			$params='&data[' . $table . '][' . $row['uid'] . '][' . $hiddenField . ']=1';
-			$cells[]='<a href="' . $this->doc->issueCommand($params) . '"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/button_hide.gif') . ' border="0" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:disable', true) . '" align="top" alt="" /></a>';
+			$cells[]='<a href="' . $this->doc->issueCommand($params) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:disable', true) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-edit-hide') .
+			'</a>';
 		}
 
 			// Delete
 		$params='&cmd[' . $table . '][' . $row['uid'] . '][delete]=1';
-		$cells[]='<a href="' . $this->doc->issueCommand($params) . '" onclick="return confirm(unescape(\'' . $GLOBALS['LANG']->getLL('sureToDelete', true) . '\'));"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/garbage.gif') . ' border="0" align="top" title="' . $GLOBALS['LANG']->getLL('delete', TRUE) . '" alt="" /></a>';
+		$cells[]='<a href="' . $this->doc->issueCommand($params) . '" onclick="return confirm(unescape(\'' . $GLOBALS['LANG']->getLL('sureToDelete', TRUE) . '\'));" title="' . $GLOBALS['LANG']->getLL('delete', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-edit-delete') .
+			'</a>';
 
 		return implode('',$cells);
 	}
@@ -1578,7 +1601,7 @@ class SC_mod_tools_be_user_index {
 							'<span'.$hostName.'>'.$ip.'</span>' .
 						'</td>' .
 						'<td width="130">' .
-							t3lib_iconWorks::getIconImage('be_users',$session,$GLOBALS['BACK_PATH'],'align="top" title="'.$session['uid'].'"').htmlspecialchars($session['username']).'&nbsp;' .
+							t3lib_iconWorks::getSpriteIconForRecord('be_users',$session,array('title'=>$session['uid'])).htmlspecialchars($session['username']).'&nbsp;' .
 						'</td>' .
 						'<td nowrap="nowrap">'.htmlspecialchars($session['realName']).'&nbsp;&nbsp;</td>' .
 						'<td nowrap="nowrap">'.$this->elementLinks('be_users',$session).'</td>' .
@@ -1589,12 +1612,12 @@ class SC_mod_tools_be_user_index {
 		}
 			// Wrap <table> tag around the rows:
 		$outTable = '
-		<table border="0" cellpadding="2" cellspacing="2">
-			<tr class="bgColor5">
-				<td valign="top"><b>' . $GLOBALS['LANG']->getLL('timestamp', true) . '</b></td>
-				<td valign="top"><b>' . $GLOBALS['LANG']->getLL('host', true) . '</b></td>
-				<td valign="top" colspan="5"><b>' . $GLOBALS['LANG']->getLL('username', true) . '</b></td>
-			</tr>'.$outTable.'
+		<table border="0" cellpadding="0" cellspacing="0" class="typo3-dblist">
+			<tr class="t3-row-header">
+				<td>' . $GLOBALS['LANG']->getLL('timestamp', true) . '</td>
+				<td>' . $GLOBALS['LANG']->getLL('host', true) . '</td>
+				<td colspan="5">' . $GLOBALS['LANG']->getLL('username', true) . '</td>
+			</tr>' . $outTable . '
 		</table>';
 
 		$content.= $this->doc->section($GLOBALS['LANG']->getLL('whoIsOnline', true),$outTable,0,1);
@@ -1604,8 +1627,8 @@ class SC_mod_tools_be_user_index {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/beuser/mod/index.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/beuser/mod/index.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/beuser/mod/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/beuser/mod/index.php']);
 }
 
 

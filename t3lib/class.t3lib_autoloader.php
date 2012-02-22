@@ -1,38 +1,38 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2008-2009 Dmitry Dulepov <dmitry@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*  A copy is found in the textfile GPL.txt and important notices to the license
-*  from the author is found in LICENSE.txt distributed with these scripts.
-*
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2008-2011 Dmitry Dulepov <dmitry@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * Contains TYPO3 autoloader
  *
- * $Id: class.t3lib_autoloader.php 8802 2010-09-17 18:13:35Z stephenking $
+ * $Id$
  *
  * @author	Dmitry Dulepov	<dmitry@typo3.org>
  * @author	Martin Kutschker <masi@typo3.org>
  * @author	Oliver Hader <oliver@typo3.org>
- * @author	Sebastian Kurfuerst <sebastian@typo3.org>
+ * @author	Sebastian Kurfürst <sebastian@typo3.org>
  */
 
 /**
@@ -55,7 +55,7 @@ class t3lib_autoloader {
 	 *
 	 * Key: extension key
 	 * Value: TRUE, if extension has an ext_autoload.php and this is already part of $classNameToFileMapping
-	 *        FALSE, if extension has no ext_autoload.php
+	 *		  FALSE, if extension has no ext_autoload.php
 	 *
 	 * @var array
 	 */
@@ -107,8 +107,8 @@ class t3lib_autoloader {
 			t3lib_div::requireFile($classPath);
 		} else {
 			try {
-				// Regular expression for a valid classname taken from
-				// http://www.php.net/manual/en/language.oop5.basic.php
+					// Regular expression for a valid classname taken from
+					// http://www.php.net/manual/en/language.oop5.basic.php
 				if (preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $className)) {
 					spl_autoload($className);
 				}
@@ -159,7 +159,7 @@ class t3lib_autoloader {
 		$extensionKey = t3lib_extMgm::getExtensionKeyByPrefix($extensionPrefix);
 
 		if (!$extensionKey || array_key_exists($extensionKey, self::$extensionHasAutoloadConfiguration)) {
-			// extension key could not be determined or we already tried to load the extension's autoload configuration
+				// extension key could not be determined or we already tried to load the extension's autoload configuration
 			return;
 		}
 		$possibleAutoloadConfigurationFileName = t3lib_extMgm::extPath($extensionKey) . 'ext_autoload.php';
@@ -172,10 +172,4 @@ class t3lib_autoloader {
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_autoload.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_autoload.php']);
-}
-
 ?>

@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage MVC\Exception
- * @version $Id: InvalidOrNoRequestHash.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 class Tx_Extbase_MVC_Exception_InvalidOrNoRequestHash extends Tx_Extbase_MVC_Exception {
 

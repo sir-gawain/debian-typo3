@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2010 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * This class is a search indexer for TYPO3
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * Originally Christian Jul Jensen <christian@jul.net> helped as well.
  */
 /**
@@ -129,7 +129,7 @@
 /**
  * Indexing class for TYPO3 frontend
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_indexedsearch
  */
@@ -946,7 +946,7 @@ class tx_indexedsearch_indexer {
 
 		if (strlen($content))	{
 				// Compile headers:
-			$headers = t3lib_div::trimExplode(chr(10),$content,1);
+			$headers = t3lib_div::trimExplode(LF,$content,1);
 			$retVal = array();
 			foreach($headers as $line)	{
 				if (!strlen(trim($line)))	{
@@ -1304,8 +1304,7 @@ class tx_indexedsearch_indexer {
 	function charsetEntity2utf8(&$contentArr, $charset)	{
 
 			// Convert charset if necessary
-		reset($contentArr);
-		while(list($key,)=each($contentArr)) {
+		foreach ($contentArr as $key => $value) {
 			if (strlen($contentArr[$key]))	{
 
 				if ($charset!=='utf-8')	{
@@ -1327,8 +1326,7 @@ class tx_indexedsearch_indexer {
 	function processWordsInArrays($contentArr)	{
 
 			// split all parts to words
-		reset($contentArr);
-		while(list($key,)=each($contentArr)) {
+		foreach ($contentArr as $key => $value) {
 			$contentArr[$key] = $this->lexerObj->split2Words($contentArr[$key]);
 		}
 
@@ -1347,7 +1345,7 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @param	array		Array of content to index, see splitHTMLContent() and splitRegularContent()
 	 * @return	array		Content input array modified so each key is not a unique array of words
-	 * @deprecated since TYPO3 4.0, this function will be removed in TYPO3 4.5.
+	 * @deprecated since TYPO3 4.0, this function will be removed in TYPO3 4.6.
 	 */
 	function procesWordsInArrays($contentArr)	{
 		t3lib_div::logDeprecatedFunction();
@@ -1368,7 +1366,7 @@ class tx_indexedsearch_indexer {
 		if ($maxL)	{
 				// Takes the quadruple lenght first, because whitespace and entities may be removed and thus shorten the string more yet.
 	#		$bodyDescription = implode(' ',split('[[:space:],]+',substr(trim($contentArr['body']),0,$maxL*4)));
-			$bodyDescription = str_replace(array(' ',"\t","\r","\n"),' ',$contentArr['body']);
+			$bodyDescription = str_replace(array(' ',TAB,CR,LF),' ',$contentArr['body']);
 
 				// Shorten the string:
 			$bodyDescription = $this->csObj->strtrunc('utf-8', $bodyDescription, $maxL);
@@ -1405,8 +1403,7 @@ class tx_indexedsearch_indexer {
 	 * @return	void
 	 */
 	function analyzeHeaderinfo(&$retArr,$content,$key,$offset) {
-		reset($content[$key]);
-		while(list(,$val)=each($content[$key]))  {
+		foreach ($content[$key] as $val) {
 			$val = substr($val,0,60);	// Max 60 - because the baseword varchar IS 60. This MUST be the same.
 			$retArr[$val]['cmp'] = $retArr[$val]['cmp']|pow(2,$offset);
 			$retArr[$val]['count'] = $retArr[$val]['count']+1;
@@ -1996,9 +1993,8 @@ class tx_indexedsearch_indexer {
 	 * @return	void
 	 */
 	function checkWordList($wl) {
-		reset($wl);
 		$phashArr = array();
-		while(list($key,) = each($wl)) {
+		foreach ($wl as $key => $value) {
 			$phashArr[] = $wl[$key]['hash'];
 		}
 		if (count($phashArr))	{
@@ -2011,8 +2007,7 @@ class tx_indexedsearch_indexer {
 					unset($wl[$row['baseword']]);
 				}
 
-				reset($wl);
-				while(list($key,$val)=each($wl)) {
+				foreach ($wl as $key => $val) {
 					$insertFields = array(
 						'wid' => $val['hash'],
 						'baseword' => $key,
@@ -2148,7 +2143,7 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @param	array		Array of GET parameters to encode
 	 * @return	void
-	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, use directly t3lib_div::calculateCHash()
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.6, use directly t3lib_div::calculateCHash()
 	 */
 	function makeCHash($paramArray)	{
 		t3lib_div::logDeprecatedFunction();
@@ -2228,7 +2223,7 @@ class tx_indexedsearch_indexer {
 	 * @param	array		Parameters from frontend
 	 * @param	object		TSFE object (reference under PHP5)
 	 * @return	void
-	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, the method was extracted to hooks/class.tx_indexedsearch_tslib_fe_hook.php
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.6, the method was extracted to hooks/class.tx_indexedsearch_tslib_fe_hook.php
 	 */
 	function fe_headerNoCache(&$params, $ref)	{
 		t3lib_div::logDeprecatedFunction();
@@ -2252,7 +2247,7 @@ class tx_indexedsearch_indexer {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.indexer.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.indexer.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.indexer.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.indexer.php']);
 }
 ?>

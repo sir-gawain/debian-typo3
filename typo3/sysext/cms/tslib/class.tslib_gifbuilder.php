@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,10 +28,10 @@
  * Generating gif/png-files from TypoScript
  * Used by the menu-objects and imgResource in TypoScript.
  *
- * $Id: class.tslib_gifbuilder.php 5424 2009-05-15 23:12:32Z k-fish $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -94,10 +94,9 @@
  * }
  * return $gifCreator->getImageDimensions($theImage);
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=377&cHash=e00ac666f3
  */
 class tslib_gifBuilder extends t3lib_stdGraphic {
 
@@ -131,6 +130,8 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 		if (is_array($conf))	{
 			$this->setup = $conf;
 			$this->data = $data;
+			$this->cObj =t3lib_div::makeInstance('tslib_cObj');
+			$this->cObj->start($this->data);
 
 
 			/* Hook preprocess gifbuilder conf
@@ -170,25 +171,34 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 
 				// Setting the background color, passing it through stdWrap
 			if ($conf['backColor.'] || $conf['backColor'])	{
-				$cObj =t3lib_div::makeInstance('tslib_cObj');
-				$cObj->start($this->data);
-				$this->setup['backColor'] = trim($cObj->stdWrap($this->setup['backColor'], $this->setup['backColor.']));
+				$this->setup['backColor'] = isset($this->setup['backColor.'])
+					? trim($this->cObj->stdWrap($this->setup['backColor'], $this->setup['backColor.']))
+					: $this->setup['backColor'];
 			}
 			if (!$this->setup['backColor'])	{ $this->setup['backColor']='white'; }
 
 			if ($conf['transparentColor.'] || $conf['transparentColor'])	{
-				$cObj =t3lib_div::makeInstance('tslib_cObj');
-				$cObj->start($this->data);
-				$this->setup['transparentColor_array'] = explode('|', trim($cObj->stdWrap($this->setup['transparentColor'], $this->setup['transparentColor.'])));
+				$this->setup['transparentColor_array'] = isset($this->setup['transparentColor.'])
+					? explode('|', trim($this->cObj->stdWrap($this->setup['transparentColor'], $this->setup['transparentColor.'])))
+					: explode('|', trim($this->setup['transparentColor']));
 			}
 
  				// Transparency does not properly work when, GIFs or 8-bit PNGs are generated or reduceColors is set -- disable truecolor flag so they get generated "natively" in 8-bit.
  				// not working with reduceColors and truecolor images
- 			if (($this->setup['transparentBackground'] || is_array($this->setup['transparentColor_array'])) && ($this->gifExtension=='gif' || !$this->png_truecolor || isset($this->setup['reduceColors'])))	{
+			if(isset($this->setup['transparentBackground.'])) {
+				$this->setup['transparentBackground'] = $this->cObj->stdWrap($this->setup['transparentBackground'], $this->setup['transparentBackground.']);
+			}
+			if(isset($this->setup['reduceColors.'])) {
+				$this->setup['reduceColors'] = $this->cObj->stdWrap($this->setup['reduceColors'], $this->setup['reduceColors.']);
+			}
+ 			if (($this->setup['transparentBackground'] || is_array($this->setup['transparentColor_array'])) && ($this->gifExtension=='gif' || !$this->png_truecolor || $this->setup['reduceColors']))	{
  				$this->truecolor = false;
  			}
 
 				// Set default dimensions
+			if (isset($this->setup['XY.'])) {
+				$this->setup['XY'] = $this->cObj->stdWrap($this->setup['XY'], $this->setup['XY.']);
+			}
 			if (!$this->setup['XY'])	{$this->setup['XY']='120,50';}
 
 
@@ -204,7 +214,10 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 							if ($this->setup[$theKey.'.'] = $this->checkTextObj($conf))	{
 
 									// Adjust font width if max size is set:
-								if ($this->setup[$theKey.'.']['maxWidth'])	{
+								$maxWidth = isset($this->setup[$theKey.'.']['maxWidth.'])
+									? $this->cObj->stdWrap($this->setup[$theKey.'.']['maxWidth'], $this->setup[$theKey.'.']['maxWidth.'])
+									: $this->setup[$theKey.'.']['maxWidth'];
+								if ($maxWidth)	{
 									$this->setup[$theKey.'.']['fontSize'] = $this->fontResize($this->setup[$theKey.'.']); //RTF - this has to be done before calcBBox
 								}
 
@@ -250,7 +263,15 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 
 				// Calculate offsets on elements
 			$this->setup['XY'] = $this->calcOffset($this->setup['XY']);
+
+			if(isset($this->setup['offset.'])) {
+				$this->setup['offset'] = $this->cObj->stdWrap($this->setup['offset'], $this->setup['offset.']);
+			}
 			$this->setup['offset'] = $this->calcOffset($this->setup['offset']);
+
+			if(isset($this->setup['workArea.'])) {
+				$this->setup['workArea'] = $this->cObj->stdWrap($this->setup['workArea'], $this->setup['workArea.']);
+			}
 			$this->setup['workArea'] = $this->calcOffset($this->setup['workArea']);
 
 			foreach ($sKeyArray as $theKey) {
@@ -260,28 +281,47 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 					switch($theValue)	{
 						case 'TEXT':
 						case 'IMAGE':
+							if(isset($this->setup[$theKey.'.']['offset.'])) {
+								$this->setup[$theKey.'.']['offset'] = $this->cObj->stdWrap($this->setup[$theKey.'.']['offset'], $this->setup[$theKey.'.']['offset.']);
+							}
 							if ($this->setup[$theKey.'.']['offset'])	{
 								$this->setup[$theKey.'.']['offset'] = $this->calcOffset($this->setup[$theKey.'.']['offset']);
 							}
 						break;
 						case 'BOX':
+						case 'ELLIPSE':
+							if(isset($this->setup[$theKey.'.']['dimensions.'])) {
+								$this->setup[$theKey.'.']['dimensions'] = $this->cObj->stdWrap($this->setup[$theKey.'.']['dimensions'], $this->setup[$theKey.'.']['dimensions.']);
+							}
 							if ($this->setup[$theKey.'.']['dimensions'])	{
 								$this->setup[$theKey.'.']['dimensions'] = $this->calcOffset($this->setup[$theKey.'.']['dimensions']);
 							}
 						break;
 						case 'WORKAREA':
+							if(isset($this->setup[$theKey.'.']['set.'])) {
+								$this->setup[$theKey.'.']['set'] = $this->cObj->stdWrap($this->setup[$theKey.'.']['set'], $this->setup[$theKey.'.']['set.']);
+							}
 							if ($this->setup[$theKey.'.']['set'])	{
 								$this->setup[$theKey.'.']['set'] = $this->calcOffset($this->setup[$theKey.'.']['set']);
 							}
 						break;
 						case 'CROP':
+							if(isset($this->setup[$theKey.'.']['crop.'])) {
+								$this->setup[$theKey.'.']['crop'] = $this->cObj->stdWrap($this->setup[$theKey.'.']['crop'], $this->setup[$theKey.'.']['crop.']);
+							}
 							if ($this->setup[$theKey.'.']['crop'])	{
 								$this->setup[$theKey.'.']['crop'] = $this->calcOffset($this->setup[$theKey.'.']['crop']);
 							}
 						break;
 						case 'SCALE':
+							if(isset($this->setup[$theKey.'.']['width.'])) {
+								$this->setup[$theKey.'.']['width'] = $this->cObj->stdWrap($this->setup[$theKey.'.']['width'], $this->setup[$theKey.'.']['width.']);
+							}
 							if ($this->setup[$theKey.'.']['width'])	{
 								$this->setup[$theKey.'.']['width'] = $this->calcOffset($this->setup[$theKey.'.']['width']);
+							}
+							if(isset($this->setup[$theKey.'.']['height.'])) {
+								$this->setup[$theKey.'.']['height'] = $this->cObj->stdWrap($this->setup[$theKey.'.']['height'], $this->setup[$theKey.'.']['height.']);
 							}
 							if ($this->setup[$theKey.'.']['height'])	{
 								$this->setup[$theKey.'.']['height'] = $this->calcOffset($this->setup[$theKey.'.']['height']);
@@ -292,8 +332,12 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 			}
 				// Get trivial data
 			$XY = t3lib_div::intExplode(',',$this->setup['XY']);
-			$maxWidth = intval($this->setup['maxWidth']);
-			$maxHeight = intval($this->setup['maxHeight']);
+			$maxWidth = isset($this->setup['maxWidth.'])
+				? intval($this->cObj->stdWrap($this->setup['maxWidth'], $this->setup['maxWidth.']))
+				: intval($this->setup['maxWidth']);
+			$maxHeight = isset($this->setup['maxHeight.'])
+				? intval($this->cObj->stdWrap($this->setup['maxHeight'], $this->setup['maxHeight.']))
+				: intval($this->setup['maxHeight']);
 
 			$XY[0] = t3lib_div::intInRange($XY[0],1, $maxWidth?$maxWidth:2000);
 			$XY[1] = t3lib_div::intInRange($XY[1],1, $maxHeight?$maxHeight:2000);
@@ -341,14 +385,13 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 	 * @return	void
 	 * @access private
 	 * @see gifBuild()
-	 * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=378&cHash=3c2ae4a1ab
 	 */
 	function make()	{
 			// Get trivial data
 		$XY = $this->XY;
 
 			// Gif-start
-		$this->im = $this->imagecreate($XY[0],$XY[1]);
+		$this->im = imagecreatetruecolor($XY[0], $XY[1]);
 		$this->w = $XY[0];
 		$this->h = $XY[1];
 
@@ -362,8 +405,15 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 			$sKeyArray=t3lib_TStemplate::sortedKeyList($this->setup);
 			foreach($sKeyArray as $theKey)	{
 				$theValue=$this->setup[$theKey];
-
 				if (intval($theKey) && $conf=$this->setup[$theKey.'.'])	{
+					$isStdWrapped = array();
+					foreach($conf as $key => $value) {
+						$parameter = rtrim($key,'.');
+						if(!$isStdWrapped[$parameter] && isset($conf[$parameter.'.'])) {
+							$conf[$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter.'.']);
+							$isStdWrapped[$parameter] = 1;
+						}
+					}
 					switch($theValue)	{
 							// Images
 						case 'IMAGE':
@@ -378,12 +428,36 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 						case 'TEXT':
 							if (!$conf['hide'])	{
 								if (is_array($conf['shadow.']))	{
+									$isStdWrapped = array();
+									foreach($conf['shadow.'] as $key => $value) {
+										$parameter = rtrim($key,'.');
+										if(!$isStdWrapped[$parameter] && isset($conf[$parameter.'.'])) {
+											$conf['shadow.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter.'.']);
+											$isStdWrapped[$parameter] = 1;
+										}
+									}
 									$this->makeShadow($this->im,$conf['shadow.'],$this->workArea,$conf);
 								}
 								if (is_array($conf['emboss.']))	{
+									$isStdWrapped = array();
+									foreach($conf['emboss.'] as $key => $value) {
+										$parameter = rtrim($key,'.');
+										if(!$isStdWrapped[$parameter] && isset($conf[$parameter.'.'])) {
+											$conf['emboss.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter.'.']);
+											$isStdWrapped[$parameter] = 1;
+										}
+									}
 									$this->makeEmboss($this->im,$conf['emboss.'],$this->workArea,$conf);
 								}
 								if (is_array($conf['outline.']))	{
+									$isStdWrapped = array();
+									foreach($conf['outline.'] as $key => $value) {
+										$parameter = rtrim($key,'.');
+										if(!$isStdWrapped[$parameter] && isset($conf[$parameter.'.'])) {
+											$conf['outline.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter.'.']);
+											$isStdWrapped[$parameter] = 1;
+										}
+									}
 									$this->makeOutline($this->im,$conf['outline.'],$this->workArea,$conf);
 								}
 								$conf['imgMap']=1;
@@ -432,6 +506,9 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 								$this->workArea = $this->defaultWorkArea;	// this sets the current to the default;
 							}
 						break;
+						case 'ELLIPSE':
+							$this->makeEllipse($this->im, $conf, $this->workArea);
+						break;
 					}
 				}
 			}
@@ -440,7 +517,7 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 
 		if ($this->setup['transparentBackground'])	{
 				// Auto transparent background is set
-			$Bcolor = ImageColorExact($this->im, $BGcols[0],$BGcols[1],$BGcols[2]);
+			$Bcolor = ImageColorClosest($this->im, $BGcols[0], $BGcols[1], $BGcols[2]);
 			imagecolortransparent($this->im, $Bcolor);
 		} elseif (is_array($this->setup['transparentColor_array']))	{
 				// Multiple transparent colors are set. This is done via the trick that all transparent colors get converted to one color and then this one gets set as transparent as png/gif can just have one transparent color.
@@ -488,6 +565,17 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 	 * @access private
 	 */
 	function checkTextObj($conf)	{
+		$cObj = t3lib_div::makeInstance('tslib_cObj');
+		$cObj->start($this->data);
+
+		$isStdWrapped = array();
+		foreach($conf as $key => $value) {
+			$parameter = rtrim($key,'.');
+			if(!$isStdWrapped[$parameter] && isset($conf[$parameter.'.'])) {
+				$conf[$parameter] = $cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
+				$isStdWrapped[$parameter] = 1;
+			}
+		}
 		$conf['fontFile']=$this->checkFile($conf['fontFile']);
 		if (!$conf['fontFile']){$conf['fontFile']='t3lib/fonts/nimbus.ttf';}
 		if (!$conf['iterations']){$conf['iterations'] = 1;}
@@ -496,11 +584,8 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 			$conf['angle']=0;
 		}
 		if (!isset($conf['antiAlias'])){$conf['antiAlias']=1;}
-		$cObj =t3lib_div::makeInstance('tslib_cObj');
-		$cObj->start($this->data);
 
-		$conf['fontColor'] = trim($cObj->stdWrap($conf['fontColor'], $conf['fontColor.']));
-		$conf['text']=$cObj->stdWrap($conf['text'],$conf['text.']);
+		$conf['fontColor'] = trim($conf['fontColor']);
 			// Strip HTML
 		if (!$conf['doNotStripHTML'])	{
 			$conf['text'] = strip_tags($conf['text']);
@@ -510,7 +595,11 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 			// Max length = 100 if automatic line braks are not defined:
 		if (!isset($conf['breakWidth']) || !$conf['breakWidth']) {
 			$tlen = (intval($conf['textMaxLength']) ? intval($conf['textMaxLength']) : 100);
-			$conf['text'] = substr($conf['text'], 0, $tlen);
+			if ($this->nativeCharset) {
+				$conf['text'] = $this->csConvObj->substr($this->nativeCharset, $conf['text'], 0, $tlen);
+			} else {
+				$conf['text'] = substr($conf['text'], 0 , $tlen);
+			}
 		}
 		if ((string)$conf['text']!='')	{
 
@@ -593,8 +682,6 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 	 * @return	array		Returns an array with file information if an image was returned. Otherwise false.
 	 * @access private
 	 * @see tslib_cObj::getImgResource()
-	 * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=315&cHash=63b593a934
-	 * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=282&cHash=831a95115d
 	 */
 	function getResource($file,$fileArray)	{
 		if (!t3lib_div::inList($this->imageFileExt, $fileArray['ext']))	{
@@ -620,18 +707,37 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 	/**
 	 * Calculates the GIFBUILDER output filename/path based on a serialized, hashed value of this->setup
 	 *
-	 * @param	string		Filename prefix, eg. "GB_"
-	 * @return	string		The relative filepath (relative to PATH_site)
+	 * @param $pre string Filename prefix, eg. "GB_"
+	 * @return string The relative filepath (relative to PATH_site)
 	 * @access private
 	 */
 	function fileName($pre)	{
 
+		$meaningfulPrefix = '';
+
+		if ($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']) {
+			/** @var $basicFileFunctions t3lib_basicFileFunctions */
+			$basicFileFunctions = t3lib_div::makeInstance('t3lib_basicFileFunctions');
+			
+			$meaningfulPrefix = implode('_', array_merge($this->combinedTextStrings, $this->combinedFileNames));
+			$meaningfulPrefix = $basicFileFunctions->cleanFileName($meaningfulPrefix);
+			$meaningfulPrefixLength = intval($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']);
+			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+					/** @var $t3libCsInstance t3lib_cs */
+				$t3libCsInstance = t3lib_div::makeInstance('t3lib_cs');
+				$meaningfulPrefix = $t3libCsInstance->substr('utf-8', $meaningfulPrefix, 0, $meaningfulPrefixLength);
+			} else {
+				$meaningfulPrefix = substr($meaningfulPrefix, 0, $meaningfulPrefixLength);
+			}
+			$meaningfulPrefix .= '_';
+		}
+
 			// WARNING: In PHP5 I discovered that rendering with freetype of Japanese letters was totally corrupt. Not only the wrong glyphs are printed but also some memory stack overflow resulted in strange additional chars - and finally the reason for this investigation: The Bounding box data was changing all the time resulting in new images being generated all the time. With PHP4 it works fine.
-		return $this->tempPath.
-				$pre.
-				($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix'] ? $GLOBALS['TSFE']->fileNameASCIIPrefix(implode('_',array_merge($this->combinedTextStrings,$this->combinedFileNames)),intval($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']),'_') : '').
-				t3lib_div::shortMD5(serialize($this->setup)).
-				'.'.$this->extension();
+		return $this->tempPath .
+				$pre .
+				$meaningfulPrefix .
+				t3lib_div::shortMD5(serialize($this->setup)) .
+				'.' . $this->extension();
 	}
 
 	/**
@@ -747,8 +853,8 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_gifbuilder.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_gifbuilder.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_gifbuilder.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_gifbuilder.php']);
 }
 
 ?>

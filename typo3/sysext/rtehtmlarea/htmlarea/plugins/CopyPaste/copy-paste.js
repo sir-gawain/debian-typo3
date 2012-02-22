@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,142 +27,192 @@
 /*
  * Copy Paste for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: copy-paste.js 7391 2010-04-19 16:01:42Z stan $
+ * TYPO3 SVN ID: $Id$
  */
-CopyPaste = HTMLArea.Plugin.extend({
-		
-	constructor : function(editor, pluginName) {
+HTMLArea.CopyPaste = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
 		this.base(editor, pluginName);
 	},
-	
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin : function (editor) {
-		
+	configurePlugin: function (editor) {
 		/*
 		 * Setting up some properties from PageTSConfig
 		 */
 		this.buttonsConfiguration = this.editorConfiguration.buttons;
-		
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.0",
-			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.sjbr.ca/",
-			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: this.localize("Technische Universitat Ilmenau"),
-			sponsorUrl	: "http://www.tu-ilmenau.de/",
-			license		: "GPL"
+			version		: '2.2',
+			developer	: 'Stanislas Rolland',
+			developerUrl	: 'http://www.sjbr.ca/',
+			copyrightOwner	: 'Stanislas Rolland',
+			sponsor		: this.localize('Technische Universitat Ilmenau'),
+			sponsorUrl	: 'http://www.tu-ilmenau.de/',
+			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		
 		/*
 		 * Registering the buttons
 		 */
-		for (var buttonId in this.buttonList) {
-			if (this.buttonList.hasOwnProperty(buttonId)) {
-				var button = this.buttonList[buttonId];
-				var buttonConfiguration = {
-					id		: buttonId,
-					tooltip		: this.localize(buttonId.toLowerCase()),
-					action		: "onButtonPress",
-					context		: button[0],
-					hotKey		: ((this.buttonsConfiguration[button[2]] && this.buttonsConfiguration[button[2]].hotKey) ? this.buttonsConfiguration[button[2]].hotKey : (button[1] ? button[1] : null))
-				};
-				this.registerButton(buttonConfiguration);
-				if (!this.isButtonInToolbar(buttonId)) {
-					var hotKeyConfiguration = {
-						id	: buttonConfiguration.hotKey,
-						cmd	: buttonConfiguration.id,
-						action	: buttonConfiguration.action
-					};
-					this.registerHotKey(hotKeyConfiguration);
-				}
-			}
-		}
+		Ext.iterate(this.buttonList, function (buttonId, button) {
+			var buttonConfiguration = {
+				id		: buttonId,
+				tooltip		: this.localize(buttonId.toLowerCase()),
+				iconCls		: 'htmlarea-action-' + button[2],
+				action		: 'onButtonPress',
+				context		: button[0],
+				selection	: button[3],
+				hotKey		: button[1]
+			};
+			this.registerButton(buttonConfiguration);
+		}, this);
 		return true;
-	 },
-	 
+	},
 	/*
 	 * The list of buttons added by this plugin
 	 */
-	buttonList : {
-		Copy	: [null, "c", "copy"],
-		Cut	: [null, "x", "cut"],
-		Paste	: [null, "v", "paste"]
+	buttonList: {
+		Copy	: [null, 'c', 'copy', true],
+		Cut	: [null, 'x', 'cut', true],
+		Paste	: [null, 'v', 'paste', false]
 	},
-	
+	/*
+	 * This function gets called when the editor is generated
+	 */
+	onGenerate: function () {
+		this.editor.iframe.mon(Ext.get(Ext.isIE ? this.editor.document.body : this.editor.document.documentElement), 'cut', this.cutHandler, this);
+		Ext.iterate(this.buttonList, function (buttonId, button) {
+				// Remove button from toolbar, if command is not supported
+				// Starting with Safari 5 and Chrome 6, cut and copy commands are not supported anymore by WebKit
+			if (!Ext.isGecko && !this.editor.document.queryCommandSupported(buttonId)) {
+				this.editor.toolbar.remove(buttonId);
+			}
+				// Add hot key handling if the button is not enabled in the toolbar
+			if (!this.getButton(buttonId)) {
+				this.editor.iframe.hotKeyMap.addBinding({
+					key: button[1].toUpperCase(),
+					ctrl: true,
+					shift: false,
+					alt: false,
+					handler: this.onHotKey,
+					scope: this
+				});
+					// Ensure the hot key can be translated
+				this.editorConfiguration.hotKeyList[button[1]] = {
+					id	: button[1],
+					cmd	: buttonId
+				};
+			}
+		}, this);
+	},
 	/*
 	 * This function gets called when a button or a hotkey was pressed.
 	 *
 	 * @param	object		editor: the editor instance
 	 * @param	string		id: the button id or the key
-	 * @param	object		target: the target element of the contextmenu event, when invoked from the context menu
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function (editor, id, target) {
+	onButtonPress: function (editor, id) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		this.editor.focusEditor();
-		if (!this.applyToTable(buttonId, target)) {
+		this.editor.focus();
+		if (!this.applyToTable(buttonId)) {
 				// If we are not handling table cells
 			switch (buttonId) {
-				case "Copy":
-				case "Cut" :
+				case 'Copy':
 					if (buttonId == id) {
 							// If we are handling a button, not a hotkey
 						this.applyBrowserCommand(buttonId);
-					} else if (buttonId == "Cut") {
-							// If we are handling the cut hotkey
-						var removeEmpyLinkLaterFunctRef = this.makeFunctionReference("removeEmptyLinkLater");
-						window.setTimeout(removeEmpyLinkLaterFunctRef, 50);
 					}
 					break;
-				case "Paste":
+				case 'Cut' :
+					if (buttonId == id) {
+							// If we are handling a button, not a hotkey
+						this.applyBrowserCommand(buttonId);
+					}
+						// Opera will not trigger the onCut event
+					if (Ext.isOpera) {
+						this.cutHandler();
+					}
+					break;
+				case 'Paste':
 					if (buttonId == id) {
 							// If we are handling a button, not a hotkey
 						this.applyBrowserCommand(buttonId);
 					}
 						// In FF3, the paste operation will indeed trigger the onPaste event not in FF2; nor in Opera
-					if (HTMLArea.is_opera || (HTMLArea.is_gecko && navigator.productSub < 20080514) || HTMLArea.is_safari) {
-						var cleanLaterFunctRef = this.getPluginInstance("DefaultClean") ? this.getPluginInstance("DefaultClean").cleanLaterFunctRef : (this.getPluginInstance("TYPO3HtmlParser") ? this.getPluginInstance("TYPO3HtmlParser").cleanLaterFunctRef : null);
-						if (cleanLaterFunctRef) {
-							window.setTimeout(cleanLaterFunctRef, 50);
+					if (Ext.isOpera || Ext.isGecko2) {
+						var cleaner = this.getButton('CleanWord');
+						if (cleaner) {
+							cleaner.fireEvent.defer(250, cleaner, ['click', cleaner]);
 						}
 					}
 					break;
 				default:
 					break;
 			}
+				// Stop the event if a button was handled
 			return (buttonId != id);
 		} else {
-				// We handled the table case
+				// The table case was handled, let the event be stopped.
+				// No cleaning required as the pasted cells are copied from the editor.
+				// However paste by Opera cannot be stopped.
+				// Revert Opera's operation as it produces invalid html anyways
+			if (Ext.isOpera) {
+				this.editor.inhibitKeyboardInput = true;
+				var bookmark = this.editor.getBookmark(this.editor._createRange(this.editor._getSelection()));
+				var html = this.editor.getInnerHTML();
+				this.revertPaste.defer(200, this, [html, bookmark]);
+			}
 			return false;
 		}
 	},
-	
-	applyBrowserCommand : function (buttonId) {
+	/*
+	 * This funcion reverts the paste operation (performed by Opera)
+	 */
+	revertPaste: function (html, bookmark) {
+		this.editor.setHTML(html);
+		this.editor.selectRange(this.editor.moveToBookmark(bookmark));
+		this.editor.inhibitKeyboardInput = false;
+	},
+	/*
+	 * This function applies the browser command when a button is pressed
+	 * In the case of hot key, the browser does it automatically
+	 */
+	applyBrowserCommand: function (buttonId) {
 		try {
-			this.editor._doc.execCommand(buttonId, false, null);
+			this.editor.document.execCommand(buttonId, false, null);
 		} catch (e) {
-			if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
+			if (Ext.isGecko) {
 				this.mozillaClipboardAccessException();
 			}
 		}
-		if (buttonId == "Cut") {
-			this.removeEmptyLink();
+	},
+	/*
+	 * Handler for hotkeys configured through the hotKeyMap while button not enabled in toolbar (see onGenerate above)
+	 */
+	onHotKey: function (key, event) {
+		var hotKey = String.fromCharCode(key).toLowerCase();
+			// Stop the event if it was handled here
+		if (!this.onButtonPress(this, hotKey)) {
+			event.stopEvent();
 		}
 	},
-	
+	/*
+	 * This function removes any link left over by the cut operation
+	 */
+	cutHandler: function (event) {
+		this.removeEmptyLink.defer(50, this);
+	},
 	/*
 	 * This function unlinks any empty link left over by the cut operation
 	 */
-	removeEmptyLink : function() {
+	removeEmptyLink: function() {
 		var selection = this.editor._getSelection();
 		var range = this.editor._createRange(selection);
 		var parent = this.editor.getParentElement(selection, range);
@@ -172,12 +222,12 @@ CopyPaste = HTMLArea.Plugin.extend({
 		if (/^(a)$/i.test(parent.nodeName)) {
 			parent.normalize();
 			if (!parent.innerHTML || (parent.childNodes.length == 1 && /^(br)$/i.test(parent.firstChild.nodeName))) {
-				if (HTMLArea.is_gecko) {
+				if (!Ext.isIE) {
 					var container = parent.parentNode;
 					this.editor.removeMarkup(parent);
 						// Opera does not render empty list items
-					if (HTMLArea.is_opera && /^(li)$/i.test(container.nodeName) && !container.firstChild) {
-						container.innerHTML = "<br />";
+					if (Ext.isOpera && /^(li)$/i.test(container.nodeName) && !container.firstChild) {
+						container.innerHTML = '<br />';
 						this.editor.selectNodeContents(container, true);
 					}
 				} else {
@@ -185,53 +235,49 @@ CopyPaste = HTMLArea.Plugin.extend({
 				}
 			}
 		}
-		if (HTMLArea.is_safari) {
+		if (Ext.isWebKit) {
 				// Remove Apple's span and font tags
-			this.editor.cleanAppleStyleSpans(this.editor._doc.body);
+			this.editor.cleanAppleStyleSpans(this.editor.document.body);
 				// Reset Safari selection in order to prevent insertion of span and/or font tags on next text input
 			var bookmark = this.editor.getBookmark(this.editor._createRange(this.editor._getSelection()));
 			this.editor.selectRange(this.editor.moveToBookmark(bookmark));
 		}
-	},
-	
-	/*
-	 * This function removes any link left over by the cut operation triggered by hotkey
-	 */
-	removeEmptyLinkLater : function() {
-		this.removeEmptyLink();
 		this.editor.updateToolbar();
 	},
-	
 	/*
-	 * This function gets called by the main editor when a copy/cut/paste operation is to be performed
+	 * This function gets called when a copy/cut/paste operation is to be performed
+	 * This feature allows to paste a region of table cells
 	 */
-	applyToTable : function (buttonId, target) {
+	applyToTable: function (buttonId) {
 		var selection = this.editor._getSelection();
 		var range = this.editor._createRange(selection);
 		var parent = this.editor.getParentElement(selection, range);
 		var endBlocks = this.editor.getEndBlocks(selection);
 		switch (buttonId) {
-			case "Copy":
-			case "Cut" :
+			case 'Copy':
+			case 'Cut' :
 				HTMLArea.copiedCells = null;
 				var endBlocks = this.editor.getEndBlocks(selection);
-				if ((/^(tr)$/i.test(parent.nodeName) && HTMLArea.is_gecko) || (/^(td|th)$/i.test(endBlocks.start.nodeName) && /^(td|th)$/i.test(endBlocks.end.nodeName) && (HTMLArea.is_ie || HTMLArea.is_safari || HTMLArea.is_opera) && endBlocks.start != endBlocks.end)) {
+				if ((/^(tr)$/i.test(parent.nodeName) && !Ext.isIE) || (/^(td|th)$/i.test(endBlocks.start.nodeName) && /^(td|th)$/i.test(endBlocks.end.nodeName) && !Ext.isGecko && endBlocks.start != endBlocks.end)) {
 					HTMLArea.copiedCells = this.collectCells(buttonId, selection, endBlocks);
-					if (buttonId === "Cut") return true;
 				}
 				break;
-			case "Paste":
+			case 'Paste':
 				if (/^(tr|td|th)$/i.test(parent.nodeName) && HTMLArea.copiedCells) {
 					return this.pasteCells(selection, endBlocks);
 				}
 				break;
+			default:
+				break;
 		}
 		return false;
 	},
-	
-	pasteCells : function (selection, endBlocks) {
+	/*
+	 * This function handles pasting of a collection of table cells
+	 */
+	pasteCells: function (selection, endBlocks) {
 		var cell = null;
-		if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
+		if (Ext.isGecko) {
 			range = selection.getRangeAt(0);
 			cell = range.startContainer.childNodes[range.startOffset];
 			while (cell && !HTMLArea.isBlockElement(cell)) {
@@ -241,8 +287,11 @@ CopyPaste = HTMLArea.Plugin.extend({
 		if (!cell && /^(td|th)$/i.test(endBlocks.start.nodeName)) {
 			cell = endBlocks.start;
 		}
-		if (!cell) return false;
-		var tableParts = ["thead", "tbody", "tfoot"];
+		if (!cell) {
+				// Let the browser do it
+			return false;
+		}
+		var tableParts = ['thead', 'tbody', 'tfoot'];
 		var tablePartsIndex = { thead : 0, tbody : 1, tfoot : 2 };
 		var tablePart = cell.parentNode.parentNode;
 		var tablePartIndex = tablePartsIndex[tablePart.nodeName.toLowerCase()]
@@ -274,12 +323,11 @@ CopyPaste = HTMLArea.Plugin.extend({
 		}
 		return true;
 	},
-	
 	/*
 	 * This function collects the selected table cells for copy/cut operations
 	 */
-	collectCells : function (operation, selection, endBlocks) {
-		var tableParts = ["thead", "tbody", "tfoot"];
+	collectCells: function (operation, selection, endBlocks) {
+		var tableParts = ['thead', 'tbody', 'tfoot'];
 		var tablePartsIndex = { thead : 0, tbody : 1, tfoot : 2 };
 		var selection = this.editor._getSelection();
 		var range, i = 0, cell, cells = null;
@@ -289,16 +337,16 @@ CopyPaste = HTMLArea.Plugin.extend({
 		}
 		var row = null;
 		var cutRows = [];
-		if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {  // Firefox
+		if (Ext.isGecko) {
 			if (selection.rangeCount == 1) { // Collect the cells in the selected row
 				cells = [];
 				for (var i = 0, n = endBlocks.start.cells.length; i < n; ++i) {
 					cell = endBlocks.start.cells[i];
 					cells.push(cell.innerHTML);
-					if (operation === "Cut") {
-						cell.innerHTML = "<br />";
+					if (operation === 'Cut') {
+						cell.innerHTML = '<br />';
 					}
-					if (operation === "Cut") {
+					if (operation === 'Cut') {
 						cutRows.push(endBlocks.start);
 					}
 				}
@@ -311,15 +359,15 @@ CopyPaste = HTMLArea.Plugin.extend({
 						cell = range.startContainer.childNodes[range.startOffset];
 						if (cell.parentNode != row) {
 							(cells) && rows[tablePartsIndex[row.parentNode.nodeName.toLowerCase()]].push(cells);
-							if (operation === "Cut" && firstCellOfRow && lastCellOfRow) cutRows.push(row);
+							if (operation === 'Cut' && firstCellOfRow && lastCellOfRow) cutRows.push(row);
 							row = cell.parentNode;
 							cells = [];
 							firstCellOfRow = false;
 							lastCellOfRow = false;
 						}
 						cells.push(cell.innerHTML);
-						if (operation === "Cut") {
-							cell.innerHTML = "<br />";
+						if (operation === 'Cut') {
+							cell.innerHTML = '<br />';
 						}
 						if (!cell.previousSibling) firstCellOfRow = true;
 						if (!cell.nextSibling) lastCellOfRow = true;
@@ -328,7 +376,7 @@ CopyPaste = HTMLArea.Plugin.extend({
 					/* finished walking through selection */
 				}
 				try { rows[tablePartsIndex[row.parentNode.nodeName.toLowerCase()]].push(cells); } catch(e) { }
-				if (row && operation === "Cut" && firstCellOfRow && lastCellOfRow) {
+				if (row && operation === 'Cut' && firstCellOfRow && lastCellOfRow) {
 					cutRows.push(row);
 				}
 			}
@@ -342,8 +390,8 @@ CopyPaste = HTMLArea.Plugin.extend({
 				cell = endBlocks.start;
 				while (cell) {
 					cells.push(cell.innerHTML);
-					if (operation === "Cut") {
-						cell.innerHTML = "";
+					if (operation === 'Cut') {
+						cell.innerHTML = '';
 					}
 					if (!cell.previousSibling) firstCellOfRow = true;
 					if (!cell.nextSibling) lastCellOfRow = true;
@@ -351,19 +399,19 @@ CopyPaste = HTMLArea.Plugin.extend({
 					cell = cell.nextSibling;
 				}
 				rows[tablePartsIndex[firstRow.parentNode.nodeName.toLowerCase()]].push(cells);
-				if (operation === "Cut" && firstCellOfRow && lastCellOfRow) cutRows.push(firstRow);
+				if (operation === 'Cut' && firstCellOfRow && lastCellOfRow) cutRows.push(firstRow);
 			} else { // Collect all cells on selected rows
 				row = firstRow;
 				while (row) {
 					cells = [];
 					for (var i = 0, n = row.cells.length; i < n ; ++i) {
 						cells.push(row.cells[i].innerHTML);
-						if (operation === "Cut") {
-							row.cells[i].innerHTML = "";
+						if (operation === 'Cut') {
+							row.cells[i].innerHTML = '';
 						}
 					}
 					rows[tablePartsIndex[row.parentNode.nodeName.toLowerCase()]].push(cells);
-					if (operation === "Cut") cutRows.push(row);
+					if (operation === 'Cut') cutRows.push(row);
 					if (row == lastRow) break;
 					row = row.nextSibling;
 				}
@@ -385,56 +433,80 @@ CopyPaste = HTMLArea.Plugin.extend({
 		}
 		return rows;
 	},
-	
 	/*
 	 * This function gets called when the toolbar is updated
 	 */
-	onUpdateToolbar : function () {
-		if (this.getEditorMode() === "wysiwyg" || this.editor.isEditable()) {
-			var buttonId = "Paste";
-			if (typeof(this.editor._toolbarObjects[buttonId]) !== "undefined") {
-				try {
-					this.editor._toolbarObjects[buttonId].state("enabled", this.editor._doc.queryCommandEnabled(buttonId));
-				} catch(e) {
-					this.editor._toolbarObjects[buttonId].state("enabled", false);
-				}
+	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
+		if (mode === 'wysiwyg' && this.editor.isEditable() && button.itemId === 'Paste') {
+			try {
+				button.setDisabled(!this.editor.document.queryCommandEnabled(button.itemId));
+			} catch(e) {
+				button.setDisabled(true);
 			}
 		}
 	},
-
 	/*
 	 * Mozilla clipboard access exception handler
 	 */
-	mozillaClipboardAccessException : function () {
-		if (this.buttonsConfiguration.paste && this.buttonsConfiguration.paste.mozillaAllowClipboardURL) {
-			if (confirm(this.localize("Allow-Clipboard-Helper-Extension"))) {
-				if (InstallTrigger.enabled()) {
-					var mozillaXpi = new Object();
-					mozillaXpi["AllowClipboard Helper"] = this.buttonsConfiguration.paste.mozillaAllowClipboardURL;
-					var mozillaInstallCallback = this.makeFunctionReference("mozillaInstallCallback");
-					InstallTrigger.install(mozillaXpi, mozillaInstallCallback);
-				} else {
-					alert(this.localize("Mozilla-Org-Install-Not-Enabled"));
-					this.appendToLog("mozillaClipboardAccessException", "Mozilla install was not enabled.");
-					return;
+	mozillaClipboardAccessException: function () {
+		if (InstallTrigger && this.buttonsConfiguration.paste && this.buttonsConfiguration.paste.mozillaAllowClipboardURL) {
+			TYPO3.Dialog.QuestionDialog({
+				title: this.localize('Allow-Clipboard-Helper-Add-On-Title'),
+				msg: this.localize('Allow-Clipboard-Helper-Extension'),
+				fn: this.installAllowClipboardHelperExtension,
+				scope: this
+			});
+		} else {
+			TYPO3.Dialog.QuestionDialog({
+				title: this.localize('Firefox-Security-Prefs-Question-Title'),
+				msg: this.localize('Moz-Clipboard'),
+				fn: function (button) {
+					if (button == 'yes') {
+						window.open('http://mozilla.org/editor/midasdemo/securityprefs.html');
+					}
 				}
+			});
+			if (!InstallTrigger) {
+				this.appendToLog('mozillaClipboardAccessException', 'Firefox InstallTrigger was not defined.');
 			}
-		} else if (confirm(this.localize("Moz-Clipboard"))) {
-			window.open("http://mozilla.org/editor/midasdemo/securityprefs.html");
 		}
 	},
-	
 	/*
-	 * Mozilla Add-on installer call back
+	 * Install AllowClipboardHelperExtension
+	 *
+	 * @param	string		button: yes or no button was clicked in the dialogue
+	 *
+	 * @return	void
 	 */
-	mozillaInstallCallback : function (url, returnCode) {
-		if (returnCode == 0) {
-			alert(this.localize("Allow-Clipboard-Helper-Extension-Success"));
-		} else {
-			alert(this.localize("Moz-Extension-Failure"));
-			this.appendToLog("mozillaInstallCallback", "Mozilla install return code was: " + returnCode + ".");
+	installAllowClipboardHelperExtension: function (button) {
+		if (button == 'yes') {
+			if (InstallTrigger.enabled()) {
+				var self = this;
+				function mozillaInstallCallback(url, returnCode) {
+					if (returnCode == 0) {
+						TYPO3.Dialog.InformationDialog({
+							title: self.localize('Allow-Clipboard-Helper-Add-On-Title'),
+							msg: self.localize('Allow-Clipboard-Helper-Extension-Success')
+						});
+					} else {
+						TYPO3.Dialog.ErrorDialog({
+							title: self.localize('Allow-Clipboard-Helper-Add-On-Title'),
+							msg: self.localize('Moz-Extension-Failure')
+						});
+						self.appendToLog('installAllowClipboardHelperExtension', 'Mozilla install return code was: ' + returnCode + '.');
+					}
+					return false;
+				}
+				var mozillaXpi = new Object();
+				mozillaXpi['AllowClipboard Helper'] = this.buttonsConfiguration.paste.mozillaAllowClipboardURL;
+				InstallTrigger.install(mozillaXpi, mozillaInstallCallback);
+			} else {
+				TYPO3.Dialog.ErrorDialog({
+					title: this.localize('Allow-Clipboard-Helper-Add-On-Title'),
+					msg: this.localize('Mozilla-Org-Install-Not-Enabled')
+				});
+				this.appendToLog('installAllowClipboardHelperExtension', 'Mozilla install was not enabled.');
+			}
 		}
-		return;
 	}
 });
-

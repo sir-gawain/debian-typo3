@@ -1,26 +1,26 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 
 /**
@@ -50,7 +50,8 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @version $Id: class.t3lib_cache_backend_memcachedbackend.php 8800 2010-09-16 16:17:08Z lolli $
+ * @api
+ * @version $Id$
  */
 class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractBackend {
 
@@ -102,13 +103,13 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	/**
 	 * Constructs this backend
 	 *
-	 * @param mixed $options Configuration options - depends on the actual backend
+	 * @param array $options Configuration options - depends on the actual backend
 	 * @author Robert Lemke <robert@typo3.org>
 	 */
-	public function __construct($options = array()) {
+	public function __construct(array $options = array()) {
 		if (!extension_loaded('memcache')) {
 			throw new t3lib_cache_Exception(
-				'The PHP extension "memcached" must be installed and loaded in ' .
+				'The PHP extension "memcache" must be installed and loaded in ' .
 				'order to use the Memcached backend.',
 				1213987706
 			);
@@ -117,7 +118,6 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 		parent::__construct($options);
 
 		$this->memcache = new Memcache();
-		$this->identifierPrefix = $this->getIdentifierPrefix();
 		$defaultPort = ini_get('memcache.default_port');
 
 		if (!count($this->servers)) {
@@ -184,6 +184,19 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	}
 
 	/**
+	 * Initializes the identifier prefix when setting the cache.
+	 *
+	 * @param t3lib_cache_frontend_Frontend $cache The frontend for this backend
+	 * @return void
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @author Dmitry Dulepov
+	 */
+	public function setCache(t3lib_cache_frontend_Frontend $cache) {
+		parent::setCache($cache);
+		$this->identifierPrefix = 'TYPO3_' . md5(PATH_site) . '_';
+	}
+
+	/**
 	 * Saves data in the cache.
 	 *
 	 * @param string An identifier for this specific cache entry
@@ -220,7 +233,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 			);
 		}
 
-		$tags[] = '%MEMCACHEBE%' . $this->cache->getIdentifier();
+		$tags[] = '%MEMCACHEBE%' . $this->cacheIdentifier;
 		$expiration = $lifetime !== NULL ? $lifetime : $this->defaultLifetime;
 
 			// Memcached consideres values over 2592000 sec (30 days) as UNIX timestamp
@@ -230,7 +243,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 		}
 
 		try {
-			if(strlen($data) > self::MAX_BUCKET_SIZE) {
+			if (strlen($data) > self::MAX_BUCKET_SIZE) {
 				$data = str_split($data, 1024 * 1000);
 				$success = TRUE;
 				$chunkNumber = 1;
@@ -268,7 +281,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 					1275830266
 				);
 			}
-		} catch(Exception $exception) {
+		} catch (Exception $exception) {
 			throw new t3lib_cache_Exception(
 				'Could not set value. ' .
 				$exception->getMessage(),
@@ -289,10 +302,10 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 		$value = $this->memcache->get($this->identifierPrefix . $entryIdentifier);
 
 		if (substr($value, 0, 14) === 'TYPO3*chunked:') {
-			list( , $chunkCount) = explode(':', $value);
+			list(, $chunkCount) = explode(':', $value);
 			$value = '';
 
-			for ($chunkNumber = 1 ; $chunkNumber < $chunkCount; $chunkNumber++) {
+			for ($chunkNumber = 1; $chunkNumber < $chunkCount; $chunkNumber++) {
 				$value .= $this->memcache->get($this->identifierPrefix . $entryIdentifier . '_chunk_' . $chunkNumber);
 			}
 		}
@@ -324,7 +337,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	 */
 	public function remove($entryIdentifier) {
 		$this->removeIdentifierFromAllTags($entryIdentifier);
-		return $this->memcache->delete($this->identifierPrefix . $entryIdentifier);
+		return $this->memcache->delete($this->identifierPrefix . $entryIdentifier, 0);
 	}
 
 	/**
@@ -356,7 +369,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	 */
 	public function findIdentifiersByTags(array $tags) {
 		$taggedEntries = array();
-		$foundEntries  = array();
+		$foundEntries = array();
 
 		foreach ($tags as $tag) {
 			$taggedEntries[$tag] = $this->findIdentifiersByTag($tag);
@@ -382,7 +395,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 			throw new t3lib_cache_Exception('No cache frontend has been set via setCache() yet.', 1204111376);
 		}
 
-		$this->flushByTag('%MEMCACHEBE%' . $this->cache->getIdentifier());
+		$this->flushByTag('%MEMCACHEBE%' . $this->cacheIdentifier);
 	}
 
 	/**
@@ -395,7 +408,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	public function flushByTag($tag) {
 		$identifiers = $this->findIdentifiersByTag($tag);
 
-		foreach($identifiers as $identifier) {
+		foreach ($identifiers as $identifier) {
 			$this->remove($identifier);
 		}
 	}
@@ -425,20 +438,20 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	 */
 	protected function addIdentifierToTags($entryIdentifier, array $tags) {
 		if ($this->serverConnected) {
-			foreach($tags as $tag) {
+			foreach ($tags as $tag) {
 					// Update tag-to-identifier index
 				$identifiers = $this->findIdentifiersByTag($tag);
 				if (array_search($entryIdentifier, $identifiers) === false) {
 					$identifiers[] = $entryIdentifier;
 					$this->memcache->set($this->identifierPrefix . 'tag_' . $tag,
-						$identifiers);
+										 $identifiers);
 				}
 
 					// Update identifier-to-tag index
 				$existingTags = $this->findTagsByIdentifier($entryIdentifier);
 				if (array_search($tag, $existingTags) === FALSE) {
 					$this->memcache->set($this->identifierPrefix . 'ident_' . $entryIdentifier,
-						array_merge($existingTags, $tags));
+										 array_merge($existingTags, $tags));
 				}
 			}
 		}
@@ -468,19 +481,19 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 				if (($key = array_search($entryIdentifier, $identifiers)) !== false) {
 					unset($identifiers[$key]);
 
-					if(count($identifiers)) {
+					if (count($identifiers)) {
 						$this->memcache->set(
 							$this->identifierPrefix . 'tag_' . $tag,
 							$identifiers
 						);
 					} else {
-						$this->memcache->delete($this->identifierPrefix . 'tag_' . $tag);
+						$this->memcache->delete($this->identifierPrefix . 'tag_' . $tag, 0);
 					}
 				}
 			}
 
 				// Clear reverse tag index for this identifier
-			$this->memcache->delete($this->identifierPrefix . 'ident_' . $entryIdentifier);
+			$this->memcache->delete($this->identifierPrefix . 'ident_' . $entryIdentifier, 0);
 		}
 	}
 
@@ -495,21 +508,7 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 	 */
 	protected function findTagsByIdentifier($identifier) {
 		$tags = $this->memcache->get($this->identifierPrefix . 'ident_' . $identifier);
-		return ($tags === FALSE ? array() : (array)$tags);
-	}
-
-	/**
-	 * Returns idenfier prefix. Extensions can override this function to provide
-	 * another identifier prefix if it is necessary for special purposes.
-	 * Default identifier prefix is based on PATH_site only. In most cases
-	 * it is enough because different installations use different paths and page
-	 * IDs in the same installation never repeat.
-	 *
-	 * @return	string	Identifier prefix, ending with underscore
-	 * @author	Dmitry Dulepov
-	 */
-	protected function getIdentifierPrefix() {
-		return 'TYPO3_' . md5(PATH_site) . '_';
+		return ($tags === FALSE ? array() : (array) $tags);
 	}
 
 	/**
@@ -522,8 +521,8 @@ class t3lib_cache_backend_MemcachedBackend extends t3lib_cache_backend_AbstractB
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_memcachedbackend.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_memcachedbackend.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_memcachedbackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_memcachedbackend.php']);
 }
 
 ?>

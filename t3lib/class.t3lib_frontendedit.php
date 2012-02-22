@@ -1,34 +1,34 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2008-2009 Jeff Segars <jeff@webempoweredchurch.org>
-*  (c) 2008-2009 David Slayback <dave@webempoweredchurch.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*  A copy is found in the textfile GPL.txt and important notices to the license
-*  from the author is found in LICENSE.txt distributed with these scripts.
-*
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2008-2011 Jeff Segars <jeff@webempoweredchurch.org>
+ *  (c) 2008-2011 David Slayback <dave@webempoweredchurch.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * Controller class for frontend editing.
  *
- * $Id: class.t3lib_frontendedit.php 6274 2009-10-24 11:42:50Z baschny $
+ * $Id$
  *
  * @author	Jeff Segars <jeff@webempoweredchurch.org>
  * @author	David Slayback <dave@webempoweredchurch.org>
@@ -78,12 +78,14 @@ class t3lib_frontendedit {
 	 * @param	string		The "table:uid" of the record being shown. If empty string then $this->currentRecord is used. For new records (set by $conf['newRecordFromTable']) it's auto-generated to "[tablename]:NEW"
 	 * @param	array		Alternative data array to use. Default is $this->data
 	 * @return	string		The input content string with the editPanel appended. This function returns only an edit panel appended to the content string if a backend user is logged in (and has the correct permissions). Otherwise the content string is directly returned.
-	 * @link	http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=375&cHash=7d8915d508
 	 */
 	public function displayEditPanel($content, array $conf, $currentRecord, array $dataArray) {
 		if ($conf['newRecordFromTable']) {
 			$currentRecord = $conf['newRecordFromTable'] . ':NEW';
 			$conf['allow'] = 'new';
+			$checkEditAccessInternals = FALSE;
+		} else {
+			$checkEditAccessInternals = TRUE;
 		}
 
 		list($table, $uid) = explode(':', $currentRecord);
@@ -91,13 +93,13 @@ class t3lib_frontendedit {
 			// Page ID for new records, 0 if not specified
 		$newRecordPid = intval($conf['newRecordInPid']);
 		if (!$conf['onlyCurrentPid'] || $dataArray['pid'] == $GLOBALS['TSFE']->id) {
-			if ($table=='pages') {
+			if ($table == 'pages') {
 				$newUid = $uid;
 			} else {
 				if ($conf['newRecordFromTable']) {
 					$newUid = $GLOBALS['TSFE']->id;
 					if ($newRecordPid) {
-						 $newUid = $newRecordPid;
+						$newUid = $newRecordPid;
 					}
 				} else {
 					$newUid = -1 * $uid;
@@ -105,10 +107,10 @@ class t3lib_frontendedit {
 			}
 		}
 
-		if ($GLOBALS['TSFE']->displayEditIcons && $table && $this->allowedToEdit($table, $dataArray, $conf) && $this->allowedToEditLanguage($table, $dataArray)) {
+		if ($GLOBALS['TSFE']->displayEditIcons && $table && $this->allowedToEdit($table, $dataArray, $conf, $checkEditAccessInternals) && $this->allowedToEditLanguage($table, $dataArray)) {
 			$editClass = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/classes/class.frontendedit.php']['edit'];
 			if ($editClass) {
-				$edit = t3lib_div::getUserObj($editClass, false);
+				$edit = t3lib_div::getUserObj($editClass, FALSE);
 				if (is_object($edit)) {
 					$allowedActions = $this->getAllowedEditActions($table, $conf, $dataArray['pid']);
 					$content = $edit->editPanel($content, $conf, $currentRecord, $dataArray, $table, $allowedActions, $newUid, $this->getHiddenFields($dataArray));
@@ -132,14 +134,14 @@ class t3lib_frontendedit {
 	 * @return	string		The input content string, possibly with edit icons added (not necessarily in the end but just after the last string of normal content.
 	 */
 
-	public function displayEditIcons($content, $params, array $conf=array(), $currentRecord = '', array $dataArray = array(), $addUrlParamStr = '') {
+	public function displayEditIcons($content, $params, array $conf = array(), $currentRecord = '', array $dataArray = array(), $addUrlParamStr = '') {
 			// Check incoming params:
 		list($currentRecordTable, $currentRecordUID) = explode(':', $currentRecord);
 		list($fieldList, $table) = array_reverse(t3lib_div::trimExplode(':', $params, 1)); // Reverse the array because table is optional
 		if (!$table) {
 			$table = $currentRecordTable;
 		} elseif ($table != $currentRecordTable) {
-				return $content;	// If the table is set as the first parameter, and does not match the table of the current record, then just return.
+			return $content; // If the table is set as the first parameter, and does not match the table of the current record, then just return.
 		}
 
 		$editUid = $dataArray['_LOCALIZED_UID'] ? $dataArray['_LOCALIZED_UID'] : $currentRecordUID;
@@ -154,7 +156,7 @@ class t3lib_frontendedit {
 			if ($editClass) {
 				$edit = t3lib_div::getUserObj($editClass);
 				if (is_object($edit)) {
-					$content = $edit->editIcons($content, $params, $conf, $currentRecord, $dataArray, $addURLParamStr, $table, $editUid, $fieldList);
+					$content = $edit->editIcons($content, $params, $conf, $currentRecord, $dataArray, $addUrlParamStr, $table, $editUid, $fieldList);
 				}
 			}
 		}
@@ -182,11 +184,11 @@ class t3lib_frontendedit {
 				$cmd = (string) $this->TSFE_EDIT['cmd'];
 				if (($cmd != 'edit' || (is_array($this->TSFE_EDIT['data']) && ($this->TSFE_EDIT['doSave'] || $this->TSFE_EDIT['update'] || $this->TSFE_EDIT['update_close']))) && $cmd != 'new') {
 						// $cmd can be a command like "hide" or "move". If $cmd is "edit" or "new" it's an indication to show the formfields. But if data is sent with update-flag then $cmd = edit is accepted because edit may be sent because of .keepGoing flag.
-					return true;
+					return TRUE;
 				}
 			}
 		}
-		return false;
+		return FALSE;
 	}
 
 	/**
@@ -200,7 +202,7 @@ class t3lib_frontendedit {
 		if (is_array($this->TSFE_EDIT)) {
 			$cmd = (string) $this->TSFE_EDIT['cmd'];
 			if ($cmd == 'edit' || $cmd == 'new') {
-				return true;
+				return TRUE;
 			}
 		}
 	}
@@ -327,22 +329,22 @@ class t3lib_frontendedit {
 	 * @param	integer		The UID of record to move after. This is specified for dragging only.
 	 * @return	void
 	 */
-	protected function move($table, $uid, $direction='', $afterUID=0) {
+	protected function move($table, $uid, $direction = '', $afterUID = 0) {
 		$cmdData = array();
 		$sortField = $GLOBALS['TCA'][$table]['ctrl']['sortby'];
 		if ($sortField) {
 				// Get self:
-			$fields = array_unique(t3lib_div::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['copyAfterDuplFields'] . ',uid,pid,' . $sortField, true));
+			$fields = array_unique(t3lib_div::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['copyAfterDuplFields'] . ',uid,pid,' . $sortField, TRUE));
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(implode(',', $fields), $table, 'uid=' . $uid);
 			if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					// record before or after
 				if (($GLOBALS['BE_USER']->adminPanel instanceOf tslib_AdminPanel) && ($GLOBALS['BE_USER']->adminPanel->extGetFeAdminValue('preview'))) {
-					$ignore = array('starttime'=>1, 'endtime'=>1, 'disabled'=>1, 'fe_group'=>1);
+					$ignore = array('starttime' => 1, 'endtime' => 1, 'disabled' => 1, 'fe_group' => 1);
 				}
 				$copyAfterFieldsQuery = '';
 				if ($GLOBALS['TCA'][$table]['ctrl']['copyAfterDuplFields']) {
-					$cAFields = t3lib_div::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['copyAfterDuplFields'], true);
-					foreach($cAFields as $fieldName) {
+					$cAFields = t3lib_div::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['copyAfterDuplFields'], TRUE);
+					foreach ($cAFields as $fieldName) {
 						$copyAfterFieldsQuery .= ' AND ' . $fieldName . '="' . $row[$fieldName] . '"';
 					}
 				}
@@ -357,16 +359,16 @@ class t3lib_frontendedit {
 					$sortCheck = ' AND ' . $sortField . $operator . intval($row[$sortField]);
 				}
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-							'uid,pid',
-							$table,
-							'pid=' . intval($row['pid']) .
+					'uid,pid',
+					$table,
+						'pid=' . intval($row['pid']) .
 								$sortCheck .
 								$copyAfterFieldsQuery .
 								$GLOBALS['TSFE']->sys_page->enableFields($table, '', $ignore),
-							'',
-							$sortField . ' ' . $order,
-							'2'
-						);
+					'',
+						$sortField . ' ' . $order,
+					'2'
+				);
 				if ($row2 = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					if ($afterUID) {
 						$cmdData[$table][$uid]['move'] = -$afterUID;
@@ -374,10 +376,10 @@ class t3lib_frontendedit {
 					elseif ($direction == 'down') {
 						$cmdData[$table][$uid]['move'] = -$row2['uid'];
 					}
-					elseif ($row3 = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {	// Must take the second record above...
+					elseif ($row3 = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) { // Must take the second record above...
 						$cmdData[$table][$uid]['move'] = -$row3['uid'];
 					}
-					else {	// ... and if that does not exist, use pid
+					else { // ... and if that does not exist, use pid
 						$cmdData[$table][$uid]['move'] = $row['pid'];
 					}
 				} elseif ($direction == 'up') {
@@ -483,9 +485,9 @@ class t3lib_frontendedit {
 		}
 
 		if ($GLOBALS['BE_USER']->checkLanguageAccess($lang)) {
-			$languageAccess = true;
+			$languageAccess = TRUE;
 		} else {
-			$languageAccess = false;
+			$languageAccess = FALSE;
 		}
 
 		return $languageAccess;
@@ -497,40 +499,50 @@ class t3lib_frontendedit {
 	 * @param	string	The name of the table.
 	 * @param	array	The data array.
 	 * @param	array	The configuration array for the edit panel.
+	 * @param	boolean	Boolean indicating whether recordEditAccessInternals should not be checked. Defaults
+	 *					 to true but doesn't makes sense when creating new records on a page.
 	 * @return	boolean
 	 */
-	protected function allowedToEdit($table, array $dataArray, array $conf) {
+	protected function allowedToEdit($table, array $dataArray, array $conf, $checkEditAccessInternals = TRUE) {
 
 			// Unless permissions specifically allow it, editing is not allowed.
-		$mayEdit = false;
+		$mayEdit = FALSE;
 
-		if ($table=='pages') {
-				// 2 = permission to edit the page
-			if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->doesUserHaveAccess($dataArray, 2)) {
-				$mayEdit = true;
-			}
+		if ($checkEditAccessInternals) {
+			$editAccessInternals = $GLOBALS['BE_USER']->recordEditAccessInternals($table, $dataArray, FALSE, FALSE);
 		} else {
-				// 16 = permission to edit content on the page
-			if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->doesUserHaveAccess(t3lib_BEfunc::getRecord('pages', $dataArray['pid']), 16)) {
-				$mayEdit = true;
-			}
+			$editAccessInternals = TRUE;
 		}
 
-		if (!$conf['onlyCurrentPid'] || ($dataArray['pid'] == $GLOBALS['TSFE']->id)) {
-				// Permissions:
-			$types = t3lib_div::trimExplode(',', t3lib_div::strtolower($conf['allow']),1);
-			$allow = array_flip($types);
-
-			$perms = $GLOBALS['BE_USER']->calcPerms($GLOBALS['TSFE']->page);
+		if ($editAccessInternals) {
 			if ($table == 'pages') {
-				$allow = $this->getAllowedEditActions($table, $conf, $dataArray['pid'], $allow);
-
-					// Can only display editbox if there are options in the menu
-				if (count($allow)) {
-					$mayEdit = true;
+					// 2 = permission to edit the page
+				if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->doesUserHaveAccess($dataArray, 2)) {
+					$mayEdit = TRUE;
 				}
 			} else {
-				$mayEdit = count($allow) && ($perms & 16);
+					// 16 = permission to edit content on the page
+				if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->doesUserHaveAccess(t3lib_BEfunc::getRecord('pages', $dataArray['pid']), 16)) {
+					$mayEdit = TRUE;
+				}
+			}
+
+			if (!$conf['onlyCurrentPid'] || ($dataArray['pid'] == $GLOBALS['TSFE']->id)) {
+					// Permissions:
+				$types = t3lib_div::trimExplode(',', t3lib_div::strtolower($conf['allow']), 1);
+				$allow = array_flip($types);
+
+				$perms = $GLOBALS['BE_USER']->calcPerms($GLOBALS['TSFE']->page);
+				if ($table == 'pages') {
+					$allow = $this->getAllowedEditActions($table, $conf, $dataArray['pid'], $allow);
+
+						// Can only display editbox if there are options in the menu
+					if (count($allow)) {
+						$mayEdit = TRUE;
+					}
+				} else {
+					$mayEdit = count($allow) && ($perms & 16);
+				}
 			}
 		}
 
@@ -549,24 +561,24 @@ class t3lib_frontendedit {
 	protected function getAllowedEditActions($table, array $conf, $pid, $allow = '') {
 
 		if (!$allow) {
-			$types = t3lib_div::trimExplode(',', t3lib_div::strtolower($conf['allow']), true);
+			$types = t3lib_div::trimExplode(',', t3lib_div::strtolower($conf['allow']), TRUE);
 			$allow = array_flip($types);
 		}
 
 		if (!$conf['onlyCurrentPid'] || $pid == $GLOBALS['TSFE']->id) {
 				// Permissions:
-			$types = t3lib_div::trimExplode(',', t3lib_div::strtolower($conf['allow']), true);
+			$types = t3lib_div::trimExplode(',', t3lib_div::strtolower($conf['allow']), TRUE);
 			$allow = array_flip($types);
 
 			$perms = $GLOBALS['BE_USER']->calcPerms($GLOBALS['TSFE']->page);
-			if ($table=='pages') {
+			if ($table == 'pages') {
 					// rootpage!
 				if (count($GLOBALS['TSFE']->config['rootLine']) == 1) {
 					unset($allow['move']);
 					unset($allow['hide']);
 					unset($allow['delete']);
 				}
-				if (!($perms & 2)){
+				if (!($perms & 2)) {
 					unset($allow['edit']);
 					unset($allow['move']);
 					unset($allow['hide']);
@@ -574,7 +586,7 @@ class t3lib_frontendedit {
 				if (!($perms & 4)) {
 					unset($allow['delete']);
 				}
-				if (!($perms&8)) {
+				if (!($perms & 8)) {
 					unset($allow['new']);
 				}
 			}
@@ -614,13 +626,13 @@ class t3lib_frontendedit {
 	protected function initializeTceMain() {
 		if (!isset($this->tce)) {
 			$this->tce = t3lib_div::makeInstance('t3lib_TCEmain');
-			$this->tce->stripslashes_values=0;
+			$this->tce->stripslashes_values = 0;
 		}
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_frontendedit.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_frontendedit.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_frontendedit.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_frontendedit.php']);
 }
 
 ?>

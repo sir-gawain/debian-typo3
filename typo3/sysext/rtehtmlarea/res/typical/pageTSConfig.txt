@@ -5,7 +5,7 @@
 #
 # @author	Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 #
-# TYPO3 SVN ID: $Id: pageTSConfig.txt 5131 2009-03-06 17:53:40Z stan $
+# TYPO3 SVN ID: $Id$
 # ***************************************************************************************
 
 	## Define labels and styles to be applied to class selectors in the interface of the RTE

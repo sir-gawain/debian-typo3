@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 /**
  * Shows information about a database or file item
  *
- * $Id: show_item.php 8840 2010-09-21 19:56:38Z benni $
- * Revised for TYPO3 3.7 May/2004 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.7 May/2004 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -74,7 +74,7 @@ require($BACK_PATH.'template.php');
 /**
  * Extension of transfer data class
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -125,7 +125,7 @@ class transferData extends t3lib_transferData	{
 /**
  * Script Class for showing information about an item.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -204,12 +204,12 @@ class SC_show_item {
 		}
 
 			// Initialize document template object:
-		$this->doc = t3lib_div::makeInstance('smallDoc');
+		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $BACK_PATH;
 
 			// Starting the page by creating page header stuff:
 		$this->content.=$this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.viewItem'));
-		$this->content.=$this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.viewItem'));
+		$this->content.='<h3 class="t3-row-header">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.viewItem') . '</h3>';
 		$this->content.=$this->doc->spacer(5);
 	}
 
@@ -278,16 +278,16 @@ class SC_show_item {
 		$i = 0;
 
 			// Traverse the list of fields to display for the record:
-		$fieldList = t3lib_div::trimExplode(',',$TCA[$this->table]['interface']['showRecordFieldList'],1);
-		foreach($fieldList as $name)	{
+		$fieldList = t3lib_div::trimExplode(',', $TCA[$this->table]['interface']['showRecordFieldList'], 1);
+		foreach ($fieldList as $name) {
 			$name = trim($name);
 			if ($TCA[$this->table]['columns'][$name])	{
-				if (!$TCA[$this->table]['columns'][$name]['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields',$this->table.':'.$name))	{
+				if (!$TCA[$this->table]['columns'][$name]['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $this->table . ':' . $name)) {
 					$i++;
 					$tableRows[] = '
 						<tr>
-							<td class="bgColor5">'.$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel($this->table,$name),1).'</td>
-							<td class="bgColor4">' . htmlspecialchars(t3lib_BEfunc::getProcessedValue($this->table, $name, $this->row[$name], 0, 0, FALSE, $this->row['uid'])) . '</td>
+							<td class="t3-col-header">' . $GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel($this->table, $name), 1) . '</td>
+							<td>' . htmlspecialchars(t3lib_BEfunc::getProcessedValue($this->table, $name, $this->row[$name], 0, 0, FALSE, $this->row['uid'])) . '</td>
 						</tr>';
 				}
 			}
@@ -295,11 +295,10 @@ class SC_show_item {
 
 			// Create table from the information:
 		$tableCode = '
-					<table border="0" cellpadding="1" cellspacing="1" id="typo3-showitem">
+					<table border="0" cellpadding="0" cellspacing="0" id="typo3-showitem" class="t3-table-info">
 						'.implode('',$tableRows).'
 					</table>';
 		$this->content.=$this->doc->section('',$tableCode);
-		$this->content.=$this->doc->divider(2);
 
 			// Add path and table information in the bottom:
 		$code = '';
@@ -339,9 +338,7 @@ class SC_show_item {
 		$code = '';
 
 			// Setting header:
-		$icon = t3lib_BEfunc::getFileIcon($ext);
-		$url = 'gfx/fileicons/'.$icon;
-		$fileName = '<img src="'.$url.'" width="18" height="16" align="top" alt="" /><strong>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.file', 1).':</strong> '.$fI['file'];
+		$fileName = t3lib_iconWorks::getSpriteIconForFile($ext) . '<strong>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.file', TRUE) . ':</strong> ' . $fI['file'];
 		if (t3lib_div::isFirstPartOfStr($this->file,PATH_site))	{
 			$code.= '<a href="../'.substr($this->file,strlen(PATH_site)).'" target="_blank">'.$fileName.'</a>';
 		} else {
@@ -372,7 +369,7 @@ class SC_show_item {
 				if ($ext=='zip')	{
 					$code = '';
 					$t = array();
-					exec('unzip -l '.$this->file, $t);
+					t3lib_utility_Command::exec('unzip -l ' . $this->file, $t);
 					if (is_array($t))	{
 						reset($t);
 						next($t);
@@ -397,7 +394,7 @@ class SC_show_item {
 						$compr = 'z';
 					}
 					$t = array();
-					exec('tar t'.$compr.'f '.$this->file, $t);
+					t3lib_utility_Command::exec('tar t' . $compr . 'f ' . $this->file, $t);
 					if (is_array($t))	{
 						foreach($t as $val)	{
 							$code.='
@@ -487,7 +484,7 @@ class SC_show_item {
 			// Compile information for title tag:
 		$infoData = array();
 		if (count($rows))	{
-			$infoData[] = '<tr class="bgColor5 tableheader">' .
+			$infoData[] = '<tr class="t3-row-header">' .
 					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.table').'</td>' .
 					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.uid').'</td>' .
 					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.field').'</td>'.
@@ -507,7 +504,7 @@ class SC_show_item {
 					'</tr>';
 		}
 
-		return count($infoData) ? '<table border="0" cellpadding="1" cellspacing="1">'.implode('',$infoData).'</table>' : '';
+		return count($infoData) ? '<table border="0" cellpadding="0" cellspacing="0" class="typo3-dblist">' . implode('', $infoData) . '</table>' : '';
 	}
 
 	/**
@@ -530,7 +527,7 @@ class SC_show_item {
 			// Compile information for title tag:
 		$infoData = array();
 		if (count($rows))	{
-			$infoData[] = '<tr class="bgColor5 tableheader">' .
+			$infoData[] = '<tr class="t3-row-header">' .
 					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.field').'</td>'.
 					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.flexpointer').'</td>'.
 					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.softrefKey').'</td>'.
@@ -552,13 +549,13 @@ class SC_show_item {
 					'</tr>';
 		}
 
-		return count($infoData) ? '<table border="0" cellpadding="1" cellspacing="1">'.implode('',$infoData).'</table>' : '';
+		return count($infoData) ? '<table border="0" cellpadding="0" cellspacing="0" class="typo3-dblist">' . implode('', $infoData) . '</table>' : '';
 	}
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_item.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_item.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_item.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_item.php']);
 }
 
 

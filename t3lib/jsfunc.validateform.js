@@ -2,11 +2,11 @@
 *
 *  Universal validate-form
 *
-* $Id: jsfunc.validateform.js 5535 2009-06-03 07:55:36Z francois $
+* $Id$
 *
 *  Copyright notice
 *
-*  (c) 1998-2009 Kasper Skaarhoj
+*  (c) 1998-2011 Kasper Skaarhoj
 *  All rights reserved
 *
 *  This script is part of the TYPO3 t3lib/ library provided by

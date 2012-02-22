@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<!-- TYPO3 SVN ID: $Id: locallang.xml 4382 2008-10-29 13:50:51Z ingmars $ -->
+<!-- TYPO3 SVN ID: $Id$ -->
 <T3locallang>
 	<meta type="array">
 		<description>Labels for Definition List plugin of htmlArea RTE</description>
@@ -8,9 +8,13 @@
 	<data type="array">
 		<languageKey index="default" type="array">
 			<label index="Indent-Tooltip">Increase indent</label>
+			<label index="Indent-helpText">Increases text indentation</label>
 			<label index="Outdent-Tooltip">Reduce indent</label>
+			<label index="Outdent-helpText">Reduces text indentation</label>
 			<label index="DefinitionList-Tooltip">Definition list</label>
+			<label index="DefinitionList-helpText">Makes a definition list from the current selection</label>
 			<label index="DefinitionItem-Tooltip">Toggle term and definition</label>
+			<label index="DefinitionItem-helpText">Toggles term and definition elements</label>
 			<label index="No block">No block format</label>
 			<label index="Remove block">Remove block format</label>
 			<label index="Technische Universitat Ilmenau">Technische Universität Ilmenau</label>

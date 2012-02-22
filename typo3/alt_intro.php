@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,11 +29,11 @@
  * Will display the list of main- and sub-modules available to the user.
  * Each module will be show with description and a link to the module.
  *
- * $Id: alt_intro.php 5526 2009-06-02 13:52:04Z benni $
- * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -66,7 +66,7 @@ $LANG->includeLLFile('EXT:lang/locallang_alt_intro.xml');
 /**
  * Script Class for the introduction screen, alias "About > Modules" which shows the description of each available module for the user.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -106,9 +106,12 @@ class SC_alt_intro {
 		$alt_menuObj = t3lib_div::makeInstance('alt_menu_functions');
 
 		$TBE_TEMPLATE->divClass = $TBE_TEMPLATE->bodyTagId;
-		$this->content.= $TBE_TEMPLATE->startPage('About modules');
 
-		$this->content .= '
+		$this->content = '
+			<div id="typo3-docheader">
+				<div id="typo3-docheader-row1">&nbsp;</div>
+			</div>
+			<div id="typo3-alt-intro-php-sub">
 			<h1>TYPO3 '.TYPO3_version.'<br />'.$LANG->getLL('introtext').'</h1>
 
 			<p>'.t3lib_BEfunc::TYPO3_copyRightNotice().'</p>';
@@ -117,7 +120,7 @@ class SC_alt_intro {
 			'.t3lib_BEfunc::displayWarningMessages();
 
 		$this->content .= '
-			<p>'.$LANG->getLL('introtext2').'</p>';
+			<h3>' . $LANG->getLL('introtext2') . '</h3>';
 
 
 			// Printing the description of the modules available
@@ -126,21 +129,13 @@ class SC_alt_intro {
 
 			// end text: 'Features may vary depending on your website and permissions'
 		$this->content.='<p class="c-features"><em>('.$LANG->getLL('endText').')</em></p>';
-		$this->content.='<hr />';
+		$this->content .= '<br /></div>';
 
-			// Logged in user, eg: 'You're logged in as user: admin (John Doe, john@doe.email)'
-		$this->content.='<p class="c-user">'.
-				htmlspecialchars($LANG->getLL('userInfo')).
-				sprintf(' <strong>%s</strong> (%s)',
-						htmlspecialchars($BE_USER->user['username']),
-						htmlspecialchars(implode(', ',array($BE_USER->user['realName'],$BE_USER->user['email'])))
-						).
-				'</p>
-				<br />
-				<br />';
-
-			// End page
-		$this->content.= $TBE_TEMPLATE->endPage();
+			// Renders the module page
+		$this->content = $TBE_TEMPLATE->render(
+			'About modules',
+			$this->content
+		);
 	}
 
 	/**
@@ -154,8 +149,8 @@ class SC_alt_intro {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_intro.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_intro.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_intro.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_intro.php']);
 }
 
 

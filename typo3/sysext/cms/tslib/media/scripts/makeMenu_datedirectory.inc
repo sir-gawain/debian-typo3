@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,11 +28,10 @@
  * Date directory
  * Can be used with the HMENU cObject, special property set to "userdefined".
  *
- * $Id: makeMenu_datedirectory.inc 5165 2009-03-09 18:28:59Z ohader $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
  * @author	Olaf.Schuemann@erz.be.ch
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=358&cHash=5400c1c06a
  * @see makeMenu_keywords_updated.inc
  */
 
@@ -68,7 +67,7 @@ if ($value=='') {
 	$value=$GLOBALS['TSFE']->page['uid'];
 }
 $items=t3lib_div::intExplode(',',$value);
-while(list(,$id)=each($items))        {
+foreach ($items as $id) {
 	$res = $GLOBALS['TSFE']->cObj->exec_getQuery('pages',Array('pidInList'=>$id,'orderBy'=>$altSortField));
 	while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))        {
 		$menuItemsArray[]=$row;

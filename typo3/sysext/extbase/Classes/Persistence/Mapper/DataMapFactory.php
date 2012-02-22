@@ -29,60 +29,100 @@
  * @subpackage Persistence\Mapper
  * @version $ID:$
  */
-class Tx_Extbase_Persistence_Mapper_DataMapFactory {
+class Tx_Extbase_Persistence_Mapper_DataMapFactory implements t3lib_Singleton {
+
+	/**
+	 * @var Tx_Extbase_Reflection_Service
+	 */
+	protected $reflectionService;
+
+	/**
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
+
+	/**
+	 * Injects the reflection service
+	 *
+	 * @param Tx_Extbase_Reflection_Service $reflectionService
+	 * @return void
+	 */
+	public function injectReflectionService(Tx_Extbase_Reflection_Service $reflectionService) {
+		$this->reflectionService = $reflectionService;
+	}
+
+	/**
+	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @return void
+	 */
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+	}
 
 	/**
 	 * Builds a data map by adding column maps for all the configured columns in the $TCA.
 	 * It also resolves the type of values the column is holding and the typo of relation the column
 	 * represents.
 	 *
-	 * @return void
+	 * @param string $className The class name you want to fetch the Data Map for
+	 * @return Tx_Extbase_Persistence_Mapper_DataMap The data map
 	 */
 	public function buildDataMap($className) {
 		if (!class_exists($className)) {
 			throw new Tx_Extbase_Persistence_Exception_InvalidClass('Could not find class definition for name "' . $className . '". This could be caused by a mis-spelling of the class name in the class definition.');
 		}
-		$tableName = NULL;
+
+		$recordType = NULL;
+		$subclasses = array();
+		$tableName = strtolower($className);
 		$columnMapping = array();
-		$extbaseSettings = Tx_Extbase_Dispatcher::getExtbaseFrameworkConfiguration();
-		if (is_array($extbaseSettings['persistence']['classes'][$className])) {
-			$persistenceSettings = $extbaseSettings['persistence']['classes'][$className];
-			if (is_string($persistenceSettings['mapping']['tableName']) && strlen($persistenceSettings['mapping']['tableName']) > 0) {
-				$tableName = $persistenceSettings['mapping']['tableName'];
+
+		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+		$classSettings = $frameworkConfiguration['persistence']['classes'][$className];
+		if ($classSettings !== NULL) {
+			if (isset($classSettings['subclasses']) && is_array($classSettings['subclasses'])) {
+				$subclasses = $classSettings['subclasses'];
 			}
-			if (is_array($persistenceSettings['mapping']['columns'])) {
-				$columnMapping = $persistenceSettings['mapping']['columns'];
+			if (isset($classSettings['mapping']['recordType']) && strlen($classSettings['mapping']['recordType']) > 0) {
+				$recordType = $classSettings['mapping']['recordType'];
 			}
-		} elseif (class_exists($className)) {
-			foreach (class_parents($className) as $parentClassName) {
-				$persistenceSettings = $extbaseSettings['persistence']['classes'][$parentClassName];
-				if (is_array($persistenceSettings)) {
-					if (is_string($persistenceSettings['mapping']['tableName']) && strlen($persistenceSettings['mapping']['tableName']) > 0) {
-						$tableName = $persistenceSettings['mapping']['tableName'];
-					}
-					if (is_array($persistenceSettings['mapping']['columns'])) {
-						$columnMapping = $persistenceSettings['mapping']['columns'];
+			if (isset($classSettings['mapping']['tableName']) && strlen($classSettings['mapping']['tableName']) > 0) {
+				$tableName = $classSettings['mapping']['tableName'];
+			}
+			$classHierachy = array_merge(array($className), class_parents($className));
+			foreach ($classHierachy as $currentClassName) {
+				if (in_array($currentClassName, array('Tx_Extbase_DomainObject_AbstractEntity', 'Tx_Extbase_DomainObject_AbstractValueObject'))) {
+					break;
+				}
+				$currentClassSettings = $frameworkConfiguration['persistence']['classes'][$currentClassName];
+				if ($currentClassSettings !== NULL) {
+					if (isset($currentClassSettings['mapping']['columns']) && is_array($currentClassSettings['mapping']['columns'])) {
+						$columnMapping = t3lib_div::array_merge_recursive_overrule($columnMapping, $currentClassSettings['mapping']['columns'], 0, FALSE); // FALSE means: do not include empty values form 2nd array
 					}
 				}
-				break;
 			}
 		}
-		if ($tableName === NULL) {
-			$tableName = strtolower($className);
-		}
-		$dataMap = t3lib_div::makeInstance('Tx_Extbase_Persistence_Mapper_DataMap', $className, $tableName);
+
+		$dataMap = new Tx_Extbase_Persistence_Mapper_DataMap($className, $tableName, $recordType, $subclasses);
 		$dataMap = $this->addMetaDataColumnNames($dataMap, $tableName);
-		$columnConfigurations = array();
-		foreach ($this->getColumnsDefinition($tableName) as $columnName => $columnDefinition) {
-			$columnConfigurations[$columnName] = $columnDefinition['config'];
-			$columnConfigurations[$columnName]['mapOnProperty'] = Tx_Extbase_Utility_Extension::convertUnderscoredToLowerCamelCase($columnName);
+
+		// $classPropertyNames = $this->reflectionService->getClassPropertyNames($className);
+		$tcaColumnsDefinition = $this->getColumnsDefinition($tableName);
+		$tcaColumnsDefinition = t3lib_div::array_merge_recursive_overrule($tcaColumnsDefinition, $columnMapping); // TODO Is this is too powerful?
+		foreach ($tcaColumnsDefinition as $columnName => $columnDefinition) {
+			if (isset($columnDefinition['mapOnProperty'])) {
+				$propertyName = $columnDefinition['mapOnProperty'];
+			} else {
+				$propertyName = t3lib_div::underscoredToLowerCamelCase($columnName);
+			}
+			// if (in_array($propertyName, $classPropertyNames)) { // TODO Enable check for property existance
+				$columnMap = new Tx_Extbase_Persistence_Mapper_ColumnMap($columnName, $propertyName);
+				$propertyMetaData = $this->reflectionService->getClassSchema($className)->getProperty($propertyName);
+				$columnMap = $this->setRelations($columnMap, $columnDefinition['config'], $propertyMetaData);
+				$dataMap->addColumnMap($columnMap);
+			// }
 		}
-		$columnConfigurations = t3lib_div::array_merge_recursive_overrule($columnConfigurations, $columnMapping);
-		foreach ($columnConfigurations as $columnName => $columnConfiguration) {
-			$columnMap = new Tx_Extbase_Persistence_Mapper_ColumnMap($columnName, $columnConfiguration['mapOnProperty']);
-			$columnMap = $this->setRelations($columnMap, $columnConfiguration);
-			$dataMap->addColumnMap($columnMap);
-		}
+		// debug($dataMap);
 		return $dataMap;
 	}
 
@@ -96,7 +136,7 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		$this->includeTca($tableName);
 		return is_array($GLOBALS['TCA'][$tableName]['ctrl']) ? $GLOBALS['TCA'][$tableName]['ctrl'] : NULL;
 	}
-	
+
 	/**
 	 * Returns the TCA columns array of the specified table
 	 *
@@ -107,7 +147,7 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		$this->includeTca($tableName);
 		return is_array($GLOBALS['TCA'][$tableName]['columns']) ? $GLOBALS['TCA'][$tableName]['columns'] : array();
 	}
-	
+
 	/**
 	 * Includes the TCA for the given table
 	 *
@@ -120,7 +160,7 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		}
 		t3lib_div::loadTCA($tableName);
 	}
-	
+
 	protected function addMetaDataColumnNames(Tx_Extbase_Persistence_Mapper_DataMap $dataMap, $tableName) {
 		$controlSection = $GLOBALS['TCA'][$tableName]['ctrl'];
 		$dataMap->setPageIdColumnName('pid');
@@ -130,40 +170,40 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		if (isset($controlSection['delete'])) $dataMap->setDeletedFlagColumnName($controlSection['delete']);
 		if (isset($controlSection['languageField'])) $dataMap->setLanguageIdColumnName($controlSection['languageField']);
 		if (isset($controlSection['transOrigPointerField'])) $dataMap->setTranslationOriginColumnName($controlSection['transOrigPointerField']);
+		if (isset($controlSection['type'])) $dataMap->setRecordTypeColumnName($controlSection['type']);
 		if (isset($controlSection['enablecolumns']['disabled'])) $dataMap->setDisabledFlagColumnName($controlSection['enablecolumns']['disabled']);
 		if (isset($controlSection['enablecolumns']['starttime'])) $dataMap->setStartTimeColumnName($controlSection['enablecolumns']['starttime']);
 		if (isset($controlSection['enablecolumns']['endtime'])) $dataMap->setEndTimeColumnName($controlSection['enablecolumns']['endtime']);
 		if (isset($controlSection['enablecolumns']['fe_group'])) $dataMap->setFrontEndUserGroupColumnName($controlSection['enablecolumns']['fe_group']);
 		return $dataMap;
 	}
-		
+
 	/**
 	 * This method tries to determine the type of type of relation to other tables and sets it based on
 	 * the $TCA column configuration
 	 *
 	 * @param Tx_Extbase_Persistence_Mapper_ColumnMap $columnMap The column map
 	 * @param string $columnConfiguration The column configuration from $TCA
+	 * @param array $propertyMetaData The property metadata as delivered by the reflection service
 	 * @return void
 	 */
-	protected function setRelations(Tx_Extbase_Persistence_Mapper_ColumnMap $columnMap, $columnConfiguration) {
-		if (isset($columnConfiguration) && $columnConfiguration['type'] !== 'passthrough') {
-			if (isset($columnConfiguration['foreign_table'])) {
-				if (isset($columnConfiguration['MM']) || isset($columnConfiguration['foreign_selector'])) {
-					$columnMap = $this->setManyToManyRelation($columnMap, $columnConfiguration);
-				} else {
-					if (!isset($columnConfiguration['maxitems']) || $columnConfiguration['maxitems'] == 1) {
-						$columnMap = $this->setOneToOneRelation($columnMap, $columnConfiguration);
-					} else {
-						$columnMap = $this->setOneToManyRelation($columnMap, $columnConfiguration);
-					}
-				}
+	protected function setRelations(Tx_Extbase_Persistence_Mapper_ColumnMap $columnMap, $columnConfiguration, $propertyMetaData) {
+		if (isset($columnConfiguration)) {
+			if (isset($columnConfiguration['MM']) || isset($columnConfiguration['foreign_selector'])) {
+				$columnMap = $this->setManyToManyRelation($columnMap, $columnConfiguration);
+			} elseif (isset($propertyMetaData['elementType'])) {
+				$columnMap = $this->setOneToManyRelation($columnMap, $columnConfiguration);
+			} elseif (isset($propertyMetaData['type']) && strpos($propertyMetaData['type'], '_') !== FALSE) {
+				$columnMap = $this->setOneToOneRelation($columnMap, $columnConfiguration);
 			} else {
-				$columnMap->setTypeOfRelation(Tx_Extbase_Persistence_Mapper_ColumnMap::RELATION_NONE);
+					$columnMap->setTypeOfRelation(Tx_Extbase_Persistence_Mapper_ColumnMap::RELATION_NONE);
 			}
+		} else {
+			$columnMap->setTypeOfRelation(Tx_Extbase_Persistence_Mapper_ColumnMap::RELATION_NONE);
 		}
 		return $columnMap;
 	}
-	
+
 	/**
 	 * This method sets the configuration for a 1:1 relation based on
 	 * the $TCA column configuration
@@ -181,7 +221,7 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		$columnMap->setParentTableFieldName($columnConfiguration['foreign_table_field']);
 		return $columnMap;
 	}
-	
+
 	/**
 	 * This method sets the configuration for a 1:n relation based on
 	 * the $TCA column configuration
@@ -199,7 +239,7 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		$columnMap->setParentTableFieldName($columnConfiguration['foreign_table_field']);
 		return $columnMap;
 	}
-	
+
 	/**
 	 * This method sets the configuration for a m:n relation based on
 	 * the $TCA column configuration
@@ -246,5 +286,5 @@ class Tx_Extbase_Persistence_Mapper_DataMapFactory {
 		}
 		return $columnMap;
 	}
-		
+
 }

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Julian Kleinhans <typo3@kj187.de>
+*  (c) 2009-2011 Julian Kleinhans <typo3@kj187.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@ require_once(t3lib_extMgm::extPath('recycler', 'classes/model/class.tx_recycler_
  * @author	Julian Kleinhans <typo3@kj187.de>
  * @package	TYPO3
  * @subpackage	tx_recycler
- * @version $Id: class.tx_recycler_model_tables.php 6536 2009-11-25 14:07:18Z stucki $
+ * @version $Id$
  */
 class tx_recycler_model_tables {
 	/**
@@ -93,8 +93,8 @@ class tx_recycler_model_tables {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/classes/model/class.tx_recycler_model_tables.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/classes/model/class.tx_recycler_model_tables.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/model/class.tx_recycler_model_tables.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/model/class.tx_recycler_model_tables.php']);
 }
 
 ?>

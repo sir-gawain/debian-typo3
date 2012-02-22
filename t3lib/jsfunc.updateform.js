@@ -2,13 +2,13 @@
 *
 *  Universal formupdate-function
 *
-* $Id: jsfunc.updateform.js 5175 2009-03-10 20:36:07Z ohader $
+* $Id$
 *
 *
 *
 *  Copyright notice
 *
-*  (c) 1998-2009 Kasper Skaarhoj
+*  (c) 1998-2011 Kasper Skaarhoj
 *  All rights reserved
 *
 *  This script is part of the TYPO3 t3lib/ library provided by

@@ -14,9 +14,6 @@
  *                                                                        */
 
 /**
- * @package
- * @subpackage
- * @version $Id: DocbookGeneratorService.php 1734 2009-11-25 21:53:57Z stucki $
  */
 /**
  * Class extending the docbook generator service for use in typo3 v4.
@@ -75,7 +72,7 @@ class Tx_Fluid_Compatibility_DocbookGeneratorService extends Tx_Fluid_Service_Do
 	}
 
 	protected function instanciateViewHelper($className) {
-		$objectFactory = t3lib_div::makeInstance('Tx_Fluid_Compatibility_ObjectFactory');
+		$objectFactory = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
 		return $objectFactory->create($className);
 	}
 }

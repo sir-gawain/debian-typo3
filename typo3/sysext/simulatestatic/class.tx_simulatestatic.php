@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj <kasperYYYY@typo3.com>
-*  (c) 2008-2009 Benjamin Mack <benni . typo3 . o)rg>
+*  (c) 1999-2011 Kasper Skårhøj <kasperYYYY@typo3.com>
+*  (c) 2008-2011 Benjamin Mack <benni . typo3 . o)rg>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,9 +29,9 @@
  * Class that does the simulatestatic feature (Speaking URLs)
  * Was extracted for TYPO3 4.3 from the core
  *
- * $Id: class.tx_simulatestatic.php 6469 2009-11-17 23:56:35Z benni $
+ * $Id$
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author	Benjamin Mack <benni . typo3 . o)rg>
  */
 class tx_simulatestatic {
@@ -107,7 +107,8 @@ class tx_simulatestatic {
 					$message = 'PATH_INFO was not configured for this website, and the URL tries to find the page by PATH_INFO!';
 					header(t3lib_utility_Http::HTTP_STATUS_503);
 					t3lib_div::sysLog($message, 'cms', t3lib_div::SYSLOG_SEVERITY_ERROR);
-					$parentObject->printError($message.'<br /><br /><a href="' . htmlspecialchars($redirectUrl) . '">Click here to get to the right page.</a>','Error: PATH_INFO not configured');
+					$message = 'Error: PATH_INFO not configured: ' . $message . '<br /><br /><a href="' . htmlspecialchars($redirectUrl) . '">Click here to get to the right page.</a>';
+					throw new RuntimeException($message);
 				}
 			} else {
 				t3lib_utility_Http::redirect($redirectUrl);
@@ -273,9 +274,11 @@ class tx_simulatestatic {
 	 * @param	tslib_fe	Reference to the calling TSFE instance
 	 * @return	string		The body of the filename.
 	 * @see makeSimulatedFileName()
-	 * @deprecated since TYPO3 4.3, will be deleted in TYPO3 4.5
+	 * @deprecated since TYPO3 4.3, will be deleted in TYPO3 4.6
 	 */
 	public function makeSimulatedFileNameCompat(array &$parameters, tslib_fe &$parentObject) {
+		t3lib_div::logDeprecatedFunction();
+
 		return $this->makeSimulatedFileName(
 			$parameters['inTitle'],
 			$parameters['page'],
@@ -412,7 +415,7 @@ class tx_simulatestatic {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simulatestatic/class.tx_simulatestatic.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simulatestatic/class.tx_simulatestatic.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simulatestatic/class.tx_simulatestatic.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/simulatestatic/class.tx_simulatestatic.php']);
 }
 ?>

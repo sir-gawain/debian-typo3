@@ -37,6 +37,11 @@
 class Tx_Extbase_MVC_Controller_Argument {
 
 	/**
+	 * @var Tx_Extbase_Object_ObjectManagerInterface
+	 */
+	protected $objectManager;
+
+	/**
 	 * @var Tx_Extbase_Persistence_QueryFactory
 	 */
 	protected $queryFactory;
@@ -134,14 +139,29 @@ class Tx_Extbase_MVC_Controller_Argument {
 	}
 
 	/**
-	 * Initializes this object
+	 * Injects the object manager
 	 *
+	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
 	 * @return void
 	 */
-	public function initializeObject() {
-		$this->reflectionService = t3lib_div::makeInstance('Tx_Extbase_Reflection_Service');
-		$this->propertyMapper = t3lib_div::makeInstance('Tx_Extbase_Property_Mapper');
-		$this->propertyMapper->injectReflectionService($this->reflectionService);
+	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
+		$this->objectManager = $objectManager;
+	}
+
+	/**
+	 * @param Tx_Extbase_Property_Mapper $propertyMapper
+	 * @return void
+	 */
+	public function injectPropertyMapper(Tx_Extbase_Property_Mapper $propertyMapper) {
+		$this->propertyMapper = $propertyMapper;
+	}
+
+	/**
+	 * @param Tx_Extbase_Reflection_Service $reflectionService
+	 * @return void
+	 */
+	public function injectReflectionService(Tx_Extbase_Reflection_Service $reflectionService) {
+		$this->reflectionService = $reflectionService;
 		$this->dataTypeClassSchema = (strstr($this->dataType, '_') !== FALSE) ? $this->reflectionService->getClassSchema($this->dataType) : NULL;
 	}
 
@@ -286,11 +306,13 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 */
 	public function setNewValidatorConjunction(array $objectNames) {
 		if ($this->validator === NULL) {
-			$this->validator = t3lib_div::makeInstance('Tx_Extbase_Validation_Validator_ConjunctionValidator');
+			$this->validator = $this->objectManager->create('Tx_Extbase_Validation_Validator_ConjunctionValidator');
 		}
 		foreach ($objectNames as $objectName) {
-			if (!class_exists($objectName)) $objectName = 'Tx_Extbase_Validation_Validator_' . $objectName;
-			$this->validator->addValidator(t3lib_div::makeInstance($objectName));
+			if (!class_exists($objectName)) {
+				$objectName = 'Tx_Extbase_Validation_Validator_' . $objectName;
+			}
+			$this->validator->addValidator($this->objectManager->get($objectName));
 		}
 		return $this;
 	}
@@ -302,7 +324,7 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * @api
 	 */
 	public function getValidator() {
- 		return $this->validator;
+		return $this->validator;
 	}
 
 	/**
@@ -323,8 +345,11 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * @throws Tx_Extbase_MVC_Exception_InvalidArgumentValue if the argument is not a valid object of type $dataType
 	 */
 	public function setValue($value) {
-		$this->value = $this->transformValue($value);
-
+		if ($value === NULL || (is_object($value) && $value instanceof $this->dataType)) {
+			$this->value = $value;
+		} else {
+			$this->value = $this->transformValue($value);
+		}
 		return $this;
 	}
 
@@ -339,9 +364,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * @return mixed
 	 */
 	protected function transformValue($value) {
-		if ($value === NULL) {
-			return NULL;
-		}
 		if (!class_exists($this->dataType)) {
 			return $value;
 		}
@@ -363,8 +385,15 @@ class Tx_Extbase_MVC_Controller_Argument {
 			$transformedValue = $this->propertyMapper->map(array_keys($value), $value, $this->dataType);
 		}
 
-		if (!($transformedValue instanceof $this->dataType)) {
-			throw new Tx_Extbase_MVC_Exception_InvalidArgumentValue('The value must be of type "' . $this->dataType . '", but was of type "' . (is_object($transformedValue) ? get_class($transformedValue) : gettype($transformedValue)) . '".', 1251730701);
+		if (!($transformedValue instanceof $this->dataType) && ($transformedValue !== NULL || $this->isRequired())) {
+			throw new Tx_Extbase_MVC_Exception_InvalidArgumentValue(
+				'The value must be of type "' . $this->dataType . '", but was of type "'
+					. (is_object($transformedValue) ? get_class($transformedValue) : gettype($transformedValue)) . '".'
+						// add mappingResult errors to exception
+					. ($this->propertyMapper->getMappingResults()->hasErrors()
+						? '<p>' . implode('<br />', $this->propertyMapper->getMappingResults()->getErrors()) . '</p>'
+						: ''),
+				1251730701);
 		}
 		return $transformedValue;
 	}
@@ -373,17 +402,16 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * Finds an object from the repository by searching for its technical UID.
 	 *
 	 * @param int $uid The object's uid
-	 * @return mixed Either the object matching the uid or, if none or more than one object was found, FALSE
+	 * @return object Either the object matching the uid or, if none or more than one object was found, NULL
 	 */
 	protected function findObjectByUid($uid) {
 		$query = $this->queryFactory->create($this->dataType);
 		$query->getQuerySettings()->setRespectSysLanguage(FALSE);
-		$result = $query->matching($query->withUid($uid))->execute();
-		$object = NULL;
-		if (count($result) > 0) {
-			$object = current($result);
-		}
-		return $object;
+		$query->getQuerySettings()->setRespectStoragePage(FALSE);
+		return $query->matching(
+			$query->equals('uid', $uid))
+			->execute()
+			->getFirst();
 	}
 
 	/**

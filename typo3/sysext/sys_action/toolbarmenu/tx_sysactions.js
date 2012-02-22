@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Steffen Kamper <info@sk-typo3.de>
+*  (c) 2008-2010 Steffen Kamper <info@sk-typo3.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * class to handle the dev links menu
  *
- * $Id: tx_sysactions.js 6539 2009-11-25 14:49:14Z stucki $
+ * $Id$
  */
 var SysActionMenu = Class.create({
 
@@ -35,41 +35,18 @@ var SysActionMenu = Class.create({
 	 * registers for resize event listener and executes on DOM ready
 	 */
 	initialize: function() {
-		Event.observe(window, 'resize', this.positionMenu);
 
-		Event.observe(window, 'load', function(){
-			this.positionMenu();
-			this.toolbarItemIcon = $$('#tx-sys-action-menu .toolbar-item img')[0].src;
+		Ext.onReady(function() {
+			Event.observe(
+				window, 'resize',
+				function() { TYPO3BackendToolbarManager.positionMenu('tx-sys-action-menu'); }
+			);
+			TYPO3BackendToolbarManager.positionMenu('tx-sys-action-menu');
+			this.toolbarItemIcon = $$('#tx-sys-action-menu .toolbar-item span')[0].src;
 
 			Event.observe('tx-sys-action-menu', 'click', this.toggleMenu);
 
-		}.bindAsEventListener(this));
-	},
-
-	/**
-	 * positions the menu below the toolbar icon, let's do some math!
-	 */
-	positionMenu: function() {
-		var calculatedOffset = 0;
-		var parentWidth      = $('tx-sys-action-menu').getWidth();
-		var ownWidth         = $$('#tx-sys-action-menu ul')[0].getWidth();
-		var parentSiblings   = $('tx-sys-action-menu').previousSiblings();
-
-		parentSiblings.each(function(toolbarItem) {
-			calculatedOffset += toolbarItem.getWidth() - 1;
-			// -1 to compensate for the margin-right -1px of the list items,
-			// which itself is necessary for overlaying the separator with the active state background
-
-			if(toolbarItem.down().hasClassName('no-separator')) {
-				calculatedOffset -= 1;
-			}
-		});
-		calculatedOffset = calculatedOffset - ownWidth + parentWidth;
-
-
-		$$('#tx-sys-action-menu ul')[0].setStyle({
-			left: calculatedOffset + 'px'
-		});
+		}, this);
 	},
 
 	/**
@@ -97,4 +74,3 @@ var SysActionMenu = Class.create({
 });
 
 var TYPO3BackendSysactionMenu = new SysActionMenu();
-

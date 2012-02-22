@@ -1,5 +1,5 @@
 #
-# TYPO3 SVN ID: $Id: tables.sql 6525 2009-11-25 11:27:34Z steffenk $
+# TYPO3 SVN ID: $Id$
 #
 
 #
@@ -93,33 +93,6 @@ CREATE TABLE be_users (
 );
 
 #
-# Table structure for table 'cache_extensions'
-#
-CREATE TABLE cache_extensions (
-  extkey varchar(60) NOT NULL default '',
-  version varchar(10) NOT NULL default '',
-  alldownloadcounter int(11) unsigned NOT NULL default '0',
-  downloadcounter int(11) unsigned NOT NULL default '0',
-  title varchar(150) NOT NULL default '',
-  description mediumtext,
-  state int(4) NOT NULL default '0',
-  reviewstate int(4) NOT NULL default '0',
-  category int(4) NOT NULL default '0',
-  lastuploaddate int(11) unsigned NOT NULL default '0',
-  dependencies mediumtext,
-  authorname varchar(100) NOT NULL default '',
-  authoremail varchar(100) NOT NULL default '',
-  ownerusername varchar(50) NOT NULL default '',
-  t3xfilemd5 varchar(35) NOT NULL default '',
-  uploadcomment mediumtext,
-  authorcompany varchar(100) NOT NULL default '',
-  intversion int(11) NOT NULL default '0',
-  lastversion int(3) NOT NULL default '0',
-  lastreviewedversion int(3) NOT NULL default '0',
-  PRIMARY KEY (extkey,version)
-);
-
-#
 # Table structure for table 'cache_hash'
 #
 CREATE TABLE cache_hash (
@@ -140,7 +113,7 @@ CREATE TABLE cachingframework_cache_hash (
   id int(11) unsigned NOT NULL auto_increment,
   identifier varchar(128) DEFAULT '' NOT NULL,
   crdate int(11) unsigned DEFAULT '0' NOT NULL,
-  content mediumtext,
+  content mediumblob,
   lifetime int(11) unsigned DEFAULT '0' NOT NULL,
   PRIMARY KEY (id),
   KEY cache_id (identifier)
@@ -184,7 +157,7 @@ CREATE TABLE pages (
   t3ver_wsid int(11) DEFAULT '0' NOT NULL,
   t3ver_label varchar(255) DEFAULT '' NOT NULL,
   t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
-  t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
+  t3ver_stage int(11) DEFAULT '0' NOT NULL,
   t3ver_count int(11) DEFAULT '0' NOT NULL,
   t3ver_tstamp int(11) DEFAULT '0' NOT NULL,
   t3ver_swapmode tinyint(4) DEFAULT '0' NOT NULL,
@@ -209,9 +182,45 @@ CREATE TABLE pages (
   is_siteroot tinyint(4) DEFAULT '0' NOT NULL,
   php_tree_stop tinyint(4) DEFAULT '0' NOT NULL,
   tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
+  url varchar(255) DEFAULT '' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  urltype tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  shortcut int(10) unsigned DEFAULT '0' NOT NULL,
+  shortcut_mode int(10) unsigned DEFAULT '0' NOT NULL,
+  no_cache int(10) unsigned DEFAULT '0' NOT NULL,
+  fe_group varchar(100) DEFAULT '0' NOT NULL,
+  subtitle varchar(255) DEFAULT '' NOT NULL,
+  layout tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  url_scheme tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  target varchar(80) DEFAULT '' NOT NULL,
+  media text,
+  lastUpdated int(10) unsigned DEFAULT '0' NOT NULL,
+  keywords text,
+  cache_timeout int(10) unsigned DEFAULT '0' NOT NULL,
+  newUntil int(10) unsigned DEFAULT '0' NOT NULL,
+  description text,
+  no_search tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  SYS_LASTCHANGED int(10) unsigned DEFAULT '0' NOT NULL,
+  abstract text,
+  module varchar(10) DEFAULT '' NOT NULL,
+  extendToSubpages tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  author varchar(255) DEFAULT '' NOT NULL,
+  author_email varchar(80) DEFAULT '' NOT NULL,
+  nav_title varchar(255) DEFAULT '' NOT NULL,
+  nav_hide tinyint(4) DEFAULT '0' NOT NULL,
+  content_from_pid int(10) unsigned DEFAULT '0' NOT NULL,
+  mount_pid int(10) unsigned DEFAULT '0' NOT NULL,
+  mount_pid_ol tinyint(4) DEFAULT '0' NOT NULL,
+  alias varchar(32) DEFAULT '' NOT NULL,
+  l18n_cfg tinyint(4) DEFAULT '0' NOT NULL,
+  fe_login_mode tinyint(4) DEFAULT '0' NOT NULL,
+  backend_layout int(10) DEFAULT '0' NOT NULL,
+  backend_layout_next_level int(10) DEFAULT '0' NOT NULL,
   PRIMARY KEY (uid),
   KEY t3ver_oid (t3ver_oid,t3ver_wsid),
-  KEY parent (pid,sorting,deleted,hidden)
+  KEY parent (pid,sorting,deleted,hidden),
+  KEY alias (alias)
 );
 
 #
@@ -243,6 +252,27 @@ CREATE TABLE sys_be_shortcuts (
 
 
 #
+# Table structure for table 'sys_news'
+#
+CREATE TABLE sys_news (
+  uid int(11) unsigned NOT NULL auto_increment,
+  pid int(11) unsigned DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
+  deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
+  hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  starttime int(11) unsigned DEFAULT '0' NOT NULL,
+  endtime int(11) unsigned DEFAULT '0' NOT NULL,
+  title varchar(255) DEFAULT '' NOT NULL,
+  content mediumtext,
+
+  PRIMARY KEY (uid),
+  KEY parent (pid)
+);
+
+
+#
 # Table structure for table 'sys_preview'
 #
 CREATE TABLE sys_preview (
@@ -266,36 +296,7 @@ CREATE TABLE sys_filemounts (
   base tinyint(4) unsigned DEFAULT '0' NOT NULL,
   hidden tinyint(3) unsigned DEFAULT '0' NOT NULL,
   deleted tinyint(1) unsigned DEFAULT '0' NOT NULL,
-  PRIMARY KEY (uid),
-  KEY parent (pid)
-);
-
-#
-# Table structure for table 'sys_workspace'
-#
-CREATE TABLE sys_workspace (
-  uid int(11) NOT NULL auto_increment,
-  pid int(11) DEFAULT '0' NOT NULL,
-  tstamp int(11) DEFAULT '0' NOT NULL,
-  deleted tinyint(1) DEFAULT '0' NOT NULL,
-  title varchar(30) DEFAULT '' NOT NULL,
-  description varchar(255) DEFAULT '' NOT NULL,
-  adminusers varchar(255) DEFAULT '' NOT NULL,
-  members text,
-  reviewers text,
-  db_mountpoints varchar(255) DEFAULT '' NOT NULL,
-  file_mountpoints varchar(255) DEFAULT '' NOT NULL,
-  publish_time int(11) DEFAULT '0' NOT NULL,
-  unpublish_time int(11) DEFAULT '0' NOT NULL,
-  freeze tinyint(3) DEFAULT '0' NOT NULL,
-  live_edit tinyint(3) DEFAULT '0' NOT NULL,
-  review_stage_edit tinyint(3) DEFAULT '0' NOT NULL,
-  vtypes tinyint(3) DEFAULT '0' NOT NULL,
-  disable_autocreate tinyint(1) DEFAULT '0' NOT NULL,
-  swap_modes tinyint(3) DEFAULT '0' NOT NULL,
-  publish_access tinyint(3) DEFAULT '0' NOT NULL,
-  stagechg_notification tinyint(3) DEFAULT '0' NOT NULL,
-
+  sorting int(11) unsigned DEFAULT '0' NOT NULL,
   PRIMARY KEY (uid),
   KEY parent (pid)
 );
@@ -314,9 +315,10 @@ CREATE TABLE sys_history (
   history_files mediumtext,
   snapshot tinyint(4) DEFAULT '0' NOT NULL,
   PRIMARY KEY (uid),
-  KEY recordident (tablename,recuid,tstamp),
+  KEY recordident_1 (tablename,recuid),
+  KEY recordident_2 (tablename,tstamp),
   KEY sys_log_uid (sys_log_uid)
-);
+) ENGINE=InnoDB;
 
 #
 # Table structure for table 'sys_lockedrecords'
@@ -328,7 +330,7 @@ CREATE TABLE sys_lockedrecords (
   record_table varchar(255) DEFAULT '' NOT NULL,
   record_uid int(11) DEFAULT '0' NOT NULL,
   record_pid int(11) DEFAULT '0' NOT NULL,
-  username varchar(20) DEFAULT '' NOT NULL,
+  username varchar(50) DEFAULT '' NOT NULL,
   feuserid int(11) unsigned DEFAULT '0' NOT NULL,
   PRIMARY KEY (uid),
   KEY event (userid,tstamp)
@@ -358,35 +360,6 @@ CREATE TABLE sys_refindex (
 );
 
 #
-# Table structure for table 'sys_refindex_words'
-#
-CREATE TABLE sys_refindex_words (
-  wid int(11) DEFAULT '0' NOT NULL,
-  baseword varchar(60) DEFAULT '' NOT NULL,
-  PRIMARY KEY (wid)
-);
-
-#
-# Table structure for table 'sys_refindex_rel'
-#
-CREATE TABLE sys_refindex_rel (
-  rid int(11) DEFAULT '0' NOT NULL,
-  wid int(11) DEFAULT '0' NOT NULL,
-  PRIMARY KEY (rid,wid)
-);
-
-
-#
-# Table structure for table 'sys_refindex_res'
-#
-CREATE TABLE sys_refindex_res (
-  rid int(11) DEFAULT '0' NOT NULL,
-  tablename varchar(255) DEFAULT '' NOT NULL,
-  recuid int(11) DEFAULT '0' NOT NULL,
-  PRIMARY KEY (rid)
-);
-
-#
 # Table structure for table 'sys_log'
 #
 CREATE TABLE sys_log (
@@ -397,7 +370,7 @@ CREATE TABLE sys_log (
   tablename varchar(255) DEFAULT '' NOT NULL,
   recpid int(11) DEFAULT '0' NOT NULL,
   error tinyint(4) unsigned DEFAULT '0' NOT NULL,
-  details varchar(255) DEFAULT '' NOT NULL,
+  details text NOT NULL,
   tstamp int(11) unsigned DEFAULT '0' NOT NULL,
   type tinyint(3) unsigned DEFAULT '0' NOT NULL,
   details_nr tinyint(3) unsigned DEFAULT '0' NOT NULL,

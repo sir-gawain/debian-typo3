@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2009 Robert Lemke (robert@typo3.org)
-*  (c) 2006-2009 Karsten Dambekalns (karsten@typo3.org)
+*  (c) 2004-2011 Robert Lemke (robert@typo3.org)
+*  (c) 2006-2011 Karsten Dambekalns (karsten@typo3.org)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -38,8 +38,8 @@ class tx_adodb_tceforms {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/adodb/class.tx_adodb_tceforms.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/adodb/class.tx_adodb_tceforms.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/adodb/class.tx_adodb_tceforms.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/adodb/class.tx_adodb_tceforms.php']);
 }
 
 ?>

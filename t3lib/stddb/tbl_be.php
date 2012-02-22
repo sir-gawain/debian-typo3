@@ -1,42 +1,38 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*  A copy is found in the textfile GPL.txt and important notices to the license
-*  from the author is found in LICENSE.txt distributed with these scripts.
-*
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
- * Contains the dynamic configuation of the fields in the core tables of TYPO3: be_users, be_groups, sys_filemounts and sys_workspace
+ * Contains the dynamic configuation of the fields in the core tables of TYPO3: be_users, be_groups and sys_filemounts
  *
- * $Id: tbl_be.php 6430 2009-11-16 16:31:24Z ohader $
- * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @see tables.php, tables.sql
  */
-
-
-
-
 
 
 /**
@@ -74,7 +70,7 @@ $TCA['be_users'] = array(
 				'foreign_table_where' => 'ORDER BY be_groups.title',
 				'size' => '5',
 				'maxitems' => '20',
-#				'renderMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['accessListRenderMode'],
+				#				'renderMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['accessListRenderMode'],
 				'iconsInOptionTags' => 1,
 				'wizards' => array(
 					'_PADDING' => 1,
@@ -118,7 +114,6 @@ $TCA['be_users'] = array(
 				'size' => '20',
 				'eval' => 'trim',
 				'max' => '50',
-				'checkbox' => '',
 				'softref' => 'substitute'
 			)
 		),
@@ -127,7 +122,7 @@ $TCA['be_users'] = array(
 			'config' => array(
 				'type' => 'group',
 				'internal_type' => 'db',
-					'allowed' => 'pages',
+				'allowed' => 'pages',
 				'size' => '3',
 				'maxitems' => '10',
 				'autoSizeMax' => 10,
@@ -148,7 +143,6 @@ $TCA['be_users'] = array(
 				'size' => '3',
 				'maxitems' => '10',
 				'autoSizeMax' => 10,
-				'renderMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['accessListRenderMode'],
 				'iconsInOptionTags' => 1,
 				'wizards' => array(
 					'_PADDING' => 1,
@@ -255,7 +249,6 @@ $TCA['be_users'] = array(
 				'items' => array(
 					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_live', 0),
 					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_draft', 0),
-					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_custom', 0),
 				),
 				'default' => 3
 			)
@@ -268,7 +261,6 @@ $TCA['be_users'] = array(
 				'max' => '20',
 				'eval' => 'date',
 				'default' => '0',
-				'checkbox' => '0'
 			)
 		),
 		'endtime' => array(
@@ -278,10 +270,9 @@ $TCA['be_users'] = array(
 				'size' => '8',
 				'max' => '20',
 				'eval' => 'date',
-				'checkbox' => '0',
 				'default' => '0',
 				'range' => array(
-					'upper' => mktime(0,0,0,12,31,2020),
+					'upper' => mktime(0, 0, 0, 12, 31, 2020),
 				)
 			)
 		),
@@ -309,6 +300,7 @@ $TCA['be_users'] = array(
 					array('Faroese', 'fo'),
 					array('Finnish', 'fi'),
 					array('French', 'fr'),
+					array('French (Canada)', 'qc'),
 					array('Galician', 'ga'),
 					array('Georgian', 'ge'),
 					array('German', 'de'),
@@ -320,6 +312,7 @@ $TCA['be_users'] = array(
 					array('Icelandic', 'is'),
 					array('Italian', 'it'),
 					array('Japanese', 'jp'),
+					array('Khmer', 'km'),
 					array('Korean', 'kr'),
 					array('Latvian', 'lv'),
 					array('Lithuanian', 'lt'),
@@ -372,7 +365,7 @@ $TCA['be_users'] = array(
 				'wizards' => array(
 					'_PADDING' => 4,
 					'0' => array(
-						'type' => t3lib_extMgm::isLoaded('tsconfig_help')?'popup':'',
+						'type' => t3lib_extMgm::isLoaded('tsconfig_help') ? 'popup' : '',
 						'title' => 'LLL:EXT:lang/locallang_tca.xml:TSconfig_title',
 						'script' => 'wizard_tsconfig.php?mode=beuser',
 						'icon' => 'wizard_tsconfig.gif',
@@ -408,13 +401,12 @@ $TCA['be_users'] = array(
 			--div--;LLL:EXT:lang/locallang_tca.xml:be_users.tabs.extended'
 		),
 		'1' => array('showitem' => 'disable;;;;1-1-1, username;;;;2-2-2, password, usergroup;;;;3-3-3, admin;;;;1-1-1, realName;;;;3-3-3, email, lang, lastlogin;;;;1-1-1,
-			--div--;LLL:EXT:lang/locallang_tca.xml:be_users.tabs.options, disableIPlock;;;;1-1-1, TSconfig;;;;2-2-2, db_mountpoints;;;;3-3-3, file_mountpoints;;;;4-4-4,
+			--div--;LLL:EXT:lang/locallang_tca.xml:be_users.tabs.options, disableIPlock;;;;1-1-1, TSconfig;;;;2-2-2, db_mountpoints;;;;3-3-3, options, file_mountpoints;;;;4-4-4,
 			--div--;LLL:EXT:lang/locallang_tca.xml:be_users.tabs.access, starttime;;;;1-1-1,endtime,
 			--div--;LLL:EXT:lang/locallang_tca.xml:be_users.tabs.extended'
 		)
 	),
 );
-
 
 
 /**
@@ -440,7 +432,7 @@ $TCA['be_groups'] = array(
 			'config' => array(
 				'type' => 'group',
 				'internal_type' => 'db',
-					'allowed' => 'pages',
+				'allowed' => 'pages',
 				'size' => '3',
 				'maxitems' => 20,
 				'autoSizeMax' => 10,
@@ -461,7 +453,6 @@ $TCA['be_groups'] = array(
 				'size' => '3',
 				'maxitems' => 20,
 				'autoSizeMax' => 10,
-				'renderMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['accessListRenderMode'],
 				'iconsInOptionTags' => 1,
 				'wizards' => array(
 					'_PADDING' => 1,
@@ -519,7 +510,6 @@ $TCA['be_groups'] = array(
 				'items' => array(
 					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_live', 0),
 					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_draft', 0),
-					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_custom', 0),
 				),
 				'default' => 0
 			)
@@ -569,6 +559,7 @@ $TCA['be_groups'] = array(
 				'maxitems' => 1000,
 				'autoSizeMax' => 50,
 				'renderMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['accessListRenderMode'],
+				'itemListStyle' => 'width:500px',
 			)
 		),
 		'explicit_allowdeny' => array(
@@ -612,7 +603,6 @@ $TCA['be_groups'] = array(
 				'size' => '20',
 				'eval' => 'trim',
 				'max' => '50',
-				'checkbox' => '',
 				'softref' => 'substitute'
 			)
 		),
@@ -652,7 +642,7 @@ $TCA['be_groups'] = array(
 				'wizards' => array(
 					'_PADDING' => 4,
 					'0' => array(
-						'type' => t3lib_extMgm::isLoaded('tsconfig_help')?'popup':'',
+						'type' => t3lib_extMgm::isLoaded('tsconfig_help') ? 'popup' : '',
 						'title' => 'LLL:EXT:lang/locallang_tca.xml:TSconfig_title',
 						'script' => 'wizard_tsconfig.php?mode=beuser',
 						'icon' => 'wizard_tsconfig.gif',
@@ -679,7 +669,6 @@ $TCA['be_groups'] = array(
 				'size' => '5',
 				'autoSizeMax' => 50,
 				'maxitems' => 20,
-				'renderMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['accessListRenderMode'],
 				'iconsInOptionTags' => 1,
 			)
 		)
@@ -699,7 +688,6 @@ $TCA['be_groups'] = array(
 		)
 	)
 );
-
 
 
 /**
@@ -754,8 +742,6 @@ $TCA['sys_filemounts'] = array(
 );
 
 
-
-
 /**
  * System languages - Defines possible languages used for translation of records in the system
  */
@@ -803,12 +789,9 @@ $TCA['sys_language'] = array(
 			'config' => array(
 				'type' => 'select',
 				'items' => array(
-					array('', 0),
+					array('', 0, ''),
 				),
-				'fileFolder' => 'typo3/gfx/flags/',	// Only shows if "t3lib/" is in the PATH_site...
-				'fileFolder_extList' => 'png,jpg,jpeg,gif',
-				'fileFolder_recursions' => 0,
-				'selicon_cols' => 8,
+				'selicon_cols' => 16,
 				'size' => 1,
 				'minitems' => 0,
 				'maxitems' => 1,
@@ -817,6 +800,84 @@ $TCA['sys_language'] = array(
 	),
 	'types' => array(
 		'1' => array('showitem' => 'hidden;;;;1-1-1,title;;;;2-2-2,static_lang_isocode,flag')
+	)
+);
+
+
+/**
+ * System News (displayed on Login screen)
+ */
+$TCA['sys_news'] = array(
+	'ctrl' => $TCA['sys_news']['ctrl'],
+	'interface' => array(
+		'showRecordFieldList' => 'hidden,title,content,starttime,endtime'
+	),
+	'columns' => array(
+		'hidden' => array(
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.disable',
+			'exclude' => 1,
+			'config' => array(
+				'type' => 'check',
+				'default' => '0'
+			)
+		),
+		'starttime' => array(
+			'exclude' => 1,
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.starttime',
+			'config' => array(
+				'type' => 'input',
+				'size' => '8',
+				'max' => '20',
+				'eval' => 'date',
+				'default' => '0'
+			)
+		),
+		'endtime' => array(
+			'exclude' => 1,
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.endtime',
+			'config' => array(
+				'type' => 'input',
+				'size' => '8',
+				'max' => '20',
+				'eval' => 'date',
+				'default' => '0'
+			)
+		),
+		'title' => array(
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.title',
+			'config' => array(
+				'type' => 'input',
+				'size' => '30',
+				'max' => '255',
+				'eval' => 'required'
+			)
+		),
+		'content' => array(
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.text',
+			'config' => array(
+				'type' => 'text',
+				'cols' => '48',
+				'rows' => '5',
+				'wizards' => array(
+					'_PADDING' => 4,
+					'_VALIGN' => 'middle',
+					'RTE' => array(
+						'notNewRecords' => 1,
+						'RTEonly' => 1,
+						'type' => 'script',
+						'title' => 'LLL:EXT:cms/locallang_ttc.php:bodytext.W.RTE',
+						'icon' => 'wizard_rte2.gif',
+						'script' => 'wizard_rte.php'
+					),
+				),
+			),
+		),
+	),
+	'types' => array(
+		'1' => array('showitem' => '
+			hidden, title, content;;9;richtext:rte_transform[flag=rte_enabled|mode=ts_css];3-3-3,
+			--div--;LLL:EXT:lang/locallang_tca.xml:sys_news.tabs.access, starttime, endtime'
+		)
 	)
 );
 

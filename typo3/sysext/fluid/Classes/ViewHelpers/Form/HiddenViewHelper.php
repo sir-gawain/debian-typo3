@@ -28,19 +28,15 @@
  * <code title="Example">
  * <f:form.hidden name="myHiddenValue" value="42" />
  * </code>
- *
- * Output:
+ * <output>
  * <input type="hidden" name="myHiddenValue" value="42" />
+ * </output>
  *
  * You can also use the "property" attribute if you have bound an object to the form.
  * See <f:form> for more documentation.
  *
- * @version $Id: HiddenViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Form
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Form_HiddenViewHelper extends Tx_Fluid_ViewHelpers_Form_AbstractFormFieldViewHelper {
 

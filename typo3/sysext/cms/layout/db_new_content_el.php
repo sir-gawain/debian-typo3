@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,11 +28,11 @@
  * New content elements wizard
  * (Part of the 'cms' extension)
  *
- * $Id: db_new_content_el.php 8428 2010-07-28 09:18:27Z ohader $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compatible.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -87,7 +87,7 @@ t3lib_extMgm::isLoaded('cms',1);
 /**
  * Local position map class
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -139,7 +139,7 @@ class ext_posMap extends t3lib_positionMap {
 /**
  * Script Class for the New Content element wizard
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -200,7 +200,6 @@ class SC_db_new_content_el {
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/db_new_content_el.html');
 		$this->doc->JScode='';
-		$this->doc->JScodeLibArray['dyntabmenu'] = $this->doc->getDynTabMenuJScode();
 		$this->doc->form='<form action="" name="editForm"><input type="hidden" name="defValues" value="" />';
 
 			// Setting up the context sensitive menu:
@@ -254,7 +253,7 @@ class SC_db_new_content_el {
 			$wizardItems = $this->getWizardItems();
 
 				// Wrapper for wizards
-			$this->elementWrapper['sectionHeader'] = array('<h3 class="bgColor5">', '</h3>');
+			$this->elementWrapper['sectionHeader'] = array('<h3 class="divider">', '</h3>');
 			$this->elementWrapper['section'] = array('<table border="0" cellpadding="1" cellspacing="2">', '</table>');
 			$this->elementWrapper['wizard'] = array('<tr>', '</tr>');
 			$this->elementWrapper['wizardPart'] = array('<td>', '</td>');
@@ -291,10 +290,6 @@ class SC_db_new_content_el {
 				} else {
 					top.TYPO3ModuleMenu.refreshMenu();
 				}
-
-				if(top.shortcutFrame) {
-					top.shortcutFrame.refreshShortcuts();
-				}
 			');
 
 				// Traverse items for the wizard.
@@ -313,11 +308,11 @@ class SC_db_new_content_el {
 						// Radio button:
 					$oC = "document.editForm.defValues.value=unescape('".rawurlencode($wInfo['params'])."');goToalt_doc();".(!$this->onClickEvent?"window.location.hash='#sel2';":'');
 					$content .= $this->elementWrapper['wizardPart'][0] .
-						'<input type="radio" name="tempB" value="' . htmlspecialchars($k) . '" onclick="' . htmlspecialchars($this->doc->thisBlur().$oC) . '" />' .
+						'<input type="radio" name="tempB" value="' . htmlspecialchars($k) . '" onclick="' . htmlspecialchars($oC) . '" />' .
 						$this->elementWrapper['wizardPart'][1];
 
 						// Onclick action for icon/title:
-					$aOnClick = 'document.getElementsByName(\'tempB\')['.$cc.'].checked=1;'.$this->doc->thisBlur().$oC.'return false;';
+					$aOnClick = 'document.getElementsByName(\'tempB\')['.$cc.'].checked=1;'.$oC.'return false;';
 
 						// Icon:
 					$iInfo = @getimagesize($wInfo['icon']);
@@ -347,11 +342,11 @@ class SC_db_new_content_el {
 				// Add the wizard table to the content, wrapped in tabs:
 			if ($this->config['renderMode'] == 'tabs') {
 				$this->doc->inDocStylesArray[] = '
-					.typo3-dyntabmenu-divs { background-color: #fafafa; border: 1px solid #000; width: 680px; }
+					.typo3-dyntabmenu-divs { background-color: #fafafa; border: 1px solid #adadad; width: 680px; }
 					.typo3-dyntabmenu-divs table { margin: 15px; }
 					.typo3-dyntabmenu-divs table td { padding: 3px; }
 				';
-				$code = $LANG->getLL('sel1',1) . '<br /><br />' . $this->doc->getDynTabMenu($menuItems, 'new-content-element-wizard', false, false, 100);
+				$code = $LANG->getLL('sel1', 1) . '<br /><br />' . $this->doc->getDynTabMenu($menuItems, 'new-content-element-wizard', FALSE, FALSE);
 			} else {
 				$code = $LANG->getLL('sel1',1) . '<br /><br />';
 				foreach ($menuItems as $section) {
@@ -382,6 +377,9 @@ class SC_db_new_content_el {
 				$code.= $posMap->printContentElementColumns($this->id,0,$colPosList,1,$this->R_URI);
 				$this->content.= $this->doc->section($LANG->getLL('2_selectPosition'),$code,0,1);
 			}
+
+				// Close wrapper div
+			$this->content .= '</div>';
 		} else {		// In case of no access:
 			$this->content = '';
 			$this->content.= $this->doc->header($LANG->getLL('newContentElement'));
@@ -430,8 +428,8 @@ class SC_db_new_content_el {
 
 				// Back
 			if ($this->R_URI)	{
-				$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack">' .
-					'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/goback.gif') . ' alt="" title="' . $LANG->getLL('goBack', 1) . '" />' .
+				$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $LANG->getLL('goBack', TRUE) . '">' .
+						t3lib_iconWorks::getSpriteIcon('actions-view-go-back') .
 					'</a>';
 			}
 		}
@@ -623,8 +621,8 @@ class SC_db_new_content_el {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/layout/db_new_content_el.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/layout/db_new_content_el.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/layout/db_new_content_el.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/layout/db_new_content_el.php']);
 }
 
 

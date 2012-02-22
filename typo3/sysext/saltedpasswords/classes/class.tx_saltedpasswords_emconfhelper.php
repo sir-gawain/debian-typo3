@@ -77,7 +77,7 @@ class tx_saltedpasswords_emconfhelper {
 				if ($this->errorType < t3lib_FlashMessage::ERROR) {
 					$this->errorType = t3lib_FlashMessage::WARNING;
 					$this->header = 'Warnings about your configuration';
-					$this->preText = 'SaltedPasswords might behave different than expectated:<br />';
+					$this->preText = 'SaltedPasswords might behave different than expected:<br />';
 				}
 			break;
 			case 'info':
@@ -159,22 +159,39 @@ EOT;
 
 			// the backend is called over SSL
 		$SSL = (($GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL'] > 0 ? TRUE : FALSE) && ($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel'] != 'superchallenged'));
-			// rsaAuth is loaded/active
-		$RSAauth = (t3lib_extMgm::isLoaded('rsaauth') && ($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel'] == 'rsa'));
+		$rsaAuthLoaded = t3lib_extMgm::isLoaded('rsaauth');
 
 		if ($extConf['enabled']) {
 				// SSL configured?
 			if ($SSL) {
 				$this->setErrorLevel('ok');
 				$problems[] = 'The backend is configured to use SaltedPasswords over SSL.';
-			} elseif ($RSAauth) {
-				$this->setErrorLevel('ok');
-				$problems[] = 'The backend is configured to use SaltedPasswords with RSA authentification.';
+			} elseif ($rsaAuthLoaded) {
+				if (trim($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel']) === 'rsa') {
+					if ($this->isRsaAuthBackendAvailable()) {
+						$this->setErrorLevel('ok');
+						$problems[] = 'The backend is configured to use SaltedPasswords with RSA authentication.';
+					} else {
+							// this means that login would fail because rsaauth is not working properly
+						$this->setErrorLevel('error');
+						$problems[] = '<strong>Using the extension "rsaauth" is not possible, as no encryption backend ' .
+									  'is available. Please install and configure the PHP extension "openssl". '.
+									  'See <a href="http://php.net/manual/en/openssl.installation.php" target="_blank">PHP.net</a></strong>.';
+					}
+				} else {
+						// this means that we are not using saltedpasswords
+					$this->setErrorLevel('error');
+					$problems[] = 'The "rsaauth" extension is installed, but TYPO3 is not configured to use it during login.
+						Use the Install Tool to set the Login Security Level for the backend to "rsa"
+						($TYPO3_CONF_VARS[\'BE\'][\'loginSecurityLevel\'])';
+
+				}
 			} else {
+					// this means that we are not using saltedpasswords
 				$this->setErrorLevel('error');
 				$problems[] = <<< EOT
 Backend requirements for SaltedPasswords are not met, therefore the
-authentication will not work even if it was explicitely enabled for backend
+authentication will not work even if it was explicitly enabled for backend
 usage:<br />
 <ul>
 	<li>Install the "rsaauth" extension and use the Install Tool to set the
@@ -196,7 +213,7 @@ EOT;
 
 				// only saltedpasswords as authsservice
 			if ($extConf['onlyAuthService']) {
-					// warn user taht the combination with "forceSalted" may lock him out from Backend
+					// warn user that the combination with "forceSalted" may lock him out from Backend
 				if ($extConf['forceSalted']) {
 					$this->setErrorLevel('warning');
 					$problems[] = <<< EOT
@@ -204,7 +221,7 @@ SaltedPasswords has been configured to be the only authentication service for
 the backend. Additionally, usage of salted passwords is enforced (forceSalted).
 The result is that there is no chance to login with users not having a salted
 password hash.<br />
-<b><i>WARNING:</i></b> This may lock you out of the backend!
+<strong><i>WARNING:</i></strong> This may lock you out of the backend!
 EOT;
 				} else {
 						// inform the user that things like openid won't work anymore
@@ -224,7 +241,7 @@ SaltedPasswords has been configured to enforce salted passwords (forceSalted).
 <br />
 This means that only passwords in the format of this extension will succeed for
 login.<br />
-<b><i>IMPORTANT:</i></b> This has the effect that passwords that are set from
+<strong><i>IMPORTANT:</i></strong> This has the effect that passwords that are set from
 the Install Tool will not work!
 EOT;
 			}
@@ -258,6 +275,20 @@ EOT;
 	}
 
 	/**
+	 * Checks if rsaauth is able to obtain a backend
+	 *
+	 * @return bool
+	 */
+	protected function isRsaAuthBackendAvailable() {
+		/**
+		 * Try to instantiate an RSAauth backend. If this does not work, it means that OpenSSL is not usable
+		 */
+		require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/backends/class.tx_rsaauth_backendfactory.php');
+		$backend = tx_rsaauth_backendfactory::getBackend();
+		return $backend !== NULL;
+	}
+
+	/**
 	 * Checks the frontend configuration and shows a message if necessary.
 	 *
 	 * @param	array				$params: Field information to be rendered
@@ -269,13 +300,13 @@ EOT;
 		$extConf = $this->extConf['FE'];
 
 		if ($extConf['enabled']) {
-				// inform the user if securityLevel in FE is superchallenged or blank --> extension won't work
+				// inform the user if securityLevel in FE is challenged or blank --> extension won't work
 			if (!t3lib_div::inList('normal,rsa', $GLOBALS['TYPO3_CONF_VARS']['FE']['loginSecurityLevel'])) {
 				$this->setErrorLevel('info');
 				$problems[] = <<< EOT
-<b>IMPORTANT:</b><br />
+<strong>IMPORTANT:</strong><br />
 Frontend requirements for SaltedPasswords are not met, therefore the
-authentication will not work even if it was explicitely enabled for frontend
+authentication will not work even if it was explicitly enabled for frontend
 usage:<br />
 <ul>
 	<li>Install the "rsaauth" extension and use the Install Tool to set the
@@ -287,8 +318,19 @@ usage:<br />
 		(\$TYPO3_CONF_VARS['FE']['loginSecurityLevel'])</li>
 </ul>
 <br />
-Make sure that the Login Security Level is not set to "" or "superchallenged"!
+Make sure that the Login Security Level is not set to "" or "challenged"!
 EOT;
+			} elseif (trim($GLOBALS['TYPO3_CONF_VARS']['FE']['loginSecurityLevel']) === 'rsa') {
+				if ($this->isRsaAuthBackendAvailable()) {
+					$this->setErrorLevel('ok');
+					$problems[] = 'The frontend is configured to use SaltedPasswords with RSA authentication.';
+				} else {
+						// this means that login would fail because rsaauth is not working properly
+					$this->setErrorLevel('error');
+					$problems[] = '<strong>Using the extension "rsaauth" is not possible, as no encryption backend ' .
+								  'is available. Please install and configure the PHP extension "openssl". '.
+								  'See <a href="http://php.net/manual/en/openssl.installation.php" target="_blank">PHP.net</a></strong>.';
+				}
 			}
 				// only saltedpasswords as authsservice
 			if ($extConf['onlyAuthService']) {
@@ -300,7 +342,7 @@ SaltedPasswords has been configured to enforce salted passwords (forceSalted).
 <br />
 This means that only passwords in the format of this extension will succeed for
 login.<br />
-<b><i>IMPORTANT:</i></b> Because of this, it is not possible to login with
+<strong><i>IMPORTANT:</i></strong> Because of this, it is not possible to login with
 users not having a salted password hash (e.g. existing frontend users).
 EOT;
 				} else {
@@ -321,7 +363,7 @@ SaltedPasswords has been configured to enforce salted passwords (forceSalted).
 <br />
 This means that only passwords in the format of this extension will succeed for
 login.<br />
-<b><i>IMPORTANT:</i></b> This has the effect that passwords that were set
+<strong><i>IMPORTANT:</i></strong> This has the effect that passwords that were set
 before SaltedPasswords was used will not work (in fact, they need to be
 redefined).
 EOT;
@@ -426,7 +468,7 @@ EOT;
 
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php']);
 }
 ?>

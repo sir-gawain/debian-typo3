@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,11 +28,11 @@
  * Move element wizard:
  * Moving pages or content elements (tt_content) around in the system via a page tree navigation.
  *
- * $Id: move_el.php 8428 2010-07-28 09:18:27Z ohader $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compatible.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -84,7 +84,7 @@ $LANG->includeLLFile('EXT:lang/locallang_misc.xml');
 /**
  * Local extension of the page tree class
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -115,7 +115,7 @@ class localPageTree extends t3lib_pageTree {
 /**
  * Extension of position map for pages
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -130,7 +130,11 @@ class ext_posMap_pages extends t3lib_positionMap {
 	 * @return	string		Onclick attribute content
 	 */
 	function onClickEvent($pid,$newPagePID)	{
-		return 'window.location.href=\'tce_db.php?cmd[pages]['.$GLOBALS['SOBE']->moveUid.']['.$this->moveOrCopy.']='.$pid.'&redirect='.rawurlencode($this->R_URI).'&prErr=1&uPT=1&vC='.$GLOBALS['BE_USER']->veriCode().'\';return false;';
+		return 'window.location.href=\'tce_db.php?cmd[pages][' . $GLOBALS['SOBE']->moveUid . '][' . $this->moveOrCopy . ']=' . $pid .
+				'&redirect=' . rawurlencode($this->R_URI) .
+				'&prErr=1&uPT=1&vC=' . $GLOBALS['BE_USER']->veriCode() .
+				t3lib_BEfunc::getUrlToken('tceAction') .
+				'\';return false;';
 	}
 
 	/**
@@ -172,7 +176,7 @@ class ext_posMap_pages extends t3lib_positionMap {
 /**
  * Extension of position map for content elements
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -199,7 +203,7 @@ class ext_posMap_tt_content extends t3lib_positionMap {
 	 * @return	string		Wrapped title string.
 	 */
 	function wrapRecordTitle($str,$row)	{
-		if ($GLOBALS['SOBE']->moveUid==$row['uid'])	$str = '<b>'.$str.'</b>';
+		if ($GLOBALS['SOBE']->moveUid==$row['uid'])	$str = '<strong>'.$str.'</strong>';
 		return parent::wrapRecordTitle($str,$row);
 	}
 }
@@ -215,7 +219,7 @@ class ext_posMap_tt_content extends t3lib_positionMap {
 /**
  * Script Class for rendering the move-element wizard display
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -289,7 +293,7 @@ class SC_move_el {
 			$elRow = t3lib_BEfunc::getRecordWSOL($this->table,$this->moveUid);
 
 				// Headerline: Icon, record title:
-			$hline = t3lib_iconWorks::getIconImage($this->table,$elRow,$BACK_PATH,' id="c-recIcon" title="'.htmlspecialchars(t3lib_BEfunc::getRecordIconAltText($elRow,$this->table)).'"');
+			$hline = t3lib_iconWorks::getSpriteIconForRecord($this->table, $elRow, array('id' => "c-recIcon", 'title' => htmlspecialchars(t3lib_BEfunc::getRecordIconAltText($elRow,$this->table))));
 			$hline.= t3lib_BEfunc::getRecordTitle($this->table,$elRow,TRUE);
 
 				// Make-copy checkbox (clicking this will reload the page with the GET var makeCopy set differently):
@@ -320,11 +324,11 @@ class SC_move_el {
 						if (is_array($pidPageInfo))	{
 							if ($BE_USER->isInWebMount($pidPageInfo['pid'],$this->perms_clause))	{
 								$code.= '<a href="'.htmlspecialchars(t3lib_div::linkThisScript(array('uid'=>intval($pageinfo['pid']),'moveUid'=>$this->moveUid))).'">'.
-									'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/i/pages_up.gif','width="18" height="16"').' alt="" />'.
+									t3lib_iconWorks::getSpriteIcon('actions-view-go-up') .
 									t3lib_BEfunc::getRecordTitle('pages',$pidPageInfo,TRUE).
 									'</a><br />';
 							} else {
-								$code.= t3lib_iconWorks::getIconImage('pages',$pidPageInfo,$BACK_PATH,'').
+								$code.= t3lib_iconWorks::getSpriteIconForRecord('pages', $pidPageInfo) .
 									t3lib_BEfunc::getRecordTitle('pages',$pidPageInfo,TRUE).
 									'<br />';
 							}
@@ -355,7 +359,7 @@ class SC_move_el {
 					$posMap->cur_sys_language = $this->sys_language;
 
 						// Headerline for the parent page: Icon, record title:
-					$hline = t3lib_iconWorks::getIconImage('pages',$pageinfo,$BACK_PATH,' title="'.htmlspecialchars(t3lib_BEfunc::getRecordIconAltText($pageinfo,'pages')).'"');
+					$hline = t3lib_iconWorks::getSpriteIconForRecord('pages', $pageinfo, array('title' => htmlspecialchars(t3lib_BEfunc::getRecordIconAltText($pageinfo, 'pages'))));
 					$hline.= t3lib_BEfunc::getRecordTitle('pages',$pageinfo,TRUE);
 
 						// Load SHARED page-TSconfig settings and retrieve column list from there, if applicable:
@@ -375,11 +379,11 @@ class SC_move_el {
 						if (is_array($pidPageInfo))	{
 							if ($BE_USER->isInWebMount($pidPageInfo['pid'],$this->perms_clause))	{
 								$code.= '<a href="'.htmlspecialchars(t3lib_div::linkThisScript(array('uid'=>intval($pageinfo['pid']),'moveUid'=>$this->moveUid))).'">'.
-									'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/i/pages_up.gif','width="18" height="16"').' alt="" />'.
+									t3lib_iconWorks::getSpriteIcon('actions-view-go-up') .
 									t3lib_BEfunc::getRecordTitle('pages',$pidPageInfo,TRUE).
 									'</a><br />';
 							} else {
-								$code.= t3lib_iconWorks::getIconImage('pages',$pidPageInfo,$BACK_PATH,'').
+								$code.= t3lib_iconWorks::getSpriteIconForRecord('pages', $pidPageInfo).
 									t3lib_BEfunc::getRecordTitle('pages',$pidPageInfo,TRUE).
 									'<br />';
 							}
@@ -440,7 +444,9 @@ class SC_move_el {
 
 			if ($this->R_URI) {
 					// Back
-				$buttons['back'] ='<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack"><img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/goback.gif') . ' alt="" title="' . $LANG->getLL('goBack', 1) .'" /></a>';
+				$buttons['back'] ='<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $LANG->getLL('goBack', TRUE) .'">' .
+						t3lib_iconWorks::getSpriteIcon('actions-view-go-back') .
+					'</a>';
 			}
 		}
 
@@ -449,8 +455,8 @@ class SC_move_el {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/move_el.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/move_el.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/move_el.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/move_el.php']);
 }
 
 

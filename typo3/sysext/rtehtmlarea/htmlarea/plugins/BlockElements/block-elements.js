@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /*
  * BlockElements Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: block-elements.js 7967 2010-06-19 14:32:56Z stan $
+ * TYPO3 SVN ID: $Id$
  */
-BlockElements = HTMLArea.Plugin.extend({
+HTMLArea.BlockElements = HTMLArea.Plugin.extend({
 		
 	constructor : function(editor, pluginName) {
 		this.base(editor, pluginName);
@@ -70,22 +70,49 @@ BlockElements = HTMLArea.Plugin.extend({
 			}
 		}
 		this.allowedAttributes = new Array("id", "title", "lang", "xml:lang", "dir", "class");
-		if (HTMLArea.is_ie) {
+		if (Ext.isIE) {
 			this.addAllowedAttribute("className");
 		}
 		this.indentedList = null;
+			// Standard block formating items
+		var standardElements = new Array("address", "blockquote", "div", "h1", "h2", "h3", "h4", "h5", "h6", "p", "pre");
+		this.standardBlockElements = new RegExp( "^(" + standardElements.join("|") + ")$", "i");
+			// Process block formating customization configuration
+		this.formatBlockItems = {};
+		if (this.buttonsConfiguration
+			&& this.buttonsConfiguration.formatblock
+			&& this.buttonsConfiguration.formatblock.items) {
+				this.formatBlockItems = this.buttonsConfiguration.formatblock.items;
+		}
+			// Build lists of mutually exclusive class names
+		for (var tagName in this.formatBlockItems) {
+			if (this.formatBlockItems.hasOwnProperty(tagName) && this.formatBlockItems[tagName].tagName && this.formatBlockItems[tagName].addClass) {
+				if (!this.formatBlockItems[this.formatBlockItems[tagName].tagName]) {
+					this.formatBlockItems[this.formatBlockItems[tagName].tagName] = {};
+				}
+				if (!this.formatBlockItems[this.formatBlockItems[tagName].tagName].classList) {
+					this.formatBlockItems[this.formatBlockItems[tagName].tagName].classList = new Array();
+				}
+				this.formatBlockItems[this.formatBlockItems[tagName].tagName].classList.push(this.formatBlockItems[tagName].addClass);
+			}
+		}
+		for (var tagName in this.formatBlockItems) {
+			if (this.formatBlockItems.hasOwnProperty(tagName) && this.formatBlockItems[tagName].classList) {
+				this.formatBlockItems[tagName].classList = new RegExp( "^(" + this.formatBlockItems[tagName].classList.join("|") + ")$");
+			}
+		}
 		
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.2",
-			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.sjbr.ca/",
-			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: this.localize("Technische Universitat Ilmenau"),
-			sponsorUrl	: "http://www.tu-ilmenau.de/",
-			license		: "GPL"
+			version		: '1.5',
+			developer	: 'Stanislas Rolland',
+			developerUrl	: 'http://www.sjbr.ca/',
+			copyrightOwner	: 'Stanislas Rolland',
+			sponsor		: this.localize('Technische Universitat Ilmenau'),
+			sponsorUrl	: 'http://www.tu-ilmenau.de/',
+			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
 		
@@ -94,48 +121,56 @@ BlockElements = HTMLArea.Plugin.extend({
 		 */
 		var buttonId = "FormatBlock";
 		var dropDownConfiguration = {
-			id		: buttonId,
-			tooltip		: this.localize(buttonId + "-Tooltip"),
-			options		: ((this.editorConfiguration.buttons.formatblock && this.editorConfiguration.buttons.formatblock.dropDownOptions) ? this.editorConfiguration.buttons.formatblock.dropDownOptions : null),
-			action		: "onChange",
-			refresh		: null,
-			context		: null
+			id: buttonId,
+			tooltip: this.localize(buttonId + "-Tooltip"),
+			options: this.buttonsConfiguration.formatblock ? this.buttonsConfiguration.formatblock.options : [],
+			action: "onChange"
 		};
+		if (this.buttonsConfiguration.formatblock) {
+			dropDownConfiguration.width = this.buttonsConfiguration.formatblock.width ? parseInt(this.buttonsConfiguration.formatblock.width, 10) : 200;
+			if (this.buttonsConfiguration.formatblock.listWidth) {
+				dropDownConfiguration.listWidth = parseInt(this.buttonsConfiguration.formatblock.listWidth, 10);
+			}
+			if (this.buttonsConfiguration.formatblock.maxHeight) {
+				dropDownConfiguration.maxHeight = parseInt(this.buttonsConfiguration.formatblock.maxHeight, 10);
+			}
+		}
 		this.registerDropDown(dropDownConfiguration);
-		
 		/*
 		 * Establishing the list of allowed block elements
 		 */
 		var blockElements = new Array();
-		for (var option in dropDownConfiguration.options) {
-			if (dropDownConfiguration.options.hasOwnProperty(option)) {
-				blockElements.push(dropDownConfiguration.options[option]);
+		Ext.each(dropDownConfiguration.options, function (option) {
+			if (option[1] != 'none') {
+				blockElements.push(option[1]);
 			}
-		}
+		});
 		this.allowedBlockElements = new RegExp( "^(" + blockElements.join("|") + ")$", "i");
-		
+		if (blockElements.length) {
+			this.allowedBlockElements = new RegExp( "^(" + blockElements.join("|") + ")$", "i");
+		} else {
+			this.allowedBlockElements = this.standardBlockElements;
+		}
 		/*
-		 * Registering hot keys
+		 * Registering hot keys for the dropdown list items
 		 */
-		for (var i = 0; i < blockElements.length; ++i) {
-			var configuredHotKey = this.defaultHotKeys[blockElements[i]];
+		Ext.each(blockElements, function (blockElement) {
+			var configuredHotKey = this.defaultHotKeys[blockElement];
 			if (this.editorConfiguration.buttons.formatblock
 					&& this.editorConfiguration.buttons.formatblock.items
-					&& this.editorConfiguration.buttons.formatblock.items[blockElements[i]]
-					&& this.editorConfiguration.buttons.formatblock.items[blockElements[i]].hotKey) {
-				configuredHotKey = this.editorConfiguration.buttons.formatblock.items[blockElements[i]].hotKey;
+					&& this.editorConfiguration.buttons.formatblock.items[blockElement]
+					&& this.editorConfiguration.buttons.formatblock.items[blockElement].hotKey) {
+				configuredHotKey = this.editorConfiguration.buttons.formatblock.items[blockElement].hotKey;
 			}
 			if (configuredHotKey) {
 				var hotKeyConfiguration = {
 					id		: configuredHotKey,
 					cmd		: buttonId,
-					action		: "onHotKey",
-					element		: blockElements[i]
+					element		: blockElement
 				};
 				this.registerHotKey(hotKeyConfiguration);
 			}
-		}
-		
+		}, this);
 		/*
 		 * Registering the buttons
 		 */
@@ -144,48 +179,47 @@ BlockElements = HTMLArea.Plugin.extend({
 				var button = this.buttonList[buttonId];
 				var buttonConfiguration = {
 					id		: buttonId,
-					tooltip		: this.localize(buttonId + "-Tooltip"),
-					action		: "onButtonPress",
-					context		: button[0],
+					tooltip		: this.localize(buttonId + '-Tooltip'),
+					iconCls		: 'htmlarea-action-' + button[3],
+					contextMenuTitle: this.localize(buttonId + '-contextMenuTitle'),
+					helpText	: this.localize(buttonId + '-helpText'),
+					action		: 'onButtonPress',
 					hotKey		: ((this.buttonsConfiguration[button[2]] && this.buttonsConfiguration[button[2]].hotKey) ? this.buttonsConfiguration[button[2]].hotKey : (button[1] ? button[1] : null))
 				};
 				this.registerButton(buttonConfiguration);
 			}
 		}
-		
 		return true;
-	 },
-	 
+	},
 	/*
 	 * The list of buttons added by this plugin
 	 */
-	buttonList : {
-		Indent			: [null, "TAB", "indent"],
-		Outdent			: [null, "SHIFT-TAB", "outdent"],
-		Blockquote		: [null, null, "blockquote"],
-		InsertParagraphBefore	: [null, null, "insertparagraphbefore"],
-		InsertParagraphAfter	: [null, null, "insertparagraphafter"],
-		JustifyLeft		: [null, "l", "left"],
-		JustifyCenter		: [null, "e", "center"],
-		JustifyRight		: [null, "r", "right"],
-		JustifyFull		: [null, "j", "justifyfull"],
-		InsertOrderedList	: [null, null, "orderedlist"],
-		InsertUnorderedList	: [null, null, "unorderedlist"]
+	buttonList: {
+		Indent			: [null, 'TAB', 'indent', 'indent'],
+		Outdent			: [null, 'SHIFT-TAB', 'outdent', 'outdent'],
+		Blockquote		: [null, null, 'blockquote', 'blockquote'],
+		InsertParagraphBefore	: [null, null, 'insertparagraphbefore', 'paragraph-insert-before'],
+		InsertParagraphAfter	: [null, null, 'insertparagraphafter', 'paragraph-insert-after'],
+		JustifyLeft		: [null, 'l', 'left', 'justify-left'],
+		JustifyCenter		: [null, 'e', 'center', 'justify-center'],
+		JustifyRight		: [null, 'r', 'right', 'justify-right'],
+		JustifyFull		: [null, 'j', 'justifyfull', 'justify-full'],
+		InsertOrderedList	: [null, null, 'orderedlist', 'ordered-list'],
+		InsertUnorderedList	: [null, null, 'unorderedlist', 'unordered-list'],
+		InsertHorizontalRule	: [null, null, 'inserthorizontalrule', 'horizontal-rule-insert']
 	},
-	
 	/*
 	 * The list of hotkeys associated with block elements and registered by default by this plugin
 	 */
-	defaultHotKeys : {
-			"p"	: "n",
-			"h1"	: "1",
-			"h2"	: "2",
-			"h3"	: "3",
-			"h4"	: "4",
-			"h5"	: "5",
-			"h6"	: "6"
+	defaultHotKeys: {
+			'p'	: 'n',
+			'h1'	: '1',
+			'h2'	: '2',
+			'h3'	: '3',
+			'h4'	: '4',
+			'h5'	: '5',
+			'h6'	: '6'
 	},
-	
 	/*
 	 * The function returns true if the type of block element is allowed in the current configuration
 	 */
@@ -207,40 +241,51 @@ BlockElements = HTMLArea.Plugin.extend({
 	/*
 	 * This function gets called when some block element was selected in the drop-down list
 	 */
-	onChange : function (editor, buttonId) {
-		var tbobj = this.editor._toolbarObjects[buttonId];
-		var blockElement = document.getElementById(tbobj.elementId).value;
-		this.applyBlockElement(buttonId, blockElement);
+	onChange : function (editor, combo, record, index) {
+		this.applyBlockElement(combo.itemId, combo.getValue());
 	},
 	
 	applyBlockElement : function(buttonId, blockElement) {
-		switch (blockElement) {
-			case "blockquote" :
-				this.onButtonPress(this.editor, "Blockquote");
-				break;
-			case "div"     :
-			case "address" :
-			case "none"    :
-				this.onButtonPress(this.editor, blockElement);
-				break;
-			default	:
-				var element = blockElement;
-				if (HTMLArea.is_ie) {
-					element = "<" + element + ">";
-				}
-				this.editor.focusEditor();
-				if (HTMLArea.is_safari) {
-					if (!this.editor._doc.body.hasChildNodes()) {
-						this.editor._doc.body.appendChild((this.editor._doc.createElement("br")));
+		var tagName = blockElement;
+		var className = null;
+		if (this.formatBlockItems[tagName]) {
+			if (this.formatBlockItems[tagName].addClass) {
+				className = this.formatBlockItems[tagName].addClass;
+			}
+			if (this.formatBlockItems[tagName].tagName) {
+				tagName = this.formatBlockItems[tagName].tagName;
+			}
+		}
+		if (this.standardBlockElements.test(tagName) || tagName == "none") {
+			switch (tagName) {
+				case "blockquote" :
+					this.onButtonPress(this.editor, "Blockquote", null, className);
+					break;
+				case "div"     :
+				case "address" :
+				case "none"    :
+					this.onButtonPress(this.editor, tagName, null, className);
+					break;
+				default	:
+					var element = tagName;
+					if (Ext.isIE) {
+						element = "<" + element + ">";
 					}
-						// WebKit sometimes leaves empty block at the end of the selection
-					this.editor._doc.body.normalize();
-				}
-				try {
-					this.editor._doc.execCommand(buttonId, false, element);
-				} catch(e) {
-					this.appendToLog("applyBlockElement", e + "\n\nby execCommand(" + buttonId + ");");
-				}
+					this.editor.focus();
+					if (Ext.isWebKit) {
+						if (!this.editor._doc.body.hasChildNodes()) {
+							this.editor._doc.body.appendChild((this.editor._doc.createElement("br")));
+						}
+							// WebKit sometimes leaves empty block at the end of the selection
+						this.editor._doc.body.normalize();
+					}
+					try {
+						this.editor._doc.execCommand(buttonId, false, element);
+					} catch(e) {
+						this.appendToLog("applyBlockElement", e + "\n\nby execCommand(" + buttonId + ");");
+					}
+					this.addClassOnBlockElements(tagName, className);
+			}
 		}
 	},
 	
@@ -250,17 +295,18 @@ BlockElements = HTMLArea.Plugin.extend({
 	 * @param	object		editor: the editor instance
 	 * @param	string		id: the button id or the key
 	 * @param	object		target: the target element of the contextmenu event, when invoked from the context menu
+	 * @param	string		className: the className to be assigned to the element
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function (editor, id, target) {
+	onButtonPress : function (editor, id, target, className) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		this.editor.focusEditor();
+		this.editor.focus();
 		var selection = editor._getSelection();
 		var range = editor._createRange(selection);
-		var statusBarSelection = this.editor.getPluginInstance("StatusBar") ? this.editor.getPluginInstance("StatusBar").getSelection() : null;
+		var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
 		var parentElement = statusBarSelection ? statusBarSelection : this.editor.getParentElement(selection, range);
 		if (target) {
 			parentElement = target;
@@ -270,7 +316,6 @@ BlockElements = HTMLArea.Plugin.extend({
 		}
 		var blockAncestors = this.getBlockAncestors(parentElement);
 		var tableCell = null;
-		
 		if (id === "TAB" || id === "SHIFT-TAB") {
 			for (var i = blockAncestors.length; --i >= 0;) {
 				if (/^(td|th)$/i.test(blockAncestors[i].nodeName)) {
@@ -279,12 +324,11 @@ BlockElements = HTMLArea.Plugin.extend({
 				}
 			}
 		}
-		var fullNodeTextSelected = (HTMLArea.is_gecko && parentElement.textContent === range.toString()) || (HTMLArea.is_ie && parentElement.innerText === range.text);
-
+		var fullNodeTextSelected = (!Ext.isIE && parentElement.textContent === range.toString()) || (Ext.isIE && parentElement.innerText === range.text);
 		switch (buttonId) {
 			case "Indent" :
 				if (/^(ol|ul)$/i.test(parentElement.nodeName) && !(fullNodeTextSelected && !/^(li)$/i.test(parentElement.parentNode.nodeName))) {
-					if (HTMLArea.is_opera) {
+					if (Ext.isOpera) {
 						try {
 							this.editor._doc.execCommand(buttonId, false, null);
 						} catch(e) {
@@ -297,6 +341,7 @@ BlockElements = HTMLArea.Plugin.extend({
 						this.indentSelectedListElements(parentElement, range);
 					}
 				} else if (tableCell) {
+	
 					var tablePart = tableCell.parentNode.parentNode;
 						// Get next cell in same table part
 					var nextCell = tableCell.nextSibling ? tableCell.nextSibling : (tableCell.parentNode.nextSibling ? tableCell.parentNode.nextSibling.cells[0] : null);
@@ -312,7 +357,6 @@ BlockElements = HTMLArea.Plugin.extend({
 						    case "tfoot":
 							this.editor.selectNodeContents(tablePart.parentNode.lastChild.lastChild.lastChild, true);
 						}
-	
 					}
 					if (!nextCell) {
 						if (this.editor.plugins.TableOperations) {
@@ -322,6 +366,9 @@ BlockElements = HTMLArea.Plugin.extend({
 						}
 					}
 					if (nextCell) {
+						if (Ext.isOpera && !nextCell.hasChildNodes()) {
+							nextCell.appendChild(this.editor.document.createElement('br'));
+						}
 						this.editor.selectNodeContents(nextCell, true);
 					}
 				} else  if (this.useBlockquote) {
@@ -331,10 +378,10 @@ BlockElements = HTMLArea.Plugin.extend({
 						this.appendToLog("onButtonPress", e + "\n\nby execCommand(" + buttonId + ");");
 					}
 				} else if (this.isAllowedBlockElement("div")) {
-					if (/^div$/i.test(parentElement.nodeName) && !HTMLArea._hasClass(parentElement, this.useClass[buttonId])) {
-						HTMLArea._addClass(parentElement, this.useClass[buttonId]);
-					} else if (!/^div$/i.test(parentElement.nodeName) && /^div$/i.test(parentElement.parentNode.nodeName) && !HTMLArea._hasClass(parentElement.parentNode, this.useClass[buttonId])) {
-						HTMLArea._addClass(parentElement.parentNode, this.useClass[buttonId]);
+					if (/^div$/i.test(parentElement.nodeName) && !HTMLArea.DOM.hasClass(parentElement, this.useClass[buttonId])) {
+						HTMLArea.DOM.addClass(parentElement, this.useClass[buttonId]);
+					} else if (!/^div$/i.test(parentElement.nodeName) && /^div$/i.test(parentElement.parentNode.nodeName) && !HTMLArea.DOM.hasClass(parentElement.parentNode, this.useClass[buttonId])) {
+						HTMLArea.DOM.addClass(parentElement.parentNode, this.useClass[buttonId]);
 					} else {
 						var bookmark = this.editor.getBookmark(range);
 						var newBlock = this.wrapSelectionInBlockElement("div", this.useClass[buttonId], null, true);
@@ -345,9 +392,9 @@ BlockElements = HTMLArea.Plugin.extend({
 				}
 				break;
 			case "Outdent" :
-				if (/^(ol|ul)$/i.test(parentElement.nodeName) && !HTMLArea._hasClass(parentElement, this.useClass.Indent)) {
+				if (/^(ol|ul)$/i.test(parentElement.nodeName) && !HTMLArea.DOM.hasClass(parentElement, this.useClass.Indent)) {
 					if (/^(li)$/i.test(parentElement.parentNode.nodeName)) {
-						if (HTMLArea.is_opera) {
+						if (Ext.isOpera) {
 							try {
 								this.editor._doc.execCommand(buttonId, false, null);
 							} catch(e) {
@@ -378,6 +425,9 @@ BlockElements = HTMLArea.Plugin.extend({
 						}
 					}
 					if (previousCell) {
+						if (Ext.isOpera && !previousCell.hasChildNodes()) {
+							previousCell.appendChild(this.editor.document.createElement('br'));
+						}
 						this.editor.selectNodeContents(previousCell, true);
 					}
 				} else  if (this.useBlockquote) {
@@ -388,7 +438,7 @@ BlockElements = HTMLArea.Plugin.extend({
 					}
 				} else if (this.isAllowedBlockElement("div")) {
 					for (var i = blockAncestors.length; --i >= 0;) {
-						if (HTMLArea._hasClass(blockAncestors[i], this.useClass.Indent)) {
+						if (HTMLArea.DOM.hasClass(blockAncestors[i], this.useClass.Indent)) {
 							var bookmark = this.editor.getBookmark(range);
 							var newBlock = this.wrapSelectionInBlockElement("div", false, blockAncestors[i]);
 								// If not directly under the div, we need to backtrack
@@ -402,7 +452,7 @@ BlockElements = HTMLArea.Plugin.extend({
 								newBlock.appendChild(parent);
 							}
 							newBlock.className = blockAncestors[i].className;
-							HTMLArea._removeClass(newBlock, this.useClass.Indent);
+							HTMLArea.DOM.removeClass(newBlock, this.useClass.Indent);
 							if (!newBlock.previousSibling) {
 								while (newBlock.hasChildNodes()) {
 									if (newBlock.firstChild.nodeType == 1) {
@@ -470,14 +520,14 @@ BlockElements = HTMLArea.Plugin.extend({
 				}
 				if (!commandState) {
 					var bookmark = this.editor.getBookmark(range);
-					var newBlock = this.wrapSelectionInBlockElement("blockquote", null, null, true);
+					var newBlock = this.wrapSelectionInBlockElement("blockquote", className, null, true);
 					this.editor.selectRange(this.editor.moveToBookmark(bookmark));
 				}
 				break;
 			case "address" :
 			case "div"     :
 				var bookmark = this.editor.getBookmark(range);
-				var newBlock = this.wrapSelectionInBlockElement(buttonId, null, null, true);
+				var newBlock = this.wrapSelectionInBlockElement(buttonId, className, null, true);
 				this.editor.selectRange(this.editor.moveToBookmark(bookmark));
 				break;
 			case "JustifyLeft"   :
@@ -497,6 +547,9 @@ BlockElements = HTMLArea.Plugin.extend({
 			case "InsertOrderedList":
 			case "InsertUnorderedList":
 				this.insertList(buttonId, parentElement);
+				break;
+			case "InsertHorizontalRule":
+				this.insertHorizontalRule();
 				break;
 			case "none" :
 				if (this.isAllowedBlockElement(parentElement.nodeName)) {
@@ -560,7 +613,7 @@ BlockElements = HTMLArea.Plugin.extend({
 		}
 		var blockElement = this.editor._doc.createElement(blockName);
 		if (useClass) {
-			HTMLArea._addClass(blockElement, useClass);
+			HTMLArea.DOM.addClass(blockElement, useClass);
 		}
 		var contextElement = endAncestors[0];
 		if (i) {
@@ -590,7 +643,7 @@ BlockElements = HTMLArea.Plugin.extend({
 			blockElement = contextElement.appendChild(blockElement);
 		}
 			// Things go wrong in some browsers when the node is empty
-		if (HTMLArea.is_safari && !blockElement.hasChildNodes()) {
+		if (Ext.isWebKit && !blockElement.hasChildNodes()) {
 			blockElement = blockElement.appendChild(this.editor._doc.createElement("br"));
 		}
 		return blockElement;
@@ -599,7 +652,7 @@ BlockElements = HTMLArea.Plugin.extend({
 	/*
 	 * This function adds a class attribute on blocks sibling of the block containing the start container of the selection
 	 */
-	addClassOnBlockElements : function(buttonId) {
+	addClassOnBlockElements : function(buttonId, className) {
 		var selection = this.editor._getSelection();
 		var endBlocks = this.editor.getEndBlocks(selection);
 		var startAncestors = this.getBlockAncestors(endBlocks.start);
@@ -616,13 +669,13 @@ BlockElements = HTMLArea.Plugin.extend({
 				if (HTMLArea.isBlockElement(block)) {
 					switch (buttonId) {
 						case "Indent" :
-							if (!HTMLArea._hasClass(block, this.useClass[buttonId])) {
-								HTMLArea._addClass(block, this.useClass[buttonId]);
+							if (!HTMLArea.DOM.hasClass(block, this.useClass[buttonId])) {
+								HTMLArea.DOM.addClass(block, this.useClass[buttonId]);
 							}
 							break;
 						case "Outdent" :
-							if (HTMLArea._hasClass(block, this.useClass["Indent"])) {
-								HTMLArea._removeClass(block, this.useClass["Indent"]);
+							if (HTMLArea.DOM.hasClass(block, this.useClass["Indent"])) {
+								HTMLArea.DOM.removeClass(block, this.useClass["Indent"]);
 							}
 							break;
 						case "JustifyLeft"   :
@@ -632,6 +685,12 @@ BlockElements = HTMLArea.Plugin.extend({
 							this.toggleAlignmentClass(block, buttonId);
 							break;
 						default :
+							if (this.standardBlockElements.test(buttonId.toLowerCase()) && buttonId.toLowerCase() == block.nodeName.toLowerCase()) {
+								this.cleanClasses(block);
+								if (className) {
+									HTMLArea.DOM.addClass(block, className);
+								}
+							}
 							break;
 					}
 				}
@@ -648,10 +707,10 @@ BlockElements = HTMLArea.Plugin.extend({
 	toggleAlignmentClass : function(block, buttonId) {
 		for (var alignmentButtonId in this.useClass) {
 			if (this.useClass.hasOwnProperty(alignmentButtonId) && alignmentButtonId !== "Indent") {
-				if (HTMLArea._hasClass(block, this.useClass[alignmentButtonId])) {
-					HTMLArea._removeClass(block, this.useClass[alignmentButtonId]);
+				if (HTMLArea.DOM.hasClass(block, this.useClass[alignmentButtonId])) {
+					HTMLArea.DOM.removeClass(block, this.useClass[alignmentButtonId]);
 				} else if (alignmentButtonId === buttonId) {
-					HTMLArea._addClass(block, this.useClass[alignmentButtonId]);
+					HTMLArea.DOM.addClass(block, this.useClass[alignmentButtonId]);
 				}
 			}
 		}
@@ -703,7 +762,7 @@ BlockElements = HTMLArea.Plugin.extend({
 			} catch(e) {
 				this.appendToLog("onButtonPress", e + "\n\nby execCommand(" + buttonId + ");");
 			}
-			if (HTMLArea.is_safari) {
+			if (Ext.isWebKit) {
 				this.editor.cleanAppleStyleSpans(parentNode);
 			}
 		}
@@ -865,7 +924,7 @@ BlockElements = HTMLArea.Plugin.extend({
 		if (endElement) {
 			var parent = endElement.parentNode;
 			var paragraph = this.editor._doc.createElement("p");
-			if (HTMLArea.is_ie) {
+			if (Ext.isIE) {
 				paragraph.innerHTML = "&nbsp";
 			} else {
 				paragraph.appendChild(this.editor._doc.createElement("br"));
@@ -878,118 +937,155 @@ BlockElements = HTMLArea.Plugin.extend({
 			this.editor.selectNodeContents(paragraph, true);
 		}
 	},
-	
 	/*
-	 * This function gets called by the main editor event handler when a key was pressed.
-	 * It will process the enter key for IE when the cursor is at the end of a dt or a dd element
+	 * Insert horizontal line
 	 */
-	onKeyPress : function (ev) {
-		if (HTMLArea.is_ie && ev.keyCode == 13 && !ev.shiftKey) {
-			var selection = this.editor._getSelection();
-			if (this.editor._selectionEmpty(selection)) {
-				var range = this.editor._createRange(selection);
-				var parentElement = this.editor.getParentElement(selection, range);
-				while (parentElement && !HTMLArea.isBlockElement(parentElement)) {
-					parentElement = parentElement.parentNode;
-				}
-				if (/^(dt|dd)$/i.test(parentElement.nodeName)) {
-					var nodeRange = this.editor._createRange();
-					nodeRange.moveToElementText(parentElement);
-					range.setEndPoint("EndToEnd", nodeRange);
-					if (!range.text || range.text == "\x20") {
-						var item = parentElement.parentNode.insertBefore(this.editor._doc.createElement((parentElement.nodeName.toLowerCase() === "dt") ? "dd" : "dt"), parentElement.nextSibling);
-						item.innerHTML = "\x20";
-						this.editor.selectNodeContents(item, true);
-						return false;
+	insertHorizontalRule: function() {
+		this.editor.execCommand('InsertHorizontalRule');
+			// Apply enterParagraphs rule
+		if (!Ext.isIE && !Ext.isOpera && !this.editor.config.disableEnterParagraphs) {
+			var range = this.editor._createRange(this.editor._getSelection());
+			var startContainer = range.startContainer;
+			if (/^body$/i.test(startContainer.nodeName)) {
+				startContainer.normalize();
+				var ruler = startContainer.childNodes[range.startOffset-1];
+				if (ruler.nextSibling) {
+					if (ruler.nextSibling.nodeType == HTMLArea.DOM.TEXT_NODE) {
+						if (/\S/.test(ruler.nextSibling.textContent)) {
+							var paragraph = this.editor.document.createElement('p');
+							paragraph = startContainer.appendChild(paragraph);
+							paragraph = startContainer.insertBefore(paragraph, ruler.nextSibling);
+							paragraph.appendChild(ruler.nextSibling);
+						} else {
+							HTMLArea.removeFromParent(ruler.nextSibling);
+							var paragraph = ruler.nextSibling;
+						}
+					} else {
+						var paragraph = ruler.nextSibling;
 					}
-				} else if (/^(li)$/i.test(parentElement.nodeName)
-						&& !parentElement.innerText
-						&& parentElement.parentNode.parentNode
-						&& /^(dd|td|th)$/i.test(parentElement.parentNode.parentNode.nodeName)) {
-					var item = parentElement.parentNode.parentNode.insertBefore(this.editor._doc.createTextNode("\x20"), parentElement.parentNode.nextSibling);
-					this.editor.selectNodeContents(parentElement.parentNode.parentNode, false);
-					parentElement.parentNode.removeChild(parentElement);
+						// Cannot set the cursor on the hr element
+					if (/^hr$/i.test(paragraph.nodeName)) {
+						var inBetweenParagraph = this.editor.document.createElement('p');
+						inBetweenParagraph.innerHTML = '<br />';
+						paragraph = startContainer.insertBefore(inBetweenParagraph, paragraph);
+					}
+				} else {
+					var paragraph = this.editor.document.createElement('p');
+					if (Ext.isWebKit) {
+						paragraph.innerHTML = '<br />';
+					}
+					paragraph = startContainer.appendChild(paragraph);
+				}
+				this.editor.selectNodeContents(paragraph, true);
+			}
+		}
+	},
+	/*
+	 * This function gets called when the plugin is generated
+	 */
+	onGenerate: function () {
+			// Register the enter key handler for IE when the cursor is at the end of a dt or a dd element
+		if (Ext.isIE) {
+			this.editor.iframe.keyMap.addBinding({
+				key: Ext.EventObject.ENTER,
+				shift: false,
+				handler: this.onKey,
+				scope: this
+			});
+		}
+	},
+	/*
+	 * This function gets called when the enter key was pressed in IE
+	 * It will process the enter key for IE when the cursor is at the end of a dt or a dd element
+	 *
+	 * @param	string		key: the key code
+	 * @param	object		event: the Ext event object (keydown)
+	 *
+	 * @return	boolean		false, if the event was taken care of
+	 */
+	onKey: function (key, event) {
+		var selection = this.editor._getSelection();
+		if (this.editor._selectionEmpty(selection)) {
+			var range = this.editor._createRange(selection);
+			var parentElement = this.editor.getParentElement(selection, range);
+			while (parentElement && !HTMLArea.isBlockElement(parentElement)) {
+				parentElement = parentElement.parentNode;
+			}
+			if (/^(dt|dd)$/i.test(parentElement.nodeName)) {
+				var nodeRange = this.editor._createRange();
+				nodeRange.moveToElementText(parentElement);
+				range.setEndPoint("EndToEnd", nodeRange);
+				if (!range.text || range.text == "\x20") {
+					var item = parentElement.parentNode.insertBefore(this.editor._doc.createElement((parentElement.nodeName.toLowerCase() === "dt") ? "dd" : "dt"), parentElement.nextSibling);
+					item.innerHTML = "\x20";
+					this.editor.selectNodeContents(item, true);
+					event.stopEvent();
 					return false;
 				}
+			} else if (/^(li)$/i.test(parentElement.nodeName)
+					&& !parentElement.innerText
+					&& parentElement.parentNode.parentNode
+					&& /^(dd|td|th)$/i.test(parentElement.parentNode.parentNode.nodeName)) {
+				var item = parentElement.parentNode.parentNode.insertBefore(this.editor._doc.createTextNode("\x20"), parentElement.parentNode.nextSibling);
+				this.editor.selectNodeContents(parentElement.parentNode.parentNode, false);
+				parentElement.parentNode.removeChild(parentElement);
+				event.stopEvent();
+				return false;
 			}
 		}
 		return true;
+	},
+	/*
+	 * This function removes any disallowed class or mutually exclusive classes from the class attribute of the node
+	 */
+	cleanClasses : function(node) {
+		var classNames = node.className.trim().split(" ");
+		var nodeName = node.nodeName.toLowerCase();
+		for (var i = classNames.length; --i >= 0;) {
+			if (!HTMLArea.reservedClassNames.test(classNames[i])) {
+				if (this.tags && this.tags[nodeName] && this.tags[nodeName].allowedClasses) {
+					if (!this.tags[nodeName].allowedClasses.test(classNames[i])) {
+						HTMLArea.DOM.removeClass(node, classNames[i]);
+					}
+				} else if (this.tags && this.tags.all && this.tags.all.allowedClasses) {
+					if (!this.tags.all.allowedClasses.test(classNames[i])) {
+						HTMLArea.DOM.removeClass(node, classNames[i]);
+					}
+				}
+				if (this.formatBlockItems[nodeName] && this.formatBlockItems[nodeName].classList && this.formatBlockItems[nodeName].classList.test(classNames[i])) {
+					HTMLArea.DOM.removeClass(node, classNames[i]);
+				}
+			}
+		}
 	},
 	
 	/*
 	 * This function gets called when the toolbar is updated
 	 */
-	onUpdateToolbar : function () {
-		if (this.getEditorMode() === "textmode" || !this.editor.isEditable()) {
-			return false;
-		}
-		var statusBarSelection = this.editor.getPluginInstance("StatusBar") ? this.editor.getPluginInstance("StatusBar").getSelection() : null;
-		var parentElement = statusBarSelection ? statusBarSelection : this.editor.getParentElement();
-		if (parentElement.nodeName.toLowerCase() === "body") {
-				// The selection is not contained in any block
-			var dropDownConfiguration = this.getDropDownConfiguration("FormatBlock");
-			if ((typeof(dropDownConfiguration) !== "undefined") && this.isButtonInToolbar(dropDownConfiguration.id)) {
-				this.updateDropDown(dropDownConfiguration);
-			}
-			for (var buttonId in this.buttonList) {
-				if (this.buttonList.hasOwnProperty(buttonId) && this.isButtonInToolbar(buttonId)) {
-					switch (buttonId) {
-						case 'Outdent' :
-							this.editor._toolbarObjects[buttonId].state("enabled", false);
-							break;
-						case 'Indent' :
-							break;
-						case 'InsertParagraphBefore' :
-						case 'InsertParagraphAfter'  :
-							this.editor._toolbarObjects[buttonId].state("enabled", false);
-							break;
-						case 'Blockquote' :
-							this.editor._toolbarObjects[buttonId].state("active", false);
-							break;
-						case 'JustifyLeft'   :
-						case 'JustifyCenter' :
-						case 'JustifyRight'  :
-						case 'JustifyFull'   :
-							this.editor._toolbarObjects[buttonId].state("active", false);
-							this.editor._toolbarObjects[buttonId].state("enabled", false);
-							break;
-						case 'InsertOrderedList':
-						case 'InsertUnorderedList':
-							this.editor._toolbarObjects[buttonId].state("active", false);
-							break;
-						default	:
-							break;
-					}
+	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors, endPointsInSameBlock) {
+		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+			var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
+			var parentElement = statusBarSelection ? statusBarSelection : this.editor.getParentElement();
+			if (!/^body$/i.test(parentElement.nodeName)) {
+				while (parentElement && !HTMLArea.isBlockElement(parentElement) || /^li$/i.test(parentElement.nodeName)) {
+					parentElement = parentElement.parentNode;
 				}
-			}
-			return false;
-		}
-		while (parentElement && !HTMLArea.isBlockElement(parentElement) || /^li$/i.test(parentElement.nodeName)) {
-			parentElement = parentElement.parentNode;
-		}
-		var blockAncestors = this.getBlockAncestors(parentElement);
-		
-		var selection = this.editor._getSelection();
-		var endBlocks = this.editor.getEndBlocks(selection);
-		var startAncestors = this.getBlockAncestors(endBlocks.start);
-		var endAncestors = this.getBlockAncestors(endBlocks.end);
-		var index = 0;
-		while (index < startAncestors.length && index < endAncestors.length && startAncestors[index] === endAncestors[index]) {
-			++index;
-		}
-		if (endBlocks.start === endBlocks.end || !startAncestors[index]) {
-			--index;
-		}
-		var dropDownConfiguration = this.getDropDownConfiguration("FormatBlock");
-		if ((typeof(dropDownConfiguration) !== "undefined") && this.isButtonInToolbar(dropDownConfiguration.id)) {
-			this.updateDropDown(dropDownConfiguration, blockAncestors[blockAncestors.length-1], startAncestors[index]);
-		}
-		
-		var commandState;
-		for (var buttonId in this.buttonList) {
-			commandState = false;
-			if (this.buttonList.hasOwnProperty(buttonId) && this.isButtonInToolbar(buttonId)) {
-				switch (buttonId) {
+				var blockAncestors = this.getBlockAncestors(parentElement);
+				var endBlocks = this.editor.getEndBlocks(this.editor._getSelection());
+				var startAncestors = this.getBlockAncestors(endBlocks.start);
+				var endAncestors = this.getBlockAncestors(endBlocks.end);
+				var index = 0;
+				while (index < startAncestors.length && index < endAncestors.length && startAncestors[index] === endAncestors[index]) {
+					++index;
+				}
+				if (endBlocks.start === endBlocks.end || !startAncestors[index]) {
+					--index;
+				}
+				var commandState = false;
+				switch (button.itemId) {
+					case 'FormatBlock':
+						this.updateDropDown(button, blockAncestors[blockAncestors.length-1], startAncestors[index]);
+						break;
 					case "Outdent" :
 						if (this.useBlockquote) {
 							for (var j = blockAncestors.length; --j >= 0;) {
@@ -1002,19 +1098,19 @@ BlockElements = HTMLArea.Plugin.extend({
 							commandState = true;
 						} else {
 							for (var j = blockAncestors.length; --j >= 0;) {
-								if (HTMLArea._hasClass(blockAncestors[j], this.useClass.Indent)) {
+								if (HTMLArea.DOM.hasClass(blockAncestors[j], this.useClass.Indent) || /^(td|th)$/i.test(blockAncestors[j].nodeName)) {
 									commandState = true;
 									break;
 								}
 							}
 						}
-						this.editor._toolbarObjects[buttonId].state("enabled", commandState);
+						button.setDisabled(!commandState);
 						break;
 					case "Indent" :
 						break;
 					case "InsertParagraphBefore" :
 					case "InsertParagraphAfter"  :
-						this.editor._toolbarObjects[buttonId].state("enabled", !(/^(body)$/i.test(startAncestors[index].nodeName)));
+						button.setDisabled(/^(body)$/i.test(startAncestors[index].nodeName));
 						break;
 					case "Blockquote" :
 						for (var j = blockAncestors.length; --j >= 0;) {
@@ -1023,7 +1119,7 @@ BlockElements = HTMLArea.Plugin.extend({
 								break;
 							}
 						}
-						this.editor._toolbarObjects[buttonId].state("active", commandState);
+						button.setInactive(!commandState);
 						break;
 					case "JustifyLeft"   :
 					case "JustifyCenter" :
@@ -1031,34 +1127,66 @@ BlockElements = HTMLArea.Plugin.extend({
 					case "JustifyFull"   :
 						if (this.useAlignAttribute) {
 							try {
-								commandState = this.editor._doc.queryCommandState(buttonId);
+								commandState = this.editor._doc.queryCommandState(button.itemId);
 							} catch(e) {
 								commandState = false;
 							}
 						} else {
 							if (/^(body)$/i.test(startAncestors[index].nodeName)) {
-								this.editor._toolbarObjects[buttonId].state("enabled", false);
+								button.setDisabled(true);
 							} else {
-								this.editor._toolbarObjects[buttonId].state("enabled", true);
+								button.setDisabled(false);
 								commandState = true;
 								for (var block = startAncestors[index]; block; block = block.nextSibling) {
-									commandState = commandState && HTMLArea._hasClass(block, this.useClass[buttonId]);
+									commandState = commandState && HTMLArea.DOM.hasClass(block, this.useClass[button.itemId]);
 									if (block == endAncestors[index]) {
 										break;
 									}
 								}
 							}
 						}
-						this.editor._toolbarObjects[buttonId].state("active", commandState);
+						button.setInactive(!commandState);
 						break;
 					case "InsertOrderedList":
 					case "InsertUnorderedList":
 						try {
-							commandState = this.editor._doc.queryCommandState(buttonId);
+							commandState = this.editor._doc.queryCommandState(button.itemId);
 						} catch(e) {
 							commandState = false;
 						}
-						this.editor._toolbarObjects[buttonId].state("active", commandState);
+						button.setInactive(!commandState);
+						break;
+					default	:
+						break;
+				}
+			} else {
+					// The selection is not contained in any block
+				switch (button.itemId) {
+					case 'FormatBlock':
+						this.updateDropDown(button);
+						break;
+					case 'Outdent' :
+						button.setDisabled(true);
+						break;
+					case 'Indent' :
+						break;
+					case 'InsertParagraphBefore' :
+					case 'InsertParagraphAfter'  :
+						button.setDisabled(true);
+						break;
+					case 'Blockquote' :
+						button.setInactive(true);
+						break;
+					case 'JustifyLeft'   :
+					case 'JustifyCenter' :
+					case 'JustifyRight'  :
+					case 'JustifyFull'   :
+						button.setInactive(true);
+						button.setDisabled(true);
+						break;
+					case 'InsertOrderedList':
+					case 'InsertUnorderedList':
+						button.setInactive(true);
 						break;
 					default	:
 						break;
@@ -1068,30 +1196,36 @@ BlockElements = HTMLArea.Plugin.extend({
 	},
 	
 	/*
-	* This function updates the drop-down list of block elemenents
-	*/
-	updateDropDown : function(dropDownConfiguration, deepestBlockAncestor, startAncestor) {
-		
-		var select = document.getElementById(this.editor._toolbarObjects[dropDownConfiguration.id].elementId);
-		var options = select.options;
-		for (var i = options.length; --i >= 0;) {
-			options[i].selected = false;
-		}
-		select.selectedIndex = 0;
-		options[0].selected = true;
-		options[0].style.display = "list-item";
-		options[0].text = this.localize("No block");
-		
+	 * This function updates the drop-down list of block elements
+	 */
+	updateDropDown : function(select, deepestBlockAncestor, startAncestor) {
+		var store = select.getStore();
+		store.removeAt(0);
+		var index = -1;
 		if (deepestBlockAncestor) {
 			var nodeName = deepestBlockAncestor.nodeName.toLowerCase();
-			for (i = options.length; --i >= 0;) {
-				if (nodeName === options[i].value.toLowerCase()) {
-					options[i].selected = true;
-					select.selectedIndex = i;
-					options[0].text = this.localize("Remove block");
-					break;
-				}
+				// Could be a custom item ...
+			index = store.findBy(function(record, id) {
+				var item = this.formatBlockItems[record.get('value')];
+				return item && item.tagName == nodeName && item.addClass && HTMLArea.DOM.hasClass(deepestBlockAncestor, item.addClass);
+			}, this);
+			if (index == -1) {
+					// ... or a standard one
+				index = store.findExact('value', nodeName);
 			}
+		}
+		if (index == -1) {
+			store.insert(0, new store.recordType({
+				text: this.localize('No block'),
+				value: 'none'
+			}));
+			select.setValue('none');
+		} else {
+			store.insert(0, new store.recordType({
+				text: this.localize('Remove block'),
+				value: 'none'
+			}));
+			select.setValue(store.getAt(index+1).get('value'));
 		}
 	},
 	

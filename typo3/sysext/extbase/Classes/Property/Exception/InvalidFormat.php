@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Property\Exception
- * @version $Id: InvalidFormat.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  */
 class InvalidFormat extends Tx_Extbase_Property_Exception {
 

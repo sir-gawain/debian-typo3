@@ -1,11 +1,11 @@
 /***************************************************************
 *  AJAX selectors for TCEforms
 *
-* $Id: jsfunc.tceforms_suggest.js 6539 2009-11-25 14:49:14Z stucki $
+* $Id$
 *
 *  Copyright notice
 *
-*  (c) 2007-2009 Andreas Wolf <andreas.wolf@ikt-werk.de>
+*  (c) 2007-2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -54,11 +54,12 @@ TCEForms.Suggest = Class.create({
 	 * @param  integer minimumCharacters the minimum characaters that is need to trigger the initial search
 	 */
 	initialize: function(objectId, table, field, uid, pid, minimumCharacters) {
+		var PATH_typo3 = top.TS.PATH_typo3 || window.opener.top.TS.PATH_typo3;
 		this.objectId = objectId;
 		this.suggestField = objectId + 'Suggest';
 		this.suggestResultList = objectId + 'SuggestChoices';
 
-		new Ajax.Autocompleter(this.suggestField, this.suggestResultList, top.TS.PATH_typo3 + 'ajax.php', {
+		new Ajax.Autocompleter(this.suggestField, this.suggestResultList, PATH_typo3 + 'ajax.php', {
 				paramName: 'value',
 				minChars: (minimumCharacters ? minimumCharacters : this.minimumCharacters),
 				updateElement: this.addElementToList.bind(this),

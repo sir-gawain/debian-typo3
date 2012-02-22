@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Validation\Validator
- * @version $Id: EmailAddressValidator.php 1792 2010-01-19 00:06:05Z jocrau $
+ * @version $Id$
  */
 class Tx_Extbase_Validation_Validator_EmailAddressValidator extends Tx_Extbase_Validation_Validator_AbstractValidator {
 

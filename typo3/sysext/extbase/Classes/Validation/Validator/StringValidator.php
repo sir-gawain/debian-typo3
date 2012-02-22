@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Validation\Validator
- * @version $Id: StringValidator.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @scope prototype
  */
 class Tx_Extbase_Validation_Validator_StringValidator extends Tx_Extbase_Validation_Validator_AbstractValidator {

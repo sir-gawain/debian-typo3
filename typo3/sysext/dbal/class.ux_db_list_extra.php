@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  (c) 2006-2009 Karsten Dambekalns <karsten@typo3.org>
 *  All rights reserved
 *
@@ -28,16 +28,14 @@
 /**
  * Include file extending localRecordList for DBAL compatibility
  *
- * $Id: class.ux_db_list_extra.php 30033 2010-02-14 23:15:46Z xperseguers $
- *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author	Karsten Dambekalns <k.dambekalns@fishfarm.de>
  */
 
 /**
  * Child class for rendering of Web > List (not the final class. see class.db_list_extra)
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author	Karsten Dambekalns <k.dambekalns@fishfarm.de>
  * @package TYPO3
  * @subpackage DBAL
@@ -102,8 +100,8 @@ class ux_localRecordList extends localRecordList {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php']);
 }
 
 ?>

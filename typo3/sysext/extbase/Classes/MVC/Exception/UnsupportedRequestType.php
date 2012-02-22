@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage MVC\Exception
- * @version $Id: UnsupportedRequestType.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  */
 class Tx_Extbase_MVC_Exception_UnsupportedRequestType extends Tx_Extbase_MVC_Exception {
 

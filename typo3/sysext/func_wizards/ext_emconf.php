@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext "func_wizards".
 #
-# Auto generated 21-10-2009 11:09
+# Auto generated 26-01-2011 20:08
 #
 # Manual updates:
 # Only the data in the array - everything else is removed by next
@@ -15,7 +15,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'description' => 'Adds the \'Wizards\' item to the function menu in Web>Func. This is just a framework for wizard extensions.',
 	'category' => 'module',
 	'shy' => 1,
-	'dependencies' => '',
+	'dependencies' => 'func',
 	'conflicts' => '',
 	'priority' => '',
 	'loadOrder' => '',
@@ -33,12 +33,13 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '0.2.0',
-	'_md5_values_when_last_written' => 'a:5:{s:32:"class.tx_funcwizards_webfunc.php";s:4:"a083";s:12:"ext_icon.gif";s:4:"b4bf";s:14:"ext_tables.php";s:4:"17f9";s:13:"locallang.xml";s:4:"4654";s:17:"locallang_csh.xml";s:4:"fcd5";}',
+	'version' => '1.0.0',
+	'_md5_values_when_last_written' => 'a:5:{s:32:"class.tx_funcwizards_webfunc.php";s:4:"d13f";s:12:"ext_icon.gif";s:4:"ff38";s:14:"ext_tables.php";s:4:"17f9";s:13:"locallang.xml";s:4:"4654";s:17:"locallang_csh.xml";s:4:"fcd5";}',
 	'constraints' => array(
 		'depends' => array(
 			'php' => '5.1.0-0.0.0',
-			'typo3' => '4.3.0-4.3.99',
+			'typo3' => '4.4.0-0.0.0',
+			'func' => '',
 		),
 		'conflicts' => array(
 		),

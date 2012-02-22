@@ -5,7 +5,7 @@
 *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
 *  All rights reserved
 *
-*  This class is a backport of the corresponding class of FLOW3. 
+*  This class is a backport of the corresponding class of FLOW3.
 *  All credits go to the v5 team.
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,9 +30,88 @@
  *
  * @package Extbase
  * @subpackage Persistence
- * @version $Id: QuerySettingsInterface.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 interface Tx_Extbase_Persistence_QuerySettingsInterface {
+
+	/**
+	 * Sets the flag if the storage page should be respected for the query.
+	 *
+	 * @param boolean $respectStoragePage If TRUE the storage page ID will be determined and the statement will be extended accordingly.
+	 * @return Tx_Extbase_Persistence_QuerySettingsInterface instance of $this to allow method chaining
+	 * @api
+	 */
+	public function setRespectStoragePage($respectStoragePage);
+
+	/**
+	 * Returns the state, if the storage page should be respected for the query.
+	 *
+	 * @return boolean TRUE, if the storage page should be respected; otherwise FALSE.
+	 */
+	public function getRespectStoragePage();
+
+	/**
+	 * Sets the pid(s) of the storage page(s) that should be respected for the query.
+	 *
+	 * @param array $respectStoragePage If TRUE the storage page ID will be determined and the statement will be extended accordingly.
+	 * @return Tx_Extbase_Persistence_QuerySettingsInterface instance of $this to allow method chaining
+	 * @api
+	 */
+	public function setStoragePageIds(array $storagePageIds);
+
+	/**
+	 * Returns the pid(s) of the storage page(s) that should be respected for the query.
+	 *
+	 * @return array list of integers that each represent a storage page id
+	 */
+	public function getStoragePageIds();
+
+	/**
+	 * Sets the flag if a  and language overlay should be performed.
+	 *
+	 * @param boolean $respectEnableFields TRUE if a  and language overlay should be performed.
+	 * @return Tx_Extbase_Persistence_QuerySettingsInterface instance of $this to allow method chaining
+	 * @api
+	 */
+	public function setRespectSysLanguage($respectSysLanguage);
+
+	/**
+	 * Returns the state, if a  and language overlay should be performed.
+	 *
+	 * @return boolean TRUE, if a  and language overlay should be performed; otherwise FALSE.
+	 */
+	public function getRespectSysLanguage();
+
+	/**
+	 * Sets the flag if the visibility in the frontend should be respected.
+	 *
+	 * @param boolean $respectEnableFields TRUE if the visibility in the frontend should be respected. If TRUE, the "enable fields" of TYPO3 will be added to the query statement.
+	 * @return Tx_Extbase_Persistence_QuerySettingsInterface instance of $this to allow method chaining
+	 * @api
+	 */
+	public function setRespectEnableFields($respectEnableFields);
+
+	/**
+	 * Returns the state, if the visibility settings for the frontend should be respected for the query.
+	 *
+	 * @return boolean TRUE, if the visibility settings for the frontend should should be respected; otherwise FALSE.
+	 */
+	public function getRespectEnableFields();
+
+	/**
+	 * Sets the state, if the QueryResult should be returned unmapped.
+	 *
+	 * @var boolean $returnRawQueryResult TRUE, if the QueryResult should be returned unmapped; otherwise FALSE.
+	 * @return void
+	 */
+	public function setReturnRawQueryResult($returnRawQueryResult);
+
+	/**
+	 * Returns the state, if the QueryResult should be returned unmapped.
+	 *
+	 * @return boolean TRUE, if the QueryResult should be returned unmapped; otherwise FALSE.
+	 */
+	public function getReturnRawQueryResult();
 
 }
 ?>

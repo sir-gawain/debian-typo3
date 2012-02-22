@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 /**
  * Generating plain text content of content elements for Direct Mails
  *
- * $Id: plaintextLib.inc 9057 2010-10-14 09:04:16Z benni $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -115,10 +115,9 @@
  *
  * (And then also "lib.alt_plaintext.renderObj" is configured extensively - basically with the TypoScript options passed to this class. See the static template "plugin.alt.plaintext")
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=398&cHash=e3024de334
  */
 class user_plaintext {
 	var $cObj;
@@ -287,10 +286,9 @@ class user_plaintext {
 	 */
 	function renderUploads($str,$upload_path='uploads/media/')	{
 		$files = explode(',',$str);
-		reset($files);
 		$lines=array();
 		if ($this->conf['uploads.']['header'])	{$lines[]=$this->getString($this->conf['uploads.']['header']);}
-		while(list($k,$file)=each($files))	{
+		foreach ($files as $k => $file) {
 			$lines[]=$this->siteUrl.$upload_path.$file;
 		}
 		return implode(chr(10),$lines);
@@ -385,9 +383,8 @@ class user_plaintext {
 	 */
 	function breakContent($str)	{
 		$cParts = explode(chr(10),$str);
-		reset($cParts);
 		$lines=array();
-		while(list(,$substrs)=each($cParts))	{
+		foreach ($cParts as $substrs) {
 			$lines[]=$this->breakLines($substrs);
 		}
 		return implode(chr(10),$lines);
@@ -406,10 +403,9 @@ class user_plaintext {
 		$tConf = $this->conf['bulletlist.'][$type.'.'];
 
 		$cParts = explode(chr(10),$str);
-		reset($cParts);
 		$lines=array();
 		$c=0;
-		while(list(,$substrs)=each($cParts))	{
+		foreach ($cParts as $substrs) {
 			$c++;
 			$bullet = $tConf['bullet'] ? $this->getString($tConf['bullet']) : ' - ';
 			$bLen=strlen($bullet);
@@ -432,11 +428,10 @@ class user_plaintext {
 	 */
 	function breakTable($str)	{
 		$cParts = explode(chr(10),$str);
-		reset($cParts);
 		$lines=array();
 		$cols = intval($this->conf['cols']) ? intval($this->conf['cols']) : 0 ;
 		$c=0;
-		while(list(,$substrs)=each($cParts))	{
+		foreach ($cParts as $substrs) {
 			$c++;
 			if (trim($substrs))	{
 				$lineParts=explode('|',$substrs);
@@ -459,8 +454,7 @@ class user_plaintext {
 		$outLines = array();
 		$outLines[]=$this->addDiv($messure,'',$divChar,$joinChar,$cols);
 
-		reset($lines);
-		while(list($k,$v)=each($lines))	{
+		foreach ($lines as $k => $v) {
 			$top = intval($messure[1][$k]);
 			for ($aa=0;$aa<$top;$aa++)	{
 				$tempArr=array();
@@ -505,12 +499,9 @@ class user_plaintext {
 	function traverseTable($tableLines)	{
 		$maxLen=array();
 		$maxLines=array();
-		reset($tableLines);
-		while(list($k,$v)=each($tableLines))	{
-			reset($v);
-			while(list($kk,$vv)=each($v))	{
-				reset($vv);
-				while(list($lk,$lv)=each($vv))	{
+		foreach ($tableLines as $k => $v) {
+			foreach ($v as $kk => $vv) {
+				foreach ($vv as $lk => $lv) {
 					if (strlen($lv)>intval($maxLen[$kk]))	$maxLen[$kk]=strlen($lv);
 				}
 				if (count($vv)>intval($maxLines[$k]))	$maxLines[$k]=count($vv);
@@ -531,11 +522,10 @@ class user_plaintext {
 	 */
 	function renderImages($str,$links,$caption,$upload_path='uploads/pics/')	{
 		$images = explode(',',$str);
-		$linksArr = explode(',',$links);
-		reset($images);
+		$linksArr = explode(LF, $links);
 		$lines=array();
 		if ($this->conf['images.']['header'])	{$lines[]=$this->getString($this->conf['images.']['header']);}
-		while(list($k,$file)=each($images))	{
+		foreach ($images as $k => $file) {
 			$lines[]=$this->siteUrl.$upload_path.$file;
 			if ($links && count($linksArr)>1)	{
 				if (isset($linksArr[$k]))	{
@@ -691,7 +681,7 @@ class user_plaintext {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/plaintextLib.inc'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/plaintextLib.inc']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/plaintextLib.inc'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/plaintextLib.inc']);
 }
 ?>

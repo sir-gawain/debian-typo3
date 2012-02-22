@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
  * @package		TYPO3
  * @subpackage	reports
  *
- * $Id: class.tx_reports_reports_status_securitystatus.php 7377 2010-04-16 16:00:21Z psychomieze $
+ * $Id$
  */
 class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvider {
 
@@ -50,6 +50,7 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 			'htaccessUpload'      => $this->getHtaccessUploadStatus(),
 			'installToolEnabled'  => $this->getInstallToolProtectionStatus(),
 			'installToolPassword' => $this->getInstallToolPasswordStatus(),
+			'saltedpasswords'     => $this->getSaltedPasswordsStatus()
 		);
 
 		return $statuses;
@@ -77,7 +78,7 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 			$value    = $GLOBALS['LANG']->getLL('status_insecure');
 			$severity = tx_reports_reports_status_Status::ERROR;
 
-			$editUserAccountUrl = 'alt_doc.php?returnUrl=index.php&edit[be_users][' . $row['uid'] . ']=edit';
+			$editUserAccountUrl = 'alt_doc.php?returnUrl=mod.php?M=tools_txreportsM1&edit[be_users][' . $row['uid'] . ']=edit';
 			$message = sprintf(
 				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.backend_admin'),
 				'<a href="' . $editUserAccountUrl . '">',
@@ -130,7 +131,10 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 		$message  = '';
 		$severity = tx_reports_reports_status_Status::OK;
 
-		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'] != FILE_DENY_PATTERN_DEFAULT) {
+		$defaultParts = t3lib_div::trimExplode('|', FILE_DENY_PATTERN_DEFAULT, TRUE);
+		$givenParts = t3lib_div::trimExplode('|', $GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'], TRUE);
+		$result = array_intersect($defaultParts, $givenParts);
+		if ($defaultParts !== $result) {
 			$value    = $GLOBALS['LANG']->getLL('status_insecure');
 			$severity = tx_reports_reports_status_Status::ERROR;
 
@@ -138,7 +142,7 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 				. urlencode('?TYPO3_INSTALL[type]=config#set_encryptionKey');
 
 			$message = sprintf(
-				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_deny_pattern'),
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_deny_pattern_partsNotPresent'),
 				'<br /><pre>'
 				. htmlspecialchars(FILE_DENY_PATTERN_DEFAULT)
 				. '</pre><br />'
@@ -233,7 +237,53 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 		);
 	}
 
+	/**
+	 * Checks whether the Install Tool password is set to its default value.
+	 *
+	 * @return	tx_reports_reports_status_Status	An tx_reports_reports_status_Status object representing the security of the saltedpassswords extension
+	 */
+	protected function getSaltedPasswordsStatus() {
+		$value    = $GLOBALS['LANG']->getLL('status_ok');
+		$message  = '';
+		$severity = tx_reports_reports_status_Status::OK;
 
+		if (!t3lib_extMgm::isLoaded('saltedpasswords')) {
+			$value    = $GLOBALS['LANG']->getLL('status_insecure');
+			$severity = tx_reports_reports_status_Status::ERROR;
+			$message .= $GLOBALS['LANG']->getLL('status_saltedPasswords_notInstalled');
+		} else {
+			/** @var tx_saltedpasswords_emconfhelper $configCheck */
+			$configCheck = t3lib_div::makeInstance('tx_saltedpasswords_emconfhelper');
+			$message .= '<p>' . $GLOBALS['LANG']->getLL('status_saltedPasswords_infoText') . '</p>';
+			$flashMessage = $configCheck->checkConfigurationBackend(array(), new t3lib_tsStyleConfig());
+
+			if (strpos($flashMessage, 'message-error') !== FALSE ||
+				strpos($flashMessage, 'message-warning') !== FALSE ||
+				strpos($flashMessage, 'message-information') !== FALSE
+			) {
+				$value    = $GLOBALS['LANG']->getLL('status_insecure');
+				$severity = tx_reports_reports_status_Status::ERROR;
+				$message .= $flashMessage;
+			}
+
+			$unsecureUserCount = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+				'*',
+				'be_users',
+				'password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('$%', 'be_users')
+					. ' AND password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('M$%', 'be_users')
+			);
+			if ($unsecureUserCount > 0) {
+				$value    = $GLOBALS['LANG']->getLL('status_insecure');
+				$severity = tx_reports_reports_status_Status::ERROR;
+				$message .= '<div class="typo3-message message-warning">' .
+						$GLOBALS['LANG']->getLL('status_saltedPasswords_notAllPasswordsHashed') .'</div>';
+			}
+		}
+
+		return t3lib_div::makeInstance('tx_reports_reports_status_Status',
+			$GLOBALS['LANG']->getLL('status_saltedPasswords'), $value, $message, $severity
+		);
+	}
 
 	/**
 	 * Checks for the existance of the ENABLE_INSTALL_TOOL file.
@@ -301,8 +351,8 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_systemstatus.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_systemstatus.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_securitystatus.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_securitystatus.php']);
 }
 
 ?>

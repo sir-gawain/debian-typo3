@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Dmitry Dulepov (dmitry.dulepov@gmail.com)
+*  (c) 2009-2011 Dmitry Dulepov (dmitry.dulepov@gmail.com)
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -22,7 +22,7 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /**
- * $Id: class.tx_openid_store.php 7249 2010-04-06 12:39:16Z dmitry $
+ * $Id$
  */
 
 require_once(t3lib_extMgm::extPath('openid', 'lib/php-openid/Auth/OpenID/Interface.php'));
@@ -97,8 +97,13 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 		else {
 			$sort = 'tstamp DESC';
 		}
-		list($row) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,content',
-			self::ASSOCIATION_TABLE_NAME, $where, '', $sort, '1');
+		$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+			'uid, content',
+			self::ASSOCIATION_TABLE_NAME,
+			$where,
+			'',
+			$sort
+		);
 
 		$result = null;
 		if (is_array($row)) {
@@ -187,7 +192,7 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 			$GLOBALS['TYPO3_DB']->fullQuoteStr($serverUrl, self::ASSOCIATION_TABLE_NAME),
 			$GLOBALS['TYPO3_DB']->fullQuoteStr($association->handle, self::ASSOCIATION_TABLE_NAME),
 			time());
-		list($row) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+		$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 			'COUNT(*) as assocCount', self::ASSOCIATION_TABLE_NAME, $where);
 		return ($row['assocCount'] > 0);
 	}
@@ -249,8 +254,8 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php']);
 }
 
 ?>

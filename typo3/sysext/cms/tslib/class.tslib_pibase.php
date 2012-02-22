@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,11 +27,11 @@
 /**
  * This script contains the parent class, 'pibase', providing an API with the most basic methods for frontend plugins
  *
- * $Id: class.tslib_pibase.php 6684 2009-12-19 15:26:00Z xperseguers $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -114,7 +114,7 @@
  * This class contains functions which assists these plugins in creating lists, searching, displaying menus, page-browsing (next/previous/1/2/3) and handling links.
  * Functions are all prefixed "pi_" which is reserved for this class. Those functions can of course be overridden in the extension classes (that is the point...)
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
  */
@@ -218,9 +218,9 @@ class tslib_pibase {
 				$GLOBALS['TSFE']->reqCHash();
 			}
 		}
-		if ($GLOBALS['TSFE']->config['config']['language'])	{
+		if (!empty($GLOBALS['TSFE']->config['config']['language'])) {
 			$this->LLkey = $GLOBALS['TSFE']->config['config']['language'];
-			if ($GLOBALS['TSFE']->config['config']['language_alt'])	{
+			if (!empty($GLOBALS['TSFE']->config['config']['language_alt'])) {
 				$this->altLLkey = $GLOBALS['TSFE']->config['config']['language_alt'];
 			}
 		}
@@ -443,9 +443,10 @@ class tslib_pibase {
 	 * @param	array		Array with elements to overwrite the default $wrapper-array.
 	 * @param	string		varname for the pointer.
 	 * @param	boolean		enable htmlspecialchars() for the pi_getLL function (set this to FALSE if you want f.e use images instead of text for links like 'previous' and 'next').
-	 * @return	string		Output HTML-Table, wrapped in <div>-tags with a class attribute (if $wrapArr is not passed,
+	 * @param   boolean     forces the output of the page browser if you set this option to "true" (otherwise it's only drawn if enough entries are available)
+ 	 * @return	string		Output HTML-Table, wrapped in <div>-tags with a class attribute (if $wrapArr is not passed,
 	 */
-	function pi_list_browseresults($showResultCount=1, $tableParams='', $wrapArr=array(), $pointerName='pointer', $hscText=TRUE)	{
+	function pi_list_browseresults($showResultCount=1, $tableParams='', $wrapArr=array(), $pointerName='pointer', $hscText=TRUE, $forceOutput=FALSE) {
 
 		// example $wrapArr-array how it could be traversed from an extension
 		/* $wrapArr = array(
@@ -465,6 +466,10 @@ class tslib_pibase {
 		$totalPages = ceil($count/$results_at_a_time);
 		$maxPages = t3lib_div::intInRange($this->internal['maxPages'],1,100);
 		$pi_isOnlyFields = $this->pi_isOnlyFields($this->pi_isOnlyFields);
+
+		if (!$forceOutput && $count <= $results_at_a_time) {
+			return '';
+		}
 
 			// $showResultCount determines how the results of the pagerowser will be shown.
 			// If set to 0: only the result-browser will be shown
@@ -561,7 +566,7 @@ class tslib_pibase {
 					$links[]=$this->cObj->wrap($this->pi_getLL('pi_list_browseresults_last','Last >>',$hscText),$wrapper['disabledLinkWrap']);
 				}
 			}
-			$theLinks = $this->cObj->wrap(implode(chr(10),$links),$wrapper['browseLinksWrap']);
+			$theLinks = $this->cObj->wrap(implode(LF,$links),$wrapper['browseLinksWrap']);
 		} else {
 			$theLinks = '';
 		}
@@ -784,7 +789,7 @@ class tslib_pibase {
 	 * @param	string		$data: CSS data
 	 * @param	string		If $selector is set to any CSS selector, eg 'P' or 'H1' or 'TABLE' then the style $data will regard those HTML-elements only
 	 * @return	void
-	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.5, I think this function should not be used (and probably isn't used anywhere). It was a part of a concept which was left behind quite quickly.
+	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.6, I think this function should not be used (and probably isn't used anywhere). It was a part of a concept which was left behind quite quickly.
 	 * @obsolete
 	 * @private
 	 */
@@ -1045,24 +1050,26 @@ class tslib_pibase {
 	 * @return	mixed		The query build.
 	 * @access private
 	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.5, use pi_exec_query() instead!
+	 * @todo	Deprecated but still used in the Core!
 	 */
 	function pi_list_query($table,$count=0,$addWhere='',$mm_cat='',$groupBy='',$orderBy='',$query='',$returnQueryArray=FALSE)	{
+		t3lib_div::logDeprecatedFunction();
 
-			// Begin Query:
+		// Begin Query:
 		if (!$query)	{
 				// Fetches the list of PIDs to select from.
 				// TypoScript property .pidList is a comma list of pids. If blank, current page id is used.
 				// TypoScript property .recursive is a int+ which determines how many levels down from the pids in the pid-list subpages should be included in the select.
 			$pidList = $this->pi_getPidList($this->conf['pidList'],$this->conf['recursive']);
 			if (is_array($mm_cat))	{
-				$query='FROM '.$table.','.$mm_cat['table'].','.$mm_cat['mmtable'].chr(10).
-						' WHERE '.$table.'.uid='.$mm_cat['mmtable'].'.uid_local AND '.$mm_cat['table'].'.uid='.$mm_cat['mmtable'].'.uid_foreign '.chr(10).
-						(strcmp($mm_cat['catUidList'],'')?' AND '.$mm_cat['table'].'.uid IN ('.$mm_cat['catUidList'].')':'').chr(10).
-						' AND '.$table.'.pid IN ('.$pidList.')'.chr(10).
-						$this->cObj->enableFields($table).chr(10);	// This adds WHERE-clauses that ensures deleted, hidden, starttime/endtime/access records are NOT selected, if they should not! Almost ALWAYS add this to your queries!
+				$query='FROM '.$table.','.$mm_cat['table'].','.$mm_cat['mmtable'].LF.
+						' WHERE '.$table.'.uid='.$mm_cat['mmtable'].'.uid_local AND '.$mm_cat['table'].'.uid='.$mm_cat['mmtable'].'.uid_foreign '.LF.
+						(strcmp($mm_cat['catUidList'],'')?' AND '.$mm_cat['table'].'.uid IN ('.$mm_cat['catUidList'].')':'').LF.
+						' AND '.$table.'.pid IN ('.$pidList.')'.LF.
+						$this->cObj->enableFields($table).LF;	// This adds WHERE-clauses that ensures deleted, hidden, starttime/endtime/access records are NOT selected, if they should not! Almost ALWAYS add this to your queries!
 			} else {
-				$query='FROM '.$table.' WHERE pid IN ('.$pidList.')'.chr(10).
-						$this->cObj->enableFields($table).chr(10);	// This adds WHERE-clauses that ensures deleted, hidden, starttime/endtime/access records are NOT selected, if they should not! Almost ALWAYS add this to your queries!
+				$query='FROM '.$table.' WHERE pid IN ('.$pidList.')'.LF.
+						$this->cObj->enableFields($table).LF;	// This adds WHERE-clauses that ensures deleted, hidden, starttime/endtime/access records are NOT selected, if they should not! Almost ALWAYS add this to your queries!
 			}
 		}
 
@@ -1072,11 +1079,11 @@ class tslib_pibase {
 		$WHERE = trim($WHERE);
 
 			// Add '$addWhere'
-		if ($addWhere)	{$WHERE.=' '.$addWhere.chr(10);}
+		if ($addWhere)	{$WHERE.=' '.$addWhere.LF;}
 
 			// Search word:
 		if ($this->piVars['sword'] && $this->internal['searchFieldList'])	{
-			$WHERE.=$this->cObj->searchWhere($this->piVars['sword'],$this->internal['searchFieldList'],$table).chr(10);
+			$WHERE.=$this->cObj->searchWhere($this->piVars['sword'],$this->internal['searchFieldList'],$table).LF;
 		}
 
 		if ($count) {
@@ -1138,9 +1145,73 @@ class tslib_pibase {
 	 * @param	string		If set, this is taken as the first part of the query instead of what is created internally. Basically this should be a query starting with "FROM [table] WHERE ... AND ...". The $addWhere clauses and all the other stuff is still added. Only the tables and PID selecting clauses are bypassed. May be deprecated in the future!
 	 * @return	pointer		SQL result pointer
 	 */
-	function pi_exec_query($table,$count=0,$addWhere='',$mm_cat='',$groupBy='',$orderBy='',$query='')	{
-		$queryParts = $this->pi_list_query($table,$count,$addWhere,$mm_cat,$groupBy,$orderBy,$query, TRUE);
+	function pi_exec_query($table, $count=0 ,$addWhere='' ,$mm_cat='' ,$groupBy='' ,$orderBy='', $query='') {
+        		// Begin Query:
+		if (!$query) {
+				// Fetches the list of PIDs to select from.
+				// TypoScript property .pidList is a comma list of pids. If blank, current page id is used.
+				// TypoScript property .recursive is a int+ which determines how many levels down from the pids in the pid-list subpages should be included in the select.
+			$pidList = $this->pi_getPidList($this->conf['pidList'], $this->conf['recursive']);
+			if (is_array($mm_cat)) {
+				$query = 'FROM ' . $table . ',' . $mm_cat['table'] . ',' . $mm_cat['mmtable'] . LF .
+						' WHERE ' . $table . '.uid=' . $mm_cat['mmtable'] . '.uid_local AND ' . $mm_cat['table'] . '.uid=' . $mm_cat['mmtable'] . '.uid_foreign ' . LF .
+						(strcmp($mm_cat['catUidList'],'') ? ' AND ' . $mm_cat['table'] . '.uid IN (' . $mm_cat['catUidList'] . ')' : '') . LF .
+						' AND ' . $table . '.pid IN (' . $pidList . ')' . LF .
+						$this->cObj->enableFields($table) . LF;	// This adds WHERE-clauses that ensures deleted, hidden, starttime/endtime/access records are NOT selected, if they should not! Almost ALWAYS add this to your queries!
+			} else {
+				$query='FROM ' . $table . ' WHERE pid IN (' . $pidList . ')' . LF .
+						$this->cObj->enableFields($table) . LF;	// This adds WHERE-clauses that ensures deleted, hidden, starttime/endtime/access records are NOT selected, if they should not! Almost ALWAYS add this to your queries!
+			}
+		}
 
+			// Split the "FROM ... WHERE" string so we get the WHERE part and TABLE names separated...:
+		list($TABLENAMES, $WHERE) = preg_split('/WHERE/i', trim($query), 2);
+		$TABLENAMES = trim(substr(trim($TABLENAMES), 5));
+		$WHERE = trim($WHERE);
+
+			// Add '$addWhere'
+		if ($addWhere) {
+			$WHERE .= ' ' . $addWhere . LF;
+		}
+
+			// Search word:
+		if ($this->piVars['sword'] && $this->internal['searchFieldList']) {
+			$WHERE .= $this->cObj->searchWhere($this->piVars['sword'], $this->internal['searchFieldList'], $table) . LF;
+		}
+
+		if ($count) {
+			$queryParts = array(
+				'SELECT' => 'count(*)',
+				'FROM' => $TABLENAMES,
+				'WHERE' => $WHERE,
+				'GROUPBY' => '',
+				'ORDERBY' => '',
+				'LIMIT' => ''
+			);
+		} else {
+				// Order by data:
+			if (!$orderBy && $this->internal['orderBy']) {
+				if (t3lib_div::inList($this->internal['orderByList'], $this->internal['orderBy'])) {
+					$orderBy = 'ORDER BY ' . $table . '.' . $this->internal['orderBy'] . ($this->internal['descFlag'] ? ' DESC' : '');
+				}
+			}
+
+				// Limit data:
+			$pointer = $this->piVars['pointer'];
+			$pointer = intval($pointer);
+			$results_at_a_time = t3lib_div::intInRange($this->internal['results_at_a_time'], 1, 1000);
+			$LIMIT = ($pointer * $results_at_a_time) . ',' . $results_at_a_time;
+
+				// Add 'SELECT'
+			$queryParts = array(
+				'SELECT' => $this->pi_prependFieldsWithTable($table, $this->pi_listFields),
+				'FROM' => $TABLENAMES,
+				'WHERE' => $WHERE,
+				'GROUPBY' => $GLOBALS['TYPO3_DB']->stripGroupBy($groupBy),
+				'ORDERBY' => $GLOBALS['TYPO3_DB']->stripOrderBy($orderBy),
+				'LIMIT' => $LIMIT
+			);
+		}
 		return $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($queryParts);
 	}
 

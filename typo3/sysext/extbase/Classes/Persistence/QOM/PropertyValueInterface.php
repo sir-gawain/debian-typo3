@@ -38,7 +38,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\QOM
- * @version $Id: PropertyValueInterface.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 interface Tx_Extbase_Persistence_QOM_PropertyValueInterface extends Tx_Extbase_Persistence_QOM_DynamicOperandInterface {
 

@@ -44,7 +44,7 @@
  *
  * @package Extbase
  * @subpackage Persistence
- * @version $Id: PropertyType.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 final class Tx_Extbase_Persistence_PropertyType {
 

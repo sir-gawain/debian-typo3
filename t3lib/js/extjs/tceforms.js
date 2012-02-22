@@ -1,11 +1,11 @@
 /***************************************************************
  * extJS for TCEforms
  *
- * $Id: tceforms.js 8022 2010-06-21 21:59:22Z steffenk $
+ * $Id$
  *
  * Copyright notice
  *
- * (c) 2009 Steffen Kamper <info@sk-typo3.de>
+ * (c) 2009-2011 Steffen Kamper <info@sk-typo3.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -38,29 +38,43 @@ TYPO3.TCEFORMS = {
 	},
 
 	convertDateFieldsToDatePicker: function() {
-		var dateFields = Ext.select("input[id^=tceforms-date]");
+		var dateFields = Ext.select("input[id^=tceforms-date]"), minDate, maxDate, lowerMatch, upperMatch;
 		dateFields.each(function(element) {
 			var index = element.dom.id.match(/tceforms-datefield-/) ? 0 : 1;
 			var format = TYPO3.settings.datePickerUSmode ? TYPO3.settings.dateFormatUS : TYPO3.settings.dateFormat;
 
-			var datepicker = element.next('img');
+			var datepicker = element.next('span');
+			var oldValue = Date.parseDate(element.dom.value, format[index]);
+
+			// check for daterange
+			var lowerMatch = element.dom.className.match(/lower-(\d+)\b/);
+			minDate = Ext.isArray(lowerMatch) ? new Date(lowerMatch[1] * 1000) : null;
+			var upperMatch = element.dom.className.match(/upper-(\d+)\b/);
+			maxDate = Ext.isArray(upperMatch) ? new Date(upperMatch[1] * 1000) : null;
 
 			var menu = new Ext.menu.DateMenu({
 				id:			'p' + element.dom.id,
 				format:		format[index],
-				value:		Date.parseDate(element.dom.value, format[index]),
+				value:		oldValue,
+				minDate:	minDate,
+				maxDate:	maxDate,
 				handler: 	function(picker, date){
-					var relElement = Ext.getDom(picker.id.substring(1));
+					var relElement = Ext.getDom(picker.ownerCt.id.substring(1));
+					if (index === 1 && oldValue !== undefined) {
+							//datetimefield, preserve time information
+						date.setHours(oldValue.getHours());
+						date.setMinutes(oldValue.getMinutes());
+					}
 					relElement.value = date.format(format[index]);
 					if (Ext.isFunction(relElement.onchange)) {
 						relElement.onchange.call(relElement);
 					}
 				},
 				listeners:	{
-					beforeshow:	function(picker) {
-						var relElement = Ext.getDom(picker.id.substring(1));
+					beforeshow:	function(obj) {
+						var relElement = Ext.getDom(obj.picker.ownerCt.id.substring(1));
 						if (relElement.value) {
-							Ext.getCmp('p' + relElement.id).setValue(Date.parseDate(relElement.value, format[index]));
+							obj.picker.setValue(Date.parseDate(relElement.value, format[index]));
 						}
 					}
 				}
@@ -71,7 +85,7 @@ TYPO3.TCEFORMS = {
 			});
 		});
 	},
-	
+
 	convertTextareasResizable: function() {
 		var textAreas = Ext.select("textarea[id^=tceforms-textarea-]");
 		textAreas.each(function(element) {
@@ -92,6 +106,6 @@ TYPO3.TCEFORMS = {
 			}
 		});
 	}
-	
+
 }
 Ext.onReady(TYPO3.TCEFORMS.init, TYPO3.TCEFORMS);

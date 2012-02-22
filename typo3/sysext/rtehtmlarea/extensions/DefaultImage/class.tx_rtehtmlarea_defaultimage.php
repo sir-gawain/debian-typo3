@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,15 +24,12 @@
 /**
  * Image plugin for htmlArea RTE
  *
- * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+ * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultimage.php 5489 2009-05-23 15:26:20Z ohader $
+ * TYPO3 SVN ID: $Id$
  *
  */
-
-require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlareaapi.php');
-
-class tx_rtehtmlarea_defaultimage extends tx_rtehtmlareaapi {
+class tx_rtehtmlarea_defaultimage extends tx_rtehtmlarea_api {
 
 	protected $extensionKey = 'rtehtmlarea';	// The key of the extension that is extending htmlArea RTE
 	protected $pluginName = 'DefaultImage';		// The name of the plugin registered by the extension
@@ -48,6 +45,12 @@ class tx_rtehtmlarea_defaultimage extends tx_rtehtmlareaapi {
 		'image'	=> 'InsertImage',
 		);
 
+	public function main($parentObject) {
+			// Check if this should be enabled based on extension configuration and Page TSConfig
+			// The 'Minimal' and 'Typical' default configurations include Page TSConfig that removes images on the way to the database
+		return parent::main($parentObject)
+			&& !($this->thisConfig['proc.']['entryHTMLparser_db.']['tags.']['img.']['allowedAttribs'] == '0' && $this->thisConfig['proc.']['entryHTMLparser_db.']['tags.']['img.']['rmTagIfNoAttrib'] == '1');
+	}
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -68,8 +71,8 @@ class tx_rtehtmlarea_defaultimage extends tx_rtehtmlareaapi {
 
 } // end of class
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultImage/class.tx_rtehtmlarea_defaultimage.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultImage/class.tx_rtehtmlarea_defaultimage.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultImage/class.tx_rtehtmlarea_defaultimage.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultImage/class.tx_rtehtmlarea_defaultimage.php']);
 }
 
 ?>

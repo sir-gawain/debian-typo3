@@ -32,7 +32,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\QOM
- * @version $Id: NotInterface.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 interface Tx_Extbase_Persistence_QOM_NotInterface extends Tx_Extbase_Persistence_QOM_ConstraintInterface {
 

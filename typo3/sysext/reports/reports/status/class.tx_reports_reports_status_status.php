@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
  * @package		TYPO3
  * @subpackage	reports
  *
- * $Id: class.tx_reports_reports_status_status.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 class tx_reports_reports_status_Status {
 
@@ -99,11 +99,34 @@ class tx_reports_reports_status_Status {
 	public function getSeverity() {
 		return $this->severity;
 	}
+
+	/**
+	 * Creates a string representation of a status.
+	 *
+	 * @return	string	String representation of this status.
+	 */
+	public function __toString() {
+		$severity = array(
+			self::NOTICE  => 'NOTE',
+			self::INFO    => 'INFO',
+			self::OK      => 'OK',
+			self::WARNING => 'WARN',
+			self::ERROR   => 'ERR',
+		);
+
+			// max length 80 characters
+		$stringRepresentation =
+			str_pad('[' . $severity[$this->severity] . ']', 7) .
+			str_pad($this->title, 40) . ' - ' .
+			substr($this->value, 0, 30);
+
+		return $stringRepresentation;
+	}
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_status.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_status.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_status.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_status.php']);
 }
 
 ?>

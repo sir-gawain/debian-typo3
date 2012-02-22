@@ -31,7 +31,7 @@
  *
  * @package Extbase
  * @subpackage Utility
- * @version $Id: ExtbaseRequirementsCheck.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 class Tx_Extbase_Utility_ExtbaseRequirementsCheck implements tx_reports_StatusProvider {
 
@@ -44,7 +44,7 @@ class Tx_Extbase_Utility_ExtbaseRequirementsCheck implements tx_reports_StatusPr
 		$reports = array(
 			'docCommentsShouldBePreserved' => $this->checkIfDocCommentsArePreserved()
 		);
-		
+
 		return $reports;
 	}
 
@@ -55,7 +55,7 @@ class Tx_Extbase_Utility_ExtbaseRequirementsCheck implements tx_reports_StatusPr
 	 */
 	protected function checkIfDocCommentsArePreserved() {
 
-		$method = new ReflectionMethod('Tx_Extbase_Dispatcher', 'dispatch');
+		$method = new ReflectionMethod('Tx_Extbase_MVC_Dispatcher', 'dispatch');
 
 		if(strlen($method->getDocComment()) > 0) {
 			$value = 'Preserved';

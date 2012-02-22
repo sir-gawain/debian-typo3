@@ -29,7 +29,7 @@
  * Contains class "tx_saltedpasswords_div"
  * that provides various helper functions.
  *
- * $Id: class.tx_saltedpasswords_div.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 
 /**

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 /**
  * Contains class for creating WAP pages for TYPO3
  *
- * $Id: wapversionLib.inc 5634 2009-06-26 13:25:08Z ohader $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -99,7 +99,7 @@
  *
  * @package TYPO3
  * @subpackage tslib
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 class user_wapversion {
 	var $cObj;		// The backReference to the mother cObj object set at call time
@@ -342,11 +342,10 @@ class user_wapversion {
 	 */
 	function menuCurrentLevel($indent)	{
 		$rL = $GLOBALS['TSFE']->config['rootLine'];
-		reset($rL);
 		$preSpace='';
 		$out=array();
 			// Hierarchy menu
-		while(list($level,$data)=each($rL))	{
+		foreach ($rL as $level => $data) {
 			$preSign = count($rL)-1 > $level ? '-' : '>';
 			$menuItem = htmlspecialchars($preSign.' '.$data['title']);
 			$menuItem = $this->link($preSpace.$menuItem,$data['uid']);
@@ -355,8 +354,7 @@ class user_wapversion {
 		}
 			// Current page menu:
 		$menu = $this->cleanMenuArray($GLOBALS['TSFE']->sys_page->getMenu($GLOBALS['TSFE']->id));
-		reset($menu);
-		while(list(,$data)=each($menu))	{
+		foreach ($menu as $data) {
 			$preSign = count($this->cleanMenuArray($GLOBALS['TSFE']->sys_page->getMenu($data['uid']))) ? '+' : '*';
 			$menuItem = htmlspecialchars($preSign.' '.$data['title']);
 			$menuItem = $this->link($preSpace.$menuItem,$data['uid']);
@@ -395,7 +393,7 @@ class user_wapversion {
 		reset($menu);
 		$newMenu=array();
 		while(list(,$data)=each($menu))	{
-			if ($data['doktype']!=5 && !$data['nav_hide'])	{
+			if ($data['doktype'] != t3lib_pageSelect::DOKTYPE_HIDE_IN_MENU && !$data['nav_hide']) {
 				$newMenu[]=$data;
 			}
 		}
@@ -448,8 +446,8 @@ switch($id)	{
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/wapversionLib.inc'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['media/scripts/wapversionLib.inc']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/wapversionLib.inc'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['media/scripts/wapversionLib.inc']);
 }
 
 

@@ -26,7 +26,7 @@
 ***************************************************************/
 
 /**
- * @version $Id: InvalidConfigurationType.php 1051 2009-08-05 20:42:09Z sebastian $
+ * @version $Id$
  */
 
 /**

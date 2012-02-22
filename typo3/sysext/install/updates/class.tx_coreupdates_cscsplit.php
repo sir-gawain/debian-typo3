@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Susanne Moog <typo3@susanne-moog.de>
+*  (c) 1999-2011 Susanne Moog <typo3@susanne-moog.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,9 +29,10 @@
  * Contains the update class for the split of css styled content templates. Used by the update wizard in the install tool.
  *
  * @author Susanne Moog <typo3@susanne-moog.de>
- * @version $Id: class.tx_coreupdates_cscsplit.php 6536 2009-11-25 14:07:18Z stucki $
+ * @version $Id$
  */
-class tx_coreupdates_cscsplit {
+class tx_coreupdates_cscsplit extends Tx_Install_Updates_Base {
+	protected $title = 'Split TypoScript Templates from CSS Styled Content';
 
 	/**
 	 * Function which checks if update is needed. Called in the beginning of an update process.
@@ -132,7 +133,17 @@ class tx_coreupdates_cscsplit {
 							$includedTemplates[$j] = 'EXT:css_styled_content/static/v4.2/';
 							$templateNeedsUpdate = true;
 						}
-					} elseif ($compatVersion == $currentVersion || $compatVersion > '4.2') {
+					} elseif ($compatVersion <= t3lib_div::int_from_ver('4.3')) {
+						if ($includedTemplates[$j] != 'EXT:css_styled_content/static/v4.3/') {
+							$includedTemplates[$j] = 'EXT:css_styled_content/static/v4.3/';
+							$templateNeedsUpdate = true;
+						}
+					} elseif ($compatVersion <= t3lib_div::int_from_ver('4.4')) {
+						if ($includedTemplates[$j] != 'EXT:css_styled_content/static/v4.4/') {
+							$includedTemplates[$j] = 'EXT:css_styled_content/static/v4.4/';
+							$templateNeedsUpdate = true;
+						}
+					} elseif ($compatVersion === $currentVersion || $compatVersion > '4.5') {
 						if ($includedTemplates[$j] != 'EXT:css_styled_content/static/') {
 							$includedTemplates[$j] = 'EXT:css_styled_content/static/';
 							$templateNeedsUpdate = true;

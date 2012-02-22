@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Steffen Kamper <info@sk-typo3.de>
+*  (c) 2009-2011 Steffen Kamper <info@sk-typo3.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -49,7 +49,7 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 					method: "GET",
 					success: function(response, options) {
 						var result = Ext.util.JSON.decode(response.responseText);
-						if(result.login.locked) {
+						if (result.login.locked) {
 							this.locked = 1;
 							Ext.MessageBox.show({
 								title: TYPO3.LLL.core.please_wait,
@@ -64,10 +64,14 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 								Ext.MessageBox.hide();
 							}
 						}
-						if (result.login.timed_out && Ext.getCmp("loginformWindow")) {
+						if ((result.login.timed_out || result.login.will_time_out) && Ext.getCmp("loginformWindow")) {
 							Ext.getCmp("login_username").value = TYPO3.configuration.username;
 							this.stopTimer();
-							this.progressWindow.show();
+							if (result.login.timed_out) {
+								this.showLoginForm();
+							} else {
+								this.progressWindow.show();
+							}
 						}
 					},
 					failure: function() {
@@ -147,7 +151,12 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 			border: false,
 			modal: true,
 			draggable: false,
-			items: [loginPanel]
+			items: [loginPanel],
+			listeners: {
+				activate: function() {
+					Ext.getCmp('password').focus(false, 800);
+				}
+			}
 		});
 
 		var progressControl = new Ext.ProgressBar({
@@ -178,7 +187,7 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 			buttons: [{
 				text: TYPO3.LLL.core.refresh_login_refresh_button,
 				handler: function() {
-					refresh = Ext.Ajax.request({
+					var refresh = Ext.Ajax.request({
 						url: "ajax.php",
 						params: {
 							"ajaxID": "BackendLogin::isTimedOut"
@@ -203,33 +212,14 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 				duration: 30000,
 				increment: 32,
 				text: String.format(TYPO3.LLL.core.refresh_login_countdown, '30'),
-				fn: function(win){
-					if (TYPO3.configuration.showRefreshLoginPopup) {
-						//log off for sure
-						Ext.Ajax.request({
-							url: "ajax.php",
-							params: {
-								"ajaxID": "BackendLogin::logout"
-							},
-							method: "GET",
-							scope: this,
-							success: function(response, opts) {
-								TYPO3.loginRefresh.showLoginPopup();
-							},
-							failure: function(response, opts) {
-								alert("something went wrong");
-							}
-						});
-					} else {
-						Ext.getCmp("loginRefreshWindow").hide();
-						Ext.getCmp("loginformWindow").show();
-					}
+				fn: function() {
+					TYPO3.loginRefresh.showLoginForm();
 				}
 			});
 
 		});
 		progressControl.on('update', function(control, value, text) {
-			var rest = 30-(parseInt(value*30));
+			var rest = parseInt(30 - (value * 30), 10);
 			if (rest === 1) {
 				control.updateText(String.format(TYPO3.LLL.core.refresh_login_countdown_singular, rest));
 			} else {
@@ -242,9 +232,32 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 		});
 	},
 
+	showLoginForm: function() {
+		if (TYPO3.configuration.showRefreshLoginPopup) {
+			//log off for sure
+			Ext.Ajax.request({
+				url: "ajax.php",
+				params: {
+				"ajaxID": "BackendLogin::logout"
+			},
+			method: "GET",
+			scope: this,
+			success: function(response, opts) {
+				TYPO3.loginRefresh.showLoginPopup();
+			},
+			failure: function(response, opts) {
+				alert("something went wrong");
+			}
+			});
+		} else {
+			Ext.getCmp("loginRefreshWindow").hide();
+			Ext.getCmp("loginformWindow").show();
+		}
+	},
+
 	showLoginPopup: function() {
 		Ext.getCmp("loginRefreshWindow").hide();
-		vHWin=window.open("login_frameset.php","relogin_"+TS.uniqueID,"height=450,width=700,status=0,menubar=0,location=1");
+		var vHWin = window.open("login_frameset.php","relogin_" + TS.uniqueID,"height=450,width=700,status=0,menubar=0,location=1");
 		vHWin.focus();
 	},
 
@@ -262,10 +275,10 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 		if (fields.p_field === "") {
 			Ext.Msg.alert(TYPO3.LLL.core.refresh_login_failed, TYPO3.LLL.core.refresh_login_emptyPassword);
 		} else {
-			if (TS.securityLevel == "superchallenged") {
+			if (TS.securityLevel === "superchallenged") {
 				fields.p_field = MD5(fields.p_field);
 			}
-			if (TS.securityLevel == "superchallenged" || TS.securityLevel == "challenged") {
+			if (TS.securityLevel === "superchallenged" || TS.securityLevel === "challenged") {
 				fields.challenge = challenge;
 				fields.userident = MD5(fields.username + ":" + fields.p_field + ":" + challenge);
 			} else {
@@ -303,7 +316,7 @@ Ext.ux.TYPO3.loginRefresh = Ext.extend(Ext.util.Observable, {
 	},
 
 	triggerSubmitForm: function() {
-		if (TS.securityLevel == 'superchallenged' || TS.securityLevel == 'challenged') {
+		if (TS.securityLevel === 'superchallenged' || TS.securityLevel === 'challenged') {
 			Ext.Ajax.request({
 				url: 'ajax.php',
 				params: {

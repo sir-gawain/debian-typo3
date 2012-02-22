@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,11 +28,11 @@
  * Wizard to help make tables (eg. for tt_content elements) of type "table".
  * Each line is a table row, each cell divided by a |
  *
- * $Id: wizard_table.php 8428 2010-07-28 09:18:27Z ohader $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -77,7 +77,7 @@ $LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
 /**
  * Script Class for rendering the Table Wizard
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -210,8 +210,8 @@ class SC_wizard_table {
 
 			// Close
 			$buttons['close'] = '<a href="#" onclick="' . htmlspecialchars('jumpToUrl(unescape(\'' . rawurlencode(t3lib_div::sanitizeLocalUrl($this->P['returnUrl'])) . '\')); return false;') . '">' .
-				'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/closedok.gif') . ' class="c-inputButton" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', 1) . '" alt="" />' .
-				'</a>';
+				t3lib_iconWorks::getSpriteIcon('actions-document-close', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE))) .
+		  '</a>';
 
 			// Save
 			$buttons['save'] = '<input type="image" class="c-inputButton" name="savedok"' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/savedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />';
@@ -235,9 +235,8 @@ class SC_wizard_table {
 
 			// First, check the references by selecting the record:
 		$row = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
-		if (!is_array($row))	{
-			t3lib_BEfunc::typo3PrintError ('Wizard Error','No reference to record',0);
-			exit;
+		if (!is_array($row)) {
+			throw new RuntimeException('Wizard Error: No reference to record');
 		}
 
 			// This will get the content of the form configuration code field to us - possibly cleaned up, saved to database etc. if the form has been submitted in the meantime.
@@ -359,7 +358,7 @@ class SC_wizard_table {
 					if ($this->inputStyle)	{
 						$cells[]='<input type="text"'.$this->doc->formWidth(20).' name="TABLE[c]['.(($k+1)*2).']['.(($a+1)*2).']" value="'.htmlspecialchars($cellContent).'" />';
 					} else {
-						$cellContent=preg_replace('/<br[ ]?[\/]?>/i',chr(10),$cellContent);
+						$cellContent=preg_replace('/<br[ ]?[\/]?>/i',LF,$cellContent);
 						$cells[]='<textarea '.$this->doc->formWidth(20).' rows="5" name="TABLE[c]['.(($k+1)*2).']['.(($a+1)*2).']">'.t3lib_div::formatForTextarea($cellContent).'</textarea>';
 					}
 
@@ -552,8 +551,7 @@ class SC_wizard_table {
 				ksort($this->TABLECFG['c']);
 			}
 			if (substr($cmd,0,4)=='col_')	{
-				reset($this->TABLECFG['c']);
-				while(list($cAK)=each($this->TABLECFG['c']))	{
+				foreach ($this->TABLECFG['c'] as $cAK => $value) {
 					switch($cmd)	{
 						case 'col_remove':
 							unset($this->TABLECFG['c'][$cAK][$kk]);
@@ -584,11 +582,9 @@ class SC_wizard_table {
 		}
 
 		// Convert line breaks to <br /> tags:
-		reset($this->TABLECFG['c']);
-		while(list($a)=each($this->TABLECFG['c']))	{
-			reset($this->TABLECFG['c'][$a]);
-			while(list($b)=each($this->TABLECFG['c'][$a]))	{
-				$this->TABLECFG['c'][$a][$b] = str_replace(chr(10),'<br />',str_replace(chr(13),'',$this->TABLECFG['c'][$a][$b]));
+		foreach ($this->TABLECFG['c'] as $a => $value) {
+			foreach ($this->TABLECFG['c'][$a] as $b => $value2) {
+				$this->TABLECFG['c'][$a][$b] = str_replace(LF,'<br />',str_replace(CR,'',$this->TABLECFG['c'][$a][$b]));
 			}
 		}
 	}
@@ -606,18 +602,16 @@ class SC_wizard_table {
 		$inLines=array();
 
 			// Traverse the elements of the table wizard and transform the settings into configuration code.
-		reset($this->TABLECFG['c']);
-		while(list($a)=each($this->TABLECFG['c']))	{
+		foreach ($this->TABLECFG['c'] as $a => $value) {
 			$thisLine=array();
-			reset($this->TABLECFG['c'][$a]);
-			while(list($b)=each($this->TABLECFG['c'][$a]))	{
+			foreach ($this->TABLECFG['c'][$a] as $b => $value) {
 				$thisLine[]=$this->tableParsing_quote.str_replace($this->tableParsing_delimiter,'',$this->TABLECFG['c'][$a][$b]).$this->tableParsing_quote;
 			}
 			$inLines[]=implode($this->tableParsing_delimiter,$thisLine);
 		}
 
 			// Finally, implode the lines into a string:
-		$bodyText = implode(chr(10),$inLines);
+		$bodyText = implode(LF,$inLines);
 
 			// Return the configuration code:
 		return $bodyText;
@@ -634,7 +628,7 @@ class SC_wizard_table {
 	function cfgString2CfgArray($cfgStr,$cols)	{
 
 			// Explode lines in the configuration code - each line is a table row.
-		$tLines=explode(chr(10),$cfgStr);
+		$tLines=explode(LF,$cfgStr);
 
 			// Setting number of columns
 		if (!$cols && trim($tLines[0]))	{	// auto...
@@ -664,8 +658,8 @@ class SC_wizard_table {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_table.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_table.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_table.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_table.php']);
 }
 
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2208 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,13 +26,10 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_blockelements.php 4525 2008-12-02 23:41:38Z stan $
+ * TYPO3 SVN ID: $Id$
  *
  */
-
-require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlareaapi.php');
-
-class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
+class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
 
 	protected $extensionKey = 'rtehtmlarea';		// The key of the extension that is extending htmlArea RTE
 	protected $pluginName = 'BlockElements';		// The name of the plugin registered by the extension
@@ -43,7 +40,7 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
 	protected $toolbar;					// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 					// Frontend language array
 
-	protected $pluginButtons = 'formatblock, indent, outdent, blockquote, insertparagraphbefore, insertparagraphafter, left, center, right, justifyfull, orderedlist, unorderedlist';
+	protected $pluginButtons = 'formatblock, indent, outdent, blockquote, insertparagraphbefore, insertparagraphafter, left, center, right, justifyfull, orderedlist, unorderedlist, line';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'formatblock'		=> 'FormatBlock',
 		'indent'		=> 'Indent',
@@ -57,6 +54,7 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
 		'justifyfull'		=> 'JustifyFull',
 		'orderedlist'		=> 'InsertOrderedList',
 		'unorderedlist'		=> 'InsertUnorderedList',
+		'line'			=> 'InsertHorizontalRule',
 		);
 
 	protected $defaultBlockElements = array(
@@ -98,6 +96,7 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
 			}
 				// Default block elements
 			$hideItems = array();
+			$addItems = array();
 			$restrictTo = array('*');
 			$blockElementsOrder = $this->defaultBlockElementsOrder;
 			$prefixLabelWithTag = false;
@@ -108,6 +107,10 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
 					// Removing elements
 				if ($this->thisConfig['buttons.']['formatblock.']['removeItems']) {
 					$hideItems =  t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList(t3lib_div::strtolower($this->thisConfig['buttons.']['formatblock.']['removeItems'])), 1);
+				}
+					// Adding elements
+				if ($this->thisConfig['buttons.']['formatblock.']['addItems']) {
+					$addItems =  t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList(t3lib_div::strtolower($this->thisConfig['buttons.']['formatblock.']['addItems'])), 1);
 				}
 					// Restriction clause
 				if ($this->thisConfig['buttons.']['formatblock.']['restrictToItems']) {
@@ -124,10 +127,20 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
 			if ($this->thisConfig['hidePStyleItems']) {
 				$hideItems = array_merge($hideItems, t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList(t3lib_div::strtolower($this->thisConfig['hidePStyleItems'])), 1));
 			}
+				// Adding custom items
+			$blockElementsOrder = array_merge(t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList($blockElementsOrder), 1), $addItems);
 				// Applying User TSConfig restriction
-			$blockElementsOrder = array_diff(t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList($blockElementsOrder), 1), $hideItems);
+			$blockElementsOrder = array_diff($blockElementsOrder, $hideItems);
 			if (!in_array('*', $restrictTo)) {
 				$blockElementsOrder = array_intersect($blockElementsOrder, $restrictTo);
+			}
+				// Add div element if indent is configured in the toolbar
+			if (in_array('indent', $this->toolbar) || in_array('outdent', $this->toolbar)) {
+				$blockElementsOrder = array_merge($blockElementsOrder, array('div'));
+			}
+				// Add blockquote element if blockquote is configured in the toolbar
+			if (in_array('blockquote', $this->toolbar)) {
+				$blockElementsOrder = array_merge($blockElementsOrder, array('blockquote'));
 			}
 				// Localizing the options
 			$blockElementsOptions = array();
@@ -157,31 +170,24 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlareaapi {
 			if (!is_array($this->thisConfig['buttons.']) || !is_array($this->thisConfig['buttons.']['formatblock.']) || !$this->thisConfig['buttons.']['formatblock.']['orderItems']) {
 				asort($blockElementsOptions);
 			}
-				// utf8-encode labels if we are responding to an IRRE ajax call
-			if (!$this->htmlAreaRTE->is_FE() && $this->htmlAreaRTE->TCEform->inline->isAjaxCall) {
-				foreach ($blockElementsOptions as $item => $label) {
-					$blockElementsOptions[$item] = $GLOBALS['LANG']->csConvObj->utf8_encode($label, $GLOBALS['LANG']->charSet);
-				}
-			}
 				// Generating the javascript options
-			$JSBlockElements = '{
-			"'. $first.'" : "none"';
+			$JSBlockElements = array();
+			$JSBlockElements[] = array($first, 'none');
 			foreach ($blockElementsOptions as $item => $label) {
-				$JSBlockElements .= ',
-			"' . $label . '" : "' . $item . '"';
+				$JSBlockElements[] = array($label, $item);
 			}
-			$JSBlockElements .= '};';
-
+			if ($this->htmlAreaRTE->is_FE()) {
+				$GLOBALS['TSFE']->csConvObj->convArray($JSBlockElements, $this->htmlAreaRTE->OutputCharset, 'utf-8');
+			} else {
+				$GLOBALS['LANG']->csConvObj->convArray($JSBlockElements, $GLOBALS['LANG']->charSet, 'utf-8');
+			}
 			$registerRTEinJavascriptString .= '
-			RTEarea['.$RTEcounter.'].buttons.formatblock.dropDownOptions = '. $JSBlockElements;
+			RTEarea['.$RTEcounter.'].buttons.formatblock.options = ' . json_encode($JSBlockElements) . ';';
 		}
 		return $registerRTEinJavascriptString;
 	}
-
-} // end of class
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockElements/class.tx_rtehtmlarea_blockelements.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockElements/class.tx_rtehtmlarea_blockelements.php']);
 }
-
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockElements/class.tx_rtehtmlarea_blockelements.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockElements/class.tx_rtehtmlarea_blockelements.php']);
+}
 ?>

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Sebastian Kurfuerst <sebastian@garbage-group.de>
+*  (c) 1999-2011 Sebastian Kurfürst <sebastian@garbage-group.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,20 +28,12 @@
 /**
  * Contains the update class for not in menu pages. Used by the update wizard in the install tool.
  *
- * @author Sebastian Kurfuerst <sebastian@garbage-group.de>
+ * @author Sebastian Kurfürst <sebastian@garbage-group.de>
  * @author Steffen Kamper <info@sk-typo3.de>
- * @version $Id: class.tx_coreupdates_notinmenu.php 5489 2009-05-23 15:26:20Z ohader $
+ * @version $Id$
  */
-class tx_coreupdates_notinmenu {
-	var $versionNumber;	// version number coming from t3lib_div::int_from_ver()
-
-	/**
-	 * parent object
-	 *
-	 * @var tx_install
-	 */
-	var $pObj;
-	var $userInput;	// user input
+class tx_coreupdates_notinmenu extends Tx_Install_Updates_Base {
+	protected $title = 'Update Pages with Doktype "Not in menu"';
 
 
 	/**

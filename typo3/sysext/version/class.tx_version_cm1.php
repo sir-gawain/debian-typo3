@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2004-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,7 +24,7 @@
 /**
  * Addition of the versioning item to the clickmenu
  *
- * @author	Kasper Sk�rh�j <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -47,7 +47,7 @@
 /**
  * "Versioning" item added to click menu of elements.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -86,6 +86,7 @@ class tx_version_cm1 {
 			);
 
 				// "Send to review" element added:
+			/*
 			$url = t3lib_extMgm::extRelPath('version').'cm1/index.php?id='.($table=='pages'?$uid:$backRef->rec['pid']).'&table='.rawurlencode($table).'&uid='.$uid.'&sendToReview=1';
 			$localItems[] = $backRef->linkItem(
 				$GLOBALS['LANG']->getLLL('title_review',$LL),
@@ -93,11 +94,11 @@ class tx_version_cm1 {
 				$backRef->urlRefForCM($url),
 				1
 			);
+			*/
 
 				// Find position of "delete" element:
-			reset($menuItems);
 			$c=0;
-			while(list($k)=each($menuItems))	{
+			foreach ($menuItems as $k => $value) {
 				$c++;
 				if (!strcmp($k,'delete'))	break;
 			}
@@ -128,7 +129,7 @@ class tx_version_cm1 {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_cm1.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_cm1.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_cm1.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_cm1.php']);
 }
 ?>

@@ -31,7 +31,7 @@
  *
  * @package Extbase
  * @subpackage Persistence
- * @version $Id: Typo3QuerySettings.php 1972 2010-03-08 16:59:20Z jocrau $
+ * @version $Id$
  * @api
  */
 class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistence_QuerySettingsInterface {
@@ -41,6 +41,12 @@ class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistenc
 	 * @var boolean
 	 */
 	protected $respectStoragePage = TRUE;
+
+	/**
+	 * the pid(s) of the storage page(s) that should be respected for the query.
+	 * @var array
+	 */
+	protected $storagePageIds = array();
 
 	/**
 	 * Flag if the visibility settings for the frontend should be respected.
@@ -82,6 +88,26 @@ class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistenc
 	}
 
 	/**
+	 * Sets the pid(s) of the storage page(s) that should be respected for the query.
+	 *
+	 * @param array $respectStoragePage If TRUE the storage page ID will be determined and the statement will be extended accordingly.
+	 * @return Tx_Extbase_Persistence_QuerySettingsInterface instance of $this to allow method chaining
+	 * @api
+	 */
+	public function setStoragePageIds(array $storagePageIds) {
+		$this->storagePageIds = $storagePageIds;
+	}
+
+	/**
+	 * Returns the pid(s) of the storage page(s) that should be respected for the query.
+	 *
+	 * @return array list of integers that each represent a storage page id
+	 */
+	public function getStoragePageIds() {
+		return $this->storagePageIds;
+	}
+
+	/**
 	 * Sets the flag if a  and language overlay should be performed.
 	 *
 	 * @param $respectEnableFields TRUE if a  and language overlay should be performed.
@@ -101,7 +127,7 @@ class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistenc
 	public function getRespectSysLanguage() {
 		return $this->respectSysLanguage;
 	}
-	
+
 	/**
 	 * Sets the flag if the visibility in the frontend should be respected.
 	 *
@@ -122,7 +148,7 @@ class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistenc
 	public function getRespectEnableFields() {
 		return $this->respectEnableFields;
 	}
-	
+
 	/**
 	 * Sets the state, if the QueryResult should be returned unmapped.
 	 *
@@ -132,7 +158,7 @@ class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistenc
 	public function setReturnRawQueryResult($returnRawQueryResult) {
 		$this->returnRawQueryResult = $returnRawQueryResult;
 	}
-	
+
 	/**
 	 * Returns the state, if the QueryResult should be returned unmapped.
 	 *
@@ -140,7 +166,7 @@ class Tx_Extbase_Persistence_Typo3QuerySettings implements Tx_Extbase_Persistenc
 	 */
 	public function getReturnRawQueryResult() {
 		return $this->returnRawQueryResult;
-	}	
+	}
 
 }
 ?>

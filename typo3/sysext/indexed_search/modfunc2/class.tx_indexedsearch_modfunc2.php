@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2004-2009 Dimitri Ebert (dimitri.ebert@dkd.de)
+ *  (c) 2004-2011 Dimitri Ebert (dimitri.ebert@dkd.de)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -200,7 +200,7 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
 	 *
 	 * @param	string		Name of the function you want to call / hook key
 	 * @return	object		Hook object, if any. Otherwise null.
-	 * @author Kasper Skaarhoj
+	 * @author Kasper Skårhøj
 	 */
 	function hookRequest($functionName) {
 		global $TYPO3_CONF_VARS;
@@ -218,8 +218,8 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php']);
 }
 
 ?>

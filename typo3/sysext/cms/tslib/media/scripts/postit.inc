@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,11 +29,11 @@
  *
  * Creates graphical postit notes with text on them.
  *
- * $Id: postit.inc 5165 2009-03-09 18:28:59Z ohader $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
 
@@ -118,7 +118,7 @@ $cols = intval($conf['cols']) ? intval($conf['cols']) : 3;
 
 $lines = explode(chr(10),$data);
 $imageArr = array();
-while(list($key,$content)=each($lines))	{
+foreach ($lines as $key => $content) {
 	$content = trim($content);
 	if ($content)	{
 		$parts = explode('|',$content);

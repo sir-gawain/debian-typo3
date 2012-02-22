@@ -14,9 +14,6 @@
  *                                                                        */
 
 /**
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: EmailViewHelper.php 1492 2009-10-21 16:02:16Z bwaidelich $
  */
 
 /**
@@ -28,26 +25,23 @@
  * <code title="basic email link">
  * <f:link.email email="foo@bar.tld" />
  * </code>
- *
- * Output:
+ * <output>
  * <a href="javascript:linkTo_UnCryptMailto('ocknvq,hqqBdct0vnf');">foo(at)bar.tld</a>
  * (depending on your spamProtectEmailAddresses-settings)
+ * </output>
  *
  * <code title="Email link with custom linktext">
- * <f:link.email email="foo@bar.tld">some custom content</f:emaillink>
+ * <f:link.email email="foo@bar.tld">some custom content</f:link.email>
  * </code>
- *
- * Output:
+ * <output>
  * <a href="javascript:linkTo_UnCryptMailto('ocknvq,hqqBdct0vnf');">some custom content</a>
+ * </output>
  *
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: EmailViewHelper.php 1492 2009-10-21 16:02:16Z bwaidelich $
  */
-class Tx_Fluid_ViewHelpers_Link_EmailViewHelper extends Tx_Fluid_Core_ViewHelper_TagBasedViewHelper {
+class Tx_Fluid_ViewHelpers_Link_EmailViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractTagBasedViewHelper {
 
 	/**
-	 * @var	string
+	 * @var string
 	 */
 	protected $tagName = 'a';
 

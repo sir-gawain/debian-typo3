@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Benjamin Mack <mack@xnos.org>
+*  (c) 2008-2011 Benjamin Mack <mack@xnos.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -98,14 +98,14 @@ class tx_opendocs implements backend_toolbarItem {
 			// toolbar item icon
 		$opendocsMenu[] = '<a href="#" class="toolbar-item">';
 		$opendocsMenu[] = '<input type="text" id="tx-opendocs-counter" disabled="disabled" value="' . $numDocs . '" />';
-		$opendocsMenu[] = '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], t3lib_extMgm::extRelPath($this->EXTKEY) . 'opendocs.png', 'width="23" height="16"') . '  alt="' . $title . '" title="' . $title . '" /></a>';
+		$opendocsMenu[] = t3lib_iconWorks::getSpriteIcon('apps-toolbar-menu-opendocs', array('title' => $title)) . '</a>';
 
 			// toolbar item menu and initial content
 		$opendocsMenu[] = '<div class="toolbar-item-menu" style="display: none;">';
 		$opendocsMenu[] = $this->renderMenu();
 		$opendocsMenu[] = '</div>';
 
-		return implode("\n", $opendocsMenu);
+		return implode(LF, $opendocsMenu);
 	}
 
 	/**
@@ -158,8 +158,12 @@ class tx_opendocs implements backend_toolbarItem {
 		$table  = $document[3]['table'];
 		$uid    = $document[3]['uid'];
 		$record = t3lib_BEfunc::getRecordWSOL($table, $uid);
+		if (!is_array($record)) {
+				// record seems to be deleted
+			return '';
+		}
 		$label  = htmlspecialchars(strip_tags(t3lib_div::htmlspecialchars_decode($document[0])));
-		$icon   = t3lib_iconWorks::getIconImage($table, $record, $GLOBALS['BACK_PATH']);
+		$icon   = t3lib_iconWorks::getSpriteIconForRecord($table, $record);
 		$link   = $GLOBALS['BACK_PATH'] . 'alt_doc.php?' . $document[2];
 
 		$firstRow = '';
@@ -171,10 +175,10 @@ class tx_opendocs implements backend_toolbarItem {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:rm.closeDoc', true);
 
 				// open document
-			$closeIcon = '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/closedok.gif', 'width="16" height="16"') . ' title="' . $title . '" alt="' . $title . '" />';
+			$closeIcon = t3lib_iconWorks::getSpriteIcon('actions-document-close');
 
 			$entry = '
-				<tr id="opendocs-open-' . $table . '-' . $uid . '" class="opendoc' . $firstRow . '">
+				<tr class="opendoc' . $firstRow . '">
 					<td class="icon">' . $icon . '</td>
 					<td class="label"><a href="#" onclick="jump(unescape(\'' . htmlspecialchars($link) . '\'), \'web_list\', \'web\'); TYPO3BackendOpenDocs.toggleMenu(); return false;" target="content">' . $label . '</a></td>
 					<td class="close" onclick="return TYPO3BackendOpenDocs.closeDocument(\'' . $md5sum . '\');">' . $closeIcon . '</td>
@@ -182,7 +186,7 @@ class tx_opendocs implements backend_toolbarItem {
 		} else {
 				// recently used document
 			$entry = '
-				<tr id="opendocs-recent-' . $table . '-' . $uid . '" class="recentdoc' . $firstRow . '">
+				<tr class="recentdoc' . $firstRow . '">
 					<td class="icon">' . $icon . '</td>
 					<td class="label" colspan="2"><a href="#" onclick="jump(unescape(\'' . htmlspecialchars($link) . '\'), \'web_list\', \'web\'); TYPO3BackendOpenDocs.toggleMenu(); return false;" target="content">' . $label . '</a></td>
 				</tr>';
@@ -293,7 +297,7 @@ class tx_opendocs implements backend_toolbarItem {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/opendocs/class.tx_opendocs.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/opendocs/class.tx_opendocs.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/opendocs/class.tx_opendocs.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/opendocs/class.tx_opendocs.php']);
 }
 ?>

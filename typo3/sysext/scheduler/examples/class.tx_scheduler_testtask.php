@@ -22,8 +22,6 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-require_once(PATH_t3lib . 'class.t3lib_htmlmail.php');
-
 /**
  * Class "tx_scheduler_TestTask" provides testing procedures
  *
@@ -31,7 +29,7 @@ require_once(PATH_t3lib . 'class.t3lib_htmlmail.php');
  * @package		TYPO3
  * @subpackage	tx_scheduler
  *
- * $Id: class.tx_scheduler_testtask.php 7237 2010-04-03 14:30:24Z francois $
+ * $Id$
  */
 class tx_scheduler_TestTask extends tx_scheduler_Task {
 
@@ -76,33 +74,34 @@ class tx_scheduler_TestTask extends tx_scheduler_Task {
 			$multiple = $exec->getMultiple();
 			$cronCmd = $exec->getCronCmd();
 			$mailBody =
-				'SCHEDULER TEST-TASK' . chr(10)
-				. '- - - - - - - - - - - - - - - -' . chr(10)
-				. 'UID: ' . $this->taskUid . chr(10)
-				. 'Sitename: ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'] . chr(10)
-				. 'Site: ' . $site . chr(10)
-				. 'Called by: ' . $calledBy . chr(10)
-				. 'tstamp: ' . date('Y-m-d H:i:s') . ' [' . time() . ']' . chr(10)
-				. 'maxLifetime: ' . $this->scheduler->extConf['maxLifetime'] . chr(10)
-				. 'start: ' . date('Y-m-d H:i:s', $start) . ' [' . $start . ']' . chr(10)
-				. 'end: ' . ((empty($end)) ? '-' : (date('Y-m-d H:i:s', $end) . ' [' . $end . ']')) . chr(10)
-				. 'interval: ' . $interval . chr(10)
-				. 'multiple: ' . ($multiple ? 'yes' : 'no') . chr(10)
+				'SCHEDULER TEST-TASK' . LF
+				. '- - - - - - - - - - - - - - - -' . LF
+				. 'UID: ' . $this->taskUid . LF
+				. 'Sitename: ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'] . LF
+				. 'Site: ' . $site . LF
+				. 'Called by: ' . $calledBy . LF
+				. 'tstamp: ' . date('Y-m-d H:i:s') . ' [' . time() . ']' . LF
+				. 'maxLifetime: ' . $this->scheduler->extConf['maxLifetime'] . LF
+				. 'start: ' . date('Y-m-d H:i:s', $start) . ' [' . $start . ']' . LF
+				. 'end: ' . ((empty($end)) ? '-' : (date('Y-m-d H:i:s', $end) . ' [' . $end . ']')) . LF
+				. 'interval: ' . $interval . LF
+				. 'multiple: ' . ($multiple ? 'yes' : 'no') . LF
 				. 'cronCmd: ' . ($cronCmd ? $cronCmd : 'not used');
 
 				// Prepare mailer and send the mail
-			$mailer = t3lib_div::makeInstance('t3lib_htmlmail');
-			$mailer->start();
-			$mailer->from_email = $this->email;
-			$mailer->from_name = 'SCHEDULER TEST-TASK';
-			$mailer->replyto_email = $this->email;
-			$mailer->replyto_name = 'SCHEDULER TEST-TASK';
-			$mailer->subject = 'SCHEDULER TEST-TASK';
-			$mailer->setPlain($mailer->encodeMsg($mailBody));
-			$mailer->setRecipient($this->email);
-			$mailer->setHeaders();
-			$mailer->setContent();
-			$success = $mailer->sendtheMail();
+			try {
+				/** @var $mailer t3lib_mail_message */
+				$mailer = t3lib_div::makeInstance('t3lib_mail_message');
+				$mailer->setFrom(array($this->email => 'SCHEDULER TEST-TASK'));
+				$mailer->setReplyTo(array($this->email => 'SCHEDULER TEST-TASK'));
+				$mailer->setSubject('SCHEDULER TEST-TASK');
+				$mailer->setBody($mailBody);
+				$mailer->setTo($this->email);
+				$mailsSend = $mailer->send();
+				$success = ($mailsSend>0);
+			} catch (Exception $e) {
+				throw new t3lib_exception($e->getMessage());
+			}
 		} else {
 				// No email defined, just log the task
 			t3lib_div::devLog('[tx_scheduler_TestTask]: No email address given', 'scheduler', 2);
@@ -121,8 +120,8 @@ class tx_scheduler_TestTask extends tx_scheduler_Task {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_testtask.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_testtask.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_testtask.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_testtask.php']);
 }
 
 ?>

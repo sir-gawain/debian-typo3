@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2006-2009 Sebastian Kurfuerst (sebastian@garbage-group.de)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Sebastian Kurfürst (sebastian@garbage-group.de)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,17 +28,17 @@
 /**
  * Class for the record history display script (show_rechis.php)
  *
- * $Id: class.show_rechis.inc 8428 2010-07-28 09:18:27Z ohader $
+ * $Id$
  * XHTML Compliant
  *
- * @author	Sebastian Kurfuerst <sebastian@garbage-group.de>
+ * @author	Sebastian Kurfürst <sebastian@garbage-group.de>
  */
 
 
 /**
  * Class for the record history display script (show_rechis.php)
  *
- * @author	Sebastian Kurfuerst <sebastian@garbage-group.de>
+ * @author	Sebastian Kurfürst <sebastian@garbage-group.de>
  * @package TYPO3
  * @subpackage core
  */
@@ -324,7 +324,7 @@ class recordHistory {
 			// get link to page history if the element history is shown
 		$elParts = explode(':',$this->element);
 		if ($elParts[0] != 'pages')	{
-			$content .= '<b>'.$LANG->getLL('elementHistory',1).'</b><br />';
+			$content .= '<strong>'.$LANG->getLL('elementHistory',1).'</strong><br />';
 			$pid = t3lib_BEfunc::getRecordRaw($elParts[0],'uid='.intval($elParts[1]));
 			$content .= $this->linkPage($LANG->getLL('elementHistory_link',1),array('element' => 'pages:'.$pid['pid']));
 		}
@@ -346,7 +346,7 @@ class recordHistory {
 		$lines=array();
 
 			// Initialize:
-		$lines[] = '<tr class="bgColor5 c-head">
+		$lines[] = '<tr class="t3-row-header">
 				<td> </td>
 				<td>'.$LANG->getLL('time',1).'</td>
 				<td>'.$LANG->getLL('age',1).'</td>
@@ -388,8 +388,8 @@ class recordHistory {
 				$expirationWarning = 1;
 
 				$lines[] = '
-				<tr class="bgColor4-20">
-					<td colspan="7"><b>'.$LANG->getLL('consistenceWarning',1).'</b></td>
+				<tr class="c-headLine">
+					<td colspan="7"><strong>'.$LANG->getLL('consistenceWarning',1).'</strong></td>
 				</tr>';
 			}
 
@@ -405,7 +405,7 @@ class recordHistory {
 			$singleLine = array();
 
 				// diff link
-			$image = '<img'.t3lib_iconWorks::skinImg('','gfx/button_top_right.gif').' align="top" alt="'.$LANG->getLL('sumUpChanges',1).'" title="'.$LANG->getLL('sumUpChanges',1).'" />';
+			$image = t3lib_iconWorks::getSpriteIcon('actions-view-go-forward', array('title' => $LANG->getLL('sumUpChanges', TRUE)));
 			$singleLine[] = '<span>'.$this->linkPage($image,array('diff' => $sysLogUid)).'</span>';	// remove first link
 
 			$singleLine[] = htmlspecialchars(t3lib_BEfunc::datetime($entry['tstamp']));	// add time
@@ -443,11 +443,10 @@ class recordHistory {
 				$singleLine[] = '';
 			}
 
-			$bgColorClass = $entry['snapshot'] ? 'bgColor2' : 'bgColor4-20';
 				// put line together
 			$lines[] = '
-				<tr class="'.$bgColorClass.'">
-					<td>'.implode('</td><td>',$singleLine).'</td>
+				<tr class="db_list_normal">
+					<td>' . implode('</td><td>', $singleLine) . '</td>
 				</tr>';
 		}
 
@@ -456,12 +455,12 @@ class recordHistory {
 			<!--
 				History (list):
 			-->
-			<table border="0" cellpadding="2" cellspacing="2" id="typo3-history">
-				'.implode('',$lines).'
+			<table class="typo3-dblist" border="0" cellpadding="0" cellspacing="0" id="typo3-history">
+				' . implode('', $lines) . '
 			</table>';
 
 		if ($this->lastSyslogId)	{
-			$theCode .= '<br />' .  $this->linkPage('<img'.t3lib_iconWorks::skinImg('','gfx/group_tobottom.gif').' alt="'.$LANG->getLL('fullView',1).'" title="'.$LANG->getLL('fullView',1).'" />',array('diff' => ''));
+			$theCode .= '<br />' .  $this->linkPage(t3lib_iconWorks::getSpriteIcon('actions-move-to-bottom', array('title' => $LANG->getLL('fullView', TRUE))), array('diff' => ''));
 		}
 
 			// Add message about the difference view.
@@ -501,10 +500,10 @@ class recordHistory {
 				$elParts = explode(':',$key);
 					// turn around diff because it should be a "rollback preview"
 				if ($diff['insertsDeletes'][$key] == 1)	{	// insert
-					$record .= '<b>'.$LANG->getLL('delete',1).'</b>';
+					$record .= '<strong>'.$LANG->getLL('delete',1).'</strong>';
 					$record .= '<br />';
 				} elseif ($diff['insertsDeletes'][$key] == -1)	{
-					$record .= '<b>'.$LANG->getLL('insert',1).'</b>';
+					$record .= '<strong>'.$LANG->getLL('insert',1).'</strong>';
 					$record .= '<br />';
 				}
 					// build up temporary diff array

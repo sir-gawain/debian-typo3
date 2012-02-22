@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,11 +29,11 @@
  * Will make the vertical, horizontal, selectorbox based menus AND the "about modules" display.
  * Basically it traverses the module structure and generates output based on that.
  *
- * $Id: class.alt_menu_functions.inc 5871 2009-09-01 17:19:02Z ohader $
- * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML compliant content
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -66,7 +66,7 @@
 /**
  * Class with menu functions
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -142,8 +142,7 @@ class alt_menu_functions {
 		}
 
 			// Traverse array with modules
-		reset($theModules);
-		while(list($moduleName,$moduleInfo)=each($theModules))	{
+		foreach ($theModules as $moduleName => $moduleInfo) {
 			$mC++;
 
 			$prefix = $this->getNavFramePrefix($moduleInfo);
@@ -207,13 +206,13 @@ class alt_menu_functions {
 			}
 
 			$selectItems[] = '<option value="top.goToModule(\''.$moduleName.'\');">'.htmlspecialchars($LANG->moduleLabels['tabs'][$moduleKey]).'</option>';
-			$label='&nbsp;<b>'.$label.'</b>&nbsp;';
+			$label='&nbsp;<strong>'.$label.'</strong>&nbsp;';
 
 
 				// make menu collapsable
 			if($collapsable == 1 && is_array($moduleInfo['sub'])) {
 				$collapseJS = 'onclick="window.location.href=\'alt_menu.php?collapsedOverride['.$moduleName.']='.($config[$moduleName] ? '0' : '1').'\'"';
-				$collapseIcon = '<span class="c-iconCollapse"><img'.t3lib_iconWorks::skinImg($backPath,'gfx/ol/'.($config[$moduleName] ? 'plusbullet.gif':'minusbullet.gif'),'width="18" height="16"').' title="" alt="" /></span>';
+				$collapseIcon = t3lib_iconWorks::getSpriteIcon('actions-view-table-' . ($config[$moduleName] ? 'expand' : 'collapse'), array('class' => 'c-iconCollapse'));
 			} else {
 				$collapseJS = $collapseIcon = '';
 			}
@@ -226,7 +225,7 @@ class alt_menu_functions {
 
 				// Code for "About modules"
 			$descrCode.='
-						<tr class="c-mainitem bgColor4">
+						<tr class="c-mainitem">
 							<td colspan="3">'.$imageCode.$label.'</td>
 						</tr>';
 
@@ -239,10 +238,9 @@ class alt_menu_functions {
 				// Traversing submodules
 			$subCode='';
 			if (is_array($moduleInfo['sub']))	{
-				reset($moduleInfo['sub']);
 				$collection[$moduleKey]['subitems'] = array();
 				$c=0;
-				while(list($subName,$subInfo)=each($moduleInfo['sub']))	{
+				foreach ($moduleInfo['sub'] as $subName => $subInfo) {
 					if ($c==0)		{
 						$subCode.='
 								<tr class="c-first">
@@ -366,7 +364,7 @@ class alt_menu_functions {
 
 					if (!empty($moduleLabel) || !empty($moduleDescription)) {
 						$descrCode .= '
-								<td>' . $moduleLabelHtml . $moduleDescription . '</td>';
+								<td class="module-description">' . $moduleLabelHtml . $moduleDescription . '</td>';
 					} else {
 						$descrCode .= '
 								<td>&nbsp;</td>';
@@ -391,20 +389,21 @@ class alt_menu_functions {
 				}
 			}
 
-				// Add spacers after each main section:
-			$subCode.='
-					<tr class="c-endrow">
-						<td colspan="3"></td>
-					</tr>';
-			$descrCode.='
-					<tr class="c-endrow">
-						<td colspan="3"></td>
-					</tr>';
+			if (!empty($subCode)) {
+					// Add spacers after each main section:
+				$subCode .= '
+						<tr class="c-endrow">
+							<td colspan="3"></td>
+						</tr>';
+				$descrCode .= '
+						<tr class="c-endrow">
+							<td colspan="3"></td>
+						</tr>';
 
-				// Add sub-code:
-			$menuCode.=$subCode;
+					// Add sub-code:
+				$menuCode .= $subCode;
+			}
 		}
-
 			// $descr==0:	Ordinary vertical menu
 		if ($menuCode)	{
 			if($collapsable == 1 || $config['expandAll'] == 1) {
@@ -600,7 +599,11 @@ class alt_menu_functions {
 			$functions[]=array(
 				'id' => 'temp_CACHED',
 				'title' => $title,
-				'href' => $backPath.'tce_db.php?vC='.$BE_USER->veriCode().'&redirect='.rawurlencode(t3lib_div::getIndpEnv('TYPO3_REQUEST_SCRIPT')).'&cacheCmd=temp_CACHED',
+				'href' => $backPath .
+						'tce_db.php?vC=' . $BE_USER->veriCode() .
+						'&redirect=' . rawurlencode(t3lib_div::getIndpEnv('TYPO3_REQUEST_SCRIPT')) .
+						'&cacheCmd=temp_CACHED' .
+						t3lib_BEfunc::getUrlToken('tceAction'),
 				'icon' => '<img'.t3lib_iconWorks::skinImg($backPath,'gfx/clear_cache_files_in_typo3c.gif','width="21" height="18"').' title="'.htmlspecialchars($title).'" alt="" />'
 			);
 		}
@@ -610,7 +613,10 @@ class alt_menu_functions {
 		$functions[]=array(
 			'id' => 'all',
 			'title' => $title,
-			'href' => $backPath.'tce_db.php?vC='.$BE_USER->veriCode().'&redirect='.rawurlencode(t3lib_div::getIndpEnv('TYPO3_REQUEST_SCRIPT')).'&cacheCmd=all',
+			'href' => $backPath . 'tce_db.php?vC=' . $BE_USER->veriCode() .
+					'&redirect=' . rawurlencode(t3lib_div::getIndpEnv('TYPO3_REQUEST_SCRIPT')) .
+					'&cacheCmd=all' .
+					t3lib_BEfunc::getUrlToken('tceAction'),
 			'icon' => '<img'.t3lib_iconWorks::skinImg($backPath,'gfx/clear_all_cache.gif','width="21" height="18"').' title="'.htmlspecialchars($title).'" alt="" />'
 		);
 
@@ -663,7 +669,7 @@ class alt_menu_functions {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/class.alt_menu_functions.inc'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/class.alt_menu_functions.inc']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/class.alt_menu_functions.inc'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/class.alt_menu_functions.inc']);
 }
 ?>

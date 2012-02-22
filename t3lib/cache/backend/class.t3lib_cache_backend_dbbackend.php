@@ -1,26 +1,26 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2008-2009 Ingo Renner <ingo@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2008-2011 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 
 /**
@@ -28,12 +28,23 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @version $Id: class.t3lib_cache_backend_dbbackend.php 8728 2010-08-29 13:15:33Z steffenk $
+ * @api
+ * @version $Id$
  */
 class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend {
 
 	protected $cacheTable;
 	protected $tagsTable;
+
+	/**
+	 * @var boolean Indicates wether data is compressed or not (requires php zlib)
+	 */
+	protected $compression = FALSE;
+
+	/**
+	 * @var integer -1 to 9, indicates zlib compression level: -1 = default level 6, 0 = no compression, 9 maximum compression
+	 */
+	protected $compressionLevel = -1;
 
 	protected $identifierField;
 	protected $creationField;
@@ -45,7 +56,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	/**
 	 * Constructs this backend
 	 *
-	 * @param mixed Configuration options - depends on the actual backend
+	 * @param array $options Configuration options - depends on the actual backend
 	 */
 	public function __construct(array $options = array()) {
 		parent::__construct($options);
@@ -79,7 +90,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 		$this->tableList = $this->cacheTable . ', ' . $this->tagsTable;
 		$this->tableJoin = $this->identifierField . ' = ' . $this->tagsTable . '.identifier';
 		$this->notExpiredStatement = '(' . $this->creationField . ' + ' . $this->lifetimeField .
-			' >= ' . $GLOBALS['EXEC_TIME'] . ' OR ' . $this->lifetimeField . ' = 0)';
+									 ' >= ' . $GLOBALS['EXEC_TIME'] . ' OR ' . $this->lifetimeField . ' = 0)';
 	}
 
 	/**
@@ -115,23 +126,37 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 
 		$this->remove($entryIdentifier);
 
+		if ($this->compression) {
+			$data = gzcompress($data, $this->compressionLevel);
+		}
+
 		$GLOBALS['TYPO3_DB']->exec_INSERTquery(
 			$this->cacheTable,
 			array(
-				'identifier' => $entryIdentifier,
-				'crdate'     => $GLOBALS['EXEC_TIME'],
-				'content'    => $data,
-				'lifetime'   => $lifetime
+				 'identifier' => $entryIdentifier,
+				 'crdate' => $GLOBALS['EXEC_TIME'],
+				 'content' => $data,
+				 'lifetime' => $lifetime
 			)
 		);
 
-		foreach ($tags as $tag) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery(
+		if (count($tags)) {
+			$fields = array();
+			$fields[] = 'identifier';
+			$fields[] = 'tag';
+
+			$tagRows = array();
+			foreach ($tags as $tag) {
+				$tagRow = array();
+				$tagRow[] = $entryIdentifier;
+				$tagRow[] = $tag;
+				$tagRows[] = $tagRow;
+			}
+
+			$GLOBALS['TYPO3_DB']->exec_INSERTmultipleRows(
 				$this->tagsTable,
-				array(
-					'identifier' => $entryIdentifier,
-					'tag'        => $tag,
-				)
+				$fields,
+				$tagRows
 			);
 		}
 	}
@@ -146,15 +171,19 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	public function get($entryIdentifier) {
 		$cacheEntry = false;
 
-		$cacheEntries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+		$cacheEntry = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 			'content',
 			$this->cacheTable,
 			'identifier = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($entryIdentifier, $this->cacheTable) . ' '
-				. 'AND (crdate + lifetime >= ' . $GLOBALS['EXEC_TIME'] . ' OR lifetime = 0)'
+			. 'AND (crdate + lifetime >= ' . $GLOBALS['EXEC_TIME'] . ' OR lifetime = 0)'
 		);
 
-		if (count($cacheEntries) == 1) {
-			$cacheEntry = $cacheEntries[0]['content'];
+		if (is_array($cacheEntry)) {
+			$cacheEntry = $cacheEntry['content'];
+		}
+
+		if ($this->compression && strlen($cacheEntry)) {
+			$cacheEntry = gzuncompress($cacheEntry);
 		}
 
 		return $cacheEntry;
@@ -174,7 +203,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 			'*',
 			$this->cacheTable,
 			'identifier = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($entryIdentifier, $this->cacheTable) .
-				' AND (crdate + lifetime >= ' . $GLOBALS['EXEC_TIME'] . ' OR lifetime = 0)'
+			' AND (crdate + lifetime >= ' . $GLOBALS['EXEC_TIME'] . ' OR lifetime = 0)'
 		);
 		if ($cacheEntries >= 1) {
 			$hasEntry = TRUE;
@@ -204,7 +233,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 			'identifier = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($entryIdentifier, $this->tagsTable)
 		);
 
-		if($GLOBALS['TYPO3_DB']->sql_affected_rows($res) == 1) {
+		if ($GLOBALS['TYPO3_DB']->sql_affected_rows($res) == 1) {
 			$entryRemoved = true;
 		}
 
@@ -225,8 +254,8 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 			$this->identifierField,
 			$this->tableList,
 			$this->getQueryForTag($tag) .
-				' AND ' . $this->tableJoin .
-				' AND ' . $this->notExpiredStatement,
+			' AND ' . $this->tableJoin .
+			' AND ' . $this->notExpiredStatement,
 			$this->identifierField
 		);
 
@@ -247,7 +276,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 */
 	public function findIdentifiersByTags(array $tags) {
 		$cacheEntryIdentifiers = array();
-		$whereClause  = array();
+		$whereClause = array();
 
 		foreach ($tags as $tag) {
 			$whereClause[] = $this->getQueryForTag($tag);
@@ -277,8 +306,8 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function flush() {
-		$GLOBALS['TYPO3_DB']->sql_query('TRUNCATE ' . $this->cacheTable);
-		$GLOBALS['TYPO3_DB']->sql_query('TRUNCATE ' . $this->tagsTable);
+		$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery($this->cacheTable);
+		$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery($this->tagsTable);
 	}
 
 	/**
@@ -370,37 +399,6 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function setCacheTable($cacheTable) {
-/*
-
-	TODO reenable this check or remove it before 4.3 final
-
-	This check causes mysql warnings when not being logged in and calling
-	typo3/backend.php or the install tool.
-	Reason: the caches in typo3/init.php get initialized before a DB connection
-	has been established.
-	Related Question: Why aren't there warnings in the FE as the caches get
-	initialized in tslib_fe's constructor which is also before a DB conection
-	exsits?
-	Assumption Ingo Renner: Is a custom error_reporting level causing that?
-
-	There's also an unit test for that check (also deactivated for now).
-
-		$result = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-			'id',
-			$cacheTable,
-			'',
-			'',
-			'',
-			1
-		);
-
-		if (!is_array($result)) {
-			throw new t3lib_cache_Exception(
-				'The table "' . $cacheTable . '" does not exist.',
-				1236516444
-			);
-		}
-*/
 		$this->cacheTable = $cacheTable;
 		$this->initializeCommonReferences();
 	}
@@ -433,6 +431,28 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 */
 	public function getTagsTable() {
 		return $this->tagsTable;
+	}
+
+	/**
+	 * Enable data compression
+	 *
+	 * @param boolean TRUE to enable compression
+	 */
+	public function setCompression($compression) {
+		$this->compression = $compression;
+	}
+
+	/**
+	 * Set data compression level.
+	 * If compression is enabled and this is not set,
+	 * gzcompress default level will be used
+	 *
+	 * @param integer -1 to 9: Compression level
+	 */
+	public function setCompressionLevel($compressionLevel) {
+		if ($compressionLevel >= -1 && $compressionLevel <= 9) {
+			$this->compressionLevel = $compressionLevel;
+		}
 	}
 
 	/**
@@ -489,8 +509,8 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_dbbackend.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_dbbackend.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_dbbackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_dbbackend.php']);
 }
 
 ?>

@@ -1,26 +1,26 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 /**
  * An abstract caching backend
@@ -30,7 +30,8 @@
  * @author	Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage t3lib_cache
- * @version $Id: class.t3lib_cache_backend_abstractbackend.php 5595 2009-06-15 21:40:01Z flyguide $
+ * @api
+ * @version $Id$
  */
 abstract class t3lib_cache_backend_AbstractBackend implements t3lib_cache_backend_Backend {
 
@@ -45,6 +46,11 @@ abstract class t3lib_cache_backend_AbstractBackend implements t3lib_cache_backen
 	protected $cache;
 
 	/**
+	 * @var string
+	 */
+	protected $cacheIdentifier;
+
+	/**
 	 * Default lifetime of a cache entry in seconds
 	 *
 	 * @var integer
@@ -54,7 +60,7 @@ abstract class t3lib_cache_backend_AbstractBackend implements t3lib_cache_backen
 	/**
 	 * Constructs this backend
 	 *
-	 * @param mixed Configuration options - depends on the actual backend
+	 * @param array $options Configuration options - depends on the actual backend
 	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function __construct(array $options = array()) {
@@ -79,12 +85,13 @@ abstract class t3lib_cache_backend_AbstractBackend implements t3lib_cache_backen
 	 */
 	public function setCache(t3lib_cache_frontend_Frontend $cache) {
 		$this->cache = $cache;
+		$this->cacheIdentifier = $this->cache->getIdentifier();
 	}
 
 	/**
 	 * Sets the default lifetime for this cache backend
 	 *
-	 * @param integer $defaultLifeTime Default lifetime of this cache backend in seconds. If NULL is specified, the default lifetime is used. "0" means unlimited liftime.
+	 * @param integer $defaultLifetime Default lifetime of this cache backend in seconds. If NULL is specified, the default lifetime is used. "0" means unlimited liftime.
 	 * @return void
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
@@ -125,8 +132,8 @@ abstract class t3lib_cache_backend_AbstractBackend implements t3lib_cache_backen
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_abstractbackend.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_abstractbackend.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_abstractbackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_abstractbackend.php']);
 }
 
 ?>

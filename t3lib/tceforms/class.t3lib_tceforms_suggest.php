@@ -1,33 +1,33 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2007-2009 Andreas Wolf <andreas.wolf@ikt-werk.de>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*  A copy is found in the textfile GPL.txt and important notices to the license
-*  from the author is found in LICENSE.txt distributed with these scripts.
-*
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2007-2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * TCEforms wizard for rendering an AJAX selector for records
  *
- * $Id: class.t3lib_tceforms_suggest.php 6915 2010-02-19 17:11:00Z benni $
+ * $Id$
  *
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  * @author Benjamin Mack <benni@typo3.org>
@@ -37,7 +37,7 @@ class t3lib_TCEforms_Suggest {
 		// count the number of ajax selectors used
 	public $suggestCount = 0;
 	public $cssClass = 'typo3-TCEforms-suggest';
-	public $TCEformsObj; 	// reference to t3lib_tceforms
+	public $TCEformsObj; // reference to t3lib_tceforms
 
 
 	/**
@@ -66,10 +66,17 @@ class t3lib_TCEforms_Suggest {
 		$containerCssClass = $this->cssClass . ' ' . $this->cssClass . '-position-right';
 		$suggestId = 'suggest-' . $table . '-' . $field . '-' . $row['uid'];
 
+		if ($GLOBALS['TCA'][$table]['columns'][$field]['config']['type'] === 'flex') {
+			$fieldPattern = 'data[' . $table . '][' . $row['uid'] . '][';
+			$flexformField = str_replace($fieldPattern, '', $fieldname);
+			$flexformField = substr($flexformField, 0, -1);
+			$field = str_replace(array(']['), '|', $flexformField);
+		}
+
 		$selector = '
 		<div class="' . $containerCssClass . '" id="' . $suggestId . '">
 			<input type="text" id="' . $fieldname . 'Suggest" value="' .
-				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.findRecord') . '" class="' . $this->cssClass . '-search" />
+					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.findRecord') . '" class="' . $this->cssClass . '-search" />
 			<div class="' . $this->cssClass . '-indicator" style="display: none;" id="' . $fieldname . 'SuggestIndicator">
 				<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/spinner.gif" alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:alttext.suggestSearching') . '" />
 			</div>
@@ -91,7 +98,7 @@ class t3lib_TCEforms_Suggest {
 		$jsObj = str_replace(' ', '', ucwords(str_replace('-', ' ', t3lib_div::strtolower($suggestId))));
 		$this->TCEformsObj->additionalJS_post[] = '
 			var ' . $jsObj . ' = new TCEForms.Suggest("' . $fieldname . '", "' . $table . '", "' . $field .
-			'", "' . $row['uid'] . '", ' . $row['pid'] . ', ' . $minChars . ');
+												  '", "' . $row['uid'] . '", ' . $row['pid'] . ', ' . $minChars . ');
 			' . $jsObj . '.defaultValue = "' . t3lib_div::slashJS($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.findRecord')) . '";
 		';
 
@@ -129,9 +136,45 @@ class t3lib_TCEforms_Suggest {
 		}
 
 		$TSconfig = t3lib_BEfunc::getPagesTSconfig($pageId);
+		$queryTables = array();
+		$foreign_table_where = '';
 
-		$wizardConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config']['wizards']['suggest'];
-		$queryTables = t3lib_div::trimExplode(',', $GLOBALS['TCA'][$table]['columns'][$field]['config']['allowed']);
+		$fieldConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
+
+		$parts = explode('|', $field);
+		if ($GLOBALS['TCA'][$table]['columns'][$parts[0]]['config']['type'] === 'flex') {
+			if (is_array($row) && (count($row) > 0)) {
+				$flexfieldTCAConfig = $GLOBALS['TCA'][$table]['columns'][$parts[0]]['config'];
+				$flexformDSArray = t3lib_BEfunc::getFlexFormDS($flexfieldTCAConfig, $row, $table);
+				$flexformDSArray = t3lib_div::resolveAllSheetsInDS($flexformDSArray);
+				$flexformElement = $parts[count($parts) - 2];
+				$continue = TRUE;
+				foreach ($flexformDSArray as $sheet) {
+					foreach ($sheet as $_ => $dataStructure) {
+						if (isset($dataStructure['ROOT']['el'][$flexformElement]['TCEforms']['config'])) {
+							$fieldConfig = $dataStructure['ROOT']['el'][$flexformElement]['TCEforms']['config'];
+							$continue = FALSE;
+							break;
+						}
+					}
+					if (!$continue) {
+						break;
+					}
+				}
+				$field = str_replace('|', '][', $field);
+			}
+		}
+
+		$wizardConfig = $fieldConfig['wizards']['suggest'];
+
+		if (isset($fieldConfig['allowed'])) {
+			$queryTables = t3lib_div::trimExplode(',', $fieldConfig['allowed']);
+		} elseif (isset($fieldConfig['foreign_table'])) {
+			$queryTables = array($fieldConfig['foreign_table']);
+			$foreign_table_where = $fieldConfig['foreign_table_where'];
+				// strip ORDER BY clause
+			$foreign_table_where = trim(preg_replace('/ORDER[[:space:]]+BY.*/i', '', $foreign_table_where));
+		}
 		$resultRows = array();
 
 			// fetch the records for each query table. A query table is a table from which records are allowed to
@@ -143,7 +186,7 @@ class t3lib_TCEforms_Suggest {
 			if (!is_array($GLOBALS['TCA'][$queryTable]) || !count($GLOBALS['TCA'][$queryTable])) {
 				continue;
 			}
-			$config = (array)$wizardConfig['default'];
+			$config = (array) $wizardConfig['default'];
 
 			if (is_array($wizardConfig[$queryTable])) {
 				$config = t3lib_div::array_merge_recursive_overrule($config, $wizardConfig[$queryTable]);
@@ -156,17 +199,28 @@ class t3lib_TCEforms_Suggest {
 				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.']['suggest.']['default.']);
 			}
 
-			if (is_array($TSconfig['TCEFORM.']['suggest.'][$queryTable.'.'])) {
-				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.']['suggest.'][$queryTable.'.']);
+			if (is_array($TSconfig['TCEFORM.']['suggest.'][$queryTable . '.'])) {
+				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.']['suggest.'][$queryTable . '.']);
 			}
 
 				// use $table instead of $queryTable here because we overlay a config
 				// for the input-field here, not for the queried table
-			if (is_array($TSconfig['TCEFORM.'][$table.'.'][$field.'.']['suggest.']['default.'])) {
-				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.'][$table.'.'][$field.'.']['suggest.']['default.']);
+			if (is_array($TSconfig['TCEFORM.'][$table . '.'][$field . '.']['suggest.']['default.'])) {
+				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.'][$table . '.'][$field . '.']['suggest.']['default.']);
 			}
-			if (is_array($TSconfig['TCEFORM.'][$table.'.'][$field.'.']['suggest.'][$queryTable.'.'])) {
-				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.'][$table.'.'][$field.'.']['suggest.'][$queryTable.'.']);
+			if (is_array($TSconfig['TCEFORM.'][$table . '.'][$field . '.']['suggest.'][$queryTable . '.'])) {
+				$config = t3lib_div::array_merge_recursive_overrule($config, $TSconfig['TCEFORM.'][$table . '.'][$field . '.']['suggest.'][$queryTable . '.']);
+			}
+
+				//process addWhere
+			if (!isset($config['addWhere']) && $foreign_table_where) {
+				$config['addWhere'] = $foreign_table_where;
+			}
+			if (isset($config['addWhere'])) {
+				$config['addWhere'] = strtr(' ' . $config['addWhere'], array(
+																			'###THIS_UID###' => intval($uid),
+																			'###CURRENT_PID###' => intval($pageId),
+																	   ));
 			}
 				// instantiate the class that should fetch the records for this $queryTable
 			$receiverClassName = $config['receiverClass'];
@@ -204,7 +258,7 @@ class t3lib_TCEforms_Suggest {
 				$row = $resultRows[$rowsSort[$i]];
 				$rowId = $row['table'] . '-' . $row['uid'] . '-' . $table . '-' . $uid . '-' . $field;
 				$listItems[] = '<li' . ($row['class'] != '' ? ' class="' . $row['class'] . '"' : '') .
-				                ' id="' . $rowId . '" style="' . $row['style'] . '">' . $row['text'] . '</li>';
+							   ' id="' . $rowId . '" style="' . $row['style'] . '">' . $row['text'] . '</li>';
 			}
 		}
 
@@ -220,8 +274,8 @@ class t3lib_TCEforms_Suggest {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_suggest.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_suggest.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_suggest.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_suggest.php']);
 }
 
 ?>

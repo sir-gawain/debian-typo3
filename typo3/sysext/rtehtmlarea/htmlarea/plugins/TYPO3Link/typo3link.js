@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,37 +27,32 @@
 /*
  * TYPO3Link plugin for htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: typo3link.js 9618 2010-11-25 04:24:19Z stan $
+ * TYPO3 SVN ID: $Id$
  */
-TYPO3Link = HTMLArea.Plugin.extend({
-	
-	constructor : function(editor, pluginName) {
+HTMLArea.TYPO3Link = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
 		this.base(editor, pluginName);
 	},
-	
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin : function(editor) {
-		
+	configurePlugin: function(editor) {
 		this.pageTSConfiguration = this.editorConfiguration.buttons.link;
 		this.modulePath = this.pageTSConfiguration.pathLinkModule;
 		this.classesAnchorUrl = this.pageTSConfiguration.classesAnchorUrl;
-		
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.1",
-			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.sjbr.ca/",
-			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "SJBR",
-			sponsorUrl	: "http://www.sjbr.ca/",
-			license		: "GPL"
+			version		: '2.1',
+			developer	: 'Stanislas Rolland',
+			developerUrl	: 'http://www.sjbr.ca/',
+			copyrightOwner	: 'Stanislas Rolland',
+			sponsor		: 'SJBR',
+			sponsorUrl	: 'http://www.sjbr.ca/',
+			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		
 		/*
 		 * Registering the buttons
 		 */
@@ -68,7 +63,8 @@ TYPO3Link = HTMLArea.Plugin.extend({
 			var buttonConfiguration = {
 				id		: buttonId,
 				tooltip		: this.localize(buttonId.toLowerCase()),
-				action		: "onButtonPress",
+				iconCls		: 'htmlarea-action-' + button[4],
+				action		: 'onButtonPress',
 				hotKey		: (this.pageTSConfiguration ? this.pageTSConfiguration.hotKey : null),
 				context		: button[1],
 				selection	: button[2],
@@ -76,18 +72,35 @@ TYPO3Link = HTMLArea.Plugin.extend({
 			};
 			this.registerButton(buttonConfiguration);
 		}
-		
 		return true;
-	 },
-	 
+	},
 	/*
 	 * The list of buttons added by this plugin
 	 */
-	buttonList : [
-		["CreateLink", "a,img", true, true],
-		["UnLink", "a", false, false]
+	buttonList: [
+		['CreateLink', 'a,img', false, true, 'link-edit'],
+		['UnLink', 'a', false, false, 'unlink']
 	],
-	 
+	/*
+	 * This function is invoked when the editor is being generated
+	 */
+	onGenerate: function () {
+			// Download the definition of special anchor classes if not yet done
+		if (this.classesAnchorUrl && (typeof(HTMLArea.classesAnchorSetup) === 'undefined')) {
+			this.getJavascriptFile(this.classesAnchorUrl, function (options, success, response) {
+				if (success) {
+					try {
+						if (typeof(HTMLArea.classesAnchorSetup) === 'undefined') {
+							eval(response.responseText);
+							this.appendToLog('ongenerate', 'Javascript file successfully evaluated: ' + this.classesAnchorUrl);
+						}
+					} catch(e) {
+						this.appendToLog('ongenerate', 'Error evaluating contents of Javascript file: ' + this.classesAnchorUrl);
+					}
+				}
+			});
+		}
+	},
 	/*
 	 * This function gets called when the button was pressed
 	 *
@@ -97,55 +110,75 @@ TYPO3Link = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function(editor, id, target) {
+	onButtonPress: function(editor, id, target) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		
 			// Download the definition of special anchor classes if not yet done
-		if (this.classesAnchorUrl && (typeof(HTMLArea.classesAnchorSetup) === "undefined")) {
-			this.getJavascriptFile(this.classesAnchorUrl);
-		}
-		
-		if (buttonId === "UnLink") {
-			this.unLink();
-			return false;
-		}
-		
-		var additionalParameter;
-		var node = this.editor.getParentElement();
-		var el = HTMLArea.getElementObject(node, "a");
-		if (el != null && /^a$/i.test(el.nodeName)) node = el;
-		if (node != null && /^a$/i.test(node.nodeName)) {
-			additionalParameter = "&curUrl[href]=" + encodeURIComponent(node.getAttribute("href"));
-			if (node.target) additionalParameter += "&curUrl[target]=" + encodeURIComponent(node.target);
-			if (node.className) additionalParameter += "&curUrl[class]=" + encodeURIComponent(node.className);
-			if (node.title) additionalParameter += "&curUrl[title]=" + encodeURIComponent(node.title);
-			if (this.pageTSConfiguration && this.pageTSConfiguration.additionalAttributes) {
-				var additionalAttributes = this.pageTSConfiguration.additionalAttributes.split(",");
-				for (var i = additionalAttributes.length; --i >= 0;) {
-						// hasAttribute() not available in IE < 8
-					if ((node.hasAttribute && node.hasAttribute(additionalAttributes[i])) || node.getAttribute(additionalAttributes[i]) != null) {
-						additionalParameter += "&curUrl[" + additionalAttributes[i] + "]=" + encodeURIComponent(node.getAttribute(additionalAttributes[i]));
+		if (this.classesAnchorUrl && (typeof(HTMLArea.classesAnchorSetup) === 'undefined')) {
+			this.getJavascriptFile(this.classesAnchorUrl, function (options, success, response) {
+				if (success) {
+					try {
+						if (typeof(HTMLArea.classesAnchorSetup) === 'undefined') {
+							eval(response.responseText);
+							this.appendToLog('onButtonPress', 'Javascript file successfully evaluated: ' + this.classesAnchorUrl);
+						}
+						this.onButtonPress(editor, id, target);
+					} catch(e) {
+						this.appendToLog('onButtonPress', 'Error evaluating contents of Javascript file: ' + this.classesAnchorUrl);
+					}
+				}
+			});
+		} else {
+			if (buttonId === "UnLink") {
+				this.unLink(true);
+				return false;
+			}
+			var additionalParameter;
+			var node = this.editor.getParentElement();
+			var el = HTMLArea.getElementObject(node, "a");
+			if (el != null && /^a$/i.test(el.nodeName)) node = el;
+			if (node != null && /^a$/i.test(node.nodeName)) {
+				additionalParameter = "&curUrl[href]=" + encodeURIComponent(node.getAttribute("href"));
+				if (node.target) additionalParameter += "&curUrl[target]=" + encodeURIComponent(node.target);
+				if (node.className) additionalParameter += "&curUrl[class]=" + encodeURIComponent(node.className);
+				if (node.title) additionalParameter += "&curUrl[title]=" + encodeURIComponent(node.title);
+				if (this.pageTSConfiguration && this.pageTSConfiguration.additionalAttributes) {
+					var additionalAttributes = this.pageTSConfiguration.additionalAttributes.split(",");
+					for (var i = additionalAttributes.length; --i >= 0;) {
+							// hasAttribute() not available in IE < 8
+						if ((node.hasAttribute && node.hasAttribute(additionalAttributes[i])) || node.getAttribute(additionalAttributes[i]) != null) {
+							additionalParameter += "&curUrl[" + additionalAttributes[i] + "]=" + encodeURIComponent(node.getAttribute(additionalAttributes[i]));
+						}
+					}
+				}
+			} else if (this.editor.hasSelectedText()) {
+				var text = this.editor.getSelectedHTML();
+				if (text && text != null) {
+					var offset = text.toLowerCase().indexOf("<a");
+					if (offset!=-1) {
+						var ATagContent = text.substring(offset+2);
+						offset = ATagContent.toUpperCase().indexOf(">");
+						ATagContent = ATagContent.substring(0,offset);
+						additionalParameter = "&curUrl[all]=" + encodeURIComponent(ATagContent);
 					}
 				}
 			}
-		} else if (this.editor.hasSelectedText()) {
-			var text = this.editor.getSelectedHTML();
-			if (text && text != null) {
-				var offset = text.toLowerCase().indexOf("<a");
-				if (offset!=-1) {
-					var ATagContent = text.substring(offset+2);
-					offset = ATagContent.toUpperCase().indexOf(">");
-					ATagContent = ATagContent.substring(0,offset);
-					additionalParameter = "&curUrl[all]=" + encodeURIComponent(ATagContent);
-				}
-			}
+			this.openContainerWindow(
+				buttonId,
+				this.getButton(buttonId).tooltip.title,
+				this.getWindowDimensions(
+					{
+						width:	550,
+						height:	500
+					},
+					buttonId
+				),
+				this.makeUrlFromModulePath(this.modulePath, additionalParameter)
+			);
 		}
-		this.dialog = this.openDialog("CreateLink", this.makeUrlFromModulePath(this.modulePath, additionalParameter), null, null, {width:550, height:350}, "yes");
 		return false;
 	},
-	
 	/*
 	 * Add a link to the selection.
 	 * This function is called from the TYPO3 link popup.
@@ -160,8 +193,10 @@ TYPO3Link = HTMLArea.Plugin.extend({
 	 */
 	createLink : function(theLink,cur_target,cur_class,cur_title,additionalValues) {
 		var selection, range, anchorClass, imageNode = null, addIconAfterLink;
-		this.editor.focusEditor();
+		this.editor.focus();
+		this.restoreSelection();
 		var node = this.editor.getParentElement();
+			// Looking at parent
 		var el = HTMLArea.getElementObject(node, 'a');
 		if (el != null && /^a$/i.test(el.nodeName)) {
 			node = el;
@@ -170,7 +205,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 			for (var i = HTMLArea.classesAnchorSetup.length; --i >= 0;) {
 				anchorClass = HTMLArea.classesAnchorSetup[i];
 				if (anchorClass.name == cur_class && anchorClass.image) {
-					imageNode = this.editor._doc.createElement('img');
+					imageNode = this.editor.document.createElement('img');
 					imageNode.src = anchorClass.image;
 					imageNode.alt = anchorClass.altText;
 					addIconAfterLink = anchorClass.addIconAfterLink;
@@ -183,57 +218,79 @@ TYPO3Link = HTMLArea.Plugin.extend({
 			this.editor.selectNode(node);
 			selection = this.editor._getSelection();
 			range = this.editor._createRange(selection);
-				// Clean images
+				// Clean images, keep links
 			if (HTMLArea.classesAnchorSetup) {
 				this.cleanAllLinks(node, range, true);
 			}
 				// Update link href
-			node.href = (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) ? encodeURI(theLink) : theLink;
+				// In IE, setting href may update the content of the element. We don't want this feature.
+			if (Ext.isIE) {
+				var content = node.innerHTML;
+			}
+			node.href = Ext.isGecko ? encodeURI(theLink) : theLink;
+			if (Ext.isIE) {
+				node.innerHTML = content;
+			}
 				// Update link attributes
 			this.setLinkAttributes(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues);
 		} else {
 				// Create new link
-				// Clean existing anchors otherwise Mozilla may create nested anchors
 			selection = this.editor._getSelection();
 			range = this.editor._createRange(selection);
-				// Selection may be lost when cleaning links
-			var bookmark = this.editor.getBookmark(range);
-			this.cleanAllLinks(node, range);
-			this.editor.selectRange(this.editor.moveToBookmark(bookmark));
-			if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
-				this.editor._doc.execCommand('CreateLink', false, encodeURI(theLink));
+				// Clean existing anchors otherwise Mozilla may create nested anchors while IE may update existing link
+			if (Ext.isIE) {
+				this.cleanAllLinks(node, range);
 			} else {
-				this.editor._doc.execCommand('CreateLink', false, theLink);
+					// Selection may be lost when cleaning links
+					// Note: In IE, the following procedure breaks the selection used by the execCommand
+				var bookmark = this.editor.getBookmark(range);
+				this.cleanAllLinks(node, range);
+				var range = this.editor.moveToBookmark(bookmark);
+				this.editor.selectRange(range);
+			}
+			if (Ext.isGecko) {
+				this.editor.document.execCommand('CreateLink', false, encodeURI(theLink));
+			} else {
+				this.editor.document.execCommand('CreateLink', false, theLink);
 			}
 				// Get the created link
 			selection = this.editor._getSelection();
 			range = this.editor._createRange(selection);
 			node = this.editor.getParentElement();
-			el = HTMLArea.getElementObject(node, 'a');
+				// Looking at parent
+			var el = HTMLArea.getElementObject(node, 'a');
 			if (el != null && /^a$/i.test(el.nodeName)) {
 				node = el;
 			}
 			if (node) {
 					// Export trailing br that IE may include in the link
-				if (HTMLArea.is_ie) {
+				if (Ext.isIE) {
 					if (node.lastChild && /^br$/i.test(node.lastChild.nodeName)) {
 						HTMLArea.removeFromParent(node.lastChild);
-						node.parentNode.insertBefore(this.editor._doc.createElement('br'), node.nextSibling);
+						node.parentNode.insertBefore(this.editor.document.createElement('br'), node.nextSibling);
 					}
 				}
 					// We may have created multiple links in as many blocks
 				this.setLinkAttributes(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues);
 			}
 		}
-		this.dialog.close();
+		this.close();
 	},
 	
 	/*
-	* Unlink the selection.
-	* This function is called from the TYPO3 link popup and from the context menu.
-	*/
-	unLink : function() {
-		this.editor.focusEditor();
+	 * Unlink the selection.
+	 * This function is called from the TYPO3 link popup and from unlink button pressed in toolbar or context menu.
+	 *
+	 * @param	string	buttonPressd: true if the unlink button was pressed
+	 *
+	 * @return void
+	 */
+	unLink: function (buttonPressed) {
+		this.editor.focus();
+			// If no dialogue window was opened, the selection should not be restored
+		if (!buttonPressed) {
+			this.restoreSelection();
+		}
 		var node = this.editor.getParentElement();
 		var el = HTMLArea.getElementObject(node, "a");
 		if (el != null && /^a$/i.test(el.nodeName)) node = el;
@@ -241,7 +298,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 		if (HTMLArea.classesAnchorSetup) {
 			var selection = this.editor._getSelection();
 			var range = this.editor._createRange(selection);
-			if (HTMLArea.is_gecko) {
+			if (!Ext.isIE) {
 				this.cleanAllLinks(node, range, false);
 			} else {
 				this.cleanAllLinks(node, range, true);
@@ -251,7 +308,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 			this.editor._doc.execCommand("Unlink", false, "");
 		}
 		if (this.dialog) {
-			this.dialog.close();
+			this.close();
 		}
 	},
 	
@@ -272,7 +329,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 	setLinkAttributes : function(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues) {
 		if (/^a$/i.test(node.nodeName)) {
 			var nodeInRange = false;
-			if (HTMLArea.is_gecko) {
+			if (!Ext.isIE) {
 				nodeInRange = this.editor.rangeIntersectsNode(range, node);
 			} else {
 				if (this.editor._getSelection().type.toLowerCase() == "control") {
@@ -281,7 +338,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 				} else {
 					var nodeRange = this.editor._doc.body.createTextRange();
 					nodeRange.moveToElementText(node);
-					nodeInRange = range.inRange(nodeRange) || (range.compareEndPoints("StartToStart", nodeRange) == 0) || (range.compareEndPoints("EndToEnd", nodeRange) == 0);
+					nodeInRange = nodeRange.inRange(range) || range.inRange(nodeRange) || (range.compareEndPoints("StartToStart", nodeRange) == 0) || (range.compareEndPoints("EndToEnd", nodeRange) == 0);
 				}
 			}
 			if (nodeInRange) {
@@ -292,7 +349,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 						node.insertBefore(imageNode.cloneNode(false), node.firstChild);
 					}
 				}
-				if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
+				if (Ext.isGecko) {
 					node.href = decodeURI(node.href);
 				}
 				if (cur_target.trim()) node.target = cur_target.trim();
@@ -300,10 +357,13 @@ TYPO3Link = HTMLArea.Plugin.extend({
 				if (cur_class.trim()) {
 					node.className = cur_class.trim();
 				} else { 
-					if (HTMLArea.is_gecko) {
+					if (!Ext.isOpera) {
 						node.removeAttribute('class');
+						if (Ext.isIE) {
+							node.removeAttribute('className');
+						}
 					} else {
-						node.removeAttribute('className');
+						node.className = '';
 					}
 				}
 				if (cur_title.trim()) {
@@ -363,7 +423,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 	cleanAllLinks : function(node, range, keepLinks) {
 		if (/^a$/i.test(node.nodeName)) {
 			var intersection = false;
-			if (HTMLArea.is_gecko) {
+			if (!Ext.isIE) {
 				intersection = this.editor.rangeIntersectsNode(range, node);
 			} else {
 				if (this.editor._getSelection().type.toLowerCase() == "control") {
@@ -387,6 +447,43 @@ TYPO3Link = HTMLArea.Plugin.extend({
 				if (i.nodeType == 1 || i.nodeType == 11) this.cleanAllLinks(i, range, keepLinks);
 			}
 		}
+	},
+	/*
+	 * This function gets called when the toolbar is updated
+	 */
+	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
+		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+			switch (button.itemId) {
+				case 'CreateLink':
+					button.setDisabled(selectionEmpty && !button.isInContext(mode, selectionEmpty, ancestors));
+					if (!button.disabled) {
+						var node = this.editor.getParentElement();
+						var el = HTMLArea.getElementObject(node, 'a');
+						if (el != null && /^a$/i.test(el.nodeName)) {
+							node = el;
+						}
+						if (node != null && /^a$/i.test(node.nodeName)) {
+							button.setTooltip({ title: this.localize('Modify link') });
+						} else {
+							button.setTooltip({ title: this.localize('Insert link') });
+						}
+					}
+					break;
+				case 'UnLink':
+					var link = false;
+						// Let's see if a link was double-clicked in Firefox
+					if (Ext.isGecko && !selectionEmpty) {
+						var range = this.editor._createRange(this.editor._getSelection());
+						if (range.startContainer.nodeType == 1 && range.startContainer == range.endContainer && (range.endOffset - range.startOffset == 1)) {
+							var node = range.startContainer.childNodes[range.startOffset];
+							if (node && /^a$/i.test(node.nodeName) && node.textContent == range.toString()) {
+								link = true;
+							}
+						}
+					}
+					button.setDisabled(!link && !button.isInContext(mode, selectionEmpty, ancestors));
+					break;
+			}
+		}
 	}
 });
-

@@ -2,7 +2,7 @@
 /***************************************************************
  * Copyright notice
  *
- * (c) 2008-2009 Oliver Hader <oh@inpublica.de>
+ * (c) 2008-2011 Oliver Hader <oh@inpublica.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,10 +28,10 @@
 /**
  * Interface for classes which hook into t3lib_TCEforms_inline.
  *
- * $Id: interface.t3lib_tceformsinlinehook.php 5165 2009-03-09 18:28:59Z ohader $
+ * $Id$
  *
  * @author		Oliver Hader <oh@inpublica.de>
- * @package 	TYPO3
+ * @package	 TYPO3
  * @subpackage	t3lib
  */
 interface t3lib_tceformsInlineHook {
@@ -69,4 +69,5 @@ interface t3lib_tceformsInlineHook {
 	 */
 	public function renderForeignRecordHeaderControl_postProcess($parentUid, $foreignTable, array $childRecord, array $childConfig, $isVirtual, array &$controlItems);
 }
+
 ?>

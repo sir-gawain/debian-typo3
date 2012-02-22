@@ -1,13 +1,13 @@
 <?php
 
 ########################################################################
-# Extension Manager/Repository config file for ext: "cshmanual"
+# Extension Manager/Repository config file for ext "cshmanual".
 #
-# Auto generated 22-12-2008 12:33
+# Auto generated 26-01-2011 20:08
 #
 # Manual updates:
-# Only the data in the array - anything else is removed by next write.
-# "version" and "dependencies" must not be touched!
+# Only the data in the array - everything else is removed by next
+# writing. "version" and "dependencies" must not be touched!
 ########################################################################
 
 $EM_CONF[$_EXTKEY] = array(
@@ -33,12 +33,12 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '0.1.0',
-	'_md5_values_when_last_written' => 'a:4:{s:12:"ext_icon.gif";s:4:"24ff";s:14:"ext_tables.php";s:4:"9ce2";s:13:"mod/about.gif";s:4:"24ff";s:12:"mod/conf.php";s:4:"ac70";}',
+	'version' => '1.0.0',
+	'_md5_values_when_last_written' => 'a:4:{s:12:"ext_icon.gif";s:4:"1d55";s:14:"ext_tables.php";s:4:"9ce2";s:13:"mod/about.gif";s:4:"711d";s:12:"mod/conf.php";s:4:"09b8";}',
 	'constraints' => array(
 		'depends' => array(
 			'php' => '5.1.0-0.0.0',
-			'typo3' => '4.2.0-4.3.99',
+			'typo3' => '4.2.0-0.0.0',
 		),
 		'conflicts' => array(
 		),

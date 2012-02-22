@@ -27,7 +27,7 @@
  *
  * @package Extbase
  * @subpackage Domain\Repository
- * @version $Id: FrontendUserRepository.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @api
  */
 class Tx_Extbase_Domain_Repository_FrontendUserRepository extends Tx_Extbase_Persistence_Repository {

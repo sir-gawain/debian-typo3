@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,10 +28,10 @@
  * Shows a picture from uploads/* in enlarged format in a separate window.
  * Picture file and settings is supplied by GET-parameters: file, width, height, sample, alternativeTempPath, effects, frame, bodyTag, title, wrap, md5
  *
- * $Id: showpic.php 9792 2010-12-16 13:41:33Z ohader $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author		Kasper Skaarhoj	<kasperYYYY@typo3.com>
+ * @author		Kasper Skårhøj	<kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -66,7 +66,14 @@ if (defined('E_DEPRECATED')) {
 // ***********************
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','FE');
-if (!defined('PATH_thisScript')) 	define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (PHP_SAPI=='cgi'||PHP_SAPI=='isapi' ||PHP_SAPI=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
+
+if(!defined('PATH_thisScript')) {
+	define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
+		(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
+		($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
+}
 
 if (!defined('PATH_site')) 			define('PATH_site', dirname(PATH_thisScript).'/');
 if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
@@ -89,6 +96,18 @@ require_once(PATH_t3lib.'class.t3lib_db.php');
 $TYPO3_DB = t3lib_div::makeInstance('t3lib_DB');
 
 
+// *********************
+// Error & Exception handling
+// *********************
+if ($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionHandler'] !== '') {
+	if ($TYPO3_CONF_VARS['SYS']['errorHandler'] !== '') {
+			// register an error handler for the given errorHandlerErrors
+		$errorHandler = t3lib_div::makeInstance($TYPO3_CONF_VARS['SYS']['errorHandler'], $TYPO3_CONF_VARS['SYS']['errorHandlerErrors']);
+			// set errors which will be converted in an exception
+		$errorHandler->setExceptionalErrors($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionalErrors']);
+	}
+	$exceptionHandler = t3lib_div::makeInstance($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionHandler']);
+}
 
 
 
@@ -109,7 +128,7 @@ require_once(PATH_t3lib.'class.t3lib_stdgraphic.php');
  * Script Class, generating the page output.
  * Instantiated in the bottom of this script.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
  */
@@ -142,17 +161,19 @@ class SC_tslib_showpic {
 	function init()	{
 			// Loading internal vars with the GET/POST parameters from outside:
 		$this->file = t3lib_div::_GP('file');
-		$this->parametersEncoded = implode(t3lib_div::_GP('parameters'));
+		$parametersArray = t3lib_div::_GP('parameters');
 		$this->frame = t3lib_div::_GP('frame');
 		$this->md5 = t3lib_div::_GP('md5');
 
 		// ***********************
 		// Check parameters
 		// ***********************
-			// If no file-param is given, we must exit
-		if (!$this->file)	{
-			die('Parameter Error: No file given.');
+			// If no file-param or parameters are given, we must exit
+		if (!$this->file || !isset($parametersArray) || !is_array($parametersArray)) {
+			throw new UnexpectedValueException('Parameter Error: No file or no parameters given.');
 		}
+
+		$this->parametersEncoded = implode($parametersArray);
 
 			// Chech md5-checksum: If this md5-value does not match the one submitted, then we fail... (this is a kind of security that somebody don't just hit the script with a lot of different parameters
 		$md5_value = t3lib_div::hmac(
@@ -162,8 +183,8 @@ class SC_tslib_showpic {
 			)
 		);
 
-		if ($md5_value!=$this->md5) {
-			die('Parameter Error: Wrong parameters sent.');
+		if ($md5_value !== $this->md5) {
+			throw new UnexpectedValueException('Parameter Error: Wrong parameters sent.');
 		}
 
 		$parameters = unserialize(base64_decode($this->parametersEncoded));
@@ -178,10 +199,10 @@ class SC_tslib_showpic {
 
 		$test_file=PATH_site.$this->file;
 		if (!t3lib_div::validPathStr($test_file))	{
-			die('Parameter Error: No valid filepath');
+			throw new UnexpectedValueException('Parameter Error: No valid filepath');
 		}
 		if (!@is_file($test_file))	{
-			die('The given file was not found');
+			throw new UnexpectedValueException('The given file was not found');
 		}
 	}
 
@@ -245,8 +266,8 @@ class SC_tslib_showpic {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/showpic.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/showpic.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/showpic.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/showpic.php']);
 }
 
 

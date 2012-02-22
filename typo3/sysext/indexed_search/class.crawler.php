@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Crawler hook for indexed search. Works with the "crawler" extension
  *
- * @author	Kasper Sk�rh�j <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -79,7 +79,7 @@ if (!is_object($GLOBALS['LANG']))	{
 /**
  * Crawler hook for indexed search. Works with the "crawler" extension
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_indexedsearch
  */
@@ -221,7 +221,7 @@ class tx_indexedsearch_crawler {
 		if ($params['indexConfigUid'])	{
 
 				// Load the indexing configuration record:
-			list($cfgRec) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+			$cfgRec = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 				'*',
 				'index_config',
 				'uid='.intval($params['indexConfigUid'])
@@ -802,10 +802,10 @@ class tx_indexedsearch_crawler {
 	 */
 	function checkDeniedSuburls($url, $url_deny)	{
 		if (trim($url_deny))	{
-			$url_denyArray = t3lib_div::trimExplode(chr(10),$url_deny,1);
+			$url_denyArray = t3lib_div::trimExplode(LF,$url_deny,1);
 			foreach($url_denyArray as $testurl)	{
 				if (t3lib_div::isFirstPartOfStr($url,$testurl))	{
-					echo $url.' /// '.$url_deny.chr(10);
+					echo $url.' /// '.$url_deny.LF;
 					return TRUE;
 				}
 			}
@@ -944,7 +944,7 @@ class tx_indexedsearch_crawler {
  * Crawler hook for indexed search. Works with the "crawler" extension
  * This hook is specifically used to index external files found on pages through the crawler extension.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_indexedsearch
  * @see tx_indexedsearch_indexer::extractLinks()
@@ -996,8 +996,8 @@ class tx_indexedsearch_files {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.crawler.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.crawler.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.crawler.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.crawler.php']);
 }
 
 ?>

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,11 +27,11 @@
 /**
  * Web>File: Editing documents
  *
- * $Id: file_edit.php 8428 2010-07-28 09:18:27Z ohader $
- * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML compliant (except textarea field)
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -56,7 +56,7 @@ require('template.php');
 /**
  * Script Class for rendering the file editing screen
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -110,9 +110,10 @@ class SC_file_edit {
 			$this->target='';
 		}
 		$key=$this->basicff->checkPathAgainstMounts($this->target.'/');
-		if (!$this->target || !$key)	{
-			t3lib_BEfunc::typo3PrintError($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', true), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', true), '');
-			exit;
+		if (!$this->target || !$key) {
+			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', TRUE);
+			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', TRUE);
+			throw new RuntimeException($title . ': ' . $message);
 		}
 			// Finding the icon
 		switch($GLOBALS['FILEMOUNTS'][$key]['type'])	{
@@ -155,6 +156,20 @@ class SC_file_edit {
 
 		$this->content = $this->doc->startPage($LANG->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.pagetitle'));
 
+			// hook	before compiling the output
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['preOutputProcessingHook'])) {
+			$preOutputProcessingHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['preOutputProcessingHook'];
+			if (is_array($preOutputProcessingHook)) {
+				$hookParameters = array(
+					'content' => &$this->content,
+					'target' => &$this->target,
+				);
+				foreach ($preOutputProcessingHook as $hookFunction)	{
+					t3lib_div::callUserFunction($hookFunction, $hookParameters, $this);
+				}
+			}
+		}
+
 		$pageContent = $this->doc->header($LANG->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.pagetitle'));
 		$pageContent .= $this->doc->spacer(2);
 
@@ -191,6 +206,20 @@ class SC_file_edit {
 			// Ending of section and outputting editing form:
 		$pageContent.= $this->doc->sectionEnd();
 		$pageContent.=$code;
+
+				// hook	after compiling the output
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['postOutputProcessingHook'])) {
+			$postOutputProcessingHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['postOutputProcessingHook'];
+			if (is_array($postOutputProcessingHook)) {
+				$hookParameters = array(
+					'pageContent' => &$pageContent,
+					'target' => &$this->target,
+				);
+				foreach ($postOutputProcessingHook as $hookFunction)	{
+					t3lib_div::callUserFunction($hookFunction, $hookParameters, $this);
+				}
+			}
+		}
 
 			// Add the HTML as a section:
 		$markerArray = array(
@@ -230,24 +259,24 @@ class SC_file_edit {
 		$buttons['csh'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'file_edit', $GLOBALS['BACK_PATH'], '', TRUE);
 
 			// Save button
-		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/savedok.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.submit',1)).'" alt="" />';
-		$buttons['SAVE'] = '<a href="#" onclick="document.editform.submit();">'.$theIcon.'</a>';
+		$theIcon = t3lib_iconWorks::getSpriteIcon('actions-document-save');
+		$buttons['SAVE'] = '<a href="#" onclick="document.editform.submit();" title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.submit', TRUE)).'">' . $theIcon . '</a>';
 
 			// Save and Close button
-		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/saveandclosedok.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.saveAndClose',1)).'" alt="" />';
-		$buttons['SAVE_CLOSE'] = '<a href="#" onclick="document.editform.redirect.value=\''.htmlspecialchars($this->returnUrl).'\'; document.editform.submit();">'.$theIcon.'</a>';
+		$theIcon = t3lib_iconWorks::getSpriteIcon('actions-document-save-close');
+		$buttons['SAVE_CLOSE'] = '<a href="#" onclick="document.editform.redirect.value=\''.htmlspecialchars($this->returnUrl).'\'; document.editform.submit();" title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.saveAndClose', TRUE)).'">' . $theIcon . '</a>';
 
 			// Cancel button
-		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/closedok.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.cancel',1)).'" alt="" />';
-		$buttons['CANCEL'] = '<a href="#" onclick="backToList(); return false;">'.$theIcon.'</a>';
+		$theIcon = t3lib_iconWorks::getSpriteIcon('actions-document-close');
+		$buttons['CANCEL'] = '<a href="#" onclick="backToList(); return false;" title="' . $GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.cancel', TRUE)) . '">' . $theIcon . '</a>';
 
 		return $buttons;
 	}
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_edit.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_edit.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/file_edit.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/file_edit.php']);
 }
 
 

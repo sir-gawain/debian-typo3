@@ -31,16 +31,12 @@
  * <f:base />
  * </code>
  * <output>
- * <base href="http://yourdomain.tld/"></base>
+ * <base href="http://yourdomain.tld/" />
  * (depending on your domain)
  * </output>
  *
- * @version $Id: BaseViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_BaseViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
@@ -55,8 +51,7 @@ class Tx_Fluid_ViewHelpers_BaseViewHelper extends Tx_Fluid_Core_ViewHelper_Abstr
 	 * @api
 	 */
 	public function render() {
-		$currentRequest = $this->controllerContext->getRequest();
-		return '<base href="' . $currentRequest->getBaseUri() . '"></base>';
+		return '<base href="' . $this->controllerContext->getRequest()->getBaseUri() . '" />';
 	}
 }
 

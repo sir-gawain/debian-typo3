@@ -1,7 +1,7 @@
 # ***************************************************************************************
 # Extension configuration variables for htmlArea RTE
 #
-# TYPO3 SVN ID: $Id: ext_conf_template.txt 5046 2009-02-21 05:27:57Z stan $
+# TYPO3 SVN ID: $Id$
 # ***************************************************************************************
 
   # cat=basic; type=string; label=No spell checking languages: The list of languages for which Aspell does not provide spell checking (see http://aspell.net/man-html/Unsupported.html#Unsupported) and for which the htmlArea SpellChecker plugin will therefore be disabled.

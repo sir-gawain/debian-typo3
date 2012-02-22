@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Persistence
- * @version $Id: QueryInterface.php 2036 2010-03-15 20:53:40Z jocrau $
+ * @version $Id$
  * @api
  */
 interface Tx_Extbase_Persistence_QueryInterface {
@@ -113,7 +113,7 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	/**
 	 * Executes the query against the backend and returns the result
 	 *
-	 * @return array<object> The query result as an array of objects
+	 * @return Tx_Extbase_Persistence_QueryResultInterface|array The query result object or an array if $this->getQuerySettings()->getReturnRawQueryResult() is TRUE
 	 * @api
 	 */
 	public function execute();
@@ -123,6 +123,7 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 *
 	 * @return integer The number of matching objects
 	 * @api
+	 * @deprecated since Extbase 1.3.0; was removed in FLOW3; will be removed in Extbase 1.5.0
 	 */
 	public function count();
 
@@ -202,6 +203,7 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 * @param string $uid An identifier to match against
 	 * @return object
 	 * @api
+	 * @deprecated since Extbase 1.2.0; was removed in FLOW3; will be removed in Extbase 1.4.0; use equals() instead
 	 */
 	public function withUid($uid);
 
@@ -288,5 +290,30 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 */
 	public function greaterThanOrEqual($propertyName, $operand);
 
+	/**
+	 * Returns the type this query cares for.
+	 *
+	 * @return string
+	 * @api
+	 */
+	public function getType();
+
+	/**
+	 * Sets the Query Settings. These Query settings must match the settings expected by
+	 * the specific Storage Backend.
+	 *
+	 * @param Tx_Extbase_Persistence_QuerySettingsInterface $querySettings The Query Settings
+	 * @return void
+	 * @api This method is not part of FLOW3 API
+	 */
+	public function setQuerySettings(Tx_Extbase_Persistence_QuerySettingsInterface $querySettings);
+
+	/**
+	 * Returns the Query Settings.
+	 *
+	 * @return Tx_Extbase_Persistence_QuerySettingsInterface $querySettings The Query Settings
+	 * @api This method is not part of FLOW3 API
+	 */
+	public function getQuerySettings();
 }
 ?>

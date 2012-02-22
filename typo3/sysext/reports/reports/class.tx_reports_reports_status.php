@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,18 +26,18 @@
 /**
  * The status report
  *
- * @author		Ingo Renner <ingo@typo3.org>
- * @package		TYPO3
+ * @author	Ingo Renner <ingo@typo3.org>
+ * @package	TYPO3
  * @subpackage	reports
  *
- * $Id: class.tx_reports_reports_status.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 class tx_reports_reports_Status implements tx_reports_Report {
 
 	protected $statusProviders = array();
 
 	/**
-	 * constructor for class tx_reports_report_Status
+	 * Constructor for class tx_reports_report_Status
 	 */
 	public function __construct() {
 		$this->getStatusProviders();
@@ -51,16 +51,14 @@ class tx_reports_reports_Status implements tx_reports_Report {
 	 * @return	string	The status report as HTML
 	 */
 	public function getReport() {
-		$status  = array();
 		$content = '';
 
-		foreach ($this->statusProviders as $statusProviderId => $statusProvidersList) {
-			$status[$statusProviderId] = array();
-			foreach ($statusProvidersList as $statusProvider) {
-				$statuses = $statusProvider->getStatus();
-				$status[$statusProviderId] = array_merge($status[$statusProviderId], $statuses);
-			}
-		}
+		$status = $this->getSystemStatus();
+		$highestSeverity = $this->getHighestSeverity($status);
+
+			// updating the registry
+		$registry = t3lib_div::makeInstance('t3lib_Registry');
+		$registry->set('tx_reports', 'status.highestSeverity', $highestSeverity);
 
 		$content .= '<p class="help">'
 			. $GLOBALS['LANG']->getLL('status_report_explanation')
@@ -72,18 +70,64 @@ class tx_reports_reports_Status implements tx_reports_Report {
 	/**
 	 * Gets all registered status providers and creates instances of them.
 	 *
-	 * @return	void
 	 */
 	protected function getStatusProviders() {
 		foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['reports']['tx_reports']['status']['providers'] as $key => $statusProvidersList) {
 			$this->statusProviders[$key] = array();
+
 			foreach ($statusProvidersList as $statusProvider) {
 				$statusProviderInstance = t3lib_div::makeInstance($statusProvider);
+
 				if ($statusProviderInstance instanceof tx_reports_StatusProvider) {
 					$this->statusProviders[$key][] = $statusProviderInstance;
 				}
 			}
 		}
+	}
+
+	/**
+	 * Runs through all status providers and returns all statuses collected.
+	 *
+	 * @return	array	An array of tx_reports_reports_status_Status objects
+	 */
+	public function getSystemStatus() {
+		$status = array();
+
+		foreach ($this->statusProviders as $statusProviderId => $statusProviderList) {
+			$status[$statusProviderId] = array();
+
+			foreach ($statusProviderList as $statusProvider) {
+				$statuses = $statusProvider->getStatus();
+				$status[$statusProviderId] = array_merge($status[$statusProviderId], $statuses);
+			}
+		}
+
+		return $status;
+	}
+
+	/**
+	 * Determines the highest severity from the given statuses.
+	 *
+	 * @param	array	An array of tx_reports_reports_status_Status objects.
+	 * @return	integer	The highest severity found from the statuses.
+	 */
+	public function getHighestSeverity(array $statusCollection) {
+		$highestSeverity = tx_reports_reports_status_Status::NOTICE;
+
+		foreach ($statusCollection as $statusProvider => $providerStatuses) {
+			foreach ($providerStatuses as $status) {
+				if ($status->getSeverity() > $highestSeverity) {
+					$highestSeverity = $status->getSeverity();
+				}
+
+					// reached the highest severity level, no need to go on
+				if ($highestSeverity == tx_reports_reports_status_Status::ERROR) {
+					break;
+				}
+			}
+		}
+
+		return $highestSeverity;
 	}
 
 	/**
@@ -93,6 +137,9 @@ class tx_reports_reports_Status implements tx_reports_Report {
 	 * @return	string	The system status as an HTML table
 	 */
 	protected function renderStatus(array $statusCollection) {
+
+		// TODO refactor into separate methods, status list and single status
+
 		$content = '';
 		$template = '
 		<div class="typo3-message message-###CLASS###">
@@ -109,15 +156,6 @@ class tx_reports_reports_Status implements tx_reports_Report {
 			$providerState = $this->sortStatuses($providerStatus);
 
 			$id = str_replace(' ', '-', $provider);
-			if (isset($GLOBALS['BE_USER']->uc['reports']['states'][$id]) && $GLOBALS['BE_USER']->uc['reports']['states'][$id]) {
-				$collapsedStyle = 'style="display:none"';
-				$collapsedClass = 'collapsed';
-			} else {
-				$collapsedStyle = '';
-				$collapsedClass = 'expanded';
-			}
-
-
 			$classes = array(
 				tx_reports_reports_status_Status::NOTICE  => 'notice',
 				tx_reports_reports_status_Status::INFO    => 'information',
@@ -126,10 +164,10 @@ class tx_reports_reports_Status implements tx_reports_Report {
 				tx_reports_reports_status_Status::ERROR   => 'error',
 			);
 
-			$icon[tx_reports_reports_status_Status::WARNING] = '<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/warning.png', 'width="16" height="16"') . ' alt="" />';
-			$icon[tx_reports_reports_status_Status::ERROR] = '<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/error.png', 'width="16" height="16"') . ' alt="" />';
-			$messages = '';
-			$headerIcon = '';
+			$icon[tx_reports_reports_status_Status::WARNING] = t3lib_iconWorks::getSpriteIcon('status-dialog-warning');
+			$icon[tx_reports_reports_status_Status::ERROR]   = t3lib_iconWorks::getSpriteIcon('status-dialog-error');
+			$messages        = '';
+			$headerIcon      = '';
 			$sectionSeverity = 0;
 
 			foreach ($providerState as $status) {
@@ -145,17 +183,17 @@ class tx_reports_reports_Status implements tx_reports_Report {
 			if ($sectionSeverity > 0) {
 				$headerIcon = $icon[$sectionSeverity];
 			}
-			$content .= '<h2 id="' . $id . '" class="section-header ' . $collapsedClass . '">' . $headerIcon . $provider . '</h2>
-				<div ' . $collapsedStyle . '>' . $messages . '</div>';
+			$content .= $GLOBALS['TBE_TEMPLATE']->collapseableSection($headerIcon . $provider, $messages, $id, 'reports.states');
 		}
+
 		return $content;
 	}
 
 	/**
 	 * Sorts the status providers (alphabetically and puts primary status providers at the beginning)
 	 *
-	 * @param   array   A collection of statuses (with providers)
-	 * @return  array   The collection of statuses sorted by provider (beginning with provider "_install")
+	 * @param	array	A collection of statuses (with providers)
+	 * @return	array	The collection of statuses sorted by provider (beginning with provider "_install")
 	 */
 	protected function sortStatusProviders(array $statusCollection) {
 			// Extract the primary status collections, i.e. the status groups
@@ -173,11 +211,14 @@ class tx_reports_reports_Status implements tx_reports_Report {
 			$statusCollection['security'],
 			$statusCollection['configuration']
 		);
+
 			// Assemble list of secondary status collections with left-over collections
 			// Change their keys using localized labels if available
+			// TODO extract into getLabel() method
 		$secondaryStatuses = array();
 		foreach ($statusCollection as $statusProviderId => $collection) {
 			$label = '';
+
 			if (strpos($statusProviderId, 'LLL:') === 0) {
 					// Label provided by extension
 				$label = $GLOBALS['LANG']->sL($statusProviderId);
@@ -185,6 +226,7 @@ class tx_reports_reports_Status implements tx_reports_Report {
 					// Generic label
 				$label = $GLOBALS['LANG']->getLL('status_' . $statusProviderId);
 			}
+
 			$providerLabel = (empty($label)) ? $statusProviderId : $label;
 			$secondaryStatuses[$providerLabel] = $collection;
 		}
@@ -198,8 +240,8 @@ class tx_reports_reports_Status implements tx_reports_Report {
 	/**
 	 * Sorts the statuses by severity
 	 *
-	 * @param   array   A collection of statuses per provider
-	 * @return  array   The collection of statuses sorted by severity
+	 * @param	array	A collection of statuses per provider
+	 * @return	array	The collection of statuses sorted by severity
 	 */
 	protected function sortStatuses(array $statusCollection) {
 		$statuses  = array();
@@ -223,26 +265,11 @@ class tx_reports_reports_Status implements tx_reports_Report {
 		return $statuses;
 	}
 
-	/**
-	 * saves the section toggle state in the backend user's uc
-	 *
-	 * @param	array		array of parameters from the AJAX interface, currently unused
-	 * @param	TYPO3AJAX	object of type TYPO3AJAX
-	 * @return	void
-	 */
-
-	public function saveCollapseState(array $params, TYPO3AJAX $ajaxObj) {
-		$item = t3lib_div::_POST('item');
-		$state = (bool)t3lib_div::_POST('state');
-
-		$GLOBALS['BE_USER']->uc['reports']['states'][$item] = $state;
-		$GLOBALS['BE_USER']->writeUC();
-	}
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/reports/reports/class.tx_reports_reports_status.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/reports/reports/class.tx_reports_reports_status.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/class.tx_reports_reports_status.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/class.tx_reports_reports_status.php']);
 }
 
 ?>

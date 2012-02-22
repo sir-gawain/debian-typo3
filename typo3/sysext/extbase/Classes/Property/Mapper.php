@@ -47,10 +47,10 @@
  *
  * @package Extbase
  * @subpackage Property
- * @version $Id: Mapper.php 2240 2010-04-21 09:45:32Z jocrau $
+ * @version $Id$
  * @api
  */
-class Tx_Extbase_Property_Mapper {
+class Tx_Extbase_Property_Mapper implements t3lib_Singleton {
 
 	/**
 	 * Results of the last mapping operation
@@ -79,14 +79,28 @@ class Tx_Extbase_Property_Mapper {
 	protected $queryFactory;
 
 	/**
-	 * Constructs the Property Mapper.
+	 * @param Tx_Extbase_Validation_ValidatorResolver $validatorResolver
+	 * @return void
 	 */
-	public function __construct() {
-		$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_Manager');
-		$this->validatorResolver = t3lib_div::makeInstance('Tx_Extbase_Validation_ValidatorResolver');
-		$this->validatorResolver->injectObjectManager($objectManager);
-		$this->persistenceManager = Tx_Extbase_Dispatcher::getPersistenceManager();
-		$this->queryFactory = t3lib_div::makeInstance('Tx_Extbase_Persistence_QueryFactory');
+	public function injectValidatorResolver(Tx_Extbase_Validation_ValidatorResolver $validatorResolver) {
+		$this->validatorResolver = $validatorResolver;
+	}
+
+	/**
+	 *
+	 * @param Tx_Extbase_Persistence_QueryFactory $queryFactory
+	 * @return void
+	 */
+	public function injectQueryFactory(Tx_Extbase_Persistence_QueryFactory $queryFactory) {
+		$this->queryFactory = $queryFactory;
+	}
+
+	/**
+	 * @param Tx_Extbase_Persistence_Manager $persistenceManager
+	 * @return void
+	 */
+	public function injectPersistenceManager(Tx_Extbase_Persistence_Manager $persistenceManager) {
+		$this->persistenceManager = $persistenceManager;
 	}
 
 	/**
@@ -197,10 +211,15 @@ class Tx_Extbase_Property_Mapper {
 				if ($targetClassSchema !== NULL && $targetClassSchema->hasProperty($propertyName)) {
 					$propertyMetaData = $targetClassSchema->getProperty($propertyName);
 
-					if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'Tx_Extbase_Persistence_ObjectStorage')) && strpos($propertyMetaData['elementType'], '_') !== FALSE) {
+					if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'Tx_Extbase_Persistence_ObjectStorage')) && (strpos($propertyMetaData['elementType'], '_') !== FALSE || $propertyValue === '')) {
 						$objects = array();
-						foreach ($propertyValue as $value) {
-							$objects[] = $this->transformToObject($value, $propertyMetaData['elementType'], $propertyName);
+						if (is_array($propertyValue)) {
+							foreach ($propertyValue as $value) {
+								$transformedObject = $this->transformToObject($value, $propertyMetaData['elementType'], $propertyName);
+								if ($transformedObject !== NULL) {
+									$objects[] = $transformedObject;
+								}
+							}
 						}
 
 							// make sure we hand out what is expected
@@ -308,17 +327,17 @@ class Tx_Extbase_Property_Mapper {
 	 *
 	 * @param string $dataType the data type to fetch
 	 * @param int $uid The object's uid
-	 * @return mixed Either the object matching the uid or, if none or more than one object was found, FALSE
+	 * @return object Either the object matching the uid or, if none or more than one object was found, NULL
 	 */
+	// TODO This is duplicated code; see Argument class
 	protected function findObjectByUid($dataType, $uid) {
 		$query = $this->queryFactory->create($dataType);
 		$query->getQuerySettings()->setRespectSysLanguage(FALSE);
-		$result = $query->matching($query->equals('uid', intval($uid)))->execute();
-		$object = NULL;
-		if (count($result) > 0) {
-			$object = current($result);
-		}
-		return $object;
+		$query->getQuerySettings()->setRespectStoragePage(FALSE);
+		return $query->matching(
+			$query->equals('uid', intval($uid)))
+			->execute()
+			->getFirst();
 	}
 }
 

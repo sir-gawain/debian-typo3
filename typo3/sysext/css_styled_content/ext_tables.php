@@ -1,5 +1,5 @@
 <?php
-# TYPO3 SVN ID: $Id: ext_tables.php 7544 2010-05-06 16:26:35Z psychomieze $
+# TYPO3 SVN ID: $Id$
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
 	// add flexform
@@ -12,5 +12,10 @@ t3lib_extMgm::addStaticFile($_EXTKEY, 'static/', 'CSS Styled Content');
 t3lib_extMgm::addStaticFile($_EXTKEY, 'static/v3.8/', 'CSS Styled Content TYPO3 v3.8');
 t3lib_extMgm::addStaticFile($_EXTKEY, 'static/v3.9/', 'CSS Styled Content TYPO3 v3.9');
 t3lib_extMgm::addStaticFile($_EXTKEY, 'static/v4.2/', 'CSS Styled Content TYPO3 v4.2');
+t3lib_extMgm::addStaticFile($_EXTKEY, 'static/v4.3/', 'CSS Styled Content TYPO3 v4.3');
+t3lib_extMgm::addStaticFile($_EXTKEY, 'static/v4.4/', 'CSS Styled Content TYPO3 v4.4');
+
+$TCA['tt_content']['columns']['section_frame']['config']['items'][0] = array('LLL:EXT:css_styled_content/locallang_db.php:tt_content.tx_cssstyledcontent_section_frame.I.0', '0');
+$TCA['tt_content']['columns']['section_frame']['config']['items'][9] = array('LLL:EXT:css_styled_content/locallang_db.php:tt_content.tx_cssstyledcontent_section_frame.I.9', '66');
 
 ?>

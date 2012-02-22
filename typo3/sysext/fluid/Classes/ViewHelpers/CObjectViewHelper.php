@@ -14,11 +14,31 @@
  *                                                                        */
 
 /**
- * This class is a TypoScript view helper for the Fluid templating engine.
+ * This ViewHelper renders CObjects from the global TypoScript configuration.
  *
- * @package TYPO3
- * @subpackage Fluid
- * @version $Id: CObjectViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
+ * = Examples =
+ *
+ * <code title="Render lib object">
+ * <f:cObject typoscriptObjectPath="lib.someLibObject" />
+ * </code>
+ * <output>
+ * // rendered lib.someLibObject
+ * </output>
+ *
+ * <code title="Specify cObject data & current value">
+ * <f:cObject typoscriptObjectPath="lib.customHeader" data="{article}" current="{article.title}" />
+ * </code>
+ * <output>
+ * // rendered lib.customHeader. data and current value will be available in TypoScript
+ * </output>
+ *
+ * <code title="inline notation">
+ * {article -> f:cObject(typoscriptObjectPath: 'lib.customHeader')}
+ * </code>
+ * <output>
+ * // rendered lib.customHeader. data will be available in TypoScript
+ * </output>
+ *
  */
 class Tx_Fluid_ViewHelpers_CObjectViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
@@ -33,25 +53,23 @@ class Tx_Fluid_ViewHelpers_CObjectViewHelper extends Tx_Fluid_Core_ViewHelper_Ab
 	protected $typoScriptSetup;
 
 	/**
-	 * Constructor. Used to create an instance of tslib_cObj used by the render() method.
-	 *
-	 * @param tslib_cObj $contentObject injector for tslib_cObj (optional)
-	 * @param array $typoScriptSetup global TypoScript setup (optional)
-	 * @return void
-	 * @author Bastian Waidelich <bastian@typo3.org>
+	 * @var	t3lib_fe contains a backup of the current $GLOBALS['TSFE'] if used in BE mode
 	 */
-	public function __construct($contentObject = NULL, array $typoScriptSetup = NULL) {
-		$this->contentObject = $contentObject !== NULL ? $contentObject : t3lib_div::makeInstance('tslib_cObj');
-		if ($typoScriptSetup !== NULL) {
-			$this->typoScriptSetup = $typoScriptSetup;
-		} else {
-			$configurationManager = Tx_Extbase_Dispatcher::getConfigurationManager();
-			$this->typoScriptSetup = $configurationManager->loadTypoScriptSetup();
-		}
-		if (TYPO3_MODE === 'BE') {
-				// this is a hacky work around to enable this view helper for backend mode
-			$GLOBALS['TSFE']->cObjectDepthCounter = 100;
-		}
+	protected $tsfeBackup;
+
+	/**
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
+
+	/**
+	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @return void
+	 */
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+		$this->contentObject = $this->configurationManager->getContentObject();
+		$this->typoScriptSetup = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
 	}
 
 	/**
@@ -65,6 +83,10 @@ class Tx_Fluid_ViewHelpers_CObjectViewHelper extends Tx_Fluid_Core_ViewHelper_Ab
 	 * @author Niels Pardon <mail@niels-pardon.de>
 	 */
 	public function render($typoscriptObjectPath, $data = NULL, $currentValueKey = NULL) {
+		if (TYPO3_MODE === 'BE') {
+			$this->simulateFrontendEnvironment();
+		}
+
 		if ($data === NULL) {
 			$data = $this->renderChildren();
 		}
@@ -91,7 +113,37 @@ class Tx_Fluid_ViewHelpers_CObjectViewHelper extends Tx_Fluid_Core_ViewHelper_Ab
 			}
 			$setup = $setup[$segment . '.'];
 		}
-		return $this->contentObject->cObjGetSingle($setup[$lastSegment], $setup[$lastSegment . '.']);
+		$content = $this->contentObject->cObjGetSingle($setup[$lastSegment], $setup[$lastSegment . '.']);
+
+		if (TYPO3_MODE === 'BE') {
+			$this->resetFrontendEnvironment();
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Sets the $TSFE->cObjectDepthCounter in Backend mode
+	 * This somewhat hacky work around is currently needed because the cObjGetSingle() function of tslib_cObj relies on this setting
+	 *
+	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
+	 */
+	protected function simulateFrontendEnvironment() {
+		$this->tsfeBackup = isset($GLOBALS['TSFE']) ? $GLOBALS['TSFE'] : NULL;
+		$GLOBALS['TSFE'] = new stdClass();
+		$GLOBALS['TSFE']->cObjectDepthCounter = 100;
+	}
+
+	/**
+	 * Resets $GLOBALS['TSFE'] if it was previously changed by simulateFrontendEnvironment()
+	 *
+	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
+	 * @see simulateFrontendEnvironment()
+	 */
+	protected function resetFrontendEnvironment() {
+		$GLOBALS['TSFE'] = $this->tsfeBackup;
 	}
 }
 

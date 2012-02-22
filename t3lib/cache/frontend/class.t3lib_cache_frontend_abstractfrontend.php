@@ -1,26 +1,26 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 
 /**
@@ -30,7 +30,8 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @version $Id: class.t3lib_cache_frontend_abstractfrontend.php 5595 2009-06-15 21:40:01Z flyguide $
+ * @api
+ * @version $Id$
  */
 abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_frontend_Frontend {
 
@@ -59,7 +60,7 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 		}
 
 		$this->identifier = $identifier;
-		$this->backend    = $backend;
+		$this->backend = $backend;
 		$this->backend->setCache($this);
 	}
 
@@ -107,7 +108,7 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 	 *
 	 * @param string $entryIdentifier An identifier specifying the cache entry
 	 * @return boolean TRUE if such an entry exists, FALSE if not
-	 * @author Sebastian Kurfuerst <sebastian@typo3.org>
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function remove($entryIdentifier) {
@@ -190,7 +191,7 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 	/**
 	 * Checks the validity of an entry identifier. Returns true if it's valid.
 	 *
-	 * @param string An identifier to be checked for validity
+	 * @param string $identifier An identifier to be checked for validity
 	 * @return boolean
 	 * @author Christian Jul Jensen <julle@typo3.org>
 	 */
@@ -201,7 +202,7 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 	/**
 	 * Checks the validity of a tag. Returns true if it's valid.
 	 *
-	 * @param string An identifier to be checked for validity
+	 * @param string $tag An identifier to be checked for validity
 	 * @return boolean
 	 * @author Robert Lemke <robert@typo3.org>
 	 */
@@ -212,8 +213,8 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/frontend/class.t3lib_cache_frontend_abstractfrontend.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/frontend/class.t3lib_cache_frontend_abstractfrontend.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/frontend/class.t3lib_cache_frontend_abstractfrontend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/frontend/class.t3lib_cache_frontend_abstractfrontend.php']);
 }
 
 ?>

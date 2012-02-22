@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Julian Kleinhans <typo3@kj187.de>
+*  (c) 2009-2011 Julian Kleinhans <typo3@kj187.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
  * @author	Julian Kleinhans <typo3@kj187.de>
  * @package	TYPO3
  * @subpackage	tx_recycler
- * @version $Id: class.tx_recycler_helper.php 6536 2009-11-25 14:07:18Z stucki $
+ * @version $Id$
  */
 class tx_recycler_helper {
 
@@ -118,13 +118,15 @@ class tx_recycler_helper {
 						$output = ' [#VEP#]' . $output;		// Adding visual token - Versioning Entry Point - that tells that THIS position was where the versionized branch got connected to the main tree. I will have to find a better name or something...
 					}
 					$uid = $row['pid'];
-					$output = '/' . t3lib_div::fixed_lgd_cs(strip_tags($row['title']), $titleLimit) . $output;
+					$output = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $titleLimit)) . $output;
 
 					if ($row['deleted']) {
 						$output = '<span class="deletedPath">' . $output . '</span>';
 					}
 
-					if ($fullTitleLimit) $fullOutput = '/' . t3lib_div::fixed_lgd_cs(strip_tags($row['title']), $fullTitleLimit) . $fullOutput;
+					if ($fullTitleLimit) {
+						$fullOutput = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $fullTitleLimit)) . $fullOutput;
+					}
 				} else {
 					break;
 				}
@@ -204,8 +206,8 @@ class tx_recycler_helper {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/classes/helper/class.tx_recycler_helper.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/classes/helper/class.tx_recycler_helper.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/helper/class.tx_recycler_helper.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/helper/class.tx_recycler_helper.php']);
 }
 
 ?>

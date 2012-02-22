@@ -38,7 +38,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\QOM
- * @version $Id: Selector.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @scope prototype
  */
 class Tx_Extbase_Persistence_QOM_Selector implements Tx_Extbase_Persistence_QOM_SelectorInterface {

@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Validation\Validator
- * @version $Id: AbstractValidator.php 1052 2009-08-05 21:51:32Z sebastian $
+ * @version $Id$
  */
 abstract class Tx_Extbase_Validation_Validator_AbstractValidator implements Tx_Extbase_Validation_Validator_ValidatorInterface {
 	/**
@@ -70,7 +70,7 @@ abstract class Tx_Extbase_Validation_Validator_AbstractValidator implements Tx_E
 	 * @return void
 	 */
 	protected function addError($message, $code) {
-		$this->errors[] = t3lib_div::makeInstance('Tx_Extbase_Validation_Error', $message, $code);
+		$this->errors[] = new Tx_Extbase_Validation_Error($message, $code);
 	}
 }
 

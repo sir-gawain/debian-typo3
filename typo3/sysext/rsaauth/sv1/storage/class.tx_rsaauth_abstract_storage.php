@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Dmitry Dulepov <dmitry@typo3.org>
+*  (c) 2009-2011 Dmitry Dulepov <dmitry@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,7 +25,7 @@
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
  *
- * $Id: class.tx_rsaauth_abstract_storage.php 6536 2009-11-25 14:07:18Z stucki $
+ * $Id$
  */
 
 
@@ -53,8 +53,8 @@ abstract class tx_rsaauth_abstract_storage {
 	abstract public function put($key);
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rsaauth/storage/class.tx_rsaauth_abstract_storage.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rsaauth/storage/class.tx_rsaauth_abstract_storage.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/storage/class.tx_rsaauth_abstract_storage.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/storage/class.tx_rsaauth_abstract_storage.php']);
 }
 
 ?>

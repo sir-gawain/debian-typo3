@@ -34,7 +34,7 @@
  *
  * @package Extbase
  * @subpackage Persistence\QOM
- * @version $Id: EquiJoinConditionInterface.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  */
 interface Tx_Extbase_Persistence_QOM_EquiJoinConditionInterface extends Tx_Extbase_Persistence_QOM_JoinConditionInterface {
 

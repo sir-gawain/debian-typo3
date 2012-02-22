@@ -30,10 +30,53 @@
  *
  * @package Extbase
  * @subpackage MVC\View
- * @version $Id: EmptyView.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
-final class Tx_Extbase_MVC_View_EmptyView extends Tx_Extbase_MVC_View_AbstractView {
+final class Tx_Extbase_MVC_View_EmptyView implements Tx_Extbase_MVC_View_ViewInterface {
+
+	/**
+	 * Dummy method to satisfy the ViewInterface
+	 *
+	 * @param Tx_Extbase_MVC_Controller_ControllerContext $controllerContext
+	 * @return void
+	 */
+	public function setControllerContext(Tx_Extbase_MVC_Controller_ControllerContext $controllerContext) {
+	}
+
+	/**
+	 * Dummy method to satisfy the ViewInterface
+	 *
+	 * @param string $key
+	 * @param mixed $value
+	 * @return Tx_Extbase_MVC_View_EmptyView instance of $this to allow chaining
+	 * @api
+	 */
+	public function assign($key, $value) {
+		return $this;
+	}
+
+	/**
+	 * Dummy method to satisfy the ViewInterface
+	 *
+	 * @param array $values
+	 * @return Tx_Extbase_MVC_View_EmptyView instance of $this to allow chaining
+	 * @api
+	 */
+	public function assignMultiple(array $values) {
+		return $this;
+	}
+
+	/**
+	 * This view can be used in any case.
+	 *
+	 * @param Tx_Extbase_MVC_Controller_ControllerContext $controllerContext
+	 * @return boolean TRUE
+	 * @api
+	 */
+	public function canRender(Tx_Extbase_MVC_Controller_ControllerContext $controllerContext) {
+		return TRUE;
+	}
 
 	/**
 	 * Renders the empty view

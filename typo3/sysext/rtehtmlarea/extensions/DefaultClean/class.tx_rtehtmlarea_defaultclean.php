@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,13 +26,10 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultclean.php 5489 2009-05-23 15:26:20Z ohader $
+ * TYPO3 SVN ID: $Id$
  *
  */
-
-require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlareaapi.php');
-
-class tx_rtehtmlarea_defaultclean extends tx_rtehtmlareaapi {
+class tx_rtehtmlarea_defaultclean extends tx_rtehtmlarea_api {
 
 	protected $extensionKey = 'rtehtmlarea';		// The key of the extension that is extending htmlArea RTE
 	protected $pluginName = 'DefaultClean';			// The name of the plugin registered by the extension
@@ -91,8 +88,8 @@ class tx_rtehtmlarea_defaultclean extends tx_rtehtmlareaapi {
 	}
 } // end of class
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultClean/class.tx_rtehtmlarea_defaultclean.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultClean/class.tx_rtehtmlarea_defaultclean.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultClean/class.tx_rtehtmlarea_defaultclean.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultClean/class.tx_rtehtmlarea_defaultclean.php']);
 }
 
 ?>

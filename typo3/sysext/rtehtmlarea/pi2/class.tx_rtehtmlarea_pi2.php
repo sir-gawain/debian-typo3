@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,18 +29,13 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * $Id: class.tx_rtehtmlarea_pi2.php 6313 2009-11-02 23:23:43Z stan $  *
+ * $Id$  *
  */
-
-require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlarea_base.php');
-
 class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 
 		// External:
-	var $RTEWrapStyle = '';				// Alternative style for RTE wrapper <div> tag.
-	var $RTEdivStyle = '';				// Alternative style for RTE <div> tag.
-	var $extHttpPath;				// full Path to this extension for http (so no Server path). It ends with "/"
-	public $httpTypo3Path;
+	public $RTEWrapStyle = '';				// Alternative style for RTE wrapper <div> tag.
+	public $RTEdivStyle = '';				// Alternative style for RTE <div> tag.
 
 		// For the editor
 	var $elementId;
@@ -55,6 +50,10 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 	public $OutputCharset;
 	var $specConf;
 	var $LOCAL_LANG;
+	/**
+	 * @var t3lib_PageRenderer
+	 */
+	protected $pageRenderer;
 
 	/**
 	 * Draws the RTE as an iframe
@@ -82,21 +81,12 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		 * INIT THE EDITOR-SETTINGS
 		 * =======================================
 		 */
-
-			// first get the http-path to typo3:
-		$this->httpTypo3Path = substr( substr( t3lib_div::getIndpEnv('TYPO3_SITE_URL'), strlen( t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST') ) ), 0, -1 );
-		if (strlen($this->httpTypo3Path) == 1) {
-			$this->httpTypo3Path = '/';
-		} else {
-			$this->httpTypo3Path .= '/';
-		}
 			// Get the path to this extension:
-		$this->extHttpPath = $this->httpTypo3Path.t3lib_extMgm::siteRelPath($this->ID);
+		$this->extHttpPath = t3lib_extMgm::siteRelPath($this->ID);
 			// Get the site URL
-		$this->siteURL = t3lib_div::getIndpEnv('TYPO3_SITE_URL');
+		$this->siteURL = $GLOBALS['TSFE']->absRefPrefix ? $GLOBALS['TSFE']->absRefPrefix : '';
 			// Get the host URL
-		$this->hostURL = t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST');
-
+		$this->hostURL = '';
 			// Element ID + pid
 		$this->elementId = $PA['itemFormElName'];
 		$this->elementParts[0] = $table;
@@ -123,12 +113,14 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		$this->specConf = $specConf;
 
 		if ($this->thisConfig['forceHTTPS']) {
-			$this->httpTypo3Path = preg_replace('/^(http|https)/', 'https', $this->httpTypo3Path);
 			$this->extHttpPath = preg_replace('/^(http|https)/', 'https', $this->extHttpPath);
 			$this->siteURL = preg_replace('/^(http|https)/', 'https', $this->siteURL);
 			$this->hostURL = preg_replace('/^(http|https)/', 'https', $this->hostURL);
 		}
-
+			// Register RTE windows:
+		$this->TCEform->RTEwindows[] = $PA['itemFormElName'];
+		$textAreaId = preg_replace('/[^a-zA-Z0-9_:.-]/', '_', $PA['itemFormElName']);
+		$textAreaId = htmlspecialchars(preg_replace('/^[^a-zA-Z]/', 'x', $textAreaId)) . '_' . strval($this->TCEform->RTEcounter);
 		/* =======================================
 		 * LANGUAGES & CHARACTER SETS
 		 * =======================================
@@ -196,7 +188,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		$width = 460+($this->TCEform->docLarge ? 150 : 0);
 		if (isset($this->thisConfig['RTEWidthOverride'])) {
 			if (strstr($this->thisConfig['RTEWidthOverride'], '%')) {
-				if ($this->client['BROWSER'] != 'msie') {
+				if ($this->client['browser'] != 'msie') {
 					$width = (intval($this->thisConfig['RTEWidthOverride']) > 0) ? $this->thisConfig['RTEWidthOverride'] : '100%';
 				}
 			} else {
@@ -217,15 +209,36 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		 * LOAD JS, CSS and more
 		 * =======================================
 		 */
+		$pageRenderer = $this->getPageRenderer();
 			// Preloading the pageStyle and including RTE skin stylesheets
 		$this->addPageStyle();
 		$this->addSkin();
-			// Loading JavaScript files and code
+			// Re-initialize the scripts array so that only the cumulative set of plugins of the last RTE on the page is used
+		$this->cumulativeScripts[$this->TCEform->RTEcounter] = array();
+		$this->includeScriptFiles($this->TCEform->RTEcounter);
+		$this->buildJSMainLangFile($this->TCEform->RTEcounter);
+			// Register RTE in JS:
+		$this->TCEform->additionalJS_post[] = $this->wrapCDATA($this->registerRTEinJS($this->TCEform->RTEcounter, '', '', '',$textAreaId));
+			// Set the save option for the RTE:
+		$this->TCEform->additionalJS_submit[] = $this->setSaveRTE($this->TCEform->RTEcounter, $this->TCEform->formName, $textAreaId);
+			// Loading ExtJs JavaScript files and inline code, if not configured in TS setup
+		if (!$GLOBALS['TSFE']->isINTincScript() || !is_array($GLOBALS['TSFE']->pSetup['javascriptLibs.']['ExtJs.'])) {
+			$pageRenderer->loadExtJs();
+			$pageRenderer->enableExtJSQuickTips();
+			if (!$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][$this->ID]['enableCompressedScripts']) {
+				$pageRenderer->enableExtJsDebug();
+			}
+		}
+		$pageRenderer->addCssFile($this->siteURL . 't3lib/js/extjs/ux/resize.css');
+		$pageRenderer->addJsFile($this->siteURL . 't3lib/js/extjs/ux/ext.resizable.js');
+		$pageRenderer->addJsFile($this->siteURL . '/t3lib/js/extjs/notifications.js');
 		if ($this->TCEform->RTEcounter == 1) {
-			$this->TCEform->additionalJS_pre['rtehtmlarea-loadJScode'] = $this->loadJScode($this->TCEform->RTEcounter);
+			$this->TCEform->additionalJS_pre['rtehtmlarea-loadJScode'] = $this->wrapCDATA($this->loadJScode($this->TCEform->RTEcounter));
 		}
 		$this->TCEform->additionalJS_initial = $this->loadJSfiles($this->TCEform->RTEcounter);
-
+		if ($GLOBALS['TSFE']->isINTincScript()) {
+			$GLOBALS['TSFE']->additionalHeaderData['rtehtmlarea'] = $pageRenderer->render();
+		}
 		/* =======================================
 		 * DRAW THE EDITOR
 		 * =======================================
@@ -239,27 +252,15 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 				$value = $plugin->transformContent($value);
 			}
 		}
-
-			// Register RTE windows:
-		$this->TCEform->RTEwindows[] = $PA['itemFormElName'];
-		$textAreaId = htmlspecialchars($PA['itemFormElName']);
-
-			// Register RTE in JS:
-		$this->TCEform->additionalJS_post[] = $this->registerRTEinJS($this->TCEform->RTEcounter, '', '', '',$textAreaId);
-
-			// Set the save option for the RTE:
-		$this->TCEform->additionalJS_submit[] = $this->setSaveRTE($this->TCEform->RTEcounter, $this->TCEform->formName, $textAreaId);
-
 			// draw the textarea
 		$item = $this->triggerField($PA['itemFormElName']).'
 			<div id="pleasewait' . $textAreaId . '" class="pleasewait" style="display: block;" >' . $TSFE->csConvObj->conv($TSFE->getLLL('Please wait',$this->LOCAL_LANG), $this->charset, $TSFE->renderCharset) . '</div>
 			<div id="editorWrap' . $textAreaId . '" class="editorWrap" style="visibility: hidden; '. htmlspecialchars($this->RTEWrapStyle). '">
-			<textarea id="RTEarea' . $textAreaId . '" name="'.htmlspecialchars($PA['itemFormElName']).'" style="'.htmlspecialchars($this->RTEdivStyle).'">'.t3lib_div::formatForTextarea($value).'</textarea>
+			<textarea id="RTEarea' . $textAreaId . '" name="'.htmlspecialchars($PA['itemFormElName']).'" rows="0" cols="0" style="'.htmlspecialchars($this->RTEdivStyle).'">'.t3lib_div::formatForTextarea($value).'</textarea>
 			</div>' . ($TYPO3_CONF_VARS['EXTCONF'][$this->ID]['enableDebugMode'] ? '<div id="HTMLAreaLog"></div>' : '') . '
 			';
 		return $item;
 	}
-
 	/**
 	 * Add style sheet file to document header
 	 *
@@ -270,11 +271,8 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 	 * @return	void
 	 */
 	protected function addStyleSheet($key, $href, $title='', $relation='stylesheet') {
-		if (!isset($GLOBALS['TSFE']->additionalHeaderData[$key])) {
-			$GLOBALS['TSFE']->additionalHeaderData[$key] = '<link rel="' . $relation . '" type="text/css" href="' . $href . '"' . ($title ? (' title="' . $title . '"') : '') . ' />';
-		}
+		$this->pageRenderer->addCssFile($href, $relation, 'screen', $title);
 	}
-
 	/**
 	 * Return the JS-Code for copy the HTML-Code from the editor in the hidden input field.
 	 * This is for submit function from the form.
@@ -288,8 +286,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 	function setSaveRTE($RTEcounter, $form, $textareaId) {
 		return '
 		if (RTEarea[\'' . $textareaId . '\'] && !RTEarea[\'' . $textareaId . '\'].deleted) {
-			fields = document.getElementsByName(\'' . $textareaId . '\');
-			field = fields.item(0);
+			var field = document.getElementById(\'RTEarea' . $textareaId . '\');
 			if (field && field.nodeName.toLowerCase() == \'textarea\') {
 				field.value = RTEarea[\'' . $textareaId . '\'][\'editor\'].getHTML();
 			}
@@ -297,10 +294,44 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 			OK = 0;
 		}';
 	}
+	/**
+	 * Gets instance of PageRenderer
+	 *
+	 * @return	t3lib_PageRenderer
+	 */
+	public function getPageRenderer() {
+		if (!isset($this->pageRenderer)) {
+			if ($GLOBALS['TSFE']->isINTincScript()) {
+					// We use an instance of t3lib_PageRenderer to render additional header data
+					// because this script is invoked after header has been rendered by $GLOBALS['TSFE']->getPageRenderer()
+				$this->pageRenderer = t3lib_div::makeInstance('t3lib_PageRenderer');
+				$this->pageRenderer->setTemplateFile($this->extHttpPath . 'templates/rtehtmlarea_pageheader_frontend.html');
+			} else {
+				$this->pageRenderer = $GLOBALS['TSFE']->getPageRenderer();
+			}
+			$this->pageRenderer->setBackPath(TYPO3_mainDir);
+		}
+		return $this->pageRenderer;
+	}
+	/**
+	 * Wrap input string in CDATA enclosure
+	 *
+	 * @param	string		$string: input to be wrapped
+	 *
+	 * @return	string		wrapped string
+	 */
+	public function wrapCDATA ($string) {
+		return implode(LF,
+			array(
+				'',
+				'/*<![CDATA[*/',
+				$string,
+				'/*]]>*/'
+			)
+		);
+	}
 }
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php']);
 }
-
 ?>

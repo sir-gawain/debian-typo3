@@ -1,49 +1,36 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2008-2009 Michael Stucki (michael@typo3.org)
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*  A copy is found in the textfile GPL.txt and important notices to the license
-*  from the author is found in LICENSE.txt distributed with these scripts.
-*
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2008-2011 Michael Stucki (michael@typo3.org)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * Class for providing locking features in TYPO3
  *
- * $Id: class.t3lib_lock.php 6207 2009-10-21 08:29:45Z steffenk $
+ * $Id$
  *
  * @author	Michael Stucki <michael@typo3.org>
  */
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -60,16 +47,15 @@
  */
 class t3lib_lock {
 	protected $method;
-	protected $id;		// Identifier used for this lock
-	protected $resource;	// Resource used for this lock (can be a file or a semaphore resource)
+	protected $id; // Identifier used for this lock
+	protected $resource; // Resource used for this lock (can be a file or a semaphore resource)
 	protected $filepointer;
-	protected $isAcquired = false;
+	protected $isAcquired = FALSE;
 
-	protected $loops = 150;	// Number of times a locked resource is tried to be acquired. This is only used by manual locks like the "simple" method.
-	protected $step = 200;	// Milliseconds after lock acquire is retried. $loops * $step results in the maximum delay of a lock. Only used by manual locks like the "simple" method.
-
-
-
+	protected $loops = 150; // Number of times a locked resource is tried to be acquired. This is only used by manual locks like the "simple" method.
+	protected $step = 200; // Milliseconds after lock acquire is retried. $loops * $step results in the maximum delay of a lock. Only used by manual locks like the "simple" method.
+	protected $syslogFacility = 'cms';
+	protected $isLoggingEnabled = TRUE;
 
 
 	/**
@@ -82,10 +68,10 @@ class t3lib_lock {
 	 * @param	integer		Milliseconds after lock acquire is retried. $loops * $step results in the maximum delay of a lock. Only used by manual locks like the "simple" method.
 	 * @return	boolean		Returns true unless something went wrong
 	 */
-	public function __construct($id, $method='', $loops=0, $step=0)	{
+	public function __construct($id, $method = '', $loops = 0, $step = 0) {
 
 			// Input checks
-		$id = (string)$id;	// Force ID to be string
+		$id = (string) $id; // Force ID to be string
 		if (intval($loops)) {
 			$this->loops = intval($loops);
 		}
@@ -143,44 +129,52 @@ class t3lib_lock {
 	 *
 	 * @return	boolean		Returns true if lock could be acquired without waiting, false otherwise.
 	 */
-	public function acquire()	{
-		$noWait = TRUE;	// Default is TRUE, which means continue without caring for other clients. In the case of TYPO3s cache management, this has no negative effect except some resource overhead.
+	public function acquire() {
+		$noWait = TRUE; // Default is TRUE, which means continue without caring for other clients. In the case of TYPO3s cache management, this has no negative effect except some resource overhead.
 		$isAcquired = TRUE;
 
 		switch ($this->method) {
 			case 'simple':
 				if (is_file($this->resource)) {
 					$this->sysLog('Waiting for a different process to release the lock');
-					$i = 0;
-					while ($i<$this->loops) {
-						$i++;
-						usleep($this->step * 1000);
-						clearstatcache();
-						if (!is_file($this->resource)) {	// Lock became free, leave the loop
-							$this->sysLog('Different process released the lock');
-							$noWait = FALSE;
-							break;
-						}
+					$maxExecutionTime = ini_get('max_execution_time');
+					$maxAge = time() - ($maxExecutionTime ? $maxExecutionTime : 120);
+					if (@filectime($this->resource) < $maxAge) {
+						@unlink($this->resource);
+						$this->sysLog('Unlink stale lockfile');
 					}
-				} else {
-					$noWait = TRUE;
 				}
 
-				if (($this->filepointer = touch($this->resource)) == FALSE) {
+				$isAcquired = FALSE;
+				for ($i = 0; $i < $this->loops; $i++) {
+					$filepointer = @fopen($this->resource, 'x');
+					if ($filepointer !== FALSE) {
+						fclose($filepointer);
+						$this->sysLog('Lock aquired');
+						$noWait = ($i === 0);
+						$isAcquired = TRUE;
+						break;
+					}
+					usleep($this->step * 1000);
+				}
+
+				if (!$isAcquired) {
 					throw new Exception('Lock file could not be created');
 				}
+
+				t3lib_div::fixPermissions($this->resource);
 			break;
 			case 'flock':
 				if (($this->filepointer = fopen($this->resource, 'w+')) == FALSE) {
 					throw new Exception('Lock file could not be opened');
 				}
 
-				if (flock($this->filepointer, LOCK_EX|LOCK_NB) == TRUE) {	// Lock without blocking
+				if (flock($this->filepointer, LOCK_EX | LOCK_NB) == TRUE) { // Lock without blocking
 					$noWait = TRUE;
-				} elseif (flock($this->filepointer, LOCK_EX) == TRUE) {		// Lock with blocking (waiting for similar locks to become released)
+				} elseif (flock($this->filepointer, LOCK_EX) == TRUE) { // Lock with blocking (waiting for similar locks to become released)
 					$noWait = FALSE;
 				} else {
-					throw new Exception('Could not lock file "'.$this->resource.'"');
+					throw new Exception('Could not lock file "' . $this->resource . '"');
 				}
 			break;
 			case 'semaphore':
@@ -204,7 +198,7 @@ class t3lib_lock {
 	 *
 	 * @return	boolean		Returns TRUE on success or FALSE on failure
 	 */
-	public function release()	{
+	public function release() {
 		if (!$this->isAcquired) {
 			return TRUE;
 		}
@@ -212,8 +206,10 @@ class t3lib_lock {
 		$success = TRUE;
 		switch ($this->method) {
 			case 'simple':
-				if (unlink($this->resource) == FALSE) {
-					$success = FALSE;
+				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/locks/')) {
+					if (unlink($this->resource) == FALSE) {
+						$success = FALSE;
+					}
 				}
 			break;
 			case 'flock':
@@ -221,7 +217,9 @@ class t3lib_lock {
 					$success = FALSE;
 				}
 				fclose($this->filepointer);
-				unlink($this->resource);
+				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/locks/')) {
+					unlink($this->resource);
+				}
 			break;
 			case 'semaphore':
 				if (@sem_release($this->resource)) {
@@ -244,7 +242,7 @@ class t3lib_lock {
 	 *
 	 * @return	string		Locking method
 	 */
-	public function getMethod()	{
+	public function getMethod() {
 		return $this->method;
 	}
 
@@ -253,7 +251,7 @@ class t3lib_lock {
 	 *
 	 * @return	string		Locking ID
 	 */
-	public function getId()	{
+	public function getId() {
 		return $this->id;
 	}
 
@@ -263,7 +261,7 @@ class t3lib_lock {
 	 *
 	 * @return	mixed		Locking resource (filename as string or semaphore as resource)
 	 */
-	public function getResource()	{
+	public function getResource() {
 		return $this->resource;
 	}
 
@@ -272,8 +270,26 @@ class t3lib_lock {
 	 *
 	 * @return	string		Returns TRUE if lock is acquired, FALSE otherwise
 	 */
-	public function getLockStatus()	{
+	public function getLockStatus() {
 		return $this->isAcquired;
+	}
+
+	/**
+	 * Sets the facility (extension name) for the syslog entry.
+	 *
+	 * @param string $syslogFacility
+	 */
+	public function setSyslogFacility($syslogFacility) {
+		$this->syslogFacility = $syslogFacility;
+	}
+
+	/**
+	 * Enable/ disable logging
+	 *
+	 * @param boolean $isLoggingEnabled
+	 */
+	public function setEnableLogging($isLoggingEnabled) {
+		$this->isLoggingEnabled = $isLoggingEnabled;
 	}
 
 	/**
@@ -284,13 +300,15 @@ class t3lib_lock {
 	 * @param	integer		$severity: Severity - 0 is info (default), 1 is notice, 2 is warning, 3 is error, 4 is fatal error
 	 * @return	void
 	 */
-	public function sysLog($message, $severity=0) {
-		t3lib_div::sysLog('Locking [' . $this->method . '::' . $this->id.']: ' . trim($message), 'cms', $severity);
+	public function sysLog($message, $severity = 0) {
+		if ($this->isLoggingEnabled) {
+			t3lib_div::sysLog('Locking [' . $this->method . '::' . $this->id . ']: ' . trim($message), $this->syslogFacility, $severity);
+		}
 	}
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_lock.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_lock.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_lock.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_lock.php']);
 }
 ?>

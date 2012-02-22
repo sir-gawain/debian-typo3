@@ -1,26 +1,26 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 
 /**
@@ -30,7 +30,8 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @version $Id: class.t3lib_cache_manager.php 8520 2010-08-07 10:55:15Z lolli $
+ * @api
+ * @version $Id$
  */
 class t3lib_cache_Manager implements t3lib_Singleton {
 	/**
@@ -46,13 +47,7 @@ class t3lib_cache_Manager implements t3lib_Singleton {
 	/**
 	 * @var array
 	 */
-	protected $cacheConfigurations = array(
-		'default' => array(
-			'frontend'       => 't3lib_cache_frontend_VariableFrontend',
-			'backend'        =>  't3lib_cache_backend_FileBackend',
-			'backendOptions' => array()
-		)
-	);
+	protected $cacheConfigurations = array();
 
 	/**
 	 * Sets configurations for caches. The key of each entry specifies the
@@ -103,13 +98,12 @@ class t3lib_cache_Manager implements t3lib_Singleton {
 	 */
 	public function initialize() {
 		foreach ($this->cacheConfigurations as $identifier => $configuration) {
-			if ($identifier !== 'default') {
-				$frontend       = isset($configuration['frontend'])       ? $configuration['frontend']       : $this->cacheConfigurations['default']['frontend'];
-				$backend        = isset($configuration['backend'])        ? $configuration['backend']        : $this->cacheConfigurations['default']['backend'];
-				$backendOptions = isset($configuration['backendOptions']) ? $configuration['backendOptions'] : $this->cacheConfigurations['default']['backendOptions'];
-
-				$cache = $this->cacheFactory->create($identifier, $frontend, $backend, $backendOptions);
-			}
+			$this->cacheFactory->create(
+				$identifier,
+				$configuration['frontend'],
+				$configuration['backend'],
+				$configuration['backendOptions']
+			);
 		}
 	}
 
@@ -192,8 +186,8 @@ class t3lib_cache_Manager implements t3lib_Singleton {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/class.t3lib_cache_manager.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/class.t3lib_cache_manager.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/class.t3lib_cache_manager.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/class.t3lib_cache_manager.php']);
 }
 
 ?>

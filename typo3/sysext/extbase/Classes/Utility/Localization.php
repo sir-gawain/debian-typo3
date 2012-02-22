@@ -78,12 +78,11 @@ class Tx_Extbase_Utility_Localization {
 	 * @api
 	 * @todo: If vsprintf gets a malformed string, it returns FALSE! Should we throw an exception there?
 	 */
-	public function translate($key, $extensionName, $arguments = NULL) {
+	static public function translate($key, $extensionName, $arguments = NULL) {
 		if (t3lib_div::isFirstPartOfStr($key, 'LLL:')) {
 			$value = self::translateFileReference($key);
 		} else {
 			self::initializeLocalization($extensionName);
-
 			// The "from" charset of csConv() is only set for strings from TypoScript via _LOCAL_LANG
 			if (isset(self::$LOCAL_LANG[$extensionName][self::$languageKey][$key])) {
 				$value = self::$LOCAL_LANG[$extensionName][self::$languageKey][$key];
@@ -134,7 +133,7 @@ class Tx_Extbase_Utility_Localization {
 	 * @author Christopher Hlubek <hlubek@networkteam.com>
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
-	protected static function initializeLocalization($extensionName) {
+	static protected function initializeLocalization($extensionName) {
 		if (isset(self::$LOCAL_LANG[$extensionName])) {
 			return;
 		}
@@ -184,12 +183,14 @@ class Tx_Extbase_Utility_Localization {
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	protected function loadTypoScriptLabels($extensionName) {
-		$extbaseFrameworkConfiguration = Tx_Extbase_Dispatcher::getExtbaseFrameworkConfiguration();
-		if (!is_array($extbaseFrameworkConfiguration['_LOCAL_LANG'])) {
+		$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		$configurationManager = $objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
+		$frameworkConfiguration = $configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+		if (!is_array($frameworkConfiguration['_LOCAL_LANG'])) {
 			return;
 		}
-		foreach ($extbaseFrameworkConfiguration['_LOCAL_LANG'] as $languageKey => $labels) {
-			if (!is_array($labels)) {
+		foreach ($frameworkConfiguration['_LOCAL_LANG'] as $languageKey => $labels) {
+			if (!(is_array($labels) && isset(self::$LOCAL_LANG[$extensionName][$languageKey]))) {
 				continue;
 			}
 			foreach($labels as $labelKey => $labelValue) {
@@ -203,9 +204,40 @@ class Tx_Extbase_Utility_Localization {
 					} else {
 						self::$LOCAL_LANG_charset[$extensionName][$languageKey][$labelKey] = $GLOBALS['TSFE']->csConvObj->charSetArray[$languageKey];
 					}
+				} elseif (is_array($labelValue)) {
+					$labelValue = self::flattenTypoScriptLabelArray($labelValue, $labelKey);
+					self::$LOCAL_LANG[$extensionName][$languageKey] = array_merge(self::$LOCAL_LANG[$extensionName][$languageKey], $labelValue);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Flatten TypoScript label array; converting a hierarchical array into a flat
+	 * array with the keys separated by dots.
+	 *
+	 * Example Input:  array('k1' => array('subkey1' => 'val1'))
+	 * Example Output: array('k1.subkey1' => 'val1')
+	 *
+	 * @param array $labelValues Hierarchical array of labels
+	 * @param string $parentKey the name of the parent key in the recursion; is only needed for recursion.
+	 * @return array flattened array of labels.
+	 */
+	protected function flattenTypoScriptLabelArray(array $labelValues, $parentKey = '') {
+		$result = array();
+		foreach ($labelValues as $key => $labelValue) {
+			if (!empty($parentKey)) {
+				$key = $parentKey . '.' . $key;
+			}
+
+			if (is_array($labelValue)) {
+				$labelValue = self::flattenTypoScriptLabelArray($labelValue, $key);
+				$result = array_merge($result, $labelValue);
+			} else {
+				$result[$key] = $labelValue;
+			}
+		}
+		return $result;
 	}
 
 	/**

@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * class to handle the clear cache menu
  *
- * $Id: clearcachemenu.js 6539 2009-11-25 14:49:14Z stucki $
+ * $Id$
  */
 var ClearCacheMenu = Class.create({
 
@@ -35,11 +35,14 @@ var ClearCacheMenu = Class.create({
 	 * registers for resize event listener and executes on DOM ready
 	 */
 	initialize: function() {
-		Event.observe(window, 'resize', this.positionMenu);
 
-		Event.observe(window, 'load', function(){
-			this.positionMenu();
-			this.toolbarItemIcon = $$('#clear-cache-actions-menu .toolbar-item img')[0].src;
+		Ext.onReady(function() {
+			Event.observe(
+				window, 'resize',
+				function() { TYPO3BackendToolbarManager.positionMenu('clear-cache-actions-menu'); }
+			);
+			TYPO3BackendToolbarManager.positionMenu('clear-cache-actions-menu');
+			this.toolbarItemIcon = $$('#clear-cache-actions-menu .toolbar-item span.t3-icon')[0];
 
 			Event.observe('clear-cache-actions-menu', 'click', this.toggleMenu)
 
@@ -47,33 +50,7 @@ var ClearCacheMenu = Class.create({
 			$$('#clear-cache-actions-menu li a').each(function(element) {
 				Event.observe(element, 'click', this.clearCache.bind(this));
 			}.bindAsEventListener(this));
-		}.bindAsEventListener(this));
-	},
-
-	/**
-	 * positions the menu below the toolbar icon, let's do some math!
-	 */
-	positionMenu: function() {
-		var calculatedOffset = 0;
-		var parentWidth      = $('clear-cache-actions-menu').getWidth();
-		var ownWidth         = $$('#clear-cache-actions-menu ul')[0].getWidth();
-		var parentSiblings   = $('clear-cache-actions-menu').previousSiblings();
-
-		parentSiblings.each(function(toolbarItem) {
-			calculatedOffset += toolbarItem.getWidth() - 1;
-			// -1 to compensate for the margin-right -1px of the list items,
-			// which itself is necessary for overlaying the separator with the active state background
-
-			if(toolbarItem.down().hasClassName('no-separator')) {
-				calculatedOffset -= 1;
-			}
-		});
-		calculatedOffset = calculatedOffset - ownWidth + parentWidth;
-
-
-		$$('#clear-cache-actions-menu ul')[0].setStyle({
-			left: calculatedOffset + 'px'
-		});
+		}, this);
 	},
 
 	/**
@@ -84,7 +61,7 @@ var ClearCacheMenu = Class.create({
 		var menu        = $$('#clear-cache-actions-menu .toolbar-item-menu')[0];
 		toolbarItem.blur();
 
-		if(!toolbarItem.hasClassName('toolbar-item-active')) {
+		if (!toolbarItem.hasClassName('toolbar-item-active')) {
 			toolbarItem.addClassName('toolbar-item-active');
 			Effect.Appear(menu, {duration: 0.2});
 			TYPO3BackendToolbarManager.hideOthers(toolbarItem);
@@ -104,24 +81,26 @@ var ClearCacheMenu = Class.create({
 	 * @param	Event	prototype event object
 	 */
 	clearCache: function(event) {
-		var toolbarItemIcon = $$('#clear-cache-actions-menu .toolbar-item img')[0];
+		var toolbarItemIcon = $$('#clear-cache-actions-menu .toolbar-item span.t3-icon')[0];
 		var url             = '';
 		var clickedElement  = Event.element(event);
 
 			// activate the spinner
-		toolbarItemIcon.src = 'gfx/spinner.gif';
+		var parent = Element.up(toolbarItemIcon);
+		var spinner = new Element('span').addClassName('spinner');
+		var oldIcon = toolbarItemIcon.replace(spinner);
 
-		if (clickedElement.tagName == 'IMG') {
-			url =  clickedElement.up('a').href;
+		if (clickedElement.tagName === 'SPAN') {
+			link =  clickedElement.up('a');
 		} else {
-			url =  clickedElement.href;
+			link =  clickedElement;
 		}
 
-		if (url) {
-			new Ajax.Request(url, {
+		if (link.href) {
+			var call = new Ajax.Request(link.href, {
 				'method': 'get',
-				'onComplete': function() {
-					toolbarItemIcon.src = this.toolbarItemIcon;
+				'onComplete': function(result) {
+					spinner.replace(oldIcon);
 				}.bind(this)
 			});
 		}

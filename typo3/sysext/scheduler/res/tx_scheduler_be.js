@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Francois Suter <francois@typo3.org>
+*  (c) 2009-2010 Francois Suter <francois@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,13 +26,13 @@
  *
  * @author	Francois Suter <francois@typo3.org>
  *
- * $Id: tx_scheduler_be.js 6539 2009-11-25 14:49:14Z stucki $
+ * $Id$
  */
 
 /**
  * Global variable to keep track of checked/unchecked status of all
  * checkboxes for execution selection
- * 
+ *
  * @var	boolean
  */
 var allCheckedStatus = false;
@@ -100,3 +100,26 @@ function toggleCheckboxes() {
 		checkboxes.item(i).dom.checked = allCheckedStatus;
 	}
 }
+
+/**
+ * Ext.onReader functions
+ *
+ * onClick event for scheduler task execution from backend module
+ */
+Ext.onReady(function(){
+	Ext.addBehaviors({
+			// Add a listener for click on scheduler execute button
+		'#scheduler_executeselected@click' : function(e, t){
+				// Get all active checkboxes with proper class
+			var checkboxes = Ext.select('.checkboxes:checked');
+			var count = checkboxes.getCount();
+			var idParts;
+
+				// Set the status icon all to same status: running
+			for (var i = 0; i < count; i++) {
+				idParts = checkboxes.item(i).id.split('_');
+				Ext.select('#executionstatus_' + idParts[1]).item(0).set({src: TYPO3.settings.scheduler.runningIcon});
+			}
+		}
+	});
+});

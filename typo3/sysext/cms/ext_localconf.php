@@ -1,5 +1,5 @@
 <?php
-# TYPO3 SVN ID: $Id: ext_localconf.php 6770 2010-01-14 08:29:16Z steffenk $
+# TYPO3 SVN ID: $Id$
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
 t3lib_extMgm::addUserTSConfig('
@@ -180,7 +180,7 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['compat_version']['cms'] = array(
 					'underscore (_) to hyphen (-) to make URLs more friendly for search engines' .
 					'URLs that are already existing (e.g. external links to your site) will still work like before.</p>' .
 					'<p>You can set the separator character back to an underscore by putting the following line into the '.
-					'<b>Setup</b> section of your Page TypoScript template:</p>' .
+					'<strong>Setup</strong> section of your Page TypoScript template:</p>' .
 					'<p style="margin-top: 5px; white-space: nowrap;"><code>config.simulateStaticDocuments_replacementChar = _</code></p></li>'.
 					'<li><p>CSS Stylesheets and JavaScript are put into an external file by default.</p>'.
 					'<p>Technically, that means that the default value of "config.inlineStyle2TempFile" is now set to "1" and that of "config.removeDefaultJS" to "external"</p></li>'.
@@ -193,5 +193,15 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapC
 $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][]  = 'EXT:cms/tslib/hooks/class.tx_cms_treelistcacheupdate.php:&tx_cms_treelistCacheUpdate';
 $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['moveRecordClass'][]     = 'EXT:cms/tslib/hooks/class.tx_cms_treelistcacheupdate.php:&tx_cms_treelistCacheUpdate';
 
+if (TYPO3_MODE === 'FE') {
+		// Register the core media wizard provider
+	tslib_mediaWizardManager::registerMediaWizardProvider('tslib_mediaWizardCoreProvider');
+		// register eID provider for ExtDirect for the frontend
+	$GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['ExtDirect'] = PATH_tslib . 'extdirecteid.php';
+}
+
+	// register search keys
+$GLOBALS ['TYPO3_CONF_VARS']['SYS']['livesearch']['page'] = 'pages';
+$GLOBALS ['TYPO3_CONF_VARS']['SYS']['livesearch']['content'] = 'tt_content';
 
 ?>

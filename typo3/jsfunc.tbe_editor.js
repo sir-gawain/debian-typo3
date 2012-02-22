@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2010 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,7 +26,7 @@
 /**
  * Contains JavaScript for TYPO3 Core Form generator - AKA "TCEforms"
  *
- * $Id: jsfunc.tbe_editor.js 7113 2010-03-15 20:20:56Z etobi.de $
+ * $Id$
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @coauthor	Oliver Hader <oh@inpublica.de>
@@ -73,7 +73,7 @@ var TBE_EDITOR = {
 		cm: new Image(),
 		sel: new Image(),
 		clear: new Image()
-	},	
+	},
 
 	// Handling of data structures:
 	addElements: function(elements) {
@@ -196,6 +196,15 @@ var TBE_EDITOR = {
 			if (type == 'required') {
 				form = document[TBE_EDITOR.formname][elementName];
 				if (form) {
+						// Check if we are within a deleted inline element
+					var testNode = $(form.parentNode);
+					while(testNode) {
+						if (testNode.hasClassName && testNode.hasClassName('inlineIsDeletedRecord')) {
+							return result;
+						}
+						testNode = $(testNode.parentNode);
+					}
+
 					var value = form.value;
 					if (!value || elementData.additional && elementData.additional.isPositiveNumber && (isNaN(value) || Number(value) <= 0)) {
 						result = 0;
@@ -220,7 +229,7 @@ var TBE_EDITOR = {
 						// special treatment for file uploads
 					var tempObj = document[TBE_EDITOR.formname][elementName.replace(/^data/, 'data_files')];
 					numberOfElements = form.length;
-					
+
 					if (tempObj && tempObj.type == 'file' && tempObj.value) {
 						numberOfElements++; // Add new uploaded file to the number of elements
 					}
@@ -332,9 +341,12 @@ var TBE_EDITOR = {
 			return true;
 		}
 	},
+	/**
+	 * This function is not used by core and will be removed in version 4.6
+	 * @deprecated
+	 */
 	setHiddenContent: function(RTEcontent,theField) {
 		document[TBE_EDITOR.formname][theField].value = RTEcontent;
-		alert(document[TBE_EDITOR.formname][theField].value);
 	},
 	fieldChanged_fName: function(fName,el) {
 		var idx=2+TBE_EDITOR.prependFormFieldNamesCnt;
@@ -409,13 +421,6 @@ var TBE_EDITOR = {
 	 */
 	checkSubmit: function(sendAlert) {
 		var funcIndex, funcMax, funcRes;
-		if (TBE_EDITOR.backend_interface == "backend_old") {
-			if (TBE_EDITOR.checkLoginTimeout() && confirm(TBE_EDITOR.labels.refresh_login)) {
-				vHWin=window.open(TBE_EDITOR.backPath+'login_frameset.php?','relogin','height=300,width=400,status=0,menubar=0');
-				vHWin.focus();
-				return false;
-			}
-		}
 		var OK=1;
 
 		// $this->additionalJS_submit:
@@ -482,7 +487,7 @@ var TBE_EDITOR = {
 	},
 	submitForm: function() {
 		if (TBE_EDITOR.doSaveFieldName) {
-			document[TBE_EDITOR.formname][TBE_EDITOR.doSaveFieldName].value=1;			
+			document[TBE_EDITOR.formname][TBE_EDITOR.doSaveFieldName].value=1;
 		}
 		document[TBE_EDITOR.formname].submit();
 	},
@@ -533,11 +538,7 @@ var TBE_EDITOR = {
 	rawurlencode: function(str,maxlen) {
 		var output = str;
 		if (maxlen)	output = output.substr(0,200);
-		output = escape(output);
-		output = TBE_EDITOR.str_replace("*","%2A", output);
-		output = TBE_EDITOR.str_replace("+","%2B", output);
-		output = TBE_EDITOR.str_replace("/","%2F", output);
-		output = TBE_EDITOR.str_replace("@","%40", output);
+		output = encodeURIComponent(output);
 		return output;
 	},
 	str_replace: function(match,replace,string) {
@@ -557,13 +558,13 @@ var TBE_EDITOR = {
 	},
 	toggle_display_states: function(id, state_1, state_2) {
 		var node = document.getElementById(id);
-		if (node) {	
+		if (node) {
 			switch (node.style.display) {
 				case state_1:
 					node.style.display = state_2;
 					break;
 				case state_2:
-					node.style.display = state_1; 
+					node.style.display = state_1;
 					break;
 			}
 		}

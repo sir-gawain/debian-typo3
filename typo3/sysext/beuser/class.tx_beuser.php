@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /**
  * Class, adding SU link to context menu
  *
- * $Id: class.tx_beuser.php 5165 2009-03-09 18:28:59Z ohader $
+ * $Id$
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -50,7 +50,7 @@
 /**
  * Class, adding SU link to context menu
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_beuser
  */
@@ -78,7 +78,7 @@ class tx_beuser {
 			$url = 'mod.php?M=tools_beuser&SwitchUser='.rawurlencode($uid).'&switchBackUser=1';
 			$localItems[] = $backRef->linkItem(
 				'Switch To User',
-				$backRef->excludeIcon('<img '.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/su_back.gif').' border="0" align="top" title="" alt="" />'),
+				$backRef->excludeIcon(t3lib_iconWorks::getSpriteIcon('actions-system-backend-user-emulate')),
 				$backRef->urlRefForCM($url,'',1,'top'),
 				1
 			);
@@ -101,7 +101,7 @@ class tx_beuser {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
 }
 ?>

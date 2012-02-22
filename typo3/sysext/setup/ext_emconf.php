@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext "setup".
 #
-# Auto generated 25-11-2009 22:09
+# Auto generated 23-02-2011 11:00
 #
 # Manual updates:
 # Only the data in the array - everything else is removed by next
@@ -33,12 +33,12 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '0.1.0',
-	'_md5_values_when_last_written' => 'a:23:{s:12:"ext_icon.gif";s:4:"6187";s:14:"ext_tables.php";s:4:"cdf5";s:21:"locallang_csh_mod.xml";s:4:"6ed5";s:18:"cshimages/lang.png";s:4:"237d";s:17:"cshimages/rte.png";s:4:"aaeb";s:20:"cshimages/setup1.png";s:4:"7e74";s:21:"cshimages/setup10.png";s:4:"4f5b";s:21:"cshimages/setup11.png";s:4:"2210";s:21:"cshimages/setup12.png";s:4:"7976";s:20:"cshimages/setup2.png";s:4:"8c62";s:20:"cshimages/setup3.png";s:4:"b6cf";s:20:"cshimages/setup4.png";s:4:"57e1";s:20:"cshimages/setup5.png";s:4:"7623";s:20:"cshimages/setup6.png";s:4:"2c85";s:20:"cshimages/setup7.png";s:4:"8543";s:20:"cshimages/setup8.png";s:4:"c12a";s:20:"cshimages/setup9.png";s:4:"42c9";s:13:"mod/clear.gif";s:4:"cc11";s:12:"mod/conf.php";s:4:"a8bf";s:13:"mod/index.php";s:4:"a20b";s:17:"mod/locallang.xml";s:4:"2966";s:21:"mod/locallang_mod.xml";s:4:"395a";s:13:"mod/setup.gif";s:4:"6187";}',
+	'version' => '1.0.0',
+	'_md5_values_when_last_written' => 'a:23:{s:12:"ext_icon.gif";s:4:"84ad";s:14:"ext_tables.php";s:4:"4f59";s:21:"locallang_csh_mod.xml";s:4:"6ed5";s:18:"cshimages/lang.png";s:4:"ed5f";s:17:"cshimages/rte.png";s:4:"d3ae";s:20:"cshimages/setup1.png";s:4:"fc36";s:21:"cshimages/setup10.png";s:4:"f1c4";s:21:"cshimages/setup11.png";s:4:"b90e";s:21:"cshimages/setup12.png";s:4:"038e";s:20:"cshimages/setup2.png";s:4:"b1ef";s:20:"cshimages/setup3.png";s:4:"b4b8";s:20:"cshimages/setup4.png";s:4:"c79d";s:20:"cshimages/setup5.png";s:4:"d0a0";s:20:"cshimages/setup6.png";s:4:"c640";s:20:"cshimages/setup7.png";s:4:"3479";s:20:"cshimages/setup8.png";s:4:"404a";s:20:"cshimages/setup9.png";s:4:"37b9";s:13:"mod/clear.gif";s:4:"cc11";s:12:"mod/conf.php";s:4:"a8bf";s:13:"mod/index.php";s:4:"9ccd";s:17:"mod/locallang.xml";s:4:"5796";s:21:"mod/locallang_mod.xml";s:4:"395a";s:13:"mod/setup.gif";s:4:"6187";}',
 	'constraints' => array(
 		'depends' => array(
 			'php' => '5.1.0-0.0.0',
-			'typo3' => '4.3.0-4.3.99',
+			'typo3' => '4.4.0-0.0.0',
 		),
 		'conflicts' => array(
 		),

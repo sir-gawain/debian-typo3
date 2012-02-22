@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,10 +28,10 @@
  * Form-data processing
  * included from index_ts.php
  *
- * $Id: class.tslib_fetce.php 5978 2009-09-18 12:47:26Z rupi $
- * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -74,11 +74,10 @@
  * Form-data processing class.
  * Used by the FE_DATA object found in TSref. Quite old fashioned and used only by a few extensions, like good old 'tt_guest' and 'tt_board'
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
  * @deprecated since TYPO3 3.6
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=342&cHash=fdf55adb3b
  */
 class tslib_feTCE	{
 
@@ -98,13 +97,11 @@ class tslib_feTCE	{
 	 * @see tslib_fe::fe_tce(), includeScripts()
 	 */
 	function start($data,$FEData)	{
-		reset($data);
-		while(list($table,$id_arr)=each($data))	{
+		foreach ($data as $table => $id_arr) {
 			t3lib_div::loadTCA($table);
 			if (is_array($id_arr))	{
-				$sep=$FEData[$table.'.']['separator']?$FEData[$table.'.']['separator']:chr(10);
-				reset($id_arr);
-				while(list($id,$field_arr)=each($id_arr))	{
+				$sep=$FEData[$table.'.']['separator']?$FEData[$table.'.']['separator']:LF;
+				foreach ($id_arr as $id => $field_arr) {
 					$this->newData[$table][$id]=Array();
 					if (strstr($id,'NEW'))	{		// NEW
 							// Defaults:
@@ -116,8 +113,7 @@ class tslib_feTCE	{
 						}
 							// Insert external data:
 						if (is_array($field_arr))	{
-							reset($field_arr);
-							while(list($field,$value)=each($field_arr))	{
+							foreach ($field_arr as $field => $value) {
 								if ($FEData[$table.'.']['allowNew.'][$field])	{
 									if (is_array($value)) {
 										$this->newData[$table][$id][$field] = implode($sep,$value);
@@ -142,8 +138,7 @@ class tslib_feTCE	{
 					} else {		// EDIT
 							// Insert external data:
 						if (is_array($field_arr))	{
-							reset($field_arr);
-							while(list($field,$value)=each($field_arr))	{
+							foreach ($field_arr as $field => $value) {
 								if ($FEData[$table.'.']['allowEdit.'][$field])	{
 									if (is_array($value)) {
 										$this->newData[$table][$id][$field] = implode($sep,$value);
@@ -155,8 +150,7 @@ class tslib_feTCE	{
 						}
 							// Internal Override
 						if (is_array($FEData[$table.'.']['overrideEdit.']))	{
-							reset($FEData[$table.'.']['overrideEdit.']);
-							while(list($field,$value)=each($FEData[$table.'.']['overrideEdit.']))	{
+							foreach ($FEData[$table.'.']['overrideEdit.'] as $field => $value) {
 								$this->newData[$table][$id][$field] = $value;
 							}
 						}
@@ -212,8 +206,7 @@ class tslib_feTCE	{
 	 * @see tslib_fe::fe_tce(), includeScripts()
 	 */
 	function includeScripts()	{
-		reset($this->extScripts);
-		while(list($incFile_table,$incFile)=each($this->extScripts))	{
+		foreach ($this->extScripts as $incFile_table => $incFile) {
 			if (@is_file($incFile) && $GLOBALS['TSFE']->checkFileInclude($incFile))	{
 				include($incFile);	// Always start the incFiles with a check of the object fe_tce.  is_object($this);
 				$GLOBALS['TT']->setTSlogMessage('Included '.$incFile,0);
@@ -296,8 +289,8 @@ class tslib_feTCE	{
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_fetce.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_fetce.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_fetce.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_fetce.php']);
 }
 
 ?>

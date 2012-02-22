@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009 Ernesto Baschny <ernst@cron-it.de>
+*  (c) 2009-2011 Ernesto Baschny <ernst@cron-it.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,7 +33,7 @@
  * @package TYPO3
  * @subpackage tx_install
  *
- * @version $Id: class.tx_install_session.php 8475 2010-08-03 15:39:25Z ohader $
+ * @version $Id$
  */
 class tx_install_session {
 
@@ -73,6 +73,13 @@ class tx_install_session {
 	 * @var integer
 	 */
 	private $regenerateSessionIdTime = 5;
+
+	/**
+	 * part of the referer when the install tool has been called from the backend
+	 *
+	 * @var string
+	 */
+	private $backendFile = 'backend.php';
 
 	/**
 	 * Constructor. Starts PHP session handling in our own private store
@@ -131,7 +138,7 @@ class tx_install_session {
 	 */
 	private function getSessionSavePath() {
 		return sprintf(
-			$this->typo3tempPath . '/' . $this->sessionPath,
+			$this->typo3tempPath . $this->sessionPath,
 			md5(
 				'session:' .
 					$GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword']
@@ -148,6 +155,14 @@ class tx_install_session {
 		$_SESSION['created'] = time();
 			// Be sure to use our own session id, so create a new one
 		return $this->renewSession();
+	}
+
+	/**
+	 * Destroys a session
+	 *
+	 */
+	public function destroySession() {
+		session_destroy();
 	}
 
 	/**
@@ -329,13 +344,7 @@ class tx_install_session {
 	 */
 	public function write($id, $sessionData) {
 		$sessionFile = $this->getSessionFile($id);
-		if ($fp = @fopen($sessionFile, 'w')) {
-			$return = fwrite($fp, $sessionData);
-			fclose($fp);
-			return $return;
-		} else {
-			return FALSE;
-		}
+		return t3lib_div::writeFile($sessionFile, $sessionData);
 	}
 
 	/**
@@ -371,10 +380,26 @@ class tx_install_session {
 		return TRUE;
 	}
 
+	/**
+	 * Writes the session data at the end, to overcome a PHP APC bug.
+	 *
+	 * Writes the session data in a proper context that is not affected by the APC bug:
+	 * http://pecl.php.net/bugs/bug.php?id=16721.
+	 *
+	 * This behaviour was introduced in #17511, where self::write() made use of t3lib_div
+	 * which due to the APC bug throws a "Fatal error: Class 't3lib_div' not found"
+	 * (and the session data is not saved). Calling session_write_close() at this point
+	 * seems to be the most easy solution, acording to PHP author.
+	 *
+	 * @return void
+	 */
+	public function __destruct() {
+		session_write_close();
+	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_session.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_session.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_session.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_session.php']);
 }
 
 ?>

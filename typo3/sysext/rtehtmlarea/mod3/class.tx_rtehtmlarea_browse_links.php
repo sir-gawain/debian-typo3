@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+*  (c) 2005-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,9 +32,9 @@
  *
  * Adapted for htmlArea RTE by Stanislas Rolland
  *
- * $Id: class.tx_rtehtmlarea_browse_links.php 8896 2010-09-25 22:00:32Z stan $
+ * $Id$
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
  */
 
@@ -44,7 +44,7 @@ require_once (PATH_typo3.'class.browse_links.php');
 /**
  * Class which generates the page tree
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -105,7 +105,7 @@ class tx_rtehtmlarea_pageTree extends rtePageTree {
  * Base extension class which generates the folder tree.
  * Used directly by the RTE.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -194,7 +194,7 @@ class tx_rtehtmlarea_folderTree extends rteFolderTree {
 /**
  * Script class for the Element Browser window.
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -464,7 +464,6 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				$bodyTagAdditions = $hookObject->addBodyTagAdditions($bodyTagAdditions);
 			}
 		}
-		$bodyTagAdditions['onLoad'] = 'initDialog();' . $bodyTagAdditions['onLoad'];
 		return t3lib_div::implodeAttributes($bodyTagAdditions, TRUE);
 	}
 
@@ -478,16 +477,8 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 			// BEGIN accumulation of header JavaScript:
 		$JScode = '';
 		$JScode.= '
-			var dialog = window.opener.HTMLArea.Dialog.TYPO3Link;
-			var plugin = dialog.plugin;
-			var HTMLArea = window.opener.HTMLArea;
-
-			function initDialog() {
-				window.dialog = window.opener.HTMLArea.Dialog.TYPO3Link;
-				window.plugin = dialog.plugin;
-				window.HTMLArea = window.opener.HTMLArea;
-				dialog.captureEvents("skipUnload");
-			}
+			var plugin = window.parent.RTEarea["' . $this->editorNo . '"].editor.getPlugin("TYPO3Link");
+			var HTMLArea = window.parent.HTMLArea;
 			var add_href="'.($this->curUrlArray['href']?'&curUrl[href]='.rawurlencode($this->curUrlArray['href']):'').'";
 			var add_target="'.($this->setTarget?'&curUrl[target]='.rawurlencode($this->setTarget):'').'";
 			var add_class="'.($this->setClass?'&curUrl[class]='.rawurlencode($this->setClass):'').'";
@@ -530,6 +521,8 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				if (document.ltargetform.anchor_title) browse_links_setTitle(document.ltargetform.anchor_title.value);
 				if (document.ltargetform.anchor_class) browse_links_setClass(document.ltargetform.anchor_class.value);
 				if (document.ltargetform.ltarget) browse_links_setTarget(document.ltargetform.ltarget.value);
+				if (document.ltargetform.lrel) browse_links_setAdditionalValue("rel", document.ltargetform.lrel.value);
+				browse_links_setAdditionalValue("external", "");
 				plugin.createLink(theLink,cur_target,cur_class,cur_title,additionalValues);
 				return false;
 			}
@@ -538,6 +531,8 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				if (document.ltargetform.anchor_title) browse_links_setTitle(document.ltargetform.anchor_title.value);
 				if (document.ltargetform.anchor_class) browse_links_setClass(document.ltargetform.anchor_class.value);
 				if (document.ltargetform.ltarget) browse_links_setTarget(document.ltargetform.ltarget.value);
+				if (document.ltargetform.lrel) browse_links_setAdditionalValue("rel", document.ltargetform.lrel.value);
+				browse_links_setAdditionalValue("external", "");
 				plugin.createLink(theLink,cur_target,cur_class,cur_title,additionalValues);
 				return false;
 			}
@@ -545,6 +540,7 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				if (document.ltargetform.anchor_title) browse_links_setTitle(document.ltargetform.anchor_title.value);
 				if (document.ltargetform.anchor_class) browse_links_setClass(document.ltargetform.anchor_class.value);
 				if (document.ltargetform.ltarget) browse_links_setTarget(document.ltargetform.ltarget.value);
+				browse_links_setAdditionalValue("external", "");
 				plugin.createLink(theLink,cur_target,cur_class,cur_title,additionalValues);
 				return false;
 			}
@@ -553,6 +549,7 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				if (document.ltargetform.anchor_title) browse_links_setTitle(document.ltargetform.anchor_title.value);
 				if (document.ltargetform.anchor_class) browse_links_setClass(document.ltargetform.anchor_class.value);
 				if (document.ltargetform.ltarget) browse_links_setTarget(document.ltargetform.ltarget.value);
+				if (document.ltargetform.lrel) browse_links_setAdditionalValue("rel", document.ltargetform.lrel.value);
 				if (cur_href!="http://" && cur_href!="mailto:")	{
 					plugin.createLink(cur_href + parameters,cur_target,cur_class,cur_title,additionalValues);
 				}
@@ -689,7 +686,7 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 							<tr>
 								<td>'.$LANG->getLL('emailAddress',1).':</td>
 								<td><input type="text" name="lemail"'.$this->doc->formWidth(20).' value="'.htmlspecialchars($this->curUrlInfo['act']=='mail'?$this->curUrlInfo['info']:'').'" /> '.
-									'<input type="submit" value="'.$LANG->getLL('setLink',1).'" onclick="browse_links_setTarget(\'\');browse_links_setHref(\'mailto:\'+document.lurlform.lemail.value); return link_current();" /></td>
+									'<input type="submit" value="'.$LANG->getLL('setLink',1).'" onclick="browse_links_setTarget(\'\');browse_links_setHref(\'mailto:\'+document.lurlform.lemail.value);browse_links_setAdditionalValue(\'external\', \'\');return link_current();" /></td>
 							</tr>
 						</table>
 					</form>';
@@ -768,8 +765,7 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				if (is_array($this->thisConfig['userLinks.']))	{
 					$subcats=array();
 					$v=$this->thisConfig['userLinks.'];
-					reset($v);
-					while(list($k2)=each($v))	{
+					foreach ($v as $k2 => $dummyValue) {
 						$k2i = intval($k2);
 						if (substr($k2,-1)=='.' && is_array($v[$k2i.'.']))	{
 
@@ -830,14 +826,30 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 				$pagetree->addField('nav_title');
 				$tree=$pagetree->getBrowsableTree();
 				$cElements = $this->expandPage();
-				$content.= '
+
+
+				// Outputting Temporary DB mount notice:
+				if (intval($GLOBALS['BE_USER']->getSessionData('pageTree_temporaryMountPoint')))	{
+					$link = '<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array('setTempDBmount' => 0))) . '">' .
+										$LANG->sl('LLL:EXT:lang/locallang_core.xml:labels.temporaryDBmount', 1) .
+									'</a>';
+					$flashMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						$link,
+						'',
+						t3lib_FlashMessage::INFO
+					);
+					$dbmount = $flashMessage->render();
+				}
+
+				$content .= '
 			<!--
 				Wrapper table for page tree / record list:
 			-->
 					<table border="0" cellpadding="0" cellspacing="0" id="typo3-linkPages">
 						<tr>
-							<td class="c-wCell" valign="top">'.$this->barheader($LANG->getLL('pageTree').':').$tree.'</td>
-							<td class="c-wCell" valign="top">'.$cElements.'</td>
+							<td class="c-wCell" valign="top">' . $this->barheader($LANG->getLL('pageTree') . ':') . $dbmount . $tree . '</td>
+							<td class="c-wCell" valign="top">' . $cElements . '</td>
 						</tr>
 					</table>
 					';
@@ -865,8 +877,9 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 		$ltarget = $this->addTargetSelector();
 		$lclass = $this->addClassSelector();
 		$ltitle = $this->addTitleSelector();
-		if ($lpageId || $queryParameters || $ltarget || $lclass || $ltitle) {
-			$ltargetForm = $this->wrapInForm($lpageId.$queryParameters.$ltarget.$lclass.$ltitle);
+		$rel = $this->addRelField();
+		if ($lpageId || $queryParameters || $ltarget || $lclass || $ltitle || $rel) {
+			$ltargetForm = $this->wrapInForm($lpageId.$queryParameters.$ltarget.$lclass.$ltitle.$rel);
 		}
 		return $ltargetForm;
 	}
@@ -904,6 +917,16 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 							<td>'.$LANG->getLL('page_id',1).':</td>
 							<td colspan="3">
 								<input type="text" size="6" name="luid" />&nbsp;<input type="submit" value="'.$LANG->getLL('setLink',1).'" onclick="return link_typo3Page(document.ltargetform.luid.value);" />
+							</td>
+						</tr>':'';
+	}
+
+	function addRelField() {
+		return (($this->act == 'page' || $this->act == 'url' || $this->act == 'file') && $this->buttonConfig && is_array($this->buttonConfig['relAttribute.']) && $this->buttonConfig['relAttribute.']['enabled'])?'
+						<tr>
+							<td>'.$GLOBALS['LANG']->getLL('linkRelationship',1).':</td>
+							<td colspan="3">
+								<input type="text" name="lrel" value="' . $this->additionalAttributes['rel']. '"  ' . $this->doc->formWidth(30) . ' />
 							</td>
 						</tr>':'';
 	}
@@ -1110,8 +1133,8 @@ class tx_rtehtmlarea_browse_links extends browse_links {
 
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod3/class.tx_rtehtmlarea_browse_links.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod3/class.tx_rtehtmlarea_browse_links.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod3/class.tx_rtehtmlarea_browse_links.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod3/class.tx_rtehtmlarea_browse_links.php']);
 }
 
 ?>

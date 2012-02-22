@@ -27,7 +27,7 @@
  *
  * @package Extbase
  * @subpackage Domain\Model
- * @version $Id: FrontendUserGroup.php 2143 2010-03-30 09:28:26Z jocrau $
+ * @version $Id$
  * @scope prototype
  * @entity
  * @api
@@ -168,7 +168,7 @@ class Tx_Extbase_Domain_Model_FrontendUserGroup extends Tx_Extbase_DomainObject_
 	 * @api
 	 */
 	public function getSubgroup() {
-		return $this->subgroups;
+		return $this->subgroup;
 	}
 
 }

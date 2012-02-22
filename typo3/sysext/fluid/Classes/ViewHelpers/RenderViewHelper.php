@@ -21,13 +21,54 @@
  *                                                                        */
 
 /**
+ * ViewHelper that renders a section or a specified partial
  *
- * @version $Id: RenderViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers
+ * == Examples ==
+ *
+ * <code title="Rendering partials">
+ * <f:render partial="SomePartial" arguments="{foo: someVariable}" />
+ * </code>
+ * <output>
+ * the content of the partial "SomePartial". The content of the variable {someVariable} will be available in the partial as {foo}
+ * </output>
+ *
+ * <code title="Rendering sections">
+ * <f:section name="someSection">This is a section. {foo}</f:section>
+ * <f:render section="someSection" arguments="{foo: someVariable}" />
+ * </code>
+ * <output>
+ * the content of the section "someSection". The content of the variable {someVariable} will be available in the partial as {foo}
+ * </output>
+ *
+ * <code title="Rendering recursive sections">
+ * <f:section name="mySection">
+ *  <ul>
+ *    <f:for each="{myMenu}" as="menuItem">
+ *      <li>
+ *        {menuItem.text}
+ *        <f:if condition="{menuItem.subItems}">
+ *          <f:render section="mySection" arguments="{myMenu: menuItem.subItems}" />
+ *        </f:if>
+ *      </li>
+ *    </f:for>
+ *  </ul>
+ * </f:section>
+ * <f:render section="mySection" arguments="{myMenu: menu}" />
+ * </code>
+ * <output>
+ * <ul>
+ *   <li>menu1
+ *     <ul>
+ *       <li>menu1a</li>
+ *       <li>menu1b</li>
+ *     </ul>
+ *   </li>
+ * [...]
+ * (depending on the value of {menu})
+ * </output>
+ *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_RenderViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
@@ -41,17 +82,29 @@ class Tx_Fluid_ViewHelpers_RenderViewHelper extends Tx_Fluid_Core_ViewHelper_Abs
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
-	public function render($section = '', $partial = '', $arguments = array()) {
-		if ($partial !== '') {
+	public function render($section = NULL, $partial = NULL, $arguments = array()) {
+		$arguments = $this->loadSettingsIntoArguments($arguments);
+
+		if ($partial !== NULL) {
 			return $this->viewHelperVariableContainer->getView()->renderPartial($partial, $section, $arguments);
-		} elseif ($section !== '') {
-			return $this->viewHelperVariableContainer->getView()->renderSection($section);
+		} elseif ($section !== NULL) {
+			return $this->viewHelperVariableContainer->getView()->renderSection($section, $arguments);
 		}
 		return '';
 	}
 
-
+	/**
+	 * If $arguments['settings'] is not set, it is loaded from the TemplateVariableContainer (if it is available there).
+	 *
+	 * @param array $arguments
+	 * @return array
+	 */
+	protected function loadSettingsIntoArguments($arguments) {
+		if (!isset($arguments['settings']) && $this->templateVariableContainer->exists('settings')) {
+			$arguments['settings'] = $this->templateVariableContainer->get('settings');
+		}
+		return $arguments;
+	}
 }
-
 
 ?>

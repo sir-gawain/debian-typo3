@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,11 +29,11 @@
  * By sending certain parameters to this script you can bring up a form
  * which allows the user to edit the content of one or more database records.
  *
- * $Id: alt_doc.php 9697 2010-11-30 23:40:00Z ohader $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -78,9 +78,9 @@
  */
 
 
-require('init.php');
-require('template.php');
-$LANG->includeLLFile('EXT:lang/locallang_alt_doc.xml');
+require_once('init.php');
+require_once('template.php');
+$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_alt_doc.xml');
 
 t3lib_BEfunc::lockRecords();
 
@@ -91,7 +91,7 @@ t3lib_BEfunc::lockRecords();
  * Script Class: Drawing the editing form for editing records in TYPO3.
  * Notice: It does NOT use tce_db.php to submit data to, rather it handles submissions itself
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -483,7 +483,7 @@ class SC_alt_doc {
 				if (
 					'.($GLOBALS['BE_USER']->jsConfirmation(4)?'confirm('.$LANG->JScharCode($LANG->getLL('deleteWarning')).')':'1==1').'
 				)	{
-					window.location.href = "tce_db.php?cmd["+table+"]["+id+"][delete]=1&redirect="+escape(url)+"&vC='.$BE_USER->veriCode().'&prErr=1&uPT=1";
+					window.location.href = "tce_db.php?cmd["+table+"]["+id+"][delete]=1' . t3lib_BEfunc::getUrlToken('tceAction') . '&redirect="+escape(url)+"&vC=' . $BE_USER->veriCode() . '&prErr=1&uPT=1";
 				}
 				return false;
 			}
@@ -494,7 +494,7 @@ class SC_alt_doc {
 				t3lib_BEfunc::viewOnClick($this->popViewId,'',t3lib_BEfunc::BEgetRootLine($this->popViewId),'',$this->viewUrl,$this->popViewId_addParams).
 				' } '
 			: '')
-		).$this->doc->getDynTabMenuJScode();
+		);
 
 			// Setting up the context sensitive menu:
 		$this->doc->getContextMenuCode();
@@ -629,6 +629,7 @@ class SC_alt_doc {
 		$this->newC=0;
 		$thePrevUid='';
 		$editForm='';
+		$trData = NULL;
 
 			// Traverse the GPvar edit array
 		foreach($this->editconf as $table => $conf)	{	// Tables:
@@ -704,6 +705,18 @@ class SC_alt_doc {
 										$deniedAccessReason = $BE_USER->errorMsg;
 									}
 								} else $hasAccess = 0;
+							}
+
+							if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/alt_doc.php']['makeEditForm_accessCheck']))	{
+								foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/alt_doc.php']['makeEditForm_accessCheck'] as $_funcRef)	{
+									$_params = array(
+										'table' 	=>	$table,
+										'uid' 		=> 	$theUid,
+										'cmd' 		=> 	$cmd,
+										'hasAccess' => $hasAccess
+									);
+									$hasAccess = t3lib_div::callUserFunction($_funcRef, $_params, $this);
+								}
 							}
 
 							// AT THIS POINT we have checked the access status of the editing/creation of records and we can now proceed with creating the form elements:
@@ -826,20 +839,20 @@ class SC_alt_doc {
 		if (!$this->errorC && !$TCA[$this->firstEl['table']]['ctrl']['readOnly'])	{
 
 				// SAVE button:
-			$buttons['save'] = '<input type="image" class="c-inputButton" name="_savedok" src="' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/savedok.gif', '', 1) . '" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />';
+			$buttons['save'] = t3lib_iconWorks::getSpriteIcon('actions-document-save', array( 'html' => '<input type="image" name="_savedok" class="c-inputButton" src="clear.gif" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />' ));
 
 				// SAVE / VIEW button:
 			if ($this->viewId && !$this->noView && t3lib_extMgm::isLoaded('cms') && $this->getNewIconMode($this->firstEl['table'], 'saveDocView')) {
-				$buttons['save_view'] = '<input type="image" class="c-inputButton" name="_savedokview" src="' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/savedokshow.gif', '', 1) . '" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveDocShow', 1) . '" />';
+				$buttons['save_view'] = t3lib_iconWorks::getSpriteIcon('actions-document-save-view',array('html'=>'<input type="image" class="c-inputButton" name="_savedokview" src="clear.gif" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveDocShow', 1) . '" />'));
 			}
 
 				// SAVE / NEW button:
 			if (count($this->elementsData)==1 && $this->getNewIconMode($this->firstEl['table'])) {
-				$buttons['save_new'] = '<input type="image" class="c-inputButton" name="_savedoknew" src="' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/savedoknew.gif', '', 1) . '" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveNewDoc', 1) . '" />';
+				$buttons['save_new'] = t3lib_iconWorks::getSpriteIcon('actions-document-save-new',array('html'=>'<input type="image" class="c-inputButton" name="_savedoknew" src="clear.gif" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveNewDoc', 1) . '" />'));
 			}
 
 				// SAVE / CLOSE
-			$buttons['save_close'] = '<input type="image" class="c-inputButton" name="_saveandclosedok" src="' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/saveandclosedok.gif', '', 1) . '" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', 1) . '" />';
+			$buttons['save_close'] = t3lib_iconWorks::getSpriteIcon('actions-document-save-close',array('html'=>'<input type="image" class="c-inputButton" name="_saveandclosedok" src="clear.gif" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', 1) . '" />'));
 
 				// FINISH TRANSLATION / SAVE / CLOSE
 			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['explicitConfirmationOfTranslation'])	{
@@ -849,8 +862,8 @@ class SC_alt_doc {
 		}
 
 			// CLOSE button:
-		$buttons['close'] = '<a href="#" onclick="document.editform.closeDoc.value=1; document.editform.submit(); return false;">'.
-				'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/closedok.gif','width="21" height="16"').' class="c-inputButton" title="'.$LANG->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc',1).'" alt="" />'.
+		$buttons['close'] = '<a href="#" onclick="document.editform.closeDoc.value=1; document.editform.submit(); return false;" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE) . '">' .
+					t3lib_iconWorks::getSpriteIcon('actions-document-close') .
 				'</a>';
 
 
@@ -861,8 +874,8 @@ class SC_alt_doc {
 					// Delete:
 				if ($this->firstEl['deleteAccess'] && !$TCA[$this->firstEl['table']]['ctrl']['readOnly'] && !$this->getNewIconMode($this->firstEl['table'],'disableDelete')) {
 					$aOnClick = 'return deleteRecord(\''.$this->firstEl['table'].'\',\''.$this->firstEl['uid'].'\',unescape(\''.rawurlencode($this->retUrl).'\'));';
-					$buttons['delete'] = '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.
-							'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/deletedok.gif','width="21" height="16"').' class="c-inputButton" title="'.$LANG->getLL('deleteItem',1).'" alt="" />'.
+					$buttons['delete'] = '<a href="#" onclick="'.htmlspecialchars($aOnClick).'" title="' . $LANG->getLL('deleteItem', TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-edit-delete') .
 							'</a>';
 				}
 
@@ -870,26 +883,23 @@ class SC_alt_doc {
 				$undoRes = $GLOBALS['TYPO3_DB']->exec_SELECTquery('tstamp', 'sys_history', 'tablename='.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->firstEl['table'], 'sys_history').' AND recuid='.intval($this->firstEl['uid']), '', 'tstamp DESC', '1');
 				if ($undoButtonR = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($undoRes))	{
 					$aOnClick = 'window.location.href=\'show_rechis.php?element='.rawurlencode($this->firstEl['table'].':'.$this->firstEl['uid']).'&revert=ALL_FIELDS&sumUp=-1&returnUrl='.rawurlencode($this->R_URI).'\'; return false;';
-					$buttons['undo'] = '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.
-						'<img' .
-							t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/undo.gif', 'width="21" height="16"') .
-							' class="c-inputButton"' .
-							' title="' . htmlspecialchars(sprintf($LANG->getLL('undoLastChange'), t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $undoButtonR['tstamp'], $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')))) .
-							'" alt="" />' .
+					$buttons['undo'] = '<a href="#" onclick="'.htmlspecialchars($aOnClick).'"'.
+						' title="' . htmlspecialchars(sprintf($LANG->getLL('undoLastChange'), t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $undoButtonR['tstamp'], $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')))) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-edit-undo') .
 						'</a>';
 				}
 				if ($this->getNewIconMode($this->firstEl['table'],'showHistory'))	{
 					$aOnClick = 'window.location.href=\'show_rechis.php?element='.rawurlencode($this->firstEl['table'].':'.$this->firstEl['uid']).'&returnUrl='.rawurlencode($this->R_URI).'\'; return false;';
 					$buttons['history'] = '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.
-							'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/history2.gif','width="13" height="12"').' class="c-inputButton" alt="" />'.
-							'</a>';
+							t3lib_iconWorks::getSpriteIcon('actions-document-history-open') .
+						'</a>';
 				}
 
 					// If only SOME fields are shown in the form, this will link the user to the FULL form:
 				if ($this->columnsOnly)	{
-					$buttons['columns_only'] = '<a href="'.htmlspecialchars($this->R_URI.'&columnsOnly=').'">'.
-							'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/edit2.gif','width="11" height="12"').' class="c-inputButton" title="'.$LANG->getLL('editWholeRecord',1).'" alt="" />'.
-							'</a>';
+					$buttons['columns_only'] = '<a href="'.htmlspecialchars($this->R_URI.'&columnsOnly=').'" title="' . $LANG->getLL('editWholeRecord', TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-document-open') .
+						'</a>';
 				}
 			}
 		}
@@ -926,7 +936,7 @@ class SC_alt_doc {
 
 		if (is_array($this->tceforms->extraFormHeaders)) {
 			$extraTemplate = t3lib_parsehtml::getSubpart($this->doc->moduleTemplate, '###DOCHEADER_EXTRAHEADER###');
-			$extraTemplate = t3lib_parsehtml::substituteMarker($extraTemplate, '###EXTRAHEADER###', implode(chr(10), $this->tceforms->extraFormHeaders));
+			$extraTemplate = t3lib_parsehtml::substituteMarker($extraTemplate, '###EXTRAHEADER###', implode(LF, $this->tceforms->extraFormHeaders));
 		}
 		return $extraTemplate;
 	}
@@ -959,7 +969,7 @@ class SC_alt_doc {
 			<input type="hidden" name="closeDoc" value="0" />
 			<input type="hidden" name="doSave" value="0" />
 			<input type="hidden" name="_serialNumber" value="'.md5(microtime()).'" />
-			<input type="hidden" name="_scrollPosition" value="" />';
+			<input type="hidden" name="_scrollPosition" value="" />' . t3lib_TCEforms::getHiddenTokenField('editRecord');
 
 		return $formContent;
 	}
@@ -972,10 +982,15 @@ class SC_alt_doc {
 	function functionMenus()	{
 		global $LANG;
 
+		if ($GLOBALS['BE_USER']->getTSConfigVal('options.enableShowPalettes')) {
 			// Show palettes:
-		return '
-				<!-- Function menus (checkboxes for selecting options): -->
-				<br />'.t3lib_BEfunc::getFuncCheck('','SET[showPalettes]',$this->MOD_SETTINGS['showPalettes'],'alt_doc.php',t3lib_div::implodeArrayForUrl('',array_merge($this->R_URL_getvars,array('SET'=>''))),'id="checkShowPalettes"').'<label for="checkShowPalettes">'.$LANG->sL('LLL:EXT:lang/locallang_core.php:labels.showPalettes',1).'</label>';
+			return '
+				<!-- Function menu (checkbox for showing all palettes): -->
+				<br />'.t3lib_BEfunc::getFuncCheck('','SET[showPalettes]',$this->MOD_SETTINGS['showPalettes'],'alt_doc.php',t3lib_div::implodeArrayForUrl('',array_merge($this->R_URL_getvars,array('SET'=>''))) . t3lib_BEfunc::getUrlToken('editRecord'),'id="checkShowPalettes"').'<label for="checkShowPalettes">'.$LANG->sL('LLL:EXT:lang/locallang_core.php:labels.showPalettes',1).'</label>';
+		}
+		else {
+			return '';
+		}
 	}
 
 
@@ -1005,8 +1020,9 @@ class SC_alt_doc {
 			return '';
 		}
 		$aOnClick = 'vHWin=window.open(\''.t3lib_div::linkThisScript(array('returnUrl'=>'close.html')).'\',\''.md5($this->R_URI).'\',\'width=670,height=500,status=0,menubar=0,scrollbars=1,resizable=1\');vHWin.focus();return false;';
-		return '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.
-				'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/open_in_new_window.gif','width="19" height="14"').' title="'.$LANG->sL('LLL:EXT:lang/locallang_core.php:labels.openInNewWindow',1).'" alt="" /></a>';
+		return '<a href="#" onclick="'.htmlspecialchars($aOnClick).'" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.openInNewWindow', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-window-open') .
+			'</a>';
 	}
 
 
@@ -1019,7 +1035,7 @@ class SC_alt_doc {
 		if (count($this->tceforms->commentMessages))	{
 			$tceformMessages = '
 				<!-- TCEFORM messages
-				'.htmlspecialchars(implode(chr(10),$this->tceforms->commentMessages)).'
+				'.htmlspecialchars(implode(LF,$this->tceforms->commentMessages)).'
 				-->
 			';
 		}
@@ -1079,29 +1095,38 @@ class SC_alt_doc {
 				$fetchFields = 'uid,'.$languageField.','.$transOrigPointerField;
 
 					// get record in current language
-				$rowCurrent = t3lib_befunc::getRecord($table, $uid, $fetchFields);
+				$rowCurrent = t3lib_befunc::getLiveVersionOfRecord($table, $uid, $fetchFields);
+				if (!is_array($rowCurrent)) {
+					$rowCurrent = t3lib_befunc::getRecord($table, $uid, $fetchFields);
+				}
+
 				$currentLanguage = $rowCurrent[$languageField];
 
-				if ($currentLanguage>-1)	{	// Disabled for records with [all] language!
+				if ($currentLanguage > -1) {	// Disabled for records with [all] language!
 						// get record in default language if needed
-					if ($currentLanguage) {
-						$rowsByLang[0] = t3lib_befunc::getRecord($table, $rowCurrent[$transOrigPointerField], $fetchFields);
+					if ($currentLanguage && $rowCurrent[$transOrigPointerField]) {
+						$rowsByLang[0] = t3lib_befunc::getLiveVersionOfRecord($table, $rowCurrent[$transOrigPointerField], $fetchFields);
+						if (!is_array($rowsByLang[0])) {
+							$rowsByLang[0] = t3lib_befunc::getRecord($table, $rowCurrent[$transOrigPointerField], $fetchFields);
+						}
 					} else {
-						$rowsByLang[0] = $rowCurrent;
+						$rowsByLang[$rowCurrent[$languageField]] = $rowCurrent;
 					}
 
-						// get record in other languages to see what's already available
-					$translations = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-						$fetchFields,
-						$table,
-						'pid='.intval($pid).
-							' AND '.$languageField.'>0'.
-							' AND '.$transOrigPointerField.'='.intval($rowsByLang[0]['uid']).
-							t3lib_BEfunc::deleteClause($table).
-							t3lib_BEfunc::versioningPlaceholderClause($table)
-					);
-					foreach ($translations as $row)	{
-						$rowsByLang[$row[$languageField]] = $row;
+					if ($rowCurrent[$transOrigPointerField] || $currentLanguage === '0') {
+							// get record in other languages to see what's already available
+						$translations = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+							$fetchFields,
+							$table,
+							'pid='.intval($pid).
+								' AND '.$languageField.'>0'.
+								' AND '.$transOrigPointerField.'='.intval($rowsByLang[0]['uid']).
+								t3lib_BEfunc::deleteClause($table).
+								t3lib_BEfunc::versioningPlaceholderClause($table)
+						);
+						foreach ($translations as $row)	{
+							$rowsByLang[$row[$languageField]] = $row;
+						}
 					}
 
 					$langSelItems=array();
@@ -1114,14 +1139,14 @@ class SC_alt_doc {
 							if($newTranslation) {
 								$href = $this->doc->issueCommand(
 									'&cmd['.$table.']['.$rowsByLang[0]['uid'].'][localize]='.$lang['uid'],
-									$this->backPath.'alt_doc.php?justLocalized='.rawurlencode($table.':'.$rowsByLang[0]['uid'].':'.$lang['uid']).'&returnUrl='.rawurlencode($this->retUrl)
+									$this->backPath.'alt_doc.php?justLocalized='.rawurlencode($table.':'.$rowsByLang[0]['uid'].':'.$lang['uid']).'&returnUrl='.rawurlencode($this->retUrl) . t3lib_BEfunc::getUrlToken('editRecord')
 								);
 
 								// create edit url
 							} else {
 								$href = $this->backPath.'alt_doc.php?';
 								$href .= '&edit['.$table.']['.$rowsByLang[$lang['uid']]['uid'].']=edit';
-								$href .= '&returnUrl='.rawurlencode($this->retUrl);
+								$href .= '&returnUrl='.rawurlencode($this->retUrl) . t3lib_BEfunc::getUrlToken('editRecord');
 							}
 
 							$langSelItems[$lang['uid']]='
@@ -1155,7 +1180,7 @@ class SC_alt_doc {
 		list($table,$orig_uid,$language) = explode(':',$justLocalized);
 
 		if ($TCA[$table] && $TCA[$table]['ctrl']['languageField'] && $TCA[$table]['ctrl']['transOrigPointerField'])	{
-			list($localizedRecord) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+			$localizedRecord = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'uid',
 					$table,
 					$TCA[$table]['ctrl']['languageField'].'='.intval($language).' AND '.
@@ -1168,7 +1193,7 @@ class SC_alt_doc {
 					// Create parameters and finally run the classic page module for creating a new page translation
 				$params = '&edit['.$table.']['.$localizedRecord['uid'].']=edit';
 				$returnUrl = '&returnUrl='.rawurlencode(t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl')));
-				$location = $GLOBALS['BACK_PATH'].'alt_doc.php?'.$params.$returnUrl;
+				$location = $GLOBALS['BACK_PATH'].'alt_doc.php?'.$params.$returnUrl . t3lib_BEfunc::getUrlToken('editRecord');
 
 				t3lib_utility_Http::redirect($location);
 			}
@@ -1177,7 +1202,7 @@ class SC_alt_doc {
 
 
 	/**
-	 * Returns sys_language records.
+	 * Returns sys_language records available for record translations on given page.
 	 *
 	 * @param	integer		Page id: If zero, the query will select all sys_language records from root level which are NOT hidden. If set to another value, the query will select all sys_language records that has a pages_language_overlay record on that page (and is not hidden, unless you are admin user)
 	 * @return	array		Language records including faked record for default language
@@ -1186,6 +1211,11 @@ class SC_alt_doc {
 		global $LANG;
 
 		$modSharedTSconfig = t3lib_BEfunc::getModTSconfig($id, 'mod.SHARED');
+
+			// fallback non sprite-configuration
+		if (preg_match('/\.gif$/', $modSharedTSconfig['properties']['defaultLanguageFlag'])) {
+			$modSharedTSconfig['properties']['defaultLanguageFlag'] = str_replace('.gif', '', $modSharedTSconfig['properties']['defaultLanguageFlag']);
+		}
 
 		$languages = array(
 			0 => array(
@@ -1202,7 +1232,7 @@ class SC_alt_doc {
 			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 							'sys_language.*',
 							'pages_language_overlay,sys_language',
-							'pages_language_overlay.sys_language_uid=sys_language.uid AND pages_language_overlay.pid='.intval($id).$exQ,
+							'pages_language_overlay.sys_language_uid=sys_language.uid AND pages_language_overlay.pid=' . intval($id) . t3lib_BEfunc::deleteClause('pages_language_overlay') . $exQ,
 							'pages_language_overlay.sys_language_uid,sys_language.uid,sys_language.pid,sys_language.tstamp,sys_language.hidden,sys_language.title,sys_language.static_lang_isocode,sys_language.flag',
 							'sys_language.title'
 						);
@@ -1451,8 +1481,8 @@ class SC_alt_doc {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_doc.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_doc.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_doc.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_doc.php']);
 }
 
 
@@ -1462,10 +1492,14 @@ $SOBE = t3lib_div::makeInstance('SC_alt_doc');
 
 // Preprocessing, storing data if submitted to
 $SOBE->preInit();
-if ($SOBE->doProcessData())	{		// Checks, if a save button has been clicked (or the doSave variable is sent)
-	$SOBE->processData();
-}
 
+$formprotection = t3lib_formprotection_Factory::get();
+
+if ($SOBE->doProcessData())	{		// Checks, if a save button has been clicked (or the doSave variable is sent)
+	if ($formprotection->validateToken(t3lib_div::_GP('formToken'), 'editRecord')) {
+		$SOBE->processData();
+	}
+}
 
 // Main:
 $SOBE->init();

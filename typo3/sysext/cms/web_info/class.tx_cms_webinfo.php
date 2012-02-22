@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 /**
  * Contains a class with functions for page related statistics added to the backend Info module
  *
- * $Id: class.tx_cms_webinfo.php 5526 2009-06-02 13:52:04Z benni $
- * Revised for TYPO3 3.6 5/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 5/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -56,7 +56,7 @@ require_once(t3lib_extMgm::extPath('cms').'layout/class.tx_cms_layout.php');
 /**
  * Class for displaying page information (records, page record properties)
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_cms
  */
@@ -84,7 +84,8 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 				0 => $LANG->getLL('depth_0'),
 				1 => $LANG->getLL('depth_1'),
 				2 => $LANG->getLL('depth_2'),
-				3 => $LANG->getLL('depth_3')
+				3 => $LANG->getLL('depth_3'),
+				999 => $LANG->sL('LLL:EXT:lang/locallang_core.xml:labels.depth_infi'),
 			)
 		);
 	}
@@ -188,7 +189,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
  * IMPORTANT: This class is used by the extension "sys_stat" and will be added to the Info module only when "sys_stat" is installed.
  * The display of statistics goes on in "tx_cms_webinfo_page" though
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_cms
  */
@@ -196,7 +197,7 @@ class tx_cms_webinfo_hits extends tx_cms_webinfo_page {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/web_info/class.tx_cms_webinfo.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/web_info/class.tx_cms_webinfo.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/web_info/class.tx_cms_webinfo.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/web_info/class.tx_cms_webinfo.php']);
 }
 ?>

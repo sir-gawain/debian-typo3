@@ -28,33 +28,41 @@
  * <code title="Minimal">
  * <f:be.tableList tableName="fe_users" />
  * </code>
- *
- * Output:
+ * <output>
  * List of all "Website user" records stored in the configured storage PID.
  * Records will be editable, if the current BE user has got edit rights for the table "fe_users".
  * Only the title column (username) will be shown.
  * Context menu is active.
+ * </output>
  *
  * <code title="Full">
  * <f:be.tableList tableName="fe_users" fieldList="{0: 'name', 1: 'email'}" storagePid="1" levels="2" filter='foo' recordsPerPage="10" sortField="name" sortDescending="true" readOnly="true" enableClickMenu="false" clickTitleMode="info" alternateBackgroundColors="true" />
  * </code>
- *
- * Output:
+ * <output>
  * List of "Website user" records with a text property of "foo" stored on PID 1 and two levels down.
  * Clicking on a username will open the TYPO3 info popup for the respective record
+ * </output>
  *
- * @package     Fluid
- * @subpackage  ViewHelpers\Be
- * @author      Bastian Waidelich <bastian@typo3.org>
- * @license     http://www.gnu.org/copyleft/gpl.html
- * @version     SVN: $Id:
- *
+ * @author Bastian Waidelich <bastian@typo3.org>
+ * @license http://www.gnu.org/copyleft/gpl.html
  */
 require_once (PATH_typo3 . 'class.db_list.inc');
 require_once (PATH_typo3 . 'class.db_list_extra.inc');
 
 class Tx_Fluid_ViewHelpers_Be_TableListViewHelper extends Tx_Fluid_ViewHelpers_Be_AbstractBackendViewHelper {
 
+	/**
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
+
+	/**
+	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @return void
+	 */
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+	}
 
 	/**
 	 * Renders a record list as known from the TYPO3 list module
@@ -91,7 +99,7 @@ class Tx_Fluid_ViewHelpers_Be_TableListViewHelper extends Tx_Fluid_ViewHelpers_B
 		$dblist->clickMenuEnabled = $enableClickMenu;
 
 		if ($storagePid === NULL) {
-			$frameworkConfiguration = Tx_Extbase_Dispatcher::getExtbaseFrameworkConfiguration();
+			$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 			$storagePid = $frameworkConfiguration['persistence']['storagePid'];
 		}
 

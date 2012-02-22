@@ -23,57 +23,38 @@
 /**
  * Abstract node in the syntax tree which has been built.
  *
- * @version $Id: AbstractNode.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage Core\Parser\SyntaxTree
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
- * @scope prototype
  */
-abstract class Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode {
+abstract class Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode implements Tx_Fluid_Core_Parser_SyntaxTree_NodeInterface {
 
 	/**
 	 * List of Child Nodes.
-	 * @var array<Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode>
+	 * @var array<Tx_Fluid_Core_Parser_SyntaxTree_NodeInterface>
 	 */
 	protected $childNodes = array();
 
 	/**
-	 * The rendering context containing everything to correctly render the subtree
-	 * @var Tx_Fluid_Core_Rendering_RenderingContext
-	 */
-	protected $renderingContext;
-
-	/**
-	 * @param Tx_Fluid_Core_Rendering_RenderingContext $renderingContext Rendering Context to be used for this evaluation
-	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 */
-	public function setRenderingContext(Tx_Fluid_Core_Rendering_RenderingContext $renderingContext) {
-		$this->renderingContext = $renderingContext;
-	}
-
-	/**
 	 * Evaluate all child nodes and return the evaluated results.
 	 *
-	 * @return object Normally, an object is returned - in case it is concatenated with a string, a string is returned.
+	 * @param Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext
+	 * @return mixed Normally, an object is returned - in case it is concatenated with a string, a string is returned.
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
-	public function evaluateChildNodes() {
+	public function evaluateChildNodes(Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext) {
 		$output = NULL;
 		foreach ($this->childNodes as $subNode) {
-			$subNode->setRenderingContext($this->renderingContext);
-
 			if ($output === NULL) {
-				$output = $subNode->evaluate();
+				$output = $subNode->evaluate($renderingContext);
 			} else {
 				if (is_object($output) && !method_exists($output, '__toString')) {
 					throw new Tx_Fluid_Core_Parser_Exception('Cannot cast object of type "' . get_class($output) . '" to string.', 1248356140);
 				}
 				$output = (string)$output;
-				$subNodeOutput = $subNode->evaluate();
+				$subNodeOutput = $subNode->evaluate($renderingContext);
+
 				if (is_object($subNodeOutput) && !method_exists($subNodeOutput, '__toString')) {
-					throw new Tx_Fluid_Core_Parser_Exception('Cannot cast object of type "' . get_class($subNodeOutput) . '" to string.', 1248356140);
+					throw new Tx_Fluid_Core_Parser_Exception('Cannot cast object of type "' . get_class($subNodeOutput) . '" to string.', 1273753083);
 				}
 				$output .= (string)$subNodeOutput;
 			}
@@ -85,7 +66,7 @@ abstract class Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode {
 	 * Returns all child nodes for a given node.
 	 * This is especially needed to implement the boolean expression language.
 	 *
-	 * @return array Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode A list of nodes
+	 * @return array<Tx_Fluid_Core_Parser_SyntaxTree_NodeInterface> A list of nodes
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function getChildNodes() {
@@ -95,22 +76,14 @@ abstract class Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode {
 	/**
 	 * Appends a subnode to this node. Is used inside the parser to append children
 	 *
-	 * @param Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode $childNode The subnode to add
+	 * @param Tx_Fluid_Core_Parser_SyntaxTree_NodeInterface $childNode The subnode to add
 	 * @return void
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
-	public function addChildNode(Tx_Fluid_Core_Parser_SyntaxTree_AbstractNode $childNode) {
+	public function addChildNode(Tx_Fluid_Core_Parser_SyntaxTree_NodeInterface $childNode) {
 		$this->childNodes[] = $childNode;
 	}
 
-	/**
-	 * Evaluates the node - can return not only strings, but arbitary objects.
-	 *
-	 * @return object Evaluated node
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @author Bastian Waidelich <bastian@typo3.org>
-	 */
-	abstract public function evaluate();
 }
 
 ?>

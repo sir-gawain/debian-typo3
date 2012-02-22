@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,11 +27,11 @@
 /**
  * Shows information about a database or file item
  *
- * $Id: show_rechis.php 5526 2009-06-02 13:52:04Z benni $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML Compliant
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -66,7 +66,7 @@ require_once ('class.show_rechis.inc');
 /**
  * Script Class for showing the history module of TYPO3s backend
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  * @see class.show_rechis.inc
@@ -155,7 +155,7 @@ class SC_show_rechis {
 		$historyObj = t3lib_div::makeInstance('recordHistory');
 
 		if ($historyObj->returnUrl)	{
-			$buttons['back']= '<a href="' . htmlspecialchars($historyObj->returnUrl) . '" class="typo3-goBack"><img' . t3lib_iconWorks::skinImg('', 'gfx/goback.gif') . ' alt="" title="' . $GLOBALS['LANG']->getLL('returnLink', 1) . '" /></a>';
+			$buttons['back']= '<a href="' . htmlspecialchars($historyObj->returnUrl) . '" class="typo3-goBack">' . t3lib_iconWorks::getSpriteIcon('actions-view-go-back') . '</a>';
 		}
 
 		return $buttons;
@@ -163,8 +163,8 @@ class SC_show_rechis {
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_rechis.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_rechis.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_rechis.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_rechis.php']);
 }
 
 

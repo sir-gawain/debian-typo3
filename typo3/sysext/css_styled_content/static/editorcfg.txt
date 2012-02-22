@@ -205,4 +205,4 @@ Normal line again.		</PRE>
 
 // Commented out since it needs update - or a vision... ?
 
-# TYPO3 SVN ID: $Id: editorcfg.txt 3437 2008-03-16 16:22:11Z flyguide $
+# TYPO3 SVN ID: $Id$

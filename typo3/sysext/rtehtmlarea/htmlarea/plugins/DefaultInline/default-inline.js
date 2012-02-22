@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /*
  * Default Inline Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: default-inline.js 5165 2009-03-09 18:28:59Z ohader $
+ * TYPO3 SVN ID: $Id$
  */
-DefaultInline = HTMLArea.Plugin.extend({
+HTMLArea.DefaultInline = HTMLArea.Plugin.extend({
 		
 	constructor : function(editor, pluginName) {
 		this.base(editor, pluginName);
@@ -44,7 +44,7 @@ DefaultInline = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.0",
+			version		: "1.1",
 			developer	: "Stanislas Rolland",
 			developerUrl	: "http://www.fructifor.ca/",
 			copyrightOwner	: "Stanislas Rolland",
@@ -53,29 +53,36 @@ DefaultInline = HTMLArea.Plugin.extend({
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
-		
 		/*
 		 * Registering the buttons
 		 */
-		var buttonList = DefaultInline.buttonList, buttonId;
-		var n = buttonList.length;
-		for (var i = 0; i < n; ++i) {
-			var button = buttonList[i];
-			buttonId = button[0];
+		Ext.each(this.buttonList, function (button) {
+			var buttonId = button[0];
 			var buttonConfiguration = {
 				id		: buttonId,
-				tooltip		: this.localize(buttonId + "-Tooltip"),
+				tooltip		: this.localize(buttonId + '-Tooltip'),
+				iconCls		: 'htmlarea-action-' + button[2],
 				textMode	: false,
-				action		: "onButtonPress",
+				action		: 'onButtonPress',
 				context		: button[1],
 				hotKey		: (this.editorConfiguration.buttons[buttonId.toLowerCase()]?this.editorConfiguration.buttons[buttonId.toLowerCase()].hotKey:null)
 			};
 			this.registerButton(buttonConfiguration);
-		}
-		
+			return true;
+		}, this);
 		return true;
-	 },
-	 
+	},
+	/*
+	 * The list of buttons added by this plugin
+	 */
+	buttonList: [
+		['Bold', null, 'bold'],
+		['Italic', null, 'italic'],
+		['StrikeThrough', null, 'strike-through'],
+		['Subscript', null, 'subscript'],
+		['Superscript', null, 'superscript'],
+		['Underline', null, 'underline']
+	],
 	/*
 	 * This function gets called when some inline element button was pressed.
 	 */
@@ -83,7 +90,7 @@ DefaultInline = HTMLArea.Plugin.extend({
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		editor.focusEditor();
+		editor.focus();
 		try {
 			editor._doc.execCommand(buttonId, false, null);
 		}
@@ -96,34 +103,16 @@ DefaultInline = HTMLArea.Plugin.extend({
 	/*
 	 * This function gets called when the toolbar is updated
 	 */
-	onUpdateToolbar : function () {
-		var editor = this.editor;
-		var buttonList = DefaultInline.buttonList;
-		var buttonId, n = buttonList.length, commandState;
-		if (editor.getMode() === "wysiwyg" && editor.isEditable()) {
-			for (var i = 0; i < n; ++i) {
-				buttonId = buttonList[i][0];
-				if (this.isButtonInToolbar(buttonId)) {
-					commandState = false;
-					try {
-						commandState = editor._doc.queryCommandState(buttonId);
-					} catch(e) {
-						commandState = false;
-					}
-					editor._toolbarObjects[buttonId].state("active", commandState);
-				}
+	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
+		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+			var commandState = false;
+			try {
+				commandState = this.editor._doc.queryCommandState(button.itemId);
+			} catch(e) {
+				commandState = false;
 			}
+			button.setInactive(!commandState);
 		}
 	}
 });
-
-/* The list of buttons added by this plugin */
-DefaultInline.buttonList = [
-	["Bold", null],
-	["Italic", null],
-	["StrikeThrough", null],
-	["Subscript", null],
-	["Superscript", null],
-	["Underline", null]
-];
 

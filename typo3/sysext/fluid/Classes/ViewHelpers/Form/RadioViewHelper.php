@@ -28,34 +28,30 @@
  * <code title="Example">
  * <f:form.radio name="myRadioButton" value="someValue" />
  * </code>
- *
- * Output:
+ * <output>
  * <input type="radio" name="myRadioButton" value="someValue" />
+ * </output>
  *
  * <code title="Preselect">
  * <f:form.radio name="myRadioButton" value="someValue" checked="{object.value} == 5" />
  * </code>
- *
- * Output:
+ * <output>
  * <input type="radio" name="myRadioButton" value="someValue" checked="checked" />
  * (depending on $object)
+ * </output>
  *
  * <code title="Bind to object property">
  * <f:form.radio property="newsletter" value="1" /> yes
  * <f:form.radio property="newsletter" value="0" /> no
  * </code>
- *
- * Output:
+ * <output>
  * <input type="radio" name="user[newsletter]" value="1" checked="checked" /> yes
  * <input type="radio" name="user[newsletter]" value="0" /> no
  * (depending on property "newsletter")
+ * </output>
  *
- * @version $Id: RadioViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage ViewHelpers\Form
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Form_RadioViewHelper extends Tx_Fluid_ViewHelpers_Form_AbstractFormFieldViewHelper {
 
@@ -75,7 +71,7 @@ class Tx_Fluid_ViewHelpers_Form_RadioViewHelper extends Tx_Fluid_ViewHelpers_For
 		parent::initializeArguments();
 		$this->registerTagAttribute('disabled', 'string', 'Specifies that the input element should be disabled when the page loads');
 		$this->registerArgument('errorClass', 'string', 'CSS class to set if there are errors for this view helper', FALSE, 'f3-form-error');
-		#$this->registerArgument('value', 'string', 'Value of input tag. Required for radio buttons', TRUE);
+		$this->overrideArgument('value', 'string', 'Value of input tag. Required for radio buttons', TRUE);
 		$this->registerUniversalTagAttributes();
 	}
 

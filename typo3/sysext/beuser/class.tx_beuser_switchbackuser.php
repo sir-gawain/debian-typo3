@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,9 +24,9 @@
 /**
  * Backend user switchback
  *
- * $Id: class.tx_beuser_switchbackuser.php 6469 2009-11-17 23:56:35Z benni $
+ * $Id$
  *
- * @author	Sebastian Kurfuerst <sebastian@garbage-group.de>
+ * @author	Sebastian Kurfürst <sebastian@garbage-group.de>
  */
 class tx_beuser_switchbackuser {
 	function switchBack($params, $that)	{

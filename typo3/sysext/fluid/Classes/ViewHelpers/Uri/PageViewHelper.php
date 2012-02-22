@@ -21,24 +21,28 @@
  * <code title="URI to the current page">
  * <f:uri.page>page link</f:uri.page>
  * </code>
- *
- * Output:
+ * <output>
  * index.php?id=123
  * (depending on the current page and your TS configuration)
+ * </output>
  *
  * <code title="query parameters">
  * <f:uri.page pageUid="1" additionalParams="{foo: 'bar'}" />
  * </code>
- *
- * Output:
+ * <output>
  * index.php?id=1&foo=bar
  * (depending on your TS configuration)
+ * </output>
  *
- * @package Fluid
- * @subpackage ViewHelpers
- * @version $Id: PageViewHelper.php 1193 2009-09-04 16:08:17Z bwaidelich $
+ * <code title="query parameters for extensions">
+ * <f:uri.page pageUid="1" additionalParams="{extension_key: {foo: 'bar'}}" />
+ * </code>
+ * <output>
+ * index.php?id=1&extension_key[foo]=bar
+ * (depending on your TS configuration)
+ * </output>
+ *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
- * @scope prototype
  */
 class Tx_Fluid_ViewHelpers_Uri_PageViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 

@@ -25,12 +25,8 @@
  * Is available inside every view helper as $this->arguments - and you use it as if it was an array.
  * However, you can only read, and not write to it.
  *
- * @version $Id: Arguments.php 1734 2009-11-25 21:53:57Z stucki $
- * @package Fluid
- * @subpackage Core\ViewHelper
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
- * @scope prototype
  */
 class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 
@@ -84,7 +80,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function offsetSet($key, $value) {
-		throw new RuntimeException('Tried to set argument "' . $key . '", but setting arguments is forbidden.', 1236080693);
+		throw new Tx_Fluid_Core_Exception('Tried to set argument "' . $key . '", but setting arguments is forbidden.', 1236080693);
 	}
 
 	/**
@@ -94,7 +90,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function offsetUnset($key) {
-		throw new RuntimeException('Tried to unset argument "' . $key . '", but setting arguments is forbidden.', 1236080702);
+		throw new Tx_Fluid_Core_Exception('Tried to unset argument "' . $key . '", but setting arguments is forbidden.', 1236080702);
 	}
 
 	/**

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Benjamin Mack
+*  (c) 2007-2011 Benjamin Mack
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,7 +33,7 @@
 $TYPO3_AJAX = true;
 
 // include t3lib_div at this time to get the GET/POST methods it provides
-require_once('../t3lib/class.t3lib_div.php');
+require_once(dirname(__FILE__) . '/../t3lib/class.t3lib_div.php');
 
 // first get the ajaxID
 $ajaxID = (string)t3lib_div::_GP('ajaxID');

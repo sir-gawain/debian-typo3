@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2006-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 /**
  * Module Dispatch script
  *
- * $Id: mod.php 6135 2009-10-11 14:02:27Z steffenk $
+ * $Id$
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -65,4 +65,5 @@ if ($temp_path = $TBE_MODULES['_PATHS'][$temp_M]) {
 if ($isDispatched === FALSE) {
 	die('Value "' . htmlspecialchars($temp_M) . '" for "M" was not found as a module');
 }
+
 ?>

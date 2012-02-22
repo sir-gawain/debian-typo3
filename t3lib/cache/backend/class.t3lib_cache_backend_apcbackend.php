@@ -1,26 +1,26 @@
 <?php
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2009 Ingo Renner <ingo@typo3.org>
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 
 /**
@@ -39,7 +39,7 @@
  * Each key is prepended with a prefix. By default prefix consists from two parts
  * separated by underscore character and ends in yet another underscore character:
  * - "TYPO3"
- * - MD5 of script path and filename and SAPI name
+ * - MD5 of path to TYPO3 and user running TYPO3
  * This prefix makes sure that keys from the different installations do not
  * conflict.
  *
@@ -47,7 +47,8 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @version $Id: class.t3lib_cache_backend_apcbackend.php 8800 2010-09-16 16:17:08Z lolli $
+ * @api
+ * @version $Id$
  */
 class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend {
 
@@ -61,11 +62,11 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	/**
 	 * Constructs this backend
 	 *
-	 * @param mixed $options Configuration options - unused here
+	 * @param array $options Configuration options - unused here
 	 * @author Robert Lemke <robert@typo3.org>
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
-	public function __construct($options = array()) {
+	public function __construct(array $options = array()) {
 		if (!extension_loaded('apc')) {
 			throw new t3lib_cache_Exception(
 				'The PHP extension "apc" must be installed and loaded in order to use the APC backend.',
@@ -74,6 +75,20 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 		}
 
 		parent::__construct($options);
+	}
+
+	/**
+	 * Initializes the identifier prefix when setting the cache.
+	 *
+	 * @param t3lib_cache_frontend_Frontend $cache The frontend for this backend
+	 * @return void
+	 * @author Robert Lemke <robert@typo3.org>
+	 */
+	public function setCache(t3lib_cache_frontend_Frontend $cache) {
+		parent::setCache($cache);
+		$processUser = extension_loaded('posix') ? posix_getpwuid(posix_geteuid()) : array('name' => 'default');
+		$pathHash = t3lib_div::shortMD5(PATH_site . $processUser['name'], 12);
+		$this->identifierPrefix = 'TYPO3_' . $pathHash;
 	}
 
 	/**
@@ -105,7 +120,7 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 			);
 		}
 
-		$tags[] = '%APCBE%' . $this->cache->getIdentifier();
+		$tags[] = '%APCBE%' . $this->cacheIdentifier;
 		$expiration = $lifetime !== NULL ? $lifetime : $this->defaultLifetime;
 
 		$success = apc_store($this->identifierPrefix . $entryIdentifier, $data, $expiration);
@@ -192,7 +207,7 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 */
 	public function findIdentifiersByTags(array $tags) {
 		$taggedEntries = array();
-		$foundEntries  = array();
+		$foundEntries = array();
 
 		foreach ($tags as $tag) {
 			$taggedEntries[$tag] = $this->findIdentifiersByTag($tag);
@@ -221,7 +236,7 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 		$success = FALSE;
 		$tags = apc_fetch($this->identifierPrefix . 'ident_' . $identifier, $success);
 
-		return ($success ? (array)$tags : array());
+		return ($success ? (array) $tags : array());
 	}
 
 	/**
@@ -238,7 +253,7 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 			);
 		}
 
-		$this->flushByTag('%APCBE%' . $this->cache->getIdentifier());
+		$this->flushByTag('%APCBE%' . $this->cacheIdentifier);
 	}
 
 	/**
@@ -339,8 +354,8 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_apcbackend.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_apcbackend.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_apcbackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_apcbackend.php']);
 }
 
 ?>

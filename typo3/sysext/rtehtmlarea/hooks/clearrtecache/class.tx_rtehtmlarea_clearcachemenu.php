@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,9 +31,7 @@
  * @author	Steffen kamper <info@sk-typo3.de>
  * @package	TYPO3
  */
-
 require_once (PATH_typo3.'interfaces/interface.backend_cacheActionsHook.php');
-
 class tx_rtehtmlarea_clearcachemenu implements backend_cacheActionsHook {
 	/**
 	 * modifies CacheMenuItems array
@@ -58,7 +56,7 @@ class tx_rtehtmlarea_clearcachemenu implements backend_cacheActionsHook {
 	 }
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/hooks/clearrtecache/class.tx_rtehtmlarea_clearcachemenu.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/hooks/clearrtecache/class.tx_rtehtmlarea_clearcachemenu.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/hooks/clearrtecache/class.tx_rtehtmlarea_clearcachemenu.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/hooks/clearrtecache/class.tx_rtehtmlarea_clearcachemenu.php']);
 }
 ?>

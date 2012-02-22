@@ -6,7 +6,7 @@ URL    : http://typo3.org
 
 Description : styles the Open Documents toolbar item
 
-	$Id: opendocs.css 6539 2009-11-25 14:49:14Z stucki $
+	$Id$
 
 - - - - - - - - - - - - - - - - - - - - - */
 
@@ -20,12 +20,12 @@ Description : styles the Open Documents toolbar item
 }
 
 #tx-opendocs-counter {
+	font-size: 9px;
+	height: 12px;
 	width: 14px;
 	text-align: right;
 	border: 1px dashed #999;
 	padding: 1px 2px;
-	position: relative;
-	top: -4px;
 }
 
 #tx-opendocs-menu .toolbar-item-menu {
@@ -79,7 +79,7 @@ Description : styles the Open Documents toolbar item
 	vertical-align: top;
 }
 
-#tx-opendocs-menu .toolbar-item-menu .list .opendoc .close img {
+#tx-opendocs-menu .toolbar-item-menu .list .opendoc .close span {
 	cursor: pointer;
 }
 

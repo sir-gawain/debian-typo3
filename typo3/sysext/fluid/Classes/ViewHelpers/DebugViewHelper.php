@@ -14,18 +14,24 @@
  *                                                                        */
 
 /**
+ * Wrapper for TYPO3s famous debug() function
  *
- * @package
- * @subpackage
- * @version $Id: DebugViewHelper.php 1734 2009-11-25 21:53:57Z stucki $
+ * = Examples =
+ *
+ * <code title="Simple">
+ * <f:debug>{testVariables.array}</f:debug>
+ * </code>
+ * <output>
+ * foobarbazfoo
+ * </output>
  */
 class Tx_Fluid_ViewHelpers_DebugViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
 	/**
-	 * Wrapper for TYPO3s famous debug()
+	 * Wrapper for TYPO3s famous debug() function
 	 *
 	 * @param string $title
-	 * @return string the altered string. 
+	 * @return string the altered string.
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function render($title = NULL) {

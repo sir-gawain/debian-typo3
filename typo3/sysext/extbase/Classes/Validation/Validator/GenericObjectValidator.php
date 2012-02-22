@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Validation\Validator
- * @version $Id: GenericObjectValidator.php 1948 2010-03-04 06:40:53Z jocrau $
+ * @version $Id$
  * @scope prototype
  */
 class Tx_Extbase_Validation_Validator_GenericObjectValidator extends Tx_Extbase_Validation_Validator_AbstractObjectValidator {
@@ -106,7 +106,7 @@ class Tx_Extbase_Validation_Validator_GenericObjectValidator extends Tx_Extbase_
 	 */
 	protected function addErrorsForProperty($errors, $propertyName) {
 		if (!isset($this->errors[$propertyName])) {
-			$this->errors[$propertyName] = t3lib_div::makeInstance('Tx_Extbase_Validation_PropertyError', $propertyName);
+			$this->errors[$propertyName] = new Tx_Extbase_Validation_PropertyError($propertyName);
 		}
 		$this->errors[$propertyName]->addErrors($errors);
 	}

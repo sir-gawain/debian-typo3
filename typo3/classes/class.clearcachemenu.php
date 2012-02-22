@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2011 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 /**
  * class to render the menu for the cache clearing actions
  *
- * $Id: class.clearcachemenu.php 5947 2009-09-16 17:57:09Z ohader $
+ * $Id$
  *
  * @author	Ingo Renner <ingo@typo3.org>
  * @package TYPO3
@@ -63,8 +63,12 @@ class ClearCacheMenu implements backend_toolbarItem {
 			$this->cacheActions[] = array(
 				'id'    => 'all',
 				'title' => $title,
-				'href'  => $this->backPath.'tce_db.php?vC='.$GLOBALS['BE_USER']->veriCode().'&cacheCmd=all',
-				'icon'  => '<img'.t3lib_iconWorks::skinImg($this->backPath, 'gfx/lightning_red.png', 'width="16" height="16"').' title="'.$title.'" alt="'.$title.'" />'
+				'href'  => $this->backPath .
+						'tce_db.php?vC=' .
+						$GLOBALS['BE_USER']->veriCode() .
+						'&cacheCmd=all&ajaxCall=1' .
+						t3lib_BEfunc::getUrlToken('tceAction'),
+				'icon'  => t3lib_iconWorks::getSpriteIcon('actions-system-cache-clear-impact-high')
 			);
 		}
 
@@ -74,8 +78,12 @@ class ClearCacheMenu implements backend_toolbarItem {
 			$this->cacheActions[] = array(
 				'id'    => 'pages',
 				'title' => $title,
-				'href'  => $this->backPath.'tce_db.php?vC='.$GLOBALS['BE_USER']->veriCode().'&cacheCmd=pages',
-				'icon'  => '<img'.t3lib_iconWorks::skinImg($this->backPath, 'gfx/lightning.png', 'width="16" height="16"').' title="'.$title.'" alt="'.$title.'" />'
+				'href'  => $this->backPath .
+						'tce_db.php?vC=' .
+						$GLOBALS['BE_USER']->veriCode() .
+						'&cacheCmd=pages&ajaxCall=1' .
+						t3lib_BEfunc::getUrlToken('tceAction'),
+				'icon'  => t3lib_iconWorks::getSpriteIcon('actions-system-cache-clear-impact-medium')
 			);
 		}
 
@@ -85,8 +93,12 @@ class ClearCacheMenu implements backend_toolbarItem {
 			$this->cacheActions[] = array(
 				'id'    => 'temp_CACHED',
 				'title' => $title,
-				'href'  => $this->backPath.'tce_db.php?vC='.$GLOBALS['BE_USER']->veriCode().'&cacheCmd=temp_CACHED',
-				'icon'  => '<img'.t3lib_iconWorks::skinImg($this->backPath, 'gfx/lightning_green.png', 'width="16" height="16"').' title="'.$title.'" alt="'.$title.'" />'
+				'href'  => $this->backPath .
+						'tce_db.php?vC=' .
+						$GLOBALS['BE_USER']->veriCode() .
+						'&cacheCmd=temp_CACHED&ajaxCall=1' .
+						t3lib_BEfunc::getUrlToken('tceAction'),
+				'icon'  => t3lib_iconWorks::getSpriteIcon('actions-system-cache-clear-impact-low')
 			);
 		}
 
@@ -102,7 +114,6 @@ class ClearCacheMenu implements backend_toolbarItem {
 				$hookObject->manipulateCacheActions($this->cacheActions, $this->optionValues);
 			}
 		}
-
 	}
 
 	/**
@@ -137,7 +148,9 @@ class ClearCacheMenu implements backend_toolbarItem {
 		$this->addJavascriptToBackend();
 		$cacheMenu = array();
 
-		$cacheMenu[] = '<a href="#" class="toolbar-item"><img'.t3lib_iconWorks::skinImg($this->backPath, 'gfx/lightning.png', 'width="16" height="16"').' title="'.$title.'" alt="'.$title.'" /></a>';
+		$cacheMenu[] = '<a href="#" class="toolbar-item">' .
+			t3lib_iconWorks::getSpriteIcon('apps-toolbar-menu-cache', array('title' => $title)) .
+			'</a>';
 
 		$cacheMenu[] = '<ul class="toolbar-item-menu" style="display: none;">';
 
@@ -147,7 +160,7 @@ class ClearCacheMenu implements backend_toolbarItem {
 
 		$cacheMenu[] = '</ul>';
 
-		return implode("\n", $cacheMenu);
+		return implode(LF, $cacheMenu);
 	}
 
 	/**
@@ -170,8 +183,8 @@ class ClearCacheMenu implements backend_toolbarItem {
 
 }
 
-if(defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/classes/class.clearcachemenu.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/classes/class.clearcachemenu.php']);
+if(defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.clearcachemenu.php']) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.clearcachemenu.php']);
 }
 
 ?>

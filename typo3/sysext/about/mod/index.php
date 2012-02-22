@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,12 +28,12 @@
  * Module: About
  * This document shows some standard-information for TYPO3 CMS: About-text, version number and so on.
  *
- * $Id: index.php 6536 2009-11-25 14:07:18Z stucki $
- * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
+ * $Id$
+ * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
  * @todo	This module could use a major overhaul in general.
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -66,7 +66,7 @@ $BE_USER->modAccess($MCONF,1);
 /**
  * Script Class for the Help > About module
  *
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -98,17 +98,24 @@ class SC_mod_help_about_index {
 		// **************************
 		#$TBE_TEMPLATE->bgColor = '#cccccc';
 		$TBE_TEMPLATE->backPath = $GLOBALS['BACK_PATH'];
-		$this->content.= $TBE_TEMPLATE->startPage('About');
 
 		$minorText = sprintf($LANG->getLL('minor'), 'TYPO3 Ver. '.htmlspecialchars(TYPO3_version).', Copyright &copy; '.htmlspecialchars(TYPO3_copyright_year), 'Kasper Sk&aring;rh&oslash;j');
 
 		$content='
 			<div id="typo3-mod-help-about-index-php-outer">
-				<img src="'.$BACK_PATH.'gfx/typo3logo.gif" width="123" height="34" vspace="10" alt="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_help_about.xml:typo3_logo', true).'" />
+				<img' . t3lib_iconWorks::skinImg($BACK_PATH, 'gfx/typo3logo.gif', 'width="123" height="34"') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_help_about.xml:typo3_logo', true) . '" />
 				<div class="typo3-mod-help-about-index-php-inner">
-					<h2>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_help_about.xml:information', true).'</h2>
-					<h3>'.$LANG->getLL('welcome',1).'</h3>
+					<h2>' . $LANG->getLL('welcome', TRUE) . '</h2>
 					<p>'.$minorText.'</p>
+				</div>
+
+				<div class="typo3-mod-help-about-index-php-inner">
+					<h2>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_help_about.xml:donation_header', TRUE) . '</h2>
+					<p id="donation-description">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_help_about.xml:donation_message') . '</p>
+					<div class="donation-button">
+						<input type="button" id="donation-button" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_help_about.xml:donation_button') . '"
+						onclick="window.open(\'' . TYPO3_URL_DONATE . '\');" />
+					</div>
 				</div>
 
 				<div class="typo3-mod-help-about-index-php-inner">
@@ -128,8 +135,12 @@ class SC_mod_help_about_index {
 				</div>
 			</div>
 		';
-		$this->content.= $content;
-		$this->content.= $TBE_TEMPLATE->endPage();
+
+			// Renders the module page
+		$this->content = $TBE_TEMPLATE->render(
+			'About',
+			$content
+		);
 	}
 
 	/**
@@ -169,8 +180,8 @@ class SC_mod_help_about_index {
 }
 
 // Include extension?
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/help/about/index.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/help/about/index.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/help/about/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/help/about/index.php']);
 }
 
 

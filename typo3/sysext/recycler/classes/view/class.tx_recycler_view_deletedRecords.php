@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Julian Kleinhans <typo3@kj187.de>
+ *  (c) 2009-2011 Julian Kleinhans <typo3@kj187.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@ require_once(t3lib_extMgm::extPath('recycler', 'classes/helper/class.tx_recycler
  * @author	Julian Kleinhans <typo3@kj187.de>
  * @package	TYPO3
  * @subpackage	tx_recycler
- * @version $Id: class.tx_recycler_view_deletedRecords.php 6536 2009-11-25 14:07:18Z stucki $
+ * @version $Id$
  **/
 class tx_recycler_view_deletedRecords {
 
@@ -55,21 +55,21 @@ class tx_recycler_view_deletedRecords {
 				$total += count($deletedRowsArray[$table]);
 
 				foreach($rows as $row) {
-					$feuser = t3lib_BEfunc::getRecord('be_users', $row[$GLOBALS['TCA'][$table]['ctrl']['cruser_id']], 'username', '', false);
+					$backendUser = t3lib_BEfunc::getRecord('be_users', $row[$GLOBALS['TCA'][$table]['ctrl']['cruser_id']], 'username', '', FALSE);
 					$jsonArray['rows'][] = array(
 						'uid'	=> $row['uid'],
 						'pid'	=> $row['pid'],
 						'table'	=> $table,
 						'crdate' => date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $row[$GLOBALS['TCA'][$table]['ctrl']['crdate']]),
 						'tstamp' => date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $row[$GLOBALS['TCA'][$table]['ctrl']['tstamp']]),
-						'owner' => $feuser['username'],
+						'owner' => htmlspecialchars($backendUser['username']),
 						'owner_uid' => $row[$GLOBALS['TCA'][$table]['ctrl']['cruser_id']],
 						'tableTitle' => tx_recycler_helper::getUtf8String(
 							$GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title'])
 						),
-						'title'	=> tx_recycler_helper::getUtf8String(
+						'title' => htmlspecialchars(tx_recycler_helper::getUtf8String(
 							t3lib_BEfunc::getRecordTitle($table, $row)
-						),
+						)),
 						'path'	=> tx_recycler_helper::getRecordPath($row['pid']),
 					);
 				}
@@ -81,8 +81,8 @@ class tx_recycler_view_deletedRecords {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php']);
 }
 
 ?>

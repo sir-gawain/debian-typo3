@@ -17,10 +17,15 @@
  *
  * @package Extbase
  * @subpackage MVC\Web\Routing
- * @version $Id: UriBuilder.php 2465 2010-07-26 09:29:49Z jocrau $
+ * @version $Id$
  * @api
  */
 class Tx_Extbase_MVC_Web_Routing_UriBuilder {
+
+	/**
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
 
 	/**
 	 * An instance of tslib_cObj
@@ -96,12 +101,25 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	protected $format = '';
 
 	/**
-	 * Constructs this URI Helper
-	 *
-	 * @param tslib_cObj $contentObject
+	 * @var string
 	 */
-	public function __construct(tslib_cObj $contentObject = NULL) {
-		$this->contentObject = $contentObject !== NULL ? $contentObject : t3lib_div::makeInstance('tslib_cObj');
+	protected $argumentPrefix = NULL;
+
+	/**
+	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @return void
+	 */
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+	}
+
+	/**
+	 * Life-cycle method that is called by the DI container as soon as this object is completely built
+	 *
+	 * @return void
+	 */
+	public function initializeObject() {
+		$this->contentObject = $this->configurationManager->getContentObject();
 	}
 
 	/**
@@ -249,6 +267,24 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	}
 
 	/**
+	 * Specifies the prefix to be used for all arguments.
+	 *
+	 * @param string $argumentPrefix
+	 * @return Tx_Extbase_MVC_Web_Routing_UriBuilder the current UriBuilder to allow method chaining
+	 */
+	public function setArgumentPrefix($argumentPrefix) {
+		$this->argumentPrefix = (string)$argumentPrefix;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getArgumentPrefix() {
+		return $this->argumentPrefix;
+	}
+
+	/**
 	 * If set, URIs for pages without access permissions will be created
 	 *
 	 * @param boolean $linkAccessRestrictedPages
@@ -381,13 +417,14 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 		$this->targetPageType = 0;
 		$this->noCache = FALSE;
 		$this->useCacheHash = TRUE;
+		$this->argumentPrefix = NULL;
 
 		return $this;
 	}
 
 	/**
 	 * Creates an URI used for linking to an Extbase action.
-	 * Works in Frondend and Backend mode of TYPO3.
+	 * Works in Frontend and Backend mode of TYPO3.
 	 *
 	 * @param string $actionName Name of the action to be called
 	 * @param array $controllerArguments Additional query parameters. Will be "namespaced" and merged with $this->arguments.
@@ -410,19 +447,29 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 		if ($extensionName === NULL) {
 			$extensionName = $this->request->getControllerExtensionName();
 		}
+		if ($pluginName === NULL && TYPO3_MODE === 'FE') {
+			$pluginName = Tx_Extbase_Utility_Extension::getPluginNameByAction($extensionName, $controllerArguments['controller'], $controllerArguments['action']);
+		}
 		if ($pluginName === NULL) {
 			$pluginName = $this->request->getPluginName();
+		}
+		if ($this->targetPageUid === NULL && TYPO3_MODE === 'FE') {
+			$this->targetPageUid = Tx_Extbase_Utility_Extension::getTargetPidByPlugin($extensionName, $pluginName);
 		}
 		if ($this->format !== '') {
 			$controllerArguments['format'] = $this->format;
 		}
-		$argumentPrefix = strtolower('tx_' . $extensionName . '_' . $pluginName);
-		$prefixedControllerArguments = array($argumentPrefix => $controllerArguments);
+		if ($this->argumentPrefix !== NULL) {
+			$prefixedControllerArguments = array($this->argumentPrefix => $controllerArguments);
+		} else {
+			$pluginNamespace = Tx_Extbase_Utility_Extension::getPluginNamespace($extensionName, $pluginName);
+			$prefixedControllerArguments = array($pluginNamespace => $controllerArguments);
+		}
 		$this->arguments = t3lib_div::array_merge_recursive_overrule($this->arguments, $prefixedControllerArguments);
 
 		return $this->build();
 	}
-	
+
 	/**
 	 * Builds the URI
 	 * Depending on the current context this calls buildBackendUri() or buildFrontendUri()
@@ -547,6 +594,13 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	 */
 	protected function convertDomainObjectsToIdentityArrays(array $arguments) {
 		foreach ($arguments as $argumentKey => $argumentValue) {
+			// if we have a LazyLoadingProxy here, make sure to get the real instance for further processing
+			if ($argumentValue instanceof Tx_Extbase_Persistence_LazyLoadingProxy) {
+				$argumentValue = $argumentValue->_loadRealInstance();
+				// also update the value in the arguments array, because the lazyLoaded object could be
+				// hidden and thus the $argumentValue would be NULL.
+				$arguments[$argumentKey] = $argumentValue;
+			}
 			if ($argumentValue instanceof Tx_Extbase_DomainObject_AbstractDomainObject) {
 				if ($argumentValue->getUid() !== NULL) {
 					$arguments[$argumentKey] = $argumentValue->getUid();
@@ -561,11 +615,11 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 		}
 		return $arguments;
 	}
-	
+
 	/**
 	 * Converts a given object recursively into an array.
 	 *
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object 
+	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object
 	 * @return void
 	 */
 	// TODO Refactore this into convertDomainObjectsToIdentityArrays()

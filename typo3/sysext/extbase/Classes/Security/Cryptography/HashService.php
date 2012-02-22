@@ -30,7 +30,7 @@
  *
  * It will use some salt / encryption key in the future.
  *
- * @version $Id: HashService.php 1729 2009-11-25 21:37:20Z stucki $
+ * @version $Id$
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser Public License, version 3 or later
  */
 class Tx_Extbase_Security_Cryptography_HashService implements t3lib_singleton {

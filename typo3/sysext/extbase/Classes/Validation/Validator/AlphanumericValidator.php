@@ -30,7 +30,7 @@
  *
  * @package Extbase
  * @subpackage Validation\Validator
- * @version $Id: AlphanumericValidator.php 1789 2010-01-18 21:31:59Z jocrau $
+ * @version $Id$
  * @scope prototype
  */
 class Tx_Extbase_Validation_Validator_AlphanumericValidator extends Tx_Extbase_Validation_Validator_AbstractValidator {
