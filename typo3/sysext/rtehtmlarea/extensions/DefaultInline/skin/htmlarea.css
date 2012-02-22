@@ -1,0 +1,8 @@
+/* Selectors for the DefaultInline plugin of htmlArea RTE */
+/* TYPO3 SVN ID: $Id: htmlarea.css 2862 2008-01-05 19:32:58Z stan $ */
+.htmlarea .toolbar .Bold {background-image:url("images/bold.gif");}
+.htmlarea .toolbar .Italic {background-image:url("images/italic.gif");}
+.htmlarea .toolbar .StrikeThrough {background-image:url("images/strikethrough.gif");}
+.htmlarea .toolbar .Subscript {background-image:url("images/subscript.gif");}
+.htmlarea .toolbar .Superscript {background-image:url("images/superscript.gif");}
+.htmlarea .toolbar .Underline {background-image:url("images/underline.gif");}

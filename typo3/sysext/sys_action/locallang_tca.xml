@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<description>Table labels for sys_action</description>
+		<type>database</type>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="sys_action">Action</label>
+			<label index="tx_sys_action">Actions</label>
+		</languageKey>
+	</data>
+</T3locallang>

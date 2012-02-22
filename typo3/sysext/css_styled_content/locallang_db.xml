@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<description>labels for tables in CSS styled content</description>
+		<type>database</type>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="tt_content.tx_cssstyledcontent_acctables">Accessibility</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_caption">Table caption (&lt;caption&gt;)</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_summary">Table summary (&quot;summary&quot; attribute in &lt;table&gt; tags)</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_tfoot">Use table-footer (&lt;tfoot&gt; around last table row)</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_headerpos.I.0">no header</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_headerpos.I.1">top</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_headerpos.I.2">left</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_headerpos">Table Header position</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_nostyles">No CSS styles for this table</label>
+			<label index="tt_content.tx_cssstyledcontent_acctables_tableclass">CSS class for the table.</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing">Table parsing</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_quote">Text delimiter</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_quote_none">none</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_quote_single">'</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_quote_double">"</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_delimiter">Field delimiter</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_delimiter_pipe">|</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_delimiter_semicolon">;</label>
+			<label index="tt_content.tx_cssstyledcontent_tableparsing_delimiter_colon">,</label>
+		</languageKey>
+	</data>
+</T3locallang>

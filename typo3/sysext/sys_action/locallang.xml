@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<description>Module labels</description>
+		<type>module</type>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="action_noType">Error: The action had no type defined.</label>
+			<label index="action_notReady">Error: The action configuration is not finished.</label>
+			<label index="action_download_file">Click here to download the exported data in a file</label>
+			<label index="action_error">Action error!</label>
+			<label index="action_BEu_hidden">Disable user</label>
+			<label index="action_BEu_username">Login name</label>
+			<label index="action_BEu_password">Password</label>
+			<label index="action_BEu_realName">Real name</label>
+			<label index="action_BEu_email">Email</label>
+			<label index="action_BEu_usergroups">Member of groups</label>
+			<label index="action_t2_result">Result of query</label>
+			<label index="action_Create">Create Backend User</label>
+			<label index="action_Update">Update Backend User</label>
+			<label index="action_t1_listOfUsers">List of backend users</label>
+			<label index="action_BEu_db_mount">Pagetree starting points</label>
+			<label index="action_t4_edit">Select record to edit:</label>
+		</languageKey>
+	</data>
+</T3locallang>

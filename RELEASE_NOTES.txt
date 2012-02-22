@@ -1,0 +1,12 @@
+RELEASE NOTES FOR TYPO3 4.1
+****************************
+
+The release notes for this version have been published on typo3.org:
+http://typo3.org/development/articles/release-notes-41/
+
+In case of any problems you should also visit this page:
+http://wiki.typo3.org/index.php/Category:ReleaseNotes
+
+It contains links to updated and/or older release notes.
+
+-- Michael Stucki <michael@typo3.org>  Tue, 06 Mar 2007 01:19:25 +0100
