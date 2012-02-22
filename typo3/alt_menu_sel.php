@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * The selector-box menu is an alternative to the vertical default menu.
  * If configured to appear it will be displayed in the top-frame.
  *
- * $Id: alt_menu_sel.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: alt_menu_sel.php 5526 2009-06-02 13:52:04Z benni $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -52,8 +52,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once ('class.alt_menu_functions.inc');
 
 
@@ -88,7 +86,6 @@ class SC_alt_menu_sel {
 
 			// Start page
 		$TBE_TEMPLATE->form = '<form action="">';
-		$TBE_TEMPLATE->docType = 'xhtml_trans';
 
 			// add menu JS
 		$alt_menuObj = t3lib_div::makeInstance('alt_menu_functions');
@@ -113,18 +110,10 @@ class SC_alt_menu_sel {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_menu_sel.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_menu_sel.php']);
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -132,4 +121,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_m
 $SOBE = t3lib_div::makeInstance('SC_alt_menu_sel');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

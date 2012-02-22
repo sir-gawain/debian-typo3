@@ -9,7 +9,9 @@
 			<label index="action_noType">Error: The action had no type defined.</label>
 			<label index="action_notReady">Error: The action configuration is not finished.</label>
 			<label index="action_download_file">Click here to download the exported data in a file</label>
+			<label index="action_editQuery">Edit Query</label>
 			<label index="action_error">Action error!</label>
+			<label index="action_lowlevelMissing">The extension "lowlevel" must be installed in order to create a query.</label>
 			<label index="action_BEu_hidden">Disable user</label>
 			<label index="action_BEu_username">Login name</label>
 			<label index="action_BEu_password">Password</label>
@@ -22,6 +24,7 @@
 			<label index="action_t1_listOfUsers">List of backend users</label>
 			<label index="action_BEu_db_mount">Pagetree starting points</label>
 			<label index="action_t4_edit">Select record to edit:</label>
+			<label index="action_toolbaritem">Open System Actions</label>
 		</languageKey>
 	</data>
 </T3locallang>

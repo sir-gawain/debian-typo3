@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Web>File: Renaming files and folders
  *
- * $Id: file_rename.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: file_rename.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -52,8 +52,6 @@
 $BACK_PATH = '';
 require('init.php');
 require('template.php');
-require_once(PATH_t3lib.'class.t3lib_basicfilefunc.php');
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
 
 
 
@@ -105,25 +103,26 @@ class SC_file_rename {
 	 * @return	void
 	 */
 	function init()	{
+		//TODO remove global
 		global $LANG,$BACK_PATH,$TYPO3_CONF_VARS;
 
 			// Initialize GPvars:
 		$this->target = t3lib_div::_GP('target');
-		$this->returnUrl = t3lib_div::_GP('returnUrl');
+		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 
 			// Init basic-file-functions object:
 		$this->basicff = t3lib_div::makeInstance('t3lib_basicFileFunctions');
 		$this->basicff->init($GLOBALS['FILEMOUNTS'],$TYPO3_CONF_VARS['BE']['fileExtensions']);
 
 			// Cleaning and checking target
-		if (@file_exists($this->target))	{
+		if (file_exists($this->target))	{
 			$this->target=$this->basicff->cleanDirectoryName($this->target);		// Cleaning and checking target (file or dir)
 		} else {
 			$this->target='';
 		}
 		$key=$this->basicff->checkPathAgainstMounts($this->target.'/');
 		if (!$this->target || !$key)	{
-			t3lib_BEfunc::typo3PrintError ('Parameter Error','Target was not a directory!','');
+			t3lib_BEfunc::typo3PrintError ($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', true), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', true), '');
 			exit;
 		}
 
@@ -140,11 +139,10 @@ class SC_file_rename {
 		$this->shortPath = substr($this->target,strlen($GLOBALS['FILEMOUNTS'][$key]['path']));
 
 			// Setting title:
-		$this->title = $this->icon.$GLOBALS['FILEMOUNTS'][$key]['name'].': '.$this->shortPath;
+		$this->title = $this->icon . htmlspecialchars($GLOBALS['FILEMOUNTS'][$key]['name']) . ': ' . $this->shortPath;
 
 			// Setting template object
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->setModuleTemplate('templates/file_rename.html');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->JScode=$this->doc->wrapScriptTags('
@@ -160,6 +158,8 @@ class SC_file_rename {
 	 * @return	void
 	 */
 	function main()	{
+		//TODO remove global, change $LANG into $GLOBALS['LANG'], change locallang*.php to locallang*.xml
+
 		global $LANG;
 
 			// Make page header:
@@ -189,6 +189,7 @@ class SC_file_rename {
 			</div>
 		';
 
+		$code .= '</form>';
 
 			// Add the HTML as a section:
 		$pageContent .= $code;
@@ -219,19 +220,10 @@ class SC_file_rename {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_rename.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_rename.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -240,4 +232,5 @@ $SOBE = t3lib_div::makeInstance('SC_file_rename');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

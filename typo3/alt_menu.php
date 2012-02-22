@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Displays the vertical menu in the left most frame of TYPO3s backend
  *
- * $Id: alt_menu.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: alt_menu.php 5799 2009-08-18 12:49:48Z francois $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML-trans compliant
  *
@@ -52,8 +52,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once ('class.alt_menu_functions.inc');
 
 
@@ -120,7 +118,6 @@ class SC_alt_menu {
 	function main()	{
 		global $BE_USER,$TYPO3_CONF_VARS,$TBE_TEMPLATE;
 
-		$TBE_TEMPLATE->docType='xhtml_trans';
 		$TBE_TEMPLATE->divClass='vertical-menu';
 		$TBE_TEMPLATE->bodyTagAdditions = 'onload="top.restoreHighlightedModuleMenuItem()"';
 
@@ -183,11 +180,13 @@ class SC_alt_menu {
 
 			// superuser mode
 		if($BE_USER->user['ses_backuserid']) {
-			$username = '<p id="username" class="typo3-red-background">[SU: '.htmlspecialchars($BE_USER->user['username']).']</p>';
+			$username = '<p id="username" class="typo3-red-background">[' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:switchtousershort') . ' ' .
+				htmlspecialchars($BE_USER->user['username']) . ']</p>';
 		} else {
-			$username = '<p id="username">['.htmlspecialchars($BE_USER->user['username']).']</p>';
+			$username = '<p id="username">[' . htmlspecialchars($BE_USER->user['username']) . ']</p>';
 		}
-			// Printing bottons (logout button)
+			// Printing buttons (logout button)
 		$this->content.='
 
 
@@ -211,19 +210,10 @@ class SC_alt_menu {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_menu.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_menu.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -232,4 +222,5 @@ $SOBE = t3lib_div::makeInstance('SC_alt_menu');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

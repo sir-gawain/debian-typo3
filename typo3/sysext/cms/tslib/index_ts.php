@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
  * The script configures constants, includes libraries and does a little logic here and there in order to instantiate the right classes to create the webpage.
  * All the real data processing goes on in the "tslib/" classes which this script will include and use as needed.
  *
- * $Id: index_ts.php 4353 2008-10-27 23:06:49Z ohader $
+ * $Id: index_ts.php 7263 2010-04-09 08:46:26Z stucki $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -41,22 +41,26 @@
 // *******************************
 // Checking PHP version
 // *******************************
-if (version_compare(phpversion(), '5.1', '<'))	die ('TYPO3 requires PHP 5.1.0 or higher.');
+if (version_compare(phpversion(), '5.2', '<'))	die ('TYPO3 requires PHP 5.2.0 or higher.');
 
 // *******************************
 // Set error reporting
 // *******************************
-error_reporting (E_ALL ^ E_NOTICE);
+if (defined('E_DEPRECATED')) {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+} else {
+	error_reporting(E_ALL ^ E_NOTICE);
+}
 
 
 // ******************
 // Constants defined
 // ******************
-$TYPO3_MISC['microtime_start'] = microtime();
+$TYPO3_MISC['microtime_start'] = microtime(true);
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','FE');
 
-if (!defined('PATH_thisScript')) 	define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (php_sapi_name()=='cgi'||php_sapi_name()=='isapi' ||php_sapi_name()=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
+if (!defined('PATH_thisScript')) 	define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (PHP_SAPI=='cgi'||PHP_SAPI=='isapi' ||PHP_SAPI=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
 if (!defined('PATH_site')) 			define('PATH_site', dirname(PATH_thisScript).'/');
 if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
 
@@ -75,10 +79,27 @@ if (!defined('PATH_tslib')) {
 if (!@is_dir(PATH_typo3conf))	die('Cannot find configuration. This file is probably executed from the wrong location.');
 
 // *********************
+// Unset variable(s) in global scope (fixes #13959)
+// *********************
+unset($error);
+
+// *********************
+// Prevent any output until AJAX/compression is initialized to stop
+// AJAX/compression data corruption
+// *********************
+ob_start();
+
+// *********************
 // Timetracking started
 // *********************
-require_once(PATH_t3lib.'class.t3lib_timetrack.php');
-$TT = new t3lib_timeTrack;
+if ($_COOKIE['be_typo_user']) {
+	require_once(PATH_t3lib.'class.t3lib_timetrack.php');
+	$TT = new t3lib_timeTrack;
+} else {
+	require_once(PATH_t3lib.'class.t3lib_timetracknull.php');
+	$TT = new t3lib_timeTrackNull;
+}
+
 $TT->start();
 $TT->push('','Script start');
 
@@ -105,7 +126,24 @@ if (!defined('PATH_tslib')) {
 	define('PATH_tslib', t3lib_extMgm::extPath('cms').'tslib/');
 }
 
-require_once(PATH_t3lib.'class.t3lib_db.php');
+
+
+
+// *********************
+// Error & Exception handling
+// *********************
+if ($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionHandler'] !== '') {
+	$TT->push('Register Exceptionhandler', '');
+	if ($TYPO3_CONF_VARS['SYS']['errorHandler'] !== '') {
+			// register an error handler for the given errorHandlerErrors
+		$errorHandler = t3lib_div::makeInstance($TYPO3_CONF_VARS['SYS']['errorHandler'], $TYPO3_CONF_VARS['SYS']['errorHandlerErrors']);
+			// set errors which will be converted in an exception
+		$errorHandler->setExceptionalErrors($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionalErrors']);
+	}
+	$exceptionHandler = t3lib_div::makeInstance($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionHandler']);
+	$TT->pull();
+}
+
 $TYPO3_DB = t3lib_div::makeInstance('t3lib_DB');
 $TYPO3_DB->debugOutput = $TYPO3_CONF_VARS['SYS']['sqlDebug'];
 
@@ -127,57 +165,58 @@ if (!get_magic_quotes_gpc())	{
 }
 
 
+// Hook to preprocess the current request:
+if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preprocessRequest'])) {
+	foreach ($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preprocessRequest'] as $hookFunction) {
+		$hookParameters = array();
+		t3lib_div::callUserFunction($hookFunction, $hookParameters, $hookParameters);
+	}
+	unset($hookFunction);
+	unset($hookParameters);
+}
+
+
 // *********************
 // Look for extension ID which will launch alternative output engine
 // *********************
 if ($temp_extId = t3lib_div::_GP('eID'))	{
 	if ($classPath = t3lib_div::getFileAbsFileName($TYPO3_CONF_VARS['FE']['eID_include'][$temp_extId]))	{
-		require_once(PATH_tslib.'class.tslib_eidtools.php');
+		// Remove any output produced until now
+		ob_clean();
+
 		require($classPath);
 	}
 	exit;
 }
-
-// *********************
-// Libraries included
-// *********************
-$TT->push('Include Frontend libraries','');
-	require_once(PATH_tslib.'class.tslib_fe.php');
-	require_once(PATH_t3lib.'class.t3lib_page.php');
-	require_once(PATH_t3lib.'class.t3lib_userauth.php');
-	require_once(PATH_tslib.'class.tslib_feuserauth.php');
-	require_once(PATH_t3lib.'class.t3lib_tstemplate.php');
-	require_once(PATH_t3lib.'class.t3lib_cs.php');
-$TT->pull();
 
 
 // ***********************************
 // Create $TSFE object (TSFE = TypoScript Front End)
 // Connecting to database
 // ***********************************
-$temp_TSFEclassName = t3lib_div::makeInstanceClassName('tslib_fe');
-$TSFE = new $temp_TSFEclassName(
-		$TYPO3_CONF_VARS,
-		t3lib_div::_GP('id'),
-		t3lib_div::_GP('type'),
-		t3lib_div::_GP('no_cache'),
-		t3lib_div::_GP('cHash'),
-		t3lib_div::_GP('jumpurl'),
-		t3lib_div::_GP('MP'),
-		t3lib_div::_GP('RDCT')
-	);
+$TSFE = t3lib_div::makeInstance('tslib_fe',
+	$TYPO3_CONF_VARS,
+	t3lib_div::_GP('id'),
+	t3lib_div::_GP('type'),
+	t3lib_div::_GP('no_cache'),
+	t3lib_div::_GP('cHash'),
+	t3lib_div::_GP('jumpurl'),
+	t3lib_div::_GP('MP'),
+	t3lib_div::_GP('RDCT')
+);
+/* @var $TSFE tslib_fe */
 
-if($TYPO3_CONF_VARS['FE']['pageUnavailable_force'] && 
-   !t3lib_div::cmpIP(t3lib_div::getIndpEnv('REMOTE_ADDR'), $TYPO3_CONF_VARS['SYS']['devIPmask'])) {
+if($TYPO3_CONF_VARS['FE']['pageUnavailable_force'] &&
+	!t3lib_div::cmpIP(t3lib_div::getIndpEnv('REMOTE_ADDR'), $TYPO3_CONF_VARS['SYS']['devIPmask'])) {
 	$TSFE->pageUnavailableAndExit('This page is temporarily unavailable.');
 }
-	
-	
+
+
 $TSFE->connectToDB();
 
 	// In case of a keyword-authenticated preview, re-initialize the TSFE object:
 if ($temp_previewConfig = $TSFE->ADMCMD_preview())	{
-	$TSFE = new $temp_TSFEclassName(
+	$TSFE = t3lib_div::makeInstance('tslib_fe',
 		$TYPO3_CONF_VARS,
 		t3lib_div::_GP('id'),
 		t3lib_div::_GP('type'),
@@ -194,11 +233,16 @@ if ($TSFE->RDCT)	{$TSFE->sendRedirect();}
 
 
 // *******************
-// output compression
+// Output compression
 // *******************
-if ($TYPO3_CONF_VARS['FE']['compressionLevel'])	{
-	ob_start();
-	require_once(PATH_t3lib.'class.gzip_encode.php');
+// Remove any output produced until now
+ob_clean();
+if ($TYPO3_CONF_VARS['FE']['compressionLevel'] && extension_loaded('zlib'))	{
+	if (t3lib_div::testInt($TYPO3_CONF_VARS['FE']['compressionLevel'])) {
+		// Prevent errors if ini_set() is unavailable (safe mode)
+		@ini_set('zlib.output_compression_level', $TYPO3_CONF_VARS['FE']['compressionLevel']);
+	}
+	ob_start(array(t3lib_div::makeInstance('tslib_fecompression'), 'compressionOutputHandler'));
 }
 
 // *********
@@ -223,14 +267,10 @@ if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preBeUser']))
 // *********
 // BE_USER
 // *********
-$BE_USER='';
+$BE_USER = NULL;
 if ($_COOKIE['be_typo_user']) {		// If the backend cookie is set, we proceed and checks if a backend user is logged in.
-	$TYPO3_MISC['microtime_BE_USER_start'] = microtime();
+	$TYPO3_MISC['microtime_BE_USER_start'] = microtime(true);
 	$TT->push('Back End user initialized','');
-		require_once (PATH_t3lib.'class.t3lib_befunc.php');
-		require_once (PATH_t3lib.'class.t3lib_userauthgroup.php');
-		require_once (PATH_t3lib.'class.t3lib_beuserauth.php');
-		require_once (PATH_t3lib.'class.t3lib_tsfebeuserauth.php');
 
 			// the value this->formfield_status is set to empty in order to disable login-attempts to the backend account through this script
 		$BE_USER = t3lib_div::makeInstance('t3lib_tsfeBeUserAuth');	// New backend user object
@@ -242,19 +282,14 @@ if ($_COOKIE['be_typo_user']) {		// If the backend cookie is set, we proceed and
 			$BE_USER->fetchGroupData();
 			$TSFE->beUserLogin = 1;
 		}
-		if ($BE_USER->checkLockToIP() && $BE_USER->checkBackendAccessSettingsFromInitPhp())	{
-			$BE_USER->extInitFeAdmin();
-		} else {	// Unset the user initialization.
-			$BE_USER='';
+			// Unset the user initialization.
+		if (!$BE_USER->checkLockToIP() || !$BE_USER->checkBackendAccessSettingsFromInitPhp() || !$BE_USER->user['uid']) {
+			$BE_USER = NULL;
 			$TSFE->beUserLogin=0;
 		}
 	$TT->pull();
-	$TYPO3_MISC['microtime_BE_USER_end'] = microtime();
+	$TYPO3_MISC['microtime_BE_USER_end'] = microtime(true);
 } elseif ($TSFE->ADMCMD_preview_BEUSER_uid)	{
-	require_once (PATH_t3lib.'class.t3lib_befunc.php');
-	require_once (PATH_t3lib.'class.t3lib_userauthgroup.php');
-	require_once (PATH_t3lib.'class.t3lib_beuserauth.php');
-	require_once (PATH_t3lib.'class.t3lib_tsfebeuserauth.php');
 
 		// the value this->formfield_status is set to empty in order to disable login-attempts to the backend account through this script
 	$BE_USER = t3lib_div::makeInstance('t3lib_tsfeBeUserAuth');	// New backend user object
@@ -266,7 +301,7 @@ if ($_COOKIE['be_typo_user']) {		// If the backend cookie is set, we proceed and
 		$BE_USER->fetchGroupData();
 		$TSFE->beUserLogin = 1;
 	} else {
-		$BE_USER = '';
+		$BE_USER = NULL;
 		$TSFE->beUserLogin = 0;
 	}
 }
@@ -282,6 +317,11 @@ $TSFE->workspacePreviewInit();
 // After this point we have an array, $page in TSFE, which is the page-record of the current page, $id
 // *****************************************
 $TT->push('Process ID','');
+		// Initialize admin panel since simulation settings are required here:
+	if ($TSFE->beUserLogin) {
+		$BE_USER->initializeAdminPanel();
+	}
+
 	$TSFE->checkAlternativeIdMethods();
 	$TSFE->clear_preview();
 	$TSFE->determineId();
@@ -301,60 +341,19 @@ $TT->push('Process ID','');
 	$TSFE->makeCacheHash();
 $TT->pull();
 
-
 // *****************************************
-// Frontend editing
+// Admin Panel & Frontend editing
 // *****************************************
-if ($TSFE->beUserLogin && $BE_USER->extAdmEnabled)	{
-	require_once(t3lib_extMgm::extPath('lang').'lang.php');
-	$LANG = t3lib_div::makeInstance('language');
-	$LANG->init($BE_USER->uc['lang']);
-
-	$BE_USER->extSaveFeAdminConfig();
-
-		// Setting some values based on the admin panel
-	$TSFE->forceTemplateParsing = $BE_USER->extGetFeAdminValue('tsdebug', 'forceTemplateParsing');
-	$TSFE->displayEditIcons = $BE_USER->extGetFeAdminValue('edit', 'displayIcons');
-	$TSFE->displayFieldEditIcons = $BE_USER->extGetFeAdminValue('edit', 'displayFieldIcons');
-
-	if ($BE_USER->extGetFeAdminValue('tsdebug','displayQueries')) {
-		if ($GLOBALS['TYPO3_DB']->explainOutput == 0) {		// do not override if the value is already set in t3lib_db
-				// Enable execution of EXPLAIN SELECT queries
-			$GLOBALS['TYPO3_DB']->explainOutput = 3;
-		}
+if ($TSFE->beUserLogin) {
+	$BE_USER->initializeFrontendEdit();
+ 	if ($BE_USER->adminPanel instanceof tslib_AdminPanel) {
+		$LANG = t3lib_div::makeInstance('language');
+		$LANG->init($BE_USER->uc['lang']);
+ 	}
+	if ($BE_USER->frontendEdit instanceof t3lib_frontendedit) {
+		$BE_USER->frontendEdit->initConfigOptions();
 	}
-
-	if (t3lib_div::_GP('ADMCMD_editIcons'))	{
-		$TSFE->displayFieldEditIcons=1;
-		$BE_USER->uc['TSFE_adminConfig']['edit_editNoPopup']=1;
-	}
-	if (t3lib_div::_GP('ADMCMD_simUser'))	{
-		$BE_USER->uc['TSFE_adminConfig']['preview_simulateUserGroup']=intval(t3lib_div::_GP('ADMCMD_simUser'));
-		$BE_USER->ext_forcePreview=1;
-	}
-	if (t3lib_div::_GP('ADMCMD_simTime'))	{
-		$BE_USER->uc['TSFE_adminConfig']['preview_simulateDate']=intval(t3lib_div::_GP('ADMCMD_simTime'));
-		$BE_USER->ext_forcePreview=1;
-	}
-
-	// Include classes for editing IF editing module in Admin Panel is open
-	if (($BE_USER->extAdmModuleEnabled('edit') && $BE_USER->extIsAdmMenuOpen('edit')) || $TSFE->displayEditIcons == 1)	{
-		$TSFE->includeTCA();
-		if ($BE_USER->extIsEditAction())	{
-			require_once (PATH_t3lib.'class.t3lib_tcemain.php');
-			$BE_USER->extEditAction();
-		}
-		if ($BE_USER->extIsFormShown())	{
-			require_once(PATH_t3lib.'class.t3lib_tceforms.php');
-			require_once(PATH_t3lib.'class.t3lib_iconworks.php');
-			require_once(PATH_t3lib.'class.t3lib_loaddbgroup.php');
-			require_once(PATH_t3lib.'class.t3lib_transferdata.php');
-		}
-	}
-
-	if ($TSFE->forceTemplateParsing || $TSFE->displayEditIcons || $TSFE->displayFieldEditIcons)	{ $TSFE->set_no_cache(); }
 }
-
 
 // *******************************************
 // Get compressed $TCA-Array();
@@ -385,7 +384,6 @@ $TT->pull();
 // ******************************************************
 $TSFE->getConfigArray();
 
-
 // ********************************
 // Convert POST data to internal "renderCharset" if different from the metaCharset
 // *******************************
@@ -395,8 +393,10 @@ $TSFE->convPOSTCharset();
 // *******************************************
 // Setting language and locale
 // *******************************************
-$TSFE->settingLanguage();
-$TSFE->settingLocale();
+$TT->push('Setting language and locale','');
+	$TSFE->settingLanguage();
+	$TSFE->settingLocale();
+$TT->pull();
 
 
 // ********************************
@@ -412,12 +412,9 @@ $TSFE->checkJumpUrlReferer();
 // *******************************
 switch($TSFE->checkDataSubmission())	{
 	case 'email':
-		require_once(PATH_t3lib.'class.t3lib_htmlmail.php');
-		require_once(PATH_t3lib.'class.t3lib_formmail.php');
 		$TSFE->sendFormmail();
 	break;
 	case 'fe_tce':
-		require_once(PATH_tslib.'class.tslib_fetce.php');
 		$TSFE->includeTCA();
 		$TT->push('fe_tce','');
 		$TSFE->fe_tce();
@@ -432,9 +429,6 @@ switch($TSFE->checkDataSubmission())	{
 $TSFE->setUrlIdToken();
 
 $TT->push('Page generation','');
-	if ($TSFE->doXHTML_cleaning()) {
-		require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
-	}
 	if ($TSFE->isGeneratePage()) {
 		$TSFE->generatePage_preProcessing();
 		$temp_theScript=$TSFE->generatePage_whichScript();
@@ -442,12 +436,10 @@ $TT->push('Page generation','');
 		if ($temp_theScript) {
 			include($temp_theScript);
 		} else {
-			require_once(PATH_tslib.'class.tslib_pagegen.php');
 			include(PATH_tslib.'pagegen.php');
 		}
 		$TSFE->generatePage_postProcessing();
 	} elseif ($TSFE->isINTincScript()) {
-		require_once(PATH_tslib.'class.tslib_pagegen.php');
 		include(PATH_tslib.'pagegen.php');
 	}
 $TT->pull();
@@ -481,18 +473,9 @@ if ($TSFE->isOutputting())	{
 				// Special feature: Include libraries
 			reset($EXTiS_config);
 			while(list(,$EXTiS_cPart)=each($EXTiS_config))	{
-				if ($EXTiS_cPart['conf']['includeLibs'])	{
-					$EXTiS_resourceList = t3lib_div::trimExplode(',',$EXTiS_cPart['conf']['includeLibs'],1);
-					$TT->setTSlogMessage('Files for inclusion: "'.implode(', ',$EXTiS_resourceList).'"');
-					reset($EXTiS_resourceList);
-					while(list(,$EXTiS_theLib) = each($EXTiS_resourceList))	{
-						$EXTiS_incFile = $TSFE->tmpl->getFileName($EXTiS_theLib);
-						if ($EXTiS_incFile)	{
-							require_once($EXTiS_incFile);
-						} else {
-							$TT->setTSlogMessage('Include file "'.$EXTiS_theLib.'" did not exist!',2);
-						}
-					}
+				if (isset($EXTiS_cPart['conf']['includeLibs']) && $EXTiS_cPart['conf']['includeLibs']) {
+					$EXTiS_resourceList = t3lib_div::trimExplode(',',$EXTiS_cPart['conf']['includeLibs'], true);
+					$TSFE->includeLibraries($EXTiS_resourceList);
 				}
 			}
 
@@ -530,7 +513,7 @@ $TSFE->storeSessionData();
 // ***********
 // Statistics
 // ***********
-$TYPO3_MISC['microtime_end'] = microtime();
+$TYPO3_MISC['microtime_end'] = microtime(true);
 $TSFE->setParseTime();
 if ($TSFE->isOutputting() && ($TSFE->TYPO3_CONF_VARS['FE']['debug'] || $TSFE->config['config']['debug']))	{
 	echo '
@@ -554,8 +537,8 @@ $TSFE->previewInfo();
 // ******************
 // Publishing static
 // ******************
-if (is_object($BE_USER))	{
-	if ($BE_USER->extAdmModuleEnabled('publish') && $BE_USER->extPublishList)	{
+if (is_object($BE_USER) && ($BE_USER->adminPanel instanceof tslib_AdminPanel)) {
+	if ($BE_USER->adminPanel->isAdminModuleEnabled('publish') && $BE_USER->adminPanel->getExtPublishList()) {
 		include_once(PATH_tslib.'publish.php');
 	}
 }
@@ -582,32 +565,18 @@ echo $TSFE->beLoginLinkIPList();
 // *************
 // Admin panel
 // *************
-if (is_object($BE_USER)
-	&& $TSFE->beUserLogin
-	&& $TSFE->config['config']['admPanel']
-	&& $BE_USER->extAdmEnabled
-//	&& $BE_USER->extPageReadAccess($TSFE->page)	// This is already done, if there is a BE_USER object at this point!
-	&& !$BE_USER->extAdminConfig['hide'])	{
-		echo $BE_USER->extPrintFeAdminDialog();
+if (is_object($BE_USER) && $BE_USER->isAdminPanelVisible() && $TSFE->beUserLogin) {
+	echo $BE_USER->displayAdminPanel();
 }
-
 
 // *************
 // Debugging Output
 // *************
-if(@is_callable(array($error,'debugOutput'))) {
+if(is_object($error) && @is_callable(array($error,'debugOutput'))) {
 	$error->debugOutput();
 }
 if (TYPO3_DLOG) {
 	t3lib_div::devLog('END of FRONTEND session', 'cms', 0, array('_FLUSH' => TRUE));
-}
-
-
-// *************
-// Compressions
-// *************
-if ($TYPO3_CONF_VARS['FE']['compressionLevel'])	{
-	new gzip_encode($TYPO3_CONF_VARS['FE']['compressionLevel'], false, $TYPO3_CONF_VARS['FE']['compressionDebugInfo']);
 }
 
 ?>

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -108,7 +108,7 @@ class tx_indexedsearch_lexer {
 	 * @return	void
 	 */
 	function tx_indexedsearch_lexer() {
-		$this->csObj = &t3lib_div::makeInstance('t3lib_cs');
+		$this->csObj = t3lib_div::makeInstance('t3lib_cs');
 	}
 
 	/**

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2007-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,7 +26,7 @@
  *
  * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultinline.php 2862 2008-01-05 19:32:58Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultinline.php 5489 2009-05-23 15:26:20Z ohader $
  *
  */
 
@@ -42,7 +42,7 @@ class tx_rtehtmlarea_defaultinline extends tx_rtehtmlareaapi {
 	protected $thisConfig;				// Reference to RTE PageTSConfig
 	protected $toolbar;				// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 				// Frontend language array
-	
+
 	protected $pluginButtons = 'bold,italic,strikethrough,subscript,superscript,underline';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'bold'			=> 'Bold',
@@ -52,7 +52,7 @@ class tx_rtehtmlarea_defaultinline extends tx_rtehtmlareaapi {
 		'superscript'		=> 'Superscript',
 		'subscript'		=> 'Subscript',
 		);
-	
+
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -66,11 +66,11 @@ class tx_rtehtmlarea_defaultinline extends tx_rtehtmlareaapi {
 	 */
 	public function buildJavascriptConfiguration($RTEcounter) {
 		global $TSFE, $LANG;
-		
+
 		$registerRTEinJavascriptString = '';
 		return $registerRTEinJavascriptString;
 	}
-	
+
 	/**
 	 * Return tranformed content
 	 *
@@ -79,7 +79,7 @@ class tx_rtehtmlarea_defaultinline extends tx_rtehtmlareaapi {
 	 * @return 	string		the transformed content
 	 */
 	public function transformContent($content) {
-		
+
 			// Change the strong and em tags for gecko browsers
 		if ($this->htmlAreaRTE->client['BROWSER'] == 'gecko') {
 				// change <strong> to <b>
@@ -87,7 +87,7 @@ class tx_rtehtmlarea_defaultinline extends tx_rtehtmlareaapi {
 				// change <em> to <i>
 			$content = preg_replace('/<(\/?)em([^b>]*>)/i', "<$1i$2", $content);
 		}
-		
+
 		return $content;
 	}
 

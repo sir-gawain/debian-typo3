@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -50,11 +50,6 @@
 
 
 
-
-
-require_once(PATH_t3lib.'class.t3lib_pagetree.php');
-require_once(PATH_t3lib.'class.t3lib_bedisplaylog.php');
-
 /**
  * Extending for Tools > Log. Just setting labels correctly
  *
@@ -84,8 +79,6 @@ class logFunctions_ext extends t3lib_BEDisplayLog {
 
 
 
-
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
 
 /**
  * Extending for Web>Info
@@ -176,7 +169,7 @@ class tx_belog_webinfo extends t3lib_extobjbase {
 
 			// Time:
 		$starttime=0;
-		$endtime=time();
+		$endtime = $GLOBALS['EXEC_TIME'];
 		switch($this->pObj->MOD_SETTINGS['log_time'])		{
 			case 0:
 				// This week

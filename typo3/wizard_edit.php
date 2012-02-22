@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Wizard to edit records from group/select lists in TCEforms
  *
- * $Id: wizard_edit.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: wizard_edit.php 6469 2009-11-17 23:56:35Z benni $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -53,17 +53,6 @@ $BACK_PATH='';
 require ('init.php');
 require ('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
-require_once (PATH_t3lib.'class.t3lib_loaddbgroup.php');
-
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -114,7 +103,8 @@ class SC_wizard_edit {
 
 				// Detecting the various allowed field type setups and acting accordingly.
 			if (is_array($config) && $config['type']=='select' && !$config['MM'] && $config['maxitems']<=1 && t3lib_div::testInt($this->P['currentValue']) && $this->P['currentValue'] && $fTable)	{	// SINGLE value:
-				header('Location: '.t3lib_div::locationHeaderUrl('alt_doc.php?returnUrl='.rawurlencode('wizard_edit.php?doClose=1').'&edit['.$fTable.']['.$this->P['currentValue'].']=edit'));
+				$redirectUrl = 'alt_doc.php?returnUrl=' . rawurlencode('wizard_edit.php?doClose=1') . '&edit[' . $fTable . '][' . $this->P['currentValue'] . ']=edit';
+				t3lib_utility_Http::redirect($redirectUrl);
 			} elseif (is_array($config) && $this->P['currentSelectedValues'] && (($config['type']=='select' && $config['foreign_table']) || ($config['type']=='group' && $config['internal_type']=='db')))	{	// MULTIPLE VALUES:
 
 					// Init settings:
@@ -134,7 +124,7 @@ class SC_wizard_edit {
 				}
 
 					// Redirect to alt_doc.php:
-				header('Location: '.t3lib_div::locationHeaderUrl('alt_doc.php?returnUrl='.rawurlencode('wizard_edit.php?doClose=1').$params));
+				t3lib_utility_Http::redirect('alt_doc.php?returnUrl=' . rawurlencode('wizard_edit.php?doClose=1') . $params);
 			} else {
 				$this->closeWindow();
 			}
@@ -152,19 +142,10 @@ class SC_wizard_edit {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_edit.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_edit.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -172,4 +153,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizar
 $SOBE = t3lib_div::makeInstance('SC_wizard_edit');
 $SOBE->init();
 $SOBE->main();
+
 ?>

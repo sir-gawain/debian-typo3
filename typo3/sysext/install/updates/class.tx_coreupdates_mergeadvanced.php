@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Steffen Kamper <info@sk-typo3.de>
+*  (c) 2008-2009 Steffen Kamper <info@sk-typo3.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 
 /**
  * Contains the update class for merging advanced and normal pagetype.
- * 
+ *
  * @author Steffen Kamper <info@sk-typo3.de>
- * @version $Id: class.tx_coreupdates_mergeadvanced.php 3078 2008-02-05 18:36:07Z ohader $
+ * @version $Id: class.tx_coreupdates_mergeadvanced.php 5489 2009-05-23 15:26:20Z ohader $
  */
 class tx_coreupdates_mergeadvanced {
 	var $versionNumber;	// version number coming from t3lib_div::int_from_ver()
@@ -80,7 +80,7 @@ class tx_coreupdates_mergeadvanced {
 
 			$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('pages', 'doktype=2', $updateArray);
 			$dbQueries[] = str_replace(chr(10), ' ', $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery);
-			
+
 			if ($GLOBALS['TYPO3_DB']->sql_error()) {
 				$customMessages = 'SQL-ERROR: ' . htmlspecialchars($GLOBALS['TYPO3_DB']->sql_error());
 			} else {

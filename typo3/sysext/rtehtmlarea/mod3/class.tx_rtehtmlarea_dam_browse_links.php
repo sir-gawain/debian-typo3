@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2005-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,13 +32,12 @@
  *
  * Adapted for htmlArea RTE by Stanislas Rolland
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_dam_browse_links.php 4152 2008-09-19 05:17:01Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_dam_browse_links.php 5947 2009-09-16 17:57:09Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
  */
 
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once(t3lib_extMgm::extPath('dam').'class.tx_dam_browse_media.php');
 
 /**
@@ -76,7 +75,7 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 	 * @return	boolean
 	 * @see SC_browse_links::main()
 	 */
-	function isValid($type, &$pObj)	{
+	function isValid($type, $pObj) {
 		$isValid = false;
 
 		$pArr = explode('|', t3lib_div::_GP('bparams'));
@@ -97,10 +96,10 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 	 * @return	string		Rendered content
 	 * @see SC_browse_links::main()
 	 */
-	function render($type, &$pObj)	{
+	function render($type, $pObj) {
 		global $LANG, $BE_USER, $BACK_PATH;
 
-		$this->pObj = &$pObj;
+		$this->pObj = $pObj;
 
 			// init class browse_links
 		$this->init();
@@ -157,12 +156,12 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 			// init fileProcessor
 		$this->fileProcessor = t3lib_div::makeInstance('t3lib_basicFileFunctions');
 		$this->fileProcessor->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
-		
+
 			// init hook objects:
 		$this->hookObjects = array();
 		if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['typo3/class.browse_links.php']['browseLinksHook'])) {
 			foreach($TYPO3_CONF_VARS['SC_OPTIONS']['typo3/class.browse_links.php']['browseLinksHook'] as $classData) {
-				$processObject = &t3lib_div::getUserObj($classData);
+				$processObject = t3lib_div::getUserObj($classData);
 
 				if(!($processObject instanceof t3lib_browseLinksHook)) {
 					throw new UnexpectedValueException('$processObject must implement interface t3lib_browseLinksHook', 1195115652);
@@ -292,7 +291,6 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 			// Creating backend template object:
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->bodyTagAdditions = 'onLoad="initDialog();"';
-		$this->doc->docType= 'xhtml_trans';
 		$this->doc->backPath = $BACK_PATH;
 	}
 
@@ -510,9 +508,10 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 			// Initializing the action value, possibly removing blinded values etc:
 		$this->allowedItems = explode(',','page,file,url,mail,spec,upload');
 
+			// Remove upload tab if filemount is readonly
 		if ($this->isReadOnlyFolder(tx_dam::path_makeAbsolute($this->damSC->path))) {
-			$this->allowedItems = array_diff($this->allowedItems, array('upload'));  //remuve upload if filemount is readonly
-		} 
+			$this->allowedItems = array_diff($this->allowedItems, array('upload'));
+		}
 			//call hook for extra options
 		foreach($this->hookObjects as $hookObject) {
 			$this->allowedItems = $hookObject->addAllowedItems($this->allowedItems);
@@ -612,7 +611,7 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 							<tr>
 								<td>URL:</td>
 								<td><input type="text" name="lurl"'.$this->doc->formWidth(20).' value="'.htmlspecialchars($this->curUrlInfo['act']=='url'?$this->curUrlInfo['info']:'http://').'" /> '.
-									'<input type="submit" value="'.$LANG->getLL('setLink',1).'" onclick="setValue(document.lurlform.lurl.value); return link_current();" /></td>
+									'<input type="submit" value="'.$LANG->getLL('setLink',1).'" onclick="if (/^[A-Za-z0-9_+]{1,8}:/i.test(document.lurlform.lurl.value)) { setValue(document.lurlform.lurl.value); } else { setValue(\'http://\'+document.lurlform.lurl.value); }; return link_current();" /></td>
 							</tr>
 						</table>
 					</form>';
@@ -902,7 +901,7 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 							</td>
 						</tr>';
 	}
-	
+
 	/**
 	 * Localize a string using the language of the content element rather than the language of the BE interface
 	 *
@@ -927,7 +926,7 @@ class tx_rtehtmlarea_dam_browse_links extends tx_dam_browse_media {
 		$LANG->charSet = $BE_charSet;
 		return $LLString;
 	}
-	
+
 	/**
 	 * Localize a label obtained from Page TSConfig
 	 *

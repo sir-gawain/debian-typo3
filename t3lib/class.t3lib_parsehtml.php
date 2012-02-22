@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class with functions for parsing HTML code.
  *
- * $Id: class.t3lib_parsehtml.php 3770 2008-06-09 14:24:15Z baschny $
+ * $Id: class.t3lib_parsehtml.php 9629 2010-11-25 17:50:44Z jigal $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -104,42 +104,50 @@
  * @subpackage t3lib
  */
 class t3lib_parsehtml	{
-	var $caseShift_cache=array();
 
-
-	// *******************************************'
-	// COPY FROM class.tslib_content.php: / BEGIN
-	// substituteSubpart
-	// Cleaned locally 2/2003 !!!! (so different from tslib_content version)
-	// *******************************************'
+	protected $caseShift_cache = array();
 
 	/**
-	 * Returns the first subpart encapsulated in the marker, $marker (possibly present in $content as a HTML comment)
+	 * Returns the first subpart encapsulated in the marker, $marker
+	 * (possibly present in $content as a HTML comment)
 	 *
 	 * @param	string		Content with subpart wrapped in fx. "###CONTENT_PART###" inside.
 	 * @param	string		Marker string, eg. "###CONTENT_PART###"
 	 * @return	string
 	 */
-	function getSubpart($content, $marker)	{
+	public static function getSubpart($content, $marker) {
 		$start = strpos($content, $marker);
-		if ($start===false)	{ return ''; }
+
+		if ($start === false) {
+			return '';
+		}
+
 		$start += strlen($marker);
-		$stop = strpos($content, $marker, $start);
-			// Q: What shall get returned if no stop marker is given /*everything till the end*/ or nothing
-		if ($stop===false)	{ return /*substr($content, $start)*/ ''; }
+		$stop   = strpos($content, $marker, $start);
+
+			// Q: What shall get returned if no stop marker is given
+			// /*everything till the end*/ or nothing?
+		if ($stop===false) {
+			return ''; /*substr($content, $start)*/
+		}
+
 		$content = substr($content, $start, $stop-$start);
+
 		$matches = array();
-		if (preg_match('/^([^\<]*\-\-\>)(.*)(\<\!\-\-[^\>]*)$/s', $content, $matches)===1)	{
+		if (preg_match('/^([^\<]*\-\-\>)(.*)(\<\!\-\-[^\>]*)$/s', $content, $matches) === 1) {
 			return $matches[2];
 		}
-		$matches = array();
-		if (preg_match('/(.*)(\<\!\-\-[^\>]*)$/s', $content, $matches)===1)	{
+
+		$matches = array(); // resetting $matches
+		if (preg_match('/(.*)(\<\!\-\-[^\>]*)$/s', $content, $matches) === 1) {
 			return $matches[1];
 		}
-		$matches = array();
-		if (preg_match('/^([^\<]*\-\-\>)(.*)$/s', $content, $matches)===1)	{
+
+		$matches = array(); // resetting $matches
+		if (preg_match('/^([^\<]*\-\-\>)(.*)$/s', $content, $matches) === 1) {
 			return $matches[2];
 		}
+
 		return $content;
 	}
 
@@ -153,72 +161,109 @@ class t3lib_parsehtml	{
 	 * @param	boolean		If set, the marker around the subpart is not removed, but kept in the output
 	 * @return	string		Processed input content
 	 */
-	function substituteSubpart($content,$marker,$subpartContent,$recursive=1,$keepMarker=0)	{
+	public static function substituteSubpart($content, $marker, $subpartContent, $recursive = 1, $keepMarker = 0) {
 		$start = strpos($content, $marker);
-		if ($start===false)	{ return $content; }
-		$startAM = $start+strlen($marker);
-		$stop = strpos($content, $marker, $startAM);
-		if ($stop===false)	{ return $content; }
-		$stopAM = $stop+strlen($marker);
-		$before = substr($content, 0, $start);
-		$after = substr($content, $stopAM);
-		$between = substr($content, $startAM, $stop-$startAM);
 
-		if ($recursive)	{
-			$after = t3lib_parsehtml::substituteSubpart($after, $marker, $subpartContent, $recursive, $keepMarker);
+		if ($start === false) {
+			return $content;
 		}
 
-		if ($keepMarker)	{
+		$startAM = $start + strlen($marker);
+		$stop    = strpos($content, $marker, $startAM);
+
+		if ($stop===false) {
+			return $content;
+		}
+
+		$stopAM  = $stop + strlen($marker);
+		$before  = substr($content, 0, $start);
+		$after   = substr($content, $stopAM);
+		$between = substr($content, $startAM, $stop-$startAM);
+
+		if ($recursive) {
+			$after = t3lib_parsehtml::substituteSubpart(
+				$after,
+				$marker,
+				$subpartContent,
+				$recursive,
+				$keepMarker
+			);
+		}
+
+		if ($keepMarker) {
 			$matches = array();
-			if (preg_match('/^([^\<]*\-\-\>)(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches)===1)	{
-				$before .= $marker.$matches[1];
-				$between = $matches[2];
-				$after = $matches[3].$marker.$after;
-			} elseif (preg_match('/^(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches)===1)	{
-				$before .= $marker;
-				$between = $matches[1];
-				$after = $matches[2].$marker.$after;
-			} elseif (preg_match('/^([^\<]*\-\-\>)(.*)$/s', $between, $matches)===1)	{
-				$before .= $marker.$matches[1];
-				$between = $matches[2];
-				$after = $marker.$after;
+			if (preg_match('/^([^\<]*\-\-\>)(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches) === 1) {
+				$before  .= $marker.$matches[1];
+				$between  = $matches[2];
+				$after    = $matches[3] . $marker . $after;
+			} elseif (preg_match('/^(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches) === 1) {
+				$before  .= $marker;
+				$between  = $matches[1];
+				$after    = $matches[2] . $marker . $after;
+			} elseif (preg_match('/^([^\<]*\-\-\>)(.*)$/s', $between, $matches) === 1) {
+				$before  .= $marker . $matches[1];
+				$between  = $matches[2];
+				$after    = $marker . $after;
 			} else	{
 				$before .= $marker;
-				$after = $marker.$after;
+				$after   = $marker . $after;
 			}
-		} else	{
+
+		} else {
 			$matches = array();
-			if (preg_match('/^(.*)\<\!\-\-[^\>]*$/s', $before, $matches)===1)	{
+			if (preg_match('/^(.*)\<\!\-\-[^\>]*$/s', $before, $matches) === 1) {
 				$before = $matches[1];
 			}
-			if (is_array($subpartContent))	{
+
+			if (is_array($subpartContent)) {
 				$matches = array();
-				if (preg_match('/^([^\<]*\-\-\>)(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches)===1)	{
+				if (preg_match('/^([^\<]*\-\-\>)(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches) === 1) {
 					$between = $matches[2];
-				} elseif (preg_match('/^(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches)===1)	{
+				} elseif (preg_match('/^(.*)(\<\!\-\-[^\>]*)$/s', $between, $matches)===1) {
 					$between = $matches[1];
-				} elseif (preg_match('/^([^\<]*\-\-\>)(.*)$/s', $between, $matches)===1)	{
+				} elseif (preg_match('/^([^\<]*\-\-\>)(.*)$/s', $between, $matches)===1) {
 					$between = $matches[2];
 				}
 			}
-			$matches = array();
-			if (preg_match('/^[^\<]*\-\-\>(.*)$/s', $after, $matches)===1)	{
+
+			$matches = array(); // resetting $matches
+			if (preg_match('/^[^\<]*\-\-\>(.*)$/s', $after, $matches) === 1) {
 				$after = $matches[1];
 			}
 		}
 
-		if (is_array($subpartContent))	{
-			$between = $subpartContent[0].$between.$subpartContent[1];
+		if (is_array($subpartContent)) {
+			$between = $subpartContent[0] . $between . $subpartContent[1];
 		} else	{
 			$between = $subpartContent;
 		}
 
-		return $before.$between.$after;
+		return $before . $between . $after;
+	}
+
+	/**
+	 * Substitues multiple subparts at once
+	 *
+	 * @param	string		The content stream, typically HTML template content.
+	 * @param	array		The array of key/value pairs being subpart/content values used in the substitution. For each element in this array the function will substitute a subpart in the content stream with the content.
+	 * @return	string		The processed HTML content string.
+	 */
+	public static function substituteSubpartArray($content, array $subpartsContent) {
+		foreach ($subpartsContent as $subpartMarker => $subpartContent) {
+			$content = t3lib_parsehtml::substituteSubpart(
+				$content,
+				$subpartMarker,
+				$subpartContent
+			);
+		}
+
+		return $content;
 	}
 
 
 	/**
-	 * Substitutes a marker string in the input content (by a simple str_replace())
+	 * Substitutes a marker string in the input content
+	 * (by a simple str_replace())
 	 *
 	 * @param	string		The content stream, typically HTML template content.
 	 * @param	string		The marker string, typically on the form "###[the marker string]###"
@@ -226,14 +271,20 @@ class t3lib_parsehtml	{
 	 * @return	string		The processed HTML content string.
 	 * @see substituteSubpart()
 	 */
-	public function substituteMarker($content, $marker, $markContent)	{
+	public static function substituteMarker($content, $marker, $markContent) {
 		return str_replace($marker, $markContent, $content);
 	}
 
 
 	/**
-	 * Traverses the input $markContentArray array and for each key the marker by the same name (possibly wrapped and in upper case) will be substituted with the keys value in the array.
-	 * This is very useful if you have a data-record to substitute in some content. In particular when you use the $wrap and $uppercase values to pre-process the markers. Eg. a key name like "myfield" could effectively be represented by the marker "###MYFIELD###" if the wrap value was "###|###" and the $uppercase boolean true.
+	 * Traverses the input $markContentArray array and for each key the marker
+	 * by the same name (possibly wrapped and in upper case) will be
+	 * substituted with the keys value in the array. This is very useful if you
+	 * have a data-record to substitute in some content. In particular when you
+	 * use the $wrap and $uppercase values to pre-process the markers. Eg. a
+	 * key name like "myfield" could effectively be represented by the marker
+	 * "###MYFIELD###" if the wrap value was "###|###" and the $uppercase
+	 * boolean true.
 	 *
 	 * @param	string		The content stream, typically HTML template content.
 	 * @param	array		The array of key/value pairs being marker/content values used in the substitution. For each element in this array the function will substitute a marker in the content stream with the content.
@@ -243,17 +294,24 @@ class t3lib_parsehtml	{
 	 * @return	string		The processed output stream
 	 * @see substituteMarker(), substituteMarkerInObject(), TEMPLATE()
 	 */
-	public function substituteMarkerArray($content, $markContentArray, $wrap='', $uppercase=0, $deleteUnused=0) {
+	public static function substituteMarkerArray($content, $markContentArray, $wrap = '', $uppercase = 0, $deleteUnused = 0) {
 		if (is_array($markContentArray)) {
 			$wrapArr = t3lib_div::trimExplode('|', $wrap);
+
 			foreach ($markContentArray as $marker => $markContent) {
 				if ($uppercase) {
 						// use strtr instead of strtoupper to avoid locale problems with Turkish
-					$marker = strtr($marker,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+					$marker = strtr(
+						$marker,
+						'abcdefghijklmnopqrstuvwxyz',
+						'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+					);
 				}
+
 				if (count($wrapArr) > 0) {
-					$marker = $wrapArr[0].$marker.$wrapArr[1];
+					$marker = $wrapArr[0] . $marker . $wrapArr[1];
 				}
+
 				$content = str_replace($marker, $markContent, $content);
 			}
 
@@ -261,16 +319,13 @@ class t3lib_parsehtml	{
 				if (empty($wrap)) {
 					$wrapArr = array('###', '###');
 				}
-				$content = preg_replace('/'.preg_quote($wrapArr[0]).'([A-Z0-9_-|]*)'.preg_quote($wrapArr[1]).'/is', '', $content);
+
+				$content = preg_replace('/' . preg_quote($wrapArr[0]) . '([A-Z0-9_|\-]*)' . preg_quote($wrapArr[1]) . '/is', '', $content);
 			}
 		}
+
 		return $content;
 	}
-
-
-	// *******************************************'
-	// COPY FROM class.tslib_content.php: / END
-	// *******************************************'
 
 
 
@@ -756,8 +811,27 @@ class t3lib_parsehtml	{
 													$tagAttrib[0][$attr]=t3lib_div::intInRange($tagAttrib[0][$attr],intval($params['range'][0]));
 												}
 											}
-											if (is_array($params['list']))	{
-												if (!in_array($this->caseShift($tagAttrib[0][$attr],$params['casesensitiveComp']),$this->caseShift($params['list'],$params['casesensitiveComp'],$tagName)))	$tagAttrib[0][$attr]=$params['list'][0];
+											if (is_array($params['list'])) {
+													// For the class attribute, remove from the attribute value any class not in the list
+													// Classes are case sensitive
+												if ($attr == 'class') {
+													$newClasses = array();
+													$classes = t3lib_div::trimExplode(' ', $tagAttrib[0][$attr], TRUE);
+													foreach ($classes as $class) {
+														if (in_array($class, $params['list'])) {
+															$newClasses[] = $class;
+														}
+													}
+													if (count($newClasses)) {
+														$tagAttrib[0][$attr] = implode(' ', $newClasses);
+													} else {
+														$tagAttrib[0][$attr] = '';
+													}
+												} else {
+													if (!in_array($this->caseShift($tagAttrib[0][$attr],$params['casesensitiveComp']),$this->caseShift($params['list'],$params['casesensitiveComp'],$tagName))) {
+														$tagAttrib[0][$attr]=$params['list'][0];
+													}
+												}
 											}
 											if (($params['removeIfFalse'] && $params['removeIfFalse']!='blank' && !$tagAttrib[0][$attr]) || ($params['removeIfFalse']=='blank' && !strcmp($tagAttrib[0][$attr],'')))	{
 												unset($tagAttrib[0][$attr]);
@@ -802,7 +876,7 @@ class t3lib_parsehtml	{
 
 								// rmTagIfNoAttrib
 							if ($endTag || trim($tagParts[1]) || !$tags[$tagName]['rmTagIfNoAttrib'])	{
-								$setTag=1;
+								$setTag = !$tags[$tagName]['rmTagIfNoAttrib'];
 
 								if ($tags[$tagName]['nesting'])	{
 									if (!is_array($tagRegister[$tagName]))	$tagRegister[$tagName]=array();
@@ -911,7 +985,7 @@ class t3lib_parsehtml	{
 	 */
 	function prefixResourcePath($main_prefix,$content,$alternatives=array(),$suffix='')	{
 
-		$parts = $this->splitTags('embed,td,table,body,img,input,form,link,script,a',$content);
+		$parts = $this->splitTags('embed,td,table,body,img,input,form,link,script,a,param',$content);
 		foreach ($parts as $k => $v)	{
 			if ($k%2)	{
 				$params = $this->get_tag_attributes($v,1);
@@ -957,6 +1031,16 @@ class t3lib_parsehtml	{
 							$somethingDone=1;
 						}
 					break;
+						// value attribute
+					case 'param':
+						$test = $params[0]['name'];
+						if ($test && $test === 'movie') {
+							if ($params[0]['value']) {
+								$params[0]['value'] = $this->prefixRelPath($prefix, $params[0]['value'], $suffix);
+								$somethingDone = 1;
+							}
+						}
+					break;
 				}
 				if ($somethingDone)	{
 					$tagParts = preg_split('/\s+/s',$v,2);
@@ -973,7 +1057,7 @@ class t3lib_parsehtml	{
 			$parts = $this->splitIntoBlock('style',$content);
 			foreach($parts as $k => $v)	{
 				if ($k%2)	{
-					$parts[$k] = eregi_replace('(url[[:space:]]*\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\))','\1'.$prefix.'\2'.$suffix.'\3',$parts[$k]);
+					$parts[$k] = preg_replace('/(url[[:space:]]*\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\))/i','\1'.$prefix.'\2'.$suffix.'\3',$parts[$k]);
 				}
 			}
 			$content = implode('',$parts);
@@ -991,10 +1075,11 @@ class t3lib_parsehtml	{
 	 * @return	string		Output path, prefixed if no scheme in input string
 	 * @access private
 	 */
-	function prefixRelPath($prefix,$srcVal,$suffix='')	{
+	function prefixRelPath($prefix, $srcVal, $suffix = '')	{
 		$pU = parse_url($srcVal);
-		if (!$pU['scheme'] && substr($srcVal, 0, 1)!='/')	{ // If not an absolute URL.
-			$srcVal = $prefix.$srcVal.$suffix;
+			// If not an absolute URL.
+		if (!$pU['scheme'] && substr($srcVal, 0, 1) != '/' && substr($srcVal, 0, 1) != '#')	{
+			$srcVal = $prefix . $srcVal . $suffix;
 		}
 		return $srcVal;
 	}
@@ -1398,4 +1483,5 @@ class t3lib_parsehtml	{
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_parsehtml.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_parsehtml.php']);
 }
+
 ?>

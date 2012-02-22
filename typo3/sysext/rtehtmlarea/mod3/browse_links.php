@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2005-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,7 +32,7 @@
  *
  * Adapted for htmlArea RTE by Stanislas Rolland
  *
- * $Id: browse_links.php 4152 2008-09-19 05:17:01Z stan $
+ * $Id: browse_links.php 5165 2009-03-09 18:28:59Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
@@ -123,4 +123,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtml
 $SOBE = t3lib_div::makeInstance('tx_rtehtmlarea_SC_browse_links');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

@@ -1,10 +1,8 @@
 <?php
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
-	// Add static template for enabling the Click-enlarge feature
-if ($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableClickEnlarge']) {
+		// Add static template for Click-enlarge rendering
 	t3lib_extMgm::addStaticFile($_EXTKEY,'static/clickenlarge/','Clickenlarge Rendering');
-}
 
 	$TCA['tx_rtehtmlarea_acronym'] = Array (
 	'ctrl' => Array (
@@ -22,6 +20,7 @@ if ($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableClickEnlarge']) {
 		'iconfile' => t3lib_extMgm::extRelPath($_EXTKEY).'htmlarea/skins/default/images/Acronym/ed_acronym.gif',
 		)
 	);
-	 
+
 	t3lib_extMgm::allowTableOnStandardPages('tx_rtehtmlarea_acronym');
+
 ?>

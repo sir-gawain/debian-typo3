@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skårhøj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -60,7 +60,6 @@
 $BACK_PATH = '';
 require('init.php');
 require('template.php');
-require_once(PATH_t3lib.'class.t3lib_stdgraphic.php');
 $LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
 
 /**
@@ -78,6 +77,7 @@ class SC_wizard_colorpicker {
 	var $P;				// Wizard parameters, coming from TCEforms linking to the wizard.
 	var $colorValue;	// Value of the current color picked.
 	var $fieldChangeFunc;	// Serialized functions for changing the field... Necessary to call when the value is transferred to the TCEform since the form might need to do internal processing. Otherwise the value is simply not be saved.
+	protected $fieldChangeFuncHash;
 	var $fieldName;		// Form name (from opener script)
 	var $formName;		// Field name (from opener script)
 	var $md5ID;			// ID of element in opener script for which to set color.
@@ -115,6 +115,7 @@ class SC_wizard_colorpicker {
 			// Setting GET vars (used in colorpicker script):
 		$this->colorValue = t3lib_div::_GP('colorValue');
 		$this->fieldChangeFunc = t3lib_div::_GP('fieldChangeFunc');
+		$this->fieldChangeFuncHash = t3lib_div::_GP('fieldChangeFuncHash');
 		$this->fieldName = t3lib_div::_GP('fieldName');
 		$this->formName = t3lib_div::_GP('formName');
 		$this->md5ID = t3lib_div::_GP('md5ID');
@@ -133,7 +134,7 @@ class SC_wizard_colorpicker {
 			// Setting field-change functions:
 		$fieldChangeFuncArr = unserialize($this->fieldChangeFunc);
 		$update = '';
-		if (is_array($fieldChangeFuncArr))	{
+		if ($this->areFieldChangeFunctionsValid()) {
 			unset($fieldChangeFuncArr['alert']);
 			foreach($fieldChangeFuncArr as $v)	{
 				$update.= '
@@ -144,7 +145,6 @@ class SC_wizard_colorpicker {
 			// Initialize document object:
 		$this->doc = t3lib_div::makeInstance('smallDoc');
 		$this->doc->backPath = $BACK_PATH;
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->JScode = $this->doc->wrapScriptTags('
 			function checkReference()	{	//
 				if (parent.opener && parent.opener.document && parent.opener.document.'.$this->formName.' && parent.opener.document.'.$this->formName.'["'.$this->fieldName.'"])	{
@@ -212,6 +212,7 @@ class SC_wizard_colorpicker {
 						<!-- Hidden fields with values that has to be kept constant -->
 					<input type="hidden" name="showPicker" value="1" />
 					<input type="hidden" name="fieldChangeFunc" value="'.htmlspecialchars($this->fieldChangeFunc).'" />
+					<input type="hidden" name="fieldChangeFuncHash" value="'.htmlspecialchars($this->fieldChangeFuncHash).'" />
 					<input type="hidden" name="fieldName" value="'.htmlspecialchars($this->fieldName).'" />
 					<input type="hidden" name="formName" value="'.htmlspecialchars($this->formName).'" />
 					<input type="hidden" name="md5ID" value="'.htmlspecialchars($this->md5ID).'" />
@@ -270,7 +271,8 @@ class SC_wizard_colorpicker {
 				'&formName='.rawurlencode($this->P['formName']).
 				'&exampleImg='.rawurlencode($this->P['exampleImg']).
 				'&md5ID='.rawurlencode($this->P['md5ID']).
-				'&fieldChangeFunc='.rawurlencode(serialize($this->P['fieldChangeFunc']));
+				'&fieldChangeFunc='.rawurlencode(serialize($this->P['fieldChangeFunc'])) .
+				'&fieldChangeFuncHash=' . $this->P['fieldChangeFuncHash'];
 
 		$this->content.='
 			<frameset rows="*,1" framespacing="0" frameborder="0" border="0">
@@ -377,7 +379,7 @@ class SC_wizard_colorpicker {
 			<select onchange="document.colorform.colorValue.value = this.options[this.selectedIndex].value; document.colorform.submit(); return false;">
 				'.implode('
 				',$opt).'
-			</select><br/>';
+			</select><br />';
 
 		return $output;
 	}
@@ -436,21 +438,25 @@ class SC_wizard_colorpicker {
 		$hex = implode('',$hexvalue);
 		return $hex;
 	}
+
+	/**
+	 * Determines whether submitted field change functions are valid
+	 * and are coming from the system and not from an external abuse.
+	 *
+	 * @return boolean Whether the submitted field change functions are valid
+	 */
+	protected function areFieldChangeFunctionsValid() {
+		return (
+			$this->fieldChangeFunc && $this->fieldChangeFuncHash
+			&& $this->fieldChangeFuncHash == t3lib_div::hmac($this->fieldChangeFunc)
+		);
+	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_colorpicker.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_colorpicker.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -459,4 +465,5 @@ $SOBE = t3lib_div::makeInstance('SC_wizard_colorpicker');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Web>File: File listing
  *
- * $Id: file_list.php 4163 2008-09-22 04:12:15Z jsegars $
+ * $Id: file_list.php 6720 2010-01-04 19:17:21Z steffenk $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -54,11 +54,7 @@ require ('mod/file/list/conf.php');
 require ('init.php');
 require ('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_file_list.xml');
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
-require_once (PATH_t3lib.'class.t3lib_extfilefunc.php');
-require_once (PATH_t3lib.'class.t3lib_recordlist.php');
-require_once (PATH_t3lib.'class.t3lib_clipboard.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
+$LANG->includeLLFile('EXT:lang/locallang_misc.xml');
 require_once ('class.file_list.inc');
 $BE_USER->modAccess($MCONF,1);
 
@@ -149,7 +145,8 @@ class SC_file_list {
 			'sort' => '',
 			'reverse' => '',
 			'displayThumbs' => '',
-			'clipBoard' => ''
+			'clipBoard' => '',
+			'bigControlPanel' => ''
 		);
 
 			// CLEANSE SETTINGS
@@ -168,7 +165,7 @@ class SC_file_list {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/file_list.html');
-		$this->doc->docType = 'xhtml_trans';
+		$this->doc->getPageRenderer()->loadPrototype();
 
 			// Validating the input "id" (the path, directory!) and checking it against the mounts of the user.
 		$this->id = $this->basicFF->is_directory($this->id);
@@ -176,11 +173,76 @@ class SC_file_list {
 
 			// There there was access to this file path, continue, make the list
 		if ($access)	{
+				// include the initialization for the flash uploader
+			if ($GLOBALS['BE_USER']->uc['enableFlashUploader']) {
 
+				$this->doc->JScodeArray['flashUploader'] = '
+					if (top.TYPO3.FileUploadWindow.isFlashAvailable()) {
+						document.observe("dom:loaded", function() {
+								// monitor the button
+							$("button-upload").observe("click", initFlashUploader);
+
+							function initFlashUploader(event) {
+									// set the page specific options for the flashUploader
+								var flashUploadOptions = {
+									uploadURL:           top.TS.PATH_typo3 + "ajax.php",
+									uploadFileSizeLimit: "' . t3lib_div::getMaxUploadFileSize() . '",
+									uploadFileTypes: {
+										allow:  "' . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']['webspace']['allow'] . '",
+										deny: "' . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']['webspace']['deny'] . '"
+									},
+									uploadFilePostName:  "upload_1",
+									uploadPostParams: {
+										"file[upload][1][target]": "' . $this->id . '",
+										"file[upload][1][data]": 1,
+										"file[upload][1][charset]": "utf-8",
+										"ajaxID": "TYPO3_tcefile::process"
+									}
+								};
+
+									// get the flashUploaderWindow instance from the parent frame
+								var flashUploader = top.TYPO3.FileUploadWindow.getInstance(flashUploadOptions);
+								// add an additional function inside the container to show the checkbox option
+								var infoComponent = new top.Ext.Panel({
+									autoEl: { tag: "div" },
+									height: "auto",
+									bodyBorder: false,
+									border: false,
+									hideBorders: true,
+									cls: "t3-upload-window-infopanel",
+									id: "t3-upload-window-infopanel-addition",
+									html: \'<label for="overrideExistingFilesCheckbox"><input id="overrideExistingFilesCheckbox" type="checkbox" onclick="setFlashPostOptionOverwriteExistingFiles(this);" />\' + top.String.format(top.TYPO3.LLL.fileUpload.infoComponentOverrideFiles) + \'</label>\'
+								});
+								flashUploader.add(infoComponent);
+
+									// do a reload of this frame once all uploads are done
+								flashUploader.on("totalcomplete", function() {
+									window.location.reload();
+								});
+
+									// this is the callback function that delivers the additional post parameter to the flash application
+								top.setFlashPostOptionOverwriteExistingFiles = function(checkbox) {
+									var uploader = top.TYPO3.getInstance("FileUploadWindow");
+									if (uploader.isVisible()) {
+										uploader.swf.addPostParam("overwriteExistingFiles", (checkbox.checked == true ? 1 : 0));
+									}
+								};
+
+								event.stop();
+							};
+						});
+					}
+				';
+			}
 				// Create filelisting object
 			$this->filelist = t3lib_div::makeInstance('fileList');
 			$this->filelist->backPath = $BACK_PATH;
-			$this->filelist->thumbs = $this->MOD_SETTINGS['displayThumbs']?1:$BE_USER->uc['thumbnailsByDefault'];
+
+				// if user never opened the list module, set the value for displayThumbs
+			if (!isset($this->MOD_SETTINGS['displayThumbs'])) {
+				$this->MOD_SETTINGS['displayThumbs'] = $BE_USER->uc['thumbnailsByDefault'];
+			}
+			$this->filelist->thumbs = $this->MOD_SETTINGS['displayThumbs'];
 
 				// Create clipboard object and initialize that
 			$this->filelist->clipObj = t3lib_div::makeInstance('t3lib_clipboard');
@@ -208,7 +270,7 @@ class SC_file_list {
 						// Init file processing object for deleting and pass the cmd array.
 					$fileProcessor = t3lib_div::makeInstance('t3lib_extFileFunctions');
 					$fileProcessor->init($FILEMOUNTS, $TYPO3_CONF_VARS['BE']['fileExtensions']);
-					$fileProcessor->init_actionPerms($BE_USER->user['fileoper_perms']);
+					$fileProcessor->init_actionPerms($GLOBALS['BE_USER']->getFileoperationPermissions());
 					$fileProcessor->dontCheckForUnique = $this->overwriteExistingFiles ? 1 : 0;
 					$fileProcessor->start($FILE);
 					$fileProcessor->processData();
@@ -225,7 +287,7 @@ class SC_file_list {
 
 				// Start up filelisting object, include settings.
 			$this->pointer = t3lib_div::intInRange($this->pointer,0,100000);
-			$this->filelist->start($this->id,$this->pointer,$this->MOD_SETTINGS['sort'],$this->MOD_SETTINGS['reverse'],$this->MOD_SETTINGS['clipBoard']);
+			$this->filelist->start($this->id, $this->pointer, $this->MOD_SETTINGS['sort'], $this->MOD_SETTINGS['reverse'], $this->MOD_SETTINGS['clipBoard'], $this->MOD_SETTINGS['bigControlPanel']);
 
 				// Generate the list
 			$this->filelist->generateList();
@@ -274,6 +336,9 @@ class SC_file_list {
 					-->
 					<div id="typo3-listOptions">
 				';
+
+			   		// Add "display bigControlPanel" checkbox:
+				$pageContent.=t3lib_BEfunc::getFuncCheck($this->id, 'SET[bigControlPanel]', $this->MOD_SETTINGS['bigControlPanel'], 'file_list.php', '', 'id="bigControlPanel"') . '<label for="bigControlPanel"> ' .$LANG->getLL('bigControlPanel', 1) . '</label><br />';
 
 					// Add "display thumbnails" checkbox:
 				$pageContent.=t3lib_BEfunc::getFuncCheck($this->id,'SET[displayThumbs]',$this->MOD_SETTINGS['displayThumbs'],'file_list.php','','id="checkDisplayThumbs"').' <label for="checkDisplayThumbs">'.$LANG->getLL('displayThumbs',1).'</label><br />';
@@ -347,30 +412,21 @@ class SC_file_list {
 		$buttons['csh'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'filelist_module', $GLOBALS['BACK_PATH'], '', TRUE);
 
 			// upload button
-		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/upload.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.upload',1)).'" alt="" />';
-		$buttons['upload'] = '<a href="'.$BACK_PATH.'file_upload.php?target='.rawurlencode($this->id).'&returnUrl='.rawurlencode($this->filelist->listURL()).'">'.$theIcon.'</a>';
+		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/upload.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.upload',1)).'" alt="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.upload',1)).'" />';
+		$buttons['upload'] = '<a href="' . $BACK_PATH . 'file_upload.php?target=' . rawurlencode($this->id) . '&amp;returnUrl=' . rawurlencode($this->filelist->listURL()) . '" id="button-upload">' . $theIcon . '</a>';
 
-		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/new_file.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.new',1)).'" alt="" />';
-		$buttons['new'] = '<a href="'.$BACK_PATH.'file_newfolder.php?target='.rawurlencode($this->id).'&returnUrl='.rawurlencode($this->filelist->listURL()).'">'.$theIcon.'</a>';
+		$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/new_file.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.new',1)).'" alt="'.$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.new',1)).'" />';
+		$buttons['new'] = '<a href="' . $BACK_PATH . 'file_newfolder.php?target=' . rawurlencode($this->id) . '&amp;returnUrl=' . rawurlencode($this->filelist->listURL()) . '">' . $theIcon . '</a>';
 
 		return $buttons;
 	}
 
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_list.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_list.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -380,8 +436,4 @@ $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
 
-
-if ($TYPO3_CONF_VARS['BE']['compressionLevel'])	{
-	new gzip_encode($TYPO3_CONF_VARS['BE']['compressionLevel']);
-}
 ?>

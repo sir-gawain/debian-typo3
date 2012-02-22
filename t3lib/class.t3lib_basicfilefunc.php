@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class with basic file management functions
  *
- * $Id: class.t3lib_basicfilefunc.php 3793 2008-06-11 06:30:14Z ingmars $
+ * $Id: class.t3lib_basicfilefunc.php 5947 2009-09-16 17:57:09Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -67,7 +67,6 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_cs.php');
 
 
 /**
@@ -292,7 +291,7 @@ class t3lib_basicFileFunctions	{
 				// Check if the file exists and if not - return the filename...
 			$fileInfo = $origFileInfo;
 			$theDestFile = $theDest.'/'.$fileInfo['file'];		// The destinations file
-			if (!@file_exists($theDestFile) || $dontCheckForUnique)		{	// If the file does NOT exist we return this filename
+			if (!file_exists($theDestFile) || $dontCheckForUnique)		{	// If the file does NOT exist we return this filename
 				return $theDestFile;
 			}
 
@@ -308,7 +307,7 @@ class t3lib_basicFileFunctions	{
 				}
 				$theTestFile = $theTempFileBody.$insert.$theOrigExt;
 				$theDestFile = $theDest.'/'.$theTestFile;		// The destinations file
-				if (!@file_exists($theDestFile))		{	// If the file does NOT exist we return this filename
+				if (!file_exists($theDestFile))		{	// If the file does NOT exist we return this filename
 					return $theDestFile;
 				}
 			}
@@ -438,44 +437,52 @@ class t3lib_basicFileFunctions	{
 
 	/**
 	 * Returns a string where any character not matching [.a-zA-Z0-9_-] is substituted by '_'
+	 * Trailing dots are removed
 	 *
 	 * @param	string		Input string, typically the body of a filename
 	 * @param	string		Charset of the a filename (defaults to current charset; depending on context)
-	 * @return	string		Output string with any characters not matching [.a-zA-Z0-9_-] is substituted by '_'
+	 * @return	string		Output string with any characters not matching [.a-zA-Z0-9_-] is substituted by '_' and trailing dots removed
 	 */
-	function cleanFileName($fileName,$charset='')	{
-			// handle UTF-8 characters
-		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] == 'utf-8' && $GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem'])	{
+	function cleanFileName($fileName, $charset = '') {
+			// Handle UTF-8 characters
+		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] == 'utf-8' && $GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
 				// allow ".", "-", 0-9, a-z, A-Z and everything beyond U+C0 (latin capital letter a with grave)
-			return preg_replace('/[\x00-\x2C\/\x3A-\x3F\x5B-\x60\x7B-\xBF]/u','_',trim($fileName));
-		}
+			$cleanFileName = preg_replace('/[\x00-\x2C\/\x3A-\x3F\x5B-\x60\x7B-\xBF]/u', '_', trim($fileName));
 
-		if (!is_object($this->csConvObj))	{
-			if (TYPO3_MODE=='FE')	{
-				$this->csConvObj = &$GLOBALS['TSFE']->csConvObj;
-			} elseif (is_object($GLOBALS['LANG']))	{	// BE assumed:
-				$this->csConvObj = &$GLOBALS['LANG']->csConvObj;
-			} else {	// The object may not exist yet, so we need to create it now. Happens in the Install Tool for example.
-				$this->csConvObj = &t3lib_div::makeInstance('t3lib_cs');
+			// Handle other character sets
+		} else {
+				// Get conversion object or initialize if needed
+			if (!is_object($this->csConvObj)) {
+				if (TYPO3_MODE=='FE') {
+					$this->csConvObj = $GLOBALS['TSFE']->csConvObj;
+				} elseif (is_object($GLOBALS['LANG'])) {	// BE assumed:
+					$this->csConvObj = $GLOBALS['LANG']->csConvObj;
+				} else {	// The object may not exist yet, so we need to create it now. Happens in the Install Tool for example.
+					$this->csConvObj = t3lib_div::makeInstance('t3lib_cs');
+				}
 			}
-		}
 
-		if (!$charset)	{
-			if (TYPO3_MODE=='FE')	{
-				$charset = $GLOBALS['TSFE']->renderCharset;
-			} elseif (is_object($GLOBALS['LANG']))	{	// BE assumed:
-				$charset = $GLOBALS['LANG']->charSet;
-			} else {	// best guess
-				$charset = $GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'];
+				// Define character set
+			if (!$charset)	{
+				if (TYPO3_MODE == 'FE') {
+					$charset = $GLOBALS['TSFE']->renderCharset;
+				} elseif (is_object($GLOBALS['LANG'])) {	// BE assumed:
+					$charset = $GLOBALS['LANG']->charSet;
+				} else {	// best guess
+					$charset = $GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'];
+				}
 			}
-		}
 
-		if ($charset)	{
-			$fileName = $this->csConvObj->specCharsToASCII($charset,$fileName);
-		}
+				// If a charset was found, convert filename
+			if ($charset) {
+				$fileName = $this->csConvObj->specCharsToASCII($charset, $fileName);
+			}
 
-		$fileName = preg_replace('/[^.[:alnum:]_-]/','_',trim($fileName));
-		return preg_replace('/\.*$/','',$fileName);
+				// Replace unwanted characters by underscores
+			$cleanFileName = preg_replace('/[^.[:alnum:]_-]/', '_', trim($fileName));
+		}
+			// Strip trailing dots and return
+		return preg_replace('/\.*$/', '', $cleanFileName);
 	}
 
 	/**
@@ -483,8 +490,11 @@ class t3lib_basicFileFunctions	{
 	 *
 	 * @param	integer		Bytes to be formated
 	 * @return	string		Formatted with M,K or &nbsp;&nbsp; appended.
+	 * @deprecated since at least TYPO3 4.2 - Use t3lib_div::formatSize() instead
 	 */
 	function formatSize($sizeInBytes)	{
+		t3lib_div::logDeprecatedFunction();
+
 		if ($sizeInBytes>900)	{
 			if ($sizeInBytes>900000)	{	// MB
 				$val = $sizeInBytes/(1024*1024);
@@ -504,4 +514,5 @@ class t3lib_basicFileFunctions	{
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_basicfilefunc.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_basicfilefunc.php']);
 }
+
 ?>

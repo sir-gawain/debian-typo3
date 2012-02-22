@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * No-document script
  * This is used by eg. the Doc module if no documents is registered as "open" (a concept which is better known from the "classic backend"...)
  *
- * $Id: alt_doc_nodoc.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: alt_doc_nodoc.php 5526 2009-06-02 13:52:04Z benni $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -52,7 +52,6 @@
 require('init.php');
 require('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_alt_doc.xml');
-require_once(PATH_t3lib.'class.t3lib_loadmodules.php');
 
 
 if (t3lib_extMgm::isLoaded('taskcenter') && t3lib_extMgm::isLoaded('taskcenter_recent'))	{
@@ -98,7 +97,6 @@ class SC_alt_doc_nodoc {
 
 			// Start the template object:
 		$this->doc = t3lib_div::makeInstance('mediumDoc');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->bodyTagMargins['x']=5;
 		$this->doc->bodyTagMargins['y']=5;
 		$this->doc->backPath = $BACK_PATH;
@@ -184,18 +182,10 @@ class SC_alt_doc_nodoc {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_doc_nodoc.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_doc_nodoc.php']);
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -204,4 +194,5 @@ $SOBE = t3lib_div::makeInstance('SC_alt_doc_nodoc');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

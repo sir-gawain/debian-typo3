@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for creating XML output from records
  *
- * $Id: class.t3lib_xml.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_xml.php 5424 2009-05-15 23:12:32Z k-fish $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -279,7 +279,7 @@ class t3lib_xml {
 	 * @return	string		Processed input value
 	 */
 	function substNewline($string)	{
-		return ereg_replace(chr(10),'<newline/>',$string);
+		return str_replace(chr(10),'<newline/>',$string);
 	}
 
 	/**

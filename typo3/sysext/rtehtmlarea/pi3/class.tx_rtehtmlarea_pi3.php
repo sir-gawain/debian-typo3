@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,13 +27,10 @@
 /**
  * Render custom attribute clickenlarge
  *
- * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+ * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * $Id: class.tx_rtehtmlarea_pi3.php 3439 2008-03-16 19:16:51Z flyguide $  *
+ * $Id: class.tx_rtehtmlarea_pi3.php 5526 2009-06-02 13:52:04Z benni $  *
  */
-
-require_once(PATH_tslib.'class.tslib_pibase.php');
-
 class tx_rtehtmlarea_pi3 extends tslib_pibase {
 
 		// Default plugin variables:
@@ -57,17 +54,16 @@ class tx_rtehtmlarea_pi3 extends tslib_pibase {
 	 * @return	string		HTML output.
 	 * @access private
 	 */
-	function render_clickenlarge($content,$conf)	{
-		global $TYPO3_CONF_VARS;
+	function render_clickenlarge($content,$conf) {
 
 		$clickenlarge = isset($this->cObj->parameters['clickenlarge']) ? $this->cObj->parameters['clickenlarge'] : 0;
 		$path = $this->cObj->parameters['src'];
-		$pathPre = $TYPO3_CONF_VARS['BE']['RTE_imageStorageDir'].'RTEmagicC_';
+		$pathPre = $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'] . 'RTEmagicC_';
 		if (t3lib_div::isFirstPartOfStr($path,$pathPre)) {
 				// Find original file:
-			$pI=pathinfo(substr($path,strlen($pathPre)));
+			$pI = pathinfo(substr($path,strlen($pathPre)));
 			$filename = substr($pI['basename'],0,-strlen('.'.$pI['extension']));
-			$file = $TYPO3_CONF_VARS['BE']['RTE_imageStorageDir'].'RTEmagicP_'.$filename;
+			$file = $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'] . 'RTEmagicP_' . $filename;
 		} else {
 			$file = $this->cObj->parameters['src'];
 		}
@@ -76,12 +72,18 @@ class tx_rtehtmlarea_pi3 extends tslib_pibase {
 		unset($this->cObj->parameters['allParams']);
 		$content = '<img '. t3lib_div::implodeAttributes($this->cObj->parameters, TRUE, TRUE) . ' />';
 
-		if ($TYPO3_CONF_VARS['EXTCONF'][$this->extKey]['enableClickEnlarge'] && $clickenlarge && is_array($conf['imageLinkWrap.'])) {
+		if ($clickenlarge && is_array($conf['imageLinkWrap.'])) {
 			$theImage = $file ? $GLOBALS['TSFE']->tmpl->getFileName($file) : '';
 			if ($theImage) {
-				if ($this->cObj->parameters['title']) $conf['imageLinkWrap.']['title'] = $this->cObj->parameters['title'];
-				if ($this->cObj->parameters['alt']) $conf['imageLinkWrap.']['alt'] = $this->cObj->parameters['alt'];
+				$this->cObj->parameters['origFile'] = $theImage;
+				if ($this->cObj->parameters['title']) {
+					$conf['imageLinkWrap.']['title'] = $this->cObj->parameters['title'];
+				}
+				if ($this->cObj->parameters['alt']) {
+					$conf['imageLinkWrap.']['alt'] = $this->cObj->parameters['alt'];
+				}
 				$content = $this->cObj->imageLinkWrap($content,$theImage,$conf['imageLinkWrap.']);
+				$content = $this->cObj->stdWrap($content,$conf['stdWrap.']);
 			}
 		}
 		return $content;

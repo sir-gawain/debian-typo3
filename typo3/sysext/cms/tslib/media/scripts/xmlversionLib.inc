@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Example class showing how one could make XML export of page content elements in TYPO3
  *
- * $Id: xmlversionLib.inc 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: xmlversionLib.inc 5634 2009-06-26 13:25:08Z ohader $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -45,27 +45,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once (PATH_t3lib.'class.t3lib_xml.php');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Class that creates the current page and content element records as an XML structure using the library "t3lib_xml"
  * It is demonstrated in use in the testsite package on page "59"
@@ -105,8 +84,7 @@ class user_xmlversion {
 	 * @return	string		XML content
 	 */
 	function main_xmlversion($content,$conf)	{
-		$className=t3lib_div::makeInstanceClassName('t3lib_xml');
-		$xmlObj = new $className('typo3_page');
+		$xmlObj = t3lib_div::makeInstance('t3lib_xml', 'typo3_page');
 		$xmlObj->XMLdebug=0;
 		$xmlObj->setRecFields('pages','doktype,title,alias,hidden,starttime,endtime,fe_group,url,target,no_cache,shortcut,keywords,description,abstract,author,author_email,newUntil,lastUpdated,cache_timeout');
 		$xmlObj->setRecFields('tt_content','CType,header,header_link,bodytext,image,imagewidth,imageorient,media,records,colPos,starttime,endtime,fe_group');

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for TYPO3 clipboard for records and files
  *
- * $Id: class.t3lib_clipboard.php 4623 2008-12-29 13:53:48Z steffenk $
+ * $Id: class.t3lib_clipboard.php 6607 2009-11-30 17:16:13Z steffenk $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -327,7 +327,7 @@ class t3lib_clipboard {
 		$opt[]='<option style="padding-left: 20px; background-image: url(\''.t3lib_iconWorks::skinImg($this->backPath, 'gfx/clip_cut.gif', '', 1).'\'); background-repeat: no-repeat;" value="" '.(($this->currentMode()=='copy')?'':'selected="selected"').'>'.$moveLabel .'</option>';
 		$opt[]='<option style="padding-left: 20px; background-image: url(\''.t3lib_iconWorks::skinImg($this->backPath, 'gfx/clip_copy.gif', '', 1).'\'); background-repeat: no-repeat;" value="1" '.(($this->currentMode()=='copy')?'selected="selected"':'').'>'.$copyLabel .'</option>';
 
-		$copymode_selector = ' <select name="CB[setCopyMode]" onchange="this.form.method=\'POST\'; this.form.action=\''.$copymode_url.'&CB[setCopyMode]=\'+(this.options[this.selectedIndex].value); this.form.submit(); return true;" >'.implode('',$opt).'</select>';
+		$copymode_selector = ' <select name="CB[setCopyMode]" onchange="this.form.method=\'POST\'; this.form.action=\''.htmlspecialchars($copymode_url.'&CB[setCopyMode]=').'\'+(this.options[this.selectedIndex].value); this.form.submit(); return true;" >'.implode('',$opt).'</select>';
 
 			// Selector menu + clear button
 		$opt=array();
@@ -338,18 +338,18 @@ class t3lib_clipboard {
 		}
 				// Edit:
 		if (!$this->fileMode && $elCount)	{
-			$opt[]='<option value="' . htmlspecialchars("window.location.href='" . $this->editUrl() . "&returnUrl='+top.rawurlencodeAndRemoveSiteUrl(window.location.href);") . '">' . $this->clLabel('edit', 'rm') . '</option>';
+			$opt[]='<option value="' . htmlspecialchars("window.location.href='" . $this->editUrl() . "&returnUrl='+top.rawurlencode(window.location.href);") . '">' . $this->clLabel('edit', 'rm') . '</option>';
 		}
 				// Delete:
 		if ($elCount)	{
 			if($GLOBALS['BE_USER']->jsConfirmation(4))	{
 				$js = "
 			if(confirm(".$GLOBALS['LANG']->JScharCode(sprintf($LANG->sL('LLL:EXT:lang/locallang_core.php:mess.deleteClip'),$elCount)).")){
-				window.location.href='" . $this->deleteUrl(0, $this->fileMode ? 1 : 0) . "&redirect='+top.rawurlencodeAndRemoveSiteUrl(window.location.href);
+				window.location.href='" . $this->deleteUrl(0, $this->fileMode ? 1 : 0) . "&redirect='+top.rawurlencode(window.location.href);
 			}
 					";
 			} else {
-				$js = " window.location.href='" . $this->deleteUrl(0, $this->fileMode ? 1 : 0) . "&redirect='+top.rawurlencodeAndRemoveSiteUrl(window.location.href); ";
+				$js = " window.location.href='" . $this->deleteUrl(0, $this->fileMode ? 1 : 0) . "&redirect='+top.rawurlencode(window.location.href); ";
 			}
 			$opt[]='<option value="'.htmlspecialchars($js).'">'.$this->clLabel('delete','rm').'</option>';
 		}
@@ -431,7 +431,7 @@ class t3lib_clipboard {
 					$bgColClass = ($table=='_FILE'&&$this->fileMode)||($table!='_FILE'&&!$this->fileMode) ? 'bgColor4-20' : 'bgColor4';
 
 					if ($table=='_FILE')	{	// Rendering files/directories on the clipboard:
-						if (@file_exists($v) && t3lib_div::isAllowedAbsPath($v))	{
+						if (file_exists($v) && t3lib_div::isAllowedAbsPath($v))	{
 							$fI = pathinfo($v);
 							$icon = is_dir($v) ? 'folder.gif' : t3lib_BEfunc::getFileIcon(strtolower($fI['extension']));
 							$size = ' ('.t3lib_div::formatSize(filesize($v)).'bytes)';
@@ -466,6 +466,12 @@ class t3lib_clipboard {
 									'<a href="'.htmlspecialchars($this->removeUrl($table,$uid)).'#clip_head"><img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/close_12h.gif','width="11" height="12"').' border="0" title="'.$this->clLabel('removeItem').'" alt="" /></a>'.
 									'</td>
 								</tr>';
+
+							$localizationData = $this->getLocalizations($table, $rec, $bgColClass, $pad);
+							if ($localizationData) {
+								$lines[] = $localizationData;
+							}
+
 						} else {
 							unset($this->clipData[$pad]['el'][$k]);
 							$this->changed=1;
@@ -485,6 +491,58 @@ class t3lib_clipboard {
 		$this->endClipboard();
 		return $lines;
 	}
+
+
+	/**
+	 * Gets all localizations of the current record.
+	 *
+	 * @param	string		the table
+	 * @param	array		the current record
+	 * @return	string		HTML table rows
+	 */
+	function getLocalizations($table, $parentRec, $bgColClass, $pad) {
+		$lines = array();
+		$tcaCtrl = $GLOBALS['TCA'][$table]['ctrl'];
+
+		if ($table != 'pages' && t3lib_BEfunc::isTableLocalizable($table) && !$tcaCtrl['transOrigPointerTable']) {
+			$where = array();
+			$where[] = $tcaCtrl['transOrigPointerField'] . '=' . intval($parentRec['uid']);
+			$where[] = $tcaCtrl['languageField'] . '!=0';
+
+			if (isset($tcaCtrl['delete']) && $tcaCtrl['delete']) {
+				$where[] = $tcaCtrl['delete'] . '=0';
+			}
+
+			if (isset($tcaCtrl['versioningWS']) && $tcaCtrl['versioningWS']) {
+				$where[] = 't3ver_wsid=' . $parentRec['t3ver_wsid'];
+			}
+
+			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', $table, implode(' AND ', $where));
+
+			if (is_array($rows)) {
+				$modeData = '';
+				if ($pad == 'normal') {
+					$mode = ($this->clipData['normal']['mode'] == 'copy' ? 'copy' : 'cut');
+					$modeData = ' <strong>(' . $this->clLabel($mode, 'cm') . ')</strong>';
+				}
+
+				foreach ($rows as $rec) {
+					$lines[]='
+					<tr>
+						<td class="' . $bgColClass . '">' .
+							t3lib_iconWorks::getIconImage($table, $rec, $this->backPath,' style="margin-left: 38px;"') . '</td>
+						<td class="' . $bgColClass . '" nowrap="nowrap" width="95%">&nbsp;' . htmlspecialchars(
+								t3lib_div::fixed_lgd_cs(t3lib_BEfunc::getRecordTitle($table, $rec), $GLOBALS['BE_USER']->uc['titleLen'])) .
+								$modeData . '&nbsp;</td>
+						<td class="' . $bgColClass . '" align="center" nowrap="nowrap">&nbsp;</td>
+					</tr>';
+				}
+			}
+		}
+		return implode('',$lines);
+	}
+
+
 
 	/**
 	 * Wraps title of pad in bold-tags and maybe the number of elements if any.
@@ -517,7 +575,7 @@ class t3lib_clipboard {
 			} else {
 				$str='<a href="'.htmlspecialchars($this->backPath.'db_list.php?id='.$rec['pid']).'">'.$str.'</a>';
 			}
-		} elseif (@file_exists($rec))	{
+		} elseif (file_exists($rec))	{
 			if (!$this->fileMode)	{
 				$str=$GLOBALS['TBE_TEMPLATE']->dfw($str);
 			} else {
@@ -710,7 +768,7 @@ class t3lib_clipboard {
 					list($table,$uid) = explode('|',$k);
 
 					if ($table=='_FILE')	{	// Rendering files/directories on the clipboard:
-						if (@file_exists($v) && t3lib_div::isAllowedAbsPath($v))	{
+						if (file_exists($v) && t3lib_div::isAllowedAbsPath($v))	{
 							$params[] = 'tx_impexp['.(is_dir($v) ? 'dir' : 'file').'][]='.rawurlencode($v);
 						}
 					} else {	// Rendering records:
@@ -788,7 +846,7 @@ class t3lib_clipboard {
 						$this->changed=1;
 					}
 				} else {
-					if (!$v || !@file_exists($v))	{
+					if (!$v || !file_exists($v))	{
 						unset($this->clipData[$this->current]['el'][$k]);
 						$this->changed=1;
 					}
@@ -1021,4 +1079,5 @@ class t3lib_clipboard {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_clipboard.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_clipboard.php']);
 }
+
 ?>

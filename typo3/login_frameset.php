@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML-frames compatible.
  *
- * $Id: login_frameset.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: login_frameset.php 5174 2009-03-10 20:23:43Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @package TYPO3
@@ -110,17 +110,10 @@ class SC_login_frameset {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/login_frameset.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/login_frameset.php']);
 }
-
-
-
-
-
-
-
 
 
 
@@ -128,4 +121,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/login
 $SOBE = t3lib_div::makeInstance('SC_login_frameset');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

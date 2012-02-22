@@ -1,8 +1,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004  Ki Master George <kimastergeorge@gmail.com>
-*  (c) 2005-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2004 Ki Master George <kimastergeorge@gmail.com>
+*  (c) 2005-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
 /*
  * Insert Smiley Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: insert-smiley.js 3439 2008-03-16 19:16:51Z flyguide $
+ * TYPO3 SVN ID: $Id: insert-smiley.js 5166 2009-03-09 23:46:55Z ohader $
  */
 
 InsertSmiley = HTMLArea.Plugin.extend({
@@ -93,7 +93,7 @@ InsertSmiley = HTMLArea.Plugin.extend({
 			param.editor_url = document.URL;
 			param.editor_url = param.editor_url.replace(/^(.*\/).*\/.*$/g, "$1");
 		}
-		this.dialog = this.openDialog("InsertSmiley", this.makeUrlFromPopupName("insertsmiley"), "insertImageTag", param, {width:250, height:220});
+		this.dialog = this.openDialog("InsertSmiley", this.makeUrlFromPopupName("insertsmiley"), "insertImageTag", param, {width:250, height:230});
 	},
 
 	/*

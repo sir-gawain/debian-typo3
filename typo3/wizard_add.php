@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Wizard to add new records to a group/select TCEform formfield
  *
- * $Id: wizard_add.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: wizard_add.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -51,7 +51,6 @@ $BACK_PATH = '';
 require ('init.php');
 require ('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
-
 
 
 
@@ -114,7 +113,7 @@ class SC_wizard_add {
 		$this->table = $this->P['params']['table'];
 
 			// Get TSconfig for it.
-		$TSconfig = t3lib_BEfunc::getTCEFORM_TSconfig($this->table,is_array($origRow)?$origRow:array('pid'=>$this->P['pid']));
+		$TSconfig = t3lib_BEfunc::getTCEFORM_TSconfig($this->P['table'],is_array($origRow)?$origRow:array('pid'=>$this->P['pid']));
 
 			// Set [params][pid]
 		if (substr($this->P['params']['pid'],0,3)=='###' && substr($this->P['params']['pid'],-3)=='###')	{
@@ -123,8 +122,7 @@ class SC_wizard_add {
 
 			// Return if new record as parent (not possibly/allowed)
 		if (!strcmp($this->pid,''))	{
-			header('Location: '.t3lib_div::locationHeaderUrl($this->P['returnUrl']));
-			exit;
+			t3lib_utility_Http::redirect(t3lib_div::sanitizeLocalUrl($this->P['returnUrl']));
 		}
 
 			// Else proceed:
@@ -139,6 +137,10 @@ class SC_wizard_add {
 
 					// ... and if everything seems OK we will register some classes for inclusion and instruct the object to perform processing later.
 				if ($this->P['params']['setValue'] && $cmd=='edit' && $this->id && $this->P['table'] && $this->P['field'] && $this->P['uid'])	{
+
+					if ($LiveRec=t3lib_BEfunc::getLiveVersionOfRecord($this->table, $this->id, 'uid'))	{ $this->id=$LiveRec['uid'];}
+
+
 					$this->include_once[]=PATH_t3lib.'class.t3lib_loaddbgroup.php';
 					$this->include_once[]=PATH_t3lib.'class.t3lib_transferdata.php';
 					$this->include_once[]=PATH_t3lib.'class.t3lib_tcemain.php';
@@ -169,22 +171,46 @@ class SC_wizard_add {
 				if (is_array($current))	{
 					$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 					$tce->stripslashes_values=0;
-					$data=array();
+					$data = array();
 					$addEl = $this->table.'_'.$this->id;
-					switch((string)$this->P['params']['setValue'])	{
-						case 'set':
-							$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $addEl;
-						break;
-						case 'prepend':
-							$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $current[$this->P['field']].','.$addEl;
-						break;
-						case 'append':
-							$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $addEl.','.$current[$this->P['field']];
-						break;
-					}
 
 						// Setting the new field data:
-					$data[$this->P['table']][$this->P['uid']][$this->P['field']] = implode(',',t3lib_div::trimExplode(',',$data[$this->P['table']][$this->P['uid']][$this->P['field']],1));
+					if ($this->P['flexFormPath'])	{	// If the field is a flexform field, work with the XML structure instead:
+
+						$currentFlexFormData = t3lib_div::xml2array($current[$this->P['field']]); // Current value of flexform path:
+						$flexToolObj = t3lib_div::makeInstance('t3lib_flexformtools');
+						$curValueOfFlexform = $flexToolObj->getArrayValueByPath($this->P['flexFormPath'], $currentFlexFormData);
+						$insertValue = '';
+
+						switch((string)$this->P['params']['setValue'])	{
+							case 'set':
+								$insertValue = $addEl;
+							break;
+							case 'prepend':
+								$insertValue = $curValueOfFlexform.','.$addEl;
+							break;
+							case 'append':
+								$insertValue = $addEl.','.$curValueOfFlexform;
+							break;
+						}
+						$insertValue = implode(',',t3lib_div::trimExplode(',',$insertValue,1));
+
+						$data[$this->P['table']][$this->P['uid']][$this->P['field']] = array();
+						$flexToolObj->setArrayValueByPath($this->P['flexFormPath'],$data[$this->P['table']][$this->P['uid']][$this->P['field']],$insertValue);
+					} else {
+						switch((string)$this->P['params']['setValue'])	{
+							case 'set':
+								$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $addEl;
+							break;
+							case 'prepend':
+								$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $current[$this->P['field']].','.$addEl;
+							break;
+							case 'append':
+								$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $addEl.','.$current[$this->P['field']];
+							break;
+						}
+						$data[$this->P['table']][$this->P['uid']][$this->P['field']] = implode(',',t3lib_div::trimExplode(',',$data[$this->P['table']][$this->P['uid']][$this->P['field']],1));
+					}
 
 						// Submit the data:
 					$tce->start($data,array());
@@ -192,27 +218,20 @@ class SC_wizard_add {
 				}
 			}
 				// Return to the parent alt_doc.php record editing session:
-			header('Location: '.t3lib_div::locationHeaderUrl($this->P['returnUrl']));
+			t3lib_utility_Http::redirect(t3lib_div::sanitizeLocalUrl($this->P['returnUrl']));
 		} else {
-				// Redirecting to alt_doc.php with instructions to create a new record AND when closing to return back with information about that records ID etc.
-			header('Location: '.t3lib_div::locationHeaderUrl('alt_doc.php?returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')).'&returnEditConf=1&edit['.$this->P['params']['table'].']['.$this->pid.']=new'));
+				// Redirecting to alt_doc.php with instructions to create a new record
+				// AND when closing to return back with information about that records ID etc.
+			$redirectUrl = 'alt_doc.php?returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')) . '&returnEditConf=1&edit[' . $this->P['params']['table'] . '][' . $this->pid . ']=new';
+			t3lib_utility_Http::redirect($redirectUrl);
 		}
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_add.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_add.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -224,4 +243,5 @@ $SOBE->init();
 foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 
 $SOBE->main();
+
 ?>

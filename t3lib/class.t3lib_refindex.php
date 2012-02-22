@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -60,10 +60,6 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_befunc.php');
-require_once(PATH_t3lib.'class.t3lib_tcemain.php');
-require_once(PATH_t3lib.'class.t3lib_flexformtools.php');
-//require_once(PATH_typo3.'sysext/indexed_search/class.lexer.php'); // Disabled until Kasper finishes this feature. Apart from that, t3lib classes should never require stuff from extensions. [Dmitry, 12.05.2008: better move lexer to core!]
 
 
 
@@ -205,6 +201,7 @@ class t3lib_refindex {
  						case 'db':
  							$this->createEntryData_dbRels($table,$uid,$fieldname,'',$deleted,$dat['itemArray']);
  						break;
+ 						case 'file_reference':
  						case 'file':
  							$this->createEntryData_fileRels($table,$uid,$fieldname,'',$deleted,$dat['newValueFiles']);
  						break;
@@ -342,6 +339,7 @@ class t3lib_refindex {
 								 	list($tableName,$recordId) = explode(':',$el['subst']['recordRef']);
 								 	$this->relations[] = $this->createEntryData($table,$uid,$fieldname,$flexpointer,$deleted,$tableName,$recordId,'',-1,$spKey,$subKey);
 								 break;
+								 case 'file_reference':
 								 case 'file':
 								 	$this->relations[] = $this->createEntryData($table,$uid,$fieldname,$flexpointer,$deleted,'_FILE',0,$el['subst']['relFileName'],-1,$spKey,$subKey);
 								 break;
@@ -452,7 +450,7 @@ class t3lib_refindex {
 				if (strlen($value) && $softRefs = t3lib_BEfunc::explodeSoftRefParserList($conf['softref']))	{
 					$softRefValue = $value;
 					foreach($softRefs as $spKey => $spParams)	{
-						$softRefObj = &t3lib_BEfunc::softRefParserObj($spKey);
+						$softRefObj = t3lib_BEfunc::softRefParserObj($spKey);
 						if (is_object($softRefObj))	{
 							$resultArray = $softRefObj->findRef($table, $field, $uid, $softRefValue, $spKey, $spParams);
 							if (is_array($resultArray))	{
@@ -485,7 +483,7 @@ class t3lib_refindex {
 	 * @return	void
 	 * @see t3lib_TCEmain::checkValue_flex_procInData_travDS()
 	 */
-	function getRelations_flexFormCallBack($dsArr, $dataValue, $PA, $structurePath, &$pObj)	{
+	function getRelations_flexFormCallBack($dsArr, $dataValue, $PA, $structurePath, $pObj) {
 		$structurePath = substr($structurePath,5).'/';	// removing "data/" in the beginning of path (which points to location in data array)
 
 		$dsConf = $dsArr['TCEforms']['config'];
@@ -511,7 +509,7 @@ class t3lib_refindex {
 		if (strlen($dataValue) && $softRefs = t3lib_BEfunc::explodeSoftRefParserList($dsConf['softref']))	{
 			$softRefValue = $dataValue;
 			foreach($softRefs as $spKey => $spParams)	{
-				$softRefObj = &t3lib_BEfunc::softRefParserObj($spKey);
+				$softRefObj = t3lib_BEfunc::softRefParserObj($spKey);
 				if (is_object($softRefObj))	{
 					$resultArray = $softRefObj->findRef($table, $field, $uid, $softRefValue, $spKey, $spParams, $structurePath);
 					if (is_array($resultArray) && is_array($resultArray['elements']))	{
@@ -537,7 +535,7 @@ class t3lib_refindex {
 	 */
 	function getRelations_procFiles($value, $conf, $uid)	{
 			// Take care of files...
-		if ($conf['type']=='group' && $conf['internal_type']=='file')	{
+		if ($conf['type'] == 'group' && ($conf['internal_type'] == 'file' || $conf['internal_type'] == 'file_reference')) {
 
 				// Collect file values in array:
 			if ($conf['MM'])	{
@@ -555,7 +553,7 @@ class t3lib_refindex {
 			}
 
 				// Traverse the files and add them:
-			$uploadFolder = $conf['uploadfolder'];
+			$uploadFolder = $conf['internal_type'] == 'file' ? $conf['uploadfolder'] : '';
 			$dest = $this->destPathFromUploadFolder($uploadFolder);
 			$newValue = array();
 			$newValueFiles = array();
@@ -565,7 +563,7 @@ class t3lib_refindex {
 					$realFile = $dest.'/'.trim($file);
 #					if (@is_file($realFile))	{		// Now, the refernece index should NOT look if files exist - just faithfully include them if they are in the records!
 						$newValueFiles[] = array(
-							'filename' => $file,
+							'filename' => basename($file),
 							'ID' => md5($realFile),
 							'ID_absFile' => $realFile
 						);	// the order should be preserved here because.. (?)
@@ -668,6 +666,7 @@ class t3lib_refindex {
 		 							$error = $this->setReferenceValue_dbRels($refRec,$dat['itemArray'],$newValue,$dataArray);
 									if ($error)	return $error;
 		 						break;
+		 						case 'file_reference':
 		 						case 'file':
 		 							$this->setReferenceValue_fileRels($refRec,$dat['newValueFiles'],$newValue,$dataArray);
 									if ($error)	return $error;
@@ -975,6 +974,9 @@ class t3lib_refindex {
 	 * @return	string		Input folder prefixed with PATH_site. No checking for existence is done. Output must be a folder without trailing slash.
 	 */
 	function destPathFromUploadFolder($folder)	{
+		if (!$folder) {
+			return substr(PATH_site, 0, -1);
+		}
 		return PATH_site.$folder;
 	}
 
@@ -1065,4 +1067,5 @@ class t3lib_refindex {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_refindex.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_refindex.php']);
 }
+
 ?>

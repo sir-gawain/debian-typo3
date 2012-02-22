@@ -3,7 +3,7 @@
 *  Copyright notice
 *
 *  (c) webservices.nl
-*  (c) 2006 Karsten Dambekalns <karsten@typo3.org>
+*  (c) 2006-2009 Karsten Dambekalns <karsten@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,7 +25,7 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/* $Id: class.em_soap.php 3946 2008-08-06 18:42:08Z flyguide $ */
+/* $Id: class.em_soap.php 5449 2009-05-19 13:52:53Z ohader $ */
 
 /**
  * Enter description here...
@@ -88,11 +88,12 @@ class em_soap {
 		}
 
 		if (!$options['implementation'] || $options['implementation'] == 'detect') {
+				// Avoid autoloading, since it's only a strategy check here:
 			if (defined('SOAP_1_2')) {
 				$options['implementation'] = 'phpsoap';
-			} elseif (class_exists('soapclient')) {
+			} elseif (class_exists('soapclient', false)) {
 				$options['implementation'] = 'nusoap';
-			} elseif (class_exists('SOAP_Client')) {
+			} elseif (class_exists('SOAP_Client', false)) {
 				$options['implementation'] = 'pearsoap';
 			}
 		}

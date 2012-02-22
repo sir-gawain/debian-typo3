@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * Used from TCEFORMS an other elements
  * In other words: This is the ELEMENT BROWSER!
  *
- * $Id: browse_links.php 4152 2008-09-19 05:17:01Z stan $
+ * $Id: browse_links.php 5174 2009-03-10 20:23:43Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -122,7 +122,6 @@ class SC_browse_links {
 			// Creating backend template object:
 			// this might not be needed but some classes refer to $GLOBALS['SOBE']->doc, so ...
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->docType= 'xhtml_trans';
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 	}
 
@@ -161,8 +160,8 @@ class SC_browse_links {
 				}
 				break;
 		}
-			
-			
+
+
 			// render type by user func
 		$browserRendered = false;
 		if (is_array ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/browse_links.php']['browserRendering'])) {
@@ -221,15 +220,10 @@ class SC_browse_links {
 }
 
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/browse_links.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/browse_links.php']);
 }
-
-
-
-
-
 
 
 
@@ -238,4 +232,5 @@ $SOBE = t3lib_div::makeInstance('SC_browse_links');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

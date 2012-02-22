@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Index search crawler hook example
  *
- * $Id: class.crawlerhook.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.crawlerhook.php 5947 2009-09-16 17:57:09Z ohader $
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
@@ -123,7 +123,7 @@ class tx_indexedsearch_crawlerhook {
 					parse_str('&itemID='.rawurlencode($item['ID']), $GETparams);
 
 						// Prepare indexer (make instance, initialize it, set special features for indexing parameterized content - probably none of this should be changed by you) [DON'T CHANGE]:
-					$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+					$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 					$indexerObj->backend_initIndexer($cfgRec['pid'], 0, $sys_language_uid, '', $rl, $GETparams, FALSE);
 					$indexerObj->backend_setFreeIndexUid($cfgRec['uid'], $cfgRec['set_id']);
 					$indexerObj->forceIndexing = TRUE;
@@ -153,7 +153,7 @@ class tx_indexedsearch_crawlerhook {
 				$sys_language_uid = 0;
 
 					// Prepare indexer (make instance, initialize it, set special features for indexing parameterized content - probably none of this should be changed by you) [DON'T CHANGE]:
-				$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+				$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 				$indexerObj->backend_initIndexer($cfgRec['pid'], 0, $sys_language_uid, '', $rl);
 				$indexerObj->backend_setFreeIndexUid($cfgRec['uid'], $cfgRec['set_id']);
 				$indexerObj->hash['phash'] = -1;	// To avoid phash_t3 being written to file sections (otherwise they are removed when page is reindexed!!!)
@@ -167,7 +167,7 @@ class tx_indexedsearch_crawlerhook {
 				$pObj->loadIndexerClass();
 
 					// Index external URL:
-				$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+				$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 				$indexerObj->backend_initIndexer($cfgRec['pid'], 0, $sys_language_uid, '', $rl);
 				$indexerObj->backend_setFreeIndexUid($cfgRec['uid'], $cfgRec['set_id']);
 				$indexerObj->hash['phash'] = -1;	// To avoid phash_t3 being written to file sections (otherwise they are removed when page is reindexed!!!)
@@ -189,4 +189,5 @@ class tx_indexedsearch_crawlerhook {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.crawlerhook.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.crawlerhook.php']);
 }
+
 ?>

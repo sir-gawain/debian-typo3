@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Library with a single function addElement that returns tablerows based on some input.
  *
- * $Id: class.t3lib_recordlist.php 3562 2008-04-14 15:20:41Z flyguide $
+ * $Id: class.t3lib_recordlist.php 7454 2010-04-30 10:20:26Z steffenk $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -107,7 +107,19 @@ class t3lib_recordList {
 
 	var $pageOverlays = array();			// Contains page translation languages
 	var $languageIconTitles = array();		// Contains sys language icons and titles
+	var $translateTools;					// translateTools object
 
+	/**
+	 * constructor for t3lib_recordList
+	 *
+	 * @author	Ingo Renner <ingo@typo3.org>
+	 */
+	public function __construct() {
+		if (isset($GLOBALS['BE_USER']->uc['titleLen']) && $GLOBALS['BE_USER']->uc['titleLen'] > 0) {
+			$this->fixedL = $GLOBALS['BE_USER']->uc['titleLen'];
+		}
+		$this->getTranslateTools();
+	}
 
 
 	/**
@@ -305,33 +317,19 @@ class t3lib_recordList {
 	function CBfunctions()	{
 		return '
 		// checkOffCB()
-	function checkOffCB(listOfCBnames)	{	//
-		var notChecked=0;
-		var total=0;
-
-			// Checking how many is checked, how many is not
-		var pointer=0;
-		var pos = listOfCBnames.indexOf(",");
-		while (pos!=-1)	{
-			if (!cbValue(listOfCBnames.substr(pointer,pos-pointer))) notChecked++;
-			total++;
-			pointer=pos+1;
-			pos = listOfCBnames.indexOf(",",pointer);
+	function checkOffCB(listOfCBnames, link)	{	//
+		var checkBoxes, flag, i;
+		var checkBoxes = listOfCBnames.split(",");
+		if (link.rel === "") {
+			link.rel = "allChecked";
+			flag = true;
+		} else {
+			link.rel = "";
+			flag = false;
 		}
-		if (!cbValue(listOfCBnames.substr(pointer))) notChecked++;
-		total++;
-
-			// Setting the status...
-		var flag = notChecked*2>total;
-		pointer=0;
-		pos = listOfCBnames.indexOf(",");
-		while (pos!=-1)	{
-			setcbValue(listOfCBnames.substr(pointer,pos-pointer),flag);
-
-			pointer=pos+1;
-			pos = listOfCBnames.indexOf(",",pointer);
+		for (i = 0; i < checkBoxes.length; i++) {
+			setcbValue(checkBoxes[i], flag);
 		}
-		setcbValue(listOfCBnames.substr(pointer),flag);
 	}
 		// cbValue()
 	function cbValue(CBname)	{	//
@@ -341,7 +339,9 @@ class t3lib_recordList {
 		// setcbValue()
 	function setcbValue(CBname,flag)	{	//
 		CBfullName = "CBC["+CBname+"]";
-		document.dblistForm[CBfullName].checked = flag ? "on" : 0;
+		if(document.dblistForm[CBfullName]) {
+			document.dblistForm[CBfullName].checked = flag ? "on" : 0;
+		}
 	}
 
 		';
@@ -368,8 +368,7 @@ class t3lib_recordList {
 			'sys_language_uid'
 		);
 
-		$t8Tools = t3lib_div::makeInstance('t3lib_transl8tools');
-		$this->languageIconTitles = $t8Tools->getSystemLanguages($this->id, $this->backPath);
+		$this->languageIconTitles = $this->getTranslateTools()->getSystemLanguages($this->id, $this->backPath);
 	}
 
 	/**
@@ -381,6 +380,18 @@ class t3lib_recordList {
 	function languageFlag($sys_language_uid)	{
 		return ($this->languageIconTitles[$sys_language_uid]['flagIcon'] ? '<img src="'.$this->languageIconTitles[$sys_language_uid]['flagIcon'].'" class="absmiddle" alt="" />&nbsp;' : '').
 				htmlspecialchars($this->languageIconTitles[$sys_language_uid]['title']);
+	}
+
+	/**
+	 * Gets an instance of t3lib_transl8tools.
+	 *
+	 * @return	t3lib_transl8tools
+	 */
+	protected function getTranslateTools() {
+		if (!isset($this->translateTools)) {
+			$this->translateTools = t3lib_div::makeInstance('t3lib_transl8tools');
+		}
+		return $this->translateTools;
 	}
 }
 

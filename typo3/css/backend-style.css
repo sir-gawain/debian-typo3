@@ -4,9 +4,9 @@ Title  : TYPO3 backend styles
 Author : Ingo Renner <ingo@typo3.org>
 URL    : http://typo3.org
 
-Description : styles the TYPO3 backend
+Description : styles for the TYPO3 backend
 
-	$Id: backend-style.css 3643 2008-05-06 09:21:32Z dmitry $
+	$Id: backend-style.css 6751 2010-01-11 13:59:44Z benni $
 
 - - - - - - - - - - - - - - - - - - - - - */
 
@@ -121,11 +121,55 @@ Description : styles the TYPO3 backend
 
 /* ----- Workspace Selector ----- */
 
-#workspace-selector span {
-	padding-top: 2px;
-	padding-left: 7px;
-	margin-right: 5px;
+#workspace-selector-menu {
+	width: 30px;
 }
+
+#workspace-selector-menu ul {
+	position: absolute;
+	list-style: none;
+	padding: 2px 0px 0px;
+	margin: 0px;
+	background-color: #f9f9f9;
+	border: 1px solid #abb2bc;
+	border-top: none;
+	width: 180px;
+}
+
+#workspace-selector-menu li {
+	padding-top: 2px;
+	padding-left: 2px;
+	text-align: left;
+	float: none;
+	vertical-align: middle;
+	min-height: 19px;
+}
+* html #workspace-selector-menu li {
+	height: 19px;
+}
+
+#workspace-selector-menu li img {
+	float: left;
+}
+
+#workspace-selector-menu li a {
+	text-decoration: none;
+	line-height: 12px;
+	vertical-align: middle;
+	display: block;
+	padding-bottom: 2px;
+	padding-left: 3px;
+	font-size: 11px;
+}
+
+#workspace-selector-menu li.divider {
+	border-top: 1px solid #a5a5a5;
+	border-right: 1px solid #a5a5a5;
+	background-image: url('../gfx/shortcutgroups-bg.png');
+	background-repeat: repeat-x;
+	padding-top: 4px;
+}
+
 
 /* ----- Caching ----- */
 
@@ -146,6 +190,7 @@ Description : styles the TYPO3 backend
 
 #clear-cache-actions-menu li {
 	padding-top: 2px;
+	padding-left: 2px;
 	text-align: left;
 	float: none;
 	vertical-align: middle;
@@ -264,9 +309,31 @@ Description : styles the TYPO3 backend
 	padding: 1px;
 }
 
+/* ----- File Upload Window ----- */
 
+.swfupload {
+	display: block;
+	position: absolute;
+	height: 22px;
+	z-index: 2000;
+}
 
+#t3-upload-window-infopanel div div {
+	padding: 10px;
+}
+.t3-upload-window-infopanel div div {
+	padding: 0 10px 10px;
+}
 
+.t3-upload-window-infopanel input {
+	vertical-align: text-bottom;
+	margin-right: 3px;
+}
+
+.t3-upload-window-progressbar .x-progress-text div {
+	text-align: left;
+	text-indent: 6px;
+}
 
 
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Plugin 'Content rendering' for the 'css_styled_content' extension.
  *
- * $Id: class.tx_cssstyledcontent_pi1.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tx_cssstyledcontent_pi1.php 7184 2010-03-26 16:02:00Z lolli $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -52,11 +52,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once(PATH_tslib.'class.tslib_pibase.php');
-
-
-
 /**
  * Plugin class - instantiated from TypoScript.
  * Rendering some content elements from tt_content table.
@@ -96,7 +91,7 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 	function render_bullets($content,$conf)	{
 
 			// Look for hook before running default code for function
-		if ($hookObj = &$this->hookRequest('render_bullets'))	{
+		if ($hookObj = $this->hookRequest('render_bullets')) {
 			return $hookObj->render_bullets($content,$conf);
 		} else {
 
@@ -141,7 +136,7 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 	function render_table($content,$conf)	{
 
 			// Look for hook before running default code for function
-		if ($hookObj = &$this->hookRequest('render_table'))	{
+		if ($hookObj = $this->hookRequest('render_table')) {
 			return $hookObj->render_table($content,$conf);
 		} else {
 				// Init FlexForm configuration
@@ -285,7 +280,7 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 	function render_uploads($content,$conf)	{
 
 			// Look for hook before running default code for function
-		if ($hookObj = &$this->hookRequest('render_uploads'))	{
+		if ($hookObj = $this->hookRequest('render_uploads')) {
 			return $hookObj->render_uploads($content,$conf);
 		} else {
 
@@ -294,21 +289,29 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 				// Set layout type:
 			$type = intval($this->cObj->data['layout']);
 
-				// Get the list of files (using stdWrap function since that is easiest)
-			$lConf = array();
-			$lConf['override.']['filelist.']['field'] = 'select_key';
-			$field = (isset($conf['field']) && trim($conf['field']) ? trim($conf['field']) : 'media');
-			$fileList = $this->cObj->stdWrap($this->cObj->data[$field],$lConf);
+				// see if the file path variable is set, this takes precedence
+			$filePathConf = $this->cObj->stdWrap($conf['filePath'], $conf['filePath.']);
+			if ($filePathConf) {
+				$fileList = $this->cObj->filelist($filePathConf);
+				list($path) = explode('|', $filePathConf);
+			} else {
+					// Get the list of files from the field
+				$field = (trim($conf['field']) ? trim($conf['field']) : 'media');
+				$fileList = $this->cObj->data[$field];
+				t3lib_div::loadTCA('tt_content');
+				$path = 'uploads/media/';
+				if (is_array($GLOBALS['TCA']['tt_content']['columns'][$field]) && !empty($GLOBALS['TCA']['tt_content']['columns'][$field]['config']['uploadfolder'])) {
+					// in TCA-Array folders are saved without trailing slash, so $path.$fileName won't work
+				    $path = $GLOBALS['TCA']['tt_content']['columns'][$field]['config']['uploadfolder'] .'/';
+				}
+			}
+			$path = trim($path);
 
 				// Explode into an array:
 			$fileArray = t3lib_div::trimExplode(',',$fileList,1);
 
 				// If there were files to list...:
 			if (count($fileArray))	{
-
-					// Get the path from which the images came:
-				$selectKeyValues = explode('|',$this->cObj->data['select_key']);
-				$path = trim($selectKeyValues[0]) ? trim($selectKeyValues[0]) : 'uploads/media/';
 
 					// Get the descriptions for the files (if any):
 				$descriptions = t3lib_div::trimExplode(chr(10),$this->cObj->data['imagecaption']);
@@ -319,6 +322,9 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 				$conf['linkProc.']['icon.']['wrap'] = ' | //**//';	// Temporary, internal split-token!
 				$conf['linkProc.']['icon_link'] = 1;	// ALways link the icon
 				$conf['linkProc.']['icon_image_ext_list'] = ($type==2 || $type==3) ? $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] : '';	// If the layout is type 2 or 3 we will render an image based icon if possible.
+				if ($conf['labelStdWrap.']) {
+					$conf['linkProc.']['labelStdWrap.'] = $conf['labelStdWrap.'];
+				}
 
 					// Traverse the files found:
 				$filesData = array();
@@ -336,44 +342,43 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 
 						$this->cObj->setCurrentVal($path);
 						$GLOBALS['TSFE']->register['ICON_REL_PATH'] = $path.$fileName;
+						$GLOBALS['TSFE']->register['filename'] = $filesData[$key]['filename'];
+						$GLOBALS['TSFE']->register['path'] = $filesData[$key]['path'];
+						$GLOBALS['TSFE']->register['fileSize'] = $filesData[$key]['filesize'];
+						$GLOBALS['TSFE']->register['fileExtension'] = $filesData[$key]['fileextension'];
+						$GLOBALS['TSFE']->register['description'] = $filesData[$key]['description'];
 						$filesData[$key]['linkedFilenameParts'] = explode('//**//',$this->cObj->filelink($fileName, $conf['linkProc.']));
 					}
 				}
 
+					// optionSplit applied to conf to allow differnt settings per file
+				$splitConf = $GLOBALS['TSFE']->tmpl->splitConfArray($conf, count($filesData));
+
 					// Now, lets render the list!
-				$tRows = array();
-				foreach($filesData as $key => $fileD)	{
-
-						// Setting class of table row for odd/even rows:
-					$oddEven = $key%2 ? 'tr-odd' : 'tr-even';
-
-						// Render row, based on the "layout" setting
-					$tRows[]='
-					<tr class="'.$oddEven.'">'.($type>0 ? '
-						<td class="csc-uploads-icon">
-							'.$fileD['linkedFilenameParts'][0].'
-						</td>' : '').'
-						<td class="csc-uploads-fileName">
-							<p>'.$fileD['linkedFilenameParts'][1].'</p>'.
-							($fileD['description'] ? '
-							<p class="csc-uploads-description">'.htmlspecialchars($fileD['description']).'</p>' : '').'
-						</td>'.($this->cObj->data['filelink_size'] ? '
-						<td class="csc-uploads-fileSize">
-							<p>'.t3lib_div::formatSize($fileD['filesize']).'</p>
-						</td>' : '').'
-					</tr>';
+				$outputEntries = array();
+				foreach($filesData as $key => $fileData)	{
+					$GLOBALS['TSFE']->register['linkedIcon'] = $fileData['linkedFilenameParts'][0];
+					$GLOBALS['TSFE']->register['linkedLabel'] = $fileData['linkedFilenameParts'][1];
+					$GLOBALS['TSFE']->register['filename'] = $fileData['filename'];
+					$GLOBALS['TSFE']->register['path'] = $fileData['path'];
+					$GLOBALS['TSFE']->register['description'] = $fileData['description'];
+					$GLOBALS['TSFE']->register['fileSize'] = $fileData['filesize'];
+					$GLOBALS['TSFE']->register['fileExtension'] = $fileData['fileextension'];
+					$outputEntries[] = $this->cObj->cObjGetSingle($splitConf[$key]['itemRendering'], $splitConf[$key]['itemRendering.']);
 				}
 
-					// Table tag params.
-				$tableTagParams = $this->getTableAttributes($conf,$type);
-				$tableTagParams['class'] = 'csc-uploads csc-uploads-'.$type;
-
+				if (isset($conf['outerWrap']))	{
+						// Wrap around the whole content
+					$outerWrap = $conf['outerWrap'];
+				} else	{
+						// Table tag params
+					$tableTagParams = $this->getTableAttributes($conf,$type);
+					$tableTagParams['class'] = 'csc-uploads csc-uploads-'.$type;
+					$outerWrap = '<table ' . t3lib_div::implodeAttributes($tableTagParams) . '>|</table>';
+				}
 
 					// Compile it all into table tags:
-				$out = '
-				<table '.t3lib_div::implodeAttributes($tableTagParams).'>
-					'.implode('',$tRows).'
-				</table>';
+				$out = $this->cObj->wrap(implode('', $outputEntries), $outerWrap);
 			}
 
 				// Calling stdWrap:
@@ -397,7 +402,7 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 	 */
 	 function render_textpic($content, $conf)	{
 			// Look for hook before running default code for function
-		if (method_exists($this, 'hookRequest') && $hookObj = &$this->hookRequest('render_textpic'))	{
+		if (method_exists($this, 'hookRequest') && $hookObj = $this->hookRequest('render_textpic')) {
 			return $hookObj->render_textpic($content,$conf);
 		}
 
@@ -438,10 +443,25 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 
 		$imgPath = $this->cObj->stdWrap($conf['imgPath'], $conf['imgPath.']);
 
+			// Does we need to render a "global caption" (below the whole image block)?
+		$renderGlobalCaption = !$conf['captionSplit'] && !$conf['imageTextSplit'] && is_array($conf['caption.']);
+		if ($imgCount == 1) {
+				// If we just have one image, the caption relates to the image, so it is not "global"
+			$renderGlobalCaption = false;
+		}
+
+			// Use the calculated information (amount of images, if global caption is wanted) to choose a different rendering method for the images-block
+		$GLOBALS['TSFE']->register['imageCount'] = $imgCount;
+		$GLOBALS['TSFE']->register['renderGlobalCaption'] = $renderGlobalCaption;
+		$fallbackRenderMethod = $this->cObj->cObjGetSingle($conf['fallbackRendering'], $conf['fallbackRendering.']);
+		if ($fallbackRenderMethod && is_array($conf['rendering.'][$fallbackRenderMethod . '.']))	{
+			$conf = $this->cObj->joinTSarrays($conf, $conf['rendering.'][$fallbackRenderMethod . '.']);
+		}
+
 			// Global caption
-		$caption = '';
-		if (!$conf['captionSplit'] && !$conf['imageTextSplit'] && is_array($conf['caption.']))	{
-			$caption = $this->cObj->stdWrap($this->cObj->cObjGet($conf['caption.'], 'caption.'), $conf['caption.']);
+		$globalCaption = '';
+		if ($renderGlobalCaption)	{
+			$globalCaption = $this->cObj->stdWrap($this->cObj->cObjGet($conf['caption.'], 'caption.'), $conf['caption.']);
 		}
 
 			// Positioning
@@ -730,7 +750,7 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 				$thisImage = '';
 				$thisImage .= $this->cObj->stdWrap($imgsTag[$imgKey], $conf['imgTagStdWrap.']);
 
-				if ($conf['captionSplit'] || $conf['imageTextSplit'])	{
+				if (!$renderGlobalCaption)	{
 					$thisImage .= $this->cObj->stdWrap($this->cObj->cObjGet($conf['caption.'], 'caption.'), $conf['caption.']);
 				}
 				if ($editIconsHTML)	{
@@ -773,8 +793,8 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 		}
 
 			// Add the global caption, if not split
-		if ($caption)	{
-			$images .= $caption;
+		if ($globalCaption)	{
+			$images .= $globalCaption;
 		}
 
 			// CSS-classes
@@ -889,14 +909,14 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 	 * @param	string		Name of the function you want to call / hook key
 	 * @return	object		Hook object, if any. Otherwise null.
 	 */
-	function &hookRequest($functionName)	{
+	function hookRequest($functionName) {
 		global $TYPO3_CONF_VARS;
 
 			// Hook: menuConfig_preProcessModMenu
 		if ($TYPO3_CONF_VARS['EXTCONF']['css_styled_content']['pi1_hooks'][$functionName]) {
-			$hookObj = &t3lib_div::getUserObj($TYPO3_CONF_VARS['EXTCONF']['css_styled_content']['pi1_hooks'][$functionName]);
+			$hookObj = t3lib_div::getUserObj($TYPO3_CONF_VARS['EXTCONF']['css_styled_content']['pi1_hooks'][$functionName]);
 			if (method_exists ($hookObj, $functionName)) {
-				$hookObj->pObj = &$this;
+				$hookObj->pObj = $this;
 				return $hookObj;
 			}
 		}
@@ -908,4 +928,5 @@ class tx_cssstyledcontent_pi1 extends tslib_pibase {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/css_styled_content/pi1/class.tx_cssstyledcontent_pi1.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/css_styled_content/pi1/class.tx_cssstyledcontent_pi1.php']);
 }
+
 ?>

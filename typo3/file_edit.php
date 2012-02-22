@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Web>File: Editing documents
  *
- * $Id: file_edit.php 3775 2008-06-10 12:05:31Z patrick $
+ * $Id: file_edit.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant (except textarea field)
  *
@@ -51,17 +51,6 @@
 $BACK_PATH = '';
 require('init.php');
 require('template.php');
-require_once(PATH_t3lib.'class.t3lib_basicfilefunc.php');
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -103,25 +92,26 @@ class SC_file_edit {
 	 * @return	void
 	 */
 	function init()	{
+		//TODO remove global
 		global $BACK_PATH,$TYPO3_CONF_VARS;
 
 			// Setting target, which must be a file reference to a file within the mounts.
 		$this->target = $this->origTarget = t3lib_div::_GP('target');
-		$this->returnUrl = t3lib_div::_GP('returnUrl');
+		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 
 			// Creating file management object:
 		$this->basicff = t3lib_div::makeInstance('t3lib_basicFileFunctions');
 		$this->basicff->init($GLOBALS['FILEMOUNTS'],$TYPO3_CONF_VARS['BE']['fileExtensions']);
 
 
-		if (@file_exists($this->target))	{
+		if (file_exists($this->target))	{
 			$this->target=$this->basicff->cleanDirectoryName($this->target);		// Cleaning and checking target (file or dir)
 		} else {
 			$this->target='';
 		}
 		$key=$this->basicff->checkPathAgainstMounts($this->target.'/');
 		if (!$this->target || !$key)	{
-			t3lib_BEfunc::typo3PrintError ('Parameter Error','Target was not a directory!','');
+			t3lib_BEfunc::typo3PrintError($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', true), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', true), '');
 			exit;
 		}
 			// Finding the icon
@@ -143,7 +133,6 @@ class SC_file_edit {
 		// Setting template object
 		// ***************************
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->setModuleTemplate('templates/file_edit.html');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->JScode=$this->doc->wrapScriptTags('
@@ -160,6 +149,7 @@ class SC_file_edit {
 	 * @return	void
 	 */
 	function main()	{
+		//TODO remove global, change $LANG into $GLOBALS['LANG'], change locallang*.php to locallang*.xml
 		global $BE_USER, $LANG, $TYPO3_CONF_VARS;
 		$docHeaderButtons = $this->getButtons();
 
@@ -255,19 +245,10 @@ class SC_file_edit {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_edit.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_edit.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -276,4 +257,5 @@ $SOBE = t3lib_div::makeInstance('SC_file_edit');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

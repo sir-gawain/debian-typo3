@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a base class for authentication of users in TYPO3, both frontend and backend.
  *
- * $Id: class.t3lib_userauth.php 4838 2009-01-23 20:50:05Z stucki $
+ * $Id: class.t3lib_userauth.php 9207 2010-10-27 15:55:31Z stephenking $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -199,7 +199,13 @@ class t3lib_userAuth {
 		$this->loginType = ($this->name=='fe_typo_user') ? 'FE' : 'BE';
 
 			// set level to normal if not already set
-		$this->security_level = $this->security_level ? $this->security_level : 'normal';
+		if (!$this->security_level) {
+			// Notice: cannot use TYPO3_MODE here because BE user can be logged in and operate inside FE!
+			$this->security_level = trim($TYPO3_CONF_VARS[$this->loginType]['loginSecurityLevel']);
+			if (!$this->security_level) {
+				$this->security_level = 'normal';
+			}
+		}
 
 			// enable dev logging if set
 		if ($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['writeDevLog']) $this->writeDevLog = TRUE;
@@ -212,10 +218,13 @@ class t3lib_userAuth {
 		$mode = '';
 		$this->newSessionID = FALSE;
 			// $id is set to ses_id if cookie is present. Else set to false, which will start a new session
-		$id = isset($_COOKIE[$this->name]) ? stripslashes($_COOKIE[$this->name]) : '';
-		$this->hash_length = t3lib_div::intInRange($this->hash_length,6,32);
+		$id = $this->getCookie($this->name);
 		$this->svConfig = $TYPO3_CONF_VARS['SVCONF']['auth'];
 
+			// if we have a flash client, take the ID from the GP
+		if (!$id && $GLOBALS['CLIENT']['BROWSER'] == 'flash') {
+			$id = t3lib_div::_GP($this->name);
+		}
 
 			// If fallback to get mode....
 		if (!$id && $this->getFallBack && $this->get_name)	{
@@ -228,7 +237,7 @@ class t3lib_userAuth {
 			// If new session or client tries to fix session...
 		if (!$id || !$this->isExistingSessionRecord($id))	{
 				// New random session-$id is made
-			$id = substr(md5(uniqid('').getmypid()),0,$this->hash_length);
+			$id = $this->createSessionId();
 				// New session
 			$this->newSessionID = TRUE;
 		}
@@ -249,48 +258,24 @@ class t3lib_userAuth {
 			// Make certain that NO user is set initially. ->check_authentication may have set a session-record which will provide us with a user record in the next section:
 		unset($this->user);
 
+		// determine whether we need to skip session update.
+		// This is used mainly for checking session timeout without
+		// refreshing the session itself while checking.
+		if (t3lib_div::_GP('skipSessionUpdate')) {
+			$skipSessionUpdate = true;
+		} else {
+			$skipSessionUpdate = false;
+		}
+
 			// re-read user session
-		$this->user = $this->fetchUserSession();
+		$this->user = $this->fetchUserSession($skipSessionUpdate);
 
 		if ($this->writeDevLog && is_array($this->user)) 	t3lib_div::devLog('User session finally read: '.t3lib_div::arrayToLogString($this->user, array($this->userid_column,$this->username_column)), 't3lib_userAuth', -1);
 		if ($this->writeDevLog && !is_array($this->user)) t3lib_div::devLog('No user session found.', 't3lib_userAuth', 2);
 
 			// Setting cookies
-		if ($TYPO3_CONF_VARS['SYS']['cookieDomain'])	{
-			if ($TYPO3_CONF_VARS['SYS']['cookieDomain']{0} == '/')	{
-				$matchCnt = @preg_match($TYPO3_CONF_VARS['SYS']['cookieDomain'], t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'), $match);
-				if ($matchCnt === FALSE)	{
-					t3lib_div::sysLog('The regular expression of $TYPO3_CONF_VARS[SYS][cookieDomain] contains errors. The session is not shared across sub-domains.', 'Core', 3);
-				} elseif ($matchCnt)	{
-					$cookieDomain = $match[0];
-				}
-			} else {
-				$cookieDomain = $TYPO3_CONF_VARS['SYS']['cookieDomain'];
-			}
-		}
-
-			// If new session and the cookie is a sessioncookie, we need to set it only once!
-		if ($this->isSetSessionCookie())	{
-			if (!$this->dontSetCookie)	{
-				if ($cookieDomain)	{
-					SetCookie($this->name, $id, 0, '/', $cookieDomain);
-				} else {
-					SetCookie($this->name, $id, 0, '/');
-				}
-				if ($this->writeDevLog) 	t3lib_div::devLog('Set new Cookie: '.$id.($cookieDomain ? ', '.$cookieDomain : ''), 't3lib_userAuth');
-			}
-		}
-
-			// If it is NOT a session-cookie, we need to refresh it.
-		if ($this->isRefreshTimeBasedCookie())	{
-			if (!$this->dontSetCookie)	{
-				if ($cookieDomain)	{
-					SetCookie($this->name, $id, time()+$this->lifetime, '/', $cookieDomain);
-				} else {
-					SetCookie($this->name, $id, time()+$this->lifetime, '/');
-				}
-				if ($this->writeDevLog) 	t3lib_div::devLog('Update Cookie: '.$id.($cookieDomain ? ', '.$cookieDomain : ''), 't3lib_userAuth');
-			}
+		if (!$this->dontSetCookie)	{
+			$this->setSessionCookie();
 		}
 
 			// Hook for alternative ways of filling the $this->user array (is used by the "timtaw" extension)
@@ -323,6 +308,111 @@ class t3lib_userAuth {
 		if ((rand()%100) <= $this->gc_probability)	{
 			$this->gc();
 		}
+
+	}
+
+	/**
+	 * Sets the session cookie for the current disposal.
+	 *
+	 * @return	void
+	 */
+	protected function setSessionCookie() {
+		$isSetSessionCookie = $this->isSetSessionCookie();
+		$isRefreshTimeBasedCookie = $this->isRefreshTimeBasedCookie();
+
+		if ($isSetSessionCookie || $isRefreshTimeBasedCookie) {
+			$settings = $GLOBALS['TYPO3_CONF_VARS']['SYS'];
+
+			// Get the domain to be used for the cookie (if any):
+			$cookieDomain = $this->getCookieDomain();
+			// If no cookie domain is set, use the base path:
+			$cookiePath = ($cookieDomain ? '/' : t3lib_div::getIndpEnv('TYPO3_SITE_PATH'));
+			// If the cookie lifetime is set, use it:
+			$cookieExpire = ($isRefreshTimeBasedCookie ? $GLOBALS['EXEC_TIME'] + $this->lifetime : 0);
+			// Use the secure option when the current request is served by a secure connection:
+			$cookieSecure = (bool)$settings['cookieSecure'] && t3lib_div::getIndpEnv('TYPO3_SSL');
+			// Deliver cookies only via HTTP and prevent possible XSS by JavaScript:
+			$cookieHttpOnly = (bool)$settings['cookieHttpOnly'];
+
+			// Do not set cookie if cookieSecure is set to "1" (force HTTPS) and no secure channel is used:
+			if ((int)$settings['cookieSecure'] !== 1 || t3lib_div::getIndpEnv('TYPO3_SSL')) {
+				setcookie(
+					$this->name,
+					$this->id,
+					$cookieExpire,
+					$cookiePath,
+					$cookieDomain,
+					$cookieSecure,
+					$cookieHttpOnly
+				);
+			} else {
+				throw new t3lib_exception(
+					'Cookie was not set since HTTPS was forced in $TYPO3_CONF_VARS[SYS][cookieSecure].',
+					1254325546
+				);
+			}
+
+			if ($this->writeDevLog) {
+				$devLogMessage = ($isRefreshTimeBasedCookie ? 'Updated Cookie: ' : 'Set Cookie: ') . $this->id;
+				t3lib_div::devLog($devLogMessage . ($cookieDomain ? ', '.$cookieDomain : ''), 't3lib_userAuth');
+			}
+		}
+	}
+
+	/**
+	 * Gets the domain to be used on setting cookies.
+	 * The information is taken from the value in $TYPO3_CONF_VARS[SYS][cookieDomain].
+	 *
+	 * @return	string		The domain to be used on setting cookies
+	 */
+	protected function getCookieDomain() {
+		$result = '';
+		$cookieDomain = $GLOBALS['TYPO3_CONF_VARS']['SYS']['cookieDomain'];
+
+		if ($cookieDomain) {
+			if ($cookieDomain{0} == '/') {
+				$matchCnt = @preg_match($cookieDomain, t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'), $match);
+				if ($matchCnt === FALSE) {
+					t3lib_div::sysLog('The regular expression of $TYPO3_CONF_VARS[SYS][cookieDomain] contains errors. The session is not shared across sub-domains.', 'Core', 3);
+				} elseif ($matchCnt) {
+					$result = $match[0];
+				}
+			} else {
+				$result = $cookieDomain;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Get the value of a specified cookie.
+	 *
+	 * Uses HTTP_COOKIE, if available, to avoid a IE8 bug where multiple
+	 * cookies with the same name might be returned if the user accessed
+	 * the site without "www." first and switched to "www." later:
+	 *   Cookie: fe_typo_user=AAA; fe_typo_user=BBB
+	 * In this case PHP will set _COOKIE as the first cookie, when we
+	 * would need the last one (which is what this function then returns).
+	 *
+	 * @param	string		The cookie ID
+	 * @return	string		The value stored in the cookie
+	 */
+	protected function getCookie($cookieName) {
+		if (isset($_SERVER['HTTP_COOKIE'])) {
+			$cookies = t3lib_div::trimExplode(';', $_SERVER['HTTP_COOKIE']);
+			foreach ($cookies as $cookie) {
+				list ($name, $value) = t3lib_div::trimExplode('=', $cookie);
+				if (strcmp(trim($name), $cookieName) == 0) {
+					// Use the last one
+					$cookieValue = urldecode($value);
+				}
+			}
+		} else {
+			// Fallback if there is no HTTP_COOKIE, use original method:
+			$cookieValue = isset($_COOKIE[$cookieName]) ? stripslashes($_COOKIE[$cookieName]) : '';
+		}
+		return $cookieValue;
 	}
 
 	/**
@@ -413,8 +503,17 @@ class t3lib_userAuth {
 
 		// the following code makes auto-login possible (if configured). No submitted data needed
 
+		// determine whether we need to skip session update.
+		// This is used mainly for checking session timeout without
+		// refreshing the session itself while checking.
+		if (t3lib_div::_GP('skipSessionUpdate')) {
+			$skipSessionUpdate = true;
+		} else {
+			$skipSessionUpdate = false;
+		}
+
 			// re-read user session
-		$authInfo['userSession'] = $this->fetchUserSession();
+		$authInfo['userSession'] = $this->fetchUserSession($skipSessionUpdate);
 		$haveSession = is_array($authInfo['userSession']) ? TRUE : FALSE;
 
 		if ($this->writeDevLog)	{
@@ -527,7 +626,6 @@ class t3lib_userAuth {
 				// reset failure flag
 			$this->loginFailure = FALSE;
 
-
 				// Insert session record if needed:
 			if (!($haveSession && (
 				$tempuser['ses_id']==$this->id || 	// check if the tempuser has the current session id
@@ -582,6 +680,14 @@ class t3lib_userAuth {
 		}
 	}
 
+	/**
+	 * Creates a new session ID.
+	 *
+	 * @return	string		The new session ID
+	 */
+	public function createSessionId() {
+		return t3lib_div::getRandomHexString($this->hash_length);
+	}
 
 
 
@@ -653,26 +759,16 @@ class t3lib_userAuth {
 	 *
 	 * @return	array		user session data
 	 */
-	function fetchUserSession() {
+	function fetchUserSession($skipSessionUpdate = false) {
 
 		$user = '';
 
 		if ($this->writeDevLog) 	t3lib_div::devLog('Fetch session ses_id = '.$this->id, 't3lib_userAuth');
 
-			// The session_id is used to find user in the database. Two tables are joined: The session-table with user_id of the session and the usertable with its primary key
-		$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-						'*',
-						$this->session_table.','.$this->user_table,
-						$this->session_table.'.ses_id = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, $this->session_table).'
-							AND '.$this->session_table.'.ses_name = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->name, $this->session_table).'
-							AND '.$this->session_table.'.ses_userid = '.$this->user_table.'.'.$this->userid_column.'
-							'.$this->ipLockClause().'
-							'.$this->hashLockClause().'
-							'.$this->user_where_clause()
-					);
+			// fetch the user session from the DB
+		$dbres = $this->fetchUserSessionFromDB();
 
-
-		if ($user = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($dbres))	{
+		if ($dbres && $user = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($dbres)) {
 				// A user was found
 			if (is_string($this->auth_timeout_field))	{
 				$timeout = intval($user[$this->auth_timeout_field]);		// Get timeout-time from usertable
@@ -682,6 +778,7 @@ class t3lib_userAuth {
 				// If timeout > 0 (true) and currenttime has not exceeded the latest sessions-time plus the timeout in seconds then accept user
 				// Option later on: We could check that last update was at least x seconds ago in order not to update twice in a row if one script redirects to another...
 			if ($timeout>0 && ($GLOBALS['EXEC_TIME'] < ($user['ses_tstamp']+$timeout)))	{
+				if(!$skipSessionUpdate) {
 					$GLOBALS['TYPO3_DB']->exec_UPDATEquery(
 											$this->session_table,
 											'ses_id='.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, $this->session_table).'
@@ -689,6 +786,8 @@ class t3lib_userAuth {
 											array('ses_tstamp' => $GLOBALS['EXEC_TIME'])
 										);
 					$user['ses_tstamp'] = $GLOBALS['EXEC_TIME'];	// Make sure that the timestamp is also updated in the array
+				}
+
 			} else {
 				$this->logoff();		// delete any user set...
 			}
@@ -744,16 +843,11 @@ class t3lib_userAuth {
 	 * @return	boolean		Returns true if a corresponding session was found in the database
 	 */
 	function isExistingSessionRecord($id) {
-		$count = false;
-		$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-						'COUNT(ses_id)',
+		$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+						'ses_id',
 						$this->session_table,
 						'ses_id=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($id, $this->session_table)
 					);
-		if ($dbres !== false) {
-			list($count) = $GLOBALS['TYPO3_DB']->sql_fetch_row($dbres);
-			$GLOBALS['TYPO3_DB']->sql_free_result($dbres);
-		}
 		return (($count ? true : false));
 	}
 
@@ -776,6 +870,27 @@ class t3lib_userAuth {
 	 *************************/
 
 	/**
+	 * The session_id is used to find user in the database.
+	 * Two tables are joined: The session-table with user_id of the session and the usertable with its primary key
+	 * @return DB result object or false on error
+	 * @access private
+	 */
+	protected function fetchUserSessionFromDB() {
+		$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+					'*',
+					$this->session_table.','.$this->user_table,
+					$this->session_table.'.ses_id = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, $this->session_table).'
+						AND '.$this->session_table.'.ses_name = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->name, $this->session_table).'
+						AND '.$this->session_table.'.ses_userid = '.$this->user_table.'.'.$this->userid_column.'
+						'.$this->ipLockClause().'
+						'.$this->hashLockClause().'
+						'.$this->user_where_clause()
+		);
+		return $dbres;
+	}
+
+
+	/**
 	 * This returns the where-clause needed to select the user with respect flags like deleted, hidden, starttime, endtime
 	 *
 	 * @return	string
@@ -785,8 +900,8 @@ class t3lib_userAuth {
 		return  (($this->enablecolumns['rootLevel']) ? 'AND '.$this->user_table.'.pid=0 ' : '').
 				(($this->enablecolumns['disabled']) ? ' AND '.$this->user_table.'.'.$this->enablecolumns['disabled'].'=0' : '').
 				(($this->enablecolumns['deleted']) ? ' AND '.$this->user_table.'.'.$this->enablecolumns['deleted'].'=0' : '').
-				(($this->enablecolumns['starttime']) ? ' AND ('.$this->user_table.'.'.$this->enablecolumns['starttime'].'<='.time().')' : '').
-				(($this->enablecolumns['endtime']) ? ' AND ('.$this->user_table.'.'.$this->enablecolumns['endtime'].'=0 OR '.$this->user_table.'.'.$this->enablecolumns['endtime'].'>'.time().')' : '');
+				(($this->enablecolumns['starttime']) ? ' AND (' . $this->user_table . '.' . $this->enablecolumns['starttime'] . '<=' . $GLOBALS['EXEC_TIME'] . ')' : '') .
+				(($this->enablecolumns['endtime']) ? ' AND (' . $this->user_table . '.' . $this->enablecolumns['endtime'] . '=0 OR ' . $this->user_table . '.' . $this->enablecolumns['endtime'] . '>' . $GLOBALS['EXEC_TIME'] . ')' : '');
 	}
 
 	/**
@@ -1121,19 +1236,22 @@ class t3lib_userAuth {
 	function gc() {
 		$GLOBALS['TYPO3_DB']->exec_DELETEquery(
 					$this->session_table,
-					'ses_tstamp < '.intval(time()-($this->gc_time)).'
-						AND ses_name = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->name, $this->session_table)
+					'ses_tstamp < ' . intval($GLOBALS['EXEC_TIME'] - ($this->gc_time)) .
+						' AND ses_name = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->name, $this->session_table)
 				);
 	}
 
 	/**
-	 * Redirect to somewhere. Obsolete, deprecated etc.
+	 * Redirect to somewhere (obsolete).
 	 *
 	 * @return	void
+	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.5.
+	 * @obsolete
 	 * @ignore
 	 */
 	function redirect() {
 		if (!$this->userid && $this->auth_url)	{	 // if no userid AND an include-document for login is given
+			t3lib_div::deprecationLog('Redirection after login via PHP include is deprecated.');
 			include ($this->auth_include);
 			exit;
 		}
@@ -1287,4 +1405,5 @@ class t3lib_userAuth {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_userauth.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_userauth.php']);
 }
+
 ?>

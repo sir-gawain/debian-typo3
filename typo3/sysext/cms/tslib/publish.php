@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Publishing pages to static
  *
  * Is included from index_ts.php
- * $Id: publish.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: publish.php 5813 2009-08-23 14:48:37Z rupi $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @package TYPO3
@@ -58,15 +58,14 @@ if (!is_object($TSFE))	{die('You cannot execute this file directly. It\'s meant 
 	// Storing the TSFE object
 $temp_publish_TSFE = $TSFE;
 $TT->push('Publishing','');
-$temp_publish_pages = explode(',',$BE_USER->extPublishList);
+$temp_publish_pages = explode(',', $BE_USER->adminPanel->getExtPublishList());
 $temp_publish_imagesTotal = array();
 $temp_publish_array = array();	// Collects the rendered pages.
 
 while(list(,$temp_publish_id)=each($temp_publish_pages))	{
 	$TT->push('Page '.$temp_publish_id,'');
 //debug($temp_publish_id,1);
-		$temp_TSFEclassName=t3lib_div::makeInstanceClassName('tslib_fe');
-		$TSFE = new $temp_TSFEclassName($TYPO3_CONF_VARS,$temp_publish_id,0);
+		$TSFE = t3lib_div::makeInstance('tslib_fe', $TYPO3_CONF_VARS, $temp_publish_id, 0);
 
 		$TSFE->initFEuser();
 		$TSFE->clear_preview();
@@ -82,12 +81,10 @@ while(list(,$temp_publish_id)=each($temp_publish_pages))	{
 				if ($temp_theScript)	{
 					include($temp_theScript);
 				} else {
-					require_once (PATH_tslib.'class.tslib_pagegen.php');		// Just formal, this is already included from index_ts.php
 					include(PATH_tslib.'pagegen.php');
 				}
 				$TSFE->generatePage_postProcessing();
 		} elseif ($TSFE->isINTincScript())	{
-			require_once (PATH_tslib.'class.tslib_pagegen.php');	// Just formal, this is already included from index_ts.php
 			include(PATH_tslib.'pagegen.php');
 		}
 
@@ -122,7 +119,7 @@ while(list(,$temp_publish_id)=each($temp_publish_pages))	{
 // ***************************
 $publishDir = $TYPO3_CONF_VARS['FE']['publish_dir'];
 if ($publishDir && @is_dir($publishDir))	{
-	$publishDir = ereg_replace('/*$','',$publishDir).'/';
+	$publishDir = rtrim($publishDir, '/').'/';
 	debug('Publishing in: '.$publishDir,1);
 	reset($temp_publish_array);
 	while(list($key,$val)=each($temp_publish_array))	{

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Contains a class for evaluation of database integrity according to $TCA
  * Most of these functions are considered obsolete!
  *
- * $Id: class.t3lib_admin.php 3437 2008-03-16 16:22:11Z flyguide $
+ * $Id: class.t3lib_admin.php 5744 2009-08-01 18:11:03Z lolli $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -386,14 +386,14 @@ class t3lib_admin {
 					$pid_list_tmp = preg_replace('/^\-1,/','',$pid_list_tmp);
 				}
 
-				$count = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $table, 'pid IN ('.$pid_list_tmp.')');
-				if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($count))	{
-					$list[$table]=$row[0];
+				$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', $table, 'pid IN ('.$pid_list_tmp.')');
+				if ($count) {
+					$list[$table] = $count;
 				}
 
-				$count = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $table, 'pid IN ('.$pid_list_tmp.')'.t3lib_BEfunc::deleteClause($table));
-				if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($count))	{
-					$list_n[$table]=$row[0];
+				$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', $table, 'pid IN ('.$pid_list_tmp.')' . t3lib_BEfunc::deleteClause($table));
+				if ($count) {
+					$list_n[$table] = $count;
 				}
 			}
 		}
@@ -513,7 +513,7 @@ class t3lib_admin {
 						unset($fields);
 					}
 					else {
-					$cl_fl = implode ('!="" OR ',$fieldArr). '!=""';
+						$cl_fl = implode ('!=\'\' OR ',$fieldArr). '!=\'\'';
 					}
 
 					$mres = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,'.$field_list, $table, $cl_fl);
@@ -582,6 +582,31 @@ class t3lib_admin {
 	 */
 	function testFileRefs ()	{
 		$output=Array();
+			// handle direct references with upload folder setting (workaround)
+		$newCheckFileRefs = array();
+		foreach ($this->checkFileRefs as $folder => $files) {
+				// only direct references without a folder setting
+			if ($folder !== '') {
+				$newCheckFileRefs[$folder] = $files;
+				continue;
+			}
+
+			foreach ($files as $file => $references) {
+
+					// direct file references have often many references (removes occurences in the moreReferences section of the result array)
+				if ($references > 1) {
+					$references = 1;
+				}
+
+					// the directory must be empty (prevents checking of the root directory)
+				$directory = dirname($file);
+				if ($directory !== '') {
+					$newCheckFileRefs[$directory][basename($file)] = $references;
+				}
+			}
+		}
+		$this->checkFileRefs = $newCheckFileRefs;
+
 		reset($this->checkFileRefs);
 		while(list($folder,$fileArr)=each($this->checkFileRefs))	{
 			$path = PATH_site.$folder;
@@ -600,7 +625,8 @@ class t3lib_admin {
 							}
 							unset($fileArr[$entry]);
 						} else {
-							if (!strstr($entry,'index.htm'))	{
+								// contains workaround for direct references
+							if (!strstr($entry, 'index.htm') && !preg_match('/^' . preg_quote($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') . '/', $folder)) {
 								$output['noReferences'][] = Array($path,$entry);
 							}
 						}
@@ -610,6 +636,12 @@ class t3lib_admin {
 				reset($fileArr);
 				$tempCounter=0;
 				while(list($file,)=each($fileArr))	{
+						// workaround for direct file references
+					if (preg_match('/^' . preg_quote($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') . '/', $folder)) {
+						$file = $folder . '/' . $file;
+						$folder = '';
+						$path = substr(PATH_site, 0, - 1);
+					}
 					$temp = $this->whereIsFileReferenced($folder,$file);
 					$tempList = '';
 					while(list(,$inf)=each($temp))	{

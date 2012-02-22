@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Module: Workspace publisher
  *
- * $Id: publish.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: publish.php 5526 2009-06-02 13:52:04Z benni $
  *
  * @author	Dmitry Dulepov <typo3@accio.lv>
  */
@@ -61,9 +61,7 @@ $BE_USER->modAccess($MCONF, 1);
 
 // Include libraries of various kinds used inside:
 $LANG->includeLLFile('EXT:lang/locallang_mod_user_ws.xml');
-require_once(PATH_t3lib . 'class.t3lib_scbase.php');
 require_once(PATH_typo3 . 'mod/user/ws/class.wslib.php');
-require_once(PATH_t3lib . 'class.t3lib_tcemain.php');
 
 define('MAX_RECORDS_TO_PUBLISH', 30);
 
@@ -97,7 +95,6 @@ class SC_mod_user_ws_publish extends t3lib_SCbase {
 		// Initialize Document Template object:
 		$this->doc = t3lib_div::makeInstance('mediumDoc');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->JScode = '<script type="text/javascript">/*<![CDATA[*/
 			function closeAndReload() {
 				//window.opener.location.reload(); window.close();
@@ -188,7 +185,7 @@ class SC_mod_user_ws_publish extends t3lib_SCbase {
 
 				$errors = $tce->errorLog;
 				if (count($errors) > 0) {
-					$content .= '<h3>' . $GLOBALS['LANG']->getLL('label_errors') . '</h3><br/>' . implode('<br/>',$errors);
+					$content .= '<h3>' . $GLOBALS['LANG']->getLL('label_errors') . '</h3><br />' . implode('<br />', $errors);
 					$content .= '<br /><br /><a href="index.php">' . $GLOBALS['LANG']->getLL('return_to_index') . '</a>';
 				}
 				else {
@@ -258,7 +255,6 @@ class SC_mod_user_ws_publish extends t3lib_SCbase {
 }
 
 
-// Include extension?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/publish.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/publish.php']);
 }
@@ -268,4 +264,5 @@ $SOBE = t3lib_div::makeInstance('SC_mod_user_ws_publish');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

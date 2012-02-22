@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2006-2008 Karsten Dambekalns <karsten@typo3.org>
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Karsten Dambekalns <karsten@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
 /**
  * Include file extending localRecordList for DBAL compatibility
  *
- * $Id: class.ux_db_list_extra.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.ux_db_list_extra.php 30033 2010-02-14 23:15:46Z xperseguers $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @author	Karsten Dambekalns <k.dambekalns@fishfarm.de>
@@ -43,6 +43,7 @@
  * @subpackage DBAL
  */
 class ux_localRecordList extends localRecordList {
+
 	/**
 	 * Creates part of query for searching after a word ($this->searchString) fields in input table
 	 *
@@ -52,58 +53,57 @@ class ux_localRecordList extends localRecordList {
 	 * @param	string		Table, in which the fields are being searched.
 	 * @return	string		Returns part of WHERE-clause for searching, if applicable.
 	 */
-	function makeSearchString($table)	{
-		global $TCA;
-
+	function makeSearchString($table) {
 			// Make query, only if table is valid and a search string is actually defined:
-		if ($TCA[$table] && $this->searchString)	{
+		if ($GLOBALS['TCA'][$table] && $this->searchString) {
 
 				// Loading full table description - we need to traverse fields:
 			t3lib_div::loadTCA($table);
 
 				// Initialize field array:
-			$sfields=array();
+			$sfields = array();
 			$or = '';
 
 				// add the uid only if input is numeric, cast to int
-			if(is_numeric($this->searchString)) {
-				$queryPart = ' AND (uid='.(int)$this->searchString.' OR ';
+			if (is_numeric($this->searchString)) {
+				$queryPart = ' AND (uid=' . (int)$this->searchString . ' OR ';
 			} else {
 				$queryPart = ' AND (';
 			}
 
-			if($GLOBALS['TYPO3_DB']->runningADOdbDriver('oci8')) {
-				foreach($TCA[$table]['columns'] as $fieldName => $info)	{
-					if ($GLOBALS['TYPO3_DB']->cache_fieldType[$table][$fieldName]['metaType'] == 'B') {
+			if ($GLOBALS['TYPO3_DB']->runningADOdbDriver('oci8')) {
+				foreach ($GLOBALS['TCA'][$table]['columns'] as $fieldName => $info) {
+					if ($GLOBALS['TYPO3_DB']->cache_fieldType[$table][$fieldName]['metaType'] === 'B') {
 						// skip, LIKE is not supported on BLOB columns...
-					} elseif ($info['config']['type']=='text' || ($info['config']['type']=='input' && !ereg('date|time|int',$info['config']['eval']))) {
-						$queryPart .= $or.$fieldName.' LIKE \'%'.$GLOBALS['TYPO3_DB']->quoteStr($this->searchString, $table).'%\'';
+					} elseif ($info['config']['type'] === 'text' || ($info['config']['type'] === 'input' && !preg_match('/date|time|int/', $info['config']['eval']))) {
+						$queryPart .= $or . $fieldName . ' LIKE \'%' . $GLOBALS['TYPO3_DB']->quoteStr($this->searchString, $table) . '%\'';
 						$or = ' OR ';
 					}
 				}
 			} else {
 					// Traverse the configured columns and add all columns that can be searched
-				foreach($TCA[$table]['columns'] as $fieldName => $info)	{
-					if ($info['config']['type']=='text' || ($info['config']['type']=='input' && !ereg('date|time|int',$info['config']['eval']))) {
-						$sfields[]=$fieldName;
+				foreach ($GLOBALS['TCA'][$table]['columns'] as $fieldName => $info) {
+					if ($info['config']['type'] === 'text' || ($info['config']['type'] === 'input' && !preg_match('/date|time|int/', $info['config']['eval']))) {
+						$sfields[] = $fieldName;
 					}
 				}
 
 					// If search-fields were defined (and there always are) we create the query:
-				if (count($sfields))	{
-					$like = ' LIKE \'%'.$GLOBALS['TYPO3_DB']->quoteStr($this->searchString, $table).'%\'';		// Free-text
-					$queryPart .= implode($like.' OR ',$sfields).$like;
+				if (count($sfields)) {
+					$like = ' LIKE \'%'.$GLOBALS['TYPO3_DB']->quoteStr($this->searchString, $table) . '%\'';		// Free-text
+					$queryPart .= implode($like . ' OR ', $sfields) . $like;
 				}
 			}
 
 				// Return query:
-			return $queryPart.')';
+			return $queryPart . ')';
 		}
 	}
 }
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php'])	{
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php']) {
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/class.ux_db_list_extra.php']);
 }
+
 ?>

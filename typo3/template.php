@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2005 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class with layout/output function for TYPO3 Backend Scripts
  *
- * $Id: template.php 4560 2008-12-18 08:42:01Z baschny $
+ * $Id: template.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML-trans compliant
  *
@@ -124,23 +124,13 @@
 
 if (!defined('TYPO3_MODE'))	die("Can't include this file directly.");
 
-require_once(PATH_t3lib.'class.t3lib_ajax.php');
-
-
-
-
-
-
-
-
-
 
 /**
  * Deprecated fontwrap function. Is just transparent now.
  *
  * @param	string		Input string
  * @return	string		Output string (in the old days this was wrapped in <font> tags)
- * @deprecated
+ * @deprecated since TYPO3 3.6
  */
 function fw($str)	{
 	return $str;
@@ -173,9 +163,10 @@ class template {
 	var $form='';					// This can be set to the HTML-code for a formtag. Useful when you need a form to span the whole page; Inserted exactly after the body-tag.
 	var $JScodeLibArray = array();		// Similar to $JScode (see below) but used as an associative array to prevent double inclusion of JS code. This is used to include certain external Javascript libraries before the inline JS code. <script>-Tags are not wrapped around automatically
 	var $JScode='';					// Additional header code (eg. a JavaScript section) could be accommulated in this var. It will be directly outputted in the header.
+	var $extJScode = '';				// Additional header code for ExtJS. It will be included in document header and inserted in a Ext.onReady(function()
 	var $JScodeArray = array();		// Similar to $JScode but for use as array with associative keys to prevent double inclusion of JS code. a <script> tag is automatically wrapped around.
 	var $postCode='';				// Additional 'page-end' code could be accommulated in this var. It will be outputted at the end of page before </body> and some other internal page-end code.
-	var $docType = '';				// Doc-type used in the header. Default is HTML 4. You can also set it to 'strict', 'xhtml_trans', or 'xhtml_frames'.
+	var $docType = '';				// Doc-type used in the header. Default is xhtml_trans. You can also set it to 'html_3', 'xhtml_strict' or 'xhtml_frames'.
 	var $moduleTemplate = '';		// HTML template with markers for module
 
 		// Other vars you can change, but less frequently used:
@@ -187,7 +178,7 @@ class template {
 	var $form_rowsToStylewidth = 9.58;	// Multiplication factor for formWidth() input size (default is 48* this value).
 	var $form_largeComp = 1.33;		// Compensation for large documents (used in class.t3lib_tceforms.php)
 	var $endJS=1;					// If set, then a JavaScript section will be outputted in the bottom of page which will try and update the top.busy session expiry object.
-	var $additionalHeaderData=array();	// Additional data to include in head section
+	protected $additionalStyleSheets=array();	// Links to additional style sheets
 
 		// TYPO3 Colorscheme.
 		// If you want to change this, please do so through a skin using the global var $TBE_STYLES
@@ -213,10 +204,23 @@ class template {
 	var $sectionFlag=0;				// Internal: Indicates if a <div>-output section is open
 	var $divClass = '';				// (Default) Class for wrapping <DIV>-tag of page. Is set in class extensions.
 
+	var $pageHeaderBlock = '';
+	var $endOfPageJsBlock = '';
 
+	var $hasDocheader = true;
 
+	/**
+	 * @var t3lib_PageRenderer
+	 */
+	protected $pageRenderer;
+	protected $pageHeaderFooterTemplateFile = '';	// alternative template file
 
-
+	/**
+	 * Whether flashmessages should be rendered or not
+	 *
+	 * @var $showFlashMessages
+	 */
+	public $showFlashMessages = TRUE;
 
 	/**
 	 * Constructor
@@ -227,13 +231,20 @@ class template {
 	function template()	{
 		global $TBE_STYLES;
 
+			// Initializes the page rendering object:
+		$this->getPageRenderer();
+
 			// Setting default scriptID:
-		$this->scriptID = ereg_replace('^.*\/(sysext|ext)\/','ext/',substr(PATH_thisScript,strlen(PATH_site)));
+		if (($temp_M = (string) t3lib_div::_GET('M')) && $GLOBALS['TBE_MODULES']['_PATHS'][$temp_M]) {
+			$this->scriptID = preg_replace('/^.*\/(sysext|ext)\//', 'ext/', $GLOBALS['TBE_MODULES']['_PATHS'][$temp_M] . 'index.php');
+		} else {
+			$this->scriptID = preg_replace('/^.*\/(sysext|ext)\//', 'ext/', substr(PATH_thisScript, strlen(PATH_site)));
+		}
 		if (TYPO3_mainDir!='typo3/' && substr($this->scriptID,0,strlen(TYPO3_mainDir)) == TYPO3_mainDir)	{
 			$this->scriptID = 'typo3/'.substr($this->scriptID,strlen(TYPO3_mainDir));	// This fixes if TYPO3_mainDir has been changed so the script ids are STILL "typo3/..."
 		}
 
-		$this->bodyTagId = ereg_replace('[^[:alnum:]-]','-',$this->scriptID);
+		$this->bodyTagId = preg_replace('/[^A-Za-z0-9-]/','-',$this->scriptID);
 
 			// Individual configuration per script? If so, make a recursive merge of the arrays:
 		if (is_array($TBE_STYLES['scriptIDindex'][$this->scriptID]))	{
@@ -263,7 +274,21 @@ class template {
 	}
 
 
-
+	/**
+	 * Gets instance of PageRenderer
+	 *
+	 * @return	t3lib_PageRenderer
+	 */
+	public function getPageRenderer() {
+		if (!isset($this->pageRenderer)) {
+			$this->pageRenderer = t3lib_div::makeInstance('t3lib_PageRenderer');
+			$this->pageRenderer->setTemplateFile(
+				TYPO3_mainDir . 'templates/template_page_backend.html'
+			);
+			$this->pageRenderer->setLanguage($GLOBALS['LANG']->lang);
+		}
+		return $this->pageRenderer;
+	}
 
 
 
@@ -440,7 +465,7 @@ class template {
 		$pathInfo = parse_url(t3lib_div::getIndpEnv('REQUEST_URI'));
 
 			// Add the module identifier automatically if typo3/mod.php is used:
-		if (ereg('typo3/mod\.php$', $pathInfo['path']) && isset($GLOBALS['TBE_MODULES']['_PATHS'][$modName])) {
+		if (preg_match('/typo3\/mod\.php$/', $pathInfo['path']) && isset($GLOBALS['TBE_MODULES']['_PATHS'][$modName])) {
 			$storeUrl = '&M='.$modName.$storeUrl;
 		}
 
@@ -544,7 +569,7 @@ class template {
 		));
 
 		$out ="
-	var T3_RETURN_URL = '".str_replace('%20','',rawurlencode(t3lib_div::_GP('returnUrl')))."';
+	var T3_RETURN_URL = '".str_replace('%20','',rawurlencode(t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'))))."';
 	var T3_THIS_LOCATION = '".str_replace('%20','',rawurlencode($thisLocation))."';
 		";
 		return $out;
@@ -621,72 +646,115 @@ class template {
 				}
 			}
 		}
-				
-			// Get META tag containing the currently selected charset for backend output. The function sets $this->charSet.
-		$charSet = $this->initCharset();
-		$generator = $this->generator();
 
+		$this->pageRenderer->backPath = $this->backPath;
+
+			// alternative template for Header and Footer
+		if ($this->pageHeaderFooterTemplateFile) {
+			$file =  t3lib_div::getFileAbsFileName($this->pageHeaderFooterTemplateFile, TRUE);
+			if ($file) {
+				$this->pageRenderer->setTemplateFile($file);
+			}
+		}
 			// For debugging: If this outputs "QuirksMode"/"BackCompat" (IE) the browser runs in quirks-mode. Otherwise the value is "CSS1Compat"
 #		$this->JScodeArray[]='alert(document.compatMode);';
 
 			// Send HTTP header for selected charset. Added by Robert Lemke 23.10.2003
+		$this->initCharset();
 		header ('Content-Type:text/html;charset='.$this->charset);
 
+			// Standard HTML tag
+		$this->pageRenderer->setHtmlTag('<html xmlns="http://www.w3.org/1999/xhtml">');
+
 		switch($this->docType)	{
+			case 'html_3':
+				$headerStart = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">';
+				$htmlTag = '<html>';
+				break;
 			case 'xhtml_strict':
-				$headerStart= '<!DOCTYPE html
+				$headerStart = '<!DOCTYPE html
 	PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<?xml version="1.0" encoding="'.$this->charset.'"?>
-<?xml-stylesheet href="#internalStyle" type="text/css"?>
-';
-			break;
-			case 'xhtml_trans':
-				$headerStart= '<!DOCTYPE html
-     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?xml version="1.0" encoding="'.$this->charset.'"?>
-<?xml-stylesheet href="#internalStyle" type="text/css"?>
-';
-			break;
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+				break;
 			case 'xhtml_frames':
-				$headerStart= '<!DOCTYPE html
+				$headerStart = '<!DOCTYPE html
      PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
-<?xml version="1.0" encoding="'.$this->charset.'"?>
-';
-			break;
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">';
+				break;
+			// The fallthrough is intended as XHTML 1.0 transitional is the default for the BE.
+			case 'xhtml_trans':
 			default:
-				$headerStart='<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">';
-			break;
+				$headerStart = '<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
 		}
 
-		$tabJScode = '';
-		if (!$GLOBALS['BE_USER']->uc['disableTabInTextarea'])	{
-				// This loads the tabulator-in-textarea feature. It automatically modifies every textarea which is found.
-			$tabJScode = '<script src="'.$this->backPath.'tab.js" type="text/javascript"></script>';
+		// This loads the tabulator-in-textarea feature. It automatically modifies
+		// every textarea which is found.
+		if (!$GLOBALS['BE_USER']->uc['disableTabInTextarea']) {
+			$this->loadJavascriptLib('tab.js');
+		}
+
+			// Get the browser info
+		$browserInfo = t3lib_utility_Client::getBrowserInfo(t3lib_div::getIndpEnv('HTTP_USER_AGENT'));
+
+			// Set the XML prologue
+		$xmlPrologue = '<?xml version="1.0" encoding="' . $this->charset . '"?>';
+
+			// Set the XML stylesheet
+		$xmlStylesheet = '<?xml-stylesheet href="#internalStyle" type="text/css"?>';
+
+			// Add the XML prologue for XHTML doctypes
+		if ($this->docType !== 'html_3') {
+				// Put the XML prologue before or after the doctype declaration according to browser
+			if ($browserInfo['browser'] === 'msie' && $browserInfo['version'] < 7) {
+				$headerStart = $headerStart . chr(10) . $xmlPrologue;
+			} else {
+				$headerStart = $xmlPrologue . chr(10) . $headerStart;
+			}
+
+				// Add the xml stylesheet according to doctype
+			if ($this->docType !== 'xhtml_frames') {
+				$headerStart = $headerStart . chr(10) . $xmlStylesheet;
+			}
+		}
+
+		$this->pageRenderer->setXmlPrologAndDocType($headerStart);
+		$this->pageRenderer->setHeadTag('<head>' . chr(10). '<!-- TYPO3 Script ID: '.htmlspecialchars($this->scriptID).' -->');
+		$this->pageRenderer->setCharSet($this->charset);
+		$this->pageRenderer->addMetaTag($this->generator());
+		$this->pageRenderer->addMetaTag($this->xUaCompatible());
+		$this->pageRenderer->setTitle($title);
+
+		// add docstyles
+		$this->docStyle();
+
+
+		// add jsCode - has to go to headerData as it may contain the script tags already
+		$this->pageRenderer->addHeaderData($this->JScode);
+
+		foreach ($this->JScodeArray as $name => $code) {
+			$this->pageRenderer->addJsInlineCode($name, $code);
+		}
+
+		if (count($this->JScodeLibArray)) {
+			foreach($this->JScodeLibArray as $library) {
+				$this->pageRenderer->addHeaderData($library);
+			}
+		}
+
+		if ($this->extJScode) {
+			$this->pageRenderer->addExtOnReadyCode($this->extJScode);
 		}
 
 			// Construct page header.
-		$str = $headerStart.'
-<html>
-<head>
-	<!-- TYPO3 Script ID: '.htmlspecialchars($this->scriptID).' -->
-	'.$charSet.'
-	'.$generator.'
-	<title>'.htmlspecialchars($title).'</title>
-	'.$this->docStyle().'
-	'.implode("\n", $this->additionalHeaderData).'
-	'.implode("\n", $this->JScodeLibArray).'
-	'.$this->JScode.'
-	'.$tabJScode.'
-	'.$this->wrapScriptTags(implode("\n", $this->JScodeArray)).'
-	<!--###POSTJSMARKER###-->
-</head>
-';
-		$this->JScodeLibArray=array();
-		$this->JScode='';
-		$this->JScodeArray=array();
+		$str = $this->pageRenderer->render(t3lib_PageRenderer::PART_HEADER);
+
+		$this->JScodeLibArray = array();
+		$this->JScode = $this->extJScode = '';
+		$this->JScodeArray = array();
+
+		$this->endOfPageJsBlock = $this->pageRenderer->render(t3lib_PageRenderer::PART_FOOTER);
 
 		if ($this->docType=='xhtml_frames')	{
 			return $str;
@@ -720,12 +788,10 @@ $str.=$this->docBodyTagBegin().
 			$str .= ($this->divClass?'
 
 <!-- Wrapping DIV-section for whole page END -->
-</div>':'').'
-</body>	';
+</div>':'') . $this->endOfPageJsBlock ;
 
 		}
 
-		$str .= '</html>';
 
 			// Logging: Can't find better place to put it:
 		if (TYPO3_DLOG)	t3lib_div::devLog('END of BACKEND session', 'template', 0, array('_FLUSH' => true));
@@ -820,14 +886,17 @@ $str.=$this->docBodyTagBegin().
 	 * @param	string		Additional attributes to h-tag, eg. ' class=""'
 	 * @return	string		HTML content
 	 */
-	function sectionHeader($label,$sH=FALSE,$addAttrib='')	{
-		$tag = ($sH?'h3':'h4');
+	function sectionHeader($label, $sH=FALSE, $addAttrib='') {
+		$tag = ($sH ? 'h3' : 'h4');
+		if ($addAttrib && substr($addAttrib, 0, 1) !== ' ') {
+			$addAttrib = ' ' . $addAttrib;
+		}
 		$str='
 
 	<!-- Section header -->
-	<'.$tag.$addAttrib.'>'.$label.'</'.$tag.'>
+	<' . $tag . $addAttrib . '>' . $label . '</' . $tag . '>
 ';
-		return $this->sectionBegin().$str;
+		return $this->sectionBegin() . $str;
 	}
 
 	/**
@@ -876,7 +945,7 @@ $str.=$this->docBodyTagBegin().
 	 *
 	 * @return	void
 	 * @internal
-	 * @deprecated
+	 * @deprecated since TYPO3 3.6
 	 */
 	function middle()	{
 	}
@@ -926,27 +995,38 @@ $str.=$this->docBodyTagBegin().
 		$this->inDocStylesArray[] = $this->inDocStyles_TBEstyle;
 
 			// Implode it all:
-		$inDocStyles = implode('
-					',$this->inDocStylesArray);
+		$inDocStyles = implode(chr(10), $this->inDocStylesArray);
 
-			// The default color scheme should also in full be represented in the stylesheet.
-		$style=trim('
-			'.($this->styleSheetFile?'<link rel="stylesheet" type="text/css" href="'.$this->backPath.$this->styleSheetFile.'" />':'').'
-			'.($this->styleSheetFile2?'<link rel="stylesheet" type="text/css" href="'.$this->backPath.$this->styleSheetFile2.'" />':'').'
-			<style type="text/css" id="internalStyle">
-				/*<![CDATA[*/
-					'.trim($inDocStyles).'
-					/*###POSTCSSMARKER###*/
-				/*]]>*/
-			</style>
-			'.($this->styleSheetFile_post?'<link rel="stylesheet" type="text/css" href="'.$this->backPath.$this->styleSheetFile_post.'" />':'')
-		)
-		;
-		$this->inDocStyles='';
-		$this->inDocStylesArray=array();
+		if ($this->styleSheetFile) {
+			$this->pageRenderer->addCssFile($this->backPath . $this->styleSheetFile);
+		}
+		if ($this->styleSheetFile2) {
+			$this->pageRenderer->addCssFile($this->backPath . $this->styleSheetFile2);
+		}
 
-		return '
-			'.$style;
+		$this->pageRenderer->addCssInlineBlock('inDocStyles', $inDocStyles . chr(10) . '/*###POSTCSSMARKER###*/');
+		if ($this->styleSheetFile_post) {
+			$this->pageRenderer->addCssFile($this->backPath . $this->styleSheetFile_post);
+	}
+
+	}
+
+	/**
+	 * Insert additional style sheet link
+	 *
+	 * @param	string		$key: some key identifying the style sheet
+	 * @param	string		$href: uri to the style sheet file
+	 * @param	string		$title: value for the title attribute of the link element
+	 * @return	string		$relation: value for the rel attribute of the link element
+	 * @return	void
+	 */
+	function addStyleSheet($key, $href, $title='', $relation='stylesheet') {
+		if (strpos($href, '://') !== FALSE || substr($href, 0, 1) === '/') {
+			$file = $href;
+		} else {
+			$file = $this->backPath . $href;
+		}
+		$this->pageRenderer->addCssFile($file, $relation, 'screen', $title);
 	}
 
 	/**
@@ -989,10 +1069,20 @@ $str.=$this->docBodyTagBegin().
 	 * @return	string		<meta> tag with name "generator"
 	 */
 	function generator()	{
-		$str = 'TYPO3 '.TYPO3_branch.', http://typo3.com, &#169; Kasper Sk&#229;rh&#248;j 1998-2008, extensions are copyright of their respective owners.';
+		$str = 'TYPO3 '.TYPO3_branch.', http://typo3.com, &#169; Kasper Sk&#229;rh&#248;j 1998-2009, extensions are copyright of their respective owners.';
 		return '<meta name="generator" content="'.$str .'" />';
 	}
 
+	/**
+	 * Returns X-UA-Compatible meta tag
+	 *
+	 * @return	string		<meta http-equiv="X-UA-Compatible" content="???" />
+	 */
+	function xUaCompatible() {
+			// the most recent version if Internet Explorer, in which the Backend works
+		$str = "IE=8";
+		return '<meta http-equiv="X-UA-Compatible" content="' . $str . '" />';
+	}
 
 
 
@@ -1121,53 +1211,55 @@ $str.=$this->docBodyTagBegin().
 
 		// These vars defines the layout for the table produced by the table() function.
 		// You can override these values from outside if you like.
-	var $tableLayout = Array (
-		'defRow' => Array (
-			'defCol' => Array('<td valign="top">','</td>')
+	var $tableLayout = array(
+		'defRow' => array(
+			'defCol' => array('<td valign="top">','</td>')
 		)
 	);
 	var $table_TR = '<tr>';
 	var $table_TABLE = '<table border="0" cellspacing="0" cellpadding="0" id="typo3-tmpltable">';
 
 	/**
-	 * Returns a table based on the input $arr
+	 * Returns a table based on the input $data
 	 *
 	 * @param	array		Multidim array with first levels = rows, second levels = cells
 	 * @param	array		If set, then this provides an alternative layout array instead of $this->tableLayout
 	 * @return	string		The HTML table.
 	 * @internal
 	 */
-	function table($arr, $layout='')	{
-		if (is_array($arr))	{
-			$tableLayout = (is_array($layout)) ? $layout : $this->tableLayout;
+	function table($data, $layout = '') {
+		$result = '';
+		if (is_array($data)) {
+			$tableLayout = (is_array($layout) ? $layout : $this->tableLayout);
 
-			reset($arr);
-			$code='';
-			$rc=0;
-			while(list(,$val)=each($arr))	{
-				if ($rc % 2) {
+			$rowCount = 0;
+			foreach ($data as $tableRow) {
+				if ($rowCount % 2) {
 					$layout = is_array($tableLayout['defRowOdd']) ? $tableLayout['defRowOdd'] : $tableLayout['defRow'];
 				} else {
 					$layout = is_array($tableLayout['defRowEven']) ? $tableLayout['defRowEven'] : $tableLayout['defRow'];
 				}
-				$layoutRow = is_array($tableLayout[$rc]) ? $tableLayout[$rc] : $layout;
-				$code_td='';
-				if (is_array($val))	{
-					$cc=0;
-					while(list(,$content)=each($val))	{
-						$wrap= is_array($layoutRow[$cc]) ? $layoutRow[$cc] : (is_array($layoutRow['defCol']) ? $layoutRow['defCol'] : (is_array($layout[$cc]) ? $layout[$cc] : $layout['defCol']));
-						$code_td.=$wrap[0].$content.$wrap[1];
-						$cc++;
+				$rowLayout = is_array($tableLayout[$rowCount]) ? $tableLayout[$rowCount] : $layout;
+				$rowResult = '';
+				if (is_array($tableRow)) {
+					$cellCount = 0;
+					foreach ($tableRow as $tableCell) {
+						$cellWrap = (is_array($layout[$cellCount])    ? $layout[$cellCount]    : $layout['defCol']);
+						$cellWrap = (is_array($rowLayout['defCol'])   ? $rowLayout['defCol']   : $cellWrap);
+						$cellWrap = (is_array($rowLayout[$cellCount]) ? $rowLayout[$cellCount] : $cellWrap);
+						$rowResult .= $cellWrap[0] . $tableCell . $cellWrap[1];
+						$cellCount++;
 					}
 				}
-				$trWrap = is_array($layoutRow['tr']) ? $layoutRow['tr'] : (is_array($layout['tr']) ? $layout['tr'] : array($this->table_TR, '</tr>'));
-				$code.=$trWrap[0].$code_td.$trWrap[1];
-				$rc++;
+				$rowWrap = (is_array($layout['tr'])    ? $layout['tr']    : array($this->table_TR, '</tr>'));
+				$rowWrap = (is_array($rowLayout['tr']) ? $rowLayout['tr'] : $rowWrap);
+				$result .= $rowWrap[0] . $rowResult . $rowWrap[1];
+				$rowCount++;
 			}
 			$tableWrap = is_array($tableLayout['table']) ? $tableLayout['table'] : array($this->table_TABLE, '</table>');
-			$code=$tableWrap[0].$code.$tableWrap[1];
+			$result = $tableWrap[0] . $result . $tableWrap[1];
 		}
-		return $code;
+		return $result;
 	}
 
 	/**
@@ -1271,10 +1363,9 @@ $str.=$this->docBodyTagBegin().
 	 * @return	void
 	 */
 	function loadJavascriptLib($lib)	{
-		if (!isset($this->JScodeLibArray[$lib]))	{
-			$this->JScodeLibArray[$lib] = '<script type="text/javascript" src="'.$this->backPath.$lib.'"></script>';
-		}
+		$this->pageRenderer->addJsFile($this->backPath . $lib);
 	}
+
 
 
 	/**
@@ -1284,7 +1375,7 @@ $str.=$this->docBodyTagBegin().
 	 *			Please just call this function without expecting a return value for future calls
 	 */
 	function getContextMenuCode()   {
-	       $this->loadJavascriptLib('contrib/prototype/prototype.js');
+	       $this->pageRenderer->loadPrototype();
 	       $this->loadJavascriptLib('js/clickmenu.js');
 
 	       $this->JScodeArray['clickmenu'] = '
@@ -1303,7 +1394,7 @@ $str.=$this->docBodyTagBegin().
 	 * @return	array		If values are present: [0] = A <script> section for the HTML page header, [1] = onmousemove/onload handler for HTML tag or alike, [2] = One empty <div> layer for the follow-mouse drag element
 	 */
 	function getDragDropCode($table)	{
-		$this->loadJavascriptLib('contrib/prototype/prototype.js');
+		$this->pageRenderer->loadPrototype();
 		$this->loadJavascriptLib('js/common.js');
 		$this->loadJavascriptLib('js/tree.js');
 
@@ -1349,7 +1440,7 @@ $str.=$this->docBodyTagBegin().
 			foreach($menuItems as $value => $label) {
 				$menuDef[$value]['isActive'] = !strcmp($currentValue,$value);
 				$menuDef[$value]['label'] = t3lib_div::deHSCentities(htmlspecialchars($label));
-				$menuDef[$value]['url'] = htmlspecialchars($script.'?'.$mainParams.$addparams.'&'.$elementName.'='.$value);
+				$menuDef[$value]['url'] = $script . '?' . $mainParams . $addparams . '&' . $elementName . '=' . $value;
 			}
 			$content = $this->getTabMenuRaw($menuDef);
 
@@ -1435,6 +1526,9 @@ $str.=$this->docBodyTagBegin().
 	 * @return	string		JavaScript section for the HTML header.
 	 */
 	function getDynTabMenu($menuItems,$identString,$toggle=0,$foldout=FALSE,$newRowCharLimit=50,$noWrap=1,$fullWidth=FALSE,$defaultTabIndex=1,$dividers2tabs=2)	{
+		// load the static code, if not already done with the function below
+		$this->loadJavascriptLib('js/tabmenu.js');
+
 		$content = '';
 
 		if (is_array($menuItems))	{
@@ -1466,37 +1560,37 @@ $str.=$this->docBodyTagBegin().
 					$onclick = 'this.blur(); DTM_activate("'.$id.'","'.$index.'", '.($toggle<0?1:0).'); return false;';
 				}
 
-				$isNotEmpty = strcmp(trim($def['content']),'');
+				$isEmpty = !(strcmp(trim($def['content']),'') || strcmp(trim($def['icon']),''));
 
 				// "Removes" empty tabs
-				if (!$isNotEmpty && $dividers2tabs == 1) {
+				if ($isEmpty && $dividers2tabs == 1) {
 					continue;
 				}
 
 				$mouseOverOut = ' onmouseover="DTM_mouseOver(this);" onmouseout="DTM_mouseOut(this);"';
-				$requiredIcon = '<img name="'.$id.'-'.$index.'-REQ" src="clear.gif" width="10" height="10" hspace="4" alt="" />';
+				$requiredIcon = '<img name="' . $id . '-' . $index . '-REQ" src="' . $GLOBALS['BACK_PATH'] . 'gfx/clear.gif" class="t3-TCEforms-reqTabImg" alt="" />';
 
 				if (!$foldout)	{
 						// Create TAB cell:
 					$options[$tabRows][] = '
-							<td class="'.($isNotEmpty ? 'tab' : 'disabled').'" id="'.$id.'-'.$index.'-MENU"'.$noWrap.$mouseOverOut.'>'.
-							($isNotEmpty ? '<a href="#" onclick="'.htmlspecialchars($onclick).'"'.($def['linkTitle'] ? ' title="'.htmlspecialchars($def['linkTitle']).'"':'').'>' : '').
+							<td class="'.($isEmpty ? 'disabled' : 'tab').'" id="'.$id.'-'.$index.'-MENU"'.$noWrap.$mouseOverOut.'>'.
+							($isEmpty ? '' : '<a href="#" onclick="'.htmlspecialchars($onclick).'"'.($def['linkTitle'] ? ' title="'.htmlspecialchars($def['linkTitle']).'"':'').'>').
 							$def['icon'].
 							($def['label'] ? htmlspecialchars($def['label']) : '&nbsp;').
 							$requiredIcon.
 							$this->icons($def['stateIcon'],'margin-left: 10px;').
-							($isNotEmpty ? '</a>' :'').
+							($isEmpty ? '' : '</a>').
 							'</td>';
 					$titleLenCount+= strlen($def['label']);
 				} else {
 						// Create DIV layer for content:
 					$divs[] = '
-						<div class="'.($isNotEmpty ? 'tab' : 'disabled').'" id="'.$id.'-'.$index.'-MENU"'.$mouseOverOut.'>'.
-							($isNotEmpty ? '<a href="#" onclick="'.htmlspecialchars($onclick).'"'.($def['linkTitle'] ? ' title="'.htmlspecialchars($def['linkTitle']).'"':'').'>' : '').
+						<div class="'.($isEmpty ? 'disabled' : 'tab').'" id="'.$id.'-'.$index.'-MENU"'.$mouseOverOut.'>'.
+							($isEmpty ? '' : '<a href="#" onclick="'.htmlspecialchars($onclick).'"'.($def['linkTitle'] ? ' title="'.htmlspecialchars($def['linkTitle']).'"':'').'>').
 							$def['icon'].
 							($def['label'] ? htmlspecialchars($def['label']) : '&nbsp;').
 							$requiredIcon.
-							($isNotEmpty ? '</a>' : '').
+							($isEmpty ? '' : '</a>').
 							'</div>';
 				}
 
@@ -1511,7 +1605,7 @@ $str.=$this->docBodyTagBegin().
 						DTM_array["'.$id.'"]['.$c.'] = "'.$id.'-'.$index.'";
 				';
 					// If not empty and we have the toggle option on, check if the tab needs to be expanded
-				if ($toggle == 1 && $isNotEmpty) {
+				if ($toggle == 1 && !$isEmpty) {
 					$JSinit[] = '
 						if (top.DTM_currentTabs["'.$id.'-'.$index.'"]) { DTM_toggle("'.$id.'","'.$index.'",1); }
 					';
@@ -1574,93 +1668,16 @@ $str.=$this->docBodyTagBegin().
 
 	/**
 	 * Returns dynamic tab menu header JS code.
+	 * This is now incorporated automatically when the function template::getDynTabMenu is called
+	 * (as long as it is called before $this->startPage())
+	 * The return value is not needed anymore
 	 *
-	 * @return	string		JavaScript section for the HTML header.
+	 * @return	string		JavaScript section for the HTML header. (return value is deprecated since TYPO3 4.3, will be removed in TYPO3 4.5)
 	 */
 	function getDynTabMenuJScode()	{
-		return '
-			<script type="text/javascript">
-			/*<![CDATA[*/
-				var DTM_array = new Array();
-				var DTM_origClass = new String();
-
-					// if tabs are used in a popup window the array might not exists
-				if(!top.DTM_currentTabs) {
-					top.DTM_currentTabs = new Array();
-				}
-
-				function DTM_activate(idBase,index,doToogle)	{	//
-						// Hiding all:
-					if (DTM_array[idBase])	{
-						for(cnt = 0; cnt < DTM_array[idBase].length ; cnt++)	{
-							if (DTM_array[idBase][cnt] != idBase+"-"+index)	{
-								document.getElementById(DTM_array[idBase][cnt]+"-DIV").style.display = "none";
-								// Only Overriding when Tab not disabled
-								if (document.getElementById(DTM_array[idBase][cnt]+"-MENU").attributes.getNamedItem("class").nodeValue != "disabled") {
-									document.getElementById(DTM_array[idBase][cnt]+"-MENU").attributes.getNamedItem("class").nodeValue = "tab";
-								}
-							}
-						}
-					}
-
-						// Showing one:
-					if (document.getElementById(idBase+"-"+index+"-DIV"))	{
-						if (doToogle && document.getElementById(idBase+"-"+index+"-DIV").style.display == "block")	{
-							document.getElementById(idBase+"-"+index+"-DIV").style.display = "none";
-							if(DTM_origClass=="") {
-								document.getElementById(idBase+"-"+index+"-MENU").attributes.getNamedItem("class").nodeValue = "tab";
-							} else {
-								DTM_origClass = "tab";
-							}
-							top.DTM_currentTabs[idBase] = -1;
-						} else {
-							document.getElementById(idBase+"-"+index+"-DIV").style.display = "block";
-							if(DTM_origClass=="") {
-								document.getElementById(idBase+"-"+index+"-MENU").attributes.getNamedItem("class").nodeValue = "tabact";
-							} else {
-								DTM_origClass = "tabact";
-							}
-							top.DTM_currentTabs[idBase] = index;
-						}
-					}
-				}
-				function DTM_toggle(idBase,index,isInit)	{	//
-						// Showing one:
-					if (document.getElementById(idBase+"-"+index+"-DIV"))	{
-						if (document.getElementById(idBase+"-"+index+"-DIV").style.display == "block")	{
-							document.getElementById(idBase+"-"+index+"-DIV").style.display = "none";
-							if(isInit) {
-								document.getElementById(idBase+"-"+index+"-MENU").attributes.getNamedItem("class").nodeValue = "tab";
-							} else {
-								DTM_origClass = "tab";
-							}
-							top.DTM_currentTabs[idBase+"-"+index] = 0;
-						} else {
-							document.getElementById(idBase+"-"+index+"-DIV").style.display = "block";
-							if(isInit) {
-								document.getElementById(idBase+"-"+index+"-MENU").attributes.getNamedItem("class").nodeValue = "tabact";
-							} else {
-								DTM_origClass = "tabact";
-							}
-							top.DTM_currentTabs[idBase+"-"+index] = 1;
-						}
-					}
-				}
-
-				function DTM_mouseOver(obj) {	//
-						DTM_origClass = obj.attributes.getNamedItem(\'class\').nodeValue;
-						obj.attributes.getNamedItem(\'class\').nodeValue += "_over";
-				}
-
-				function DTM_mouseOut(obj) {	//
-						obj.attributes.getNamedItem(\'class\').nodeValue = DTM_origClass;
-						DTM_origClass = "";
-				}
-
-
-			/*]]>*/
-			</script>
-		';
+		$this->loadJavascriptLib('js/tabmenu.js');
+		// return value deprecated since TYPO3 4.3
+		return '';
 	}
 
 	/**
@@ -1824,9 +1841,9 @@ $str.=$this->docBodyTagBegin().
 		}
 	}
 
-
 	/**
 	 * Function to load a HTML template file with markers.
+	 * When calling from own extension, use  syntax getHtmlTemplate('EXT:extkey/template.html')
 	 *
 	 * @param	string		tmpl name, usually in the typo3/template/ directory
 	 * @return	string		HTML of template
@@ -1835,7 +1852,12 @@ $str.=$this->docBodyTagBegin().
 		if ($GLOBALS['TBE_STYLES']['htmlTemplates'][$filename]) {
 			$filename = $GLOBALS['TBE_STYLES']['htmlTemplates'][$filename];
 		}
-		return ($filename ? t3lib_div::getURL(t3lib_div::resolveBackPath($this->backPath . $filename)) : '');
+		if (substr($filename,0,4) != 'EXT:') {
+			$filename = t3lib_div::resolveBackPath($this->backPath . $filename);
+		} else {
+			$filename = t3lib_div::getFileAbsFileName($filename, true, true);
+		}
+		return t3lib_div::getURL($filename);
 	}
 
 	/**
@@ -1845,7 +1867,7 @@ $str.=$this->docBodyTagBegin().
 	 */
 	function setModuleTemplate($filename) {
 			// Load Prototype lib for IE event
-		$this->loadJavascriptLib('contrib/prototype/prototype.js');
+		$this->pageRenderer->loadPrototype();
 		$this->loadJavascriptLib('js/iecompatibility.js');
 		$this->moduleTemplate = $this->getHtmlTemplate($filename);
 	}
@@ -1890,6 +1912,31 @@ $str.=$this->docBodyTagBegin().
 		foreach ($subpartArray as $marker => $content) {
 			$moduleBody = t3lib_parsehtml::substituteSubpart($moduleBody, $marker, $content);
 		}
+
+		if ($this->showFlashMessages) {
+				// adding flash messages
+			$flashMessages = t3lib_FlashMessageQueue::renderFlashMessages();
+			if (!empty($flashMessages)) {
+				$flashMessages = '<div id="typo3-messages">' . $flashMessages . '</div>';
+			}
+
+			if (strstr($moduleBody, '###FLASHMESSAGES###')) {
+					// either replace a dedicated marker for the messages if present
+				$moduleBody = str_replace(
+					'###FLASHMESSAGES###',
+					$flashMessages,
+					$moduleBody
+				);
+			} else {
+					// or force them to appear before the content
+				$moduleBody = str_replace(
+					'###CONTENT###',
+					$flashMessages . '###CONTENT###',
+					$moduleBody
+				);
+			}
+		}
+
 			// replacing all markers with the finished markers and return the HTML content
 		return t3lib_parsehtml::substituteMarkerArray($moduleBody, $markerArray, '###|###');
 
@@ -1926,6 +1973,19 @@ $str.=$this->docBodyTagBegin().
 				// replace the marker with the template and remove all line breaks (for IE compat)
 			$markers['BUTTONLIST_' . strtoupper($key)] = str_replace("\n", '', $buttonTemplate);
 		}
+
+			// Hook for manipulating docHeaderButtons
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['docHeaderButtonsHook'])) {
+			$params = array(
+				'buttons'	=> $buttons,
+				'markers' 	=> &$markers,
+				'pObj' 		=> &$this
+			);
+			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['docHeaderButtonsHook'] as $funcRef)	{
+				t3lib_div::callUserFunction($funcRef, $params, $this);
+			}
+		}
+
 		return $markers;
 	}
 
@@ -1936,15 +1996,24 @@ $str.=$this->docBodyTagBegin().
 	 * @return	string	Page path
 	 */
 	protected function getPagePath($pageRecord) {
-		global $LANG;
 			// Is this a real page
 		if ($pageRecord['uid'])	{
-			$title = $pageRecord['_thePath'];
+			$title = $pageRecord['_thePathFull'];
 		} else {
 			$title = $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'];
 		}
 			// Setting the path of the page
-		$pagePath = $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.path', 1) . ': <span class="typo3-docheader-pagePath">' . htmlspecialchars(t3lib_div::fixed_lgd_cs($title, -50)) . '</span>';
+		$pagePath = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.path', 1) . ': <span class="typo3-docheader-pagePath">';
+
+			// crop the title to title limit (or 50, if not defined)
+		$cropLength = (empty($GLOBALS['BE_USER']->uc['titleLen'])) ? 50 : $GLOBALS['BE_USER']->uc['titleLen'];
+		$croppedTitle = t3lib_div::fixed_lgd_cs($title, -$cropLength);
+		if ($croppedTitle !== $title) {
+			$pagePath .= '<abbr title="' . htmlspecialchars($title) . '">' . htmlspecialchars($croppedTitle) . '</abbr>';
+		} else {
+			$pagePath .= htmlspecialchars($title);
+		}
+		$pagePath .= '</span>';
 		return $pagePath;
 	}
 
@@ -1962,21 +2031,28 @@ $str.=$this->docBodyTagBegin().
 			$iconImg = t3lib_iconWorks::getIconImage('pages', $pageRecord, $this->backPath, 'class="absmiddle" title="'. htmlspecialchars($alttext) . '"');
 				// Make Icon:
 			$theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg, 'pages', $pageRecord['uid']);
+			$pid = $pageRecord['uid'];
 		} else {	// On root-level of page tree
 				// Make Icon
-			$iconImg = '<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/i/_icon_website.gif') . ' alt="' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'] . '" />';
+			$iconImg = '<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/i/_icon_website.gif') . ' alt="' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']) . '" />';
 			if($BE_USER->user['admin']) {
 				$theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg, 'pages', 0);
 			} else {
 				$theIcon = $iconImg;
 			}
+			$pid = '0 (root)';
 		}
 
 			// Setting icon with clickmenu + uid
-		$pageInfo = $theIcon . '<em>[pid: ' . $pageRecord['uid'] . ']</em>';
+		$pageInfo = $theIcon . '<em>[pid: ' . $pid . ']</em>';
 		return $pageInfo;
 	}
-}
+
+
+
+
+
+		}
 
 
 // ******************************
@@ -2023,20 +2099,51 @@ class mediumDoc extends template {
 }
 
 
+/**
+ * Extension class for "template" - used in the context of frontend editing.
+ */
+class frontendDoc extends template {
 
-// Include extension to the template class?
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/template.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/template.php']);
+	/**
+	 * Gets instance of PageRenderer
+	 *
+	 * @return	t3lib_PageRenderer
+	 */
+	public function getPageRenderer() {
+		if (!isset($this->pageRenderer)) {
+			$this->pageRenderer = $GLOBALS['TSFE']->getPageRenderer();
+		}
+		return $this->pageRenderer;
+	}
+
+	/**
+	 * Used in the frontend context to insert header data via TSFE->additionalHeaderData.
+	 * Mimics header inclusion from template->startPage().
+	 *
+	 * @return	void
+	 */
+	public function insertHeaderData() {
+
+		$this->backPath = $GLOBALS['TSFE']->backPath = TYPO3_mainDir;
+		$this->pageRenderer->setBackPath($this->backPath);
+		$this->docStyle();
+
+			// add applied JS/CSS to $GLOBALS['TSFE']
+		if ($this->JScode) {
+			$this->pageRenderer->addHeaderData($this->JScode);
+		}
+		if (count($this->JScodeArray)) {
+			foreach ($this->JScodeArray as $name => $code) {
+				$this->pageRenderer->addJsInlineCode($name, $code);
+			}
+		}
+	}
 }
 
 
-
-// ******************************************************
-// The backend language engine is started (ext: "lang")
-// ******************************************************
-require_once(PATH_typo3.'sysext/lang/lang.php');
-$GLOBALS['LANG'] = t3lib_div::makeInstance('language');
-$GLOBALS['LANG']->init($BE_USER->uc['lang']);
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/template.php'])	{
+	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/template.php']);
+}
 
 
 
@@ -2044,4 +2151,5 @@ $GLOBALS['LANG']->init($BE_USER->uc['lang']);
 // The template is loaded
 // ******************************
 $GLOBALS['TBE_TEMPLATE'] = t3lib_div::makeInstance('template');
+
 ?>

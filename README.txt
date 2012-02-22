@@ -50,7 +50,7 @@ already available, or writing your own.
 5. The TYPO3 core requirements
 *******************************************
 
-TYPO3 is based upon PHP4, and uses a MySQL database. If you want to use
+TYPO3 is based upon PHP5, and uses a MySQL database. If you want to use
 the graphics functions (which are highly recommended) you will need the
 PHP GDlib extension, and the serverside image processing program
 GraphicsMagick or ImageMagick (that are both available for almost all

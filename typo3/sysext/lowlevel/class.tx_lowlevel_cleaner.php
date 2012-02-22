@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Web > Functions module plugin for cleaning up.
  *
- * $Id: class.tx_lowlevel_cleaner.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tx_lowlevel_cleaner.php 5526 2009-06-02 13:52:04Z benni $
  *
  * XHTML compliant
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
@@ -48,9 +48,7 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
 require_once(t3lib_extMgm::extPath('lowlevel').'class.tx_lowlevel_cleaner_core.php');
-require_once (PATH_t3lib.'class.t3lib_refindex.php');
 
 die('Not developed...');
 
@@ -135,7 +133,7 @@ class tx_lowlevel_cleaner extends t3lib_extobjbase {
 		if (is_array($this->pObj->MOD_MENU['tx_lowlevel_cleaner']))	{
 			$menu = '';
 			foreach($this->pObj->MOD_MENU['tx_lowlevel_cleaner'] as $key => $value)	{
-				$menu.='<a href="index.php?id='.intval(t3lib_div::_GP('id')).'&tx_lowlevel_cleaner='.$key.'">'.htmlspecialchars($value).'</a><br/>';
+				$menu .= '<a href="index.php?id=' . intval(t3lib_div::_GP('id')) . '&tx_lowlevel_cleaner=' . $key . '">' . htmlspecialchars($value) . '</a><br />';
 			}
 			return $menu;
 		}
@@ -177,8 +175,7 @@ class tx_lowlevel_cleaner extends t3lib_extobjbase {
 /*
 // TEST of how we can get the used Content Elements on a TemplaVoila page:
 require_once(t3lib_extMgm::extPath('templavoila').'class.tx_templavoila_api.php');
-$apiClassName = t3lib_div::makeInstanceClassName('tx_templavoila_api');
-$apiObj = new $apiClassName('pages');
+$apiObj = t3lib_div::makeInstance('tx_templavoila_api', 'pages');
 $contentTreeData = $apiObj->getContentTree('pages', t3lib_BEfunc::getRecordWSOL('pages',33),FALSE);
 debug($contentTreeData);
 */
@@ -187,7 +184,7 @@ debug($contentTreeData);
 
 	function quickDBlookUp()	{
 		$output = 'Enter [table]:[uid]:[fieldlist (optional)] <input name="table_uid" value="'.htmlspecialchars(t3lib_div::_POST('table_uid')).'" />';
-		$output.='<input type="submit" name="_" value="REFRESH" /><br/>';
+		$output .= '<input type="submit" name="_" value="REFRESH" /><br />';
 
 			// Show record:
 		if (t3lib_div::_POST('table_uid'))	{
@@ -197,19 +194,19 @@ debug($contentTreeData);
 
 				if (count($rec))	{
 					if (t3lib_div::_POST('_EDIT'))	{
-						$output.='<hr/>Edit:<br/><br/>';
+						$output .= '<hr />Edit:<br /><br />';
 						foreach($rec as $field => $value)	{
-							$output.= htmlspecialchars($field).'<br/><input name="record['.$table.']['.$uid.']['.$field.']" value="'.htmlspecialchars($value).'" /><br/>';
+							$output .= htmlspecialchars($field) . '<br /><input name="record[' . $table . '][' . $uid . '][' . $field . ']" value="' . htmlspecialchars($value) . '" /><br />';
 						}
 						$output.='<input type="submit" name="_SAVE" value="SAVE" />';
 					} elseif (t3lib_div::_POST('_SAVE'))	{
 						$incomingData = t3lib_div::_POST('record');
 						$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table,'uid='.intval($uid),$incomingData[$table][$uid]);
-						$output.='<br/>Updated '.$table.':'.$uid.'...';
+						$output .= '<br />Updated ' . $table . ':' . $uid . '...';
 						$this->updateRefIndex($table,$uid);
 					} else if (t3lib_div::_POST('_DELETE'))	{
 						$GLOBALS['TYPO3_DB']->exec_DELETEquery($table,'uid='.intval($uid));
-						$output.='<br/>Deleted '.$table.':'.$uid.'...';
+						$output .= '<br />Deleted ' . $table . ':' . $uid . '...';
 						$this->updateRefIndex($table,$uid);
 					} else {
 						$output.='<input type="submit" name="_EDIT" value="EDIT" />';

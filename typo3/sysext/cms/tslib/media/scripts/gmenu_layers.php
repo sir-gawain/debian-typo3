@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains the GMENU_LAYERS extension class, tslib_gmenu_layers
  *
- * $Id: gmenu_layers.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: gmenu_layers.php 9036 2010-10-11 20:47:04Z steffenk $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -114,7 +114,7 @@ class tslib_gmenu_layers extends tslib_gmenu {
 	 * @return	void
 	 */
 	function extProc_init()	{
-		$this->WMid = trim($this->mconf['layer_menu_id'])?trim($this->mconf['layer_menu_id']).'x':substr(md5(microtime()),0,6);	// NO '_' (underscore) in the ID!!! NN4 breaks!
+		$this->WMid = trim($this->mconf['layer_menu_id']) ? trim($this->mconf['layer_menu_id']) . 'x' : substr(md5('gl' . serialize($this->mconf)), 0, 6);
 
 		$GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid'][]=$this->WMid;
 		$this->WMtempStore = $GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid'];
@@ -424,8 +424,10 @@ GLV_timeout_count++;
 ';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onload']['GL_initLayers()']= 'GL_initLayers();';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onload'][$this->WMid]=	'GL_restoreMenu("'.$this->WMid.'");';
-		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove']['GL_getMouse(e)']= 'GL_getMouse(e);';	// Should be called BEFORE any of the 'local' getMouse functions!
-		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove'][$this->WMid]= 'GL'.$this->WMid.'_getMouse(e);';
+		// Should be called BEFORE any of the 'local' getMouse functions!
+		// is put inside in a try catch block to avoid JS errors in IE
+		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove']['GL_getMouse(e)']= 'try{GL_getMouse(e);}catch(ex){};';
+		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove'][$this->WMid]= 'try{GL'.$this->WMid.'_getMouse(e);}catch(ex){};';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onmouseup'][$this->WMid]= 'GL_mouseUp(\''.$this->WMid.'\',e);';
 
 		$GLOBALS['TSFE']->divSection.=implode($this->divLayers,chr(10)).chr(10);

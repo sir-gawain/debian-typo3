@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for display of backend log
  *
- * $Id: class.t3lib_bedisplaylog.php 3503 2008-04-01 19:50:18Z stucki $
+ * $Id: class.t3lib_bedisplaylog.php 8347 2010-07-28 08:57:47Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -121,11 +121,15 @@ class t3lib_BEDisplayLog {
 	 * @return	string		If the timestamp was also shown last time, then "." is returned. Otherwise the new timestamp formatted with ->doc->formatTime()
 	 */
 	function getTimeLabel($code)	{
-		$t=$GLOBALS['SOBE']->doc->formatTime($code,1);
+		#$t=$GLOBALS['SOBE']->doc->formatTime($code,1);
+		$t = date('H:i:s',$code);
+
 		if ($this->lastTimeLabel!=$t)	{
 			$this->lastTimeLabel=$t;
 			return $t;
-		} else return '.';
+		} else {
+			return '.';
+		}
 
 	}
 
@@ -141,7 +145,7 @@ class t3lib_BEDisplayLog {
 			$this->lastUserLabel=$code.'_'.$workspace;
 			$label = $this->be_user_Array[$code]['username'];
 			$ws = $this->wsArray[$workspace];
-			return ($label ? $label : '['.$code.']').'@'.($ws?$ws:$workspace);
+			return ($label ? htmlspecialchars($label) : '['.$code.']').'@'.($ws?$ws:$workspace);
 		} else return '.';
 	}
 
@@ -163,13 +167,13 @@ class t3lib_BEDisplayLog {
 	 * Get action label for log listing
 	 *
 	 * @param	string		Key for the action label in locallang
-	 * @return	string		If labe is different from last action label then the label is returned, otherwise "."
+	 * @return	string		If label is different from last action label then the label is returned, otherwise "."
 	 */
 	function getActionLabel($code)	{
 		if ($this->lastActionLabel!=$code)	{
 			$this->lastActionLabel=$code;
 			$label=$GLOBALS['LANG']->getLL('action_'.$code);
-			return $label ? $label : '['.$code.']';
+			return $label ? htmlspecialchars($label) : '['.$code.']';
 		} else return '.';
 	}
 
@@ -188,24 +192,29 @@ class t3lib_BEDisplayLog {
 		if (is_array($data))	{
 			if ($this->detailsOn)	{
 				if (is_object($GLOBALS['LANG']))	{
-					$label = $GLOBALS['LANG']->getLL('msg_'.$code);
+#					$label = $GLOBALS['LANG']->getLL('msg_'.$code);
 				} else {
 					list($label) = explode(',',$text);
 				}
-				if ($label)	{$text=$label;}
+				if ($label)	{
+					$text=$label;
+				}
 				$text = sprintf($text, htmlspecialchars($data[0]),htmlspecialchars($data[1]),htmlspecialchars($data[2]),htmlspecialchars($data[3]),htmlspecialchars($data[4]));
 			} else {
 				$text = str_replace('%s','',$text);
 			}
 		}
+		$text = htmlspecialchars($text);
 
 			// Finding the history for the record
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,fieldlist', 'sys_history', 'sys_log_uid='.intval($sys_log_uid));
 		$newRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 		if (is_array($newRow))	{
-			$text.=' Changes in fields: <em>'.$newRow['fieldlist'].'</em>.';
-			$text.=' <a href="'.htmlspecialchars($GLOBALS['BACK_PATH'].'show_rechis.php?sh_uid='.$newRow['uid'].'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))).'">'.
-					'<img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/history2.gif','width="13" height="12"').' title="Show History" alt="" />'.
+			$text .= ' ' . sprintf($GLOBALS['LANG']->getLL('changesInFields'), '<em>' . $newRow['fieldlist'] . '</em>');
+			$text .= ' <a href="' . htmlspecialchars($GLOBALS['BACK_PATH'] . 'show_rechis.php?sh_uid=' . $newRow['uid'] .
+					'&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))) . '">' .
+					'<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/history2.gif', 'width="13" height="12"') .
+					' title="' . $GLOBALS['LANG']->getLL('showHistory') . '" alt="" />' .
 					'</a>';
 		}
 

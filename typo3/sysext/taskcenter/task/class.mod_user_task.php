@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,8 +32,6 @@
 *
 * Revision for TYPO3 3.8.0 / Native Workflow System
 */
-
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
 
 class mod_user_task extends t3lib_extobjbase {
 	var $getUserNamesFields = 'username,usergroup,usergroup_cached_list,uid,realName,email';
@@ -67,7 +65,6 @@ class mod_user_task extends t3lib_extobjbase {
 				--------
 				'.sprintf($GLOBALS['LANG']->getLL('messages_emailFooter'), $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'], t3lib_div::getIndpEnv('HTTP_HOST'));
 
-		require_once(PATH_t3lib.'class.t3lib_htmlmail.php');
 		$email = t3lib_div::makeInstance('t3lib_htmlmail');
 		$email->start();
 		$email->useBase64();
@@ -125,7 +122,7 @@ class mod_user_task extends t3lib_extobjbase {
 	 * @return	string		cropped string
 	 */
 	function fixed_lgd($str, $len = 0) {
-		return t3lib_div::fixed_lgd($str, $len?$len:$this->BE_USER->uc['titleLen']);
+		return t3lib_div::fixed_lgd_cs($str, $len?$len:$this->BE_USER->uc['titleLen']);
 	}
 
 	/**
@@ -207,10 +204,8 @@ class mod_user_task extends t3lib_extobjbase {
 
 }
 
-// Include extension?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/taskcenter/task/class.mod_user_task.php']) {
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/taskcenter/task/class.mod_user_task.php']);
 }
-
 
 ?>

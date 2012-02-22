@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Super Admin class has functions for the administration of multiple TYPO3 sites in folders
  * See 'misc/superadmin.php' for details on how to use!
  *
- * $Id: class.t3lib_superadmin.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_superadmin.php 6460 2009-11-17 19:02:55Z rupi $
  * Revised for TYPO3 3.6 February/2004 by Kasper Skaarhoj
  * XHTML Compliant
  *
@@ -99,7 +99,12 @@
 // *******************************
 // Set error reporting
 // *******************************
-error_reporting (E_ALL ^ E_NOTICE);
+if (defined('E_DEPRECATED')) {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+} else {
+	error_reporting(E_ALL ^ E_NOTICE);
+}
+
 define('TYPO3_mainDir', 'typo3/');		// This is the directory of the backend administration for the sites of this TYPO3 installation.
 
 
@@ -222,8 +227,8 @@ class t3lib_superadmin {
 			case 'page':
 ?>
 <!DOCTYPE html
-     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	 PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
 	<style type="text/css">
@@ -254,8 +259,8 @@ class t3lib_superadmin {
 	<title>TYPO3 Super Admin</title>
 </head>
 <frameset  cols="250,*">
-    <frame name="TSAmenu" src="superadmin.php?type=page&show=menu" marginwidth="10" marginheight="10" scrolling="auto" frameborder="0">
-    <frame name="TSApage" src="superadmin.php?type=page" marginwidth="10" marginheight="10" scrolling="auto" frameborder="0">
+	<frame name="TSAmenu" src="superadmin.php?type=page&show=menu" marginwidth="10" marginheight="10" scrolling="auto" frameborder="0">
+	<frame name="TSApage" src="superadmin.php?type=page" marginwidth="10" marginheight="10" scrolling="auto" frameborder="0">
 </frameset>
 </html>
 <?php
@@ -445,8 +450,8 @@ class t3lib_superadmin {
 		$content = '';
 
 		foreach($this->parentDirs as $k => $v)	{
-			$dir = ereg_replace('/$','',$v['dir']);
-			$baseUrl=ereg_replace('/$','',$v['url']);
+			$dir = rtrim($v['dir'], '/');
+			$baseUrl=rtrim($v['url'], '/');
 			$content.='<br /><br /><br />';
 			$content.=$this->headerParentDir($dir);
 			if (@is_dir($dir))	{
@@ -1067,7 +1072,7 @@ class t3lib_superadmin {
 		$query = $GLOBALS['TYPO3_DB']->SELECTquery(
 						'sys_log.*, be_users.username  AS username, be_users.admin AS admin',
 						'sys_log,be_users',
-						'be_users.uid=sys_log.userid AND sys_log.type=255 AND sys_log.tstamp > '.(time()-(60*60*24*30)),
+						'be_users.uid=sys_log.userid AND sys_log.type=255 AND sys_log.tstamp > ' . ($GLOBALS['EXEC_TIME'] - (60 * 60 * 24 * 30)),
 						'',
 						'sys_log.tstamp DESC'
 					);
@@ -1158,7 +1163,7 @@ class t3lib_superadmin {
 					// Setting section header, if needed.
 				if ($head!=$all['siteInfo']['MAIN_DIR'])	{
 					$lines[] = '
-						<h4 style="white-space: nowrap;">'.htmlspecialchars(t3lib_div::fixed_lgd_pre($all['siteInfo']['MAIN_DIR'],18)).'</h4>';
+						<h4 style="white-space: nowrap;">'.htmlspecialchars(t3lib_div::fixed_lgd_cs($all['siteInfo']['MAIN_DIR'],-18)).'</h4>';
 					$head = $all['siteInfo']['MAIN_DIR'];	// Set new head...
 				}
 
@@ -1173,7 +1178,7 @@ class t3lib_superadmin {
 							<b>'.htmlspecialchars($label).'</b> ('.htmlspecialchars(substr($all['siteInfo']['SA_PATH'],strlen($all['siteInfo']['MAIN_DIR'])+1)).')<br />';
 
 								// To avoid "visited links" display on next hit:
-							$tempVal='&_someUniqueValue='.time();
+							$tempVal='&_someUniqueValue=' . $GLOBALS['EXEC_TIME'];
 
 								// Add links for update:
 							$url = $this->scriptName.'?type=page&show=rmTempCached&exp='.$k.$tempVal;
@@ -1369,4 +1374,5 @@ class t3lib_superadmin {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_superadmin.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_superadmin.php']);
 }
+
 ?>

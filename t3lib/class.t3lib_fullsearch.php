@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Class used in module tools/dbint (advanced search) and which may hold code specific for that module
  * However the class has a general principle in it which may be used in the web/export module.
  *
- * $Id: class.t3lib_fullsearch.php 3489 2008-03-31 13:13:04Z ohader $
+ * $Id: class.t3lib_fullsearch.php 8588 2010-08-12 20:41:55Z steffenk $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @coauthor	Jo Hasenau <info@cybercraft.de>
@@ -230,8 +230,9 @@ class t3lib_fullsearch {
 				$qCount = $GLOBALS['TYPO3_DB']->SELECTquery('count(*)', $qGen->table, $qString.t3lib_BEfunc::deleteClause($qGen->table));
 				$qSelect = $qGen->getSelectQuery($qString);
 
-				$res = @$GLOBALS['TYPO3_DB']->sql(TYPO3_db,$qCount);
+				$res = @$GLOBALS['TYPO3_DB']->sql_query($qCount);
 				if (!$GLOBALS['TYPO3_DB']->sql_error())	{
+					$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					$dA = array();
 					$dA['t2_data'] = serialize(array(
 						'qC'=>$saveArr,
@@ -324,7 +325,7 @@ class t3lib_fullsearch {
 				}
 			} elseif ($storeControl['REMOVE'])	{
 				if ($storeIndex>0)	{
-					$msg="'".$storeArray[$storeControl['STORE']]."' query entry removed!";
+					$msg="'" . htmlspecialchars($storeArray[$storeControl['STORE']]) . "' query entry removed!";
 					unset($storeArray[$storeControl['STORE']]);	// Removing
 					$saveStoreArray=1;
 				}
@@ -396,12 +397,13 @@ class t3lib_fullsearch {
 				$output.= $GLOBALS['SOBE']->doc->section('SQL query',$this->tableWrap(htmlspecialchars($qExplain)),0,1);
 		}
 
-				$res = @$GLOBALS['TYPO3_DB']->sql(TYPO3_db,$qExplain);
+				$res = @$GLOBALS['TYPO3_DB']->sql_query($qExplain);
 				if ($GLOBALS['TYPO3_DB']->sql_error())	{
 					$out.='<BR><strong>Error:</strong><BR><font color="red"><strong>'.$GLOBALS['TYPO3_DB']->sql_error().'</strong></font>';
 					$output.= $GLOBALS['SOBE']->doc->section('SQL error',$out,0,1);
 				} else {
 					$cPR = $this->getQueryResultCode($mQ,$res,$qGen->table);
+					$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					$output.=$GLOBALS['SOBE']->doc->section($cPR['header'],$cPR['content'],0,1);
 				}
 			}
@@ -475,8 +477,7 @@ class t3lib_fullsearch {
 				$cPR['content']=$out;
 			break;
 			case 'xml':
-				$className=t3lib_div::makeInstanceClassName('t3lib_xml');
-				$xmlObj = new $className('typo3_export');
+				$xmlObj = t3lib_div::makeInstance('t3lib_xml', 'typo3_export');
 				$xmlObj->includeNonEmptyValues=1;
 				$xmlObj->renderHeader();
 				$first=1;
@@ -576,6 +577,11 @@ class t3lib_fullsearch {
 				t3lib_div::loadTCA($table);
 				$conf=$TCA[$table];
 
+					// avoid querying tables with no columns
+				if (empty($conf['columns'])) {
+					continue;
+				}
+
 				reset($conf['columns']);
 				$list=array();
 				while(list($field,)=each($conf['columns']))	{
@@ -585,8 +591,7 @@ class t3lib_fullsearch {
 				$qp = $GLOBALS['TYPO3_DB']->searchQuery(array($swords), $list, $table);
 
 					// Count:
-				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $table, $qp.t3lib_BEfunc::deleteClause($table));
-				list($count) = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+				$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', $table, $qp . t3lib_BEfunc::deleteClause($table));
 				if($count || $showAlways)	{
 						// Output header:
 					$out.='<strong>TABLE:</strong> '.$GLOBALS['LANG']->sL($conf['ctrl']['title']).'<BR>';
@@ -600,6 +605,7 @@ class t3lib_fullsearch {
 							$rowArr[]=$this->resultRowDisplay($row,$conf,$table);
 							$lrow=$row;
 						}
+						$GLOBALS['TYPO3_DB']->sql_free_result($res);
 						$out.='<table border="0" cellpadding="2" cellspacing="1">'.$this->resultRowTitles($lrow,$conf,$table).implode(chr(10),$rowArr).'</table>';
 					}
 					$out.='<HR>';
@@ -618,30 +624,32 @@ class t3lib_fullsearch {
 	 * @return	[type]		...
 	 */
 	function resultRowDisplay($row,$conf,$table)	{
+		static $even = false;
 		$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 		$SET = $GLOBALS['SOBE']->MOD_SETTINGS;
-		$out='<tr class="bgColor4">';
+		$out='<tr class="bgColor' . ($even ? '6' : '4') . '">';
+		$even = !$even;
 		reset($row);
 		while(list($fN,$fV)=each($row))	{
 			if (t3lib_div::inList($SET['queryFields'], $fN) || (!$SET['queryFields'] && $fN!='pid' && $fN!='deleted'))	{
 				if ($SET['search_result_labels'])	{
 					$fVnew = $this->getProcessedValueExtra($table, $fN, $fV, $conf, '<br />');
 				} else {
-					$fVnew = $fV;
+					$fVnew = htmlspecialchars($fV);
 				}
-				$out.='<td'.$TDparams.'>'.$fVnew.'</td>';
+				$out.='<td>' . $fVnew . '</td>';
 			}
 		}
 		$params = '&edit['.$table.']['.$row['uid'].']=edit';
 		$out.='<td nowrap>';
 		if (!$row['deleted'])	{
-			$out .= '<a href="#" onClick="top.launchView(\''.$table.'\','.$row['uid'].',\''.$GLOBALS['BACK_PATH'].'\');return false;"><img src="'.$GLOBALS['BACK_PATH'].'gfx/zoom2.gif" width="12" height="12" alt="" /></a>';
-			$out .= '<a href="#" onClick="'.t3lib_BEfunc::editOnClick($params, $GLOBALS['BACK_PATH'], t3lib_div::getIndpEnv('REQUEST_URI').t3lib_div::implodeArrayForUrl('SET', (array)t3lib_div::_POST('SET'))).'"><img src="'.$GLOBALS['BACK_PATH'].'gfx/edit2.gif" width="11" height="12" border="0" alt=""></a>';
+			$out .= '<a href="#" onClick="top.launchView(\''.$table.'\','.$row['uid'].',\''.$GLOBALS['BACK_PATH'].'\');return false;"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' alt="" /></a>';
+			$out .= '<a href="#" onClick="'.t3lib_BEfunc::editOnClick($params, $GLOBALS['BACK_PATH'], t3lib_div::getIndpEnv('REQUEST_URI').t3lib_div::implodeArrayForUrl('SET', (array)t3lib_div::_POST('SET'))).'"><img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif', 'width="11" height="12"') . ' border="0" alt=""></a>';
 		} else {
 			$out.= '<a href="'.t3lib_div::linkThisUrl($GLOBALS['BACK_PATH'].'tce_db.php', array('cmd['.$table.']['.$row['uid'].'][undelete]' => '1', 'redirect' => t3lib_div::linkThisScript(array()))).'">';
-			$out.= '<img src="'.$GLOBALS['BACK_PATH'].'gfx/undelete.gif" width="13" height="12" border="0" alt="undelete" only></A>';
+			$out.= '<img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/undelete.gif', 'width="13" height="12"') . ' border="0" alt="undelete" only></a>';
 			$out.= '<a href="'.t3lib_div::linkThisUrl($GLOBALS['BACK_PATH'].'tce_db.php', array('cmd['.$table.']['.$row['uid'].'][undelete]' => '1', 'redirect' => t3lib_div::linkThisUrl('alt_doc.php', array('edit['.$table.']['.$row['uid'].']' => 'edit', 'returnUrl' => t3lib_div::linkThisScript(array()))))).'">';
-			$out.= '<img src="'.$GLOBALS['BACK_PATH'].'gfx/undelete_and_edit.gif" width="13" height="12" border="0" alt="undelete and edit">';
+			$out.= '<img '. t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/undelete_and_edit.gif', 'width="13" height="12"') . ' border="0" alt="undelete and edit">';
 		}
 		$_params = array($table=>$row);
 		if (is_array($this->hookArray['additionalButtons']))	{
@@ -674,15 +682,15 @@ class t3lib_fullsearch {
 			$fields = $fC['config'];
 			$fields['exclude'] = $fC['exclude'];
 			if (is_array($fC) && $fC['label'])	{
-				$fields['label'] = ereg_replace(":$", '', trim($GLOBALS['LANG']->sL($fC['label'])));
+				$fields['label'] = preg_replace('/:$/', '', trim($GLOBALS['LANG']->sL($fC['label'])));
 
 				switch ($fields['type'])	{
 					case 'input':
-						if (eregi('int|year', $fields['eval']))	{
+						if (preg_match('/int|year/i', $fields['eval']))	{
 							$fields['type'] = 'number';
-						} elseif (eregi('time', $fields['eval']))	{
+						} elseif (preg_match('/time/i', $fields['eval']))	{
 							$fields['type'] = 'time';
-						} elseif (eregi('date', $fields['eval']))	{
+						} elseif (preg_match('/date/i', $fields['eval']))	{
 							$fields['type'] = 'date';
 						} else {
 							$fields['type'] = 'text';
@@ -807,6 +815,7 @@ class t3lib_fullsearch {
 					$theList .= $this->getTreeList($row['uid'], $depth-1, $begin-1, $perms_clause);
 				}
 			}
+			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		}
 		return $theList;
 	}
@@ -824,7 +833,7 @@ class t3lib_fullsearch {
 	function makeValueList($fN, $fV, $conf, $table, $splitString) {
 		$fieldSetup = $conf;
 		if ($fieldSetup['type'] == 'files') {
-			$d = dir(t3lib_div::getIndpEnv(TYPO3_DOCUMENT_ROOT).'/'.$fieldSetup['uploadfolder']);
+			$d = dir(PATH_site . $fieldSetup['uploadfolder']);
 			while (false !== ($entry = $d->read())) {
 				if ($entry == '.' || $entry == '..') {
 					continue;
@@ -912,6 +921,7 @@ class t3lib_fullsearch {
 								}
 							}
 						}
+						$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					}
 				}
 			} else {
@@ -983,6 +993,7 @@ class t3lib_fullsearch {
 						while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 							$this->tableArray[$from_table][] = $row;
 						}
+						$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					}
 					reset($this->tableArray[$from_table]);
 					foreach ($this->tableArray[$from_table] as $key => $val) {
@@ -1023,34 +1034,43 @@ class t3lib_fullsearch {
 		return $out;
 	}
 
-	 /**
- * [Describe function...]
- *
- * @param	[type]		$row: ...
- * @param	[type]		$conf: ...
- * @param	[type]		$table: ...
- * @return	[type]		...
- */
-	function resultRowTitles($row,$conf,$table)	{
+	/**
+	 * Render table header
+	 *
+	 * @param	array		row: Table columns
+	 * @param	array		conf: Table TCA
+	 * @param	string		table: Table name
+	 * @return	string		HTML of table header
+	 */
+	function resultRowTitles($row, $conf, $table) {
 		$SET = $GLOBALS['SOBE']->MOD_SETTINGS;
-		$out='<tr class="bgColor5">';
-		reset($row);
-		while(list($fN,$fV)=each($row))	{
-			if (t3lib_div::inList($SET['queryFields'], $fN) || (!$SET['queryFields'] && $fN!='pid' && $fN!='deleted'))	{
-				if (strlen($fV) < 50)	$TDparams = ' nowrap';
-				else $TDparams = '';
 
-				if ($GLOBALS['SOBE']->MOD_SETTINGS['search_result_labels'])	{
- 					$out.='<td'.$TDparams.'><strong>'.$GLOBALS['LANG']->sL($conf['columns'][$fN]['label']?$conf['columns'][$fN]['label']:$fN,1).'</strong></td>';
+		$tableHeader = array();
+
+			// Start header row
+		$tableHeader[] = '<thead><tr class="bgColor5">';
+
+			// Iterate over given columns
+		foreach ($row as $fieldName => $fieldValue) {
+			if (t3lib_div::inList($SET['queryFields'], $fieldName) || (!$SET['queryFields'] && $fieldName != 'pid' && $fieldName != 'deleted')) {
+				$THparams = (strlen($fieldValue) < 50) ? ' style="white-space:nowrap;"' : '';
+
+				if ($GLOBALS['SOBE']->MOD_SETTINGS['search_result_labels']) {
+					$title = $GLOBALS['LANG']->sL($conf['columns'][$fieldName]['label'] ? $conf['columns'][$fieldName]['label'] : $fieldName, 1);
 				} else {
-					$out.='<td'.$TDparams.'><strong>'.$GLOBALS['LANG']->sL($fN, 1).'</strong></td>';
+					$title = $GLOBALS['LANG']->sL($fieldName, 1);
 				}
+
+				$tableHeader[] = '<th' . $THparams . '>' . $title . '</th>';
 			}
 		}
-		$out.='<td nowrap></td>
-		</tr>
-		';
-		return $out;
+
+			// Add empty icon column
+		$tableHeader[] = '<th style="white-space:nowrap;"></th>';
+			// Close header row
+		$tableHeader[] = '</tr></thead>';
+
+		return implode($tableHeader, chr(10));
 	}
 
 	/**

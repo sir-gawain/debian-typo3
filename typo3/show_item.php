@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Shows information about a database or file item
  *
- * $Id: show_item.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: show_item.php 8840 2010-09-21 19:56:38Z benni $
  * Revised for TYPO3 3.7 May/2004 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -59,9 +59,6 @@
 $BACK_PATH = '';
 require($BACK_PATH.'init.php');
 require($BACK_PATH.'template.php');
-require_once(PATH_t3lib.'class.t3lib_page.php');
-require_once(PATH_t3lib.'class.t3lib_loaddbgroup.php');
-require_once(PATH_t3lib.'class.t3lib_transferdata.php');
 
 
 
@@ -158,7 +155,7 @@ class SC_show_item {
 	 * @return	void
 	 */
 	function init()	{
-		global $BE_USER,$LANG,$BACK_PATH,$TCA;
+		global $BE_USER,$BACK_PATH,$TCA;
 
 			// Setting input variables.
 		$this->table = t3lib_div::_GET('table');
@@ -182,7 +179,7 @@ class SC_show_item {
 					$this->access = is_array($this->pageinfo) ? 1 : 0;
 					$this->row = $this->pageinfo;
 				} else {
-					$this->row = t3lib_BEfunc::getRecord($this->table,$this->uid);
+					$this->row = t3lib_BEfunc::getRecordWSOL($this->table, $this->uid);
 					if ($this->row)	{
 						$this->pageinfo = t3lib_BEfunc::readPageAccess($this->row['pid'],$this->perms_clause);
 						$this->access = is_array($this->pageinfo) ? 1 : 0;
@@ -196,7 +193,7 @@ class SC_show_item {
 		} else	{
 			// if the filereference $this->file is relative, we correct the path
 			if (substr($this->table,0,3)=='../')	{
-				$this->file = PATH_site.ereg_replace('^\.\./','',$this->table);
+				$this->file = PATH_site.preg_replace('/^\.\.\//','',$this->table);
 			} else {
 				$this->file = $this->table;
 			}
@@ -209,11 +206,10 @@ class SC_show_item {
 			// Initialize document template object:
 		$this->doc = t3lib_div::makeInstance('smallDoc');
 		$this->doc->backPath = $BACK_PATH;
-		$this->doc->docType = 'xhtml_trans';
 
 			// Starting the page by creating page header stuff:
-		$this->content.=$this->doc->startPage($LANG->sL('LLL:EXT:lang/locallang_core.php:show_item.php.viewItem'));
-		$this->content.=$this->doc->header($LANG->sL('LLL:EXT:lang/locallang_core.php:show_item.php.viewItem'));
+		$this->content.=$this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.viewItem'));
+		$this->content.=$this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.viewItem'));
 		$this->content.=$this->doc->spacer(5);
 	}
 
@@ -223,10 +219,10 @@ class SC_show_item {
 	 * @return	void
 	 */
 	function main()	{
-		global $LANG;
 
 		if ($this->access)	{
-			$returnLinkTag = t3lib_div::_GP('returnUrl') ? '<a href="'.t3lib_div::_GP('returnUrl').'" class="typo3-goBack">' : '<a href="#" onclick="window.close();">';
+			$returnLink =  t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
+			$returnLinkTag = $returnLink ? '<a href="' . $returnLink . '" class="typo3-goBack">' : '<a href="#" onclick="window.close();">';
 
 				// render type by user func
 			$typeRendered = false;
@@ -257,10 +253,10 @@ class SC_show_item {
 			}
 
 				// If return Url is set, output link to go back:
-			if (t3lib_div::_GP('returnUrl'))	{
-				$this->content = $this->doc->section('',$returnLinkTag.'<strong>'.$LANG->sL('LLL:EXT:lang/locallang_core.xml:labels.goBack',1).'</strong></a><br /><br />').$this->content;
+			if (t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl')))	{
+				$this->content = $this->doc->section('',$returnLinkTag.'<strong>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.goBack',1).'</strong></a><br /><br />').$this->content;
 
-				$this->content .= $this->doc->section('','<br />'.$returnLinkTag.'<strong>'.$LANG->sL('LLL:EXT:lang/locallang_core.xml:labels.goBack',1).'</strong></a>');
+				$this->content .= $this->doc->section('','<br />'.$returnLinkTag.'<strong>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.goBack',1).'</strong></a>');
 			}
 		}
 	}
@@ -271,7 +267,7 @@ class SC_show_item {
 	 * @return	void
 	 */
 	function renderDBInfo()	{
-		global $LANG,$TCA;
+		global $TCA;
 
 			// Print header, path etc:
 		$code = $this->doc->getHeader($this->table,$this->row,$this->pageinfo['_thePath'],1).'<br />';
@@ -290,8 +286,8 @@ class SC_show_item {
 					$i++;
 					$tableRows[] = '
 						<tr>
-							<td class="bgColor5">'.$LANG->sL(t3lib_BEfunc::getItemLabel($this->table,$name),1).'</td>
-							<td class="bgColor4">'.htmlspecialchars(t3lib_BEfunc::getProcessedValue($this->table,$name,$this->row[$name])).'</td>
+							<td class="bgColor5">'.$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel($this->table,$name),1).'</td>
+							<td class="bgColor4">' . htmlspecialchars(t3lib_BEfunc::getProcessedValue($this->table, $name, $this->row[$name], 0, 0, FALSE, $this->row['uid'])) . '</td>
 						</tr>';
 				}
 			}
@@ -307,15 +303,15 @@ class SC_show_item {
 
 			// Add path and table information in the bottom:
 		$code = '';
-		$code.= $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.path').': '.t3lib_div::fixed_lgd_cs($this->pageinfo['_thePath'],-48).'<br />';
-		$code.= $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.table').': '.$LANG->sL($TCA[$this->table]['ctrl']['title']).' ('.$this->table.') - UID: '.$this->uid.'<br />';
+		$code.= $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.path').': '.t3lib_div::fixed_lgd_cs($this->pageinfo['_thePath'],-48).'<br />';
+		$code.= $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.table').': '.$GLOBALS['LANG']->sL($TCA[$this->table]['ctrl']['title']).' ('.$this->table.') - UID: '.$this->uid.'<br />';
 		$this->content.= $this->doc->section('', $code);
 
 			// References:
-		$this->content.= $this->doc->section('References to this item:',$this->makeRef($this->table,$this->row['uid']));
+		$this->content.= $this->doc->section($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.referencesToThisItem'),$this->makeRef($this->table,$this->row['uid']));
 
 			// References:
-		$this->content.= $this->doc->section('References from this item:',$this->makeRefFrom($this->table,$this->row['uid']));
+		$this->content.= $this->doc->section($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.referencesFromThisItem'),$this->makeRefFrom($this->table,$this->row['uid']));
 	}
 
 	/**
@@ -325,10 +321,8 @@ class SC_show_item {
 	 * @return	void
 	 */
 	function renderFileInfo($returnLinkTag)	{
-		global $LANG;
 
 			// Initialize object to work on the image:
-		require_once(PATH_t3lib.'class.t3lib_stdgraphic.php');
 		$imgObj = t3lib_div::makeInstance('t3lib_stdGraphic');
 		$imgObj->init();
 		$imgObj->mayScaleUp = 0;
@@ -347,16 +341,16 @@ class SC_show_item {
 			// Setting header:
 		$icon = t3lib_BEfunc::getFileIcon($ext);
 		$url = 'gfx/fileicons/'.$icon;
-		$fileName = '<img src="'.$url.'" width="18" height="16" align="top" alt="" /><b>'.$LANG->sL('LLL:EXT:lang/locallang_core.php:show_item.php.file',1).':</b> '.$fI['file'];
+		$fileName = '<img src="'.$url.'" width="18" height="16" align="top" alt="" /><strong>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.file', 1).':</strong> '.$fI['file'];
 		if (t3lib_div::isFirstPartOfStr($this->file,PATH_site))	{
 			$code.= '<a href="../'.substr($this->file,strlen(PATH_site)).'" target="_blank">'.$fileName.'</a>';
 		} else {
 			$code.= $fileName;
 		}
-		$code.=' &nbsp;&nbsp;<b>'.$LANG->sL('LLL:EXT:lang/locallang_core.php:show_item.php.filesize').':</b> '.t3lib_div::formatSize(@filesize($this->file)).'<br />
+		$code.=' &nbsp;&nbsp;<strong>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.filesize').':</strong> '.t3lib_div::formatSize(@filesize($this->file)).'<br />
 			';
 		if (is_array($imgInfo))	{
-			$code.= '<b>'.$LANG->sL('LLL:EXT:lang/locallang_core.php:show_item.php.dimensions').':</b> '.$imgInfo[0].'x'.$imgInfo[1].' pixels';
+			$code.= '<strong>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.dimensions').':</strong> '.$imgInfo[0].'x'.$imgInfo[1].' '.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.pixels');
 		}
 		$this->content.=$this->doc->section('',$code);
 		$this->content.=$this->doc->divider(2);
@@ -412,7 +406,7 @@ class SC_show_item {
 
 						$code.='
 								 -------<br/>
-								 '.count($t).' files';
+								 '.count($t).' '.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.files');
 
 						$code = '
 							<span class="nobr">'.$code.'
@@ -422,7 +416,7 @@ class SC_show_item {
 					$this->content.= $this->doc->section('',$code);
 				}
 			} elseif ($GLOBALS['TYPO3_CONF_VARS']['BE']['disable_exec_function']) {
-				$this->content.= $this->doc->section('','Sorry, TYPO3_CONF_VARS[BE][disable_exec_function] was set, so cannot display content of archive file.');
+				$this->content.= $this->doc->section('',$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.cannotDisplayArchive'));
 			}
 
 				// Font files:
@@ -440,7 +434,7 @@ class SC_show_item {
 
 
 			// References:
-		$this->content.= $this->doc->section('References to this item:',$this->makeRef('_FILE',$this->file));
+		$this->content.= $this->doc->section($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.referencesToThisItem'),$this->makeRef('_FILE',$this->file));
 	}
 
 	/**
@@ -494,12 +488,12 @@ class SC_show_item {
 		$infoData = array();
 		if (count($rows))	{
 			$infoData[] = '<tr class="bgColor5 tableheader">' .
-					'<td>Table:</td>' .
-					'<td>Uid:</td>' .
-					'<td>Field:</td>'.
-					'<td>Flexpointer:</td>'.
-					'<td>Softref Key:</td>'.
-					'<td>Sorting:</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.table').'</td>' .
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.uid').'</td>' .
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.field').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.flexpointer').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.softrefKey').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.sorting').'</td>'.
 					'</tr>';
 		}
 		foreach($rows as $row)	{
@@ -537,13 +531,13 @@ class SC_show_item {
 		$infoData = array();
 		if (count($rows))	{
 			$infoData[] = '<tr class="bgColor5 tableheader">' .
-					'<td>Field:</td>'.
-					'<td>Flexpointer:</td>'.
-					'<td>Softref Key:</td>'.
-					'<td>Sorting:</td>'.
-					'<td>Ref Table:</td>' .
-					'<td>Ref Uid:</td>' .
-					'<td>Ref String:</td>' .
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.field').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.flexpointer').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.softrefKey').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.sorting').'</td>'.
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.refTable').'</td>' .
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.refUid').'</td>' .
+					'<td>'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:show_item.php.refString').'</td>' .
 					'</tr>';
 		}
 		foreach($rows as $row)	{
@@ -562,19 +556,10 @@ class SC_show_item {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_item.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_item.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -583,4 +568,5 @@ $SOBE = t3lib_div::makeInstance('SC_show_item');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

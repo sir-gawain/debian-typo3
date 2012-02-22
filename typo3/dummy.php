@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Dummy document - displays nothing but background color.
  *
- * $Id: dummy.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: dummy.php 5174 2009-03-10 20:23:43Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant content
  *
@@ -77,7 +77,6 @@ class SC_dummy {
 		global $TBE_TEMPLATE;
 
 			// Start page
-		$TBE_TEMPLATE->docType = 'xhtml_trans';
 		$this->content.=$TBE_TEMPLATE->startPage('Dummy document');
 
 			// End page:
@@ -94,11 +93,10 @@ class SC_dummy {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/dummy.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/dummy.php']);
 }
-
 
 
 
@@ -106,4 +104,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/dummy
 $SOBE = t3lib_div::makeInstance('SC_dummy');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

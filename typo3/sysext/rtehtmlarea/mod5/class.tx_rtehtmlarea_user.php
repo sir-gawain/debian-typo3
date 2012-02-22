@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasper@typo3.com)
-*  (c) 2005-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 1999-2009 Kasper Skaarhoj (kasper@typo3.com)
+*  (c) 2005-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@
  * @author	Kasper Skaarhoj <kasper@typo3.com>
  * @author	Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
  *
- * $Id: class.tx_rtehtmlarea_user.php 3439 2008-03-16 19:16:51Z flyguide $  *
+ * $Id: class.tx_rtehtmlarea_user.php 5557 2009-06-05 07:45:33Z patrick $  *
  */
 
 class tx_rtehtmlarea_user {
@@ -61,7 +61,7 @@ class tx_rtehtmlarea_user {
 
 		$this->doc->bodyTagAdditions = 'onload="Init();"';
 		$this->doc->form = '
-	<form action="" id="process" name="process" method="POST">
+	<form action="" id="process" name="process" method="post">
 		<input type="hidden" name="processContent" value="" />
 		<input type="hidden" name="returnUrl" value="'.htmlspecialchars(t3lib_div::getIndpEnv('REQUEST_URI')).'" />
 		';

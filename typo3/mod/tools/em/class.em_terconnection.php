@@ -2,8 +2,8 @@
 /* **************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2006-2008 Karsten Dambekalns <karsten@typo3.org>
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Karsten Dambekalns <karsten@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -298,8 +298,9 @@ class SC_mod_tools_em_terconnection {
 
 		$filesData = array();
 		foreach ($uArr['FILES'] as $filename => $infoArr) {
-			$content = (!defined('SOAP_1_2') && class_exists('soapclient')) ? base64_encode($infoArr['content']) : $infoArr['content']; // bug in NuSOAP - no automatic encoding
-			$filesData['fileData'][] = array (
+				// Avoid autoloading "soapclient", since it's only a strategy check here:
+			$content = (!defined('SOAP_1_2') && class_exists('soapclient', false)) ? base64_encode($infoArr['content']) : $infoArr['content']; // bug in NuSOAP - no automatic encoding
+			$filesData[] = array (
 				'name' => utf8_encode($infoArr['name']),
 				'size' => intval($infoArr['size']),
 				'modificationTime' => intval($infoArr['mtime']),
@@ -326,4 +327,5 @@ class SC_mod_tools_em_terconnection {
 		return $response;
 	}
 }
+
 ?>

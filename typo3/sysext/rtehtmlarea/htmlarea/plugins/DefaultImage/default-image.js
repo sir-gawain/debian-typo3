@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 /*
  * Image Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id:$
+ * TYPO3 SVN ID: $Id: default-image.js 6539 2009-11-25 14:49:14Z stucki $
  */
 DefaultImage = HTMLArea.Plugin.extend({
 	
@@ -63,10 +63,10 @@ DefaultImage = HTMLArea.Plugin.extend({
 		var pluginInformation = {
 			version		: "1.0",
 			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.fructifor.ca/",
+			developerUrl	: "http://www.ajbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "Fructifor Inc.",
-			sponsorUrl	: "http://www.fructifor.ca/",
+			sponsor		: "SJBR",
+			sponsorUrl	: "http://www.sjbr.ca/",
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
@@ -129,7 +129,7 @@ DefaultImage = HTMLArea.Plugin.extend({
 		}
 		this.image = image;
 		
-		this.dialog = this.openDialog("InsertImage", this.makeUrlFromPopupName("insert_image"), "insertImage", outparam, {width:580, height:495});
+		this.dialog = this.openDialog("InsertImage", this.makeUrlFromPopupName("insert_image"), "insertImage", outparam, {width:600, height:610});
 		return false;
 	},
 	

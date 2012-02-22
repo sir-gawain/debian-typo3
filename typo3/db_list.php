@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,7 +33,7 @@
  * are NOT located in their actual module directories (fx. mod/web/list/) but in the
  * backend root directory. This has some historical and practical causes.
  *
- * $Id: db_list.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: db_list.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -62,11 +62,6 @@ require ('mod/web/list/conf.php');
 require ('init.php');
 require ('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_web_list.xml');
-require_once (PATH_t3lib.'class.t3lib_page.php');
-require_once (PATH_t3lib.'class.t3lib_pagetree.php');
-require_once (PATH_t3lib.'class.t3lib_recordlist.php');
-require_once (PATH_t3lib.'class.t3lib_clipboard.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
 require_once ($BACK_PATH.'class.db_list.inc');
 require_once ($BACK_PATH.'class.db_list_extra.inc');
 $BE_USER->modAccess($MCONF,1);
@@ -144,7 +139,7 @@ class SC_db_list {
 		$this->search_field = t3lib_div::_GP('search_field');
 		$this->search_levels = t3lib_div::_GP('search_levels');
 		$this->showLimit = t3lib_div::_GP('showLimit');
-		$this->returnUrl = t3lib_div::_GP('returnUrl');
+		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 
 		$this->clear_cache = t3lib_div::_GP('clear_cache');
 		$this->cmd = t3lib_div::_GP('cmd');
@@ -206,7 +201,6 @@ class SC_db_list {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/db_list.html');
-		$this->doc->docType='xhtml_trans';
 
 			// Loading current page record and checking access:
 		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$this->perms_clause);
@@ -233,6 +227,7 @@ class SC_db_list {
 		$dblist->pageRow = $this->pageinfo;
 		$dblist->counter++;
 		$dblist->MOD_MENU = array('bigControlPanel' => '', 'clipBoard' => '', 'localization' => '');
+		$dblist->modTSconfig = $this->modTSconfig;
 
 			// Clipboard is initialized:
 		$dblist->clipObj = t3lib_div::makeInstance('t3lib_clipboard');		// Start clipboard
@@ -276,7 +271,7 @@ class SC_db_list {
 					$tce->process_cmdmap();
 
 					if (isset($cmd['pages']))	{
-						t3lib_BEfunc::getSetUpdateSignal('updatePageTree');
+						t3lib_BEfunc::setUpdateSignal('updatePageTree');
 					}
 
 					$tce->printLogErrorMessages(t3lib_div::getIndpEnv('REQUEST_URI'));
@@ -289,7 +284,9 @@ class SC_db_list {
 			$dblist->setDispFields();
 
 				// Render versioning selector:
-			$dblist->HTMLcode.= $this->doc->getVersionSelector($this->id);
+			if (t3lib_extMgm::isLoaded('version')) {
+				$dblist->HTMLcode .= $this->doc->getVersionSelector($this->id);
+			}
 
 				// Render the list of tables:
 			$dblist->generateList();
@@ -424,19 +421,10 @@ class SC_db_list {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/db_list.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/db_list.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -450,4 +438,5 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 $SOBE->clearCache();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

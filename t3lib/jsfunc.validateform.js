@@ -2,11 +2,11 @@
 *
 *  Universal validate-form
 *
-* $Id: jsfunc.validateform.js 4340 2008-10-21 15:15:08Z ohader $
+* $Id: jsfunc.validateform.js 5535 2009-06-03 07:55:36Z francois $
 *
 *  Copyright notice
 *
-*  (c) 1998-2008 Kasper Skaarhoj
+*  (c) 1998-2009 Kasper Skaarhoj
 *  All rights reserved
 *
 *  This script is part of the TYPO3 t3lib/ library provided by
@@ -45,9 +45,9 @@ function validateForm(theFormname,theFieldlist,goodMess,badMess,emailMess)	{
 				specialMode = theField;
 
 				index++;
-				theEregMsg = unescape(split(theFieldlist, ",", index));
+				theEregMsg = split(theFieldlist, ",", index);
 				index++;
-				theEreg = unescape(split(theFieldlist, ",", index));
+				theEreg = split(theFieldlist, ",", index);
 			} else if (theField == '_EMAIL')	{
 				specialMode = theField;
 			}
@@ -59,8 +59,8 @@ function validateForm(theFormname,theFieldlist,goodMess,badMess,emailMess)	{
 			}
 
 			index++;
-			theLabel = unescape(split(theFieldlist, ",", index));
-			theField = unescape(theField);
+			theLabel = split(theFieldlist, ",", index);
+			theField = theField;
 			if (formObject[theField])	{
 				var fObj = formObject[theField];
 				var type=fObj.type;
@@ -112,7 +112,7 @@ function validateForm(theFormname,theFieldlist,goodMess,badMess,emailMess)	{
 						var theRegEx_notValid = new RegExp("(@.*@)|(\.\.)|(@\.)|(\.@)|(^\.)", "gi");
 						var theRegEx_isValid = new RegExp("^.+\@[a-zA-Z0-9\-\.]+\.([a-zA-Z]{2,4}|[0-9]{1,3})$","");
 						if (!theRegEx_isValid.test(value))	{	// This part was supposed to be a part of the condition: " || theRegEx_notValid.test(value)" - but I couldn't make it work (Mozilla Firefox, linux) - Anyone knows why?
-							msg+="\n"+theLabel+' ('+(emailMess ? unescape(emailMess) : 'Email address not valid!')+')';
+							msg+="\n"+theLabel+' ('+(emailMess ? emailMess : 'Email address not valid!')+')';
 						}
 					break;
 					case "_EREG":
@@ -131,7 +131,7 @@ function validateForm(theFormname,theFieldlist,goodMess,badMess,emailMess)	{
 			theField = split(theFieldlist, ",", index);
 		}
 		if (msg)	{
-			var theBadMess = unescape(badMess);
+			var theBadMess = badMess;
 			if (!theBadMess)	{
 				theBadMess = "You must fill in these fields:";
 			}
@@ -139,7 +139,7 @@ function validateForm(theFormname,theFieldlist,goodMess,badMess,emailMess)	{
 			alert(theBadMess+msg);
 			return false;
 		} else {
-			var theGoodMess = unescape(goodMess);
+			var theGoodMess = goodMess;
 			if (theGoodMess)	{
 				alert(theGoodMess);
 			}

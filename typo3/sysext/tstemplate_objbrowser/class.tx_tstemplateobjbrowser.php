@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,12 +25,22 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /**
- * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ * $Id: class.tx_tstemplateobjbrowser.php 8170 2010-07-13 14:51:44Z steffenk $
  */
 
-require_once(PATH_t3lib."class.t3lib_extobjbase.php");
+$GLOBALS['LANG']->includeLLFile('EXT:tstemplate_objbrowser/locallang.xml');
 
+/**
+ * This class displays the submodule "TypoScript Object Browser" inside the Web > Template module
+ *
+ * @author		Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @package		TYPO3
+ * @subpackage	tx_tstemplateobjbrowser
+ */
 class tx_tstemplateobjbrowser extends t3lib_extobjbase {
+
 	function init(&$pObj,$conf)	{
 		parent::init($pObj,$conf);
 
@@ -38,24 +48,26 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 		$this->pObj->modMenu_setDefaultList.= ',ts_browser_fixedLgd,ts_browser_showComments';
 	}
 
-	function modMenu()	{
-		global $LANG;
-
+	function modMenu() {
 		$modMenu = array (
-			"ts_browser_type" => array(
-				"const" => "Constants",
-				"setup" => "Setup"
+			'ts_browser_type' => array(
+				'const' => $GLOBALS['LANG']->getLL('constants'),
+				'setup' => $GLOBALS['LANG']->getLL('setup')
 			),
-			"ts_browser_toplevel_setup" => array(
-				"0" => "ALL"
+			'ts_browser_toplevel_setup' => array(
+				'0' => $GLOBALS['LANG']->csConvObj->conv_case(
+					$GLOBALS['LANG']->charSet, $GLOBALS['LANG']->getLL('all'), 'toUpper'
+				)
 			),
-			"ts_browser_toplevel_const" => array(
-				"0" => "ALL"
+			'ts_browser_toplevel_const' => array(
+				'0' => $GLOBALS['LANG']->csConvObj->conv_case(
+					$GLOBALS['LANG']->charSet, $GLOBALS['LANG']->getLL('all'), 'toUpper'
+				)
 			),
-			"ts_browser_const" => array(
-				"0" => "Plain substitution (default)",
-				"subst" => "Substituted constants in green",
-				"const" => "UN-substituted constants in green"
+			'ts_browser_const' => array(
+				'0' => $GLOBALS['LANG']->getLL('plainSubstitution'),
+				'subst' => $GLOBALS['LANG']->getLL('substitutedGreen'),
+				'const' => $GLOBALS['LANG']->getLL('unsubstitutedGreen')
 			),
 			'ts_browser_regexsearch' => '1',
 			'ts_browser_fixedLgd' => '1',
@@ -182,7 +194,7 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 	 * @return	[type]		...
 	 */
 	function main()	{
-		global $SOBE,$BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
+		global $SOBE,$BE_USER,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
 		global $tmpl,$tplRow,$theConstants;
 
 		$POST = t3lib_div::_POST();
@@ -208,8 +220,10 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 		$bType= $this->pObj->MOD_SETTINGS["ts_browser_type"];
 		$existTemplate = $this->initialize_editor($this->pObj->id,$template_uid);		// initialize
 		if ($existTemplate)	{
-			$theOutput.=$this->pObj->doc->divider(5);
-			$theOutput.=$this->pObj->doc->section("Current template:",'<img '.t3lib_iconWorks::skinImg($BACK_PATH, t3lib_iconWorks::getIcon('sys_template', $tplRow)).' align="top" /> <b>'.$this->pObj->linkWrapTemplateTitle($tplRow["title"], ($bType=="setup"?"config":"constants")).'</b>'.htmlspecialchars(trim($tplRow["sitetitle"])?' - ('.$tplRow["sitetitle"].')':''),0,0);
+			$theOutput .= '<h4 style="margin-bottom:5px;">' . $GLOBALS['LANG']->getLL('currentTemplate') . ' <img ' .
+				t3lib_iconWorks::skinImg($BACK_PATH, t3lib_iconWorks::getIcon('sys_template', $tplRow)) . ' align="top" /> <b>' .
+				$this->pObj->linkWrapTemplateTitle($tplRow["title"], ($bType == "setup" ? "config" : "constants")) . '</b>' .
+				htmlspecialchars(trim($tplRow["sitetitle"]) ? ' - (' . $tplRow["sitetitle"] . ')' : '') . '</h4>';
 			if ($manyTemplatesMenu)	{
 				$theOutput.=$this->pObj->doc->section("",$manyTemplatesMenu);
 				$theOutput.=$this->pObj->doc->divider(5);
@@ -218,7 +232,6 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 			if ($POST["add_property"] || $POST["update_value"] || $POST["clear_object"])	{
 					// add property
 				$line="";
-		//		debug($POST);
 				if (is_array($POST["data"]))	{
 					$name = key($POST["data"]);
 					if ($POST['data'][$name]['name']!=='') {
@@ -227,34 +240,56 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 						$POST['add_property'] = 'Add';
 					}
 					if ($POST["add_property"])	{
-						$property = trim($POST["data"][$name]["name"]);
-						if (ereg_replace("[^a-zA-Z0-9_\.]*","",$property)!=$property)	{
-							$theOutput.=$this->pObj->doc->spacer(10);
-							$theOutput.=$this->pObj->doc->section($GLOBALS["TBE_TEMPLATE"]->rfw("BAD PROPERTY!"),'You must enter a property with characters a-z, A-Z and 0-9, no spaces!<BR>Nothing was updated!',0,0,0,1);
+						$property = trim($POST['data'][$name]['name']);
+						if (preg_replace('/[^a-zA-Z0-9_\.]*/', '', $property) != $property) {
+							$badPropertyMessage = t3lib_div::makeInstance(
+								't3lib_FlashMessage',
+								$GLOBALS['LANG']->getLL('noSpaces') . '<br />'
+									. $GLOBALS['LANG']->getLL('nothingUpdated'),
+								$GLOBALS['LANG']->getLL('badProperty'),
+								t3lib_FlashMessage::ERROR
+							);
+							t3lib_FlashMessageQueue::addMessage($badPropertyMessage);
 						} else {
-							$pline= $name.".".$property." = ".trim($POST["data"][$name]["propertyValue"]);
-							$theOutput.=$this->pObj->doc->spacer(10);
-							$theOutput.=$this->pObj->doc->section($GLOBALS["TBE_TEMPLATE"]->rfw("PROPERTY ADDED"),htmlspecialchars($pline),0,0,0,1);
+							$pline = $name . '.' . $property . ' = '
+								. trim($POST['data'][$name]['propertyValue']);
+
+							$propertyAddedMessage = t3lib_div::makeInstance(
+								't3lib_FlashMessage',
+								htmlspecialchars($pline),
+								$GLOBALS['LANG']->getLL('propertyAdded')
+							);
+							t3lib_FlashMessageQueue::addMessage($propertyAddedMessage);
+
 							$line.=chr(10).$pline;
 						}
-					}
-					elseif ($POST['update_value']) {
-						$pline= $name." = ".trim($POST["data"][$name]["value"]);
-						$theOutput.=$this->pObj->doc->spacer(10);
-						$theOutput.=$this->pObj->doc->section($GLOBALS["TBE_TEMPLATE"]->rfw("VALUE UPDATED"),htmlspecialchars($pline),0,0,0,1);
-						$line.=chr(10).$pline;
-					}
-					elseif ($POST['clear_object']) {
-						if ($POST["data"][$name]["clearValue"])	{
-							$pline= $name." >";
-							$theOutput.=$this->pObj->doc->spacer(10);
-							$theOutput.=$this->pObj->doc->section($GLOBALS["TBE_TEMPLATE"]->rfw("Object cleared"),htmlspecialchars($pline),0,0,0,1);
-							$line.=chr(10).$pline;
+					} elseif ($POST['update_value']) {
+						$pline = $name . " = " . trim($POST['data'][$name]['value']);
+
+						$updatedMessage = t3lib_div::makeInstance(
+							't3lib_FlashMessage',
+							htmlspecialchars($pline),
+							$GLOBALS['LANG']->getLL('valueUpdated')
+						);
+						t3lib_FlashMessageQueue::addMessage($updatedMessage);
+
+						$line .= chr(10) . $pline;
+					} elseif ($POST['clear_object']) {
+						if ($POST['data'][$name]['clearValue'])	{
+							$pline = $name . ' >';
+
+							$objectClearedMessage = t3lib_div::makeInstance(
+								't3lib_FlashMessage',
+								htmlspecialchars($pline),
+								$GLOBALS['LANG']->getLL('objectCleared')
+							);
+							t3lib_FlashMessageQueue::addMessage($objectClearedMessage);
+
+							$line .= chr(10) . $pline;
 						}
 					}
 				}
 				if ($line)	{
-					require_once (PATH_t3lib."class.t3lib_tcemain.php");
 					$saveId = $tplRow['_ORIG_uid'] ? $tplRow['_ORIG_uid'] : $tplRow['uid'];
 						// Set the data to be saved
 					$recData=array();
@@ -323,55 +358,65 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 			// EDIT A VALUE:
 		if ($this->pObj->sObj)	{
 			list($theSetup,$theSetupValue) = $tmpl->ext_getSetup($theSetup, ($this->pObj->sObj?$this->pObj->sObj:""));
-			$theOutput.=$this->pObj->doc->divider(5);
+
 			if ($existTemplate)	{
 					// Value
 				$out = '';
-				$out.= $this->pObj->sObj.' =<br />';
-				$out.='<input type="Text" name="data['.$this->pObj->sObj.'][value]" value="'.htmlspecialchars($theSetupValue).'"'.$GLOBALS["TBE_TEMPLATE"]->formWidth(40).'>';
-				$out.='<input type="Submit" name="update_value" value="Update">';
-				$theOutput.=$this->pObj->doc->section("Edit object/property value:",$out,0,0);
+				$out.= htmlspecialchars($this->pObj->sObj) . ' =<br />';
+				$out .= '<input type="Text" name="data[' . htmlspecialchars($this->pObj->sObj) . '][value]" value="' . htmlspecialchars($theSetupValue) . '"' . $GLOBALS['TBE_TEMPLATE']->formWidth(40) . ' />';
+				$out .= '<input type="Submit" name="update_value" value="' . $GLOBALS['LANG']->getLL('updateButton') . '" />';
+				$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('editProperty'), $out, 0, 0);
 
 					// Property
 				if (t3lib_extMgm::isLoaded("tsconfig_help"))	{
 					$url=$BACK_PATH."wizard_tsconfig.php?mode=tsref&onlyProperty=1";
 					$params=array();
 					$params["formName"]="editForm";
-					$params["itemName"]="data[".$this->pObj->sObj."][name]";
-					$params["itemValue"]="data[".$this->pObj->sObj."][propertyValue]";
-					$TSicon='<a href="#" onClick="vHWin=window.open(\''.$url.t3lib_div::implodeArrayForUrl("",array("P"=>$params)).'\',\'popUp'.$md5ID.'\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;"><img src="'.$BACK_PATH.'gfx/wizard_tsconfig_s.gif" width="22" height="16" border="0" class="absmiddle" hspace=2 title="TSref reference"></a>';
+					$params["itemName"]="data[" . htmlspecialchars($this->pObj->sObj) . "][name]";
+					$params["itemValue"]="data[" . htmlspecialchars($this->pObj->sObj) . "][propertyValue]";
+					$TSicon = '<a href="#" onClick="vHWin=window.open(\'' . $url . t3lib_div::implodeArrayForUrl("", array("P"=>$params)) . '\',\'popUp' . $md5ID . '\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;"><img src="' . $BACK_PATH . 'gfx/wizard_tsconfig_s.gif" width="22" height="16" border="0" class="absmiddle" hspace=2 title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:tsRef') . '"></a>';
 				} else $TSicon="";
-				$out="";
-				$out="<nobr>".$this->pObj->sObj.".";
-				$out.='<input type="Text" name="data['.$this->pObj->sObj.'][name]"'.$GLOBALS["TBE_TEMPLATE"]->formWidth(20).'>'.$TSicon.' = </nobr><BR>';
-				$out.='<input type="Text" name="data['.$this->pObj->sObj.'][propertyValue]"'.$GLOBALS["TBE_TEMPLATE"]->formWidth(40).'>';
-				$out.='<input type="Submit" name="add_property" value="Add">';
+				$out = '';
+				$out = '<nobr>' . htmlspecialchars($this->pObj->sObj) . '.';
+				$out .= '<input type="Text" name="data[' . htmlspecialchars($this->pObj->sObj) . '][name]"' . $GLOBALS['TBE_TEMPLATE']->formWidth(20) . ' />' . $TSicon . ' = </nobr><br />';
+				$out .= '<input type="Text" name="data[' . htmlspecialchars($this->pObj->sObj) . '][propertyValue]"' . $GLOBALS['TBE_TEMPLATE']->formWidth(40) . ' />';
+				$out .= '<input type="Submit" name="add_property" value="' . $GLOBALS['LANG']->getLL('addButton') . '" />';
 
-
-
-				$theOutput.=$this->pObj->doc->spacer(20);
-				$theOutput.=$this->pObj->doc->section("Add object property:",$out,0,0);
+				$theOutput .= $this->pObj->doc->spacer(20);
+				$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('addProperty'), $out, 0, 0);
 
 					// clear
-				$out="";
-				$out=$this->pObj->sObj." <b>CLEAR?</b> &nbsp;&nbsp;";
-				$out.='<input type="Checkbox" name="data['.$this->pObj->sObj.'][clearValue]" value="1">';
-				$out.='<input type="Submit" name="clear_object" value="Clear">';
-				$theOutput.=$this->pObj->doc->spacer(20);
-				$theOutput.=$this->pObj->doc->section("Clear object:",$out,0,0);
+				$out = '';
+				$out = htmlspecialchars($this->pObj->sObj) . " <b>" .
+					$GLOBALS['LANG']->csConvObj->conv_case(
+						$GLOBALS['LANG']->charSet, $GLOBALS['LANG']->getLL('clear'), 'toUpper'
+					) . "</b> &nbsp;&nbsp;";
+				$out .= '<input type="Checkbox" name="data[' . htmlspecialchars($this->pObj->sObj) . '][clearValue]" value="1" />';
+				$out .= '<input type="Submit" name="clear_object" value="' . $GLOBALS['LANG']->getLL('clearButton') . '" />';
+				$theOutput .= $this->pObj->doc->spacer(20);
+				$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('clearObject'), $out, 0, 0);
 
-				$theOutput.=$this->pObj->doc->spacer(10);
+				$theOutput .= $this->pObj->doc->spacer(10);
 			} else {
-				$theOutput.=$this->pObj->doc->section("EDIT:",$GLOBALS["TBE_TEMPLATE"]->rfw("You cannot edit properties and values, if there's no current template."),0,0,0,1);
+				$noTemplateMessage = t3lib_div::makeInstance(
+					't3lib_FlashMessage',
+					$GLOBALS['LANG']->getLL('noCurrentTemplate'),
+					$GLOBALS['LANG']->getLL('edit'),
+					t3lib_FlashMessage::ERROR
+				);
+
+				t3lib_FlashMessageQueue::addMessage($noTemplateMessage);
 			}
 				// Links:
-			$out='';
+			$out = '';
 			if (!$this->pObj->MOD_SETTINGS['ts_browser_TLKeys_'.$bType][$this->pObj->sObj])	{
 				if (count($theSetup))	{
-					$out = '<a href="index.php?id='.$this->pObj->id.'&addKey['.$this->pObj->sObj.']=1&SET[ts_browser_toplevel_'.$bType.']='.rawurlencode($this->pObj->sObj).'"><b>Add key</b></a> "'.$this->pObj->sObj.'" to Object List (OL)';
+					$out = '<a href="index.php?id=' . $this->pObj->id . '&addKey[' . rawurlencode($this->pObj->sObj) . ']=1&SET[ts_browser_toplevel_' . $bType . ']=' . rawurlencode($this->pObj->sObj) . '">';
+					$out .= sprintf($GLOBALS['LANG']->getLL('addKey'), htmlspecialchars($this->pObj->sObj));
 				}
 			} else {
-				$out = '<a href="index.php?id='.$this->pObj->id.'&addKey['.$this->pObj->sObj.']=0&SET[ts_browser_toplevel_'.$bType.']=0"><b>Remove key</b></a> "'.$this->pObj->sObj.'" from Object List (OL)';
+				$out = '<a href="index.php?id=' . $this->pObj->id . '&addKey[' . rawurlencode($this->pObj->sObj) . ']=0&SET[ts_browser_toplevel_' . $bType . ']=0">';
+				$out .= sprintf($GLOBALS['LANG']->getLL('removeKey'), htmlspecialchars($this->pObj->sObj));
 			}
 			if ($out)	{
 				$theOutput.=$this->pObj->doc->divider(5);
@@ -379,44 +424,32 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 			}
 
 				// back
-			$out = "< Back";
+			$out = $GLOBALS['LANG']->getLL('back');
 			$out = '<a href="index.php?id='.$this->pObj->id.'"><b>'.$out.'</b></a>';
 			$theOutput.=$this->pObj->doc->divider(5);
 			$theOutput.=$this->pObj->doc->section("",$out);
 
 		} else {
 			$tmpl->tsbrowser_depthKeys=$this->pObj->MOD_SETTINGS["tsbrowser_depthKeys_".$bType];
-		//	debug($tmpl->tsbrowser_depthKeys);
 
 			if (t3lib_div::_POST('search') && t3lib_div::_POST('search_field'))	{		// If any POST-vars are send, update the condition array
 				$tmpl->tsbrowser_depthKeys = $tmpl->ext_getSearchKeys($theSetup, '', t3lib_div::_POST('search_field'), array());
-		//		debug($tmpl->tsbrowser_depthKeys);
-		//		debug($tmpl->tsbrowser_searchKeys);
 			}
 
+			$menu = '<div class="tsob-menu"><label>' . $GLOBALS['LANG']->getLL('browse') . '</label>';
+			$menu .= t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[ts_browser_type]', $bType, $this->pObj->MOD_MENU['ts_browser_type']);
+			$menu .= '<label for="ts_browser_toplevel_' . $bType . '">' . $GLOBALS['LANG']->getLL('objectList') . '</label>';
+			$menu .= t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[ts_browser_toplevel_' . $bType . ']', $this->pObj->MOD_SETTINGS['ts_browser_toplevel_' . $bType], $this->pObj->MOD_MENU['ts_browser_toplevel_' . $bType]);
 
+			//search
+			$menu .= '<label for="search_field">' . $GLOBALS['LANG']->getLL('search') .'</label>';
+			$menu .= '<input type="Text" name="search_field" id="search_field" value="' . htmlspecialchars($POST['search_field']) . '"' . $GLOBALS['TBE_TEMPLATE']->formWidth(20) . '/>';
+			$menu .= '<input type="Submit" name="search" class="tsob-search-submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:search') . '" />';
+			$menu .= t3lib_BEfunc::getFuncCheck($this->pObj->id, 'SET[ts_browser_regexsearch]', $this->pObj->MOD_SETTINGS['ts_browser_regexsearch'], '', '', 'id="checkTs_browser_regexsearch"');
+			$menu .= '<label for="checkTs_browser_regexsearch">' . $GLOBALS['LANG']->getLL('regExp') . '</label>';
+			$menu .= '</div>';
 
-			// Expanding menu
-		/*	if (is_array($theSetup))	{
-				reset($theSetup);
-				while(list($tkey,$tval)=each($theSetup))	{
-					if (substr($tkey,-1)==".")	{
-						$tkey=substr($tkey,0,-1);
-					}
-					if ($theSetup[$tkey."."] && $tkey!="types" && $tkey!="TSConstantEditor")	{
-						$this->pObj->MOD_MENU["ts_browser_toplevel_".$bType][$tkey]=$tkey;
-					}
-				}
-			}*/
-
-			$theOutput.=$this->pObj->doc->spacer(5);
-			$theOutput.=$this->pObj->doc->section('Object tree:','',0,1);
-
-			$menu = 'Browse: '.t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[ts_browser_type]',$bType,$this->pObj->MOD_MENU['ts_browser_type']);
-			$menu.= '&nbsp;&nbsp;OL: '.t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[ts_browser_toplevel_'.$bType.']',$this->pObj->MOD_SETTINGS['ts_browser_toplevel_'.$bType],$this->pObj->MOD_MENU['ts_browser_toplevel_'.$bType]);
-			$theOutput.=$this->pObj->doc->section('','<NOBR>'.$menu.'</NOBR>');
-
-
+			$theOutput .= $this->pObj->doc->section('', '<nobr>' . $menu . '</nobr>');
 			$theKey=$this->pObj->MOD_SETTINGS["ts_browser_toplevel_".$bType];
 			if (!$theKey || !str_replace("-","",$theKey))	{$theKey="";}
 			list($theSetup,$theSetupValue) = $tmpl->ext_getSetup($theSetup, ($this->pObj->MOD_SETTINGS['ts_browser_toplevel_'.$bType]?$this->pObj->MOD_SETTINGS['ts_browser_toplevel_'.$bType]:''));
@@ -433,21 +466,32 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 				while(list(,$inf)=each($tmpl->parserErrors[$pEkey]))	{
 					$errMsg[]=($inf[1]).": &nbsp; &nbsp;".$inf[0];
 				}
-				$theOutput.=$this->pObj->doc->spacer(10);
-				$theOutput.=$this->pObj->doc->section($GLOBALS["TBE_TEMPLATE"]->rfw("Errors and warnings"),implode($errMsg,"<br>"),0,1,0,1);
+				$theOutput .= $this->pObj->doc->spacer(10);
+
+				$flashMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						implode($errMsg, '<br />'),
+						$GLOBALS['LANG']->getLL('errorsWarnings'),
+						t3lib_FlashMessage::ERROR
+					);
+				$theOutput .= $flashMessage->render();
 			}
 
 
 
 			if (isset($this->pObj->MOD_SETTINGS["ts_browser_TLKeys_".$bType][$theKey]))	{
-				$remove='<td width="1%" nowrap><a href="index.php?id='.$this->pObj->id.'&addKey['.$theKey.']=0&SET[ts_browser_toplevel_'.$bType.']=0"><b>Remove key from OL</b></a></td>';
+				$remove = '<td width="1%" nowrap><a href="index.php?id=' . $this->pObj->id . '&addKey[' . $theKey . ']=0&SET[ts_browser_toplevel_' . $bType . ']=0"><b>' . $GLOBALS['LANG']->getLL('removeKey') . '</b></a></td>';
 			} else {
-				$remove='';
+				$remove = '';
 			}
-			$label = $theKey ? $theKey : ($bType=="setup"?"SETUP ROOT":"CONSTANTS ROOT");
-			$theOutput.=$this->pObj->doc->spacer(15);
-			$theOutput.=$this->pObj->doc->sectionEnd();
-			$theOutput.='<table border=0 cellpadding=1 cellspacing=0 id="typo3-objectBrowser">
+			$label = $theKey ? $theKey :
+				($bType == 'setup' ?
+					$GLOBALS['LANG']->csConvObj->conv_case($GLOBALS['LANG']->charSet, $GLOBALS['LANG']->getLL('setupRoot'), 'toUpper') :
+					$GLOBALS['LANG']->csConvObj->conv_case($GLOBALS['LANG']->charSet, $GLOBALS['LANG']->getLL('constantRoot'), 'toUpper')
+				);
+			$theOutput .= $this->pObj->doc->spacer(15);
+			$theOutput .= $this->pObj->doc->sectionEnd();
+			$theOutput .= '<table border="0" cellpadding="1" cellspacing="0" id="typo3-objectBrowser" width="100%">
 					<tr>
 						<td><img src=clear.gif width=4 height=1></td>
 						<td class="bgColor2">
@@ -462,69 +506,43 @@ class tx_tstemplateobjbrowser extends t3lib_extobjbase {
 				</table>
 			';
 
+			// second row options
+			$menu = '<div class="tsob-menu-row2">';
+			$menu .= t3lib_BEfunc::getFuncCheck($this->pObj->id, 'SET[ts_browser_showComments]', $this->pObj->MOD_SETTINGS['ts_browser_showComments'], '', '', 'id="checkTs_browser_showComments"');
+			$menu .= '<label for="checkTs_browser_showComments">' . $GLOBALS['LANG']->getLL('displayComments') . '</label>';
+			$menu .= t3lib_BEfunc::getFuncCheck($this->pObj->id, 'SET[ts_browser_alphaSort]', $this->pObj->MOD_SETTINGS['ts_browser_alphaSort'], '', '', 'id="checkTs_browser_alphaSort"');
+			$menu .= '<label for="checkTs_browser_alphaSort">' . $GLOBALS['LANG']->getLL('sortAlphabetically') . '</label>';
+			$menu .= t3lib_BEfunc::getFuncCheck($this->pObj->id, 'SET[ts_browser_fixedLgd]', $this->pObj->MOD_SETTINGS["ts_browser_fixedLgd"], '', '', 'id="checkTs_browser_fixedLgd"');
+			$menu .= '<label for="checkTs_browser_fixedLgd">' . $GLOBALS['LANG']->getLL('cropLines') . '</label>';
+			if ($bType == 'setup' && !$this->pObj->MOD_SETTINGS['ts_browser_fixedLgd'])	{
+				$menu .= '<br /><br /><label>' . $GLOBALS['LANG']->getLL('displayConstants') . '</label>';
+				$menu .= t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[ts_browser_const]', $this->pObj->MOD_SETTINGS['ts_browser_const'], $this->pObj->MOD_MENU['ts_browser_const']);
+
+			}
+			$menu .= '</div>';
+
+			$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('displayOptions'), '<nobr>' . $menu . '</nobr>', 0, 1);
 
 				// Conditions:
 			if (is_array($tmpl->sections))	{
-				$theOutput.=$this->pObj->doc->divider(15);
+				$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('conditions'), '', 0, 1);
 
-				$out="";
+				$out = '';
 				reset($tmpl->sections);
 				while(list($key,$val)=each($tmpl->sections))	{
-					$out.='<tr><td><input type="Checkbox" name="conditions['.$key.']" id="check'.$key.'" value="'.htmlspecialchars($val).'"'.($this->pObj->MOD_SETTINGS["tsbrowser_conditions"][$key]?" checked":"").'></td><td nowrap><label for="check'.$key.'">'.$tmpl->substituteCMarkers(htmlspecialchars($val)).'</label>&nbsp;&nbsp;</td></tr>';
+					$out .= '<tr><td nowrap class="tsob-conditions"><input type="checkbox" name="conditions[' . $key . ']" id="check' . $key . '" value="' . htmlspecialchars($val) . '"' . ($this->pObj->MOD_SETTINGS['tsbrowser_conditions'][$key] ? " checked" : "") . ' />';
+					$out .= '<label for="check' .$key . '">' . $tmpl->substituteCMarkers(htmlspecialchars($val)) . '</label></td></tr>';
 				}
 				$theOutput.='
-					<table border=0 cellpadding=1 cellspacing=0>
-						<tr>
-							<td><img src=clear.gif width=4 height=1></td>
-							<td class="bgColor2">
-								<table border=0 cellpadding=0 cellspacing=0 class="bgColor4">'.$out.'
-								<tr>
-									<td>&nbsp;</td>
-									<td><img src=clear.gif height=10 width=240><BR><input type="Submit" name="Submit" value="Set conditions"><BR></td>
-								</tr>
+								<table border="0" cellpadding="0" cellspacing="0" class="bgColor4">'.$out.'
+						<td><br /><input type="Submit" name="Submit" value="' . $GLOBALS['LANG']->getLL('setConditions') . '" /></td>
 								</table>
-							</td>
-						</tr>
-					</table>
 
 				';
 			}
 
-				// Search:
-			$theOutput.='<br>
-
-				<table border=0 cellpadding=1 cellspacing=0>
-					<tr>
-						<td><img src=clear.gif width=4 height=1></td>
-						<td class="bgColor2">
-							<table border=0 cellpadding=0 cellspacing=0 class="bgColor4">
-							<tr>
-								<td>&nbsp;Enter search phrase:&nbsp;&nbsp;<input type="Text" name="search_field" value="'.htmlspecialchars($POST["search_field"]).'"'.$GLOBALS["TBE_TEMPLATE"]->formWidth(20).'></td>
-								<td><input type="Submit" name="search" value="Search"></td>
-							</tr>
-							<tr>
-								<td>&nbsp;<label for="checkTs_browser_regexsearch">Use ereg(), not stristr():</label>&nbsp;&nbsp;'.t3lib_BEfunc::getFuncCheck($this->pObj->id,"SET[ts_browser_regexsearch]",$this->pObj->MOD_SETTINGS["ts_browser_regexsearch"],'','','id="checkTs_browser_regexsearch"').'</td>
-								<td>&nbsp;</td>
-							</tr>
-							</table>
-						</td>
-					</tr>
-				</table>
-			<br>
-			';
-
-				// Menu in the bottom:
-			$menu = '<label for="checkTs_browser_fixedLgd">Crop lines:</label> '.t3lib_BEfunc::getFuncCheck($this->pObj->id,"SET[ts_browser_fixedLgd]",$this->pObj->MOD_SETTINGS["ts_browser_fixedLgd"],'','','id="checkTs_browser_fixedLgd"');
-			$menu .= '<br /><label for="checkTs_browser_showComments">Display comments:</label> '.t3lib_BEfunc::getFuncCheck($this->pObj->id,'SET[ts_browser_showComments]',$this->pObj->MOD_SETTINGS['ts_browser_showComments']);
-			$menu .= '<br /><label for="checkTs_browser_alphaSort">Sort alphabetically:</label> '.t3lib_BEfunc::getFuncCheck($this->pObj->id,'SET[ts_browser_alphaSort]',$this->pObj->MOD_SETTINGS['ts_browser_alphaSort'],'','','id="checkTs_browser_alphaSort"');
-		
-			if ($bType=="setup")	{
-				$menu.= "<br />Constants display: ".t3lib_BEfunc::getFuncMenu($this->pObj->id,"SET[ts_browser_const]",$this->pObj->MOD_SETTINGS["ts_browser_const"],$this->pObj->MOD_MENU["ts_browser_const"]);
-			}
-			$theOutput.=$this->pObj->doc->section("",'<NOBR>'.$menu.'</NOBR>');
-
 				// Ending section:
-			$theOutput.=$this->pObj->doc->sectionEnd();
+			$theOutput .= $this->pObj->doc->sectionEnd();
 		}
 		return $theOutput;
 	}

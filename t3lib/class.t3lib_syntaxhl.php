@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a class for various syntax highlighting.
  *
- * $Id: class.t3lib_syntaxhl.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_syntaxhl.php 5482 2009-05-22 19:08:30Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -71,7 +71,6 @@
 
 
 
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
 
 
 /**
@@ -380,7 +379,7 @@ class t3lib_syntaxhl {
 		$token = md5(microtime());
 
 			// Markup all tag names with token.
-		$markUpStr = ereg_replace('<([[:alnum:]_]+)[^>]*>',$token.'\1'.$token,$str);
+		$markUpStr = preg_replace('/<([[:alnum:]_]+)[^>]*>/', $token . '${1}' . $token, $str);
 
 			// Splitting by token:
 		$parts = explode($token,$markUpStr);
@@ -428,4 +427,5 @@ class t3lib_syntaxhl {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_syntaxhl.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_syntaxhl.php']);
 }
+
 ?>

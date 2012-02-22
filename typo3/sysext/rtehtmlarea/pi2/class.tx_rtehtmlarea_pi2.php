@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,12 +29,10 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * $Id: class.tx_rtehtmlarea_pi2.php 4670 2009-01-08 21:10:33Z stan $  *
+ * $Id: class.tx_rtehtmlarea_pi2.php 6313 2009-11-02 23:23:43Z stan $  *
  */
 
 require_once(t3lib_extMgm::extPath('rtehtmlarea').'class.tx_rtehtmlarea_base.php');
-require_once(PATH_t3lib.'class.t3lib_parsehtml_proc.php');
-require_once(PATH_t3lib.'class.t3lib_befunc.php');
 
 class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 
@@ -75,16 +73,16 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 	 */
 	function drawRTE($parentObject,$table,$field,$row,$PA,$specConf,$thisConfig,$RTEtypeVal,$RTErelPath,$thePidValue) {
 		global $TSFE, $TYPO3_CONF_VARS, $TYPO3_DB;
-		
-		$this->TCEform =& $parentObject;
+
+		$this->TCEform = $parentObject;
 		$this->client = $this->clientInfo();
 		$this->typoVersion = t3lib_div::int_from_ver(TYPO3_version);
-		
+
 		/* =======================================
 		 * INIT THE EDITOR-SETTINGS
 		 * =======================================
 		 */
-		 
+
 			// first get the http-path to typo3:
 		$this->httpTypo3Path = substr( substr( t3lib_div::getIndpEnv('TYPO3_SITE_URL'), strlen( t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST') ) ), 0, -1 );
 		if (strlen($this->httpTypo3Path) == 1) {
@@ -98,39 +96,39 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		$this->siteURL = t3lib_div::getIndpEnv('TYPO3_SITE_URL');
 			// Get the host URL
 		$this->hostURL = t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST');
-		
+
 			// Element ID + pid
 		$this->elementId = $PA['itemFormElName'];
 		$this->elementParts[0] = $table;
 		$this->elementParts[1] = $row['uid'];
 		$this->tscPID = $thePidValue;
 		$this->thePid = $thePidValue;
-		
+
 			// Record "type" field value:
 		$this->typeVal = $RTEtypeVal; // TCA "type" value for record
-		
+
 			// RTE configuration
 		$pageTSConfig = $TSFE->getPagesTSconfig();
 		if (is_array($pageTSConfig) && is_array($pageTSConfig['RTE.'])) {
 			$this->RTEsetup = $pageTSConfig['RTE.'];
 		}
-		
+
 		if (is_array($thisConfig) && !empty($thisConfig)) {
 			$this->thisConfig = $thisConfig;
 		} else if (is_array($this->RTEsetup['default.']) && is_array($this->RTEsetup['default.']['FE.'])) {
 			$this->thisConfig = $this->RTEsetup['default.']['FE.'];
 		}
-		
+
 			// Special configuration (line) and default extras:
 		$this->specConf = $specConf;
-		
+
 		if ($this->thisConfig['forceHTTPS']) {
 			$this->httpTypo3Path = preg_replace('/^(http|https)/', 'https', $this->httpTypo3Path);
 			$this->extHttpPath = preg_replace('/^(http|https)/', 'https', $this->extHttpPath);
 			$this->siteURL = preg_replace('/^(http|https)/', 'https', $this->siteURL);
 			$this->hostURL = preg_replace('/^(http|https)/', 'https', $this->hostURL);
 		}
-		
+
 		/* =======================================
 		 * LANGUAGES & CHARACTER SETS
 		 * =======================================
@@ -142,8 +140,6 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		if ($this->language == 'default' || !$this->language)	{
 			$this->language = 'en';
 		}
-		
-		$this->contentISOLanguage = $TYPO3_CONF_VARS['EXTCONF']['rtehtmlarea']['defaultDictionary'];
 		$this->contentLanguageUid = ($row['sys_language_uid'] > 0) ? $row['sys_language_uid'] : 0;
 		if (t3lib_extMgm::isLoaded('static_info_tables')) {
 			if ($this->contentLanguageUid) {
@@ -161,7 +157,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 					$this->contentTypo3Language = strtolower(trim($languageRow['lg_typo3']));
 				}
 			} else {
-				$this->contentISOLanguage = trim($TYPO3_CONF_VARS['EXTCONF'][$this->ID]['defaultDictionary']) ? trim($TYPO3_CONF_VARS['EXTCONF'][$this->ID]['defaultDictionary']) : 'en';
+				$this->contentISOLanguage = $GLOBALS['TSFE']->sys_language_isocode ? $GLOBALS['TSFE']->sys_language_isocode : 'en';
 				$selectFields = 'lg_iso_2, lg_typo3';
 				$tableAB = 'static_languages';
 				$whereClause = 'lg_iso_2 = ' . $TYPO3_DB->fullQuoteStr(strtoupper($this->contentISOLanguage), $tableAB);
@@ -171,78 +167,64 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 				}
 			}
 		}
-		
-		$this->contentISOLanguage = $this->contentISOLanguage?$this->contentISOLanguage:$this->language;
-		$this->contentTypo3Language = $this->contentTypo3Language?$this->contentTypo3Language:$TSFE->lang;
+		$this->contentISOLanguage = $this->contentISOLanguage ? $this->contentISOLanguage : ($GLOBALS['TSFE']->sys_language_isocode ? $GLOBALS['TSFE']->sys_language_isocode : 'en');
+		$this->contentTypo3Language = $this->contentTypo3Language ? $this->contentTypo3Language : $GLOBALS['TSFE']->lang;
 		if ($this->contentTypo3Language == 'default') {
 			$this->contentTypo3Language = 'en';
 		}
-		
+
 			// Character set
 		$this->charset = $TSFE->renderCharset;
 		$this->OutputCharset  = $TSFE->metaCharset ? $TSFE->metaCharset : $TSFE->renderCharset;
-		
+
 			// Set the charset of the content
 		$this->contentCharset = $TSFE->csConvObj->charSetArray[$this->contentTypo3Language];
 		$this->contentCharset = $this->contentCharset ? $this->contentCharset : 'iso-8859-1';
 		$this->contentCharset = trim($TSFE->config['config']['metaCharset']) ? trim($TSFE->config['config']['metaCharset']) : $this->contentCharset;
-		
+
 		/* =======================================
 		 * TOOLBAR CONFIGURATION
 		 * =======================================
 		 */
-		
-			// htmlArea plugins list
-		$this->pluginEnabledArray = t3lib_div::trimExplode(',', $this->pluginList, 1);
-		$this->enableRegisteredPlugins();
-		$hidePlugins = array();
-		if ($this->client['BROWSER'] == 'opera') {
-			$hidePlugins[] = 'ContextMenu';
-			$this->thisConfig['hideTableOperationsInToolbar'] = 0;
-			$this->thisConfig['disableEnterParagraphs'] = 1;
-		}
-		$this->pluginEnabledArray = array_diff($this->pluginEnabledArray, $hidePlugins);
-		
-			// Toolbar
-		$this->settoolbar();
-		
-			// Check if some plugins need to be disabled
-		$this->setPlugins();
-		
-			// Merge the list of enabled plugins with the lists from the previous RTE editing areas on the same form
-		$this->pluginEnabledCumulativeArray[$this->TCEform->RTEcounter] = $this->pluginEnabledArray;
-		if ($this->TCEform->RTEcounter > 1 && isset($this->pluginEnabledCumulativeArray[$this->TCEform->RTEcounter-1]) && is_array($this->pluginEnabledCumulativeArray[$this->TCEform->RTEcounter-1])) {
-			$this->pluginEnabledCumulativeArray[$this->TCEform->RTEcounter] = array_unique(array_values(array_merge($this->pluginEnabledArray,$this->pluginEnabledCumulativeArray[$this->TCEform->RTEcounter-1])));
-		}
-		
+		$this->initializeToolbarConfiguration();
+
 		/* =======================================
 		 * SET STYLES
 		 * =======================================
 		 */
-		 
-		$RTEWidth = 460+($this->TCEform->docLarge ? 150 : 0);
-		$RTEHeight = 380;
+
+		$width = 460+($this->TCEform->docLarge ? 150 : 0);
+		if (isset($this->thisConfig['RTEWidthOverride'])) {
+			if (strstr($this->thisConfig['RTEWidthOverride'], '%')) {
+				if ($this->client['BROWSER'] != 'msie') {
+					$width = (intval($this->thisConfig['RTEWidthOverride']) > 0) ? $this->thisConfig['RTEWidthOverride'] : '100%';
+				}
+			} else {
+				$width = (intval($this->thisConfig['RTEWidthOverride']) > 0) ? intval($this->thisConfig['RTEWidthOverride']) : $width;
+			}
+		}
+		$RTEWidth = strstr($width, '%') ? $width : $width . 'px';
+		$editorWrapWidth = strstr($width, '%') ? $width :  ($width+2) . 'px';
+		$height = 380;
 		$RTEHeightOverride = intval($this->thisConfig['RTEHeightOverride']);
-		$RTEHeight = ($RTEHeightOverride > 0) ? $RTEHeightOverride : $RTEHeight;
-		$editorWrapWidth = $RTEWidth . 'px';
-		$editorWrapHeight = $RTEHeight . 'px';
-		$this->RTEWrapStyle = $this->RTEWrapStyle ? $this->RTEWrapStyle : ($this->RTEdivStyle ? $this->RTEdivStyle : ('height:' . ($RTEHeight+2) . 'px; width:'. ($RTEWidth+2) . 'px;'));		
-		$this->RTEdivStyle = $this->RTEdivStyle ? $this->RTEdivStyle : 'position:relative; left:0px; top:0px; height:' . $RTEHeight . 'px; width:'.$RTEWidth.'px; border: 1px solid black;';
-		$this->toolbar_level_size = $RTEWidth;
+		$height = ($RTEHeightOverride > 0) ? $RTEHeightOverride : $height;
+		$RTEHeight = $height . 'px';
+		$editorWrapHeight = ($height+2) . 'px';
+		$this->RTEWrapStyle = $this->RTEWrapStyle ? $this->RTEWrapStyle : ($this->RTEdivStyle ? $this->RTEdivStyle : ('height:' . $editorWrapHeight . '; width:'. $editorWrapWidth . ';'));
+		$this->RTEdivStyle = $this->RTEdivStyle ? $this->RTEdivStyle : 'position:relative; left:0px; top:0px; height:' . $RTEHeight . '; width:'.$RTEWidth.'; border: 1px solid black;';
 
 		/* =======================================
 		 * LOAD JS, CSS and more
 		 * =======================================
 		 */
-			// Preloading the pageStyle
-		$GLOBALS['TSFE']->additionalHeaderData['rtehtmlarea-contentCSS'] = $this->getPageStyle();
-			// Loading RTE skin style sheets
-		$GLOBALS['TSFE']->additionalHeaderData['rtehtmlarea-skin'] = $this->getSkin();
+			// Preloading the pageStyle and including RTE skin stylesheets
+		$this->addPageStyle();
+		$this->addSkin();
 			// Loading JavaScript files and code
 		if ($this->TCEform->RTEcounter == 1) {
-			$this->TCEform->additionalJS_initial = $this->loadJSfiles($this->TCEform->RTEcounter);
 			$this->TCEform->additionalJS_pre['rtehtmlarea-loadJScode'] = $this->loadJScode($this->TCEform->RTEcounter);
 		}
+		$this->TCEform->additionalJS_initial = $this->loadJSfiles($this->TCEform->RTEcounter);
 
 		/* =======================================
 		 * DRAW THE EDITOR
@@ -250,14 +232,14 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		 */
 			// Transform value:
 		$value = $this->transformContent('rte',$PA['itemFormElValue'],$table,$field,$row,$specConf,$thisConfig,$RTErelPath,$thePidValue);
-		
+
 			// Further content transformation by registered plugins
 		foreach ($this->registeredPlugins as $pluginId => $plugin) {
 			if ($this->isPluginEnabled($pluginId) && method_exists($plugin, "transformContent")) {
 				$value = $plugin->transformContent($value);
 			}
 		}
-		
+
 			// Register RTE windows:
 		$this->TCEform->RTEwindows[] = $PA['itemFormElName'];
 		$textAreaId = htmlspecialchars($PA['itemFormElName']);
@@ -277,7 +259,22 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 			';
 		return $item;
 	}
-	
+
+	/**
+	 * Add style sheet file to document header
+	 *
+	 * @param	string		$key: some key identifying the style sheet
+	 * @param	string		$href: uri to the style sheet file
+	 * @param	string		$title: value for the title attribute of the link element
+	 * @return	string		$relation: value for the rel attribute of the link element
+	 * @return	void
+	 */
+	protected function addStyleSheet($key, $href, $title='', $relation='stylesheet') {
+		if (!isset($GLOBALS['TSFE']->additionalHeaderData[$key])) {
+			$GLOBALS['TSFE']->additionalHeaderData[$key] = '<link rel="' . $relation . '" type="text/css" href="' . $href . '"' . ($title ? (' title="' . $title . '"') : '') . ' />';
+		}
+	}
+
 	/**
 	 * Return the JS-Code for copy the HTML-Code from the editor in the hidden input field.
 	 * This is for submit function from the form.
@@ -293,7 +290,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		if (RTEarea[\'' . $textareaId . '\'] && !RTEarea[\'' . $textareaId . '\'].deleted) {
 			fields = document.getElementsByName(\'' . $textareaId . '\');
 			field = fields.item(0);
-			if (field && field.nodeName.toLowerCase() == \'textarea\') { 
+			if (field && field.nodeName.toLowerCase() == \'textarea\') {
 				field.value = RTEarea[\'' . $textareaId . '\'][\'editor\'].getHTML();
 			}
 		} else {

@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004 Robert Lemke (robert@typo3.org)
-*  (c) 2006 Karsten Dambekalns (karsten@typo3.org)
+*  (c) 2004-2009 Robert Lemke (robert@typo3.org)
+*  (c) 2006-2009 Karsten Dambekalns (karsten@typo3.org)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  */
 class tx_adodb_tceforms {
 
-	function itemsProcFunc_dbtype(&$params, &$pObj)	{
+	function itemsProcFunc_dbtype(&$params, $pObj) {
 		if (is_callable('sybase_get_last_message')) $params['items'][] = array ('Sybase', 'sybase');
 		if (is_callable('odbc_error')) $params['items'][] = array ('ODBC', 'odbc');
 		if (is_callable('mysql_error')) $params['items'][] = array ('MySQL', 'mysql');

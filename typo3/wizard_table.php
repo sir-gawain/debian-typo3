@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Wizard to help make tables (eg. for tt_content elements) of type "table".
  * Each line is a table row, each cell divided by a |
  *
- * $Id: wizard_table.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: wizard_table.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -119,8 +119,6 @@ class SC_wizard_table {
 	 * @return	void
 	 */
 	function init()	{
-		global $BACK_PATH;
-
 			// GPvars:
 		$this->P = t3lib_div::_GP('P');
 		$this->TABLECFG = t3lib_div::_GP('TABLE');
@@ -133,9 +131,9 @@ class SC_wizard_table {
 		$this->inputStyle=isset($this->TABLECFG['textFields']) ? $this->TABLECFG['textFields'] : 1;
 
 			// Document template object:
-		$this->doc = t3lib_div::makeInstance('mediumDoc');
-		$this->doc->docType = 'xhtml_trans';
-		$this->doc->backPath = $BACK_PATH;
+		$this->doc = t3lib_div::makeInstance('template');
+		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->setModuleTemplate('templates/wizard_table.html');
 		$this->doc->JScode=$this->doc->wrapScriptTags('
 			function jumpToUrl(URL,formEl)	{	//
 				window.location.href = URL;
@@ -145,9 +143,6 @@ class SC_wizard_table {
 			// Setting form tag:
 		list($rUri) = explode('#',t3lib_div::getIndpEnv('REQUEST_URI'));
 		$this->doc->form ='<form action="'.htmlspecialchars($rUri).'" method="post" name="wizardForm">';
-
-			// Start page:
-		$this->content.=$this->doc->startPage('Table');
 
 			// If save command found, include tcemain:
 		if ($_POST['savedok_x'] || $_POST['saveandclosedok_x'])	{
@@ -164,13 +159,22 @@ class SC_wizard_table {
 	 * @return	void
 	 */
 	function main()	{
-		global $LANG;
-
-		if ($this->P['table'] && $this->P['field'] && $this->P['uid'])	{
-			$this->content.=$this->doc->section($LANG->getLL('table_title'),$this->tableWizard(),0,1);
+		if ($this->P['table'] && $this->P['field'] && $this->P['uid']) {
+			$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('table_title'), $this->tableWizard(), 0, 1);
 		} else {
-			$this->content.=$this->doc->section($LANG->getLL('table_title'),'<span class="typo3-red">'.$LANG->getLL('table_noData',1).'</span>',0,1);
+			$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('table_title'), '<span class="typo3-red">' . $GLOBALS['LANG']->getLL('table_noData',1) . '</span>', 0, 1);
 		}
+
+		// Setting up the buttons and markers for docheader
+		$docHeaderButtons = $this->getButtons();
+		$markers['CSH'] = $docHeaderButtons['csh'];
+		$markers['CONTENT'] = $this->content;
+
+		// Build the <body> for the module
+		$this->content = $this->doc->startPage('Table');
+		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+		$this->content.= $this->doc->endPage();
+		$this->content = $this->doc->insertStylesAndJS($this->content);
 	}
 
 	/**
@@ -179,9 +183,47 @@ class SC_wizard_table {
 	 * @return	void
 	 */
 	function printContent()	{
-		$this->content.= $this->doc->endPage();
-		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
+	}
+
+	/**
+	 * Create the panel of buttons for submitting the form or otherwise perform operations.
+	 *
+	 * @return array all available buttons as an assoc. array
+	 */
+	protected function getButtons() {
+		$buttons = array(
+			'csh' => '',
+			'csh_buttons' => '',
+			'close' => '',
+			'save' => '',
+			'save_close' => '',
+			'reload' => '',
+		);
+
+		if ($this->P['table'] && $this->P['field'] && $this->P['uid']) {
+			// CSH
+			$buttons['csh'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'wizard_table_wiz', $GLOBALS['BACK_PATH'], '');
+
+			// CSH Buttons
+			$buttons['csh_buttons'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'wizard_table_wiz_buttons', $GLOBALS['BACK_PATH'], '');
+
+			// Close
+			$buttons['close'] = '<a href="#" onclick="' . htmlspecialchars('jumpToUrl(unescape(\'' . rawurlencode(t3lib_div::sanitizeLocalUrl($this->P['returnUrl'])) . '\')); return false;') . '">' .
+				'<img' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/closedok.gif') . ' class="c-inputButton" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', 1) . '" alt="" />' .
+				'</a>';
+
+			// Save
+			$buttons['save'] = '<input type="image" class="c-inputButton" name="savedok"' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/savedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />';
+
+			// Save & Close
+			$buttons['save_close'] = '<input type="image" class="c-inputButton" name="saveandclosedok"' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/saveandclosedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', 1) . '" />';
+
+			// Reload
+			$buttons['reload'] = '<input type="image" class="c-inputButton" name="_refresh"' . t3lib_iconWorks::skinImg($this->doc->backPath, 'gfx/refresh_n.gif') . ' title="' . $GLOBALS['LANG']->getLL('forms_refresh', 1) . '" />';
+		}
+
+		return $buttons;
 	}
 
 	/**
@@ -276,9 +318,8 @@ class SC_wizard_table {
 				$tce->process_datamap();
 
 					// If the save/close button was pressed, then redirect the screen:
-				if ($_POST['saveandclosedok_x'])	{
-					header('Location: '.t3lib_div::locationHeaderUrl($this->P['returnUrl']));
-					exit;
+				if ($_POST['saveandclosedok_x']) {
+					t3lib_utility_Http::redirect(t3lib_div::sanitizeLocalUrl($this->P['returnUrl']));
 				}
 			}
 		} else {	// If nothing has been submitted, load the $bodyText variable from the selected database row:
@@ -318,7 +359,7 @@ class SC_wizard_table {
 					if ($this->inputStyle)	{
 						$cells[]='<input type="text"'.$this->doc->formWidth(20).' name="TABLE[c]['.(($k+1)*2).']['.(($a+1)*2).']" value="'.htmlspecialchars($cellContent).'" />';
 					} else {
-						$cellContent=eregi_replace('<br[ ]?[\/]?>',chr(10),$cellContent);
+						$cellContent=preg_replace('/<br[ ]?[\/]?>/i',chr(10),$cellContent);
 						$cells[]='<textarea '.$this->doc->formWidth(20).' rows="5" name="TABLE[c]['.(($k+1)*2).']['.(($a+1)*2).']">'.t3lib_div::formatForTextarea($cellContent).'</textarea>';
 					}
 
@@ -400,9 +441,6 @@ class SC_wizard_table {
 
 		$content = '';
 
-			// Add CSH:
-		$content.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'wizard_table_wiz', $GLOBALS['BACK_PATH'],'');
-
 			// Implode all table rows into a string, wrapped in table tags.
 		$content.= '
 
@@ -413,24 +451,6 @@ class SC_wizard_table {
 			<table border="0" cellpadding="0" cellspacing="1" id="typo3-tablewizard">
 				'.implode('',$tRows).'
 			</table>';
-
-			// Add saving buttons in the bottom:
-		$content.= '
-
-			<!--
-				Save buttons:
-			-->
-			<div id="c-saveButtonPanel">';
-		$content.= '<input type="image" class="c-inputButton" name="savedok"'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/savedok.gif','').' title="'.$LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc',1).'" />';
-		$content.= '<input type="image" class="c-inputButton" name="saveandclosedok"'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/saveandclosedok.gif','').' title="'.$LANG->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc',1).'" />';
-		$content.= '<a href="#" onclick="'.htmlspecialchars('jumpToUrl(unescape(\''.rawurlencode($this->P['returnUrl']).'\')); return false;').'">'.
-					'<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/closedok.gif','width="21" height="16"').' class="c-inputButton" title="'.$LANG->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc',1).'" alt="" />'.
-					'</a>';
-		$content.= '<input type="image" class="c-inputButton" name="_refresh"'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/refresh_n.gif','').' title="'.$LANG->getLL('forms_refresh',1).'" />';
-		$content.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'wizard_table_wiz_buttons', $GLOBALS['BACK_PATH'],'');
-		$content.= '
-			</div>
-			';
 
 			// Input type checkbox:
 		$content.= '
@@ -643,19 +663,10 @@ class SC_wizard_table {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_table.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_table.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -668,4 +679,5 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

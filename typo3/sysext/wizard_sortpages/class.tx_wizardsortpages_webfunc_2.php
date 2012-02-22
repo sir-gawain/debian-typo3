@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -46,17 +46,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once(PATH_t3lib.'class.t3lib_page.php');
-require_once(PATH_t3lib.'class.t3lib_tcemain.php');
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
-
-
-
-
-
-
-
 /**
  * Creates the "Sort pages" wizard
  *
@@ -114,7 +103,7 @@ class tx_wizardsortpages_webfunc_2 extends t3lib_extobjbase {
 					}
 					$tce->start(array(),$cmd);
 					$tce->process_cmdmap();
-					t3lib_BEfunc::getSetUpdateSignal('updatePageTree');
+					t3lib_BEfunc::setUpdateSignal('updatePageTree');
 				}
 			}
 
@@ -156,7 +145,7 @@ class tx_wizardsortpages_webfunc_2 extends t3lib_extobjbase {
 			}
 
 				// CSH:
-			$theCode.= t3lib_BEfunc::cshItem('_MOD_web_func', 'tx_wizardsortpages', $GLOBALS['BACK_PATH'],'<br/>|');
+			$theCode.= t3lib_BEfunc::cshItem('_MOD_web_func', 'tx_wizardsortpages', $GLOBALS['BACK_PATH'], '<br />|');
 
 			$out=$this->pObj->doc->section($LANG->getLL('wiz_sort'),$theCode,0,1);
 		} else {

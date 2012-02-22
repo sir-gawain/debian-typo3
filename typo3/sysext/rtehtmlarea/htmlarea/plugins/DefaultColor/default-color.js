@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 /*
  * Default Color Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: $
+ * TYPO3 SVN ID: $Id: default-color.js 6539 2009-11-25 14:49:14Z stucki $
  */
 DefaultColor = HTMLArea.Plugin.extend({
 	
@@ -50,10 +50,10 @@ DefaultColor = HTMLArea.Plugin.extend({
 		var pluginInformation = {
 			version		: "1.0",
 			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.fructifor.ca/",
+			developerUrl	: "http://www.sjbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "Fructifor Inc.",
-			sponsorUrl	: "http://www.fructifor.ca/",
+			sponsor		: "SJBR",
+			sponsorUrl	: "http://www.sjbr.ca/",
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
@@ -85,6 +85,14 @@ DefaultColor = HTMLArea.Plugin.extend({
 		["ForeColor", "textcolor"],
 		["HiliteColor", "bgcolor"]
 	],
+	
+	/*
+	 * Conversion object: button name or command name to corresponding style property name
+	 */
+	styleProperty : {
+		ForeColor	: "color",
+		HiliteColor	: "backgroundColor"
+	},
 	 
 	/*
 	 * This function gets called when the button was pressed.
@@ -99,19 +107,16 @@ DefaultColor = HTMLArea.Plugin.extend({
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		
 		this.commandId = buttonId;
-		
 		switch (buttonId) {
-			case "HiliteColor"	:
-				if (HTMLArea.is_ie || HTMLArea.is_safari) {
-					this.commandId = "BackColor";
-				}
-			case "ForeColor"	:
-				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("select_color"), "setColor", HTMLArea._colorToRgb(this.editor._doc.queryCommandValue(this.commandId)), {width:200, height:182});
+			case "HiliteColor":
+				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("select_color"), "setColor", HTMLArea._colorToRgb(this.editor._doc.queryCommandValue(HTMLArea.is_ie ? "BackColor" : this.commandId)), {width:300, height:210});
+				break;
+			case "ForeColor":
+				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("select_color"), "setColor", HTMLArea._colorToRgb(this.editor._doc.queryCommandValue(this.commandId)), {width:300, height:210});
 				break;
 			default:
-				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("select_color"), "returnToCaller", HTMLArea._colorToRgb("000000"), {width:200, height:182});
+				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("select_color"), "returnToCaller", HTMLArea._colorToRgb("000000"), {width:300, height:210});
 				break;
 		}
 		return false;
@@ -125,9 +130,16 @@ DefaultColor = HTMLArea.Plugin.extend({
 	 * @return	boolean		false
 	 */
 	setColor : function(color) {
-		this.editor.focusEditor();
-		if (color) {
-			this.editor._doc.execCommand(this.commandId, false, "#" + color);
+		var editor = this.editor;
+		if (color && editor.endPointsInSameBlock()) {
+			var selection = editor._getSelection();
+			var range = editor._createRange(selection);
+			var element = editor._doc.createElement("span");
+			element.style[this.styleProperty[this.commandId]] = "#" + color;
+			editor.wrapWithInlineElement(element, selection, range);
+			if (HTMLArea.is_gecko) {
+				range.detach();
+			}
 		}
 		return false;
 	},
@@ -147,6 +159,23 @@ DefaultColor = HTMLArea.Plugin.extend({
 			this.editor.plugins[this.commandId].instance.dialog.dialogWindow.insertColor("#" + color);
 		}
 		return false;
+	},
+	
+	/*
+	 * This function gets called when the toolbar is updated
+	 */
+	onUpdateToolbar : function () {
+		var editor = this.editor;
+		if (editor.getMode() === "wysiwyg" && editor.isEditable()) {
+			var buttonId;
+			for (var i = 0, n = this.buttonList.length; i < n; ++i) {
+				buttonId = this.buttonList[i][0];
+				var obj = editor._toolbarObjects[buttonId];
+				if ((typeof(obj) !== "undefined")) {
+					obj.state("enabled", editor.endPointsInSameBlock());
+				}
+			}
+		}
 	}
 });
 

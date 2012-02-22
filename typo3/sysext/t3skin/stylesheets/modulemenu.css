@@ -6,7 +6,7 @@ URL    : http://typo3.org
 
 Description : overwrites core styles for the module menu
 
-	$Id$
+	$Id: modulemenu.css 6539 2009-11-25 14:49:14Z stucki $
 
 - - - - - - - - - - - - - - - - - - - - - */
 
@@ -57,10 +57,6 @@ TYPO3 backend menu - vertical
 #typo3-menu div.collapsed {
 	border-bottom: 1px solid #ddd;
 	margin-left: 0px;
-}
-
-#typo3-menu li div img {
-	display: none;
 }
 
 #typo3-menu li img {

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -49,7 +49,6 @@
 
 
 
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
 t3lib_extMgm::isLoaded('impexp',1);
 
 
@@ -139,16 +138,16 @@ class tx_impexp_modfunc1 extends mod_user_task {
 
 						$opt[] = '
 					<tr class="bgColor4">
-						<td>'.($thumbnailFile ? '<img src="'.$this->backPath.'../'.substr($tempDir,strlen(PATH_site)).basename($thumbnailFile).'" hspace="2" width="70" style="border: solid black 1px;" alt="" /><br/>' : '&nbsp;').'</td>
+						<td>' . ($thumbnailFile ? '<img src="' . $this->backPath . '../' . substr($tempDir, strlen(PATH_site)) . basename($thumbnailFile) . '" hspace="2" width="70" style="border: solid black 1px;" alt="" /><br />' : '&nbsp;') . '</td>
 						<td nowrap="nowrap"><a href="index.php?SET[function]=tx_impexp&display='.$presetCfg['uid'].'">'.htmlspecialchars(t3lib_div::fixed_lgd_cs($title,30)).'</a>&nbsp;</td>
 						<td>'.($presetCfg['public'] ? 'Yes' : '&nbsp;').'</td>
 						<td>'.($presetCfg['user_uid']===$GLOBALS['BE_USER']->user['uid'] ? 'Own' : '['.$usernames[$presetCfg['user_uid']]['username'].']').'</td>
 						<td>'.($configuration['pagetree']['id'] ? $configuration['pagetree']['id'] : '&nbsp;').'</td>
 						<td>'.htmlspecialchars($configuration['pagetree']['id'] ? t3lib_BEfunc::getRecordPath($configuration['pagetree']['id'],$clause,20) : '[Single Records]').'</td>
 						<td>
-							<b>'.htmlspecialchars($configuration['meta']['title']).'</b><br/>'.
+							<b>' . htmlspecialchars($configuration['meta']['title']) . '</b><br />' .
 							htmlspecialchars($configuration['meta']['description']).
-							($configuration['meta']['notes'] ? '<br/><br/><b>Notes:</b> <em>'.htmlspecialchars($configuration['meta']['notes']).'</em>' : '').
+							($configuration['meta']['notes'] ? '<br /><br /><b>Notes:</b> <em>' . htmlspecialchars($configuration['meta']['notes']) . '</em>' : '') .
 							'
 						</td>
 					</tr>';
@@ -192,7 +191,7 @@ class tx_impexp_modfunc1 extends mod_user_task {
 		$presets = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 				'*',
 				'tx_impexp_presets',
-				'(public>0 || user_uid='.intval($GLOBALS['BE_USER']->user['uid']).')',
+				'(public>0 OR user_uid='.intval($GLOBALS['BE_USER']->user['uid']).')',
 				'',
 				'item_uid DESC, title'
 			);

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,7 +37,7 @@
  *
  *
  *
- * $Id: alt_main.php 3570 2008-04-16 06:26:27Z flyguide $
+ * $Id: alt_main.php 6241 2009-10-22 08:24:10Z baschny $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML Compliant (almost)
  *
@@ -63,8 +63,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once ('class.alt_menu_functions.inc');
 $LANG->includeLLFile('EXT:lang/locallang_misc.xml');
 
@@ -185,7 +183,7 @@ class SC_alt_main {
 	function typoSetup()	{	//
 		this.PATH_typo3 = "'.$pt3.'";
 		this.PATH_typo3_enc = "'.rawurlencode($pt3).'";
-		this.username = "'.$BE_USER->user['username'].'";
+		this.username = "'.htmlspecialchars($BE_USER->user['username']).'";
 		this.uniqueID = "'.t3lib_div::shortMD5(uniqid('')).'";
 		this.navFrameWidth = 0;
 	}
@@ -479,7 +477,7 @@ class SC_alt_main {
 		if ($module) {
 			$this->mainJScode.='
 		// open in module:
-	top.goToModule(\''.$module.'\',false,\''.$params.'\');
+	top.goToModule(\''.$module.'\',false,'.t3lib_div::quoteJSvalue($params).');
 			';
 		}
 	}
@@ -570,14 +568,10 @@ class SC_alt_main {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_main.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_main.php']);
 }
-
-
-
-
 
 
 

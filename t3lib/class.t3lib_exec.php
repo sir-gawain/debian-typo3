@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2002-2008 René Fritz (r.fritz@colorcube.de)
+*  (c) 2002-2009 René Fritz (r.fritz@colorcube.de)
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,7 +24,7 @@
 /**
  * t3lib_exec finds executables (programs) on Unix and Windows without knowing where they are
  *
- * $Id: class.t3lib_exec.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_exec.php 6521 2009-11-25 09:36:55Z francois $
  *
  * @author	René Fritz <r.fritz@colorcube.de>
  */
@@ -370,19 +370,13 @@ class t3lib_exec {
 			}
 		}
 
-		if (TYPO3_OS=='WIN') {
-// TODO: add the most common paths for WIN
-			$sysPathArr = array_merge($sysPathArr, array (
-				'/usr/bin/' => '/usr/bin/',
-				'/perl/bin/' => '/perl/bin/',
-			));
-		} else { // UNIX
-			$sysPathArr = array_merge($sysPathArr, array (
+			// Set common paths for Unix (only)
+		if (TYPO3_OS !== 'WIN') {
+			$sysPathArr = array_merge($sysPathArr, array(
 				'/usr/bin/' => '/usr/bin/',
 				'/usr/local/bin/' => '/usr/local/bin/',
 			));
 		}
-
 
 		$pathsArr = array_merge($pathsArr, $sysPathArr);
 

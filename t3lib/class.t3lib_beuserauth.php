@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for TYPO3 backend user authentication
  *
- * $Id: class.t3lib_beuserauth.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_beuserauth.php 6469 2009-11-17 23:56:35Z benni $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -96,7 +96,6 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 	var $formfield_uident = 'userident'; 		// formfield with password
 	var $formfield_chalvalue = 'challenge';		// formfield with a unique value which is used to encrypt the password and username
 	var $formfield_status = 'login_status'; 	// formfield with status: *'login', 'logout'
-	var $security_level = 'superchallenged';	// sets the level of security. *'normal' = clear-text. 'challenged' = hashed password/username from form in $formfield_uident. 'superchallenged' = hashed password hashed again with username.
 
 	var $writeStdLog = 1;					// Decides if the writelog() function is called at login and logout
 	var $writeAttemptLog = 1;				// If the writelog() functions is called if a login-attempt has be tried without success
@@ -133,11 +132,27 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 		'edit_showFieldHelp' => 'icon',
 		'edit_RTE' => '1',
 		'edit_docModuleUpload' => '1',
+		'enableFlashUploader' => '1',
 		'disableCMlayers' => 0,
 		'navFrameWidth' => '',	// Default is 245 pixels
 		'navFrameResizable' => 0,
+		'resizeTextareas' => 1,
+		'resizeTextareas_MaxHeight' => 300,
+		'resizeTextareas_Flexible' => 1,
 	);
 
+
+	/**
+	 * Sets the security level for the Backend login
+	 *
+	 * @return	void
+	 */
+	function start() {
+		$securityLevel = trim($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel']);
+		$this->security_level = $securityLevel ? $securityLevel : 'superchallenged';
+
+		parent::start();
+	}
 
 	/**
 	 * If flag is set and the extensions 'beuser_tracking' is loaded, this will insert a table row with the REQUEST_URI of current script - thus tracking the scripts the backend users uses...
@@ -145,13 +160,15 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 	 *
 	 * @param	boolean		Activate insertion of the URL.
 	 * @return	void
-	 * @access private
+	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.5.
 	 */
 	function trackBeUser($flag)	{
+		t3lib_div::logDeprecatedFunction();
+
 		if ($flag && t3lib_extMgm::isLoaded('beuser_tracking'))	{
 			$insertFields = array(
 				'userid' => intval($this->user['uid']),
-				'tstamp' => time(),
+				'tstamp' => $GLOBALS['EXEC_TIME'],
 				'script' => t3lib_div::getIndpEnv('REQUEST_URI')
 			);
 
@@ -188,8 +205,7 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 	function backendCheckLogin()	{
 		if (!$this->user['uid'])	{
 			if (!defined('TYPO3_PROCEED_IF_NO_USER') || !TYPO3_PROCEED_IF_NO_USER)	{
-				t3lib_BEfunc::typo3PrintError ('Login-error or session timed-out', 'No user logged in! Sorry, I can\'t proceed then!<br /><br />(You must have cookies enabled!)<br /><br />If your session has just timed-out, you may<br /><a href="'.t3lib_div::locationHeaderUrl(t3lib_div::getIndpEnv('TYPO3_SITE_URL').TYPO3_mainDir.'index.php'.'" target="_top">click here to re-login</a>.',0));
-				exit;
+				t3lib_utility_Http::redirect($GLOBALS['BACK_PATH']);
 			}
 		} else {	// ...and if that's the case, call these functions
 			$this->fetchGroupData();	//	The groups are fetched and ready for permission checking in this initialization.	Tables.php must be read before this because stuff like the modules has impact in this
@@ -247,7 +263,11 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 		}
 			// Setting defaults if uc is empty
 		if (!is_array($this->uc))	{
-			$this->uc = array_merge($this->uc_default, (array)$TYPO3_CONF_VARS['BE']['defaultUC'], (array)$this->getTSConfigProp('setup.default'));	// Candidate for t3lib_div::array_merge() if integer-keys will some day make trouble...
+			$this->uc = array_merge(
+				$this->uc_default,
+				(array) $TYPO3_CONF_VARS['BE']['defaultUC'],
+				t3lib_div::removeDotsFromTS((array) $this->getTSConfigProp('setup.default'))
+			);
 			$this->overrideUC();
 			$U=1;
 		}
@@ -353,6 +373,40 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 	function veriCode()	{
 		return substr(md5($this->id.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']),0,10);
 	}
+
+
+	/**
+	 * The session_id is used to find user in the database.
+	 * Two tables are joined: The session-table with user_id of the session and the usertable with its primary key
+	 * if the client is flash (e.g. from a flash application inside TYPO3 that does a server request)
+	 * then don't evaluate with the hashLockClause, as the client/browser is included in this hash
+	 * and thus, the flash request would be rejected
+	 *
+	 * @return DB result object or false on error
+	 * @access private
+	 */
+	protected function fetchUserSessionFromDB() {
+		if ($GLOBALS['CLIENT']['BROWSER'] == 'flash') {
+			// if on the flash client, the veri code is valid, then the user session is fetched
+			// from the DB without the hashLock clause
+			if (t3lib_div::_GP('vC') == $this->veriCode()) {
+				$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+						'*',
+						$this->session_table.','.$this->user_table,
+						$this->session_table.'.ses_id = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, $this->session_table).'
+							AND '.$this->session_table.'.ses_name = '.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->name, $this->session_table).'
+							AND '.$this->session_table.'.ses_userid = '.$this->user_table.'.'.$this->userid_column.'
+							'.$this->ipLockClause().'
+							'.$this->user_where_clause()
+				);
+			} else {
+				$dbres = false;
+			}
+		} else {
+			$dbres = parent::fetchUserSessionFromDB();
+		}
+		return $dbres;
+	}
 }
 
 
@@ -361,4 +415,5 @@ class t3lib_beUserAuth extends t3lib_userAuthGroup {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php']);
 }
+
 ?>

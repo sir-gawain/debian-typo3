@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a class with functions for page related statistics added to the backend Info module
  *
- * $Id: class.tx_cms_webinfo.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tx_cms_webinfo.php 5526 2009-06-02 13:52:04Z benni $
  * Revised for TYPO3 3.6 5/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -49,11 +49,8 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_pagetree.php');
-require_once(PATH_t3lib.'class.t3lib_recordlist.php');
 require_once(PATH_typo3.'class.db_list.inc');
 require_once(t3lib_extMgm::extPath('cms').'layout/class.tx_cms_layout.php');
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
 
 
 /**
@@ -138,7 +135,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 
 
 			$theOutput.= $this->pObj->doc->section($LANG->getLL('hits_title'),
-				t3lib_BEfunc::cshItem($dblist->descrTable,'stat',$GLOBALS['BACK_PATH'],'|<br/>').	// CSH
+				t3lib_BEfunc::cshItem($dblist->descrTable, 'stat', $GLOBALS['BACK_PATH'], '|<br />') . // CSH
 					$h_func.
 					$header.
 					$dblist->HTMLcode,
@@ -152,7 +149,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 
 				// CSH
 			$theOutput.=$this->pObj->doc->section($LANG->getLL('page_title'),
-				t3lib_BEfunc::cshItem($dblist->descrTable,'pagetree_overview',$GLOBALS['BACK_PATH'],'|<br/>').	// CSH
+				t3lib_BEfunc::cshItem($dblist->descrTable, 'pagetree_overview', $GLOBALS['BACK_PATH'], '|<br />') . // CSH
 					$h_func.
 					$dblist->HTMLcode,
 				0,

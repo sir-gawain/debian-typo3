@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2007-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /*
  * Default Inline Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: default-inline.js 3329 2008-03-01 03:42:40Z stan $
+ * TYPO3 SVN ID: $Id: default-inline.js 5165 2009-03-09 18:28:59Z ohader $
  */
 DefaultInline = HTMLArea.Plugin.extend({
 		

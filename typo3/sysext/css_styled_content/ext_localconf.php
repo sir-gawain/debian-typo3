@@ -1,5 +1,5 @@
 <?php
-# TYPO3 CVS ID: $Id: ext_localconf.php 2761 2007-11-24 17:58:50Z benni $
+# TYPO3 CVS ID: $Id: ext_localconf.php 5654 2009-06-29 09:34:29Z baschny $
 
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
@@ -28,6 +28,11 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['compat_version']['tx_cssstyledcon
 	'title' => 'CSS Styled Content: Default targets for non-frame pages',
 	'version' => 4002000,
 	'description' => '<p>The default page target is empty (so no target is generated). If you use frames, you have to set target to "page" in Constants.</p>'
+);
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['compat_version']['tx_cssstyledcontent_menuhtmlspecialchars'] = array(
+	'title' => 'CSS Styled Content: htmlspecialchars in menu content elements',
+	'version' => 4003000,
+	'description' => '<p>Page titles will get htmlspecialchar\'ed when rendered in "Sitemap/menu" content elements, to avoid generating invalid XHTML.</p>',
 );
 
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2008 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 /**
  * class to render the backend search toolbar item menu
  *
- * $Id: class.backendsearchmenu.php 3747 2008-06-02 09:56:49Z flyguide $
+ * $Id: class.backendsearchmenu.php 5165 2009-03-09 18:28:59Z ohader $
  *
  * @author	Ingo Renner <ingo@typo3.org>
  * @package TYPO3
@@ -69,7 +69,7 @@ class BackendSearchMenu implements backend_toolbarItem {
 	 * @return	string		workspace selector as HTML select
 	 */
 	public function render() {
-		$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.search', true);
+		$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.search', true);
 		$this->addJavascriptToBackend();
 		$searchMenu = array();
 

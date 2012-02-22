@@ -2,7 +2,7 @@
  * Javascript functions regarding the clickmenu
  * relies on the javascript library "prototype"
  *
- * (c) 2007 Benjamin Mack <www.xnos.org>
+ * (c) 2007-2009 Benjamin Mack <www.xnos.org>
  * All rights reserved
  *
  * This script is part of TYPO3 by
@@ -25,7 +25,8 @@ var Clickmenu = {
 	clickURL: 'alt_clickmenu.php',	// URL to the clickmenu.php file, see template.php
 	ajax: true,	// template.php -> isCMLayers check
 	mousePos: { X: null, Y: null },
-
+	delayClickMenuHide: false,
+	
 
 	/**
 	 * main function, called from most clickmenu links
@@ -70,8 +71,6 @@ var Clickmenu = {
 					this.populateData(data, level);
 				}.bind(this)
 			});
-		} else { // fallback with no AJAX, no isCMLayers
-			top.loadTopMenu(this.clickURL + '?' + params);
 		}
 	},
 
@@ -168,7 +167,12 @@ var Clickmenu = {
 	 * @result	nothing
 	 */
 	hide: function(obj) {
-		Element.hide(obj);
+		this.delayClickMenuHide = false;
+		window.setTimeout(function() {
+			if (!Clickmenu.delayClickMenuHide) {
+				Element.hide(obj);
+			}
+		}, 500);
 	},
 
 	/**

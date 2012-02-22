@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Index search frontend example hook
  *
- * $Id: class.pihook.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.pihook.php 5165 2009-03-09 18:28:59Z ohader $
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
@@ -104,4 +104,5 @@ class tx_indexedsearch_pihook {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.pihook.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.pihook.php']);
 }
+
 ?>

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Page navigation tree for the Web module
  *
- * $Id: alt_db_navframe.php 4571 2008-12-18 18:38:49Z steffenk $
+ * $Id: alt_db_navframe.php 6762 2010-01-13 23:42:34Z steffenk $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -150,7 +150,7 @@ class SC_alt_db_navframe {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/alt_db_navframe.html');
-		$this->doc->docType  = 'xhtml_trans';
+		$this->doc->showFlashMessages = FALSE;
 
 			// get HTML-Template
 
@@ -158,7 +158,7 @@ class SC_alt_db_navframe {
 			// Adding javascript code for AJAX (prototype), drag&drop and the pagetree as well as the click menu code
 		$this->doc->getDragDropCode('pages');
 		$this->doc->getContextMenuCode();
-		$this->doc->loadJavascriptLib('contrib/scriptaculous/scriptaculous.js?load=effects');
+		$this->doc->getPageRenderer()->loadScriptaculous('effects');
 
 		$this->doc->JScode .= $this->doc->wrapScriptTags(
 		($this->currentSubScript?'top.currentSubScript=unescape("'.rawurlencode($this->currentSubScript).'");':'').'
@@ -171,8 +171,8 @@ class SC_alt_db_navframe {
 			if (theUrl.indexOf("?") != -1) {
 				theUrl += "&id=" + id
 			} else {
-				theUrl += "?id=" + id		    	
-			}	
+				theUrl += "?id=" + id
+			}
 			top.fsMod.currentBank = bank;
 
 			if (top.condensedMode) {
@@ -209,15 +209,25 @@ class SC_alt_db_navframe {
 
 			// Outputting Temporary DB mount notice:
 		if ($this->active_tempMountPoint)	{
-			$this->content.= '
-	<div class="bgColor4 c-notice">
-		<img'.t3lib_iconWorks::skinImg('','gfx/icon_note.gif','width="18" height="16"').' align="top" alt="" />'.
-		'<a href="'.htmlspecialchars(t3lib_div::linkThisScript(array('setTempDBmount' => 0))).'">'.
-		$LANG->sl('LLL:EXT:lang/locallang_core.xml:labels.temporaryDBmount',1).
-		'</a><br/>
-		'.$LANG->sl('LLL:EXT:lang/locallang_core.xml:labels.path',1).': <span title="'.htmlspecialchars($this->active_tempMountPoint['_thePathFull']).'">'.htmlspecialchars(t3lib_div::fixed_lgd_cs($this->active_tempMountPoint['_thePath'],-50)).'</span>
-	</div>
+			$flashText = '
+				<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array('setTempDBmount' => 0))) . '">' .
+				$LANG->sl('LLL:EXT:lang/locallang_core.xml:labels.temporaryDBmount',1) .
+				'</a>		<br />' . 
+				$LANG->sl('LLL:EXT:lang/locallang_core.xml:labels.path',1) . ': <span title="' .
+				htmlspecialchars($this->active_tempMountPoint['_thePathFull']) . '">' . 
+				htmlspecialchars(t3lib_div::fixed_lgd_cs($this->active_tempMountPoint['_thePath'],-50)).
+				'</span>
 			';
+
+			$flashMessage = t3lib_div::makeInstance(
+				't3lib_FlashMessage',
+				$flashText,
+				'',
+				t3lib_FlashMessage::INFO
+			);
+
+		
+			$this->content.= $flashMessage->render();
 		}
 
 			// Outputting page tree:
@@ -232,7 +242,9 @@ class SC_alt_db_navframe {
 			// Setting up the buttons and markers for docheader
 		$docHeaderButtons = $this->getButtons();
 		$markers = array(
-			'IMG_RESET'     => '<img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/close_gray.gif', ' width="16" height="16"').' id="treeFilterReset" alt="Reset Filter" />',
+			'IMG_RESET'     => '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/close_gray.gif', ' width="16" height="16"') .
+			' id="treeFilterReset" alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.resetFilter') . '" ' .
+			'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.resetFilter') . '" />',
 			'WORKSPACEINFO' => $this->getWorkspaceInfo(),
 			'CONTENT'       => $this->content
 		);
@@ -273,7 +285,7 @@ class SC_alt_db_navframe {
 		);
 
 			// New Page
-		$onclickNewPageWizard = 'top.content.list_frame.location.href=top.TS.PATH_typo3+\'db_new.php?pagesOnly=1&id=\'+Tree.pageID;"';
+		$onclickNewPageWizard = 'top.content.list_frame.location.href=top.TS.PATH_typo3+\'db_new.php?pagesOnly=1&amp;id=\'+Tree.pageID;';
 		$buttons['new_page'] = '<a href="#" onclick="' . $onclickNewPageWizard . '"><img' . t3lib_iconWorks::skinImg('', 'gfx/new_page.gif') . ' title="' . $LANG->sL('LLL:EXT:cms/layout/locallang.xml:newPage', 1) . '" alt="" /></a>';
 
 			// Refresh
@@ -381,10 +393,10 @@ class SC_alt_db_navframe {
 	 * Called by typo3/ajax.php
 	 *
 	 * @param	array		$params: additional parameters (not used here)
-	 * @param	TYPO3AJAX	&$ajaxObj: reference of the TYPO3AJAX object of this request
+	 * @param	TYPO3AJAX	$ajaxObj: The TYPO3AJAX object of this request
 	 * @return	void
 	 */
-	public function ajaxExpandCollapse($params, &$ajaxObj) {
+	public function ajaxExpandCollapse($params, $ajaxObj) {
 		global $LANG;
 
 		$this->init();
@@ -398,7 +410,7 @@ class SC_alt_db_navframe {
 }
 
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_db_navframe.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_db_navframe.php']);
 }

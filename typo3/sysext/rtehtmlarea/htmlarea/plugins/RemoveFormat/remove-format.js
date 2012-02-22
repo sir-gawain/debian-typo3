@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /*
  * Remove Format Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: remove-format.js 4102 2008-09-13 23:04:59Z stan $
+ * TYPO3 SVN ID: $Id: remove-format.js 7566 2010-05-08 03:11:17Z stan $
  */
 RemoveFormat = HTMLArea.Plugin.extend({
 
@@ -44,12 +44,12 @@ RemoveFormat = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.6",
+			version		: "1.7",
 			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.fructifor.ca/",
+			developerUrl	: "http://www.sjbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "Fructifor Inc.",
-			sponsorUrl	: "http://www.fructifor.ca/",
+			sponsor		: "SJBR",
+			sponsorUrl	: "http://www.sjbr.ca/",
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
@@ -113,13 +113,10 @@ RemoveFormat = HTMLArea.Plugin.extend({
 				}
 
 				if (param["formatting"] == true) {
-						// remove font, b, strong, i, em, u, strike, span and other tags
-					var regF1 = new RegExp("<\/?(abbr|acronym|b[^a-zA-Z]|big|cite|code|em[^a-zA-Z]|font|i[^a-zA-Z]|q|s[^a-zA-Z]|samp|small|span|strike|strong|sub|sup|u[^a-zA-Z]|var)[^>]*>", "gi");
-					html = html.replace(regF1, "");
-						// keep tags, strip attributes
-					var regF2 = new RegExp(" style=\"[^>\"]*\"", "gi");
-					var regF3 = new RegExp(" (class|align|cellpadding|cellspacing|frame|bgcolor)=(([^>\s\"]+)|(\"[^>\"]*\"))", "gi");
-					html = html.replace(regF2, "").replace(regF3, "");
+						// Remove font, b, strong, i, em, u, strike, span and other inline tags
+					html = html.replace(/<\/?(abbr|acronym|b[^a-zA-Z]|big|cite|code|em[^a-zA-Z]|font|i[^a-zA-Z]|q|s[^a-zA-Z]|samp|small|span|strike|strong|sub|sup|tt|u[^a-zA-Z]|var)[^>]*>/gi, "");
+						// Keep tags, strip attributes
+					html = html.replace(/[ \t\n\r]+(style|class|align|cellpadding|cellspacing|frame|bgcolor)=\"[^>\"]*\"/gi, "");
 				}
 
 				if (param["images"] == true) {
@@ -128,18 +125,12 @@ RemoveFormat = HTMLArea.Plugin.extend({
 				}
 
 				if (param["ms_formatting"] == true) {
-						// make one line
-					var regMS1 = new RegExp("(\r\n|\n|\r)", "g");
-					html = html.replace(regMS1, " ");
-						//clean up tags
-					var regMS2 = new RegExp("<(b[^r]|strong|i|em|p|li|ul) [^>]*>", "gi");
-					html = html.replace(regMS2, "<$1>");
-						// keep tags, strip attributes
-					var regMS3 = new RegExp(" style=\"[^>\"]*\"", "gi");
-					var regMS4 = new RegExp(" (class|align)=(([^>\s\"]+)|(\"[^>\"]*\"))", "gi");
-					html = html.replace(regMS3, "").replace(regMS4, "");
-						// mozilla doesn't like <em> tags
-					html = html.replace(/<em>/gi, "<i>").replace(/<\/em>/gi, "</i>");
+						// Make one line
+					html = html.replace(/[ \r\n\t]+/g, " ");
+						// Clean up tags
+					html = html.replace(/<(b|strong|i|em|p|li|ul) [^>]*>/gi, "<$1>");
+						// Keep tags, strip attributes
+					html = html.replace(/ (style|class|align)=\"[^>\"]*\"/gi, "");
 						// kill unwanted tags: span, div, ?xml:, st1:, [a-z]:, meta, link
 					html = html.replace(/<\/?span[^>]*>/gi, "").
 						replace(/<\/?div[^>]*>/gi, "").
@@ -153,21 +144,18 @@ RemoveFormat = HTMLArea.Plugin.extend({
 						replace(/<title[^>]*>.*<\/title[^>]*>/gi, "");
 						// remove comments
 					html = html.replace(/<!--[^>]*>/gi, "");
-						// remove double tags
-					oldlen = html.length + 1;
-					var reg6 = new RegExp("<([a-z][a-z]*)> *<\/\1>", "gi");
-					var reg7 = new RegExp("<([a-z][a-z]*)> *<\/?([a-z][^>]*)> *<\/\1>", "gi");
-					var reg8 = new RegExp("<([a-z][a-z]*)><\1>", "gi");
-					var reg9 = new RegExp("<\/([a-z][a-z]*)><\/\1>", "gi");
-					var reg10 = new RegExp("[\x20]+", "gi");
+						// Remove inline elements resets
+					html = html.replace(/<\/(b[^a-zA-Z]|big|i[^a-zA-Z]|s[^a-zA-Z]|small|strike|tt|u[^a-zA-Z])><\1>/gi, "");
+						// Remove double tags
+					var oldlen = html.length + 1;
 					while(oldlen > html.length) {
 						oldlen = html.length;
-							// join us now and free the tags
-						html = html.replace(reg6, " ").replace(reg7, "<$2>");
-							// remove double tags
-						html = html.replace(reg8, "<$1>").replace(reg9, "<\/$1>");
-							// remove double spaces
-						html = html.replace(reg10, " ");
+							// Remove double opening tags
+						html = html.replace(/<([a-z][a-z]*)> *<\/\1>/gi, " ").replace(/<([a-z][a-z]*)> *<\/?([a-z][^>]*)> *<\/\1>/gi, "<$2>");
+							// Remove double closing tags
+						html = html.replace(/<([a-z][a-z]*)><\1>/gi, "<$1>").replace(/<\/([a-z][a-z]*)><\/\1>/gi, "<\/$1>");
+							// Remove multiple spaces
+						html = html.replace(/[\x20]+/gi, " ");
 					}
 				}
 

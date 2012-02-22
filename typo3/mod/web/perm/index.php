@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Module: Permission setting
  *
- * $Id: index.php 4118 2008-09-15 03:54:11Z jsegars $
+ * $Id: index.php 7003 2010-02-23 10:07:25Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -66,9 +66,6 @@ require($BACK_PATH.'init.php');
 require($BACK_PATH.'template.php');
 require('class.sc_mod_web_perm_ajax.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_web_perm.xml');
-require_once (PATH_t3lib.'class.t3lib_pagetree.php');
-require_once (PATH_t3lib.'class.t3lib_page.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
 
 $BE_USER->modAccess($MCONF,1);
 
@@ -91,7 +88,7 @@ $BE_USER->modAccess($MCONF,1);
  * @author	Andreas Kundoch <typo3@mehrwert.de>
  * @package	TYPO3
  * @subpackage	core
- * @version	$Id: index.php 4118 2008-09-15 03:54:11Z jsegars $
+ * @version	$Id: index.php 7003 2010-02-23 10:07:25Z ohader $
  */
 class SC_mod_web_perm_index {
 
@@ -215,11 +212,10 @@ class SC_mod_web_perm_index {
 			// Initializing document template object:
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->setModuleTemplate('templates/perm.html');
 		$this->doc->form = '<form action="'.$GLOBALS['BACK_PATH'].'tce_db.php" method="post" name="editform">';
 		$this->doc->loadJavascriptLib('../t3lib/jsfunc.updateform.js');
-		$this->doc->loadJavascriptLib('contrib/prototype/prototype.js');
+		$this->doc->getPageRenderer()->loadPrototype();
 		$this->doc->loadJavascriptLib(TYPO3_MOD_PATH . 'perm.js');
 
 			// Setting up the context sensitive menu:
@@ -393,10 +389,15 @@ class SC_mod_web_perm_index {
 	public function doEdit() {
 		global $BE_USER,$LANG;
 
-		if ($BE_USER->workspace!=0)	{
+		if ($BE_USER->workspace != 0) {
 				// Adding section with the permission setting matrix:
-			$this->content.=$this->doc->divider(5);
-			$this->content.=$this->doc->section($LANG->getLL('WorkspaceWarning'),'<div class="warningbox">'.$LANG->getLL('WorkspaceWarningText').'</div>',0,1,3);
+			$lockedMessage = t3lib_div::makeInstance(
+				't3lib_FlashMessage',
+				$LANG->getLL('WorkspaceWarningText'),
+				$LANG->getLL('WorkspaceWarning'),
+				t3lib_FlashMessage::WARNING
+			);
+			t3lib_FlashMessageQueue::addMessage($lockedMessage);
 		}
 
 			// Get usernames and groupnames
@@ -519,7 +520,7 @@ class SC_mod_web_perm_index {
 		$this->content.=$this->doc->section($LANG->getLL('permissions').':',$code);
 
 			// CSH for permissions setting
-		$this->content.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'perm_module_setting', $GLOBALS['BACK_PATH'],'<br/><br/>');
+		$this->content.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'perm_module_setting', $GLOBALS['BACK_PATH'], '<br /><br />');
 
 			// Adding help text:
 		if ($BE_USER->uc['helpText'])	{
@@ -608,7 +609,7 @@ class SC_mod_web_perm_index {
 				<tr>
 					<td class="bgColor2" colspan="2">&nbsp;</td>
 					<td class="bgColor2"><img'.t3lib_iconWorks::skinImg($BACK_PATH,'gfx/line.gif','width="5" height="16"').' alt="" /></td>
-					<td class="bgColor2" align="center" nowrap="nowrap"><b>'.$LANG->getLL('User',1).':</b> '.$BE_USER->user['username'].'</td>
+					<td class="bgColor2" align="center" nowrap="nowrap"><b>'.$LANG->getLL('User',1).':</b> ' . htmlspecialchars($BE_USER->user['username']) . '</td>
 					'.(!$BE_USER->isAdmin()?'<td class="bgColor2"><img'.t3lib_iconWorks::skinImg($BACK_PATH,'gfx/line.gif','width="5" height="16"').' alt="" /></td>
 					<td class="bgColor2" align="center"><b>'.$LANG->getLL('EditLock',1).'</b></td>':'').'
 				</tr>';
@@ -624,14 +625,14 @@ class SC_mod_web_perm_index {
 			$lE_bgCol = $bgCol;
 
 				// User/Group names:
-			$userName = $beUserArray[$data['row']['perms_userid']] ? $beUserArray[$data['row']['perms_userid']]['username'] : ($data['row']['perms_userid'] ? '[' . $data['row']['perms_userid'] . ']!' : '');
+			$userName = $beUserArray[$data['row']['perms_userid']] ? $beUserArray[$data['row']['perms_userid']]['username'] : ($data['row']['perms_userid'] ?  $data['row']['perms_userid'] : '');
 			if ($data['row']['perms_userid'] && (!$beUserArray[$data['row']['perms_userid']])) {
 				$userName = SC_mod_web_perm_ajax::renderOwnername($pageId, $data['row']['perms_userid'], htmlspecialchars(t3lib_div::fixed_lgd_cs($userName, 20)), false);
 			} else {
 				$userName = SC_mod_web_perm_ajax::renderOwnername($pageId, $data['row']['perms_userid'], htmlspecialchars(t3lib_div::fixed_lgd_cs($userName, 20)));
 			}
 
-			$groupName = $beGroupArray[$data['row']['perms_groupid']] ? $beGroupArray[$data['row']['perms_groupid']]['title']  : ($data['row']['perms_groupid'] ? '[' . $data['row']['perms_groupid'] . ']!' : '');
+			$groupName = $beGroupArray[$data['row']['perms_groupid']] ? $beGroupArray[$data['row']['perms_groupid']]['title']  : ($data['row']['perms_groupid'] ?  $data['row']['perms_groupid']  : '');
 			if ($data['row']['perms_groupid'] && (!$beGroupArray[$data['row']['perms_groupid']])) {
 				$groupName = SC_mod_web_perm_ajax::renderGroupname($pageId, $data['row']['perms_groupid'], htmlspecialchars(t3lib_div::fixed_lgd_cs($groupName, 20)), false);
 			} else {
@@ -645,7 +646,7 @@ class SC_mod_web_perm_index {
 				// First column:
 			$cellAttrib = ($data['row']['_CSSCLASS'] ? ' class="'.$data['row']['_CSSCLASS'].'"' : '');
 			$cells[]='
-					<td align="left" nowrap="nowrap"'.($cellAttrib ? $cellAttrib : $bgCol).'>'.$data['HTML'].htmlspecialchars(t3lib_div::fixed_lgd($data['row']['title'],$tLen)).'&nbsp;</td>';
+					<td align="left" nowrap="nowrap"'.($cellAttrib ? $cellAttrib : $bgCol).'>'.$data['HTML'].htmlspecialchars(t3lib_div::fixed_lgd_cs($data['row']['title'],$tLen)).'&nbsp;</td>';
 
 				// "Edit permissions" -icon
 			if ($editPermsAllowed && $pageId) {
@@ -703,7 +704,7 @@ class SC_mod_web_perm_index {
 		$this->content.=$this->doc->section('',$code);
 
 			// CSH for permissions setting
-		$this->content.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'perm_module', $GLOBALS['BACK_PATH'],'<br/>|');
+		$this->content.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'perm_module', $GLOBALS['BACK_PATH'], '<br />|');
 
 			// Creating legend table:
 		$legendText = '<b>'.$LANG->getLL('1',1).'</b>: '.$LANG->getLL('1_t',1);
@@ -831,18 +832,10 @@ class SC_mod_web_perm_index {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/perm/index.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/perm/index.php']);
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -852,9 +845,5 @@ $SOBE = t3lib_div::makeInstance('SC_mod_web_perm_index');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
-
-if ($TYPO3_CONF_VARS['BE']['compressionLevel'])	{
-	new gzip_encode($TYPO3_CONF_VARS['BE']['compressionLevel']);
-}
 
 ?>

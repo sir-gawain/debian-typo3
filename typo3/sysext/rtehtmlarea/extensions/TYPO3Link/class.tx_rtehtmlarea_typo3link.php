@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -22,11 +22,11 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /**
- * TYPO3 Image plugin for htmlArea RTE
+ * TYPO3Link plugin for htmlArea RTE
  *
- * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+ * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_typo3link.php 3311 2008-02-27 22:54:26Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_typo3link.php 7576 2010-05-10 17:03:57Z stan $
  *
  */
 
@@ -42,19 +42,19 @@ class tx_rtehtmlarea_typo3link extends tx_rtehtmlareaapi {
 	protected $thisConfig;				// Reference to RTE PageTSConfig
 	protected $toolbar;				// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 				// Frontend language array
-	
+
 	protected $pluginButtons = 'link, unlink';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'link'		=> 'CreateLink',
 		'unlink'	=> 'UnLink',
 		);
-	
+
 	public function main($parentObject) {
 			// Check if this should be enabled based on Page TSConfig
-		return parent::main($parentObject) && !$this->thisConfig['disableTYPO3Browsers'] 
+		return parent::main($parentObject) && !$this->thisConfig['disableTYPO3Browsers']
 				&& !(is_array( $this->thisConfig['buttons.']) && is_array($this->thisConfig['buttons.']['link.']) && is_array($this->thisConfig['buttons.']['link.']['TYPO3Browser.']) && $this->thisConfig['buttons.']['link.']['TYPO3Browser.']['disabled']);
 	}
-	
+
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -67,17 +67,17 @@ class tx_rtehtmlarea_typo3link extends tx_rtehtmlareaapi {
 	 * 	RTEarea['.$RTEcounter.']["buttons"]["button-id"]["property"] = "value";
 	 */
 	public function buildJavascriptConfiguration($RTEcounter) {
-		
+
 		$registerRTEinJavascriptString = '';
 		$button = 'link';
 		if (in_array($button, $this->toolbar)) {
 			if (!is_array( $this->thisConfig['buttons.']) || !is_array( $this->thisConfig['buttons.'][$button.'.'])) {
-					$registerRTEinJavascriptString .= '
+				$registerRTEinJavascriptString .= '
 			RTEarea['.$RTEcounter.'].buttons.'. $button .' = new Object();';
 			}
 			$registerRTEinJavascriptString .= '
 			RTEarea['.$RTEcounter.'].buttons.'. $button .'.pathLinkModule = "../../mod3/browse_links.php";';
-			
+
 			if ($this->htmlAreaRTE->is_FE()) {
 				$RTEProperties = $this->htmlAreaRTE->RTEsetup;
 			} else {
@@ -87,10 +87,12 @@ class tx_rtehtmlarea_typo3link extends tx_rtehtmlareaapi {
 				$registerRTEinJavascriptString .= '
 			RTEarea['.$RTEcounter.'].buttons.'. $button .'.classesAnchorUrl = "' . $this->htmlAreaRTE->writeTemporaryFile('', 'classesAnchor_'.$this->htmlAreaRTE->contentLanguageUid, 'js', $this->buildJSClassesAnchorArray()) . '";';
 			}
+			$registerRTEinJavascriptString .= '
+			RTEarea['.$RTEcounter.'].buttons.'. $button .'.additionalAttributes = "external' . ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][$this->extensionKey]['plugins'][$this->pluginName]['additionalAttributes'] ? (',' . $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][$this->extensionKey]['plugins'][$this->pluginName]['additionalAttributes']) : '') . '";';
 		}
 		return $registerRTEinJavascriptString;
 	}
-	
+
 	/**
 	 * Return a JS array for special anchor classes
 	 *
@@ -98,7 +100,7 @@ class tx_rtehtmlarea_typo3link extends tx_rtehtmlareaapi {
 	 */
 	public function buildJSClassesAnchorArray() {
 		global $LANG, $TYPO3_CONF_VARS;
-		
+
 		$linebreak = $TYPO3_CONF_VARS['EXTCONF'][$this->htmlAreaRTE->ID]['enableCompressedScripts'] ? '' : chr(10);
 		$JSClassesAnchorArray .= 'HTMLArea.classesAnchorSetup = [ ' . $linebreak;
 		$classesAnchorIndex = 0;
@@ -127,11 +129,11 @@ class tx_rtehtmlarea_typo3link extends tx_rtehtmlareaapi {
 				}
 				$JSClassesAnchorArray .= '}' . $linebreak;
 			}
-		}	
+		}
 		$JSClassesAnchorArray .= '];' . $linebreak;
 		return $JSClassesAnchorArray;
 	}
-	 
+
 	/**
 	 * Return an updated array of toolbar enabled buttons
 	 *

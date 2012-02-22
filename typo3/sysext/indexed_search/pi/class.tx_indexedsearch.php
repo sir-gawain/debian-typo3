@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Index search frontend
  *
- * $Id: class.tx_indexedsearch.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tx_indexedsearch.php 8163 2010-07-12 13:24:08Z dmitry $
  *
  * Creates a searchform for indexed search. Indexing must be enabled
  * for this to make sense.
@@ -103,10 +103,6 @@
  *
  */
 
-
-
-require_once(PATH_tslib.'class.tslib_pibase.php');
-require_once(PATH_tslib.'class.tslib_search.php');
 require_once(t3lib_extMgm::extPath('indexed_search').'class.indexer.php');
 
 
@@ -217,7 +213,7 @@ class tx_indexedsearch extends tslib_pibase {
 			// Initialize external document parsers for icon display and other soft operations
 		if (is_array($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers']))	{
 			foreach ($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers'] as $extension => $_objRef)	{
-				$this->external_parsers[$extension] = &t3lib_div::getUserObj($_objRef);
+				$this->external_parsers[$extension] = t3lib_div::getUserObj($_objRef);
 
 					// Init parser and if it returns false, unset its entry again:
 				if (!$this->external_parsers[$extension]->softInit($extension))	{
@@ -230,7 +226,7 @@ class tx_indexedsearch extends tslib_pibase {
 		$lexerObjRef = $TYPO3_CONF_VARS['EXTCONF']['indexed_search']['lexer'] ?
 						$TYPO3_CONF_VARS['EXTCONF']['indexed_search']['lexer'] :
 						'EXT:indexed_search/class.lexer.php:&tx_indexedsearch_lexer';
-		$this->lexerObj = &t3lib_div::getUserObj($lexerObjRef);
+		$this->lexerObj = t3lib_div::getUserObj($lexerObjRef);
 
 			// If "_sections" is set, this value overrides any existing value.
 		if ($this->piVars['_sections'])		$this->piVars['sections'] = $this->piVars['_sections'];
@@ -350,13 +346,13 @@ class tx_indexedsearch extends tslib_pibase {
 			$firstLevelMenu = $this->getMenu($this->wholeSiteIdList);
 			while(list($kk,$mR) = each($firstLevelMenu))	{
 					// @TODO: RFC #7370: doktype 2&5 are deprecated since TYPO3 4.2-beta1
-				if ($mR['doktype']!=5)	{
+				if ($mR['doktype']!=5 && !$mR['nav_hide']) {
 					$this->optValues['sections']['rl1_'.$mR['uid']] = trim($this->pi_getLL('opt_RL1').' '.$mR['title']);
 					if ($this->conf['show.']['L2sections'])	{
 						$secondLevelMenu = $this->getMenu($mR['uid']);
 						while(list($kk2,$mR2) = each($secondLevelMenu))	{
 								// @TODO: RFC #7370: doktype 2&5 are deprecated since TYPO3 4.2-beta1
-							if ($mR2['doktype']!=5)	{
+							if ($mR2['doktype']!=5 && !$mR2['nav_hide']) {
 								$this->optValues['sections']['rl2_'.$mR2['uid']] = trim($this->pi_getLL('opt_RL2').' '.$mR2['title']);
 							} else unset($secondLevelMenu[$kk2]);
 						}
@@ -383,7 +379,7 @@ class tx_indexedsearch extends tslib_pibase {
 		}
 
 			// Calling hook for modification of initialized content
-		if ($hookObj = &$this->hookRequest('initialize_postProc'))	{
+		if ($hookObj = $this->hookRequest('initialize_postProc')) {
 			$hookObj->initialize_postProc();
 		}
 
@@ -438,7 +434,7 @@ class tx_indexedsearch extends tslib_pibase {
 		$inSW = $GLOBALS['TSFE']->csConvObj->utf8_encode($inSW, $GLOBALS['TSFE']->metaCharset);
 		$inSW = $GLOBALS['TSFE']->csConvObj->entities_to_utf8($inSW,TRUE);
 
-		if ($hookObj = &$this->hookRequest('getSearchWords'))	{
+		if ($hookObj = $this->hookRequest('getSearchWords')) {
 			return $hookObj->getSearchWords_splitSWords($inSW, $defOp);
 		} else {
 
@@ -522,7 +518,7 @@ class tx_indexedsearch extends tslib_pibase {
 		foreach ($indexCfgs as $freeIndexUid)	{
 				// Get result rows:
 			$pt1 = t3lib_div::milliseconds();
-			if ($hookObj = &$this->hookRequest('getResultRows'))	{
+			if ($hookObj = $this->hookRequest('getResultRows')) {
 				$resData = $hookObj->getResultRows($sWArr,$freeIndexUid);
 			} else {
 				$resData = $this->getResultRows($sWArr,$freeIndexUid);
@@ -530,7 +526,7 @@ class tx_indexedsearch extends tslib_pibase {
 
 				// Display search results:
 			$pt2 = t3lib_div::milliseconds();
-			if ($hookObj = &$this->hookRequest('getDisplayResults'))	{
+			if ($hookObj = $this->hookRequest('getDisplayResults')) {
 				$content = $hookObj->getDisplayResults($sWArr, $resData, $freeIndexUid);
 			} else {
 				$content = $this->getDisplayResults($sWArr, $resData, $freeIndexUid);
@@ -611,7 +607,7 @@ class tx_indexedsearch extends tslib_pibase {
 						$c++;	// Increase the result pointer
 
 							// All rows for display is put into resultRows[]
-						if ($c > $pointer * $this->piVars['results'])	{
+						if ($c > $pointer * $this->piVars['results'] && $c <= ($pointer * $this->piVars['results'] + $this->piVars['results']))	{
 							$row['result_number'] = $c;
 							$resultRows[] = $row;
 								// This may lead to a problem: If the result check is not stopped here, the search will take longer. However the result counter will not filter out grouped cHashes/pHashes that were not processed yet. You can change this behavior using the "search.exactCount" property (see above).
@@ -1076,7 +1072,7 @@ class tx_indexedsearch extends tslib_pibase {
 		$freeIndexUidClause = $this->freeIndexUidWhere($freeIndexUid);
 
 			// Calling hook for alternative creation of page ID list
-		if ($hookObj = &$this->hookRequest('execFinalQuery_idList'))	{
+		if ($hookObj = $this->hookRequest('execFinalQuery_idList')) {
 			$page_where = $hookObj->execFinalQuery_idList($list);
 		} elseif ($this->join_pages)	{	// Alternative to getting all page ids by ->getTreeList() where "excludeSubpages" is NOT respected.
 			$page_join = ',
@@ -1326,7 +1322,7 @@ class tx_indexedsearch extends tslib_pibase {
 		$html = $this->cObj->getSubpart($this->templateCode, '###SEARCH_FORM###');
 
 			// Multilangual text
-		$substituteArray = array('searchFor', 'extResume', 'atATime', 'orderBy', 'fromSection', 'searchIn', 'match', 'style', 'freeIndexUid');
+		$substituteArray = array('legend', 'searchFor', 'extResume', 'atATime', 'orderBy', 'fromSection', 'searchIn', 'match', 'style', 'freeIndexUid');
 		foreach ($substituteArray as $marker)	{
 			$markerArray['###FORM_'.t3lib_div::strtoupper($marker).'###'] = $this->pi_getLL('form_'.$marker,'',1);
 		}
@@ -1574,7 +1570,7 @@ class tx_indexedsearch extends tslib_pibase {
 			// Get template content:
 		$tmplContent = $this->prepareResultRowTemplateData($row, $headerOnly);
 
-		if ($hookObj = &$this->hookRequest('printResultRow'))	{
+		if ($hookObj = $this->hookRequest('printResultRow')) {
 			return $hookObj->printResultRow($row, $headerOnly, $tmplContent);
 		} else {
 
@@ -1735,7 +1731,13 @@ class tx_indexedsearch extends tslib_pibase {
 			// If external media, link to the media-file instead.
 		if ($row['item_type'])	{		// External media
 			if ($row['show_resume'])	{	// Can link directly.
-				$title = '<a href="'.htmlspecialchars($row['data_filename']).'">'.htmlspecialchars($this->makeTitle($row)).'</a>';
+				$targetAttribute = '';
+				if ($GLOBALS['TSFE']->config['config']['fileTarget']) {
+					$targetAttribute = ' target="' . htmlspecialchars($GLOBALS['TSFE']->config['config']['fileTarget']) . '"';
+				}
+				$title = '<a href="' . htmlspecialchars($row['data_filename']) . '"' . $targetAttribute . '>' .
+					htmlspecialchars($this->makeTitle($row)) .
+					'</a>';
 			} else {	// Suspicious, so linking to page instead...
 				$copy_row = $row;
 				unset($copy_row['cHashParams']);
@@ -1767,7 +1769,7 @@ class tx_indexedsearch extends tslib_pibase {
 		$tmplContent['CSSsuffix'] = $CSSsuffix;
 
 			// Post processing with hook.
-		if ($hookObj = &$this->hookRequest('prepareResultRowTemplateData_postProc'))	{
+		if ($hookObj = $this->hookRequest('prepareResultRowTemplateData_postProc')) {
 			$tmplContent = $hookObj->prepareResultRowTemplateData_postProc($tmplContent, $row, $headerOnly);
 		}
 
@@ -1851,9 +1853,9 @@ class tx_indexedsearch extends tslib_pibase {
 	 * @return	string		Input string wrapped in <a> tag with onclick event attribute set.
 	 */
 	function makePointerSelector_link($str,$p,$freeIndexUid)	{
-		$onclick = 'document.'.$this->prefixId.'[\''.$this->prefixId.'[pointer]\'].value=\''.$p.'\';'.
-					'document.'.$this->prefixId.'[\''.$this->prefixId.'[_freeIndexUid]\'].value=\''.rawurlencode($freeIndexUid).'\';'.
-					'document.'.$this->prefixId.'.submit();return false;';
+		$onclick = 'document.getElementById(\'' . $this->prefixId . '_pointer\').value=\'' . $p . '\';' .
+					'document.getElementById(\'' . $this->prefixId . '_freeIndexUid\').value=\'' . rawurlencode($freeIndexUid) . '\';' .
+					'document.getElementById(\'' . $this->prefixId . '\').submit();return false;';
 		return '<a href="#" onclick="'.htmlspecialchars($onclick).'">'.$str.'</a>';
 	}
 
@@ -1865,19 +1867,26 @@ class tx_indexedsearch extends tslib_pibase {
 	 * @param	array		TypoScript configuration specifically for search result.
 	 * @return	string		<img> tag for icon
 	 */
-	function makeItemTypeIcon($it,$alt='',$specRowConf)	{
+	function makeItemTypeIcon($it, $alt='', $specRowConf) {
+
+			// Build compound key if item type is 0, iconRendering is not used
+			// and specConfs.[pid].pageIcon was set in TS
+		if ($it === '0' && $specRowConf['_pid'] && is_array($specRowConf['pageIcon.']) && !is_array($this->conf['iconRendering.'])) {
+			$it .= ':' . $specRowConf['_pid'];
+		}
 		if (!isset($this->iconFileNameCache[$it]))	{
 			$this->iconFileNameCache[$it] = '';
 
 				// If TypoScript is used to render the icon:
 			if (is_array($this->conf['iconRendering.']))	{
 				$this->cObj->setCurrentVal($it);
-				$this->iconFileNameCache[$it] = $this->cObj->cObjGetSingle($this->conf['iconRendering'],$this->conf['iconRendering.']);
-			} else { // ... otherwise, get flag from sys_language record:
+				$this->iconFileNameCache[$it] = $this->cObj->cObjGetSingle($this->conf['iconRendering'], $this->conf['iconRendering.']);
+				// ... otherwise, get flag from sys_language record:
+			} else {
 
 					// Default creation / finding of icon:
 				$icon = '';
-				if ($it==='0')	{
+				if ($it === '0' || substr($it, 0, 2) == '0:')	{
 					if (is_array($specRowConf['pageIcon.']))	{
 						$this->iconFileNameCache[$it] = $this->cObj->IMAGE($specRowConf['pageIcon.']);
 					} else {
@@ -1892,8 +1901,8 @@ class tx_indexedsearch extends tslib_pibase {
 
 					if ($fullPath)	{
 						$info = @getimagesize($fullPath);
-						$iconPath = substr($fullPath,strlen(PATH_site));
-						$this->iconFileNameCache[$it] = is_array($info) ? '<img src="'.$iconPath.'" '.$info[3].' title="'.htmlspecialchars($alt).'" alt="" />' : '';
+						$iconPath = substr($fullPath, strlen(PATH_site));
+						$this->iconFileNameCache[$it] = (is_array($info)) ? '<img src="' . $iconPath . '" ' . $info[3] . ' title="' . htmlspecialchars($alt) . '" alt="" />' : '';
 					}
 				}
 			}
@@ -1932,10 +1941,10 @@ class tx_indexedsearch extends tslib_pibase {
 				return ceil(log($total)/log($max)*100).'%';
 			break;
 			case 'crdate':	// Based on creation date
-				return $this->cObj->calcAge(time()-$row['item_crdate'],0); // ,$conf['age']
+				return $this->cObj->calcAge($GLOBALS['EXEC_TIME'] - $row['item_crdate'],0); // ,$conf['age']
 			break;
 			case 'mtime':	// Based on modification time
-				return $this->cObj->calcAge(time()-$row['item_mtime'],0); // ,$conf['age']
+				return $this->cObj->calcAge($GLOBALS['EXEC_TIME'] - $row['item_mtime'],0); // ,$conf['age']
 			break;
 			default:	// fx. title
 				return '&nbsp;';
@@ -2024,17 +2033,17 @@ class tx_indexedsearch extends tslib_pibase {
 					// Possibly shorten string:
 				if (!$k)	{	// First entry at all (only cropped on the frontside)
 					if ($strLen > $postPreLgd)	{
-						$output[$k] = $divider.ereg_replace('^[^[:space:]]+[[:space:]]','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],-($postPreLgd-$postPreLgd_offset)));
+						$output[$k] = $divider.preg_replace('/^[^[:space:]]+[[:space:]]/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],-($postPreLgd-$postPreLgd_offset)));
 					}
 				} elseif ($summaryLgd > $summaryMax || !isset($parts[$k+1])) {	// In case summary length is exceed OR if there are no more entries at all:
 					if ($strLen > $postPreLgd)	{
-						$output[$k] = ereg_replace('[[:space:]][^[:space:]]+$','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],$postPreLgd-$postPreLgd_offset)).$divider;
+						$output[$k] = preg_replace('/[[:space:]][^[:space:]]+$/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],$postPreLgd-$postPreLgd_offset)).$divider;
 					}
 				} else {	// In-between search words:
 					if ($strLen > $postPreLgd*2)	{
-						$output[$k] = ereg_replace('[[:space:]][^[:space:]]+$','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],$postPreLgd-$postPreLgd_offset)).
+						$output[$k] = preg_replace('/[[:space:]][^[:space:]]+$/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],$postPreLgd-$postPreLgd_offset)).
 										$divider.
-										ereg_replace('^[^[:space:]]+[[:space:]]','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],-($postPreLgd-$postPreLgd_offset)));
+										preg_replace('/^[^[:space:]]+[[:space:]]/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8',$parts[$k],-($postPreLgd-$postPreLgd_offset)));
 					}
 				}
 				$summaryLgd+= $GLOBALS['TSFE']->csConvObj->strlen('utf-8', $output[$k]);;
@@ -2099,10 +2108,17 @@ class tx_indexedsearch extends tslib_pibase {
 
 		$pI = parse_url($row['data_filename']);
 		if ($pI['scheme'])	{
-			$tmplArray['path'] = '<a href="'.htmlspecialchars($row['data_filename']).'">'.htmlspecialchars($row['data_filename']).'</a>';
+			$targetAttribute = '';
+			if ($GLOBALS['TSFE']->config['config']['fileTarget']) {
+				$targetAttribute = ' target="' . htmlspecialchars($GLOBALS['TSFE']->config['config']['fileTarget']) . '"';
+			}
+			$tmplArray['path'] = '<a href="' . htmlspecialchars($row['data_filename']) . '"' . $targetAttribute . '>' .
+				htmlspecialchars($row['data_filename']) .
+				'</a>';
 		} else {
 			$pathStr = htmlspecialchars($this->getPathFromPageId($pathId,$pathMP));
 			$tmplArray['path'] = $this->linkPage($pathId,$pathStr,array(
+				'cHashParams' => $row['cHashParams'],
 				'data_page_type' => $row['data_page_type'],
 				'data_page_mp' => $pathMP,
 				'sys_language_uid' => $row['sys_language_uid'],
@@ -2128,6 +2144,7 @@ class tx_indexedsearch extends tslib_pibase {
 			foreach ($rl as $dat)	{
 				if (is_array($this->conf['specConfs.'][$dat['uid'].'.']))	{
 					$specConf = $this->conf['specConfs.'][$dat['uid'].'.'];
+					$specConf['_pid'] = $dat['uid'];
 					break;
 				}
 			}
@@ -2265,7 +2282,7 @@ class tx_indexedsearch extends tslib_pibase {
 	function getFirstSysDomainRecordForPage($id)	{
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('domainName', 'sys_domain', 'pid='.intval($id).$this->cObj->enableFields('sys_domain'), '', 'sorting');
 		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
-		return ereg_replace('\/$','',$row['domainName']);
+		return rtrim($row['domainName'], '/');
 	}
 
 	/**
@@ -2367,14 +2384,14 @@ class tx_indexedsearch extends tslib_pibase {
 	 * @param	string		Name of the function you want to call / hook key
 	 * @return	object		Hook object, if any. Otherwise null.
 	 */
-	function &hookRequest($functionName)	{
+	function hookRequest($functionName) {
 		global $TYPO3_CONF_VARS;
 
 			// Hook: menuConfig_preProcessModMenu
 		if ($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['pi1_hooks'][$functionName]) {
-			$hookObj = &t3lib_div::getUserObj($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['pi1_hooks'][$functionName]);
+			$hookObj = t3lib_div::getUserObj($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['pi1_hooks'][$functionName]);
 			if (method_exists ($hookObj, $functionName)) {
-				$hookObj->pObj = &$this;
+				$hookObj->pObj = $this;
 				return $hookObj;
 			}
 		}
@@ -2385,4 +2402,5 @@ class tx_indexedsearch extends tslib_pibase {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/pi/class.tx_indexedsearch.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/pi/class.tx_indexedsearch.php']);
 }
+
 ?>

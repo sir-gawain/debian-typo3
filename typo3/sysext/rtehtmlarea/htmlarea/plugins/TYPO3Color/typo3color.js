@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /*
  * TYPO3 Color Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: typo3color.js $
+ * TYPO3 SVN ID: $Id: typo3color.js 7247 2010-04-06 01:21:41Z stan $
  */
 TYPO3Color = HTMLArea.Plugin.extend({
 	
@@ -43,21 +43,42 @@ TYPO3Color = HTMLArea.Plugin.extend({
 		this.buttonsConfiguration = this.editorConfiguration.buttons;
 		this.colorsConfiguration = this.editorConfiguration.colors;
 		this.disableColorPicker = this.editorConfiguration.disableColorPicker;
-		
+
+			// Coloring will use the style attribute
+		if (this.editor.plugins.TextStyle && this.editor.plugins.TextStyle.instance) {
+			this.editor.plugins.TextStyle.instance.addAllowedAttribute("style");
+			this.allowedAttributes = this.editor.plugins.TextStyle.instance.allowedAttributes;
+		}			
+		if (this.editor.plugins.InlineElements && this.editor.plugins.InlineElements.instance) {
+			this.editor.plugins.InlineElements.instance.addAllowedAttribute("style");
+			if (!this.allowedAllowedAttributes) {
+				this.allowedAttributes = this.editor.plugins.InlineElements.instance.allowedAttributes;
+			}
+		}
+		if (this.editor.plugins.BlockElements && this.editor.plugins.BlockElements.instance) {
+			this.editor.plugins.BlockElements.instance.addAllowedAttribute("style");
+		}
+		if (!this.allowedAttributes) {
+			this.allowedAttributes = new Array("id", "title", "lang", "xml:lang", "dir", "class", "style");
+			if (HTMLArea.is_ie) {
+				this.allowedAttributes.push("className");
+			}
+		}
+
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "2.1",
+			version		: "3.0",
 			developer	: "Stanislas Rolland",
 			developerUrl	: "http://www.sjbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "Stanislas Rolland",
+			sponsor		: "SJBR",
 			sponsorUrl	: "http://www.sjbr.ca/",
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
-		
+
 		/*
 		 * Registering the buttons
 		 */
@@ -77,7 +98,7 @@ TYPO3Color = HTMLArea.Plugin.extend({
 		
 		return true;
 	 },
-	 
+
 	/*
 	 * The list of buttons added by this plugin
 	 */
@@ -85,6 +106,14 @@ TYPO3Color = HTMLArea.Plugin.extend({
 		["ForeColor", "textcolor"],
 		["HiliteColor", "bgcolor"]
 	],
+
+	/*
+	 * Conversion object: button name to corresponding style property name
+	 */
+	styleProperty : {
+		ForeColor	: "color",
+		HiliteColor	: "backgroundColor"
+	},
 
 	/*
 	 * This function gets called when the button was pressed.
@@ -95,25 +124,17 @@ TYPO3Color = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function(editor, id, target) {
+	onButtonPress : function (editor, id, target) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		
-		switch (buttonId) {
-			case "ForeColor"	:
-			case "HiliteColor"	:
-				this.dialogSelectColor(buttonId,"","");
-				break;
-			default:
-				break;
-		}
+		this.dialogSelectColor(buttonId,"","");
 	},
-	
+
 	dialogSelectColor : function (buttonId, element, field, dialogOpener) {
 		var dimensions = {
-			width	: 490,
-			height	: 245
+			width	: 440,
+			height	: 300
 		};
 		var arguments = {
 			title 		: buttonId + "_title",
@@ -150,19 +171,8 @@ TYPO3Color = HTMLArea.Plugin.extend({
 		var doc = editor._doc;
 		var buttonId = dialog.arguments.buttonId;
 		var initialValue;
-		switch (buttonId) {
-			case "ForeColor"	:
-				initialValue = HTMLArea._colorToRgb(doc.queryCommandValue("ForeColor"));
-				break;
-			case "HiliteColor"	:
-				initialValue = doc.queryCommandValue(((HTMLArea.is_ie || HTMLArea.is_safari) ? "BackColor" : "HiliteColor"));
-				if (/transparent/i.test(initialValue)) {
-					// Mozilla
-					initialValue = doc.queryCommandValue("BackColor");
-				}
-				initialValue = HTMLArea._colorToRgb(initialValue);
-				break;
-		}
+		var parentElement = editor.getParentElement();
+		initialValue = HTMLArea._colorToRgb(parentElement.style[this.styleProperty[buttonId]]);
 		dialog.content.innerHTML = this.renderPopupSelectColor(buttonId, dialog, dialog.arguments.title, initialValue);
 		var colorTable = dialog.document.getElementById("colorTable");
 		colorTable.onclick = function(e) {
@@ -180,29 +190,76 @@ TYPO3Color = HTMLArea.Plugin.extend({
 			dialog.callFormInputHandler();
 			return false;
 		};
-		try {
-			with (dialog.document.getElementById(buttonId+"Current").style) {
-				switch (buttonId) {
-					case "ForeColor":
-						backgroundColor = HTMLArea._makeColor(doc.queryCommandValue("ForeColor"));
-						break;
-					case "HiliteColor":
-						backgroundColor = HTMLArea._makeColor(doc.queryCommandValue(((HTMLArea.is_ie || HTMLArea.is_safari) ? "BackColor" : "HiliteColor")));
-						if (/transparent/i.test(backgroundColor)) {
-								// Mozilla
-							backgroundColor = HTMLArea._makeColor(doc.queryCommandValue("BackColor"));
-						}
-						break;
-				}
-			}
-		} catch (e) { }
+		dialog.document.getElementById(buttonId+"Current").style.backgroundColor = initialValue;
+		dialog.addButtons("ok", "cancel");
 	},
 	
 	/*
 	 * Set the color and close the ForeColor and the HiliteColor select color dialogues
 	 */
 	setColor : function(dialog, params) {
-		this.processStyle(dialog, params, dialog.arguments.element, dialog.arguments.field);
+		var editor = this.editor, element;
+		switch (dialog.arguments.buttonId) {
+			case "ForeColor":
+			case "HiliteColor":
+				var fullNodeSelected = false;
+				var selection = editor._getSelection();
+				var range = editor._createRange(selection);
+				var parent = editor.getParentElement(selection, range);
+				var ancestors = editor.getAllAncestors();
+				var selectionEmpty = editor._selectionEmpty(selection);
+				var statusBarSelection = editor.getPluginInstance("StatusBar") ? editor.getPluginInstance("StatusBar").getSelection() : null;
+				if (!selectionEmpty) {
+						// The selection is not empty.
+					for (var i = 0; i < ancestors.length; ++i) {
+						fullNodeSelected = (HTMLArea.is_ie && ((selection.type !== "Control" && ancestors[i].innerText === range.text) || (selection.type === "Control" && ancestors[i].innerText === range.item(0).text)))
+									|| (HTMLArea.is_gecko && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())));
+						if (fullNodeSelected) {
+							parent = ancestors[i];
+							break;
+						}
+					}
+						// Working around bug in Safari selectNodeContents
+					if (!fullNodeSelected && HTMLArea.is_safari && statusBarSelection && statusBarSelection.textContent === range.toString()) {
+						fullNodeSelected = true;
+						parent = statusBarSelection;
+					}
+					var fullNodeSelected = (HTMLArea.is_gecko && parent.textContent === range.toString())
+									|| (HTMLArea.is_ie && parent.innerText === range.text);
+				}
+				if (selectionEmpty || fullNodeSelected) {
+					element = parent;
+						// Set the color in the style attribute
+					this.processStyle(dialog, params, element, dialog.arguments.field);
+						// Remove the span tag if it has no more attribute
+					if ((element.nodeName.toLowerCase() === "span") && !HTMLArea.hasAllowedAttributes(element, this.allowedAttributes)) {
+						editor.removeMarkup(element);
+					}
+				} else if (statusBarSelection) {
+					element = statusBarSelection;
+						// Set the color in the style attribute
+					this.processStyle(dialog, params, element, dialog.arguments.field);
+						// Remove the span tag if it has no more attribute
+					if ((element.nodeName.toLowerCase() === "span") && !HTMLArea.hasAllowedAttributes(element, this.allowedAttributes)) {
+						editor.removeMarkup(element);
+					}
+				} else if (editor.endPointsInSameBlock()) {
+					element = editor._doc.createElement("span");
+						// Set the color in the style attribute
+					this.processStyle(dialog, params, element, dialog.arguments.field);
+					editor.wrapWithInlineElement(element, selection, range);
+					if (HTMLArea.is_gecko) {
+						range.detach();
+					}
+				}
+				break;
+			case "color":
+			default:
+				element = dialog.arguments.element;
+					// Set the color in the style attribute
+				this.processStyle(dialog, params, element, dialog.arguments.field);
+				break;
+		}
 		dialog.close();
 	},
 	
@@ -213,7 +270,7 @@ TYPO3Color = HTMLArea.Plugin.extend({
 	selectColorCodeInit : function(dialog) {
 		var buttonId = dialog.arguments.buttonId;
 		var field = dialog.arguments.field;
-		dialog.content.innerHTML = this.renderPopupSelectColor(buttonId, dialog, this.localize(dialog.arguments.title), field.value);
+		dialog.content.innerHTML = this.renderPopupSelectColor(buttonId, dialog, this.localize(dialog.arguments.title), (field.value ? field.value : ""));
 		var colorTable = dialog.document.getElementById("colorTable");
 		colorTable.onclick = function(e) {
 			if(!e) var e = dialog.dialogWindow.event;
@@ -239,6 +296,7 @@ TYPO3Color = HTMLArea.Plugin.extend({
 		} else if (buttonId === "tag"){
 			dialog.document.getElementById(buttonId+"Current").style.backgroundColor = "";
 		}
+		dialog.addButtons("ok", "cancel");
 	},
 	
 	/*
@@ -253,31 +311,22 @@ TYPO3Color = HTMLArea.Plugin.extend({
 	* Applies the style found in "params" to the given element
 	*/
 	processStyle : function (dialog, params, element, field) {
-		var editor = this.editor;
-		for (var i in params) {
-			var val = params[i];
-			switch (i) {
-				case "ForeColor":
-					if(val) {
-						editor._doc.execCommand("ForeColor", false, val);
-					} else {
-						var parentElement = editor.getParentElement();
-						parentElement.style.color = "";
-					}
-					break;
-				case "HiliteColor":
-					if(val) {
-						if(HTMLArea.is_ie || HTMLArea.is_safari) editor._doc.execCommand("BackColor", false, val);
-							else editor._doc.execCommand("HiliteColor", false, val);
-					} else {
-						var parentElement = editor.getParentElement();
-						parentElement.style.backgroundColor = "";
-					}
-					break;
-				case "color":
-					element.style.backgroundColor = val;
-					field.value = val;
-					break;
+		if (element) {
+			for (var i in params) {
+				var val = params[i];
+				if (val && val.charAt(0) != "#") {
+					val = "#" + val;
+				}
+				switch (i) {
+					case "ForeColor":
+					case "HiliteColor":
+						element.style[this.styleProperty[i]] = val;
+						break;
+					case "color":
+						element.style.backgroundColor = val;
+						field.value = val;
+						break;
+				}
 			}
 		}
 	},
@@ -297,17 +346,8 @@ TYPO3Color = HTMLArea.Plugin.extend({
 		var szColorId = "";
 		
 		sz = '<div class="title">' + title + '</div>';
-		sz += '<form id="HA-color-select-form"><table style="width:100%"><tr><td id="HA-layout"><fieldset>';
-		sz += '<input type="hidden" name="' + sID + '" id="' + sID + '" value="' + initialValue + '" />';
-		sz += '<table style="width:100%;"><tr><td style="vertical-align: middle;"><span style="margin-left: 5px; height: 1em;" class="dialog buttonColor" ';
-		sz += '		onMouseover="className += \' buttonColor-hilite\';" ';
-		sz += '		onMouseout="className = \'buttonColor\';">';
-		sz += '	<span id="' + szID + '" class="chooser">&nbsp;</span>';
-		sz += '	<span id="colorUnset" class="nocolor" title="' + "no_color" + '" ';
-		sz += '		onMouseover="className += \' nocolor-hilite\';" ';
-		sz += '		onMouseout="className = \'nocolor\';"';
-		sz += '	>&#x00d7;</span></span></td><td>';
-		sz += '<table class="colorTable" cellspacing="0" cellpadding="0" id="colorTable">';
+		sz += '<form id="HA-color-select-form"><fieldset>';
+		sz += '<div class="colorTableWrapper"><table class="colorTable" cellspacing="0" cellpadding="0" id="colorTable">';
 		var onMouseOut = ' onMouseout="document.getElementById(\'' + szID + '\').style.backgroundColor=\'\'; document.getElementById(\'' + sID + '\').value=\'\';"';
 		var onMouseOver = ' onMouseover="if(' + HTMLArea.is_ie + '){ if (event.srcElement.bgColor) { document.getElementById(\'' + szID + '\').style.backgroundColor = event.srcElement.bgColor; document.getElementById(\'' + sID + '\').value = event.srcElement.bgColor;} } else { if (event.target.bgColor) { document.getElementById(\'' + szID + '\').style.backgroundColor=event.target.bgColor; document.getElementById(\'' + sID + '\').value=event.target.bgColor;} };" ';
 			// Making colorPicker
@@ -340,10 +380,41 @@ TYPO3Color = HTMLArea.Plugin.extend({
 				sz += '</tr>';
 			}
 		}
-		
-		sz += '</table></td></tr></table>';
-		sz += '</fieldset></td></tr><tr><td id="HA-style"></td></tr></table></form>';
+		sz += '</table>';
+		sz += '<div class="space"></div>';
+		sz += '<label for="' + sID + '" class="fr">Color:</label>';
+		sz += '<div class="buttonColor" ';
+		sz += '		onMouseover="className += \' buttonColor-hilite\';" ';
+		sz += '		onMouseout="className = \'buttonColor\';">';
+		sz += '	<span id="' + szID + '" class="chooser">&nbsp;</span>';
+		sz += '	<span id="colorUnset" class="nocolor" title="' + "no_color" + '" ';
+		sz += '		onMouseover="className += \' nocolor-hilite\';" ';
+		sz += '		onMouseout="className = \'nocolor\';"';
+		sz += '	>&#x00d7;</span></div>';
+		sz += '<input type="text" name="' + sID + '" id="' + sID + '" value="' + initialValue + '" />';
+		sz += '</fieldset></form>';
 		return sz;
+	},
+	
+	/*
+	 * This function gets called when the toolbar is updated
+	 */
+	onUpdateToolbar : function () {
+		var editor = this.editor;
+		if (this.getEditorMode() === "wysiwyg" && editor.isEditable()) {
+			var buttonId;
+			var statusBarSelection = editor.getPluginInstance("StatusBar") ? editor.getPluginInstance("StatusBar").getSelection() : null;
+			var parentElement = statusBarSelection ? statusBarSelection : editor.getParentElement();
+			var enabled = editor.endPointsInSameBlock() && !(editor._selectionEmpty(editor._getSelection()) && parentElement.nodeName.toLowerCase() == "body");
+			for (var i = 0, n = this.buttonList.length; i < n; ++i) {
+				buttonId = this.buttonList[i][0];
+				var obj = editor._toolbarObjects[buttonId];
+				if ((typeof(obj) !== "undefined")) {
+					obj.state("active", parentElement.style[this.styleProperty[buttonId]]);
+					obj.state("enabled", enabled);
+				}
+			}
+		}
 	}
 });
 

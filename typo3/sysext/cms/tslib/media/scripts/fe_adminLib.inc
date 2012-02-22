@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * FE admin lib
  *
- * $Id: fe_adminLib.inc 3797 2008-06-11 06:39:13Z stucki $
+ * $Id: fe_adminLib.inc 8935 2010-09-30 16:05:20Z stephenking $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -88,35 +88,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');		// For use with images.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * This library provides a HTML-template file based framework for Front End creating/editing/deleting records authenticated by email or fe_user login.
  * It is used in the extensions "direct_mail_subscription" and "feuser_admin" (and the deprecated(!) static template "plugin.feadmin.dmailsubscription" and "plugin.feadmin.fe_users" which are the old versions of these two extensions)
@@ -431,7 +402,7 @@ class user_feAdmin	{
 			while(list($theField,$theValue)=each($this->conf['parseValues.']))	{
 				$listOfCommands = t3lib_div::trimExplode(',',$theValue,1);
 				while(list(,$cmd)=each($listOfCommands))	{
-					$cmdParts = split('\[|\]',$cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
+					$cmdParts = preg_split('/\[|\]/', $cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
 					$theCmd=trim($cmdParts[0]);
 					switch($theCmd)	{
 						case 'int':
@@ -445,16 +416,16 @@ class user_feAdmin	{
 							$this->dataArr[$theField] = str_replace(' ', '', $this->dataArr[$theField]);
 						break;
 						case 'alpha':
-							$this->dataArr[$theField] = ereg_replace('[^a-zA-Z]','',$this->dataArr[$theField]);
+							$this->dataArr[$theField] = preg_replace('/[^a-zA-Z]/','',$this->dataArr[$theField]);
 						break;
 						case 'num':
-							$this->dataArr[$theField] = ereg_replace('[^0-9]','',$this->dataArr[$theField]);
+							$this->dataArr[$theField] = preg_replace('/[^0-9]/','',$this->dataArr[$theField]);
 						break;
 						case 'alphanum':
-							$this->dataArr[$theField] = ereg_replace('[^a-zA-Z0-9]','',$this->dataArr[$theField]);
+							$this->dataArr[$theField] = preg_replace('/[^a-zA-Z0-9]/','',$this->dataArr[$theField]);
 						break;
 						case 'alphanum_x':
-							$this->dataArr[$theField] = ereg_replace('[^a-zA-Z0-9_-]','',$this->dataArr[$theField]);
+							$this->dataArr[$theField] = preg_replace('/[^a-zA-Z0-9_-]/','',$this->dataArr[$theField]);
 						break;
 						case 'trim':
 							$this->dataArr[$theField] = trim($this->dataArr[$theField]);
@@ -497,8 +468,8 @@ class user_feAdmin	{
 							$hashArray=array();
 							while(list(,$fN)=each($otherFields))	{
 								$vv = $this->dataArr[$fN];
-								$vv = ereg_replace('[[:space:]]','',$vv);
-								$vv = ereg_replace('[^[:alnum:]]','',$vv);
+								$vv = preg_replace('/[[:space:]]/','',$vv);
+								$vv = preg_replace('/[^[:alnum:]]/','',$vv);
 								$vv = strtolower($vv);
 								$hashArray[]=$vv;
 							}
@@ -693,7 +664,7 @@ class user_feAdmin	{
 			while(list($theField,$theValue)=each($this->conf[$this->cmdKey.'.']['evalValues.']))	{
 				$listOfCommands = t3lib_div::trimExplode(',',$theValue,1);
 				while(list(,$cmd)=each($listOfCommands))	{
-					$cmdParts = split('\[|\]',$cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
+					$cmdParts = preg_split('/\[|\]/', $cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
 					$theCmd = trim($cmdParts[0]);
 					switch($theCmd)	{
 						case 'uniqueGlobal':
@@ -786,7 +757,7 @@ class user_feAdmin	{
 	function userProcess($mConfKey,$passVar)	{
 		if ($this->conf[$mConfKey])	{
 			$funcConf = $this->conf[$mConfKey.'.'];
-			$funcConf['parentObj']=&$this;
+			$funcConf['parentObj'] = $this;
 			$passVar = $GLOBALS['TSFE']->cObj->callUserFunction($this->conf[$mConfKey], $funcConf, $passVar);
 		}
 		return $passVar;
@@ -804,7 +775,7 @@ class user_feAdmin	{
 	function userProcess_alt($confVal,$confArr,$passVar)	{
 		if ($confVal)	{
 			$funcConf = $confArr;
-			$funcConf['parentObj']=&$this;
+			$funcConf['parentObj'] = $this;
 			$passVar = $GLOBALS['TSFE']->cObj->callUserFunction($confVal, $funcConf, $passVar);
 		}
 		return $passVar;
@@ -1024,6 +995,10 @@ class user_feAdmin	{
 
 			$templateCode = $this->removeRequired($templateCode,$failure);
 			$this->setCObjects($templateCode);
+
+			if (!is_array($this->dataArr)) {
+				$this->dataArr = array();
+			}
 
 			$markerArray = $this->cObj->fillInMarkerArray($this->markerArray, $this->dataArr, '', TRUE, 'FIELD_', $this->recInMarkersHSC);
 			if ($this->conf['create.']['preview'] && !$this->previewLabel)	{$markerArray['###HIDDENFIELDS###'].= '<input type="hidden" name="preview" value="1" />';}
@@ -1248,7 +1223,7 @@ class user_feAdmin	{
 			while(list($theField,$theValue)=each($this->conf[$this->cmdKey.'.']['evalValues.']))	{
 				$listOfCommands = t3lib_div::trimExplode(',',$theValue,1);
 				while(list(,$cmd)=each($listOfCommands))	{
-					$cmdParts = split('\[|\]',$cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
+					$cmdParts = preg_split('/\[|\]/', $cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
 					$theCmd = trim($cmdParts[0]);
 					switch($theCmd)	{
 						case 'twice':
@@ -1268,7 +1243,7 @@ class user_feAdmin	{
 			while(list($theField,$theValue)=each($this->conf['parseValues.']))	{
 				$listOfCommands = t3lib_div::trimExplode(',',$theValue,1);
 				while(list(,$cmd)=each($listOfCommands))	{
-					$cmdParts = split('\[|\]',$cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
+					$cmdParts = preg_split('/\[|\]/', $cmd);	// Point is to enable parameters after each command enclosed in brackets [..]. These will be in position 1 in the array.
 					$theCmd = trim($cmdParts[0]);
 					switch($theCmd)	{
 						case 'multiple':
@@ -1457,7 +1432,8 @@ class user_feAdmin	{
 	}
 
 	/**
-	 * Actually sends the requested mails (through $this->cObj->sendNotifyEmail)
+	 * Actually sends the requested mails (through $this->cObj->sendNotifyEmail or through $this->sendHTMLMail).
+	 * As of TYPO3 v4.3 with autoloader, a check for $GLOBALS['TSFE']->config['config']['incT3Lib_htmlmail'] has been included for backwards compatibility.
 	 *
 	 * @param	string		Recipient email address (or list)
 	 * @param	string		Possible "admin" email address. Will enable sending of admin emails if also $adminContent is provided
@@ -1470,8 +1446,9 @@ class user_feAdmin	{
 	function sendMail($recipient, $admin, $content='', $adminContent='')	{
 			// Admin mail:
 		if ($admin && $adminContent)	{
-			if (!$this->isHTMLContent($adminContent))	{
-				$admMail = $this->cObj->sendNotifyEmail($adminContent,
+			if (!$this->isHTMLContent($adminContent) || !$GLOBALS['TSFE']->config['config']['incT3Lib_htmlmail']) {
+				$admMail = $this->cObj->sendNotifyEmail(
+									strip_tags($adminContent),
 									$admin,
 									'',
 									$this->conf['email.']['from'],
@@ -1489,8 +1466,9 @@ class user_feAdmin	{
 			}
 		}
 			// user mail:
-		if (!$this->isHTMLContent($content))	{
-			$this->cObj->sendNotifyEmail($content,
+		if (!$this->isHTMLContent($content) || !$GLOBALS['TSFE']->config['config']['incT3Lib_htmlmail']) {
+			$this->cObj->sendNotifyEmail(
+								strip_tags($content),
 								$recipient,
 								'',			// ($admMail ? '' : $admin), 		// If the special administration mail was not found and send, the regular is...
 								$this->conf['email.']['from'],
@@ -1521,7 +1499,6 @@ class user_feAdmin	{
 
 	/**
 	 * Sending HTML email, using same parameters as tslib_cObj::sendNotifyEmail()
-	 * NOTICE: "t3lib_htmlmail" library must be included for this to work, otherwise an error message is outputted.
 	 *
 	 * @param	string		The message content. If blank, no email is sent.
 	 * @param	string		Comma list of recipient email addresses
@@ -1535,46 +1512,40 @@ class user_feAdmin	{
 	 */
 	function sendHTMLMail($content,$recipient,$dummy,$fromEmail,$fromName,$replyTo='')	{
 		if (trim($recipient) && trim($content))	{
-			$cls=t3lib_div::makeInstanceClassName('t3lib_htmlmail');
-			if (class_exists($cls))	{	// If htmlmail lib is included, then generate a nice HTML-email
-				$parts = spliti('<title>|</title>',$content,3);
-				$subject = trim($parts[1]) ? trim($parts[1]) : 'TYPO3 FE Admin message';
+			$parts = preg_spliti('/<title>|</title>/', $content, 3);
+			$subject = trim($parts[1]) ? trim($parts[1]) : 'TYPO3 FE Admin message';
 
-				$Typo3_htmlmail = t3lib_div::makeInstance('t3lib_htmlmail');
-				$Typo3_htmlmail->start();
-				$Typo3_htmlmail->useBase64();
+			$Typo3_htmlmail = t3lib_div::makeInstance('t3lib_htmlmail');
+			$Typo3_htmlmail->start();
+			$Typo3_htmlmail->useBase64();
 
-				$Typo3_htmlmail->subject = $subject;
-				$Typo3_htmlmail->from_email = $fromEmail;
-				$Typo3_htmlmail->from_name = $fromName;
-				$Typo3_htmlmail->replyto_email = $replyTo ? $replyTo : $fromEmail;
-				$Typo3_htmlmail->replyto_name = $replyTo ? '' : $fromName;
-				$Typo3_htmlmail->organisation = '';
-				$Typo3_htmlmail->priority = 3;
+			$Typo3_htmlmail->subject = $subject;
+			$Typo3_htmlmail->from_email = $fromEmail;
+			$Typo3_htmlmail->from_name = $fromName;
+			$Typo3_htmlmail->replyto_email = $replyTo ? $replyTo : $fromEmail;
+			$Typo3_htmlmail->replyto_name = $replyTo ? '' : $fromName;
+			$Typo3_htmlmail->organisation = '';
+			$Typo3_htmlmail->priority = 3;
 
-					// HTML
-				$Typo3_htmlmail->theParts['html']['content'] = $content;	// Fetches the content of the page
-				$Typo3_htmlmail->theParts['html']['path'] = '';
-				$Typo3_htmlmail->extractMediaLinks();
-				$Typo3_htmlmail->extractHyperLinks();
-				$Typo3_htmlmail->fetchHTMLMedia();
-				$Typo3_htmlmail->substMediaNamesInHTML(0);	// 0 = relative
-				$Typo3_htmlmail->substHREFsInHTML();
-				$Typo3_htmlmail->setHTML($Typo3_htmlmail->encodeMsg($Typo3_htmlmail->theParts['html']['content']));
+				// HTML
+			$Typo3_htmlmail->theParts['html']['content'] = $content;	// Fetches the content of the page
+			$Typo3_htmlmail->theParts['html']['path'] = '';
+			$Typo3_htmlmail->extractMediaLinks();
+			$Typo3_htmlmail->extractHyperLinks();
+			$Typo3_htmlmail->fetchHTMLMedia();
+			$Typo3_htmlmail->substMediaNamesInHTML(0);	// 0 = relative
+			$Typo3_htmlmail->substHREFsInHTML();
+			$Typo3_htmlmail->setHTML($Typo3_htmlmail->encodeMsg($Typo3_htmlmail->theParts['html']['content']));
 
-					// PLAIN
-				$Typo3_htmlmail->addPlain('');
+				// PLAIN
+			$Typo3_htmlmail->addPlain('');
 
-					// SET Headers and Content
-				$Typo3_htmlmail->setHeaders();
-				$Typo3_htmlmail->setContent();
-				$Typo3_htmlmail->setRecipient($recipient);
+				// SET Headers and Content
+			$Typo3_htmlmail->setHeaders();
+			$Typo3_htmlmail->setContent();
+			$Typo3_htmlmail->setRecipient($recipient);
 
-		//		debug($Typo3_htmlmail->theParts);
-				$Typo3_htmlmail->sendtheMail();
-			} else {
-				debug('SYSTEM ERROR: No HTML-mail library loaded. Set "page.config.incT3Lib_htmlmail = 1" is your TypoScript template.');
-			}
+			$Typo3_htmlmail->sendtheMail();
 		}
 	}
 

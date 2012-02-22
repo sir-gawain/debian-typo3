@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for loading database groups
  *
- * $Id: class.t3lib_loaddbgroup.php 3639 2008-05-02 21:19:06Z ingmars $
+ * $Id: class.t3lib_loaddbgroup.php 6928 2010-02-21 12:37:16Z xperseguers $
  * Revised for TYPO3 3.6 September/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -62,7 +62,6 @@
 
 
 
-require_once (PATH_t3lib.'class.t3lib_refindex.php');
 
 
 
@@ -284,9 +283,9 @@ class t3lib_loadDBGroup	{
 			$sorting_field = 'sorting_foreign';
 
 			if ($this->MM_isMultiTableRelationship)	{
-				$additionalWhere .= ' AND ( tablenames="'.$this->currentTable.'"';
+				$additionalWhere .= ' AND ( tablenames=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->currentTable, $tableName);
 				if ($this->currentTable == $this->MM_isMultiTableRelationship)	{	// be backwards compatible! When allowing more than one table after having previously allowed only one table, this case applies.
-					$additionalWhere .= ' OR tablenames=""';
+					$additionalWhere .= ' OR tablenames=\'\'';
 				}
 				$additionalWhere .= ' ) ';
 			}
@@ -354,7 +353,7 @@ class t3lib_loadDBGroup	{
 
 			$additionalWhere_tablenames = '';
 			if ($this->MM_is_foreign && $prep)	{
-				$additionalWhere_tablenames = ' AND tablenames="'.$this->currentTable.'"';
+				$additionalWhere_tablenames = ' AND tablenames=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->currentTable, $MM_tableName);
 			}
 
 			$additionalWhere = '';
@@ -412,7 +411,7 @@ class t3lib_loadDBGroup	{
 					$whereClause = $uidLocal_field.'='.$uid.' AND '.$uidForeign_field.'='.$val['id'].
 									($this->MM_hasUidField ? ' AND uid='.intval($oldMMs_inclUid[$oldMMs_index][2]) : ''); 	// In principle, selecting on the UID is all we need to do if a uid field is available since that is unique! But as long as it "doesn't hurt" we just add it to the where clause. It should all match up.
 					if ($tablename) {
-						$whereClause .= ' AND tablenames="'.$tablename.'"';
+						$whereClause .= ' AND tablenames=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($tablename, $MM_tableName);
 					}
 					$GLOBALS['TYPO3_DB']->exec_UPDATEquery($MM_tableName, $whereClause.$additionalWhere, array($sorting_field => $c));
 
@@ -446,7 +445,7 @@ class t3lib_loadDBGroup	{
 						$elDelete = $oldMMs_inclUid[$oldMM_key];
 					} else {
 						if(is_array($mmItem)) {
-							$removeClauses[] = 'tablenames="'.$mmItem[0].'" AND '.$uidForeign_field.'='.$mmItem[1];
+							$removeClauses[] = 'tablenames=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($mmItem[0], $MM_tableName) . ' AND ' . $uidForeign_field . '=' . $mmItem[1];
 						} else {
 							$removeClauses[] = $uidForeign_field.'='.$mmItem;
 						}
@@ -499,7 +498,7 @@ class t3lib_loadDBGroup	{
 
 			$additionalWhere_tablenames = '';
 			if ($this->MM_is_foreign && $prep)	{
-				$additionalWhere_tablenames = ' AND tablenames="'.$this->currentTable.'"';
+				$additionalWhere_tablenames = ' AND tablenames=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->currentTable, $MM_tableName);
 			}
 
 			$additionalWhere = '';
@@ -831,4 +830,5 @@ class t3lib_loadDBGroup	{
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_loaddbgroup.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_loaddbgroup.php']);
 }
+
 ?>

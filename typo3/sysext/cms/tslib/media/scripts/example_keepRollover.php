@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Demonstrates how to manipulate menu generation so that a click on a menu item will trigger two (or more) frames to load an URL
  * Used in the "testsite" package
  *
- * $Id: example_keepRollover.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: example_keepRollover.php 5165 2009-03-09 18:28:59Z ohader $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  * XHTML compliant
  *

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,12 +30,12 @@
  * Module Include-file
  *
  * localconf-variables:
- * $TYPO3_CONF_VARS["MODS"]["web_ts"]["onlineResourceDir"] = "fileadmin/fonts/";		// This is the path (must be in "fileadmin/" !!) where the web_ts/constant-editor submodule fetches online resources. Put fonts (ttf) and standard images here!
+ * $TYPO3_CONF_VARS['MODS']['web_ts']['onlineResourceDir'] = 'fileadmin/fonts/';		// This is the path (must be in "fileadmin/" !!) where the web_ts/constant-editor submodule fetches online resources. Put fonts (ttf) and standard images here!
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-require_once(PATH_t3lib."class.t3lib_extobjbase.php");
+$GLOBALS['LANG']->includeLLFile('EXT:tstemplate_ceditor/locallang.xml');
 
 class tx_tstemplateceditor extends t3lib_extobjbase {
 	function initialize_editor($pageId,$template_uid=0)	{
@@ -111,7 +111,6 @@ class tx_tstemplateceditor extends t3lib_extobjbase {
 
 				// Update template ?
 			if (t3lib_div::_POST('submit') || (t3lib_div::testInt(t3lib_div::_POST('submit_x')) && t3lib_div::testInt(t3lib_div::_POST('submit_y')))) {
-				require_once (PATH_t3lib."class.t3lib_tcemain.php");
 				$tmpl->changed=0;
 				$tmpl->ext_procesInput(t3lib_div::_POST(),$_FILES,$theConstants,$tplRow);
 		//		debug($tmpl->changed);
@@ -147,7 +146,7 @@ class tx_tstemplateceditor extends t3lib_extobjbase {
 				// Resetting the menu (stop)
 
 			$theOutput.=$this->pObj->doc->spacer(5);
-			$theOutput.=$this->pObj->doc->section("Edit constants for template:",'<img '.t3lib_iconWorks::skinImg($BACK_PATH, t3lib_iconWorks::getIcon('sys_template', $tplRow)).' align="top" /> <b>'.$this->pObj->linkWrapTemplateTitle($tplRow["title"],"constants").'</b>'.htmlspecialchars(trim($tplRow["sitetitle"])?' - ('.$tplRow["sitetitle"].')':''),0,1);
+			$theOutput.=$this->pObj->doc->section($GLOBALS['LANG']->getLL('editConstants', true),'<img '.t3lib_iconWorks::skinImg($BACK_PATH, t3lib_iconWorks::getIcon('sys_template', $tplRow)).' align="top" /> <b>'.$this->pObj->linkWrapTemplateTitle($tplRow["title"],"constants").'</b>'.htmlspecialchars(trim($tplRow["sitetitle"])?' - ('.$tplRow["sitetitle"].')':''),0,1);
 
 			if ($manyTemplatesMenu)	{
 				$theOutput.=$this->pObj->doc->section("",$manyTemplatesMenu);
@@ -156,10 +155,10 @@ class tx_tstemplateceditor extends t3lib_extobjbase {
 
 			$theOutput.=$this->pObj->doc->spacer(5);
 			if (count($this->pObj->MOD_MENU["constant_editor_cat"]))	{
-				$menu = "Category: ".t3lib_BEfunc::getFuncMenu($this->pObj->id,"SET[constant_editor_cat]",$this->pObj->MOD_SETTINGS["constant_editor_cat"],$this->pObj->MOD_MENU["constant_editor_cat"]);
+				$menu = $GLOBALS['LANG']->getLL('category', true)." ".t3lib_BEfunc::getFuncMenu($this->pObj->id,"SET[constant_editor_cat]",$this->pObj->MOD_SETTINGS["constant_editor_cat"],$this->pObj->MOD_MENU["constant_editor_cat"]);
 				$theOutput.=$this->pObj->doc->section("",'<NOBR>'.$menu.'</NOBR>');
 			} else {
-				$theOutput.=$this->pObj->doc->section("No constants available","There are no editable constants available for the Constant Editor.",1,0,1);
+				$theOutput.=$this->pObj->doc->section($GLOBALS['LANG']->getLL('noConstants', true),$GLOBALS['LANG']->getLL('noConstantsDescription', true),1,0,1);
 			}
 
 

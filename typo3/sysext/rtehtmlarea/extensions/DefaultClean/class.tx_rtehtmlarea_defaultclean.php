@@ -26,7 +26,7 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultclean.php 4759 2009-01-20 04:16:48Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultclean.php 5489 2009-05-23 15:26:20Z ohader $
  *
  */
 
@@ -42,16 +42,16 @@ class tx_rtehtmlarea_defaultclean extends tx_rtehtmlareaapi {
 	protected $thisConfig;					// Reference to RTE PageTSConfig
 	protected $toolbar;					// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 					// Frontend language array
-	
+
 	protected $pluginButtons = 'cleanword';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'cleanword'	=> 'CleanWord',
 		);
-	
+
 	public function main($parentObject) {
 		return parent::main($parentObject) && $this->thisConfig['enableWordClean'] && !is_array($this->thisConfig['enableWordClean.']['HTMLparser.']);
 	}
-	
+
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -64,7 +64,7 @@ class tx_rtehtmlarea_defaultclean extends tx_rtehtmlareaapi {
 	 * 	RTEarea['.$RTEcounter.']["buttons"]["button-id"]["property"] = "value";
 	 */
 	public function buildJavascriptConfiguration($RTEcounter) {
-		
+
 		$registerRTEinJavascriptString = '';
 		$button = 'cleanword';
 		if (in_array($button, $this->toolbar)) {
@@ -73,7 +73,7 @@ class tx_rtehtmlarea_defaultclean extends tx_rtehtmlareaapi {
 			RTEarea['.$RTEcounter.'].buttons.'. $button .' = new Object();';
 			}
 			$registerRTEinJavascriptString .= '
-			RTEarea['.$RTEcounter.'].buttons.'. $button .' = {"hotKey" : "0"};';
+			RTEarea['.$RTEcounter.'].buttons.'. $button .' = {"hotKey" : "' . ($this->thisConfig['enableWordClean.']['hotKey'] ? $this->thisConfig['enableWordClean.']['hotKey'] : '0') . '"};';
 		}
 		return $registerRTEinJavascriptString;
 	}

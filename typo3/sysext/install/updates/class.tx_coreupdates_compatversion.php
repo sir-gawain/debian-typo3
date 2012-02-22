@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Sebastian Kurfuerst <sebastian@garbage-group.de>
+*  (c) 1999-2009 Sebastian Kurfuerst <sebastian@garbage-group.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,9 +27,9 @@
 
 /**
  * Contains the update class for the compatibility version. Used by the update wizard in the install tool.
- * 
+ *
  * @author Sebastian Kurfuerst <sebastian@garbage-group.de
- * @version $Id: class.tx_coreupdates_compatversion.php 3989 2008-08-18 13:47:45Z dmitry $
+ * @version $Id: class.tx_coreupdates_compatversion.php 9769 2010-12-16 13:37:08Z ohader $
  */
 class tx_coreupdates_compatversion {
 	var $versionNumber;	// version number coming from t3lib_div::int_from_ver()
@@ -66,7 +66,7 @@ class tx_coreupdates_compatversion {
 				The compatibility version has been set to the current TYPO3 version. This is a stamp and has no impact for your installation.';
 			}
 		} else {
-			$description = 'Your current TYPO3 installation is configured to <b>behave like version '.$TYPO3_CONF_VARS['SYS']['compat_version'].'</b> of TYPO3. If you just upgraded from this version, you most likely want to <b>use new features</b> as well.</p><p>In the next step, you will see the things that need to be adjusted to make your installation compatible with the new features.';
+			$description = 'Your current TYPO3 installation is configured to <b>behave like version ' . htmlspecialchars($TYPO3_CONF_VARS['SYS']['compat_version']) . '</b> of TYPO3. If you just upgraded from this version, you most likely want to <b>use new features</b> as well.</p><p>In the next step, you will see the things that need to be adjusted to make your installation compatible with the new features.';
 		}
 
 		return 1;	// Return 1 in any case so user has possibility to switch back to a previous compat_version.
@@ -86,13 +86,14 @@ class tx_coreupdates_compatversion {
 			$versions = array(
 				'3.8' => '<= 3.8',
 				'4.1' => '<= 4.1',
+				'4.2' => '<= 4.2',
 			);
 			foreach ($versions as $singleVersion => $caption)	{
 				$content .= '<option value="'.$singleVersion.'">'.$caption.'</option>';
 			}
 			$content .= '</select>';
 		} else {
-			$content = 'TYPO3 output is currently compatible to version '.$TYPO3_CONF_VARS['SYS']['compat_version'].'. To use all the new features in the current TYPO3 version, make sure you follow the guidelines below to upgrade without problems.<br />
+			$content = 'TYPO3 output is currently compatible to version ' . htmlspecialchars($TYPO3_CONF_VARS['SYS']['compat_version']) . '. To use all the new features in the current TYPO3 version, make sure you follow the guidelines below to upgrade without problems.<br />
 			<p><strong>Follow the steps below carefully and confirm every step!</strong><br />You will see this list again after you performed the update.</p>';
 
 			$content .= $this->showChangesNeeded($inputPrefix);

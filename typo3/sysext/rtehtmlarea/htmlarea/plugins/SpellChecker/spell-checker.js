@@ -2,7 +2,7 @@
 *  Copyright notice
 *
 *  (c) 2003 dynarch.com. Authored by Mihai Bazon, sponsored by www.americanbible.org.
-*  (c) 2004-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
 /*
  * Spell Checker Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: spell-checker.js 4102 2008-09-13 23:04:59Z stan $
+ * TYPO3 SVN ID: $Id: spell-checker.js 5046 2009-02-21 05:27:57Z stan $
  */
 SpellChecker = HTMLArea.Plugin.extend({
 
@@ -49,6 +49,9 @@ SpellChecker = HTMLArea.Plugin.extend({
 		this.spellCheckerMode = this.pageTSconfiguration.spellCheckerMode;
 		this.enablePersonalDicts = this.pageTSconfiguration.enablePersonalDicts;
 		this.userUid = this.editorConfiguration.userUid;
+		this.defaultDictionary = (this.pageTSconfiguration.dictionaries && this.pageTSconfiguration.dictionaries[this.contentISOLanguage] && this.pageTSconfiguration.dictionaries[this.contentISOLanguage].defaultValue) ? this.pageTSconfiguration.dictionaries[this.contentISOLanguage].defaultValue : "";
+		this.showDictionaries = (this.pageTSconfiguration.dictionaries && this.pageTSconfiguration.dictionaries.items) ? this.pageTSconfiguration.dictionaries.items : "";
+		this.restrictToDictionaries = (this.pageTSconfiguration.dictionaries && this.pageTSconfiguration.dictionaries.restrictToItems) ? this.pageTSconfiguration.dictionaries.restrictToItems : "";
 
 		/*
 		 * Registering plugin "About" information
@@ -58,8 +61,8 @@ SpellChecker = HTMLArea.Plugin.extend({
 			developer	: "Mihai Bazon & Stanislas Rolland",
 			developerUrl	: "http://dynarch.com/mishoo/",
 			copyrightOwner	: "Mihai Bazon & Stanislas Rolland",
-			sponsor		: "American Bible Society & Fructifor Inc.",
-			sponsorUrl	: "http://www.fructifor.ca/",
+			sponsor		: "American Bible Society & SJBR",
+			sponsorUrl	: "http://www.sjbr.ca/",
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
@@ -94,7 +97,7 @@ SpellChecker = HTMLArea.Plugin.extend({
 		switch (buttonId) {
 			case "SpellCheck":
 				var charset = (this.contentCharset.toLowerCase() == 'iso-8859-1') ? "-iso-8859-1" : "";
-				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("spell-check-ui" + charset), null, null, {width:670, height:600});
+				this.dialog = this.openDialog(buttonId, this.makeUrlFromPopupName("spell-check-ui" + charset), null, null, {width:710, height:600});
 				break;
 		}
 		return false;

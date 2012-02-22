@@ -1,9 +1,12 @@
-<html class="popupwin">
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
 <!--
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004  Ki Master George <kimastergeorge@gmail.com>
+*  (c) 2004 Ki Master George <kimastergeorge@gmail.com>
 *  (c) 2005-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
@@ -32,7 +35,7 @@
 /*
  * Insert Smiley Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: insertsmiley.html 4102 2008-09-13 23:04:59Z stan $
+ * TYPO3 SVN ID: $Id: insertsmiley.html 5166 2009-03-09 23:46:55Z ohader $
  */
 -->
 <head>
@@ -72,9 +75,13 @@
 				} else {
 					inum = i;
 				}
-				trow.insertCell((i - 1) % 4).innerHTML = "<a href=\"javascript:onOK('" + inum + "')\"><img style=\"border: 0px;\" alt=\"Smiley " + + i + "\" src=\""+ param.editor_url +"plugins/InsertSmiley/smileys/" + inum + ".gif\" />";
+				trow.insertCell((i - 1) % 4).innerHTML = "<a href=\"javascript:onOK('" + inum + "')\"><img alt=\"Smiley " + + i + "\" src=\""+ param.editor_url +"plugins/InsertSmiley/smileys/" + inum + ".gif\" />";
 			}
-			dialog.resize();
+			if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
+				setTimeout( function() { dialog.resize(); }, 200);
+			} else {
+				dialog.resize();
+			}
 		};
 
 		function onOK(smileynum) {
@@ -93,18 +100,17 @@
 		/*]]>*/
 	</script>
 </head>
-<body class="popupwin" onload="Init();">
+<body class="popupwin htmlarea-insert-smiley"" onload="Init();">
 <div id="content">
 <div class="title">Insert Smiley</div>
 <form action="" method="get">
-	<div class="smileytable" style="text-align: center;">
+	<div class="smileytable">
 		<table id="smileytable" name="smileytable"></table>
 	</div>
 	<div class="space"></div>
 	<div class="buttons">
 		<button type="button" onclick="return onCancel();">Cancel</button>
 	</div>
-	<br />
 </form>
 </div>
 </body>

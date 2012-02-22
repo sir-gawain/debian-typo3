@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2005-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /*
  * TYPO3Image plugin for htmlArea RTE
  *
- * TYPO3 SVN ID: $Id:$
+ * TYPO3 SVN ID: $Id: typo3image.js 6539 2009-11-25 14:49:14Z stucki $
  */
 TYPO3Image = HTMLArea.Plugin.extend({
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2005-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -209,11 +209,6 @@ class wslib {
 				OR (publish_time=0 AND unpublish_time!=0 AND unpublish_time<='.intval($GLOBALS['EXEC_TIME']).'))'.
 				t3lib_BEfunc::deleteClause('sys_workspace')
 		);
-
-			// If any workspaces was selected:
-		if (count($workspaces))	{
-			require_once(PATH_t3lib.'class.t3lib_tcemain.php');	// Including it here because we want to load a 1-minute cronjob with inclusion only if needed!
-		}
 
 		foreach($workspaces as $rec)	{
 

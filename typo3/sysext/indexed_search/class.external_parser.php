@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -83,7 +83,15 @@ class tx_indexed_search_extparse {
 	var $supportedExtensions = array();
 
 	var $pObj;		// Reference to parent object (indexer class)
+	protected $langObject;	// Reference to LANG-Object
 
+	/**
+	 * Constructs this external parsers object
+	 */
+	public function __construct() {
+			// Set the language object to be used accordant to current TYPO3_MODE:
+		$this->langObject = (TYPO3_MODE == 'FE' ? $GLOBALS['TSFE'] : $GLOBALS['LANG']);
+	}
 
 	/**
 	 * Initialize external parser for parsing content.
@@ -104,7 +112,7 @@ class tx_indexed_search_extparse {
 			// Ignore extensions
 		$ignoreExtensions = t3lib_div::trimExplode(',', strtolower($indexerConfig['ignoreExtensions']),1);
 		if (in_array($extension, $ignoreExtensions))	{
-			$this->pObj->log_setTSlogMessage('Extension "'.$extension.'" was set to be ignored.',1);
+			$this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:ignoreExtensions'), $extension), 1);
 			return FALSE;
 		}
 
@@ -113,46 +121,46 @@ class tx_indexed_search_extparse {
 			case 'pdf':
 					// PDF
 				if ($indexerConfig['pdftools'])	{
-					$pdfPath = ereg_replace("\/$",'',$indexerConfig['pdftools']).'/';
+					$pdfPath = rtrim($indexerConfig['pdftools'], '/').'/';
 					if (ini_get('safe_mode') || (@is_file($pdfPath.'pdftotext'.$exe) && @is_file($pdfPath.'pdfinfo'.$exe)))	{
 						$this->app['pdfinfo'] = $pdfPath.'pdfinfo'.$exe;
 						$this->app['pdftotext'] = $pdfPath.'pdftotext'.$exe;
 							// PDF mode:
 						$this->pdf_mode = t3lib_div::intInRange($indexerConfig['pdf_mode'],-100,100);
 						$extOK = TRUE;
-					} else $this->pObj->log_setTSlogMessage("PDF tools was not found in paths '".$pdfPath."pdftotext' and/or '".$pdfPath."pdfinfo'",3);
-				} else $this->pObj->log_setTSlogMessage('PDF tools disabled',1);
+					} else $this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:pdfToolsNotFound'), $pdfPath), 3);
+				} else $this->pObj->log_setTSlogMessage($this->sL('LLL:EXT:indexed_search/locallang.xml:pdfToolsDisabled'), 1);
 			break;
 			case 'doc':
 					// Catdoc
 				if ($indexerConfig['catdoc'])	{
-					$catdocPath = ereg_replace("\/$",'',$indexerConfig['catdoc']).'/';
+					$catdocPath = rtrim($indexerConfig['catdoc'], '/').'/';
 					if (ini_get('safe_mode') || @is_file($catdocPath.'catdoc'.$exe))	{
 						$this->app['catdoc'] = $catdocPath.'catdoc'.$exe;
 						$extOK = TRUE;
-					} else $this->pObj->log_setTSlogMessage("'catdoc' tool for reading Word-files was not found in path '".$catdocPath."catdoc'",3);
-				} else $this->pObj->log_setTSlogMessage('catdoc tools (Word-files) disabled',1);
+					} else $this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:catdocNotFound'), $catdocPath), 3);
+				} else $this->pObj->log_setTSlogMessage($this->sL('LLL:EXT:indexed_search/locallang.xml:catdocDisabled'), 1);
 			break;
 			case 'pps':		// MS PowerPoint(?)
 			case 'ppt':		// MS PowerPoint
 					// ppthtml
 				if ($indexerConfig['ppthtml'])	{
-					$ppthtmlPath = ereg_replace('\/$','',$indexerConfig['ppthtml']).'/';
+					$ppthtmlPath = rtrim($indexerConfig['ppthtml'], '/').'/';
 					if (ini_get('safe_mode') || @is_file($ppthtmlPath.'ppthtml'.$exe)){
 						$this->app['ppthtml'] = $ppthtmlPath.'ppthtml'.$exe;
 						$extOK = TRUE;
-					} else $this->pObj->log_setTSlogMessage("'ppthtml' tool for reading Powerpoint-files was not found in path '".$ppthtmlPath."ppthtml'",3);
-				} else $this->pObj->log_setTSlogMessage('ppthtml tools (Powerpoint-files) disabled',1);
+					} else $this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:ppthtmlNotFound'), $ppthtmlPath), 3);
+				} else $this->pObj->log_setTSlogMessage($this->sL('LLL:EXT:indexed_search/locallang.xml:ppthtmlDisabled'), 1);
 			break;
 			case 'xls':		// MS Excel
 					// Xlhtml
 				if ($indexerConfig['xlhtml'])	{
-					$xlhtmlPath = ereg_replace('\/$','',$indexerConfig['xlhtml']).'/';
+					$xlhtmlPath = rtrim($indexerConfig['xlhtml'], '/').'/';
 					if (ini_get('safe_mode') || @is_file($xlhtmlPath.'xlhtml'.$exe)){
 						$this->app['xlhtml'] = $xlhtmlPath.'xlhtml'.$exe;
 						$extOK = TRUE;
-					} else $this->pObj->log_setTSlogMessage("'xlhtml' tool for reading Excel-files was not found in path '".$xlhtmlPath."xlhtml'",3);
-				} else $this->pObj->log_setTSlogMessage('xlhtml tools (Excel-files) disabled',1);
+					} else $this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:xlhtmlNotFound'), $xlhtmlPath), 3);
+				} else $this->pObj->log_setTSlogMessage($this->sL('LLL:EXT:indexed_search/locallang.xml:xlhtmlDisabled'), 1);
 			break;
 			case 'sxc':		// Open Office Calc.
 			case 'sxi':		// Open Office Impress
@@ -161,22 +169,22 @@ class tx_indexed_search_extparse {
 			case 'odp':		// Oasis OpenDocument Presentation
 			case 'odt':		// Oasis OpenDocument Text
 				if ($indexerConfig['unzip'])	{
-					$unzipPath = preg_replace('/\/$/','',$indexerConfig['unzip']).'/';
+					$unzipPath = rtrim($indexerConfig['unzip'], '/').'/';
 					if (ini_get('safe_mode') || @is_file($unzipPath.'unzip'.$exe))	{
 						$this->app['unzip'] = $unzipPath.'unzip'.$exe;
 						$extOK = TRUE;
-					} else $this->pObj->log_setTSlogMessage("'unzip' tool for reading OpenOffice.org-files was not found in path '".$unzipPath."unzip'",3);
-				} else $this->pObj->log_setTSlogMessage('unzip tool (OpenOffice.org-files) disabled',1);
+					} else $this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:unzipNotFound'), $unzipPath), 3);
+				} else $this->pObj->log_setTSlogMessage($this->sL('LLL:EXT:indexed_search/locallang.xml:unzipDisabled'), 1);
 			break;
 			case 'rtf':
 					// Catdoc
 				if ($indexerConfig['unrtf'])	{
-					$unrtfPath = ereg_replace("\/$",'',$indexerConfig['unrtf']).'/';
+					$unrtfPath = rtrim($indexerConfig['unrtf'], '/').'/';
 					if (ini_get('safe_mode') || @is_file($unrtfPath.'unrtf'.$exe))	{
 						$this->app['unrtf'] = $unrtfPath.'unrtf'.$exe;
 						$extOK = TRUE;
-					} else $this->pObj->log_setTSlogMessage("'unrtf' tool for reading RTF-files was not found in path '".$unrtfPath."unrtf'",3);
-				} else $this->pObj->log_setTSlogMessage('unrtf tool (RTF-files) disabled',1);
+					} else $this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:unrtfNotFound'), $unrtfPath), 3);
+				} else $this->pObj->log_setTSlogMessage($this->sL('LLL:EXT:indexed_search/locallang.xml:unrtfDisabled'), 1);
 			break;
 			case 'txt':		// Raw text
 			case 'csv':		// Raw text
@@ -260,51 +268,79 @@ class tx_indexed_search_extparse {
 			case 'pdf':
 					// PDF
 				if ($indexerConfig['pdftools'])	{
-					return 'PDF';
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.PDF'), $extension);
 				}
 			break;
 			case 'doc':
 					// Catdoc
 				if ($indexerConfig['catdoc'])	{
-					return 'MS Word';
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.DOC'), $extension);
 				}
 			break;
 			case 'pps':		// MS PowerPoint(?)
 			case 'ppt':		// MS PowerPoint
 					// ppthtml
 				if ($indexerConfig['ppthtml'])	{
-					return 'MS Powerpoint';
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.PP'), $extension);
 				}
 			break;
 			case 'xls':		// MS Excel
 					// Xlhtml
 				if ($indexerConfig['xlhtml'])	{
-					return 'MS Excel';
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.XLS'), $extension);
 				}
 			break;
 			case 'sxc':		// Open Office Calc.
+			if ($indexerConfig['unzip'])	{
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.SXC'), $extension);
+				}
+			break;
 			case 'sxi':		// Open Office Impress
+			if ($indexerConfig['unzip'])	{
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.SXI'), $extension);
+				}
+			break;
 			case 'sxw':		// Open Office Writer
+			if ($indexerConfig['unzip'])	{
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.SXW'), $extension);
+				}
+			break;
 			case 'ods':		// Oasis OpenDocument Spreadsheet
+			if ($indexerConfig['unzip'])	{
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.ODS'), $extension);
+				}
+			break;
 			case 'odp':		// Oasis OpenDocument Presentation
+				if ($indexerConfig['unzip'])	{
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.ODP'), $extension);
+				}
+			break;
 			case 'odt':		// Oasis OpenDocument Text
 				if ($indexerConfig['unzip'])	{
-					return 'Open Office';
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.ODT'), $extension);
 				}
 			break;
 			case 'rtf':
 					// Catdoc
 				if ($indexerConfig['unrtf'])	{
-					return 'RTF';
+					return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.RTF'), $extension);
 				}
 			break;
-			case 'html':	// PHP strip-tags()
 			case 'jpeg':	// PHP EXIF
-			case 'txt':		// Raw text
-			case 'csv':		// Raw text
-			case 'xml':		// PHP strip-tags()
 			case 'tif':		// PHP EXIF
-				return strtoupper($extension);
+				return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.Images'), $extension);
+			break;
+			case 'html':	// PHP strip-tags()
+				return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.HTML'), $extension);
+			break;
+			case 'txt':		// Raw text
+				return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.TXT'), $extension);
+			break;
+			case 'csv':		// Raw text
+				return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.CSV'), $extension);
+			break;
+			case 'xml':		// PHP strip-tags()
+				return sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:extension.XML'), $extension);
 			break;
 				// NO entry (duplicates or blank):
 			case 'htm':		// PHP strip-tags()
@@ -327,6 +363,17 @@ class tx_indexed_search_extparse {
 				return TRUE;
 			break;
 		}
+	}
+
+	/**
+	 * Wraps the "splitLabel function" of the language object.
+	 *
+	 * @param	string		$reference: Reference/key of the label
+	 * @param	boolean		$useHtmlSpecialChar: Convert special chars to HTML entities (default: false)
+	 * @return	string		The label of the reference/key to be fetched
+	 */
+	protected function sL($reference, $useHtmlSpecialChar = false) {
+		return $this->langObject->sL($reference, $useHtmlSpecialChar);
 	}
 
 
@@ -378,7 +425,7 @@ class tx_indexed_search_extparse {
 							$content = t3lib_div::getUrl($tempFileName);
 							unlink($tempFileName);
 						} else {
-							$this->pObj->log_setTSlogMessage('PDFtoText Failed on this document: '.$absFile.". Maybe the PDF file is locked for printing or encrypted.",2);
+							$this->pObj->log_setTSlogMessage(sprintf($this->sL('LLL:EXT:indexed_search/locallang.xml:pdfToolsFailed'), $absFile), 2);
 						}
 						if (strlen($content))	{
 							$contentArr = $this->pObj->splitRegularContent($this->removeEndJunk($content));
@@ -485,7 +532,7 @@ class tx_indexed_search_extparse {
 				$fileContent = t3lib_div::getUrl($absFile);
 
 					// Finding charset:
-				eregi('^[[:space:]]*<\?xml[^>]+encoding[[:space:]]*=[[:space:]]*["\'][[:space:]]*([[:alnum:]_-]+)[[:space:]]*["\']',substr($fileContent,0,200),$reg);
+				preg_match('/^[[:space:]]*<\?xml[^>]+encoding[[:space:]]*=[[:space:]]*["\'][[:space:]]*([[:alnum:]_-]+)[[:space:]]*["\']/i',substr($fileContent,0,200),$reg);
 				$charset = $reg[1] ? $this->pObj->csObj->parse_charset($reg[1]) : 'utf-8';
 
 					// Converting content:
@@ -590,7 +637,7 @@ class tx_indexed_search_extparse {
 	 * @return	string		String
 	 */
 	function removeEndJunk($string)	{
-		return trim(ereg_replace('['.chr(10).chr(12).']*$','',$string));
+		return trim(preg_replace('/['.chr(10).chr(12).']*$/','',$string));
 	}
 
 
@@ -624,6 +671,7 @@ class tx_indexed_search_extparse {
 }
 
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.external_parser.php'])    {
-    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.external_parser.php']);
+	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.external_parser.php']);
 }
+
 ?>

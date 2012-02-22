@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Generate a folder tree
  *
- * $Id: class.t3lib_foldertree.php 4152 2008-09-19 05:17:01Z stan $
+ * $Id: class.t3lib_foldertree.php 5482 2009-05-22 19:08:30Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -55,7 +55,6 @@
  *
  */
 
-require_once (PATH_t3lib.'class.t3lib_treeview.php');
 
 
 
@@ -199,11 +198,19 @@ class t3lib_folderTree extends t3lib_treeView  {
 			$icon='<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/ol/'.($isOpen?'minus':'plus').'only.gif','width="18" height="16"').' alt="" />';
 			$firstHtml= $this->PM_ATagWrap($icon,$cmd);
 
-			switch($val['type'])	{
-				case 'user':	$icon = 'gfx/i/_icon_ftp_user.gif';	break;
-				case 'group':	$icon = 'gfx/i/_icon_ftp_group.gif'; break;
-				case 'readonly':	$icon = 'gfx/i/_icon_ftp_readonly.gif'; break;
-				default:		$icon = 'gfx/i/_icon_ftp.gif'; break;
+			switch ($val['type']) {
+				case 'user':
+					$icon = 'gfx/i/_icon_ftp_user.gif';
+					break;
+				case 'group':
+					$icon = 'gfx/i/_icon_ftp_group.gif';
+					break;
+				case 'readonly':
+					$icon = 'gfx/i/_icon_ftp_readonly.gif';
+					break;
+				default:
+					$icon = 'gfx/i/_icon_ftp.gif';
+					break;
 			}
 
 				// Preparing rootRec for the mount
@@ -258,7 +265,7 @@ class t3lib_folderTree extends t3lib_treeView  {
 				$treeKey = key($this->tree);	// Get the key for this space
 				$LN = ($a==$c)?'blank':'line';
 
-				$val = ereg_replace('^\./','',$val);
+				$val = preg_replace('/^\.\//','',$val);
 				$title = $val;
 				$path = $files_path.$val.'/';
 				$webpath=t3lib_BEfunc::getPathType_web_nonweb($path);
@@ -291,13 +298,13 @@ class t3lib_folderTree extends t3lib_treeView  {
 					$icon = 'gfx/i/_icon_' .$webpath . 'folders' . ($type == 'readonly' ? '_ro' : '') . '.gif';
 					if ($val=='_temp_')	{
 						$icon = 'gfx/i/sysf.gif';
-						$row['title']='TEMP';
-						$row['_title']='<b>TEMP</b>';
+						$row['title'] = $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_file_list.xml:temp', true);
+						$row['_title'] = '<strong>' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_file_list.xml:temp', true) . '</strong>';
 					}
 					if ($val=='_recycler_')	{
 						$icon = 'gfx/i/recycler.gif';
-						$row['title']='RECYCLER';
-						$row['_title']='<b>RECYCLER</b>';
+						$row['title'] = $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_file_list.xml:recycler', true);
+						$row['_title'] = '<strong>' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_file_list.xml:recycler', true) . '</strong>';
 					}
 					$HTML.=$this->wrapIcon('<img'.t3lib_iconWorks::skinImg($this->backPath,$icon,'width="18" height="16"').' alt="" />',$row);
 				}
@@ -367,4 +374,5 @@ class t3lib_folderTree extends t3lib_treeView  {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_foldertree.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_foldertree.php']);
 }
+
 ?>

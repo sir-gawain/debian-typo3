@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,7 +26,7 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_abouteditor.php 2985 2008-01-31 11:37:57Z ingmars $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_contextmenu.php 5489 2009-05-23 15:26:20Z ohader $
  *
  */
 
@@ -42,14 +42,14 @@ class tx_rtehtmlarea_contextmenu extends tx_rtehtmlareaapi {
 	protected $thisConfig;				// Reference to RTE PageTSConfig
 	protected $toolbar;				// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 				// Frontend language array
-	
+
 	protected $pluginButtons;
 	protected $convertToolbarForHtmlAreaArray = array ();
-	
+
 	public function main($parentObject) {
 		return parent::main($parentObject) && !($this->htmlAreaRTE->client['BROWSER'] == 'opera' || $this->thisConfig['disableContextMenu'] || $this->thisConfig['disableRightClick']);
 	}
-	
+
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *

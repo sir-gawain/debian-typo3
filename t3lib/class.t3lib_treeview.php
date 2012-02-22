@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains base class for creating a browsable array/page/folder tree in HTML
  *
- * $Id: class.t3lib_treeview.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_treeview.php 5482 2009-05-22 19:08:30Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -98,9 +98,6 @@
 
 
 
-require_once (PATH_t3lib.'class.t3lib_iconworks.php');
-require_once (PATH_t3lib.'class.t3lib_befunc.php');
-require_once (PATH_t3lib.'class.t3lib_div.php');
 
 
 /**
@@ -537,7 +534,7 @@ class t3lib_treeView {
 	 * @return	string		Image tag, modified with $attr attributes added.
 	 */
 	function addTagAttributes($icon,$attr)	{
-		return ereg_replace(' ?\/?>$','',$icon).' '.$attr.' />';
+		return preg_replace('/ ?\/?>$/','',$icon).' '.$attr.' />';
 	}
 
 	/**
@@ -860,16 +857,14 @@ class t3lib_treeView {
 			$res = $this->getDataInit($uid);
 			return $this->getDataCount($res);
 		} else {
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-						'count(*)',
-						$this->table,
-						$this->parentField.'='.$GLOBALS['TYPO3_DB']->fullQuoteStr($uid, $this->table).
-							t3lib_BEfunc::deleteClause($this->table).
-							t3lib_BEfunc::versioningPlaceholderClause($this->table).
-							$this->clause	// whereClauseMightContainGroupOrderBy
-					);
-			$row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
-			return $row[0];
+			return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+				'uid',
+				$this->table,
+				$this->parentField . '=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($uid, $this->table) .
+					t3lib_BEfunc::deleteClause($this->table) .
+					t3lib_BEfunc::versioningPlaceholderClause($this->table) .
+					$this->clause	// whereClauseMightContainGroupOrderBy
+			);
 		}
 	}
 
@@ -882,7 +877,7 @@ class t3lib_treeView {
 	 * @return	array		Array with title/uid keys with values of $this->title/0 (zero)
 	 */
 	function getRootRecord($uid) {
-		return array('title'=>$this->title, 'uid'=>0);
+		return array('title' => $this->title, 'uid' => 0);
 	}
 
 
@@ -898,9 +893,7 @@ class t3lib_treeView {
 		if (is_array($this->data)) {
 			return $this->dataLookup[$uid];
 		} else {
-			$row = t3lib_befunc::getRecordWSOL($this->table,$uid);
-
-			return $row;
+			return t3lib_BEfunc::getRecordWSOL($this->table, $uid);
 		}
 	}
 
@@ -1004,10 +997,8 @@ class t3lib_treeView {
 	 * @return	void
 	 * @access private
 	 */
-	function getDataFree(&$res){
-		if (is_array($this->data)) {
-		#	unset();
-		} else {
+	function getDataFree(&$res) {
+		if (!is_array($this->data)) {
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		}
 	}
@@ -1101,4 +1092,5 @@ class t3lib_treeView {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_treeview.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_treeview.php']);
 }
+
 ?>

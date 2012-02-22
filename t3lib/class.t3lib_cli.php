@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2006 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains base class for TYPO3 cli scripts
  *
- * $Id: class.t3lib_cli.php 3489 2008-03-31 13:13:04Z ohader $
+ * $Id: class.t3lib_cli.php 5165 2009-03-09 18:28:59Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */

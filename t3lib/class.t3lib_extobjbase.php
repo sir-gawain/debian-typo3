@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains the base class for 'Extension Objects' in backend modules.
  *
- * $Id: class.t3lib_extobjbase.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_extobjbase.php 5947 2009-09-16 17:57:09Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -112,7 +112,6 @@
  *
  * Anyways, the final interesting thing is to see what the framework "func_wizard" actually does:
  *
- * 	require_once(PATH_t3lib."class.t3lib_extobjbase.php");
  * 	class tx_funcwizards_webfunc extends t3lib_extobjbase {
  * 		var $localLangFile = "locallang.php";
  * 		var $function_key = "wiz";
@@ -199,7 +198,7 @@ class t3lib_extobjbase {
 	function init(&$pObj,$conf)	{
 		global $LANG;
 
-		$this->pObj = &$pObj;
+		$this->pObj = $pObj;
 
 			// Path of this script:
 		$this->thisPath = dirname($conf['path']);

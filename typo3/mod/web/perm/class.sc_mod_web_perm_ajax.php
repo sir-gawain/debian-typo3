@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007 - 2008 mehrwert (typo3@mehrwert.de)
+*  (c) 2007-2009 mehrwert (typo3@mehrwert.de)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -55,7 +55,7 @@ $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_perm.xml');
  * (user and group)) via new TYPO3AJAX facility
  *
  * @author		Andreas Kundoch <typo3@mehrwert.de>
- * @version		$Id: class.sc_mod_web_perm_ajax.php 4418 2008-11-04 20:44:26Z masi $
+ * @version		$Id: class.sc_mod_web_perm_ajax.php 5166 2009-03-09 23:46:55Z ohader $
  * @package		TYPO3
  * @subpackage	core
  * @license		GPL
@@ -327,7 +327,7 @@ class SC_mod_web_perm_ajax {
 	 */
 	public function renderOwnername($page, $ownerUid, $username, $validUser = true) {
 		$elementId = 'o_'.$page;
-		$ret = '<span id="' . $elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeOwnerSelector(' . $page . ', ' . $ownerUid . ', \'' . $elementId.'\', \'' . htmlspecialchars($username) . '\');">' . ($validUser ? ($username == '' ? '<span class=not_set>[not set]</span>' : htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20))) :  ('<span class=not_set>' . htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20)) . '</span>')) . '</a></span>';
+		$ret = '<span id="' . $elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeOwnerSelector(' . $page . ', ' . $ownerUid . ', \'' . $elementId.'\', \'' . htmlspecialchars($username) . '\');">' . ($validUser ? ($username == '' ? ('<span class=not_set>['. $GLOBALS['LANG']->getLL('notSet') .']</span>') : htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20))) :  ('<span class=not_set title="' . htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20)) . '">[' . $GLOBALS['LANG']->getLL('deleted') . ']</span>')) . '</a></span>';
 		return $ret;
 	}
 
@@ -343,7 +343,7 @@ class SC_mod_web_perm_ajax {
 	 */
 	public function renderGroupname($page, $groupUid, $groupname, $validGroup = true) {
 		$elementId = 'g_'.$page;
-		$ret = '<span id="'.$elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeGroupSelector(' . $page . ', ' . $groupUid . ', \'' . $elementId . '\', \'' . htmlspecialchars($groupname) . '\');">'. ($validGroup ? ($groupname == '' ? '<span class=not_set>[not set]</span>' : htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20))) : ('<span class=not_set>' . htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20)) . '</span>')) . '</a></span>';
+		$ret = '<span id="'.$elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeGroupSelector(' . $page . ', ' . $groupUid . ', \'' . $elementId . '\', \'' . htmlspecialchars($groupname) . '\');">'. ($validGroup ? ($groupname == '' ? ('<span class=not_set>['. $GLOBALS['LANG']->getLL('notSet') .']</span>') : htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20))) : ('<span class=not_set title="' . htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20)) . '">[' . $GLOBALS['LANG']->getLL('deleted') . ']</span>')) . '</a></span>';
 		return $ret;
 	}
 
@@ -390,7 +390,6 @@ class SC_mod_web_perm_ajax {
 
 }
 
-// Include extension?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/perm/class.sc_mod_web_perm_ajax.php']) {
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/perm/class.sc_mod_web_perm_ajax.php']);
 }

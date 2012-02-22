@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Module: Advanced functions
  * Advanced Functions related to pages
  *
- * $Id: index.php 3775 2008-06-10 12:05:31Z patrick $
+ * $Id: index.php 6762 2010-01-13 23:42:34Z steffenk $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -54,8 +54,6 @@ require('conf.php');
 require($BACK_PATH.'init.php');
 require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_web_func.xml');
-require_once(PATH_t3lib.'class.t3lib_scbase.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
 
 $BE_USER->modAccess($MCONF,1);
 
@@ -107,7 +105,6 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/func.html');
-		$this->doc->docType = 'xhtml_trans';
 
 		// **************************
 		// Main
@@ -146,8 +143,14 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 			$markers['CONTENT'] = $this->content;
 		} else {
 				// If no access or if ID == zero
-			$this->content = $this->doc->section($LANG->getLL('title'), $LANG->getLL('clickAPage_content'), 0, 1);
-
+			$flashMessage = t3lib_div::makeInstance(
+				't3lib_FlashMessage',
+				$LANG->getLL('clickAPage_content'),
+				$LANG->getLL('title'),
+				t3lib_FlashMessage::INFO
+			);
+			$this->content = $flashMessage->render();
+			
 				// Setting up the buttons and markers for docheader
 			$docHeaderButtons = $this->getButtons();
 			$markers['CSH'] = $docHeaderButtons['csh'];
@@ -211,19 +214,10 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/func/index.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/func/index.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -241,4 +235,5 @@ $SOBE->checkSubExtObj();	// Checking second level external objects
 
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

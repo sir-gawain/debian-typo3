@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Include file extending t3lib_recordList
  *
- * $Id: class.file_list.inc 4047 2008-09-01 16:59:07Z dmitry $
+ * $Id: class.file_list.inc 7454 2010-04-30 10:20:26Z steffenk $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -84,6 +84,7 @@ class fileList extends t3lib_recordList {
 	var $sortRev = 1;					// Reverse sorting flag
 	var $firstElementNumber=0;
 	var $clipBoard = 0;
+	var $bigControlPanel = 0;
 
 		// internal
 	var $JScode = '';
@@ -93,6 +94,7 @@ class fileList extends t3lib_recordList {
 	var $files = Array();
 	var $path = '';
 	var $eCounter=0;					// Counting the elements no matter what...
+	var $dirCounter = 0;
 	var $totalItems='';
 
 	var $CBnames=array();
@@ -109,7 +111,7 @@ class fileList extends t3lib_recordList {
 	 * @param	boolean		Show clipboard flag
 	 * @return	void
 	 */
-	function start($path,$pointer,$sort,$sortRev,$clipBoard=0)	{
+	function start($path, $pointer, $sort, $sortRev, $clipBoard=0, $bigControlPanel=0) {
 		$this->counter=0;
 		$this->totalbytes=0;
 		$this->JScode='';
@@ -119,12 +121,14 @@ class fileList extends t3lib_recordList {
 		$this->sortRev=$sortRev;
 		$this->firstElementNumber=$pointer;
 		$this->clipBoard = $clipBoard;
+		$this->bigControlPanel = $bigControlPanel;
 			// setting the maximum length of the filenames to the user's settings or minimum 30 (= $this->fixedL)
 		$this->fixedL = max($this->fixedL, $GLOBALS['BE_USER']->uc['titleLen']);
 
 		if (!$GLOBALS['TYPO3_CONF_VARS']['GFX']['thumbnails'])	{
 			$this->thumbScript='gfx/notfound_thumb.gif';
 		}
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_common.xml');
 	}
 
 	/**
@@ -172,11 +176,11 @@ class fileList extends t3lib_recordList {
 				// if this is some subpage under the mount root....
 			if ($GLOBALS['SOBE']->basicFF->checkPathAgainstMounts($theFile['path'])) {
 					// The icon with link
-				$otherMarkers['PAGE_ICON'] = '<img'.t3lib_iconWorks::skinImg($this->backPath,$icon,'width="18" height="16"').' title="'.htmlspecialchars($theFile['file']).'" alt="" />';
+				$otherMarkers['PAGE_ICON'] = '<img'.t3lib_iconWorks::skinImg($this->backPath,$icon,'width="18" height="16"').' title="'.htmlspecialchars($theFile['file']).'" alt="'.htmlspecialchars($theFile['file']).'" />';
 				if ($this->clickMenus) $otherMarkers['PAGE_ICON'] = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($otherMarkers['PAGE_ICON'],$path);
 
-				$buttons['level_up'] .= $this->linkWrapDir('<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/i/folder_up.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.upOneLevel',1).'" alt="" />',$theFile['path']);
-				$otherMarkers['TITLE'] .= t3lib_div::fixed_lgd_cs($title,-($this->fixedL+20));	// No HTML specialchars here - HTML like <b> </b> is allowed
+				$buttons['level_up'] .= $this->linkWrapDir('<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/i/folder_up.gif','width="18" height="16"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.upOneLevel',1).'" alt="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.upOneLevel',1).'" />',$theFile['path']);
+				$otherMarkers['TITLE'] .= t3lib_div::removeXSS(t3lib_div::fixed_lgd_cs($title,-($this->fixedL+20)));	// No HTML specialchars here - HTML like <b> </b> is allowed
 
 				// this is the root page
 			} else {
@@ -187,7 +191,7 @@ class fileList extends t3lib_recordList {
 		}
 
 		$buttons['refresh'] = '<a href="'.htmlspecialchars($this->listURL()).'">'.
-				'<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/refresh_n.gif','width="14" height="14"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.reload',1).'" alt="" />'.
+				'<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/refresh_n.gif','width="14" height="14"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.reload',1).'" alt="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.reload',1).'" />'.
 				'</a>';
 
 		return array($buttons, $otherMarkers);
@@ -220,12 +224,16 @@ class fileList extends t3lib_recordList {
 			// Adds the code of files/dirs
 		$out='';
 		$titleCol = 'file';
+		$upLevelDir = dirname(substr($files['files'][0]['path'], 0, -1)) . '/';
+		$levelUp = $GLOBALS['SOBE']->basicFF->checkPathAgainstMounts($upLevelDir) ? $this->linkWrapDir('<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/i/folder_up.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.upOneLevel',1) . '" alt="" />', $upLevelDir) : '';
 
 			// Cleaning rowlist for duplicates and place the $titleCol as the first column always!
 		$rowlist = t3lib_div::rmFromList($titleCol,$rowlist);
 		$rowlist = t3lib_div::uniqueList($rowlist);
 		$rowlist = $rowlist ? $titleCol.','.$rowlist : $titleCol;
-		if ($this->clipBoard)	$rowlist.=',_CLIPBOARD_';
+		if ($this->bigControlPanel || $this->clipBoard) {
+			$rowlist = str_replace('file,', 'file,_CLIPBOARD_,', $rowlist);
+		}
 		$this->fieldArray = explode(',',$rowlist);
 
 			// Directories are added
@@ -236,7 +244,6 @@ class fileList extends t3lib_recordList {
 				// half line is drawn
 			$theData = Array();
 			$theData[$titleCol] = '';
-			$iOut.=$this->addelement(0,'',$theData);
 		}
 
 
@@ -246,32 +253,31 @@ class fileList extends t3lib_recordList {
 
 			// Header line is drawn
 		$theData = Array();
-		reset($this->fieldArray);
-		while(list(,$v)=each($this->fieldArray))	{
-			if ($v=='_CLIPBOARD_')	{
+
+		foreach ($this->fieldArray as $v)	{
+			if ($v == '_CLIPBOARD_' && $this->clipBoard) {
 				$cells=array();
 				$table='_FILE';
 				$elFromTable = $this->clipObj->elFromTable($table);
 				if (count($elFromTable))	{
 					$cells[]='<a href="'.htmlspecialchars($this->clipObj->pasteUrl('_FILE',$this->path)).'" onclick="return '.htmlspecialchars($this->clipObj->confirmMsg('_FILE',$this->path,'into',$elFromTable)).'">'.
-						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_pasteafter.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_paste',1).'" alt="" /></a>';
+						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_pasteafter.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_paste',1).'" alt="'.$GLOBALS['LANG']->getLL('clip_paste',1).'" /></a>';
 				}
 				if ($this->clipObj->current!='normal' && $iOut)	{
-					$cells[]=$this->linkClipboardHeaderIcon('<img'.t3lib_iconWorks::skinImg('','gfx/clip_copy.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_selectMarked',1).'" alt="" />',$table,'setCB');
-					$cells[]=$this->linkClipboardHeaderIcon('<img'.t3lib_iconWorks::skinImg('','gfx/garbage.gif','width="11" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_deleteMarked',1).'" alt="" />',$table,'delete',$GLOBALS['LANG']->getLL('clip_deleteMarkedWarning'));
-					$onClick = 'checkOffCB(\''.implode(',',$this->CBnames).'\'); return false;';
-					$cells[]='<a href="#" onclick="'.htmlspecialchars($onClick).'">'.
-							'<img'.t3lib_iconWorks::skinImg('','gfx/clip_select.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_markRecords',1).'" alt="" />'.
+					$cells[]=$this->linkClipboardHeaderIcon('<img'.t3lib_iconWorks::skinImg('','gfx/clip_copy.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_selectMarked',1).'" alt="'.$GLOBALS['LANG']->getLL('clip_selectMarked',1).'" />',$table,'setCB');
+					$cells[]=$this->linkClipboardHeaderIcon('<img'.t3lib_iconWorks::skinImg('','gfx/garbage.gif','width="11" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_deleteMarked',1).'" alt="'.$GLOBALS['LANG']->getLL('clip_deleteMarked',1).'" />',$table,'delete',$GLOBALS['LANG']->getLL('clip_deleteMarkedWarning'));
+					$onClick = 'checkOffCB(\'' . implode(',', $this->CBnames) . '\', this); return false;';
+					$cells[] = '<a class="cbcCheckAll" rel="" href="#" onclick="' . htmlspecialchars($onClick) . '">'.
+							'<img'.t3lib_iconWorks::skinImg('','gfx/clip_select.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_markRecords',1).'" alt="'.$GLOBALS['LANG']->getLL('clip_markRecords',1).'" />'.
 							'</a>';
 				}
-
 				$theData[$v] = implode('',$cells);
 			} else {	// Normal row:
 				$theT = $this->linkWrapSort($GLOBALS['LANG']->getLL('c_'.$v,1), $this->path,$v);
 				$theData[$v] = $theT;
 			}
 		}
-		$out.=$this->addelement(1,'',$theData,' class="c-headLine"','');
+		$out.=$this->addelement(1, $levelUp, $theData, ' class="c-headLine"', '');
 		$out.=$iOut;
 
 			// half line is drawn
@@ -283,7 +289,7 @@ class fileList extends t3lib_recordList {
 		<!--
 			File list table:
 		-->
-			<table border="0" cellpadding="0" cellspacing="0" id="typo3-filelist">
+			<table border="0" cellpadding="0" cellspacing="1" id="typo3-filelist">
 				'.$out.'
 			</table>';
 	}
@@ -295,11 +301,11 @@ class fileList extends t3lib_recordList {
 	 **/
 	function getFolderInfo() {
 		if($this->counter == 1) {
-			$fileLabel = 'File';
+			$fileLabel = $GLOBALS['LANG']->getLL('file', true);
 		} else {
-			$fileLabel = 'Files';
+			$fileLabel = $GLOBALS['LANG']->getLL('files', true);
 		}
-		return $this->counter.' '.$fileLabel.', '.t3lib_div::formatSize($this->totalbytes).'bytes';
+		return $this->counter . ' ' . $fileLabel . ', ' . t3lib_div::formatSize($this->totalbytes, $GLOBALS['LANG']->getLL('byteSizeUnits', true));
 	}
 
 	/**
@@ -311,7 +317,7 @@ class fileList extends t3lib_recordList {
 	function formatDirList($items)	{
 		$out='';
 
-			// Files:
+		// Folders:
 		if (count($items['sorting']))	{
 			reset($items['sorting']);
 			while (list($key,) = each($items['sorting']))	{
@@ -325,7 +331,7 @@ class fileList extends t3lib_recordList {
 					list($title,$icon,$path) =  $this->dirData($theFile);
 
 						// The icon with link
-					$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,$icon,'width="18" height="16"').' title="'.htmlspecialchars($theFile['file']).'" alt="" />';
+					$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,$icon,'width="18" height="16"').' title="'.htmlspecialchars($theFile['file']).'" alt="'.htmlspecialchars($theFile['file']).'" />';
 					if ($this->clickMenus) $theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($theIcon,$path);
 
 						// 	Preparing and getting the data-array
@@ -334,13 +340,13 @@ class fileList extends t3lib_recordList {
 					while(list(,$field)=each($this->fieldArray))	{
 						switch($field)	{
 							case 'size':
-	//							$theData[$field]=t3lib_div::formatSize($theFile[$field]);
+								$theData[$field] = t3lib_div::formatSize($theFile[$field], $GLOBALS['LANG']->getLL('byteSizeUnits', true));
 							break;
 							case 'rw':
-								$theData[$field]= (($theFile['readable'])?'':'<span class="typo3-red"><b>R</b></span>').(($theFile['writable'])?'':'<span class="typo3-red"><b>W</b></span>');
+								$theData[$field] = (($theFile['readable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('read', true) . '</strong></span>') . (($theFile['writable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('write', true) . '</strong></span>');
 							break;
 							case 'fileext':
-	//							$theData[$field]=strtoupper($theFile['fileext']);
+								$theData[$field]=strtoupper($theFile['fileext']);
 							break;
 							case 'tstamp':
 								$theData[$field]=Date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'], $theFile['tstamp']);
@@ -349,19 +355,27 @@ class fileList extends t3lib_recordList {
 								$theData[$field]= $this->linkWrapDir($title,$path);
 							break;
 							case '_CLIPBOARD_':
-								$theData[$field]=$this->makeClip($theFile);
+								$temp = '';
+								if ($this->bigControlPanel) {
+									$temp .= $this->makeEdit($theFile);
+								}
+								$temp .= $this->makeClip($theFile);
+								$theData[$field] = $temp;
 							break;
 							case '_REF_':
 								$theData[$field]=$this->makeRef($theFile);
 							break;
 							default:
-								$theData[$field]=t3lib_div::fixed_lgd($theFile[$field],$this->fixedL);
+								$theData[$field]=t3lib_div::fixed_lgd_cs($theFile[$field],$this->fixedL);
 							break;
 						}
 					}
-					$out.=$this->addelement(1,$theIcon,$theData);
+					$altRows = 'class="' . ($i++ % 2 == 0 ? 'bgColor6' : 'bgColor4') . '"';
+
+					$out .= $this->addelement(1, $theIcon, $theData, $altRows);
 				}
 				$this->eCounter++;
+				$this->dirCounter = $this->eCounter;
 			}
 		}
 		return $out;
@@ -380,7 +394,7 @@ class fileList extends t3lib_recordList {
 
 			// Sometimes $code contains plain HTML tags. In such a case the string should not be modified!
 		if(!strcmp($code,strip_tags($code)))	{
-			return '<a href="'.htmlspecialchars($href).'"'.$onclick.' title="'.htmlspecialchars($code).'">'.t3lib_div::fixed_lgd($code,$this->fixedL).'</a>';
+			return '<a href="'.htmlspecialchars($href).'"'.$onclick.' title="'.htmlspecialchars($code).'">'.t3lib_div::fixed_lgd_cs($code,$this->fixedL).'</a>';
 		} else	{
 			return '<a href="'.htmlspecialchars($href).'"'.$onclick.'>'.$code.'</a>';
 		}
@@ -395,10 +409,10 @@ class fileList extends t3lib_recordList {
 	 */
 	function linkWrapFile($code,$path)	{
 
-		if (t3lib_div::isFirstPartOfStr($path,t3lib_div::getIndpEnv('TYPO3_DOCUMENT_ROOT')))	{
-			$href = substr($path,strlen(t3lib_div::getIndpEnv('TYPO3_DOCUMENT_ROOT')));
+		if (t3lib_div::isFirstPartOfStr($path, PATH_site)) {
+			$href = t3lib_div::getIndpEnv('TYPO3_SITE_URL') . substr($path, strlen(PATH_site));
 			$aOnClick = "return top.openUrlInWindow('".$href."','WebFile');";
-			$code = '<a href="#" title="'.htmlspecialchars($code).'" onclick="'.htmlspecialchars($aOnClick).'">'.t3lib_div::fixed_lgd($code,$this->fixedL).'</a>';
+			$code = '<a href="#" title="'.htmlspecialchars($code).'" onclick="'.htmlspecialchars($aOnClick).'">'.t3lib_div::fixed_lgd_cs($code,$this->fixedL).'</a>';
 		}
 		return $code;
 	}
@@ -419,22 +433,22 @@ class fileList extends t3lib_recordList {
 	 * @return	array		(title, icon, path)
 	 */
 	function dirData($theFile)	{
-		$path = $theFile['path'].$theFile['file'].'/';
-		$webpath=t3lib_BEfunc::getPathType_web_nonweb($path);
+		$path = $theFile['path'] . $theFile['file'] . '/';
+		$webpath = t3lib_BEfunc::getPathType_web_nonweb($path);
 
-		$title=htmlspecialchars($theFile['file']);
-		$icon = 'gfx/i/_icon_'.$webpath.'folders.gif';
-		if ($title=='_temp_')	{
+		$title = htmlspecialchars($theFile['file']);
+		$icon = 'gfx/i/_icon_' . $webpath . 'folders.gif';
+		if ($title == '_temp_')	{
 			$icon = 'gfx/i/sysf.gif';
-			$title='<b>TEMP</b>';
+			$title = '<strong>' . $GLOBALS['LANG']->getLL('temp', true) . '</strong>';
 		}
-		if ($title=='_recycler_')	{
+		if ($title == '_recycler_')	{
 			$icon = 'gfx/i/recycler.gif';
-			$title='<b>RECYCLER</b>';
+			$title = '<strong>' . $GLOBALS['LANG']->getLL('recycler', true) . '</strong>';
 		}
-		$icon = $theFile['writable'] ? 'gfx/i/_icon_'.$webpath.'folders_ro.gif' : $icon;
+		$icon = $theFile['writable'] ? 'gfx/i/_icon_' . $webpath . 'folders_ro.gif' : $icon;
 
-		return Array($title,$icon,$path);
+		return array($title, $icon, $path);
 	}
 
 	/**
@@ -462,7 +476,7 @@ class fileList extends t3lib_recordList {
 					$icon = t3lib_BEfunc::getFileIcon($ext);
 
 						// The icon with link
-					$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/fileicons/'.$icon,'width="18" height="16"').' title="'.htmlspecialchars($theFile['file']).'" alt="" />';
+					$theIcon = '<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/fileicons/'.$icon,'width="18" height="16"').' title="'.htmlspecialchars($theFile['file']).'" alt="'.htmlspecialchars($theFile['file']).'" />';
 					if ($this->clickMenus) $theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($theIcon,$theFile['path'].$theFile['file']);
 
 						// 	Preparing and getting the data-array
@@ -471,10 +485,10 @@ class fileList extends t3lib_recordList {
 					while(list(,$field)=each($this->fieldArray))	{
 						switch($field)	{
 							case 'size':
-								$theData[$field]=t3lib_div::formatSize($theFile[$field]);
+								$theData[$field] = t3lib_div::formatSize($theFile[$field], $GLOBALS['LANG']->getLL('byteSizeUnits', true));
 							break;
 							case 'rw':
-								$theData[$field]= (($theFile['readable'])?'':'<span class="typo3-red"><b>R</b></span>').(($theFile['writable'])?'':'<span class="typo3-red"><b>W</b></span>');
+								$theData[$field] = (($theFile['readable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('read', true) . '</strong></span>') . (($theFile['writable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('write', true) . '</strong></span>');
 							break;
 							case 'fileext':
 								$theData[$field]=strtoupper($theFile[$field]);
@@ -483,36 +497,45 @@ class fileList extends t3lib_recordList {
 								$theData[$field]=Date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'], $theFile[$field]);
 							break;
 							case '_CLIPBOARD_':
-								$theData[$field]=$this->makeClip($theFile);
+								$temp = '';
+								if ($this->bigControlPanel) {
+									$temp .= $this->makeEdit($theFile);
+								}
+								$temp .= $this->makeClip($theFile);
+								$theData[$field] = $temp;
 							break;
 							case '_REF_':
 								$theData[$field]=$this->makeRef($theFile);
 							break;
 							case 'file':
 								$theData[$field] = $this->linkWrapFile($theFile[$field],$theFile['path'].$theFile['file']);
+									// Thumbsnails?
+								if ($this->thumbs && $this->isImage($theFile['fileext']))	{
+									$thumbData = array();
+									$theFile_R = rawurlencode($theFile['path'].$theFile['file']);
+									$titleCol = $this->fieldArray[0];
+			
+									$theFile_abs = $theFile['path'].$theFile['file'];
+									$check = basename($theFile_abs).':'.filemtime($theFile_abs).':'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'];
+									$params = '&file='.$theFile_R;
+									$params.= '&md5sum='.t3lib_div::shortMD5($check);
+									$href = $this->backPath.$this->thumbScript.'?&dummy='.$GLOBALS['EXEC_TIME'].$params;
+			
+									$theData[$field] .= '<br /><img src="'.htmlspecialchars($href).'" hspace="2" title="'.htmlspecialchars(trim($theFile['file'])).'" alt="'.htmlspecialchars(trim($theFile['file'])).'" />';
+								}
 							break;
 							default:
-								$theData[$field]=t3lib_div::fixed_lgd($theFile[$field],$this->fixedL);
+								$theData[$field]=t3lib_div::fixed_lgd_cs($theFile[$field],$this->fixedL);
 							break;
 						}
 					}
-					$out.= $this->addelement(1,$theIcon,$theData);
-
-						// Thumbsnails?
-					if ($this->thumbs && $this->isImage($theFile['fileext']))	{
-						$thumbData = array();
-						$theFile_R = rawurlencode($theFile['path'].$theFile['file']);
-						$titleCol = $this->fieldArray[0];
-
-						$theFile_abs = $theFile['path'].$theFile['file'];
-						$check = basename($theFile_abs).':'.filemtime($theFile_abs).':'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'];
-						$params = '&file='.$theFile_R;
-						$params.= '&md5sum='.t3lib_div::shortMD5($check);
-						$href = $this->backPath.$this->thumbScript.'?&dummy='.$GLOBALS['EXEC_TIME'].$params;
-
-						$thumbData[$titleCol]='<img src="'.htmlspecialchars($href).'" hspace="2" title="'.htmlspecialchars(trim($theFile['file'])).'" alt="" />';
-						$out.= $this->addelement(4,'',$thumbData);
+					if ($this->dirCounter % 2 == 0) {
+						$altRows = 'class="' . ($i++ % 2 == 0 ? 'bgColor6' : 'bgColor4') . '"';
+					} else {
+						$altRows = 'class="' . ($i++ % 2 == 0 ? 'bgColor4' : 'bgColor6') . '"';
 					}
+
+					$out .= $this->addelement(1, $theIcon, $theData, $altRows);
 				}
 				$this->eCounter++;
 			}
@@ -619,10 +642,10 @@ class fileList extends t3lib_recordList {
 		if ($this->clipObj->current=='normal')	{
 			$isSel = $this->clipObj->isSelected('_FILE',$md5);
 			$cells[]='<a href="'.htmlspecialchars($this->clipObj->selUrlFile($fullIdent,1,($isSel=='copy'))).'">'.
-						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_copy'.($isSel=='copy'?'_h':'').'.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.copy',1).'" alt="" />'.
+						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_copy'.($isSel=='copy'?'_h':'').'.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.copy',1).'" alt="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.copy',1).'" />'.
 						'</a>';
 			$cells[]='<a href="'.htmlspecialchars($this->clipObj->selUrlFile($fullIdent,0,($isSel=='cut'))).'">'.
-						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_cut'.($isSel=='cut'?'_h':'').'.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.cut',1).'" alt="" />'.
+						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_cut'.($isSel=='cut'?'_h':'').'.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.cut',1).'" alt="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:cm.cut',1).'" />'.
 						'</a>';
 		} else {	// For numeric pads, add select checkboxes:
 			$n='_FILE|'.$md5;
@@ -637,7 +660,7 @@ class fileList extends t3lib_recordList {
 		$elFromTable = $this->clipObj->elFromTable('_FILE');
 		if (@is_dir($fullIdent) && count($elFromTable))	{
 			$cells[]='<a href="'.htmlspecialchars($this->clipObj->pasteUrl('_FILE',$fullIdent)).'" onclick="return '.htmlspecialchars($this->clipObj->confirmMsg('_FILE',$fullIdent,'into',$elFromTable)).'">'.
-						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_pasteinto.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_pasteInto',1).'" alt="" />'.
+						'<img'.t3lib_iconWorks::skinImg('','gfx/clip_pasteinto.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->getLL('clip_pasteInto',1).'" alt="'.$GLOBALS['LANG']->getLL('clip_pasteInto',1).'" />'.
 						'</a>';
 		}
 
@@ -646,6 +669,63 @@ class fileList extends t3lib_recordList {
 											<div class="typo3-clipCtrl">
 												'.implode('
 												',$cells).'
+											</div>';
+	}
+
+	/**
+	* Creates the edit control section
+	*
+	* @param	array		Array with information about the file/directory for which to make the edit control section for the listing.
+	* @return	string		HTML-table
+	*/
+	function makeEdit($theData) {
+		$cells = array();
+		$fullIdent = $theData['path'].$theData['file'];
+		$canEdit = t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], $theData['realFileext']);
+
+			// prepare space icon
+		$iconWidth  = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['iconSizeWidth']  ? $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['iconSizeWidth']  : 12;
+		$iconHeight = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['iconSizeHeight'] ? $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['iconSizeHeight'] : 12;
+		$spaceIcon = '<img src="' . $this->backPath . 'clear.gif" width="' . $iconWidth . '" height="' . $iconHeight . '" title="" alt="" />';
+
+
+			//edit
+		if ($theData['type'] == 'dir' || !$canEdit) {
+			$cells['edit'] = $spaceIcon;
+		} else {
+			$editOnClick = 'top.content.list_frame.location.href=top.TS.PATH_typo3+\'file_edit.php?target=' .
+				rawurlencode($fullIdent) .
+				'&returnUrl=\'+top.rawurlencode(top.content.list_frame.document.location);return false;';
+			$cells['edit'] = '<a href="#" onclick="' . $editOnClick . '"><img' . t3lib_iconWorks::skinImg('', 'gfx/edit_file.gif', 'width="' . $iconWidth . '" height="' . $iconHeight . '"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.edit') . '" alt="" /></a>';
+		}
+			//rename
+		$renameOnClick = 'top.content.list_frame.location.href=top.TS.PATH_typo3+\'file_rename.php?target=' .
+			rawurlencode($fullIdent) .
+			'&returnUrl=\'+top.rawurlencode(top.content.list_frame.document.location);return false;';
+		$cells['rename'] = '<a href="#" onclick="' . $renameOnClick . '"><img' . t3lib_iconWorks::skinImg('', 'gfx/rename.gif', 'width="' . $iconWidth . '" height="' . $iconHeight . '"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.rename') . '" alt="" /></a>';
+
+			//info
+		$infoOnClick = 'top.launchView(\'' . $fullIdent . '\', \'\');return false;';
+		$cells['info'] = '<a href="#" onclick="' . $infoOnClick . '"><img' . t3lib_iconWorks::skinImg('', 'gfx/zoom2.gif', 'width="' . $iconWidth . '" height="' . $iconHeight . '"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.info') . '" alt="" /></a>';
+
+			// Hook for manipulating edit icons.
+		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['fileList']['editIconsHook'])) {
+			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['fileList']['editIconsHook'] as $classData) {
+				$hookObject = t3lib_div::getUserObj($classData);
+
+				if(!($hookObject instanceof fileList_editIconHook)) {
+					throw new UnexpectedValueException('$hookObject must implement interface fileList_editIconHook', 1235225797);
+				}
+
+				$hookObject->manipulateEditIcons($cells, $this);
+			}
+		}
+
+			// Compile items into a DIV-element:
+		return '							<!-- EDIT CONTROLS: -->
+											<div class="typo3-editCtrl">
+												' . implode('
+												', $cells).'
 											</div>';
 	}
 
@@ -681,7 +761,7 @@ class fileList extends t3lib_recordList {
 			}
 		}
 
-		return count($infoData) ? '<a href="#" onclick="'.htmlspecialchars('top.launchView(\''.$theData['path'].$theData['file'].'\', \'\'); return false;').'" title="'.htmlspecialchars(t3lib_div::fixed_lgd(implode(' / ',$infoData),100)).'">'.count($infoData).'</a>' : '';
+		return count($infoData) ? '<a href="#" onclick="'.htmlspecialchars('top.launchView(\''.$theData['path'].$theData['file'].'\', \'\'); return false;').'" title="'.htmlspecialchars(t3lib_div::fixed_lgd_cs(implode(' / ',$infoData),100)).'">'.count($infoData).'</a>' : '';
 	}
 }
 

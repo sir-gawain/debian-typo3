@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -61,8 +61,6 @@
 unset($MCONF);
 require('conf.php');
 require($BACK_PATH.'init.php');
-require_once(PATH_t3lib.'class.t3lib_tcemain.php');
-require_once(PATH_t3lib.'class.t3lib_loadmodules.php');
 
 
 
@@ -109,8 +107,15 @@ class SC_mod_user_setup_index {
 	var $OLD_BE_USER;
 	var $languageUpdate;
 
+	protected $isAdmin;
+	protected $dividers2tabs;
 
+	protected $tsFieldConf;
 
+	protected $saveData = FALSE;
+	protected $passwordIsUpdated = FALSE;
+	protected $passwordIsSubmitted = FALSE;
+	protected $setupIsUpdated = FALSE;
 
 
 	/******************************
@@ -126,11 +131,15 @@ class SC_mod_user_setup_index {
 	 * @return	void
 	 */
 	function storeIncomingData()	{
+		/* @var $BE_USER t3lib_beUserAuth */
 		global $BE_USER;
-
 
 			// First check if something is submittet in the data-array from POST vars
 		$d = t3lib_div::_POST('data');
+		$columns = $GLOBALS['TYPO3_USER_SETTINGS']['columns'];
+		$beUserId = $BE_USER->user['uid'];
+		$storeRec = array();
+
 		if (is_array($d))	{
 
 				// UC hashed before applying changes
@@ -142,61 +151,69 @@ class SC_mod_user_setup_index {
 			if (isset($d['lang']) && ($d['lang'] != $BE_USER->uc['lang'])) {
 				$this->languageUpdate = true;
 			}
-				// Language
-			$BE_USER->uc['lang'] = $d['lang'];
 
-				// Startup
-			$BE_USER->uc['condensedMode'] = $d['condensedMode'];
-			$BE_USER->uc['noMenuMode'] = $d['noMenuMode'];
-			$BE_USER->uc['startModule'] = $d['startModule'];
-			$BE_USER->uc['thumbnailsByDefault'] = $d['thumbnailsByDefault'];
-			$BE_USER->uc['helpText'] = $d['helpText'];
-			$BE_USER->uc['titleLen'] = intval($d['titleLen']);
-
-				// Advanced functions:
-			$BE_USER->uc['copyLevels'] = t3lib_div::intInRange($d['copyLevels'],0,100);
-			$BE_USER->uc['recursiveDelete'] = $d['recursiveDelete'];
-
-				// Edit
-			$BE_USER->uc['edit_wideDocument'] = $d['edit_wideDocument'];
-			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['RTEenabled'])	{ $BE_USER->uc['edit_RTE'] = $d['edit_RTE']; }
-			$BE_USER->uc['edit_docModuleUpload'] = $d['edit_docModuleUpload'];
-			$BE_USER->uc['edit_showFieldHelp'] = $d['edit_showFieldHelp'];
-			$BE_USER->uc['disableCMlayers'] = $d['disableCMlayers'];
-
-				// Personal:
-			$BE_USER->uc['emailMeAtLogin'] = $d['emailMeAtLogin'];
-
-
-			if ($d['setValuesToDefault'])	{	// If every value should be default
+			if ($d['setValuesToDefault']) {
+					// If every value should be default
 				$BE_USER->resetUC();
+			} elseif ($d['clearSessionVars']) {
+				foreach ($BE_USER->uc as $key => $value) {
+					if (!isset($columns[$key])) {
+						unset ($BE_USER->uc[$key]);
+					}
+				}
+			} elseif ($d['save']) {
+					// save all submitted values if they are no array (arrays are with table=be_users) and exists in $GLOBALS['TYPO3_USER_SETTINGS'][columns]
+				foreach($columns as $field => $config) {
+					if ($config['table']) {
+						if ($config['table'] == 'be_users' && !in_array($field, array('password', 'password2', 'email', 'realName', 'admin'))) {
+							if (!isset($config['access']) || $this->checkAccess($config) && $BE_USER->user[$field] !== $d['be_users'][$field]) {
+								$storeRec['be_users'][$beUserId][$field] = $d['be_users'][$field];
+								$BE_USER->user[$field] = $d['be_users'][$field];
+							}
+						}
+					}
+					if ($config['type'] == 'check') {
+						$BE_USER->uc[$field] = isset($d[$field]) ? 1 : 0;
+					} else {
+						$BE_USER->uc[$field] = htmlspecialchars($d[$field]);
+					}
+				}
+
+					// Personal data for the users be_user-record (email, name, password...)
+					// If email and name is changed, set it in the users record:
+				$be_user_data = $d['be_users'];
+
+				$this->passwordIsSubmitted = (strlen($be_user_data['password']) > 0);
+				$passwordIsConfirmed = ($this->passwordIsSubmitted && $be_user_data['password'] === $be_user_data['password2']);
+
+					// Update the real name:
+				if ($be_user_data['realName'] !== $BE_USER->user['realName']) {
+					$BE_USER->user['realName'] = $storeRec['be_users'][$beUserId]['realName'] = substr($be_user_data['realName'], 0, 80);
+				}
+					// Update the email address:
+				if ($be_user_data['email'] !== $BE_USER->user['email']) {
+					$BE_USER->user['email'] = $storeRec['be_users'][$beUserId]['email'] = substr($be_user_data['email'], 0, 80);
+				}
+					// Update the password:
+				if ($passwordIsConfirmed) {
+					$storeRec['be_users'][$beUserId]['password'] = $be_user_data['password2'];
+					$this->passwordIsUpdated = TRUE;
+				}
+
+				$this->saveData = TRUE;
 			}
+
 			$BE_USER->overrideUC();	// Inserts the overriding values.
 
 			$save_after = md5(serialize($BE_USER->uc));
 			if ($save_before!=$save_after)	{	// If something in the uc-array of the user has changed, we save the array...
 				$BE_USER->writeUC($BE_USER->uc);
-				$BE_USER->writelog(254,1,0,1,'Personal settings changed',Array());
+				$BE_USER->writelog(254, 1, 0, 1, 'Personal settings changed', array());
+				$this->setupIsUpdated = TRUE;
 			}
 
-
-				// Personal data for the users be_user-record (email, name, password...)
-				// If email and name is changed, set it in the users record:
-			$be_user_data = t3lib_div::_GP('ext_beuser');
-			$this->PASSWORD_UPDATED = strlen($be_user_data['password1'].$be_user_data['password2'])>0 ? -1 : 0;
-			if ($be_user_data['email']!=$BE_USER->user['email']
-					|| $be_user_data['realName']!=$BE_USER->user['realName']
-					|| (strlen($be_user_data['password1'])==32
-							&& !strcmp($be_user_data['password1'],$be_user_data['password2']))
-					)	{
-				$storeRec = array();
-				$BE_USER->user['realName'] = $storeRec['be_users'][$BE_USER->user['uid']]['realName'] = substr($be_user_data['realName'],0,80);
-				$BE_USER->user['email'] = $storeRec['be_users'][$BE_USER->user['uid']]['email'] = substr($be_user_data['email'],0,80);
-				if (strlen($be_user_data['password1'])==32 && !strcmp($be_user_data['password1'],$be_user_data['password2']))	{
-					$BE_USER->user['password'] = $storeRec['be_users'][$BE_USER->user['uid']]['password'] = $be_user_data['password1'];
-					$this->PASSWORD_UPDATED = 1;
-				}
-
+				// Persist data if something has changed:
+			if (count($storeRec) && $this->saveData) {
 					// Make instance of TCE for storing the changes.
 				$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 				$tce->stripslashes_values=0;
@@ -205,6 +222,10 @@ class SC_mod_user_setup_index {
 				$tce->bypassWorkspaceRestrictions = TRUE;	// This is to make sure that the users record can be updated even if in another workspace. This is tolerated.
 				$tce->process_datamap();
 				unset($tce);
+
+				if (!$this->passwordIsUpdated || count($storeRec['be_users'][$beUserId]) > 1) {
+					$this->setupIsUpdated = TRUE;
+				}
 			}
 		}
 	}
@@ -232,33 +253,35 @@ class SC_mod_user_setup_index {
 	 * @return	void
 	 */
 	function init()	{
-		global $BE_USER,$BACK_PATH;
 		$this->MCONF = $GLOBALS['MCONF'];
+
 
 			// Returns the script user - that is the REAL logged in user! ($GLOBALS[BE_USER] might be another user due to simulation!)
 		$scriptUser = $this->getRealScriptUserObj();
-		$scriptUser->modAccess($this->MCONF,1);	// ... and checking module access for the logged in user.
+			// ... and checking module access for the logged in user.
+		$scriptUser->modAccess($this->MCONF, 1);
+
+		$this->isAdmin = $scriptUser->isAdmin();
 
 			// Getting the 'override' values as set might be set in User TSconfig
-		$this->overrideConf = $BE_USER->getTSConfigProp('setup.override');
+		$this->overrideConf = $GLOBALS['BE_USER']->getTSConfigProp('setup.override');
+			// Getting the disabled fields might be set in User TSconfig (eg setup.fields.password.disabled=1)
+		$this->tsFieldConf = $GLOBALS['BE_USER']->getTSConfigProp('setup.fields');
 
 			// Create instance of object for output of data
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->backPath = $BACK_PATH;
+		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->setModuleTemplate('templates/setup.html');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->JScodeLibArray['dyntabmenu'] = $this->doc->getDynTabMenuJScode();
-
 		$this->doc->form = '<form action="index.php" method="post" name="usersetup" enctype="application/x-www-form-urlencoded">';
-		$this->doc->tableLayout = array (
-			'defRow' => array (
+		$this->doc->tableLayout = array(
+			'defRow' => array(
 				'0' => array('<td class="td-label">','</td>'),
-				'2' => array('<td class="td-label-right">','</td>'),
 				'defCol' => array('<td valign="top">','</td>')
 			)
 		);
 		$this->doc->table_TR = '<tr>';
-		$this->doc->table_TABLE = '<table border="0" cellspacing="1" cellpadding="2" id="typo3-userSettings">';
+		$this->doc->table_TABLE = '<table border="0" cellspacing="1" cellpadding="2" class="typo3-usersettings">';
 	}
 
 	/**
@@ -269,22 +292,31 @@ class SC_mod_user_setup_index {
 	function main()	{
 		global $BE_USER,$LANG,$BACK_PATH,$TBE_MODULES;
 
-		if ($this->languageUpdate) {
-			$this->doc->JScode.= '<script language="javascript" type="text/javascript">
-	if(top.refreshMenu) {
-		top.refreshMenu();
-	} else {
-		top.TYPO3ModuleMenu.refreshMenu();
-	}
+			// file creation / delete
+		if ($this->isAdmin) {
+			if (t3lib_div::_POST('deleteInstallToolEnableFile')) {
+				unlink(PATH_typo3conf . 'ENABLE_INSTALL_TOOL');
+			}
+			if (t3lib_div::_POST('createInstallToolEnableFile')) {
+				touch(PATH_typo3conf . 'ENABLE_INSTALL_TOOL');
+			}
+		}
 
-	if(top.shortcutFrame) {
-		top.shortcutFrame.refreshShortcuts();
-	}
-</script>';
+		if ($this->languageUpdate) {
+			$this->doc->JScodeArray['languageUpdate'] .=  '
+				if (top.refreshMenu) {
+					top.refreshMenu();
+				} else {
+					top.TYPO3ModuleMenu.refreshMenu();
+				}
+
+				if (top.shortcutFrame) {
+					top.shortcutFrame.refreshShortcuts();
+				}
+			';
 		}
 
 			// Start page:
-		$menuItems = array();
 		$this->doc->loadJavascriptLib('md5.js');
 
 			// use a wrapper div
@@ -292,281 +324,67 @@ class SC_mod_user_setup_index {
 
 			// Load available backend modules
 		$this->loadModules = t3lib_div::makeInstance('t3lib_loadModules');
-		$this->loadModules->observeWorkspaces = TRUE;
+		$this->loadModules->observeWorkspaces = true;
 		$this->loadModules->load($TBE_MODULES);
 
 		$this->content .= $this->doc->header($LANG->getLL('UserSettings').' - '.$BE_USER->user['realName'].' ['.$BE_USER->user['username'].']');
 
-			// If password is updated, output whether it failed or was OK.
-		if ($this->PASSWORD_UPDATED)	{
-			if ($this->PASSWORD_UPDATED>0)	{
-				$this->content .= $this->doc->section($LANG->getLL('newPassword').':',$LANG->getLL('newPassword_ok'),1,0,1);
-			} else {
-				$this->content .= $this->doc->section($LANG->getLL('newPassword').':',$LANG->getLL('newPassword_failed'),1,0,2);
-			}
-			$this->content .= $this->doc->spacer(25);
-		}
-		
-			// display full help is active?
-		$displayFullText = ($BE_USER->uc['edit_showFieldHelp'] == 'text');
-		if ($displayFullText) {
-			$this->doc->tableLayout['defRowEven'] = array ('defCol' => array ('<td valign="top" colspan="3">','</td>'));
-		}
-		
-			// Personal data
-		$code = array();
-		$i = 0;
-		
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('beUser_realName');
-			
-		}
-		$code[$i][1] = $this->setLabel('beUser_realName');
-		$code[$i][2] = '<input id="field_beUser_realName" type="text" name="ext_beuser[realName]" value="'.htmlspecialchars($BE_USER->user['realName']).'"'.$GLOBALS['TBE_TEMPLATE']->formWidth(20).' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('beUser_realName');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('beUser_email');
-		}
-		$code[$i][1] = $this->setLabel('beUser_email');
-		$code[$i][2] = '<input id="field_beUser_email" type="text" name="ext_beuser[email]" value="'.htmlspecialchars($BE_USER->user['email']).'"'.$GLOBALS['TBE_TEMPLATE']->formWidth(20).' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('beUser_email');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('emailMeAtLogin');
-		}
-		$code[$i][1] = $this->setLabel('emailMeAtLogin').($BE_USER->user['email'] ? ' ('.$BE_USER->user['email'].')' : '');
-		$code[$i][2] = '<input id="field_emailMeAtLogin" type="checkbox" name="data[emailMeAtLogin]"'.($BE_USER->uc['emailMeAtLogin']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('emailMeAtLogin');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('newPassword');
-		}
-		$code[$i][1] = $this->setLabel('newPassword');
-		$code[$i][2] = '<input id="field_newPassword" type="password" name="ext_beuser[password1]" value=""'.$GLOBALS['TBE_TEMPLATE']->formWidth(20).' onchange="this.value=this.value?MD5(this.value):\'\';" />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('newPassword');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('newPasswordAgain');
-		}
-		$code[$i][1] = $this->setLabel('newPasswordAgain');
-		$code[$i][2] = '<input id="field_newPasswordAgain" type="password" name="ext_beuser[password2]" value=""'.$GLOBALS['TBE_TEMPLATE']->formWidth(20).' onchange="this.value=this.value?MD5(this.value):\'\'" />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('newPasswordAgain');
-
-			// Languages:
-		$opt = array();
-		$opt['000000000']='
-					<option value="">'.$LANG->getLL('lang_default',1).'</option>';
-		$theLanguages = t3lib_div::trimExplode('|',TYPO3_languages);
-
-			// Character set conversion object:
-		$csConvObj = t3lib_div::makeInstance('t3lib_cs');
-
-			// traverse the number of languages:
-		foreach($theLanguages as $val)	{
-			if ($val!='default')	{
-				$localLabel = '  -  ['.htmlspecialchars($GLOBALS['LOCAL_LANG']['default']['lang_'.$val]).']';
-				$unavailable = $val!='default' && !@is_dir(PATH_typo3conf.'l10n/'.$val) ? '1' : '';
-				if (!$unavailable) $opt[$GLOBALS['LOCAL_LANG']['default']['lang_'.$val].'--'.$val]='
-					<option value="'.$val.'"'.($BE_USER->uc['lang']==$val?' selected="selected"':'').($unavailable ? ' class="c-na"' : '').'>'.$LANG->getLL('lang_'.$val,1).$localLabel.'</option>';
-			}
-		}
-		ksort($opt);
-		$languageCode = '
-				<select id="field_language" name="data[lang]">'.
-					implode('',$opt).'
-				</select>';
-			if ($BE_USER->uc['lang'] && !@is_dir(PATH_typo3conf.'l10n/'.$BE_USER->uc['lang']))	{
-				$languageCode.= '<table border="0" cellpadding="0" cellspacing="0" class="warningbox"><tr><td>'.
-							$this->doc->icons(3).
-							'The selected language is not available before the language pack is installed.<br />'.
-							($BE_USER->isAdmin()? 'You can use the Extension Manager to easily download and install new language packs.':'Please ask your system administrator to do this.').
-						'</td></tr></table>';
-			}
-
-
-		if ($displayFullText) {
-			$code[$i++][1] = t3lib_BEfunc::cshItem('_MOD_user_setup', 'language', $BACK_PATH);
-		}
-		$code[$i][1] = $this->setLabel('language');
-		$code[$i][2] = $languageCode;
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : t3lib_BEfunc::cshItem('_MOD_user_setup', 'language', $BACK_PATH);
-
-		$menuItems[] = array(
-				'label'   => $LANG->getLL('language').' & '.$LANG->getLL('personal_data'),
-				'content' => $this->doc->spacer(20).$this->doc->table($code)
-		);
-
-
-
-			// compiling the 'Startup' section
-		$code = array();
-		$i = 0;
-		
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('condensedMode');
-		}
-		$code[$i][1] = $this->setLabel('condensedMode','condensedMode');
-		$code[$i][2] = '<input id="field_condensedMode" type="checkbox" name="data[condensedMode]"'.($BE_USER->uc['condensedMode']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('condensedMode');
-
-		if($GLOBALS['BE_USER']->uc['interfaceSetup'] == 'backend_old') {
-			$code[$i][1] = $this->setLabel('noMenuMode','noMenuMode');
-			$code[$i][2] = '<select id="field_noMenuMode" name="data[noMenuMode]">
-				<option value=""'.(!$BE_USER->uc['noMenuMode']?' selected="selected"':'').'>'.$LANG->getLL('noMenuMode_def').'</option>
-				<option value="1"'.($BE_USER->uc['noMenuMode'] && (string)$BE_USER->uc['noMenuMode']!="icons"?' selected="selected"':'').'>'.$LANG->getLL('noMenuMode_sel').'</option>
-				<option value="icons"'.((string)$BE_USER->uc['noMenuMode']=='icons'?' selected="selected"':'').'>'.$LANG->getLL('noMenuMode_icons').'</option>
-			</select>';
-			$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('noMenuMode');
-		}
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('startModule');
-		}
-		$code[$i][1] = $this->setLabel('startModule','startModule');
-		$modSelect = '<select id="field_startModule" name="data[startModule]">';
-		$modSelect .= '<option value=""></option>';
-		if (empty($BE_USER->uc['startModule']))	{
-			$BE_USER->uc['startModule'] = $BE_USER->uc_default['startModule'];
-		}
-		foreach ($this->loadModules->modules as $mainMod => $modData) {
-			if (isset($modData['sub']) && is_array($modData['sub'])) {
-				$modSelect .= '<option disabled="disabled">'.$LANG->moduleLabels['tabs'][$mainMod.'_tab'].'</option>';
-				foreach ($modData['sub'] as $subKey => $subData) {
-					$modName = $subData['name'];
-					$modSelect .= '<option value="'.$modName.'"'.($BE_USER->uc['startModule']==$modName?' selected="selected"':'').'>';
-					$modSelect .= ' - '.$LANG->moduleLabels['tabs'][$modName.'_tab'].'</option>';
-				}
-			}
-		}
-		$modSelect .= '</select>';
-		$code[$i][2] = $modSelect;
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('startModule');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('showThumbs');
-		}
-		$code[$i][1] = $this->setLabel('showThumbs','thumbnailsByDefault');
-		$code[$i][2] = '<input id="field_showThumbs" type="checkbox" name="data[thumbnailsByDefault]"'.($BE_USER->uc['thumbnailsByDefault']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('showThumbs');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('helpText');
-		}
-		$code[$i][1] = $this->setLabel('helpText');
-		$code[$i][2] = '<input id="field_helpText" type="checkbox" name="data[helpText]"'.($BE_USER->uc['helpText']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('helpText');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('edit_showFieldHelp');
-		}
-		$code[$i][1] = $this->setLabel('edit_showFieldHelp');
-		$code[$i][2] = '<select id="field_edit_showFieldHelp" name="data[edit_showFieldHelp]">
-			<option value="">'.$LANG->getLL('edit_showFieldHelp_none').'</option>
-			<option value="icon"'.($BE_USER->uc['edit_showFieldHelp']=='icon'?' selected="selected"':'').'>'.$LANG->getLL('edit_showFieldHelp_icon').'</option>
-			<option value="text"'.($BE_USER->uc['edit_showFieldHelp']=='text'?' selected="selected"':'').'>'.$LANG->getLL('edit_showFieldHelp_message').'</option>
-		</select>';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('edit_showFieldHelp');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('maxTitleLen');
-		}
-		$code[$i][1] = $this->setLabel('maxTitleLen','titleLen');
-		$code[$i][2] = '<input id="field_maxTitleLen" type="text" name="data[titleLen]" value="'.$BE_USER->uc['titleLen'].'"'.$GLOBALS['TBE_TEMPLATE']->formWidth(5).' maxlength="5" />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('maxTitleLen');
-
-		$menuItems[] = array(
-				'label' => $LANG->getLL('opening'),
-				'content' => $this->doc->spacer(20).$this->doc->table($code)
-		);
-
-
-			// Edit
-		$code = array();
-		$i = 0;
-		
-		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['RTEenabled'])	{
-			if ($displayFullText) {
-				$code[$i++][1] = $this->getCSH('edit_RTE');
-			}
-			$code[$i][1] = $this->setLabel('edit_RTE');
-			$code[$i][2] = '<input id="field_edit_RTE" type="checkbox" name="data[edit_RTE]"'.($BE_USER->uc['edit_RTE']?' checked="checked"':'').' />';
-			$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('edit_RTE');
-		}
-		
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('edit_docModuleUpload');
-		}
-		$code[$i][1] = $this->setLabel('edit_docModuleUpload');
-		$code[$i][2] = '<input id="field_edit_docModuleUpload" type="checkbox" name="data[edit_docModuleUpload]"'.($BE_USER->uc['edit_docModuleUpload']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('edit_docModuleUpload');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('disableCMlayers');
-		}
-		$code[$i][1] = $this->setLabel('disableCMlayers');
-		$code[$i][2] = '<input id="field_disableCMlayers" type="checkbox" name="data[disableCMlayers]"'.($BE_USER->uc['disableCMlayers']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('disableCMlayers');
-
-
-			// Advanced Operations:
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('copyLevels');
-		}
-		$code[$i][1] = $this->setLabel('copyLevels');
-		$code[$i][2] = '<input id="field_copyLevels" type="text" name="data[copyLevels]" value="'.$BE_USER->uc['copyLevels'].'"'.$GLOBALS['TBE_TEMPLATE']->formWidth(5).' maxlength="5" />&nbsp;'.$LANG->getLL('levels');
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('copyLevels');
-
-		if ($displayFullText) {
-			$code[$i++][1] = $this->getCSH('recursiveDelete');
-		}
-		$code[$i][1] = $this->setLabel('recursiveDelete');
-		$code[$i][2] = '<input id="field_recursiveDelete" type="checkbox" name="data[recursiveDelete]"'.($BE_USER->uc['recursiveDelete']?' checked="checked"':'').' />';
-		$code[$i++][3] = $displayFullText ? '&nbsp;' : $this->getCSH('recursiveDelete');
-
-		$menuItems[] = array(
-				'label'   => $LANG->getLL('edit_functions') . ' & ' . $LANG->getLL('functions'),
-				'content' => $this->doc->spacer(20).$this->doc->table($code)
-		);
-
-
-		$code = array();
-		$i = 0;
-		
-			// Admin functions
-		if($BE_USER->isAdmin()) {
-				// Simulate selector box:
-			if ($this->simulateSelector)	{
-				if ($displayFullText) {
-					$code[$i++][1] = t3lib_BEfunc::cshItem('_MOD_user_setup', 'simuser', $BACK_PATH);
-				}
-				$code[$i][1] = $this->setLabel('simulate');
-				$code[$i][2] = $this->simulateSelector;
-				$code[$i++][3] = $displayFullText ? '&nbsp;' : t3lib_BEfunc::cshItem('_MOD_user_setup', 'simuser', $BACK_PATH);
-			}
-
-			$menuItems[] = array(
-					'label'   => $LANG->getLL('adminFunctions'),
-					'content' => $this->doc->spacer(20).$this->doc->table($code)
+			// show if setup was saved
+		if ($this->setupIsUpdated) {
+			$flashMessage = t3lib_div::makeInstance(
+				't3lib_FlashMessage',
+				$LANG->getLL('setupWasUpdated'),
+				$LANG->getLL('UserSettings')
 			);
+			$this->content .= $flashMessage->render();
 		}
-		
-		$this->content .= $this->doc->spacer(20);
-		$this->content .= $this->doc->getDynTabMenu($menuItems, 'user-setup', false, false, 100);
+			// If password is updated, output whether it failed or was OK.
+		if ($this->passwordIsSubmitted) {
+			if ($this->passwordIsUpdated) {
+				$flashMessage = t3lib_div::makeInstance(
+					't3lib_FlashMessage',
+					$LANG->getLL('newPassword_ok'),
+					$LANG->getLL('newPassword')
+				);
+			} else {
+				$flashMessage = t3lib_div::makeInstance(
+					't3lib_FlashMessage',
+					$LANG->getLL('newPassword_failed'),
+					$LANG->getLL('newPassword'),
+					t3lib_FlashMessage::ERROR
+				);
+			}
+			$this->content .= $flashMessage->render();
+		}
+
+
+			// render the menu items
+		$menuItems = $this->renderUserSetup();
+
+		$this->content .= $this->doc->spacer(20) . $this->doc->getDynTabMenu($menuItems, 'user-setup', false, false, 100, 1, false, 1, $this->dividers2tabs);
 
 
 			// Submit and reset buttons
 		$this->content .= $this->doc->spacer(20);
-		$this->content .= $this->doc->section('','
+		$this->content .= $this->doc->section('',
+			t3lib_BEfunc::cshItem('_MOD_user_setup', 'reset', $BACK_PATH) . '
 			<input type="hidden" name="simUser" value="'.$this->simUser.'" />
-			<input type="submit" name="submit" value="'.$LANG->getLL('save').'" />
-			<input type="submit" name="data[setValuesToDefault]" value="'.$LANG->getLL('setToStandard').'" onclick="return confirm(\''.$LANG->getLL('setToStandardQuestion').'\');" />'.
-			t3lib_BEfunc::cshItem('_MOD_user_setup', 'reset', $BACK_PATH)
+			<input type="submit" name="data[save]" value="'.$LANG->getLL('save').'" />
+			<input type="submit" name="data[setValuesToDefault]" value="'.$LANG->getLL('resetConfiguration').'" onclick="return confirm(\''.$LANG->getLL('setToStandardQuestion').'\');" />
+			<input type="submit" name="data[clearSessionVars]" value="'.$LANG->getLL('clearSessionVars').'" />'
 		);
+
+
 
 			// Notice
 		$this->content .= $this->doc->spacer(30);
-		$this->content .= $this->doc->section('', $LANG->getLL('activateChanges'));
+		$flashMessage = t3lib_div::makeInstance(
+			't3lib_FlashMessage',
+			$LANG->getLL('activateChanges'),
+			'',
+			t3lib_FlashMessage::INFO
+		);
+		$this->content .= $flashMessage->render();
 
 			// Setting up the buttons and markers for docheader
 		$docHeaderButtons = $this->getButtons();
@@ -576,11 +394,11 @@ class SC_mod_user_setup_index {
 			// Build the <body> for the module
 		$this->content = $this->doc->startPage($LANG->getLL('UserSettings'));
 		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+			// end of wrapper div
+		$this->content .= '</div>';
 		$this->content.= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 
-			// end of wrapper div
-		$this->content .= '</div>';
 	}
 
 	/**
@@ -598,19 +416,15 @@ class SC_mod_user_setup_index {
 	 * @return	array	all available buttons as an assoc. array
 	 */
 	protected function getButtons()	{
-		global $LANG, $BACK_PATH, $BE_USER;
-
 		$buttons = array(
 			'csh' => '',
 			'save' => '',
 			'shortcut' => '',
 		);
 
-			//CSH
-		$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_user_setup', '', $BACK_PATH, '|', TRUE);
+		$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_user_setup', '', $GLOBALS['BACK_PATH'], '|', true);
 
-		if ($BE_USER->mayMakeShortcut())	{
-				// Shortcut
+		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
 			$buttons['shortcut'] = $this->doc->makeShortcutIcon('','',$this->MCONF['name']);
 		}
 
@@ -620,6 +434,185 @@ class SC_mod_user_setup_index {
 
 
 
+	/******************************
+	 *
+	 * Render module
+	 *
+	 ******************************/
+
+
+	 /**
+	 * renders the data for all tabs in the user setup and returns
+	 * everything that is needed with tabs and dyntab menu
+	 *
+	 * @return	ready to use for the dyntabmenu itemarray
+	 */
+	protected function renderUserSetup() {
+		$result = array();
+		$firstTabLabel = '';
+		$code = array();
+		$i = 0;
+
+		$fieldList = $GLOBALS['TYPO3_USER_SETTINGS']['showitem'];
+
+			// disable fields depended on settings
+		if (!$GLOBALS['TYPO3_CONF_VARS']['BE']['RTEenabled']) {
+			$fieldList = t3lib_div::rmFromList('edit_RTE', $fieldList);
+		}
+
+		if ($GLOBALS['BE_USER']->uc['interfaceSetup'] != 'backend_old') {
+			$fieldList = t3lib_div::rmFromList('noMenuMode', $fieldList);
+		}
+
+		$fieldArray = t3lib_div::trimExplode(',', $fieldList, true);
+		$this->dividers2tabs = isset($GLOBALS['TYPO3_USER_SETTINGS']['ctrl']['dividers2tabs']) ? intval($GLOBALS['TYPO3_USER_SETTINGS']['ctrl']['dividers2tabs']) : 0;
+
+
+		// "display full help" is active?
+		$displayFullText = ($GLOBALS['BE_USER']->uc['edit_showFieldHelp'] == 'text');
+		if ($displayFullText) {
+			$this->doc->tableLayout['defRowEven'] = array('defCol' => array ('<td valign="top" colspan="3">','</td>'));
+		}
+
+		foreach ($fieldArray as $fieldName) {
+			$more = '';
+
+			if (substr($fieldName, 0, 8) == '--div--;') {
+				if ($firstTabLabel == '') {
+					// first tab
+					$tabLabel = $this->getLabel(substr($fieldName, 8), '', false);
+					$firstTabLabel = $tabLabel;
+				} else {
+					if ($this->dividers2tabs) {
+						$result[] = array(
+							'label'   => $tabLabel,
+							'content' => count($code) ? $this->doc->spacer(20) . $this->doc->table($code) : ''
+						);
+						$tabLabel = $this->getLabel(substr($fieldName, 8), '', false);
+						$i = 0;
+						$code = array();
+					}
+				}
+				continue;
+			}
+
+			$config = $GLOBALS['TYPO3_USER_SETTINGS']['columns'][$fieldName];
+
+				// field my be disabled in setup.fields
+			if (isset($this->tsFieldConf[$fieldName . '.']['disabled']) && $this->tsFieldConf[$fieldName . '.']['disabled'] == 1) {
+				continue;
+			}
+			if (isset($config['access']) && !$this->checkAccess($config)) {
+				continue;
+			}
+
+			$label = $this->getLabel($config['label'], $fieldName);
+			$csh = $this->getCSH($config['csh'] ? $config['csh'] : $fieldName);
+			if (!$csh) {
+				$csh = '<img class="csh-dummy" src="' . $this->doc->backPath . 'clear.gif" width="16" height="16" />';
+			}
+			$type = $config['type'];
+			$eval = $config['eval'];
+			$class = $config['class'];
+			$style = $config['style'];
+
+			if ($class) {
+				$more .= ' class="' . $class . '"';
+			}
+			if ($style) {
+				$more .= ' style="' . $style . '"';
+			}
+			if ($this->overrideConf[$fieldName]) {
+				$more .= ' disabled="disabled"';
+			}
+
+			$value = $config['table'] == 'be_users' ? $GLOBALS['BE_USER']->user[$fieldName] : $GLOBALS['BE_USER']->uc[$fieldName];
+			if (!$value && isset($config['default'])) {
+				$value = $config['default'];
+			}
+
+			switch ($type) {
+				case 'text':
+				case 'password':
+					$dataAdd = '';
+					if ($config['table'] == 'be_users') {
+						$dataAdd = '[be_users]';
+					}
+					if ($eval == 'md5') {
+						$more .= ' onchange="this.value=this.value?MD5(this.value):\'\';"';
+					}
+
+					if ($type == 'password') {
+						$value = '';
+					}
+
+					$noAutocomplete = ($type == 'password' ? 'autocomplete="off" ' : '');
+					$html = '<input id="field_' . $fieldName . '"
+							type="' . $type . '"
+							name="data' . $dataAdd . '[' . $fieldName . ']" ' .
+							$noAutocomplete .
+							'value="' . htmlspecialchars($value) . '" ' . $GLOBALS['TBE_TEMPLATE']->formWidth(20) . $more . ' />';
+				break;
+				case 'check':
+					if (!$class) {
+						$more .= ' class="check"';
+					}
+					$html = '<input id="field_' . $fieldName . '"
+									type="checkbox"
+									name="data[' . $fieldName . ']"' .
+									($value ? ' checked="checked"' : '') . $more . ' />';
+				break;
+				case 'select':
+					if (!$class) {
+						$more .= ' class="select"';
+					}
+
+					if ($config['itemsProcFunc']) {
+						$html = t3lib_div::callUserFunction($config['itemsProcFunc'], $config, $this, '');
+					} else {
+						$html = '<select id="field_' . $fieldName . '" name="data[' . $fieldName . ']"' . $more . '>' . chr(10);
+						foreach ($config['items'] as $key => $optionLabel) {
+							$html .= '<option value="' . $key . '"' .
+								($value == $key ? ' selected="selected"' : '') .
+								'>' . $this->getLabel($optionLabel, '', false) . '</option>' . chr(10);
+						}
+						$html .= '</select>';
+					}
+
+				break;
+				case 'user':
+					$html = t3lib_div::callUserFunction($config['userFunc'], $config, $this, '');
+				break;
+				default:
+					$html = '';
+			}
+
+
+				// add another table row with the full text help if needed
+			if ($displayFullText) {
+				$code[$i++][1] = $csh;
+				$csh = '';
+			}
+
+			$code[$i][1] = $csh . $label;
+			$code[$i++][2]   = $html;
+
+
+
+		}
+
+		if ($this->dividers2tabs == 0) {
+			$tabLabel = $firstTabLabel;
+		}
+
+		$result[] = array(
+			'label'   => $tabLabel,
+			'content' => count($code) ? $this->doc->spacer(20) . $this->doc->table($code) : ''
+		);
+
+
+		return $result;
+	}
 
 
 
@@ -638,8 +631,114 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	object		The REAL user is returned - the one logged in.
 	 */
-	function getRealScriptUserObj()	{
+	protected function getRealScriptUserObj()	{
 		return is_object($this->OLD_BE_USER) ? $this->OLD_BE_USER : $GLOBALS['BE_USER'];
+	}
+
+
+	/**
+	* Return a select with available languages
+	 *
+	* @return	string		complete select as HTML string or warning box if something went wrong.
+	 */
+	public function renderLanguageSelect($params, $pObj) {
+
+			// compile the languages dropdown
+		$languageOptions = array(
+			'000000000' => chr(10) . '<option value="">' . $GLOBALS['LANG']->getLL('lang_default', 1) . '</option>'
+		);
+			// traverse the number of languages
+		$theLanguages = t3lib_div::trimExplode('|', TYPO3_languages);
+		foreach ($theLanguages as $language) {
+			if ($language != 'default') {
+				$languageValue = $GLOBALS['LOCAL_LANG']['default']['lang_' . $language];
+				$localLabel = '  -  ['.htmlspecialchars($languageValue) . ']';
+				$unavailable = (is_dir(PATH_typo3conf . 'l10n/' . $language) ? false : true);
+				if (!$unavailable) {
+					$languageOptions[$languageValue . '--' . $language] = '
+					<option value="'.$language.'"'.($GLOBALS['BE_USER']->uc['lang'] == $language ? ' selected="selected"' : '') . ($unavailable ? ' class="c-na"' : '').'>'.$GLOBALS['LANG']->getLL('lang_' . $language, 1) . $localLabel . '</option>';
+				}
+			}
+		}
+		ksort($languageOptions);
+		$languageCode = '
+				<select id="field_lang" name="data[lang]" class="select">' .
+					implode('', $languageOptions) . '
+				</select>';
+		if ( $GLOBALS['BE_USER']->uc['lang'] && !@is_dir(PATH_typo3conf . 'l10n/' . $GLOBALS['BE_USER']->uc['lang'])) {
+			$languageUnavailableWarning = 'The selected language "'
+				. $GLOBALS['LANG']->getLL('lang_' . $GLOBALS['BE_USER']->uc['lang'], 1)
+				. '" is not available before the language pack is installed.<br />'
+				. ($GLOBALS['BE_USER']->isAdmin() ?
+					'You can use the Extension Manager to easily download and install new language packs.'
+				:	'Please ask your system administrator to do this.');
+
+
+			$languageUnavailableMessage = t3lib_div::makeInstance(
+				't3lib_FlashMessage',
+				$languageUnavailableWarning,
+				'',
+				t3lib_FlashMessage::WARNING
+			);
+
+			$languageCode = $languageUnavailableMessage->render() . $languageCode;
+		}
+
+		return $languageCode;
+	}
+
+	/**
+	* Returns a select with all modules for startup
+	*
+	* @return	string		complete select as HTML string
+	*/
+	public function renderStartModuleSelect($params, $pObj) {
+			// start module select
+		if (empty($GLOBALS['BE_USER']->uc['startModule']))	{
+			$GLOBALS['BE_USER']->uc['startModule'] = $GLOBALS['BE_USER']->uc_default['startModule'];
+		}
+		$startModuleSelect .= '<option value=""></option>';
+		foreach ($pObj->loadModules->modules as $mainMod => $modData) {
+			if (isset($modData['sub']) && is_array($modData['sub'])) {
+				$startModuleSelect .= '<option disabled="disabled">'.$GLOBALS['LANG']->moduleLabels['tabs'][$mainMod.'_tab'].'</option>';
+				foreach ($modData['sub'] as $subKey => $subData) {
+					$modName = $subData['name'];
+					$startModuleSelect .= '<option value="' . $modName . '"' . ($GLOBALS['BE_USER']->uc['startModule'] == $modName ? ' selected="selected"' : '') . '>';
+					$startModuleSelect .= ' - ' . $GLOBALS['LANG']->moduleLabels['tabs'][$modName.'_tab'] . '</option>';
+				}
+			}
+		}
+
+
+		return '<select id="field_startModule" name="data[startModule]" class="select">' . $startModuleSelect . '</select>';
+		}
+
+ 	/**
+	 *
+	 * @param array $params                    config of the field
+	 * @param SC_mod_user_setup_index $parent  this class as reference
+	 * @return string	                       html with description and button
+	 */
+	public function renderInstallToolEnableFileButton(array $params, SC_mod_user_setup_index $parent) {
+		// Install Tool access file
+		$installToolEnableFile = PATH_typo3conf . 'ENABLE_INSTALL_TOOL';
+		$installToolEnableFileExists = is_file($installToolEnableFile);
+		if ($installToolEnableFileExists && (time() - filemtime($installToolEnableFile) > 3600)) {
+			$content = file_get_contents($installToolEnableFile);
+			$verifyString = 'KEEP_FILE';
+
+			if (trim($content) !== $verifyString) {
+					// Delete the file if it is older than 3600s (1 hour)
+				unlink($installToolEnableFile);
+				$installToolEnableFileExists = is_file($installToolEnableFile);
+			}
+		}
+
+		if ($installToolEnableFileExists) {
+			return '<input type="submit" name="deleteInstallToolEnableFile" value="' . $GLOBALS['LANG']->sL('LLL:EXT:setup/mod/locallang.xml:enableInstallTool.deleteFile') . '" />';
+		} else {
+			return '<input type="submit" name="createInstallToolEnableFile" value="' . $GLOBALS['LANG']->sL('LLL:EXT:setup/mod/locallang.xml:enableInstallTool.createFile') . '" />';
+		}
 	}
 
 	/**
@@ -648,7 +747,7 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	void
 	 */
-	function simulateUser()	{
+	public function simulateUser()	{
 		global $BE_USER,$LANG,$BACK_PATH;
 
 		// *******************************************************************************
@@ -658,19 +757,19 @@ class SC_mod_user_setup_index {
 		$this->simulateSelector = '';
 		unset($this->OLD_BE_USER);
 		if ($BE_USER->isAdmin())	{
-			$this->simUser = t3lib_div::_GP('simUser');
+			$this->simUser = intval(t3lib_div::_GP('simUser'));
 
 				// Make user-selector:
-			$users = t3lib_BEfunc::getUserNames('username,usergroup,usergroup_cached_list,uid,realName');
+			$users = t3lib_BEfunc::getUserNames('username,usergroup,usergroup_cached_list,uid,realName', t3lib_BEfunc::BEenableFields('be_users'));
 			$opt = array();
-			reset($users);
-			$opt[] = '<option></option>';
-			while(list(,$rr)=each($users))	{
-				if ($rr['uid']!=$BE_USER->user['uid'])	{
+			foreach ($users as $rr) {
+				if ($rr['uid'] != $BE_USER->user['uid']) {
 					$opt[] = '<option value="'.$rr['uid'].'"'.($this->simUser==$rr['uid']?' selected="selected"':'').'>'.htmlspecialchars($rr['username'].' ('.$rr['realName'].')').'</option>';
 				}
 			}
-			$this->simulateSelector = '<select id="field_simulate" name="simulateUser" onchange="window.location.href=\'index.php?simUser=\'+this.options[this.selectedIndex].value;">'.implode('',$opt).'</select>';
+			if (count($opt)) {
+				$this->simulateSelector = '<select id="field_simulate" name="simulateUser" onchange="window.location.href=\'index.php?simUser=\'+this.options[this.selectedIndex].value;"><option></option>'.implode('',$opt).'</select>';
+			}
 		}
 
 		if ($this->simUser>0)	{	// This can only be set if the previous code was executed.
@@ -687,6 +786,36 @@ class SC_mod_user_setup_index {
 	}
 
 	/**
+	* Returns a select with simulate users
+	*
+	* @return	string		complete select as HTML string
+	*/
+	public function renderSimulateUserSelect($params, $pObj) {
+		return $pObj->simulateSelector;
+	}
+
+	/**
+	* Returns access check (currently only "admin" is supported)
+	*
+	* @param	array		$config: Configuration of the field, access mode is defined in key 'access'
+	* @return	boolean		Whether it is allowed to modify the given field
+	*/
+	protected function checkAccess(array $config) {
+		$access = $config['access'];
+			// check for hook
+		if (strpos($access, 'tx_') === 0) {
+			$accessObject = t3lib_div::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['setup']['accessLevelCheck'][$access] . ':&' . $access);
+			if (is_object($accessObject) && method_exists($accessObject, 'accessLevelCheck'))	{
+					// initialize vars. If method fails, $set will be set to false
+				return $accessObject->accessLevelCheck($config);
+			}
+		} elseif ($access == 'admin') {
+			return $this->isAdmin;
+		}
+	}
+
+
+	/**
 	 * Returns the label $str from getLL() and grays out the value if the $str/$key is found in $this->overrideConf array
 	 *
 	 * @param	string		Locallang key
@@ -695,13 +824,20 @@ class SC_mod_user_setup_index {
 	 * @param	string		Alternative id for use in "for" attribute of <label> tag. By default the $str key is used prepended with "field_".
 	 * @return	string		HTML output.
 	 */
-	function setLabel($str, $key='', $addLabelTag=true, $altLabelTagId='')	{
-		$out = $GLOBALS['LANG']->getLL($str) . ': ';
+	protected function getLabel($str, $key='', $addLabelTag=true, $altLabelTagId='')	{
+		if (substr($str, 0, 4) == 'LLL:') {
+			$out = $GLOBALS['LANG']->sL($str);
+		} else {
+			$out = htmlspecialchars($str);
+ 		}
+
+
 		if (isset($this->overrideConf[($key?$key:$str)]))	{
 			$out = '<span style="color:#999999">'.$out.'</span>';
 		}
+
 		if($addLabelTag) {
-			$out = '<label for="'.($altLabelTagId?$altLabelTagId:'field_'.$str).'">'.$out.'</label>';
+			$out = '<label for="' . ($altLabelTagId ? $altLabelTagId : 'field_' . $key) . '">' . $out . '</label>';
 		}
 		return $out;
 	}
@@ -712,24 +848,18 @@ class SC_mod_user_setup_index {
 	 * @param	string		Locallang key
 	 * @return	string		HTML output.
 	 */
-	function getCSH($str) {
-		return t3lib_BEfunc::cshItem('_MOD_user_setup', 'option_'.$str, $GLOBALS['BACK_PATH'],'|',FALSE,'margin-bottom:0px;');
+	protected function getCSH($str) {
+		if (!t3lib_div::inList('language,simuser', $str)) {
+			$str = 'option_' . $str;
+		}
+		return t3lib_BEfunc::cshItem('_MOD_user_setup', $str, $this->doc->backPath, '|', false, 'margin-bottom:0px;');
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/setup/mod/index.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/setup/mod/index.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -745,4 +875,5 @@ $LANG->includeLLFile('EXT:setup/mod/locallang.xml');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

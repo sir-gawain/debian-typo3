@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Web>File: Create new folders in the filemounts
  *
- * $Id: file_newfolder.php 4407 2008-11-01 17:21:28Z ohader $
+ * $Id: file_newfolder.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -52,8 +52,6 @@
 $BACK_PATH = '';
 require('init.php');
 require('template.php');
-require_once(PATH_t3lib.'class.t3lib_basicfilefunc.php');
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
 
 
 
@@ -94,6 +92,13 @@ class SC_file_newfolder {
 	var $shortPath;		// Relative path to current found filemount
 	var $title;			// Name of the filemount
 
+	/**
+	 * Charset processing object
+	 *
+	 * @var t3lib_cs
+	 */
+	protected $charsetConversion;
+
 		// Internal, static (GPVar):
 	var $number;
 	var $target;		// Set with the target path inputted in &target
@@ -115,18 +120,21 @@ class SC_file_newfolder {
 			// Initialize GPvars:
 		$this->number = t3lib_div::_GP('number');
 		$this->target = t3lib_div::_GP('target');
-		$this->returnUrl = t3lib_div::_GP('returnUrl');
+		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 
 			// Init basic-file-functions object:
 		$this->basicff = t3lib_div::makeInstance('t3lib_basicFileFunctions');
 		$this->basicff->init($GLOBALS['FILEMOUNTS'],$TYPO3_CONF_VARS['BE']['fileExtensions']);
 
+			// Init basic-charset-functions object:
+		$this->charsetConversion = t3lib_div::makeInstance('t3lib_cs');
+
 			// Cleaning and checking target
-		$this->target = $GLOBALS['LANG']->csConvObj->conv($this->target, 'utf-8', $GLOBALS['LANG']->charSet);
+		$this->target = $this->charsetConversion->conv($this->target, 'utf-8', $GLOBALS['LANG']->charSet);
 		$this->target = $this->basicff->is_directory($this->target);
 		$key=$this->basicff->checkPathAgainstMounts($this->target.'/');
 		if (!$this->target || !$key)	{
-			t3lib_BEfunc::typo3PrintError ('Parameter Error','Target was not a directory!','');
+			t3lib_BEfunc::typo3PrintError ($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', true), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', true), '');
 			exit;
 		}
 
@@ -143,11 +151,10 @@ class SC_file_newfolder {
 		$this->shortPath = substr($this->target,strlen($GLOBALS['FILEMOUNTS'][$key]['path']));
 
 			// Setting title:
-		$this->title = $this->icon.$GLOBALS['FILEMOUNTS'][$key]['name'].': '.$this->shortPath;
+		$this->title = $this->icon . htmlspecialchars($GLOBALS['FILEMOUNTS'][$key]['name']) . ': ' . $this->shortPath;
 
 			// Setting template object
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->setModuleTemplate('templates/file_newfolder.html');
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->JScode=$this->doc->wrapScriptTags('
@@ -155,8 +162,8 @@ class SC_file_newfolder {
 
 			function reload(a)	{	//
 				if (!changed || (changed && confirm('.$LANG->JScharCode($LANG->sL('LLL:EXT:lang/locallang_core.php:mess.redraw')).')))	{
-					var params = "&target="+encodeURIComponent(path)+"&number="+a+"&returnUrl=' 
-							. urlencode($GLOBALS['LANG']->csConvObj->conv($this->returnUrl, $GLOBALS['LANG']->charSet, 'utf-8')) 
+					var params = "&target="+encodeURIComponent(path)+"&number="+a+"&returnUrl='
+							. urlencode($this->charsetConversion->conv($this->returnUrl, $GLOBALS['LANG']->charSet, 'utf-8'))
 							. '";
 					window.location.href = "file_newfolder.php?"+params;
 				}
@@ -193,10 +200,14 @@ class SC_file_newfolder {
 		$this->number = t3lib_div::intInRange($this->number,1,10);
 		$code .= '
 			<div id="c-select">
-				<select name="number" onchange="reload(this.options[this.selectedIndex].value);">';
+				<label for="number-of-new-folders">' .
+				$LANG->sL('LLL:EXT:lang/locallang_core.php:file_newfolder.php.number_of_folders') .
+				'</label>
+				<select name="number" id="number-of-new-folders" onchange="reload(this.options[this.selectedIndex].value);">';
 		for ($a=1;$a<=$this->folderNumber;$a++)	{
-			$code.='
-					<option value="'.$a.'"'.($this->number==$a?' selected="selected"':'').'>'.$a.' '.$LANG->sL('LLL:EXT:lang/locallang_core.php:file_newfolder.php.folders',1).'</option>';
+			$code .= '<option value="' . $a . '"' .
+					($this->number == $a ? ' selected="selected"' : '') .
+					'>' . $a . '</option>';
 		}
 		$code.='
 				</select>
@@ -227,7 +238,7 @@ class SC_file_newfolder {
 			';
 
 			// CSH:
-		$code.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'file_newfolder', $GLOBALS['BACK_PATH'],'<br/>');
+		$code.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'file_newfolder', $GLOBALS['BACK_PATH'], '<br />');
 
 		$pageContent.= $code;
 
@@ -240,10 +251,18 @@ class SC_file_newfolder {
 		$pageContent.= $this->doc->sectionEnd();
 		$pageContent.= '</form><form action="tce_file.php" method="post" name="editform2">';
 
+			// Create a list of allowed file extensions with the nice format "*.jpg, *.gif" etc.
+		$fileExtList = array();
+		$textfileExt = t3lib_div::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], TRUE);
+		foreach ($textfileExt as $fileExt) {
+			if (!preg_match('/' . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'] . '/i', '.' . $fileExt)) {
+				$fileExtList[] = '*.' . $fileExt;
+			}
+		}
 			// Add form fields for creation of a new, blank text file:
 		$code='
 			<div id="c-newFile">
-				<p>['.htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext']).']</p>
+				<p>[' . htmlspecialchars(implode(', ', $fileExtList)) . ']</p>
 				<input'.$this->doc->formWidth(20).' type="text" name="file[newfile][0][data]" onchange="changed=true;" />
 				<input type="hidden" name="file[newfile][0][target]" value="'.htmlspecialchars($this->target).'" />
 			</div>
@@ -259,8 +278,10 @@ class SC_file_newfolder {
 			';
 
 			// CSH:
-		$code.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'file_newfile', $GLOBALS['BACK_PATH'],'<br/>');
+		$code.= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'file_newfile', $GLOBALS['BACK_PATH'], '<br />');
 		$pageContent.= $this->doc->section($LANG->sL('LLL:EXT:lang/locallang_core.php:file_newfolder.php.newfile'),$code);
+		$pageContent .= $this->doc->sectionEnd();
+		$pageContent .= '</form>';
 
 		$docHeaderButtons = array();
 
@@ -288,19 +309,10 @@ class SC_file_newfolder {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_newfolder.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/file_newfolder.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -309,4 +321,5 @@ $SOBE = t3lib_div::makeInstance('SC_file_newfolder');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

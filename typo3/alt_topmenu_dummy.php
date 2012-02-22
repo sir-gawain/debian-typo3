@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@
  * Will appear as the default document in the top frame if configured to appear.
  * This is the default menu used during "condensed mode"
  *
- * $Id: alt_topmenu_dummy.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: alt_topmenu_dummy.php 5947 2009-09-16 17:57:09Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant content
  *
@@ -55,8 +55,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once ('class.alt_menu_functions.inc');
 
 
@@ -90,7 +88,7 @@ class SC_alt_topmenu_dummy {
 			// Hook for adding content to the topmenu. Only works if noMenuMode is not set to "icons" in the users setup!
 		if (!$iconMenuMode && is_array ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/alt_topmenu_dummy.php']['fetchContentTopmenu']))	{
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/alt_topmenu_dummy.php']['fetchContentTopmenu'] as $classRef)	{
-				$hookObj = &t3lib_div::getUserObj($classRef);
+				$hookObj = t3lib_div::getUserObj($classRef);
 				if (method_exists($hookObj,'fetchContentTopmenu_processContent'))	{
 					$tempContent = $hookObj->fetchContentTopmenu_processContent($this);
 
@@ -118,7 +116,6 @@ class SC_alt_topmenu_dummy {
 			$alt_menuObj = t3lib_div::makeInstance('alt_menu_functions');
 
 				// Start page
-			$TBE_TEMPLATE->docType = 'xhtml_trans';
 			$TBE_TEMPLATE->bodyTagId.= '-iconmenu';
 			$TBE_TEMPLATE->JScodeArray[] = $alt_menuObj->generateMenuJScode($loadModules->modules);
 
@@ -166,7 +163,6 @@ class SC_alt_topmenu_dummy {
 		global $TBE_TEMPLATE;
 
 			// Start page
-		$TBE_TEMPLATE->docType = 'xhtml_trans';
 		$this->content.=$TBE_TEMPLATE->startPage('Top frame dummy display');
 
 			// End page:
@@ -183,19 +179,10 @@ class SC_alt_topmenu_dummy {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_topmenu_dummy.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_topmenu_dummy.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -203,4 +190,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_t
 $SOBE = t3lib_div::makeInstance('SC_alt_topmenu_dummy');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

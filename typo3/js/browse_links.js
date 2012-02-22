@@ -1,12 +1,12 @@
 /***************************************************************
  * TYPO3 Element Browser
  *
- * $Id: browse_links.js 3834 2008-06-22 14:03:55Z ohader $
+ * $Id: browse_links.js 5165 2009-03-09 18:28:59Z ohader $
  *
  *
  * Copyright notice
  *
- * (c) 2007 Oliver Hader <oh@inpublica.de>
+ * (c) 2007-2009 Oliver Hader <oh@inpublica.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is

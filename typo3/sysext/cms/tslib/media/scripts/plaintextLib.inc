@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Generating plain text content of content elements for Direct Mails
  *
- * $Id: plaintextLib.inc 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: plaintextLib.inc 9057 2010-10-14 09:04:16Z benni $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -178,6 +178,10 @@ class user_plaintext {
 				$lines[]=$this->getHeader();
 				$lines[]=$this->breakBulletlist(strip_tags($this->parseBody($this->cObj->data['bodytext'])));
 			break;
+			case 'list':
+				$lines[]=$this->getHeader();
+				$lines[]=$this->getList();
+			break;
 			case 'table':
 				$lines[]=$this->getHeader();
 				$lines[]=$this->breakTable(strip_tags($this->parseBody($this->cObj->data['bodytext'])));
@@ -208,7 +212,7 @@ class user_plaintext {
 	 */
 	function getMenuSitemap()	{
 		$str = $this->cObj->cObjGetSingle($this->conf['menu'],$this->conf['menu.']);
-		$str = $this->breakBulletlist(trim(strip_tags(eregi_replace('<br[ /]*>',chr(10),$this->parseBody($str)))));
+		$str = $this->breakBulletlist(trim(strip_tags(preg_replace('/<br[ \/]*>/i',chr(10),$this->parseBody($str)))));
 		return $str;
 	}
 
@@ -229,7 +233,7 @@ class user_plaintext {
 	 * @return	string		Content
 	 */
 	function getHTML($str=array())	{
-		return $this->breakContent(strip_tags(eregi_replace('<br[ /]*>',chr(10),$this->parseBody(is_string($str)?$str:$this->cObj->data['bodytext']))));
+		return $this->breakContent(strip_tags(preg_replace('/<br[ \/]*>/i',chr(10),$this->parseBody(is_string($str)?$str:$this->cObj->data['bodytext']))));
 	}
 
 	/**
@@ -261,7 +265,7 @@ class user_plaintext {
 	 */
 	function parseBody($str)	{
 			// First, regular parsing:
-		$str = eregi_replace('<br[ /]*>',' ',$str);
+		$str = preg_replace('/<br[ \/]*>/i',' ',$str);
 		$str = $this->cObj->stdWrap($str,$this->conf['bodytext.']['stdWrap.']);
 			// Then all a-tags:
 		$aConf = array();
@@ -290,6 +294,17 @@ class user_plaintext {
 			$lines[]=$this->siteUrl.$upload_path.$file;
 		}
 		return implode(chr(10),$lines);
+	}
+
+	/**
+	 * Creates a list
+	 *
+	 * @param	string	type of content
+	 * @return	string	Content
+	 */
+	function getList($CType = 'list') {
+		$str = $this->cObj->cObjGetSingle($this->conf[$CType], $this->conf[$CType . '.']);
+		return trim(strip_tags($this->parseBody($str)));
 	}
 
 	/**
@@ -597,7 +612,7 @@ class user_plaintext {
 	function userProcess($mConfKey,$passVar)	{
 		if ($this->conf[$mConfKey])	{
 			$funcConf = $this->conf[$mConfKey.'.'];
-			$funcConf['parentObj']=&$this;
+			$funcConf['parentObj'] = $this;
 			$passVar = $GLOBALS['TSFE']->cObj->callUserFunction($this->conf[$mConfKey], $funcConf, $passVar);
 		}
 		return $passVar;

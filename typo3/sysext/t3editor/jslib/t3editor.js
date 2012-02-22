@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007 Tobias Liebig <mail_typo3@etobi.de>
+*  (c) 2007-2009 Tobias Liebig <mail_typo3@etobi.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@
 var t3e_instances = {};
 
 // path to the editor ext dir
-  // can be overwritten in class.tx_t3editor.php
+// can be overwritten in class.tx_t3editor.php
 var PATH_t3e = "../../../sysext/t3editor/";
 
 
@@ -49,7 +49,7 @@ function T3editor(textarea) {
 	this.textarea = $(textarea);
 	
 		// outer wrap around the whole t3editor
-  	this.outerdiv = new Element("DIV", {
+	this.outerdiv = new Element("DIV", {
 		"class": "t3e_wrap"
 	});
 	
@@ -70,14 +70,6 @@ function T3editor(textarea) {
 	});
 	this.outerdiv.appendChild(this.modalOverlay);
 
-/*
-		// wrapping the Toolbar
-	this.toolbar_wrap = new Element("DIV", {
-		"class": "t3e_toolbar_wrap"
-	});
-	this.outerdiv.appendChild(this.toolbar_wrap);
-*/
-	
 		// wrapping the linenumbers
 	this.linenum_wrap = new Element("DIV", {
 		"class": "t3e_linenum_wrap"
@@ -134,25 +126,27 @@ function T3editor(textarea) {
 		path: PATH_t3e + "jslib/codemirror/",
 		outerEditor: this,
 		saveFunction: this.saveFunction.bind(this),
-		initCallback: this.init.bind(this)
+		initCallback: this.init.bind(this),
+		autoMatchParens: true
 	};
 
 		// get the editor
 	this.mirror = new CodeMirror(this.mirror_wrap, options);
-
+	this.tsCodeCompletion = new TsCodeCompletion(this.mirror,this.outerdiv);
 }
 
 T3editor.prototype = {
 		saveFunctionEvent: null,
 		saveButtons: null,
+		updateTextareaEvent: null,
 	
 		init: function() {
 			var textareaDim = $(this.textarea).getDimensions();
 			// hide the textarea
 			this.textarea.hide();
-			
+
 			// get the form object (needed for Ajax saving)
-			var form = $(this.textarea.form)
+			var form = $(this.textarea.form);
 			this.saveButtons = form.getInputs('image', 'submit');
 
 			// initialize ajax saving events
@@ -161,7 +155,15 @@ T3editor.prototype = {
 				Event.observe(button,'click',this.saveFunctionEvent);
 			}.bind(this));
 
+			this.updateTextareaEvent = this.updateTextarea.bind(this);
+			Event.observe($(this.textarea.form), 'submit', this.updateTextareaEvent);
+
+			Event.observe(this.mirror.win.document, 'keyup', this.tsCodeCompletion.keyUp);
+			Event.observe(this.mirror.win.document, 'keydown', this.tsCodeCompletion.keyDown);
+			Event.observe(this.mirror.win.document, 'click', this.tsCodeCompletion.click);
 			this.resize(textareaDim.width, textareaDim.height );
+			
+			this.updateLinenum();
 		},
 	
 		// indicates is content is modified and not safed yet
@@ -188,8 +190,8 @@ T3editor.prototype = {
 				scrOfY = this.mirror.editor.doc.body.scrollTop;
 				scrOfX = this.mirror.editor.doc.body.scrollLeft;
 			} else if (this.mirror.editor.doc.documentElement
-			  && (this.mirror.editor.doc.documentElement.scrollLeft
-			  || this.mirror.editor.doc.documentElement.scrollTop)) {
+				&& (this.mirror.editor.doc.documentElement.scrollLeft
+				|| this.mirror.editor.doc.documentElement.scrollTop)) {
 				// IE6 standards compliant mode
 				scrOfY = this.mirror.editor.doc.documentElement.scrollTop;
 				scrOfX = this.mirror.editor.doc.documentElement.scrollLeft;
@@ -199,22 +201,11 @@ T3editor.prototype = {
 		
 
 		// update the line numbers
-		updateLinenum: function(code) {
-			var theMatch;
-			if (!code) {
-				code = this.mirror.editor.container.innerHTML;
-				theMatch = code.match(/<br/gi);
-			} else {
-				theMatch = code.match(/\n/gi);
-			} 
-
-			if (!theMatch) {
-				theMatch = [1];
-			} else if (Prototype.Browser.IE) {
-				theMatch.push('1');
-			}
-
-			var bodyContentLineCount = theMatch.length;
+		updateLinenum: function() {
+			// escape if editor is not yet loaded
+			if (!this.mirror.editor) return;
+			
+			var bodyContentLineCount = this.mirror.lineNumber(this.mirror.lastLine());
 			disLineCount = this.linenum.childNodes.length;
 			while (disLineCount != bodyContentLineCount) {
 				if (disLineCount > bodyContentLineCount) {
@@ -231,21 +222,28 @@ T3editor.prototype = {
 			}
 
 			this.t3e_statusbar_status.update(
-				(this.textModified ? ' <span alt="document has been modified">*</span> ': '') + bodyContentLineCount + ' lines');
+				(this.textModified ? ' <span title="' + T3editor.lang.documentModified + '" alt="' + T3editor.lang.documentModified + '">*</span> ': '')
+				 + bodyContentLineCount
+				 + ' '
+				 + T3editor.lang.lines );
+		},
+		
+		updateTextarea: function(event) {
+			this.textarea.value = this.mirror.getCode();
 		},
 		
 		saveFunction: function(event) {
+			this.modalOverlay.show();
+			this.updateTextarea(event);
+			
 			if (event) {
 				Event.stop(event);
-			}
-			this.modalOverlay.show();
-			this.textarea.value = this.mirror.editor.getCode();
-			
+			}	
 			params = $(this.textarea.form).serialize(true);
 			params = Object.extend( { ajaxID: 'tx_t3editor::saveCode' }, params);
 			
 			new Ajax.Request(
-				(top && top.TS ? top.TS.PATH_typo3 : PATH_t3e + '../../' ) + 'ajax.php', { 
+				URL_typo3 + 'ajax.php', {
 					parameters: params,
 					onComplete: this.saveFunctionComplete.bind(this)
 				}
@@ -256,107 +254,16 @@ T3editor.prototype = {
 		// callback if ajax saving was successful
 		saveFunctionComplete: function(ajaxrequest) {
 			if (ajaxrequest.status == 200
-			  && ajaxrequest.headerJSON.result == true) {
-				
+				&& ajaxrequest.headerJSON.result == true) {
+
 				this.textModified = false;
 				this.updateLinenum();
 			} else {
-				alert("An error occured while saving the data.");
+				alert(T3editor.lang.errorWhileSaving);
 			};
 			this.modalOverlay.hide();
 		},
-		
-		// find matching bracket
-		checkBracketAtCursor: function() {
-			var cursor = this.mirror.editor.win.select.markSelection(this.mirror.editor.win);
-			
-			if (!cursor || !cursor.start) return;
-			
-			this.cursorObj = cursor.start;
-			
-			// remove current highlights
-			Selector.findChildElements(this.mirror.editor.doc,
-				$A(['.highlight-bracket', '.error-bracket'])
-			).each(function(item) {
-				item.className = item.className.replace(' highlight-bracket', '');
-				item.className = item.className.replace(' error-bracket', '');
-			});
-
-
-			if (!cursor.start || !cursor.start.node || !cursor.start.node.parentNode || !cursor.start.node.parentNode.className) {
-				return;
-			}
-
-			// if cursor is behind an bracket, we search for the matching one
-
-			// we have an opening bracket, search forward for a closing bracket
-			if (cursor.start.node.parentNode.className.indexOf('curly-bracket-open') != -1) {
-				var maybeMatch = cursor.start.node.parentNode.nextSibling;
-				var skip = 0;
-				while (maybeMatch) {
-					if (maybeMatch.className.indexOf('curly-bracket-open') != -1) {
-						skip++;
-					}
-					if (maybeMatch.className.indexOf('curly-bracket-close') != -1) {
-						if (skip > 0) {
-							skip--;
-						} else {
-							maybeMatch.className += ' highlight-bracket';
-							cursor.start.node.parentNode.className += ' highlight-bracket';
-							break;
-						}
-					}
-					maybeMatch = maybeMatch.nextSibling;
-				}
-			}
-
-			// we have a closing bracket, search backward for an opening bracket
-			if (cursor.start.node.parentNode.className.indexOf('curly-bracket-close') != -1) {
-				var maybeMatch = cursor.start.node.parentNode.previousSibling;
-				var skip = 0;
-				while (maybeMatch) {
-					if (maybeMatch.className.indexOf('curly-bracket-close') != -1) {
-						skip++;
-					}
-					if (maybeMatch.className.indexOf('curly-bracket-open') != -1) {
-						if (skip > 0) {
-							skip--;
-						} else {
-							maybeMatch.className += ' highlight-bracket';
-							cursor.start.node.parentNode.className += ' highlight-bracket';
-							break;
-						}
-					}
-					maybeMatch = maybeMatch.previousSibling;
-				}
-			}
-
-			if (cursor.start.node.parentNode.className.indexOf('curly-bracket-') != -1
-			  && maybeMatch == null) {
-				cursor.start.node.parentNode.className += ' error-bracket';
-			}
-		},
-
-		// close an opend bracket
-		autoCloseBracket: function(prevNode) {
-			if (prevNode && prevNode.className.indexOf('curly-bracket-open') != -1) {
-				this.mirror.editor.win.select.insertNewlineAtCursor(this.mirror.editor.win);
-				this.mirror.editor.win.select.insertTextAtCursor(this.mirror.editor.win, "}");
-			}
-		},
-		
-		// click event. Refresh cursor object.
-		click: function() {
-			this.refreshCursorObj();
-			this.checkBracketAtCursor();
-		},
-		
-		
-		refreshCursorObj: function() {
-			var cursor = this.mirror.editor.win.select.markSelection(this.mirror.editor.win);
-			this.cursorObj = cursor.start;
-		},
-		
+				
 		// toggle between the textarea and t3editor
 		toggleView: function(checkboxEnabled) {
 			if (checkboxEnabled) {
@@ -366,6 +273,7 @@ T3editor.prototype = {
 				this.saveButtons.each(function(button) {
 					Event.stopObserving(button,'click',this.saveFunctionEvent);
 				}.bind(this));
+				Event.stopObserving($(this.textarea.form), 'submit', this.updateTextareaEvent);
 				
 			} else {
 				this.mirror.editor.importCode(this.textarea.value);
@@ -375,6 +283,7 @@ T3editor.prototype = {
 					this.saveFunctionEvent = this.saveFunction.bind(this);
 					Event.observe(button,'click',this.saveFunctionEvent);
 				}.bind(this));
+				Event.observe($(this.textarea.form), 'submit', this.updateTextareaEvent);
 			}
 		},
 		
@@ -476,15 +385,14 @@ function t3editor_toggleEditor(checkbox, index) {
 // ------------------------------------------------------------------------
 
 
-if (!Prototype.Browser.MobileSafari
-	&& !Prototype.Browser.WebKit) {
+if (!Prototype.Browser.MobileSafari) {
 	
 	// everything ready: turn textarea's into fancy editors	
 	Event.observe(window, 'load',
 		function() {
 			$$('textarea.t3editor').each(
 				function(textarea, i) {
-					if ($('t3editor_disableEditor_' + (i + 1) + '_checkbox') 
+					if ($('t3editor_disableEditor_' + (i + 1) + '_checkbox')
 					&& !$('t3editor_disableEditor_' + (i + 1) + '_checkbox').checked) {
 						var t3e = new T3editor(textarea);
 						t3e_instances[i] = t3e;

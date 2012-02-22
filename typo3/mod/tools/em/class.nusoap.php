@@ -1,6 +1,6 @@
 <?php
 /*
-$Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+$Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 
 NuSOAP - Web Services Toolkit for PHP
 
@@ -56,7 +56,7 @@ $GLOBALS['_transient']['static']['nusoap_base']->globalDebugLevel = 9;
 * nusoap_base
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access   public
 */
 class nusoap_base {
@@ -80,7 +80,7 @@ class nusoap_base {
 	 * @var string
 	 * @access private
 	 */
-	var $revision = '$Revision: 2663 $';
+	var $revision = '$Revision: 6339 $';
     /**
      * Current error string (manipulated by getError/setError)
 	 *
@@ -188,7 +188,7 @@ class nusoap_base {
 	*
 	* @var      array
 	* @access   public
-	* @deprecated
+	* @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 	* @see	expandEntities
 	*/
 	var $xmlEntities = array('quot' => '"','amp' => '&',
@@ -500,7 +500,7 @@ class nusoap_base {
 			case (is_array($val) || $type):
 				// detect if struct or array
 				$valueType = $this->isArraySimpleOrStruct($val);
-                if($valueType=='arraySimple' || ereg('^ArrayOf',$type)){
+                if($valueType=='arraySimple' || preg_match('/^ArrayOf/',$type)){
 					$i = 0;
 					if(is_array($val) && count($val)> 0){
 						foreach($val as $v){
@@ -654,9 +654,11 @@ class nusoap_base {
 	 * @param string $str The string to format
 	 * @return string The formatted string
 	 * @access public
-	 * @deprecated
+	 * @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5
 	 */
     function formatDump($str){
+    	t3lib_div::logDeprecatedFunction();
+
 		$str = htmlspecialchars($str);
 		return nl2br($str);
     }
@@ -695,7 +697,7 @@ class nusoap_base {
 	*/
 	function expandQname($qname){
 		// get element prefix
-		if(strpos($qname,':') && !ereg('^http://',$qname)){
+		if(strpos($qname,':') && !preg_match('/^http:\/\//',$qname)){
 			// get unqualified name
 			$name = substr(strstr($qname,':'),1);
 			// get ns prefix
@@ -823,7 +825,7 @@ class nusoap_base {
 function timestamp_to_iso8601($timestamp,$utc=true){
 	$datestr = date('Y-m-d\TH:i:sO',$timestamp);
 	if($utc){
-		$eregStr =
+		$pattern = '/'.
 		'([0-9]{4})-'.	// centuries & years CCYY-
 		'([0-9]{2})-'.	// months MM-
 		'([0-9]{2})'.	// days DD
@@ -831,9 +833,10 @@ function timestamp_to_iso8601($timestamp,$utc=true){
 		'([0-9]{2}):'.	// hours hh:
 		'([0-9]{2}):'.	// minutes mm:
 		'([0-9]{2})(\.[0-9]*)?'. // seconds ss.ss...
-		'(Z|[+\-][0-9]{2}:?[0-9]{2})?'; // Z to indicate UTC, -/+HH:MM:SS.SS... for local tz's
+		'(Z|[+\-][0-9]{2}:?[0-9]{2})?'. // Z to indicate UTC, -/+HH:MM:SS.SS... for local tz's
+		'/';
 
-		if(ereg($eregStr,$datestr,$regs)){
+		if(preg_match($pattern,$datestr,$regs)){
 			return sprintf('%04d-%02d-%02dT%02d:%02d:%02dZ',$regs[1],$regs[2],$regs[3],$regs[4],$regs[5],$regs[6]);
 		}
 		return false;
@@ -849,7 +852,7 @@ function timestamp_to_iso8601($timestamp,$utc=true){
 * @access   public
 */
 function iso8601_to_timestamp($datestr){
-	$eregStr =
+	$pattern = '/'.
 	'([0-9]{4})-'.	// centuries & years CCYY-
 	'([0-9]{2})-'.	// months MM-
 	'([0-9]{2})'.	// days DD
@@ -857,8 +860,10 @@ function iso8601_to_timestamp($datestr){
 	'([0-9]{2}):'.	// hours hh:
 	'([0-9]{2}):'.	// minutes mm:
 	'([0-9]{2})(\.[0-9]+)?'. // seconds ss.ss...
-	'(Z|[+\-][0-9]{2}:?[0-9]{2})?'; // Z to indicate UTC, -/+HH:MM:SS.SS... for local tz's
-	if(ereg($eregStr,$datestr,$regs)){
+	'(Z|[+\-][0-9]{2}:?[0-9]{2})?'. // Z to indicate UTC, -/+HH:MM:SS.SS... for local tz's
+	'/';
+
+	if(preg_match($pattern,$datestr,$regs)){
 		// not utc
 		if($regs[8] != 'Z'){
 			$op = substr($regs[8],0,1);
@@ -883,10 +888,12 @@ function iso8601_to_timestamp($datestr){
 *
 * @param    string $usec the number of microseconds to sleep
 * @access   public
-* @deprecated
+* @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 */
 function usleepWindows($usec)
 {
+	t3lib_div::logDeprecatedFunction();
+
 	$start = gettimeofday();
 
 	do
@@ -905,7 +912,7 @@ function usleepWindows($usec)
 * Mainly used for returning faults from deployed functions
 * in a server instance.
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access public
 */
 class soap_fault extends nusoap_base {
@@ -987,7 +994,7 @@ class soap_fault extends nusoap_base {
 * tutorials I refer to :)
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access   public
 */
 class XMLSchema extends nusoap_base  {
@@ -1162,7 +1169,7 @@ class XMLSchema extends nusoap_base  {
         if(count($attrs) > 0){
         	foreach($attrs as $k => $v){
                 // if ns declarations, add to class level array of valid namespaces
-				if(ereg("^xmlns",$k)){
+				if(preg_match('/^xmlns/',$k)){
                 	//$this->xdebug("$k: $v");
                 	//$this->xdebug('ns_prefix: '.$this->getPrefix($k));
                 	if($ns_prefix = substr(strrchr($k,':'),1)){
@@ -1272,7 +1279,7 @@ class XMLSchema extends nusoap_base  {
 					//                        minOccurs="0" maxOccurs="unbounded" />
 					//                </sequence>
 					//            </complexType>
-					if(isset($attrs['base']) && ereg(':Array$',$attrs['base'])){
+					if(isset($attrs['base']) && preg_match('/:Array$/',$attrs['base'])){
 						$this->xdebug('complexType is unusual array');
 						$this->complexTypes[$this->currentComplexType]['phpType'] = 'array';
 					} else {
@@ -1291,7 +1298,7 @@ class XMLSchema extends nusoap_base  {
 					//                        minOccurs="0" maxOccurs="unbounded" />
 					//                </sequence>
 					//            </complexType>
-					if(isset($attrs['base']) && ereg(':Array$',$attrs['base'])){
+					if(isset($attrs['base']) && preg_match('/:Array$/',$attrs['base'])){
 						$this->xdebug('complexType is unusual array');
 						$this->complexTypes[$this->currentComplexType]['phpType'] = 'array';
 					} else {
@@ -1604,9 +1611,11 @@ class XMLSchema extends nusoap_base  {
     * @param string $ns, namespace of type
     * @return mixed
     * @access public
-    * @deprecated
+    * @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
     */
 	function getPHPType($type,$ns){
+		t3lib_div::logDeprecatedFunction();
+
 		if(isset($this->typemap[$ns][$type])){
 			//print "found type '$type' and ns $ns in typemap<br>";
 			return $this->typemap[$ns][$type];
@@ -1689,7 +1698,7 @@ class XMLSchema extends nusoap_base  {
 		} elseif(isset($this->attributes[$type])){
 			$this->xdebug("in getTypeDef, found attribute $type");
 			return $this->attributes[$type];
-		} elseif (ereg('_ContainedType$', $type)) {
+		} elseif (preg_match('/_ContainedType$/', $type)) {
 			$this->xdebug("in getTypeDef, have an untyped element $type");
 			$typeDef['typeClass'] = 'simpleType';
 			$typeDef['phpType'] = 'scalar';
@@ -1706,9 +1715,11 @@ class XMLSchema extends nusoap_base  {
     * @param string $type, name of type
     * @return mixed
     * @access public
-    * @deprecated
+    * @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
     */
     function serializeTypeDef($type){
+    	t3lib_div::logDeprecatedFunction();
+
     	//print "in sTD() for type $type<br>";
 	if($typeDef = $this->getTypeDef($type)){
 		$str .= '<'.$type;
@@ -1742,9 +1753,11 @@ class XMLSchema extends nusoap_base  {
     * @param string $type, name of type
     * @return string
     * @access public
-    * @deprecated
+    * @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 	*/
 	function typeToForm($name,$type){
+		t3lib_div::logDeprecatedFunction();
+
 		// get typedef
 		if($typeDef = $this->getTypeDef($type)){
 			// if struct
@@ -1886,7 +1899,7 @@ class XMLSchema extends nusoap_base  {
 * xsd:anyType and user-defined types.
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access   public
 */
 class soapval extends nusoap_base {
@@ -1983,7 +1996,7 @@ class soapval extends nusoap_base {
 * NOTE: PHP must be compiled with the CURL extension for HTTPS support
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access public
 */
 class soap_transport_http extends nusoap_base {
@@ -2024,7 +2037,7 @@ class soap_transport_http extends nusoap_base {
 	function soap_transport_http($url){
 		parent::nusoap_base();
 		$this->setURL($url);
-		ereg('\$Revisio' . 'n: ([^ ]+)', $this->revision, $rev);
+		preg_match('/\$Revisio' . 'n: ([^ ]+)/', $this->revision, $rev);
 		$this->outgoing_headers['User-Agent'] = $this->title.'/'.$this->version.' ('.$rev[1].')';
 		$this->debug('set User-Agent: ' . $this->outgoing_headers['User-Agent']);
 	}
@@ -2399,9 +2412,11 @@ class soap_transport_http extends nusoap_base {
 	* @param    string $lb
 	* @returns	string
 	* @access   public
-	* @deprecated
+	* @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 	*/
 	function decodeChunked($buffer, $lb){
+		t3lib_div::logDeprecatedFunction();
+
 		// length := 0
 		$length = 0;
 		$new = '';
@@ -2563,7 +2578,7 @@ class soap_transport_http extends nusoap_base {
 				}
 			}
 			// remove 100 header
-			if(isset($lb) && ereg('^HTTP/1.1 100',$data)){
+			if(isset($lb) && preg_match('/^HTTP\/1.1 100/',$data)){
 				unset($lb);
 				$data = '';
 			}//
@@ -2716,7 +2731,7 @@ class soap_transport_http extends nusoap_base {
 		curl_close($this->ch);
 
 		// remove 100 header(s)
-		while (ereg('^HTTP/1.1 100',$data)) {
+		while (preg_match('/^HTTP\/1.1 100/',$data)) {
 			if ($pos = strpos($data,"\r\n\r\n")) {
 				$data = ltrim(substr($data,$pos));
 			} elseif($pos = strpos($data,"\n\n") ) {
@@ -2907,7 +2922,7 @@ class soap_transport_http extends nusoap_base {
 	 */
 	function parseCookie($cookie_str) {
 		$cookie_str = str_replace('; ', ';', $cookie_str) . ';';
-		$data = split(';', $cookie_str);
+		$data = explode(';', $cookie_str);
 		$value_str = $data[0];
 
 		$cookie_param = 'domain=';
@@ -3015,7 +3030,7 @@ class soap_transport_http extends nusoap_base {
 * parses a WSDL file, allows access to it's data, other utility methods
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access public
 */
 class wsdl extends nusoap_base {
@@ -3282,7 +3297,7 @@ class wsdl extends nusoap_base {
             $this->currentSchema->schemaStartElement($parser, $name, $attrs);
             $this->appendDebug($this->currentSchema->getDebug());
             $this->currentSchema->clearDebug();
-        } elseif (ereg('schema$', $name)) {
+        } elseif (preg_match('/schema$/', $name)) {
         	$this->debug('Parsing WSDL schema');
             // $this->debug("startElement for $name ($attrs[name]). status = $this->status (".$this->getLocalPart($name).")");
             $this->status = 'schema';
@@ -3301,7 +3316,7 @@ class wsdl extends nusoap_base {
             if (count($attrs) > 0) {
 				// register namespace declarations
                 foreach($attrs as $k => $v) {
-                    if (ereg("^xmlns", $k)) {
+                    if (preg_match('/^xmlns/', $k)) {
                         if ($ns_prefix = substr(strrchr($k, ':'), 1)) {
                             $this->namespaces[$ns_prefix] = $v;
                         } else {
@@ -3326,7 +3341,7 @@ class wsdl extends nusoap_base {
                 $attrs = array();
             }
             // get element prefix, namespace and name
-            if (ereg(':', $name)) {
+            if (preg_match('/:/', $name)) {
                 // get ns prefix
                 $prefix = substr($name, 0, strpos($name, ':'));
                 // get ns
@@ -3491,7 +3506,7 @@ class wsdl extends nusoap_base {
 	*/
 	function end_element($parser, $name){
 		// unset schema status
-		if (/*ereg('types$', $name) ||*/ ereg('schema$', $name)) {
+		if (/*preg_match('/types$/', $name) ||*/ preg_match('/schema$/', $name)) {
 			$this->status = "";
             $this->appendDebug($this->currentSchema->getDebug());
             $this->currentSchema->clearDebug();
@@ -4036,10 +4051,12 @@ class wsdl extends nusoap_base {
 	 * @param mixed $ param value
 	 * @return mixed new param or false if initial value didn't validate
 	 * @access public
-	 * @deprecated
+	 * @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 	 */
 	function serializeParameters($operation, $direction, $parameters)
 	{
+		t3lib_div::logDeprecatedFunction();
+
 		$this->debug("in serializeParameters: operation=$operation, direction=$direction, XMLSchemaVersion=$this->XMLSchemaVersion");
 		$this->appendDebug('parameters=' . $this->varDump($parameters));
 
@@ -4739,7 +4756,7 @@ class wsdl extends nusoap_base {
 * soap_parser class parses SOAP XML messages into native PHP values
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access   public
 */
 class soap_parser extends nusoap_base {
@@ -4936,7 +4953,7 @@ class soap_parser extends nusoap_base {
 			$key_localpart = $this->getLocalPart($key);
 			// if ns declarations, add to class level array of valid namespaces
             if($key_prefix == 'xmlns'){
-				if(ereg('^http://www.w3.org/[0-9]{4}/XMLSchema$',$value)){
+				if(preg_match('/^http:\/\/www.w3.org\/[0-9]{4}\/XMLSchema$/',$value)){
 					$this->XMLSchemaVersion = $value;
 					$this->namespaces['xsd'] = $this->XMLSchemaVersion;
 					$this->namespaces['xsi'] = $this->XMLSchemaVersion.'-instance';
@@ -4960,7 +4977,7 @@ class soap_parser extends nusoap_base {
 				// should do something here with the namespace of specified type?
 			} elseif($key_localpart == 'arrayType'){
 				$this->message[$pos]['type'] = 'array';
-				/* do arrayType ereg here
+				/* do arrayType preg_match here
 				[1]    arrayTypeValue    ::=    atype asize
 				[2]    atype    ::=    QName rank*
 				[3]    rank    ::=    '[' (',')* ']'
@@ -4968,8 +4985,8 @@ class soap_parser extends nusoap_base {
 				[5]    length    ::=    nextDimension* Digit+
 				[6]    nextDimension    ::=    Digit+ ','
 				*/
-				$expr = '([A-Za-z0-9_]+):([A-Za-z]+[A-Za-z0-9_]+)\[([0-9]+),?([0-9]*)\]';
-				if(ereg($expr,$value,$regs)){
+				$expr = '/([A-Za-z0-9_]+):([A-Za-z]+[A-Za-z0-9_]+)\[([0-9]+),?([0-9]*)\]/';
+				if(preg_match($expr,$value,$regs)){
 					$this->message[$pos]['typePrefix'] = $regs[1];
 					$this->message[$pos]['arrayTypePrefix'] = $regs[1];
 	                if (isset($this->namespaces[$regs[1]])) {
@@ -5342,7 +5359,7 @@ class soap_parser extends nusoap_base {
 * unset($soapclient);
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.nusoap.php 2663 2007-11-05 09:22:23Z ingmars $
+* @version  $Id: class.nusoap.php 6339 2009-11-05 21:21:54Z masi $
 * @access   public
 */
 class soapclient extends nusoap_base  {
@@ -5434,7 +5451,7 @@ class soapclient extends nusoap_base  {
 
 				// instantiate wsdl object and parse wsdl file
 				$this->debug('instantiating wsdl class with doc: '.$endpoint);
-				$this->wsdl =& new wsdl($this->wsdlFile,$this->proxyhost,$this->proxyport,$this->proxyusername,$this->proxypassword,$this->timeout,$this->response_timeout);
+				$this->wsdl = new wsdl($this->wsdlFile,$this->proxyhost,$this->proxyport,$this->proxyusername,$this->proxypassword,$this->timeout,$this->response_timeout);
 			}
 			$this->appendDebug($this->wsdl->getDebug());
 			$this->wsdl->clearDebug();
@@ -5682,7 +5699,7 @@ class soapclient extends nusoap_base  {
 		// detect transport
 		switch(true){
 			// http(s)
-			case ereg('^http',$this->endpoint):
+			case preg_match('/^http/',$this->endpoint):
 				$this->debug('transporting via HTTP');
 				if($this->persistentConnection == true && is_object($this->persistentConnection)){
 					$http =& $this->persistentConnection;
@@ -5704,10 +5721,10 @@ class soapclient extends nusoap_base  {
 					$http->setEncoding($this->http_encoding);
 				}
 				$this->debug('sending message, length='.strlen($msg));
-				if(ereg('^http:',$this->endpoint)){
+				if(preg_match('/^http:/',$this->endpoint)){
 				//if(strpos($this->endpoint,'http:')){
 					$this->responseData = $http->send($msg,$timeout,$response_timeout,$this->cookies);
-				} elseif(ereg('^https',$this->endpoint)){
+				} elseif(preg_match('/^https/',$this->endpoint)){
 				//} elseif(strpos($this->endpoint,'https:')){
 					//if(phpversion() == '4.3.0-dev'){
 						//$response = $http->send($msg,$timeout,$response_timeout);
@@ -5765,7 +5782,7 @@ class soapclient extends nusoap_base  {
 		if (strpos($headers['content-type'], '=')) {
 			$enc = str_replace('"', '', substr(strstr($headers["content-type"], '='), 1));
 			$this->debug('Got response encoding: ' . $enc);
-			if(eregi('^(ISO-8859-1|US-ASCII|UTF-8)$',$enc)){
+			if(preg_match('/^(ISO-8859-1|US-ASCII|UTF-8)$/i',$enc)){
 				$this->xml_encoding = strtoupper($enc);
 			} else {
 				$this->xml_encoding = 'US-ASCII';
@@ -5888,9 +5905,11 @@ class soapclient extends nusoap_base  {
 	*
 	* @return boolean
 	* @access public
-	* @deprecated
+	* @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 	*/
 	function getDefaultRpcParams() {
+		t3lib_div::logDeprecatedFunction();
+
 		return $this->defaultRpcParams;
 	}
 
@@ -5903,9 +5922,11 @@ class soapclient extends nusoap_base  {
 	*
 	* @param    boolean $rpcParams
 	* @access public
-	* @deprecated
+	* @deprecated since at least TYPO3 4.3, will be removed in TYPO3 4.5.
 	*/
 	function setDefaultRpcParams($rpcParams) {
+		t3lib_div::logDeprecatedFunction();
+
 		$this->defaultRpcParams = $rpcParams;
 	}
 

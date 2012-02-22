@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Wizard for inserting TSconfig in form fields. (page,user or TS)
  *
- * $Id: wizard_tsconfig.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: wizard_tsconfig.php 8401 2010-07-28 09:12:31Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -73,14 +73,6 @@ $BACK_PATH='';
 require ('init.php');
 require ('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
-require_once (PATH_t3lib.'class.t3lib_tstemplate.php');
-require_once (PATH_t3lib.'class.t3lib_tsparser_ext.php');
-
-
-
-
-
 
 
 
@@ -164,7 +156,9 @@ class SC_wizard_tsconfig {
 		$this->objString = t3lib_div::_GP('objString');
 		$this->onlyProperty = t3lib_div::_GP('onlyProperty');
 			// Preparing some JavaScript code:
-		if (!is_array($this->P['fieldChangeFunc']))	$this->P['fieldChangeFunc']=array();
+		if (!$this->areFieldChangeFunctionsValid()) {
+			$this->P['fieldChangeFunc']=array();
+		}
 		unset($this->P['fieldChangeFunc']['alert']);
 		$update='';
 		foreach($this->P['fieldChangeFunc'] as $k=>$v)	{
@@ -174,7 +168,6 @@ class SC_wizard_tsconfig {
 
 			// Init the document table object:
 		$this->doc = t3lib_div::makeInstance('mediumDoc');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->form='<form action="" name="editform">';
 
@@ -570,7 +563,7 @@ class SC_wizard_tsconfig {
 
 					// Generally "->[something]"
 				$reg=array();
-				ereg('->[[:alnum:]_]*',$dataType,$reg);
+				preg_match('/->[[:alnum:]_]*/',$dataType,$reg);
 				if ($reg[0] && is_array($objTree[$reg[0]]))	{
 					$dataType = str_replace($reg[0],'<a href="'.htmlspecialchars(t3lib_div::linkThisScript(array('show'=>$objTree[$reg[0]][0]['uid'],'objString'=>$objString.'.'.$lP[0]))).'">'.htmlspecialchars($reg[0]).'</a>',$dataType);
 				}
@@ -637,21 +630,25 @@ class SC_wizard_tsconfig {
 			// Return link:
 		return $out;
 	}
+
+	/**
+	 * Determines whether submitted field change functions are valid
+	 * and are coming from the system and not from an external abuse.
+	 *
+	 * @return boolean Whether the submitted field change functions are valid
+	 */
+	protected function areFieldChangeFunctionsValid() {
+		return (
+			isset($this->P['fieldChangeFunc']) && is_array($this->P['fieldChangeFunc']) && isset($this->P['fieldChangeFuncHash'])
+			&& $this->P['fieldChangeFuncHash'] == t3lib_div::hmac(serialize($this->P['fieldChangeFunc']))
+		);
+	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_tsconfig.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_tsconfig.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -660,4 +657,5 @@ $SOBE = t3lib_div::makeInstance('SC_wizard_tsconfig');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

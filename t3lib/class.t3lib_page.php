@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a class with "Page functions" mainly for the frontend
  *
- * $Id: class.t3lib_page.php 4659 2009-01-07 15:39:49Z francois $
+ * $Id: class.t3lib_page.php 8574 2010-08-11 20:30:07Z lolli $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML-trans compliant
  *
@@ -63,7 +63,7 @@
  *  823:     function getRecordsByField($theTable,$theField,$theValue,$whereClause='',$groupBy='',$orderBy='',$limit='')
  *
  *              SECTION: Caching and standard clauses
- *  875:     function getHash($hash,$expTime=0)
+ *  875:     function getHash($hash)
  *  898:     function storeHash($hash,$data,$ident)
  *  916:     function deleteClause($table)
  *  936:     function enableFields($table,$show_hidden=-1,$ignore_array=array(),$noVersionPreview=FALSE)
@@ -125,6 +125,8 @@ class t3lib_pageSelect {
 		// Internal caching
 	protected $cache_getRootLine = array();
 	protected $cache_getPage = array();
+	protected $cache_getPage_noCheck = array();
+	protected $cache_getPageIdFromAlias = array();
 	protected $cache_getMountPointInfo = array();
 
 	/**
@@ -141,11 +143,11 @@ class t3lib_pageSelect {
 		if (!$show_hidden)	{
 			$this->where_hid_del.= 'AND pages.hidden=0 ';
 		}
-		$this->where_hid_del.= 'AND (pages.starttime<='.$GLOBALS['SIM_ACCESS_TIME'].') AND (pages.endtime=0 OR pages.endtime>'.$GLOBALS['SIM_ACCESS_TIME'].') ';
+		$this->where_hid_del .= 'AND pages.starttime<=' . $GLOBALS['SIM_ACCESS_TIME'] . ' AND (pages.endtime=0 OR pages.endtime>' . $GLOBALS['SIM_ACCESS_TIME'] . ') ';
 
 			// Filter out new/deleted place-holder pages in case we are NOT in a versioning preview (that means we are online!)
 		if (!$this->versioningPreview)	{
-			$this->where_hid_del.= ' AND NOT (pages.t3ver_state>0)';
+			$this->where_hid_del .= ' AND NOT pages.t3ver_state>0';
 		} else {
 				// For version previewing, make sure that enable-fields are not de-selecting hidden pages - we need versionOL() to unset them only if the overlay record instructs us to.
 			$this->versioningPreview_where_hid_del = $this->where_hid_del;	// Copy where_hid_del to other variable (used in relation to versionOL())
@@ -186,6 +188,19 @@ class t3lib_pageSelect {
 	 * @see getPage_noCheck()
 	 */
 	function getPage($uid, $disableGroupAccessCheck=FALSE)	{
+			// Hook to manipulate the page uid for special overlay handling
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'])) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'] as $classRef) {
+				$hookObject = t3lib_div::getUserObj($classRef);
+
+				if (!($hookObject instanceof t3lib_pageSelect_getPageHook)) {
+					throw new UnexpectedValueException('$hookObject must implement interface t3lib_pageSelect_getPageHook', 1251476766);
+				}
+
+				$hookObject->getPage_preProcess($uid, $disableGroupAccessCheck, $this);
+			}
+		}
+
 		$accessCheck = $disableGroupAccessCheck ? '' : $this->where_groupAccess;
 		$cacheKey = md5($accessCheck . '-' . $this->where_hid_del . '-' . $this->sys_language_uid);
 
@@ -210,20 +225,28 @@ class t3lib_pageSelect {
 	 * Return the $row for the page with uid = $uid WITHOUT checking for ->where_hid_del (start- and endtime or hidden). Only "deleted" is checked!
 	 *
 	 * @param	integer		The page id to look up
-	 * @return	array		The page row with overlayed localized fields. Empty it no page.
+	 * @return	array		The page row with overlayed localized fields. Empty array if no page.
 	 * @see getPage()
 	 */
 	function getPage_noCheck($uid)	{
+		if ($this->cache_getPage_noCheck[$uid]) {
+			return $this->cache_getPage_noCheck[$uid];
+		}
+
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'pages', 'uid='.intval($uid).$this->deleteClause('pages'));
 		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
-		if ($row)	{
+
+		$result = array();
+		if ($row) {
 			$this->versionOL('pages',$row);
-			if (is_array($row))	{
-				return $this->getPageOverlay($row);
+			if (is_array($row)) {
+				$result = $this->getPageOverlay($row);
 			}
 		}
-		return Array();
+		$this->cache_getPage_noCheck[$uid] = $result;
+
+		return $result;
 	}
 
 	/**
@@ -256,12 +279,17 @@ class t3lib_pageSelect {
 	 */
 	function getPageIdFromAlias($alias)	{
 		$alias = strtolower($alias);
+		if ($this->cache_getPageIdFromAlias[$alias]) {
+			return $this->cache_getPageIdFromAlias[$alias];
+		}
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'pages', 'alias='.$GLOBALS['TYPO3_DB']->fullQuoteStr($alias, 'pages').' AND pid>=0 AND pages.deleted=0');	// "AND pid>=0" because of versioning (means that aliases sent MUST be online!)
 		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		if ($row)	{
+			$this->cache_getPageIdFromAlias[$alias] = $row['uid'];
 			return $row['uid'];
 		}
+		$this->cache_getPageIdFromAlias[$alias] = 0;
 		return 0;
 	}
 
@@ -388,7 +416,7 @@ class t3lib_pageSelect {
 							unset($row);
 						}
 					} else {
-							// When default language is displayed, we never want to return a record carrying another language!:
+							// When default language is displayed, we never want to return a record carrying another language!
 						if ($row[$TCA[$table]['ctrl']['languageField']]>0)	{
 							unset($row);
 						}
@@ -464,11 +492,17 @@ class t3lib_pageSelect {
 							// If a shortcut mode is set and no valid page is given to select subpags from use the actual page.
 						$searchUid = intval($row['shortcut'])?intval($row['shortcut']):$row['uid'];
 					}
-					$res2 = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'pages', $searchField.'='.$searchUid.$this->where_hid_del.$this->where_groupAccess.' '.$addWhere, '', $sortField);
-					if (!$GLOBALS['TYPO3_DB']->sql_num_rows($res2))	{
+					$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+						'uid',
+						'pages',
+						$searchField . '=' . $searchUid .
+							$this->where_hid_del .
+							$this->where_groupAccess .
+							' ' . $addWhere
+					);
+					if (!$count) {
 						unset($row);
 					}
-					$GLOBALS['TYPO3_DB']->sql_free_result($res2);
 				} elseif ($row['doktype'] == 4 && $checkShortcuts)	{
 						// Neither shortcut target nor mode is set. Remove the page from the menu.
 					unset($row);
@@ -496,15 +530,15 @@ class t3lib_pageSelect {
 	 */
 	function getDomainStartPage($domain, $path='',$request_uri='')	{
 		$domain = explode(':',$domain);
-		$domain = strtolower(ereg_replace('\.$','',$domain[0]));
+		$domain = strtolower(preg_replace('/\.$/','',$domain[0]));
 			// Removing extra trailing slashes
-		$path = trim(ereg_replace('\/[^\/]*$','',$path));
+		$path = trim(preg_replace('/\/[^\/]*$/','',$path));
 			// Appending to domain string
 		$domain.= $path;
-		$domain = ereg_replace('\/*$','',$domain);
+		$domain = preg_replace('/\/*$/','',$domain);
 
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-					'pages.uid,sys_domain.redirectTo,sys_domain.prepend_params',
+					'pages.uid,sys_domain.redirectTo,sys_domain.redirectHttpStatusCode,sys_domain.prepend_params',
 					'pages,sys_domain',
 					'pages.uid=sys_domain.pid
 						AND sys_domain.hidden=0
@@ -518,14 +552,19 @@ class t3lib_pageSelect {
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		if ($row)	{
 			if ($row['redirectTo'])	{
-				$rURL = $row['redirectTo'];
+				$redirectUrl = $row['redirectTo'];
 				if ($row['prepend_params'])	{
-					$rURL = ereg_replace('\/$','',$rURL);
-					$prependStr = ereg_replace('^\/','',substr($request_uri,strlen($path)));
-					$rURL.= '/'.$prependStr;
+					$redirectUrl = rtrim($redirectUrl, '/');
+					$prependStr = ltrim(substr($request_uri,strlen($path)), '/');
+					$redirectUrl .= '/' . $prependStr;
 				}
-				Header('HTTP/1.1 301 Moved Permanently');
-				Header('Location: '.t3lib_div::locationHeaderUrl($rURL));
+
+				$statusCode = intval($row['redirectHttpStatusCode']);
+				if ($statusCode && defined('t3lib_utility_Http::HTTP_STATUS_' . $statusCode)) {
+					t3lib_utility_Http::redirect($redirectUrl, constant('t3lib_utility_Http::HTTP_STATUS_' . $statusCode));
+				} else {
+					t3lib_utility_Http::redirect($redirectUrl, 't3lib_utility_Http::HTTP_STATUS_301');
+				}
 				exit;
 			} else {
 				return $row['uid'];
@@ -562,8 +601,7 @@ class t3lib_pageSelect {
 		$MPA = array();
 		if ($MP)	{
 			$MPA = explode(',',$MP);
-			reset($MPA);
-			while(list($MPAk) = each($MPA))	{
+			foreach ($MPA as $MPAk => $v) {
 				$MPA[$MPAk] = explode('-', $MPA[$MPAk]);
 			}
 		}
@@ -571,7 +609,7 @@ class t3lib_pageSelect {
 		$loopCheck = 0;
 		$theRowArray = Array();
 
-		while ($uid!=0 && $loopCheck<20)	{	// Max 20 levels in the page tree.
+		while ($uid != 0 && $loopCheck < 99) {	// Max 99 levels in the page tree.
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($selFields, 'pages', 'uid='.intval($uid).' AND pages.deleted=0 AND pages.doktype!=255');
 			$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
@@ -921,48 +959,77 @@ class t3lib_pageSelect {
 	 **********************************/
 
 	/**
-	 * Returns string value stored for the hash string in the table "cache_hash"
+	 * Returns string value stored for the hash string in the cache "cache_hash"
 	 * Can be used to retrieved a cached value
-	 * Can be used from your frontend plugins if you like. It is also used to store the parsed TypoScript template structures. You can call it directly like t3lib_pageSelect::getHash()
+	 * Can be used from your frontend plugins if you like. It is also used to
+	 * store the parsed TypoScript template structures. You can call it directly
+	 * like t3lib_pageSelect::getHash()
+	 *
+	 * IDENTICAL to the function by same name found in t3lib_page
 	 *
 	 * @param	string		The hash-string which was used to store the data value
-	 * @param	integer		Allowed expiretime in seconds. Basically a record is selected only if it is not older than this value in seconds. If expTime is not set, the hashed value will never expire.
-	 * @return	string		The "content" field of the "cache_hash" table row.
+	 * @return	string		The "content" field of the "cache_hash" cache entry.
 	 * @see tslib_TStemplate::start(), storeHash()
 	 */
-	function getHash($hash,$expTime=0)	{
-			// if expTime is not set, the hash will never expire
-		$expTime = intval($expTime);
-		if ($expTime) {
-			$whereAdd = ' AND tstamp > '.(time()-$expTime);
+	public static function getHash($hash, $expTime = 0)	{
+		$hashContent = null;
+
+		if (TYPO3_UseCachingFramework) {
+			if (is_object($GLOBALS['typo3CacheManager'])) {
+				$contentHashCache = $GLOBALS['typo3CacheManager']->getCache('cache_hash');
+				$cacheEntry = $contentHashCache->get($hash);
+
+				if ($cacheEntry) {
+					$hashContent = $cacheEntry;
+				}
+			}
+		} else {
+			$expTime = intval($expTime);
+			if ($expTime) {
+				$whereAdd = ' AND tstamp > '.($GLOBALS['ACCESS_TIME']-$expTime);
+			}
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('content', 'cache_hash', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_hash').$whereAdd);
+			$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
+			$GLOBALS['TYPO3_DB']->sql_free_result($res);
+			if ($row)	{
+				$hashContent = $row['content'];
+			}
 		}
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('content', 'cache_hash', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_hash').$whereAdd);
-		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
-		$GLOBALS['TYPO3_DB']->sql_free_result($res);
-		if ($row)	{
-			return $row['content'];
-		}
+		return $hashContent;
 	}
 
 	/**
-	 * Stores a string value in the cache_hash table identified by $hash.
-	 * Can be used from your frontend plugins if you like. You can call it directly like t3lib_pageSelect::storeHash()
+	 * Stores a string value in the cache_hash cache identified by $hash.
+	 * Can be used from your frontend plugins if you like. You can call it
+	 * directly like t3lib_pageSelect::storeHash()
 	 *
 	 * @param	string		32 bit hash string (eg. a md5 hash of a serialized array identifying the data being stored)
 	 * @param	string		The data string. If you want to store an array, then just serialize it first.
-	 * @param	string		$ident is just a textual identification in order to inform about the content! May be 20 characters long.
+	 * @param	string		$ident is just a textual identification in order to inform about the content!
+	 * @param	integer		The lifetime for the cache entry in seconds
 	 * @return	void
 	 * @see tslib_TStemplate::start(), getHash()
 	 */
-	function storeHash($hash,$data,$ident)	{
-		$insertFields = array(
-			'hash' => $hash,
-			'content' => $data,
-			'ident' => $ident,
-			'tstamp' => time()
-		);
-		$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_hash', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_hash'));
-		$GLOBALS['TYPO3_DB']->exec_INSERTquery('cache_hash', $insertFields);
+	public static function storeHash($hash, $data, $ident, $lifetime = 0) {
+		if (TYPO3_UseCachingFramework) {
+			if (is_object($GLOBALS['typo3CacheManager'])) {
+				$GLOBALS['typo3CacheManager']->getCache('cache_hash')->set(
+					$hash,
+					$data,
+					array('ident_' . $ident),
+					intval($lifetime)
+				);
+			}
+		} else {
+			$insertFields = array(
+				'hash' => $hash,
+				'content' => $data,
+				'ident' => $ident,
+				'tstamp' => $GLOBALS['EXEC_TIME']
+			);
+			$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_hash', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_hash'));
+			$GLOBALS['TYPO3_DB']->exec_INSERTquery('cache_hash', $insertFields);
+		}
 	}
 
 	/**
@@ -1023,7 +1090,7 @@ class t3lib_pageSelect {
 					}
 					if ($ctrl['enablecolumns']['starttime'] && !$ignore_array['starttime']) {
 						$field = $table.'.'.$ctrl['enablecolumns']['starttime'];
-						$query.=' AND ('.$field.'<='.$GLOBALS['SIM_ACCESS_TIME'].')';
+						$query .= ' AND ' . $field . '<=' . $GLOBALS['SIM_ACCESS_TIME'];
 					}
 					if ($ctrl['enablecolumns']['endtime'] && !$ignore_array['endtime']) {
 						$field = $table.'.'.$ctrl['enablecolumns']['endtime'];
@@ -1383,4 +1450,5 @@ class t3lib_pageSelect {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_page.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_page.php']);
 }
+
 ?>

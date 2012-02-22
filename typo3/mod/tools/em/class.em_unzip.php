@@ -3,7 +3,7 @@
 *  Copyright notice
 *
 *  (c) Vincent Blavet <vincent@phpconcept.net>
-*  (c) 2005-2008 Karsten Dambekalns <karsten@typo3.org>
+*  (c) 2005-2009 Karsten Dambekalns <karsten@typo3.org>
 *  All rights reserved
 *
 *  This library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 /**
  * Module: Extension manager
  *
- * $Id: class.em_unzip.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.em_unzip.php 9789 2010-12-16 13:40:55Z ohader $
  *
  * @author	Vincent Blavet <vincent@phpconcept.net>
  * @author	Karsten Dambekalns <karsten@typo3.org>
@@ -547,6 +547,11 @@ class em_unzip {
 
 			}
 		}
+		
+			// added by TYPO3 secteam to check for invalid paths
+		if (!t3lib_div::validPathStr($p_entry['filename'])) {
+				return $v_result;
+		}
 
 		// Add the path
 		if ($p_path != '')
@@ -799,7 +804,7 @@ class em_unzip {
 			$p_header['mtime'] = mktime($v_hour, $v_minute, $v_seconde, $v_month, $v_day, $v_year);
 
 		} else {
-			$p_header['mtime'] = time();
+			$p_header['mtime'] = $GLOBALS['EXEC_TIME'];
 		}
 
 		// Other informations
@@ -895,7 +900,7 @@ class em_unzip {
 			$p_header['mtime'] = mktime($v_hour, $v_minute, $v_seconde, $v_month, $v_day, $v_year);
 
 		} else {
-			$p_header['mtime'] = time();
+			$p_header['mtime'] = $GLOBALS['EXEC_TIME'];
 		}
 
 		// Set the stored filename

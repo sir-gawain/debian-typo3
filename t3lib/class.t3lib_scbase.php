@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains the parent class for 'ScriptClasses' in backend modules.
  *
- * $Id: class.t3lib_scbase.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_scbase.php 5947 2009-09-16 17:57:09Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -80,7 +80,6 @@
  * 		require ($BACK_PATH.'init.php');
  * 		require ($BACK_PATH.'template.php');
  * 		$LANG->includeLLFile('EXT:prototype/locallang.php');
- * 		require_once(PATH_t3lib.'class.t3lib_scbase.php');		// NOTICE THE INCLUSION OF t3lib_SCbase
  * 		$BE_USER->modAccess($MCONF,1);
  *
  * 			// SC_mod_prototype EXTENDS THE CLASS t3lib_SCbase with a main() and printContent() function:
@@ -382,9 +381,13 @@ class t3lib_SCbase {
 	 *
 	 * @return	void
 	 */
-	function extObjContent()	{
-		$this->extObj->pObj = &$this;
-		if (is_callable(array($this->extObj, 'main')))	$this->content.=$this->extObj->main();
+	function extObjContent() {
+		$this->extObj->pObj = $this;
+
+		if (is_callable(array($this->extObj, 'main'))) {
+			$this->content .= $this->extObj->main();
+		}
 	}
 }
+
 ?>

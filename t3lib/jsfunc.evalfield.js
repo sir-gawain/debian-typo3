@@ -2,13 +2,13 @@
 *
 *  Evaluation of TYPO3 form field content
 *
-* $Id: jsfunc.evalfield.js 4772 2009-01-20 10:36:33Z ingmars $
+* $Id: jsfunc.evalfield.js 8885 2010-09-24 22:36:48Z stephenking $
 *
 *
 *
 *  Copyright notice
 *
-*  (c) 1998-2008 Kasper Skaarhoj
+*  (c) 1998-2009 Kasper Skaarhoj
 *  All rights reserved
 *
 *  This script is part of the TYPO3 t3lib/ library provided by
@@ -159,18 +159,21 @@ function evalFunc_getNumChars(value)	{
 	return outVal;
 }
 function evalFunc_parseDouble(value)	{
-	var theVal = ''+value;
-	var dec=0;
-	if (!value)	return 0;
-	for (var a=theVal.length; a>0; a--)	{
-		if (theVal.substr(a-1,1)=='.' || theVal.substr(a-1,1)==',')	{
-			dec = theVal.substr(a);
-			theVal = theVal.substr(0,a-1);
-			break;
-		}
+	var theVal = "" + value;
+	theVal = theVal.replace(/[^0-9,\.-]/g, "");
+	var negative = theVal.substring(0, 1) === '-';
+	theVal = theVal.replace(/-/g, "");
+	theVal = theVal.replace(/,/g, ".");
+	if (theVal.indexOf(".") == -1) {
+		theVal += ".0";
 	}
-	dec = this.getNumChars(dec)+'00';
-	theVal=this.parseInt(this.noSpace(theVal))+TS.decimalSign+dec.substr(0,2);
+	var parts = theVal.split(".");
+	var dec = parts.pop();
+	theVal = Number(parts.join("") + "." + dec);
+	if (negative) {
+	    theVal *= -1;
+	}
+	theVal = theVal.toFixed(2);
 
 	return theVal;
 }
@@ -415,7 +418,7 @@ function evalFunc_input(type,inVal)	{
 					var min = (values.values[2])?this.parseInt(values.values[2]):today.getUTCMinutes();
 					if (min > 59)	{min=59;}
 					var hour = (values.values[1])?this.parseInt(values.values[1]):today.getUTCHours();
-					if (hour > 23)	{hour=23;}
+					if (hour >= 24)	{hour=0;}
 
 					var theTime = new Date(this.getYear(this.refDate), this.refDate.getUTCMonth(), this.refDate.getUTCDate(), hour, min, ((type=="timesec")?sec:0));
 
@@ -467,11 +470,11 @@ function evalFunc_output(type,value,FObj)	{
 	return theString;
 }
 function evalFunc_getSecs(timeObj)	{
-	return Math.round(timeObj.getUTCSeconds()/1000);
+	return timeObj.getUTCSeconds();
 }
 // Seconds since midnight:
 function evalFunc_getTime(timeObj)	{
-	return timeObj.getUTCHours()*60*60+timeObj.getUTCMinutes()*60+Math.round(timeObj.getUTCSeconds()/1000);
+	return timeObj.getUTCHours() * 60 * 60 + timeObj.getUTCMinutes() * 60 + this.getSecs(timeObj);
 }
 function evalFunc_getYear(timeObj)	{
 	return timeObj.getUTCFullYear();

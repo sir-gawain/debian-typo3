@@ -1,8 +1,8 @@
 <?php
 /***************************************************************
 *  Copyright notice
-*  
-*  (c) 2004 Kasper Skaarhoj (kasper@typo3.com)
+*
+*  (c) 2004-2009 Kasper Skaarhoj (kasper@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,8 +27,8 @@
 /**
  * Contains an example DBAL handler class
  *
- * $Id: class.tx_dbal_handler_openoffice.php 3508 2008-04-01 20:28:08Z stucki $
- * 
+ * $Id: class.tx_dbal_handler_openoffice.php 35525 2010-07-11 14:05:40Z xperseguers $
+ *
  * @author	Kasper Skaarhoj <kasper@typo3.com>
  */
 /**
@@ -36,24 +36,24 @@
  *
  *
  *
- *   74: class tx_dbal_handler_xmldb extends t3lib_sqlengine 
- *   91:     function init($config, &$pObj)	
- *  128:     function readDataSource($table)	
- *  157:     function saveDataSource($table)	
- *  184:     function xmlDB_writeStructure()	
- *  193:     function xmlDB_readStructure()	
+ *   74: class tx_dbal_handler_xmldb extends tx_dbal_sqlengine
+ *   91:     function init($config, &$pObj)
+ *  128:     function readDataSource($table)
+ *  157:     function saveDataSource($table)
+ *  184:     function xmlDB_writeStructure()
+ *  193:     function xmlDB_readStructure()
  *
  *              SECTION: SQL admin functions
- *  217:     function admin_get_tables()	
- *  242:     function admin_get_fields($tableName)	
- *  276:     function admin_get_keys($tableName)	
- *  314:     function admin_query($query)	
+ *  217:     function admin_get_tables()
+ *  242:     function admin_get_fields($tableName)
+ *  276:     function admin_get_keys($tableName)
+ *  314:     function admin_query($query)
  *
  * TOTAL FUNCTIONS: 9
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
- 
+
 
 
 
@@ -71,7 +71,7 @@
  * @package TYPO3
  * @subpackage tx_dbal
  */
-class tx_dbal_handler_openoffice extends t3lib_sqlengine {
+class tx_dbal_handler_openoffice extends tx_dbal_sqlengine {
 
 	var $config = array();
 	var $pObj;	// Set from DBAL class.
@@ -86,7 +86,7 @@ class tx_dbal_handler_openoffice extends t3lib_sqlengine {
 	 * @param	object		Parent object
 	 * @return	boolean		True on success.
 	 */
-	function init($config, &$pObj)	{
+	function init($config, $pObj) {
 		$this->config = $config['config'];
 
 		if (t3lib_extMgm::isLoaded('libunzipped'))	{
@@ -134,7 +134,7 @@ class tx_dbal_handler_openoffice extends t3lib_sqlengine {
 		$this->unzip->putFileToArchive('content.xml', $content_xml['content']);
 
 			// Writing ZIP content back to zip-archive file:
-		$result = $this->unzip->compileZipFile('fileadmin/dbtest_output.sxc');
+		$result = $this->unzip->compileZipFile($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'] . 'dbtest_output.sxc');
 
 		debug($result);
 
@@ -231,4 +231,5 @@ class tx_dbal_handler_openoffice extends t3lib_sqlengine {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/handlers/class.tx_dbal_handler_openoffice.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dbal/handlers/class.tx_dbal_handler_openoffice.php']);
 }
+
 ?>

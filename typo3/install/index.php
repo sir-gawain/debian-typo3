@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Starter-script for install screen
  *
- * $Id: index.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: index.php 7613 2010-05-14 19:24:22Z baschny $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @package TYPO3
@@ -40,15 +40,42 @@
 // Insert some security here, if you don't trust the Install Tool Password:
 // **************************************************************************
 
-error_reporting (E_ALL ^ E_NOTICE);
-$PATH_thisScript = str_replace('//','/', str_replace('\\','/', (php_sapi_name()=='cgi'||php_sapi_name()=='isapi' ||php_sapi_name()=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME'])));
+if (defined('E_DEPRECATED')) {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+} else {
+	error_reporting(E_ALL ^ E_NOTICE);
+}
+
+$PATH_thisScript = str_replace('//','/', str_replace('\\','/', (PHP_SAPI=='cgi'||PHP_SAPI=='isapi' ||PHP_SAPI=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME'])));
 
 	// Only allow Install Tool access if the file "typo3conf/ENABLE_INSTALL_TOOL" is found
 $enableInstallToolFile = dirname(dirname(dirname($PATH_thisScript))).'/typo3conf/ENABLE_INSTALL_TOOL';
 
+if (is_file($enableInstallToolFile) && (time() - filemtime($enableInstallToolFile) > 3600)) {
+	$content = file_get_contents($enableInstallToolFile);
+	$verifyString = 'KEEP_FILE';
+
+	if (trim($content) !== $verifyString) {
+			// Delete the file if it is older than 3600s (1 hour)
+		unlink($enableInstallToolFile);
+	}
+}
+
 	// Change 1==2 to 1==1 if you want to lock the Install Tool regardless of the file ENABLE_INSTALL_TOOL
-if (1==2 || ($_SERVER['REMOTE_ADDR']!='127.0.0.1' && !@is_file($enableInstallToolFile)))	{
-	die('The Install Tool is locked.<br /><br /><strong>Fix:</strong> Create a file typo3conf/ENABLE_INSTALL_TOOL<br />This file may simply be empty.<br /><br />For security reasons, it is highly recommended to rename<br />or delete the file after the operation is finished.');
+if (1==2 || !is_file($enableInstallToolFile)) {
+	header('Cache-Control: no-cache, must-revalidate');
+	header('Pragma: no-cache');
+	die(nl2br('<strong>The Install Tool is locked.</strong>
+
+		Fix: Create a file typo3conf/ENABLE_INSTALL_TOOL
+		This file may simply be empty.
+
+		For security reasons, it is highly recommended to rename
+		or delete the file after the operation is finished.
+
+		<strong>If the file is older than 1 hour TYPO3 has automatically
+		deleted it, so it needs to be created again.</strong>
+	'));
 }
 
 
@@ -62,4 +89,5 @@ $BACK_PATH='../';
 	// Defining this variable and setting it non-false will invoke the install-screen called from init.php
 define('TYPO3_enterInstallScript', '1');
 require ('../init.php');
+
 ?>

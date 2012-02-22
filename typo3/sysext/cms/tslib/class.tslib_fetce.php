@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Form-data processing
  * included from index_ts.php
  *
- * $Id: class.tslib_fetce.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tslib_fetce.php 5978 2009-09-18 12:47:26Z rupi $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -77,7 +77,7 @@
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
- * @deprecated
+ * @deprecated since TYPO3 3.6
  * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=342&cHash=fdf55adb3b
  */
 class tslib_feTCE	{
@@ -180,15 +180,16 @@ class tslib_feTCE	{
 	 *
 	 * @param	string		The database table to check
 	 * @param	string		The fieldname from the database table to search
-	 * @param	string		The value to search for.
+	 * @param	integer		The hash value to search for.
 	 * @return	integer		The number of found rows. If zero then no "double-post" was found and its all OK.
 	 * @access private
 	 */
 	function checkDoublePostExist($table,$doublePostField,$key)	{
-		$where = $doublePostField.'='.$key;
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $table, $where);
-		$row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
-		return $row[0];
+		return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'*',
+			$table,
+			$doublePostField . '=' . intval($key)
+		);
 	}
 
 	/**
@@ -232,8 +233,16 @@ class tslib_feTCE	{
 	 */
 	function execNEWinsert($table, $dataArr)	{
 		$extraList=$this->extraList;
-		if ($GLOBALS['TCA'][$table]['ctrl']['tstamp'])	{$field=$GLOBALS['TCA'][$table]['ctrl']['tstamp']; $dataArr[$field]=time(); $extraList.=','.$field;}
-		if ($GLOBALS['TCA'][$table]['ctrl']['crdate'])	{$field=$GLOBALS['TCA'][$table]['ctrl']['crdate']; $dataArr[$field]=time(); $extraList.=','.$field;}
+		if ($GLOBALS['TCA'][$table]['ctrl']['tstamp']) {
+			$field = $GLOBALS['TCA'][$table]['ctrl']['tstamp'];
+			$dataArr[$field] = $GLOBALS['EXEC_TIME'];
+			$extraList .= ',' . $field;
+		}
+		if ($GLOBALS['TCA'][$table]['ctrl']['crdate']) {
+			$field = $GLOBALS['TCA'][$table]['ctrl']['crdate'];
+			$dataArr[$field] = $GLOBALS['EXEC_TIME'];
+			$extraList .= ',' . $field;
+		}
 		if ($GLOBALS['TCA'][$table]['ctrl']['cruser_id'])	{$field=$GLOBALS['TCA'][$table]['ctrl']['cruser_id']; $dataArr[$field]=0; $extraList.=','.$field;}
 
 		unset($dataArr['uid']);	// uid can never be set
@@ -258,9 +267,17 @@ class tslib_feTCE	{
 	 */
 	function clear_cacheCmd($cacheCmd)	{
 		$cacheCmd = intval($cacheCmd);
+
 		if ($cacheCmd)	{
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_pages', 'page_id='.intval($cacheCmd));
-			if ($cacheCmd == intval($GLOBALS['TSFE']->id))	{	// Setting no_cache true if the cleared-cache page is the current page!
+			if (TYPO3_UseCachingFramework) {
+				$pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
+				$pageCache->flushByTag('pageId_' . $cacheCmd);
+			} else {
+				$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_pages', 'page_id = ' . $cacheCmd);
+			}
+
+			if ($cacheCmd == intval($GLOBALS['TSFE']->id)) {
+					// Setting no_cache true if the cleared-cache page is the current page!
 				$GLOBALS['TSFE']->set_no_cache();
 			}
 		}

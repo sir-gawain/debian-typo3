@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
  * This is an example of how to use your own functions and classes directly from TYPO3.
  * Used in the "testsite" package
  *
- * $Id: example_callfunction.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: example_callfunction.php 5165 2009-03-09 18:28:59Z ohader $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -157,7 +157,7 @@ class user_various	{
 	 * @access private
 	 */
 	function selectThem($query)	{
-		$res = $GLOBALS['TYPO3_DB']->sql(TYPO3_db,$query);
+		$res = $GLOBALS['TYPO3_DB']->sql_query($query);
 		$output=array();
 		while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
 			$output[]=$row['header'];

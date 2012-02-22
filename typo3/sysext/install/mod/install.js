@@ -1,7 +1,6 @@
 /***************************************************************
 *
-*  javascript functions to get the TYPO3 encryption key by an
-*  AJAX call and fill the form with it.
+*  Javascript functions to provide AJAX calls for install tool
 *
 *  Copyright notice
 *
@@ -28,22 +27,23 @@
  */
 var EncryptionKey = {
 	thisScript: '../../index.php',
-	eID: 'tx_install_eid',
+	eID: 'tx_install_ajax',
+	cmd: 'encryptionKey',
 
-	// loads the ecryption key by an AJAX call
+		// loads the ecryption key by an AJAX call
 	load: function(obj) {
-		// fallback if AJAX is not possible (e.g. IE < 6)
+			// fallback if AJAX is not possible (e.g. IE < 6)
 		if (typeof Ajax.getTransport() != 'object') {
-			window.location.href = this.thisScript + '?eID=' + this.eID;
+			window.location.href = this.thisScript + '?eID=' + this.eID + '&cmd=' + this.cmd;
 			return;
 		}
 
 		new Ajax.Request(this.thisScript, {
 			method: 'get',
-			parameters: '?eID=' + this.eID,
+			parameters: '?eID=' + this.eID + '&cmd=' + this.cmd,
 			onComplete: function(xhr) {
 				document.getElementsByName('TYPO3_INSTALL[localconf.php][encryptionKey]').item(0).value=xhr.responseText;
-			}.bind(this),
+			}.bind(this)
 		});
-	},
+	}
 };

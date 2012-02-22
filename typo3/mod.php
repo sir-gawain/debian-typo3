@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2006 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Module Dispatch script
  *
- * $Id: mod.php 2663 2007-11-05 09:22:23Z ingmars $
+ * $Id: mod.php 6135 2009-10-11 14:02:27Z steffenk $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -40,16 +40,29 @@ unset($MCONF);
 require('init.php');
 require('template.php');
 
-	// Find module path:
+// Find module path:
 $temp_M = (string)t3lib_div::_GET('M');
-if ($temp_path = $TBE_MODULES['_PATHS'][$temp_M])	{
-	$MCONF['_'] = 'mod.php?M='.rawurlencode($temp_M);
-	require($temp_path.'conf.php');
-	$BACK_PATH='';
-	require($temp_path.'index.php');
+$isDispatched = FALSE;
+
+if ($temp_path = $TBE_MODULES['_PATHS'][$temp_M]) {
+	$MCONF['_'] = 'mod.php?M=' . rawurlencode($temp_M);
+	require($temp_path . 'conf.php');
+	$BACK_PATH = '';
+	require($temp_path . 'index.php');
+	$isDispatched = TRUE;
 } else {
-	#debug($TBE_MODULES);
-	die('Value "'.htmlspecialchars($temp_M).'" for "M" was not found as a module');
+	if (is_array($TBE_MODULES['_dispatcher'])) {
+		foreach ($TBE_MODULES['_dispatcher'] as $dispatcherClassName) {
+			$dispatcher = t3lib_div::makeInstance($dispatcherClassName);
+			if ($dispatcher->callModule($temp_M) === TRUE) {
+				$isDispatched = TRUE;
+				break;
+			}
+		}
+	}
 }
 
+if ($isDispatched === FALSE) {
+	die('Value "' . htmlspecialchars($temp_M) . '" for "M" was not found as a module');
+}
 ?>

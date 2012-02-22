@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Class, adding extra context menu options
  *
- * $Id: class.tx_extrapagecmoptions.php 3861 2008-07-07 16:15:32Z baschny $
+ * $Id: class.tx_extrapagecmoptions.php 5165 2009-03-09 18:28:59Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -83,8 +83,8 @@ class tx_extrapagecmoptions {
 		$subname = t3lib_div::_GP('subname');
 
 			// Detecting menu level
-		if (!$backRef->cmLevel)	{	// LEVEL: Primary menu.
-
+		// LEVEL: Primary menu.
+		if (!in_array('moreoptions', $backRef->disabledItems) && !$backRef->cmLevel) {
 				// Creating menu items here:
 			if ($backRef->editOK)	{
 				$LL = $this->includeLL();
@@ -166,4 +166,5 @@ class tx_extrapagecmoptions {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
 }
+
 ?>

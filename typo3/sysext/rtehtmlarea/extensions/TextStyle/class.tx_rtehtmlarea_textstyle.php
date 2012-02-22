@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2007-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,7 +26,7 @@
  *
  * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_textstyle.php 2926 2008-01-20 08:58:13Z ingmars $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_textstyle.php 5489 2009-05-23 15:26:20Z ohader $
  *
  */
 
@@ -42,7 +42,7 @@ class tx_rtehtmlarea_textstyle extends tx_rtehtmlareaapi {
 	protected $thisConfig;						// Reference to RTE PageTSConfig
 	protected $toolbar;						// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 						// Frontend language array
-	
+
 	protected $pluginButtons = 'textstyle';				// The comma-seperated list of button names that the extension id adding to the htmlArea RTE tollbar
 	protected $pluginLabels = 'textstylelabel';			// The comma-seperated list of label names that the extension id adding to the htmlArea RTE tollbar
 									// The name-converting array, converting the button names used in the RTE PageTSConfing to the button id's used by the JS scripts

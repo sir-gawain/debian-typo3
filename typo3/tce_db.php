@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * This script is a gateway for POST forms to class.t3lib_TCEmain that manipulates all information in the database!!
  * For syntax and API information, see the document 'TYPO3 Core APIs'
  *
- * $Id: tce_db.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: tce_db.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -53,7 +53,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_tcemain.php');
 
 
 
@@ -118,7 +117,7 @@ class SC_tce_db {
 		$this->cmd = t3lib_div::_GP('cmd');
 		$this->mirror = t3lib_div::_GP('mirror');
 		$this->cacheCmd = t3lib_div::_GP('cacheCmd');
-		$this->redirect = t3lib_div::_GP('redirect');
+		$this->redirect = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('redirect'));
 		$this->prErr = t3lib_div::_GP('prErr');
 		$this->_disableRTE = t3lib_div::_GP('_disableRTE');
 		$this->CB = t3lib_div::_GP('CB');
@@ -210,7 +209,7 @@ class SC_tce_db {
 
 				// Update page tree?
 			if ($this->uPT && (isset($this->data['pages'])||isset($this->cmd['pages'])))	{
-				t3lib_BEfunc::getSetUpdateSignal('updatePageTree');
+				t3lib_BEfunc::setUpdateSignal('updatePageTree');
 			}
 		}
 	}
@@ -228,19 +227,15 @@ class SC_tce_db {
 		}
 
 		if ($this->redirect && !$this->tce->debug) {
-			Header('Location: '.t3lib_div::locationHeaderUrl($this->redirect));
+			t3lib_utility_Http::redirect($this->redirect);
 		}
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/tce_db.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/tce_db.php']);
 }
-
-
-
-
 
 
 
@@ -254,4 +249,5 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 $SOBE->initClipboard();
 $SOBE->main();
 $SOBE->finish();
+
 ?>

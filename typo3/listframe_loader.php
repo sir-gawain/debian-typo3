@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Redirects to real module if shortcut pressed
  *
- * $Id: listframe_loader.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: listframe_loader.php 5174 2009-03-10 20:23:43Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML-trans compliant
  *
@@ -75,7 +75,6 @@ class SC_listframe_loader {
 	function main()	{
 		global $TBE_TEMPLATE;
 
-		$TBE_TEMPLATE->docType='xhtml_trans';
 		$TBE_TEMPLATE->divClass='';
 		$this->content.=$TBE_TEMPLATE->startPage('List Frame Loader');
 		$this->content.=$TBE_TEMPLATE->wrapScriptTags('
@@ -90,18 +89,15 @@ class SC_listframe_loader {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/listframe_loader.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/listframe_loader.php']);
 }
 
 
 
-
-
-
-
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_listframe_loader');
 $SOBE->main();
+
 ?>

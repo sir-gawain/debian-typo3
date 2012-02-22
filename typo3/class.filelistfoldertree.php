@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -50,11 +50,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once (PATH_t3lib.'class.t3lib_foldertree.php');
-
-
-
 /**
  * Extension class for the t3lib_filetree class, needed for drag and drop and ajax functionality
  *
@@ -138,7 +133,7 @@ class filelistFolderTree extends t3lib_folderTree {
 
 		$out = '
 			<!-- TYPO3 folder tree structure. -->
-			<ul class="tree">
+			<ul class="tree" id="treeRoot">
 		';
 		$titleLen=intval($this->BE_USER->uc['titleLen']);
 		if (!is_array($treeArr))	$treeArr=$this->tree;
@@ -182,9 +177,9 @@ class filelistFolderTree extends t3lib_folderTree {
 			if($v['isLast']) { $classAttr = ($classAttr) ? ' last'	: 'last';	 }
 
 			$itemHTML .='
-				<li id="'.$idAttr.'"'.($classAttr ? ' class="'.$classAttr.'"' : '').'>'.
+				<li id="'.$idAttr.'"'.($classAttr ? ' class="'.$classAttr.'"' : '').'><div class="treeLinkItem">'.
 					$v['HTML'].
-					$this->wrapTitle($this->getTitleStr($v['row'],$titleLen),$v['row'],$v['bank']);
+					$this->wrapTitle($this->getTitleStr($v['row'],$titleLen),$v['row'],$v['bank']) . '</div>';
 
 
 			if(!$v['hasSub']) { $itemHTML .= "</li>\n"; }
@@ -298,6 +293,7 @@ class filelistFolderTree extends t3lib_folderTree {
 
 			// Traverse mounts:
 		foreach($this->MOUNTS as $key => $val)	{
+			$hasSub = false;
 			$specUID = t3lib_div::md5int($val['path']);
 			$this->specUIDmap[$specUID] = $val['path'];
 
@@ -311,11 +307,19 @@ class filelistFolderTree extends t3lib_folderTree {
 			$icon='<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/ol/'.($isOpen?'minus':'plus').'only.gif').' alt="" />';
 			$firstHtml= $this->PM_ATagWrap($icon,$cmd);
 
-			switch($val['type'])	{
-				case 'user':	$icon = 'gfx/i/_icon_ftp_user.gif';	break;
-				case 'group':	$icon = 'gfx/i/_icon_ftp_group.gif'; break;
-				case 'readonly':	$icon = 'gfx/i/_icon_ftp_readonly.gif'; break;
-				default:		$icon = 'gfx/i/_icon_ftp.gif'; break;
+			switch ($val['type']) {
+				case 'user':
+					$icon = 'gfx/i/_icon_ftp_user.gif';
+					break;
+				case 'group':
+					$icon = 'gfx/i/_icon_ftp_group.gif';
+					break;
+				case 'readonly':
+					$icon = 'gfx/i/_icon_ftp_readonly.gif';
+					break;
+				default:
+					$icon = 'gfx/i/_icon_ftp.gif';
+					break;
 			}
 
 				// Preparing rootRec for the mount
@@ -325,8 +329,12 @@ class filelistFolderTree extends t3lib_folderTree {
 			$row['path']  = $val['path'];
 			$row['title'] = $val['name'];
 
+				// hasSub is true when the root of the mount is expanded
+			if ($isOpen) {
+				$hasSub = true;
+			}
 				// Add the root of the mount to ->tree
-			$this->tree[] = array('HTML' => $firstHtml, 'row' => $row, 'bank' => $this->bank);
+			$this->tree[] = array('HTML' => $firstHtml, 'row' => $row, 'bank' => $this->bank, 'hasSub' => $hasSub);
 
 				// If the mount is expanded, go down:
 			if ($isOpen)
@@ -334,6 +342,12 @@ class filelistFolderTree extends t3lib_folderTree {
 
 				// Add tree:
 			$treeArr = array_merge($treeArr, $this->tree);
+			
+				// if this is an AJAX call, don't run through all mounts, only 
+				// show the expansion of the current one, not the rest of the mounts
+			if (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX) {
+				break;
+			}
 		}
 		return $this->printTree($treeArr);
 	}
@@ -367,7 +381,7 @@ class filelistFolderTree extends t3lib_folderTree {
 			end($this->tree);
 			$treeKey = key($this->tree);	// Get the key for this space
 
-			$val = ereg_replace('^\./','',$val);
+			$val = preg_replace('/^\.\//','',$val);
 			$title = $val;
 			$path = $files_path.$val.'/';
 
@@ -398,16 +412,23 @@ class filelistFolderTree extends t3lib_folderTree {
 				$HTML = $this->PMicon($row,$a,$c,$nextCount,$exp);
 
 				$webpath = t3lib_BEfunc::getPathType_web_nonweb($path);
+
+				if (is_writable($path)) {
+					$type = '';
+				} else {
+					$type = 'readonly';
+				}
+
 				$icon = 'gfx/i/_icon_' .$webpath . 'folders' . ($type == 'readonly' ? '_ro' : '') . '.gif';
 				if ($val == '_temp_')	{
 					$icon = 'gfx/i/sysf.gif';
-					$row['title']='TEMP';
-					$row['_title']='<b>TEMP</b>';
+					$row['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:temp', true);
+					$row['_title'] = '<strong>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:temp', true) . '</strong>';
 				}
 				if ($val == '_recycler_')	{
 					$icon = 'gfx/i/recycler.gif';
-					$row['title']='RECYCLER';
-					$row['_title']='<b>RECYCLER</b>';
+					$row['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:recycler', true);
+					$row['_title'] = '<strong>' .$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:recycler', true) . '</strong>';
 				}
 				$HTML .= $this->wrapIcon('<img'.t3lib_iconWorks::skinImg($this->backPath, $icon, 'width="18" height="16"').' alt="" />',$row);
 			}
@@ -432,4 +453,5 @@ class filelistFolderTree extends t3lib_folderTree {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/class.filelistfoldertree.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/class.filelistfoldertree.php']);
 }
+
 ?>

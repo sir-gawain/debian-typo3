@@ -2,7 +2,7 @@
 /***************************************************************
  * Copyright notice
  *
- * (c) 2008 Oliver Hader <oh@inpublica.de>
+ * (c) 2008-2009 Oliver Hader <oh@inpublica.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
 /**
  * Interface for classes which hook into t3lib_TCEforms_inline.
  *
- * $Id: interface.t3lib_tceformsinlinehook.php 3555 2008-04-11 18:19:04Z ohader $
+ * $Id: interface.t3lib_tceformsinlinehook.php 5165 2009-03-09 18:28:59Z ohader $
  *
  * @author		Oliver Hader <oh@inpublica.de>
  * @package 	TYPO3

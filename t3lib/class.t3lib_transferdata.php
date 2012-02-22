@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for getting and transforming data for display in backend forms (TCEforms)
  *
- * $Id: class.t3lib_transferdata.php 4281 2008-10-04 17:44:00Z dmitry $
+ * $Id: class.t3lib_transferdata.php 6588 2009-11-29 16:43:32Z ohader $
  * Revised for TYPO3 3.6 September/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -73,10 +73,6 @@
  */
 
 
-require_once (PATH_t3lib.'class.t3lib_loaddbgroup.php');
-require_once (PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml_proc.php');
-require_once (PATH_t3lib.'class.t3lib_flexformtools.php');
 
 
 
@@ -164,7 +160,16 @@ class t3lib_transferData {
 							}
 						}
 
-						$pageTS = t3lib_beFunc::getPagesTSconfig($id, true);
+						if ($id < 0) {
+							$record = t3lib_beFunc::getRecord ($table, abs($id), 'pid');
+							$pid = $record['pid'];
+							unset($record);
+						} else {
+							$pid = intval($id);
+						}
+
+						$pageTS = t3lib_beFunc::getPagesTSconfig($pid);
+
 						if (isset($pageTS['TCAdefaults.'])) {
 							$TCAPageTSOverride  = $pageTS['TCAdefaults.'];
 							if (is_array($TCAPageTSOverride[$table.'.']))	{
@@ -752,7 +757,7 @@ class t3lib_transferData {
 					foreach($theExcludeFields as $theExcludeFieldsArrays)	{
 						foreach($elements as $eKey => $value)	{
 							if (!strcmp($theExcludeFieldsArrays[1],$value))	{
-								$dataAcc[$eKey]=rawurlencode($value).'|'.rawurlencode(ereg_replace(':$','',$theExcludeFieldsArrays[0]));
+								$dataAcc[$eKey]=rawurlencode($value).'|'.rawurlencode(rtrim($theExcludeFieldsArrays[0], ':'));
 							}
 						}
 					}
@@ -1034,4 +1039,5 @@ class t3lib_transferData {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_transferdata.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_transferdata.php']);
 }
+
 ?>

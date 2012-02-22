@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Shows information about a database or file item
  *
- * $Id: show_rechis.php 3775 2008-06-10 12:05:31Z patrick $
+ * $Id: show_rechis.php 5526 2009-06-02 13:52:04Z benni $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML Compliant
  *
@@ -52,8 +52,6 @@
 $BACK_PATH='';
 require ($BACK_PATH.'init.php');
 require ($BACK_PATH.'template.php');
-require_once (PATH_t3lib.'class.t3lib_diff.php');
-require_once (PATH_t3lib.'class.t3lib_tcemain.php');
 $LANG->includeLLFile('EXT:lang/locallang_show_rechis.xml');
 require_once ('class.show_rechis.inc');
 
@@ -96,7 +94,6 @@ class SC_show_rechis {
 			// Create internal template object:
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->setModuleTemplate('templates/show_rechis.html');
 
 			// Start the page header:
@@ -165,19 +162,10 @@ class SC_show_rechis {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_rechis.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/show_rechis.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -186,4 +174,5 @@ $SOBE = t3lib_div::makeInstance('SC_show_rechis');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

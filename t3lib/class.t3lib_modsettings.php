@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
  *
  * inspired by t3lib_fullsearch
  *
- * $Id: class.t3lib_modsettings.php 3433 2008-03-16 14:13:33Z masi $
+ * $Id: class.t3lib_modsettings.php 5761 2009-08-05 10:05:29Z rupi $
  *
  * @author	René Fritz <r.fritz@colorcube.de>
  */
@@ -106,7 +106,7 @@
  *					'desc' => 'descritpion text, not mandatory',
  *					'data' => array(),	// data from MOD_SETTINGS
  *					'user' => NULL, // can be used for extra data used by the application to identify this entry
- *					'tstamp' => 12345, // time()
+ *					'tstamp' => 12345, // $GLOBALS['EXEC_TIME']
  *				),
  *			'another id' => ...
  *
@@ -249,7 +249,7 @@ class t3lib_modSettings {
 
 		reset($SOBE->MOD_SETTINGS);
 		while(list($key)=each($SOBE->MOD_SETTINGS))	{
-			if (ereg('^'.$prefix,$key)) {
+			if (preg_match('/^'.$prefix.'/',$key)) {
 				$this->storeList[$key]=$key;
 			}
 		}
@@ -325,7 +325,7 @@ class t3lib_modSettings {
 						'desc' => (string)$data['desc'],
 						'data' => $storageData,
 						'user' => NULL,
-						'tstamp' => time(),
+						'tstamp' => $GLOBALS['EXEC_TIME'],
 					);
 		$storageArr = $this->processEntry($storageArr);
 
@@ -549,7 +549,7 @@ class t3lib_modSettings {
 #TODO need to add parameters
 		if ($useOwnForm AND trim($code)) {
 			$code = '
-		<form action="'.t3lib_div::getIndpEnv('SCRIPT_NAME').'" method="POST" name="'.$this->formName.'" enctype="'.$TYPO3_CONF_VARS['SYS']['form_enctype'].'">'.$code.'</form>';
+		<form action="' . t3lib_div::getIndpEnv('SCRIPT_NAME') . '" method="post" name="' . $this->formName . '" enctype="' . $TYPO3_CONF_VARS['SYS']['form_enctype'] . '">' . $code . '</form>';
 		}
 
 		return $code;
@@ -580,4 +580,5 @@ class t3lib_modSettings {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_modSettings.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_modSettings.php']);
 }
+
 ?>

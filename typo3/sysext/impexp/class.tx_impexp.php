@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -171,14 +171,6 @@
  * 	#debug(strlen($out));
  */
 
-require_once(PATH_t3lib.'class.t3lib_tcemain.php');
-require_once (PATH_t3lib.'class.t3lib_diff.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
-
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
-require_once (PATH_t3lib.'class.t3lib_extfilefunc.php');
-require_once (PATH_t3lib.'class.t3lib_refindex.php');
-
 @ini_set('max_execution_time',600);
 @ini_set('memory_limit','256m');
 
@@ -343,8 +335,7 @@ class tx_impexp {
 			'packager_name' => $packager_name,
 			'packager_email' => $packager_email,
 			'TYPO3_version' => TYPO3_version,
-#			'loaded_extensions' => $GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'],
-			'created' => strftime('%A %e. %B %Y', time())
+			'created' => strftime('%A %e. %B %Y', $GLOBALS['EXEC_TIME']),
 		);
 	}
 
@@ -783,6 +774,8 @@ class tx_impexp {
 				$fileRec['filesize'] = filesize($fI['ID_absFile']);
 				$fileRec['filename'] = basename($fI['ID_absFile']);
 				$fileRec['filemtime'] = filemtime($fI['ID_absFile']);
+					//for internal type file_reference
+				$fileRec['relFileRef'] = substr($fI['ID_absFile'], strlen(PATH_site));
 				if ($recordRef)	{
 					$fileRec['record_ref'] = $recordRef.'/'.$fieldname;
 				}
@@ -841,10 +834,10 @@ class tx_impexp {
 						// This is only done with files grabbed by a softreference parser since it is deemed improbable that hard-referenced files should undergo this treatment.
 					$html_fI = pathinfo(basename($fI['ID_absFile']));
 					if ($this->includeExtFileResources && t3lib_div::inList($this->extFileResourceExtensions,strtolower($html_fI['extension'])))	{
-						$uniquePrefix = '###'.md5(time()).'###';
+						$uniquePrefix = '###' . md5($GLOBALS['EXEC_TIME']) . '###';
 
 						if (strtolower($html_fI['extension'])==='css')	{
-							$prefixedMedias = explode($uniquePrefix, eregi_replace('(url[[:space:]]*\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\))', '\1'.$uniquePrefix.'\2'.$uniquePrefix.'\3', $fileRec['content']));
+							$prefixedMedias = explode($uniquePrefix, preg_replace('/(url[[:space:]]*\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\))/i', '\1'.$uniquePrefix.'\2'.$uniquePrefix.'\3', $fileRec['content']));
 						} else {	// html, htm:
 							$htmlParser = t3lib_div::makeInstance('t3lib_parsehtml');
 							$prefixedMedias = explode($uniquePrefix, $htmlParser->prefixResourcePath($uniquePrefix,$fileRec['content'],array(),$uniquePrefix));
@@ -1167,6 +1160,7 @@ class tx_impexp {
 			// Temporary files stack initialized:
 		$this->unlinkFiles = array();
 		$this->alternativeFileName = array();
+		$this->alternativeFilePath = array();
 
 			// Write records, first pages, then the rest
 			// Fields with "hard" relations to database, files and flexform fields are kept empty during this run
@@ -1486,6 +1480,7 @@ class tx_impexp {
 		$tce->dontProcessTransformations = 1;
 		$tce->enableLogging = $this->enableLogging;
 		$tce->alternativeFileName = $this->alternativeFileName;
+		$tce->alternativeFilePath = $this->alternativeFilePath;
 		return $tce;
 	}
 
@@ -1623,6 +1618,7 @@ class tx_impexp {
 				$this->unlinkFiles[] = $tmpFile;
 				if (filesize($tmpFile)==$this->dat['files'][$fI['ID']]['filesize'])	{
 					$this->alternativeFileName[$tmpFile] = $fI['filename'];
+					$this->alternativeFilePath[$tmpFile] = $this->dat['files'][$fI['ID']]['relFileRef'];
 
 					return $tmpFile;
 				} else $this->error('Error: temporary file '.$tmpFile.' had a size ('.filesize($tmpFile).') different from the original ('.$this->dat['files'][$fI['ID']]['filesize'].')',1);
@@ -1680,7 +1676,7 @@ class tx_impexp {
 #	debug($currentValueArray['data'],'BE');
 											// Do recursive processing of the XML data:
 										$iteratorObj = t3lib_div::makeInstance('t3lib_TCEmain');
-										$iteratorObj->callBackObj = &$this;
+										$iteratorObj->callBackObj = $this;
 										$currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData(
 													$currentValueArray['data'],
 													array(),	// Not used.
@@ -1725,16 +1721,15 @@ class tx_impexp {
 	function remapListedDBRecords_flexFormCallBack($pParams, $dsConf, $dataValue, $dataValue_ext1, $dataValue_ext2, $path)	{
 
 			// Extract parameters:
-		list($table,$uid,$field,$config)	= $pParams;
+		list($table,$uid,$field,$config) = $pParams;
 
 			// In case the $path is used as index without a trailing slash we will remove that
-		if (!is_array($config['flexFormRels']['db'][$path]) && is_array($config['flexFormRels']['db'][ereg_replace('\/$','',$path)]))	{
-			$path = ereg_replace('\/$','',$path);
+		if (!is_array($config['flexFormRels']['db'][$path]) && is_array($config['flexFormRels']['db'][rtrim($path, '/')]))	{
+			$path = rtrim($path, '/');
 		}
 		if (is_array($config['flexFormRels']['db'][$path]))	{
 			$valArray = $this->setRelations_db($config['flexFormRels']['db'][$path]);
 			$dataValue = implode(',',$valArray);
-#	debug(array('value' => $dataValue));
 		}
 
 		if (is_array($config['flexFormRels']['file'][$path]))	{
@@ -1744,7 +1739,6 @@ class tx_impexp {
 			$dataValue = implode(',',$valArr);
 		}
 
-			// Return
 		return array('value' => $dataValue);
 	}
 
@@ -1812,7 +1806,7 @@ class tx_impexp {
 
 											// Do recursive processing of the XML data:
 										$iteratorObj = t3lib_div::makeInstance('t3lib_TCEmain');
-										$iteratorObj->callBackObj = &$this;
+										$iteratorObj->callBackObj = $this;
 										$currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData(
 													$currentValueArray['data'],
 													array(),	// Not used.
@@ -1977,7 +1971,7 @@ class tx_impexp {
 				if (@is_dir(PATH_site.$dirPrefix))	{
 
 						// From the "original" RTE filename, produce a new "original" destination filename which is unused. Even if updated, the image should be unique. Currently the problem with this is that it leaves a lot of unused RTE images...
-					$fileProcObj = &$this->getFileProcObj();
+					$fileProcObj = $this->getFileProcObj();
 					$origDestName = $fileProcObj->getUniqueName($rteOrigName, PATH_site.$dirPrefix);
 
 						// Create copy file name:
@@ -2042,7 +2036,7 @@ class tx_impexp {
 				$newName = PATH_site.$dirPrefix.$fileName;
 			} else {
 					// Create unique filename:
-				$fileProcObj = &$this->getFileProcObj();
+				$fileProcObj = $this->getFileProcObj();
 				$newName = $fileProcObj->getUniqueName($fileName, PATH_site.$dirPrefix);
 			}
 #debug($newName,'$newName');
@@ -2056,7 +2050,7 @@ class tx_impexp {
 					$tokenizedContent = $this->dat['files'][$fileID]['tokenizedContent'];
 					$tokenSubstituted = FALSE;
 
-					$fileProcObj = &$this->getFileProcObj();
+					$fileProcObj = $this->getFileProcObj();
 
 					if ($updMode)	{
 						foreach($fileHeaderInfo['EXT_RES_ID'] as $res_fileID)	{
@@ -2079,7 +2073,7 @@ class tx_impexp {
 						}
 					} else {
 							// Create the resouces directory name (filename without extension, suffixed "_FILES")
-						$resourceDir = dirname($newName).'/'.ereg_replace('\.[^.]*$','',basename($newName)).'_FILES';
+						$resourceDir = dirname($newName).'/'.preg_replace('/\.[^.]*$/','',basename($newName)).'_FILES';
 						if (t3lib_div::mkdir($resourceDir))	{
 							foreach($fileHeaderInfo['EXT_RES_ID'] as $res_fileID)	{
 								if ($this->dat['files'][$res_fileID]['filename'])	{
@@ -2114,7 +2108,7 @@ class tx_impexp {
 	 * @return	boolean		Returns true if it went well. Notice that the content of the file is read again, and md5 from import memory is validated.
 	 */
 	function writeFileVerify($fileName, $fileID, $bypassMountCheck=FALSE)	{
-		$fileProcObj = &$this->getFileProcObj();
+		$fileProcObj = $this->getFileProcObj();
 
 		if ($fileProcObj->actionPerms['newFile'])	{
 			if ($fileProcObj->checkPathAgainstMounts($fileName) || $bypassMountCheck)	{	// Just for security, check again. Should actually not be necessary.
@@ -2174,7 +2168,7 @@ class tx_impexp {
 	 * @return	string		If a path is available that will be returned, otherwise false.
 	 */
 	function verifyFolderAccess($dirPrefix, $noAlternative=FALSE)	{
-		$fileProcObj = &$this->getFileProcObj();
+		$fileProcObj = $this->getFileProcObj();
 
 #$fileProcObj->mounts['1f390e42e1dc46f125310ead30c7bd9d']['path'] = '/var/www/typo3/dev/testsite-3.6.0/fileadmin/user_upload/';
 
@@ -2863,7 +2857,7 @@ class tx_impexp {
 
 
 					// Check if file exists:
-				if (@file_exists(PATH_site.$fI['relFileName']))	{
+				if (file_exists(PATH_site.$fI['relFileName']))	{
 					if ($this->update)	{
 						$pInfo['updatePath'].= 'File exists.';
 					} else {
@@ -2872,7 +2866,7 @@ class tx_impexp {
 				}
 
 					// Check extension:
-				$fileProcObj = &$this->getFileProcObj();
+				$fileProcObj = $this->getFileProcObj();
 				if ($fileProcObj->actionPerms['newFile'])	{
 					$testFI = t3lib_div::split_fileref(PATH_site.$fI['relFileName']);
 					if (!$this->allowPHPScripts && !$fileProcObj->checkIfAllowed($testFI['fileext'], $testFI['path'], $testFI['file']))	{
@@ -3278,15 +3272,12 @@ class tx_impexp {
 	 *
 	 * @return	object		File processor object
 	 */
-	function &getFileProcObj()	{
-		global $FILEMOUNTS, $TYPO3_CONF_VARS, $BE_USER;
-
+	function getFileProcObj() {
 		if (!is_object($this->fileProcObj))	{
 			$this->fileProcObj = t3lib_div::makeInstance('t3lib_extFileFunctions');
-			$this->fileProcObj->init($FILEMOUNTS, $TYPO3_CONF_VARS['BE']['fileExtensions']);
-			$this->fileProcObj->init_actionPerms($BE_USER->user['fileoper_perms']);
+			$this->fileProcObj->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
+			$this->fileProcObj->init_actionPerms($GLOBALS['BE_USER']->getFileoperationPermissions());
 		}
-
 		return $this->fileProcObj;
 	}
 

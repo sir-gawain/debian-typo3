@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a class with functions for page related overview of translations.
  *
- * $Id: class.tx_cms_webinfo_lang.php 4166 2008-09-23 08:44:14Z masi $
+ * $Id: class.tx_cms_webinfo_lang.php 5761 2009-08-05 10:05:29Z rupi $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -49,13 +49,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once(PATH_t3lib.'class.t3lib_pagetree.php');
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
-
-
-
-
 /**
  * Class for displaying translation status of pages in the tree.
  *
@@ -111,7 +104,7 @@ class tx_cms_webinfo_lang extends t3lib_extobjbase {
 			$theOutput.= $h_func;
 
 				// Add CSH:
-			$theOutput.= t3lib_BEfunc::cshItem('_MOD_web_info','lang',$GLOBALS['BACK_PATH'],'|<br/>');
+			$theOutput .= t3lib_BEfunc::cshItem('_MOD_web_info', 'lang', $GLOBALS['BACK_PATH'], '|<br />');
 
 				// Showing the tree:
 				// Initialize starting point of page tree:
@@ -217,6 +210,9 @@ class tx_cms_webinfo_lang extends t3lib_extobjbase {
 			$tCells[] = '<td class="'.$status.' c-leftLine">'.$info.'</td>';
 			$tCells[] = '<td class="'.$status.'" title="'.$LANG->getLL('lang_renderl10n_CEcount','1').'" align="center">'.$this->getContentElementCount($data['row']['uid'],0).'</td>';
 
+			$modSharedTSconfig = t3lib_BEfunc::getModTSconfig($data['row']['uid'], 'mod.SHARED');
+			$disableLanguages = isset($modSharedTSconfig['properties']['disableLanguages']) ? t3lib_div::trimExplode(',', $modSharedTSconfig['properties']['disableLanguages'], 1) : array();
+
 				// Traverse system languages:
 			foreach($languages as $langRow)	{
 				if ($this->pObj->MOD_SETTINGS['lang']==0 || (int)$this->pObj->MOD_SETTINGS['lang']===(int)$langRow['uid'])	{
@@ -257,14 +253,20 @@ class tx_cms_webinfo_lang extends t3lib_extobjbase {
 						$tCells[] = '<td class="'.$status.'">'.$info.'</td>';
 						$tCells[] = '<td class="'.$status.'" title="'.$LANG->getLL('lang_renderl10n_CEcount','1').'" align="center">'.$this->getContentElementCount($data['row']['uid'],$langRow['uid']).'</td>';
 					} else {
-						$status = t3lib_div::hideIfNotTranslated($data['row']['l18n_cfg']) || $data['row']['l18n_cfg']&1 ? 'c-blocked' : 'c-fallback';
+						if (in_array($langRow['uid'], $disableLanguages)) {
+								// Language has been disabled for this page
+							$status = 'c-blocked';
+							$info = '';
+						} else {
+							$status = t3lib_div::hideIfNotTranslated($data['row']['l18n_cfg']) || $data['row']['l18n_cfg']&1 ? 'c-blocked' : 'c-fallback';
+							$info = '<input type="checkbox" name="newOL['.$langRow['uid'].']['.$data['row']['uid'].']" value="1" />';
+							$newOL_js[$langRow['uid']].= '
+								+(document.webinfoForm[\'newOL['.$langRow['uid'].']['.$data['row']['uid'].']\'].checked ? \'&edit[pages_language_overlay]['.$data['row']['uid'].']=new\' : \'\')
+							';
+						}
+
 						$tCells[] = '<td class="'.$status.' c-leftLine">&nbsp;</td>';
 						$tCells[] = '<td class="'.$status.'">&nbsp;</td>';
-
-						$info = '<input type="checkbox" name="newOL['.$langRow['uid'].']['.$data['row']['uid'].']" value="1" />';
-						$newOL_js[$langRow['uid']].= '
-							+(document.webinfoForm[\'newOL['.$langRow['uid'].']['.$data['row']['uid'].']\'].checked ? \'&edit[pages_language_overlay]['.$data['row']['uid'].']=new\' : \'\')
-						';
 						$tCells[] = '<td class="'.$status.'">'.$info.'</td>';
 					}
 				}
@@ -384,8 +386,8 @@ class tx_cms_webinfo_lang extends t3lib_extobjbase {
 		if (is_array($row))	{
 			$row['_COUNT'] = $GLOBALS['TYPO3_DB']->sql_num_rows($res);
 			$row['_HIDDEN'] = $row['hidden'] ||
-							(intval($row['endtime']) > 0 && intval($row['endtime']) < time()) ||
-							(time() < intval($row['starttime']));
+							(intval($row['endtime']) > 0 && intval($row['endtime']) < $GLOBALS['EXEC_TIME']) ||
+							($GLOBALS['EXEC_TIME'] < intval($row['starttime']));
 		}
 
 		return $row;
@@ -399,16 +401,14 @@ class tx_cms_webinfo_lang extends t3lib_extobjbase {
 	 * @return	integer		Number of content elements from the PID where the language is set to a certain value.
 	 */
 	function getContentElementCount($pageId,$sysLang)	{
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-			'count(*)',
+		$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'uid',
 			'tt_content',
-			'pid='.intval($pageId).
-				' AND sys_language_uid='.intval($sysLang).
-				t3lib_BEfunc::deleteClause('tt_content').
+			'pid=' . intval($pageId) .
+				' AND sys_language_uid=' . intval($sysLang) .
+				t3lib_BEfunc::deleteClause('tt_content') .
 				t3lib_BEfunc::versioningPlaceholderClause('tt_content')
 		);
-
-		list($count) = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
 		return $count ? $count : '-';
 	}
 }

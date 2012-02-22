@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * This document provides a class that loads the modules for the TYPO3 interface.
  *
- * $Id: class.t3lib_loadmodules.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_loadmodules.php 6134 2009-10-11 13:05:54Z steffenk $
  * Modifications by Rene Fritz, 2001
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
@@ -88,7 +88,7 @@ class t3lib_loadModules {
 	 *
 	 * @var t3lib_beUserAuth
 	 */
-	var $BE_USER = '';
+	var $BE_USER;
 	var $observeWorkspaces = FALSE;		// If set true, workspace "permissions" will be observed so non-allowed modules will not be included in the array of modules.
 
 
@@ -368,7 +368,7 @@ class t3lib_loadModules {
 		global $TYPO3_LOADED_EXT;
 
 		if (isset($this->absPathArray[$name]))	{
-			return ereg_replace ('\/$', '', substr($this->absPathArray[$name],strlen(PATH_site)));
+			return rtrim(substr($this->absPathArray[$name],strlen(PATH_site)), '/');
 		}
 	}
 
@@ -384,9 +384,21 @@ class t3lib_loadModules {
 	 * @return	mixed		See description of function
 	 */
 	function checkMod($name, $fullpath)	{
-		$modconf=Array();
-		$path = ereg_replace ('/[^/.]+/\.\./', '/', $fullpath); // because 'path/../path' does not work
-		if (@is_dir($path) && @file_exists($path.'/conf.php')) 	{
+		if ($name == 'user_ws' && !t3lib_extMgm::isLoaded('version')) {
+			return FALSE;
+		}
+
+			// Check for own way of configuring module
+		if (is_array($GLOBALS['TBE_MODULES'][$name]['configureModuleFunction'])) {
+			$obj = $GLOBALS['TBE_MODULES'][$name]['configureModuleFunction'];
+			if (is_callable($obj)) {
+				return call_user_func($obj, $name, $fullpath);
+			}
+		}
+
+ 		$modconf = array();
+		$path = preg_replace('/\/[^\/.]+\/\.\.\//', '/', $fullpath); // because 'path/../path' does not work
+		if (@is_dir($path) && file_exists($path.'/conf.php')) 	{
 			$MCONF = array();
 			$MLANG = array();
 			include($path.'/conf.php');	// The conf-file is included. This must be valid PHP.
@@ -433,8 +445,12 @@ class t3lib_loadModules {
 
 					// Default script setup
 				if ($MCONF['script']==='_DISPATCH')	{
-					$modconf['script'] = 'mod.php?M='.rawurlencode($name);
-				} elseif ($MCONF['script'] && @file_exists($path.'/'.$MCONF['script']))	{
+					if ($MCONF['extbase']) {
+						$modconf['script'] = 'mod.php?M=Tx_' . rawurlencode($name);
+					} else {
+						$modconf['script'] = 'mod.php?M=' . rawurlencode($name);
+					}
+				} elseif ($MCONF['script'] && file_exists($path.'/'.$MCONF['script']))	{
 					$modconf['script'] = $this->getRelativePath(PATH_typo3,$fullpath.'/'.$MCONF['script']);
 				} else {
 					$modconf['script'] = 'dummy.php';
@@ -447,7 +463,7 @@ class t3lib_loadModules {
 				if ($MCONF['navFrameScript']) {
 					$navFrameScript = explode('?', $MCONF['navFrameScript']);
 					$navFrameScript = $navFrameScript[0];
-					if (@file_exists($path.'/'.$navFrameScript))	{
+					if (file_exists($path.'/'.$navFrameScript))	{
 						$modconf['navFrameScript'] = $this->getRelativePath(PATH_typo3,$fullpath.'/'.$MCONF['navFrameScript']);
 					}
 				}
@@ -562,8 +578,8 @@ class t3lib_loadModules {
 			return './';
 		}
 
-		$baseDir = ereg_replace ('^/', '', $baseDir); 	// remove beginning
-		$destDir = ereg_replace ('^/', '', $destDir);
+		$baseDir = ltrim($baseDir, '/'); 	// remove beginning
+		$destDir = ltrim($destDir, '/');
 
 		$found = true;
 		$slash_pos=0;
@@ -590,4 +606,5 @@ class t3lib_loadModules {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_loadmodules.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_loadmodules.php']);
 }
+
 ?>

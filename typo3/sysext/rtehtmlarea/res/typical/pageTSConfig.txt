@@ -5,7 +5,7 @@
 #
 # @author	Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 #
-# TYPO3 SVN ID: $Id: pageTSConfig.txt 4140 2008-09-17 02:57:32Z stan $
+# TYPO3 SVN ID: $Id: pageTSConfig.txt 5131 2009-03-06 17:53:40Z stan $
 # ***************************************************************************************
 
 	## Define labels and styles to be applied to class selectors in the interface of the RTE
@@ -102,7 +102,7 @@ RTE.default {
 	enableWordClean = 1
 	removeTrailingBR = 1
 	removeComments = 1
-	removeTags = center, font, o:p, sdfield, strike,u
+	removeTags = center, font, o:p, sdfield, strike, u
 	removeTagsAndContents = link, meta, script, style, title
 
 		## Toolbar options
@@ -236,7 +236,3 @@ RTE.default.FE.hideButtons = chMode, blockstyle, textstyle, underline, strikethr
 RTE.default.FE.FE >
 RTE.default.FE.userElements >
 RTE.default.FE.userLinks >
-
-	## tt_content TCEFORM configuration
-	## Let use all the space available for more comfort.
-TCEFORM.tt_content.bodytext.RTEfullScreenWidth= 100%

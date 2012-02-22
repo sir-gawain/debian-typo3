@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,7 +26,7 @@
  *
  * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_userelements.php 2985 2008-01-31 11:37:57Z ingmars $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_userelements.php 5489 2009-05-23 15:26:20Z ohader $
  *
  */
 
@@ -42,12 +42,12 @@ class tx_rtehtmlarea_userelements extends tx_rtehtmlareaapi {
 	protected $thisConfig;					// Reference to RTE PageTSConfig
 	protected $toolbar;					// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 					// Frontend language array
-	
+
 	protected $pluginButtons = 'user';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'user'	=> 'UserElements',
 		);
-	
+
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -60,7 +60,7 @@ class tx_rtehtmlarea_userelements extends tx_rtehtmlareaapi {
 	 * 	RTEarea['.$RTEcounter.']["buttons"]["button-id"]["property"] = "value";
 	 */
 	public function buildJavascriptConfiguration($RTEcounter) {
-		
+
 		$registerRTEinJavascriptString = '';
 		$button = 'user';
 		if (in_array($button, $this->toolbar)) {
@@ -71,7 +71,7 @@ class tx_rtehtmlarea_userelements extends tx_rtehtmlareaapi {
 			$registerRTEinJavascriptString .= '
 			RTEarea['.$RTEcounter.'].buttons.'. $button .'.pathUserModule = "../../mod5/user.php";';
 		}
-		
+
 		return $registerRTEinJavascriptString;
 	}
 

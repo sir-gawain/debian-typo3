@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,7 +37,6 @@ require ('conf.php');
 require ($BACK_PATH.'init.php');
 require ($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:taskcenter/task/locallang.php');
-require_once(PATH_t3lib.'class.t3lib_scbase.php');
 require_once('class.mod_user_task.php');
 
 $BE_USER->modAccess($MCONF, 1);
@@ -90,11 +89,10 @@ class SC_mod_user_task_index extends t3lib_SCbase {
 
 		/* Setup document template */
 		$this->doc = t3lib_div::makeInstance('noDoc');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->divClass = '';
-		$this->doc->form = '<form action="index.php" method="POST" name="editform">';
+		$this->doc->form = '<form action="index.php" method="post" name="editform">';
 		$this->backPath = $this->doc->backPath = $BACK_PATH;
-		$this->doc->loadJavascriptLib('contrib/prototype/prototype.js');
+		$this->doc->getPageRenderer()->loadPrototype();
 		$this->doc->JScode = '  <script language="javascript" type="text/javascript">
 			script_ended = 0;
 			function jumpToUrl(URL) {
@@ -109,7 +107,7 @@ class SC_mod_user_task_index extends t3lib_SCbase {
 			var parent = $("list_frame").up("body");
 			var parentHeight = $(parent).getHeight();
 			$("list_frame").setStyle({height: parentHeight+"px"});
-			
+
 		}
 		// event crashes IE6 so he is excluded first
 		//TODO: use a central handler instead of multiple single ones
@@ -161,9 +159,8 @@ class SC_mod_user_task_index extends t3lib_SCbase {
 	 * @return	string		header in the left side (HTML)
 	 */
 	function getleftHeader() {
-		$name = $GLOBALS['BE_USER']->user['realName']?$GLOBALS['BE_USER']->user['realName']:
-		$GLOBALS['BE_USER']->user['username'];
-		return '<h1>TYPO3 taskcenter <br />'.$name.'</h1>';
+		$name = $GLOBALS['BE_USER']->user['realName'] ? $GLOBALS['BE_USER']->user['realName'] : $GLOBALS['BE_USER']->user['username'];
+		return '<h1>TYPO3 taskcenter <br />' . htmlspecialchars($name) . '</h1>';
 	}
 
 	/**
@@ -192,8 +189,6 @@ class SC_mod_user_task_index extends t3lib_SCbase {
 }
 
 
-
-// Include extension?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/taskcenter/task/index.php']) {
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/taskcenter/task/index.php']);
 }

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * Will make the vertical, horizontal, selectorbox based menus AND the "about modules" display.
  * Basically it traverses the module structure and generates output based on that.
  *
- * $Id: class.alt_menu_functions.inc 4623 2008-12-29 13:53:48Z steffenk $
+ * $Id: class.alt_menu_functions.inc 5871 2009-09-01 17:19:02Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant content
  *
@@ -355,11 +355,24 @@ class alt_menu_functions {
 							</tr>';
 
 						// For "About modules":
+					$moduleLabel = htmlspecialchars($LANG->moduleLabels['labels'][$subKey.'label']);
+					$moduleLabelHtml = !empty($moduleLabel) ? '<strong>' . $moduleLabel . '</strong><br />' : '';
+					$moduleDescription = $LANG->moduleLabels['labels'][$subKey.'descr'];
+
 					$descrCode.='
 							<tr class="c-subitem-row">
 								<td align="center">'.$imageCode.'</td>
-								<td>'.$flabel.'&nbsp;&nbsp;</td>
-								<td><strong>'.htmlspecialchars($LANG->moduleLabels['labels'][$subKey.'label']).'</strong><br />'.$LANG->moduleLabels['labels'][$subKey.'descr'].'</td>
+								<td>'.$flabel.'&nbsp;&nbsp;</td>';
+
+					if (!empty($moduleLabel) || !empty($moduleDescription)) {
+						$descrCode .= '
+								<td>' . $moduleLabelHtml . $moduleDescription . '</td>';
+					} else {
+						$descrCode .= '
+								<td>&nbsp;</td>';
+					}
+
+					$descrCode .= '
 							</tr>';
 
 						// Possibly adding a divider line

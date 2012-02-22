@@ -1,5 +1,5 @@
 #
-# TYPO3 SVN ID: $Id: tables.sql 3766 2008-06-05 17:14:19Z ingmars $
+# TYPO3 SVN ID: $Id: tables.sql 6525 2009-11-25 11:27:34Z steffenk $
 #
 
 #
@@ -22,6 +22,7 @@ CREATE TABLE be_groups (
   cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
   groupMods text,
   file_mountpoints varchar(255) DEFAULT '' NOT NULL,
+  fileoper_perms tinyint(4) DEFAULT '0' NOT NULL,
   hidden tinyint(1) unsigned DEFAULT '0' NOT NULL,
   inc_access_lists tinyint(3) unsigned DEFAULT '0' NOT NULL,
   description text,
@@ -122,12 +123,42 @@ CREATE TABLE cache_extensions (
 # Table structure for table 'cache_hash'
 #
 CREATE TABLE cache_hash (
+  id int(11) unsigned NOT NULL auto_increment,
   hash varchar(32) DEFAULT '' NOT NULL,
   content mediumblob,
   tstamp int(11) unsigned DEFAULT '0' NOT NULL,
-  ident varchar(20) DEFAULT '' NOT NULL,
-  PRIMARY KEY (hash)
+  ident varchar(32) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY hash (hash)
 ) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_hash'
+#
+CREATE TABLE cachingframework_cache_hash (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_hash_tags'
+#
+CREATE TABLE cachingframework_cache_hash_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
+
 
 #
 # Table structure for table 'cache_imagesizes'
@@ -151,7 +182,7 @@ CREATE TABLE pages (
   t3ver_oid int(11) DEFAULT '0' NOT NULL,
   t3ver_id int(11) DEFAULT '0' NOT NULL,
   t3ver_wsid int(11) DEFAULT '0' NOT NULL,
-  t3ver_label varchar(30) DEFAULT '' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
   t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_count int(11) DEFAULT '0' NOT NULL,
@@ -181,6 +212,18 @@ CREATE TABLE pages (
   PRIMARY KEY (uid),
   KEY t3ver_oid (t3ver_oid,t3ver_wsid),
   KEY parent (pid,sorting,deleted,hidden)
+);
+
+#
+# Table structure for table 'sys_registry'
+#
+CREATE TABLE sys_registry (
+  uid int(11) unsigned NOT NULL auto_increment,
+  entry_namespace varchar(128) DEFAULT '' NOT NULL,
+  entry_key varchar(128) DEFAULT '' NOT NULL,
+  entry_value blob,
+  PRIMARY KEY (uid),
+  UNIQUE KEY entry_identifier (entry_namespace,entry_key)
 );
 
 #
@@ -266,7 +309,7 @@ CREATE TABLE sys_history (
   history_data mediumtext,
   fieldlist text,
   recuid int(11) DEFAULT '0' NOT NULL,
-  tablename varchar(40) DEFAULT '' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
   tstamp int(11) DEFAULT '0' NOT NULL,
   history_files mediumtext,
   snapshot tinyint(4) DEFAULT '0' NOT NULL,
@@ -282,10 +325,11 @@ CREATE TABLE sys_lockedrecords (
   uid int(11) unsigned NOT NULL auto_increment,
   userid int(11) unsigned DEFAULT '0' NOT NULL,
   tstamp int(11) unsigned DEFAULT '0' NOT NULL,
-  record_table varchar(40) DEFAULT '' NOT NULL,
+  record_table varchar(255) DEFAULT '' NOT NULL,
   record_uid int(11) DEFAULT '0' NOT NULL,
   record_pid int(11) DEFAULT '0' NOT NULL,
   username varchar(20) DEFAULT '' NOT NULL,
+  feuserid int(11) unsigned DEFAULT '0' NOT NULL,
   PRIMARY KEY (uid),
   KEY event (userid,tstamp)
 );
@@ -295,7 +339,7 @@ CREATE TABLE sys_lockedrecords (
 #
 CREATE TABLE sys_refindex (
   hash varchar(32) DEFAULT '' NOT NULL,
-  tablename varchar(40) DEFAULT '' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
   recuid int(11) DEFAULT '0' NOT NULL,
   field varchar(40) DEFAULT '' NOT NULL,
   flexpointer varchar(255) DEFAULT '' NOT NULL,
@@ -303,18 +347,18 @@ CREATE TABLE sys_refindex (
   softref_id varchar(40) DEFAULT '' NOT NULL,
   sorting int(11) DEFAULT '0' NOT NULL,
   deleted tinyint(1) DEFAULT '0' NOT NULL,
-  ref_table varchar(40) DEFAULT '' NOT NULL,
+  ref_table varchar(255) DEFAULT '' NOT NULL,
   ref_uid int(11) DEFAULT '0' NOT NULL,
   ref_string varchar(200) DEFAULT '' NOT NULL,
 
   PRIMARY KEY (hash),
   KEY lookup_rec (tablename,recuid),
   KEY lookup_uid (ref_table,ref_uid),
-  KEY lookup_string (ref_table,ref_string)
+  KEY lookup_string (ref_string)
 );
 
 #
-# Table structure for table ''
+# Table structure for table 'sys_refindex_words'
 #
 CREATE TABLE sys_refindex_words (
   wid int(11) DEFAULT '0' NOT NULL,
@@ -323,7 +367,7 @@ CREATE TABLE sys_refindex_words (
 );
 
 #
-# Table structure for table ''
+# Table structure for table 'sys_refindex_rel'
 #
 CREATE TABLE sys_refindex_rel (
   rid int(11) DEFAULT '0' NOT NULL,
@@ -333,11 +377,11 @@ CREATE TABLE sys_refindex_rel (
 
 
 #
-# Table structure for table ''
+# Table structure for table 'sys_refindex_res'
 #
 CREATE TABLE sys_refindex_res (
   rid int(11) DEFAULT '0' NOT NULL,
-  tablename varchar(100) DEFAULT '' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
   recuid int(11) DEFAULT '0' NOT NULL,
   PRIMARY KEY (rid)
 );
@@ -350,7 +394,7 @@ CREATE TABLE sys_log (
   userid int(11) unsigned DEFAULT '0' NOT NULL,
   action tinyint(4) unsigned DEFAULT '0' NOT NULL,
   recuid int(11) unsigned DEFAULT '0' NOT NULL,
-  tablename varchar(40) DEFAULT '' NOT NULL,
+  tablename varchar(255) DEFAULT '' NOT NULL,
   recpid int(11) DEFAULT '0' NOT NULL,
   error tinyint(4) unsigned DEFAULT '0' NOT NULL,
   details varchar(255) DEFAULT '' NOT NULL,

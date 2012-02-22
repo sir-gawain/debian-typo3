@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2005 Kasper Skaarhoj (kasperYYYY@typo3.com)
+ *  (c) 2005-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * module but also can be used from extensions. Originally 99.9%% of the code
  * was written by Kasper and only transfered here by Dmitry.
  *
- * $Id: class.wslib_gui.php 3489 2008-03-31 13:13:04Z ohader $
+ * $Id: class.wslib_gui.php 7919 2010-06-14 14:57:23Z steffenk $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @author	Dmitry Dulepov <dmitry@typo3.org>
@@ -174,40 +174,49 @@ class wslib_gui {
 		$pointer = t3lib_div::_GP('browsePointer');
 		$browseStat = $this->cropWorkspaceOverview_list($pArray,$pointer,$resultsPerPage);
 		$browse = '';
-		$browse.='Showing '.$browseStat['begin'].' to '.($browseStat['end'] ? $browseStat['end'].' out of '.$browseStat['allItems'] : $browseStat['allItems']).' versions:<br/>';
+		$browse .= 'Showing ' . $browseStat['begin'] . ' to ' . ($browseStat['end'] ? $browseStat['end'] . ' out of ' . $browseStat['allItems'] : $browseStat['allItems']) . ' versions:<br />';
 		if (!($browseStat['begin']==1 && !$browseStat['end']))	{
 			for($a=0;$a<ceil($browseStat['allItems']/$resultsPerPage);$a++)	{
 				$browse.=($a==(int)$pointer?'<b>':'').'<a href="'.htmlspecialchars('index.php?browsePointer='.rawurlencode($a)).'">['.($a+1).']</a>'.($a==(int)$pointer?'</b>':'').' ';
 			}
-			$browse.='<br/>';
+			$browse.= '<br />';
 		}
-		$browse.='<br/>';
+		$browse.= '<br />';
 
 		$workspaceOverviewList = $this->displayWorkspaceOverview_list($pArray);
 		if ($workspaceOverviewList || $this->alwaysDisplayHeader) {
 			// Make header of overview:
 			$tableRows = array();
-			$tableRows[] = '
+			$tableHeader = '
 				<tr class="bgColor5 tableheader">
 					<td nowrap="nowrap" width="100">' . $LANG->getLL('label_pagetree') . '</td>
 					<td nowrap="nowrap" colspan="2">' . $LANG->getLL('label_live_version') . '</td>
 					<td nowrap="nowrap" colspan="2">' . $LANG->getLL('label_draft_versions') . '</td>
 					<td nowrap="nowrap">' . $LANG->getLL('label_stage') . '</td>
 					<td nowrap="nowrap">' . $LANG->getLL('label_publish') . '</td>
-					<td><select name="_with_selected_do" onchange="if (confirm(\'Sure you want to perform this action with selected elements?\')) {document.forms[0].submit();}">
-						<option value="_">Do:</option>
-						<option value="publish">Publish</option>
-						<option value="swap">Swap</option>
-						<option value="release">Release</option>
-						<option value="stage_-1">Stage: Reject</option>
-						<option value="stage_0">Stage: Editing</option>
-						<option value="stage_1">Stage: Review</option>
-						<option value="stage_10">Stage: Publish</option>
-						<option value="flush">Flush (Delete)</option>
+					<td><select name="_with_selected_do" onchange="if (confirm(\'' . $LANG->getLL('submit_apply_action_on_selected_elements') . '\')) {document.forms[0].submit();}">
+						<option value="_">' . $LANG->getLL('label_doaction_default') . '</option>';
+
+			if ($this->publishAccess && !($GLOBALS['BE_USER']->workspaceRec['publish_access'] & 1))	{
+				$tableHeader .= '<option value="publish">' . $LANG->getLL('label_doaction_publish') . '</option>';
+				if ($GLOBALS['BE_USER']->workspaceSwapAccess())	{
+					$tableHeader .= '<option value="swap">' . $LANG->getLL('label_doaction_swap') . '</option>';
+				}
+			}
+			if ($GLOBALS['BE_USER']->workspace !== 0) {
+				$tableHeader .= '<option value="release">' . $LANG->getLL('label_doaction_release') . '</option>';
+			}
+			$tableHeader .= $GLOBALS['BE_USER']->workspaceCheckStageForCurrent('-1') ? '<option value="stage_-1">' . $LANG->getLL('label_doaction_stage_reject') . '</option>' : '';
+			$tableHeader .= $GLOBALS['BE_USER']->workspaceCheckStageForCurrent('0') ? '<option value="stage_0">' . $LANG->getLL('label_doaction_stage_editing') . '</option>' : '';
+			$tableHeader .= $GLOBALS['BE_USER']->workspaceCheckStageForCurrent('1') ? '<option value="stage_1">' . $LANG->getLL('label_doaction_stage_review') . '</option>' : '';
+			$tableHeader .= $GLOBALS['BE_USER']->workspaceCheckStageForCurrent('10') ? '<option value="stage_10">' . $LANG->getLL('label_doaction_stage_publish') . '</option>' : '';
+
+			$tableHeader .= '<option value="flush">' . $LANG->getLL('label_doaction_flush') . '</option>
 					</select></td>
 					<td>' . $LANG->getLL('label_lifecycle') . '</td>
 					'.($this->showWorkspaceCol ? '<td>' . $LANG->getLL('label_workspace') . '</td>' : '').'
 				</tr>';
+			$tableRows[] = $tableHeader;
 
 			// Add lines from overview:
 			$tableRows = array_merge($tableRows, $workspaceOverviewList);
@@ -429,18 +438,17 @@ class wslib_gui {
 										$diffCode = '';
 										list($diffHTML,$diffPct) = $this->createDiffView($table, $rec_off, $rec_on);
 										if ($rec_on['t3ver_state']==1)	{	// New record:
-											$diffCode.= $this->doc->icons(1).$LANG->getLL('label_newrecord').'<br/>';
+											$diffCode.= $this->doc->icons(1) . $LANG->getLL('label_newrecord') . '<br />';
 											$diffCode.= $diffHTML;
 										} elseif ($rec_off['t3ver_state']==2)	{
-											$diffCode.= $this->doc->icons(2).'Deleted element<br/>';
-											$diffCode.= $this->doc->icons(2).$LANG->getLL('label_deletedrecord').'<br/>';
+											$diffCode.= $this->doc->icons(2) . $LANG->getLL('label_deletedrecord') . '<br/>';
 										} elseif ($rec_on['t3ver_state']==3)	{
-											$diffCode.= $this->doc->icons(1).'Move-to placeholder (destination)<br/>';
+											$diffCode.= $this->doc->icons(1) . $LANG->getLL('label_moveto_placeholder') . '<br/>';
 										} elseif ($rec_off['t3ver_state']==4)	{
-											$diffCode.= $this->doc->icons(1).'Move-to pointer (source)<br/>';
+											$diffCode.= $this->doc->icons(1) . $LANG->getLL('label_moveto_pointer') . '<br/>';
 										} else {
-											$diffCode.= ($diffPct<0 ? 'N/A' : ($diffPct ? $diffPct.'% change:' : ''));
-											$diffCode.= ($diffPct<0 ? $LANG->getLL('label_notapplicable') : ($diffPct ? sprintf($LANG->getLL('label_percentchange'), $diffPct) : ''));
+											$diffCode .= ($diffPct < 0 ? $LANG->getLL('label_notapplicable') :
+												($diffPct ? sprintf($LANG->getLL('label_percentChange'), $diffPct) : ''));
 											$diffCode.= $diffHTML;
 										}
 
@@ -474,9 +482,9 @@ class wslib_gui {
 
 									// Create version element:
 									$versionsInOtherWS = $this->versionsInOtherWS($table, $rec_on['uid']);
-									$versionsInOtherWSWarning = $versionsInOtherWS && $GLOBALS['BE_USER']->workspace!==0 ? '<br/>'.$this->doc->icons(2).$LANG->getLL('label_otherversions').' '.$versionsInOtherWS : '';
-									$multipleWarning = (!$mainCell && $GLOBALS['BE_USER']->workspace!==0? '<br/>'.$this->doc->icons(3).'<b>'.$LANG->getLL('label_multipleversions').'</b>' : '');
-									$verWarning = $warnAboutVersions || ($warnAboutVersions_nonPages && $GLOBALS['TCA'][$table]['ctrl']['versioning_followPages'])? '<br/>'.$this->doc->icons(3).'<b>'.$LANG->getLL('label_nestedversions').'</b>' : '';
+									$versionsInOtherWSWarning = $versionsInOtherWS && $GLOBALS['BE_USER']->workspace !== 0 ? '<br />' . $this->doc->icons(2) . $LANG->getLL('label_otherversions') . ' ' . $versionsInOtherWS : '';
+									$multipleWarning = (!$mainCell && $GLOBALS['BE_USER']->workspace !==0 ? '<br />' . $this->doc->icons(3) . '<b>' . $LANG->getLL('label_multipleversions') . '</b>' : '');
+									$verWarning = $warnAboutVersions || ($warnAboutVersions_nonPages && $GLOBALS['TCA'][$table]['ctrl']['versioning_followPages']) ? '<br />' . $this->doc->icons(3) . '<b>' . $LANG->getLL('label_nestedversions') . '</b>' : '';
 									$verElement = $icon.
 										'<a href="'.htmlspecialchars($this->doc->backPath.t3lib_extMgm::extRelPath('version').'cm1/index.php?id='.($table==='pages'?$rec_on['uid']:$rec_on['pid']).'&details='.rawurlencode($table.':'.$rec_off['uid']).'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))).'">'.
 										t3lib_BEfunc::getRecordTitle($table,$rec_off,TRUE).
@@ -838,8 +846,8 @@ class wslib_gui {
 					$text = $LANG->getLL('stage_undefined');
 					break;
 			}
-			$text = t3lib_BEfunc::datetime($dat['tstamp']).': ' . sprintf($text, $username);
-			$text.= ($data['comment']?'<br/>' . $LANG->getLL('stage_label_user_comment'). ' <em>'.htmlspecialchars($data['comment']).'</em>':'');
+			$text = t3lib_BEfunc::datetime($dat['tstamp']).': ' . sprintf($text, htmlspecialchars($username));
+			$text.= ($data['comment'] ? '<br />' . $LANG->getLL('stage_label_user_comment') . ' <em>' . htmlspecialchars($data['comment']) . '</em>' : '');
 
 			$entry[] = $text;
 		}
@@ -964,7 +972,7 @@ class wslib_gui {
 		global $TCA, $LANG;
 
 		if ($GLOBALS['BE_USER']->workspace===0 || !$this->expandSubElements)	{	// In online workspace we have a reduced view because otherwise it will bloat the listing:
-			return '<br/>
+			return '<br />
 					<img'.t3lib_iconWorks::skinImg($this->doc->backPath,'gfx/ol/joinbottom.gif','width="18" height="16"').' align="top" alt="" title="" />'.
 			($origId ?
 			'<a href="'.htmlspecialchars($this->doc->backPath.t3lib_extMgm::extRelPath('version').'cm1/index.php?id='.$uid.'&details='.rawurlencode('pages:'.$uid).'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))).'">'.
@@ -1252,7 +1260,7 @@ class wslib_gui {
 
 		$raiseOk = !$GLOBALS['BE_USER']->workspaceCannotEditOfflineVersion($table,$rec_off);
 
-		if ($raiseOk && $rec_off['t3ver_stage']!=-1)	{
+		if ($raiseOk && $rec_off['t3ver_stage'] != -1 && $GLOBALS['BE_USER']->workspaceCheckStageForCurrent($sId))	{
 			$onClick = 'var commentTxt=window.prompt("'.$LANG->getLL('explain_reject').'","");
 							if (commentTxt!=null) {window.location.href="'.$this->doc->issueCommand(
 			'&cmd['.$table.']['.$rec_off['uid'].'][version][action]=setStage'.
@@ -1274,7 +1282,7 @@ class wslib_gui {
 		$actionLinks.= '<span style="background-color: '.$color.'; color: white;">'.$sLabel.'</span>';
 
 		// Raise
-		if ($raiseOk)	{
+		if ($raiseOk && $GLOBALS['BE_USER']->workspaceCheckStageForCurrent($sId))	{
 			$onClick = 'var commentTxt=window.prompt("'.$label.'","");
 							if (commentTxt!=null) {window.location.href="'.$this->doc->issueCommand(
 			'&cmd['.$table.']['.$rec_off['uid'].'][version][action]=setStage'.
@@ -1295,7 +1303,7 @@ class wslib_gui {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/class.wslib_gui.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/class.wslib_gui.php']);
 }

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,7 +26,7 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_quicktag.php 4131 2008-09-15 17:24:40Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_quicktag.php 5489 2009-05-23 15:26:20Z ohader $
  *
  */
 
@@ -42,13 +42,13 @@ class tx_rtehtmlarea_quicktag extends tx_rtehtmlareaapi {
 	protected $thisConfig;				// Reference to RTE PageTSConfig
 	protected $toolbar;				// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 				// Frontend language array
-	
+
 	protected $pluginButtons = 'inserttag';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'inserttag'	=> 'InsertTag',
 		);
 	protected $requiredPlugins = 'TYPO3Color';	// The comma-separated list of names of prerequisite plugins
-	
+
 	public function main($parentObject) {
 		$available = parent::main($parentObject);
 		if ($this->thisConfig['disableSelectColor'] && $this->htmlAreaRTE->client['BROWSER'] != 'gecko') {
@@ -56,7 +56,7 @@ class tx_rtehtmlarea_quicktag extends tx_rtehtmlareaapi {
 		}
 		return $available;
 	}
-	
+
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -69,7 +69,7 @@ class tx_rtehtmlarea_quicktag extends tx_rtehtmlareaapi {
 	 * 	RTEarea['.$RTEcounter.']["buttons"]["button-id"]["property"] = "value";
 	 */
 	public function buildJavascriptConfiguration($RTEcounter) {
-		
+
 		$registerRTEinJavascriptString = '';
 			// Deprecated inserttag button configuration
 		if (in_array('inserttag', $this->toolbar) && trim($this->thisConfig['hideTags'])) {

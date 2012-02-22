@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Provides a simplified layer for making Constant Editor style configuration forms
  *
- * $Id: class.t3lib_tsstyleconfig.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_tsstyleconfig.php 6628 2009-12-04 23:33:30Z steffenk $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -57,7 +57,6 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_tsparser_ext.php');
 
 
 
@@ -170,21 +169,18 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext	{
 		$printFields = trim($this->ext_printFields($theConstants,$cat));
 
 		$content='';
-		$content.='
-		<script language="javascript" type="text/javascript">
-			function uFormUrl(aname)	{
-				document.'.$this->ext_CEformName.'.action = "'.t3lib_div::linkThisScript().'#"+aname;
+		$content .= t3lib_div::wrapJS('
+			function uFormUrl(aname) {
+				document.' . $this->ext_CEformName . '.action = "' . t3lib_div::linkThisScript() . '#"+aname;
 			}
-		</script>
-		';
-		$content.= '<form action="'.($script?$script:t3lib_div::linkThisScript()).'" name="'.$this->ext_CEformName.'" method="POST" enctype="'.$GLOBALS["TYPO3_CONF_VARS"]["SYS"]["form_enctype"].'">';
+		');
+		$content .= '<form action="' . htmlspecialchars($script ? $script : t3lib_div::linkThisScript()) . '" name="' . $this->ext_CEformName . '" method="post" enctype="' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['form_enctype'] . '">';
 		$content.= $addFields;
-#		$content.= '<input type="Submit" name="submit" value="Update"><BR>';
 		$content.= $printFields;
-		$content.= '<input type="Submit" name="submit" value="Update">';
+		$content.= '<input type="Submit" name="submit" value="Update" />';
 
 		$example = $this->ext_displayExample();
-		$content.= $example?'<HR>'.$example:"";
+		$content.= $example?'<hr/>'.$example:"";
 
 		return $content;
 	}
@@ -249,7 +245,7 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext	{
 			$fV="";
 		}
 		$fV=htmlspecialchars($fV);
-#debug(array($params,$fN,$fV,isset($this->ext_realValues[$params["name"]])));
+
 		return array($fN,$fV,$params);
 	}
 
@@ -262,7 +258,7 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext	{
 	function ext_loadResources($absPath)	{
 		$this->ext_readDirResources($GLOBALS["TYPO3_CONF_VARS"]["MODS"]["web_ts"]["onlineResourceDir"]);
 		if (is_dir($absPath))	{
-			$absPath = ereg_replace("\/$","",$absPath);
+			$absPath = rtrim($absPath, '/');
 			$this->readDirectory($absPath);
 		}
 		$this->ext_resourceDims();

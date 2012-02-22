@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /*
  * Inline Elements Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: inline-elements.js $
+ * TYPO3 SVN ID: $Id: inline-elements.js 6539 2009-11-25 14:49:14Z stucki $
  */
 /*
  * Creation of the class of InlineElements plugins
@@ -44,9 +44,17 @@ InlineElements = HTMLArea.Plugin.extend({
 	 * This function gets called by the base constructor
 	 */
 	configurePlugin : function (editor) {
-		
-		this.allowedAttributes = new Array("id", "title", "lang", "xml:lang", "dir", (HTMLArea.is_gecko?"class":"className"));
-		
+
+			// Setting the array of allowed attributes on inline elements
+		if (this.editor.plugins.TextStyle && this.editor.plugins.TextStyle.instance) {
+			this.allowedAttributes = this.editor.plugins.TextStyle.instance.allowedAttributes;
+		} else {
+			this.allowedAttributes = new Array("id", "title", "lang", "xml:lang", "dir", "class");
+			if (HTMLArea.is_ie) {
+				this.addAllowedAttribute("className");
+			}
+		}
+			// Getting tags configuration for inline elements
 		if (this.editorConfiguration.buttons.textstyle) {
 			this.tags = this.editorConfiguration.buttons.textstyle.tags;
 		}
@@ -168,6 +176,17 @@ InlineElements = HTMLArea.Plugin.extend({
 	},
 	
 	/*
+	 * This function adds an attribute to the array of allowed attributes on inline elements
+	 *
+	 * @param	string	attribute: the name of the attribute to be added to the array
+	 *
+	 * @return	void
+	 */
+	addAllowedAttribute : function (attribute) {
+		this.allowedAttributes.push(attribute);
+	},
+	
+	/*
 	 * This function gets called when some inline element button was pressed.
 	 */
 	onButtonPress : function (editor, id) {
@@ -205,7 +224,7 @@ InlineElements = HTMLArea.Plugin.extend({
 		var elementIsAncestor = false;
 		var selectionEmpty = editor._selectionEmpty(selection);
 		if (HTMLArea.is_ie) {
-			var bookmark = range.getBookmark();
+			var bookmark = editor.getBookmark(range);
 		}
 			// Check if the chosen element is among the ancestors
 		for (var i = 0; i < ancestors.length; ++i) {
@@ -216,10 +235,11 @@ InlineElements = HTMLArea.Plugin.extend({
 			}
 		}
 		if (!selectionEmpty) {
+			var statusBarSelection = (editor.getPluginInstance("StatusBar") ? editor.getPluginInstance("StatusBar").getSelection() : null);
 				// The selection is not empty.
 			for (var i = 0; i < ancestors.length; ++i) {
-				fullNodeSelected = (HTMLArea.is_ie && ((editor._statusBarTree.selected === ancestors[i] && ancestors[i].innerText === range.text) || (!editor._statusBarTree.selected && ancestors[i].innerText === range.text)))
-							|| (HTMLArea.is_gecko && ((editor._statusBarTree.selected === ancestors[i] && ancestors[i].textContent === range.toString()) || (!editor._statusBarTree.selected && ancestors[i].textContent === range.toString())));
+				fullNodeSelected = (HTMLArea.is_ie && ((selection.type !== "Control" && ancestors[i].innerText === range.text) || (selection.type === "Control" && ancestors[i].innerText === range.item(0).text)))
+							|| (HTMLArea.is_gecko && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())));
 				if (fullNodeSelected) {
 					if (!HTMLArea.isBlockElement(ancestors[i])) {
 						parent = ancestors[i];
@@ -228,9 +248,9 @@ InlineElements = HTMLArea.Plugin.extend({
 				}
 			}
 				// Working around bug in Safari selectNodeContents
-			if (!fullNodeSelected && HTMLArea.is_safari && this.editor._statusBarTree.selected && this.isInlineElement(this.editor._statusBarTree.selected) && this.editor._statusBarTree.selected.textContent === range.toString()) {
+			if (!fullNodeSelected && HTMLArea.is_safari && statusBarSelection && this.isInlineElement(statusBarSelection) && statusBarSelection.textContent === range.toString()) {
 				fullNodeSelected = true;
-				parent = this.editor._statusBarTree.selected;
+				parent = statusBarSelection;
 			}
 			
 			var fullNodeTextSelected = (HTMLArea.is_gecko && parent.textContent === range.toString())
@@ -240,50 +260,30 @@ InlineElements = HTMLArea.Plugin.extend({
 			}
 			if (element !== "none" && !(fullNodeSelected && elementIsAncestor)) {
 					// Add markup
+				var newElement = editor._doc.createElement(element);
+				if (element === "bdo") {
+					newElement.setAttribute("dir", "rtl");
+				}
 				if (HTMLArea.is_gecko) {
-					if (fullNodeSelected && editor._statusBarTree.selected) {
+					if (fullNodeSelected && statusBarSelection) {
 						if (HTMLArea.is_safari) {
-							this.editor.selectNode(parent);
-							range = this.editor._createRange(this.editor._getSelection());
+							editor.selectNode(parent);
+							selection = editor._getSelection();
+							range = editor._createRange(selection);
 						} else {
 							range.selectNode(parent);
 						}
 					}
-					var newElement = this.editor._doc.createElement(element);
-					if (element === "bdo") {
-						newElement.setAttribute("dir", "rtl");
-					}
-						// Sometimes Opera 9.25 raises a bad boundary points error
-					if (HTMLArea.is_opera) {
-						try {
-							range.surroundContents(newElement);
-						} catch(e) {
-							newElement.appendChild(range.extractContents());
-							range.insertNode(newElement);
-						}
-					} else {
-						range.surroundContents(newElement);
-					}
-						// Sometimes Firefox inserts empty elements just outside the boundaries of the range
-					var neighbour = newElement.previousSibling;
-					if (neighbour && (neighbour.nodeType != 3) && !/\S/.test(neighbour.textContent)) {
-						HTMLArea.removeFromParent(neighbour);
-					}
-					neighbour = newElement.nextSibling;
-					if (neighbour && (neighbour.nodeType != 3) && !/\S/.test(neighbour.textContent)) {
-						HTMLArea.removeFromParent(neighbour);
-					}
-					if (fullNodeSelected && editor._statusBarTree.selected && !HTMLArea.is_safari) {
-						this.editor.selectNodeContents(newElement.lastChild, false);
-					} else {
-						this.editor.selectNodeContents(newElement, false);
+					editor.wrapWithInlineElement(newElement, selection, range);
+					if (fullNodeSelected && statusBarSelection && !HTMLArea.is_safari) {
+						editor.selectNodeContents(newElement.lastChild, false);
 					}
 					range.detach();
 				} else {
 					var tagopen = "<" + element + ">";
 					var tagclose = "</" + element + ">";
 					if (fullNodeSelected) {
-						if (!editor._statusBarTree.selected) {
+						if (!statusBarSelection) {
 							parent.innerHTML = tagopen + parent.innerHTML + tagclose;
 							if (element === "bdo") {
 								parent.firstChild.setAttribute("dir", "rtl");
@@ -296,61 +296,7 @@ InlineElements = HTMLArea.Plugin.extend({
 							editor.selectNodeContents(newElement, false);
 						}
 					} else {
-						var rangeStart = range.duplicate();
-						rangeStart.collapse(true);
-						var parentStart = rangeStart.parentElement();
-						var rangeEnd = range.duplicate();
-						rangeEnd.collapse(true);
-						var newRange = editor._createRange();
-						
-						var parentEnd = rangeEnd.parentElement();
-						var upperParentStart = parentStart;
-						if (parentStart !== parent) {
-							while (upperParentStart.parentNode !== parent) {
-								upperParentStart = upperParentStart.parentNode;
-							}
-						}
-						
-						var newElement = editor._doc.createElement(element);
-						newElement.innerHTML = range.htmlText;
-							// IE eats spaces on the start boundary
-						if (range.htmlText.charAt(0) === "\x20") {
-							newElement.innerHTML = "&nbsp;" + newElement.innerHTML;
-						}
-						var newElementClone = newElement.cloneNode(true);
-						range.pasteHTML(newElement.outerHTML);
-							// IE inserts the element as the last child of the start container
-						if (parentStart !== parent
-								&& parentStart.lastChild
-								&& parentStart.lastChild.nodeType === 1
-								&& parentStart.lastChild.nodeName.toLowerCase() === element) {
-							parent.insertBefore(newElementClone, upperParentStart.nextSibling);
-							parentStart.removeChild(parentStart.lastChild);
-								// Sometimes an empty previous sibling was created
-							if (newElementClone.previousSibling
-									&& newElementClone.previousSibling.nodeType === 1
-									&& !newElementClone.previousSibling.innerText) {
-								parent.removeChild(newElementClone.previousSibling);
-							}
-								// The bookmark will not work anymore
-							newRange.moveToElementText(newElementClone);
-							newRange.collapse(false);
-							newRange.select();
-						} else {
-								// Working around IE boookmark bug
-							if (parentStart != parentEnd) {
-								var newRange = editor._createRange();
-								if (newRange.moveToBookmark(bookmark)) {
-									newRange.collapse(false);
-									newRange.select();
-								}
-							} else {
-								range.collapse(false);
-							}
-						}
-						try { // normalize() is not available in IE5.5
-							parent.normalize();
-						} catch(e) { }
+						editor.wrapWithInlineElement(newElement, selection, range);
 					}
 				}
 			} else {
@@ -359,7 +305,7 @@ InlineElements = HTMLArea.Plugin.extend({
 					if (elementIsAncestor) {
 						parent = ancestors[elementAncestorIndex];
 					}
-					this.removeMarkup(parent);
+					editor.removeMarkup(parent);
 				}
 			}
 		} else {
@@ -369,7 +315,7 @@ InlineElements = HTMLArea.Plugin.extend({
 					if (elementIsAncestor) {
 						parent = ancestors[elementAncestorIndex];
 					}
-					this.removeMarkup(parent);
+					editor.removeMarkup(parent);
 				} else {
 					var bookmark = this.editor.getBookmark(range);
 					var newElement = this.remapMarkup(parent, element);
@@ -393,6 +339,23 @@ InlineElements = HTMLArea.Plugin.extend({
 				newElement.setAttribute(this.allowedAttributes[i], attributeValue);
 			}
 		}
+			// In IE, the above fails to update the class and style attributes.
+		if (HTMLArea.is_ie) {
+			if (element.style.cssText) {
+				newElement.style.cssText = element.style.cssText;
+			}
+			if (element.className) {
+				newElement.setAttribute("class", element.className);
+				if (!newElement.className) {
+						// IE before IE8
+					newElement.setAttribute("className", element.className);
+				}
+			} else {
+				newElement.removeAttribute("class");
+					// IE before IE8
+				newElement.removeAttribute("className");
+			}
+		}
 		
 		if (this.tags && this.tags[tagName] && this.tags[tagName].allowedClasses) {
 			if (newElement.className && /\S/.test(newElement.className)) {
@@ -409,24 +372,11 @@ InlineElements = HTMLArea.Plugin.extend({
 	},
 	
 	/*
-	 * This function removes the given markup element
-	 */
-	removeMarkup : function(element) {
-		var bookmark = this.editor.getBookmark(this.editor._createRange(this.editor._getSelection()));
-		var parent = element.parentNode;
-		while (element.firstChild) {
-			parent.insertBefore(element.firstChild, element);
-		}
-		parent.removeChild(element);
-		this.editor.selectRange(this.editor.moveToBookmark(bookmark));
-	},
-	
-	/*
 	* This function gets called when the toolbar is updated
 	*/
 	onUpdateToolbar : function () {
 		var editor = this.editor;
-		if (editor.getMode() === "wysiwyg" && editor.isEditable()) {
+		if (this.getEditorMode() === "wysiwyg" && editor.isEditable()) {
 			var id, activeButton;
 			var tagName = false, endPointsInSameBlock = true, fullNodeSelected = false;
 			var sel = editor._getSelection();
@@ -437,10 +387,11 @@ InlineElements = HTMLArea.Plugin.extend({
 			}
 			var selectionEmpty = editor._selectionEmpty(sel);
 			if (!selectionEmpty) {
+				var statusBarSelection = editor.getPluginInstance("StatusBar") ? editor.getPluginInstance("StatusBar").getSelection() : null;
 				var ancestors = editor.getAllAncestors();
 				for (var i = 0; i < ancestors.length; ++i) {
-					fullNodeSelected = (editor._statusBarTree.selected === ancestors[i])
-						&& ((HTMLArea.is_gecko && ancestors[i].textContent === range.toString()) || (HTMLArea.is_ie && ancestors[i].innerText === range.text));
+					fullNodeSelected = (statusBarSelection === ancestors[i])
+						&& ((HTMLArea.is_gecko && ancestors[i].textContent === range.toString()) || (HTMLArea.is_ie && ((sel.type !== "Control" && ancestors[i].innerText === range.text) || (sel.type === "Control" && ancestors[i].innerText === range.item(0).text))));
 					if (fullNodeSelected) {
 						if (!HTMLArea.isBlockElement(ancestors[i])) {
 							tagName = ancestors[i].nodeName.toLowerCase();
@@ -449,13 +400,13 @@ InlineElements = HTMLArea.Plugin.extend({
 					}
 				}
 					// Working around bug in Safari selectNodeContents
-				if (!fullNodeSelected && HTMLArea.is_safari && this.editor._statusBarTree.selected && this.isInlineElement(this.editor._statusBarTree.selected) && this.editor._statusBarTree.selected.textContent === range.toString()) {
+				if (!fullNodeSelected && HTMLArea.is_safari && statusBarSelection && this.isInlineElement(statusBarSelection) && statusBarSelection.textContent === range.toString()) {
 					fullNodeSelected = true;
-					tagName = this.editor._statusBarTree.selected.nodeName.toLowerCase();
+					tagName = statusBarSelection.nodeName.toLowerCase();
 				}
 			}
 			var selectionInInlineElement = tagName && this.REInlineElements.test(tagName);
-			var disabled = !this.endPointsInSameBlock() || (fullNodeSelected && !tagName) || (selectionEmpty && !selectionInInlineElement);
+			var disabled = !editor.endPointsInSameBlock() || (fullNodeSelected && !tagName) || (selectionEmpty && !selectionInInlineElement);
 			
 			var obj = editor.config.customSelects["FormatText"];
 			if ((typeof(obj) !== "undefined") && (typeof(editor._toolbarObjects[obj.id]) !== "undefined")) {
@@ -481,20 +432,6 @@ InlineElements = HTMLArea.Plugin.extend({
 					obj.state("enabled", !disabled);
 				}
 			}
-		}
-	},
-	
-	/*
-	 * This function determines if the end poins of the current selection are within the same block
-	 */
-	endPointsInSameBlock : function() {
-		var selection = this.editor._getSelection();
-		if (this.editor._selectionEmpty(selection)) {
-			return true;
-		} else {
-			var parent = this.editor.getParentElement(selection);
-			var endBlocks = this.editor.getEndBlocks(selection);
-			return (endBlocks.start === endBlocks.end && !/^(table|thead|tbody|tfoot|tr)$/i.test(parent.nodeName));
 		}
 	},
 	

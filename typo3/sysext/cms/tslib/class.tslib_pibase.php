@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * This script contains the parent class, 'pibase', providing an API with the most basic methods for frontend plugins
  *
- * $Id: class.tslib_pibase.php 3720 2008-05-26 08:01:24Z flyguide $
+ * $Id: class.tslib_pibase.php 6684 2009-12-19 15:26:00Z xperseguers $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -209,7 +209,7 @@ class tslib_pibase {
 
 			// Setting piVars:
 		if ($this->prefixId)	{
-			$this->piVars = t3lib_div::GParrayMerged($this->prefixId);
+			$this->piVars = t3lib_div::_GPmerged($this->prefixId);
 
 				// cHash mode check
 				// IMPORTANT FOR CACHED PLUGINS (USER cObject): As soon as you generate cached plugin output which depends on parameters (eg. seeing the details of a news item) you MUST check if a cHash value is set.
@@ -304,7 +304,7 @@ class tslib_pibase {
 		$conf['useCacheHash'] = $this->pi_USER_INT_obj ? 0 : $cache;
 		$conf['no_cache'] = $this->pi_USER_INT_obj ? 0 : !$cache;
 		$conf['parameter'] = $altPageId ? $altPageId : ($this->pi_tmpPageId ? $this->pi_tmpPageId : $GLOBALS['TSFE']->id);
-		$conf['additionalParams'] = $this->conf['parent.']['addParams'].t3lib_div::implodeArrayForUrl('',$urlParameters,'',1).$this->pi_moreParams;
+		$conf['additionalParams'] = $this->conf['parent.']['addParams'].t3lib_div::implodeArrayForUrl('', $urlParameters, '', true).$this->pi_moreParams;
 
 		return $this->cObj->typoLink($str, $conf);
 	}
@@ -393,7 +393,7 @@ class tslib_pibase {
 	 * @return	string		The processed input string, modified IF a <a> tag was found
 	 */
 	function pi_openAtagHrefInJSwindow($str,$winName='',$winParams='width=670,height=500,status=0,menubar=0,scrollbars=1,resizable=1')	{
-		if (eregi('(.*)(<a[^>]*>)(.*)',$str,$match))	{
+		if (preg_match('/(.*)(<a[^>]*>)(.*)/i',$str,$match))	{
 			$aTagContent = t3lib_div::get_tag_attributes($match[2]);
 			$match[2]='<a href="#" onclick="'.
 				htmlspecialchars('vHWin=window.open(\''.$GLOBALS['TSFE']->baseUrlWrap($aTagContent['href']).'\',\''.($winName?$winName:md5($aTagContent['href'])).'\',\''.$winParams.'\');vHWin.focus();return false;').
@@ -548,7 +548,7 @@ class tslib_pibase {
 				}
 			}
 			if ($pointer<$totalPages-1 || $showFirstLast)	{
-				if ($pointer==$totalPages-1) { // Link to next page
+				if ($pointer>=$totalPages-1) { // Link to next page
 					$links[]=$this->cObj->wrap($this->pi_getLL('pi_list_browseresults_next','Next >',$hscText),$wrapper['disabledLinkWrap']);
 				} else {
 					$links[]=$this->cObj->wrap($this->pi_linkTP_keepPIvars($this->pi_getLL('pi_list_browseresults_next','Next >',$hscText),array($pointerName => $pointer+1),$pi_isOnlyFields),$wrapper['inactiveLinkWrap']);
@@ -640,8 +640,7 @@ class tslib_pibase {
 	 */
 	function pi_list_modeSelector($items=array(),$tableParams='')	{
 		$cells=array();
-		reset($items);
-		while(list($k,$v)=each($items))	{
+		foreach ($items as $k => $v) {
 			$cells[]='
 					<td'.($this->piVars['mode']==$k?$this->pi_classParam('modeSelector-SCell'):'').'><p>'.
 				$this->pi_linkTP_keepPIvars(htmlspecialchars($v),array('mode'=>$k),$this->pi_isOnlyFields($this->pi_isOnlyFields)).
@@ -785,10 +784,13 @@ class tslib_pibase {
 	 * @param	string		$data: CSS data
 	 * @param	string		If $selector is set to any CSS selector, eg 'P' or 'H1' or 'TABLE' then the style $data will regard those HTML-elements only
 	 * @return	void
-	 * @deprecated		I think this function should not be used (and probably isn't used anywhere). It was a part of a concept which was left behind quite quickly.
+	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.5, I think this function should not be used (and probably isn't used anywhere). It was a part of a concept which was left behind quite quickly.
+	 * @obsolete
 	 * @private
 	 */
 	function pi_setClassStyle($class,$data,$selector='')	{
+		t3lib_div::logDeprecatedFunction();
+
 		$GLOBALS['TSFE']->setCSS($this->pi_getClassName($class).($selector?' '.$selector:''),'.'.$this->pi_getClassName($class).($selector?' '.$selector:'').' {'.$data.'}');
 	}
 
@@ -970,7 +972,7 @@ class tslib_pibase {
 	 */
 	function pi_loadLL()	{
 		if (!$this->LOCAL_LANG_loaded && $this->scriptRelPath)	{
-			$basePath = t3lib_extMgm::extPath($this->extKey).dirname($this->scriptRelPath).'/locallang.php';
+			$basePath = 'EXT:' . $this->extKey . '/' . dirname($this->scriptRelPath) . '/locallang.xml';
 
 				// Read the strings in the required charset (since TYPO3 4.2)
 			$this->LOCAL_LANG = t3lib_div::readLLfile($basePath,$this->LLkey,$GLOBALS['TSFE']->renderCharset);
@@ -980,9 +982,9 @@ class tslib_pibase {
 			}
 
 				// Overlaying labels from TypoScript (including fictitious language keys for non-system languages!):
-			if (is_array($this->conf['_LOCAL_LANG.']))	{
-				reset($this->conf['_LOCAL_LANG.']);
-				while(list($k,$lA)=each($this->conf['_LOCAL_LANG.']))	{
+			$confLL = $this->conf['_LOCAL_LANG.'];
+			if (is_array($confLL)) {
+				foreach ($confLL as $k => $lA) {
 					if (is_array($lA))	{
 						$k = substr($k,0,-1);
 						foreach($lA as $llK => $llV)	{
@@ -1042,7 +1044,7 @@ class tslib_pibase {
 	 * @param	boolean		If set, the function will return the query not as a string but array with the various parts.
 	 * @return	mixed		The query build.
 	 * @access private
-	 * @deprecated		Use pi_exec_query() instead!
+	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.5, use pi_exec_query() instead!
 	 */
 	function pi_list_query($table,$count=0,$addWhere='',$mm_cat='',$groupBy='',$orderBy='',$query='',$returnQueryArray=FALSE)	{
 
@@ -1065,7 +1067,7 @@ class tslib_pibase {
 		}
 
 			// Split the "FROM ... WHERE" string so we get the WHERE part and TABLE names separated...:
-		list($TABLENAMES,$WHERE) = spliti('WHERE', trim($query), 2);
+		list($TABLENAMES, $WHERE) = preg_split('/WHERE/i', trim($query), 2);
 		$TABLENAMES = trim(substr(trim($TABLENAMES),5));
 		$WHERE = trim($WHERE);
 
@@ -1195,7 +1197,7 @@ class tslib_pibase {
 	function pi_prependFieldsWithTable($table,$fieldList)	{
 		$list=t3lib_div::trimExplode(',',$fieldList,1);
 		$return=array();
-		while(list(,$listItem)=each($list))	{
+		foreach ($list as $listItem) {
 			$return[]=$table.'.'.$listItem;
 		}
 		return implode(',',$return);
@@ -1261,7 +1263,7 @@ class tslib_pibase {
 
 		$fList = t3lib_div::trimExplode(',',$fList,1);
 		$tempPiVars = $this->piVars;
-		while(list(,$k)=each($fList))	{
+		foreach ($fList as $k) {
 			if (!t3lib_div::testInt($tempPiVars[$k]) || $tempPiVars[$k]<$lowerThan)		unset($tempPiVars[$k]);
 		}
 		if (!count($tempPiVars))	return 1;
@@ -1278,8 +1280,7 @@ class tslib_pibase {
 	 */
 	function pi_autoCache($inArray)	{
 		if (is_array($inArray))	{
-			reset($inArray);
-			while(list($fN,$fV)=each($inArray))	{
+			foreach ($inArray as $fN => $fV) {
 				if (!strcmp($inArray[$fN],''))	{
 					unset($inArray[$fN]);
 				} elseif (is_array($this->pi_autoCacheFields[$fN]))	{
@@ -1389,4 +1390,5 @@ class tslib_pibase {
 }
 
 // NO extension of class - does not make sense here.
+
 ?>

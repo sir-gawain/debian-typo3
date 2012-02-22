@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Logout script for the backend
  * This script saves the interface positions and calls the closeTypo3Windows in the frameset
  *
- * $Id: logout.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: logout.php 8428 2010-07-28 09:18:27Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -71,28 +71,21 @@ class SC_logout {
 
 		$BE_USER->writelog(255,2,0,1,'User %s logged out from TYPO3 Backend',Array($BE_USER->user['username']));	// Logout written to log
 		$BE_USER->logoff();
-
-		header('Location: '.t3lib_div::locationHeaderUrl(t3lib_div::_GP('redirect')?t3lib_div::_GP('redirect'):'index.php'));
+		$redirect = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('redirect'));
+		$redirectUrl = $redirect ? $redirect : 'index.php';
+		t3lib_utility_Http::redirect($redirectUrl);
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/logout.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/logout.php']);
 }
 
 
 
-
-
-
-
-
-
-
-
-
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_logout');
 $SOBE->logout();
+
 ?>

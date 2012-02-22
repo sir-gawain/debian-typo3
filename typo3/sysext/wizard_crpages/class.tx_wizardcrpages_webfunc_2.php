@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -47,19 +47,6 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_page.php');
-require_once(PATH_t3lib.'class.t3lib_tcemain.php');
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
-
-
-
-
-
-
-
-
-
-
 /**
  * Creates the "Create pages" wizard
  *
@@ -101,10 +88,10 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 		$pRec = t3lib_BEfunc::getRecord('pages',$this->pObj->id,'uid',' AND '.$m_perms_clause);
 		$sys_pages = t3lib_div::makeInstance('t3lib_pageSelect');
 		$menuItems = $sys_pages->getMenu($this->pObj->id,'*','sorting','',0);
-		if (is_array($pRec))	{
+		if (is_array($pRec)) {
 			$data = t3lib_div::_GP('data');
-			if (is_array($data['pages']))	{
-				if (t3lib_div::_GP('createInListEnd'))	{
+			if (is_array($data['pages'])) {
+				if (t3lib_div::_GP('createInListEnd')) {
 					$endI = end($menuItems);
 					$thePid = -intval($endI['uid']);
 					if (!$thePid)	$thePid = $this->pObj->id;
@@ -112,19 +99,26 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 					$thePid = $this->pObj->id;
 				}
 
-				while(list($k,$dat)=each($data['pages']))	{
-					if (!trim($dat['title']))	{
-						unset($data['pages'][$k]);
+				$firstRecord = true;
+				foreach ($data['pages'] as $identifier => $dat) {
+					if (!trim($dat['title'])) {
+						unset($data['pages'][$identifier]);
 					} else {
-						$data['pages'][$k]['pid']=$thePid;
-						$data['pages'][$k]['hidden'] = t3lib_div::_GP('hidePages') ? 1 : 0;
+						$data['pages'][$identifier]['hidden'] = t3lib_div::_GP('hidePages') ? 1 : 0;
+						if ($firstRecord) {
+							$firstRecord = false;
+							$data['pages'][$identifier]['pid'] = $thePid;
+						} else {
+							$data['pages'][$identifier]['pid'] = '-' . $previousIdentifier;
+						}
+						$previousIdentifier = $identifier;
 					}
 				}
+
 				if (count($data['pages']))	{
 					reset($data);
 					$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 					$tce->stripslashes_values=0;
-					$tce->reverseOrder=1;
 
 						// set default TCA values specific for the user
 					$TCAdefaultOverride = $GLOBALS['BE_USER']->getTSConfigProp('TCAdefaults');
@@ -134,10 +128,23 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 
 					$tce->start($data,array());
 					$tce->process_datamap();
-					t3lib_BEfunc::getSetUpdateSignal('updatePageTree');
+					t3lib_BEfunc::setUpdateSignal('updatePageTree');
+					
+					$flashMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						'',
+						$GLOBALS['LANG']->getLL('wiz_newPages_create')
+					);					
 				} else {
-					$theCode.=$GLOBALS['TBE_TEMPLATE']->rfw($LANG->getLL('wiz_newPages_noCreate').'<br /><br />');
+					$flashMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						'',
+						$GLOBALS['LANG']->getLL('wiz_newPages_noCreate'),
+						t3lib_FlashMessage::ERROR
+					);
 				}
+				
+				$theCode.= $flashMessage->render();
 
 					// Display result:
 				$menuItems = $sys_pages->getMenu($this->pObj->id,'*','sorting','',0);
@@ -168,14 +175,14 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 				'<br /><br />
 				<input type="checkbox" name="createInListEnd" id="createInListEnd" value="1" /> <label for="createInListEnd">'.$LANG->getLL('wiz_newPages_listEnd').'</label><br />
 				<input type="checkbox" name="hidePages" id="hidePages" value="1" /> <label for="hidePages">'.$LANG->getLL('wiz_newPages_hidePages').'</label><br /><br />
-				<input type="submit" name="create" value="'.$LANG->getLL('wiz_newPages_lCreate').'" onclick="return confirm('.$GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('wiz_newPages_lCreate_msg1')).')"> <input type="reset" value="'.$LANG->getLL('wiz_newPages_lReset').'" /><br />';
+				<input type="submit" name="create" value="' . $LANG->getLL('wiz_newPages_lCreate') . '" onclick="return confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('wiz_newPages_lCreate_msg1')) . ')" /><input type="reset" value="' . $LANG->getLL('wiz_newPages_lReset') . '" /><br />';
 			}
 		} else {
 			$theCode.=$GLOBALS['TBE_TEMPLATE']->rfw($LANG->getLL('wiz_newPages_errorMsg1'));
 		}
 
 			// CSH
-		$theCode.= t3lib_BEfunc::cshItem('_MOD_web_func', 'tx_wizardcrpages', $GLOBALS['BACK_PATH'],'<br/>|');
+		$theCode.= t3lib_BEfunc::cshItem('_MOD_web_func', 'tx_wizardcrpages', $GLOBALS['BACK_PATH'], '<br />|');
 
 		$out=$this->pObj->doc->section($LANG->getLL('wiz_crMany'),$theCode,0,1);
 		return $out;

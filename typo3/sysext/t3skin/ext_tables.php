@@ -1,9 +1,8 @@
 <?php
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
-// require_once(t3lib_extMgm::extPath('t3skin').'debuglib.php');
-
-if (TYPO3_MODE=='BE')	{
+if (TYPO3_MODE == 'BE' || (TYPO3_MODE == 'FE' && isset($GLOBALS['BE_USER']) && $GLOBALS['BE_USER']->isFrontendEditingActive())) {
+	global $TBE_STYLES;
 
 		// Support for other extensions to add own icons...
 	$presetSkinImgs = is_array($TBE_STYLES['skinImg']) ?
@@ -83,6 +82,7 @@ if (TYPO3_MODE=='BE')	{
 #	$TBE_STYLES['inDocStyles_TBEstyle']         = '* {text-align: right;}';							// Additional default in-document styles.
 	$TBE_STYLES['stylesheets']['modulemenu']    = $temp_eP.'stylesheets/modulemenu.css';
 	$TBE_STYLES['stylesheets']['backend-style'] = $temp_eP.'stylesheets/backend-style.css';
+	$TBE_STYLES['stylesheets']['admPanel'] = $temp_eP.'stylesheets/admPanel.css';
 
 		// Alternative dimensions for frameset sizes:
 	$TBE_STYLES['dims']['leftMenuFrameW'] = 160;		// Left menu frame width
@@ -110,7 +110,7 @@ if (TYPO3_MODE=='BE')	{
 
 		// Manual setting up of alternative icons. This is mainly for module icons which has a special prefix:
 	$TBE_STYLES['skinImg'] = array_merge($presetSkinImgs, array (
-		'gfx/ol/blank.gif'                         => array('clear.gif','width="14" height="14"'),
+		'gfx/ol/blank.gif'                         => array('clear.gif','width="18" height="16"'),
 		'MOD:web/website.gif'                      => array($temp_eP.'icons/module_web.gif','width="24" height="24"'),
 		'MOD:web_layout/layout.gif'                => array($temp_eP.'icons/module_web_layout.gif','width="24" height="24"'),
 		'MOD:web_view/view.gif'                    => array($temp_eP.'icons/module_web_view.gif','width="24" height="24"'),
@@ -121,6 +121,7 @@ if (TYPO3_MODE=='BE')	{
 		'MOD:web_func/func.gif'                    => array($temp_eP.'icons/module_web_func.gif','width="24" height="24"'),
 		'MOD:web_ts/ts1.gif'                       => array($temp_eP.'icons/module_web_ts.gif','width="24" height="24"'),
 		'MOD:web_modules/modules.gif'              => array($temp_eP.'icons/module_web_modules.gif','width="24" height="24"'),
+		'MOD:web_txversionM1/cm_icon.gif'          => array($temp_eP.'icons/module_web_version.gif','width="24" height="24"'),
 		'MOD:file/file.gif'                        => array($temp_eP.'icons/module_file.gif','width="22" height="24"'),
 		'MOD:file_list/list.gif'                   => array($temp_eP.'icons/module_file_list.gif','width="22" height="24"'),
 		'MOD:file_images/images.gif'               => array($temp_eP.'icons/module_file_images.gif','width="22" height="22"'),
@@ -128,6 +129,7 @@ if (TYPO3_MODE=='BE')	{
 		'MOD:user_task/task.gif'                   => array($temp_eP.'icons/module_user_taskcenter.gif','width="22" height="22"'),
 		'MOD:user_setup/setup.gif'                 => array($temp_eP.'icons/module_user_setup.gif','width="22" height="22"'),
 		'MOD:user_doc/document.gif'                => array($temp_eP.'icons/module_doc.gif','width="22" height="22"'),
+		'MOD:user_ws/sys_workspace.gif'            => array($temp_eP.'icons/module_user_ws.gif','width="22" height="22"'),
 		'MOD:tools/tool.gif'                       => array($temp_eP.'icons/module_tools.gif','width="25" height="24"'),
 		'MOD:tools_beuser/beuser.gif'              => array($temp_eP.'icons/module_tools_user.gif','width="24" height="24"'),
 		'MOD:tools_em/em.gif'                      => array($temp_eP.'icons/module_tools_em.gif','width="24" height="24"'),
@@ -141,7 +143,7 @@ if (TYPO3_MODE=='BE')	{
 		'MOD:help/help.gif'                        => array($temp_eP.'icons/module_help.gif','width="23" height="24"'),
 		'MOD:help_about/info.gif'                  => array($temp_eP.'icons/module_help_about.gif','width="25" height="24"'),
 		'MOD:help_aboutmodules/aboutmodules.gif'   => array($temp_eP.'icons/module_help_aboutmodules.gif','width="24" height="24"'),
-		'MOD:help_cshmanual/ext_icon.gif'          => array($temp_eP.'icons/module_help_cshmanual.gif','width="25" height="24"'),
+		'MOD:help_cshmanual/about.gif'         => array($temp_eP.'icons/module_help_cshmanual.gif','width="25" height="24"'),
 		'MOD:help_txtsconfighelpM1/moduleicon.gif' => array($temp_eP.'icons/module_help_ts.gif','width="25" height="24"'),
 	));
 
@@ -158,7 +160,13 @@ if (TYPO3_MODE=='BE')	{
 	$TBE_STYLES['skinImg']['MOD:tools_em/install.gif']   = array($temp_eP.'icons/ext/templavoila/mod1/moduleicon.gif','width="22" height="22"');
 	$TBE_STYLES['skinImg']['MOD:tools_em/uninstall.gif'] = array($temp_eP.'icons/ext/templavoila/mod1/moduleicon.gif','width="22" height="22"');
 
+		// extJS theme
+	$TBE_STYLES['extJS']['theme'] =  $temp_eP . 'extjs/xtheme-t3skin.css';
+
 	//print_a($TBE_STYLES,2);
+
+	// Adding HTML template for login screen
+	$TBE_STYLES['htmlTemplates']['templates/login.html'] = 'sysext/t3skin/templates/login.html';
 
 	$GLOBALS['TYPO3_CONF_VARS']['typo3/backend.php']['additionalBackendItems'][] = t3lib_extMgm::extPath('t3skin').'registerIe6Stylesheet.php';
 

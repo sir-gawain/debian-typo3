@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,9 +24,9 @@
 /**
  * Default Font plugin for htmlArea RTE
  *
- * @author Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+ * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultfont.php 4526 2008-12-02 23:45:50Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_defaultfont.php 5165 2009-03-09 18:28:59Z ohader $
  *
  */
 
@@ -138,7 +138,7 @@ class tx_rtehtmlarea_defaultfont extends tx_rtehtmlareaapi {
 				"' . $GLOBALS['TSFE']->getLLL('No font', $this->LOCAL_LANG) . '" : ""';
 		} else {
 			$HTMLAreaFontname['nofont'] = '
-			"' . ($this->htmlAreaRTE->TCEform->inline->isAjaxCall ? $GLOBALS['LANG']->csConvObj->utf8_encode($GLOBALS['LANG']->getLL('No font'), $GLOBALS['LANG']->charSet) : $GLOBALS['LANG']->getLL('No font')) . '" : ""';
+				"' . ($this->htmlAreaRTE->TCEform->inline->isAjaxCall ? $GLOBALS['LANG']->csConvObj->utf8_encode($GLOBALS['LANG']->getLL('No font'), $GLOBALS['LANG']->charSet) : $GLOBALS['LANG']->getLL('No font')) . '" : ""';
 		}
 
 		$hideFontFaces = $this->htmlAreaRTE->cleanList($this->thisConfig['hideFontFaces']);
@@ -147,7 +147,7 @@ class tx_rtehtmlarea_defaultfont extends tx_rtehtmlareaapi {
 			foreach ($this->defaultFontFaces as $fontName => $fontValue) {
 				if (!t3lib_div::inList($hideFontFaces, $index+1)) {
 					$HTMLAreaFontname[$fontName] = '
-					"' . ((!$this->htmlAreaRTE->is_FE() && $this->htmlAreaRTE->TCEform->inline->isAjaxCall) ? $GLOBALS['LANG']->csConvObj->utf8_encode($fontName, $GLOBALS['LANG']->charSet) : $fontName) . '" : "' . $this->htmlAreaRTE->cleanList($fontValue) . '"';
+				"' . ((!$this->htmlAreaRTE->is_FE() && $this->htmlAreaRTE->TCEform->inline->isAjaxCall) ? $GLOBALS['LANG']->csConvObj->utf8_encode($fontName, $GLOBALS['LANG']->charSet) : $fontName) . '" : "' . $this->htmlAreaRTE->cleanList($fontValue) . '"';
 					$defaultFontFacesList .= $fontName . ',';
 				}
 				$index++;

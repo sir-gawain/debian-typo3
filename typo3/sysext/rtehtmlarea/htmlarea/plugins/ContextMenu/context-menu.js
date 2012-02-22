@@ -2,7 +2,7 @@
 *  Copyright notice
 *
 *  Copyright (c) 2003 dynarch.com. Authored by Mihai Bazon. Sponsored by www.americanbible.org.
-*  Copyright (c) 2004-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  Copyright (c) 2004-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
 /*
  * Context Menu Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: context-menu.js 4285 2008-10-04 23:12:16Z stan $
+ * TYPO3 SVN ID: $Id: context-menu.js 5934 2009-09-16 00:45:56Z stan $
  */
 
 ContextMenu = HTMLArea.Plugin.extend({
@@ -116,7 +116,7 @@ ContextMenu = HTMLArea.Plugin.extend({
 				list.appendChild(item);
 				var label = option[0];
 				if (separator) {
-					item.className += " separator";
+					HTMLArea._addClass(item, "separator");
 					separator = false;
 				}
 				item.__msh = {
@@ -126,31 +126,32 @@ ContextMenu = HTMLArea.Plugin.extend({
 					tooltip:	option[2] || null,
 					icon:		option[3] || null,
 					activate:	ContextMenu.activateHandler(item, this),
-					cmd:		option[4] || null
+					cmd:		option[4] || null,
+					dialog:		option[5] || null
 				};
 				label = label.replace(/_([a-zA-Z0-9])/, "<u>$1</u>");
 				if (label != option[0]) this.keys.push([ RegExp.$1, item ]);
 				label = label.replace(/__/, "_");
 				var button = doc.createElement("button");
-				button.className = "button";
-				if(item.__msh.cmd) {
-					button.className += " " + item.__msh.cmd;
-					if(typeof(editor.plugins["TYPO3Browsers"]) != "undefined" && (item.__msh.cmd == "CreateLink" || item.__msh.cmd == "UnLink" || item.__msh.cmd == "InsertImage")) button.className += "-TYPO3Browsers";
-					button.innerHTML = label;
-				} else if(item.__msh.icon) {
-					button.innerHTML = "<img src='" + item.__msh.icon + "' />" + label;
-				} else {
-					button.innerHTML = label;
+				HTMLArea._addClass(button,  "button");
+				if (item.__msh.cmd) {
+					HTMLArea._addClass(button,  item.__msh.cmd);
+					if (editor._toolbarObjects[item.__msh.cmd]  && editor._toolbarObjects[item.__msh.cmd].active) {
+						HTMLArea._addClass(button,  "buttonActive");
+					}
+				} else if (item.__msh.icon) {
+					button.innerHTML = "<img src='" + item.__msh.icon + "' />";
 				}
 				item.appendChild(button);
-	
+				item.innerHTML = item.innerHTML + label;
+					// Setting event handlers on the menu items
 				item.__msh.mouseover = ContextMenu.mouseOverHandler(editor, item);
 				HTMLArea._addEvent(item, "mouseover", item.__msh.mouseover);
 				item.__msh.mouseout = ContextMenu.mouseOutHandler(item);
 				HTMLArea._addEvent(item, "mouseout", item.__msh.mouseout);
 				item.__msh.contextmenu = ContextMenu.itemContextMenuHandler(item);
 				HTMLArea._addEvent(item, "contextmenu", item.__msh.contextmenu);
-				if(!HTMLArea.is_ie) {
+				if (!HTMLArea.is_ie) {
 					item.__msh.mousedown = ContextMenu.mouseDownHandler(item);
 					HTMLArea._addEvent(item, "mousedown", item.__msh.mousedown);
 				}
@@ -213,10 +214,14 @@ ContextMenu = HTMLArea.Plugin.extend({
 			if (opEnabled[opcode]) {
 				switch (pluginId) {
 					case "TableOperations" :
-						elmenus.push([this.localize(opcode + "-title"),
+						elmenus.push([
+							this.localize(opcode + "-title"),
 							ContextMenu.tableOperationsHandler(editor, pluginInstance, opcode),
 							this.localize(opcode + "-tooltip"),
-							btnList[opcode][1], opcode]);
+							btnList[opcode][1],
+							opcode,
+							btnList[opcode][7]
+							]);
 						break;
 					case "BlockElements" :
 						elmenus.push([this.localize(opcode + "-title"),
@@ -339,7 +344,7 @@ ContextMenu = HTMLArea.Plugin.extend({
 			}
 		}
 		
-		if (selection && !link && btnList["CreateLink"]) {
+		if (selection && !link && btnList.CreateLink) {
 			if (menu.length) menu.push(null);
 			menu.push([this.localize("Make link"),
 				this.linkHandler(link, "MakeLink"),
@@ -513,7 +518,9 @@ ContextMenu.blockElementsHandler = function(editor, currentTarget, buttonId) {
 ContextMenu.mouseOverHandler = function(editor,item) {
 	return (function() {
 		item.className += " hover";
-		editor._statusBarTree.innerHTML = item.__msh.tooltip || '&nbsp;';
+		if (editor.getPluginInstance("StatusBar")) {
+			editor.getPluginInstance("StatusBar").setText(item.__msh.tooltip || "&nbsp;");
+		}
 	});
 };
 
@@ -541,9 +548,12 @@ ContextMenu.mouseDownHandler = function(item) {
 ContextMenu.mouseUpHandler = function(item,instance) {
 	return (function(ev) {
 		var timeStamp = (new Date()).getTime();
-		if (timeStamp - instance.timeStamp > 500) item.__msh.activate();
-		if (!HTMLArea.is_ie) HTMLArea._stopEvent(ev);
-		instance.editor.updateToolbar();
+		if (timeStamp - instance.timeStamp > 500) {
+			item.__msh.activate();
+		}
+		if (!HTMLArea.is_ie) {
+			HTMLArea._stopEvent(ev);
+		}
 		return false;
 	});
 };
@@ -551,6 +561,9 @@ ContextMenu.mouseUpHandler = function(item,instance) {
 ContextMenu.activateHandler = function(item,instance) {
 	return (function() {
 		item.__msh.action();
+		if (!item.__msh.dialog) {
+			instance.editor.updateToolbar();
+		}
 		instance.closeMenu();
 	});
 };

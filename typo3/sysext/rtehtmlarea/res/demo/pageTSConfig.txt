@@ -3,7 +3,7 @@
 #
 # Sets default Page TSConfig with maximal features for users who want to explore the features of the RTE.
 #
-# TYPO3 SVN ID: $Id: pageTSConfig.txt 4140 2008-09-17 02:57:32Z stan $
+# TYPO3 SVN ID: $Id: pageTSConfig.txt 5131 2009-03-06 17:53:40Z stan $
 # ***************************************************************************************
 
 	## Define labels and styles to be applied to class selectors in the interface of the RTE
@@ -239,7 +239,7 @@ RTE.default {
 
 		## Configuration specific to the spellcheck button or SpellCheck feature (htmlArea RTE only)
 		## Enable the use of personal dictionaries
-	enablePersonalDicts = 1
+	buttons.spellcheck.enablePersonalDictionaries = 1
 }
 
 	## Use same processing as on entry to database to clean content pasted into the editor
@@ -250,7 +250,3 @@ RTE.default.FE < RTE.default
 RTE.default.FE.FE >
 RTE.default.FE.userElements >
 RTE.default.FE.userLinks >
-
-	## tt_content TCEFORM configuration
-	## Let use all the space available for more comfort.
-TCEFORM.tt_content.bodytext.RTEfullScreenWidth= 100%

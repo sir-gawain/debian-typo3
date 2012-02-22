@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 /*
  * Default Link Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id$
+ * TYPO3 SVN ID: $Id: default-link.js 6539 2009-11-25 14:49:14Z stucki $
  */
 DefaultLink = HTMLArea.Plugin.extend({
 	
@@ -53,10 +53,10 @@ DefaultLink = HTMLArea.Plugin.extend({
 		var pluginInformation = {
 			version		: "1.0",
 			developer	: "Stanislas Rolland",
-			developerUrl	: "http://www.fructifor.ca/",
+			developerUrl	: "http://www.sjbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
-			sponsor		: "Fructifor Inc.",
-			sponsorUrl	: "http://www.fructifor.ca/",
+			sponsor		: "SJBR",
+			sponsorUrl	: "http://www.sjbr.ca/",
 			license		: "GPL"
 		};
 		this.registerPluginInformation(pluginInformation);
@@ -125,7 +125,7 @@ DefaultLink = HTMLArea.Plugin.extend({
 		}
 		
 		this.link = link;
-		this.dialog = this.openDialog("CreateLink", this.makeUrlFromPopupName("link"), "createLink", paramameters, {width:450, height:145});
+		this.dialog = this.openDialog("CreateLink", this.makeUrlFromPopupName("link"), "createLink", paramameters, {width:570, height:150});
 		return false;
 	},
 	

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * This is the frameset to the file/record browser window
  *
- * $Id: browser.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: browser.php 5165 2009-03-09 18:28:59Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  * XHTML-frames compatible.
  *
@@ -124,17 +124,10 @@ class SC_browser {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/browser.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/browser.php']);
 }
-
-
-
-
-
-
-
 
 
 
@@ -142,4 +135,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/brows
 $SOBE = t3lib_div::makeInstance('SC_browser');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

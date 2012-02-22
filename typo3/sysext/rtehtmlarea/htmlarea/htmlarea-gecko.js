@@ -1,9 +1,9 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2002-2004, interactivetools.com, inc.
+*  (c) 2002-2004 interactivetools.com, inc.
 *  (c) 2003-2004 dynarch.com
-*  (c) 2004-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /*
- * TYPO3 SVN ID: $Id: htmlarea-gecko.js 4670 2009-01-08 21:10:33Z stan $
+ * TYPO3 SVN ID: $Id: htmlarea-gecko.js 9155 2010-10-18 23:16:42Z stan $
  */
 
 /***************************************************
@@ -379,18 +379,23 @@ HTMLArea.prototype.getBookmarkNode = function(bookmark, endPoint) {
 HTMLArea.prototype.moveToBookmark = function (bookmark) {
 	var startSpan  = this.getBookmarkNode(bookmark, true);
 	var endSpan    = this.getBookmarkNode(bookmark, false);
-
+	var parent;
 	var range = this._createRange();
-		// If the previous sibling is a text node, let the anchor have it as parent
-	if (startSpan.previousSibling && startSpan.previousSibling.nodeType == 3) {
-		range.setStart(startSpan.previousSibling, startSpan.previousSibling.data.length);
+	if (startSpan) {
+			// If the previous sibling is a text node, let the anchorNode have it as parent
+		if (startSpan.previousSibling && startSpan.previousSibling.nodeType == 3) {
+			range.setStart(startSpan.previousSibling, startSpan.previousSibling.data.length);
+		} else {
+			range.setStartBefore(startSpan);
+		}
+		HTMLArea.removeFromParent(startSpan);
 	} else {
-		range.setStartBefore(startSpan);
+			// For some reason, the startSpan was removed or its id attribute was removed so that it cannot be retrieved
+		range.setStart(this._doc.body, 0);
 	}
-	HTMLArea.removeFromParent(startSpan);
 		// If the bookmarked range was collapsed, the end span will not be available
 	if (endSpan) {
-			// If the next sibling is a text node, let the anchor have it as parent
+			// If the next sibling is a text node, let the focusNode have it as parent
 		if (endSpan.nextSibling && endSpan.nextSibling.nodeType == 3) {
 			range.setEnd(endSpan.nextSibling, 0);
 		} else {
@@ -445,6 +450,62 @@ HTMLArea.prototype.insertHTML = function(html) {
 	this.insertNodeAtSelection(fragment);
 };
 
+/*
+ * Wrap the range with an inline element
+ *
+ * @param	string	element: the node that will wrap the range
+ * @param	object	selection: the selection object
+ * @param	object	range: the range to be wrapped
+ *
+ * @return	void
+ */
+HTMLArea.prototype.wrapWithInlineElement = function(element, selection, range) {
+	element.appendChild(range.extractContents());
+	range.insertNode(element);
+	element.normalize();
+		// Sometimes Firefox inserts empty elements just outside the boundaries of the range
+	var neighbour = element.previousSibling;
+	if (neighbour && (neighbour.nodeType != 3) && !/\S/.test(neighbour.textContent)) {
+		HTMLArea.removeFromParent(neighbour);
+	}
+	neighbour = element.nextSibling;
+	if (neighbour && (neighbour.nodeType != 3) && !/\S/.test(neighbour.textContent)) {
+		HTMLArea.removeFromParent(neighbour);
+	}
+	this.selectNodeContents(element, false);
+};
+
+/*
+ * Clean Apple wrapping span and font tags under the specified node
+ *
+ * @param	object	node: the node in the subtree of which cleaning is performed
+ *
+ * @return	void
+ */
+HTMLArea.prototype.cleanAppleStyleSpans = function(node) {
+	if (HTMLArea.is_safari) {
+		if (node.getElementsByClassName) {
+			var spans = node.getElementsByClassName("Apple-style-span");
+			for (var i = spans.length; --i >= 0;) {
+				this.removeMarkup(spans[i]);
+			}
+		} else {
+			var spans = node.getElementsByTagName("span");
+			for (var i = spans.length; --i >= 0;) {
+				if (HTMLArea._hasClass(spans[i], "Apple-style-span")) {
+					this.removeMarkup(spans[i]);
+				}
+			}
+			var fonts = node.getElementsByTagName("font");
+			for (i = fonts.length; --i >= 0;) {
+				if (HTMLArea._hasClass(fonts[i], "Apple-style-span")) {
+					this.removeMarkup(fonts[i]);
+				}
+			}
+		}
+	}
+};
+
 /***************************************************
  *  EVENTS HANDLERS
  ***************************************************/
@@ -470,14 +531,14 @@ HTMLArea.NestedHandler = function(ev,editor,nestedObj,noOpenCloseAction) {
 		if (navigator.productSub > 20071127) {
 			styleEvent = (ev.attrName == "style");
 		}
-		if (target == nestedObj && editor._editMode == "wysiwyg" && styleEvent && (target.style.display == "" || target.style.display == "block")) {
+		if (target == nestedObj && editor.getMode() == "wysiwyg" && styleEvent && (target.style.display == "" || target.style.display == "block")) {
 				// Check if all affected nested elements are displayed (style.display!='none'):
 			if (HTMLArea.allElementsAreDisplayed(editor.nested.sorted)) {
 				window.setTimeout(function() {
 					try {
 						editor._doc.designMode = "on";
 						if (editor.config.sizeIncludesToolbar && editor._initialToolbarOffsetHeight != editor._toolbar.offsetHeight) {
-							editor.sizeIframe(-2);
+							editor.sizeIframe(2);
 						}
 						if (editor._doc.queryCommandEnabled("insertbronreturn")) editor._doc.execCommand("insertbronreturn", false, editor.config.disableEnterParagraphs);
 						if (editor._doc.queryCommandEnabled("enableObjectResizing")) editor._doc.execCommand("enableObjectResizing", false, !editor.config.disableObjectResizing);
@@ -501,103 +562,52 @@ HTMLArea.NestedHandler = function(ev,editor,nestedObj,noOpenCloseAction) {
 };
 
 /*
- * Handle statusbar element events
- */
-HTMLArea.statusBarHandler = function (ev) {
-	if(!ev) var ev = window.event;
-	var target = (ev.target) ? ev.target : ev.srcElement;
-	var editor = target.editor;
-	target.blur();
-	editor.selectNodeContents(target.el);
-	editor._statusBarTree.selected = target.el;
-	editor.updateToolbar(true);
-	switch (ev.type) {
-		case "click" :
-		case "mousedown" :
-			HTMLArea._stopEvent(ev);
-			return false;
-		case "contextmenu" :
-			return editor.plugins["ContextMenu"] ? editor.plugins["ContextMenu"].instance.popupMenu(ev,target.el) : false;
-	}
-};
-
-/*
- * Paste exception handler
- */
-HTMLArea.prototype._mozillaPasteException = function(cmdID, UI, param) {
-		// Mozilla lauches an exception, but can paste anyway on ctrl-V
-		// UI is false on keyboard shortcut, and undefined on button click
-	if(typeof(UI) != "undefined") {
-		try { this._doc.execCommand(cmdID, UI, param); } catch(e) { }
-		if (cmdID == "Paste" && this._toolbarObjects.CleanWord) {
-			this._toolbarObjects.CleanWord.cmd(this, "CleanWord");
-		}
-	} else if (this.config.enableMozillaExtension) {
-		if (confirm(HTMLArea.I18N.msg["Allow-Clipboard-Helper-Extension"])) {
-			if (InstallTrigger.enabled()) {
-				HTMLArea._mozillaXpi = new Object();
-				HTMLArea._mozillaXpi["AllowClipboard Helper"] = _editor_mozAllowClipboard_url;
-				InstallTrigger.install(HTMLArea._mozillaXpi,HTMLArea._mozillaInstallCallback);
-			} else {
-				alert(HTMLArea.I18N.msg["Mozilla-Org-Install-Not-Enabled"]);
-				HTMLArea._appendToLog("WARNING [HTMLArea::execCommand]: Mozilla install was not enabled.");
-				return;
-			}
-		}
-	} else if (confirm(HTMLArea.I18N.msg["Moz-Clipboard"])) {
-		window.open("http://mozilla.org/editor/midasdemo/securityprefs.html");
-	}
-}
-
-HTMLArea._mozillaInstallCallback = function(url,returnCode) {
-	if (returnCode == 0) {
-		if (HTMLArea._mozillaXpi["TYPO3 htmlArea RTE Preferences"]) alert(HTMLArea.I18N.msg["Moz-Extension-Success"]);
-			else alert(HTMLArea.I18N.msg["Allow-Clipboard-Helper-Extension-Success"]);
-		return;
-	} else {
-		alert(HTMLArea.I18N.msg["Moz-Extension-Failure"]);
-		HTMLArea._appendToLog("WARNING [HTMLArea::execCommand]: Mozilla install return code was: " + returnCode + ".");
-		return;
-	}
-};
-
-/*
  * Backspace event handler
  */
 HTMLArea.prototype._checkBackspace = function() {
-	var self = this;
-	self.focusEditor();
-	var sel = self._getSelection();
-	var range = self._createRange(sel);
-	var SC = range.startContainer;
-	var SO = range.startOffset;
-	var EC = range.endContainer;
-	var EO = range.endOffset;
-	var newr = SC.nextSibling;
-	while (SC.nodeType == 3 || /^a$/i.test(SC.tagName)) SC = SC.parentNode;
-	if (!self.config.disableEnterParagraphs && /^td$/i.test(SC.parentNode.tagName) && SC.parentNode.firstChild == SC && SO == 0 && range.collapsed) return true;
-	window.setTimeout(function() {
-			// Remove br tag inserted by Mozilla
-		if (!self.config.disableEnterParagraphs && (/^p$/i.test(SC.tagName) || !/\S/.test(SC.tagName)) && SO == 0) {
-			if (SC.firstChild && /^br$/i.test(SC.firstChild.tagName)) {
-				HTMLArea.removeFromParent(SC.firstChild);
-				return true;
+	if (!HTMLArea.is_safari && !HTMLArea.is_opera) {
+		var self = this;
+		window.setTimeout(function() {
+			var selection = self._getSelection();
+			var range = self._createRange(selection);
+			var startContainer = range.startContainer;
+			var startOffset = range.startOffset;
+				// If the selection is collapsed...
+			if (self._selectionEmpty()) {
+					// ... and the cursor lies in a direct child of body...
+				if (/^(body)$/i.test(startContainer.nodeName)) {
+					var node = startContainer.childNodes[startOffset];
+				} else if (/^(body)$/i.test(startContainer.parentNode.nodeName)) {
+					var node = startContainer;
+				} else {
+					return false;
+				}
+					// ... which is a br or text node containing no non-whitespace character
+				if (/^(br|#text)$/i.test(node.nodeName) && !/\S/.test(node.textContent)) {
+						// Get a meaningful previous sibling in which to reposition de cursor
+					var previousSibling = node.previousSibling;
+					while (previousSibling && /^(br|#text)$/i.test(previousSibling.nodeName) && !/\S/.test(previousSibling.textContent)) {
+						previousSibling = previousSibling.previousSibling;
+					}
+						// If there is no meaningful previous sibling, the cursor is at the start of body
+					if (previousSibling) {
+							// Remove the node
+						HTMLArea.removeFromParent(node);
+							// Position the cursor
+						if (/^(ol|ul|dl)$/i.test(previousSibling.nodeName)) {
+							self.selectNodeContents(previousSibling.lastChild, false);
+						} else if (/^(table)$/i.test(previousSibling.nodeName)) {
+							self.selectNodeContents(previousSibling.rows[previousSibling.rows.length-1].cells[previousSibling.rows[previousSibling.rows.length-1].cells.length-1], false);
+						} else if (!/\S/.test(previousSibling.textContent) && previousSibling.firstChild) {
+							self.selectNode(previousSibling.firstChild, true);
+						} else {
+							self.selectNodeContents(previousSibling, false);
+						}
+					}
+				}
 			}
-		}
-		if (!/\S/.test(SC.tagName)) {
-			var p = document.createElement("p");
-			while (SC.firstChild) p.appendChild(SC.firstChild);
-			SC.parentNode.insertBefore(p, SC);
-			HTMLArea.removeFromParent(SC);
-			var r = range.cloneRange();
-			r.setStartBefore(newr);
-			r.setEndAfter(newr);
-			r.extractContents();
-			this.emptySelection(sel);
-			this.addRangeToSelection(sel, r);
-			return true;
-		}
-	},10);
+		}, 10);
+	}
 	return false;
 };
 
@@ -626,48 +636,95 @@ HTMLArea.prototype._checkInsertP = function() {
 	}
 	this.emptySelection(sel);
 	if (!block || /^(td|div)$/i.test(block.nodeName)) {
-		if (!block) var block = doc.body;
+		if (!block) {
+			block = doc.body;
+		}
 		if (block.hasChildNodes()) {
 			rangeClone = range.cloneRange();
-			rangeClone.setStartBefore(block.firstChild);
-				// Working around Opera issue: The following gives a range exception
-				// rangeClone.surroundContents(left = doc.createElement("p"));
-			left = doc.createElement("p");
+			if (range.startContainer == block) {
+					// Selection is directly under the block
+				var blockOnLeft = null;
+				var leftSibling = null;
+					// Looking for the farthest node on the left that is not a block
+				for (var i = range.startOffset; --i >= 0;) {
+					if (HTMLArea.isBlockElement(block.childNodes[i])) {
+						blockOnLeft = block.childNodes[i];
+						break;
+					} else {
+						rangeClone.setStartBefore(block.childNodes[i]);
+					}
+				}
+			} else {
+					// Looking for inline or text container immediate child of block
+				var inlineContainer = range.startContainer;
+				while (inlineContainer.parentNode != block) {
+					inlineContainer = inlineContainer.parentNode;
+				}
+					// Looking for the farthest node on the left that is not a block
+				var leftSibling = inlineContainer;
+				while (leftSibling.previousSibling && !HTMLArea.isBlockElement(leftSibling.previousSibling)) {
+					leftSibling = leftSibling.previousSibling;
+				}
+				rangeClone.setStartBefore(leftSibling);
+				var blockOnLeft = leftSibling.previousSibling;
+			}
+				// Avoiding surroundContents buggy in Opera and Safari
+			left = doc.createElement('p');
 			left.appendChild(rangeClone.extractContents());
-			if (!left.textContent && !left.getElementsByTagName("img") && !left.getElementsByTagName("table")) {
-				left.innerHTML = "<br />";
+			if (!left.textContent && !left.getElementsByTagName('img').length && !left.getElementsByTagName('table').length) {
+				left.innerHTML = '<br />';
 			}
 			if (block.hasChildNodes()) {
-				left = block.insertBefore(left, block.firstChild);
+				if (blockOnLeft) {
+					left = block.insertBefore(left, blockOnLeft.nextSibling);
+				} else {
+					left = block.insertBefore(left, block.firstChild);
+				}
 			} else {
 				left = block.appendChild(left);
 			}
-			left.normalize();
-			range.setEndAfter(block.lastChild);
-			range.setStartAfter(left);
-				// Working around Safari issue: The following gives a range exception
-				// range.surroundContents(right = doc.createElement("p"));
-			right = doc.createElement("p");
-			right.appendChild(range.extractContents());
-			if (!right.textContent && !left.getElementsByTagName("img") && !left.getElementsByTagName("table")) {
-				right.innerHTML = "<br />";
+			block.normalize();
+				// Looking for the farthest node on the right that is not a block
+			var rightSibling = left;
+			while (rightSibling.nextSibling && !HTMLArea.isBlockElement(rightSibling.nextSibling)) {
+				rightSibling = rightSibling.nextSibling;
 			}
-			block.appendChild(right);
-			right.normalize();
+			var blockOnRight = rightSibling.nextSibling;
+			range.setEndAfter(rightSibling);
+			range.setStartAfter(left);
+				// Avoiding surroundContents buggy in Opera and Safari
+			right = doc.createElement('p');
+			right.appendChild(range.extractContents());
+			if (!right.textContent && !right.getElementsByTagName('img').length && !right.getElementsByTagName('table').length) {
+				right.innerHTML = '<br />';
+			}
+			if (!(left.childNodes.length == 1 && right.childNodes.length == 1 && left.firstChild.nodeName.toLowerCase() == 'br' && right.firstChild.nodeName.toLowerCase() == 'br')) {
+				if (blockOnRight) {
+					right = block.insertBefore(right, blockOnRight);
+				} else {
+					right = block.appendChild(right);
+				}
+				this.selectNodeContents(right, true);
+			} else {
+				this.selectNodeContents(left, true);
+			}
+			block.normalize();
 		} else {
 			var first = block.firstChild;
-			if (first) block.removeChild(first);
+			if (first) {
+				block.removeChild(first);
+			}
 			right = doc.createElement("p");
 			if (HTMLArea.is_safari || HTMLArea.is_opera) {
 				right.innerHTML = "<br />";
 			}
 			right = block.appendChild(right);
+			this.selectNodeContents(right, true);
 		}
-		this.selectNodeContents(right, true);
 	} else {
 		range.setEndAfter(block);
 		var df = range.extractContents(), left_empty = false;
-		if (!/\S/.test(block.innerHTML)) {
+		if (!/\S/.test(block.innerHTML) || (!/\S/.test(block.textContent) && !/<(img|hr|table)/i.test(block.innerHTML))) {
 			if (!HTMLArea.is_opera) {
 				block.innerHTML = "<br />";
 			}
@@ -675,7 +732,7 @@ HTMLArea.prototype._checkInsertP = function() {
 		}
 		p = df.firstChild;
 		if (p) {
-			if (!/\S/.test(p.textContent)) {
+			if (!/\S/.test(p.innerHTML) || (!/\S/.test(p.textContent) && !/<(img|hr|table)/i.test(p.innerHTML))) {
  				if (/^h[1-6]$/i.test(p.nodeName)) {
 					p = this.convertNode(p, "p");
 				}
@@ -685,22 +742,35 @@ HTMLArea.prototype._checkInsertP = function() {
 				if (!HTMLArea.is_opera) {
 					p.innerHTML = "<br />";
 				}
-			}
-			if(/^li$/i.test(p.nodeName) && left_empty && !block.nextSibling) {
-				left = block.parentNode;
-				left.removeChild(block);
-				range.setEndAfter(left);
-				range.collapse(false);
-				p = this.convertNode(p, /^(li|dd|td|th)$/i.test(left.parentNode.nodeName) ? "br" : "p");
+				if (/^li$/i.test(p.nodeName) && left_empty && (!block.nextSibling || !/^li$/i.test(block.nextSibling.nodeName))) {
+					left = block.parentNode;
+					left.removeChild(block);
+					range.setEndAfter(left);
+					range.collapse(false);
+					p = this.convertNode(p, /^(li|dd|td|th|p|h[1-6])$/i.test(left.parentNode.nodeName) ? "br" : "p");
+				}
 			}
 			range.insertNode(df);
-				// Remove any anchor created empty
+				// Remove any anchor created empty on both sides of the selection
 			if (p.previousSibling) {
 				var a = p.previousSibling.lastChild;
-				if (a && /^a$/i.test(a.nodeName) && !/\S/.test(a.innerHTML)) HTMLArea.removeFromParent(a);
+				if (a && /^a$/i.test(a.nodeName) && !/\S/.test(a.innerHTML)) {
+					this.convertNode(a, 'br');
+				}
+			}
+			var a = p.lastChild;
+			if (a && /^a$/i.test(a.nodeName) && !/\S/.test(a.innerHTML)) {
+				this.convertNode(a, 'br');
+			}
+				// Walk inside the deepest child element (presumably inline element)
+			while (p.firstChild && p.firstChild.nodeType == 1 && !/^(br|img|hr|table)$/i.test(p.firstChild.nodeName)) {
+				p = p.firstChild;
 			}
 			if (/^br$/i.test(p.nodeName)) {
-				p = p.parentNode.insertBefore(this._doc.createTextNode("\x20"), p);
+				p = p.parentNode.insertBefore(doc.createTextNode('\x20'), p);
+			} else if (!/\S/.test(p.innerHTML)) {
+					// Need some element inside the deepest element
+				p.appendChild(doc.createElement('br'));
 			}
 			this.selectNodeContents(p, true);
 		} else {
@@ -738,10 +808,9 @@ HTMLArea.prototype._detectURL = function(ev) {
 			var a = textNode.parentNode.insertBefore(tag, rightText);
 			HTMLArea.removeFromParent(textNode);
 			a.appendChild(textNode);
-			rightText.data += " ";
-			s.collapse(rightText, rightText.data.length);
-			HTMLArea._stopEvent(ev);
-	
+			s.collapse(rightText, 0);
+			rightText.parentNode.normalize();
+
 			editor._unLink = function() {
 				var t = a.firstChild;
 				a.removeChild(t);
@@ -786,7 +855,7 @@ HTMLArea.prototype._detectURL = function(ev) {
 						var midText   = leftText.splitText(midStart);
 						var midEnd = midText.data.search(/[^a-zA-Z0-9\._\-\/\&\?=:@]/);
 						if (midEnd != -1) var endText = midText.splitText(midEnd);
-						autoWrap(midText, 'a').href = (m[1] ? m[1] : 'http://') + m[2];
+						autoWrap(midText, 'a').href = (m[1] ? m[1] : 'http://') + m[3];
 						break;
 					}
 				}
@@ -819,7 +888,7 @@ HTMLArea.prototype._detectURL = function(ev) {
 								var textNode = s.anchorNode;
 								var fn = function() {
 									var m = textNode.data.match(HTMLArea.RE_url);
-									a.href = (m[1] ? m[1] : 'http://') + m[2];
+									a.href = (m[1] ? m[1] : 'http://') + m[3];
 									a._updateAnchTimeout = setTimeout(fn, 250);
 								}
 								a._updateAnchTimeout = setTimeout(fn, 250);

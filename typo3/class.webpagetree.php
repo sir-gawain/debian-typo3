@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -54,9 +54,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-
-require_once(PATH_t3lib.'class.t3lib_browsetree.php');
 
 
 /**
@@ -157,6 +154,15 @@ class webPageTree extends t3lib_browseTree {
 	 * @access	private
 	 */
 	function wrapTitle($title,$row,$bank=0)	{
+			// Hook for overriding the page title
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.webpagetree.php']['pageTitleOverlay'])) {
+			$_params = array('title' => &$title, 'row' => &$row);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.webpagetree.php']['pageTitleOverlay'] as $_funcRef) {
+				t3lib_div::callUserFunction($_funcRef, $_params, $this);
+			}
+			unset($_params);
+		}
+
 		$aOnClick = 'return jumpTo(\''.$this->getJumpToParam($row).'\',this,\''.$this->domIdPrefix.$this->getId($row).'\','.$bank.');';
 		$CSM = '';
 		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['useOnContextMenuHandler'])	{
@@ -224,9 +230,9 @@ class webPageTree extends t3lib_browseTree {
 			if($v['isLast']) { $classAttr .= ($classAttr) ? ' last'	: 'last';	 }
 
 			$itemHTML .='
-				<li id="'.$idAttr.'"'.($classAttr ? ' class="'.$classAttr.'"' : '').'>'.
+				<li id="'.$idAttr.'"'.($classAttr ? ' class="'.$classAttr.'"' : '').'><div class="treeLinkItem">'.
 					$v['HTML'].
-					$this->wrapTitle($this->getTitleStr($v['row'],$titleLen),$v['row'],$v['bank'])."\n";
+					$this->wrapTitle($this->getTitleStr($v['row'],$titleLen),$v['row'],$v['bank'])."</div>\n";
 
 
 			if(!$v['hasSub']) { $itemHTML .= '</li>'; }
@@ -352,7 +358,7 @@ class webPageTree extends t3lib_browseTree {
 				// Set PM icon for root of mount:
 			$cmd = $this->bank.'_'.($isOpen? "0_" : "1_").$uid.'_'.$this->treeName;
 			$icon='<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/ol/'.($isOpen?'minus':'plus').'only.gif').' alt="" />';
-			$firstHtml = $this->PMiconATagWrap($icon,$cmd);
+			$firstHtml = $this->PMiconATagWrap($icon,$cmd,!$isOpen);
 
 				// Preparing rootRec for the mount
 			if ($uid)   {
@@ -510,4 +516,5 @@ class webPageTree extends t3lib_browseTree {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/class.webpagetree.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/class.webpagetree.php']);
 }
+
 ?>

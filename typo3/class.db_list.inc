@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Include file extending t3lib_recordList
  * Shared between Web>List (db_list.php) and Web>Page (sysext/cms/layout/db_layout.php)
  *
- * $Id: class.db_list.inc 4723 2009-01-15 20:40:54Z steffenk $
+ * $Id: class.db_list.inc 9781 2010-12-16 13:39:08Z ohader $
  * Revised for TYPO3 3.6 December/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -119,6 +119,7 @@ class recordList extends t3lib_recordList {
 	var $pageRecord = array();		// Loaded with page record with version overlay if any.
 	var $hideTables = '';			// Tables which should not get listed
 	var $tableTSconfigOverTCA = array(); //TSconfig which overwrites TCA-Settings
+	var $tablesCollapsed = array(); // Array of collapsed / uncollapsed tables in multi table view
 
 		// Internal, dynamic:
 	var $JScode = '';				// JavaScript code accumulation
@@ -131,7 +132,7 @@ class recordList extends t3lib_recordList {
 	var $currentTable = array();			// Used for tracking next/prev uids
 	var $duplicateStack=array();			// Used for tracking duplicate values of fields
 
-
+	var $modTSconfig;				// module configuratio
 
 
 
@@ -178,6 +179,14 @@ class recordList extends t3lib_recordList {
 		$this->JScode='';
 		$this->HTMLcode='';
 
+			// limits
+		if(isset($this->modTSconfig['properties']['itemsLimitPerTable'])) {
+			$this->itemsLimitPerTable = t3lib_div::intInRange(intval($this->modTSconfig['properties']['itemsLimitPerTable']), 1, 10000);
+		}
+		if(isset($this->modTSconfig['properties']['itemsLimitSingleTable'])) {
+			$this->itemsLimitSingleTable = t3lib_div::intInRange(intval($this->modTSconfig['properties']['itemsLimitSingleTable']), 1, 10000);
+		}
+
 			// Set select levels:
 		$sL=intval($this->searchLevels);
 		$this->perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
@@ -189,9 +198,28 @@ class recordList extends t3lib_recordList {
 			}
 		}
 
+		// Get configuration of collapsed tables from user uc and merge with sanitized GP vars
+		$this->tablesCollapsed = is_array($GLOBALS['BE_USER']->uc['moduleData']['db_list.php']) ? $GLOBALS['BE_USER']->uc['moduleData']['db_list.php'] : array();
+		$collapseOverride = t3lib_div::_GP('collapse');
+		if (is_array($collapseOverride)) {
+			foreach($collapseOverride as $collapseTable => $collapseValue) {
+				if (is_array($GLOBALS['TCA'][$collapseTable]) && ($collapseValue == 0 || $collapseValue == 1)) {
+					$this->tablesCollapsed[$collapseTable] = $collapseValue;
+				}
+			}
+			// Save modified user uc
+			$GLOBALS['BE_USER']->uc['moduleData']['db_list.php'] = $this->tablesCollapsed;
+			$GLOBALS['BE_USER']->writeUC($GLOBALS['BE_USER']->uc);
+			if (t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'))) {
+				$location = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
+				t3lib_utility_Http::redirect($location);
+			}
+		}
+
 		if ($sL>0)	{
-			$tree = $this->getTreeObject($id,$sL,$this->perms_clause);
-			$this->pidSelect = 'pid IN ('.implode(',',$tree->ids).')';
+			$tree = $this->getTreeObject($this->id, $sL, $this->perms_clause);
+			$pidList = implode(',', $GLOBALS['TYPO3_DB']->cleanIntArray($tree->ids));
+			$this->pidSelect = 'pid IN (' . $pidList . ')';
 		} else {
 			$this->pidSelect = 'pid='.intval($id);
 		}
@@ -225,9 +253,17 @@ class recordList extends t3lib_recordList {
 					// Load full table definitions:
 				t3lib_div::loadTCA($tableName);
 
-					// Hide tables which are configured via TSConfig not to be shown (also works for admins):
-				if (isset($this->tableTSconfigOverTCA[$tableName.'.']['hideTable']) ? $this->tableTSconfigOverTCA[$tableName.'.']['hideTable'] :
-						(t3lib_div::inList($this->hideTables, $tableName) ? true : $GLOBALS['TCA'][$tableName]['ctrl']['hideTable'])) {
+					// Don't show table if hidden by TCA ctrl section
+				$hideTable = $GLOBALS['TCA'][$tableName]['ctrl']['hideTable'] ? TRUE : FALSE;
+					// Don't show table if hidden by pageTSconfig mod.web_list.hideTables
+				if (in_array($tableName, t3lib_div::trimExplode(',', $this->hideTables))) {
+					$hideTable = TRUE;
+				}
+					// Override previous selection if table is enabled or hidden by TSconfig TCA override mod.web_list.table
+				if (isset($this->tableTSconfigOverTCA[$tableName.'.']['hideTable'])) {
+					$hideTable = $this->tableTSconfigOverTCA[$tableName.'.']['hideTable'] ? TRUE : FALSE;
+				}
+				if ($hideTable) {
 					continue;
 				}
 
@@ -435,8 +471,15 @@ class recordList extends t3lib_recordList {
 	 * @param	string		Field list to select, * for all (for "SELECT [fieldlist] FROM ...")
 	 * @return	array		Returns query array
 	 */
-	function makeQueryArray($table, $id, $addWhere="",$fieldList='*')	{
-		global $TCA;
+	function makeQueryArray($table, $id, $addWhere='', $fieldList='*')	{
+		global $TCA, $TYPO3_CONF_VARS;
+
+		$hookObjectsArr = array();
+		if (is_array ($TYPO3_CONF_VARS['SC_OPTIONS']['typo3/class.db_list.inc']['makeQueryArray'])) {
+			foreach ($TYPO3_CONF_VARS['SC_OPTIONS']['typo3/class.db_list.inc']['makeQueryArray'] as $classRef) {
+				$hookObjectsArr[] = t3lib_div::getUserObj($classRef);
+			}
+		}
 
 			// Set ORDER BY:
 		$orderBy = ($TCA[$table]['ctrl']['sortby']) ? 'ORDER BY '.$TCA[$table]['ctrl']['sortby'] : $TCA[$table]['ctrl']['default_sortby'];
@@ -471,6 +514,19 @@ class recordList extends t3lib_recordList {
 			'LIMIT' => $limit
 		);
 
+			// Apply hook as requested in http://bugs.typo3.org/view.php?id=4361
+		foreach ($hookObjectsArr as $hookObj) {
+			if (method_exists($hookObj, 'makeQueryArray_post')) {
+				$_params = array(
+					'orderBy' => $orderBy,
+					'limit' => $limit,
+					'pC' => $pC,
+					'search' => $search,
+				);
+				$hookObj->makeQueryArray_post($queryParts, $this, $table, $id, $addWhere, $fieldList, $_params);
+			}
+		}
+
 			// Return query:
 		return $queryParts;
 	}
@@ -483,13 +539,11 @@ class recordList extends t3lib_recordList {
 	 * @see makeQueryArray()
 	 */
 	function setTotalItems($queryParts)	{
-		$result = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-					'count(*)',
-					$queryParts['FROM'],
-					$queryParts['WHERE']
-				);
-		list($rCount) = $GLOBALS['TYPO3_DB']->sql_fetch_row($result);
-		$this->totalItems = $rCount;
+		$this->totalItems = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'*',
+			$queryParts['FROM'],
+			$queryParts['WHERE']
+		);
 	}
 
 	/**
@@ -513,7 +567,7 @@ class recordList extends t3lib_recordList {
 
 				// Traverse the configured columns and add all columns that can be searched:
 			foreach($TCA[$table]['columns'] as $fieldName => $info)	{
-				if ($info['config']['type']=='text' || ($info['config']['type']=='input' && !ereg('date|time|int',$info['config']['eval'])))	{
+				if ($info['config']['type']=='text' || ($info['config']['type']=='input' && !preg_match('/date|time|int/',$info['config']['eval'])))	{
 					$sfields[]=$fieldName;
 				}
 			}
@@ -563,7 +617,7 @@ class recordList extends t3lib_recordList {
 		if (!strcmp($code,'')) {
 			$code = '<i>['.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.no_title',1).']</i> - '.htmlspecialchars(t3lib_div::fixed_lgd_cs(t3lib_BEfunc::getRecordTitle($table,$row),$GLOBALS['BE_USER']->uc['titleLen']));
 		} else {
-			$code = htmlspecialchars(t3lib_div::fixed_lgd_cs($code, t3lib_div::intval_positive($GLOBALS['BE_USER']->uc['titleLen']) ? $GLOBALS['BE_USER']->uc['titleLen'] : $this->fixedL));
+			$code = htmlspecialchars(t3lib_div::fixed_lgd_cs($code, $this->fixedL));
 			if ($code != htmlspecialchars($origCode)) {
 				$code = '<span title="'.htmlspecialchars($origCode).'">'.$code.'</span>';
 			}
@@ -649,7 +703,7 @@ class recordList extends t3lib_recordList {
 	 * @return	string		URL
 	 */
 	function listURL($altId='',$table=-1,$exclList='')	{
-		return $this->script.
+		return $GLOBALS['BACK_PATH'] . $this->script.
 			'?id='.(strcmp($altId,'')?$altId:$this->id).
 			'&table='.rawurlencode($table==-1?$this->table:$table).
 			($this->thumbs?'&imagemode='.$this->thumbs:'').
@@ -774,8 +828,7 @@ class recordList extends t3lib_recordList {
 				$returnUrl = '&returnUrl='.rawurlencode($this->listURL());
 				$location = $GLOBALS['BACK_PATH'].'alt_doc.php?'.$params.$returnUrl;
 
-				header('Location: '.t3lib_div::locationHeaderUrl($location));
-				exit;
+				t3lib_utility_Http::redirect($location);
 			}
 		}
 	}

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Front End session user. Login and session data
  * Included from index_ts.php
  *
- * $Id: class.tslib_feuserauth.php 4846 2009-01-24 14:47:29Z ingmars $
+ * $Id: class.tslib_feuserauth.php 6804 2010-01-18 16:06:31Z benni $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -105,6 +105,7 @@ class tslib_feUserAuth extends t3lib_userAuth {
 	var $auth_timeout_field = 6000;				// Server session lifetime. If > 0: session-timeout in seconds. If false or <0: no timeout. If string: The string is a fieldname from the usertable where the timeout can be found.
 
 	var $lifetime = 0;				// Client session lifetime. 0 = Session-cookies. If session-cookies, the browser will stop the session when the browser is closed. Otherwise this specifies the lifetime of a cookie that keeps the session.
+	protected $sessionDataLifetime = 86400;		// Lifetime of session data in seconds.
 	var $sendNoCacheHeaders = 0;
 	var $getFallBack = 1;						// If this is set, authentication is also accepted by the _GET. Notice that the identification is NOT 128bit MD5 hash but reduced. This is done in order to minimize the size for mobile-devices, such as WAP-phones
 	var $getMethodEnabled = 1;					// Login may be supplied by url.
@@ -132,6 +133,7 @@ class tslib_feUserAuth extends t3lib_userAuth {
 	var $sesData = Array();
 	var $sesData_change = 0;
 	var $userData_change = 0;
+	protected $sessionDataTimestamp;
 
 
 	/**
@@ -144,6 +146,11 @@ class tslib_feUserAuth extends t3lib_userAuth {
 		if (intval($this->auth_timeout_field)>0 && intval($this->auth_timeout_field) < $this->lifetime)	{
 				// If server session timeout is non-zero but less than client session timeout: Copy this value instead.
 			$this->auth_timeout_field = $this->lifetime;
+		}
+
+		$this->sessionDataLifetime = intval($GLOBALS['TYPO3_CONF_VARS']['FE']['sessionDataLifetime']);
+		if ($this->sessionDataLifetime <= 0) {
+			$this->sessionDataLifetime = 86400;
 		}
 
 		parent::start();
@@ -366,11 +373,9 @@ class tslib_feUserAuth extends t3lib_userAuth {
 			$dbres = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'fe_session_data', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, 'fe_session_data'));
 			if ($sesDataRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($dbres))	{
 				$this->sesData = unserialize($sesDataRow['content']);
+				$this->sessionDataTimestamp = $sesDataRow['tstamp'];
 			}
-		}
-			// delete old data:
-		if ((rand()%100) <= 1) {		// a possibility of 1 % for garbage collection.
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('fe_session_data', 'tstamp < '.intval(time()-3600*24));		// all data older than 24 hours are deleted.
+			$GLOBALS['TYPO3_DB']->sql_free_result($dbres);
 		}
 	}
 
@@ -392,12 +397,37 @@ class tslib_feUserAuth extends t3lib_userAuth {
 				$insertFields = array (
 					'hash' => $this->id,
 					'content' => serialize($this->sesData),
-					'tstamp' => time()
+					'tstamp' => $GLOBALS['EXEC_TIME'],
 				);
-				$GLOBALS['TYPO3_DB']->exec_DELETEquery('fe_session_data', 'hash='.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, 'fe_session_data'));
+				$this->removeSessionData();
 				$GLOBALS['TYPO3_DB']->exec_INSERTquery('fe_session_data', $insertFields);
 			}
 		}
+	}
+
+	/**
+	 * Removes data of the current session.
+	 *
+	 * @return	void
+	 */
+	public function removeSessionData() {
+		$GLOBALS['TYPO3_DB']->exec_DELETEquery(
+			'fe_session_data',
+			'hash=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, 'fe_session_data')
+		);
+	}
+
+	/**
+	 * Executes the garbage collection of session data and session.
+	 * The lifetime of session data is defined by $TYPO3_CONF_VARS['FE']['sessionDataLifetime'].
+	 *
+	 * @return	void
+	 */
+	public function gc() {
+		$timeoutTimeStamp = intval($GLOBALS['EXEC_TIME'] - $this->sessionDataLifetime);
+		$GLOBALS['TYPO3_DB']->exec_DELETEquery('fe_session_data', 'tstamp < ' . $timeoutTimeStamp);
+
+		parent::gc();
 	}
 
 	/**
@@ -461,10 +491,12 @@ class tslib_feUserAuth extends t3lib_userAuth {
 	 */
 	function record_registration($recs,$maxSizeOfSessionData=0)	{
 
-			// Storing value ONLY if there is a confirmed cookie set (->cookieID), otherwise a shellscript could easily be spamming the fe_sessions table with bogus content and thus bloat the database
-		if (!$maxSizeOfSessionData || $this->cookieId===$this->id)	{
+			// Storing value ONLY if there is a confirmed cookie set (->cookieID), 
+			// otherwise a shellscript could easily be spamming the fe_sessions table
+			// with bogus content and thus bloat the database
+		if (!$maxSizeOfSessionData || $this->cookieId) {
 			if ($recs['clear_all'])	{
-				$this->setKey('ses','recs','');
+				$this->setKey('ses', 'recs', array());
 			}
 			$change=0;
 			$recs_array=$this->getKey('ses','recs');
@@ -511,6 +543,7 @@ class tslib_feUserAuth extends t3lib_userAuth {
 					$count = true;
 					$this->sesData = unserialize($sesDataRow['content']);
 				}
+				$GLOBALS['TYPO3_DB']->sql_free_result($dbres);
 			}
 		}
 
@@ -526,6 +559,7 @@ class tslib_feUserAuth extends t3lib_userAuth {
 				if ($sesDataRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($dbres)) {
 					$count = true;
 				}
+				$GLOBALS['TYPO3_DB']->sql_free_result($dbres);
 			}
 		}
 
@@ -537,4 +571,5 @@ class tslib_feUserAuth extends t3lib_userAuth {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_feuserauth.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/class.tslib_feuserauth.php']);
 }
+
 ?>

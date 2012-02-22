@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -35,7 +35,7 @@
  *
  * If you want to integrate a context menu in your scripts, please see template::getContextMenuCode()
  *
- * $Id: alt_clickmenu.php 4727 2009-01-16 08:50:31Z steffenk $
+ * $Id: alt_clickmenu.php 6500 2009-11-23 18:27:51Z steffenk $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -118,8 +118,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_clipboard.php');
-require_once(PATH_t3lib.'class.t3lib_ajax.php');
 $LANG->includeLLFile('EXT:lang/locallang_misc.xml');
 
 
@@ -268,6 +266,12 @@ class clickMenu {
 		if ($table=='pages' && in_array($uid,$GLOBALS['BE_USER']->returnWebmounts()))	{	// DB mount
 			$DBmount = TRUE;
 		}
+			// used to hide cut,copy icons for l10n-records
+		$l10nOverlay = false;
+			// should only be performed for overlay-records within the same table
+		if (t3lib_BEfunc::isTableLocalizable($table) && !isset($TCA[$table]['ctrl']['transOrigPointerTable'])) {
+			$l10nOverlay = intval($this->rec[$TCA[$table]['ctrl']['transOrigPointerField']]) != 0;
+		}
 
 			// If record found (or root), go ahead and fill the $menuItems array which will contain data for the elements to render.
 		if (is_array($this->rec) || $root)	{
@@ -299,9 +303,9 @@ class clickMenu {
 			$menuItems['spacer1']='spacer';
 
 				// Copy:
-			if(!in_array('copy',$this->disabledItems) && !$root && !$DBmount)	$menuItems['copy']=$this->DB_copycut($table,$uid,'copy');
+			if (!in_array('copy', $this->disabledItems) && !$root && !$DBmount && !$l10nOverlay)	$menuItems['copy'] = $this->DB_copycut($table, $uid, 'copy');
 				// Cut:
-			if(!in_array('cut',$this->disabledItems) && !$root && !$DBmount)	$menuItems['cut']=$this->DB_copycut($table,$uid,'cut');
+			if (!in_array('cut', $this->disabledItems) && !$root && !$DBmount && !$l10nOverlay)	$menuItems['cut'] = $this->DB_copycut($table, $uid, 'cut');
 
 				// Paste:
 			$elFromAllTables = count($this->clipObj->elFromTable(''));
@@ -627,7 +631,7 @@ class clickMenu {
 	 * @param	integer		page uid to edit (PID)
 	 * @return	array		Item array, element in $menuItems
 	 * @internal
-	 * @deprecated		Use DB_editPageProperties instead
+	 * @deprecated since TYPO3 4.0 - Use DB_editPageProperties instead
 	 */
 	function DB_editPageHeader($uid)	{
 		return $this->DB_editPageProperties($uid);
@@ -729,7 +733,10 @@ class clickMenu {
 		$editOnClick='';
 		$loc='top.content'.($this->listFrame && !$this->alwaysContentFrame ?'.list_frame':'');
 		if($GLOBALS['BE_USER']->jsConfirmation(4))	{
-			$conf = "confirm(".$GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.delete'),$elInfo[0]).t3lib_BEfunc::referenceCount($table,$uid,' (There are %s reference(s) to this record!)')).")";
+			$conf = "confirm(".$GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.delete'),$elInfo[0]) .
+						t3lib_BEfunc::referenceCount($table,$uid,' (There are %s reference(s) to this record!)') .
+						t3lib_BEfunc::translationCount($table, $uid, ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.translationsOfRecord'))
+					) . ")";
 		} else {
 			$conf = '1==1';
 		}
@@ -799,18 +806,18 @@ class clickMenu {
 	 * @return	array		Item array, element in $menuItems
 	 */
 	function DB_changeFlag($table, $rec, $flagField, $title, $name, $iconRelPath='gfx/')    {
-	    $uid = $rec['_ORIG_uid'] ? $rec['_ORIG_uid'] : $rec['uid'];
-	    $editOnClick='';
-	    $loc='top.content'.($this->listFrame && !$this->alwaysContentFrame ?'.list_frame':'');
-	    $editOnClick = 'if(' . $loc . '){' . $loc . ".location.href=top.TS.PATH_typo3+'tce_db.php?redirect='+top.rawurlencode(" . $this->frameLocation($loc . '.document') . ")+'" .
-	        "&data[".$table.']['.$uid.']['.$flagField.']='.($rec[$flagField]?0:1).'&prErr=1&vC='.$GLOBALS['BE_USER']->veriCode()."';hideCM();}";
+		$uid = $rec['_ORIG_uid'] ? $rec['_ORIG_uid'] : $rec['uid'];
+		$editOnClick='';
+		$loc='top.content'.($this->listFrame && !$this->alwaysContentFrame ?'.list_frame':'');
+		$editOnClick = 'if(' . $loc . '){' . $loc . ".location.href=top.TS.PATH_typo3+'tce_db.php?redirect='+top.rawurlencode(" . $this->frameLocation($loc . '.document') . ")+'" .
+			"&data[".$table.']['.$uid.']['.$flagField.']='.($rec[$flagField]?0:1).'&prErr=1&vC='.$GLOBALS['BE_USER']->veriCode()."';hideCM();}";
 
-	    return $this->linkItem(
-	        $title,
-	        $this->excludeIcon('<img'.t3lib_iconWorks::skinImg($this->PH_backPath,$iconRelPath.'button_'.($rec[$flagField]?'un':'').$name.'.gif','width="11" height="10"').' alt="" />'),
-	        $editOnClick.'return false;',
-	        1
-	    );
+		return $this->linkItem(
+			$title,
+			$this->excludeIcon('<img'.t3lib_iconWorks::skinImg($this->PH_backPath,$iconRelPath.'button_'.($rec[$flagField]?'un':'').$name.'.gif','width="11" height="10"').' alt="" />'),
+			$editOnClick.'return false;',
+			1
+		);
 	}
 
 
@@ -835,7 +842,7 @@ class clickMenu {
 	function printFileClickMenu($path)	{
 		$menuItems=array();
 
-		if (@file_exists($path) && t3lib_div::isAllowedAbsPath($path))	{
+		if (file_exists($path) && t3lib_div::isAllowedAbsPath($path))	{
 			$fI = pathinfo($path);
 			$icon = is_dir($path) ? 'folder.gif' : t3lib_BEfunc::getFileIcon(strtolower($fI['extension']));
 			$size=' ('.t3lib_div::formatSize(filesize($path)).'bytes)';
@@ -846,7 +853,10 @@ class clickMenu {
 				// rename
 			if (!in_array('rename',$this->disabledItems))	$menuItems['rename']=$this->FILE_launch($path,'file_rename.php','rename','rename.gif');
 				// upload
-			if (!in_array('upload',$this->disabledItems) && is_dir($path)) $menuItems['upload']=$this->FILE_launch($path,'file_upload.php','upload','upload.gif',TRUE);
+			if (!in_array('upload',$this->disabledItems) && is_dir($path)) {
+				$menuItems['upload'] = $this->FILE_upload($path);
+			}
+
 				// new
 			if (!in_array('new',$this->disabledItems) && is_dir($path)) $menuItems['new']=$this->FILE_launch($path,'file_newfolder.php','new','new_file.gif');
 				// info
@@ -921,6 +931,32 @@ class clickMenu {
 			$this->excludeIcon('<img'.t3lib_iconWorks::skinImg($this->PH_backPath,'gfx/'.$image,'width="12" height="12"').' alt="" />'),
 			$editOnClick.'return hideCM();'
 		);
+	}
+
+	/**
+	 * function for adding an upload entry to the $menuItems array
+	 *
+	 * @param	string		Path to the file/directory (target)
+	 * @return	array		Item array, element in $menuItems
+	 * @internal
+	 */
+	function FILE_upload($path) {
+		$script = 'file_upload.php';
+		$type = 'upload';
+		$image = 'upload.gif';
+		if ($GLOBALS['BE_USER']->uc['enableFlashUploader']) {
+			$loc='top.content'.(!$this->alwaysContentFrame?'.list_frame':'');
+
+			$editOnClick = 'if (top.TYPO3.FileUploadWindow.isFlashAvailable()) { initFlashUploader("' . rawurlencode($path) . '"); } else if(' . $loc . '){' . $loc . ".location.href=top.TS.PATH_typo3+'".$script.'?target=' . rawurlencode($path) . "';}";
+
+			return $this->linkItem(
+				$this->label($type),
+				$this->excludeIcon('<img'.t3lib_iconWorks::skinImg($this->PH_backPath,'gfx/'.$image,'width="12" height="12"').' alt="" />'),
+				$editOnClick.'return hideCM();'
+				);
+		} else {
+			return $this->FILE_launch($path, $script, $type, $image, true);
+		}
 	}
 
 	/**
@@ -1283,9 +1319,9 @@ class clickMenu {
 					</tr>';
 			} else {	// Just make normal element:
 				$onClick=$i[3];
-				$onClick=eregi_replace('return[[:space:]]+hideCM\(\)[[:space:]]*;','',$onClick);
-				$onClick=eregi_replace('return[[:space:]]+false[[:space:]]*;','',$onClick);
-				$onClick=eregi_replace('hideCM\(\);','',$onClick);
+				$onClick=preg_replace('/return[[:space:]]+hideCM\(\)[[:space:]]*;/i','',$onClick);
+				$onClick=preg_replace('/return[[:space:]]+false[[:space:]]*;/i','',$onClick);
+				$onClick=preg_replace('/hideCM\(\);/i','',$onClick);
 				if (!$i[5])	$onClick.='Clickmenu.hideAll();';
 
 				if ($GLOBALS['TYPO3_CONF_VARS']['BE']['useOnContextMenuHandler'])   {
@@ -1604,7 +1640,6 @@ class SC_alt_clickmenu {
 			// Initialize template object
 		if (!$this->ajax)	{
 			$this->doc = t3lib_div::makeInstance('template');
-			$this->doc->docType='xhtml_trans';
 			$this->doc->backPath = $BACK_PATH;
 		}
 
@@ -1720,17 +1755,10 @@ class SC_alt_clickmenu {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_clickmenu.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_clickmenu.php']);
 }
-
-
-
-
-
-
-
 
 
 
@@ -1743,4 +1771,5 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

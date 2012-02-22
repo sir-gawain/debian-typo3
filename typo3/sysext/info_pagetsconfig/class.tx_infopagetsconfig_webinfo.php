@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -45,25 +45,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once(PATH_t3lib.'class.t3lib_tsparser_ext.php');
-require_once(PATH_t3lib.'class.t3lib_extobjbase.php');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Page TSconfig viewer
  *
@@ -116,7 +97,7 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 		global $LANG;
 
 		$menu = t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[tsconf_parts]',$this->pObj->MOD_SETTINGS['tsconf_parts'],$this->pObj->MOD_MENU['tsconf_parts']);
-		$menu .= '<br /><label for="checkTsconf_alphaSort">Sort alphabetically:</label> '.t3lib_BEfunc::getFuncCheck($this->pObj->id,'SET[tsconf_alphaSort]',$this->pObj->MOD_SETTINGS['tsconf_alphaSort'],'','','id="checkTsconf_alphaSort"');
+		$menu .= '<br /><label for="checkTsconf_alphaSort">' . $GLOBALS['LANG']->getLL('sort_alphabetic', true) . '</label> ' . t3lib_BEfunc::getFuncCheck($this->pObj->id, 'SET[tsconf_alphaSort]', $this->pObj->MOD_SETTINGS['tsconf_alphaSort'], '', '', 'id="checkTsconf_alphaSort"');
 		$menu .= '<br /><br />';
 
 		if ($this->pObj->MOD_SETTINGS['tsconf_parts']==99)	{
@@ -167,13 +148,13 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 
 
 			$theOutput.= $this->pObj->doc->section($LANG->getLL('tsconf_title'),
-				t3lib_BEfunc::cshItem('_MOD_'.$GLOBALS['MCONF']['name'],'tsconfig_edit',$GLOBALS['BACK_PATH'],'|<br/>').
+				t3lib_BEfunc::cshItem('_MOD_' . $GLOBALS['MCONF']['name'], 'tsconfig_edit', $GLOBALS['BACK_PATH'], '|<br />') .
 					$menu.
 					'
 					<br /><br />
 
 					<!-- Edit fields: -->
-					<table border="0" cellpadding="0" cellspacing="1">'.implode('',$lines).'</table><br/>'.$editIcon,
+					<table border="0" cellpadding="0" cellspacing="1">' . implode('', $lines) . '</table><br />' . $editIcon,
 				0,
 				1
 			);
@@ -236,7 +217,7 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 			if (!is_array($modTSconfig))	$modTSconfig = array();
 
 			$theOutput.= $this->pObj->doc->section($LANG->getLL('tsconf_title'),
-					t3lib_BEfunc::cshItem('_MOD_'.$GLOBALS['MCONF']['name'],'tsconfig_hierarchy',$GLOBALS['BACK_PATH'],'|<br/>').
+					t3lib_BEfunc::cshItem('_MOD_' . $GLOBALS['MCONF']['name'], 'tsconfig_hierarchy', $GLOBALS['BACK_PATH'], '|<br />') .
 					$menu.
 					'
 

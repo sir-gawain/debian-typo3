@@ -6,7 +6,7 @@
 *
 *  Copyright notice
 *
-*  (c) 2006-2008	Benjamin Mack <www.xnos.org>
+*  (c) 2006-2009 Benjamin Mack <benni@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 t3lib/ library provided by
@@ -20,7 +20,7 @@
 *
 *  This copyright notice MUST APPEAR in all copies of this script
 *
-*  TYPO3 SVN ID: $Id: tree.js 2911 2008-01-15 22:49:57Z ingorenner $
+*  TYPO3 SVN ID: $Id: tree.js 9723 2010-12-01 13:14:30Z ohader $
 *
 ***************************************************************/
 
@@ -49,8 +49,10 @@ var Tree = {
 		// immediately collapse the subtree and change the plus to a minus when collapsing
 		// without waiting for the response
 		if (!isExpand) {
-			var ul = obj.parentNode.getElementsByTagName('ul')[0];
-			obj.parentNode.removeChild(ul); // no remove() directly because of IE 5.5
+			var ul = obj.parentNode.parentNode.getElementsByTagName('ul')[0];
+			if (ul) {
+				obj.parentNode.parentNode.removeChild(ul); // no remove() directly because of IE 5.5
+			}
 			var pm = Selector.findChildElements(obj.parentNode, ['.pm'])[0]; // Getting pm object by CSS selector (because document.getElementsByClassName() doesn't seem to work on Konqueror)
 			if (pm) {
 				pm.onclick = null;
@@ -66,7 +68,7 @@ var Tree = {
 			parameters: 'ajaxID=' + this.ajaxID + '&PM=' + params,
 			onComplete: function(xhr) {
 				// the parent node needs to be overwritten, not the object
-				$(obj.parentNode).replace(xhr.responseText);
+				$(obj.parentNode.parentNode).replace(xhr.responseText);
 				this.registerDragDropHandlers();
 				this.reSelectActiveItem();
 				filter($('_livesearch').value);
@@ -82,8 +84,9 @@ var Tree = {
 	refresh: function() {
 		var r = new Date();
 		// randNum is useful so pagetree does not get cached in browser cache when refreshing
-		var search = window.location.search.replace(/&randNum=\d+/, '');
-		window.location.search = search+'&randNum=' + r.getTime();
+		var loc = window.location.href.replace(/&randNum=\d+|#.*/g, '');
+		var addSign = loc.indexOf('?') > 0 ? '&' : '?';
+		window.location = loc + addSign + 'randNum=' + r.getTime();
 	},
 
 	// attaches the events to the elements needed for the drag and drop (for the titles and the icons)

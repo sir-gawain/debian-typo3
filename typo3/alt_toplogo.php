@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Top logo frame
  * Displays the logo in the top frame (upper left corner)
  *
- * $Id: alt_toplogo.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: alt_toplogo.php 5174 2009-03-10 20:23:43Z ohader $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant content
  *
@@ -76,8 +76,6 @@ class SC_alt_toplogo {
 		global $TBE_TEMPLATE,$TBE_STYLES;
 
 			// Start page
-		$TBE_TEMPLATE->docType = 'xhtml_trans';
-
 		$this->content.=$TBE_TEMPLATE->startPage('Logo frame');
 
 			// Set logo:
@@ -98,19 +96,10 @@ class SC_alt_toplogo {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_toplogo.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_toplogo.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -118,4 +107,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_t
 $SOBE = t3lib_div::makeInstance('SC_alt_toplogo');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

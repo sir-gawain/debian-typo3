@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Sebastian Kurfuerst <sebastian@garbage-group.de>
+*  (c) 1999-2009 Sebastian Kurfuerst <sebastian@garbage-group.de>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,10 @@
 
 /**
  * Contains the update class for not in menu pages. Used by the update wizard in the install tool.
- * 
+ *
  * @author Sebastian Kurfuerst <sebastian@garbage-group.de>
  * @author Steffen Kamper <info@sk-typo3.de>
- * @version $Id: class.tx_coreupdates_notinmenu.php 3078 2008-02-05 18:36:07Z ohader $
+ * @version $Id: class.tx_coreupdates_notinmenu.php 5489 2009-05-23 15:26:20Z ohader $
  */
 class tx_coreupdates_notinmenu {
 	var $versionNumber;	// version number coming from t3lib_div::int_from_ver()
@@ -82,7 +82,7 @@ class tx_coreupdates_notinmenu {
 
 			$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('pages', 'doktype=5', $updateArray);
 			$dbQueries[] = str_replace(chr(10), ' ', $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery);
-			
+
 			if ($GLOBALS['TYPO3_DB']->sql_error()) {
 				$customMessages = 'SQL-ERROR: ' . htmlspecialchars($GLOBALS['TYPO3_DB']->sql_error());
 			} else {

@@ -51,9 +51,11 @@
  * @author      Matt Knapp <mdknapp[at]gmail[dot]com>
  * @author      Brett Stimmerman <brettstimmerman[at]gmail[dot]com>
  * @copyright   2005 Michal Migurski
- * @version     $Id: json.php 3437 2008-03-16 16:22:11Z flyguide $
+ * @version     $Id: json.php 4432 2008-11-07 03:52:22Z flyguide $
  * @license     http://www.opensource.org/licenses/bsd-license.php
  * @link        http://pear.php.net/pepr/pepr-proposal-show.php?id=198
+ * @deprecated	since TYPO3 4.3, will be removed in TYPO3 4.5
+ * 				(applies to the whole package at typo3/contrib/json/)
  */
 
 /**

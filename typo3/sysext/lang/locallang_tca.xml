@@ -29,8 +29,8 @@
 			<label index="be_users.disableIPlock">Disable IP lock for user:</label>
 			<label index="be_users.admin">Admin(!):</label>
 			<label index="be_users.options">Mount from groups:</label>
-			<label index="be_users.options_db_mounts">DB Mounts</label>
-			<label index="be_users.options_file_mounts">File Mounts</label>
+			<label index="be_users.options_db_mounts">DB Mounts:</label>
+			<label index="be_users.options_file_mounts">File Mounts:</label>
 			<label index="be_users.fileoper_perms">Fileoperation permissions:</label>
 			<label index="be_users.fileoper_perms_general">Files: Upload,Copy,Move,Delete,Rename,New,Edit</label>
 			<label index="be_users.fileoper_perms_unzip">Files: Unzip</label>
@@ -55,6 +55,12 @@
 			<label index="be_groups.subgroup">Sub Groups:</label>
 			<label index="be_groups.tabs.base_rights">Access Lists</label>
 			<label index="be_groups.tabs.mounts_and_workspaces">Mounts and Workspaces</label>
+			<label index="be_groups.fileoper_perms">Fileoperation permissions:</label>
+			<label index="be_groups.fileoper_perms_general">Files: Upload,Copy,Move,Delete,Rename,New,Edit</label>
+			<label index="be_groups.fileoper_perms_unzip">Files: Unzip</label>
+			<label index="be_groups.fileoper_perms_diroper_perms">Directory: Move,Delete,Rename,New</label>
+			<label index="be_groups.fileoper_perms_diroper_perms_copy">Directory: Copy</label>
+			<label index="be_groups.fileoper_perms_diroper_perms_delete">Directory: Delete recursively (rm -Rf)</label>
 			<label index="be_groups.tabs.options">Options</label>
 			<label index="be_groups.tabs.extended">Extended</label>
 			<label index="sys_filemounts.tabs.users">Users</label>

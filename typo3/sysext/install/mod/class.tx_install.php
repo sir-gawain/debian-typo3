@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains the class for the Install Tool
  *
- * $Id: class.tx_install.php 4783 2009-01-20 11:20:27Z flyguide $
+ * $Id: class.tx_install.php 9769 2010-12-16 13:37:08Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @author	Ingmar Schlecht <ingmar@typo3.org>
@@ -39,7 +39,7 @@
  *
  *  162: class tx_install extends t3lib_install
  *  234:     function tx_install()
- *  318:     function checkPassword($uKey)
+ *  318:     function checkPassword()
  *  362:     function loginForm()
  *  396:     function init()
  *  574:     function stepOutput()
@@ -142,20 +142,19 @@
  *
  */
 
-
-
-
-
-
-
-require_once (PATH_t3lib.'class.t3lib_install.php');
-require_once (PATH_t3lib.'class.t3lib_stdgraphic.php');
+// include requirements definition:
+require_once(t3lib_extMgm::extPath('install') . 'requirements.php');
 
 // include update classes
 require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_compatversion.php');
+require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_cscsplit.php');
 require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_notinmenu.php');
 require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_mergeadvanced.php');
-
+require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_installsysexts.php');
+require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_imagescols.php');
+require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_installversioning.php');
+require_once(t3lib_extMgm::extPath('install').'updates/class.tx_coreupdates_installnewsysexts.php');
+require_once(t3lib_extMgm::extPath('install') . 'mod/class.tx_install_session.php');
 
 /**
  * Install Tool module
@@ -172,8 +171,8 @@ class tx_install extends t3lib_install {
 	var $getTTF_string_alt = 'with freetype';       // Used to identify whether TTF-lib is included with GD
 	var $action = '';		// The url that calls this script
 	var $scriptSelf = 'index.php';		// The url that calls this script
-	var $fontTag2='<span class="bodytext">';
-	var $fontTag1='<span class="smalltext">';
+	var $fontTag2='<div class="bodytext">';
+	var $fontTag1='<div class="smalltext">';
 	var $updateIdentity = 'TYPO3 Install Tool';
 	var $headerStyle ='';
 	var $contentBeforeTable='';
@@ -211,6 +210,12 @@ class tx_install extends t3lib_install {
 		'no_database' => 0
 	);
 	var $typo3temp_path='';
+	/**
+	 * the session handling object
+	 *
+	 * @var tx_install_session
+	 */
+	protected $session = NULL;
 
 	var $menuitems = array(
 		'config' => 'Basic Configuration',
@@ -224,7 +229,6 @@ class tx_install extends t3lib_install {
 		'typo3conf_edit' => 'Edit files in typo3conf/',
 		'about' => 'About'
 	);
-	var $cookie_name = 'Typo3InstallTool';
 	var $JSmessage = '';
 
 
@@ -255,11 +259,26 @@ class tx_install extends t3lib_install {
 			// ****************************
 		$this->INSTALL = t3lib_div::_GP('TYPO3_INSTALL');
 		$this->mode = t3lib_div::_GP('mode');
-		$this->step = t3lib_div::_GP('step');
-		$this->redirect_url = t3lib_div::_GP('redirect_url');
+		if ($this->mode !== '123') {
+			$this->mode = '';
+		}
+		if (t3lib_div::_GP('step') === 'go') {
+			$this->step = 'go';
+		} else {
+			$this->step = intval(t3lib_div::_GP('step'));
+		}
+		$this->redirect_url = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('redirect_url'));
 
-		if ($_GET['TYPO3_INSTALL']['type'])	{
-			$this->INSTALL['type'] = $_GET['TYPO3_INSTALL']['type'];
+		$this->INSTALL['type'] = '';
+		if ($_GET['TYPO3_INSTALL']['type']) {
+			$allowedTypes = array(
+				'config', 'database', 'update', 'images', 'extConfig',
+				'typo3temp', 'cleanup', 'phpinfo', 'typo3conf_edit', 'about'
+			);
+
+			if (in_array($_GET['TYPO3_INSTALL']['type'], $allowedTypes)) {
+				$this->INSTALL['type'] = $_GET['TYPO3_INSTALL']['type'];
+			}
 		}
 
 		if ($this->step == 3) {
@@ -281,18 +300,26 @@ class tx_install extends t3lib_install {
 			}
 		}
 
-		$this->action = $this->scriptSelf.'?TYPO3_INSTALL[type]='.$this->INSTALL['type'].($this->mode?'&mode='.rawurlencode($this->mode):'').($this->step?'&step='.rawurlencode($this->step):'');
+		$this->action = $this->scriptSelf .
+			'?TYPO3_INSTALL[type]=' . $this->INSTALL['type'] .
+			($this->mode? '&mode=' . $this->mode : '') .
+			($this->step? '&step=' . $this->step : '');
 		$this->typo3temp_path = PATH_site.'typo3temp/';
+		if (!is_dir($this->typo3temp_path) || !is_writeable($this->typo3temp_path)) {
+			die('Install Tool needs to write to typo3temp/. Make sure this directory is writeable by your webserver: '. $this->typo3temp_path);
+		}
 
+		try {
+			$this->session = t3lib_div::makeInstance('tx_install_session');
+		} catch (Exception $exception) {
+			$this->outputErrorAndExit($exception->getMessage());
+		}
 
-			// ****************
-			// Check password
-			// ****************
-			// Getting a unique session key, used to encode the session-access cookie later...
-		$uKey = $_COOKIE[$this->cookie_name.'_key'];
-		if (!$uKey)	{
-			$uKey = md5(uniqid(microtime()));
-			SetCookie($this->cookie_name.'_key', $uKey, 0, '/');		// Cookie is set
+			// *******************
+			// Check authorization
+			// *******************
+		if (!$this->session->hasSession()) {
+			$this->session->startSession();
 
 			$this->JSmessage='SECURITY:
 Make sure to protect the Install Tool with another password than "joh316".
@@ -305,13 +332,18 @@ On behalf of PHP we regret this inconvenience.
 
 BTW: This Install Tool will only work if cookies are accepted by your web browser. If this dialog pops up over and over again you didn\'t enable cookies.
 ';
-
 		}
-			// Check if the password from TYPO3_CONF_VARS combined with uKey matches the sKey cookie. If not, ask for password.
-		$sKey = $_COOKIE[$this->cookie_name];
 
-		if (md5($GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'].'|'.$uKey) == $sKey || $this->checkPassword($uKey))	{
+		if ($this->session->isAuthorized() || $this->checkPassword())	{
 			$this->passwordOK=1;
+			$this->session->refreshSession();
+
+			$enableInstallToolFile = PATH_typo3conf . 'ENABLE_INSTALL_TOOL';
+			if (is_file ($enableInstallToolFile)) {
+					// Extend the age of the ENABLE_INSTALL_TOOL file by one hour
+				@touch($enableInstallToolFile);
+			}
+
 			if($this->redirect_url)	{
 				header('Location: '.$this->redirect_url);
 			}
@@ -321,17 +353,18 @@ BTW: This Install Tool will only work if cookies are accepted by your web browse
 	}
 
 	/**
-	 * Returns true if submitted password is ok. Else displays a form in which to enter password.
+	 * Returns true if submitted password is ok.
 	 *
-	 * @param	[type]		$uKey: ...
-	 * @return	bool		whether the submitted password is ok 
+	 * If password is ok, set session as "authorized".
+	 *
+	 * @return boolean true if the submitted password was ok and session was
+	 *                 authorized, false otherwise
 	 */
-	function checkPassword($uKey)	{
+	function checkPassword() {
 		$p = t3lib_div::_GP('password');
 
 		if ($p && md5($p)==$GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'])	{
-			$sKey = md5($GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'].'|'.$uKey);
-			SetCookie($this->cookie_name, $sKey, 0, '/');
+			$this->session->setAuthorized();
 
 				// Sending warning email
 			$wEmail = $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'];
@@ -379,7 +412,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 
 		$content = '<form action="index.php" method="post" name="passwordForm">
 			<input type="password" name="password"><br />
-			<input type="hidden" name="redirect_url" value="'.$redirect_url.'">
+			<input type="hidden" name="redirect_url" value="'.htmlspecialchars($redirect_url).'">
 			<input type="submit" value="Log in"><br />
 			<br />
 
@@ -394,7 +427,10 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 			//-->
 			</script>';
 
-		$this->message('Password', 'Enter the Install Tool Password', $content,3);
+		if (!$this->session->isAuthorized() && $this->session->isExpired()) {
+			$this->message('Password', 'Your install tool session has expired', '', 3);
+		}
+		$this->message('Password', 'Enter the Install Tool Password', $content, 0);
 		$this->output($this->outputWrapper($this->printAll()));
 	}
 
@@ -551,16 +587,16 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 
 
 					$headCode='Header legend';
+					$this->message($headCode, 'Notice!', '
+					Indicates that something is important to be aware of.
+					This does <em>not</em> indicate an error.
+					',1);
 					$this->message($headCode, 'Just information', '
 					This is a simple message with some information about something.
 					');
 					$this->message($headCode, 'Check was successful', '
 					Indicates that something was checked and returned an expected result.
 					',-1);
-					$this->message($headCode, 'Notice!', '
-					Indicates that something is important to be aware of.
-					This does <em>not</em> indicate an error.
-					',1);
 					$this->message($headCode, 'Warning!', '
 					Indicates that something may very well cause trouble and you should definitely look into it before proceeding.
 					This indicates a <em>potential</em> error.
@@ -586,7 +622,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 		$error_missingConnect='<br />
 			'.$this->fontTag2.'<img src="'.$this->backPath.'gfx/icon_fatalerror.gif" width="18" height="16" class="absmiddle">
 			There is no connection to the database!<br />
-			(Username: <i>'.TYPO3_db_username.'</i>, Password: <i>'.TYPO3_db_password.'</i>, Host: <i>'.TYPO3_db_host.'</i>).<br />
+			(Username: <i>' . htmlspecialchars(TYPO3_db_username) . '</i>, Host: <i>' . htmlspecialchars(TYPO3_db_host) . '</i>, Using Password: YES) . <br />
 			<br />
 			<strong>Go to Step 1</strong> and enter a proper username/password!</span>
 			<br />
@@ -594,7 +630,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 		';
 		$error_missingDB='<br />
 			'.$this->fontTag2.'<img src="'.$this->backPath.'gfx/icon_fatalerror.gif" width="18" height="16" class="absmiddle">
-			There is no access to the database (<i>'.TYPO3_db.'</i>)!<br />
+			There is no access to the database (<i>' . htmlspecialchars(TYPO3_db) . '</i>)!<br />
 			<br />
 			<strong>Go to Step 2</strong> and select an accessible database!</span>
 			<br />
@@ -611,19 +647,15 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 						</tr>
 					   	<tr>
 					   		<td valign="top" nowrap="nowrap">'.$this->fontTag1.'Username:</span></td>
-					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.''.TYPO3_db_username.'</span></strong></td>
-						</tr>
-					   	<tr>
-					   		<td valign="top" nowrap="nowrap">'.$this->fontTag1.'Password:</span></td>
-					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.''.TYPO3_db_password.'</span></strong></td>
+					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.'' . htmlspecialchars(TYPO3_db_username) . '</span></strong></td>
 						</tr>
 					   	<tr>
 					   		<td valign="top" nowrap="nowrap">'.$this->fontTag1.'Host:</span></td>
-					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.''.TYPO3_db_host.'</span></strong></td>
+					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.'' . htmlspecialchars(TYPO3_db_host) . '</span></strong></td>
 						</tr>
 					   	<tr>
 					   		<td valign="top" nowrap="nowrap">'.$this->fontTag1.'Database:</span></td>
-					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.''.TYPO3_db.'</span></strong></td>
+					   		<td valign="top" nowrap="nowrap"><strong>'.$this->fontTag1.'' . htmlspecialchars(TYPO3_db) . '</span></strong></td>
 						</tr>
 					   	<tr>
 					   		<td valign="top" nowrap="nowrap">'.$this->fontTag1.'# of tables:</span></td>
@@ -655,7 +687,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					   		</td>
 					   		<td valign="top">
 								  '.$this->fontTag2.'
-								  <input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_username]" value="'.TYPO3_db_username.'"></span><br />
+								  <input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_username]" value="' . htmlspecialchars(TYPO3_db_username) . '"></span><br />
 					   		</td>
 					   	</tr>
 					   	<tr>
@@ -666,7 +698,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					   		</td>
 					   		<td valign="top">
 								  '.$this->fontTag2.'
-								  <input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_password]" value="'.TYPO3_db_password.'"></span><br />
+								  <input type="password" name="TYPO3_INSTALL[localconf.php][typo_db_password]" value="' . htmlspecialchars(TYPO3_db_password) . '"></span><br />
 					   		</td>
 					   	</tr>
 					   	<tr>
@@ -677,7 +709,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					   		</td>
 					   		<td valign="top">
 								  '.$this->fontTag2.'
-								  <input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_host]" value="'.(TYPO3_db_host?TYPO3_db_host:'localhost').'"></span><br />
+								  <input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_host]" value="'.(TYPO3_db_host? htmlspecialchars(TYPO3_db_host) :'localhost').'"></span><br />
 					   		</td>
 					   	</tr>
 					   	<tr>
@@ -689,7 +721,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					   		<td valign="top">
 								  '.$this->fontTag1.'<br />
 							   <input type="hidden" name="step" value="2">
-							   <input type="hidden" name="TYPO3_INSTALL[localconf.php][encryptionKey]" value="'.md5(uniqid(rand(),true)).'">
+							   <input type="hidden" name="TYPO3_INSTALL[localconf.php][encryptionKey]" value="' . $this->createEncryptionKey() . '">
 								 <input type="hidden" name="TYPO3_INSTALL[localconf.php][compat_version]" value="'.TYPO3_branch.'">
 								  <input type="submit" value="Continue"><br /><br /><strong>NOTICE: </strong>By clicking this button, typo3conf/localconf.php is updated with new values for the parameters listed above!</span><br />
 					   		</td>
@@ -946,17 +978,10 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 		$fileList .= '<br /><br /><a href="'.$this->action.'&TYPO3_INSTALL[delTempCached]=1">Delete temp_CACHED* files</a>';
 
 		if ($fileFound && @is_file($this->INSTALL['typo3conf_files']))	{
-			$this->headerStyle = '
-			<style type="text/css"><!--
-				SELECT {font-family: Verdana,Arial,Helvetica,Sans-serif; font-size: 10px;}
-				TEXTAREA  {font-family: Verdana,Arial,Helvetica,Sans-serif; font-size: 10px;}
-				INPUT {font-family: Verdana,Arial,Helvetica,Sans-serif; font-size: 10px;}
-			//--></style>
-			';
 
 			$backupFile = $this->getBackupFilename($this->INSTALL['typo3conf_files']);
 			$fileContent = t3lib_div::getUrl($this->INSTALL['typo3conf_files']);
-			$this->contentBeforeTable.= '<form action="'.$this->action.'" method="post">'.(substr($this->INSTALL['typo3conf_files'],-1)!='~' && !strstr($this->INSTALL['typo3conf_files'],'_bak') ? '
+			$this->contentBeforeTable.= '<div class="editFile"><form action="'.$this->action.'" method="post">'.(substr($this->INSTALL['typo3conf_files'],-1)!='~' && !strstr($this->INSTALL['typo3conf_files'],'_bak') ? '
 				<input type="submit" name="TYPO3_INSTALL[SAVE_FILE]" value="Save file">&nbsp;' : '').'
 				<input type="submit" name="_close" value="Close">
 				<br />File: '.$this->INSTALL['typo3conf_files'].'
@@ -970,7 +995,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 				<input type="checkbox" name="TYPO3_INSTALL[FILE][win_to_unix_br]" id="win_to_unix_br" value="1"'.(TYPO3_OS=='WIN'?'':' checked="checked"').'> <label for="win_to_unix_br">Convert Windows linebreaks (13-10) to Unix (10)</label><br />
 				<input type="checkbox" name="TYPO3_INSTALL[FILE][backup]" id="backup" value="1"'.(@is_file($backupFile) ? ' checked="checked"' : '').'> <label for="backup">Make backup copy (rename to '.basename($backupFile).')</label><br />
 				'.
-			'</form>';
+			'</form></div>';
 		}
 
 		if ($this->contentBeforeTable)	{
@@ -994,7 +1019,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 		$sVar['CONST: PHP_OS']=PHP_OS;
 		$sVar['CONST: TYPO3_OS']=TYPO3_OS;
 		$sVar['CONST: PATH_thisScript']=PATH_thisScript;
-		$sVar['CONST: php_sapi_name()']=php_sapi_name();
+		$sVar['CONST: php_sapi_name()']=PHP_SAPI;
 		$sVar['OTHER: TYPO3_VERSION']=TYPO3_version;
 		$sVar['OTHER: PHP_VERSION']=phpversion();
 		$sVar['imagecreatefromgif()']=function_exists('imagecreatefromgif');
@@ -1028,7 +1053,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 		$buf=$this->messageFunc_nl2br;
 		$this->messageFunc_nl2br=0;
 		$this->message($headCode,'DEBUG information','Please copy/paste the information from this text field into an email or bug-report as "Debug System Information" whenever you wish to get support or report problems. This information helps others to check if your system has some obvious misconfiguration and you\'ll get your help faster!<br />
-		<form action=""><textarea rows="10" '.$this->formWidthText(80,'','off').' wrap="off" class="fixed-font">'.t3lib_div::formatForTextarea(implode(chr(10),$debugInfo)).'</textarea></form>');
+		<form action=""><textarea rows="10" '.$this->formWidthText(80,'width:100%; height:500px;','off').' wrap="off" class="fixed-font">'.t3lib_div::formatForTextarea(implode(chr(10),$debugInfo)).'</textarea></form>');
 		$this->messageFunc_nl2br=$buf;
 
 		$getEnvArray = array();
@@ -1049,20 +1074,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 		ob_end_clean();
 		$contents = explode('</body>',$contents[1]);
 
-		$this->message($headCode,'phpinfo()',$contents[0]);
-
-
-
-$this->headerStyle = '
-<style type="text/css"><!--
-a { text-decoration: none; }
-a:hover { text-decoration: underline; }
-h1 { font-family: verdana,arial, helvetica, sans-serif; font-size: 14pt; font-weight: bold;}
-h2 { font-family: verdana,arial, helvetica, sans-serif; font-size: 12pt; font-weight: bold;}
-body, td { font-family: verdana,arial, helvetica, sans-serif; font-size: 10pt; }
-th { font-family: verdana,arial, helvetica, sans-serif; font-size: 10pt; font-weight: bold; }
-//--></style>
-';
+		$this->message($headCode,'phpinfo()','<div class="phpinfo">' . $contents[0] . '</div>');
 
 		$this->output($this->outputWrapper($this->printAll()));
 	}
@@ -1115,7 +1127,7 @@ th { font-family: verdana,arial, helvetica, sans-serif; font-size: 10pt; font-we
 		$tmap=array('day'=>1, 'week'=>7, 'month'=>30);
 		$tt = $this->INSTALL['typo3temp_delete'];
 		$subdir = $this->INSTALL['typo3temp_subdir'];
-		if (strlen($subdir) && !ereg('^[[:alnum:]_]+/$',$subdir))	die('subdir "'.$subdir.'" was not allowed!');
+		if (strlen($subdir) && !preg_match('/^[[:alnum:]_]+\/$/',$subdir))	die('subdir "'.$subdir.'" was not allowed!');
 		$action = $this->INSTALL['typo3temp_action'];
 		$d = @dir($this->typo3temp_path.$subdir);
 		if (is_object($d))	{
@@ -1128,14 +1140,16 @@ th { font-family: verdana,arial, helvetica, sans-serif; font-size: 10pt; font-we
 						if (t3lib_div::testInt($tt))	{
 							if (filesize($theFile) > $tt*1024)	$ok=1;
 						} else {
-							if (fileatime($theFile) < time()-(intval($tmap[$tt])*60*60*24))	$ok=1;
+							if (fileatime($theFile) < $GLOBALS['EXEC_TIME'] - (intval($tmap[$tt]) * 60 * 60 * 24)) {
+								$ok = 1;
+							}
 						}
 					} else {
 						$ok = 1;
 					}
 					if ($ok)	{
 						$hashPart=substr(basename($theFile),-14,10);
-						if (!ereg('[^a-f0-9]',$hashPart) || substr($theFile,-6)==='.cache' || substr($theFile,-4)==='.tbl' || substr(basename($theFile),0,8)==='install_')	{		// This is a kind of check that the file being deleted has a 10 char hash in it
+						if (!preg_match('/[^a-f0-9]/',$hashPart) || substr($theFile,-6)==='.cache' || substr($theFile,-4)==='.tbl' || substr(basename($theFile),0,8)==='install_')	{		// This is a kind of check that the file being deleted has a 10 char hash in it
 							if ($action && $deleteCounter<$action)	{
 								$deleteCounter++;
 								unlink($theFile);
@@ -1267,9 +1281,7 @@ From sub-directory:
 			// Get cache_imagesizes info
 		if (isset ($tables['cache_imagesizes'])) {
 			$cleanupType['cache_imagesizes'] = 'Clear cached image sizes only';
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('COUNT(*) AS icount', 'cache_imagesizes', '');
-			$resArr = $GLOBALS['TYPO3_DB']->sql_fetch_assoc ($res);
-			$cachedImageSizesCounter = intval ($resArr['icount']);
+			$cachedImageSizesCounter = intval($GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', 'cache_imagesizes'));
 		} else {
 			$this->message($headCode,'Table cache_imagesizes does not exist!',"
 				The table cache_imagesizes was not found. Please check your database settings in Basic Configuration and compare your table definition with the Database Analyzer.
@@ -1325,10 +1337,11 @@ From sub-directory:
 					while(list($vk,$value)=each($va))	{
 						$description = trim($commentArr[1][$k][$vk]);
 						$isTextarea = preg_match('/^string \(textarea\)/i',$description) ? TRUE : FALSE;
+						$doNotRender = preg_match('/^string \(exclude\)/i', $description) ? TRUE : FALSE;
 
-						if (!is_array($value) && ($this->checkForBadString($value) || $isTextarea))	{
+						if (!is_array($value) && !$doNotRender && ($this->checkForBadString($value) || $isTextarea)) {
 							$k2 = '['.$vk.']';
-							$msg = htmlspecialchars($description).'<br /><br /><em>'.$ext.$k2.' = '.htmlspecialchars(t3lib_div::fixed_lgd($value,60)).'</em><br />';
+							$msg = htmlspecialchars($description).'<br /><br /><em>'.$ext.$k2.' = '.htmlspecialchars(t3lib_div::fixed_lgd_cs($value,60)).'</em><br />';
 
 							if ($isTextarea)	{
 								$form = '<textarea name="TYPO3_INSTALL[extConfig]['.$k.']['.$vk.']" cols="60" rows="5" wrap="off">'.htmlspecialchars($value).'</textarea>';
@@ -1336,7 +1349,7 @@ From sub-directory:
 								$form = '<input type="hidden" name="TYPO3_INSTALL[extConfig]['.$k.']['.$vk.']" value="0">';
 								$form.= '<input type="checkbox" name="TYPO3_INSTALL[extConfig]['.$k.']['.$vk.']"'.($value?' checked="checked"':'').' value="'.($value&&strcmp($value,'0')?htmlspecialchars($value):1).'">';
 							} else {
-								$form = '<input type="text" size="40" name="TYPO3_INSTALL[extConfig]['.$k.']['.$vk.']" value="'.htmlspecialchars($value).'">';
+								$form = '<input type="text" size="80" name="TYPO3_INSTALL[extConfig][' . $k . '][' . $vk . ']" value="' . htmlspecialchars($value) . '">';
 							}
 							$this->message($ext, $k2,$msg.$form);
 						}
@@ -1366,6 +1379,14 @@ From sub-directory:
 									if (preg_match('/^string \(textarea\)/i', $description))	{
 										$value = str_replace(chr(13),'',$value);	// Force Unix linebreaks in textareas
 										$value = str_replace(chr(10),"'.chr(10).'",$value);	// Preserve linebreaks
+									}
+									if (preg_match('/^boolean/i', $description)) {
+											// When submitting settings in the Install Tool, values that default to "false" or "true" in config_default.php will be sent as "0" resp. "1". Therefore, reset the values to their boolean equivalent.
+										if ($GLOBALS['TYPO3_CONF_VARS'][$k][$vk] === false && $value === '0') {
+											$value = false;
+										} elseif ($GLOBALS['TYPO3_CONF_VARS'][$k][$vk] === true && $value === '1') {
+											$value = true;
+										}
 									}
 
 									if ($doit && strcmp($GLOBALS['TYPO3_CONF_VARS'][$k][$vk],$value))	$this->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\''.$k.'\'][\''.$vk.'\']', $value);
@@ -1409,7 +1430,7 @@ From sub-directory:
 					}
 				}
 			}
-			if (!strcmp($lc,'$TYPO3_CONF_VARS = Array('))	{
+			if (!strcmp($lc, '$TYPO3_CONF_VARS = array(')) {
 				$in=1;
 			}
 		}
@@ -1490,11 +1511,12 @@ From sub-directory:
 			// Memory and functions
 			// *****************
 		$memory_limit_value = $this->convertByteSize(ini_get('memory_limit'));
-		if ($memory_limit_value && $memory_limit_value < 16*1024*1024)	{
-			$this->message($ext, 'Memory limit below 16 MB',"
-				<i>memory_limit=".ini_get('memory_limit')."</i>
-				Your system is configured to enforce a memory limit of PHP scripts lower than 16 MB. The Extension Manager needs to include more PHP-classes than will fit into this memory space. There is nothing else to do than raise the limit. To be safe, ask the system administrator of the webserver to raise the limit to over 25 MB.
-			",3);
+
+		if ($memory_limit_value && $memory_limit_value < t3lib_div::getBytesFromSizeMeasurement(TYPO3_REQUIREMENTS_MINIMUM_PHP_MEMORY_LIMIT)) {
+			$this->message($ext, 'Memory limit below ' . TYPO3_REQUIREMENTS_MINIMUM_PHP_MEMORY_LIMIT,'
+				<i>memory_limit=' . ini_get('memory_limit') . '</i>
+				Your system is configured to enforce a memory limit of PHP scripts lower than ' . TYPO3_REQUIREMENTS_MINIMUM_PHP_MEMORY_LIMIT . '. The Extension Manager needs to include more PHP-classes than will fit into this memory space. There is nothing else to do than raise the limit. To be safe, ask the system administrator of the webserver to raise the limit to over ' . TYPO3_REQUIREMENTS_MINIMUM_PHP_MEMORY_LIMIT . '.
+			',3);
 		} elseif(!$memory_limit_value) {
 			$this->message($ext, 'Memory limit',"<i>No memory limit in effect.</i>",-1);
 		} else $this->message($ext, 'Memory limit',"<i>memory_limit=".ini_get('memory_limit')."</i>",-1);
@@ -1631,6 +1653,39 @@ From sub-directory:
 				TYPO3 needs session support
 			',3);
 		}
+
+				// Suhosin/Hardened PHP:
+		$suhosinDescription = 'Suhosin limits the number of elements that can be submitted in forms to the server. ' .
+			'This will affect for example the "All configuration" section in the Install Tool or Inline Relational ' .
+			'Record Editing (IRRE) with many child records.';
+		if (extension_loaded('suhosin')) {
+			$suhosinSuggestion = 'At least a value of 400 is suggested.';
+
+			$suhosinRequestMaxVars = ini_get('suhosin.request.max_vars');
+			$suhosinPostMaxVars = ini_get('suhosin.post.max_vars');
+			$suhosinRequestMaxVarsType = ($suhosinRequestMaxVars < 400 ? 2 : -1);
+			$suhosinPostMaxVarsType = ($suhosinPostMaxVars < 400 ? 2 : -1);
+			$suhosinType = ($suhosinRequestMaxVars < 400 || $suhosinPostMaxVars < 400 ? 2 : -1);
+
+			$this->message($ext, 'Suhosin/Hardened PHP is loaded', $suhosinDescription, $suhosinType);
+			$this->message($ext, 'suhosin.request.max_vars: ' . $suhosinRequestMaxVars, $suhosinSuggestion, $suhosinRequestMaxVarsType);
+			$this->message($ext, 'suhosin.post.max_vars: ' . $suhosinPostMaxVars, $suhosinSuggestion, $suhosinPostMaxVarsType);
+		} else {
+			$this->message($ext, 'Suhosin/Hardened PHP is not loaded', $suhosinDescription, 0);
+		}
+
+			// Check for stripped PHPdoc comments that are required to evaluate annotations:
+		$method = new ReflectionMethod('tx_install', 'check_mail');
+		if (strlen($method->getDocComment()) === 0) {
+			$description = 'The system extension Extbase evaluates annotations in PHPdoc comments ' .
+				'and thus requires eAccelerator not to strip away these parts. However, this is currently ' .
+				'the only part in the TYPO3 Core (beside deprecation log and unit tests). If Extbase is not ' .
+				'used, recompiling eAccelerator is not required at all.<br/><br/>' .
+				'If you do not want comments to be stripped by eAccelerator, please recompile with the following ' .
+				'configuration setting (<a href="http://eaccelerator.net/ticket/229" target="_blank">more details</a>):<br />' .
+				'<i>--with-eaccelerator-doc-comment-inclusion</i>';
+			$this->message($ext, 'PHPdoc comments are stripped', $description, 2);
+		}
 	}
 
 	/**
@@ -1653,7 +1708,6 @@ From sub-directory:
 					$email = trim($this->INSTALL['check_mail']);
 
 					if($this->INSTALL['use_htmlmail'])	{
-						require_once (PATH_t3lib.'class.t3lib_htmlmail.php');
 					  	$emailObj = t3lib_div::makeInstance('t3lib_htmlmail');
 					  	/* @var $emailObj t3lib_htmlmail */
 						$emailObj->start();
@@ -1770,8 +1824,8 @@ From sub-directory:
 			'uploads/pics/' => array('Typical location for uploaded files (images especially).',0),
 			'uploads/media/' => array('Typical location for uploaded files (non-images especially).',0),
 			'uploads/tf/' => array('Typical location for uploaded files (TS template resources).',0),
-			'fileadmin/' => array('Location for local files such as templates, independent uploads etc.',-1),
-			'fileadmin/_temp_/' => array('Typical temporary location for default upload of files by administrators.',0),
+			$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'] => array('Location for local files such as templates, independent uploads etc.',-1),
+			$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'] . '_temp_/' => array('Typical temporary location for default upload of files by administrators.',0),
 		);
 
 		foreach ($checkWrite as $relpath => $descr)	{
@@ -1850,9 +1904,9 @@ From sub-directory:
 		reset($paths);
 		while(list($k,$v)=each($paths))	{
 			reset($programs);
-			if (!ereg('[\\\/]$',$v)) $v.='/';
+			if (!preg_match('/[\\/]$/',$v)) $v.='/';
 			while(list(,$filename)=each($programs))	{
-				if (ini_get('open_basedir') || (@file_exists($v)&&@is_file($v.$filename.$isExt))) {
+				if (ini_get('open_basedir') || (file_exists($v)&&@is_file($v.$filename.$isExt))) {
 					$version = $this->_checkImageMagick_getVersion($filename,$v);
 					if($version > 0)	{
 						if($filename=='gm')	{	// Assume GraphicsMagick
@@ -2001,9 +2055,8 @@ From sub-directory:
 			",2);
 		} else {
 			$cInfo='
-				Username: <strong>'.TYPO3_db_username.'</strong>
-				Password: <strong>'.TYPO3_db_password.'</strong>
-				Host: <strong>'.TYPO3_db_host.'</strong>
+				Username: <strong>' . htmlspecialchars(TYPO3_db_username) . '</strong>
+				Host: <strong>' . htmlspecialchars(TYPO3_db_host) . '</strong>
 			';
 			if (!TYPO3_db_host || !TYPO3_db_username)	{
 				$this->message($ext, 'Username, password or host not set',"
@@ -2026,13 +2079,13 @@ From sub-directory:
 					$this->config_array['no_database']=1;
 				} elseif (!$GLOBALS['TYPO3_DB']->sql_select_db(TYPO3_db))  {
 					$this->message($ext, 'Database',"
-						'".TYPO3_db."' could not be selected as database!
+						'" . htmlspecialchars(TYPO3_db) . "' could not be selected as database!
 						Please select another one or create a new database.
 					",3,1);
 					$this->config_array['no_database']=1;
 				} else  {
 					$this->message($ext, 'Database',"
-						<strong>".TYPO3_db."</strong> is selected as database.
+						<strong>" . htmlspecialchars(TYPO3_db) . "</strong> is selected as database.
 					",1,1);
 				}
 			} else {
@@ -2062,7 +2115,7 @@ From sub-directory:
 				<table border="0" cellpadding="0" cellspacing="0">';
 
 				$out.=$this->wrapInCells('Username:', '<input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_username]" value="'.htmlspecialchars(TYPO3_db_username?TYPO3_db_username:($this->config_array['sql.safe_mode_user']?$this->config_array['sql.safe_mode_user']:"")).'">'.($this->config_array['sql.safe_mode_user']?"<br />sql.safe_mode_user: <strong>".$this->config_array['sql.safe_mode_user']."</strong>":""));
-				$out.=$this->wrapInCells('Password:', '<input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_password]" value="'.htmlspecialchars(TYPO3_db_password).'">');
+				$out.=$this->wrapInCells('Password:', '<input type="password" name="TYPO3_INSTALL[localconf.php][typo_db_password]" value="'.htmlspecialchars(TYPO3_db_password).'">');
 				$out.=$this->wrapInCells('Host:', '<input type="text" name="TYPO3_INSTALL[localconf.php][typo_db_host]" value="'.htmlspecialchars(TYPO3_db_host).'">');
 				if ($this->config_array['mysqlConnect'])	{
 					$dbArr = $this->getDatabaseList();
@@ -2085,10 +2138,13 @@ From sub-directory:
 				$out.=$this->wrapInCells('', '<br />');
 
 				if ($this->mode!='123')	{
+					$this->headerStyle .= chr(10) .
+						'<script type="text/javascript" src="' . t3lib_div::getIndpEnv('TYPO3_SITE_URL') . TYPO3_mainDir . 'contrib/prototype/prototype.js"></script>
+						 <script type="text/javascript" src="' . t3lib_div::getIndpEnv('TYPO3_SITE_URL') . TYPO3_mainDir . 'sysext/install/mod/install.js"></script>';
+
+
 					$out.=$this->wrapInCells('Site name:', '<input type="text" name="TYPO3_INSTALL[localconf.php][sitename]" value="'.htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']).'">');
 					$out.=$this->wrapInCells('', '<br />');
-					$out.='<script type="text/javascript" src="../sysext/install/mod/install.js"></script>';
-					$out.='<script type="text/javascript" src="../contrib/prototype/prototype.js"></script>';
 					$out.=$this->wrapInCells('Encryption key:', '<a name="set_encryptionKey"></a><input type="text" name="TYPO3_INSTALL[localconf.php][encryptionKey]" value="'.htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']).'"><br /><input type="button" onclick="EncryptionKey.load(this)" value="Generate random key">');
 					$out.=$this->wrapInCells('', '<br />');
 
@@ -2136,7 +2192,7 @@ From sub-directory:
 #debug($this->INSTALL);
 					if (trim($this->INSTALL['localconf.php']['NEW_DATABASE_NAME']))	{
 						$newdbname=trim($this->INSTALL['localconf.php']['NEW_DATABASE_NAME']);
-						if (!ereg('[^[:alnum:]_-]',$newdbname))	{
+						if (!preg_match('/[^[:alnum:]_-]/',$newdbname))	{
 							if ($result = $GLOBALS['TYPO3_DB']->sql_pconnect(TYPO3_db_host, TYPO3_db_username, TYPO3_db_password))	{
 								if ($GLOBALS['TYPO3_DB']->admin_query('CREATE DATABASE '.$newdbname)) {
 									$this->INSTALL['localconf.php']['typo_db'] = $newdbname;
@@ -2158,7 +2214,7 @@ From sub-directory:
 							case 'typo_db_password':
 								if (strlen($value)<50)	{
 									if (strcmp(TYPO3_db_password,$value))		$this->setValueInLocalconfFile($lines, '$typo_db_password',  trim($value));
-								} else $this->messages[]= $errorMessages[] = "Password '".$value."' was longer than 50 chars (...not saved)";
+								} else $this->messages[]= $errorMessages[] = "Password was longer than 50 chars (...not saved)";
 							break;
 							case 'typo_db_host':
 								if (preg_match('/^[a-zA-Z0-9_\.-]+(:.+)?$/',$value) && strlen($value)<50)	{
@@ -2194,7 +2250,7 @@ From sub-directory:
 							break;
 							case 'im_path':
 								list($value,$version) = explode('|',$value);
-								if (!ereg('[[:space:]]',$value,$reg) && strlen($value)<100)	{
+								if (!preg_match('/[[:space:]]/',$value,$reg) && strlen($value)<100)	{
 									if (strcmp($GLOBALS['TYPO3_CONF_VARS']['GFX'][$key], $value)) {
 										$this->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'GFX\'][\'' . $key . '\']', $value);
 									}
@@ -2202,7 +2258,9 @@ From sub-directory:
 										$value_ext = 'gm';
 									} elseif(doubleval($version)<5)	{	// Assume ImageMagick 4.x
 										$value_ext = '';
-									} else	{	// Assume ImageMagick 5+
+									} elseif(doubleval($version) >= 6) {	// Assume ImageMagick 6.x
+										$value_ext = 'im6';
+									} else	{	// Assume ImageMagick 5.x
 										$value_ext = 'im5';
 									}
 									if (strcmp(strtolower($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5']),$value_ext))	{
@@ -2213,7 +2271,7 @@ From sub-directory:
 							break;
 							case 'im_path_lzw':
 								list($value) = explode('|',$value);
-								if (!ereg('[[:space:]]',$value) && strlen($value)<100)	{
+								if (!preg_match('/[[:space:]]/',$value) && strlen($value)<100)	{
 									if (strcmp($GLOBALS['TYPO3_CONF_VARS']['GFX'][$key], $value)) {
 										$this->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'GFX\'][\'' . $key . '\']', $value);
 									}
@@ -2273,8 +2331,8 @@ From sub-directory:
 	 * @return	[type]		...
 	 */
 	function outputExitBasedOnStep($content)	{
-		if ($this->step)	{
-			Header('Location: '.t3lib_div::locationHeaderUrl($this->action));
+		if ($this->step) {
+			t3lib_utility_Http::redirect($this->action);
 		} else {
 			$this->output($this->outputWrapper($content));
 		}
@@ -2411,7 +2469,16 @@ From sub-directory:
 							$formArray['im_path']=array($path);
 							$found=1;
 						}
-					} elseif (!$found)	{
+					} elseif (doubleval($dat['convert']) >= 6) {
+						$formArray['im_version_5'] = array('im6');
+						if ($dat['gif_capability'] == 'LZW') {
+							$formArray['im_path'] = array($path);
+							$found = 2;
+						} elseif ($found < 2)	{
+							$formArray['im_path'] = array($path);
+							$found = 1;
+						}
+					} elseif (!$found) {
 						$formArray['im_version_5']=array('im5');
 						$formArray['im_path']=array($path);
 						$found=1;
@@ -2575,9 +2642,10 @@ From sub-directory:
 	 */
 	function getGDSoftwareInfo()	{
 		return trim('
-		You can get GDLib in the PNG version from '.$this->linkIt('http://www.boutell.com/gd/').'.<br />FreeType is for download at '.$this->linkIt('http://www.freetype.org/').'.
-		Generally, software for TYPO3 is found at '.$this->linkIt('http://typo3.sunsite.dk/software/').' and packages listed at '.$this->linkIt('http://typo3.org/1274.0.html').'.
-		');
+		You can get GDLib in the PNG version from ' . $this->linkIt('http://www.libgd.org/') .
+		'. <br />FreeType is for download at ' . $this->linkIt('http://www.freetype.org/') .
+		'. <br />Generally, TYPO3 packages are listed at ' . $this->linkIt('http://typo3.org/download/packages/') . '.'
+		);
 	}
 
 	/**
@@ -2688,19 +2756,19 @@ From sub-directory:
 		$im_path_lzw = $GLOBALS['TYPO3_CONF_VARS']['GFX']['im_path_lzw'];
 		$im_path_lzw_version = $this->config_array['im_versions'][$im_path_lzw]['convert'];
 		$msg = '
-		ImageMagick enabled: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['im'].'</strong>
-		ImageMagick path: <strong>'.$im_path.'</strong> ('.$im_path_version.')
-		ImageMagick path/LZW: <strong>'.$im_path_lzw.'</strong>  ('.$im_path_lzw_version.')
-		Version 5/GraphicsMagick flag: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5'].'</strong>
+		ImageMagick enabled: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['im']) . '</strong>
+		ImageMagick path: <strong>' . htmlspecialchars($im_path) . '</strong> (' . htmlspecialchars($im_path_version) . ')
+		ImageMagick path/LZW: <strong>' . htmlspecialchars($im_path_lzw) . '</strong>  (' . htmlspecialchars($im_path_lzw_version) . ')
+		Version 5/GraphicsMagick flag: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5']) . '</strong>
 
-		GDLib enabled: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib'].'</strong>
-		GDLib using PNG: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png'].'</strong>
-		GDLib 2 enabled: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_2'].'</strong>
-		IM5 effects enabled: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_v5effects'].'</strong> (Blurring/Sharpening with IM 5+)
-		Freetype DPI: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['TTFdpi'].'</strong> (Should be 96 for Freetype 2)
-		Mask invert: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_imvMaskState'].'</strong> (Should be set for some IM versions approx. 5.4+)
+		GDLib enabled: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib']) . '</strong>
+		GDLib using PNG: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png']) . '</strong>
+		GDLib 2 enabled: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_2']) . '</strong>
+		IM5 effects enabled: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_v5effects']) . '</strong> (Blurring/Sharpening with IM 5+)
+		Freetype DPI: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['TTFdpi']) . '</strong> (Should be 96 for Freetype 2)
+		Mask invert: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_imvMaskState']) . '</strong> (Should be set for some IM versions approx. 5.4+)
 
-		File Formats: <strong>'.$GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'].'</strong>
+		File Formats: <strong>' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']) . '</strong>
 		';
 
 			// Various checks to detect IM/GM version mismatches
@@ -2719,8 +2787,8 @@ From sub-directory:
 
 		if ($mismatch)	{
 			$msg.= 'Warning: Mismatch between the version of ImageMagick'.
-					' ('.$im_path_version.') and the configuration of '.
-					'[GFX][im_version_5] ('.$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5'].')';
+					' (' . htmlspecialchars($im_path_version) . ') and the configuration of '.
+					'[GFX][im_version_5] (' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5']) . ')';
 			$etype=2;
 		} else $etype=1;
 
@@ -2757,7 +2825,7 @@ From sub-directory:
 
 
 		$this->messageFunc_nl2br=0;
-		$parseStart = microtime();
+		$parseStart = t3lib_div::milliseconds();
 		$imageProc = t3lib_div::makeInstance('t3lib_stdGraphic');
 		$imageProc->init();
 		$imageProc->tempPath = $this->typo3temp_path;
@@ -3136,8 +3204,7 @@ From sub-directory:
 				");
 			}
 
-			$parseStop = microtime();
-			$parseMS = t3lib_div::convertMicrotime($parseStop)-t3lib_div::convertMicrotime($parseStart);
+			$parseMS = t3lib_div::milliseconds() - $parseStart;
 			$this->message('Info','Parsetime',$parseMS.' ms');
 		}
 		$this->output($this->outputWrapper($this->printAll()));
@@ -3284,13 +3351,13 @@ From sub-directory:
 		$c=0;
 		$out=array();
 		while(list($k,$v)=each($menuitems))	{
-			$bgcolor = ($this->INSTALL['images_type']==$k ? ' bgcolor="#ABBBB4"' : ' bgcolor="#F4F0E8"');
+			$bgcolor = ($this->INSTALL['images_type']==$k ? ' class="activeMenu"' : ' class="generalTableBackground"');
 			$c++;
 			$out[]='<tr><td'.$bgcolor.'><a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[images_type]='.$k.'#testmenu').'">'.$this->fw($c.': '.$v).'</a></td></tr>';
 		}
 
 		$code = '<table border="0" cellpadding="0" cellspacing="1">'.implode($out,'').'</table>';
-		$code = '<table border="0" cellpadding="0" cellspacing="0" bgcolor="#ABBBB4"><tr><td>'.$code.'</td></tr></table>';
+		$code = '<table border="0" cellpadding="0" cellspacing="0" id="imageMenu"><tr><td>'.$code.'</td></tr></table>';
 		return '<div align="center">'.$code.'</div>';
 	}
 
@@ -3336,8 +3403,7 @@ From sub-directory:
 
 			// Getting number of static_template records
 		if ($whichTables['static_template'])	{
-			$res_static = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', 'static_template', '');
-			list($static_template_count) = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res_static);
+			$static_template_count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', 'static_template');
 		}
 		$static_template_count=intval($static_template_count);
 
@@ -3347,15 +3413,14 @@ From sub-directory:
 		",0);
 
 		$cInfo='
-			Username: <strong>'.TYPO3_db_username.'</strong>
-			Password: <strong>'.TYPO3_db_password.'</strong>
-			Host: <strong>'.TYPO3_db_host.'</strong>
+			Username: <strong>' . htmlspecialchars(TYPO3_db_username) . '</strong>
+			Host: <strong>' . htmlspecialchars(TYPO3_db_host) . '</strong>
 		';
 		$this->message($headCode, 'Connected to SQL database successfully',"
 		".trim($cInfo)."
 		",-1,1);
 		$this->message($headCode, 'Database',"
-			<strong>".TYPO3_db.'</strong> is selected as database.
+			<strong>" . htmlspecialchars(TYPO3_db) . '</strong> is selected as database.
 			Has <strong>'.count($whichTables)."</strong> tables.
 		",-1,1);
 
@@ -3377,7 +3442,7 @@ From sub-directory:
 		$out='';
 		$out.='<tr>
 				<td nowrap="nowrap"><strong>'.$this->fw('Update required tables').'</strong></td>
-				<td'.($action_type=='cmpFile|CURRENT_TABLES'?' bgcolor="#D9D5C9"':'').'>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=cmpFile|CURRENT_TABLES#bottom').'"><strong>COMPARE</strong></a>').'</td>
+				<td' . ($action_type == 'cmpFile|CURRENT_TABLES' ? ' class="notice"' : '') . '>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=cmpFile|CURRENT_TABLES#bottom') . '"><strong>COMPARE</strong></a>') . '</td>
 				<td>'.$this->fw('&nbsp;').'</td>
 				<td>'.$this->fw('&nbsp;').'</td>
 			</tr>';
@@ -3385,7 +3450,7 @@ From sub-directory:
 		$out.='<tr>
 				<td nowrap="nowrap"><strong>'.$this->fw('Dump static data').'</strong></td>
 				<td>'.$this->fw('&nbsp;').'</td>
-				<td nowrap="nowrap"'.($action_type=='import|CURRENT_STATIC'?' bgcolor="#D9D5C9"':'').'>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=import|CURRENT_STATIC#bottom').'"><strong>IMPORT</strong></a>').'</td>
+				<td nowrap="nowrap"' . ($action_type == 'import|CURRENT_STATIC' ? ' class="notice"' : '').'>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=import|CURRENT_STATIC#bottom') . '"><strong>IMPORT</strong></a>') . '</td>
 				<td>'.$this->fw('&nbsp;').'</td>
 			</tr>';
 
@@ -3407,27 +3472,27 @@ From sub-directory:
 
 			$out.='<tr>
 				<td nowrap="nowrap">'.$this->fw($fShortName.' ('.t3lib_div::formatSize(filesize($file)).')').'</td>
-				<td'.($action_type=='cmpFile|'.$file?' bgcolor="#D9D5C9"':'').'>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=cmpFile|'.rawurlencode($file).'#bottom').'"><strong>COMPARE</strong></a>').'</td>
-				<td nowrap="nowrap"'.($action_type=='import|'.$file?' bgcolor="#D9D5C9"':'').'>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=import|'.rawurlencode($file).'#bottom').'"><strong>IMPORT'.$spec1.$spec2.'</strong></a>').'</td>
-				<td nowrap="nowrap"'.($action_type=='view|'.$file?' bgcolor="#D9D5C9"':'').'>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=view|'.rawurlencode($file).'#bottom').'"><strong>VIEW'.$spec1.$spec2.'</strong></a>').'</td>
+				<td' . ($action_type == 'cmpFile|' . $file ? ' class="notice"' : '') . '>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=cmpFile|' . rawurlencode($file) . '#bottom') . '"><strong>COMPARE</strong></a>') . '</td>
+				<td nowrap="nowrap"' . ($action_type == 'import|' . $file ? ' class="notice"' : '') . '>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=import|' . rawurlencode($file) . '#bottom') . '"><strong>IMPORT' . $spec1 . $spec2 . '</strong></a>') . '</td>
+				<td nowrap="nowrap"' . ($action_type == 'view|' . $file ? ' class="notice"' : '') . '>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=view|' . rawurlencode($file) . '#bottom') . '"><strong>VIEW' . $spec1 . $spec2 . '</strong></a>') . '</td>
 			</tr>';
 		}
 			// TCA
 		$out.='<tr>
 			<td></td>
-			<td colspan="3"'.($action_type=="cmpTCA|"?' bgcolor="#D9D5C9"':'').'><strong>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=cmpTCA|#bottom').'">Compare with $TCA</a>').'</strong></td>
+			<td colspan="3"' . ($action_type == "cmpTCA|" ? ' class="notice"' : '') . '><strong>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=cmpTCA|#bottom') . '">Compare with $TCA</a>') . '</strong></td>
 		</tr>';
 		$out.='<tr>
 			<td></td>
-			<td colspan="3"'.($action_type=="adminUser|"?' bgcolor="#D9D5C9"':'').'><strong>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=adminUser|#bottom').'">Create "admin" user</a>').'</strong></td>
+			<td colspan="3"' . ($action_type == "adminUser|" ? ' class="notice"' : '') . '><strong>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=adminUser|#bottom') . '">Create "admin" user</a>') . '</strong></td>
 		</tr>';
 		$out.='<tr>
 			<td></td>
-			<td colspan="3"'.($action_type=="UC|"?' bgcolor="#D9D5C9"':'').'><strong>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=UC|#bottom').'">Reset user preferences</a>').'</strong></td>
+			<td colspan="3"' . ($action_type == "UC|" ? ' class="notice"' : '') . '><strong>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=UC|#bottom') . '">Reset user preferences</a>') . '</strong></td>
 		</tr>';
 		$out.='<tr>
 			<td></td>
-			<td colspan="3"'.($action_type=="cache|"?' bgcolor="#D9D5C9"':'').'><strong>'.$this->fw('<a href="'.htmlspecialchars($this->action.'&TYPO3_INSTALL[database_type]=cache|#bottom').'">Clear tables</a>').'</strong></td>
+			<td colspan="3"' . ($action_type == "cache|" ? ' class="notice"' : '') . '><strong>' . $this->fw('<a href="' . htmlspecialchars($this->action . '&TYPO3_INSTALL[database_type]=cache|#bottom') . '">Clear tables</a>') . '</strong></td>
 		</tr>';
 
 		$theForm='<table border="0" cellpadding="2" cellspacing="2">'.$out.'</table>';
@@ -3487,6 +3552,8 @@ From sub-directory:
 							$diff = $this->getDatabaseExtra($FDdb, $FDfile);
 							$remove_statements = $this->getUpdateSuggestions($diff,'remove');
 
+							$this->performUpdateQueries($update_statements['clear_table'],$this->INSTALL['database_update']);
+
 							$this->performUpdateQueries($update_statements['add'],$this->INSTALL['database_update']);
 							$this->performUpdateQueries($update_statements['change'],$this->INSTALL['database_update']);
 							$this->performUpdateQueries($remove_statements['change'],$this->INSTALL['database_update']);
@@ -3536,7 +3603,7 @@ From sub-directory:
 						',-1);
 					} else {
 						$this->message($tLabel,'Invalid table and field definitions in $TCA!','
-						There are some tables and/or fields configured in the \$TCA array which does not exist in the database!
+						There are some tables and/or fields configured in the $TCA array which do not exist in the database!
 						This will most likely cause you trouble with the TYPO3 backend interface!
 						',3);
 						while(list($tableName, $conf)=each($cmpTCA_DB['extra']))	{
@@ -3675,16 +3742,20 @@ From sub-directory:
 								$username = 'admin';
 								$pass = 'password';
 
-								$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'be_users', 'username='.$GLOBALS['TYPO3_DB']->fullQuoteStr($username, 'be_users'));
-								if (!$GLOBALS['TYPO3_DB']->sql_num_rows($res))	{
+								$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+									'uid',
+									'be_users',
+									'username=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($username, 'be_users')
+								);
+								if (!$count) {
 									$insertFields = array(
 										'username' => $username,
 										'password' => md5($pass),
 										'admin' => 1,
 										'uc' => '',
-										'fileoper_perms' => 7,
-										'tstamp' => time(),
-										'crdate' => time()
+										'fileoper_perms' => 0,
+										'tstamp' => $GLOBALS['EXEC_TIME'],
+										'crdate' => $GLOBALS['EXEC_TIME']
 									);
 
 									$GLOBALS['TYPO3_DB']->exec_INSERTquery('be_users', $insertFields);
@@ -3779,7 +3850,7 @@ From sub-directory:
 						if (count($statements))	{
 							$out = '';
 							foreach ($statements as $statement) {
-								$out.= nl2br(htmlspecialchars(t3lib_div::fixed_lgd($statement,$maxlen)).chr(10).chr(10));
+								$out.= nl2br(htmlspecialchars(t3lib_div::fixed_lgd_cs($statement,$maxlen)).chr(10).chr(10));
 							}
 						}
 						$this->message($tLabel,'Content of '.basename($actionParts[1]),$out,1);
@@ -3789,8 +3860,12 @@ From sub-directory:
 					if ($whichTables['be_users'])	{
 						if (is_array($this->INSTALL['database_adminUser']))	{
 							$username = preg_replace('/[^\da-z._-]/i', '', trim($this->INSTALL['database_adminUser']['username']));
-							$pass = trim($this->INSTALL['database_adminUser']['password']);
+							$pass = trim($this->INSTALL['database_adminUser']['password2']);
 							if ($username && $pass)	{
+								if ($pass != trim($this->INSTALL['database_adminUser']['password'])) {
+									$this->message($headCode, 'Passwords are not equal!', '
+										The passwords entered twice are not equal.',2,1);
+								} else {
 								$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'be_users', 'username='.$GLOBALS['TYPO3_DB']->fullQuoteStr($username, 'be_users'));
 								if (!$GLOBALS['TYPO3_DB']->sql_num_rows($res))	{
 
@@ -3799,19 +3874,18 @@ From sub-directory:
 										'password' => md5($pass),
 										'admin' => 1,
 										'uc' => '',
-										'fileoper_perms' => 7,
-										'tstamp' => time(),
-										'crdate' => time()
+										'fileoper_perms' => 0,
+										'tstamp' => $GLOBALS['EXEC_TIME'],
+										'crdate' => $GLOBALS['EXEC_TIME']
 									);
 
 									$result = $GLOBALS['TYPO3_DB']->exec_INSERTquery('be_users', $insertFields);
 
 									$this->isBasicComplete($headCode);
 
-									if ($result) {					
+									if ($result) {
 										$this->message($headCode,'User created','
-											Username: <strong>'.htmlspecialchars($username).'</strong><br />
-											Password: <strong>'.htmlspecialchars($pass).'</strong><br />',
+												Username: <strong>'.htmlspecialchars($username).'</strong><br />',
 											1,1);
 									} else {
 										$this->message($headCode,'User not created','
@@ -3824,9 +3898,11 @@ From sub-directory:
 								}
 							}
 						}
+						}
 						$content = '
 						<input type="text" name="TYPO3_INSTALL[database_adminUser][username]"> username - unique, no space, lowercase<br />
-						<input type="text" name="TYPO3_INSTALL[database_adminUser][password]"> password
+						<input type="password" name="TYPO3_INSTALL[database_adminUser][password]"> password
+						<input type="password" name="TYPO3_INSTALL[database_adminUser][password2]"> password (repeated)
 						';
 						$form = $this->getUpdateDbFormWrap($action_type, $content);
 						$this->message($headCode,'Create admin user',"
@@ -3915,8 +3991,7 @@ From sub-directory:
 						if ($table!='--div--')	{
 							$table_c = TYPO3_OS=='WIN' ? strtolower($table) : $table;
 							if ($whichTables[$table_c])	{
-								$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $table, '');
-								list($countEntries[$table]) = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+								$countEntries[$table] = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', $table);
 									// Checkboxes:
 								$checkBoxes[]= '<input type="checkbox" name="TYPO3_INSTALL[database_clearcache]['.$table.']" id="TYPO3_INSTALL[database_clearcache]['.$table.']" value="1"'.($this->INSTALL['database_clearcache'][$table]||$_GET['PRESET']['database_clearcache'][$table]?' checked="checked"':'').'> <label for="TYPO3_INSTALL[database_clearcache]['.$table.']"><strong>'.$table.'</strong> ('.$countEntries[$table].' rows) - '.$labelArr[$table].'</label>';
 							}
@@ -3946,17 +4021,8 @@ From sub-directory:
 	 * @return	void
 	 */
 	function updateWizard()	{
-		global $TYPO3_CONF_VARS;
-
 			// clear cache files
-		t3lib_extMgm::removeCacheFiles();
-
-			// generate new cache files and include them
-		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extCache'] = 1;
-		$TYPO3_LOADED_EXT = t3lib_extMgm::typo3_loadExtensions();
-		if ($TYPO3_LOADED_EXT['_CACHEFILE'])	{
-			require(PATH_typo3conf.$TYPO3_LOADED_EXT['_CACHEFILE'].'_ext_localconf.php');
-		}
+		t3lib_extMgm::removeCacheFiles(t3lib_extMgm::getCacheFilePrefix());
 
 			// call wizard
 		$action = ($this->INSTALL['database_type']?$this->INSTALL['database_type']:'checkForUpdate');
@@ -3988,7 +4054,7 @@ From sub-directory:
 						$explanation = '';
 						if ($tmpObj->checkForUpdate($explanation))	{
 							$updateWizardBoxes.= '
-								<div style="border: 1px solid; padding: 10px; margin: 10px; padding-top: 0px; width: 400px;">
+								<div class="updateWizardBoxes">
 									<h3>'.$identifier.'</h3>
 									<p>'.str_replace(chr(10),'<br />',$explanation).'</p>
 									<input type="submit" name="TYPO3_INSTALL[update]['.$identifier.']" id="TYPO3_INSTALL[update]['.$identifier.']" value="Next" />
@@ -4006,10 +4072,20 @@ From sub-directory:
 				} else {
 					$content = '<strong>No updates to perform!</strong>';
 				}
+				$content .= '<table><tbody><tr><td>
+				<div class="updateWizardBoxes">
+				<h3>Final Step</h3>
+				<p>When all updates are done you should check your database for required updates.<br />
+				Perform <strong>COMPARE DATABASE</strong> as often until no more changes are required.<br /><br />
+				<input type="button" onclick="document.location.href=\'index.php?TYPO3_INSTALL[type]=database&TYPO3_INSTALL[database_type]=cmpFile|CURRENT_TABLES#bottom\';"
+				value="COMPARE DATABASE" />
+				</p>
+				</div>
+				</td></tr></tbody></table>';
 			break;
 			case 'getUserInput':	// second step - get user input and ask for final confirmation
 				$title = 'Step 2 - Configuration of updates';
-				$formContent = '<p style="width:400px;"><strong>The following updates will be performed:</strong></p>';
+				$formContent = '<p class="innerWidth"><strong>The following updates will be performed:</strong></p>';
 				if (!$this->INSTALL['update'])	{
 					$content = '<strong>No updates selected!</strong>';
 					break;
@@ -4037,9 +4113,9 @@ From sub-directory:
 				foreach ($this->INSTALL['update']['extList'] as $identifier)	{
 					$className = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/install']['update'][$identifier];
 
-					$tmpObj = &$this->getUpgradeObjInstance($className, $identifier);
+					$tmpObj = $this->getUpgradeObjInstance($className, $identifier);
 
-					$content = '<p style="width: 400px;"><strong>'.$identifier.'</strong></p>';
+					$content = '<p class="innerWidth"><strong>'.$identifier.'</strong></p>';
 						// check user input if testing method is available
 					if (method_exists($tmpObj,'checkUserInput'))	{
 						$customOutput = '';
@@ -4082,7 +4158,7 @@ From sub-directory:
 	 * @return	object		newly instanciated upgrade object
 	 */
 	function getUpgradeObjInstance($className, $identifier)	{
-		$tmpObj = &t3lib_div::getUserObj($className);
+		$tmpObj = t3lib_div::getUserObj($className);
 		$tmpObj->versionNumber = t3lib_div::int_from_ver(TYPO3_version);
 		$tmpObj->pObj = $this;
 		$tmpObj->userInput = $this->INSTALL['update'][$identifier];
@@ -4095,9 +4171,7 @@ From sub-directory:
 	 * @return	[type]		...
 	 */
 	function isBackendAdminUser()	{
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', 'be_users', 'admin=1');
-		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
-		return current($row);
+		return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', 'be_users', 'admin=1');
 	}
 
 	/**
@@ -4106,9 +4180,7 @@ From sub-directory:
 	 * @return	[type]		...
 	 */
 	function isStaticTemplates()	{
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', 'static_template', '');
-		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
-		return current($row);
+		return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', 'static_template');
 	}
 
 	/**
@@ -4161,15 +4233,16 @@ From sub-directory:
 		$content = '';
 		switch($type)	{
 			case 'get_form':
-				$content='';
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_update['add'],'Add fields');
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_update['change'],'Changing fields',(t3lib_extMgm::isLoaded('dbal')?0:1),0,$arr_update['change_currentValue']);
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_remove['change'],'Remove unused fields (rename with prefix)',$this->setAllCheckBoxesByDefault,1);
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_remove['drop'],'Drop fields (really!)',$this->setAllCheckBoxesByDefault);
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_update['clear_table'],'Clear tables (use with care!)',false,true);
 
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_update['create_table'],'Add tables');
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_remove['change_table'],'Removing tables (rename with prefix)',$this->setAllCheckBoxesByDefault,1,$arr_remove['tables_count'],1);
-				$content.=$this->generateUpdateDatabaseForm_checkboxes($arr_remove['drop_table'],'Drop tables (really!)',$this->setAllCheckBoxesByDefault,0,$arr_remove['tables_count'],1);
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_update['add'],'Add fields');
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_update['change'],'Changing fields',(t3lib_extMgm::isLoaded('dbal')?0:1),0,$arr_update['change_currentValue']);
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_remove['change'],'Remove unused fields (rename with prefix)',$this->setAllCheckBoxesByDefault,1);
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_remove['drop'],'Drop fields (really!)',$this->setAllCheckBoxesByDefault);
+
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_update['create_table'],'Add tables');
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_remove['change_table'],'Removing tables (rename with prefix)',$this->setAllCheckBoxesByDefault,1,$arr_remove['tables_count'],1);
+				$content.= $this->generateUpdateDatabaseForm_checkboxes($arr_remove['drop_table'],'Drop tables (really!)',$this->setAllCheckBoxesByDefault,0,$arr_remove['tables_count'],1);
 
 				$content = $this->getUpdateDbFormWrap($action_type, $content);
 			break;
@@ -4189,7 +4262,10 @@ From sub-directory:
 	 * @return	[type]		...
 	 */
 	function getUpdateDbFormWrap($action_type, $content, $label='Write to database')	{
-		$form = '<form action="'.$this->action.'#bottom" method="post"><input type="hidden" name="TYPO3_INSTALL[database_type]" value="'.htmlspecialchars($action_type).'">'.$content.'<br /><input type="submit" value="'.$label.'">';
+		$form = '<form action="' . $this->action . '#bottom" method="post">' .
+			'<input type="hidden" name="TYPO3_INSTALL[database_type]" value="' . htmlspecialchars($action_type) . '">' .
+				$content . '<br />' .
+			'<input type="submit" value="' . $label . '">';
 		return $form;
 	}
 
@@ -4203,7 +4279,7 @@ From sub-directory:
 	 */
 	function displayFields($arr, $pre=0, $label='')	{
 		$out='';
-		$out.='<tr><td bgcolor="#9BA1A8" align="center"><strong>'.$this->fw('Field name:').'</strong></td><td bgcolor="#9BA1A8" align="center"><strong>'.$this->fw($label?$label:'Info:').'</strong></td></tr>';
+		$out.='<tr><td class="tcaTableHeader" align="center"><strong>'.$this->fw('Field name:').'</strong></td><td class="tcaTableHeader" align="center"><strong>'.$this->fw($label?$label:'Info:').'</strong></td></tr>';
 		if (is_array($arr))	{
 			reset($arr);
 			while(list($fieldname, $fieldContent)=each($arr))	{
@@ -4212,10 +4288,10 @@ From sub-directory:
 				} else {
 					$fieldContent = $this->fw($fieldContent);
 				}
-				$out.='<tr><td bgcolor="#ABBBB4">'.$this->fw($fieldname).'</td><td bgcolor="#ABBBB4">'.$fieldContent.'</td></tr>';
+				$out.='<tr><td class="tcaTableBackground">'.$this->fw($fieldname).'</td><td class="tcaTableBackground">'.$fieldContent.'</td></tr>';
 			}
 		}
-		$out= '<table border="0" cellpadding="0" cellspacing="0">'.$out.'</table>';
+		$out = '<table border="0" cellpadding="0" cellspacing="1">' . $out . '</table>';
 		return $out;
 	}
 
@@ -4244,14 +4320,14 @@ From sub-directory:
 				$str2 = str_replace('int(10)','int(11)',$str2);
 					// Compare:
 				if (strcmp($str1,$str2))	{
-					$bgcolor=' bgcolor="#ABBBB4"';
+					$bgcolor=' class="warning"';
 				} else {
-					$bgcolor=' bgcolor="#D9D5C9"';
+					$bgcolor=' class="generalTableBackground"';
 				}
 				$fieldContent = $this->fw($fieldContent);
 				$fieldContent_db = $this->fw($arr_db[$fieldname]);
 				$out.='<tr>
-					<td bgcolor="#D9D5C9">'.$this->fw($fieldname).'</td>
+					<td class="generalTableBackground">'.$this->fw($fieldname).'</td>
 					<td'.$bgcolor.'>'.$fieldContent.'</td>
 					<td'.$bgcolor.'>'.$fieldContent_db.'</td>
 					</tr>';
@@ -4281,7 +4357,7 @@ From sub-directory:
 						$fieldContent.= '<hr />';
 						$fieldContent.= '<pre>'.trim($arr[$fieldname.'.']).'</pre>';
 					}
-					$out.='<tr><td bgcolor="#ABBBB4">'.$this->fw($fieldname).'</td><td bgcolor="#ABBBB4">'.$fieldContent.'</td></tr>';
+					$out.='<tr><td class="tcaTableBackground">'.$this->fw($fieldname).'</td><td class="tcaTableBackground">'.$fieldContent.'</td></tr>';
 					$fC++;
 				}
 			}
@@ -4394,19 +4470,19 @@ From sub-directory:
 		$out='';
 		switch($fieldInfo['config']['type'])	{
 			case 'input':
-				if (ereg('date|time|int|year',$fieldInfo['config']['eval']))	{
+				if (preg_match('/date|time|int|year/',$fieldInfo['config']['eval']))	{
 					$out = "int(11) NOT NULL default '0'";
 				} else {
 					$max = intval($fieldInfo['config']['max']);
 					if ($max>0 && $max<200)	{
 						$out = 'varchar('.$max.") NOT NULL default ''";
 					} else {
-						$out = 'tinytext NOT NULL';
+						$out = 'tinytext';
 					}
 				}
 			break;
 			case 'text':
-				$out = 'text NOT NULL';
+				$out = 'text';
 			break;
 			case 'check':
 				if (is_array($fieldInfo['config']['items']) && count($fieldInfo['config']['items'])>8)	{
@@ -4496,7 +4572,7 @@ From sub-directory:
 	 * @return	[type]		...
 	 */
 	function getItemBlobSize($len)	{
-		return ($len>255 ? 'tiny' : '').'blob NOT NULL';
+		return ($len>255 ? 'tiny' : '').'blob';
 	}
 
 	/**
@@ -4507,7 +4583,7 @@ From sub-directory:
 	 * @return	[type]		...
 	 */
 	function suggestTCAFieldDefinition($fieldName,$fieldInfo)	{
-		list($type,$len) = split(' |\(|\)',$fieldInfo,3);
+		list($type,$len) = preg_split('/ |\(|\)/', $fieldInfo, 3);
 		switch($type)	{
 			case 'int':
 $out="
@@ -4727,36 +4803,30 @@ $out="
 	 * @return	void
 	 */
 	function printSection($head, $short_string, $long_string, $type)	{
-		$icon='';
-
-		$bgCol =' bgcolor="#D9D5C9"';	// The default color
 		switch($type)	{
-			case '3':
-				$bgCol =' bgcolor="red"';
-				$icon = 'gfx/icon_fatalerror.gif';
+			case 3:
+				$cssClass = ' class="typo3-message message-error"';
 			break;
-			case '2':
-				$bgCol =' bgcolor="#9BA1A8"';
-				$icon = 'gfx/icon_warning.gif';
+			case 2:
+				$cssClass = ' class="typo3-message message-warning"';
 			break;
-			case '1':
-				// $bgCol =' bgcolor="#ABBBB4"';
-				$icon = 'gfx/icon_note.gif';
-			break;
-			case '-1':
-				// $bgCol =' bgcolor="yellow"';
-				$icon = 'gfx/icon_ok.gif';
-			break;
-			default:
-				$bgCol =' bgcolor="#D3D9DC"';
+			case 1:
+				$cssClass =' class="typo3-message message-notice"';
+				break;
+			case 0:
+				$cssClass = ' class="typo3-message message-information"';
+				break;
+			case -1:
+				$cssClass = ' class="typo3-message message-ok"';
 			break;
 		}
+
 		if (!trim($short_string))	{
 			$this->sections[$head][]='';
 		} else {
 			$this->sections[$head][]='
-			<tr><td'.$bgCol.' nowrap="nowrap">'.($icon?'<img src="'.$this->backPath.$icon.'" width="18" height="16" align="top" alt="">':'').'<strong>'.$this->fw($short_string).'</strong></td></tr>'.(trim($long_string)?'
-			<tr><td>'.$this->fw($long_string).'<br /><br /></td></tr>' : '');
+			<tr><td' . $cssClass . ' nowrap="nowrap">' . '<strong>' . $this->fw($short_string) . '</strong></td></tr>' . (trim($long_string) ? '
+			<tr><td>' . $this->fw($long_string) . '<br /><br /></td></tr>' : '');
 		}
 	}
 
@@ -4836,48 +4906,33 @@ $out="
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset='.($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset']?$GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset']:'iso-8859-1').'" />
-<style type="text/css">
-body, p, td, a, span, input, .bodytext {
-	font-family:verdana,sans-serif;
-	font-size:1em;
-	color:#000;
-	text-align: left;
-}
-.smalltext {
-	font-size:0.9em;
-}
-.size3text {
-	font-size:1.2em;
-}
-.size4text {
-	font-size:1.5em;
-}
-a {color: #600; text-decoration: none;}
-a:active {text-decoration: none;}
-a:hover {color: #006; text-decoration:underline:}
-</style>
 '.$this->headerStyle.'
-
+		<link rel="stylesheet" type="text/css" href="'.$this->backPath.'sysext/install/mod/install.css" >
  		<title>TYPO3 Install Tool</title>
 		'.($this->JSmessage?'
-<script language="javascript" type="text/javascript">alert(\''.t3lib_div::slashJS($this->JSmessage).'\'));</script>
+<script language="javascript" type="text/javascript">alert(unescape(\'' . t3lib_div::rawUrlEncodeJS($this->JSmessage) . '\'));</script>
 
 		':'').'
+<script type="text/javascript" src="../contrib/prototype/prototype.js"></script>
 	</head>
-	<body bgcolor="white" alink="maroon" link="maroon" vlink="maroon">'.$this->contentBeforeTable.'
-		<div align="center">
-		<table border="0" cellspacing="0" cellpadding="0" width="333" bgcolor="white">
-		<tr>
-			<td style="text-align:center;"><img src="'.$this->backPath.'gfx/typo3logo.gif" width="123" height="34" vspace="10" hspace="50" alt="TYPO3"></td>
+	<body>'.$this->contentBeforeTable.'
+		<div align="center">';
+		if($this->INSTALL['type'] == 'about') {
+			$out .= '<table class="smallOuterTable" border="0" cellspacing="0" cellpadding="0">';
+		} else {
+			$out .= '<table class="outerTable" border="0" cellspacing="0" cellpadding="0">';
+		}
+		$out .= '<tr>
+			<td class="logo"><img src="'.$this->backPath.'gfx/typo3logo.gif" width="123" height="34" vspace="10" hspace="50" alt="TYPO3"></td>
 		</tr>
 		<tr>
-			<td bgcolor="black">
+			<td class="createBorder">
 				<table width="100%" border="0" cellspacing="1" cellpadding="10">
 					<tr>
-						<td bgcolor="#F4F0E8">
+						<td class="generalTableBackground">
 						<div align="center"><span class="size4text"><strong>TYPO3 '.TYPO3_branch.' Install Tool</strong></span></div>
-						<div align="center"><span style="color:navy;"><strong>Site: '.$GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'].'</strong></span></div>
-						'.($this->passwordOK ? '<div align="center"><span style="color:navy;"><strong>Version: '.TYPO3_version.'</strong></span></div>':'').'<br />
+						<div align="center"><span class="siteInfo"><strong>Site: ' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']) . '</strong></span></div>
+						'.($this->passwordOK ? '<div align="center"><span class="siteInfo"><strong>Version: '.TYPO3_version.'</strong></span></div>':'').'<br />
 
 '.($this->step?$this->stepHeader():$this->menu()).$content.'<hr />'.$this->note123().$this->endNotes().'
 						</td>
@@ -4890,6 +4945,23 @@ a:hover {color: #006; text-decoration:underline:}
 	</body>
 </html>';
 		return $out;
+	}
+
+	/**
+	 * Outputs an error and dies.
+	 * Should be used by all errors that occur before even starting the install tool process.
+	 *
+	 * @param string The content of the error
+	 * @return void
+	 */
+	protected function outputErrorAndExit($content, $title = 'Install Tool error') {
+			// Output the warning message and exit
+		header('Content-Type: text/html; charset=utf-8');
+		header('Cache-Control: no-cache, must-revalidate');
+		header('Pragma: no-cache');
+		echo '<h1>'.$title.'</h1>';
+		echo $content;
+		exit();
 	}
 
 	/**
@@ -4915,13 +4987,13 @@ a:hover {color: #006; text-decoration:underline:}
 		$c=0;
 		$out=array();
 		while(list($k,$v)=each($this->menuitems))	{
-			$bgcolor = ($this->INSTALL['type']==$k ? ' bgcolor="#ABBBB4"' : ' bgcolor="#F4F0E8"');
+			$bgcolor = ($this->INSTALL['type']==$k ? ' class="activeMenu"' : ' class="generalTableBackground"');
 			$c++;
 			$out[]='<tr><td'.$bgcolor.'><a href="'.htmlspecialchars($this->scriptSelf.'?TYPO3_INSTALL[type]='.$k.($this->mode?'&mode='.rawurlencode($this->mode):'')).'">'.$this->fw($c.': '.$v).'</a></td></tr>';
 		}
 
 		$code = '<table border="0" cellpadding="0" cellspacing="1">'.implode($out,chr(10)).'</table>';
-		$code = '<table border="0" cellpadding="0" cellspacing="0" bgcolor="#ABBBB4"><tr><td>'.$code.'</td></tr></table>';
+		$code = '<table border="0" cellpadding="0" cellspacing="0" id="menu"><tr><td>'.$code.'</td></tr></table>';
 		return '<div align="center">'.$code.'</div>';
 	}
 
@@ -4975,7 +5047,7 @@ a:hover {color: #006; text-decoration:underline:}
 	function note123()	{
 		if ($this->mode=='123')	{
 			$c='<table border="0" cellpadding="0" cellspacing="0" width="100%">
-				<tr><td bgcolor="#D9D5C9" nowrap="nowrap"><img src="'.$this->backPath.'gfx/icon_note.gif" width="18" height="16" align="top" alt=""><strong>'.$this->fontTag1.'NOTICE: Install Tool is running in \'123\' mode. <a href="'.$this->scriptSelf.'">Click here to disable.</a></span></strong></td></tr>
+				<tr><td class="notice" nowrap="nowrap"><img src="' . $this->backPath . 'gfx/icon_note.gif" width="18" height="16" align="top" alt=""><strong>' . $this->fontTag1 . 'NOTICE: Install Tool is running in \'123\' mode. <a href="' . $this->scriptSelf . '">Click here to disable.</a></span></strong></td></tr>
 			</table>';
 			return $c;
 		}
@@ -4989,7 +5061,7 @@ a:hover {color: #006; text-decoration:underline:}
 	function endNotes()	{
 		if ($this->mode!='123' && $this->passwordOK)	{
 			$c.='OS detected: <strong>'.(TYPO3_OS=='WIN'?'WIN':'UNIX').'</strong><br />';
-			$c.='UNIX/CGI detected: <strong>'.(php_sapi_name()=='cgi' ? 'YES' : 'NO').'</strong><br />';
+			$c.='UNIX/CGI detected: <strong>'.(PHP_SAPI=='cgi' ? 'YES' : 'NO').'</strong><br />';
 			$c.='PATH_thisScript: <strong>'.PATH_thisScript.'</strong><br />';
 			$c.='<br />';
 			$c.='<a href="../index.php" target="install_backend">Backend admin in new window.</a><br />';
@@ -5134,9 +5206,21 @@ a:hover {color: #006; text-decoration:underline:}
 
 		return $backupFile;
 	}
+
+	/**
+	 * Returns a newly created TYPO3 encryption key with a given length.
+	 *
+	 * @param  integer  $keyLength  desired key length
+	 * @return string
+	 */
+	protected function createEncryptionKey($keyLength = 96) {
+		$bytes = t3lib_div::generateRandomBytes($keyLength);
+		return substr(bin2hex($bytes), -96);
+	}
 }
 
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install.php']);
 }
+
 ?>

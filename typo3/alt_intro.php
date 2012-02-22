@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * Will display the list of main- and sub-modules available to the user.
  * Each module will be show with description and a link to the module.
  *
- * $Id: alt_intro.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: alt_intro.php 5526 2009-06-02 13:52:04Z benni $
  * Revised for TYPO3 3.6 2/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -53,8 +53,6 @@
 
 require ('init.php');
 require ('template.php');
-require_once (PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once ('class.alt_menu_functions.inc');
 $LANG->includeLLFile('EXT:lang/locallang_alt_intro.xml');
 
@@ -107,7 +105,6 @@ class SC_alt_intro {
 
 		$alt_menuObj = t3lib_div::makeInstance('alt_menu_functions');
 
-		$TBE_TEMPLATE->docType = 'xhtml_trans';
 		$TBE_TEMPLATE->divClass = $TBE_TEMPLATE->bodyTagId;
 		$this->content.= $TBE_TEMPLATE->startPage('About modules');
 
@@ -135,8 +132,8 @@ class SC_alt_intro {
 		$this->content.='<p class="c-user">'.
 				htmlspecialchars($LANG->getLL('userInfo')).
 				sprintf(' <strong>%s</strong> (%s)',
-						$BE_USER->user['username'],
-						(implode(', ',array($BE_USER->user['realName'],$BE_USER->user['email'])))
+						htmlspecialchars($BE_USER->user['username']),
+						htmlspecialchars(implode(', ',array($BE_USER->user['realName'],$BE_USER->user['email'])))
 						).
 				'</p>
 				<br />
@@ -156,19 +153,10 @@ class SC_alt_intro {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_intro.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/alt_intro.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -177,4 +165,5 @@ $SOBE = t3lib_div::makeInstance('SC_alt_intro');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

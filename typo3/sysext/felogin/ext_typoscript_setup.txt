@@ -1,9 +1,13 @@
 plugin.tx_felogin_pi1 {
 		#storagePid - where are the user records? use single value or a commaseperated list
 	storagePid = {$styles.content.loginform.pid}
+	recursive = 
 	
 		#Template File
 	templateFile = EXT:felogin/template.html
+	
+		#baseURL for the link generation
+	feloginBaseURL = 
 	
 		#wrapContentInBaseClass
 	wrapContentInBaseClass = 1
@@ -23,7 +27,11 @@ plugin.tx_felogin_pi1 {
 	showForgotPasswordLink =
 	showPermaLogin =
 	
+		# time in hours how long the link for forget password is valid
+	forgotLinkHashValidTime = 12
 	
+	newPasswordMinLength = 6
+
 	welcomeHeader_stdWrap {
 		wrap = <h3>|</h3>
 	}
@@ -59,7 +67,21 @@ plugin.tx_felogin_pi1 {
 		wrap = <div>|</div>
 	}
 	
+	changePasswordHeader_stdWrap {
+		wrap = <h3>|</h3>
+	}
+	changePasswordMessage_stdWrap {
+		wrap = <div>|</div>
+	}
 	
+	
+	# stdWrap for fe_users fields used in Messages
+	userfields {
+		username {
+			htmlSpecialChars = 1
+			wrap = <strong>|</strong>
+		}
+	}
 	
 		#redirect
 	redirectMode =
@@ -79,7 +101,7 @@ plugin.tx_felogin_pi1 {
 	# Allowed Referrer-Redirect-Domains:
 	domains =
 	
-	
+	dateFormat = Y-m-d H:i
 }
 
 plugin.tx_felogin_pi1._CSS_DEFAULT_STYLE (

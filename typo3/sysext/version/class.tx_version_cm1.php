@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2004-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -69,7 +69,9 @@ class tx_version_cm1 {
 		if (!$backRef->cmLevel && $uid>0 && $BE_USER->check('modules','web_txversionM1'))	{
 
 				// Returns directly, because the clicked item was not from the pages table
-			if (!$TCA[$table] || !$TCA[$table]['ctrl']['versioningWS'])	return $menuItems;
+			if (in_array('versioning', $backRef->disabledItems) || !$TCA[$table] || !$TCA[$table]['ctrl']['versioningWS']) {
+				return $menuItems;
+			}
 
 				// Adds the regular item
 			$LL = $this->includeLL();

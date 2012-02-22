@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Generate a page-tree, non-browsable.
  *
- * $Id: class.t3lib_pagetree.php 3319 2008-02-28 21:28:57Z ohader $
+ * $Id: class.t3lib_pagetree.php 5482 2009-05-22 19:08:30Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -64,7 +64,6 @@
 
 
 
-require_once (PATH_t3lib.'class.t3lib_treeview.php');
 
 /**
  * Class for generating a page tree.

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Move element wizard:
  * Moving pages or content elements (tt_content) around in the system via a page tree navigation.
  *
- * $Id: move_el.php 3775 2008-06-10 12:05:31Z patrick $
+ * $Id: move_el.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compatible.
  *
@@ -71,11 +71,6 @@ require('template.php');
 
 	// Include local language labels:
 $LANG->includeLLFile('EXT:lang/locallang_misc.xml');
-
-	// Include libraries:
-require_once(PATH_t3lib.'class.t3lib_page.php');
-require_once(PATH_t3lib.'class.t3lib_positionmap.php');
-require_once(PATH_t3lib.'class.t3lib_pagetree.php');
 
 
 
@@ -260,7 +255,7 @@ class SC_move_el {
 		$this->sys_language = intval(t3lib_div::_GP('sys_language'));
 		$this->page_id=intval(t3lib_div::_GP('uid'));
 		$this->table=t3lib_div::_GP('table');
-		$this->R_URI=t3lib_div::_GP('returnUrl');
+		$this->R_URI=t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 		$this->input_moveUid = t3lib_div::_GP('moveUid');
 		$this->moveUid = $this->input_moveUid ? $this->input_moveUid : $this->page_id;
 		$this->makeCopy = t3lib_div::_GP('makeCopy');
@@ -270,7 +265,6 @@ class SC_move_el {
 
 			// Starting the document template object:
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->docType= 'xhtml_trans';
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/move_el.html');
 		$this->doc->JScode='';
@@ -454,19 +448,10 @@ class SC_move_el {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/move_el.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/move_el.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -475,4 +460,5 @@ $SOBE = t3lib_div::makeInstance('SC_move_el');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

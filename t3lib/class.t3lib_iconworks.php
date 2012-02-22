@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for icon generation in the backend
  *
- * $Id: class.t3lib_iconworks.php 4622 2008-12-29 13:32:28Z steffenk $
+ * $Id: class.t3lib_iconworks.php 7242 2010-04-05 16:01:06Z xperseguers $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -187,11 +187,19 @@ final class t3lib_iconWorks	{
 				// If "hidden" is enabled:
 			if ($enCols['disabled'])	{ if ($row[$enCols['disabled']]) { $hidden = TRUE; }}
 				// If a "starttime" is set and higher than current time:
-			if ($enCols['starttime'])	{ if (time() < intval($row[$enCols['starttime']]))	{ $timing = TRUE; }}
+			if ($enCols['starttime']) {
+				if ($GLOBALS['EXEC_TIME'] < intval($row[$enCols['starttime']])) {
+					$timing = TRUE;
+						// ...And if "endtime" is NOT set:
+					if (intval($row[$enCols['endtime']]) == 0) {
+						$futuretiming = TRUE;
+					}
+				}
+			}
 				// If an "endtime" is set:
 			if ($enCols['endtime']) {
 				if (intval($row[$enCols['endtime']]) > 0) {
-					if (intval($row[$enCols['endtime']]) < time()) {
+					if (intval($row[$enCols['endtime']]) < $GLOBALS['EXEC_TIME']) {
 						$timing = TRUE;	// End-timing applies at this point.
 					} else {
 						$futuretiming = TRUE;		// End-timing WILL apply in the future for this element.
@@ -241,13 +249,13 @@ final class t3lib_iconWorks	{
 			}
 
 				// Create tagged icon file name:
-			$iconFileName_stateTagged = ereg_replace('.([[:alnum:]]+)$', '__'.$flags.'.\1', basename($iconfile));
+			$iconFileName_stateTagged = preg_replace('/.([[:alnum:]]+)$/', '__'.$flags.'.\1', basename($iconfile));
 
 				// Check if tagged icon file name exists (a tagget icon means the icon base name with the flags added between body and extension of the filename, prefixed with underscore)
-			if (@is_file(dirname($absfile).'/'.$iconFileName_stateTagged))	{	// Look for [iconname]_xxxx.[ext]
+			if (@is_file(dirname($absfile) . '/' . $iconFileName_stateTagged) || @is_file($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['absDir'] . '/' . dirname($iconfile) . '/' . $iconFileName_stateTagged)) {	// Look for [iconname]_xxxx.[ext]
 				return dirname($iconfile).'/'.$iconFileName_stateTagged;
 			} elseif ($doNotGenerateIcon)	{		// If no icon generation can be done, try to look for the _X icon:
-				$iconFileName_X = ereg_replace('.([[:alnum:]]+)$', '__x.\1', basename($iconfile));
+				$iconFileName_X = preg_replace('/.([[:alnum:]]+)$/', '__x.\1', basename($iconfile));
 				if (@is_file(dirname($absfile).'/'.$iconFileName_X)) {
 					return dirname($iconfile).'/'.$iconFileName_X;
 				} else {
@@ -276,49 +284,57 @@ final class t3lib_iconWorks	{
 	 */
 	public static function skinImg($backPath, $src, $wHattribs = '', $outputMode = 0)	{
 
+		static $cachedSkinImages = array();
+
+		$imageId = md5($backPath . $src . $wHattribs . $outputMode);
+
+		if (isset($cachedSkinImages[$imageId])) {
+			return $cachedSkinImages[$imageId];
+		}
 			// Setting source key. If the icon is refered to inside an extension, we homogenize the prefix to "ext/":
-		$srcKey = ereg_replace('^(\.\.\/typo3conf\/ext|sysext|ext)\/', 'ext/', $src);
-#if ($src!=$srcKey)debug(array($src, $srcKey));
+		$srcKey = preg_replace('/^(\.\.\/typo3conf\/ext|sysext|ext)\//', 'ext/', $src);
+		#if ($src!=$srcKey)debug(array($src, $srcKey));
 
 			// LOOKING for alternative icons:
-		if ($GLOBALS['TBE_STYLES']['skinImg'][$srcKey])	{	// Slower or faster with is_array()? Could be used.
+		if ($GLOBALS['TBE_STYLES']['skinImg'][$srcKey]) {	// Slower or faster with is_array()? Could be used.
 			list($src, $wHattribs) = $GLOBALS['TBE_STYLES']['skinImg'][$srcKey];
-		} elseif ($GLOBALS['TBE_STYLES']['skinImgAutoCfg'])	{	// Otherwise, test if auto-detection is enabled:
+		} elseif ($GLOBALS['TBE_STYLES']['skinImgAutoCfg']) {	// Otherwise, test if auto-detection is enabled:
 
 				// Search for alternative icon automatically:
 			$fExt = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['forceFileExtension'];
-			$scaleFactor = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['scaleFactor'] ? $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['scaleFactor'] : 1;	// Scaling factor
-			$lookUpName = $fExt ? ereg_replace('\.[[:alnum:]]+$', '', $srcKey).'.'.$fExt : $srcKey;	// Set filename to look for
-	 
+			$scaleFactor = ($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['scaleFactor'] ? $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['scaleFactor'] : 1);	// Scaling factor
+			$lookUpName = ($fExt ? preg_replace('/\.[[:alnum:]]+$/', '', $srcKey) . '.' . $fExt : $srcKey);	// Set filename to look for
+
 			if ($fExt && !@is_file($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['absDir'] . $lookUpName)) {
 				// fallback to original filename if icon with forced extension doesn't exists
-				$lookUpName = $srcKey;	
+				$lookUpName = $srcKey;
 			}
 				// If file is found:
-			if (@is_file($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['absDir'].$lookUpName))	{	// If there is a file...
-				$iInfo = @getimagesize($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['absDir'].$lookUpName);	// Get width/height:
+			if (@is_file($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['absDir'].$lookUpName)) {	// If there is a file...
+				$iInfo = @getimagesize($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['absDir'] . $lookUpName);	// Get width/height:
 
 					// Set $src and $wHattribs:
-				$src = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['relDir'].$lookUpName;
-				$wHattribs = 'width="'.round($iInfo[0]*$scaleFactor).'" height="'.round($iInfo[1]*$scaleFactor).'"';
+				$src = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['relDir'] . $lookUpName;
+				$wHattribs = 'width="' . round($iInfo[0] * $scaleFactor) . '" height="' . round($iInfo[1] * $scaleFactor) . '"';
 			}
 
-				// In anycase, set currect src / wHattrib - this way we make sure that an entry IS found next time we hit the function, regardless of whether it points to a alternative icon or just the current.
+				// In any case, set currect src / wHattrib - this way we make sure that an entry IS found next time we hit the function,
+				// regardless of whether it points to a alternative icon or just the current.
 			$GLOBALS['TBE_STYLES']['skinImg'][$srcKey] = array($src, $wHattribs);		// Set default...
 		}
 
 			// DEBUG: This doubles the size of all icons - for testing/debugging:
-#		if (ereg('^width="([0-9]+)" height="([0-9]+)"$', $wHattribs, $reg))	$wHattribs='width="'.($reg[1]*2).'" height="'.($reg[2]*2).'"';
+		# if (preg_match('/^width="([0-9]+)" height="([0-9]+)"$/', $wHattribs, $reg))	$wHattribs='width="'.($reg[1]*2).'" height="'.($reg[2]*2).'"';
 
 
 			// rendering disabled (greyed) icons using _i (inactive) as name suffix ("_d" is already used)
 		$matches = array();
 		$srcBasename = basename($src);
 		if (preg_match('/(.*)_i(\....)$/', $srcBasename, $matches)) {
-			$temp_path = dirname(PATH_thisScript).'/';
-			if(!@is_file($temp_path.$backPath.$src)) {
-				$srcOrg = preg_replace('/_i'.preg_quote($matches[2]).'$/', $matches[2], $src);
-				$src = t3lib_iconWorks::makeIcon($backPath.$srcOrg, 'disabled', 0, false, $temp_path.$backPath.$srcOrg, $srcBasename);
+			$temp_path = dirname(PATH_thisScript) . '/';
+			if (!@is_file($temp_path . $backPath . $src)) {
+				$srcOrg = preg_replace('/_i' . preg_quote($matches[2]) . '$/', $matches[2], $src);
+				$src = t3lib_iconWorks::makeIcon($backPath . $srcOrg, 'disabled', 0, false, $temp_path . $backPath . $srcOrg, $srcBasename);
 			}
 		}
 
@@ -327,15 +343,17 @@ final class t3lib_iconWorks	{
 		$output = '';
 		switch($outputMode) {
 			case 0:
-				$output = ' src="'.$backPath.$src.'" '.$wHattribs;
+				$output = ' src="' . $backPath . $src . '" ' . $wHattribs;
 			break;
 			case 1:
-				$output = $backPath.$src;
+				$output = $backPath . $src;
 			break;
 			case 2:
 				$output = $wHattribs;
 			break;
 		}
+
+		$cachedSkinImages[$imageId] = $output;
 		return $output;
 	}
 
@@ -373,12 +391,12 @@ final class t3lib_iconWorks	{
 		$path = PATH_site.'typo3temp/'.$iconFileName;
 
 
-		if (@file_exists(PATH_typo3.'icons/'.$iconFileName))	{	// Returns if found in typo3/icons/
+		if (file_exists(PATH_typo3.'icons/'.$iconFileName))	{	// Returns if found in typo3/icons/
 			return 'icons/'.$iconFileName;
-		} elseif (@file_exists($path))	{	// Returns if found in ../typo3temp/icons/
+		} elseif (file_exists($path))	{	// Returns if found in ../typo3temp/icons/
 			return $mainpath;
 		} else {	// Makes icon:
-			if (@file_exists($absFile)) {
+			if (file_exists($absFile)) {
 				if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib'])	{
 
 						// Create image pointer, if possible

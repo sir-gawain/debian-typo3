@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Module: Workspace manager
  *
- * $Id: workspaceforms.php 3510 2008-04-01 20:42:57Z flyguide $
+ * $Id: workspaceforms.php 6469 2009-11-17 23:56:35Z benni $
  *
  * @author	Dmitry Dulepov <typo3@accio.lv>
  */
@@ -76,12 +76,7 @@ $BE_USER->modAccess($MCONF,1);
 
 // Include libraries of various kinds used inside:
 $LANG->includeLLFile('EXT:lang/locallang_mod_user_ws.xml');
-require_once(PATH_t3lib.'class.t3lib_scbase.php');
 //require_once(PATH_typo3.'mod/user/ws/class.wslib.php');
-require_once(PATH_t3lib.'class.t3lib_tcemain.php');
-require_once(PATH_t3lib.'class.t3lib_tceforms.php');
-require_once (PATH_t3lib.'class.t3lib_transferdata.php');
-require_once (PATH_t3lib.'class.t3lib_loaddbgroup.php');
 
 /**
  * Module: Workspace forms for editing/creating workspaces.
@@ -140,7 +135,6 @@ class SC_mod_user_ws_workspaceForms extends t3lib_SCbase {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->setModuleTemplate('templates/ws_forms.html');
-		$this->doc->docType = 'xhtml_trans';
 		$this->doc->form = '<form action="' . t3lib_div::getIndpEnv('SCRIPT_NAME').'" method="post" enctype="'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['form_enctype'].'" name="editform" onsubmit="return TBE_EDITOR.checkSubmit(1);">';
 
 		$this->doc->getContextMenuCode();
@@ -199,8 +193,7 @@ class SC_mod_user_ws_workspaceForms extends t3lib_SCbase {
 			// if 'Save&Close' was pressed, redirect to main module script
 			if (t3lib_div::_GP('_saveandclosedok_x')) {
 				// `n` below is to prevent caching
-				header('Location: ' . t3lib_div::locationHeaderUrl('index.php?n=' . uniqid('')));
-				exit();
+				t3lib_utility_Http::redirect('index.php?n=' . uniqid(''));
 			}
 		}
 
@@ -653,7 +646,7 @@ class user_SC_mod_user_ws_workspaceForms {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/workspaceforms.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/workspaceforms.php']);
 }
@@ -663,4 +656,5 @@ $SOBE = t3lib_div::makeInstance('SC_mod_user_ws_workspaceForms');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

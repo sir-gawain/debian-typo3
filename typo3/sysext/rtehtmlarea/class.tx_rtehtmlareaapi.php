@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,11 +26,9 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlareaapi.php 4131 2008-09-15 17:24:40Z stan $
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlareaapi.php 5947 2009-09-16 17:57:09Z ohader $
  *
  */
-
-require_once(PATH_t3lib.'class.t3lib_div.php');
 
 abstract class tx_rtehtmlareaapi {
 
@@ -49,6 +47,7 @@ abstract class tx_rtehtmlareaapi {
 	protected $pluginAddsButtons = true;			// Boolean indicating whether the plugin is adding buttons or not
 	protected $convertToolbarForHtmlAreaArray = array();	// The name-converting array, converting the button names used in the RTE PageTSConfing to the button id's used by the JS scripts
 	protected $requiresClassesConfiguration = false;	// True if the registered plugin requires the PageTSConfig Classes configuration
+	protected $requiresSynchronousLoad = false;		// True if the plugin must be loaded synchronously
 	protected $requiredPlugins = '';			// The comma-separated list of names of prerequisite plugins
 
 	/**
@@ -61,7 +60,7 @@ abstract class tx_rtehtmlareaapi {
 	public function main($parentObject) {
 		global $TYPO3_CONF_VARS, $LANG, $TSFE;
 
-		$this->htmlAreaRTE =& $parentObject;
+		$this->htmlAreaRTE = $parentObject;
 		$this->rteExtensionKey =& $this->htmlAreaRTE->ID;
 		$this->thisConfig =& $this->htmlAreaRTE->thisConfig;
 		$this->toolbar =& $this->htmlAreaRTE->toolbar;
@@ -74,6 +73,7 @@ abstract class tx_rtehtmlareaapi {
 		if ($this->htmlAreaRTE->is_FE() && $TYPO3_CONF_VARS['EXTCONF'][$this->rteExtensionKey]['plugins'][$this->pluginName]['disableInFE']) {
 			return false;
 		}
+
 			// Localization array must be initialized here
 		if ($this->relativePathToLocallangFile) {
 			if ($this->htmlAreaRTE->is_FE()) {
@@ -154,7 +154,7 @@ abstract class tx_rtehtmlareaapi {
 	public function getPathToPluginDirectory() {
 		return ($this->relativePathToPluginDirectory ? $this->htmlAreaRTE->httpTypo3Path . t3lib_extMgm::siteRelPath($this->extensionKey) . $this->relativePathToPluginDirectory : '');
 	}
-	
+
 	/**
 	 * Returns a boolean indicating whether the plugin adds buttons or not to the toolbar
 	 *
@@ -198,6 +198,26 @@ abstract class tx_rtehtmlareaapi {
 	 */
 	public function requiresClassesConfiguration() {
 		return $this->requiresClassesConfiguration;
+	}
+
+	/**
+	 * Returns true if the plugin requires synchronous load
+	 *
+	 * @return	boolean		true if the plugin requires synchronous load
+	 */
+	public function requiresSynchronousLoad() {
+		return $this->requiresSynchronousLoad;
+	}
+
+	/**
+	 * Sets the plugin to require synchronous load or not
+	 *
+	 * @param	boolean		$value: the boolean value to set
+	 *
+	 * @return	void
+	 */
+	public function setSynchronousLoad($value = true) {
+		$this->requiresSynchronousLoad = $value;
 	}
 
 	/**

@@ -1,5 +1,5 @@
 #
-# TYPO3 SVN ID: $Id: ext_tables.sql 3766 2008-06-05 17:14:19Z ingmars $
+# TYPO3 SVN ID: $Id: ext_tables.sql 6525 2009-11-25 11:27:34Z steffenk $
 #
 
 
@@ -11,7 +11,7 @@ CREATE TABLE cache_pages (
   hash varchar(32) DEFAULT '' NOT NULL,
   page_id int(11) unsigned DEFAULT '0' NOT NULL,
   reg1 int(11) unsigned DEFAULT '0' NOT NULL,
-  HTML mediumtext,
+  HTML mediumblob,
   temp_content int(1) DEFAULT '0' NOT NULL,
   tstamp int(11) unsigned DEFAULT '0' NOT NULL,
   expires int(10) unsigned DEFAULT '0' NOT NULL,
@@ -31,6 +31,62 @@ CREATE TABLE cache_pagesection (
   content blob,
   tstamp int(11) unsigned DEFAULT '0' NOT NULL,
   PRIMARY KEY (page_id,mpvar_hash)
+) ENGINE=InnoDB;
+
+
+
+
+#
+# Table structure for table 'cachingframework_cache_pages'
+#
+CREATE TABLE cachingframework_cache_pages (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pages_tags'
+#
+CREATE TABLE cachingframework_cache_pages_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pagesection'
+#
+CREATE TABLE cachingframework_cache_pagesection (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumtext,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pagesection_tags'
+#
+CREATE TABLE cachingframework_cache_pagesection_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
 ) ENGINE=InnoDB;
 
 
@@ -69,6 +125,19 @@ CREATE TABLE cache_imagesizes (
   imagewidth mediumint(11) unsigned DEFAULT '0' NOT NULL,
   imageheight mediumint(11) unsigned DEFAULT '0' NOT NULL,
   PRIMARY KEY (md5filename)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_treelist'
+#
+CREATE TABLE cache_treelist (
+  md5hash char(32) DEFAULT '' NOT NULL,
+  pid int(11) DEFAULT '0' NOT NULL,
+  treelist text,
+  tstamp int(11) DEFAULT '0' NOT NULL,
+  expires int(11) unsigned  DEFAULT '0' NOT NULL,
+  PRIMARY KEY (md5hash)
 ) ENGINE=InnoDB;
 
 
@@ -167,10 +236,11 @@ CREATE TABLE fe_users (
 CREATE TABLE pages_language_overlay (
   uid int(11) NOT NULL auto_increment,
   pid int(11) DEFAULT '0' NOT NULL,
+  doktype tinyint(3) unsigned DEFAULT '0' NOT NULL,
   t3ver_oid int(11) DEFAULT '0' NOT NULL,
   t3ver_id int(11) DEFAULT '0' NOT NULL,
   t3ver_wsid int(11) DEFAULT '0' NOT NULL,
-  t3ver_label varchar(30) DEFAULT '' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
   t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_count int(11) DEFAULT '0' NOT NULL,
@@ -195,6 +265,10 @@ CREATE TABLE pages_language_overlay (
   author_email varchar(80) DEFAULT '' NOT NULL,
   tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
   l18n_diffsource mediumblob,
+  url varchar(255) DEFAULT '' NOT NULL,
+  urltype tinyint(4) unsigned DEFAULT '0' NOT NULL,
+  shortcut int(10) unsigned DEFAULT '0' NOT NULL,
+  shortcut_mode int(10) unsigned DEFAULT '0' NOT NULL,
 
   PRIMARY KEY (uid),
   KEY t3ver_oid (t3ver_oid,t3ver_wsid),
@@ -233,8 +307,10 @@ CREATE TABLE sys_domain (
   hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
   domainName varchar(80) DEFAULT '' NOT NULL,
   redirectTo varchar(120) DEFAULT '' NOT NULL,
+  redirectHttpStatusCode int(4) unsigned DEFAULT '301' NOT NULL,
   sorting int(10) unsigned DEFAULT '0' NOT NULL,
   prepend_params int(10) DEFAULT '0' NOT NULL,
+  forced tinyint(3) unsigned DEFAULT '0' NOT NULL,
 
   PRIMARY KEY (uid),
   KEY parent (pid)
@@ -251,7 +327,7 @@ CREATE TABLE sys_template (
   t3ver_oid int(11) DEFAULT '0' NOT NULL,
   t3ver_id int(11) DEFAULT '0' NOT NULL,
   t3ver_wsid int(11) DEFAULT '0' NOT NULL,
-  t3ver_label varchar(30) DEFAULT '' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
   t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_count int(11) DEFAULT '0' NOT NULL,
@@ -296,7 +372,7 @@ CREATE TABLE tt_content (
   t3ver_oid int(11) DEFAULT '0' NOT NULL,
   t3ver_id int(11) DEFAULT '0' NOT NULL,
   t3ver_wsid int(11) DEFAULT '0' NOT NULL,
-  t3ver_label varchar(30) DEFAULT '' NOT NULL,
+  t3ver_label varchar(255) DEFAULT '' NOT NULL,
   t3ver_state tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_stage tinyint(4) DEFAULT '0' NOT NULL,
   t3ver_count int(11) DEFAULT '0' NOT NULL,
@@ -391,7 +467,7 @@ CREATE TABLE pages (
   fe_group varchar(100) DEFAULT '0' NOT NULL,
   subtitle varchar(255) DEFAULT '' NOT NULL,
   layout tinyint(3) unsigned DEFAULT '0' NOT NULL,
-  target varchar(20) DEFAULT '' NOT NULL,
+  target varchar(80) DEFAULT '' NOT NULL,
   media text,
   lastUpdated int(10) unsigned DEFAULT '0' NOT NULL,
   keywords text,

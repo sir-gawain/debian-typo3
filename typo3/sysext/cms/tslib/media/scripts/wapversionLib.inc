@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains class for creating WAP pages for TYPO3
  *
- * $Id: wapversionLib.inc 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: wapversionLib.inc 5634 2009-06-26 13:25:08Z ohader $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -57,31 +57,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-require_once (PATH_t3lib.'class.t3lib_xml.php');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Class that creates the current page and content element records as an WML structure using the library "t3lib_xml"
  * It is demonstrated in use in the testsite package on page "59"
@@ -141,9 +116,7 @@ class user_wapversion {
 	function main_wapversion($content,$conf)	{
 		$GLOBALS['TSFE']->set_no_cache();
 
-
-		$className=t3lib_div::makeInstanceClassName('t3lib_xml');
-		$xmlObj = new $className('wml');
+		$xmlObj = t3lib_div::makeInstance('t3lib_xml', 'wml');
 		$xmlObj->XMLdebug=$conf['debug'];
 
 			// Creating top level object
@@ -200,8 +173,8 @@ class user_wapversion {
 	function contentAbstract()	{
 		$res = $this->getContentResult('tt_content');
 		$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
-		$out = $this->bold(t3lib_div::fixed_lgd(htmlspecialchars($row['header']),20)).'<br/>';
-		$out.= t3lib_div::fixed_lgd(htmlspecialchars($row['bodytext']),50);
+		$out = $this->bold(t3lib_div::fixed_lgd_cs(htmlspecialchars($row['header']),20)).'<br/>';
+		$out.= t3lib_div::fixed_lgd_cs(htmlspecialchars($row['bodytext']),50);
 		$out = '<p>'.$out.' <a href="'.htmlspecialchars('?id='.$GLOBALS['TSFE']->id.',1.'.$GLOBALS['TSFE']->type).'">[more]</a></p>';
 		return $out;
 	}
@@ -289,7 +262,7 @@ class user_wapversion {
 	 * @see contentAll()
 	 */
 	function cBodytext($str,$start=0,$max=0)	{
-		$out = t3lib_div::fixed_lgd(($start?'...':'').substr($this->nl2br(htmlspecialchars(strip_tags($str))),$start),($max?$max:100000));
+		$out = t3lib_div::fixed_lgd_cs(($start?'...':'').substr($this->nl2br(htmlspecialchars(strip_tags($str))),$start),($max?$max:100000));
 		$out = str_replace('&','',$out);	// No & in WAP docs??? --> or maybe just htmlspecialchar() things as the LAST thing instead!)
 		return $out;
 	}
@@ -301,7 +274,7 @@ class user_wapversion {
 	 * @return	string		The processed value returned.
 	 */
 	function nl2br($str)	{
-		return ereg_replace(chr(10),'<br/>',$str);
+		return str_replace(chr(10),'<br/>',$str);
 	}
 
 	/**

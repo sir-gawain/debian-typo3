@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2001-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2001-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -70,7 +70,6 @@
 
 
 # To make sure the backend charset is available:
-require_once(PATH_typo3.'sysext/lang/lang.php');
 if (!is_object($GLOBALS['LANG']))	{
 	$GLOBALS['LANG'] = t3lib_div::makeInstance('language');
 	$GLOBALS['LANG']->init($GLOBALS['BE_USER']->uc['lang']);
@@ -110,8 +109,8 @@ class tx_indexedsearch_crawler {
 			'*',
 			'index_config',
 			'hidden=0
-				AND (starttime=0 OR starttime<='.time().')
-				AND timer_next_indexing<'.time().'
+				AND (starttime=0 OR starttime<=' . $GLOBALS['EXEC_TIME'] . ')
+				AND timer_next_indexing<' . $GLOBALS['EXEC_TIME'] . '
 				AND set_id=0
 				'.t3lib_BEfunc::deleteClause('index_config')
 		);
@@ -187,7 +186,7 @@ class tx_indexedsearch_crawler {
 				break;
 				default:
 					if ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['crawler'][$cfgRec['type']])	{
-						$hookObj = &t3lib_div::getUserObj($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['crawler'][$cfgRec['type']]);
+						$hookObj = t3lib_div::getUserObj($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['crawler'][$cfgRec['type']]);
 
 						if (is_object($hookObj))	{
 
@@ -252,10 +251,10 @@ class tx_indexedsearch_crawler {
 					break;
 					default:
 						if ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['crawler'][$cfgRec['type']])	{
-							$hookObj = &t3lib_div::getUserObj($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['crawler'][$cfgRec['type']]);
+							$hookObj = t3lib_div::getUserObj($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['crawler'][$cfgRec['type']]);
 
 							if (is_object($hookObj))	{
-								$this->pObj = &$pObj;	// For addQueueEntryForHook()
+								$this->pObj = $pObj;	// For addQueueEntryForHook()
 								$hookObj->indexOperation($cfgRec,$session_data,$params,$this);
 							}
 						}
@@ -361,7 +360,7 @@ class tx_indexedsearch_crawler {
 				$this->loadIndexerClass();
 
 					// (Re)-Indexing file on page.
-				$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+				$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 				$indexerObj->backend_initIndexer($cfgRec['pid'], 0, 0, '', $rl);
 				$indexerObj->backend_setFreeIndexUid($cfgRec['uid'], $cfgRec['set_id']);
 				$indexerObj->hash['phash'] = -1;	// EXPERIMENT - but to avoid phash_t3 being written to file sections (otherwise they are removed when page is reindexed!!!)
@@ -396,7 +395,13 @@ class tx_indexedsearch_crawler {
 							'procInstructions' => array('[Index Cfg UID#'.$cfgRec['uid'].']'),
 							'depth' => $params['depth']+1
 						);
-						$pObj->addQueueEntry_callBack($cfgRec['set_id'],$nparams,$this->callBack,$cfgRec['pid'],time()+$this->instanceCounter*$this->secondsPerExternalUrl);
+						$pObj->addQueueEntry_callBack(
+							$cfgRec['set_id'],
+							$nparams,
+							$this->callBack,
+							$cfgRec['pid'],
+							$GLOBALS['EXEC_TIME'] + $this->instanceCounter * $this->secondsPerExternalUrl
+						);
 					}
 				}
 			}
@@ -440,7 +445,13 @@ class tx_indexedsearch_crawler {
 							'procInstructions' => array('[Index Cfg UID#'.$cfgRec['uid'].']'),
 							'depth' => $params['depth']+1
 						);
-						$pObj->addQueueEntry_callBack($cfgRec['set_id'],$nparams,$this->callBack,$cfgRec['pid'],time()+$this->instanceCounter*$this->secondsPerExternalUrl);
+						$pObj->addQueueEntry_callBack(
+							$cfgRec['set_id'],
+							$nparams,
+							$this->callBack,
+							$cfgRec['pid'],
+							$GLOBALS['EXEC_TIME'] + $this->instanceCounter * $this->secondsPerExternalUrl
+						);
 					}
 				}
 			}
@@ -471,7 +482,17 @@ class tx_indexedsearch_crawler {
 			// Submit URLs:
 		if (count($res))	{
 			foreach($res as $paramSetKey => $vv)	{
-				$urlList = $pObj->urlListFromUrlArray($vv,$pageRow,time(),30,1,0,$duplicateTrack,$downloadUrls,array('tx_indexedsearch_reindex'));
+				$urlList = $pObj->urlListFromUrlArray(
+					$vv,
+					$pageRow,
+					$GLOBALS['EXEC_TIME'],
+					30,
+					1,
+					0,
+					$duplicateTrack,
+					$downloadUrls,
+					array('tx_indexedsearch_reindex')
+				);
 			}
 		}
 
@@ -500,7 +521,13 @@ class tx_indexedsearch_crawler {
 						'procInstructions' => array('[Index Cfg UID#'.$cfgRec['uid'].']'),
 						'depth' => $params['depth']+1
 					);
-					$pObj->addQueueEntry_callBack($cfgRec['set_id'],$nparams,$this->callBack,$cfgRec['pid'],time()+$this->instanceCounter*$this->secondsPerExternalUrl);
+					$pObj->addQueueEntry_callBack(
+						$cfgRec['set_id'],
+						$nparams,
+						$this->callBack,
+						$cfgRec['pid'],
+						$GLOBALS['EXEC_TIME'] + $this->instanceCounter * $this->secondsPerExternalUrl
+					);
 				}
 			}
 		}
@@ -524,13 +551,13 @@ class tx_indexedsearch_crawler {
 		foreach($runningIndexingConfigurations as $cfgRec)	{
 
 				// Look for ended processes:
-			list($queued_items) = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-				'count(*) AS count',
+			$queued_items = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+				'*',
 				'tx_crawler_queue',
-				'set_id='.intval($cfgRec['set_id']).' AND exec_time=0'
+				'set_id=' . intval($cfgRec['set_id']) . ' AND exec_time=0'
 			);
 
-			if (!$queued_items['count'])	{
+			if (!$queued_items) {
 
 					// Lookup old phash rows:
 				$oldPhashRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
@@ -578,7 +605,7 @@ class tx_indexedsearch_crawler {
 	 * @return	string		Returls the URL if OK, otherwise false
 	 */
 	function checkUrl($url,$urlLog,$baseUrl)	{
-		$url = ereg_replace('\/\/$','/',$url);
+		$url = preg_replace('/\/\/$/','/',$url);
 		list($url) = explode('#',$url);
 
 		if (!strstr($url,'../'))	{
@@ -606,13 +633,22 @@ class tx_indexedsearch_crawler {
 		$this->loadIndexerClass();
 
 			// Index external URL:
-		$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+		$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 		$indexerObj->backend_initIndexer($pageId, 0, 0, '', $rl);
 		$indexerObj->backend_setFreeIndexUid($cfgUid, $setId);
 		$indexerObj->hash['phash'] = -1;	// To avoid phash_t3 being written to file sections (otherwise they are removed when page is reindexed!!!)
 
 		$indexerObj->indexExternalUrl($url);
 		$url_qParts = parse_url($url);
+
+		$baseAbsoluteHref = $url_qParts['scheme'] . '://' . $url_qParts['host'];
+		$baseHref = $indexerObj->extractBaseHref($indexerObj->indexExternalUrl_content);
+		if (!$baseHref) {
+				// Extract base href from current URL
+			$baseHref = $baseAbsoluteHref;
+			$baseHref .= substr($url_qParts['path'], 0, strrpos($url_qParts['path'], '/'));
+		}
+		$baseHref = rtrim($baseHref, '/');
 
 			// Get URLs on this page:
 		$subUrls = array();
@@ -626,7 +662,12 @@ class tx_indexedsearch_crawler {
 
 			$qParts = parse_url($subUrl);
 			if (!$qParts['scheme'])	{
-				$subUrl = $url_qParts['scheme'].'://'.$url_qParts['host'].'/'.t3lib_div::resolveBackPath($subUrl);
+				$relativeUrl = t3lib_div::resolveBackPath($subUrl);
+				if ($relativeUrl{0} === '/') {
+					$subUrl = $baseAbsoluteHref . $relativeUrl;
+				} else {
+					$subUrl = $baseHref . '/' . $relativeUrl;
+				}
 			}
 
 			$subUrls[] = $subUrl;
@@ -656,7 +697,7 @@ class tx_indexedsearch_crawler {
 		$sys_language_uid = $languageField ? $r[$languageField] : 0;
 
 			// (Re)-Indexing a row from a table:
-		$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+		$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 		parse_str(str_replace('###UID###',$r['uid'],$cfgRec['get_params']),$GETparams);
 		$indexerObj->backend_initIndexer($cfgRec['pid'], 0, $sys_language_uid, '', $rl, $GETparams, $cfgRec['chashcalc'] ? TRUE : FALSE);
 		$indexerObj->backend_setFreeIndexUid($cfgRec['uid'], $cfgRec['set_id']);
@@ -673,18 +714,15 @@ class tx_indexedsearch_crawler {
 
 			// Indexing the record as a page (but with parameters set, see ->backend_setFreeIndexUid())
 		$indexerObj->backend_indexAsTYPO3Page(
-			strip_tags($theTitle),
+			strip_tags(str_replace('<', ' <', $theTitle)),
 			'',
 			'',
-			strip_tags($theContent),
+			strip_tags(str_replace('<', ' <', $theContent)),
 			$GLOBALS['LANG']->charSet,	// Requires that
 			$r[$GLOBALS['TCA'][$cfgRec['table2index']]['ctrl']['tstamp']],
 			$r[$GLOBALS['TCA'][$cfgRec['table2index']]['ctrl']['crdate']],
 			$r['uid']
 		);
-
-		#echo print_r($indexerObj->internal_log);
-		#echo print_r($indexerObj->contentParts);
 	}
 
 	/**
@@ -706,12 +744,6 @@ class tx_indexedsearch_crawler {
 	 */
 	function getUidRootLineForClosestTemplate($id)	{
 		global $TYPO3_CONF_VARS;
-
-		require_once (PATH_t3lib."class.t3lib_page.php");
-		require_once (PATH_t3lib."class.t3lib_tstemplate.php");
-		require_once (PATH_t3lib."class.t3lib_tsparser_ext.php");
-
-
 
 		$tmpl = t3lib_div::makeInstance("t3lib_tsparser_ext");
 		$tmpl->tt_track = 0;	// Do not log time-performance information
@@ -738,13 +770,13 @@ class tx_indexedsearch_crawler {
 	 * @return	integer		The next time stamp
 	 */
 	function generateNextIndexingTime($cfgRec)	{
-		$currentTime = time();
+		$currentTime = $GLOBALS['EXEC_TIME'];
 
 			// Now, find a midnight time to use for offset calculation. This has to differ depending on whether we have frequencies within a day or more than a day; Less than a day, we don't care which day to use for offset, more than a day we want to respect the currently entered day as offset regardless of when the script is run - thus the day-of-week used in case "Weekly" is selected will be respected
 		if ($cfgRec['timer_frequency']<=24*3600)	{
 			$aMidNight = mktime (0,0,0)-1*24*3600;
 		} else {
-			$lastTime = $cfgRec['timer_next_indexing']?$cfgRec['timer_next_indexing']:time();
+			$lastTime = $cfgRec['timer_next_indexing'] ? $cfgRec['timer_next_indexing'] : $GLOBALS['EXEC_TIME'];
 			$aMidNight = mktime (0,0,0, date('m',$lastTime), date('d',$lastTime), date('y',$lastTime));
 		}
 
@@ -845,7 +877,7 @@ class tx_indexedsearch_crawler {
 	 * @param	object		Reference to tcemain calling object
 	 * @return	void
 	 */
-	function processCmdmap_preProcess($command, $table, $id, $value, &$pObj)	{
+	function processCmdmap_preProcess($command, $table, $id, $value, $pObj) {
 
 			// Clean up the index
 		if ($command=='delete' && $table == 'pages')	{
@@ -863,7 +895,7 @@ class tx_indexedsearch_crawler {
 	 * @param	object		Reference to tcemain calling object
 	 * @return	void
 	 */
-	function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, &$pObj) {
+	function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, $pObj) {
 
 			// Check if any fields are actually updated:
 		if (count($fieldArray))	{
@@ -887,7 +919,7 @@ class tx_indexedsearch_crawler {
 					'*',
 					'index_config',
 					'hidden=0
-						AND (starttime=0 OR starttime<='.time().')
+						AND (starttime=0 OR starttime<=' . $GLOBALS['EXEC_TIME'] . ')
 						AND set_id=0
 						AND type=1
 						AND table2index='.$GLOBALS['TYPO3_DB']->fullQuoteStr($table,'index_config').'
@@ -934,7 +966,7 @@ class tx_indexedsearch_files {
 		if (is_array($params['conf']))	{
 
 				// Initialize the indexer class:
-			$indexerObj = &t3lib_div::makeInstance('tx_indexedsearch_indexer');
+			$indexerObj = t3lib_div::makeInstance('tx_indexedsearch_indexer');
 			$indexerObj->conf = $params['conf'];
 			$indexerObj->init();
 
@@ -967,4 +999,5 @@ class tx_indexedsearch_files {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.crawler.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/indexed_search/class.crawler.php']);
 }
+
 ?>

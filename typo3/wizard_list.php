@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Wizard to list records from a page id.
  *
- * $Id: wizard_list.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: wizard_list.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -117,26 +117,18 @@ class SC_wizard_list {
 
 			// Make redirect:
 		if (!strcmp($this->pid,'') || strcmp($this->id,''))	{	// If pid is blank OR if id is set, then return...
-			header('Location: '.t3lib_div::locationHeaderUrl($this->P['returnUrl']));
+			$redirectUrl = t3lib_div::sanitizeLocalUrl($this->P['returnUrl']);
 		} else {	// Otherwise, show the list:
-			header('Location: '.t3lib_div::locationHeaderUrl('db_list.php?id='.$this->pid.'&table='.$this->P['params']['table'].'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))));
+			$redirectUrl = 'db_list.php?id=' . $this->pid . '&table=' . $this->P['params']['table'] . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
 		}
+		t3lib_utility_Http::redirect($redirectUrl);
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_list.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizard_list.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -144,5 +136,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/wizar
 $SOBE = t3lib_div::makeInstance('SC_wizard_list');
 $SOBE->init();
 $SOBE->main();
-$SOBE->printContent();
+
 ?>

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -167,7 +167,7 @@ Will report lost files.';
 						}
 					} else {
 							// When here it means the file was not found. So we test if it has a RTEmagic-image name and if so, we allow it:
-						if (ereg('^RTEmagic[P|C]_',basename($value)))	{
+						if (preg_match('/^RTEmagic[P|C]_/',basename($value)))	{
 							unset($fileArr[$key])	;
 							$resultArray['RTEmagicFiles'][$shortKey] = $value;
 						} else {

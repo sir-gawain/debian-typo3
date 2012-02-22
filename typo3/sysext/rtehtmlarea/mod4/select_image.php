@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasper@typo3.com)
-*  (c) 2004-2008 Stanislas Rolland <typo3(arobas)jbr.ca>
+*  (c) 1999-2009 Kasper Skaarhoj (kasper@typo3.com)
+*  (c) 2004-2009 Stanislas Rolland <typo3(arobas)jbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@
  * @author	Kasper Skaarhoj <kasper@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)jbr.ca>
  *
- * $Id: select_image.php 4152 2008-09-19 05:17:01Z stan $  *
+ * $Id: select_image.php 5165 2009-03-09 18:28:59Z ohader $  *
  */
 
 error_reporting (E_ALL ^ E_NOTICE);
@@ -114,4 +114,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rtehtml
 $SOBE = t3lib_div::makeInstance('tx_rtehtmlarea_SC_select_image');
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

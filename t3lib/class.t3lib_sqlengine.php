@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2004-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,9 +28,10 @@
  * PHP SQL engine
  * EXPERIMENTAL!
  *
- * $Id: class.t3lib_sqlengine.php 3508 2008-04-01 20:28:08Z stucki $
+ * $Id: class.t3lib_sqlengine.php 6281 2009-10-27 09:58:53Z steffenk $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @deprecated since TYPO3 4.3, this class will be removed in TYPO3 4.5, it has been integrated to extension DBAL.
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -89,7 +90,6 @@
 
 
 
-require_once(PATH_t3lib.'class.t3lib_sqlparser.php');
 
 
 /**
@@ -123,7 +123,7 @@ class t3lib_sqlengine extends t3lib_sqlparser {
 	 * @param	object		Parent object
 	 * @return	void
 	 */
-	function init($config, &$pObj)	{
+	function init($config, $pObj) {
 	}
 
 	/**
@@ -902,4 +902,5 @@ class t3lib_sqlengine_resultobj {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_sqlengine.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_sqlengine.php']);
 }
+
 ?>

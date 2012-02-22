@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Document for viewing the online help texts, also known as TCA_DESCR.
  * See Inside TYPO3 for details.
  *
- * $Id: view_help.php 4087 2008-09-09 08:37:27Z dmitry $
+ * $Id: view_help.php 6537 2009-11-25 14:13:52Z steffenk $
  * Revised for TYPO3 3.7 5/2004 by Kasper Skaarhoj
  * XHTML-trans compliant
  *
@@ -77,8 +77,6 @@
 require('init.php');
 require('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_view_help.xml');
-require_once(PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
 
 
 /**
@@ -149,6 +147,10 @@ class SC_view_help {
 
 			// Setting GPvars:
 		$this->tfID = t3lib_div::_GP('tfID');
+			// Sanitizes the tfID using whitelisting.
+		if (!preg_match('/^[a-zA-Z0-9_\-\.\*]*$/', $this->tfID)) {
+			$this->tfID = '';
+		}
 		if (!$this->tfID) {
 			if (($this->ffID = t3lib_div::_GP('ffID'))) {
 				$this->ffID = unserialize(base64_decode($this->ffID));
@@ -174,7 +176,6 @@ class SC_view_help {
 		global $BE_USER,$LANG,$TCA_DESCR,$TCA,$TBE_TEMPLATE;
 
 			// Start HTML output accumulation:
-		$TBE_TEMPLATE->docType = 'xhtml_trans';
 		$TBE_TEMPLATE->divClass = 'typo3-view-help';
 		$this->content.= $TBE_TEMPLATE->startPage($LANG->getLL('title'));
 
@@ -301,13 +302,12 @@ class SC_view_help {
 		$output = '';
 		$output.= '
 
-			<h1>'.$LANG->getLL('manual_title',1).'</h1>
-			';
+			<h1>'.$LANG->getLL('manual_title',1).'</h1>';
 
 		$output.= '
 
 			<h2>'.$LANG->getLL('introduction',1).'</h2>
-			<p class="introduction">'.$LANG->getLL('description',1).'</p>';
+			<p>'.$LANG->getLL('description',1).'</p>';
 
 		$output.= '
 
@@ -315,7 +315,7 @@ class SC_view_help {
 			$this->render_TOC_makeTocList($tocArray);
 
 		if (!$this->renderALL)	{
-		$output.= '
+			$output.= '
 				<br/>
 				<p class="c-nav"><a href="view_help.php?renderALL=1">'.$LANG->getLL('full_manual',1).'</a></p>';
 		}
@@ -330,9 +330,9 @@ class SC_view_help {
 				<!-- NEW SECTION: -->
 				',$outputSections);
 		}
-		
+
 		$output .= '<hr /><p class="manual-title">'.t3lib_BEfunc::TYPO3_copyRightNotice().'</p>';
-		
+
 		return $output;
 	}
 
@@ -448,7 +448,9 @@ class SC_view_help {
 				}
 			}
 
-			if (!strcmp($parts,''))	unset($parts[0]);
+			if (!$parts[0])	{
+				unset($parts[0]);
+			}
 			$output.= implode('<br />',$parts);
 		}
 
@@ -535,8 +537,8 @@ class SC_view_help {
 	function make_seeAlso($value,$anchorTable='')	{
 		global $TCA,$BE_USER,$TCA_DESCR;
 
-			// Split references by comma, vert.line or linebreak
-		$items = split(',|'.chr(10),$value);
+			// Split references by comma or linebreak
+		$items = preg_split('/[,' . chr(10) . ']/', $value);
 		$lines = array();
 
 		foreach($items as $val)	{
@@ -721,7 +723,7 @@ class SC_view_help {
 
 			$tableName = is_array($TCA_DESCR[$table]['columns']['']) && $TCA_DESCR[$table]['columns']['']['alttitle'] ?
 							$TCA_DESCR[$table]['columns']['']['alttitle'] :
-							(isset($TCA[$table]) ? $TCA[$table]['ctrl']['title'] : ereg_replace('^_MOD_','',$table));
+							(isset($TCA[$table]) ? $TCA[$table]['ctrl']['title'] : preg_replace('/^_MOD_/','',$table));
 			$fieldName = is_array($TCA_DESCR[$table]['columns'][$field]) && $TCA_DESCR[$table]['columns'][$field]['alttitle'] ?
 							$TCA_DESCR[$table]['columns'][$field]['alttitle'] :
 							(isset($TCA[$table])&&isset($TCA[$table]['columns'][$field]) ? $TCA[$table]['columns'][$field]['label'] : $field);
@@ -745,7 +747,7 @@ class SC_view_help {
 
 			// Create label:
 		$labelStr = $LANG->sL($tableName).
-					($field ? $mergeToken.ereg_replace(':$','', trim($LANG->sL($fieldName))):'');
+					($field ? $mergeToken.rtrim(trim($LANG->sL($fieldName)), ':'):'');
 
 		return $labelStr;
 	}
@@ -768,7 +770,7 @@ class SC_view_help {
 
 	/**
 	 * Creates glossary index in $this->glossaryWords
-	 * Glossary is cached in cache_hash table and so will be updated only when cache is cleared.
+	 * Glossary is cached in cache_hash cache and so will be updated only when cache is cleared.
 	 *
 	 * @return	void
 	 */
@@ -833,7 +835,7 @@ class SC_view_help {
 	 */
 	function substituteGlossaryWords($code) {
 		$htmlParser = t3lib_div::makeInstance('local_t3lib_parsehtml');
-		$htmlParser->pObj = &$this;
+		$htmlParser->pObj = $this;
 		$code = $htmlParser->HTMLcleaner($code, array(), 1);
 
 		return $code;
@@ -873,13 +875,10 @@ class SC_view_help {
 }
 
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/view_help.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/view_help.php']);
 }
-
-
-
 
 
 
@@ -888,4 +887,5 @@ $SOBE = t3lib_div::makeInstance('SC_view_help');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

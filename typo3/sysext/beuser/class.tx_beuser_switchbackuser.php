@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,7 +24,7 @@
 /**
  * Backend user switchback
  *
- * $Id: class.tx_beuser_switchbackuser.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tx_beuser_switchbackuser.php 6469 2009-11-17 23:56:35Z benni $
  *
  * @author	Sebastian Kurfuerst <sebastian@garbage-group.de>
  */
@@ -37,9 +37,8 @@ class tx_beuser_switchbackuser {
 				);
 			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('be_sessions', 'ses_id='.$GLOBALS['TYPO3_DB']->fullQuoteStr($GLOBALS['BE_USER']->id, 'be_sessions').' AND ses_name=\'be_typo_user\' AND ses_userid='.intval($GLOBALS['BE_USER']->user['uid']),$updateData);
 
-			header('Location: '.t3lib_div::locationHeaderUrl($GLOBALS['BACK_PATH'].'index.php'.($GLOBALS['TYPO3_CONF_VARS']['BE']['interfaces']?'':'?commandLI=1')));
-			exit;
-			//$GLOBALS['TYPO4
+			$redirectUrl = $GLOBALS['BACK_PATH'] . 'index.php' . ($GLOBALS['TYPO3_CONF_VARS']['BE']['interfaces'] ? '' : '?commandLI=1');
+			t3lib_utility_Http::redirect($redirectUrl);
 		}
 	}
 }

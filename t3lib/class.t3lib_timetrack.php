@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
 * Contains class with time tracking functions
 *
-* $Id: class.t3lib_timetrack.php 3763 2008-06-05 11:51:40Z flyguide $
+* $Id: class.t3lib_timetrack.php 6339 2009-11-05 21:21:54Z masi $
 * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
 * XHTML compliant
 *
@@ -134,7 +134,7 @@ class t3lib_timeTrack {
 	 *
 	 * @return	void
 	 */
-	function start()    {
+	public function start() {
 		$this->wrapError = array(
 			0 => array('',''),
 			1 => array('<strong>','</strong>'),
@@ -149,8 +149,7 @@ class t3lib_timeTrack {
 			3 => '<img src="'.TYPO3_mainDir.'gfx/icon_fatalerror.gif" width="18" height="16" align="absmiddle" alt="" />'
 		);
 
-		$this->starttime = 0;
-		$this->starttime = $this->mtime();
+		$this->starttime = $this->getMilliseconds();
 	}
 
 	/**
@@ -161,7 +160,7 @@ class t3lib_timeTrack {
 	 * @return	void
 	 * @see tslib_cObj::cObjGetSingle(), pull()
 	 */
-	function push($tslabel, $value='')  {
+	public function push($tslabel, $value = '') {
 		array_push($this->tsStack[$this->tsStackPointer], $tslabel);
 		array_push($this->currentHashPointer, 'timetracker_'.$this->uniqueCounter++);
 
@@ -174,7 +173,7 @@ class t3lib_timeTrack {
 			'level' => $this->tsStackLevel,
 			'tsStack' => $this->tsStack,
 			'value' => $value,
-			'starttime' => microtime(),
+			'starttime' => microtime(true),
 			'stackPointer' => $this->tsStackPointer
 		);
 	}
@@ -186,9 +185,9 @@ class t3lib_timeTrack {
 	 * @return	void
 	 * @see tslib_cObj::cObjGetSingle(), push()
 	 */
-	function pull($content='')  {
+	public function pull($content = '') {
 		$k = end($this->currentHashPointer);
-		$this->tsStackLog[$k]['endtime'] =  microtime();
+		$this->tsStackLog[$k]['endtime'] =  microtime(true);
 		$this->tsStackLog[$k]['content'] = $content;
 
 		$this->tsStackLevel--;
@@ -204,7 +203,7 @@ class t3lib_timeTrack {
 	 * @return	void
 	 * @see tslib_cObj::CONTENT()
 	 */
-	function setTSlogMessage($content,$num=0)   {
+	public function setTSlogMessage($content, $num = 0) {
 		end($this->currentHashPointer);
 		$k = current($this->currentHashPointer);
 
@@ -221,7 +220,7 @@ class t3lib_timeTrack {
 	 * @param	string		Message/Label to attach
 	 * @return	void
 	 */
-	function setTSselectQuery(array $data,$msg='')  {
+	public function setTSselectQuery(array $data, $msg = '') {
 		end($this->currentHashPointer);
 		$k = current($this->currentHashPointer);
 
@@ -238,7 +237,7 @@ class t3lib_timeTrack {
 	 * @return	void
 	 * @see decStackPointer(), TSpagegen::renderContent(), tslib_cObj::cObjGetSingle()
 	 */
-	function incStackPointer()  {
+	public function incStackPointer() {
 		$this->tsStackPointer++;
 		$this->tsStack[$this->tsStackPointer]=array();
 	}
@@ -249,7 +248,7 @@ class t3lib_timeTrack {
 	 * @return	void
 	 * @see incStackPointer(), TSpagegen::renderContent(), tslib_cObj::cObjGetSingle()
 	 */
-	function decStackPointer()  {
+	public function decStackPointer() {
 		unset($this->tsStack[$this->tsStackPointer]);
 		$this->tsStackPointer--;
 	}
@@ -258,9 +257,12 @@ class t3lib_timeTrack {
 	 * Returns the current time in milliseconds
 	 *
 	 * @return	integer
+	 * @deprecated	since TYPO3 4.3, this function will be removed in TYPO3 4.5, use getDifferenceToStarttime() instead
 	 */
-	function mtime()    {
-		return $this->convertMicrotime(microtime())-$this->starttime;
+	protected function mtime() {
+		t3lib_div::logDeprecatedFunction();
+
+		return $this->getDifferenceToStarttime();
 	}
 
 	/**
@@ -268,10 +270,36 @@ class t3lib_timeTrack {
 	 *
 	 * @param	string		PHP microtime string
 	 * @return	integer
+	 * @deprecated	since TYPO3 4.3, this function will be removed in TYPO3 4.5, use getMilliseconds() instead that expects microtime as float instead of a string
 	 */
-	function convertMicrotime($microtime)   {
+	public function convertMicrotime($microtime) {
+		t3lib_div::logDeprecatedFunction();
+
 		$parts = explode(' ',$microtime);
 		return round(($parts[0]+$parts[1])*1000);
+	}
+
+	/**
+	 * Gets a microtime value as milliseconds value.
+	 *
+	 * @param	float		$microtime: The microtime value - if not set the current time is used
+	 * @return	integer		The microtime value as milliseconds value
+	 */
+	public function getMilliseconds($microtime = NULL) {
+		if (!isset($microtime)) {
+			$microtime = microtime(true);
+		}
+		return round($microtime * 1000);
+	}
+
+	/**
+	 * Gets the difference between a given microtime value and the starting time as milliseconds.
+	 *
+	 * @param	float		$microtime: The microtime value - if not set the current time is used
+	 * @return	integer		The difference between a given microtime value and starting time as milliseconds
+	 */
+	public function getDifferenceToStarttime($microtime = NULL) {
+		return ($this->getMilliseconds($microtime) - $this->starttime);
 	}
 
 
@@ -302,29 +330,24 @@ class t3lib_timeTrack {
 	 * @return	string		HTML table with the information about parsing times.
 	 * @see t3lib_tsfeBeUserAuth::extGetCategory_tsdebug()
 	 */
-	function printTSlog() {
+	public function printTSlog() {
 			// Calculate times and keys for the tsStackLog
-		$preEndtime = 0;
-		foreach($this->tsStackLog as $uniqueId=>$data) {
-			$this->tsStackLog[$uniqueId]['endtime'] = $this->convertMicrotime($this->tsStackLog[$uniqueId]['endtime'])-$this->starttime;
-			$this->tsStackLog[$uniqueId]['starttime'] = $this->convertMicrotime($this->tsStackLog[$uniqueId]['starttime'])-$this->starttime;
-			$this->tsStackLog[$uniqueId]['deltatime'] = $this->tsStackLog[$uniqueId]['endtime']-$this->tsStackLog[$uniqueId]['starttime'];
-			$this->tsStackLog[$uniqueId]['key'] = implode($this->tsStackLog[$uniqueId]['stackPointer']?'.':'/', end($data['tsStack']));
-			$preEndtime = $this->tsStackLog[$uniqueId]['endtime'];
+		foreach ($this->tsStackLog as $uniqueId => &$data) {
+			$data['endtime'] = $this->getDifferenceToStarttime($data['endtime']);
+			$data['starttime'] = $this->getDifferenceToStarttime($data['starttime']);
+			$data['deltatime'] = $data['endtime'] - $data['starttime'];
+			$data['key'] = implode($data['stackPointer'] ? '.' : '/', end($data['tsStack']));
 		}
 
 			// Create hierarchical array of keys pointing to the stack
 		$arr = array();
-		reset($this->tsStackLog);
-		while(list($uniqueId,$data)=each($this->tsStackLog)) {
-			$this->createHierarchyArray($arr,$data['level'], $uniqueId);
+		foreach ($this->tsStackLog as $uniqueId => $data) {
+			$this->createHierarchyArray($arr, $data['level'], $uniqueId);
 		}
 			// Parsing the registeret content and create icon-html for the tree
 		$this->tsStackLog[$arr['0.'][0]]['content'] = $this->fixContent($arr['0.']['0.'], $this->tsStackLog[$arr['0.'][0]]['content'], '', 0, $arr['0.'][0]);
 
 			// Displaying the tree:
-		reset($this->tsStackLog);
-
 		$outputArr = array();
 		$outputArr[] = $this->fw('TypoScript Key');
 		$outputArr[] = $this->fw('Value');
@@ -357,7 +380,7 @@ class t3lib_timeTrack {
 		$highlight_col = $this->printConf['highlight_col'];
 
 		$c=0;
-		while(list($uniqueId,$data)=each($this->tsStackLog)) {
+		foreach ($this->tsStackLog as $uniqueId => $data) {
 			$bgColor = ' background-color:'.($c%2 ? t3lib_div::modifyHTMLColor($col,$factor,$factor,$factor) : $col).';';
 			if ($this->highlightLongerThan && intval($data['owntime']) > intval($this->highlightLongerThan)) {
 				$bgColor = ' background-color:'.$highlight_col.';';
@@ -377,7 +400,7 @@ class t3lib_timeTrack {
 				$temp = array();
 				reset($data['tsStack']);
 				while(list($k,$v)=each($data['tsStack'])) {
-					$temp[] = t3lib_div::fixed_lgd_pre(implode($v,$k?'.':'/'),$keyLgd);
+					$temp[] = t3lib_div::fixed_lgd_cs(implode($v,$k?'.':'/'),-$keyLgd);
 				}
 				array_pop($temp);
 				$temp = array_reverse($temp);
@@ -392,7 +415,7 @@ class t3lib_timeTrack {
 			} else {
 				$theLabel = $data['key'];
 			}
-			$theLabel = t3lib_div::fixed_lgd_pre($theLabel, $keyLgd);
+			$theLabel = t3lib_div::fixed_lgd_cs($theLabel, -$keyLgd);
 			$theLabel = $data['stackPointer'] ? '<span style="color:maroon;">'.$theLabel.'</span>' : $theLabel;
 			$keyLabel = $theLabel.$keyLabel;
 			$item.= '<td valign="top" style="text-align:left; white-space:nowrap; padding-left:2px;'.$bgColor.'">'.($flag_tree?$data['icons']:'').$this->fw($keyLabel).'</td>';
@@ -454,7 +477,7 @@ class t3lib_timeTrack {
 	 * @param	string		Seems to be the previous tsStackLog key
 	 * @return	string		Returns the $content string generated/modified. Also the $arr array is modified!
 	 */
-	function fixContent(&$arr, $content, $depthData='', $first=0, $vKey='') {
+	protected function fixContent(&$arr, $content, $depthData = '', $first = 0, $vKey = '') {
 		$ac=0;
 		$c=0;
 			// First, find number of entries
@@ -518,10 +541,10 @@ class t3lib_timeTrack {
 	 * @param	string		Command: If "FILE" then $this->printConf['contentLength_FILE'] is used for content length comparison, otherwise $this->printConf['contentLength']
 	 * @return	string
 	 */
-	function fixCLen($c,$v) {
+	protected function fixCLen($c, $v) {
 		$len = $v=='FILE'?$this->printConf['contentLength_FILE']:$this->printConf['contentLength'];
 		if (strlen($c)>$len) {
-			$c = '<span style="color:green;">'.htmlspecialchars(t3lib_div::fixed_lgd($c,$len)).'</span>';
+			$c = '<span style="color:green;">'.htmlspecialchars(t3lib_div::fixed_lgd_cs($c,$len)).'</span>';
 		} else {
 			$c = htmlspecialchars($c);
 		}
@@ -534,7 +557,7 @@ class t3lib_timeTrack {
 	 * @param	string		The string to be wrapped
 	 * @return	string
 	 */
-	function fw($str) {
+	protected function fw($str) {
 		return '<span style="font-family:Verdana,Arial,Helvetica,sans-serif; font-size:10px; color:black; vertical-align:top;">'.$str.'&nbsp;</span>';
 	}
 
@@ -548,7 +571,7 @@ class t3lib_timeTrack {
 	 * @access private
 	 * @see printTSlog()
 	 */
-	function createHierarchyArray(&$arr,$pointer,$uniqueId) {
+	protected function createHierarchyArray(&$arr, $pointer, $uniqueId) {
 		if (!is_array($arr)) {
 			$arr = array();
 		}
@@ -570,11 +593,11 @@ class t3lib_timeTrack {
 	 * @param	string		URL for the <base> tag (if you want it)
 	 * @return	string
 	 */
-	function debug_typo3PrintError($header,$text,$js,$baseUrl='') {
+	public function debug_typo3PrintError($header, $text, $js, $baseUrl = '') {
 		if ($js) {
-			echo "alert('".t3lib_div::slashJS($header."\n".$text)."');";
+			$errorMessage = 'alert(\'' . t3lib_div::slashJS($header . '\n' . $text) . '\');';
 		} else {
-			echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+			$errorMessage = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
 					"http://www.w3.org/TR/xhtml1/DTD/xhtml11.dtd">
 				<?xml version="1.0" encoding="utf-8"?>
 				<html>
@@ -601,6 +624,23 @@ class t3lib_timeTrack {
 					</body>
 				</html>';
 		}
+
+			// Hook to modify error message
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_timetrack.php']['debug_typo3PrintError'])) {
+			$params = array(
+				'header' => $header,
+				'text' => $text,
+				'js' => $js,
+				'baseUrl' => $baseUrl,
+				'errorMessage' => &$errorMessage
+			);
+			$null = null;
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_timetrack.php']['debug_typo3PrintError'] as $hookMethod) {
+				t3lib_div::callUserFunction($hookMethod, $params, $null);
+			}
+		}
+
+		echo $errorMessage;
 	}
 }
 

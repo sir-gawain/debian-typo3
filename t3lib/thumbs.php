@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Generates a thumbnail and returns an image stream, either GIF/PNG or JPG
  *
- * $Id: thumbs.php 3713 2008-05-24 12:02:21Z flyguide $
+ * $Id: thumbs.php 6951 2010-02-21 19:46:37Z benni $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author		Kasper Skaarhoj	<kasperYYYY@typo3.com>
@@ -55,7 +55,11 @@
 // *******************************
 // Set error reporting
 // *******************************
-error_reporting (E_ALL ^ E_NOTICE);
+if (defined('E_DEPRECATED')) {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+} else {
+	error_reporting(E_ALL ^ E_NOTICE);
+}
 
 
 
@@ -65,7 +69,7 @@ error_reporting (E_ALL ^ E_NOTICE);
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','BE');
 if(!defined('PATH_thisScript')) define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (php_sapi_name()=='cgi'||php_sapi_name()=='isapi' ||php_sapi_name()=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
-if(!defined('PATH_site'))  		define('PATH_site', ereg_replace('[^/]*.[^/]*$','',PATH_thisScript));		// the path to the website folder (see init.php)
+if(!defined('PATH_site'))  		define('PATH_site', preg_replace('/[^\/]*.[^\/]*$/','',PATH_thisScript));		// the path to the website folder (see init.php)
 if(!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
 define('PATH_typo3conf', PATH_site.'typo3conf/');
 define('TYPO3_mainDir', 'typo3/');		// This is the directory of the backend administration for the sites of this TYPO3 installation.
@@ -184,11 +188,11 @@ class SC_t3lib_thumbs {
 		global $TYPO3_CONF_VARS;
 
 			// If file exists, we make a thumbsnail of the file.
-		if ($this->input && @file_exists($this->input))	{
+		if ($this->input && file_exists($this->input))	{
 
 				// Check file extension:
 			$reg = array();
-			if (ereg('(.*)\.([^\.]*$)',$this->input,$reg))	{
+			if (preg_match('/(.*)\.([^\.]*$)/',$this->input,$reg))	{
 				$ext=strtolower($reg[2]);
 				$ext=($ext=='jpeg')?'jpg':$ext;
 				if ($ext=='ttf')	{
@@ -222,20 +226,11 @@ class SC_t3lib_thumbs {
 
 			if ($TYPO3_CONF_VARS['GFX']['im'])	{
 					// If thumbnail does not exist, we generate it
-				if (!@file_exists($this->output))	{
-/*					if (strstr($this->input,' ') || strstr($this->output,' '))	{
-						$this->errorGif('Spaces in','filepath',basename($this->input));
-					}
-*/						// 16 colors for small (56) thumbs, 64 for bigger and all for jpegs
-					if ($outext=='jpg')	{
-						$colors = '';
-					} else {
-						$colors = ($sizeMax>56)?'-colors 64':'-colors 16';
-					}
-					$parameters = '-sample '.$this->size.' '.$colors.' '.$this->wrapFileName($this->input.'[0]').' '.$this->wrapFileName($this->output);
+				if (!file_exists($this->output))	{
+					$parameters = '-sample ' . $this->size . ' ' . $this->wrapFileName($this->input) . '[0] ' . $this->wrapFileName($this->output);
 					$cmd = t3lib_div::imageMagickCommand('convert', $parameters);
 					exec($cmd);
-					if (!@file_exists($this->output))	{
+					if (!file_exists($this->output))	{
 						$this->errorGif('No thumb','generated!',basename($this->input));
 					}
 				}
@@ -372,21 +367,17 @@ class SC_t3lib_thumbs {
 	}
 
 	/**
-	 * Wrapping the input filename in double-quotes
+	 * Escapes a file name so it can safely be used on the command line.
 	 *
-	 * @param	string		Input filename
-	 * @return	string		The output wrapped in "" (if there are spaces in the filepath)
-	 * @access private
+	 * @param string $inputName filename to safeguard, must not be empty
+	 *
+	 * @return string $inputName escaped as needed
 	 */
-	function wrapFileName($inputName)	{
-		if (strstr($inputName,' '))	{
-			$inputName='"'.$inputName.'"';
-		}
-		return $inputName;
+	protected function wrapFileName($inputName) {
+		return escapeshellarg($inputName);
 	}
 }
 
-// Include extension class?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/thumbs.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/thumbs.php']);
 }

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2006 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Logo menu
  *
- * $Id: logomenu.php 3489 2008-03-31 13:13:04Z ohader $
+ * $Id: logomenu.php 5761 2009-08-05 10:05:29Z rupi $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -39,9 +39,6 @@
 
 require ('init.php');
 require ('template.php');
-
-require_once(PATH_t3lib.'class.t3lib_topmenubase.php');
-
 
 
 /**
@@ -163,7 +160,7 @@ class SC_logomenu extends t3lib_topmenubase {
 					$elRow = t3lib_BEfunc::getRecord($row['tablename'],$row['recuid']);
 					if (is_array($elRow))	{
 						$items[] = array(
-							'title' => t3lib_div::fixed_lgd_cs(t3lib_BEfunc::getRecordTitle($row['tablename'],$elRow),$GLOBALS['BE_USER']->uc['titleLen']).' - '.t3lib_BEfunc::calcAge(time()-$row['tstamp_MAX']),
+							'title' => t3lib_div::fixed_lgd_cs(t3lib_BEfunc::getRecordTitle($row['tablename'], $elRow), $GLOBALS['BE_USER']->uc['titleLen']) . ' - ' . t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $row['tstamp_MAX']),
 							'icon' => array(t3lib_iconworks::getIcon($row['tablename'],$elRow),'width="18" height="16"'),
 							'onclick' => 'content.'.t3lib_BEfunc::editOnClick('&edit['.$row['tablename'].']['.$row['recuid'].']=edit','','dummy.php')
 						);
@@ -176,7 +173,7 @@ class SC_logomenu extends t3lib_topmenubase {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/logomenu.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/logomenu.php']);
 }
@@ -186,4 +183,5 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/logom
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_logomenu');
 $SOBE->main();
+
 ?>

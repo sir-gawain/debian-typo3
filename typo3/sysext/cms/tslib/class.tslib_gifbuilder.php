@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Generating gif/png-files from TypoScript
  * Used by the menu-objects and imgResource in TypoScript.
  *
- * $Id: class.tslib_gifbuilder.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tslib_gifbuilder.php 5424 2009-05-15 23:12:32Z k-fish $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -218,7 +218,7 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 						case 'IMAGE':
 							$fileInfo = $this->getResource($conf['file'],$conf['file.']);
 							if ($fileInfo)	{
-								$this->combinedFileNames[] = ereg_replace('\.[[:alnum:]]+$','',basename($fileInfo[3]));
+								$this->combinedFileNames[] = preg_replace('/\.[[:alnum:]]+$/','',basename($fileInfo[3]));
 								$this->setup[$theKey.'.']['file'] = $fileInfo[3];
 								$this->setup[$theKey.'.']['BBOX'] = $fileInfo;
 								$this->objBB[$theKey] = $fileInfo;
@@ -318,7 +318,7 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 	function gifBuild()	{
 		if ($this->setup)	{
 			$gifFileName = $this->fileName('GB/');	// Relative to PATH_site
-			if (!@file_exists($gifFileName))	{		// File exists
+			if (!file_exists($gifFileName))	{		// File exists
 
 					// Create temporary directory if not done:
 				$this->createTempSubDir('GB/');
@@ -507,9 +507,11 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 		}
 		$this->combinedTextStrings[] = strip_tags($conf['text']);
 
-			// Max length = 100
-		$tlen = intval($conf['textMaxLength']) ? intval($conf['textMaxLength']) : 100;
-		$conf['text'] = substr($conf['text'],0,$tlen);
+			// Max length = 100 if automatic line braks are not defined:
+		if (!isset($conf['breakWidth']) || !$conf['breakWidth']) {
+			$tlen = (intval($conf['textMaxLength']) ? intval($conf['textMaxLength']) : 100);
+			$conf['text'] = substr($conf['text'], 0, $tlen);
+		}
 		if ((string)$conf['text']!='')	{
 
 				// Char range map thingie:
@@ -568,40 +570,18 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 	 * @access private
 	 */
 	function calcOffset($string)	{
-		$numbers=explode(',',$string);
-		while(list($key,$val)=each($numbers))	{
-			$val = trim($val);
-			if ((string)$val==(string)intval($val)) {
-				$value[$key]=intval($val);
+		$value = array();
+		$numbers = t3lib_div::trimExplode(',', $this->calculateFunctions($string));
+
+		foreach ($numbers as $key => $val) {
+			if ((string)$val == (string)intval($val)) {
+				$value[$key] = intval($val);
 			} else {
-				$parts= t3lib_div::splitCalc($val,'+-*/%');
-				$value[$key]=0;
-				reset($parts);
-				while(list(,$part)=each($parts))	{
-					$theVal = $part[1];
-					$sign =  $part[0];
-					if ((string)intval($theVal)==(string)$theVal)	{
-						$theVal = intval($theVal);
-					} elseif ('['.substr($theVal,1,-1).']'==$theVal)	{
-						$objParts=explode('.',substr($theVal,1,-1));
-						$theVal=0;
-						if (isset($this->objBB[$objParts[0]]))	{
-							if ($objParts[1]=='w')	{$theVal=intval($this->objBB[$objParts[0]][0]);}
-							if ($objParts[1]=='h')	{$theVal=intval($this->objBB[$objParts[0]][1]);}
-						}
-					} else {
-						$theVal =0;
-					}
-					if ($sign=='-')	{$value[$key]-=$theVal;}
-					if ($sign=='+')	{$value[$key]+=$theVal;}
-					if ($sign=='/')	{if (intval($theVal)) $value[$key]/=intval($theVal);}
-					if ($sign=='*')	{$value[$key]*=$theVal;}
-					if ($sign=='%') {if (intval($theVal)) $value[$key]%=intval($theVal);}
-				}
-				$value[$key]=intval($value[$key]);
+				$value[$key] = $this->calculateValue($val);
 			}
 		}
-		$string = implode(',',$value);
+
+		$string = implode(',', $value);
 		return $string;
 	}
 
@@ -676,6 +656,93 @@ class tslib_gifBuilder extends t3lib_stdGraphic {
 				return $this->gifExtension;
 			break;
 		}
+	}
+
+	/**
+	 * Calculates the value concerning the dimensions of objects.
+	 *
+	 * @param	string		$string: The string to be calculated (e.g. "[20.h]+13")
+	 * @return	integer		The calculated value (e.g. "23")
+	 * @see		calcOffset()
+	 */
+	protected function calculateValue($string) {
+		$calculatedValue = 0;
+		$parts = t3lib_div::splitCalc($string, '+-*/%');
+
+		foreach ($parts as $part) {
+			$theVal = $part[1];
+			$sign = $part[0];
+
+			if ((string)intval($theVal) == (string)$theVal) {
+				$theVal = intval($theVal);
+			} elseif ('[' . substr($theVal, 1, -1) . ']' == $theVal) {
+				$objParts = explode('.', substr($theVal, 1, -1));
+				$theVal = 0;
+				if (isset($this->objBB[$objParts[0]])) {
+					if ($objParts[1] == 'w') {
+						$theVal = $this->objBB[$objParts[0]][0];
+					} elseif ($objParts[1] == 'h') {
+						$theVal = $this->objBB[$objParts[0]][1];
+					} elseif ($objParts[1] == 'lineHeight') {
+						$theVal = $this->objBB[$objParts[0]][2]['lineHeight'];
+					}
+					$theVal = intval($theVal);
+				}
+			} elseif (floatval($theVal)) {
+				$theVal = floatval($theVal);
+			} else {
+				$theVal = 0;
+			}
+
+			if ($sign == '-') {
+				$calculatedValue-= $theVal;
+			} elseif ($sign == '+') {
+				$calculatedValue+= $theVal;
+			} elseif ($sign == '/' && $theVal) {
+				$calculatedValue = $calculatedValue / $theVal;
+			} elseif ($sign == '*') {
+				$calculatedValue = $calculatedValue * $theVal;
+			} elseif ($sign == '%' && $theVal) {
+				$calculatedValue%= $theVal;
+			}
+		}
+
+		return round($calculatedValue);
+	}
+
+	/**
+	 * Calculates special functions:
+	 * + max([10.h], [20.h])	-> gets the maximum of the given values
+	 *
+	 * @param	string		$string: The raw string with functions to be calculated
+	 * @return	string		The calculated values
+	 */
+	protected function calculateFunctions($string) {
+		if (preg_match_all('#max\(([^)]+)\)#', $string, $matches)) {
+			foreach ($matches[1] as $index => $maxExpression) {
+				$string = str_replace(
+					$matches[0][$index],
+					$this->calculateMaximum(
+						$maxExpression
+					),
+					$string
+				);
+			}
+		}
+
+		return $string;
+	}
+
+	/**
+	 * Calculates the maximum of a set of values defined like "[10.h],[20.h],1000"
+	 *
+	 * @param	string		$string: The string to be used to calculate the maximum (e.g. "[10.h],[20.h],1000")
+	 * @return	integer		The maxium value of the given comma separated and calculated values
+	 */
+	protected function calculateMaximum($string) {
+		$parts = t3lib_div::trimExplode(',', $this->calcOffset($string), true);
+		$maximum = (count($parts) ? max($parts) : 0);
+		return $maximum;
 	}
 }
 

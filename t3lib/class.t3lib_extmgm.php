@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a class with Extension Management functions
  *
- * $Id: class.t3lib_extmgm.php 3489 2008-03-31 13:13:04Z ohader $
+ * $Id: class.t3lib_extmgm.php 8816 2010-09-19 14:04:28Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -112,6 +112,7 @@
  * @subpackage t3lib
  */
 final class t3lib_extMgm {
+	protected static $extensionKeyMap;
 
 
 	/**************************************
@@ -195,6 +196,40 @@ final class t3lib_extMgm {
 		return substr($key, 0, 5)=='user_' ? 'user_'.str_replace('_', '', substr($key, 5)) : 'tx_'.str_replace('_', '', $key);
 	}
 
+	/**
+	 * Returns the real extension key like 'tt_news' from an extension prefix like 'tx_ttnews'.
+	 *
+	 * @param	string		$prefix: The extension prefix (e.g. 'tx_ttnews')
+	 * @return	mixed		Real extension key (string) or false (boolean) if something went wrong
+	 */
+	public static function getExtensionKeyByPrefix($prefix) {
+		$result = false;
+		// Build map of short keys referencing to real keys:
+		if (!isset(self::$extensionKeyMap)) {
+			self::$extensionKeyMap = array();
+			foreach (array_keys($GLOBALS['TYPO3_LOADED_EXT']) as $extensionKey) {
+				$shortKey = str_replace('_', '', $extensionKey);
+				self::$extensionKeyMap[$shortKey] = $extensionKey;
+			}
+		}
+		// Lookup by the given short key:
+		$parts = explode('_', $prefix);
+		if (isset(self::$extensionKeyMap[$parts[1]])) {
+			$result = self::$extensionKeyMap[$parts[1]];
+		}
+		return $result;
+	}
+
+	/**
+	 * Clears the extension key map.
+	 *
+	 * @return	void
+	 */
+	public static function clearExtensionKeyMap() {
+		self::$extensionKeyMap = NULL;
+	}
+
+
 
 
 
@@ -249,59 +284,323 @@ final class t3lib_extMgm {
 	 * @return	void
 	 */
 	public static function addToAllTCAtypes($table, $str, $specificTypesList = '', $position = '') {
-		global $TCA;
-
-		$positionArr = t3lib_div::trimExplode(',', $position, 1);
-		$insert = count($position);
-
 		t3lib_div::loadTCA($table);
 		$str = trim($str);
-		if ($str && is_array($TCA[$table]) && is_array($TCA[$table]['types'])) {
-			foreach($TCA[$table]['types'] as $k => $v) {
-				if ($specificTypesList === '' || t3lib_div::inList($specificTypesList, $k)) {
-					if ($insert) {
-						if (count($positionArr)) {
-							$append = true;
-							$showItem = t3lib_div::trimExplode(',', $TCA[$table]['types'][$k]['showitem'], 1);
-							foreach($showItem as $key => $fieldInfo)	{
 
-								$parts = explode(';', $fieldInfo);
-								$theField = trim($parts[0]);
-								$palette = trim($parts[0]).';;'.trim($parts[2]);
+		if ($str && is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['types'])) {
+			foreach($GLOBALS['TCA'][$table]['types'] as $type => &$typeDetails) {
+				if ($specificTypesList === '' || t3lib_div::inList($specificTypesList, $type)) {
+					$typeDetails['showitem'] = self::executePositionedStringInsertion(
+						$typeDetails['showitem'],
+						$str,
+						$position
+					);
+				}
+			}
+		}
+	}
 
-									// insert before: find exact field name or palette with number
-								if (in_array($theField, $positionArr) || in_array($palette, $positionArr) || in_array('before:'.$theField, $positionArr) || in_array('before:'.$palette, $positionArr)) {
-									$showItem[$key] = $str.', '.$fieldInfo;
-									$append = false;
-									break;
-								}
-									// insert after
-								if (in_array('after:'.$theField, $positionArr) || in_array('after:'.$palette, $positionArr)) {
-									$showItem[$key] = $fieldInfo.', '.$str;
-									$append = false;
-									break;
-								}
+	/**
+	 * Adds new fields to all palettes of an existing field.
+	 * If the field does not have a palette yet, it's created automatically and
+	 * gets called "generatedFor-$field".
+	 *
+	 * @param	string		$table: Name of the table
+	 * @param	string		$field: Name of the field that has the palette to be extended
+	 * @param	string		$addFields: List of fields to be added to the palette
+	 * @param	string		$insertionPosition: Insert fields before (default) or after one
+	 * 						of this fields (commalist with "before:" or "after:" commands).
+	 * 						Example: "before:keywords,--palette--;;4,after:description".
+	 * 						Palettes must be passed like in the example no matter how the
+	 * 						palette definition looks like in TCA.
+	 * @return	void
+	 */
+	public static function addFieldsToAllPalettesOfField($table, $field, $addFields, $insertionPosition = '') {
+		$generatedPalette = '';
+		$processedPalettes = array();
+		t3lib_div::loadTCA($table);
+
+		if (isset($GLOBALS['TCA'][$table]['columns'][$field])) {
+			$types =& $GLOBALS['TCA'][$table]['types'];
+			if (is_array($types)) {
+					// Iterate through all types and search for the field that defines the palette to be extended:
+				foreach (array_keys($types) as $type) {
+					$items = self::explodeItemList($types[$type]['showitem']);
+					if (isset($items[$field])) {
+							// If the field already has a palette, extend it:
+						if ($items[$field]['details']['palette']) {
+							$palette = $items[$field]['details']['palette'];
+							if (!isset($processedPalettes[$palette])) {
+								self::addFieldsToPalette($table, $palette, $addFields, $insertionPosition);
+								$processedPalettes[$palette] = true;
 							}
-
-								// Not found? Then append.
-							if($append) {
-								$showItem[] = $str;
+							// If there's not palette yet, create one:
+						} else {
+							if ($generatedPalette) {
+								$palette = $generatedPalette;
+							} else {
+								$palette = $generatedPalette = 'generatedFor-' . $field;
+								self::addFieldsToPalette($table, $palette, $addFields, $insertionPosition);
 							}
-
-							$TCA[$table]['types'][$k]['showitem'] = implode(', ', $showItem);
+							$items[$field]['details']['palette'] = $palette;
+							$types[$type]['showitem'] =  self::generateItemList($items);
 						}
-						else {
-							$TCA[$table]['types'][$k]['showitem'] .= ', ' . $str;
-						}
-
-					} else {
-						$TCA[$table]['types'][$k]['showitem'].=', ' . $str;
 					}
 				}
 			}
 		}
 	}
 
+	/**
+	 * Adds new fields to a palette.
+	 * If the palette does not exist yet, it's created automatically.
+	 *
+	 * @param	string		$table: Name of the table
+	 * @param	string		$palette: Name of the palette to be extended
+	 * @param	string		$addFields: List of fields to be added to the palette
+	 * @param	string		$insertionPosition: Insert fields before (default) or after one
+	 * 						of this fields (commalist with "before:" or "after:" commands).
+	 * 						Example: "before:keywords,--palette--;;4,after:description".
+	 * 						Palettes must be passed like in the example no matter how the
+	 * 						palette definition looks like in TCA.
+	 * @return	void
+	 */
+	public static function addFieldsToPalette($table, $palette, $addFields, $insertionPosition = '') {
+		t3lib_div::loadTCA($table);
+
+		if (isset($GLOBALS['TCA'][$table])) {
+			$paletteData =& $GLOBALS['TCA'][$table]['palettes'][$palette];
+				// If palette already exists, merge the data:
+			if (is_array($paletteData)) {
+				$paletteData['showitem'] = self::executePositionedStringInsertion(
+					$paletteData['showitem'],
+					$addFields,
+					$insertionPosition
+				);
+				// If it's a new palette, just set the data:
+			} else {
+				$paletteData['showitem'] = self::removeDuplicatesForInsertion($addFields);
+			}
+		}
+	}
+
+	/**
+	 * Adds a list of new fields to the TYPO3 USER SETTINGS configuration "showitem" list, the array with
+	 * the new fields itself needs to be added additionally to show up in the user setup, like
+	 * $GLOBALS['TYPO3_USER_SETTINGS']['columns'] += $tempColumns
+	 *
+	 * @param	string	$addFields: List of fields to be added to the user settings
+	 * @param	string	$insertionPosition: Insert fields before (default) or after one
+	 * 					of this fields (commalist with "before:" or "after:" commands).
+	 * 					Example: "before:password,after:email".
+	 * @return void
+	 */
+	public function addFieldsToUserSettings($addFields, $insertionPosition = '') {
+		$GLOBALS['TYPO3_USER_SETTINGS']['showitem'] = self::executePositionedStringInsertion(
+			$GLOBALS['TYPO3_USER_SETTINGS']['showitem'],
+			$addFields,
+			$insertionPosition
+		);
+	}
+
+	/**
+	 * Inserts as list of data into an existing list.
+	 * The insertion position can be defined accordant before of after existing list items.
+	 *
+	 * @param	string		$list: The list of items to be extended
+	 * @param	string		$insertionList: The list of items to inserted
+	 * @param	string		$insertionPosition: Insert fields before (default) or after one
+	 * 						of this fields (commalist with "before:" or "after:" commands).
+	 * 						Example: "before:keywords,--palette--;;4,after:description".
+	 * 						Palettes must be passed like in the example no matter how the
+	 * 						palette definition looks like in TCA.
+	 * @return	string		The extended list
+	 */
+	protected static function executePositionedStringInsertion($list, $insertionList, $insertionPosition = '') {
+		$list = trim($list);
+		$insertionList = self::removeDuplicatesForInsertion($insertionList, $list);
+
+		if ($insertionList) {
+				// Append data to the end (default):
+			if ($insertionPosition === '') {
+				$list.= ($list ? ', ' : '') . $insertionList;
+				// Insert data before or after insertion points:
+			} else {
+				$positions = t3lib_div::trimExplode(',', $insertionPosition, true);
+				$items = self::explodeItemList($list);
+				$isInserted = false;
+					// Iterate through all fields an check whether it's possible to inserte there:
+				foreach ($items as $item => &$itemDetails) {
+					$needles = self::getInsertionNeedles($item, $itemDetails['details']);
+						// Insert data before:
+					foreach ($needles['before'] as $needle) {
+						if (in_array($needle, $positions)) {
+							$itemDetails['rawData'] = $insertionList . ', '  . $itemDetails['rawData'];
+							$isInserted = true;
+							break;
+						}
+					}
+						// Insert data after:
+					foreach ($needles['after'] as $needle) {
+						if (in_array($needle, $positions)) {
+							$itemDetails['rawData'] .= ', ' . $insertionList;
+							$isInserted = true;
+							break;
+						}
+					}
+						// Break if insertion was already done:
+					if ($isInserted) {
+						break;
+					}
+				}
+					// If insertion point could not be determined, append the data:
+				if (!$isInserted) {
+					$list.= ($list ? ', ' : '') . $insertionList;
+					// If data was correctly inserted before or after existing items, recreate the list:
+				} else {
+					$list = self::generateItemList($items, true);
+				}
+			}
+		}
+
+		return $list;
+	}
+
+	/**
+	 * Compares an existing list of items and a list of items to be inserted
+	 * and returns a duplicate-free variant of that insertion list.
+	 *
+	 * Example:
+	 *  + list: 'field_a, field_b;;;;2-2-2, field_c;;;;3-3-3'
+	 *  + insertion: 'field_b, field_d, field_c;;;4-4-4'
+	 * -> new insertion: 'field_d'
+	 *
+	 * @param	string		$insertionList: The list of items to inserted
+	 * @param	string		$list: The list of items to be extended (default: '')
+	 * @return	string		Duplicate-free list of items to be inserted
+	 */
+	protected static function removeDuplicatesForInsertion($insertionList, $list = '') {
+		$pattern = '/(^|,)\s*\b([^;,]+)\b[^,]*/';
+		$listItems = array();
+
+		if ($list && preg_match_all($pattern, $list, $listMatches)) {
+			$listItems = $listMatches[2];
+		}
+
+		if ($insertionList && preg_match_all($pattern, $insertionList, $insertionListMatches)) {
+			$insertionItems = array();
+			$insertionDuplicates = false;
+
+			foreach ($insertionListMatches[2] as $insertionIndex => $insertionItem) {
+				if (!isset($insertionItems[$insertionItem]) && !in_array($insertionItem, $listItems)) {
+					$insertionItems[$insertionItem] = true;
+				} else {
+					unset($insertionListMatches[0][$insertionIndex]);
+					$insertionDuplicates = true;
+				}
+			}
+
+			if ($insertionDuplicates) {
+				$insertionList = implode('', $insertionListMatches[0]);
+			}
+		}
+
+		return $insertionList;
+	}
+
+	/**
+	 * Generates search needles that are used for inserting fields/items into an existing list.
+	 *
+	 * @see		executePositionedStringInsertion
+	 * @param	string		$item: The name of the field/item
+	 * @param	array		$itemDetails: Additional details of the field/item like e.g. palette information
+	 * 						(this array gets created by the function explodeItemList())
+	 * @return	array		The needled to be used for inserting content before or after existing fields/items
+	 */
+	protected static function getInsertionNeedles($item, array $itemDetails) {
+		if (strstr($item, '--')) {
+				// If $item is a separator (--div--) or palette (--palette--) then it may have been appended by a unique number. This must be stripped away here.
+			$item = preg_replace('/[0-9]+$/', '', $item);
+		}
+
+		$needles = array(
+			'before' => array($item, 'before:' . $item),
+			'after' => array('after:' . $item),
+		);
+
+		if ($itemDetails['palette']) {
+			$palette = $item . ';;' . $itemDetails['palette'];
+			$needles['before'][] = $palette;
+			$needles['before'][] = 'before:' . $palette;
+			$needles['after'][] = 'after:' . $palette;
+		}
+
+		return $needles;
+	}
+
+	/**
+	 * Generates an array of fields/items with additional information such as e.g. the name of the palette.
+	 *
+	 * @param	string		$itemList: List of fields/items to be splitted up
+	 * 						(this mostly reflects the data in $TCA[<table>]['types'][<type>]['showitem'])
+	 * @return	array		An array with the names of the fields/items as keys and additional information
+	 */
+	protected static function explodeItemList($itemList) {
+		$items = array();
+		$itemParts = t3lib_div::trimExplode(',', $itemList, true);
+
+		foreach ($itemParts as $itemPart) {
+			$itemDetails = t3lib_div::trimExplode(';', $itemPart, false, 5);
+			$key = $itemDetails[0];
+			if (strstr($key, '--')) {
+					// If $key is a separator (--div--) or palette (--palette--) then it will be appended by a unique number. This must be removed again when using this value!
+				$key.= count($items);
+			}
+
+			if (!isset($items[$key])) {
+				$items[$key] = array(
+					'rawData' => $itemPart,
+					'details' => array(
+						'field' => $itemDetails[0],
+						'label' => $itemDetails[1],
+						'palette' => $itemDetails[2],
+						'special' => $itemDetails[3],
+						'styles' => $itemDetails[4],
+					),
+				);
+			}
+		}
+
+		return $items;
+	}
+
+	/**
+	 * Generates a list of fields/items out of an array provided by the function getFieldsOfFieldList().
+	 *
+	 * @see		explodeItemList
+	 * @param	array		$items: The array of fields/items with optional additional information
+	 * @param	boolean		$useRawData: Use raw data instead of building by using the details (default: false)
+	 * @return	string		The list of fields/items which gets used for $TCA[<table>]['types'][<type>]['showitem']
+	 * 						or $TCA[<table>]['palettes'][<palette>]['showitem'] in most cases
+	 */
+	protected static function generateItemList(array $items, $useRawData = false) {
+		$itemParts = array();
+
+		foreach ($items as $item => $itemDetails) {
+			if (strstr($item, '--')) {
+					// If $item is a separator (--div--) or palette (--palette--) then it may have been appended by a unique number. This must be stripped away here.
+				$item = preg_replace('/[0-9]+$/', '', $item);
+			}
+
+			if ($useRawData) {
+				$itemParts[] = $itemDetails['rawData'];
+			} else {
+				$itemParts[] = (count($itemDetails['details']) > 1 ? implode(';', $itemDetails['details']) : $item);
+			}
+		}
+
+		return implode(', ', $itemParts);
+	}
 
 	/**
 	 * Add tablename to default list of allowed tables on pages (in $PAGES_TYPES)
@@ -422,7 +721,7 @@ final class t3lib_extMgm {
 	/**
 	 * Adds $content to the default Page TSconfig as set in $TYPO3_CONF_VARS[BE]['defaultPageTSconfig']
 	 * Prefixed with a [GLOBAL] line
-	 * FOR USE IN ext_tables.php/ext_locallang.php FILES
+	 * FOR USE IN ext_tables.php/ext_localconf.php FILES
 	 * Usage: 5
 	 *
 	 * @param	string		Page TSconfig content
@@ -436,7 +735,7 @@ final class t3lib_extMgm {
 	/**
 	 * Adds $content to the default User TSconfig as set in $TYPO3_CONF_VARS[BE]['defaultUserTSconfig']
 	 * Prefixed with a [GLOBAL] line
-	 * FOR USE IN ext_tables.php/ext_locallang.php FILES
+	 * FOR USE IN ext_tables.php/ext_localconf.php FILES
 	 * Usage: 3
 	 *
 	 * @param	string		User TSconfig content
@@ -485,7 +784,7 @@ final class t3lib_extMgm {
 	 *
 	 *	 Adding SERVICES features
 	 *
-	 *   @author	René Fritz <r.fritz@colorcube.de>
+	 *   @author	Rene Fritz <r.fritz@colorcube.de>
 	 *
 	 ***************************************/
 
@@ -497,7 +796,7 @@ final class t3lib_extMgm {
 	 * @param	string		Service key, must be prefixed "tx_" or "user_"
 	 * @param	array		Service description array
 	 * @return	void
-	 * @author	René Fritz <r.fritz@colorcube.de>
+	 * @author	Rene Fritz <r.fritz@colorcube.de>
 	 */
 	public static function addService($extKey, $serviceType, $serviceKey, $info) {
 		global $T3_SERVICES, $TYPO3_CONF_VARS;
@@ -565,10 +864,10 @@ final class t3lib_extMgm {
 	 * @param	string		Service sub type
 	 * @param	mixed		Service keys that should be excluded in the search for a service. Array or comma list.
 	 * @return	mixed		Service info array if a service was found, FLASE otherwise
-	 * @author	René Fritz <r.fritz@colorcube.de>
+	 * @author	Rene Fritz <r.fritz@colorcube.de>
 	 */
 	public static function findService($serviceType, $serviceSubType = '', $excludeServiceKeys = array()) {
-		global $T3_SERVICES, $T3_VAR, $TYPO3_CONF_VARS;
+		global $T3_SERVICES, $TYPO3_CONF_VARS;
 
 		$serviceKey = FALSE;
 		$serviceInfo = FALSE;
@@ -602,8 +901,6 @@ final class t3lib_extMgm {
 
 						// service depends on external programs - check if they exists
 					if(trim($info['exec'])) {
-						require_once(PATH_t3lib.'class.t3lib_exec.php');
-
 						$executables = t3lib_div::trimExplode(',', $info['exec'], 1);
 						foreach($executables as $executable) {
 							if(!t3lib_exec::checkCommand($executable)) {
@@ -636,7 +933,7 @@ final class t3lib_extMgm {
 	 * @param	string		Service type
 	 * @param	string		Service key
 	 * @return	void
-	 * @author	René Fritz <r.fritz@colorcube.de>
+	 * @author	Rene Fritz <r.fritz@colorcube.de>
 	 */
 	public static function deactivateService($serviceType, $serviceKey) {
 		global $T3_SERVICES;
@@ -679,6 +976,12 @@ final class t3lib_extMgm {
 	 */
 	public static function addPlugin($itemArray, $type = 'list_type') {
 		global $TCA;
+
+		$_EXTKEY = $GLOBALS['_EXTKEY'];
+		if ($_EXTKEY && !$itemArray[2]) {
+			$itemArray[2] = t3lib_extMgm::extRelPath($_EXTKEY) . 'ext_icon.gif';
+		}
+
 		t3lib_div::loadTCA('tt_content');
 		if (is_array($TCA['tt_content']['columns']) && is_array($TCA['tt_content']['columns'][$type]['config']['items'])) {
 			reset($TCA['tt_content']['columns'][$type]['config']['items']);
@@ -744,7 +1047,7 @@ final class t3lib_extMgm {
 	 * 		"header_layout" - an additional header type (added to the selection of layout1-5)
 	 * 		"includeLib" - just includes the library for manual use somewhere in TypoScript.
 	 * 	(Remember that your $type definition should correspond to the column/items array in $TCA[tt_content] where you added the selector item for the element! See addPlugin() function)
-	 * FOR USE IN ext_locallang.php FILES
+	 * FOR USE IN ext_localconf.php FILES
 	 * Usage: 2
 	 *
 	 * @param	string		$key is the extension key
@@ -760,21 +1063,12 @@ final class t3lib_extMgm {
 		$cN = t3lib_extMgm::getCN($key);
 
 			// General plugin:
-		if ($cached) {
-			$pluginContent = trim('
-includeLibs.'.$cN.$prefix.' = '.$TYPO3_LOADED_EXT[$key]['siteRelPath'].$classFile.'
-plugin.'.$cN.$prefix.' = USER
-plugin.'.$cN.$prefix.' {
-  userFunc = '.$cN.$prefix.'->main
-}');
-		} else {
-			$pluginContent = trim('
-plugin.'.$cN.$prefix.' = USER_INT
+		$pluginContent = trim('
+plugin.'.$cN.$prefix.' = USER' . ($cached ? '' : '_INT') . '
 plugin.'.$cN.$prefix.' {
   includeLibs = '.$TYPO3_LOADED_EXT[$key]['siteRelPath'].$classFile.'
   userFunc = '.$cN.$prefix.'->main
 }');
-		}
 		t3lib_extMgm::addTypoScript($key, 'setup', '
 # Setting '.$key.' plugin TypoScript
 '.$pluginContent);
@@ -820,7 +1114,7 @@ tt_content.'.$key.$prefix.' {
 	/**
 	 * Call this method to add an entry in the static template list found in sys_templates
 	 * "static template files" are the modern equalent (provided from extensions) to the traditional records in "static_templates"
-	 * FOR USE IN ext_locallang.php FILES
+	 * FOR USE IN ext_localconf.php FILES
 	 * Usage: 3
 	 *
 	 * @param	string		$extKey is of course the extension key
@@ -842,7 +1136,7 @@ tt_content.'.$key.$prefix.' {
 	/**
 	 * Adds $content to the default TypoScript setup code as set in $TYPO3_CONF_VARS[FE]['defaultTypoScript_setup']
 	 * Prefixed with a [GLOBAL] line
-	 * FOR USE IN ext_locallang.php FILES
+	 * FOR USE IN ext_localconf.php FILES
 	 * Usage: 6
 	 *
 	 * @param	string		TypoScript Setup string
@@ -856,7 +1150,7 @@ tt_content.'.$key.$prefix.' {
 	/**
 	 * Adds $content to the default TypoScript constants code as set in $TYPO3_CONF_VARS[FE]['defaultTypoScript_constants']
 	 * Prefixed with a [GLOBAL] line
-	 * FOR USE IN ext_locallang.php FILES
+	 * FOR USE IN ext_localconf.php FILES
 	 * Usage: 0
 	 *
 	 * @param	string		TypoScript Constants string
@@ -870,7 +1164,7 @@ tt_content.'.$key.$prefix.' {
 	/**
 	 * Adds $content to the default TypoScript code for either setup, constants or editorcfg as set in $TYPO3_CONF_VARS[FE]['defaultTypoScript_*']
 	 * (Basically this function can do the same as addTypoScriptSetup and addTypoScriptConstants - just with a little more hazzle, but also with some more options!)
-	 * FOR USE IN ext_locallang.php FILES
+	 * FOR USE IN ext_localconf.php FILES
 	 * Usage: 7
 	 *
 	 * @param	string		$key is the extension key (informative only).
@@ -893,8 +1187,12 @@ tt_content.'.$key.$prefix.' {
 '.$content;
 			if ($afterStaticUid) {
 				$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type.'.'][$afterStaticUid].=$content;
+					// TODO: find a dynamic way to add default TS to all versions of css_style_content
 				if ($afterStaticUid==43)	{	// If 'content (default)' is targeted, also add to other 'content rendering templates', eg. css_styled_content
-					$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type.'.']['cssstyledcontent/static/'].=$content;
+					$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type.'.']['cssstyledcontent/static/'] .= $content;
+					$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type.'.']['cssstyledcontent/static/v4.2/'] .= $content;
+					$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type.'.']['cssstyledcontent/static/v3.9/'] .= $content;
+					$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type.'.']['cssstyledcontent/static/v3.8/'] .= $content;
 				}
 			} else {
 				$TYPO3_CONF_VARS['FE']['defaultTypoScript_'.$type].=$content;
@@ -945,8 +1243,10 @@ tt_content.'.$key.$prefix.' {
 	public static function typo3_loadExtensions() {
 		global $TYPO3_CONF_VARS;
 
+			// Caching behaviour of ext_tables.php and ext_localconf.php files:
+		$extensionCacheBehaviour = self::getExtensionCacheBehaviour();
 			// Full list of extensions includes both required and extList:
-		$rawExtList = $TYPO3_CONF_VARS['EXT']['requiredExt'].','.$TYPO3_CONF_VARS['EXT']['extList'];
+		$rawExtList = self::getEnabledExtensionList();
 
 			// Empty array as a start.
 		$extensions = array();
@@ -954,20 +1254,16 @@ tt_content.'.$key.$prefix.' {
 			//
 		if ($rawExtList) {
 				// The cached File prefix.
-			$cacheFilePrefix = 'temp_CACHED';
-				// Setting the name for the cache files:
-			if (intval($TYPO3_CONF_VARS['EXT']['extCache'])==1)	$cacheFilePrefix.= '_ps'.substr(t3lib_div::shortMD5(PATH_site.'|'.$GLOBALS['TYPO_VERSION']), 0, 4);
-			if (intval($TYPO3_CONF_VARS['EXT']['extCache'])==2)	$cacheFilePrefix.= '_'.t3lib_div::shortMD5($rawExtList);
+			$cacheFilePrefix = self::getCacheFilePrefix();
 
 				// If cache files available, set cache file prefix and return:
-			if ($TYPO3_CONF_VARS['EXT']['extCache'] && t3lib_extMgm::isCacheFilesAvailable($cacheFilePrefix)) {
+			if ($extensionCacheBehaviour && t3lib_extMgm::isCacheFilesAvailable($cacheFilePrefix)) {
 					// Return cache file prefix:
 				$extensions['_CACHEFILE'] = $cacheFilePrefix;
 			} else {	// ... but if not, configure...
 
 					// Prepare reserved filenames:
-				$files = t3lib_div::trimExplode(',', 'ext_localconf.php,ext_tables.php,ext_tables.sql,ext_tables_static+adt.sql,ext_typoscript_constants.txt,ext_typoscript_editorcfg.txt,ext_typoscript_setup.txt', 1);
-
+				$files = array('ext_localconf.php','ext_tables.php','ext_tables.sql','ext_tables_static+adt.sql','ext_typoscript_constants.txt','ext_typoscript_editorcfg.txt','ext_typoscript_setup.txt');
 					// Traverse extensions and check their existence:
 				clearstatcache();	// Clear file state cache to make sure we get good results from is_dir()
 				$temp_extensions = array_unique(t3lib_div::trimExplode(',', $rawExtList, 1));
@@ -994,7 +1290,7 @@ tt_content.'.$key.$prefix.' {
 				unset($extensions['_CACHEFILE']);
 
 					// write cache?
-				if ($TYPO3_CONF_VARS['EXT']['extCache'] &&
+				if ($extensionCacheBehaviour &&
 						@is_dir(PATH_typo3.'sysext/') &&
 						@is_dir(PATH_typo3.'ext/'))	{	// Must also find global and system extension directories to exist, otherwise caching cannot be allowed (since it is most likely a temporary server problem). This might fix a rare, unrepeatable bug where global/system extensions are not loaded resulting in fatal errors if that is cached!
 					$wrError = t3lib_extMgm::cannotCacheFilesWritable($cacheFilePrefix);
@@ -1087,18 +1383,28 @@ $_EXTCONF = $TYPO3_CONF_VARS[\'EXT\'][\'extConf\'][$_EXTKEY];
 	 * Evaluation relies on $TYPO3_LOADED_EXT['_CACHEFILE']
 	 * Usage: 2
 	 *
+	 * @param string $cacheFilePrefix Cache file prefix to be used (optional)
 	 * @return	array
 	 * @internal
 	 */
-	public static function currentCacheFiles() {
-		global $TYPO3_LOADED_EXT;
+	public static function currentCacheFiles($cacheFilePrefix = NULL) {
+		if (is_null($cacheFilePrefix)) {
+			$cacheFilePrefix = $GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'];
+		}
 
-		if ($TYPO3_LOADED_EXT['_CACHEFILE']) {
-			if (t3lib_extMgm::isCacheFilesAvailable($TYPO3_LOADED_EXT['_CACHEFILE'])) {
-				return array(
-					PATH_typo3conf.$TYPO3_LOADED_EXT['_CACHEFILE'].'_ext_localconf.php',
-					PATH_typo3conf.$TYPO3_LOADED_EXT['_CACHEFILE'].'_ext_tables.php'
-				);
+		if ($cacheFilePrefix) {
+			$cacheFilePrefixFE = str_replace('temp_CACHED','temp_CACHED_FE',$cacheFilePrefix);
+			$files = array();
+			if (t3lib_extMgm::isCacheFilesAvailable($cacheFilePrefix)) {
+				$files[] = PATH_typo3conf.$cacheFilePrefix.'_ext_localconf.php';
+				$files[] = PATH_typo3conf.$cacheFilePrefix.'_ext_tables.php';
+			}
+			if (t3lib_extMgm::isCacheFilesAvailable($cacheFilePrefixFE)) {
+				$files[] = PATH_typo3conf.$cacheFilePrefixFE.'_ext_localconf.php';
+				$files[] = PATH_typo3conf.$cacheFilePrefixFE.'_ext_tables.php';
+			}
+			if (!empty($files)) {
+				return $files;
 			}
 		}
 	}
@@ -1152,10 +1458,12 @@ $TYPO3_LOADED_EXT = unserialize(stripslashes(\''.addslashes(serialize($extension
 	/**
 	 * Unlink (delete) cache files
 	 *
+	 * @param string $cacheFilePrefix Cache file prefix to be used (optional)
 	 * @return	integer		Number of deleted files.
 	 */
-	public static function removeCacheFiles() {
-		$cacheFiles = t3lib_extMgm::currentCacheFiles();
+	public static function removeCacheFiles($cacheFilePrefix = NULL) {
+		$cacheFiles = self::currentCacheFiles($cacheFilePrefix);
+
 		$out = 0;
 		if (is_array($cacheFiles)) {
 			reset($cacheFiles);
@@ -1166,6 +1474,65 @@ $TYPO3_LOADED_EXT = unserialize(stripslashes(\''.addslashes(serialize($extension
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * Gets the behaviour for caching ext_tables.php and ext_localconf.php files
+	 * (see $TYPO3_CONF_VARS['EXT']['extCache'] setting in the install tool).
+	 *
+	 * @param boolean $usePlainValue Whether to use the value as it is without modifications
+	 * @return integer
+	 */
+	public static function getExtensionCacheBehaviour($usePlainValue = FALSE) {
+		$extensionCacheBehaviour = intval($GLOBALS['TYPO3_CONF_VARS']['EXT']['extCache']);
+
+		// Caching of extensions is disabled when install tool is used:
+		if (!$usePlainValue && defined('TYPO3_enterInstallScript') && TYPO3_enterInstallScript) {
+			$extensionCacheBehaviour = 0;
+		} 
+
+		return $extensionCacheBehaviour;
+	}
+
+	/**
+	 * Gets the prefix used for the ext_tables.php and ext_localconf.php cached files.
+	 *
+	 * @return string
+	 */
+	public static function getCacheFilePrefix() {
+		$extensionCacheBehaviour = self::getExtensionCacheBehaviour(TRUE);
+
+		$cacheFileSuffix = (TYPO3_MODE == 'FE' ? '_FE' : '');
+		$cacheFilePrefix = 'temp_CACHED' . $cacheFileSuffix;
+
+		if ($extensionCacheBehaviour == 1) {
+			$cacheFilePrefix.= '_ps' . substr(t3lib_div::shortMD5(PATH_site . '|' . $GLOBALS['TYPO_VERSION']), 0, 4);
+		} elseif ($extensionCacheBehaviour == 2) {
+			$cacheFilePrefix.= '_' . t3lib_div::shortMD5(self::getEnabledExtensionList());
+		}
+
+		return $cacheFilePrefix;
+	}
+
+	/**
+	 * Gets the list of enabled extensions for the accordant context (frontend or backend).
+	 *
+	 * @return string
+	 */
+	public static function getEnabledExtensionList() {
+			// Select mode how to load extensions in order to speed up the FE
+		if (TYPO3_MODE == 'FE') {
+			if (!($extLoadInContext = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extList_FE'])) {
+					// fall back to standard 'extList' if 'extList_FE' is not (yet) set
+				$extLoadInContext = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'];
+			}
+		} else {
+			$extLoadInContext = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'];
+		}
+
+		$extensionList = $GLOBALS['TYPO3_CONF_VARS']['EXT']['requiredExt'] . ',' . $extLoadInContext;
+
+		return $extensionList;
 	}
 }
 

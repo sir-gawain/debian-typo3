@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * TSParser extension class to t3lib_TStemplate
  *
- * $Id: class.t3lib_tsparser_ext.php 4137 2008-09-16 19:24:13Z benni $
+ * $Id: class.t3lib_tsparser_ext.php 8356 2010-07-28 08:59:28Z ohader $
  * Contains functions for the TS module in TYPO3 backend
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -87,7 +87,6 @@
  *
  */
 
-require_once(PATH_t3lib.'class.t3lib_tstemplate.php');
 
 
 
@@ -135,6 +134,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		'ctable' => Array('Content: \'Table\'', 'mf'),
 		'cuploads' => Array('Content: \'Filelinks\'', 'mg'),
 		'cmultimedia' => Array('Content: \'Multimedia\'', 'mh'),
+		'cmedia' => Array('Content: \'Media\'', 'mr'),
 		'cmailform' => Array('Content: \'Form\'', 'mi'),
 		'csearch' => Array('Content: \'Search\'', 'mj'),
 		'clogin' => Array('Content: \'Login\'', 'mk'),
@@ -292,8 +292,9 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		$constants->setup = $this->const;
 		$constants->setup = $this->mergeConstantsFromPageTSconfig($constants->setup);
 
-		$matchObj = t3lib_div::makeInstance('t3lib_matchCondition');
-		$matchObj->matchAll=1;		// Matches ALL conditions in TypoScript
+		/* @var $matchObj t3lib_matchCondition_frontend */
+		$matchObj = t3lib_div::makeInstance('t3lib_matchCondition_frontend');
+		$matchObj->setSimulateMatchResult(true);	// Matches ALL conditions in TypoScript
 
 		$c=0;
 		$cc=count($this->constants);
@@ -367,7 +368,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		$keyArr_alpha=array();
 		while (list($key,)=each($arr))	{
 			if (substr($key,-2)!='..')	{	// Don't do anything with comments / linenumber registrations...
-				$key=ereg_replace('\.$','',$key);
+				$key=preg_replace('/\.$/','',$key);
 				if (substr($key,-1)!='.')	{
 					if (t3lib_div::testInt($key))	{
 						$keyArr_num[$key]=$arr[$key];
@@ -440,7 +441,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 							$comment = preg_replace('/[\r\n]/', ' ', $comment);	// Remove linebreaks, replace with ' '
 							$comment = preg_replace('/[#\*]{2,}/', '', $comment);	// Remove # and * if more than twice in a row
 							$comment = preg_replace('/^[#\*\s]+/', '# ', $comment);	// Replace leading # (just if it exists) and add it again. Result: Every comment should be prefixed by a '#'.
-							$comment = $this->makeHtmlspecialchars($comment);	// Masking HTML Tags: Replace < with &lt; and > with &gt; 
+							$comment = $this->makeHtmlspecialchars($comment);	// Masking HTML Tags: Replace < with &lt; and > with &gt;
 							$HTML.= ' <span class="comment">'.trim($comment).'</span>';
 						}
 					}
@@ -509,7 +510,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		reset($arr);
 		$keyArr=array();
 		while (list($key,)=each($arr))	{
-			$key=ereg_replace('\.$','',$key);
+			$key=preg_replace('/\.$/','',$key);
 			if (substr($key,-1)!='.')	{
 				$keyArr[$key]=1;
 			}
@@ -522,13 +523,13 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 			$deeper = is_array($arr[$key.'.']);
 
 			if ($this->regexMode)	{
-				if (ereg($searchString,$arr[$key]))	{	// The value has matched
+				if (preg_match('/'.$searchString.'/',$arr[$key]))	{	// The value has matched
 					$this->tsbrowser_searchKeys[$depth]+=2;
 				}
-				if (ereg($searchString,$key))	{		// The key has matched
+				if (preg_match('/'.$searchString.'/',$key))	{		// The key has matched
 					$this->tsbrowser_searchKeys[$depth]+=4;
 				}
-				if (ereg($searchString,$depth_in))	{	// Just open this subtree if the parent key has matched the search
+				if (preg_match('/'.$searchString.'/',$depth_in))	{	// Just open this subtree if the parent key has matched the search
 					$this->tsbrowser_searchKeys[$depth]=1;
 				}
 			} else {
@@ -582,7 +583,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		reset($arr);
 		$keyArr=array();
 		while (list($key,)=each($arr))	{
-			$key=ereg_replace('\.$','',$key);
+			$key=preg_replace('/\.$/','',$key);
 			if (substr($key,-1)!='.')	{
 				$keyArr[$key]=1;
 			}
@@ -590,41 +591,49 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		reset($keyArr);
 		$a=0;
 		$c=count($keyArr);
+		static $i;
 		while (list($key,)=each($keyArr))	{
-			$HTML='';
+			$HTML = '';
 			$a++;
-			$deeper = is_array($arr[$key.'.']);
-			$row=$arr[$key];
+			$deeper = is_array($arr[$key . '.']);
+			$row = $arr[$key];
 
 			$PM = 'join';
-			$LN = ($a==$c)?'blank':'line';
-			$BTM = ($a==$c)?'top':'';
+			$LN = ($a==$c) ? 'blank' : 'line';
+			$BTM = ($a==$c) ? 'top' : '';
 			$PM = 'join';
 
-			$HTML.=$depthData;
-			$icon = substr($row['templateID'],0,3)=='sys' ? t3lib_iconWorks::getIcon('sys_template',array('root'=>$row['root'])) :
-							(substr($row['templateID'],0,6)=='static' ? t3lib_iconWorks::getIcon('static_template',array()) : 'gfx/i/default.gif');
-			$alttext= '['.$row['templateID'].']';
-			$alttext.= $row['pid'] ? ' - '.t3lib_BEfunc::getRecordPath($row['pid'],$GLOBALS['SOBE']->perms_clause,20) : '';
-			if (in_array($row['templateID'],$this->clearList_const) || in_array($row['templateID'],$this->clearList_setup))	{
-				$A_B='<a href="index.php?id='.$GLOBALS['SOBE']->id.'&template='.$row['templateID'].'">';
-				$A_E='</a>';
+			$HTML .= $depthData;
+			$icon = substr($row['templateID'],0,3) == 'sys' ? t3lib_iconWorks::getIcon('sys_template', array('root' => $row['root'])) :
+							(substr($row['templateID'], 0, 6) == 'static' ? t3lib_iconWorks::getIcon('static_template', array()) : 'gfx/i/default.gif');
+			$alttext = '[' . $row['templateID'] . ']';
+			$alttext .= $row['pid'] ? ' - ' . t3lib_BEfunc::getRecordPath($row['pid'], $GLOBALS['SOBE']->perms_clause, 20) : '';
+			if (in_array($row['templateID'], $this->clearList_const) || in_array($row['templateID'], $this->clearList_setup)) {
+				$A_B = '<a href="index.php?id=' . $GLOBALS['SOBE']->id . '&template=' . $row['templateID'] . '">';
+				$A_E = '</a>';
+				if (t3lib_div::_GP('template') == $row['templateID']) {
+					$A_B = '<strong>' . $A_B;
+					$A_E .= '</strong>';
+				}
 			} else {
-				$A_B='';
-				$A_E='';
+				$A_B = '';
+				$A_E = '';
 			}
-			$HTML.=($first?'':'<IMG src="'.$GLOBALS['BACK_PATH'].'gfx/ol/'.$PM.$BTM.'.gif" width="18" height="16" align="top" border=0>').'<img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], $icon) . ' align="top" title="'.$alttext.'" /> '.$A_B.t3lib_div::fixed_lgd_cs($row['title'],$GLOBALS['BE_USER']->uc['titleLen']).$A_E.'&nbsp;&nbsp;';
+			$HTML .= ($first ? '' : '<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/ol/' . $PM . $BTM . '.gif" width="18" height="16" align="top" border="0" />') .
+				'<img ' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], $icon) . ' align="top" title="' . htmlspecialchars($alttext) . '" /> ' .
+				$A_B . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $GLOBALS['BE_USER']->uc['titleLen'])) . $A_E . '&nbsp;&nbsp;';
 			$RL = $this->ext_getRootlineNumber($row['pid']);
-			$keyArray[] = '<tr>
-							<td nowrap>'.$HTML.'</td>
-							<td align=center>'.($row['root']?'<b>X</b>':'').'&nbsp;&nbsp;</td>
-							<td align=center'.$row['bgcolor_setup'].'>'.fw(($row['clConf']?'<b>X</b>':'').'&nbsp;&nbsp;').'</td>
-							<td align=center'.$row['bgcolor_const'].'>'.fw(($row['clConst']?'<b>X</b>':'').'&nbsp;&nbsp;').'</td>
-							<td>'.($row['pid']?'&nbsp;'.$row['pid'].(strcmp($RL,'')?' ('.$RL.')':'').'&nbsp;&nbsp;':'').'</td>
-							<td>'.($row['next']?'&nbsp;'.$row['next'].'&nbsp;&nbsp;':'').'</td>
+			$keyArray[] = '<tr class="' . ($i++ % 2 == 0 ? 'bgColor4' : 'bgColor6') . '">
+							<td nowrap>' . $HTML . '</td>
+							<td align="center" class="bgColor5">' . ($row['root'] ? '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/perm-allowed.gif', 'width="10" height="9"') . ' align="top" alt="" />' : '') . '&nbsp;&nbsp;</td>
+							<td align="center">' . fw(($row['clConf'] ? '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/perm-allowed.gif', 'width="10" height="9"') . ' align="top" alt="" />' :'') . '&nbsp;&nbsp;') . '</td>
+							<td align="center" class="bgColor5">' . fw(($row['clConst'] ? '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/perm-allowed.gif', 'width="10" height="9"') . ' align="top" alt="" />' : '') . '&nbsp;&nbsp;') . '</td>
+							<td align="center">' . ($row['pid'] ? $row['pid'] : '') . '</td>
+							<td align="center" class="bgColor5">' . (strcmp($RL, '') ? $RL : '') . '</td>
+							<td>' . ($row['next'] ? '&nbsp;' . $row['next'] . '&nbsp;&nbsp;' : '') . '</td>
 						</tr>';
 			if ($deeper)	{
-				$keyArray = $this->ext_getTemplateHierarchyArr($arr[$key.'.'], $depthData.($first?'':'<IMG src="'.$GLOBALS['BACK_PATH'].'gfx/ol/'.$LN.'.gif" width="18" height="16" align="top">'), $keyArray);
+				$keyArray = $this->ext_getTemplateHierarchyArr($arr[$key . '.'], $depthData . ($first ? '' : '<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/ol/' . $LN . '.gif" width="18" height="16" align="top" />'), $keyArray);
 			}
 		}
 		return $keyArray;
@@ -676,7 +685,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 		}
 
 		if ($syntaxHL)	{
-			$all = ereg_replace('^[^'.chr(10).']*.','',$all);
+			$all = preg_replace('/^[^'.chr(10).']*./','',$all);
 			$all = chop($all);
 			$tsparser = t3lib_div::makeInstance('t3lib_TSparser');
 			$tsparser->lineNumberOffset=$this->ext_lineNumberOffset+1;
@@ -729,7 +738,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 	 * @return	[type]		...
 	 */
 	function ext_formatTS($input, $ln, $comments=1, $crop=0)	{
-		$input = ereg_replace('^[^'.chr(10).']*.','',$input);
+		$input = preg_replace('/^[^'.chr(10).']*./','',$input);
 		$input = chop($input);
 		$cArr = explode(chr(10),$input);
 
@@ -816,7 +825,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 				$comment = trim($this->flatSetup[$const.'..']);
 				$c_arr = explode(chr(10),$comment);
 				while(list($k,$v)=each($c_arr))	{
-					$line=trim(ereg_replace('^[#\/]*','',$v));
+					$line=trim(preg_replace('/^[#\/]*/','',$v));
 					if ($line)	{
 						$parts = explode(';', $line);
 						while(list(,$par)=each($parts))		{
@@ -850,6 +859,14 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 									case 'label':
 											// label
 										$editableComments[$const]['label'] = trim($keyValPair[1]);
+									break;
+									case 'customsubcategory':
+											// custom subCategory label
+										$customSubcategory = explode('=',$keyValPair[1],2);
+										if (trim($customSubcategory[0])) {
+											$subCategoryKey = strtolower($customSubcategory[0]);
+											$this->subCategories[$subCategoryKey][0] = $GLOBALS['LANG']->sL($customSubcategory[1]);
+										}
 									break;
 								}
 							}
@@ -925,7 +942,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 			if (t3lib_div::inList('int,options,file,boolean,offset,user', $retArr['type']))	{
 				$p=trim(substr($type,$m));
 				$reg = array();
-				ereg('\[(.*)\]',$p,$reg);
+				preg_match('/\[(.*)\]/',$p,$reg);
 				$p=trim($reg[1]);
 				if ($p)	{
 					$retArr['paramstr']=$p;
@@ -1059,10 +1076,10 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 	 * @return	[type]		...
 	 */
 	function ext_readDirResources($path)	{
-		$path=trim($path);
-		if ($path && substr($path,0,10)=='fileadmin/')	{
-			$path = ereg_replace('\/$','',$path);
-			$this->readDirectory(PATH_site.$path);
+		$path = trim($path);
+		if ($path && strstr($path, $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir']))	{
+			$path = rtrim($path, '/');
+			$this->readDirectory(PATH_site . $path);
 		}
 	}
 
@@ -1081,7 +1098,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 				while($entry=$d->read()) {
 					if ($entry!='.' && $entry!='..')	{
 						$wholePath = $path.'/'.$entry;		// Because of odd PHP-error where  <BR>-tag is sometimes placed after a filename!!
-						if (@file_exists($wholePath) && (!$type || filetype($wholePath)==$type))	{
+						if (file_exists($wholePath) && (!$type || filetype($wholePath)==$type))	{
 							$fI = t3lib_div::split_fileref($wholePath);
 							$this->dirResources[]=substr($wholePath,strlen(PATH_site));
 						}
@@ -1101,7 +1118,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 	function ext_fNandV($params)	{
 		$fN='data['.$params['name'].']';
 		$fV=$params['value'];
-		if (ereg('^{[\$][a-zA-Z0-9\.]*}$',trim($fV),$reg))	{		// Values entered from the constantsedit cannot be constants!	230502; removed \{ and set {
+		if (preg_match('/^{[\$][a-zA-Z0-9\.]*}$/',trim($fV),$reg))	{		// Values entered from the constantsedit cannot be constants!	230502; removed \{ and set {
 			$fV='';
 		}
 		$fV=htmlspecialchars($fV);
@@ -1260,7 +1277,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 								$val=trim($val);
 								$fI=t3lib_div::split_fileref($val);
 								if ($val && (!$extList || t3lib_div::inList($extList,$fI['fileext'])))	{
-									if ($onlineResourceFlag<=0 && substr($fI['path'],0,10)=='fileadmin/')	{
+									if ($onlineResourceFlag <= 0 && strstr($fI['path'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'])) {
 										if ($onlineResourceFlag<0)	{
 											$p_field.='<option value=""></option>';
 										}
@@ -1312,7 +1329,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 								}
 
 								if ($copyFile && @is_file($copyFile))	{
-									$p_field.='<img src="clear.gif" width="20" height="1" alt="" /><img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/clip_copy.gif','width="12" height="12"').' border="0" alt="" /><input type="checkbox" name="_copyResource['.$params['name'].']" value="'.htmlspecialchars($copyFile).'" onClick="uFormUrl('.$aname.');if (this.checked) {alert(unescape(\''.rawurlencode(sprintf("This will make a copy of the current file, '%s'. Do you really want that?",$params['value'])).'\'));}" />';
+									$p_field .= '<img src="clear.gif" width="20" ' . 'height="1" alt="" /><img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/clip_copy.gif', 'width="12" height="12"') . ' border="0" alt="" /><input type="checkbox" ' . 'name="_copyResource[' . $params['name'] . ']" value="' . htmlspecialchars($copyFile) . '" onclick="uFormUrl(' . $aname . ');if (this.checked && !confirm(\'' . t3lib_div::slashJS(htmlspecialchars(sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tsparser.xml:tsparser_ext.make_copy'), $params['value']))) . '\')) this.checked=false;" />';
 								}
 
 								// Upload?
@@ -1574,7 +1591,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 							case 'color':
 								$col=array();
 								if($var && !t3lib_div::inList($this->HTMLcolorList,strtolower($var)))	{
-									$var = ereg_replace('[^A-Fa-f0-9]*','',$var);
+									$var = preg_replace('/[^A-Fa-f0-9]*/','',$var);
 									$useFullHex = strlen($var) > 3;
 
 									$col[]=HexDec(substr($var,0,1));
@@ -1748,7 +1765,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 	 */
 	function ext_setStar($val)	{
 		$fParts = explode('.',strrev($val),2);
-		$val=ereg_replace('_[0-9][0-9]$','',strrev($fParts[1])).'*.'.strrev($fParts[0]);
+		$val=preg_replace('/_[0-9][0-9]$/','',strrev($fParts[1])).'*.'.strrev($fParts[0]);
 		return $val;
 	}
 
@@ -1775,4 +1792,5 @@ class t3lib_tsparser_ext extends t3lib_TStemplate	{
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser_ext.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser_ext.php']);
 }
+
 ?>

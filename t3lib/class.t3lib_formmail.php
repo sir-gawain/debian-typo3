@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains a class for formmail
  *
- * $Id: class.t3lib_formmail.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_formmail.php 8419 2010-07-28 09:15:45Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -67,7 +67,7 @@
  * @see tslib_fe::sendFormmail(), t3lib/formmail.php
  */
 class t3lib_formmail extends t3lib_htmlmail {
-	var $reserved_names = 'recipient,recipient_copy,auto_respond_msg,redirect,subject,attachment,from_email,from_name,replyto_email,replyto_name,organisation,priority,html_enabled,quoted_printable,submit_x,submit_y';
+	protected $reserved_names = 'recipient,recipient_copy,auto_respond_msg,auto_respond_checksum,redirect,subject,attachment,from_email,from_name,replyto_email,replyto_name,organisation,priority,html_enabled,quoted_printable,submit_x,submit_y';
 	var $dirtyHeaders = array();	// collection of suspicious header data, used for logging
 
 
@@ -132,9 +132,20 @@ class t3lib_formmail extends t3lib_htmlmail {
 			$this->replyto_email = t3lib_div::validEmail($this->replyto_email) ? $this->replyto_email : '';
 			$this->priority = ($V['priority']) ? t3lib_div::intInRange($V['priority'],1,5) : 3;
 
-				// Auto responder.
+				// auto responder
 			$this->auto_respond_msg = (trim($V['auto_respond_msg']) && $this->from_email) ? trim($V['auto_respond_msg']) : '';
-			$this->auto_respond_msg = $this->sanitizeHeaderString($this->auto_respond_msg);
+
+			if ($this->auto_respond_msg !== '') {
+					// Check if the value of the auto responder message has been modified with evil intentions
+				$autoRespondChecksum = $V['auto_respond_checksum'];
+				$correctHmacChecksum = t3lib_div::hmac($this->auto_respond_msg);
+				if ($autoRespondChecksum !== $correctHmacChecksum) {
+					t3lib_div::sysLog('Possible misuse of t3lib_formmail auto respond method. Subject: ' . $V['subject'], 'Core', 3);
+					return;
+				} else {
+					$this->auto_respond_msg = $this->sanitizeHeaderString($this->auto_respond_msg);
+				}
+			}
 
 			$Plain_content = '';
 			$HTML_content = '<table border="0" cellpadding="2" cellspacing="2">';
@@ -165,14 +176,19 @@ class t3lib_formmail extends t3lib_htmlmail {
 
 			for ($a=0;$a<10;$a++)	{
 				$varname = 'attachment'.(($a)?$a:'');
-				if (!is_uploaded_file($_FILES[$varname]['tmp_name']))	{
-					t3lib_div::sysLog('Possible abuse of t3lib_formmail: temporary file "'.$_FILES[$varname]['tmp_name'].'" ("'.$_FILES[$varname]['name'].'") was not an uploaded file.', 'Core', 3);
+				if (!isset($_FILES[$varname])) {
 					continue;
+				}
+				if (!is_uploaded_file($_FILES[$varname]['tmp_name'])) {
+					t3lib_div::sysLog('Possible abuse of t3lib_formmail: temporary file "'.$_FILES[$varname]['tmp_name'].'" ("'.$_FILES[$varname]['name'].'") was not an uploaded file.', 'Core', 3);
+				}
+				if ($_FILES[$varname]['tmp_name']['error'] !== UPLOAD_ERR_OK) {
+					t3lib_div::sysLog('Error in uploaded file in t3lib_formmail: temporary file "'.$_FILES[$varname]['tmp_name'].'" ("'.$_FILES[$varname]['name'].'") Error code: '.$_FILES[$varname]['tmp_name']['error'], 'Core', 3);
 				}
 				$theFile = t3lib_div::upload_to_tempfile($_FILES[$varname]['tmp_name']);
 				$theName = $_FILES[$varname]['name'];
 
-				if ($theFile && @file_exists($theFile))	{
+				if ($theFile && file_exists($theFile))	{
 					if (filesize($theFile) < $GLOBALS['TYPO3_CONF_VARS']['FE']['formmailMaxAttachmentSize'])	{
 						$this->addAttachment($theFile, $theName);
 					}
@@ -243,4 +259,5 @@ class t3lib_formmail extends t3lib_htmlmail {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_formmail.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_formmail.php']);
 }
+
 ?>

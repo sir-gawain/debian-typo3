@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  *
  * This module lets you view a page in a more Content Management like style than the ordinary record-list
  *
- * $Id: db_layout.php 3775 2008-06-10 12:05:31Z patrick $
+ * $Id: db_layout.php 8428 2010-07-28 09:18:27Z ohader $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -72,13 +72,8 @@ require('conf.php');
 require($BACK_PATH.'init.php');
 require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:cms/layout/locallang.xml');
-require_once(PATH_t3lib.'class.t3lib_pagetree.php');
-require_once(PATH_t3lib.'class.t3lib_page.php');
-require_once(PATH_t3lib.'class.t3lib_recordlist.php');
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
 require_once(PATH_typo3.'class.db_list.inc');
 require_once('class.tx_cms_layout.php');
-require_once(PATH_t3lib.'class.t3lib_positionmap.php');
 $BE_USER->modAccess($MCONF,1);
 
 // Will open up records locked by current user. It's assumed that the locking should end if this script is hit.
@@ -254,7 +249,7 @@ class SC_db_layout {
 		$this->search_field = t3lib_div::_GP('search_field');
 		$this->search_levels = t3lib_div::_GP('search_levels');
 		$this->showLimit = t3lib_div::_GP('showLimit');
-		$this->returnUrl = t3lib_div::_GP('returnUrl');
+		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 
 			// Load page info array:
 		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$this->perms_clause);
@@ -341,8 +336,8 @@ class SC_db_layout {
 		}
 
 			// Find if there are ANY languages at all (and if not, remove the language option from function menu).
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'sys_language', ($BE_USER->isAdmin()?'':'hidden=0'));
-		if (!$GLOBALS['TYPO3_DB']->sql_num_rows($res))	{
+		$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', 'sys_language', ($BE_USER->isAdmin() ? '' : 'hidden=0'));
+		if (!$count) {
 			unset($this->MOD_MENU['function']['2']);
 		}
 
@@ -407,7 +402,6 @@ class SC_db_layout {
 			$this->doc = t3lib_div::makeInstance('template');
 			$this->doc->backPath = $BACK_PATH;
 			$this->doc->setModuleTemplate('templates/db_layout.html');
-			$this->doc->docType='xhtml_trans';
 
 				// JavaScript:
 			$this->doc->JScode = '<script type="text/javascript" src="'.$BACK_PATH.'../t3lib/jsfunc.updateform.js"></script>';
@@ -528,6 +522,21 @@ class SC_db_layout {
 				$body = $this->renderListContent();	// All other listings
 			}
 
+
+			if ($this->pageinfo['content_from_pid']) {
+				$contentPage = t3lib_BEfunc::getRecord('pages', intval($this->pageinfo['content_from_pid']));
+				$title = t3lib_BEfunc::getRecordTitle('pages', $contentPage);
+				$linkToPid = $this->local_linkThisScript(array('id' => $this->pageinfo['content_from_pid']));
+				$link = '<a href="' . $linkToPid . '">' . htmlspecialchars($title) . ' (PID ' . intval($this->pageinfo['content_from_pid']) . ')</a>';
+				$flashMessage = t3lib_div::makeInstance(
+					't3lib_FlashMessage',
+					'',
+					sprintf($GLOBALS['LANG']->getLL('content_from_pid_title'), $link),
+					t3lib_FlashMessage::INFO
+				);
+				$body = $flashMessage->render() . $body;
+			}
+
 				// Setting up the buttons and markers for docheader
 			$docHeaderButtons = $this->getButtons($this->MOD_SETTINGS['function']==0 ? 'quickEdit' : '');
 			$markers = array(
@@ -547,7 +556,6 @@ class SC_db_layout {
 
 				// If no access or id value, create empty document:
 			$this->doc = t3lib_div::makeInstance('template');
-			$this->doc->docType='xhtml_trans';
 			$this->doc->backPath = $BACK_PATH;
 			$this->doc->setModuleTemplate('templates/db_layout.html');
 
@@ -555,7 +563,13 @@ class SC_db_layout {
 				if (top.fsMod) top.fsMod.recentIds["web"] = '.intval($this->id).';
 			');
 
-			$body = $this->doc->section($LANG->getLL('clickAPage_header'), $LANG->getLL('clickAPage_content'), 0, 1);
+			$flashMessage = t3lib_div::makeInstance(
+				't3lib_FlashMessage',
+				$LANG->getLL('clickAPage_content'),
+				$LANG->getLL('clickAPage_header'),
+				t3lib_FlashMessage::INFO
+			);
+			$body = $flashMessage->render();
 
 				// Setting up the buttons and markers for docheader
 			$docHeaderButtons = array(
@@ -629,8 +643,7 @@ class SC_db_layout {
 			}
 
 			$url = $BACK_PATH.'alt_doc.php?edit[tt_content]['.implode(',',$idListA).']=edit&returnUrl='.rawurlencode($this->local_linkThisScript(array('edit_record'=>'')));
-			header('Location: '.t3lib_div::locationHeaderUrl($url));
-			exit;
+			t3lib_utility_Http::redirect($url);
 		}
 
 			// If the former record edited was the creation of a NEW record, this will look up the created records uid:
@@ -793,7 +806,7 @@ class SC_db_layout {
 			if (!$recordAccess)	{
 					// If no edit access, print error message:
 				$content.=$this->doc->section($LANG->getLL('noAccess'),$LANG->getLL('noAccess_msg').'<br /><br />'.
-							($BE_USER->errorMsg ? 'Reason: '.$BE_USER->errorMsg.'<br/><br/>' : ''),0,1);
+							($BE_USER->errorMsg ? 'Reason: ' . $BE_USER->errorMsg . '<br /><br />' : ''), 0, 1);
 			} elseif (is_array($rec))	{	// If the record is an array (which it will always be... :-)
 
 					// Create instance of TCEforms, setting defaults:
@@ -833,23 +846,18 @@ class SC_db_layout {
 				$theCode=$tceforms->printNeededJSFunctions_top().$theCode.$tceforms->printNeededJSFunctions();
 
 					// Add warning sign if record was "locked":
-				if ($lockInfo=t3lib_BEfunc::isRecordLocked($this->eRParts[0],$rec['uid']))	{
-					$lockIcon='
-
-						<!--
-						 	Warning box:
-						-->
-						<table border="0" cellpadding="0" cellspacing="0" class="warningbox">
-							<tr>
-								<td><img'.t3lib_iconWorks::skinImg($BACK_PATH,'gfx/recordlock_warning3.gif','width="17" height="12"').' alt="" /></td>
-								<td>'.htmlspecialchars($lockInfo['msg']).'</td>
-							</tr>
-						</table>
-						';
-				} else $lockIcon='';
+				if ($lockInfo = t3lib_BEfunc::isRecordLocked($this->eRParts[0], $rec['uid'])) {
+					$lockedMessage = t3lib_div::makeInstance(
+						't3lib_FlashMessage',
+						htmlspecialchars($lockInfo['msg']),
+						'',
+						t3lib_FlashMessage::WARNING
+					);
+					t3lib_FlashMessageQueue::addMessage($lockedMessage);
+				}
 
 					// Add whole form as a document section:
-				$content.=$this->doc->section('',$lockIcon.$theCode);
+				$content .= $this->doc->section('', $theCode);
 			}
 		} else {
 				// If no edit access, print error message:
@@ -892,7 +900,7 @@ class SC_db_layout {
 			$HTMLcode = '';
 
 				// CSH:
-			$HTMLcode.= t3lib_BEfunc::cshItem($this->descrTable,'quickEdit_selElement',$BACK_PATH,'|<br/>');
+			$HTMLcode.= t3lib_BEfunc::cshItem($this->descrTable, 'quickEdit_selElement', $BACK_PATH, '|<br />');
 
 			$HTMLcode.=$posMap->printContentElementColumns($this->id,$this->eRParts[1],$this->colPosList,$this->MOD_SETTINGS['tt_content_showHidden'],$this->R_URI);
 
@@ -1233,7 +1241,11 @@ class SC_db_layout {
 				if($this->undoButton) {
 						// Undo button
 					$buttons['undo'] = '<a href="#" onclick="' . htmlspecialchars('window.location.href=\'' . $BACK_PATH . 'show_rechis.php?element=' . rawurlencode($this->eRParts[0] . ':' . $this->eRParts[1]) . '&revert=ALL_FIELDS&sumUp=-1&returnUrl=' . rawurlencode($this->R_URI) . '\'; return false;') . '">' .
-						'<img' . t3lib_iconWorks::skinImg($BACK_PATH, 'gfx/undo.gif', 'width="21" height="16"') . ' class="c-inputButton" title="' . htmlspecialchars(sprintf($LANG->getLL('undoLastChange'), t3lib_BEfunc::calcAge(time() - $this->undoButtonR['tstamp'], $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')))) . '" alt="" />' .
+						'<img' .
+							t3lib_iconWorks::skinImg($BACK_PATH, 'gfx/undo.gif', 'width="21" height="16"') .
+							' class="c-inputButton"' .
+							' title="' . htmlspecialchars(sprintf($LANG->getLL('undoLastChange'), t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $this->undoButtonR['tstamp'], $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')))) .
+							'" alt="" />' .
 						'</a>';
 
 						// History button
@@ -1259,9 +1271,15 @@ class SC_db_layout {
 	 * @return	void
 	 */
 	function getNumberOfHiddenElements()	{
-		$q_res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', 'tt_content', 'pid='.intval($this->id).' AND sys_language_uid='.intval($this->current_sys_language).t3lib_BEfunc::BEenableFields('tt_content',1).t3lib_BEfunc::deleteClause('tt_content').t3lib_BEfunc::versioningPlaceholderClause('tt_content'));
-		list($q_count) = $GLOBALS['TYPO3_DB']->sql_fetch_row($q_res);
-		return $q_count;
+		return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'uid',
+			'tt_content',
+			'pid=' . intval($this->id) .
+				' AND sys_language_uid=' . intval($this->current_sys_language) .
+				t3lib_BEfunc::BEenableFields('tt_content', 1) .
+				t3lib_BEfunc::deleteClause('tt_content') .
+				t3lib_BEfunc::versioningPlaceholderClause('tt_content')
+		);
 	}
 
 	/**
@@ -1305,20 +1323,10 @@ class SC_db_layout {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/layout/db_layout.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/layout/db_layout.php']);
 }
-
-
-
-
-
-
-
-
-
-
 
 
 // Make instance:
@@ -1331,4 +1339,5 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 $SOBE->clearCache();
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

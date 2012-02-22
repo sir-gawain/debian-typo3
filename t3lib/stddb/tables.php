@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -41,7 +41,7 @@
  * Thus you preserve backwards compatibility.
  *
  *
- * $Id: tables.php 3793 2008-06-11 06:30:14Z ingmars $
+ * $Id: tables.php 5917 2009-09-12 09:36:04Z steffenk $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -80,7 +80,6 @@ $PAGES_TYPES = array(
  * Each key is a value from the "module" field of page records and the value is an array with a key/value pair, eg. "icon" => "modules_shop.gif"
  *
  * @see t3lib_iconWorks::getIcon(), typo3/sysext/cms/ext_tables.php
- * @deprecated
  */
 $ICON_TYPES = array();
 
@@ -88,8 +87,8 @@ $ICON_TYPES = array();
 /**
  * Commonly used language labels which can be used in the $TCA array and elsewhere.
  * Obsolete - just use the values of each entry directly.
- *
- * @deprecated
+ * @todo turn into an object with magic getters and setter so we can make use of the deprecation logging
+ * @deprecated since TYPO3 3.6
  */
 $LANG_GENERAL_LABELS = array(
 	'endtime' => 'LLL:EXT:lang/locallang_general.php:LGL.endtime',
@@ -225,7 +224,12 @@ $TCA['pages'] = array(
 				'size' => '1',
 				'maxitems' => '1',
 				'minitems' => '0',
-				'show_thumbs' => '1'
+				'show_thumbs' => '1',
+				'wizards' => array(
+					'suggest' => array(
+						'type' => 'suggest',
+					),
+				),
 			)
 		),
 		'tx_impexp_origuid' => array('config'=>array('type'=>'passthrough')),
@@ -234,7 +238,7 @@ $TCA['pages'] = array(
 			'config' => array(
 				'type' => 'input',
 				'size' => '30',
-				'max' => '30',
+				'max' => '255',
 			)
 		),
 		'editlock' => array(
@@ -316,7 +320,7 @@ $TCA['be_groups'] = array(
 			'disabled' => 'hidden'
 		),
 		'title' => 'LLL:EXT:lang/locallang_tca.php:be_groups',
-		'useColumnsForDefaultValues' => 'lockToDomain',
+		'useColumnsForDefaultValues' => 'lockToDomain, fileoper_perms',
 		'dividers2tabs' => true,
 		'dynamicConfigFile' => 'T3LIB:tbl_be.php',
 		'versioningWS_alwaysAllowLiveEdit' => TRUE
@@ -347,25 +351,6 @@ $TCA['sys_filemounts'] = array(
 	)
 );
 
-/**
- * Table "sys_filemounts":
- * Defines filepaths on the server which can be mounted for users so they can upload and manage files online by eg. the Filelist module
- * This is only the 'header' part (ctrl). The full configuration is found in t3lib/stddb/tbl_be.php
- */
-$TCA['sys_workspace'] = array(
-	'ctrl' => array(
-		'label' => 'title',
-		'tstamp' => 'tstamp',
-		'title' => 'LLL:EXT:lang/locallang_tca.php:sys_workspace',
-		'adminOnly' => 1,
-		'rootLevel' => 1,
-		'delete' => 'deleted',
-		'iconfile' => 'sys_workspace.png',
-		'dynamicConfigFile' => 'T3LIB:tbl_be.php',
-		'versioningWS_alwaysAllowLiveEdit' => true,
-		'dividers2tabs' => true
-	)
-);
 
 /**
  * Table "sys_languages":
@@ -471,6 +456,7 @@ $FILEICONS = array(
 	'php5' => 'php3.gif',
 	'php6' => 'php3.gif',
 	'php' => 'php3.gif',
+	'ppt' => 'ppt.gif',
 	'ttf' => 'ttf.gif',
 	'pcx' => 'pcx.gif',
 	'png' => 'png.gif',

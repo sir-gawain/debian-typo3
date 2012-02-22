@@ -2,8 +2,8 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
-*  (c) 2006-2008 Sebastian Kurfuerst (sebastian@garbage-group.de)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2006-2009 Sebastian Kurfuerst (sebastian@garbage-group.de)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
 /**
  * Class for the record history display script (show_rechis.php)
  *
- * $Id: class.show_rechis.inc 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.show_rechis.inc 8428 2010-07-28 09:18:27Z ohader $
  * XHTML Compliant
  *
  * @author	Sebastian Kurfuerst <sebastian@garbage-group.de>
@@ -65,7 +65,7 @@ class recordHistory {
 	function recordHistory()	{
 			// GPvars:
 		$this->element = t3lib_div::_GP('element');
-		$this->returnUrl = t3lib_div::_GP('returnUrl');
+		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 		$this->lastSyslogId = t3lib_div::_GP('diff');
 		$this->rollbackFields = t3lib_div::_GP('rollbackFields');
 			// resolve sh_uid if set
@@ -95,8 +95,7 @@ class recordHistory {
 			$this->createChangeLog();
 			$completeDiff = $this->createMultipleDiff();
 			$this->performRollback($completeDiff);
-			Header ('Location: '.t3lib_div::locationHeaderUrl($this->returnUrl));
-			exit;
+			t3lib_utility_Http::redirect($this->returnUrl);
 		}
 
 			// save snapshot
@@ -368,7 +367,7 @@ class recordHistory {
 		$tmpTsConfig = $GLOBALS['BE_USER']->getTSConfig('TCEMAIN',t3lib_BEfunc::getPagesTSconfig($pid));
 		$expirationTime = isset($tmpTsConfig['properties']['default.']['history.']['maxAgeDays']) ? $tmpTsConfig['properties']['default.']['history.']['maxAgeDays'] : 30;
 
-		$expirationTimestamp = $expirationTime ? (time() - 60*60*24*$expirationTime) : 0;
+		$expirationTimestamp = $expirationTime ? ($GLOBALS['EXEC_TIME'] - 60 * 60 * 24 * $expirationTime) : 0;
 		$expirationWarning = 0;
 
 		$be_user_array = t3lib_BEfunc::getUserNames();
@@ -410,7 +409,7 @@ class recordHistory {
 			$singleLine[] = '<span>'.$this->linkPage($image,array('diff' => $sysLogUid)).'</span>';	// remove first link
 
 			$singleLine[] = htmlspecialchars(t3lib_BEfunc::datetime($entry['tstamp']));	// add time
-			$singleLine[] = htmlspecialchars(t3lib_BEfunc::calcAge(time()-$entry['tstamp'],$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')));	// add age
+			$singleLine[] = htmlspecialchars(t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $entry['tstamp'], $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')));	// add age
 			$singleLine[] = htmlspecialchars($userName);	// add user name
 			$singleLine[] = $this->linkPage($this->generateTitle($entry['tablename'],$entry['recuid']),array('element' => $entry['tablename'].':'.$entry['recuid']),'',$LANG->getLL('linkRecordHistory',1));	// add record UID
 
@@ -464,8 +463,16 @@ class recordHistory {
 		if ($this->lastSyslogId)	{
 			$theCode .= '<br />' .  $this->linkPage('<img'.t3lib_iconWorks::skinImg('','gfx/group_tobottom.gif').' alt="'.$LANG->getLL('fullView',1).'" title="'.$LANG->getLL('fullView',1).'" />',array('diff' => ''));
 		}
+
 			// Add message about the difference view.
-		$theCode .= '<br /><img'.t3lib_iconWorks::skinImg('','gfx/icon_note.gif','width="18" height="16"').' align="top" alt="" />'.$LANG->getLL('differenceMsg').'<br /><br />';
+		$flashMessage = t3lib_div::makeInstance(
+			't3lib_FlashMessage',
+			$GLOBALS['LANG']->getLL('differenceMsg'),
+			'',
+			t3lib_FlashMessage::INFO
+		);
+
+		$theCode .= '<br /><br />' . $flashMessage->render() . '<br />';
 
 			// Add CSH:
 		$theCode .= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'history_'.($this->sumUp ? 'sum' : 'log'), $GLOBALS['BACK_PATH'],'');

@@ -21,9 +21,10 @@
  * 2005-12-09  Peter Niederlag  <peter@niederlag.de>
  *	- Fixed bug #1976: PHP5 type-conversion of string 'true' and boolean
  *
- * $Id: class.gzip_encode.php 4516 2008-12-01 16:25:00Z dmitry $
+ * $Id: class.gzip_encode.php 5652 2009-06-29 06:56:00Z benni $
  *
  * @author	Sandy McArthur, Jr. <leknor@leknor.com>
+ * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, we're using the "ob_gzhandler" for compression now.
  */
 /**
  * [CLASS/FUNCTION INDEX of SCRIPT]
@@ -190,18 +191,21 @@ class gzip_encode {
 	 * @param	boolean		$debug: If true, no data will be outputted (default: false)
 	 * @param	boolean		$outputCompressedSizes: If true, the original and compressed size appended as HTML (default: false)
 	 * @return	void
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, we're using the "ob_gzhandler" for compression now.
 	 */
 	function gzip_encode($level=3, $debug=false, $outputCompressedSizes=false) {
+		t3lib_div::logDeprecatedFunction();
+
 		if (!function_exists('gzcompress')) {
-		    trigger_error('gzcompress not found, ' .
-			    'zlib needs to be installed for gzip_encode',
-			    E_USER_WARNING);
-		    return;
+			trigger_error('gzcompress not found, ' .
+				'zlib needs to be installed for gzip_encode',
+				E_USER_WARNING);
+			return;
 		}
 		if (!function_exists('crc32')) {
-		    trigger_error('crc32() not found, ' .
-			    'PHP >= 4.0.1 needed for gzip_encode', E_USER_WARNING);
-		    return;
+			trigger_error('crc32() not found, ' .
+				'PHP >= 4.0.1 needed for gzip_encode', E_USER_WARNING);
+			return;
 		}
 		if (headers_sent()) return;
 		if (connection_status() !== 0) return;
@@ -210,7 +214,7 @@ class gzip_encode {
 		$this->encoding = $encoding;
 
 		if (strtolower($level) == 'true' || $level === true) {
-		    $level = $this->get_complevel();
+			$level = $this->get_complevel();
 		}
 		$this->level = $level;
 
@@ -237,7 +241,7 @@ class gzip_encode {
 		$this->gzsize = strlen($gzdata);
 
 		if ($debug) {
-		    return;
+			return;
 		}
 
 		ob_end_clean();
@@ -263,8 +267,11 @@ class gzip_encode {
 	 *  somehow it got in my brain.
 	 *
 	 * @return	mixed		Returns 'gzip' if the client browser accepts gzip encoding, otherwise false
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, we're using the "ob_gzhandler" for compression now.
 	 */
 	function gzip_accepted() {
+		t3lib_div::logDeprecatedFunction();
+
 			// Checks, if the accepted encoding supports gzip or x-gzip.
 			// Furthermore a qvalue check is done. "gzip;q=0" means no gzip accepted at all.
 		$acceptEncoding = t3lib_div::getIndpEnv('HTTP_ACCEPT_ENCODING');
@@ -277,24 +284,24 @@ class gzip_encode {
 			// Test file type. I wish I could get HTTP response headers.
 		$magic = substr(ob_get_contents(),0,4);
 		if (substr($magic,0,2) === '^_') {
-		    // gzip data
-		    $encoding = false;
+			// gzip data
+			$encoding = false;
 		} else if (substr($magic,0,3) === 'GIF') {
-		    // gif images
-		    $encoding = false;
+			// gif images
+			$encoding = false;
 		} else if (substr($magic,0,2) === "\xFF\xD8") {
-		    // jpeg images
-		    $encoding = false;
+			// jpeg images
+			$encoding = false;
 		} else if (substr($magic,0,4) === "\x89PNG") {
-		    // png images
-		    $encoding = false;
+			// png images
+			$encoding = false;
 		} else if (substr($magic,0,3) === 'FWS') {
-		    // Don't gzip Shockwave Flash files. Flash on windows incorrectly
-		    // claims it accepts gzip'd content.
-		    $encoding = false;
+			// Don't gzip Shockwave Flash files. Flash on windows incorrectly
+			// claims it accepts gzip'd content.
+			$encoding = false;
 		} else if (substr($magic,0,2) === 'PK') {
-		    // pk zip file
-		    $encoding = false;
+			// pk zip file
+			$encoding = false;
 		}
 
 		return $encoding;
@@ -312,19 +319,22 @@ class gzip_encode {
 	 * this work with your OS - Thanks
 	 *
 	 * @return	integer		Suggests a level of compression (0..9) for the current situation
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, we're using the "ob_gzhandler" for compression now.
 	 */
-    function get_complevel() {
+	function get_complevel() {
+		t3lib_div::logDeprecatedFunction();
+
 		$uname = posix_uname();
 		switch ($uname['sysname']) {
-		    case 'Linux':
+			case 'Linux':
 				$cl = (1 - $this->linux_loadavg()) * 10;
 				$level = (int)max(min(9, $cl), 0);
 			break;
-		    case 'FreeBSD':
+			case 'FreeBSD':
 				$cl = (1 - $this->freebsd_loadavg()) * 10;
 				$level = (int)max(min(9, $cl), 0);
 				break;
-			    default:
+				default:
 				$level = 3;
 			break;
 		}
@@ -337,8 +347,11 @@ class gzip_encode {
 	 * The max() Load Average will be returned
 	 *
 	 * @return	float		Returns the current load average
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, we're using the "ob_gzhandler" for compression now.
 	 */
 	function linux_loadavg() {
+		t3lib_div::logDeprecatedFunction();
+
 		$buffer = '0 0 0';
 		$f = @fopen('/proc/loadavg', 'rb');
 		if ($f) {
@@ -360,11 +373,14 @@ class gzip_encode {
 	 * test it?
 	 *
 	 * @return	float		Returns the current load average
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.5, we're using the "ob_gzhandler" for compression now.
 	 */
 	function freebsd_loadavg() {
+		t3lib_div::logDeprecatedFunction();
+
 		$buffer= `uptime`;
 		$load = array();
-		ereg("averag(es|e): ([0-9][.][0-9][0-9]), ([0-9][.][0-9][0-9]), ([0-9][.][0-9][0-9]*)", $buffer, $load);
+		preg_match('/averag(es|e): ([0-9][.][0-9][0-9]), ([0-9][.][0-9][0-9]), ([0-9][.][0-9][0-9]*)/', $buffer, $load);
 
 		return max((float)$load[2], (float)$load[3], (float)$load[4]);
 	}

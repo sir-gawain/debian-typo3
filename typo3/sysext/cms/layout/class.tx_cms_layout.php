@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Include file extending db_list.inc for use with the web_layout module
  *
- * $Id: class.tx_cms_layout.php 4625 2008-12-29 14:01:18Z steffenk $
+ * $Id: class.tx_cms_layout.php 8703 2010-08-27 08:03:14Z baschny $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -318,7 +318,7 @@ class tx_cms_layout extends recordList {
 			foreach($this->fieldArray as $field)	{
 				if ($editIdList && isset($TCA['pages']['columns'][$field]) && $field!='uid' && !$this->pages_noEditColumns)	{
 					$params='&edit[pages]['.$editIdList.']=edit&columnsOnly='.$field.'&disHelp=1';
-					$iTitle = sprintf($GLOBALS['LANG']->getLL('editThisColumn'),ereg_replace(':$','',trim($GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('pages',$field)))));
+					$iTitle = sprintf($GLOBALS['LANG']->getLL('editThisColumn'),rtrim(trim($GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('pages',$field))), ':'));
 					$eI= '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick($params,$this->backPath,'')).'">'.
 							'<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/edit2.gif','width="11" height="12"').' title="'.htmlspecialchars($iTitle).'" alt="" />'.
 							'</a>';
@@ -1161,7 +1161,7 @@ class tx_cms_layout extends recordList {
 		if ($dbCount)	{
 
 				// Set fields
-			$this->fieldArray = explode(',','__cmds__,'.$fList);
+			$this->fieldArray = t3lib_div::trimExplode(',', '__cmds__,' . $fList, TRUE);
 
 				// Header line is drawn
 			$theData = array();
@@ -1341,10 +1341,9 @@ class tx_cms_layout extends recordList {
 				}
 			}
 		} else {
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', 'pages', 'pid='.intval($pid).$qWhere);
-			$row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
-			if ($row[0])	{
-				$this->plusPages[$pid]=$row[0];
+			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', 'pages', 'pid=' . intval($pid) . $qWhere);
+			if ($count) {
+				$this->plusPages[$pid] = $count;
 			}
 		}
 		return $theRows;
@@ -1402,14 +1401,13 @@ class tx_cms_layout extends recordList {
 								case 'days':
 									$timespan = mktime (0,0,0)+intval($fParts[1])*3600*24;
 										// Page hits
-									$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-													'count(*)',
-													'sys_stat',
-													$this->stat_select_field.'='.intval($row['uid']).'
-														AND tstamp>='.intval($timespan).'
-														AND tstamp<'.intval($timespan+3600*24)
-												);
-									list($number) = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+									$number = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+										'*',
+										'sys_stat',
+										$this->stat_select_field . '=' . intval($row['uid']) .
+											' AND tstamp >=' . intval($timespan) .
+											' AND tstamp <' . intval($timespan + 3600 * 24)
+									);
 									if ($number)	{
 											// Sessions
 										$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
@@ -1536,7 +1534,7 @@ class tx_cms_layout extends recordList {
 			// Call stats information hook
 		$stat = '';
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']))	{
-			$_params = array('tt_content',$row['uid']);
+			$_params = array('tt_content', $row['uid'], &$row);
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'] as $_funcRef)	{
 				$stat.=t3lib_div::callUserFunction($_funcRef,$_params,$this);
 			}
@@ -1625,7 +1623,9 @@ class tx_cms_layout extends recordList {
 
 					// Delete
 				$params='&cmd[tt_content]['.$row['uid'].'][delete]=1';
-				$out.='<a href="'.htmlspecialchars($GLOBALS['SOBE']->doc->issueCommand($params)).'" onclick="'.htmlspecialchars('return confirm('.$GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning')).');').'">'.
+				$confirm = $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning') .
+					t3lib_BEfunc::translationCount('tt_content', $row['uid'], ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.translationsOfRecord')));
+				$out.='<a href="'.htmlspecialchars($GLOBALS['SOBE']->doc->issueCommand($params)).'" onclick="'.htmlspecialchars('return confirm('. $confirm .');').'">'.
 						'<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/garbage.gif','width="11" height="12"').' title="'.$GLOBALS['LANG']->getLL('deleteItem',1).'" alt="" />'.
 						'</a>';
 
@@ -1680,140 +1680,160 @@ class tx_cms_layout extends recordList {
 					'<b>' . $this->linkEditContent($this->renderText($row['header']), $row) . $hiddenHeaderNote . '</b><br />';
 		}
 
-			// Make content:
-		$infoArr=Array();
-		switch($row['CType'])	{
-			case 'header':
-				if ($row['subheader'])	{
-					$this->getProcessedValue('tt_content','layout',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($this->renderText($row['subheader']),$row).'<br />';
-				}
-			break;
-			case 'text':
-			case 'textpic':
-			case 'image':
-				if ($row['CType']=='text' || $row['CType']=='textpic')	{
-					if ($row['bodytext'])	{
-						$this->getProcessedValue('tt_content','text_align,text_face,text_size,text_color,text_properties',$row,$infoArr);
-						$out.= $this->infoGif($infoArr).
-								$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-					}
-				}
-				if ($row['CType']=='textpic' || $row['CType']=='image')	{
-					if ($row['image'])	{
-						$infoArr=Array();
-						$this->getProcessedValue('tt_content','imageorient,imagecols,image_noRows,imageborder,imageheight,image_link,image_zoom,image_compression,image_effects,image_frames',$row,$infoArr);
-						$out.=	$this->infoGif($infoArr).
-								$this->thumbCode($row,'tt_content','image').'<br />';
+		// Make content:
+		$infoArr = array();
+		$drawItem = true;
 
-						if ($row['imagecaption'])	{
-							$infoArr=Array();
-							$this->getProcessedValue('tt_content','imagecaption_position',$row,$infoArr);
-							$out.=	$this->infoGif($infoArr).
-									$this->linkEditContent($this->renderText($row['imagecaption']),$row).'<br />';
+		// Hook: Render an own preview of a record
+		$drawItemHooks =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem'];
+
+		if (is_array($drawItemHooks)) {
+			foreach($drawItemHooks as $hookClass)    {
+				$hookObject = t3lib_div::getUserObj($hookClass);
+
+				if(!($hookObject instanceof tx_cms_layout_tt_content_drawItemHook)) {
+					throw new UnexpectedValueException('$hookObject must implement interface tx_cms_layout_tt_content_drawItemHook', 1218547409);
+				}
+
+				$hookObject->preProcess($this, $drawItem, $outHeader, $out, $row);
+			}
+		}
+
+		// Draw preview of the item depending on its CType (if not disabled by previous hook):
+		if ($drawItem) {
+			switch($row['CType'])	{
+				case 'header':
+					if ($row['subheader'])	{
+						$this->getProcessedValue('tt_content','layout',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($this->renderText($row['subheader']),$row).'<br />';
+					}
+				break;
+				case 'text':
+				case 'textpic':
+				case 'image':
+					if ($row['CType']=='text' || $row['CType']=='textpic')	{
+						if ($row['bodytext'])	{
+							$this->getProcessedValue('tt_content','text_align,text_face,text_size,text_color,text_properties',$row,$infoArr);
+							$out.= $this->infoGif($infoArr).
+									$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
 						}
 					}
-				}
-			break;
-			case 'bullets':
-				if ($row['bodytext'])	{
-					$this->getProcessedValue('tt_content','layout,text_align,text_face,text_size,text_color,text_properties',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				}
-			break;
-			case 'table':
-				if ($row['bodytext'])	{
-					$this->getProcessedValue('tt_content','table_bgColor,table_border,table_cellspacing,cols,layout,text_align,text_face,text_size,text_color,text_properties',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				}
-			break;
-			case 'uploads':
-				if ($row['media'])	{
-					$this->getProcessedValue('tt_content','media,select_key,layout,filelink_size,table_bgColor,table_border,table_cellspacing',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				}
-			break;
-			case 'multimedia':
-				if ($row['multimedia'])	{
-					$out.=	$this->renderText($row['multimedia']).'<br />';
-					$out.=	$this->renderText($row['parameters']).'<br />';
-				}
-			break;
-			case 'mailform':
-				if ($row['bodytext'])	{
-					$this->getProcessedValue('tt_content','pages,subheader',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				}
-			break;
-			case 'splash':
-				if ($row['bodytext'])	{
-					$out.=	$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				}
-				if ($row['image'])	{
-					$infoArr=Array();
-					$this->getProcessedValue('tt_content','imagewidth',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->thumbCode($row,'tt_content','image').'<br />';
-				}
-			break;
-			case 'menu':
-				if ($row['pages'])	{
-					$this->getProcessedValue('tt_content','menu_type',$row,$infoArr);
-					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($row['pages'],$row).'<br />';
-				}
-			break;
-			case 'shortcut':
-				if ($row['records'])	{
+					if ($row['CType']=='textpic' || $row['CType']=='image')	{
+						if ($row['image'])	{
+							$infoArr=Array();
+							$this->getProcessedValue('tt_content','imageorient,imagecols,image_noRows,imageborder,imageheight,image_link,image_zoom,image_compression,image_effects,image_frames',$row,$infoArr);
+							$out.=	$this->infoGif($infoArr).
+									$this->thumbCode($row,'tt_content','image').'<br />';
+
+							if ($row['imagecaption'])	{
+								$infoArr=Array();
+								$this->getProcessedValue('tt_content','imagecaption_position',$row,$infoArr);
+								$out.=	$this->infoGif($infoArr).
+										$this->linkEditContent($this->renderText($row['imagecaption']),$row).'<br />';
+							}
+						}
+					}
+				break;
+				case 'bullets':
+					if ($row['bodytext'])	{
+						$this->getProcessedValue('tt_content','layout,text_align,text_face,text_size,text_color,text_properties',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					}
+				break;
+				case 'table':
+					if ($row['bodytext'])	{
+						$this->getProcessedValue('tt_content','table_bgColor,table_border,table_cellspacing,cols,layout,text_align,text_face,text_size,text_color,text_properties',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					}
+				break;
+				case 'uploads':
+					if ($row['media'])	{
+						$this->getProcessedValue('tt_content','media,select_key,layout,filelink_size,table_bgColor,table_border,table_cellspacing',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					}
+				break;
+				case 'multimedia':
+					if ($row['multimedia'])	{
+						$out.=	$this->renderText($row['multimedia']).'<br />';
+						$out.=	$this->renderText($row['parameters']).'<br />';
+					}
+				break;
+				case 'mailform':
+					if ($row['bodytext'])	{
+						$this->getProcessedValue('tt_content','pages,subheader',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					}
+				break;
+				case 'splash':
+					if ($row['bodytext'])	{
+						$out.=	$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					}
+					if ($row['image'])	{
+						$infoArr=Array();
+						$this->getProcessedValue('tt_content','imagewidth',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->thumbCode($row,'tt_content','image').'<br />';
+					}
+				break;
+				case 'menu':
+					if ($row['pages'])	{
+						$this->getProcessedValue('tt_content','menu_type',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($row['pages'],$row).'<br />';
+					}
+				break;
+				case 'shortcut':
+					if ($row['records'])	{
+						$this->getProcessedValue('tt_content','layout',$row,$infoArr);
+						$out.=	$this->infoGif($infoArr).
+								$this->linkEditContent($row['shortcut'],$row).'<br />';
+					}
+				break;
+				case 'list':
 					$this->getProcessedValue('tt_content','layout',$row,$infoArr);
 					$out.=	$this->infoGif($infoArr).
-							$this->linkEditContent($row['shortcut'],$row).'<br />';
-				}
-			break;
-			case 'list':
-				$this->getProcessedValue('tt_content','layout',$row,$infoArr);
-				$out.=	$this->infoGif($infoArr).
-						$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('tt_content','list_type'),1).' '.
-						$GLOBALS['LANG']->sL(t3lib_BEfunc::getLabelFromItemlist('tt_content','list_type',$row['list_type']),1).'<br />';
-				$hookArr = array();
-				$hookOut = '';
-				if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info'][$row['list_type']]))	{
-					$hookArr = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info'][$row['list_type']];
-				} elseif (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info']['_DEFAULT']))	{
-					$hookArr = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info']['_DEFAULT'];
-				}
-				if (count($hookArr) > 0)	{
-					$_params = array('pObj' => &$this, 'row' => $row, 'infoArr' => $infoArr);
-					foreach ($hookArr as $_funcRef)	{
-						$hookOut .= t3lib_div::callUserFunction($_funcRef, $_params, $this);
+							$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('tt_content','list_type'),1).' '.
+							$GLOBALS['LANG']->sL(t3lib_BEfunc::getLabelFromItemlist('tt_content','list_type',$row['list_type']),1).'<br />';
+					$hookArr = array();
+					$hookOut = '';
+					if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info'][$row['list_type']]))	{
+						$hookArr = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info'][$row['list_type']];
+					} elseif (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info']['_DEFAULT']))	{
+						$hookArr = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info']['_DEFAULT'];
 					}
-				}
-				if (strcmp($hookOut, ''))	{
-					$out .= $hookOut;
-				} else	{
-					$out.=	$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('tt_content','select_key'),1).' '.$row['select_key'].'<br />';
-				}
+					if (count($hookArr) > 0)	{
+						$_params = array('pObj' => &$this, 'row' => $row, 'infoArr' => $infoArr);
+						foreach ($hookArr as $_funcRef)	{
+							$hookOut .= t3lib_div::callUserFunction($_funcRef, $_params, $this);
+						}
+					}
+					if (strcmp($hookOut, ''))	{
+						$out .= $hookOut;
+					} else	{
+						$out.=	$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('tt_content','select_key'),1).' '.$row['select_key'].'<br />';
+					}
 
-				$infoArr=Array();
-				$this->getProcessedValue('tt_content','recursive',$row,$infoArr);
-				$out.=	$this->infoGif($infoArr).
-						$GLOBALS['LANG']->sL(t3lib_BEfunc::getLabelFromItemlist('tt_content','pages',$row['pages']),1).'<br />';
-			break;
-			case 'script':
-				$out.=	$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('tt_content','select_key'),1).' '.$row['select_key'].'<br />';
-				$out.=	'<br />'.$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				$out.=	'<br />'.$this->linkEditContent($this->renderText($row['imagecaption']),$row).'<br />';
-			break;
-			default:
-				if ($row['bodytext'])	{
-					$out.=$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
-				}
-			break;
+					$infoArr=Array();
+					$this->getProcessedValue('tt_content','recursive',$row,$infoArr);
+					$out.=	$this->infoGif($infoArr).
+							$GLOBALS['LANG']->sL(t3lib_BEfunc::getLabelFromItemlist('tt_content','pages',$row['pages']),1).'<br />';
+				break;
+				case 'script':
+					$out.=	$GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel('tt_content','select_key'),1).' '.$row['select_key'].'<br />';
+					$out.=	'<br />'.$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					$out.=	'<br />'.$this->linkEditContent($this->renderText($row['imagecaption']),$row).'<br />';
+				break;
+				default:
+					if ($row['bodytext'])	{
+						$out.=$this->linkEditContent($this->renderText($row['bodytext']),$row).'<br />';
+					}
+				break;
+			}
 		}
 
 			// Wrap span-tags:
@@ -1961,7 +1981,8 @@ class tx_cms_layout extends recordList {
 
 	/**
 	 * Make selector box for creating new translation in a language
-	 * Displays only languages which are not yet present for the current page.
+	 * Displays only languages which are not yet present for the current page and
+	 * that are not disabled with page TS.
 	 *
 	 * @param	integer		Page id for which to create a new language (pages_language_overlay record)
 	 * @return	string		<select> HTML element (if there were items for the box anyways...)
@@ -2002,10 +2023,20 @@ class tx_cms_layout extends recordList {
 					}
 				}
 			}
+				// Remove disabled languages
+			$modSharedTSconfig = t3lib_BEfunc::getModTSconfig($id, 'mod.SHARED');
+			$disableLanguages = isset($modSharedTSconfig['properties']['disableLanguages']) ? t3lib_div::trimExplode(',', $modSharedTSconfig['properties']['disableLanguages'], 1) : array();
+			if (count($langSelItems) && count($disableLanguages)) {
+				foreach ($disableLanguages as $language) {
+					if ($language != 0 && isset($langSelItems[$language])) {
+						unset($langSelItems[$language]);
+					}
+				}
+			}
 
 				// If any languages are left, make selector:
 			if (count($langSelItems)>1)		{
-				$onChangeContent = 'window.location.href=\''.$this->backPath.'alt_doc.php?&edit[pages_language_overlay]['.$id.']=new&overrideVals[pages_language_overlay][sys_language_uid]=\'+this.options[this.selectedIndex].value+\'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')).'\'';
+				$onChangeContent = 'window.location.href=\''.$this->backPath.'alt_doc.php?&edit[pages_language_overlay]['.$id.']=new&overrideVals[pages_language_overlay][doktype]=' . (int) $this->pageRecord['doktype'] . '&overrideVals[pages_language_overlay][sys_language_uid]=\'+this.options[this.selectedIndex].value+\'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')).'\'';
 				return $GLOBALS['LANG']->getLL('new_language',1).': <select name="createNewLanguage" onchange="'.htmlspecialchars($onChangeContent).'">
 						'.implode('',$langSelItems).'
 					</select><br /><br />';
@@ -2135,7 +2166,7 @@ class tx_cms_layout extends recordList {
 		$theData['subject'] = t3lib_div::fixed_lgd_cs(htmlspecialchars($row['subject']),25).'&nbsp; &nbsp;';
 		$theData['author'] = t3lib_div::fixed_lgd_cs(htmlspecialchars($row['author']),15).'&nbsp; &nbsp;';
 		$theData['date'] = t3lib_div::fixed_lgd_cs(t3lib_BEfunc::datetime($row['crdate']),20).'&nbsp; &nbsp;';
-		$theData['age'] = t3lib_BEfunc::calcAge(time()-$row['crdate'], $this->agePrefixes).'&nbsp; &nbsp;';
+		$theData['age'] = t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $row['crdate'], $this->agePrefixes) . '&nbsp; &nbsp;';
 		if ($re)	{
 			$theData['replys'] = $re;
 		}
@@ -2176,16 +2207,16 @@ class tx_cms_layout extends recordList {
 	 * @return	integer		Number of records.
 	 */
 	function numberOfRecords($table,$pid)	{
-		global $TCA;
-
-		$c=0;
-		if ($TCA[$table])	{
-			$result = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $table, 'pid='.intval($pid).t3lib_BEfunc::deleteClause($table).t3lib_BEfunc::versioningPlaceholderClause($table));
-			if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($result))	{
-				$c=$row[0];
-			}
+		if ($GLOBALS['TCA'][$table]) {
+			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+				'uid',
+				$table,
+				'pid=' . intval($pid) .
+					t3lib_BEfunc::deleteClause($table) .
+					t3lib_BEfunc::versioningPlaceholderClause($table)
+			);
 		}
-		return $c;
+		return intval($count);
 	}
 
 	/**
@@ -2255,8 +2286,8 @@ class tx_cms_layout extends recordList {
 		global $TCA;
 		if (
 			($TCA[$table]['ctrl']['enablecolumns']['disabled'] && $row[$TCA[$table]['ctrl']['enablecolumns']['disabled']]) ||
-			($TCA[$table]['ctrl']['enablecolumns']['starttime'] && $row[$TCA[$table]['ctrl']['enablecolumns']['starttime']]>time() ) ||
-			($TCA[$table]['ctrl']['enablecolumns']['endtime'] && $row[$TCA[$table]['ctrl']['enablecolumns']['endtime']] && $row[$TCA[$table]['ctrl']['enablecolumns']['endtime']]<time())
+			($TCA[$table]['ctrl']['enablecolumns']['starttime'] && $row[$TCA[$table]['ctrl']['enablecolumns']['starttime']] > $GLOBALS['EXEC_TIME']) ||
+			($TCA[$table]['ctrl']['enablecolumns']['endtime'] && $row[$TCA[$table]['ctrl']['enablecolumns']['endtime']] && $row[$TCA[$table]['ctrl']['enablecolumns']['endtime']] < $GLOBALS['EXEC_TIME'])
 		)	return true;
 	}
 
@@ -2270,7 +2301,7 @@ class tx_cms_layout extends recordList {
 	 * @return	string		Processed output.
 	 */
 	function wordWrapper($content,$max=50,$char=' -')	{
-		$array = split(' |'.chr(10),$content);
+		$array = preg_split('/[ ' . chr(10) . ']/', $content);
 		foreach($array as $val)	{
 			if (strlen($val)>$max)	{
 				$content=str_replace($val,substr(chunk_split($val,$max,$char),0,-1),$content);
@@ -2431,14 +2462,23 @@ class tx_cms_layout extends recordList {
 		}
 
 			// Created:
-		$lines[]=array($LANG->getLL('pI_crDate').':', t3lib_BEfunc::datetime($rec['crdate']).' ('.t3lib_BEfunc::calcAge(time()-$rec['crdate'],$this->agePrefixes).')');
+		$lines[] = array(
+			$LANG->getLL('pI_crDate') . ':',
+			t3lib_BEfunc::datetime($rec['crdate']) . ' (' . t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $rec['crdate'], $this->agePrefixes) . ')',
+		);
 
 			// Last change:
-		$lines[]=array($LANG->getLL('pI_lastChange').':', t3lib_BEfunc::datetime($rec['tstamp']).' ('.t3lib_BEfunc::calcAge(time()-$rec['tstamp'],$this->agePrefixes).')');
+		$lines[] = array(
+			$LANG->getLL('pI_lastChange') . ':',
+			t3lib_BEfunc::datetime($rec['tstamp']) . ' (' . t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $rec['tstamp'],$this->agePrefixes) . ')',
+		);
 
 			// Last change of content:
 		if ($rec['SYS_LASTCHANGED'])	{
-			$lines[]=array($LANG->getLL('pI_lastChangeContent').':', t3lib_BEfunc::datetime($rec['SYS_LASTCHANGED']).' ('.t3lib_BEfunc::calcAge(time()-$rec['SYS_LASTCHANGED'],$this->agePrefixes).')');
+			$lines[] = array(
+				$LANG->getLL('pI_lastChangeContent') . ':',
+				t3lib_BEfunc::datetime($rec['SYS_LASTCHANGED']) . ' (' . t3lib_BEfunc::calcAge($GLOBALS['EXEC_TIME'] - $rec['SYS_LASTCHANGED'], $this->agePrefixes) . ')',
+			);
 		}
 
 			// Spacer:
@@ -2456,9 +2496,8 @@ class tx_cms_layout extends recordList {
 		if ($this->pI_showStat && t3lib_extMgm::isLoaded('sys_stat'))	{
 
 				// Counting total hits:
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', 'sys_stat', 'page_id='.intval($rec['uid']));
-			$rrow = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
-			if ($rrow[0])	{
+			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', 'sys_stat', 'page_id=' . intval($rec['uid']));
+			if ($count) {
 
 					// Get min/max
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('min(tstamp) AS min,max(tstamp) AS max', 'sys_stat', 'page_id='.intval($rec['uid']));
@@ -2586,8 +2625,13 @@ class tx_cms_layout extends recordList {
 			if ($GLOBALS['BE_USER']->check('tables_select',$tName) && (t3lib_extMgm::isLoaded($tName)||t3lib_div::inList('fe_users,tt_content',$tName) || isset($this->externalTables[$tName])))	{
 
 					// Make query to count records from page:
-				$result = $GLOBALS['TYPO3_DB']->exec_SELECTquery('count(*)', $tName, 'pid='.intval($id).t3lib_BEfunc::deleteClause($tName).t3lib_BEfunc::versioningPlaceholderClause($tName));
-				list($c) = $GLOBALS['TYPO3_DB']->sql_fetch_row($result);
+				$c = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+					'uid',
+					$tName,
+					'pid=' . intval($id) .
+						t3lib_BEfunc::deleteClause($tName) .
+						t3lib_BEfunc::versioningPlaceholderClause($tName)
+				);
 
 					// If records were found (or if "tt_content" is the table...):
 				if ($c || t3lib_div::inList('tt_content',$tName))	{
@@ -2648,4 +2692,5 @@ class tx_cms_layout extends recordList {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/layout/class.tx_cms_layout.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/layout/class.tx_cms_layout.php']);
 }
+
 ?>

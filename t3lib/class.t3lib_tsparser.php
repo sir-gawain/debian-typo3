@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains the TypoScript parser class
  *
- * $Id: class.t3lib_tsparser.php 3530 2008-04-03 23:41:54Z sebastian $
+ * $Id: class.t3lib_tsparser.php 9773 2010-12-16 13:37:59Z ohader $
  * Revised for TYPO3 3.6 July/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -45,7 +45,7 @@
  *  413:     function getVal($string,$setup)
  *  439:     function setVal($string,&$setup,$value,$wipeOut=0)
  *  485:     function error($err,$num=2)
- *  497:     function checkIncludeLines($string)
+ *  497:     function checkIncludeLines($string, $cycle_counter=1, $returnFiles=false)
  *  541:     function checkIncludeLines_array($array)
  *
  *              SECTION: Syntax highlighting
@@ -499,20 +499,27 @@ class t3lib_TSparser {
 	 *
 	 * @param	string		Unparsed TypoScript
 	 * @param	integer		Counter for detecting endless loops
+	 * @param	boolean		When set an array containing the resulting typoscript and all included files will get returned
 	 * @return	string		Complete TypoScript with includes added.
 	 * @static
 	 */
-	function checkIncludeLines($string, $cycle_counter=1)	{
+	function checkIncludeLines($string, $cycle_counter=1, $returnFiles=false) {
+		$includedFiles = array();
 		if ($cycle_counter>100) {
 			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags','Core',2);
+			if ($returnFiles) {
+				return array(
+					'typoscript' => '',
+					'files' => $includedFiles,
+				);
+			}
 			return '';
 		}
 		$splitStr='<INCLUDE_TYPOSCRIPT:';
 		if (strstr($string,$splitStr))	{
 			$newString='';
 			$allParts = explode($splitStr,chr(10).$string.chr(10));	// adds line break char before/after
-			reset($allParts);
-			while(list($c,$v)=each($allParts))	{
+			foreach ($allParts as $c => $v) {
 				if (!$c)	{	 // first goes through
 					$newString.=$v;
 				} elseif (preg_match('/\r?\n\s*$/',$allParts[$c-1]))	{	// There must be a line-break char before.
@@ -527,10 +534,21 @@ class t3lib_TSparser {
 								case 'file':
 									$filename = t3lib_div::getFileAbsFileName(trim($sourceParts[1]));
 									if (strcmp($filename,''))	{	// Must exist and must not contain '..' and must be relative
-										if (@is_file($filename) && filesize($filename)<100000)	{	// Max. 100 KB include files!
-												// check for includes in included text
-											$included_text = self::checkIncludeLines(t3lib_div::getUrl($filename),$cycle_counter+1);
-											$newString.= $included_text.chr(10);
+										if (t3lib_div::verifyFilenameAgainstDenyPattern($filename)) { // Check for allowed files
+											if (@is_file($filename) && filesize($filename)<100000)	{	// Max. 100 KB include files!
+													// check for includes in included text
+												$includedFiles[] = $filename;
+												$included_text = self::checkIncludeLines(t3lib_div::getUrl($filename),$cycle_counter+1, $returnFiles);
+													// If the method also has to return all included files, merge currently included
+													// files with files included by recursively calling itself
+												if ($returnFiles && is_array($included_text)) {
+													$includedFiles = array_merge($includedFiles, $included_text['files']);
+													$included_text = $included_text['typoscript'];
+												}
+												$newString.= $included_text.chr(10);
+											}
+										} else {
+											t3lib_div::sysLog('File "' . $filename . '" was not included since it is not allowed due to fileDenyPattern', 'Core', 2);
 										}
 									}
 								break;
@@ -543,6 +561,14 @@ class t3lib_TSparser {
 			}
 			$string=substr($newString,1,-1);	// not the first/last linebreak char.
 		}
+			// When all included files should get returned, simply return an compound array containing
+			// the TypoScript with all "includes" processed and the files which got included
+		if ($returnFiles) {
+			return array(
+				'typoscript' => $string,
+				'files' => $includedFiles,
+			);
+		}
 		return $string;
 	}
 
@@ -553,8 +579,7 @@ class t3lib_TSparser {
 	 * @return	array		Same array but where the values has been parsed for include-commands
 	 */
 	function checkIncludeLines_array($array)	{
-		reset($array);
-		while(list($k)=each($array))	{
+		foreach ($array as $k => $v) {
 			$array[$k]=t3lib_TSparser::checkIncludeLines($array[$k]);
 		}
 		return $array;
@@ -686,4 +711,5 @@ class t3lib_TSparser {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser.php']);
 }
+
 ?>

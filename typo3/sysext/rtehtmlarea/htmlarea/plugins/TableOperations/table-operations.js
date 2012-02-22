@@ -3,7 +3,7 @@
 *
 *  (c) 2002 interactivetools.com, inc. Authored by Mihai Bazon, sponsored by http://www.bloki.com.
 *  (c) 2005 Xinha, http://xinha.gogo.co.nz/ for the original toggle borders function.
-*  (c) 2004-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,7 +31,7 @@
 /*
  * Table Operations Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: table-operations.js 4102 2008-09-13 23:04:59Z stan $
+ * TYPO3 SVN ID: $Id: table-operations.js 6650 2009-12-10 19:20:53Z stan $
  */
 TableOperations = HTMLArea.Plugin.extend({
 		
@@ -170,7 +170,7 @@ TableOperations = HTMLArea.Plugin.extend({
 		};
 		var dimensions = {
 			width	: 860,
-			height	: insert ? 600 : 610
+			height	: 620
 		};
 		this.dialog = this.openDialog((insert ? "InsertTable" : "TO-table-prop"), "", "tablePropertiesUpdate", arguments, dimensions);
 	},
@@ -200,6 +200,7 @@ TableOperations = HTMLArea.Plugin.extend({
 				TableOperations.insertSpace(doc, content);
 			}
 		}
+		this.buildLanguageFieldset(doc, table, content, "floating");
 		if (this.removedFieldsets.indexOf("layout") == -1) this.buildLayoutFieldset(doc, table, content, "floating");
 		if (this.removedFieldsets.indexOf("alignment") == -1) this.buildAlignmentFieldset(doc, table, content);
 		TableOperations.insertSpace(doc, content);
@@ -340,6 +341,12 @@ TableOperations = HTMLArea.Plugin.extend({
 						this.editor.plugins.BlockStyle.instance.applyClassChange(tpart, val);
 					}
 					break;
+				    case "f_lang":
+					this.getPluginInstance("Language").setLanguageAttributes(table, val);
+					break;
+				    case "f_dir":
+					table.dir = (val != "not set") ? val : "";
+					break;
 				}
 			}
 		}
@@ -350,7 +357,7 @@ TableOperations = HTMLArea.Plugin.extend({
 				table.id = "htmlarea_table_insert";
 				this.editor.insertNodeAtSelection(table);
 				table = this.editor._doc.getElementById(table.id);
-				table.id = "";
+				table.removeAttribute("id");
 			}
 			this.editor.selectNodeContents(table.rows[0].cells[0], true);
 			if (this.buttonsConfiguration.toggleborders && this.buttonsConfiguration.toggleborders.setOnTableCreation) {
@@ -416,6 +423,7 @@ TableOperations = HTMLArea.Plugin.extend({
 		} else {
 			TableOperations.insertSpace(doc, content);
 		}
+		this.buildLanguageFieldset(doc, element, content, "floating");
 		if (this.removedFieldsets.indexOf("layout") == -1) this.buildLayoutFieldset(doc, element, content, "floating");
 		if (this.removedFieldsets.indexOf("alignment") == -1) this.buildAlignmentFieldset(doc, element, content);
 		if (this.removedFieldsets.indexOf("borders") == -1) this.buildBordersFieldset(dialog.dialogWindow, doc, dialog.editor, element, content);
@@ -479,11 +487,36 @@ TableOperations = HTMLArea.Plugin.extend({
 				    case "f_class":
 					this.editor.plugins.BlockStyle.instance.applyClassChange(element, val);
 					break;
+				    case "f_lang":
+					this.getPluginInstance("Language").setLanguageAttributes(element, val);
+					break;
+				    case "f_dir":
+					element.dir = (val != "not set") ? val : "";
+					break;
 				}
 			}
 		}
 		this.reStyleTable(table);
 		dialog.close();
+	},
+	
+	/*
+	 * This function gets called when the plugin is generated
+	 * Set table borders if requested by configuration
+	 */
+	onGenerate : function() {
+		if (this.buttonsConfiguration.toggleborders && this.buttonsConfiguration.toggleborders.setOnRTEOpen) {
+			this.toggleBorders(true);
+		}
+	},
+	
+	/*
+	 * This function gets called when the toolbar is being updated
+	 */
+	onUpdateToolbar : function() {
+		if (this.getEditorMode() === "wysiwyg" && this.editor.isEditable() && this.isButtonInToolbar("TO-toggle-borders")) {
+			this.editor._toolbarObjects["TO-toggle-borders"].state("active", HTMLArea._hasClass(this.editor._doc.body, 'htmlarea-showtableborders'));
+		}
 	},
 	
 	/*
@@ -987,7 +1020,7 @@ TableOperations = HTMLArea.Plugin.extend({
 	},
 	
 	/*
-	 * Applies to rows/cells the alternating classes of an alternating style scheme
+	 * Applies to rows/cells the alternating and counting classes of an alternating or counting style scheme
 	 *
 	 * @param	object		table: the table to be re-styled
 	 *
@@ -995,7 +1028,7 @@ TableOperations = HTMLArea.Plugin.extend({
 	 */
 	reStyleTable : function (table) {
 		if (table) {
-			if (this.classesUrl && typeof(HTMLArea.classesAlternating) === "undefined") {
+			if (this.classesUrl && (typeof(HTMLArea.classesAlternating) === "undefined" || typeof(HTMLArea.classesCounting) === "undefined")) {
 				this.getJavascriptFile(this.classesUrl);
 			}
 			var classNames = table.className.trim().split(" ");
@@ -1009,6 +1042,17 @@ TableOperations = HTMLArea.Plugin.extend({
 				if (classConfiguration && classConfiguration.columns) {
 					if (classConfiguration.columns.oddClass && classConfiguration.columns.evenClass) {
 						this.alternateColumns(table, classConfiguration);
+					}
+				}
+				classConfiguration = HTMLArea.classesCounting[classNames[i]];
+				if (classConfiguration && classConfiguration.rows) {
+					if (classConfiguration.rows.rowClass) {
+						this.countRows(table, classConfiguration);
+					}
+				}
+				if (classConfiguration && classConfiguration.columns) {
+					if (classConfiguration.columns.columnClass) {
+						this.countColumns(table, classConfiguration);
 					}
 				}
 			}
@@ -1127,6 +1171,129 @@ TableOperations = HTMLArea.Plugin.extend({
 	},
 	
 	/*
+	 * Removes from rows/cells the counting classes of an counting style scheme
+	 *
+	 * @param	object		table: the table to be re-styled
+	 * @param	string		removeClass: the name of the class that identifies the counting style scheme
+	 *
+	 * @return	void
+	 */
+	removeCountingClasses : function (table, removeClass) {
+		if (table) {
+			if (this.classesUrl && typeof(HTMLArea.classesCounting) === "undefined") {
+				this.getJavascriptFile(this.classesUrl);
+			}
+			var classConfiguration = HTMLArea.classesCounting[removeClass];
+			if (classConfiguration) {
+				if (classConfiguration.rows && classConfiguration.rows.rowClass) {
+					this.countRows(table, classConfiguration, true);
+				}
+				if (classConfiguration.columns && classConfiguration.columns.columnClass) {
+					this.countColumns(table, classConfiguration, true);
+				}
+			}
+		}
+	},
+
+	/*
+	 * Applies/removes the counting classes of an counting rows style scheme
+	 *
+	 * @param	object		table: the table to be re-styled
+	 * @param	object		classConfifuration: the counting sub-array of the configuration of the class
+	 * @param	boolean		remove: if true, the classes are removed
+	 *
+	 * @return	void
+	 */
+	countRows : function (table, classConfiguration, remove) {
+		var rowClass = { tbody : classConfiguration.rows.rowClass, thead : classConfiguration.rows.rowHeaderClass };
+		var rowLastClass = { tbody : classConfiguration.rows.rowLastClass, thead : classConfiguration.rows.rowHeaderLastClass };
+		var startAt = parseInt(classConfiguration.rows.startAt);
+		startAt = remove ? 1 : (startAt ? startAt : 1);
+		var rows = table.rows, type, baseClassName, rowClassName, lastRowClassName;
+			// Loop through the rows
+		for (var i = startAt-1, n = rows.length; i < n; i++) {
+			var row = rows[i];
+			type = (row.parentNode.nodeName.toLowerCase() == "thead") ? "thead" : "tbody";
+			baseClassName = rowClass[type];
+			rowClassName = baseClassName + (i+1);
+			lastRowClassName = rowLastClass[type];
+			if (remove) {
+				if (baseClassName) {
+					HTMLArea._removeClass(row, rowClassName);
+				}
+				if (lastRowClassName && i == n-1) {
+					HTMLArea._removeClass(row, lastRowClassName);
+				}
+			} else {
+				if (baseClassName) {
+					if (HTMLArea._hasClass(row, baseClassName, true)) {
+						HTMLArea._removeClass(row, baseClassName, true);
+					}
+					HTMLArea._addClass(row, rowClassName);
+				}
+				if (lastRowClassName) {
+					if (i == n-1) {
+						HTMLArea._addClass(row, lastRowClassName);
+					} else if (HTMLArea._hasClass(row, lastRowClassName)) {
+						HTMLArea._removeClass(row, lastRowClassName);
+					}
+				}
+			}
+		}
+	},
+
+	/*
+	 * Applies/removes the counting classes of a counting columns style scheme
+	 *
+	 * @param	object		table: the table to be re-styled
+	 * @param	object		classConfifuration: the counting sub-array of the configuration of the class
+	 * @param	boolean		remove: if true, the classes are removed
+	 *
+	 * @return	void
+	 */
+	countColumns : function (table, classConfiguration, remove) {
+		var columnClass = { td : classConfiguration.columns.columnClass, th : classConfiguration.columns.columnHeaderClass };
+		var columnLastClass = { td : classConfiguration.columns.columnLastClass, th : classConfiguration.columns.columnHeaderLastClass };
+		var startAt = parseInt(classConfiguration.columns.startAt);
+		startAt = remove ? 1 : (startAt ? startAt : 1);
+		var rows = table.rows, type, baseClassName, columnClassName, lastColumnClassName;
+			// Loop through the rows of the table
+		for (var i = rows.length; --i >= 0;) {
+				// Loop through the cells
+			var cells = rows[i].cells;
+			for (var j = startAt-1, n = cells.length; j < n; j++) {
+				var cell = cells[j];
+				type = cell.nodeName.toLowerCase();
+				baseClassName = columnClass[type];
+				columnClassName = baseClassName + (j+1);
+				lastColumnClassName = columnLastClass[type];
+				if (remove) {
+					if (baseClassName) {
+						HTMLArea._removeClass(cell, columnClassName);
+					}
+					if (lastColumnClassName && j == n-1) {
+							HTMLArea._removeClass(cell, lastColumnClassName);
+					}
+				} else {
+					if (baseClassName) {
+						if (HTMLArea._hasClass(cell, baseClassName, true)) {
+							HTMLArea._removeClass(cell, baseClassName, true);
+						}
+						HTMLArea._addClass(cell, columnClassName);
+					}
+					if (lastColumnClassName) {
+						if (j == n-1) {
+							HTMLArea._addClass(cell, lastColumnClassName);
+						} else if (HTMLArea._hasClass(cell, lastColumnClassName)) {
+							HTMLArea._removeClass(cell, lastColumnClassName);
+						}
+					}
+				}
+			}
+		}
+	},
+
+	/*
 	 * This function sets the headers cells on the table (top, left, both or none)
 	 *
 	 * @param	object		table: the table being edited
@@ -1224,8 +1391,14 @@ TableOperations = HTMLArea.Plugin.extend({
 				newCell.style.cssText = element.style.cssText;
 			}
 			if (element.className) {
-				newCell.setAttribute("className", element.className);
+				newCell.setAttribute("class", element.className);
+				if (!newCell.className) {
+						// IE before IE8
+					newCell.setAttribute("className", element.className);
+				}
 			} else {
+				newCell.removeAttribute("class");
+					// IE before IE8
 				newCell.removeAttribute("className");
 			}
 		}
@@ -1350,42 +1523,44 @@ TableOperations = HTMLArea.Plugin.extend({
 	 * @return	void
 	 */
 	buildSizeAndHeadersFieldset : function (doc, table, content, fieldsetClass) {
-		var fieldset = doc.createElement("fieldset");
-		if (fieldsetClass) fieldset.className = fieldsetClass;
-		if (!table) {
-			TableOperations.insertLegend(doc, fieldset, "Size and Headers");
-			TableOperations.buildInput(doc, fieldset, "f_rows", "Rows:", "Number of rows", "", "5", ((this.properties && this.properties.numberOfRows && this.properties.numberOfRows.defaultValue) ? this.properties.numberOfRows.defaultValue : "2"), "fr");
-			TableOperations.insertSpace(doc, fieldset);
-			TableOperations.buildInput(doc, fieldset, "f_cols", "Cols:", "Number of columns", "", "5", ((this.properties && this.properties.numberOfColumns && this.properties.numberOfColumns.defaultValue) ? this.properties.numberOfColumns.defaultValue : "4"), "fr");
-		} else {
-			TableOperations.insertLegend(doc, fieldset, "Headers");
-		}
-		if (this.removedProperties.indexOf("headers") == -1) {
-			var ul = doc.createElement("ul");
-			fieldset.appendChild(ul);
-			var li = doc.createElement("li");
-			ul.appendChild(li);
+		if (!table || this.removedProperties.indexOf("headers") == -1) {
+			var fieldset = doc.createElement("fieldset");
+			if (fieldsetClass) fieldset.className = fieldsetClass;
 			if (!table) {
-				var selected = (this.properties && this.properties.headers && this.properties.headers.defaultValue) ? this.properties.headers.defaultValue : "top";
+				TableOperations.insertLegend(doc, fieldset, "Size and Headers");
+				TableOperations.buildInput(doc, fieldset, "f_rows", "Rows:", "Number of rows", "", "5", ((this.properties && this.properties.numberOfRows && this.properties.numberOfRows.defaultValue) ? this.properties.numberOfRows.defaultValue : "2"), "fr");
+				TableOperations.insertSpace(doc, fieldset);
+				TableOperations.buildInput(doc, fieldset, "f_cols", "Cols:", "Number of columns", "", "5", ((this.properties && this.properties.numberOfColumns && this.properties.numberOfColumns.defaultValue) ? this.properties.numberOfColumns.defaultValue : "4"), "fr");
 			} else {
-				var selected = "none";
-				var thead = table.getElementsByTagName("thead");
-				var tbody = table.getElementsByTagName("tbody");
-				if (thead.length && thead[0].rows.length) {
-					selected = "top";
-				} else if (tbody.length && tbody[0].rows.length) {
-					if (HTMLArea._hasClass(tbody[0].rows[0], this.useHeaderClass)) {
-						selected = "both";
-					} else if (tbody[0].rows[0].cells.length && tbody[0].rows[0].cells[0].nodeName.toLowerCase() == "th") {
-						selected = "left";
+				TableOperations.insertLegend(doc, fieldset, "Headers");
+			}
+			if (this.removedProperties.indexOf("headers") == -1) {
+				var ul = doc.createElement("ul");
+				fieldset.appendChild(ul);
+				var li = doc.createElement("li");
+				ul.appendChild(li);
+				if (!table) {
+					var selected = (this.properties && this.properties.headers && this.properties.headers.defaultValue) ? this.properties.headers.defaultValue : "top";
+				} else {
+					var selected = "none";
+					var thead = table.getElementsByTagName("thead");
+					var tbody = table.getElementsByTagName("tbody");
+					if (thead.length && thead[0].rows.length) {
+						selected = "top";
+					} else if (tbody.length && tbody[0].rows.length) {
+						if (HTMLArea._hasClass(tbody[0].rows[0], this.useHeaderClass)) {
+							selected = "both";
+						} else if (tbody[0].rows[0].cells.length && tbody[0].rows[0].cells[0].nodeName.toLowerCase() == "th") {
+							selected = "left";
+						}
 					}
 				}
+				var selectHeaders = TableOperations.buildSelectField(doc, li, "f_headers", "Headers:", "fr", "floating", "Table headers", ["No header cells", "Header cells on top", "Header cells on left", "Header cells on top and left"], ["none", "top", "left", "both"],  new RegExp((selected ? selected : "top"), "i"));
+				this.removeOptions(selectHeaders, "headers");
 			}
-			var selectHeaders = TableOperations.buildSelectField(doc, li, "f_headers", "Headers:", "fr", "floating", "Table headers", ["No header cells", "Header cells on top", "Header cells on left", "Header cells on top and left"], ["none", "top", "left", "both"],  new RegExp((selected ? selected : "top"), "i"));
-			this.removeOptions(selectHeaders, "headers");
+			TableOperations.insertSpace(doc, fieldset);
+			content.appendChild(fieldset);
 		}
-		TableOperations.insertSpace(doc, fieldset);
-		content.appendChild(fieldset);
 	},
 	
 	buildLayoutFieldset : function(doc, el, content, fieldsetClass) {
@@ -1493,6 +1668,48 @@ TableOperations = HTMLArea.Plugin.extend({
 		content.appendChild(fieldset);
 	},
 	
+	buildLanguageFieldset : function (doc, el, content, fieldsetClass) {
+		if (this.removedFieldsets.indexOf("language") == -1 && (this.removedProperties.indexOf("language") == -1 || this.removedProperties.indexOf("direction") == -1) && this.getPluginInstance("Language") && (this.isButtonInToolbar("Language") || this.isButtonInToolbar("LeftToRight") || this.isButtonInToolbar("RightToLeft"))) {
+			var languageObject = this.getPluginInstance("Language");
+			var fieldset = doc.createElement("fieldset");
+			if (fieldsetClass) {
+				fieldset.className = fieldsetClass;
+			}
+			TableOperations.insertLegend(doc, fieldset, "Language");
+			var ul = doc.createElement("ul");
+			fieldset.appendChild(ul);
+			if (this.removedProperties.indexOf("language") == -1 && this.isButtonInToolbar("Language")) {
+				var languageOptions = this.getDropDownConfiguration("Language").options;
+				var select,
+					selected = "",
+					options = new Array(),
+					values = new Array();
+				for (var option in languageOptions) {
+					if (languageOptions.hasOwnProperty(option)) {
+						options.push(option);
+						values.push(languageOptions[option]);
+					}
+				}
+				selected = el ? languageObject.getLanguageAttribute(el) : "none";
+				if (selected != "none") {
+					options[0] = languageObject.localize("Remove language mark");
+				}
+				(selected.match(/([^\s]*)\s/)) && (selected = RegExp.$1);
+				var li = doc.createElement("li");
+				ul.appendChild(li);
+				select = TableOperations.buildSelectField(doc, li, "f_lang", "Language:", "fr", "", "Language", options, values, new RegExp((selected ? selected : "none"), "i"));
+			}
+			if (this.removedProperties.indexOf("direction") == -1 && (this.isButtonInToolbar("LeftToRight") || this.isButtonInToolbar("RightToLeft"))) {
+				var li = doc.createElement("li");
+				ul.appendChild(li);
+				selected = el ? el.dir : "";
+				(selected.match(/([^\s]*)\s/)) && (selected = RegExp.$1);
+				select = TableOperations.buildSelectField(doc, li, "f_dir", "Text direction:", "fr", "", "Text direction", ["Not set", "Right to left", "Left to right"], ["not set", "rtl", "ltr"], new RegExp((selected ? selected : "not set"), "i"));
+			}
+			content.appendChild(fieldset);
+		}
+	},
+	
 	buildCellTypeFieldset : function (doc, el, content, column, fieldsetClass) {
 		var fieldset = doc.createElement("fieldset");
 		if (fieldsetClass) fieldset.className = fieldsetClass;
@@ -1574,7 +1791,7 @@ TableOperations = HTMLArea.Plugin.extend({
 		(selected.match(/([^\s]*)\s/)) && (selected = RegExp.$1);
 		selectBorderStyle = TableOperations.buildSelectField(doc, fieldset, "f_st_borderStyle", "Border style:", "fr", "floating", "Border style", ["Not set", "No border", "Dotted", "Dashed", "Solid", "Double", "Groove", "Ridge", "Inset", "Outset"], ["not set", "none", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"], new RegExp((selected ? selected : "not set"), "i"));
 		selectBorderStyle.onchange = function() { setBorderFieldsVisibility(this.value == "none"); };
-		this.removeOptions(selectBorderStyle, "f_st_borderStyle");
+		this.removeOptions(selectBorderStyle, "borderStyle");
 		TableOperations.buildInput(doc, fieldset, "f_st_borderWidth", "Border width:", "Border width", "pixels", "5", f_st_borderWidth, "fr", "floating", "postlabel", borderFields);
 		TableOperations.insertSpace(doc, fieldset, borderFields);
 		
@@ -1622,10 +1839,10 @@ TableOperations = HTMLArea.Plugin.extend({
 	
 	/*
 	 * This function gets called by the main editor event handler when a key was pressed.
-	 * It will process the enter key for IE when buttons.table.disableEnterParagraphs is set in the editor configuration
+	 * It will process the enter key for IE and Opera when buttons.table.disableEnterParagraphs is set in the editor configuration
 	 */
 	onKeyPress : function (ev) {
-		if (HTMLArea.is_ie && ev.keyCode == 13 && !ev.shiftKey && this.disableEnterParagraphs) {
+		if ((HTMLArea.is_ie || HTMLArea.is_opera) && ev.keyCode == 13 && !ev.shiftKey && this.disableEnterParagraphs) {
 			var selection = this.editor._getSelection();
 			var range = this.editor._createRange(selection);
 			var parentElement = this.editor.getParentElement(selection, range);
@@ -1633,7 +1850,13 @@ TableOperations = HTMLArea.Plugin.extend({
 				parentElement = parentElement.parentNode;
 			}
 			if (/^(td|th)$/i.test(parentElement.nodeName)) {
-				range.pasteHTML("<br />");
+				if (HTMLArea.is_ie) {
+					range.pasteHTML("<br />");
+				} else {
+					var brNode = this.editor._doc.createElement("br");
+					this.editor.insertNodeAtSelection(brNode);
+					this.editor.selectNode(brNode, false);
+				}
 				return false;
 			}
 		}

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -44,12 +44,6 @@
  * (This index is automatically created/updated by the extension "extdeveval")
  *
  */
-
-
-require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
-require_once (PATH_t3lib.'class.t3lib_extfilefunc.php');
-
-
 /**
  * Looking for RTE images integrity
  *
@@ -135,7 +129,7 @@ Reports problems with RTE images';
 			foreach($recs as $rec)	{
 				$filename = basename($rec['ref_string']);
 				if (t3lib_div::isFirstPartOfStr($filename,'RTEmagicC_'))	{
-					$original = 'RTEmagicP_'.ereg_replace('\.[[:alnum:]]+$','',substr($filename,10));
+					$original = 'RTEmagicP_'.preg_replace('/\.[[:alnum:]]+$/','',substr($filename,10));
 					$infoString = $this->infoStr($rec);
 
 						// Build index:
@@ -168,7 +162,7 @@ Reports problems with RTE images';
 
 			// Now, ask for RTEmagic files inside uploads/ folder:
 		$cleanerModules = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['lowlevel']['cleanerModules'];
-		$cleanerMode = &t3lib_div::getUserObj($cleanerModules['lost_files'][0]);
+		$cleanerMode = t3lib_div::getUserObj($cleanerModules['lost_files'][0]);
 		$resLostFiles = $cleanerMode->main(array(),FALSE,TRUE);
 		if (is_array($resLostFiles['RTEmagicFiles']))	{
 			foreach($resLostFiles['RTEmagicFiles'] as $fileName) {
@@ -226,7 +220,7 @@ Reports problems with RTE images';
 								if ($rteOrigName && t3lib_div::isFirstPartOfStr($dirPrefix,'uploads/') && @is_dir(PATH_site.$dirPrefix))	{	// RTE:
 
 										// From the "original" RTE filename, produce a new "original" destination filename which is unused.
-									$fileProcObj = &$this->getFileProcObj();
+									$fileProcObj = $this->getFileProcObj();
 									$origDestName = $fileProcObj->getUniqueName($rteOrigName, PATH_site.$dirPrefix);
 
 										// Create copy file name:
@@ -296,15 +290,12 @@ Reports problems with RTE images';
 	 *
 	 * @return	object		File processor object
 	 */
-	function &getFileProcObj()	{
-		global $FILEMOUNTS, $TYPO3_CONF_VARS, $BE_USER;
-
+	function getFileProcObj() {
 		if (!is_object($this->fileProcObj))	{
 			$this->fileProcObj = t3lib_div::makeInstance('t3lib_extFileFunctions');
-			$this->fileProcObj->init($FILEMOUNTS, $TYPO3_CONF_VARS['BE']['fileExtensions']);
-			$this->fileProcObj->init_actionPerms($BE_USER->user['fileoper_perms']);
+			$this->fileProcObj->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
+			$this->fileProcObj->init_actionPerms($GLOBALS['BE_USER']->getFileoperationPermissions());
 		}
-
 		return $this->fileProcObj;
 	}
 }

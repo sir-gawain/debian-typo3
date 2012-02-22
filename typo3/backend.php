@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -38,8 +38,6 @@ require('classes/class.clearcachemenu.php');
 require('classes/class.shortcutmenu.php');
 require('classes/class.backendsearchmenu.php');
 
-require_once(PATH_t3lib.'class.t3lib_loadmodules.php');
-require_once(PATH_t3lib.'class.t3lib_basicfilefunc.php');
 require_once('class.alt_menu_functions.inc');
 $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xml');
 
@@ -58,6 +56,7 @@ class TYPO3backend {
 	protected $cssFiles;
 	protected $js;
 	protected $jsFiles;
+	protected $jsFilesAfterInline;
 	protected $toolbarItems;
 	private   $menuWidthDefault = 160; // intentionally private as nobody should modify defaults
 	protected $menuWidth;
@@ -82,6 +81,7 @@ class TYPO3backend {
 	 * @return	void
 	 */
 	public function __construct() {
+
 			// Initializes the backend modules structure for use later.
 		$this->moduleLoader = t3lib_div::makeInstance('t3lib_loadModules');
 		$this->moduleLoader->load($GLOBALS['TBE_MODULES']);
@@ -91,24 +91,29 @@ class TYPO3backend {
 			// add default BE javascript
 		$this->js      = '';
 		$this->jsFiles = array(
-			'contrib/prototype/prototype.js',
-			'contrib/scriptaculous/scriptaculous.js?load=builder,effects,controls,dragdrop',
+			'contrib/swfupload/swfupload.js',
+			'contrib/swfupload/plugins/swfupload.swfobject.js',
+			'contrib/swfupload/plugins/swfupload.cookies.js',
+			'contrib/swfupload/plugins/swfupload.queue.js',
 			'md5.js',
-			'js/backend.js',
 			'js/common.js',
 			'js/sizemanager.js',
 			'js/toolbarmanager.js',
 			'js/modulemenu.js',
 			'js/iecompatibility.js',
+			'js/flashupload.js',
 			'../t3lib/jsfunc.evalfield.js'
 		);
-
+		$this->jsFilesAfterInline = array(
+			'js/backend.js',
+				'js/loginrefresh.js',
+		);
 			// add default BE css
 		$this->css      = '';
 		$this->cssFiles = array(
 			'backend-scaffolding' => 'css/backend-scaffolding.css',
 			'backend-style'       => 'css/backend-style.css',
-			'modulemenu'          => 'css/modulemenu.css'
+			'modulemenu'          => 'css/modulemenu.css',
 		);
 
 		$this->toolbarItems = array();
@@ -135,9 +140,7 @@ class TYPO3backend {
 		);
 
 		foreach($coreToolbarItems as $toolbarItemName => $toolbarItemClassName) {
-				// Get name of XCLASS (if any):
-			$toolbarItemClassName = t3lib_div::makeInstanceClassName($toolbarItemClassName);
-			$toolbarItem = new $toolbarItemClassName($this);
+			$toolbarItem = t3lib_div::makeInstance($toolbarItemClassName, $this);
 
 			if(!($toolbarItem instanceof backend_toolbarItem)) {
 				throw new UnexpectedValueException('$toolbarItem "'.$toolbarItemName.'" must implement interface backend_toolbarItem', 1195126772);
@@ -192,7 +195,7 @@ class TYPO3backend {
 				'.$menu.'
 			</div>
 			<div id="typo3-content">
-				<iframe src="alt_intro.php" name="content" id="content" marginwidth="0" marginheight="0" frameborder="0"  scrolling="auto" noresize="noresize"></iframe>
+				<iframe src="alt_intro.php" name="content" id="content" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto"></iframe>
 			</div>
 		</div>
 	</div>
@@ -202,37 +205,40 @@ class TYPO3backend {
 		 * now put the complete backend document together
 		 ******************************************************/
 
-			// set doctype
-		$GLOBALS['TBE_TEMPLATE']->docType = 'xhtml_trans';
+		/** @var $pageRenderer t3lib_PageRenderer */
+		$pageRenderer = $GLOBALS['TBE_TEMPLATE']->getPageRenderer();
+		$pageRenderer->loadScriptaculous('builder,effects,controls,dragdrop');
+		$pageRenderer->loadExtJS();
+
+			// remove duplicate entries
+		$this->jsFiles = array_unique($this->jsFiles);
 
 			// add javascript
 		foreach($this->jsFiles as $jsFile) {
-			$GLOBALS['TBE_TEMPLATE']->JScode .= '
-			<script type="text/javascript" src="'.$jsFile.'"></script>';
+			$GLOBALS['TBE_TEMPLATE']->loadJavascriptLib($jsFile);
 		}
 		$GLOBALS['TBE_TEMPLATE']->JScode .= chr(10);
 		$this->generateJavascript();
-		$GLOBALS['TBE_TEMPLATE']->JScode .= $GLOBALS['TBE_TEMPLATE']->wrapScriptTags($this->js);
+		$GLOBALS['TBE_TEMPLATE']->JScode .= $GLOBALS['TBE_TEMPLATE']->wrapScriptTags($this->js) . chr(10);
+
+		foreach($this->jsFilesAfterInline as $jsFile) {
+			$GLOBALS['TBE_TEMPLATE']->JScode .= '
+			<script type="text/javascript" src="' . $jsFile . '"></script>';
+		}
+
 
 			// FIXME abusing the JS container to add CSS, need to fix template.php
 		foreach($this->cssFiles as $cssFileName => $cssFile) {
-			$GLOBALS['TBE_TEMPLATE']->JScode .= '
-			<link rel="stylesheet" type="text/css" href="'.$cssFile.'" />
-			';
+			$GLOBALS['TBE_TEMPLATE']->addStyleSheet($cssFileName, $cssFile);
 
 				// load addditional css files to overwrite existing core styles
 			if(!empty($GLOBALS['TBE_STYLES']['stylesheets'][$cssFileName])) {
-				$GLOBALS['TBE_TEMPLATE']->JScode .= '
-			<link rel="stylesheet" type="text/css" href="'.$GLOBALS['TBE_STYLES']['stylesheets'][$cssFileName].'" />
-				';
+				$GLOBALS['TBE_TEMPLATE']->addStyleSheet($cssFileName . 'TBE_STYLES', $GLOBALS['TBE_STYLES']['stylesheets'][$cssFileName]);
 			}
 		}
 
 		if(!empty($this->css)) {
-			$GLOBALS['TBE_TEMPLATE']->JScode .= '
-			<style type="text/css" id="internalStyle">
-				'.$this->css.'
-			</style>';
+			$GLOBALS['TBE_TEMPLATE']->inDocStylesArray['backend.php'] = $this->css;
 		}
 
 			// set document title:
@@ -266,16 +272,18 @@ class TYPO3backend {
 					<li><div id="logout-button" class="toolbar-item no-separator">'.$this->moduleMenu->renderLogoutButton().'</div></li>';
 
 		foreach($this->toolbarItems as $toolbarItem) {
-			$additionalAttributes = $toolbarItem->getAdditionalAttributes();
-
-			$toolbar .= '<li'.$additionalAttributes.'>'.$toolbarItem->render().'</li>';
+			$menu = $toolbarItem->render();
+			if ($menu) {
+				$additionalAttributes = $toolbarItem->getAdditionalAttributes();
+				$toolbar .= '<li' . $additionalAttributes . '>' .$menu. '</li>';
+			}
 		}
 
 		return $toolbar.'</ul>';
 	}
 
 	/**
-	 * gets the label of the currently loged in BE user
+	 * Gets the label of the BE user currently logged in
 	 *
 	 * @return	string		html code snippet displaying the currently logged in user
 	 */
@@ -306,8 +314,9 @@ class TYPO3backend {
 			// superuser mode
 		if($BE_USER->user['ses_backuserid']) {
 			$username   = ' su-user">'.$icon.
-			'<span title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:switchtouser').'">SU: </span>'.
-			'<span>'.htmlspecialchars($label).'</span>';
+			'<span title="' . $GLOBALS['LANG']->getLL('switchtouser') . '">' .
+			$GLOBALS['LANG']->getLL('switchtousershort') . ' </span>' .
+			'<span>' . htmlspecialchars($label) . '</span>';
 		}
 
 		return '<div id="username" class="toolbar-item no-separator'.$username.'</div>';
@@ -333,178 +342,112 @@ class TYPO3backend {
 			$menuFrameName = 'topmenuFrame';
 		}
 
-		$this->js .= '
-	/**
-	 * Function similar to PHPs  rawurlencode();
-	 */
-	function rawurlencode(str) {	//
-		var output = escape(str);
-		output = str_replace("*","%2A", output);
-		output = str_replace("+","%2B", output);
-		output = str_replace("/","%2F", output);
-		output = str_replace("@","%40", output);
-		return output;
-	}
-
-	/**
-	 * Function to similar to PHPs  rawurlencode() which removes TYPO3_SITE_URL;
-	 */
-	function rawurlencodeAndRemoveSiteUrl(str)	{	//
-		var siteUrl = "' . t3lib_div::getIndpEnv('TYPO3_SITE_URL') . '";
-		return rawurlencode(str_replace(siteUrl, \'\', str));
-	}
-	
-	/**
-	 * String-replace function
-	 */
-	function str_replace(match,replace,string)	{	//
-		var input = ""+string;
-		var matchStr = ""+match;
-		if (!matchStr)	{return string;}
-		var output = "";
-		var pointer=0;
-		var pos = input.indexOf(matchStr);
-		while (pos!=-1)	{
-			output+=""+input.substr(pointer, pos-pointer)+replace;
-			pointer=pos+matchStr.length;
-			pos = input.indexOf(match,pos+1);
+		// determine security level from conf vars and default to super challenged
+		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel']) {
+			$this->loginSecurityLevel = $GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel'];
+		} else {
+			$this->loginSecurityLevel = 'superchallenged';
 		}
-		output+=""+input.substr(pointer);
-		return output;
-	}
+
+		$t3Configuration = array(
+			'siteUrl' => t3lib_div::getIndpEnv('TYPO3_SITE_URL'),
+			'PATH_typo3' => $pathTYPO3,
+			'PATH_typo3_enc' => rawurlencode($pathTYPO3),
+			'username' => htmlspecialchars($GLOBALS['BE_USER']->user['username']),
+			'uniqueID' => t3lib_div::shortMD5(uniqid('')),
+			'securityLevel' => $this->loginSecurityLevel,
+			'TYPO3_mainDir' => TYPO3_mainDir,
+			'pageModule' => $pageModule,
+			'condensedMode' => $GLOBALS['BE_USER']->uc['condensedMode'] ? 1 : 0 ,
+			'workspaceFrontendPreviewEnabled' => $GLOBALS['BE_USER']->workspace != 0 && !$GLOBALS['BE_USER']->user['workspace_preview'] ? 0 : 1,
+			'veriCode' => $GLOBALS['BE_USER']->veriCode(),
+			'denyFileTypes' => PHP_EXTENSIONS_DEFAULT,
+			'showRefreshLoginPopup' => isset($GLOBALS['TYPO3_CONF_VARS']['BE']['showRefreshLoginPopup']) ? intval($GLOBALS['TYPO3_CONF_VARS']['BE']['showRefreshLoginPopup']) : FALSE,
+		);
+		$t3LLLcore = array(
+			'waitTitle' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_logging_in') ,
+			'refresh_login_failed' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_failed'),
+			'refresh_login_failed_message' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_failed_message'),
+			'refresh_login_title' => sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_title'), htmlspecialchars($GLOBALS['BE_USER']->user['username'])),
+			'login_expired' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.login_expired'),
+			'refresh_login_username' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_username'),
+			'refresh_login_password' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_password'),
+			'refresh_login_emptyPassword' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_emptyPassword'),
+			'refresh_login_button' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_button'),
+			'refresh_logout_button' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_logout_button'),
+			'please_wait' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.please_wait'),
+			'be_locked' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.be_locked'),
+			'refresh_login_countdown_singular' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_countdown_singular'),
+			'refresh_login_countdown' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_countdown'),
+			'login_about_to_expire' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.login_about_to_expire'),
+			'login_about_to_expire_title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.login_about_to_expire_title'),
+			'refresh_login_refresh_button' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_login_refresh_button'),
+			'refresh_direct_logout_button' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:mess.refresh_direct_logout_button'),
+		);
+		$t3LLLfileUpload = array(
+			'windowTitle' => $GLOBALS['LANG']->getLL('fileUpload_windowTitle'),
+			'buttonSelectFiles' => $GLOBALS['LANG']->getLL('fileUpload_buttonSelectFiles'),
+			'buttonCancelAll' => $GLOBALS['LANG']->getLL('fileUpload_buttonCancelAll'),
+			'infoComponentMaxFileSize' => $GLOBALS['LANG']->getLL('fileUpload_infoComponentMaxFileSize'),
+			'infoComponentFileUploadLimit' => $GLOBALS['LANG']->getLL('fileUpload_infoComponentFileUploadLimit'),
+			'infoComponentFileTypeLimit' => $GLOBALS['LANG']->getLL('fileUpload_infoComponentFileTypeLimit'),
+			'infoComponentOverrideFiles' => $GLOBALS['LANG']->getLL('fileUpload_infoComponentOverrideFiles'),
+	 		'processRunning' => $GLOBALS['LANG']->getLL('fileUpload_processRunning'),
+			'uploadWait' => $GLOBALS['LANG']->getLL('fileUpload_uploadWait'),
+			'uploadStarting' => $GLOBALS['LANG']->getLL('fileUpload_uploadStarting'),
+			'uploadProgress' => $GLOBALS['LANG']->getLL('fileUpload_uploadProgress'),
+			'uploadSuccess' => $GLOBALS['LANG']->getLL('fileUpload_uploadSuccess'),
+			'errorQueueLimitExceeded' => $GLOBALS['LANG']->getLL('fileUpload_errorQueueLimitExceeded'),
+			'errorQueueFileSizeLimit' => $GLOBALS['LANG']->getLL('fileUpload_errorQueueFileSizeLimit'),
+			'errorQueueZeroByteFile' =>  $GLOBALS['LANG']->getLL('fileUpload_errorQueueZeroByteFile'),
+			'errorQueueInvalidFiletype' => $GLOBALS['LANG']->getLL('fileUpload_errorQueueInvalidFiletype'),
+			'errorUploadHttp' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadHttpError'),
+			'errorUploadMissingUrl' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadMissingUrl'),
+			'errorUploadIO' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadIO'),
+			'errorUploadSecurityError' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadSecurityError'),
+			'errorUploadLimit' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadLimit'),
+			'errorUploadFailed' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadFailed'),
+			'errorUploadFileIDNotFound' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadFileIDNotFound'),
+			'errorUploadFileValidation' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadFileValidation'),
+			'errorUploadFileCancelled' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadFileCancelled'),
+			'errorUploadStopped' => $GLOBALS['LANG']->getLL('fileUpload_errorUploadStopped'),
+			'allErrorMessageTitle' => $GLOBALS['LANG']->getLL('fileUpload_allErrorMessageTitle'),
+			'allErrorMessageText' => $GLOBALS['LANG']->getLL('fileUpload_allErrorMessageText'),
+			'allError401' => $GLOBALS['LANG']->getLL('fileUpload_allError401'),
+			'allError2038' => $GLOBALS['LANG']->getLL('fileUpload_allError2038'),
+		);
+
+			// Convert labels/settings back to UTF-8 since json_encode() only works with UTF-8:
+		if ($GLOBALS['LANG']->charSet !== 'utf-8') {
+			$t3Configuration['username'] = $GLOBALS['LANG']->csConvObj->conv($t3Configuration['username'], $GLOBALS['LANG']->charSet, 'utf-8');
+			$GLOBALS['LANG']->csConvObj->convArray($t3LLLcore, $GLOBALS['LANG']->charSet, 'utf-8');
+			$GLOBALS['LANG']->csConvObj->convArray($t3LLLfileUpload, $GLOBALS['LANG']->charSet, 'utf-8');
+		}
+
+		$this->js .= '
+	TYPO3.configuration = ' . json_encode($t3Configuration) . ';
+	TYPO3.LLL = {
+		core : ' . json_encode($t3LLLcore) . ',
+		fileUpload: ' . json_encode($t3LLLfileUpload) . '
+	};
 
 	/**
 	 * TypoSetup object.
 	 */
 	function typoSetup()	{	//
-		this.PATH_typo3 = "'.$pathTYPO3.'";
-		this.PATH_typo3_enc = "'.rawurlencode($pathTYPO3).'";
-		this.username = "'.$GLOBALS['BE_USER']->user['username'].'";
-		this.uniqueID = "'.t3lib_div::shortMD5(uniqid('')).'";
+		this.PATH_typo3 = TYPO3.configuration.PATH_typo3;
+		this.PATH_typo3_enc = TYPO3.configuration.PATH_typo3_enc;
+		this.username = TYPO3.configuration.username;
+		this.uniqueID = TYPO3.configuration.uniqueID;
 		this.navFrameWidth = 0;
+		this.securityLevel = TYPO3.configuration.securityLevel;
+		this.veriCode = TYPO3.configuration.veriCode;
+		this.denyFileTypes = TYPO3.configuration.denyFileTypes;
 	}
 	var TS = new typoSetup();
 
-	/**
-	 * Functions for session-expiry detection:
-	 */
-	function busy()	{	//
-		this.loginRefreshed = busy_loginRefreshed;
-		this.checkLoginTimeout = busy_checkLoginTimeout;
-		this.openRefreshWindow = busy_OpenRefreshWindow;
-		this.busyloadTime=0;
-		this.openRefreshW=0;
-		this.reloginCancelled=0;
-	}
-	function busy_loginRefreshed()	{	//
-		var date = new Date();
-		this.busyloadTime = Math.floor(date.getTime()/1000);
-		this.openRefreshW=0;
-	}
-	function busy_checkLoginTimeout()	{	//
-		var date = new Date();
-		var theTime = Math.floor(date.getTime()/1000);
-		if (theTime > this.busyloadTime+'.intval($GLOBALS['BE_USER']->auth_timeout_field).'-30)	{
-			return true;
-		}
-	}
-	function busy_OpenRefreshWindow()	{	//
-		vHWin=window.open("login_frameset.php","relogin_"+TS.uniqueID,"height=350,width=700,status=0,menubar=0,location=1");
-		vHWin.focus();
-		this.openRefreshW=1;
-	}
-	function busy_checkLoginTimeout_timer()	{	//
-		if (busy.checkLoginTimeout() && !busy.reloginCancelled && !busy.openRefreshW)	{
-			if (confirm('.$GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.refresh_login')).'))	{
-				busy.openRefreshWindow();
-			} else	{
-				busy.reloginCancelled = 1;
-			}
-		}
-		window.setTimeout("busy_checkLoginTimeout_timer();",2*1000);	// Each 2nd second is enough for checking. The popup will be triggered 10 seconds before the login expires (see above, busy_checkLoginTimeout())
-
-			// Detecting the frameset module navigation frame widths (do this AFTER setting new timeout so that any errors in the code below does not prevent another time to be set!)
-		if (top && top.content && top.content.nav_frame && top.content.nav_frame.document && top.content.nav_frame.document.body)	{
-			TS.navFrameWidth = (top.content.nav_frame.document.documentElement && top.content.nav_frame.document.documentElement.clientWidth) ? top.content.nav_frame.document.documentElement.clientWidth : top.content.nav_frame.document.body.clientWidth;
-		}
-	}
-
-	/**
-	 * Launcing information window for records/files (fileref as "table" argument)
-	 */
-	function launchView(table,uid,bP)	{	//
-		var backPath= bP ? bP : "";
-		var thePreviewWindow="";
-		thePreviewWindow = window.open(TS.PATH_typo3+"show_item.php?table="+encodeURIComponent(table)+"&uid="+encodeURIComponent(uid),"ShowItem"+TS.uniqueID,"height=400,width=550,status=0,menubar=0,resizable=0,location=0,directories=0,scrollbars=1,toolbar=0");
-		if (thePreviewWindow && thePreviewWindow.focus)	{
-			thePreviewWindow.focus();
-		}
-	}
-
-	/**
-	 * Opens plain window with url
-	 */
-	function openUrlInWindow(url,windowName)	{	//
-		regularWindow = window.open(url,windowName,"status=1,menubar=1,resizable=1,location=1,directories=0,scrollbars=1,toolbar=1");
-		regularWindow.focus();
-		return false;
-	}
-
-	/**
-	 * Loads a page id for editing in the page edit module:
-	 */
-	function loadEditId(id,addGetVars)	{	//
-		top.fsMod.recentIds["web"]=id;
-		top.fsMod.navFrameHighlightedID["web"]="pages"+id+"_0";		// For highlighting
-
-		if (top.content && top.content.nav_frame && top.content.nav_frame.refresh_nav)	{
-			top.content.nav_frame.refresh_nav();
-		}
-
-		top.goToModule("'.$pageModule.'", 0, addGetVars?addGetVars:"");
-	}
-
-	/**
-	 * Returns incoming URL (to a module) unless nextLoadModuleUrl is set. If that is the case nextLoadModuleUrl is returned (and cleared)
-	 * Used by the shortcut frame to set a "intermediate URL"
-	 */
-	var nextLoadModuleUrl="";
-	function getModuleUrl(inUrl)	{	//
-		var nMU;
-		if (top.nextLoadModuleUrl)	{
-			nMU=top.nextLoadModuleUrl;
-			top.nextLoadModuleUrl="";
-			return nMU;
-		} else {
-			return inUrl;
-		}
-	}
-
-	/**
-	 * Print properties of an object
-	 */
-	function debugObj(obj,name)	{	//
-		var acc;
-		for (i in obj) {
-			if (obj[i])	{
-				acc+=i+":  "+obj[i]+"\n";
-			}
-		}
-		alert("Object: "+name+"\n\n"+acc);
-	}
-
-	/**
-	 * Initialize login expiration warning object
-	 */
-	var busy = new busy();
-	busy.loginRefreshed();
-	busy_checkLoginTimeout_timer();
-
-	/**
-	 * Function used to switch modules
-	 */
 	var currentModuleLoaded = "";
-	var goToModule = '.$goToModuleSwitch.'
+	var goToModule = ' . $goToModuleSwitch . ';
 
 	/**
 	 * Frameset Module object
@@ -520,17 +463,9 @@ class TYPO3backend {
 		this.currentMainLoaded="";
 		this.currentBank="0";
 	}
-	var fsMod = new fsModules();
-	'.$moduleFramesHelper.'
+	var fsMod = new fsModules();' . $moduleFramesHelper . ';';
 
-		// Used by Frameset Modules
-	var condensedMode = '.($GLOBALS['BE_USER']->uc['condensedMode']?1:0).';
-	var currentSubScript = "";
-	var currentSubNavScript = "";
 
-		// Used for tab-panels:
-	var DTM_currentTabs = new Array();
-		';
 
 			// Check editing of page:
 		$this->handlePageEditing();
@@ -619,7 +554,7 @@ class TYPO3backend {
 			});
 		}
 
-		startInModule(\''.$startModule.'\', false, \''.$moduleParameters.'\');
+		startInModule(\''.$startModule.'\', false, '.t3lib_div::quoteJSvalue($moduleParameters).');
 			';
 		}
 	}
@@ -724,8 +659,7 @@ class TYPO3backend {
 	 * @return	void
 	 */
 	public function addToolbarItem($toolbarItemName, $toolbarItemClassName) {
-		$toolbarItemResolvedClassName = t3lib_div::makeInstanceClassName($toolbarItemClassName);
-		$toolbarItem                  = new $toolbarItemResolvedClassName($this);
+		$toolbarItem = t3lib_div::makeInstance($toolbarItemClassName, $this);
 
 		if(!($toolbarItem instanceof backend_toolbarItem)) {
 			throw new UnexpectedValueException('$toolbarItem "'.$toolbarItemName.'" must implement interface backend_toolbarItem', 1195125501);

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Module: Web>Info
  * Presents various page related information from extensions
  *
- * $Id: index.php 3912 2008-07-25 10:42:45Z benni $
+ * $Id: index.php 5526 2009-06-02 13:52:04Z benni $
  * Revised for TYPO3 3.6 November/2003 by Kasper Skaarhoj
  * XHTML compliant
  *
@@ -53,8 +53,6 @@ require('conf.php');
 require($BACK_PATH.'init.php');
 require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_web_info.xml');
-require_once (PATH_t3lib.'class.t3lib_scbase.php');
-require_once (PATH_t3lib.'class.t3lib_parsehtml.php');
 
 $BE_USER->modAccess($MCONF,1);
 
@@ -104,7 +102,6 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 			$this->doc = t3lib_div::makeInstance('template');
 			$this->doc->backPath = $BACK_PATH;
 			$this->doc->setModuleTemplate('templates/info.html');
-			$this->doc->docType = 'xhtml_trans';
 			$this->doc->tableLayout = Array (
 				'0' => Array (
 					'0' => Array('<td valign="top"><b>','</b></td>'),
@@ -215,19 +212,9 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 
 }
 
-// Include extension?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/info/index.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/web/info/index.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -245,4 +232,5 @@ $SOBE->checkSubExtObj();	// Checking second level external objects
 
 $SOBE->main();
 $SOBE->printContent();
+
 ?>

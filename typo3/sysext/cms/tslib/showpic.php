@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
  * Shows a picture from uploads/* in enlarged format in a separate window.
  * Picture file and settings is supplied by GET-parameters: file, width, height, sample, alternativeTempPath, effects, frame, bodyTag, title, wrap, md5
  *
- * $Id: showpic.php 4705 2009-01-13 12:38:29Z dmitry $
+ * $Id: showpic.php 9792 2010-12-16 13:41:33Z ohader $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author		Kasper Skaarhoj	<kasperYYYY@typo3.com>
@@ -54,7 +54,11 @@
 // *******************************
 // Set error reporting
 // *******************************
-error_reporting (E_ALL ^ E_NOTICE);
+if (defined('E_DEPRECATED')) {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+} else {
+	error_reporting(E_ALL ^ E_NOTICE);
+}
 
 
 // ***********************
@@ -62,7 +66,7 @@ error_reporting (E_ALL ^ E_NOTICE);
 // ***********************
 define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','FE');
-if (!defined('PATH_thisScript')) 	define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (php_sapi_name()=='cgi'||php_sapi_name()=='isapi' ||php_sapi_name()=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
+if (!defined('PATH_thisScript')) 	define('PATH_thisScript',str_replace('//','/', str_replace('\\','/', (PHP_SAPI=='cgi'||PHP_SAPI=='isapi' ||PHP_SAPI=='cgi-fcgi')&&($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED'])? ($_SERVER['ORIG_PATH_TRANSLATED']?$_SERVER['ORIG_PATH_TRANSLATED']:$_SERVER['PATH_TRANSLATED']):($_SERVER['ORIG_SCRIPT_FILENAME']?$_SERVER['ORIG_SCRIPT_FILENAME']:$_SERVER['SCRIPT_FILENAME']))));
 
 if (!defined('PATH_site')) 			define('PATH_site', dirname(PATH_thisScript).'/');
 if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
@@ -126,6 +130,11 @@ class SC_tslib_showpic {
 	var $md5;
 
 	/**
+	 * @var string
+	 */
+	protected $parametersEncoded;
+
+	/**
 	 * Init function, setting the input vars in the global space.
 	 *
 	 * @return	void
@@ -133,15 +142,8 @@ class SC_tslib_showpic {
 	function init()	{
 			// Loading internal vars with the GET/POST parameters from outside:
 		$this->file = t3lib_div::_GP('file');
-		$this->width = t3lib_div::_GP('width');
-		$this->height = t3lib_div::_GP('height');
-		$this->sample = t3lib_div::_GP('sample');
-		$this->alternativeTempPath = t3lib_div::_GP('alternativeTempPath');
-		$this->effects = t3lib_div::_GP('effects');
+		$this->parametersEncoded = implode(t3lib_div::_GP('parameters'));
 		$this->frame = t3lib_div::_GP('frame');
-		$this->bodyTag = t3lib_div::_GP('bodyTag');
-		$this->title = t3lib_div::_GP('title');
-		$this->wrap = t3lib_div::_GP('wrap');
 		$this->md5 = t3lib_div::_GP('md5');
 
 		// ***********************
@@ -153,18 +155,20 @@ class SC_tslib_showpic {
 		}
 
 			// Chech md5-checksum: If this md5-value does not match the one submitted, then we fail... (this is a kind of security that somebody don't just hit the script with a lot of different parameters
-		$md5_value = md5(
-				$this->file.'|'.
-				$this->width.'|'.
-				$this->height.'|'.
-				$this->effects.'|'.
-				$this->bodyTag.'|'.
-				$this->title.'|'.
-				$this->wrap.'|'.
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'].'|');
+		$md5_value = t3lib_div::hmac(
+			implode(
+				'|',
+				array($this->file, $this->parametersEncoded)
+			)
+		);
 
 		if ($md5_value!=$this->md5) {
 			die('Parameter Error: Wrong parameters sent.');
+		}
+
+		$parameters = unserialize(base64_decode($this->parametersEncoded));
+		foreach ($parameters as $parameterName => $parameterValue) {
+			$this->$parameterName = $parameterValue;
 		}
 
 		// ***********************
@@ -240,19 +244,10 @@ class SC_tslib_showpic {
 	}
 }
 
-// Include extension?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/showpic.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['tslib/showpic.php']);
 }
-
-
-
-
-
-
-
-
-
 
 
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,13 +27,6 @@
 /**
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-
-require_once(PATH_t3lib."class.t3lib_tceforms.php");
-require_once(PATH_t3lib."class.t3lib_tcemain.php");
-
-require_once(PATH_t3lib."class.t3lib_fullsearch.php");
-require_once(PATH_t3lib."class.t3lib_xml.php");
-require_once(PATH_t3lib."class.t3lib_loaddbgroup.php");
 
 class tx_sysaction extends mod_user_task {
 	var $todoTypesCache = array();
@@ -78,7 +71,7 @@ class tx_sysaction extends mod_user_task {
 			if($actionRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
 
 					// Action header:
-				$header = t3lib_iconworks::getIconImage("sys_action",$actionRow,$this->backPath,'hspace="2" class="absmiddle"').'<b>'.$actionRow["title"].'</b>';
+				$header = t3lib_iconworks::getIconImage("sys_action",$actionRow,$this->backPath,'hspace="2" class="absmiddle"').'<b>'.htmlspecialchars($actionRow["title"]).'</b>';
 				$out.='<table border=0 cellpadding=0 cellspacing=1 width=100%>
 					<tr><td colspan=2 class="bgColor5">'.fw($header).'</td></tr>
 					<tr>
@@ -87,7 +80,7 @@ class tx_sysaction extends mod_user_task {
 					</tr>
 					<tr>
 						<td width=1% valign=top class="bgColor4">'.fw($LANG->sL(t3lib_BEfunc::getItemLabel("sys_action","description"))."&nbsp;").'</td>
-						<td valign=top class="bgColor4">'.fw(nl2br($actionRow["description"])).'</td>
+						<td valign=top class="bgColor4">'.fw(nl2br(htmlspecialchars($actionRow["description"]))).'</td>
 					</tr>';
 				$out.='</table>';
 				$theCode = $this->pObj->doc->section("",$out,0,1);
@@ -110,7 +103,7 @@ class tx_sysaction extends mod_user_task {
 								$userRecord=t3lib_BEfunc::getRecord("be_users",$nId);
 							}
 							if (t3lib_div::_GP("be_users_uid"))	{
-								$userRecord=t3lib_BEfunc::getRecord("be_users",t3lib_div::_GP("be_users_uid"));
+								$userRecord = t3lib_BEfunc::getRecord('be_users', t3lib_div::_GP('be_users_uid'), '*', ' AND cruser_id='.intval($this->BE_USER->user['uid']).' AND createdByAction='.intval($actionRow['uid']));
 							}
 							if (!is_array($userRecord))	{
 								$userRecord=array();
@@ -123,7 +116,7 @@ class tx_sysaction extends mod_user_task {
 							$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'be_users', 'pid=0 AND cruser_id='.intval($this->BE_USER->user['uid']).' AND createdByAction='.intval($actionRow['uid']).t3lib_BEfunc::deleteClause('be_users'), '', 'username');
 							$lines = array();
 							while($uRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
-								$lines[] = "<nobr>".($uRow["uid"]==$userRecord["uid"]?"<b>":"").$this->action_linkUserName(t3lib_iconworks::getIconImage("be_users",$uRow,$this->backPath,'title="uid='.$uRow["uid"].'" hspace="2" align="top"').$uRow["username"]." (".$uRow["realName"].")".($uRow["uid"]==$userRecord["uid"]?"</b>":"")."</nobr>",$actionRow["uid"],$uRow["uid"])."<br>";
+								$lines[] = '<nobr>' . ($uRow['uid'] == $userRecord['uid'] ? '<strong>' : '') . $this->action_linkUserName(t3lib_iconworks::getIconImage('be_users', $uRow, $this->backPath, 'title="uid=' . $uRow['uid'] . '" hspace="2" align="top"') . htmlspecialchars($uRow['username']) . ' (' . htmlspecialchars($uRow['realName']) . ')' . ($uRow['uid'] == $userRecord['uid'] ? '</strong>' : '') . '</nobr>', $actionRow['uid'], $uRow['uid']) . '<br />';
 							}
 							if (count($lines))	{
 								$theCode.= $this->pObj->doc->section($LANG->getLL("action_t1_listOfUsers"),implode("",$lines),0,1);
@@ -167,7 +160,7 @@ class tx_sysaction extends mod_user_task {
 								} else {
 									$p.= $LANG->getLL("lNone");
 								}
-								$actionContent.=t3lib_iconworks::getIconImage("be_users",$userRecord,$this->backPath,'title="'.htmlspecialchars($p).'" hspace=2 align=top').$userRecord["username"]." (".$userRecord["realName"].")";
+								$actionContent .= t3lib_iconworks::getIconImage('be_users', $userRecord, $this->backPath, 'title="' . htmlspecialchars($p) . '" hspace="2" align="top"') . htmlspecialchars($userRecord['username']) . ' (' . htmlspecialchars($userRecord['realName']) . ')';
 							}
 							$actionContent.=$this->pObj->doc->table($formA);
 							$theCode.= $this->pObj->doc->section($LANG->getLL($newFlag?"action_Create":"action_Update"),$actionContent,0,1);
@@ -185,7 +178,7 @@ class tx_sysaction extends mod_user_task {
 								$actionContent="";
 	//		debug($sql_query);
 								$type = $sql_query["qC"]["search_query_makeQuery"];
-								$res = $GLOBALS['TYPO3_DB']->sql(TYPO3_db,$sql_query["qSelect"]);
+								$res = $GLOBALS['TYPO3_DB']->sql_query($sql_query["qSelect"]);
 								if (!$GLOBALS['TYPO3_DB']->sql_error())	{
 									$fullsearch->formW=48;
 									$cP=$fullsearch->getQueryResultCode($type,$res,$sql_query["qC"]["queryTable"]);
@@ -203,14 +196,18 @@ class tx_sysaction extends mod_user_task {
 										'&SET[search]=query'.
 										'&storeControl[STORE]=-'.$actionRow["uid"].
 										'&storeControl[LOAD]=1'.
-										'">Edit Query</a></strong>';
+										'">' . $GLOBALS['LANG']->getLL('action_editQuery') . '</a></strong>';
 								}
 								$theCode.= $this->pObj->doc->section($LANG->getLL("action_t2_result"),$actionContent,0,1);
 							} else {
 								$theCode.= $this->pObj->doc->section($LANG->getLL("action_error"),'<span class="typo3-red">'.$LANG->getLL("action_notReady").'</span>',0,1);
 							}
 						} else {
-							$theCode.= $this->pObj->doc->section($LANG->getLL("action_error"),'<span class="typo3-red">The extension "lowlevel" must be installed in order to create a quiry</span>',0,1);
+							$theCode.= $this->pObj->doc->section(
+								$GLOBALS['LANG']->getLL('action_error'),
+								'<span class="typo3-red">' . $GLOBALS['LANG']->getLL('action_lowlevelMissing', true) . '</span>',
+								0, 1
+							);
 						}
 					break;
 					case 3: //list records
@@ -278,7 +275,7 @@ class tx_sysaction extends mod_user_task {
 		$res = $this->getActionResPointer();
 		$lines=array();
 		while($actionRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
-			$lines[]='<nobr>'.t3lib_iconworks::getIconImage("sys_action",$actionRow,$this->backPath,'hspace="2" align="top"').$this->action_link($this->fixed_lgd($actionRow["title"]),$actionRow["uid"],$actionRow["description"]).'</nobr><BR>';
+			$lines[]='<nobr>'.t3lib_iconworks::getIconImage("sys_action",$actionRow,$this->backPath,'hspace="2" align="top"').$this->action_link($this->fixed_lgd(htmlspecialchars($actionRow['title'])),$actionRow['uid'],htmlspecialchars($actionRow['description'])).'</nobr><br />';
 		}
 		$out = implode("",$lines);
 		return $out;
@@ -310,7 +307,7 @@ class tx_sysaction extends mod_user_task {
 				$data["be_users"][$key]["disable"]=intval($arr[$key]["disable"]);
 				$data["be_users"][$key]["admin"]=0;
 				$data["be_users"][$key]["usergroup"] = $this->fixUserGroup($data["be_users"][$key]["usergroup"],$actionRow["t1_allowed_groups"],$arr[$key]["usergroups"]);
-				$data["be_users"][$key]["db_mountpoints"]=$arr[$key]["db_mountpoints"];
+				$data["be_users"][$key]["db_mountpoints"]=$this->fixDbMount($arr[$key]["db_mountpoints"]);
 				$data["be_users"][$key]["createdByAction"]=$actionRow["uid"];
 			}
 		} else {
@@ -339,7 +336,7 @@ class tx_sysaction extends mod_user_task {
 					$data["be_users"][$key]["disable"]=intval($arr[$key]["disable"]);
 					$data["be_users"][$key]["admin"]=0;
 					$data["be_users"][$key]["usergroup"] = $this->fixUserGroup($beRec["usergroup"],$actionRow["t1_allowed_groups"],$arr[$key]["usergroups"]);
-					$data["be_users"][$key]["db_mountpoints"]=$arr[$key]["db_mountpoints"];
+					$data["be_users"][$key]["db_mountpoints"]=$this->fixDbMount($arr[$key]["db_mountpoints"]);
 					$nId=$key;
 				}
 			}
@@ -365,12 +362,18 @@ class tx_sysaction extends mod_user_task {
 	function fixUsername($username,$prefix)	{
 		$username=trim($username);
 		$prefix=trim($prefix);
-		$username=ereg_replace("^".quotemeta($prefix),"",$username);
+		$username=preg_replace('/^'.quotemeta($prefix).'/','',$username);
 
 		if ($username)	{
 			return $prefix.$username;
 		} else return false;
 	}
+	/**
+	 * @param  array $curUserGroup	Group array in which the user is already in
+	 * @param  array $allowedGroups	Groups this task allows the be users to be in
+	 * @param  array $inGroups	List of groups the user wants to be in, comes from $_POST
+	 * @return string
+	 */
 	function fixUserGroup($curUserGroup,$allowedGroups,$inGroups)	{
 			// User group:
 			// All current groups:
@@ -385,6 +388,7 @@ class tx_sysaction extends mod_user_task {
 		if (is_array($inGroups))	{
 			reset($inGroups);
 			while(list(,$gu)=each($inGroups))	{
+				$gu = intval($gu);
 				$checkGr = t3lib_BEfunc::getRecord("be_groups",$gu);
 				if (is_array($checkGr) && in_array($gu,$grList))	{
 					$cGroups[]=$gu;
@@ -393,6 +397,53 @@ class tx_sysaction extends mod_user_task {
 		}
 		return implode(",",$cGroups);
 	}
+
+	/**
+	 * Clean the to be applied DB-Mounts from not allowed ones
+	 *
+	 * @param	string		$appliedDbMounts: List of pages like pages_123,pages_456
+	 * @return	string		Cleaned list
+	 */
+	protected function fixDbMount($appliedDbMounts) {
+		if (!empty($appliedDbMounts) && !$GLOBALS['BE_USER']->isAdmin()) {
+			$cleanDbMountList = array();
+			$dbMounts = t3lib_div::trimExplode(',', $appliedDbMounts, 1);
+
+				// walk through every wanted DB-Mount and check if it is allowed for the current user
+			foreach ($dbMounts as $dbMount) {
+				$uid = intval(substr($dbMount,  (strrpos($dbMount, '_') + 1)));
+				$page = t3lib_BEfunc::getRecord('pages', $uid);
+
+					// check rootline and access rights
+				if ($this->checkRootline($uid) && $GLOBALS['BE_USER']->calcPerms($page)) {
+					$cleanDbMountList[] = 'pages_' . $uid;
+				}
+
+			}
+			$appliedDbMounts = implode(',', $cleanDbMountList);
+		}
+		return $appliedDbMounts;
+	}
+
+	/**
+	 * Check if a page is inside the rootline the current user can see
+	 *
+	 * @param	int		$pageId: Id of the the page to be checked
+	 * @return	boolean	Access to the page
+	 */
+	protected function checkRootline($pageId) {
+		$access = FALSE;
+
+		$dbMounts =  array_flip(explode(',', trim($GLOBALS['BE_USER']->dataLists['webmount_list'], ',')));
+		$rootline = t3lib_BEfunc::BEgetRootLine($pageId);
+		foreach ($rootline as $page) {
+			if (isset($dbMounts[$page['uid']]) && !$access) {
+				$access = TRUE;
+			}
+		}
+		return $access;
+	}
+
 	function action_createDir($uid)	{
 		$path = $this->action_getUserMainDir();
 		if ($path)	{

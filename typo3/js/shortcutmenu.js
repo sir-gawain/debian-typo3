@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2008 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,7 +28,7 @@
 /**
  * class to handle the shortcut menu
  *
- * $Id$
+ * $Id: shortcutmenu.js 6539 2009-11-25 14:49:14Z stucki $
  */
 var ShortcutMenu = Class.create({
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2004-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2004-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -196,13 +196,13 @@ class t3lib_rteapi {
 	 */
 	function triggerField($fieldName)	{
 
-		$triggerFieldName = ereg_replace('\[([^]]+)\]$','[_TRANSFORM_\1]', $fieldName);
+		$triggerFieldName = preg_replace('/\[([^]]+)\]$/','[_TRANSFORM_\1]', $fieldName);
 		return '<input type="hidden" name="'.htmlspecialchars($triggerFieldName).'" value="RTE" />';
 	}
 }
 
-// Include extension?
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rte/class.tx_rte_base.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/rte/class.tx_rte_base.php']);
 }
+
 ?>

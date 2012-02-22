@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Core functions for cleaning and analysing
  *
- * $Id: class.tx_lowlevel_cleaner_core.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tx_lowlevel_cleaner_core.php 5947 2009-09-16 17:57:09Z ohader $
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
@@ -58,11 +58,6 @@
  */
 
 
-require_once(PATH_t3lib.'class.t3lib_admin.php');
-require_once(PATH_t3lib.'class.t3lib_cli.php');
-
-
-
 /**
  * Core functions for cleaning and analysing
  *
@@ -80,6 +75,8 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 	var $label_infoString = 'The list of records is organized as [table]:[uid]:[field]:[flexpointer]:[softref_key]';
 	var $pagetreePlugins = array();
 	var $cleanerModules = array();
+
+	var $performanceStatistics = array();
 
 
 	/**
@@ -158,7 +155,7 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 		switch((string)$analysisType)    {
 			default:
 				if (is_array($this->cleanerModules[$analysisType]))	{
-					$cleanerMode = &t3lib_div::getUserObj($this->cleanerModules[$analysisType][0]);
+					$cleanerMode = t3lib_div::getUserObj($this->cleanerModules[$analysisType][0]);
 					$cleanerMode->cli_validateArgs();
 
 					if ($this->cli_isArg('-r'))	{	// Run it...
@@ -332,6 +329,8 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 	 */
 	function genTree($rootID,$depth=1000,$echoLevel=0,$callBack='')	{
 
+		$pt = t3lib_div::milliseconds();$this->performanceStatistics['genTree()']='';
+
 			// Initialize:
 		$this->workspaceIndex = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,title','sys_workspace','1=1'.t3lib_BEfunc::deleteClause('sys_workspace'),'','','','uid');
 		$this->workspaceIndex[-1] = TRUE;
@@ -351,7 +350,9 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 		);
 
 			// Start traversal:
+		$pt2 = t3lib_div::milliseconds();$this->performanceStatistics['genTree_traverse()']=''; $this->performanceStatistics['genTree_traverse():TraverseTables']='';
 		$this->genTree_traverse($rootID,$depth,$echoLevel,$callBack);
+		$this->performanceStatistics['genTree_traverse()'] = t3lib_div::milliseconds()-$pt2;
 
 			// Sort recStats (for diff'able displays)
 		foreach($this->recStats as $kk => $vv)	{
@@ -362,6 +363,31 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 		}
 
 		if ($echoLevel>0)	echo chr(10).chr(10);
+
+
+			// Processing performance statistics:
+		$this->performanceStatistics['genTree()'] = t3lib_div::milliseconds()-$pt;
+
+			// Count records:
+		foreach($GLOBALS['TCA'] as $tableName => $cfg)	{
+				// Select all records belonging to page:
+			$resSub = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+				'count(*)',
+				$tableName,
+				''
+			);
+			$countRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($resSub);
+			$this->performanceStatistics['MySQL_count'][$tableName]=$countRow['count(*)'];
+			$this->performanceStatistics['CSV'].=chr(10).$tableName.','.
+								$this->performanceStatistics['genTree_traverse():TraverseTables:']['MySQL'][$tableName].','.
+								$this->performanceStatistics['genTree_traverse():TraverseTables:']['Proc'][$tableName].','.
+								$this->performanceStatistics['MySQL_count'][$tableName];
+		}
+
+		$this->performanceStatistics['recStats_size']['(ALL)']=strlen(serialize($this->recStats));
+		foreach($this->recStats as $key => $arrcontent)	{
+			$this->performanceStatistics['recStats_size'][$key]=strlen(serialize($arrcontent));
+		}
 	}
 
 	/**
@@ -420,18 +446,24 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 			$this->$callBack('pages',$rootID,$echoLevel,$versionSwapmode,$rootIsVersion);
 		}
 
+		$pt3 = t3lib_div::milliseconds();
+
 			// Traverse tables of records that belongs to page:
 		foreach($GLOBALS['TCA'] as $tableName => $cfg)	{
 			if ($tableName!='pages') {
 
 					// Select all records belonging to page:
+				$pt4=t3lib_div::milliseconds();
 				$resSub = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 					'uid'.($GLOBALS['TCA'][$tableName]['ctrl']['delete']?','.$GLOBALS['TCA'][$tableName]['ctrl']['delete']:''),
 					$tableName,
 					'pid='.intval($rootID).
 						($this->genTree_traverseDeleted ? '' : t3lib_BEfunc::deleteClause($tableName))
 				);
+				$this->performanceStatistics['genTree_traverse():TraverseTables:']['MySQL']['(ALL)']+= t3lib_div::milliseconds()-$pt4;
+				$this->performanceStatistics['genTree_traverse():TraverseTables:']['MySQL'][$tableName]+= t3lib_div::milliseconds()-$pt4;
 
+				$pt5=t3lib_div::milliseconds();
 				$count = $GLOBALS['TYPO3_DB']->sql_num_rows($resSub);
 				if ($count)	{
 					if ($echoLevel==2)	echo chr(10).'	\-'.$tableName.' ('.$count.')';
@@ -513,10 +545,15 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 						}
 					}
 				}
+
+				$this->performanceStatistics['genTree_traverse():TraverseTables:']['Proc']['(ALL)']+= t3lib_div::milliseconds()-$pt5;
+				$this->performanceStatistics['genTree_traverse():TraverseTables:']['Proc'][$tableName]+= t3lib_div::milliseconds()-$pt5;
+
 			}
 		}
 		unset($resSub);
 		unset($rowSub);
+		$this->performanceStatistics['genTree_traverse():TraverseTables']+= t3lib_div::milliseconds()-$pt3;
 
 			// Find subpages to root ID and traverse (only when rootID is not a version or is a branch-version):
 		if (!$versionSwapmode || $versionSwapmode=='SWAPMODE:1')	{
@@ -576,4 +613,5 @@ class tx_lowlevel_cleaner_core extends t3lib_cli {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/lowlevel/class.tx_lowlevel_cleaner.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/lowlevel/class.tx_lowlevel_cleaner.php']);
 }
+
 ?>

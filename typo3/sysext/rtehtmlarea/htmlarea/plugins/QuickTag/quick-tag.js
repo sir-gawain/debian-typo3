@@ -2,7 +2,7 @@
 *  Copyright notice
 *
 *  (c) 2004 Cau guanabara <caugb@ibest.com.br>
-*  (c) 2005-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2005-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,7 +30,7 @@
 /*
  * Quick Tag Editor Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: quick-tag.js 3437 2008-03-16 16:22:11Z flyguide $
+ * TYPO3 SVN ID: $Id: quick-tag.js 5165 2009-03-09 18:28:59Z ohader $
  */
 QuickTag = HTMLArea.Plugin.extend({
 
@@ -56,7 +56,7 @@ QuickTag = HTMLArea.Plugin.extend({
 			developer	: "Cau Guanabara & Stanislas Rolland",
 			developerUrl	: "mailto:caugb@ibest.com.br",
 			copyrightOwner	: "Cau Guanabara & Stanislas Rolland",
-			sponsor		: "Independent production & Fructifor Inc.",
+			sponsor		: "Independent production & SJBR",
 			sponsorUrl	: "http://www.netflash.com.br/gb/HA3-rc1/examples/quick-tag.html",
 			license		: "GPL"
 		};
@@ -88,7 +88,7 @@ QuickTag = HTMLArea.Plugin.extend({
 	 * @return	boolean		false if action is completed
 	 */
 	onButtonPress : function(editor, id, target) {
-		this.dialog = this.openDialog("InsertTag", this.makeUrlFromPopupName("quicktag"), "setTag", null, {width:450, height:108});
+		this.dialog = this.openDialog("InsertTag", this.makeUrlFromPopupName("quicktag"), "setTag", null, {width:470, height:115});
 	},
 
 	/*

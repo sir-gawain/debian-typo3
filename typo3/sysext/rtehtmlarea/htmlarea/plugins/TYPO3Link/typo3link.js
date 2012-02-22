@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /*
  * TYPO3Link plugin for htmlArea RTE
  *
- * TYPO3 SVN ID: $Id$
+ * TYPO3 SVN ID: $Id: typo3link.js 9618 2010-11-25 04:24:19Z stan $
  */
 TYPO3Link = HTMLArea.Plugin.extend({
 	
@@ -121,6 +121,15 @@ TYPO3Link = HTMLArea.Plugin.extend({
 			if (node.target) additionalParameter += "&curUrl[target]=" + encodeURIComponent(node.target);
 			if (node.className) additionalParameter += "&curUrl[class]=" + encodeURIComponent(node.className);
 			if (node.title) additionalParameter += "&curUrl[title]=" + encodeURIComponent(node.title);
+			if (this.pageTSConfiguration && this.pageTSConfiguration.additionalAttributes) {
+				var additionalAttributes = this.pageTSConfiguration.additionalAttributes.split(",");
+				for (var i = additionalAttributes.length; --i >= 0;) {
+						// hasAttribute() not available in IE < 8
+					if ((node.hasAttribute && node.hasAttribute(additionalAttributes[i])) || node.getAttribute(additionalAttributes[i]) != null) {
+						additionalParameter += "&curUrl[" + additionalAttributes[i] + "]=" + encodeURIComponent(node.getAttribute(additionalAttributes[i]));
+					}
+				}
+			}
 		} else if (this.editor.hasSelectedText()) {
 			var text = this.editor.getSelectedHTML();
 			if (text && text != null) {
@@ -140,53 +149,81 @@ TYPO3Link = HTMLArea.Plugin.extend({
 	/*
 	 * Add a link to the selection.
 	 * This function is called from the TYPO3 link popup.
+	 *
+	 * @param	string	theLink: the href attribute of the link to be created
+	 * @param	string	cur_target: value for the target attribute
+	 * @param	string	cur_class: value for the class attribute
+	 * @param	string	cur_title: value for the title attribute
+	 * @param	object	additionalValues: values for additional attributes (may be used by extension)
+	 *
+	 * @return void
 	 */
-	createLink : function(theLink,cur_target,cur_class,cur_title) {
+	createLink : function(theLink,cur_target,cur_class,cur_title,additionalValues) {
 		var selection, range, anchorClass, imageNode = null, addIconAfterLink;
 		this.editor.focusEditor();
 		var node = this.editor.getParentElement();
-		var el = HTMLArea.getElementObject(node, "a");
-		if (el != null && /^a$/i.test(el.nodeName)) node = el;
-		if (node != null && /^a$/i.test(node.nodeName)) this.editor.selectNode(node);
-			// Clean images from existing anchors otherwise Mozilla may create nested anchors
-		if (HTMLArea.classesAnchorSetup) {
-			selection = this.editor._getSelection();
-			range = this.editor._createRange(selection);
-			this.cleanAllLinks(node, range, true);
+		var el = HTMLArea.getElementObject(node, 'a');
+		if (el != null && /^a$/i.test(el.nodeName)) {
+			node = el;
 		}
-			// In FF, if the url is the same except for upper/lower case of a file name, the link is not updated.
-			// Therefore, we remove the link before creating a new one.
-		if (HTMLArea.is_gecko && node != null && /^a$/i.test(node.nodeName)) {
-				// If the class attribute is not removed, UnLink folowed by CreateLink will create a span element inside the new link
-			node.removeAttribute("class");
-			this.editor._doc.execCommand("UnLink", false, null);
-		}
-		if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
-			this.editor._doc.execCommand("CreateLink", false, encodeURIComponent(theLink));
-		} else {
-			this.editor._doc.execCommand("CreateLink", false, theLink);
-		}
-		
-		selection = this.editor._getSelection();
-		range = this.editor._createRange(selection);
-		node = this.editor.getParentElement();
-		el = HTMLArea.getElementObject(node, "a");
-		if (el != null && /^a$/i.test(el.nodeName)) node = el;
-		if (node) {
-			if (HTMLArea.classesAnchorSetup && cur_class) {
-				for (var i = HTMLArea.classesAnchorSetup.length; --i >= 0;) {
-					anchorClass = HTMLArea.classesAnchorSetup[i];
-					if (anchorClass.name == cur_class && anchorClass.image) {
-						imageNode = this.editor._doc.createElement("img");
-						imageNode.src = anchorClass.image;
-						imageNode.alt = anchorClass.altText;
-						addIconAfterLink = anchorClass.addIconAfterLink;
-						break;
-					}
+		if (HTMLArea.classesAnchorSetup && cur_class) {
+			for (var i = HTMLArea.classesAnchorSetup.length; --i >= 0;) {
+				anchorClass = HTMLArea.classesAnchorSetup[i];
+				if (anchorClass.name == cur_class && anchorClass.image) {
+					imageNode = this.editor._doc.createElement('img');
+					imageNode.src = anchorClass.image;
+					imageNode.alt = anchorClass.altText;
+					addIconAfterLink = anchorClass.addIconAfterLink;
+					break;
 				}
 			}
-				// We may have created multiple links in as many blocks
-			this.setLinkAttributes(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink);
+		}
+		if (node != null && /^a$/i.test(node.nodeName)) {
+				// Update existing link
+			this.editor.selectNode(node);
+			selection = this.editor._getSelection();
+			range = this.editor._createRange(selection);
+				// Clean images
+			if (HTMLArea.classesAnchorSetup) {
+				this.cleanAllLinks(node, range, true);
+			}
+				// Update link href
+			node.href = (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) ? encodeURI(theLink) : theLink;
+				// Update link attributes
+			this.setLinkAttributes(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues);
+		} else {
+				// Create new link
+				// Clean existing anchors otherwise Mozilla may create nested anchors
+			selection = this.editor._getSelection();
+			range = this.editor._createRange(selection);
+				// Selection may be lost when cleaning links
+			var bookmark = this.editor.getBookmark(range);
+			this.cleanAllLinks(node, range);
+			this.editor.selectRange(this.editor.moveToBookmark(bookmark));
+			if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
+				this.editor._doc.execCommand('CreateLink', false, encodeURI(theLink));
+			} else {
+				this.editor._doc.execCommand('CreateLink', false, theLink);
+			}
+				// Get the created link
+			selection = this.editor._getSelection();
+			range = this.editor._createRange(selection);
+			node = this.editor.getParentElement();
+			el = HTMLArea.getElementObject(node, 'a');
+			if (el != null && /^a$/i.test(el.nodeName)) {
+				node = el;
+			}
+			if (node) {
+					// Export trailing br that IE may include in the link
+				if (HTMLArea.is_ie) {
+					if (node.lastChild && /^br$/i.test(node.lastChild.nodeName)) {
+						HTMLArea.removeFromParent(node.lastChild);
+						node.parentNode.insertBefore(this.editor._doc.createElement('br'), node.nextSibling);
+					}
+				}
+					// We may have created multiple links in as many blocks
+				this.setLinkAttributes(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues);
+			}
 		}
 		this.dialog.close();
 	},
@@ -220,8 +257,19 @@ TYPO3Link = HTMLArea.Plugin.extend({
 	
 	/*
 	* Set attributes of anchors intersecting a range in the given node
+	*
+	* @param	object	node: a node that may interesect the range
+	* @param	object	range: set attributes on all nodes intersecting this range
+	* @param	string	cur_target: value for the target attribute
+	* @param	string	cur_class: value for the class attribute
+	* @param	string	cur_title: value for the title attribute
+	* @param	object	imageNode: image to clone and append to the anchor
+	* @param	boolean	addIconAfterLink: add icon after rather than before the link
+	* @param	object	additionalValues: values for additional attributes (may be used by extension)
+	*
+	* @return	void
 	*/
-	setLinkAttributes : function(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink) {
+	setLinkAttributes : function(node, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues) {
 		if (/^a$/i.test(node.nodeName)) {
 			var nodeInRange = false;
 			if (HTMLArea.is_gecko) {
@@ -245,7 +293,7 @@ TYPO3Link = HTMLArea.Plugin.extend({
 					}
 				}
 				if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
-					node.href = decodeURIComponent(node.href);
+					node.href = decodeURI(node.href);
 				}
 				if (cur_target.trim()) node.target = cur_target.trim();
 					else node.removeAttribute("target");
@@ -264,11 +312,22 @@ TYPO3Link = HTMLArea.Plugin.extend({
 					node.removeAttribute("title");
 					node.removeAttribute("rtekeep");
 				}
+				if (this.pageTSConfiguration && this.pageTSConfiguration.additionalAttributes && typeof(additionalValues) == "object") {
+					for (additionalAttribute in additionalValues) {
+						if (additionalValues.hasOwnProperty(additionalAttribute)) {
+							if (additionalValues[additionalAttribute].toString().trim()) {
+								node.setAttribute(additionalAttribute, additionalValues[additionalAttribute]);
+							} else {
+								node.removeAttribute(additionalAttribute);
+							}
+						}
+					}
+				}
 			}
 		} else {
 			for (var i = node.firstChild;i;i = i.nextSibling) {
 				if (i.nodeType == 1 || i.nodeType == 11) {
-					this.setLinkAttributes(i, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink);
+					this.setLinkAttributes(i, range, cur_target, cur_class, cur_title, imageNode, addIconAfterLink, additionalValues);
 				}
 			}
 		}

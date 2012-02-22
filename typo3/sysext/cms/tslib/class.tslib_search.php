@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  * Used to generate search queries for TypoScript.
  * The class is included from "class.tslib_pagegen.php" based on whether there has been detected content in the GPvar "sword"
  *
- * $Id: class.tslib_search.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.tslib_search.php 5424 2009-05-15 23:12:32Z k-fish $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skaarhoj
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -226,33 +226,32 @@ class tslib_search {
 	function split($origSword, $specchars='+-', $delchars='+.,-')	{
 		$sword = $origSword;
 		$specs = '['.$this->quotemeta($specchars).']';
-		$delchars = '['.$this->quotemeta($delchars).']';
 
 			// As long as $sword is true (that means $sword MUST be reduced little by little until its empty inside the loop!)
 		while ($sword)	{
-			if (ereg('^"',$sword))	{		// There was a double-quote and we will then look for the ending quote.
-				$sword = ereg_replace('^"','',$sword);		// Removes first double-quote
-				ereg('^[^"]*',$sword,$reg);  // Removes everything till next double-quote
+			if (preg_match('/^"/',$sword))	{		// There was a double-quote and we will then look for the ending quote.
+				$sword = preg_replace('/^"/','',$sword);		// Removes first double-quote
+				preg_match('/^[^"]*/',$sword,$reg);  // Removes everything till next double-quote
 				$value[] = $reg[0];  // reg[0] is the value, should not be trimmed
-				$sword = ereg_replace('^'.$this->quotemeta($reg[0]),'',$sword);
-				$sword = trim(ereg_replace('^"','',$sword));		// Removes last double-quote
-			} elseif (ereg('^'.$specs,$sword,$reg)) {
+				$sword = preg_replace('/^'.$this->quotemeta($reg[0]).'/','',$sword);
+				$sword = trim(preg_replace('/^"/','',$sword));		// Removes last double-quote
+			} elseif (preg_match('/^'.$specs.'/',$sword,$reg)) {
 				$value[] = $reg[0];
-				$sword = trim(ereg_replace('^'.$specs,'',$sword));		// Removes = sign
-			} elseif (ereg('[\+\-]',$sword)) {	// Check if $sword contains + or -
+				$sword = trim(preg_replace('/^'.$specs.'/','',$sword));		// Removes = sign
+			} elseif (preg_match('/[\+\-]/',$sword)) {	// Check if $sword contains + or -
 					// + and - shall only be interpreted as $specchars when there's whitespace before it
 					// otherwise it's included in the searchword (e.g. "know-how")
 				$a_sword = explode(' ',$sword);	// explode $sword to single words
 				$word = array_shift($a_sword);	// get first word
-				$word = ereg_replace($delchars.'$','',$word);		// Delete $delchars at end of string
+				$word = rtrim($word, $delchars);		// Delete $delchars at end of string
 				$value[] = $word;	// add searchword to values
 				$sword = implode(' ',$a_sword);	// re-build $sword
 			} else {
 					// There are no double-quotes around the value. Looking for next (space) or special char.
-				ereg('^[^ '.$this->quotemeta($specchars).']*',$sword,$reg);
-				$word = ereg_replace($delchars.'$','',trim($reg[0]));		// Delete $delchars at end of string
+				preg_match('/^[^ '.$this->quotemeta($specchars).']*/',$sword,$reg);
+				$word = rtrim(trim($reg[0]), $delchars);		// Delete $delchars at end of string
 				$value[] = $word;
-				$sword = trim(ereg_replace('^'.$this->quotemeta($reg[0]),'',$sword));
+				$sword = trim(preg_replace('/^'.$this->quotemeta($reg[0]).'/','',$sword));
 			}
 		}
 

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2003-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2003-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -30,7 +30,7 @@
  * which are default for most TYPO3 installations. Soft References can also be userdefined.
  * The Soft Reference parsers are used by the system to find these references and process them accordingly in import/export actions and copy operations.
  *
- * $Id: class.t3lib_softrefproc.php 3439 2008-03-16 19:16:51Z flyguide $
+ * $Id: class.t3lib_softrefproc.php 5482 2009-05-22 19:08:30Z ohader $
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -94,7 +94,6 @@
  */
 
 
-require_once(PATH_t3lib.'class.t3lib_parsehtml.php');
 
 /**
  * Class for processing of the default soft reference types for CMS:
@@ -236,7 +235,7 @@ class t3lib_softrefproc {
 					$elements[$k]['matchString'] = $v;
 
 						// If the image seems to be from fileadmin/ folder or an RTE image, then proceed to set up substitution token:
-					if (t3lib_div::isFirstPartOfStr($srcRef,$this->fileAdminDir.'/') || (t3lib_div::isFirstPartOfStr($srcRef,'uploads/') && ereg('^RTEmagicC_',basename($srcRef))))	{
+					if (t3lib_div::isFirstPartOfStr($srcRef,$this->fileAdminDir.'/') || (t3lib_div::isFirstPartOfStr($srcRef,'uploads/') && preg_match('/^RTEmagicC_/',basename($srcRef))))	{
 							// Token and substitute value:
 						if (strstr($splitContent[$k], $attribs[0]['src']))	{	// Make sure the value we work on is found and will get substituted in the content (Very important that the src-value is not DeHSC'ed)
 							$splitContent[$k] = str_replace($attribs[0]['src'], '{softref:'.$tokenID.'}', $splitContent[$k]);	// Substitute value with token (this is not be an exact method if the value is in there twice, but we assume it will not)
@@ -324,7 +323,7 @@ class t3lib_softrefproc {
 		$elements = array();
 		foreach($linkTags as $k => $foundValue)	{
 			if ($k%2)	{
-				$typolinkValue = eregi_replace('<LINK[[:space:]]+','',substr($foundValue,0,-1));
+				$typolinkValue = preg_replace('/<LINK[[:space:]]+/i','',substr($foundValue,0,-1));
 				$tLP = $this->getTypoLinkParts($typolinkValue);
 				$linkTags[$k] = '<LINK '.$this->setTypoLinkPartsElement($tLP, $elements, $typolinkValue, $k).'>';
 			}
@@ -644,7 +643,7 @@ class t3lib_softrefproc {
 
 			// Detecting the kind of reference:
 		if(strstr($link_param,'@') && !$pU['scheme'])	{		// If it's a mail address:
-			$link_param = eregi_replace('^mailto:','',$link_param);
+			$link_param = preg_replace('/^mailto:/i','',$link_param);
 
 			$finalTagParts['LINK_TYPE'] = 'mailto';
 			$finalTagParts['url'] = trim($link_param);
@@ -668,7 +667,7 @@ class t3lib_softrefproc {
 				$finalTagParts['url'] = $link_param;
 			} elseif ($containsSlash || $isLocalFile)	{	// file (internal)
 				$splitLinkParam = explode('?', $link_param);
-				if (@file_exists(rawurldecode($splitLinkParam[0])) || $isLocalFile)	{
+				if (file_exists(rawurldecode($splitLinkParam[0])) || $isLocalFile)	{
 					$finalTagParts['LINK_TYPE'] = 'file';
 					$finalTagParts['filepath'] = rawurldecode($splitLinkParam[0]);
 					$finalTagParts['query'] = $splitLinkParam[1];
@@ -845,4 +844,5 @@ class t3lib_softrefproc {
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_softrefproc.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_softrefproc.php']);
 }
+
 ?>

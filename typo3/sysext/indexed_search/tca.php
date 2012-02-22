@@ -9,7 +9,7 @@ $TCA['index_config'] = Array (
     'feInterface' => $TCA['index_config']['feInterface'],
     'columns' => Array (
         'hidden' => Array (
-            'label' => 'Disable',
+            'label' => 'LLL:EXT:lang/locallang_general.php:LGL.disable',
             'config' => Array (
                 'type' => 'check',
                 'default' => '1'
@@ -93,6 +93,11 @@ $TCA['index_config'] = Array (
                 'size' => 1,
                 'minitems' => 0,
                 'maxitems' => 1,
+				'wizards' => array(
+					'suggest' => array(
+						'type' => 'suggest',
+					)
+				)
             )
         ),
         'indexcfgs' => Array (
@@ -104,6 +109,11 @@ $TCA['index_config'] = Array (
                 'size' => 5,
                 'minitems' => 0,
                 'maxitems' => 200,
+				'wizards' => array(
+					'suggest' => array(
+						'type' => 'suggest',
+					)
+				)
             )
         ),
         'get_params' => Array (
@@ -209,7 +219,7 @@ $TCA['index_config'] = Array (
             )
         ),
         'set_id' => Array (
-            'label' => 'Session ID (if > zero, then indexing job is running):',
+            'label' => 'LLL:EXT:indexed_search/locallang_db.php:index_config.set_id',
             'config' => Array (
                 'type' => 'none',
             )

@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 1999-2009 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@
 /**
  * Contains the TYPO3 Backend Language class
  *
- * $Id: lang.php 3065 2008-02-04 22:23:37Z masi $
+ * $Id: lang.php 6498 2009-11-23 15:46:10Z steffenk $
  * Revised for TYPO3 3.6.0
  *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
@@ -164,7 +164,7 @@ class language {
 			$this->charSet = $GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'];
 
 			if ($this->charSet!='utf-8' && !$this->csConvObj->initCharset($this->charSet))	{
-				t3lib_BEfunc::typo3PrintError ('The forced character set "'.$this->charSet.'" was not found in t3lib/csconvtbl/','Forced charset not found');
+				t3lib_BEfunc::typo3PrintError('Forced charset not found', 'The forced character set "'. $this->charSet . '" was not found in t3lib/csconvtbl/');
 				exit;
 			}
 		}
@@ -320,7 +320,10 @@ class language {
 					}
 
 						// Overriding file?
+						// @deprecated since TYPO3 4.3, remove in TYPO3 4.5, please use the generic method in
+						// t3lib_div::readLLfile and the global array $GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']
 					if (isset($GLOBALS['TYPO3_CONF_VARS']['BE']['XLLfile'][$parts[0]]))	{
+						t3lib_div::deprecationLog('Usage of $TYPO3_CONF_VARS[\'BE\'][\'XLLfile\'] is deprecated since TYPO3 4.3. Use $TYPO3_CONF_VARS[\'SYS\'][\'locallangXMLOverride\'][] to include the file ' . $fileRef . ' instead.');
 						$ORarray = $this->readLLfile($GLOBALS['TYPO3_CONF_VARS']['BE']['XLLfile'][$parts[0]]);
 						$this->LL_files_cache[$parts[0]] = t3lib_div::array_merge_recursive_overrule($this->LL_files_cache[$parts[0]],$ORarray);
 					}
@@ -412,7 +415,10 @@ class language {
 			}
 
 				// Overriding file?
+				// @deprecated since TYPO3 4.3, remove in TYPO3 4.5, please use the generic method in
+				// t3lib_div::readLLfile and the global array $GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']
 			if (isset($GLOBALS['TYPO3_CONF_VARS']['BE']['XLLfile'][$fileRef]))	{
+				t3lib_div::deprecationLog('Usage of $TYPO3_CONF_VARS[\'BE\'][\'XLLfile\'] is deprecated since TYPO3 4.3. Use $TYPO3_CONF_VARS[\'SYS\'][\'locallangXMLOverride\'][] to include the file ' . $fileRef . ' instead.');
 				$ORarray = $this->readLLfile($GLOBALS['TYPO3_CONF_VARS']['BE']['XLLfile'][$fileRef]);
 				$LOCAL_LANG = t3lib_div::array_merge_recursive_overrule($LOCAL_LANG,$ORarray);
 			}
@@ -453,8 +459,9 @@ class language {
 	}
 }
 
-// Include extension to the template class?
+
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/lang/lang.php'])	{
 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/lang/lang.php']);
 }
+
 ?>

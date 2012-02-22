@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2008 Ingo Renner <ingo@typo3.org>
+*  (c) 2007-2009 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,10 +27,6 @@
 
 
 if(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX) {
-	require_once(PATH_typo3.'sysext/lang/lang.php');
-
-	$GLOBALS['LANG'] = t3lib_div::makeInstance('language');
-	$GLOBALS['LANG']->init($GLOBALS['BE_USER']->uc['lang']);
 	$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xml');
 }
 
@@ -119,7 +115,7 @@ class ModuleMenu {
 	 * @param	TYPO3AJAX	object of type TYPO3AJAX
 	 * @return	void
 	 */
-	public function saveMenuState($params, &$ajaxObj) {
+	public function saveMenuState($params, $ajaxObj) {
 		$menuItem = t3lib_div::_POST('menuid');
 		$state    = t3lib_div::_POST('state') === 'true' ? 1 : 0;
 
@@ -137,6 +133,9 @@ class ModuleMenu {
 		$menu    = '';
 		$onBlur  = $GLOBALS['CLIENT']['FORMSTYLE'] ? 'this.blur();' : '';
 
+		$tsConfiguration = $GLOBALS['BE_USER']->getTSConfig('options.moduleMenuCollapsable');
+		$collapsable = (isset($tsConfiguration['value']) && $tsConfiguration['value'] == 0) ? 0 : 1;
+
 		$rawModuleData = $this->getRawModuleData();
 
 		foreach($rawModuleData as $moduleKey => $moduleData) {
@@ -147,7 +146,11 @@ class ModuleMenu {
 				$moduleLabel = '<a href="#" onclick="top.goToModule(\''.$moduleData['name'].'\');'.$onBlur.'return false;">'.$moduleLabel.'</a>';
 			}
 
-			$menu .= '<li id="'.$moduleKey.'" class="menuSection" title="'.$moduleData['description'].'"><div class="'.($menuState ? 'collapsed' : 'expanded').'">'.$moduleData['icon']['html'].' '.$moduleLabel.'</div>';
+			$menu .= '<li id="modmenu_' . $moduleData['name'] . '" '.
+				($collapsable ? 'class="menuSection"' : '') .
+				' title="' . $moduleData['description'] . '">
+				<div class="' . ($menuState ? 'collapsed' : 'expanded') . '">' .
+				$moduleData['icon']['html'] . ' ' . $moduleLabel . '</div>';
 
 				// traverse submodules
 			if(is_array($moduleData['subitems'])) {
@@ -211,7 +214,7 @@ class ModuleMenu {
 					.'</a>';
 			}
 
-			$moduleMenu .= '<li id="'.$moduleData['cssId'].'">'.$submoduleLink.'</li>'."\n";
+			$moduleMenu .= '<li id="modmenu_' . $moduleData['name'] . '">' . $submoduleLink . '</li>' . "\n";
 		}
 
 		return '<ul'.($menuState ? ' style="display:none;"' : '').'>'."\n".$moduleMenu.'</ul>'."\n";
@@ -243,8 +246,7 @@ class ModuleMenu {
 			}
 			$moduleLink = t3lib_div::resolveBackPath($moduleLink);
 
-			$moduleKey   = $moduleName.'_tab';
-			$moduleCssId = 'ID_'.t3lib_div::md5int($moduleName);
+			$moduleKey   = 'modmenu_' . $moduleName;
 			$moduleIcon  = $this->getModuleIcon($moduleKey);
 
 			if($moduleLink && $moduleNavigationFramePrefix) {
@@ -253,9 +255,8 @@ class ModuleMenu {
 
 			$modules[$moduleKey] = array(
 				'name'        => $moduleName,
-				'title'       => $GLOBALS['LANG']->moduleLabels['tabs'][$moduleKey],
+				'title'       => $GLOBALS['LANG']->moduleLabels['tabs'][$moduleName . '_tab'],
 				'onclick'     => 'top.goToModule(\''.$moduleName.'\');',
-				'cssId'       => $moduleCssId,
 				'icon'        => $moduleIcon,
 				'link'        => $moduleLink,
 				'prefix'      => $moduleNavigationFramePrefix,
@@ -269,7 +270,6 @@ class ModuleMenu {
 					$submoduleNavigationFramePrefix = $this->getNavigationFramePrefix($moduleData, $submoduleData);
 
 					$submoduleKey         = $moduleName.'_'.$submoduleName.'_tab';
-					$submoduleCssId       = 'ID_'.t3lib_div::md5int($moduleName.'_'.$submoduleName);
 					$submoduleIcon        = $this->getModuleIcon($submoduleKey);
 					$submoduleDescription = $GLOBALS['LANG']->moduleLabels['labels'][$submoduleKey.'label'];
 
@@ -282,13 +282,13 @@ class ModuleMenu {
 						'name'         => $moduleName.'_'.$submoduleName,
 						'title'        => $GLOBALS['LANG']->moduleLabels['tabs'][$submoduleKey],
 						'onclick'      => 'top.goToModule(\''.$moduleName.'_'.$submoduleName.'\');',
-						'cssId'        => $submoduleCssId,
 						'icon'         => $submoduleIcon,
 						'link'         => $submoduleLink,
 						'originalLink' => $originalLink,
 						'prefix'       => $submoduleNavigationFramePrefix,
 						'description'  => $submoduleDescription,
 						'navigationFrameScript' => $submoduleData['navFrameScript'],
+						'navigationFrameScriptParam' => $submoduleData['navFrameScriptParam']
 					);
 
 					if($moduleData['navFrameScript']) {
@@ -308,16 +308,24 @@ class ModuleMenu {
 	 * @return	array		icon data array with 'filename', 'size', and 'html'
 	 */
 	protected function getModuleIcon($moduleKey) {
-		$icon             = array();
+		$icon = array(
+			'filename' => '',
+			'size' => '',
+			'title' => '',
+			'html' => ''
+		);
+
 		$iconFileRelative = $this->getModuleIconRelative($GLOBALS['LANG']->moduleLabels['tabs_images'][$moduleKey]);
 		$iconFileAbsolute = $this->getModuleIconAbsolute($GLOBALS['LANG']->moduleLabels['tabs_images'][$moduleKey]);
 		$iconSizes        = @getimagesize($iconFileAbsolute);
 		$iconTitle        = $GLOBALS['LANG']->moduleLabels['tabs'][$moduleKey];
 
-		$icon['filename'] = $iconFileRelative;
-		$icon['size']     = $iconSizes[3];
-		$icon['title']    = htmlspecialchars($iconTitle);
-		$icon['html']     = '<img src="'.$iconFileRelative.'" '.$iconSizes[3].' title="'.htmlspecialchars($iconTitle).'" alt="'.htmlspecialchars($iconTitle).'" />';
+		if(!empty($iconFileRelative)) {
+			$icon['filename'] = $iconFileRelative;
+			$icon['size']     = $iconSizes[3];
+			$icon['title']    = htmlspecialchars($iconTitle);
+			$icon['html']     = '<img src="'.$iconFileRelative.'" '.$iconSizes[3].' title="'.htmlspecialchars($iconTitle).'" alt="'.htmlspecialchars($iconTitle).'" />';
+		}
 
 		return $icon;
 	}
@@ -334,7 +342,7 @@ class ModuleMenu {
 	protected function getModuleIconAbsolute($iconFilename) {
 
 		if(!t3lib_div::isAbsPath($iconFilename))	{
-			$iconFilename = $this->backPath.$iconFilename;
+			$iconFilename = $this->backPath . $iconFilename;
 		}
 
 		return $iconFilename;
@@ -348,10 +356,9 @@ class ModuleMenu {
 	 * @see getModuleIconAbsolute()
 	 */
 	protected function getModuleIconRelative($iconFilename) {
-		if(t3lib_div::isAbsPath($iconFilename)) {
-			$iconFilename = '../'.substr($iconFilename, strlen(PATH_site));
+		if (t3lib_div::isAbsPath($iconFilename)) {
+			$iconFilename = '../' . substr($iconFilename, strlen(PATH_site));
 		}
-
 		return $this->backPath.$iconFilename;
 	}
 
@@ -402,10 +409,11 @@ class ModuleMenu {
 
 		$moduleJavascriptCommands = array();
 		$rawModuleData            = $this->getRawModuleData();
+		$navFrameScripts          = array();
 
 		foreach($rawModuleData as $mainModuleKey => $mainModuleData) {
-			if($mainModuleData['subitems']) {
-				foreach($mainModuleData['subitems'] as $subModuleKey => $subModuleData) {
+			if ($mainModuleData['subitems']) {
+				foreach ($mainModuleData['subitems'] as $subModuleKey => $subModuleData) {
 
 					$parentModuleName  = substr($subModuleData['name'], 0, strpos($subModuleData['name'], '_'));
 					$javascriptCommand = '';
@@ -416,79 +424,108 @@ class ModuleMenu {
 						$additionalJavascript = "+'&id='+top.rawurlencodeAndRemoveSiteUrl(top.fsMod.recentIds['" . $parentModuleName . "'])";
 					}
 
-					if($subModuleData['link'] && $this->linkModules) {
+					if ($subModuleData['link'] && $this->linkModules) {
 							// For condensed mode, send &cMR parameter to frameset script.
-						if($additionalJavascript && $GLOBALS['BE_USER']->uc['condensedMode']) {
-							$additionalJavascript .= "+(cMR?'&cMR=1':'')";
+						if ($additionalJavascript && $GLOBALS['BE_USER']->uc['condensedMode']) {
+							$additionalJavascript .= "+(cMR ? '&cMR=1' : '')";
 						}
 
 						$javascriptCommand = '
-							$(\'content\').src = top.getModuleUrl(top.TS.PATH_typo3+"'.$this->appendQuestionmarkToLink($subModuleData['link']).'"'.$additionalJavascript.'+additionalGetVariables);
-							top.fsMod.currentMainLoaded="'.$parentModuleName.'";
-						';
+				modScriptURL = "'.$this->appendQuestionmarkToLink($subModuleData['link']).'"'.$additionalJavascript.';';
 
-						if($subModuleData['navFrameScript']) {
+						if ($subModuleData['navFrameScript']) {
 							$javascriptCommand .= '
-								top.currentSubScript="'.$subModuleData['originalLink'].'";';
+				top.currentSubScript="'.$subModuleData['originalLink'].'";';
 						}
 
-						if(!$GLOBALS['BE_USER']->uc['condensedMode'] && $subModuleData['parentNavigationFrameScript']) {
+						if (!$GLOBALS['BE_USER']->uc['condensedMode'] && $subModuleData['parentNavigationFrameScript']) {
 							$additionalJavascript = "+'&id='+top.rawurlencodeAndRemoveSiteUrl(top.fsMod.recentIds['" . $parentModuleName . "'])";
 
 							$submoduleNavigationFrameScript = $subModuleData['navigationFrameScript'] ? $subModuleData['navigationFrameScript'] : $subModuleData['parentNavigationFrameScript'];
 							$submoduleNavigationFrameScript = t3lib_div::resolveBackPath($submoduleNavigationFrameScript);
 
-								// add GET parameters for sub module to the navigation script
-							$submoduleNavigationFrameScript = $this->appendQuestionmarkToLink($submoduleNavigationFrameScript).$subModuleData['navigationFrameScript'];
+								// Add navigation script parameters if module requires them
+							if ($subModuleData['navigationFrameScriptParam']) {
+								$submoduleNavigationFrameScript = $this->appendQuestionmarkToLink($submoduleNavigationFrameScript) . $subModuleData['navigationFrameScriptParam'];
+							}
+
+							$navFrameScripts[$parentModuleName] = $submoduleNavigationFrameScript;
 
 							$javascriptCommand = '
-				if (top.content.list_frame && top.fsMod.currentMainLoaded=="'.$parentModuleName.'") {
-					top.currentSubScript="'.$subModuleData['originalLink'].'";
-					top.content.list_frame.location=top.getModuleUrl(top.TS.PATH_typo3+"'.$this->appendQuestionmarkToLink($subModuleData['originalLink']).'"'.$additionalJavascript.'+additionalGetVariables);
-					if(top.currentSubNavScript!="'.$submoduleNavigationFrameScript.'") {
-						top.currentSubNavScript="'.$submoduleNavigationFrameScript.'";
-						top.content.nav_frame.location=top.getModuleUrl(top.TS.PATH_typo3+"'.$submoduleNavigationFrameScript.'");
-					}
+				top.currentSubScript = "'.$subModuleData['originalLink'].'";
+				if (top.content.list_frame && top.fsMod.currentMainLoaded == mainModName) {
+					modScriptURL = "'.$this->appendQuestionmarkToLink($subModuleData['originalLink']).'"'.$additionalJavascript.';
+					';
+								// Change link to navigation frame if submodule has it's own navigation
+							if ($submoduleNavigationFrameScript) {
+								$javascriptCommand .= 'navFrames["' . $parentModuleName . '"] = "'. $submoduleNavigationFrameScript . '";';
+							}
+							$javascriptCommand .= '
+				} else if (top.nextLoadModuleUrl) {
+					modScriptURL = "'.($subModuleData['prefix'] ? $this->appendQuestionmarkToLink($subModuleData['link']) . '&exScript=' : '') . 'listframe_loader.php";
 				} else {
-					$(\'content\').src = top.TS.PATH_typo3+(
-						top.nextLoadModuleUrl?
-						"'.($subModuleData['prefix'] ? $this->appendQuestionmarkToLink($subModuleData['link']).'&exScript=' : '').'listframe_loader.php":
-						"'.$this->appendQuestionmarkToLink($subModuleData['link']).'"'.$additionalJavascript.'+additionalGetVariables
-					);
-					top.fsMod.currentMainLoaded="'.$parentModuleName.'";
-					top.currentSubScript="'.$subModuleData['originalLink'].'";
-				}
-							';
+					modScriptURL = "'.$this->appendQuestionmarkToLink($subModuleData['link']).'"'.$additionalJavascript.' + additionalGetVariables;
+				}';
 						}
-
-						$javascriptCommand .= '
-				top.highlightModuleMenuItem("'.$subModuleData['cssId'].'");
-						';
-						$moduleJavascriptCommands[] = "			case '".$subModuleData['name']."': \n ".$javascriptCommand." \n			break;";
 					}
+				$moduleJavascriptCommands[] = "
+			case '".$subModuleData['name']."':".$javascriptCommand."
+			break;";
 				}
 			} elseif(!$mainModuleData['subitems'] && !empty($mainModuleData['link'])) {
 					// main module has no sub modules but instead is linked itself (doc module f.e.)
 				$javascriptCommand = '
-					top.content.location=top.getModuleUrl(top.TS.PATH_typo3+"'.$this->appendQuestionmarkToLink($mainModuleData['link']).'"+additionalGetVariables);
-					top.highlightModuleMenuItem("'.$mainModuleData['cssId'].'", 1);
-				';
-				$moduleJavascriptCommands[] = "			case '".$mainModuleData['name']."': \n ".$javascriptCommand." \n			break;";
+				modScriptURL = "'.$this->appendQuestionmarkToLink($mainModuleData['link']).'";';
+				$moduleJavascriptCommands[] = "
+			case '".$mainModuleData['name']."':".$javascriptCommand."
+			break;";
 			}
 		}
 
 		$javascriptCode = 'function(modName, cMR_flag, addGetVars) {
+		var useCondensedMode = '.($GLOBALS['BE_USER']->uc['condensedMode'] ? 'true' : 'false').';
+		var mainModName = (modName.slice(0, modName.indexOf("_")) || modName);
+
 		var additionalGetVariables = "";
-		if (addGetVars)	additionalGetVariables = addGetVars;
+		if (addGetVars)	{
+			additionalGetVariables = addGetVars;
+		}';
 
-		var cMR = 0;
-		if (cMR_flag)	cMR = 1;
+		$javascriptCode .= '
+		var navFrames = {};';
+		foreach ($navFrameScripts as $mainMod => $frameScript) {
+			$javascriptCode .= '
+				navFrames["'.$mainMod.'"] = "'.$frameScript.'";';
+		}
 
-		currentModuleLoaded = modName;
+		$javascriptCode .= '
+
+		var cMR = (cMR_flag ? 1 : 0);
+		var modScriptURL = "";
 
 		switch(modName)	{'
 			."\n".implode("\n", $moduleJavascriptCommands)."\n".'
 		}
+		';
+
+		$javascriptCode .= '
+
+		if (!useCondensedMode && navFrames[mainModName]) {
+			if (top.content.list_frame && top.fsMod.currentMainLoaded == mainModName) {
+				top.content.list_frame.location = top.getModuleUrl(top.TS.PATH_typo3 + modScriptURL + additionalGetVariables);
+				if (top.currentSubNavScript != navFrames[mainModName]) {
+					top.currentSubNavScript = navFrames[mainModName];
+					top.content.nav_frame.location = top.getModuleUrl(top.TS.PATH_typo3 + navFrames[mainModName]);
+				}
+			} else {
+				$("content").src = top.TS.PATH_typo3 + modScriptURL;
+			}
+		} else if (modScriptURL) {
+			$("content").src = top.getModuleUrl(top.TS.PATH_typo3 + modScriptURL + additionalGetVariables);
+		}
+		currentModuleLoaded = modName;
+		top.fsMod.currentMainLoaded = mainModName;
+		TYPO3ModuleMenu.highlightModule("modmenu_" + modName, (modName == mainModName ? 1 : 0));
 	}';
 
 		return $javascriptCode;
@@ -518,7 +555,7 @@ class ModuleMenu {
 
 		$buttonForm = '
 		<form action="logout.php" target="_top">
-			<input type="submit" value="'.$GLOBALS['LANG']->sL($buttonLabel, 1).'" />
+			<input type="submit" value="&nbsp;' . $GLOBALS['LANG']->sL($buttonLabel, 1) . '&nbsp;" />
 		</form>';
 
 		return $buttonForm;

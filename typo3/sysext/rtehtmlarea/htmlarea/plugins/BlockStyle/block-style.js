@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-* (c) 2007-2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+* (c) 2007-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
 /*
  * Block Style Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: block-style.js $
+ * TYPO3 SVN ID: $Id: block-style.js 6539 2009-11-25 14:49:14Z stucki $
  */
 BlockStyle = HTMLArea.Plugin.extend({
 		
@@ -80,14 +80,16 @@ BlockStyle = HTMLArea.Plugin.extend({
 		}
 		var allowedClasses;
 		for (var tagName in this.tags) {
-			if (this.tags[tagName].allowedClasses) {
-				allowedClasses = this.tags[tagName].allowedClasses.trim().split(",");
-				for (var cssClass in allowedClasses) {
-					if (allowedClasses.hasOwnProperty(cssClass)) {
-						allowedClasses[cssClass] = allowedClasses[cssClass].trim();
+			if (this.tags.hasOwnProperty(tagName)) {
+				if (this.tags[tagName].allowedClasses) {
+					allowedClasses = this.tags[tagName].allowedClasses.trim().split(",");
+					for (var cssClass in allowedClasses) {
+						if (allowedClasses.hasOwnProperty(cssClass)) {
+							allowedClasses[cssClass] = allowedClasses[cssClass].trim().replace(/\*/g, ".*");
+						}
 					}
+					this.tags[tagName].allowedClasses = new RegExp( "^(" + allowedClasses.join("|") + ")$", "i");
 				}
-				this.tags[tagName].allowedClasses = new RegExp( "^(" + allowedClasses.join("|") + ")$", "i");
 			}
 		}
 		this.showTagFreeClasses = this.pageTSconfiguration.showTagFreeClasses || this.editorConfiguration.showTagFreeClasses;
@@ -160,6 +162,7 @@ BlockStyle = HTMLArea.Plugin.extend({
 					HTMLArea._removeClass(node, classNames[i]);
 					if (node.nodeName.toLowerCase() === "table" && this.editor.plugins.TableOperations) {
 						this.editor.plugins.TableOperations.instance.removeAlternatingClasses(node, classNames[i]);
+						this.editor.plugins.TableOperations.instance.removeCountingClasses(node, classNames[i]);
 					}
 					break;
 				}
@@ -188,18 +191,19 @@ BlockStyle = HTMLArea.Plugin.extend({
 	 */
 	getSelectedBlocks : function() {
 		var block, range, i = 0, blocks = [];
+		var statusBarSelection = this.editor.getPluginInstance("StatusBar") ? this.editor.getPluginInstance("StatusBar").getSelection() : null;
 		if (HTMLArea.is_gecko && !HTMLArea.is_safari && !HTMLArea.is_opera) {
 			var selection = this.editor._getSelection();
 			try {
 				while ((range = selection.getRangeAt(i++))) {
 					block = this.editor.getParentElement(selection, range);
-					blocks.push(this.editor._statusBarTree.selected ? this.editor._statusBarTree.selected : block);
+					blocks.push(statusBarSelection ? statusBarSelection : block);
 				}
 			} catch(e) {
 				/* finished walking through selection */
 			}
 		} else {
-			blocks.push(this.editor._statusBarTree.selected ? this.editor._statusBarTree.selected : this.editor.getParentElement());
+			blocks.push(statusBarSelection ? statusBarSelection : this.editor.getParentElement());
 		}
 		return blocks;
 	},
@@ -217,7 +221,7 @@ BlockStyle = HTMLArea.Plugin.extend({
 	 * This function gets called when the toolbar is being updated
 	 */
 	onUpdateToolbar : function() {
-		if (this.editor.getMode() === "wysiwyg") {
+		if (this.getEditorMode() === "wysiwyg") {
 			this.generate(this.editor, "BlockStyle");
 		}
 	},
@@ -226,7 +230,7 @@ BlockStyle = HTMLArea.Plugin.extend({
 	 * This function gets called when the editor has changed its mode to "wysiwyg"
 	 */
 	onMode : function(mode) {
-		if (this.editor.getMode() === "wysiwyg") {
+		if (this.getEditorMode() === "wysiwyg") {
 			this.generate(this.editor, "BlockStyle");
 		}
 	},
@@ -236,7 +240,7 @@ BlockStyle = HTMLArea.Plugin.extend({
 	 * Re-initiate the parsing of the style sheets, if not yet completed, and refresh our toolbar components
 	 */
 	generate : function(editor, dropDownId) {
-		if (this.cssLoaded && this.editor.getMode() === "wysiwyg" && this.editor.isEditable()) {
+		if (this.cssLoaded && this.getEditorMode() === "wysiwyg" && this.editor.isEditable()) {
 			this.updateValue(dropDownId);
 		} else {
 			if (this.cssTimeout) {
@@ -263,7 +267,8 @@ BlockStyle = HTMLArea.Plugin.extend({
 		
 		var classNames = new Array();
 		var tagName = null;
-		var parent = this.editor._statusBarTree.selected ? this.editor._statusBarTree.selected : this.editor.getParentElement();
+		var statusBarSelection = this.editor.getPluginInstance("StatusBar") ? this.editor.getPluginInstance("StatusBar").getSelection() : null;
+		var parent = statusBarSelection ? statusBarSelection : this.editor.getParentElement();
 		while (parent && !HTMLArea.isBlockElement(parent) && parent.nodeName.toLowerCase() != "img") {
 			parent = parent.parentNode;
 		}
@@ -548,16 +553,21 @@ BlockStyle = HTMLArea.Plugin.extend({
 				// for ie not relevant. returns allways one element
 			cssElements = selectorText.split(",");
 			for (var k = 0; k < cssElements.length; k++) {
-				cssElement = cssElements[k].split(".");
-				tagName = cssElement[0].toLowerCase().trim();
-				if (!tagName) {
-					tagName = "all";
-				}
-				className = cssElement[1];
-				if (className && !HTMLArea.reservedClassNames.test(className)) {
-					if (((tagName != "all") && (!this.tags || !this.tags[tagName]))
-						|| ((tagName == "all") && (!this.tags || !this.tags[tagName]) && this.showTagFreeClasses)
-						|| (this.tags && this.tags[tagName] && this.tags[tagName].allowedClasses && this.tags[tagName].allowedClasses.test(className))) {
+					// Match ALL classes (<element name (optional)>.<class name>) in selector rule
+				var s = cssElements[k],
+					pattern = /(\S*)\.(\S+)/,
+					index;
+				while ((index = s.search(pattern)) > -1) {
+					var match = pattern.exec(s.substring(index));
+					s = s.substring(index+match[0].length);
+
+					tagName = (match[1] && (match[1] != '*')) ? match[1].toLowerCase().trim() : "all";
+					className = match[2];
+
+					if (className && !HTMLArea.reservedClassNames.test(className)) {
+						if (((tagName != "all") && (!this.tags || !this.tags[tagName]))
+							|| ((tagName == "all") && (!this.tags || !this.tags[tagName]) && this.showTagFreeClasses)
+							|| (this.tags && this.tags[tagName] && this.tags[tagName].allowedClasses && this.tags[tagName].allowedClasses.test(className))) {
 							if (!newCssArray[tagName]) {
 								newCssArray[tagName] = new Object();
 							}
@@ -572,6 +582,7 @@ BlockStyle = HTMLArea.Plugin.extend({
 								cssName = this.localize("Element style");
 							}
 							newCssArray[tagName][className] = cssName;
+						}
 					}
 				}
 			}

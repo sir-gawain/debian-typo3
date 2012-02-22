@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2008 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
+*  (c) 2005-2009 Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,7 +26,7 @@
 /*
  * User Elements Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: user-elements.js 2975 2008-01-29 23:01:39Z stan $
+ * TYPO3 SVN ID: $Id: user-elements.js 5165 2009-03-09 18:28:59Z ohader $
  */
 UserElements = HTMLArea.Plugin.extend({
 	

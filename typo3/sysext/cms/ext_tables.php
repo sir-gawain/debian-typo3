@@ -1,6 +1,7 @@
 <?php
-# TYPO3 SVN ID: $Id: ext_tables.php 4667 2009-01-08 18:43:00Z ohader $
+# TYPO3 SVN ID: $Id: ext_tables.php 7544 2010-05-06 16:26:35Z psychomieze $
 if (!defined ('TYPO3_MODE'))	die ('Access denied.');
+
 
 if (TYPO3_MODE == 'BE') {
 	t3lib_extMgm::addModule('web','layout','top',t3lib_extMgm::extPath($_EXTKEY).'layout/');
@@ -28,7 +29,13 @@ if (TYPO3_MODE == 'BE') {
 
 if (TYPO3_MODE=='BE')	{
 	// Setting ICON_TYPES (obsolete by the removal of the plugin_mgm extension)
-	$ICON_TYPES = array();
+	$ICON_TYPES = array(
+		'shop' => array('icon' => 'gfx/i/modules_shop.gif'),
+		'board' => array('icon' => 'gfx/i/modules_board.gif'),
+		'news' => array('icon' => 'gfx/i/modules_news.gif'),
+		'fe_users' => array('icon' => 'gfx/i/fe_users.gif'),
+		'approve' => array('icon' => 'gfx/state_checked.png'),
+	);
 }
 
 	// Adding pages_types:
@@ -167,6 +174,7 @@ if (TYPO3_MODE=='BE')	{
 				),
 				'exclusiveKeys' => '-1,-2',
 				'foreign_table' => 'fe_groups',
+				'foreign_table_where' => 'ORDER BY fe_groups.title',
 			)
 		),
 		'extendToSubpages' => array (
@@ -209,8 +217,8 @@ if (TYPO3_MODE=='BE')	{
 			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.target',
 			'config' => array (
 				'type' => 'input',
-				'size' => '7',
-				'max' => '20',
+				'size' => '20',
+				'max' => '80',
 				'eval' => 'trim',
 				'checkbox' => ''
 			)
@@ -318,8 +326,13 @@ if (TYPO3_MODE=='BE')	{
 				'size' => '3',
 				'maxitems' => '1',
 				'minitems' => '0',
-				'show_thumbs' => '1'
-			)
+				'show_thumbs' => '1',
+				'wizards' => array(
+					'suggest' => array(
+						'type' => 'suggest',
+					),
+				),
+			),
 		),
 		'shortcut_mode' => array (
 			'exclude' => 1,
@@ -339,24 +352,34 @@ if (TYPO3_MODE=='BE')	{
 			'config' => array (
 				'type' => 'group',
 				'internal_type' => 'db',
-					'allowed' => 'pages',
+				'allowed' => 'pages',
 				'size' => '1',
 				'maxitems' => '1',
 				'minitems' => '0',
-				'show_thumbs' => '1'
-			)
+				'show_thumbs' => '1',
+				'wizards' => array(
+					'suggest' => array(
+						'type' => 'suggest',
+					),
+				),
+			),
 		),
 		'mount_pid' => array (
 			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.mount_pid',
 			'config' => array (
 				'type' => 'group',
 				'internal_type' => 'db',
-					'allowed' => 'pages',
+				'allowed' => 'pages',
 				'size' => '1',
 				'maxitems' => '1',
 				'minitems' => '0',
-				'show_thumbs' => '1'
-			)
+				'show_thumbs' => '1',
+				'wizards' => array(
+					'suggest' => array(
+						'type' => 'suggest',
+					),
+				),
+			),
 		),
 		'keywords' => array (
 			'exclude' => 1,
@@ -441,14 +464,16 @@ if (TYPO3_MODE=='BE')	{
 			'config' => array (
 				'type' => 'select',
 				'items' => array (
-					array('', ''),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.1', 'shop'),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.2', 'board'),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.3', 'news'),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.4', 'fe_users'),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.6', 'approve')
+					array('', '', ''),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.1', 'shop', 'i/modules_shop.gif'),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.2', 'board', 'i/modules_board.gif'),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.3', 'news', 'i/modules_news.gif'),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.4', 'fe_users', 'i/fe_users.gif'),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.module.I.6', 'approve', 'state_checked.png')
 				),
-				'default' => ''
+				'default' => '',
+				'iconsInOptionTags' => 1,
+				'noIconsBelowSelect' => 1,
 			)
 		),
 		'fe_login_mode' => array (
@@ -458,8 +483,9 @@ if (TYPO3_MODE=='BE')	{
 				'type' => 'select',
 				'items' => array (
 					array('', 0),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.fe_login_mode.disable', 1),
-					array('LLL:EXT:cms/locallang_tca.xml:pages.fe_login_mode.enable', 2),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.fe_login_mode.disableAll', 1),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.fe_login_mode.disableGroups', 3),
+					array('LLL:EXT:cms/locallang_tca.xml:pages.fe_login_mode.enableAgain', 2),
 				)
 			)
 		),
@@ -497,7 +523,7 @@ if (TYPO3_MODE=='BE')	{
 		'),
 			// external URL
 		'3' => array('showitem' =>
-				'hidden;;;;1-1-1, doktype, title;;3;;2-2-2, subtitle, nav_hide,
+				'doktype;;2;;1-1-1, hidden, nav_hide, title;;3;;2-2-2, subtitle,
 			--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.url,
 				url;;;;3-3-3, urltype,
 			--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.files,
@@ -555,6 +581,8 @@ if (TYPO3_MODE=='BE')	{
 			// sysfolder
 		'254' => array('showitem' =>
 				'doktype;;2;;1-1-1, hidden, title;LLL:EXT:lang/locallang_general.xml:LGL.title,
+			--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.files,
+				media,
 			--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.options,
 				TSconfig;;6;nowrap;5-5-5, storage_pid;;7, module,
 			--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
@@ -656,6 +684,7 @@ $TCA['tt_content'] = array (
 			'splash' => 'tt_content_news.gif',
 			'uploads' => 'tt_content_uploads.gif',
 			'multimedia' => 'tt_content_mm.gif',
+			'media' => 'tt_content_mm.gif',
 			'menu' => 'tt_content_menu.gif',
 			'list' => 'tt_content_list.gif',
 			'mailform' => 'tt_content_form.gif',
@@ -666,7 +695,6 @@ $TCA['tt_content'] = array (
 			'div' => 'tt_content_div.gif',
 			'html' => 'tt_content_html.gif'
 		),
-		'mainpalette' => '15',
 		'thumbnail' => 'image',
 		'requestUpdate' => 'list_type,rte_enabled',
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_tt_content.php',
@@ -745,27 +773,29 @@ $TCA['sys_domain'] = array (
 // ******************************************************************
 $TCA['pages_language_overlay'] = array (
 	'ctrl' => array (
-		'label' => 'title',
-		'tstamp' => 'tstamp',
-		'title' => 'LLL:EXT:cms/locallang_tca.xml:pages_language_overlay',
-		'versioningWS' => true,
-		'versioning_followPages' => true,
-		'origUid' => 't3_origuid',
-		'crdate' => 'crdate',
-		'cruser_id' => 'cruser_id',
-		'delete' => 'deleted',
-		'enablecolumns' => array (
-			'disabled' => 'hidden',
+		'label'                           => 'title',
+		'tstamp'                          => 'tstamp',
+		'title'                           => 'LLL:EXT:cms/locallang_tca.xml:pages_language_overlay',
+		'versioningWS'                    => true,
+		'versioning_followPages'          => true,
+		'origUid'                         => 't3_origuid',
+		'crdate'                          => 'crdate',
+		'cruser_id'                       => 'cruser_id',
+		'delete'                          => 'deleted',
+		'enablecolumns'                   => array (
+			'disabled'  => 'hidden',
 			'starttime' => 'starttime',
-			'endtime' => 'endtime'
+			'endtime'   => 'endtime'
 		),
-		'transOrigPointerField' => 'pid',
-		'transOrigPointerTable' => 'pages',
-		'transOrigDiffSourceField' => 'l18n_diffsource',
+		'transOrigPointerField'           => 'pid',
+		'transOrigPointerTable'           => 'pages',
+		'transOrigDiffSourceField'        => 'l18n_diffsource',
 		'shadowColumnsForNewPlaceholders' => 'title',
-		'languageField' => 'sys_language_uid',
-		'mainpalette' => 1,
-		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php'
+		'languageField'                   => 'sys_language_uid',
+		'mainpalette'                     => 1,
+		'dynamicConfigFile'               => t3lib_extMgm::extPath($_EXTKEY) . 'tbl_cms.php',
+		'type'                            => 'doktype',
+		'dividers2tabs'                   => true
 	)
 );
 

@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2009 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,7 +26,7 @@
 /**
  * Default Clean Plugin for TYPO3 htmlArea RTE
  *
- * TYPO3 SVN ID: $Id: default-clean.js 2663 2007-11-05 09:22:23Z ingmars $
+ * TYPO3 SVN ID: $Id: default-clean.js 6539 2009-11-25 14:49:14Z stucki $
  */
 DefaultClean = HTMLArea.Plugin.extend({
 	
@@ -45,7 +45,7 @@ DefaultClean = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: "1.1",
+			version		: "1.2",
 			developer	: "Stanislas Rolland",
 			developerUrl	: "http://www.sjbr.ca/",
 			copyrightOwner	: "Stanislas Rolland",
@@ -81,21 +81,32 @@ DefaultClean = HTMLArea.Plugin.extend({
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
 		
-		this.clean(this.editor._doc.body);
+		this.clean();
 		return false;
 	},
 	
 	onGenerate : function () {
 		var doc = this.editor._doc;
+			// Function reference used on paste with older versions of Mozilla/Firefox in which onPaste is not fired
+		this.cleanLaterFunctRef = this.makeFunctionReference("clean");
 		HTMLArea._addEvents((HTMLArea.is_ie ? doc.body : doc), ["paste","dragdrop","drop"], DefaultClean.wordCleanHandler, true);
 	},
 	
-	clean : function (html) {
+	clean : function () {
 		function clearClass(node) {
 			var newc = node.className.replace(/(^|\s)mso.*?(\s|$)/ig,' ');
 			if(newc != node.className) {
 				node.className = newc;
-				if(!/\S/.test(node.className)) node.removeAttribute("className");
+				if(!/\S/.test(node.className)) {
+					if (!HTMLArea.is_opera) {
+						node.removeAttribute("class");
+						if (HTMLArea.is_ie) {
+							node.removeAttribute("className");
+						}
+					} else {
+						node.className = '';
+					}
+				}
 			}
 		}
 		function clearStyle(node) {
@@ -152,7 +163,10 @@ DefaultClean = HTMLArea.Plugin.extend({
 					break;
 			}
 		}
-		parseTree(html);
+		parseTree(this.editor._doc.body);
+		if (HTMLArea.is_safari) {
+			this.editor.cleanAppleStyleSpans(this.editor._doc.body);
+		}
 	}
 });
 
@@ -161,7 +175,7 @@ DefaultClean = HTMLArea.Plugin.extend({
  */
 DefaultClean.cleanLater = function (editorNumber) {
 	var editor = RTEarea[editorNumber].editor;
-	editor.plugins.DefaultClean.instance.clean(editor._doc.body);
+	editor.getPluginInstance("DefaultClean").clean();
 };
 
 /*
