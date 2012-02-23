@@ -27,8 +27,6 @@
 ***************************************************************/
 /**
  * Contains authentication service class for salted hashed passwords.
- *
- * $Id$
  */
 
 
@@ -99,7 +97,14 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 	public function init() {
 		$available = FALSE;
 
-		if (tx_saltedpasswords_div::isUsageEnabled()) {
+		$mode = TYPO3_MODE;
+		if ($this->info['requestedServiceSubType'] === 'authUserBE') {
+			$mode = 'BE';
+		} elseif ($this->info['requestedServiceSubType'] === 'authUserFE') {
+			$mode = 'FE';
+		}
+
+		if (tx_saltedpasswords_div::isUsageEnabled($mode)) {
 			$available = TRUE;
 			$this->extConf = tx_saltedpasswords_div::returnExtConf();
 		}
@@ -121,7 +126,7 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 			// could be merged; still here to clarify
 		if (!strcmp(TYPO3_MODE, 'BE')) {
 			$password = $loginData['uident_text'];
-		} else if (!strcmp(TYPO3_MODE, 'FE')) {
+		} elseif (!strcmp(TYPO3_MODE, 'FE')) {
 			$password = $loginData['uident_text'];
 		}
 
@@ -158,7 +163,7 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 				);
 			}
 			// we process also clear-text, md5 and passwords updated by Portable PHP password hashing framework
-		} else if (!intval($this->extConf['forceSalted'])) {
+		} elseif (!intval($this->extConf['forceSalted'])) {
 
 				// stored password is in deprecated salted hashing method
 			if (t3lib_div::inList('C$,M$', substr($user['password'], 0, 2))) {
@@ -179,7 +184,7 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 				}
 
 				// password is stored as md5
-			} else if (preg_match('/[0-9abcdef]{32,32}/', $user['password'])) {
+			} elseif (preg_match('/[0-9abcdef]{32,32}/', $user['password'])) {
 				$validPasswd = (!strcmp(md5($password), $user['password']) ? TRUE : FALSE);
 
 					// skip further authentication methods
@@ -219,22 +224,6 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 	public function authUser(array $user) {
 		$OK = 100;
 		$validPasswd = FALSE;
-
-		if ($this->pObj->security_level == 'rsa' && t3lib_extMgm::isLoaded('rsaauth')) {
-			require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/backends/class.tx_rsaauth_backendfactory.php');
-			require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/storage/class.tx_rsaauth_storagefactory.php');
-
-			$backend = tx_rsaauth_backendfactory::getBackend();
-			$storage = tx_rsaauth_storagefactory::getStorage();
-				// Preprocess the password
-			$password = $this->login['uident'];
-			$key = $storage->get();
-			if ($key != NULL && substr($password, 0, 4) == 'rsa:') {
-				// Decode password and pass to parent
-				$decryptedPassword = $backend->decrypt($key, substr($password, 4));
-				$this->login['uident_text'] = $decryptedPassword;
-			}
-		}
 
 		if ($this->login['uident'] && $this->login['uname']) {
 			if (!empty($this->login['uident_text'])) {
@@ -316,7 +305,7 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 					0
 				);
 				$OK = 0;
-			} else if ($validPasswd) {
+			} elseif ($validPasswd) {
 				$this->writeLogMessage(
 					TYPO3_MODE . ' Authentication successful for username \'%s\'',
 					$this->login['uname']
@@ -336,13 +325,8 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
 	 * @return	void
 	 */
 	protected function updatePassword($uid, $updateFields) {
-		if (TYPO3_MODE === 'BE') {
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery( 'be_users', sprintf('uid = %u', $uid), $updateFields);
-		} else {
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery( 'fe_users', sprintf('uid = %u', $uid), $updateFields);
-		}
-
-		t3lib_div::devLog(sprintf('Automatic password update for %s user with uid %u', TYPO3_MODE, $uid), $this->extKey, 1);
+		$GLOBALS['TYPO3_DB']->exec_UPDATEquery($this->pObj->user_table, sprintf('uid = %u', $uid), $updateFields);
+		t3lib_div::devLog(sprintf('Automatic password update for user record in %s with uid %u', $this->pObj->user_table, $uid), $this->extKey, 1);
 	}
 
 	/**

@@ -26,7 +26,6 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/* $Id: class.tx_em_extensions_details.php 2058 2010-03-17 09:39:15Z steffenk $ */
 
 /**
  * This class handles extension details
@@ -52,7 +51,7 @@ class tx_em_Extensions_Details {
 	/**
 	 * Class for install extensions
 	 *
-	 * @var em_install
+	 * @var tx_em_Install
 	 */
 	public $install;
 
@@ -250,7 +249,7 @@ class tx_em_Extensions_Details {
 		if ($emConfFileContent) {
 
 			if (@is_file($emConfFileName)) {
-				if (t3lib_div::writeFile($emConfFileName, $emConfFileContent) === true) {
+				if (t3lib_div::writeFile($emConfFileName, $emConfFileContent) === TRUE) {
 					return sprintf($GLOBALS['LANG']->getLL('updateLocalEM_CONF_ok'),
 						substr($emConfFileName, strlen($absPath)));
 				} else {
@@ -580,8 +579,8 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 			);
 
 
-			// Installation status:
-			$techInfo = $this->install->makeDetailedExtensionAnalysis($extKey, $extInfo, 1);
+				// Installation status
+			$techInfo = $this->install->makeDetailedExtensionAnalysis($extKey, $extInfo, TRUE, FALSE);
 			$lines[] = array('<tr><td colspan="2">&nbsp;</td></tr>');
 			$lines[] = array('<tr class="t3-row-header"><td colspan="2"><strong>' . $GLOBALS['LANG']->getLL('extInfoArray_inst_status') . '</strong></td></tr>');
 
@@ -750,29 +749,6 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 				)
 			);
 		} else {
-			return '';
-		}
-	}
-
-
-	/**
-	 * Returns help text if applicable.
-	 *
-	 * @param	string		Help text key
-	 * @return	string		HTML table cell
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7
-	 */
-	function helpCol($key) {
-		global $BE_USER;
-		if ($BE_USER->uc['edit_showFieldHelp']) {
-			if (empty($key)) {
-				return '<td>&nbsp;</td>';
-			}
-			else {
-				return t3lib_BEfunc::cshItem($this->descrTable, 'emconf_' . $key, $GLOBALS['BACK_PATH'], '<td>|</td>');
-			}
-		}
-		else {
 			return '';
 		}
 	}

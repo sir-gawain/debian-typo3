@@ -27,23 +27,9 @@
 /**
  * Contains a class for formmail
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   69: class t3lib_formmail
- *   95:	 function start($V,$base64=false)
- *  172:	 function addAttachment($file, $filename)
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -100,7 +86,7 @@ class t3lib_formmail {
 	 * @param	boolean		Whether to base64 encode the mail content
 	 * @return	void
 	 */
-	function start($valueList, $base64 = false) {
+	function start($valueList, $base64 = FALSE) {
 
 		$this->mailMessage = t3lib_div::makeInstance('t3lib_mail_Message');
 
@@ -144,7 +130,7 @@ class t3lib_formmail {
 
 			$this->replyToAddress = ($valueList['replyto_email']) ? $valueList['replyto_email'] : $this->fromAddress;
 
-			$this->priority = ($valueList['priority']) ? t3lib_div::intInRange($valueList['priority'], 1, 5) : 3;
+			$this->priority = ($valueList['priority']) ? t3lib_utility_Math::forceIntegerInRange($valueList['priority'], 1, 5) : 3;
 
 				// auto responder
 			$this->autoRespondMessage = (trim($valueList['auto_respond_msg']) && $this->fromAddress)
@@ -264,7 +250,7 @@ class t3lib_formmail {
 		}
 		return $string;
 	}
-	
+
 	/**
 	 * Parses mailbox headers and turns them into an array.
 	 *

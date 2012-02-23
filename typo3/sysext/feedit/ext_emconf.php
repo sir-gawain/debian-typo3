@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext "feedit".
 #
-# Auto generated 26-01-2011 20:08
+# Auto generated 10-10-2011 14:47
 #
 # Manual updates:
 # Only the data in the array - everything else is removed by next
@@ -21,7 +21,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'conflicts' => '',
 	'priority' => '',
 	'module' => '',
-	'state' => 'beta',
+	'state' => 'stable',
 	'internal' => '',
 	'uploadfolder' => 0,
 	'createDirs' => '',
@@ -29,18 +29,18 @@ $EM_CONF[$_EXTKEY] = array(
 	'clearCacheOnLoad' => 0,
 	'lockType' => 'system',
 	'author_company' => 'Web-Empowered Church',
-	'version' => '0.1.0',
+	'version' => '1.0.0',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '4.4.0-0.0.0',
-			'php' => '5.2.0-0.0.0',
+			'php' => '5.3.0-0.0.0',
+			'typo3' => '4.6.0-0.0.0',
 		),
 		'conflicts' => array(
 		),
 		'suggests' => array(
 		),
 	),
-	'_md5_values_when_last_written' => 'a:3:{s:12:"ext_icon.gif";s:4:"9f86";s:17:"ext_localconf.php";s:4:"0933";s:34:"view/class.tx_feedit_editpanel.php";s:4:"7413";}',
+	'_md5_values_when_last_written' => 'a:3:{s:12:"ext_icon.gif";s:4:"9f86";s:17:"ext_localconf.php";s:4:"0933";s:34:"view/class.tx_feedit_editpanel.php";s:4:"9cdd";}',
 	'suggests' => array(
 	),
 );

@@ -29,23 +29,6 @@
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   68: class wslib
- *   81:     function getCmdArrayForPublishWS($wsid, $doSwap,$pageId=0)
- *  127:     function selectVersionsInWorkspace($wsid,$filter=0,$stage=-99,$pageId=-1)
- *
- *              SECTION: CLI functions
- *  183:     function CLI_main()
- *  193:     function autoPublishWorkspaces()
- *
- * TOTAL FUNCTIONS: 4
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 
 
@@ -125,15 +108,13 @@ class wslib {
 	 * @return	array		Array of all records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The REAL pid of the online record is found as "realpid"
 	 */
 	function selectVersionsInWorkspace($wsid,$filter=0,$stage=-99,$pageId=-1)	{
-		global $TCA;
-
 		$wsid = intval($wsid);
 		$filter = intval($filter);
 		$output = array();
 
 			// Traversing all tables supporting versioning:
-		foreach($TCA as $table => $cfg)	{
-			if ($TCA[$table]['ctrl']['versioningWS'])	{
+		foreach ($GLOBALS['TCA'] as $table => $cfg) {
+			if ($GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
 
 					// Select all records from this table in the database from the workspace
 					// This joins the online version with the offline version as tables A and B
@@ -179,17 +160,6 @@ class wslib {
 	 ****************************/
 
 	/**
-	 * Main function to call from cli-script
-	 *
-	 * @return	void
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7 - This was meant for an obsolete CLI script. You shouldn't be calling this.
-	 */
-	function CLI_main()	{
-		t3lib_div::logDeprecatedFunction();
-		$this->autoPublishWorkspaces();
-	}
-
-	/**
 	 * This method is called by the Scheduler task that triggers
 	 * the autopublication process
 	 * It searches for workspaces whose publication date is in the past
@@ -198,8 +168,6 @@ class wslib {
 	 * @return	void
 	 */
 	function autoPublishWorkspaces()	{
-		global $TYPO3_CONF_VARS;
-
 			// Temporarily set admin rights
 			// FIXME: once workspaces are cleaned up a better solution should be implemented
 		$currentAdminStatus = $GLOBALS['BE_USER']->user['admin'];

@@ -27,115 +27,15 @@
 /**
  * Contains class with layout/output function for TYPO3 Backend Scripts
  *
- * $Id$
  * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML-trans compliant
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *  145: function fw($str)
- *
- *
- *  169: class template
- *  224:     function template()
- *
- *              SECTION: EVALUATION FUNCTIONS
- *  298:     function wrapClickMenuOnIcon($str,$table,$uid='',$listFr=1,$addParams='',$enDisItems='', $returnOnClick=FALSE)
- *  315:     function viewPageIcon($id,$backPath,$addParams='hspace="3"')
- *  341:     function issueCommand($params,$rUrl='')
- *  356:     function isCMlayers()
- *  366:     function thisBlur()
- *  376:     function helpStyle()
- *  393:     function getHeader($table,$row,$path,$noViewPageIcon=0,$tWrap=array('',''))
- *  419:     function getFileheader($title,$path,$iconfile)
- *  434:     function makeShortcutIcon($gvList,$setList,$modName,$motherModName="")
- *  467:     function makeShortcutUrl($gvList,$setList)
- *  488:     function formWidth($size=48,$textarea=0,$styleOverride='')
- *  513:     function formWidthText($size=48,$styleOverride='',$wrap='')
- *  530:     function redirectUrls($thisLocation='')
- *  554:     function formatTime($tstamp,$type)
- *  571:     function parseTime()
- *
- *              SECTION: PAGE BUILDING FUNCTIONS.
- *  604:     function startPage($title)
- *  686:     function endPage()
- *  720:     function header($text)
- *  741:     function section($label,$text,$nostrtoupper=FALSE,$sH=FALSE,$type=0,$allowHTMLinHeader=FALSE)
- *  765:     function divider($dist)
- *  781:     function spacer($dist)
- *  800:     function sectionHeader($label,$sH=FALSE,$addAttrib='')
- *  817:     function sectionBegin()
- *  838:     function sectionEnd()
- *  858:     function middle()
- *  867:     function endPageJS()
- *  884:     function docBodyTagBegin()
- *  894:     function docStyle()
- *  936:     function insertStylesAndJS($content)
- *  956:     function initCharset()
- *  968:     function generator()
- *
- *              SECTION: OTHER ELEMENTS
- * 1001:     function icons($type, $styleAttribValue='')
- * 1030:     function t3Button($onClick,$label)
- * 1041:     function dfw($string)
- * 1051:     function rfw($string)
- * 1061:     function wrapInCData($string)
- * 1078:     function wrapScriptTags($string, $linebreak=TRUE)
- * 1117:     function table($arr, $layout='')
- * 1159:     function menuTable($arr1,$arr2=array(), $arr3=array())
- * 1192:     function funcMenu($content,$menu)
- * 1210:     function clearCacheMenu($id,$addSaveOptions=0)
- * 1246:     function getContextMenuCode()
- * 1251:     function showClickmenu(table, uid, listFr, enDisItems, backPath, addParams)
- * 1280:     function showClickmenu_noajax(url)
- * 1287:     function showClickmenu_ajax(t3ajax)
- * 1472:     function getDragDropCode($table)
- * 1483:     function cancelDragEvent(event)
- * 1496:     function mouseMoveEvent (event)
- * 1509:     function dragElement(id,elementID)
- * 1528:     function dropElement(id)
- * 1577:     function getTabMenu($mainParams,$elementName,$currentValue,$menuItems,$script='',$addparams='')
- * 1607:     function getTabMenuRaw($menuItems)
- * 1676:     function getDynTabMenu($menuItems,$identString,$toggle=0,$foldout=FALSE,$newRowCharLimit=50,$noWrap=1,$fullWidth=FALSE,$defaultTabIndex=1)
- * 1801:     function getDynTabMenuJScode()
- * 1892:     function getVersionSelector($id,$noAction=FALSE)
- *
- *
- * 2060: class bigDoc extends template
- *
- *
- * 2069: class noDoc extends template
- *
- *
- * 2078: class smallDoc extends template
- *
- *
- * 2087: class mediumDoc extends template
- *
- * TOTAL FUNCTIONS: 57
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 
 
 if (!defined('TYPO3_MODE'))	die("Can't include this file directly.");
-
-
-/**
- * Deprecated fontwrap function. Is just transparent now.
- *
- * @param	string		Input string
- * @return	string		Output string (in the old days this was wrapped in <font> tags)
- * @deprecated since TYPO3 3.6, will be removed in TYPO3 4.6
- */
-function fw($str) {
-	t3lib_div::logDeprecatedFunction();
-	return $str;
-}
 
 
 /**
@@ -182,7 +82,7 @@ class template {
 	var $endJS=1;					// If set, then a JavaScript section will be outputted in the bottom of page which will try and update the top.busy session expiry object.
 
 		// TYPO3 Colorscheme.
-		// If you want to change this, please do so through a skin using the global var $TBE_STYLES
+		// If you want to change this, please do so through a skin using the global var $GLOBALS['TBE_STYLES']
 	var $bgColor = '#F7F3EF';		// Light background color
 	var $bgColor2 = '#9BA1A8';		// Steel-blue
 	var $bgColor3 = '#F6F2E6';		// dok.color
@@ -225,7 +125,7 @@ class template {
 	);
 
 		// DEV:
-	var $parseTimeFlag = 0;			// Will output the parsetime of the scripts in milliseconds (for admin-users). Set this to false when releasing TYPO3. Only for dev.
+	var $parseTimeFlag = 0;			// Will output the parsetime of the scripts in milliseconds (for admin-users). Set this to FALSE when releasing TYPO3. Only for dev.
 
 		// INTERNAL
 	var $charset = 'iso-8859-1';	// Default charset. see function initCharset()
@@ -236,7 +136,7 @@ class template {
 	var $pageHeaderBlock = '';
 	var $endOfPageJsBlock = '';
 
-	var $hasDocheader = true;
+	var $hasDocheader = TRUE;
 
 	/**
 	 * @var t3lib_PageRenderer
@@ -255,13 +155,11 @@ class template {
 
 	/**
 	 * Constructor
-	 * Imports relevant parts from global $TBE_STYLES (colorscheme)
+	 * Imports relevant parts from global $GLOBALS['TBE_STYLES'] (colorscheme)
 	 *
 	 * @return	void
 	 */
-	function template()	{
-		global $TBE_STYLES;
-
+	function __construct()	{
 			// Initializes the page rendering object:
 		$this->getPageRenderer();
 
@@ -278,27 +176,27 @@ class template {
 		$this->bodyTagId = preg_replace('/[^A-Za-z0-9-]/','-',$this->scriptID);
 
 			// Individual configuration per script? If so, make a recursive merge of the arrays:
-		if (is_array($TBE_STYLES['scriptIDindex'][$this->scriptID]))	{
-			$ovr = $TBE_STYLES['scriptIDindex'][$this->scriptID];		// Make copy
-			$TBE_STYLES = t3lib_div::array_merge_recursive_overrule($TBE_STYLES,$ovr);		// merge styles.
-			unset($TBE_STYLES['scriptIDindex'][$this->scriptID]);	// Have to unset - otherwise the second instantiation will do it again!
+		if (is_array($GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID]))	{
+			$ovr = $GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID];		// Make copy
+			$GLOBALS['TBE_STYLES'] = t3lib_div::array_merge_recursive_overrule($GLOBALS['TBE_STYLES'],$ovr);		// merge styles.
+			unset($GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID]);	// Have to unset - otherwise the second instantiation will do it again!
 		}
 
 			// Color scheme:
-		if ($TBE_STYLES['mainColors']['bgColor'])	$this->bgColor=$TBE_STYLES['mainColors']['bgColor'];
-		if ($TBE_STYLES['mainColors']['bgColor1'])	$this->bgColor1=$TBE_STYLES['mainColors']['bgColor1'];
-		if ($TBE_STYLES['mainColors']['bgColor2'])	$this->bgColor2=$TBE_STYLES['mainColors']['bgColor2'];
-		if ($TBE_STYLES['mainColors']['bgColor3'])	$this->bgColor3=$TBE_STYLES['mainColors']['bgColor3'];
-		if ($TBE_STYLES['mainColors']['bgColor4'])	$this->bgColor4=$TBE_STYLES['mainColors']['bgColor4'];
-		if ($TBE_STYLES['mainColors']['bgColor5'])	$this->bgColor5=$TBE_STYLES['mainColors']['bgColor5'];
-		if ($TBE_STYLES['mainColors']['bgColor6'])	$this->bgColor6=$TBE_STYLES['mainColors']['bgColor6'];
-		if ($TBE_STYLES['mainColors']['hoverColor'])	$this->hoverColor=$TBE_STYLES['mainColors']['hoverColor'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor'])	$this->bgColor=$GLOBALS['TBE_STYLES']['mainColors']['bgColor'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor1'])	$this->bgColor1=$GLOBALS['TBE_STYLES']['mainColors']['bgColor1'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor2'])	$this->bgColor2=$GLOBALS['TBE_STYLES']['mainColors']['bgColor2'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor3'])	$this->bgColor3=$GLOBALS['TBE_STYLES']['mainColors']['bgColor3'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor4'])	$this->bgColor4=$GLOBALS['TBE_STYLES']['mainColors']['bgColor4'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor5'])	$this->bgColor5=$GLOBALS['TBE_STYLES']['mainColors']['bgColor5'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor6'])	$this->bgColor6=$GLOBALS['TBE_STYLES']['mainColors']['bgColor6'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['hoverColor'])	$this->hoverColor=$GLOBALS['TBE_STYLES']['mainColors']['hoverColor'];
 
 			// Main Stylesheets:
-		if ($TBE_STYLES['stylesheet'])	$this->styleSheetFile = $TBE_STYLES['stylesheet'];
-		if ($TBE_STYLES['stylesheet2'])	$this->styleSheetFile2 = $TBE_STYLES['stylesheet2'];
-		if ($TBE_STYLES['styleSheetFile_post'])	$this->styleSheetFile_post = $TBE_STYLES['styleSheetFile_post'];
-		if ($TBE_STYLES['inDocStyles_TBEstyle'])	$this->inDocStyles_TBEstyle = $TBE_STYLES['inDocStyles_TBEstyle'];
+		if ($GLOBALS['TBE_STYLES']['stylesheet'])	$this->styleSheetFile = $GLOBALS['TBE_STYLES']['stylesheet'];
+		if ($GLOBALS['TBE_STYLES']['stylesheet2'])	$this->styleSheetFile2 = $GLOBALS['TBE_STYLES']['stylesheet2'];
+		if ($GLOBALS['TBE_STYLES']['styleSheetFile_post'])	$this->styleSheetFile_post = $GLOBALS['TBE_STYLES']['styleSheetFile_post'];
+		if ($GLOBALS['TBE_STYLES']['inDocStyles_TBEstyle'])	$this->inDocStyles_TBEstyle = $GLOBALS['TBE_STYLES']['inDocStyles_TBEstyle'];
 
 			// include all stylesheets
 		foreach ($this->getSkinStylesheetDirectories() as $stylesheetDirectory) {
@@ -306,9 +204,21 @@ class template {
 		}
 
 			// Background image
-		if ($TBE_STYLES['background'])	$this->backGroundImage = $TBE_STYLES['background'];
+		if ($GLOBALS['TBE_STYLES']['background'])	$this->backGroundImage = $GLOBALS['TBE_STYLES']['background'];
 	}
 
+	/**
+	 * Compatibility constructor.
+	 *
+	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
+	 */
+	public function template() {
+		t3lib_div::logDeprecatedFunction();
+			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
+			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
+			// statically called non-static method inherits $this from the caller's scope.
+		template::__construct();
+	}
 
 	/**
 	 * Gets instance of PageRenderer
@@ -369,7 +279,7 @@ class template {
 	 * The link will load the top frame with the parameter "&item" which is the table,uid and listFr arguments imploded by "|": rawurlencode($table.'|'.$uid.'|'.$listFr)
 	 *
 	 * @param	string		String to be wrapped in link, typ. image tag.
-	 * @param	string		Table name/File path. If the icon is for a database record, enter the tablename from $TCA. If a file then enter the absolute filepath
+	 * @param	string		Table name/File path. If the icon is for a database record, enter the tablename from $GLOBALS['TCA']. If a file then enter the absolute filepath
 	 * @param	integer		If icon is for database record this is the UID for the record from $table
 	 * @param	boolean		Tells the top frame script that the link is coming from a "list" frame which means a frame from within the backend content frame.
 	 * @param	string		Additional GET parameters for the link to alt_clickmenu.php
@@ -380,7 +290,7 @@ class template {
 	function wrapClickMenuOnIcon($str,$table,$uid='',$listFr=1,$addParams='',$enDisItems='', $returnOnClick=FALSE)	{
 		$backPath = rawurlencode($this->backPath).'|'.t3lib_div::shortMD5($this->backPath.'|'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
 		$onClick = 'showClickmenu("'.$table.'","'.$uid.'","'.$listFr.'","'.str_replace('+','%2B',$enDisItems).'","'.str_replace('&','&amp;',addcslashes($backPath,'"')).'","'.str_replace('&','&amp;',addcslashes($addParams,'"')).'");return false;';
-		return $returnOnClick ? $onClick : '<a href="#" onclick="'.htmlspecialchars($onClick).'"'.($GLOBALS['TYPO3_CONF_VARS']['BE']['useOnContextMenuHandler'] ? ' oncontextmenu="'.htmlspecialchars($onClick).'"' : '').'>'.$str.'</a>';
+		return $returnOnClick ? $onClick : '<a href="#" onclick="'.htmlspecialchars($onClick).'" oncontextmenu="'.htmlspecialchars($onClick).'">'.$str.'</a>';
 	}
 
 	/**
@@ -395,7 +305,7 @@ class template {
 	 * @return	string		HTML string with linked icon(s)
 	 */
 	function viewPageIcon($id,$backPath,$addParams='hspace="3"')	{
-		global $BE_USER;
+
 			// If access to Web>List for user, then link to that module.
 		$str = t3lib_BEfunc::getListViewLink(
 			array(
@@ -434,37 +344,13 @@ class template {
 	}
 
 	/**
-	 * Returns true if click-menu layers can be displayed for the current user/browser
+	 * Returns TRUE if click-menu layers can be displayed for the current user/browser
 	 * Use this to test if click-menus (context sensitive menus) can and should be displayed in the backend.
 	 *
 	 * @return	boolean
 	 */
 	function isCMlayers()	{
 		return !$GLOBALS['BE_USER']->uc['disableCMlayers'] && $GLOBALS['CLIENT']['FORMSTYLE'] && !($GLOBALS['CLIENT']['SYSTEM']=='mac' && $GLOBALS['CLIENT']['BROWSER']=='Opera');
-	}
-
-	/**
-	 * Returns 'this.blur();' if the client supports CSS styles
-	 * Use this in links to remove the underlining after being clicked
-	 *
-	 * @return	string
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7
-	 */
-	function thisBlur()	{
-		t3lib_div::logDeprecatedFunction();
-		return ($GLOBALS['CLIENT']['FORMSTYLE']?'this.blur();':'');
-	}
-
-	/**
-	 * Returns ' style='cursor:help;'' if the client supports CSS styles
-	 * Use for <a>-links to help texts
-	 *
-	 * @return	string
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7
-	 */
-	function helpStyle()	{
-		t3lib_div::logDeprecatedFunction();
-		return $GLOBALS['CLIENT']['FORMSTYLE'] ? ' style="cursor:help;"':'';
 	}
 
 	/**
@@ -476,12 +362,11 @@ class template {
 	 * @param	string		Table name
 	 * @param	array		Record row
 	 * @param	string		Alt text
-	 * @param	boolean		Set $noViewPageIcon true if you don't want a magnifier-icon for viewing the page in the frontend
+	 * @param	boolean		Set $noViewPageIcon TRUE if you don't want a magnifier-icon for viewing the page in the frontend
 	 * @param	array		$tWrap is an array with indexes 0 and 1 each representing HTML-tags (start/end) which will wrap the title
 	 * @return	string		HTML content
 	 */
 	function getHeader($table,$row,$path,$noViewPageIcon=0,$tWrap=array('',''))	{
-		global $TCA;
 		if (is_array($row) && $row['uid'])	{
 			$iconImgTag=t3lib_iconWorks::getSpriteIconForRecord($table, $row , array('title' => htmlspecialchars($path)));
 			$title = strip_tags(t3lib_BEfunc::getRecordTitle($table, $row));
@@ -845,12 +730,14 @@ class template {
 					}
 				});
 			}
-		');
+			',
+			FALSE
+		);
 
 		$this->pageRenderer->addHeaderData($this->JScode);
 
 		foreach ($this->JScodeArray as $name => $code) {
-			$this->pageRenderer->addJsInlineCode($name, $code);
+			$this->pageRenderer->addJsInlineCode($name, $code, FALSE);
 		}
 
 		if (count($this->JScodeLibArray)) {
@@ -914,7 +801,9 @@ $str.=$this->docBodyTagBegin().
 			// if something is in buffer like debug, put it to end of page
 		if (ob_get_contents()) {
 			$str .= ob_get_clean();
-			header('Content-Encoding: None');
+			if (!headers_sent()) {
+				header('Content-Encoding: None');
+			}
 		}
 
 		if ($this->docType !== 'xhtml_frames') {
@@ -927,7 +816,7 @@ $str.=$this->docBodyTagBegin().
 
 
 			// Logging: Can't find better place to put it:
-		if (TYPO3_DLOG)	t3lib_div::devLog('END of BACKEND session', 'template', 0, array('_FLUSH' => true));
+		if (TYPO3_DLOG)	t3lib_div::devLog('END of BACKEND session', 'template', 0, array('_FLUSH' => TRUE));
 
 		return $str;
 	}
@@ -1050,7 +939,7 @@ $str.=$this->docBodyTagBegin().
 
 	/**
 	 * Begins an output section.
-	 * Returns the <div>-begin tag AND sets the ->sectionFlag true (if the ->sectionFlag is not already set!)
+	 * Returns the <div>-begin tag AND sets the ->sectionFlag TRUE (if the ->sectionFlag is not already set!)
 	 * You can call this function even if a section is already begun since the function will only return something if the sectionFlag is not already set!
 	 *
 	 * @return	string		HTML content
@@ -1089,20 +978,8 @@ $str.=$this->docBodyTagBegin().
 	}
 
 	/**
-	 * Originally it printed a kind of divider.
-	 * Deprecated. Just remove function calls to it or call the divider() function instead.
-	 *
-	 * @return	void
-	 * @internal
-	 * @deprecated since TYPO3 3.6, will be removed in TYPO3 4.6
-	 */
-	function middle()	{
-		t3lib_div::logDeprecatedFunction();
-	}
-
-	/**
 	 * If a form-tag is defined in ->form then and end-tag for that <form> element is outputted
-	 * Further a JavaScript section is outputted which will update the top.busy session-expiry object (unless $this->endJS is set to false)
+	 * Further a JavaScript section is outputted which will update the top.busy session-expiry object (unless $this->endJS is set to FALSE)
 	 *
 	 * @return	string		HTML content (<script> tag section)
 	 */
@@ -1239,7 +1116,7 @@ $str.=$this->docBodyTagBegin().
 				$skinStylesheetDirs = $this->stylesheetsSkins;
 
 					// skins can add custom stylesheetDirectories using
-					// $TBE_STYLES['skins'][$_EXTKEY]['stylesheetDirectories']
+					// $GLOBALS['TBE_STYLES']['skins'][$_EXTKEY]['stylesheetDirectories']
 				if (is_array($skin['stylesheetDirectories'])) {
 					$skinStylesheetDirs = array_merge($skinStylesheetDirs, $skin['stylesheetDirectories']);
 				}
@@ -1533,23 +1410,30 @@ $str.=$this->docBodyTagBegin().
 	 * @param	integer		The page uid of the "current page" - the one that will be cleared as "clear cache for this page".
 	 * @param	boolean		If $addSaveOptions is set, then also the array of save-options for TCE_FORMS will appear.
 	 * @return	string		<select> tag with content - a selector box for clearing the cache
+	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 4.8
 	 */
 	function clearCacheMenu($id,$addSaveOptions=0)	{
-		global $BE_USER;
+		t3lib_div::logDeprecatedFunction();
 		$opt=array();
 		if ($addSaveOptions)	{
 			$opt[]='<option value="">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.menu',1).'</option>';
 			$opt[]='<option value="TBE_EDITOR.checkAndDoSubmit(1);">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc',1).'</option>';
 			$opt[]='<option value="document.editform.closeDoc.value=-2; TBE_EDITOR.checkAndDoSubmit(1);">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc',1).'</option>';
-			if ($BE_USER->uc['allSaveFunctions'])	$opt[]='<option value="document.editform.closeDoc.value=-3; TBE_EDITOR.checkAndDoSubmit(1);">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseAllDocs',1).'</option>';
+			if ($GLOBALS['BE_USER']->uc['allSaveFunctions']) {
+				$opt[] = '<option value="document.editform.closeDoc.value=-3; TBE_EDITOR.checkAndDoSubmit(1);">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseAllDocs', 1) . '</option>';
+			}
 			$opt[]='<option value="document.editform.closeDoc.value=2; document.editform.submit();">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc',1).'</option>';
 			$opt[]='<option value="document.editform.closeDoc.value=3; document.editform.submit();">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeAllDocs',1).'</option>';
 			$opt[]='<option value=""></option>';
 		}
 		$opt[]='<option value="">[ '.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.clearCache_clearCache',1).' ]</option>';
 		if ($id) $opt[]='<option value="'.$id.'">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.clearCache_thisPage',1).'</option>';
-		if ($BE_USER->isAdmin() || $BE_USER->getTSConfigVal('options.clearCache.pages')) $opt[]='<option value="pages">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.clearCache_pages',1).'</option>';
-		if ($BE_USER->isAdmin() || $BE_USER->getTSConfigVal('options.clearCache.all')) $opt[]='<option value="all">'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.clearCache_all',1).'</option>';
+		if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->getTSConfigVal('options.clearCache.pages')) {
+			$opt[] = '<option value="pages">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.clearCache_pages', 1) . '</option>';
+		}
+		if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->getTSConfigVal('options.clearCache.all')) {
+			$opt[] = '<option value="all">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.clearCache_all', 1) . '</option>';
+		}
 
 		$onChange = 'if (!this.options[this.selectedIndex].value) {
 				this.selectedIndex=0;
@@ -1557,7 +1441,7 @@ $str.=$this->docBodyTagBegin().
 				eval(this.options[this.selectedIndex].value);
 			} else {
 				window.location.href=\'' . $this->backPath .
-						'tce_db.php?vC=' . $BE_USER->veriCode() .
+						'tce_db.php?vC=' . $GLOBALS['BE_USER']->veriCode() .
 						t3lib_BEfunc::getUrlToken('tceAction') .
 						'&redirect=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')) .
 						'&cacheCmd=\'+this.options[this.selectedIndex].value;
@@ -1597,9 +1481,6 @@ $str.=$this->docBodyTagBegin().
 	       $this->JScodeArray['clickmenu'] = '
 			       Clickmenu.clickURL = "'.$this->backPath.'alt_clickmenu.php";
 			       Clickmenu.ajax     = '.($this->isCMLayers() ? 'true' : 'false' ).';';
-
-		       // return array deprecated since 4.2
-	       return array('','','');
 	}
 
 	/**
@@ -1620,9 +1501,6 @@ $str.=$this->docBodyTagBegin().
 			DragDrop.backPath  = "'.t3lib_div::shortMD5(''.'|'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']).'";
 			DragDrop.table     = "'.$table.'";
 		';
-
-		       // return array deprecated since 4.2
-	       return array('','','');
 	}
 
 	 /**
@@ -1736,14 +1614,13 @@ $str.=$this->docBodyTagBegin().
 	 * @param	string		Identification string. This should be unique for every instance of a dynamic menu!
 	 * @param	integer		If "1", then enabling one tab does not hide the others - they simply toggles each sheet on/off. This makes most sense together with the $foldout option. If "-1" then it acts normally where only one tab can be active at a time BUT you can click a tab and it will close so you have no active tabs.
 	 * @param	boolean		If set, the tabs are rendered as headers instead over each sheet. Effectively this means there is no tab menu, but rather a foldout/foldin menu. Make sure to set $toggle as well for this option.
-	 * @param	integer		Character limit for a new row, 0 by default, because this parameter is deprecated since TYPO3 4.5
 	 * @param	boolean		If set, tab table cells are not allowed to wrap their content
 	 * @param	boolean		If set, the tabs will span the full width of their position
 	 * @param	integer		Default tab to open (for toggle <=0). Value corresponds to integer-array index + 1 (index zero is "1", index "1" is 2 etc.). A value of zero (or something non-existing) will result in no default tab open.
 	 * @param	integer		If set to '1' empty tabs will be remove, If set to '2' empty tabs will be disabled
 	 * @return	string		JavaScript section for the HTML header.
 	 */
-	public function getDynTabMenu($menuItems, $identString, $toggle = 0, $foldout = FALSE, $newRowCharLimit = 0, $noWrap = 1, $fullWidth = FALSE, $defaultTabIndex = 1, $dividers2tabs = 2) {
+	public function getDynTabMenu($menuItems, $identString, $toggle = 0, $foldout = FALSE, $noWrap = 1, $fullWidth = FALSE, $defaultTabIndex = 1, $dividers2tabs = 2) {
 			// load the static code, if not already done with the function below
 		$this->loadJavascriptLib('js/tabmenu.js');
 
@@ -1768,7 +1645,7 @@ $str.=$this->docBodyTagBegin().
 				$index += 1;
 
 					// Switch to next tab row if needed
-				if (!$foldout && (($newRowCharLimit > 0 && $titleLenCount > $newRowCharLimit) | ($def['newline'] === TRUE && $titleLenCount > 0))) {
+				if (!$foldout && ($def['newline'] === TRUE && $titleLenCount > 0)) {
 					$titleLenCount=0;
 					$tabRows++;
 					$options[$tabRows] = array();
@@ -1887,22 +1764,6 @@ $str.=$this->docBodyTagBegin().
 	}
 
 	/**
-	 * Returns dynamic tab menu header JS code.
-	 * This is now incorporated automatically when the function template::getDynTabMenu is called
-	 * (as long as it is called before $this->startPage())
-	 * The return value is not needed anymore
-	 *
-	 * @deprecated since TYPO3 4.5, as the getDynTabMenu() function includes the function automatically since TYPO3 4.3
-	 * @return	string		JavaScript section for the HTML header. (return value is deprecated since TYPO3 4.3, will be removed in TYPO3 4.5)
-	 */
-	function getDynTabMenuJScode()	{
-		t3lib_div::logDeprecatedFunction();
-		$this->loadJavascriptLib('js/tabmenu.js');
-		// return value deprecated since TYPO3 4.3
-		return '';
-	}
-
-	/**
 	 * Creates the version selector for the page id inputted.
 	 * Requires the core version management extension, "version" to be loaded.
 	 *
@@ -1933,14 +1794,14 @@ $str.=$this->docBodyTagBegin().
 		}
 		if (t3lib_div::isFirstPartOfStr($filename, 'EXT:')) {
 			$filename = t3lib_div::getFileAbsFileName($filename, TRUE, TRUE);
-		} else if (!t3lib_div::isAbsPath($filename)) {
+		} elseif (!t3lib_div::isAbsPath($filename)) {
 			$filename = t3lib_div::resolveBackPath($this->backPath . $filename);
-		} else if (!t3lib_div::isAllowedAbsPath($filename)) {
+		} elseif (!t3lib_div::isAllowedAbsPath($filename)) {
 			$filename = '';
 		}
 		$htmlTemplate = '';
 		if ($filename !== '') {
-			$htmlTemplate = t3lib_div::getURL($filename);
+			$htmlTemplate = t3lib_div::getUrl($filename);
 		}
 		return $htmlTemplate;
 	}
@@ -1971,20 +1832,6 @@ $str.=$this->docBodyTagBegin().
 		$moduleBody = t3lib_parsehtml::getSubpart($this->moduleTemplate, '###FULLDOC###');
 			// Add CSS
 		$this->inDocStylesArray[] = 'html { overflow: hidden; }';
-			// Add JS code to the <head> for IE
-		$this->JScode.= $this->wrapScriptTags('
-				// workaround since IE6 cannot deal with relative height for scrolling elements
-			function resizeDocBody()	{
-				$("typo3-docbody").style.height = (document.body.offsetHeight - parseInt($("typo3-docheader").getStyle("height")));
-			}
-			if (Prototype.Browser.IE) {
-				var version = parseFloat(navigator.appVersion.split(\';\')[1].strip().split(\' \')[1]);
-				if (version == 6) {
-					Event.observe(window, "resize", resizeDocBody, false);
-					Event.observe(window, "load", resizeDocBody, false);
-				}
-			}
-		');
 
 			// Get the page path for the docheader
 		$markerArray['PAGEPATH'] = $this->getPagePath($pageRecord);
@@ -2050,7 +1897,7 @@ $str.=$this->docBodyTagBegin().
 				// Get the template for each float
 			$buttonTemplate = t3lib_parsehtml::getSubpart($this->moduleTemplate, '###BUTTON_GROUPS_' . strtoupper($key) . '###');
 				// Fill the button markers in this float
-			$buttonTemplate = t3lib_parsehtml::substituteMarkerArray($buttonTemplate, $buttons, '###|###', true);
+			$buttonTemplate = t3lib_parsehtml::substituteMarkerArray($buttonTemplate, $buttons, '###|###', TRUE);
 				// getting the wrap for each group
 			$buttonWrap = t3lib_parsehtml::getSubpart($this->moduleTemplate, '###BUTTON_GROUP_WRAP###');
 				// looping through the groups (max 6) and remove the empty groups
@@ -2096,7 +1943,7 @@ $str.=$this->docBodyTagBegin().
 				// remove current page title
 			$pos = strrpos($title, '/');
 			if ($pos !== FALSE) {
-				$title = substr($title, 0, $pos) . '/';
+				$title = substr($title, 0, $pos);
 			}
 		} else {
 			$title = '';
@@ -2124,7 +1971,7 @@ $str.=$this->docBodyTagBegin().
 	 * @return	string	Page info
 	 */
 	protected function getPageInfo($pageRecord) {
-		global $BE_USER;
+
 				// Add icon with clickmenu, etc:
 		if ($pageRecord['uid'])	{	// If there IS a real page
 			$alttext = t3lib_BEfunc::getRecordIconAltText($pageRecord, 'pages');
@@ -2136,7 +1983,7 @@ $str.=$this->docBodyTagBegin().
 		} else {	// On root-level of page tree
 				// Make Icon
 			$iconImg = t3lib_iconWorks::getSpriteIcon('apps-pagetree-root', array('title' => htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'])));
-			if($BE_USER->user['admin']) {
+			if ($GLOBALS['BE_USER']->user['admin']) {
 				$theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg, 'pages', 0);
 			} else {
 				$theIcon = $iconImg;
@@ -2298,7 +2145,7 @@ class frontendDoc extends template {
 		}
 		if (count($this->JScodeArray)) {
 			foreach ($this->JScodeArray as $name => $code) {
-				$this->pageRenderer->addJsInlineCode($name, $code);
+				$this->pageRenderer->addJsInlineCode($name, $code, FALSE);
 			}
 		}
 	}

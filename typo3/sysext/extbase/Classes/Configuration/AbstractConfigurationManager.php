@@ -53,6 +53,11 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	protected $objectManager;
 
 	/**
+	 * @var Tx_Extbase_Service_TypoScriptService
+	 */
+	protected $typoScriptService;
+
+	/**
 	 * name of the extension this Configuration Manager instance belongs to
 	 * @var string
 	 */
@@ -72,11 +77,19 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	protected $configurationCache = array();
 
 	/**
-	 * @param Tx_Extbase_Object_ManagerInterface $objectManager
+	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
 	 * @return void
 	 */
 	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
+	}
+
+	/**
+	 * @param Tx_Extbase_Service_TypoScriptService $typoScriptService
+	 * @return void
+	 */
+	public function injectTypoScriptService(Tx_Extbase_Service_TypoScriptService $typoScriptService) {
+		$this->typoScriptService = $typoScriptService;
 	}
 
 	/**
@@ -91,7 +104,9 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	 * @return tslib_cObj
 	 */
 	public function getContentObject() {
-		return $this->contentObject;
+		if ($this->contentObject !== NULL) {
+			return $this->contentObject;
+		}
 	}
 
 	/**
@@ -105,9 +120,9 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 		// reset 1st level cache
 		$this->configurationCache = array();
 
-		$this->extensionName = $configuration['extensionName'];
-		$this->pluginName = $configuration['pluginName'];
-		$this->configuration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($configuration);
+		$this->extensionName = isset($configuration['extensionName']) ? $configuration['extensionName'] : NULL;
+		$this->pluginName = isset($configuration['pluginName']) ? $configuration['pluginName'] : NULL;
+		$this->configuration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($configuration);
 	}
 
 	/**
@@ -165,10 +180,14 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 				 * stdWrap. Than we convert the configuration to normal TypoScript
 				 * and apply the stdWrap to the storagePid
 				 */
-			Tx_Extbase_Utility_FrontendSimulator::simulateFrontendEnvironment($this->getContentObject());
-			$conf = Tx_Extbase_Utility_TypoScript::convertPlainArrayToTypoScriptArray($frameworkConfiguration['persistence']);
-			$frameworkConfiguration['persistence']['storagePid'] = $GLOBALS['TSFE']->cObj->stdWrap($conf['storagePid'], $conf['storagePid.']);
-			Tx_Extbase_Utility_FrontendSimulator::resetFrontendEnvironment();
+			if (TYPO3_MODE !== 'FE') {
+				Tx_Extbase_Utility_FrontendSimulator::simulateFrontendEnvironment($this->getContentObject());
+			}
+			$configuration = $this->typoScriptService->convertPlainArrayToTypoScriptArray($frameworkConfiguration['persistence']);
+			$frameworkConfiguration['persistence']['storagePid'] = $GLOBALS['TSFE']->cObj->stdWrap($configuration['storagePid'], $configuration['storagePid.']);
+			if (TYPO3_MODE !== 'FE') {
+				Tx_Extbase_Utility_FrontendSimulator::resetFrontendEnvironment();
+			}
 		}
 
 		// 1st level cache
@@ -185,7 +204,7 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 		$setup = $this->getTypoScriptSetup();
 		$extbaseConfiguration = array();
 		if (isset($setup['config.']['tx_extbase.'])) {
-			$extbaseConfiguration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['config.']['tx_extbase.']);
+			$extbaseConfiguration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['config.']['tx_extbase.']);
 		}
 		return $extbaseConfiguration;
 	}
@@ -236,7 +255,7 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	 *
 	 * @return array the TypoScript setup
 	 */
-	abstract protected function getTypoScriptSetup();
+	abstract public function getTypoScriptSetup();
 
 	/**
 	 * Returns the TypoScript configuration found in plugin.tx_yourextension_yourplugin / module.tx_yourextension_yourmodule

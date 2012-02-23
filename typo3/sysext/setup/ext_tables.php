@@ -111,33 +111,26 @@ $GLOBALS['TYPO3_USER_SETTINGS'] = array(
 			'label' => 'LLL:EXT:setup/mod/locallang.xml:resizeTextareas',
 			'csh' => 'resizeTextareas',
 		),
-		'resizeTextareas_MaxHeight' => array(
-			'type' => 'text',
-			'label' => 'LLL:EXT:setup/mod/locallang.xml:resizeTextareas_MaxHeight',
-			'csh' => 'resizeTextareas_MaxHeight',
-		),
 		'resizeTextareas_Flexible' => array(
 			'type' => 'check',
 			'label' => 'LLL:EXT:setup/mod/locallang.xml:resizeTextareas_Flexible',
 			'csh' => 'resizeTextareas_Flexible',
+		),
+		'resizeTextareas_MaxHeight' => array(
+			'type' => 'text',
+			'label' => 'LLL:EXT:setup/mod/locallang.xml:flexibleTextareas_MaxHeight',
+			'csh' => 'flexibleTextareas_MaxHeight',
 		),
 		'debugInWindow' => array(
 			'type' => 'check',
 			'label' => 'LLL:EXT:setup/mod/locallang.xml:debugInWindow',
 			'access' => 'admin',
 		),
-		'installToolEnableButton' => array(
-			'type' => 'user',
-			'label' => 'LLL:EXT:setup/mod/locallang.xml:enableInstallTool.label',
-			'userFunc' => 'SC_mod_user_setup_index->renderInstallToolEnableFileButton',
-			'access' => 'admin',
-			'csh' => 'enableInstallTool'
-		),
 	),
 	'showitem' => '--div--;LLL:EXT:setup/mod/locallang.xml:personal_data,realName,email,emailMeAtLogin,password,password2,lang,
 			--div--;LLL:EXT:setup/mod/locallang.xml:opening,startModule,thumbnailsByDefault,titleLen,
-			--div--;LLL:EXT:setup/mod/locallang.xml:editFunctionsTab,edit_RTE,edit_wideDocument,edit_docModuleUpload,enableFlashUploader,resizeTextareas,resizeTextareas_MaxHeight,resizeTextareas_Flexible,disableCMlayers,copyLevels,recursiveDelete,
-			--div--;LLL:EXT:setup/mod/locallang.xml:adminFunctions,simulate,debugInWindow,installToolEnableButton'
+			--div--;LLL:EXT:setup/mod/locallang.xml:editFunctionsTab,edit_RTE,edit_wideDocument,edit_docModuleUpload,enableFlashUploader,resizeTextareas,resizeTextareas_Flexible,resizeTextareas_MaxHeight,disableCMlayers,copyLevels,recursiveDelete,
+			--div--;LLL:EXT:setup/mod/locallang.xml:adminFunctions,simulate,debugInWindow'
 
 );
 ?>

@@ -24,8 +24,6 @@
  ***************************************************************/
 /**
  * Module: Extension manager - Extension.xml push-parser
- *
- * $Id: class.tx_em_parser_extensionxmlpushparser.php 1913 2010-02-21 15:47:37Z mkrause $
  */
 
 
@@ -55,6 +53,13 @@ class tx_em_Parser_ExtensionXmlPushParser extends tx_em_Parser_ExtensionXmlAbstr
 	 * @var  string
 	 */
 	protected $element = NULL;
+
+	/**
+	 * Keeps list of attached observers.
+	 *
+	 * @var  SplObserver[]
+	 */
+	protected $observers = array();
 
 	/**
 	 * Class constructor.
@@ -90,11 +95,11 @@ class tx_em_Parser_ExtensionXmlPushParser extends tx_em_Parser_ExtensionXmlAbstr
 		xml_set_character_data_handler($this->objXML, 'characterData');
 
 		if (!($fp = fopen($file, "r"))) {
-			$this->throwException(sprintf('Unable to open file ressource %s.', htmlspecialchars($file)));
+			$this->throwException(sprintf('Unable to open file resource %s.', htmlspecialchars($file)));
 		}
 		while ($data = fread($fp, 4096)) {
 			if (!xml_parse($this->objXML, $data, feof($fp))) {
-				$this->throwException(sprintf('XML error %s in line %u of file ressource %s.',
+				$this->throwException(sprintf('XML error %s in line %u of file resource %s.',
 					xml_error_string(xml_get_error_code($this->objXML)),
 					xml_get_current_line_number($this->objXML),
 					htmlspecialchars($file)));
@@ -106,7 +111,7 @@ class tx_em_Parser_ExtensionXmlPushParser extends tx_em_Parser_ExtensionXmlAbstr
 	/**
 	 * Method is invoked when parser accesses start tag of an element.
 	 *
-	 * @param   ressource  $parser parser resource
+	 * @param   resource  $parser parser resource
 	 * @param   string	 $elementName: element name at parser's current position
 	 * @param   array	  $attrs: array of an element's attributes if available
 	 * @return  void
@@ -127,7 +132,7 @@ class tx_em_Parser_ExtensionXmlPushParser extends tx_em_Parser_ExtensionXmlAbstr
 	/**
 	 * Method is invoked when parser accesses end tag of an element.
 	 *
-	 * @param   ressource  $parser parser resource
+	 * @param   resource  $parser parser resource
 	 * @param   string	 $elementName: element name at parser's current position
 	 * @return  void
 	 */
@@ -148,7 +153,7 @@ class tx_em_Parser_ExtensionXmlPushParser extends tx_em_Parser_ExtensionXmlAbstr
 	/**
 	 * Method is invoked when parser accesses any character other than elements.
 	 *
-	 * @param   ressource  $parser: parser ressource
+	 * @param   resource  $parser: parser resource
 	 * @param   string	 $data: an element's value
 	 * @return  void
 	 */
@@ -224,8 +229,8 @@ class tx_em_Parser_ExtensionXmlPushParser extends tx_em_Parser_ExtensionXmlAbstr
 	 * @return  void
 	 */
 	public function detach(SplObserver $observer) {
-		$key = array_search($observer, $this->observers, true);
-		if (!($key === false)) {
+		$key = array_search($observer, $this->observers, TRUE);
+		if (!($key === FALSE)) {
 			unset($this->observers[$key]);
 		}
 	}

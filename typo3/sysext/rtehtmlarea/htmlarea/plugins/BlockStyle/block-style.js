@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-* (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+* (c) 2007-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,13 +28,8 @@
 ***************************************************************/
 /*
  * Block Style Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
-	constructor : function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.BlockStyle = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -43,6 +38,7 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 		this.classesUrl = this.editorConfiguration.classesUrl;
 		this.pageTSconfiguration = this.editorConfiguration.buttons.blockstyle;
 		this.tags = (this.pageTSconfiguration && this.pageTSconfiguration.tags) ? this.pageTSconfiguration.tags : {};
+			// classesTag is DEPRECATED as of TYPO3 4.6 and will be removed#in TYPO3 4.8
 		if (typeof(this.editorConfiguration.classesTag) !== "undefined") {
 			if (this.editorConfiguration.classesTag.div) {
 				if (!this.tags.div) {
@@ -83,6 +79,7 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 				}
 			}
 		}
+			// Property this.editorConfiguration.showTagFreeClasses is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
 		this.showTagFreeClasses = (this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false) || this.editorConfiguration.showTagFreeClasses;
 		this.prefixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.prefixLabelWithClassName : false;
 		this.postfixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.postfixLabelWithClassName : false;
@@ -90,7 +87,7 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '2.1',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -219,6 +216,11 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 			tags: this.tags,
 			editor: this.editor
 		});
+			// Disable the combo while initialization completes
+		var dropDown = this.getButton('BlockStyle');
+		if (dropDown) {
+			dropDown.setDisabled(true);
+		}
 			// Monitor css parsing being completed
 		this.editor.iframe.mon(this.blockStyles, 'HTMLAreaEventCssParsingComplete', this.onCssParsingComplete, this);
 		this.blockStyles.initiateParsing();
@@ -229,16 +231,16 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 	onCssParsingComplete: function () {
 		if (this.blockStyles.isReady) {
 			this.cssArray = this.blockStyles.getClasses();
-		}
-		if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
-			this.updateValue('BlockStyle');
+			if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
+				this.updateValue('BlockStyle');
+			}
 		}
 	},
 	/*
 	 * This handler gets called when the toolbar is being updated
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
-		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+		if (mode === 'wysiwyg' && this.editor.isEditable() && this.blockStyles.isReady) {
 			this.updateValue(button.itemId);
 		}
 	},
@@ -303,7 +305,8 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 			}
 			Ext.iterate(allowedClasses, function (cssClass, value) {
 				var style = null;
-				if (!this.editor.config.disablePCexamples) {
+					// this.editor.config.disablePCexamples is deprecated as of TYPO3 4.6 and will be removed in TYPO 4.8
+				if (!this.pageTSconfiguration.disableStyleOnOptionLabel && !this.editor.config.disablePCexamples) {
 					if (HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) {
 						style = HTMLArea.classesValues[cssClass];
 					} else if (/-[0-9]+$/.test(cssClass) && HTMLArea.classesValues[RegExp.leftContext + '-'])  {

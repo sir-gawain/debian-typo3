@@ -64,8 +64,6 @@
  * </pre>
  *
  *
- * $Id$
- *
  * @package TYPO3
  * @subpackage t3lib
  *
@@ -137,16 +135,6 @@ class t3lib_formprotection_InstallToolFormProtection extends t3lib_formProtectio
 	 */
 	public function persistSessionToken() {
 		$_SESSION['installToolFormToken'] = $this->sessionToken;
-	}
-
-	/**
-	 * This method was once used for persisting all tokens.
-	 *
-	 * @deprecated since TYPO3 4.5.3, will be removed in TYPO3 4.7
-	 * @return void
-	 */
-	public function persistTokens() {
-		t3lib_div::logDeprecatedFunction();
 	}
 }
 

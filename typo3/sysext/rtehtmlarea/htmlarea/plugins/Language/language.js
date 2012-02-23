@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,20 +26,12 @@
 ***************************************************************/
 /*
  * Language Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.Language = HTMLArea.Plugin.extend({
-
-	constructor : function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
-
+HTMLArea.Language = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin : function (editor) {
-
+	configurePlugin: function (editor) {
 		/*
 		 * Setting up some properties from PageTSConfig
 		 */
@@ -71,7 +63,7 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '2.1',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -146,7 +138,7 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 					try {
 						styleSheet.insertRule(rule, styleSheet.cssRules.length);
 					} catch (e) {
-						this.appendToLog("onGenerate", "Error inserting css rule: " + rule + " Error text: " + e);
+						this.appendToLog('onGenerate', 'Error inserting css rule: ' + rule + ' Error text: ' + e, 'warn');
 					}
 				} else {
 					styleSheet.addRule(selector, style);

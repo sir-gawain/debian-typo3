@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,19 +26,11 @@
 ***************************************************************/
 /*
  * Text Style Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
 /*
  * Creation of the class of TextStyle plugins
  */
-HTMLArea.TextStyle = HTMLArea.Plugin.extend({
-	/*
-	 * Let the base class do some initialization work
-	 */
-	constructor: function (editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -47,6 +39,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 		this.classesUrl = this.editorConfiguration.classesUrl;
 		this.pageTSconfiguration = this.editorConfiguration.buttons.textstyle;
 		this.tags = (this.pageTSconfiguration && this.pageTSconfiguration.tags) ? this.pageTSconfiguration.tags : {};
+			// classesTag is DEPRECATED as of TYPO3 4.6 and will be removed#in TYPO3 4.8
 		if (typeof(this.editorConfiguration.classesTag) !== "undefined") {
 			if (this.editorConfiguration.classesTag.span) {
 				if (!this.tags.span) {
@@ -71,6 +64,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				}
 			}
 		}
+			// Property this.editorConfiguration.showTagFreeClasses is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
 		this.showTagFreeClasses = (this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false) || this.editorConfiguration.showTagFreeClasses;
 		this.prefixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.prefixLabelWithClassName : false;
 		this.postfixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.postfixLabelWithClassName : false;
@@ -88,7 +82,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.1',
+			version		: '2.2',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -228,6 +222,11 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 			tags: this.tags,
 			editor: this.editor
 		});
+			// Disable the combo while initialization completes
+		var dropDown = this.getButton('TextStyle');
+		if (dropDown) {
+			dropDown.setDisabled(true);
+		}
 			// Monitor css parsing being completed
 		this.editor.iframe.mon(this.textStyles, 'HTMLAreaEventCssParsingComplete', this.onCssParsingComplete, this);
 		this.textStyles.initiateParsing();
@@ -238,16 +237,16 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 	onCssParsingComplete: function () {
 		if (this.textStyles.isReady) {
 			this.cssArray = this.textStyles.getClasses();
-		}
-		if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
-			this.updateToolbar('TextStyle');
+			if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
+				this.updateToolbar('TextStyle');
+			}
 		}
 	},
 	/*
 	 * This handler gets called when the toolbar is being updated
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
-		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+		if (mode === 'wysiwyg' && this.editor.isEditable() && this.textStyles.isReady) {
 			this.updateToolbar(button.itemId);
 		}
 	},
@@ -345,7 +344,8 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				store.add(new store.recordType({
 					text: value,
 					value: cssClass,
-					style: (!this.editor.config.disablePCexamples && HTMLArea.classesValues && HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) ? HTMLArea.classesValues[cssClass] : null
+						// this.editor.config.disablePCexamples is deprecated as of TYPO3 4.6 and will be removed in TYPO 4.8
+					style: (!(this.pageTSconfiguration && this.pageTSconfiguration.disableStyleOnOptionLabel) && !this.editor.config.disablePCexamples && HTMLArea.classesValues && HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) ? HTMLArea.classesValues[cssClass] : null
 				}));
 			}, this);
 		}

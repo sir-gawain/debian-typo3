@@ -1,11 +1,11 @@
 <?php
 /*                                                                        *
- * This script belongs to the FLOW3 package "Fluid".                      *
+ * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License as published by the *
- * Free Software Foundation, either version 3 of the License, or (at your *
- * option) any later version.                                             *
+ * the terms of the GNU Lesser General Public License, either version 3   *
+ *  of the License, or (at your option) any later version.                *
+ *                                                                        *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -34,15 +34,12 @@
  * </output>
  *
  * <code title="Default">
- * <f:be.buttons.icon uri="{f:uri.action(action='new')}" icon="new_el" title="Create new Foo" />
+ * <f:be.buttons.icon uri="{f:uri.action(action:'new')}" icon="new_el" title="Create new Foo" />
  * </code>
  * <output>
  * This time the "new_el" icon is returned, the button has the title attribute set and links to the "new" action of the current controller.
  * </output>
  *
- * @author Steffen Kamper <info@sk-typo3.de>
- * @author Bastian Waidelich <bastian@typo3.org>
- * @license http://www.gnu.org/copyleft/gpl.html
  */
 class Tx_Fluid_ViewHelpers_Be_Buttons_IconViewHelper extends Tx_Fluid_ViewHelpers_Be_AbstractBackendViewHelper {
 
@@ -64,8 +61,7 @@ class Tx_Fluid_ViewHelpers_Be_Buttons_IconViewHelper extends Tx_Fluid_ViewHelper
 			throw new Tx_Fluid_Core_ViewHelper_Exception('"' . $icon . '" is no valid icon. Allowed are "' . implode('", "', $this->allowedIcons) .'".', 1253208523);
 		}
 
-		$skinnedIcon = t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/' . $icon . '.gif', '');
-		return '<a href="' . $uri . '"><img' . $skinnedIcon . '" title="' . htmlspecialchars($title) . '" alt="" /></a>';
+		return '<a href="' . $uri . '">' . t3lib_iconWorks::getSpriteIcon($icon, array('title' => $title)) . '</a>';
 	}
 }
 ?>

@@ -237,7 +237,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	 * Builds a complete node including childs
 	 *
 	 * @param t3lib_tree_Node $basicNode
-	 * @param null|t3lib_tree_tca_DatabaseNode $parent
+	 * @param NULL|t3lib_tree_tca_DatabaseNode $parent
 	 * @param int $level
 	 * @return A|object
 	 */
@@ -294,7 +294,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 		if (isset($this->columnConfiguration['foreign_table']) && $this->columnConfiguration['foreign_table'] != $this->getTableName()) {
 			throw new InvalidArgumentException(
 				'TCA Tree configuration is invalid: tree for different node-Tables is not implemented yet',
-				'1290944650'
+				1290944650
 			);
 		}
 
@@ -312,7 +312,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	 *
 	 * @param t3lib_tree_Node $node
 	 * @param  $level
-	 * @return A|null|object
+	 * @return A|NULL|object
 	 */
 	protected function getChildrenOf(t3lib_tree_Node $node, $level) {
 		$nodeData = NULL;

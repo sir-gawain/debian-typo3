@@ -27,10 +27,26 @@
  *
  * @package Extbase
  * @subpackage Utility
- * @version $ID:$
- * @api
+ * @deprecated since Extbase 1.4.0; will be removed in Extbase 1.6.0. Please use Tx_Extbase_Service_TypoScriptService instead
  */
 class Tx_Extbase_Utility_TypoScript {
+
+	/**
+	 * @var Tx_Extbase_Service_TypoScriptService
+	 */
+	protected static $typoScriptService = NULL;
+
+	/**
+	 * @return void
+	 */
+	static protected function getTypoScriptService() {
+		if (self::$typoScriptService === NULL) {
+			require_once t3lib_extMgm::extPath('extbase', 'Classes/Service/TypoScriptService.php');
+			$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+			self::$typoScriptService = $objectManager->get('Tx_Extbase_Service_TypoScriptService');
+		}
+		return self::$typoScriptService;
+	}
 
 	/**
 	 * Removes all trailing dots recursively from TS settings array
@@ -40,26 +56,12 @@ class Tx_Extbase_Utility_TypoScript {
 	 *
 	 * @param array $settings The settings array
 	 * @return void
-	 * @api
+	 * @deprecated since Extbase 1.4.0; will be removed in Extbase 1.6.0 - Use Tx_Extbase_Service_TypoScriptService instead
 	 */
 	static public function convertTypoScriptArrayToPlainArray(array $settings) {
-		foreach ($settings as $key => &$value) {
-			if(substr($key, -1) === '.') {
-				$keyWithoutDot = substr($key, 0, -1);
-				$hasNodeWithoutDot = array_key_exists($keyWithoutDot, $settings);
-				$typoScriptNodeValue = $hasNodeWithoutDot ? $settings[$keyWithoutDot] : NULL;
-				if(is_array($value)) {
-					$settings[$keyWithoutDot] = self::convertTypoScriptArrayToPlainArray($value);
-					if(!is_null($typoScriptNodeValue)) {
-						$settings[$keyWithoutDot]['_typoScriptNodeValue']  = $typoScriptNodeValue;
-					}
-					unset($settings[$key]);
-				} else {
-					$settings[$keyWithoutDot] = NULL;
-				}
-			}
-		}
-		return $settings;
+		t3lib_div::logDeprecatedFunction();
+		$typoScriptService = self::getTypoScriptService();
+		return $typoScriptService->convertTypoScriptArrayToPlainArray($settings);
 	}
 
 	/**
@@ -72,24 +74,15 @@ class Tx_Extbase_Utility_TypoScript {
 	 *
 	 * @param array $plainArray An Typoscript Array with Extbase Syntax (without dot but with _typoScriptNodeValue)
 	 * @return array array with Typoscript as usual (with dot)
-	 * @api
+	 * @deprecated since Extbase 1.4.0; will be removed in Extbase 1.6.0 - Use Tx_Extbase_Service_TypoScriptService instead
 	 */
 	static public function convertPlainArrayToTypoScriptArray($plainArray) {
-		$typoScriptArray = array();
-		if (is_array($plainArray)) {
-			foreach ($plainArray as $key => $value) {
-				if (is_array($value)) {
-					if (isset($value['_typoScriptNodeValue'])) {
-						$typoScriptArray[$key] = $value['_typoScriptNodeValue'];
-						unset($value['_typoScriptNodeValue']);
-					}
-					$typoScriptArray[$key.'.'] = self::convertPlainArrayToTypoScriptArray($value);
-				} else {
-					$typoScriptArray[$key] = $value;
-				}
-			}
+		t3lib_div::logDeprecatedFunction();
+		if (!is_array($plainArray)) {
+			return array();
 		}
-		return $typoScriptArray;
+		$typoScriptService = self::getTypoScriptService();
+		return $typoScriptService->convertPlainArrayToTypoScriptArray($plainArray);
 	}
 }
 ?>

@@ -27,37 +27,9 @@
 /**
  * Include file extending t3lib_recordList
  *
- * $Id$
  * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   75: class fileList extends t3lib_recordList
- *  112:     function start($path,$pointer,$sort,$sortRev,$clipBoard=0)
- *  133:     function generateList()
- *  146:     function writeTop($path)
- *  204:     function linkClipboardHeaderIcon($string,$table,$cmd,$warning='')
- *  218:     function getTable($files,$dirs,$rowlist)
- *  306:     function formatDirList($items)
- *  372:     function linkWrapDir($code,$path)
- *  391:     function linkWrapFile($code,$path)
- *  406:     function listURL()
- *  416:     function dirData($theFile)
- *  441:     function formatFileList($items)
- *  518:     function isImage($ext)
- *  530:     function linkWrapSort($code,$path,$col)
- *  548:     function readDirectory($path,$type,$extList='')
- *  602:     function makeClip($theData)
- *  647:     function makeRef($theData)
- *
- * TOTAL FUNCTIONS: 16
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -78,7 +50,7 @@ class fileList extends t3lib_recordList {
 	var $widthGif = '<img src="clear.gif" width="1" height="1" hspace="165" alt="" />';
 	var $fixedL = 30;					// Max length of strings
 	var $script = 'file_list.php';
-	var $clickMenus=1;					// If true click menus are generated on files and folders
+	var $clickMenus=1;					// If TRUE click menus are generated on files and folders
 
 	var $sort = '';						// The field to sort by...
 	var $sortRev = 1;					// Reverse sorting flag
@@ -302,11 +274,11 @@ class fileList extends t3lib_recordList {
 	 **/
 	function getFolderInfo() {
 		if($this->counter == 1) {
-			$fileLabel = $GLOBALS['LANG']->getLL('file', true);
+			$fileLabel = $GLOBALS['LANG']->getLL('file', TRUE);
 		} else {
-			$fileLabel = $GLOBALS['LANG']->getLL('files', true);
+			$fileLabel = $GLOBALS['LANG']->getLL('files', TRUE);
 		}
-		return $this->counter . ' ' . $fileLabel . ', ' . t3lib_div::formatSize($this->totalbytes, $GLOBALS['LANG']->getLL('byteSizeUnits', true));
+		return $this->counter . ' ' . $fileLabel . ', ' . t3lib_div::formatSize($this->totalbytes, $GLOBALS['LANG']->getLL('byteSizeUnits', TRUE));
 	}
 
 	/**
@@ -339,19 +311,19 @@ class fileList extends t3lib_recordList {
 					foreach ($this->fieldArray as $field) {
 						switch($field)	{
 							case 'size':
-								$theData[$field] = t3lib_div::formatSize($theFile[$field], $GLOBALS['LANG']->getLL('byteSizeUnits', true));
+								$theData[$field] = t3lib_div::formatSize($theFile[$field], $GLOBALS['LANG']->getLL('byteSizeUnits', TRUE));
 							break;
 							case 'rw':
-								$theData[$field] = (($theFile['readable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('read', true) . '</strong></span>') . (($theFile['writable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('write', true) . '</strong></span>');
+								$theData[$field] = (($theFile['readable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('read', TRUE) . '</strong></span>') . (($theFile['writable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('write', TRUE) . '</strong></span>');
 							break;
 							case 'fileext':
-								$theData[$field]=strtoupper($theFile['fileext']);
+								$theData[$field] = strtoupper($theFile['fileext']);
 							break;
 							case 'tstamp':
-								$theData[$field]=Date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'], $theFile['tstamp']);
+								$theData[$field] = t3lib_BEfunc::date($theFile['tstamp']);
 							break;
 							case 'file':
-								$theData[$field]= $this->linkWrapDir($title,$path);
+								$theData[$field] = $this->linkWrapDir($title,$path);
 							break;
 							case '_CLIPBOARD_':
 								$temp = '';
@@ -369,9 +341,8 @@ class fileList extends t3lib_recordList {
 							break;
 						}
 					}
-					$altRows = 'class="' . ($i++ % 2 == 0 ? 'bgColor6' : 'bgColor4') . '"';
 
-					$out .= $this->addelement(1, $theIcon, $theData, $altRows);
+					$out .= $this->addelement(1, $theIcon, $theData, ' class="file_list_normal"');
 				}
 				$this->eCounter++;
 				$this->dirCounter = $this->eCounter;
@@ -439,11 +410,11 @@ class fileList extends t3lib_recordList {
 		$icon = 'gfx/i/_icon_' . $webpath . 'folders.gif';
 		if ($title == '_temp_')	{
 			$icon = 'gfx/i/sysf.gif';
-			$title = '<strong>' . $GLOBALS['LANG']->getLL('temp', true) . '</strong>';
+			$title = '<strong>' . $GLOBALS['LANG']->getLL('temp', TRUE) . '</strong>';
 		}
 		if ($title == '_recycler_')	{
 			$icon = 'gfx/i/recycler.gif';
-			$title = '<strong>' . $GLOBALS['LANG']->getLL('recycler', true) . '</strong>';
+			$title = '<strong>' . $GLOBALS['LANG']->getLL('recycler', TRUE) . '</strong>';
 		}
 		$icon = $theFile['writable'] ? 'gfx/i/_icon_' . $webpath . 'folders_ro.gif' : $icon;
 
@@ -483,16 +454,16 @@ class fileList extends t3lib_recordList {
 					foreach ($this->fieldArray as $field) {
 						switch($field)	{
 							case 'size':
-								$theData[$field] = t3lib_div::formatSize($theFile[$field], $GLOBALS['LANG']->getLL('byteSizeUnits', true));
+								$theData[$field] = t3lib_div::formatSize($theFile[$field], $GLOBALS['LANG']->getLL('byteSizeUnits', TRUE));
 							break;
 							case 'rw':
-								$theData[$field] = (($theFile['readable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('read', true) . '</strong></span>') . (($theFile['writable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('write', true) . '</strong></span>');
+								$theData[$field] = (($theFile['readable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('read', TRUE) . '</strong></span>') . (($theFile['writable']) ? '' : '<span class="typo3-red"><strong>' . $GLOBALS['LANG']->getLL('write', TRUE) . '</strong></span>');
 							break;
 							case 'fileext':
-								$theData[$field]=strtoupper($theFile[$field]);
+								$theData[$field] = strtoupper($theFile[$field]);
 							break;
 							case 'tstamp':
-								$theData[$field]=Date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'], $theFile[$field]);
+								$theData[$field] = t3lib_BEfunc::date($theFile[$field]);
 							break;
 							case '_CLIPBOARD_':
 								$temp = '';
@@ -527,13 +498,8 @@ class fileList extends t3lib_recordList {
 							break;
 						}
 					}
-					if ($this->dirCounter % 2 == 0) {
-						$altRows = 'class="' . ($i++ % 2 == 0 ? 'bgColor6' : 'bgColor4') . '"';
-					} else {
-						$altRows = 'class="' . ($i++ % 2 == 0 ? 'bgColor4' : 'bgColor6') . '"';
-					}
 
-					$out .= $this->addelement(1, $theIcon, $theData, $altRows);
+					$out .= $this->addelement(1, $theIcon, $theData, ' class="file_list_normal"');
 				}
 				$this->eCounter++;
 			}
@@ -542,7 +508,7 @@ class fileList extends t3lib_recordList {
 	}
 
 	/**
-	 * Returns true if $ext is an image-extension according to $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
+	 * Returns TRUE if $ext is an image-extension according to $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
 	 *
 	 * @param	string		file extension
 	 * @return	boolean
@@ -585,7 +551,7 @@ class fileList extends t3lib_recordList {
 			$d = @dir($path);
 			$tempArray=Array();
 			if (is_object($d))	{
-				while(false !== ($entry=$d->read())) {
+				while(FALSE !== ($entry=$d->read())) {
 					if ($entry!='.' && $entry!='..')	{
 						$wholePath = $path.'/'.$entry;		// Because of odd PHP-error where  <br />-tag is sometimes placed after a filename!!
 						if (@file_exists($wholePath) && (!$type || t3lib_div::inList($type,filetype($wholePath))))	{

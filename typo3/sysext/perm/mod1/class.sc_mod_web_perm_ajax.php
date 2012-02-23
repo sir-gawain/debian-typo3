@@ -21,31 +21,6 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   66: class SC_mod_web_perm_ajax
- *
- *              SECTION: Init method for this class
- *   97:     public function __construct()
- *
- *              SECTION: Main dispatcher method
- *  143:     public function dispatch($params = array(), TYPO3AJAX &$ajaxObj = null)
- *
- *              SECTION: Helpers for this script
- *  259:     private function renderUserSelector($page, $ownerUid, $username = '')
- *  302:     private function renderGroupSelector($page, $groupUid, $groupname = '')
- *  350:     private function renderOwnername($page, $ownerUid, $username)
- *  363:     private function renderGroupname($page, $groupUid, $groupname)
- *  375:     private function renderToggleEditLock($page, $editlockstate)
- *  389:     private function renderPermissions($int, $pageId = 0, $who = 'user')
- *
- * TOTAL FUNCTIONS: 8
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_perm.xml');
 
@@ -55,7 +30,6 @@ $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_perm.xml');
  * (user and group)) via new TYPO3AJAX facility
  *
  * @author		Andreas Kundoch <typo3@mehrwert.de>
- * @version		$Id$
  * @package		TYPO3
  * @subpackage	core
  * @license		GPL
@@ -127,13 +101,14 @@ class SC_mod_web_perm_ajax {
 	 * @param	TYPO3AJAX		$ajaxObj: object of type TYPO3AJAX
 	 * @return	Void
 	 */
-	public function dispatch($params = array(), TYPO3AJAX &$ajaxObj = null) {
+	public function dispatch($params = array(), TYPO3AJAX &$ajaxObj = NULL) {
 		$content = '';
 
 			// Basic test for required value
 		if ($this->conf['page'] > 0) {
 
 				// Init TCE for execution of update
+			/** @var $tce t3lib_TCEmain */
 			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 			$tce->stripslashes_values = 1;
 
@@ -155,7 +130,7 @@ class SC_mod_web_perm_ajax {
 							// Execute TCE Update
 						$tce->start($data, array());
 						$tce->process_datamap();
-						$content = $this->renderOwnername($this->conf['page'], $this->conf['new_owner_uid'], $this->conf['new_owner_username']);
+						$content = self::renderOwnername($this->conf['page'], $this->conf['new_owner_uid'], $this->conf['new_owner_username']);
 					} else {
 						$ajaxObj->setError('An error occured: No page owner uid specified.');
 					}
@@ -178,7 +153,7 @@ class SC_mod_web_perm_ajax {
 						$tce->start($data, array());
 						$tce->process_datamap();
 
-						$content = $this->renderGroupname($this->conf['page'], $this->conf['new_group_uid'], $this->conf['new_group_username']);
+						$content = self::renderGroupname($this->conf['page'], $this->conf['new_group_uid'], $this->conf['new_group_username']);
 					} else {
 						$ajaxObj->setError('An error occured: No page group uid specified.');
 					}
@@ -214,7 +189,7 @@ class SC_mod_web_perm_ajax {
 					$tce->start($data, array());
 					$tce->process_datamap();
 
-					$content = $this->renderPermissions($this->conf['permissions'], $this->conf['page'], $this->conf['who']);
+					$content = self::renderPermissions($this->conf['permissions'], $this->conf['page'], $this->conf['who']);
 			}
 		} else {
 			$ajaxObj->setError('This script cannot be called directly.');
@@ -325,7 +300,7 @@ class SC_mod_web_perm_ajax {
 	 * @param	Boolean		$validUser: Must be set to FALSE, if the user has no name or is deleted
 	 * @return	String		The new group wrapped in HTML
 	 */
-	public function renderOwnername($page, $ownerUid, $username, $validUser = true) {
+	public static function renderOwnername($page, $ownerUid, $username, $validUser = TRUE) {
 		$elementId = 'o_'.$page;
 		$ret = '<span id="' . $elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeOwnerSelector(' . $page . ', ' . $ownerUid . ', \'' . $elementId.'\', \'' . htmlspecialchars($username) . '\');">' . ($validUser ? ($username == '' ? ('<span class=not_set>['. $GLOBALS['LANG']->getLL('notSet') .']</span>') : htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20))) :  ('<span class=not_set title="' . htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20)) . '">[' . $GLOBALS['LANG']->getLL('deleted') . ']</span>')) . '</a></span>';
 		return $ret;
@@ -341,7 +316,7 @@ class SC_mod_web_perm_ajax {
 	 * @param	Boolean		$validGroup: Must be set to FALSE, if the group has no name or is deleted
 	 * @return	String		The new group wrapped in HTML
 	 */
-	public function renderGroupname($page, $groupUid, $groupname, $validGroup = true) {
+	public static function renderGroupname($page, $groupUid, $groupname, $validGroup = TRUE) {
 		$elementId = 'g_'.$page;
 		$ret = '<span id="'.$elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeGroupSelector(' . $page . ', ' . $groupUid . ', \'' . $elementId . '\', \'' . htmlspecialchars($groupname) . '\');">'. ($validGroup ? ($groupname == '' ? ('<span class=not_set>['. $GLOBALS['LANG']->getLL('notSet') .']</span>') : htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20))) : ('<span class=not_set title="' . htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20)) . '">[' . $GLOBALS['LANG']->getLL('deleted') . ']</span>')) . '</a></span>';
 		return $ret;
@@ -373,19 +348,34 @@ class SC_mod_web_perm_ajax {
 	 * @param	String		$who: The scope (user, group or everybody)
 	 * @return	string		HTML marked up x/* indications.
 	 */
-	public function renderPermissions($int, $pageId = 0, $who = 'user') {
-		global $LANG;
+	public static function renderPermissions($int, $pageId = 0, $who = 'user') {
 		$str = '';
 
-		$permissions = array(1,16,2,4,8);
+		$permissions = array(1, 16, 2, 4, 8);
 		foreach ($permissions as $permission) {
 			if ($int&$permission) {
-				$str .= t3lib_iconWorks::getSpriteIcon('status-status-permission-granted',array('tag'=>'a','title'=>$LANG->getLL($permission,1), 'onclick'=> 'WebPermissions.setPermissions('.$pageId.', '.$permission.', \'delete\', \''.$who.'\', '.$int.');'));
+				$str .= t3lib_iconWorks::getSpriteIcon(
+							'status-status-permission-granted',
+							array(
+								'tag' => 'a',
+								'title' => $GLOBALS['LANG']->getLL($permission, TRUE),
+								'onclick'=> 'WebPermissions.setPermissions(' . $pageId . ', ' . $permission . ', \'delete\', \'' . $who . '\', ' . $int . ');',
+								'style' => 'cursor:pointer'
+							)
+						);
 			} else {
-				$str .= t3lib_iconWorks::getSpriteIcon('status-status-permission-denied',array('tag'=>'a','title'=>$LANG->getLL($permission,1),'onclick'=>'WebPermissions.setPermissions('.$pageId.', '.$permission.', \'add\', \''.$who.'\', '.$int.');'));
+				$str .= t3lib_iconWorks::getSpriteIcon(
+							'status-status-permission-denied',
+							array(
+								'tag' => 'a',
+								'title' => $GLOBALS['LANG']->getLL($permission, TRUE),
+								'onclick' => 'WebPermissions.setPermissions(' . $pageId . ', ' . $permission . ', \'add\', \'' . $who . '\', ' . $int . ');',
+								'style' => 'cursor:pointer'
+							)
+						);
 			}
 		}
-		return '<span id="'.$pageId.'_'.$who.'">'.$str.'</span>';
+		return '<span id="' . $pageId . '_' . $who . '">' . $str . '</span>';
 	}
 
 }

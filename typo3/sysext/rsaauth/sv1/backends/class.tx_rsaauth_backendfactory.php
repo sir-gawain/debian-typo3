@@ -22,13 +22,6 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- * $Id$
- */
-
-require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/backends/class.tx_rsaauth_abstract_backend.php'));
 
 /**
  * This class contains a factory for the RSA backends.
@@ -57,7 +50,7 @@ class tx_rsaauth_backendfactory {
 	 *
 	 * @var	boolean
 	 */
-	static protected $initialized = false;
+	static protected $initialized = FALSE;
 
 	/**
 	 * A selected backend. This member is set in the getBackend() function. It
@@ -68,7 +61,7 @@ class tx_rsaauth_backendfactory {
 	 *
 	 * @var	tx_rsaauth_abstract_backend
 	 */
-	static protected $selectedBackend = null;
+	static protected $selectedBackend = NULL;
 
 	/**
 	 * Obtains a backend. This function will return a non-abstract class, which
@@ -88,7 +81,7 @@ class tx_rsaauth_backendfactory {
 					if ($backendObject->isAvailable()) {
 						// The backend is available, save it and stop the loop
 						self::$selectedBackend = $backendObject;
-						self::$initialized = true;
+						self::$initialized = TRUE;
 						break;
 					}
 					// Attempt to force destruction of the object

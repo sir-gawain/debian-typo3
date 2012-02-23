@@ -31,20 +31,6 @@
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   65: class SC_mod_web_view_index
- *   83:     function init()
- *  101:     function main()
- *  127:     function printContent()
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 unset($MCONF);
 require ('conf.php');
@@ -80,12 +66,10 @@ class SC_mod_web_view_index {
 	 * @return	void
 	 */
 	function init()	{
-		global $BE_USER;
-
 		$this->MCONF = $GLOBALS['MCONF'];
 		$this->id = intval(t3lib_div::_GP('id'));
 
-		$this->perms_clause = $BE_USER->getPagePermsClause(1);
+		$this->perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
 
 			// page/be_user TSconfig settings and blinding of menu-items
 		$this->modTSconfig = t3lib_BEfunc::getModTSconfig($this->id,'mod.'.$this->MCONF['name']);
@@ -98,7 +82,6 @@ class SC_mod_web_view_index {
 	 * @return	void
 	 */
 	function main()	{
-		global $BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
 
 			// Access check...
 			// The page will show only if there is a valid page and if this page may be viewed by the user
@@ -116,6 +99,7 @@ class SC_mod_web_view_index {
 
 			// preview of mount pages
 		$sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
+		/** @var t3lib_pageSelect $sys_page */
 		$sys_page->init(FALSE);
 		$mountPointInfo = $sys_page->getMountPointInfo($this->id);
 		if ($mountPointInfo && $mountPointInfo['overlay']) {
@@ -123,7 +107,17 @@ class SC_mod_web_view_index {
 			$addCmd .= '&MP=' . $mountPointInfo['MPvar'];
 		}
 
-		$this->url.= ($dName?(t3lib_div::getIndpEnv('TYPO3_SSL') ? 'https://' : 'http://').$dName:$BACK_PATH.'..').'/index.php?id='.$this->id.($this->type?'&type='.$this->type:'').$addCmd;
+		$page = (array)$sys_page->getPage($this->id);
+
+		$urlScheme = 'http';
+		if ($page['url_scheme'] == 2 || $page['url_scheme'] == 0 && t3lib_div::getIndpEnv('TYPO3_SSL')) {
+			$urlScheme = 'https';
+		}
+
+		$this->url .= ($dName
+			? $urlScheme . '://' . $dName
+			: $GLOBALS['BACK_PATH'] . '..') . '/index.php?id=' . $this->id .
+				($this->type ? '&type='.$this->type : '') . $addCmd;
 	}
 
 	/**

@@ -117,10 +117,13 @@ class t3lib_search_livesearch {
 	 */
 	public function find($searchQuery) {
 		$recordArray = array();
-		$pageIdList = $this->getAvailablePageIds(
-			implode(',', $GLOBALS['BE_USER']->returnWebmounts()),
-			self::RECURSIVE_PAGE_LEVEL
-		);
+		$pageList = array();
+		$mounts = $GLOBALS['BE_USER']->returnWebmounts();
+		foreach ($mounts as $pageId) {
+			$pageList[] = $this->getAvailablePageIds($pageId, self::RECURSIVE_PAGE_LEVEL);
+		}
+		$pageIdList = implode(',', array_unique(explode(',', implode(',', $pageList))));
+		unset($pageList);
 		$limit = $this->startCount . ',' . $this->limitCount;
 
 		if ($this->queryParser->isValidCommand($searchQuery)) {
@@ -304,7 +307,7 @@ class t3lib_search_livesearch {
 	 */
 	public function getRecordTitlePrep($title, $titleLength = 0) {
 			// If $titleLength is not a valid positive integer, use BE_USER->uc['titleLen']:
-		if (!$titleLength || !t3lib_div::testInt($titleLength) || $titleLength < 0) {
+		if (!$titleLength || !t3lib_utility_Math::canBeInterpretedAsInteger($titleLength) || $titleLength < 0) {
 			$titleLength = $GLOBALS['BE_USER']->uc['titleLen'];
 		}
 
@@ -392,7 +395,6 @@ class t3lib_search_livesearch {
 	 */
 	protected function extractSearchableFieldsFromTable($tableName) {
 		$fieldListArray = array();
-		t3lib_div::loadTCA($tableName);
 
 			// Traverse configured columns and add them to field array, if available for user.
 		foreach ((array) $GLOBALS['TCA'][$tableName]['columns'] as $fieldName => $fieldValue) {
@@ -441,7 +443,7 @@ class t3lib_search_livesearch {
 	 * @return void
 	 */
 	public function setLimitCount($limitCount) {
-		$limit = t3lib_div::intval_positive($limitCount);
+		$limit = t3lib_utility_Math::convertToPositiveInteger($limitCount);
 		if ($limit > 0) {
 			$this->limitCount = $limit;
 		}
@@ -454,7 +456,7 @@ class t3lib_search_livesearch {
 	 * @return void
 	 */
 	public function setStartCount($startCount) {
-		$this->startCount = t3lib_div::intval_positive($startCount);
+		$this->startCount = t3lib_utility_Math::convertToPositiveInteger($startCount);
 	}
 
 	/**

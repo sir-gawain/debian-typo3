@@ -32,6 +32,7 @@
  * @subpackage MVC\Controller
  * @version $ID:$
  * @scope prototype
+ * @deprecated since Extbase 1.4.0, will be removed in Extbase 1.6.0. Is only needed for old property mapper.
  */
 class Tx_Extbase_MVC_Controller_ArgumentsValidator extends Tx_Extbase_Validation_Validator_AbstractObjectValidator {
 
@@ -99,7 +100,7 @@ class Tx_Extbase_MVC_Controller_ArgumentsValidator extends Tx_Extbase_Validation
 	 * Adds the given errors to $this->errors and creates an ArgumentError
 	 * instance if needed.
 	 *
-	 * @param array $errors Array of \F3\FLOW3\Validation\Error
+	 * @param array $errors Array of Tx_Extbase_Validation_Error
 	 * @param string $argumentName Name of the argument to add errors for
 	 * @return void
 	 */

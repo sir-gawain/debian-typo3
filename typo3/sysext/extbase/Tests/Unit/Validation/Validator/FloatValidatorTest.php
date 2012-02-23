@@ -1,96 +1,91 @@
 <?php
-/***************************************************************
-*  Copyright notice
-*
-*  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
-*  All rights reserved
-*
-*  This class is a backport of the corresponding class of FLOW3.
-*  All credits go to the v5 team.
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+
+/*                                                                        *
+ * This script belongs to the Extbase framework.                            *
+ *                                                                        *
+ * It is free software; you can redistribute it and/or modify it under    *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
+ *                                                                        *
+ * This script is distributed in the hope that it will be useful, but     *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
+ * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
+ * General Public License for more details.                               *
+ *                                                                        *
+ * You should have received a copy of the GNU Lesser General Public       *
+ * License along with the script.                                         *
+ * If not, see http://www.gnu.org/licenses/lgpl.html                      *
+ *                                                                        *
+ * The TYPO3 project - inspiring people to share!                         *
+ *                                                                        */
+
+require_once('AbstractValidatorTestcase.php');
 
 /**
  * Testcase for the float validator
  *
- * @package Extbase
- * @subpackage extbase
- * @version $Id: FloatValidator_testcase.php 2428 2010-07-20 10:18:51Z jocrau $
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
-class Tx_Extbase_Tests_Unit_Validation_Validator_FloatValidatorTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
+class Tx_Extbase_Tests_Unit_Validation_Validator_FloatValidatorTest extends Tx_Extbase_Tests_Unit_Validation_Validator_AbstractValidatorTestcase {
+
+	protected $validatorClassName = 'Tx_Extbase_Validation_Validator_FloatValidator';
 
 	/**
-	 * An array of valid floating point numbers addresses
-	 * @var array
+	 * Data provider with valid floats
+	 *
+	 * @return array
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
-	protected $validFloatingPointNumbers;
-
-	/**
-	 * An array of invalid floating point numbers addresses
-	 * @var array
-	 */
-	protected $invalidFloatingPointNumbers;
-
-	public function setUp() {
-		$this->validFloatingPointNumbers = array(
-			1029437.234726,
-			'123.45',
-			'+123.45',
-			'-123.45',
-			'123.45e3',
-			123.45e3
-			);
-
-		$this->invalidFloatingPointNumbers = array(
-			1029437,
-			'1029437',
-			'not a number'
-			);
+	public function validFloats() {
+		return array(
+			array(1029437.234726),
+			array('123.45'),
+			array('+123.45'),
+			array('-123.45'),
+			array('123.45e3'),
+			array(123.45e3)
+		);
 	}
 
 	/**
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @test
+	 * @dataProvider validFloats
 	 */
-	public function floatValidatorReturnsTrueForAValidFloat() {
-		$floatValidator = new Tx_Extbase_Validation_Validator_FloatValidator();
-		foreach ($this->validFloatingPointNumbers as $floatingPointNumber) {
-			$this->assertTrue($floatValidator->isValid($floatingPointNumber), "$floatingPointNumber was declared to be invalid, but it is valid.");
-		}
+	public function floatValidatorReturnsNoErrorsForAValidFloat($float) {
+		$this->assertFalse($this->validator->validate($float)->hasErrors());
 	}
 
 	/**
-	 * @test
+	 * Data provider with invalid floats
+	 *
+	 * @return array
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
-	public function floatValidatorReturnsFalseForAnInvalidFloat() {
-		$floatValidator = $this->getMock('Tx_Extbase_Validation_Validator_FloatValidator', array('addError'), array(), '', FALSE);
-		foreach ($this->invalidFloatingPointNumbers as $floatingPointNumber) {
-			$this->assertFalse($floatValidator->isValid($floatingPointNumber), "$floatingPointNumber was declared to be valid, but it is invalid.");
-		}
+	public function invalidFloats() {
+		return array(
+			array(1029437),
+			array('1029437'),
+			array('not a number')
+		);
 	}
 
 	/**
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @test
+	 * @dataProvider invalidFloats
+	 */
+	public function floatValidatorReturnsErrorForAnInvalidFloat($float) {
+		$this->assertTrue($this->validator->validate($float)->hasErrors());
+	}
+
+	/**
+	 * test
+	 * @author Andreas Förthner <andreas.foerthner@netlogix.de>
 	 */
 	public function floatValidatorCreatesTheCorrectErrorForAnInvalidSubject() {
-		$floatValidator = new Tx_Extbase_Validation_Validator_FloatValidator();
-		$floatValidator = $this->getMock('Tx_Extbase_Validation_Validator_FloatValidator', array('addError'), array(), '', FALSE);
-		$floatValidator->expects($this->once())->method('addError')->with('The given subject was not a valid float.', 1221560288);
-		$floatValidator->isValid(123456);
+		$this->assertEquals(1, count($this->validator->validate(123456)->getErrors()));
 	}
 
 }

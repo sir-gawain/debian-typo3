@@ -27,8 +27,6 @@
  *
  * Module: Extension manager - Central repository utility functions
  *
- * $Id: class.tx_em_repository_utility.php 2082 2010-03-21 17:19:42Z steffenk $
- *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -77,7 +75,7 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 	/**
 	 * Keeps instance of repository class.
 	 *
-	 * @var em_repository
+	 * @var tx_em_Repository
 	 */
 	protected $repository = NULL;
 
@@ -86,7 +84,7 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 	 * Class constructor.
 	 *
 	 * @access  public
-	 * @param   object  &$repository  (optional) instance of {@link em_repository repository} class
+	 * @param   object  &$repository  (optional) instance of {@link tx_em_Repository repository} class
 	 * @return  void
 	 */
 	function __construct(&$repository = NULL) {
@@ -115,7 +113,7 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 	 * Repository instance is passed by reference.
 	 *
 	 * @access  public
-	 * @param   em_repository  &$repository  instance of {@link em_repository repository} class
+	 * @param   tx_em_Repository  &$repository  instance of {@link tx_em_Repository repository} class
 	 * @return  void
 	 * @see	 $repository
 	 */
@@ -154,20 +152,20 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 	 * writes them into a file in the local file system.
 	 *
 	 * @access  protected
-	 * @param   string  $remoteRessource  remote ressource to read contents from
-	 * @param   string  $localRessource   local ressource (absolute file path) to store retrieved contents to
+	 * @param   string  $remoteResource  remote resource to read contents from
+	 * @param   string  $localResource   local resource (absolute file path) to store retrieved contents to
 	 * @return  void
-	 * @see	 t3lib_div::getURL(), t3lib_div::writeFile()
+	 * @see	 t3lib_div::getUrl(), t3lib_div::writeFile()
 	 * @throws  tx_em_ConnectionException
 	 */
-	protected function fetchFile($remoteRessource, $localRessource) {
-		if (is_string($remoteRessource) && is_string($localRessource)
-				&& !empty($remoteRessource) && !empty($localRessource)) {
-			$fileContent = t3lib_div::getURL($remoteRessource, 0, array(TYPO3_user_agent));
-			if ($fileContent !== false) {
-				t3lib_div::writeFile($localRessource, $fileContent) || $this->throwConnectionException(sprintf('Could not write to file %s.', htmlspecialchars($localRessource)));
+	protected function fetchFile($remoteResource, $localResource) {
+		if (is_string($remoteResource) && is_string($localResource)
+				&& !empty($remoteResource) && !empty($localResource)) {
+			$fileContent = t3lib_div::getUrl($remoteResource, 0, array(TYPO3_user_agent));
+			if ($fileContent !== FALSE) {
+				t3lib_div::writeFile($localResource, $fileContent) || $this->throwConnectionException(sprintf('Could not write to file %s.', htmlspecialchars($localResource)));
 			} else {
-				$this->throwConnectionException(sprintf('Could not access remote ressource %s.', htmlspecialchars($remoteRessource)));
+				$this->throwConnectionException(sprintf('Could not access remote resource %s.', htmlspecialchars($remoteResource)));
 			}
 		}
 	}
@@ -248,8 +246,8 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 	 * server.
 	 *
 	 * @access  public
-	 * @param   boolean  $forcedUpdateFromRemote  if boolean true, mirror configuration will always retrieved from remote server
-	 * @return  em_repository_mirrors  instance of repository mirrors class
+	 * @param   boolean  $forcedUpdateFromRemote  if boolean TRUE, mirror configuration will always retrieved from remote server
+	 * @return  tx_em_Repository_Mirrors  instance of repository mirrors class
 	 */
 	public function getMirrors($forcedUpdateFromRemote = TRUE) {
 		$assignedMirror = $this->repository->getMirrors();
@@ -257,6 +255,7 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 			if ($forcedUpdateFromRemote || !is_file($this->getLocalMirrorListFile())) {
 				$this->fetchMirrorListFile();
 			}
+			/** @var $objMirrorListImporter tx_em_Import_MirrorListImporter */
 			$objMirrorListImporter = t3lib_div::makeInstance('tx_em_Import_MirrorListImporter');
 			$this->repository->addMirrors($objMirrorListImporter->getMirrors($this->getLocalMirrorListFile()));
 		}
@@ -268,9 +267,9 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 	 * extension list might be outdated.
 	 *
 	 * @access  public
-	 * @see	 em_repository_utility::PROBLEM_NO_VERSIONS_IN_DATABASE,
-	 *		  em_repository_utility::PROBLEM_EXTENSION_FILE_NOT_EXISTING,
-	 *		  em_repository_utility::PROBLEM_EXTENSION_HASH_CHANGED
+	 * @see	 tx_em_Repository_Utility::PROBLEM_NO_VERSIONS_IN_DATABASE,
+	 *		  tx_em_Repository_Utility::PROBLEM_EXTENSION_FILE_NOT_EXISTING,
+	 *		  tx_em_Repository_Utility::PROBLEM_EXTENSION_HASH_CHANGED
 	 * @return  integer  integer "0" if everything is perfect, otherwise bitmask with occured problems
 	 * @see	 updateExtList()
 	 */
@@ -284,9 +283,9 @@ class tx_em_Repository_Utility implements t3lib_Singleton {
 		if (!is_file($this->getLocalExtListFile())) {
 			$updateNecessity |= self::PROBLEM_EXTENSION_FILE_NOT_EXISTING;
 		} else {
-			$remotemd5 = t3lib_div::getURL($this->getRemoteExtHashFile(), 0, array(TYPO3_user_agent));
+			$remotemd5 = t3lib_div::getUrl($this->getRemoteExtHashFile(), 0, array(TYPO3_user_agent));
 
-			if ($remotemd5 !== false) {
+			if ($remotemd5 !== FALSE) {
 				$localmd5 = md5_file($this->getLocalExtListFile());
 				if ($remotemd5 !== $localmd5) {
 					$updateNecessity |= self::PROBLEM_EXTENSION_HASH_CHANGED;

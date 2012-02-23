@@ -28,28 +28,28 @@ if (TYPO3_MODE == 'BE' && !(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_INSTALL)) {
 		// register ExtDirect
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Workspaces.ExtDirect',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/Server.php:tx_Workspaces_ExtDirect_Server',
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/Server.php:Tx_Workspaces_ExtDirect_Server',
 		'web_WorkspacesWorkspaces',
 		'user,group'
 	);
 
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Workspaces.ExtDirectActions',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ActionHandler.php:tx_Workspaces_ExtDirect_ActionHandler',
+		 t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ActionHandler.php:Tx_Workspaces_ExtDirect_ActionHandler',
 		'web_WorkspacesWorkspaces',
 		'user,group'
 	);
 
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Workspaces.ExtDirectMassActions',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/MassActionHandler.php:tx_Workspaces_ExtDirect_MassActionHandler',
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/MassActionHandler.php:Tx_Workspaces_ExtDirect_MassActionHandler',
 		'web_WorkspacesWorkspaces',
 		'user,group'
 	);
 
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Ajax.ExtDirect.ToolbarMenu',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ToolbarMenu.php:tx_Workspaces_ExtDirect_ToolbarMenu'
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ToolbarMenu.php:Tx_Workspaces_ExtDirect_ToolbarMenu'
 	);
 
 		// register the reports statusprovider
@@ -74,8 +74,8 @@ $TCA['sys_workspace'] = array(
 			'default' => 'mimetypes-x-sys_workspace'
 		),
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY) . 'tca.php',
-		'versioningWS_alwaysAllowLiveEdit' => true,
-		'dividers2tabs' => true
+		'versioningWS_alwaysAllowLiveEdit' => TRUE,
+		'dividers2tabs' => TRUE
 	)
 );
 
@@ -99,7 +99,8 @@ $TCA['sys_workspace_stage'] = array(
 			'default' => 'mimetypes-x-sys_workspace'
 		),
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY) . 'tca.php',
-		'versioningWS_alwaysAllowLiveEdit' => true,
+		'versioningWS_alwaysAllowLiveEdit' => TRUE,
+		'dividers2tabs' => TRUE
 	)
 );
 	// todo move icons to Core sprite or keep them here and remove the todo note ;)

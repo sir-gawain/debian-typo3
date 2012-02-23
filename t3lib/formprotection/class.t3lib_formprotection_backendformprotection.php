@@ -78,8 +78,6 @@
  * </pre>
  *
  *
- * $Id$
- *
  * @package TYPO3
  * @subpackage t3lib
  *
@@ -160,16 +158,6 @@ class t3lib_formprotection_BackendFormProtection extends t3lib_formprotection_Ab
 	 */
 	public function persistSessionToken() {
 		$this->backendUser->setAndSaveSessionData('formSessionToken', $this->sessionToken);
-	}
-
-	/**
-	 * This method was once used for persisting all tokens.
-	 *
-	 * @deprecated since TYPO3 4.5.3, will be removed in TYPO3 4.7
-	 * @return void
-	 */
-	public function persistTokens() {
-		t3lib_div::logDeprecatedFunction();
 	}
 
 	/**

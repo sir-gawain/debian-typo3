@@ -76,6 +76,11 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 	protected $configurationManager;
 
 	/**
+	 * @var Tx_Extbase_Service_CacheService
+	 */
+	protected $cacheService;
+
+	/**
 	 * Constructor. takes the database handle from $GLOBALS['TYPO3_DB']
 	 */
 	public function __construct() {
@@ -98,6 +103,14 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 	 */
 	public function injectDataMapper(Tx_Extbase_Persistence_Mapper_DataMapper $dataMapper) {
 		$this->dataMapper = $dataMapper;
+	}
+
+	/**
+	 * @param Tx_Extbase_Service_CacheService $cacheService
+	 * @return void
+	 */
+	public function injectCacheService(Tx_Extbase_Service_CacheService $cacheService) {
+		$this->cacheService = $cacheService;
 	}
 
 	/**
@@ -266,6 +279,10 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 			$count = $this->databaseHandle->sql_num_rows($result);
 		} else {
 			$statementParts['fields'] = array('COUNT(*)');
+			if (isset($statementParts['keywords']['distinct'])) {
+				unset($statementParts['keywords']['distinct']);
+				$statementParts['fields'] = array('COUNT(DISTINCT ' . reset($statementParts['tables']) . '.uid)');
+			}
 			$statement = $this->buildQuery($statementParts, $parameters);
 			$this->replacePlaceholders($statement, $parameters);
 			$result = $this->databaseHandle->sql_query($statement);
@@ -296,7 +313,7 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 
 		$source = $query->getSource();
 
-		$this->parseSource($source, $sql, $parameters);
+		$this->parseSource($source, $sql);
 		$this->parseConstraint($query->getConstraint(), $source, $sql, $parameters);
 		$this->parseOrderings($query->getOrderings(), $source, $sql);
 		$this->parseLimitAndOffset($query->getLimit(), $query->getOffset(), $sql);
@@ -386,7 +403,6 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 	 *
 	 * @param Tx_Extbase_Persistence_QOM_SourceInterface $source The source
 	 * @param array &$sql
-	 * @param array &$parameters
 	 * @return void
 	 */
 	protected function parseSource(Tx_Extbase_Persistence_QOM_SourceInterface $source, array &$sql) {
@@ -772,16 +788,14 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 	 * @return void
 	 */
 	protected function addAdditionalWhereClause(Tx_Extbase_Persistence_QuerySettingsInterface $querySettings, $tableName, &$sql) {
-		if ($querySettings instanceof Tx_Extbase_Persistence_Typo3QuerySettings) {
-			if ($querySettings->getRespectEnableFields()) {
-				$this->addEnableFieldsStatement($tableName, $sql);
-			}
-			if ($querySettings->getRespectSysLanguage()) {
-				$this->addSysLanguageStatement($tableName, $sql);
-			}
-			if ($querySettings->getRespectStoragePage()) {
-				$this->addPageIdStatement($tableName, $sql, $querySettings->getStoragePageIds());
-			}
+		if ($querySettings->getRespectEnableFields()) {
+			$this->addEnableFieldsStatement($tableName, $sql);
+		}
+		if ($querySettings->getRespectSysLanguage()) {
+			$this->addSysLanguageStatement($tableName, $sql);
+		}
+		if ($querySettings->getRespectStoragePage()) {
+			$this->addPageIdStatement($tableName, $sql, $querySettings->getStoragePageIds());
 		}
 	}
 
@@ -941,7 +955,8 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 			}
 			if (is_object($GLOBALS['TSFE'])) {
 				if ($languageUid === NULL) {
-					$languageUid = $GLOBALS['TSFE']->sys_language_uid;
+						// get the language UID of the content that should be output
+					$languageUid = $GLOBALS['TSFE']->sys_language_content;
 					$languageMode = $GLOBALS['TSFE']->sys_language_mode;
 				}
 				if ($workspaceUid !== NULL) {
@@ -1037,14 +1052,14 @@ class Tx_Extbase_Persistence_Storage_Typo3DbBackend implements Tx_Extbase_Persis
 			$clearCacheCommands = t3lib_div::trimExplode(',',strtolower($this->pageTSConfigCache[$storagePage]['TCEMAIN.']['clearCacheCmd']),1);
 			$clearCacheCommands = array_unique($clearCacheCommands);
 			foreach ($clearCacheCommands as $clearCacheCommand)	{
-				if (t3lib_div::testInt($clearCacheCommand))	{
+				if (t3lib_utility_Math::canBeInterpretedAsInteger($clearCacheCommand))	{
 					$pageIdsToClear[] = $clearCacheCommand;
 				}
 			}
 		}
 
 		// TODO check if we can hand this over to the Dispatcher to clear the page only once, this will save around 10% time while inserting and updating
-		Tx_Extbase_Utility_Cache::clearPageCache($pageIdsToClear);
+		$this->cacheService->clearPageCache($pageIdsToClear);
 	}
 }
 

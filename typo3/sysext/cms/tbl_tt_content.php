@@ -28,12 +28,16 @@
  * Dynamic configuation of the tt_content table
  * This gets it's own file because it's so huge and central to typical TYPO3 use.
  *
- * $Id$
- *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
 
+
+if (!function_exists('user_sortPluginList')) {
+	function user_sortPluginList(array &$parameters) {
+			usort($parameters['items'], create_function('$item1,$item2', 'return strcasecmp($GLOBALS[\'LANG\']->sL($item1[0]),$GLOBALS[\'LANG\']->sL($item2[0]));'));
+	}
+}
 
 $TCA['tt_content'] = array(
 	'ctrl' => $TCA['tt_content']['ctrl'],
@@ -103,11 +107,6 @@ $TCA['tt_content'] = array(
 						'LLL:EXT:cms/locallang_ttc.xml:CType.I.9',
 						'search',
 						'i/tt_content_search.gif',
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:CType.I.10',
-						'login',
-						'i/tt_content_login.gif',
 					),
 					array(
 						'LLL:EXT:cms/locallang_ttc.xml:CType.div.special',
@@ -185,9 +184,11 @@ $TCA['tt_content'] = array(
 				'type' => 'input',
 				'size' => '13',
 				'max' => '20',
-				'eval' => 'date',
+				'eval' => 'datetime',
 				'default' => '0',
 			),
+			'l10n_mode' => 'exclude',
+			'l10n_display' => 'defaultAsReadonly',
 		),
 		'endtime' => array(
 			'exclude' => 1,
@@ -196,12 +197,14 @@ $TCA['tt_content'] = array(
 				'type' => 'input',
 				'size' => '13',
 				'max' => '20',
-				'eval' => 'date',
+				'eval' => 'datetime',
 				'default' => '0',
 				'range' => array(
 					'upper' => mktime(0,0,0,12,31,2020),
 				),
 			),
+			'l10n_mode' => 'exclude',
+			'l10n_display' => 'defaultAsReadonly',
 		),
 		'fe_group' => array(
 			'exclude' => 1,
@@ -475,8 +478,22 @@ $TCA['tt_content'] = array(
 							'xmlOutput' => 0,
 						),
 					),
+					't3editor' => array(
+						'enableByTypeConfig' => 1,
+						'type' => 'userFunc',
+						'userFunc' => 'EXT:t3editor/classes/class.tx_t3editor_tceforms_wizard.php:tx_t3editor_tceforms_wizard->main',
+						'title' => 't3editor',
+						'icon' => 'wizard_table.gif',
+						'script' => 'wizard_table.php',
+						'params' => array(
+							'format' => 'html',
+						),
+					),
 				),
 				'softref' => 'typolink_tag,images,email[subst],url',
+				'search' => array(
+					'andWhere' => 'CType=\'text\' OR CType=\'textpic\'',
+				)
 			),
 		),
 		'text_align' => array(
@@ -1123,6 +1140,21 @@ $TCA['tt_content'] = array(
 				'type' => 'text',
 				'cols' => '30',
 				'rows' => '3',
+				'wizards' => array(
+					'_PADDING' => 2,
+					'link' => array(
+						'type' => 'popup',
+						'title' => 'LLL:EXT:cms/locallang_ttc.xml:image_link_formlabel',
+						'icon' => 'link_popup.gif',
+						'script' => 'browse_links.php?mode=wizard',
+						'params' => array(
+							'blindLinkOptions' => 'folder,file,mail,spec',
+							'blindLinkFields' => 'target,title,class,params'
+						),
+						'JSopenParams' => 'height=300,width=500,status=0,menubar=0,scrollbars=1',
+					),
+				),
+				'softref' => 'typolink[linkList]',
 			),
 		),
 		'cols' => array(
@@ -1277,6 +1309,7 @@ $TCA['tt_content'] = array(
 						'',
 					),
 				),
+				'itemsProcFunc' => 'user_sortPluginList',
 				'default' => '',
 				'authMode' => $GLOBALS['TYPO3_CONF_VARS']['BE']['explicitADmode'],
 				'iconsInOptionTags' => 1,
@@ -1426,6 +1459,24 @@ $TCA['tt_content'] = array(
 					),
 				),
 			),
+		),
+		'target' => array(
+			'label' => 'LLL:EXT:cms/locallang_ttc.xml:target',
+			'config' => array(
+				'type' => 'input',
+				'size' => 20,
+				'eval' => 'trim',
+				'wizards' => array(
+					'target_picker' => array(
+						'type' => 'select',
+						'mode' => '',
+						'items' => array(
+							array('LLL:EXT:cms/locallang_ttc.xml:target.I.1', '_blank')
+						)
+					)
+				),
+				'default' => '',
+			)
 		),
 		'records' => array(
 			'label' => 'LLL:EXT:cms/locallang_ttc.xml:records',
@@ -1618,12 +1669,44 @@ $TCA['tt_content'] = array(
 					',
 					',media' => file_get_contents(t3lib_extMgm::extPath('cms') . 'flexform_media.xml'),
 				),
+				'search' => array(
+					'andWhere' => 'CType=\'list\''
+				)
 			),
 		),
 		'tx_impexp_origuid' => array(
 			'config'=>array(
 				'type'=>'passthrough',
 			),
+		),
+		'accessibility_title' => array(
+			'label' => 'LLL:EXT:cms/locallang_ttc.xml:accessibility_title',
+			'config' => array(
+				'type' => 'input',
+				'size' => 20,
+				'eval' => 'trim',
+				'default' => '',
+			)
+		),
+		'accessibility_bypass' => array(
+			'label' => 'LLL:EXT:cms/locallang_ttc.xml:accessibility_bypass',
+			'config' => array(
+				'type' => 'check',
+				'items' => array(
+					'1' => array(
+						'0' => 'LLL:EXT:lang/locallang_core.xml:labels.enabled',
+					)
+				)
+			)
+		),
+		'accessibility_bypass_text' => array(
+			'label' => 'LLL:EXT:cms/locallang_ttc.xml:accessibility_bypass_text',
+			'config' => array(
+				'type' => 'input',
+				'size' => 20,
+				'eval' => 'trim',
+				'default' => '',
+			)
 		),
 		'l18n_diffsource' => array(
 			'config'=>array(
@@ -1803,6 +1886,7 @@ $TCA['tt_content'] = array(
 					'--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.header;header,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.menu;menu,
+					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.menu_accessibility;menu_accessibility,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.access,
@@ -1835,19 +1919,6 @@ $TCA['tt_content'] = array(
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.behaviour,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.searchform;searchform,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended',
-		),
-		'login' => 		array(
-			'showitem' =>
-					'--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.header;header,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.access,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.visibility;visibility,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.behaviour,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.loginform;loginform,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended',
 		),
 		'shortcut' => 	array(
@@ -1911,7 +1982,7 @@ $TCA['tt_content'] = array(
 			'showitem' =>
 					'--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
 					header;LLL:EXT:cms/locallang_ttc.xml:header.ALT.html_formlabel,
-					bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.html_formlabel;;nowrap,
+					bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.html_formlabel;;nowrap:wizards[t3editor],
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.access,
@@ -2005,7 +2076,7 @@ $TCA['tt_content'] = array(
 			'canNotCollapse' => 1,
 		),
 		'uploads' => array(
-			'showitem' => 'select_key;LLL:EXT:cms/locallang_ttc.xml:select_key.ALT.uploads_formlabel, --linebreak--, media;LLL:EXT:cms/locallang_ttc.xml:media.ALT.uploads_formlabel, imagecaption;LLL:EXT:cms/locallang_ttc.xml:imagecaption.ALT.uploads_formlabel;;nowrap',
+			'showitem' => 'select_key;LLL:EXT:cms/locallang_ttc.xml:select_key.ALT.uploads_formlabel, --linebreak--, media;LLL:EXT:cms/locallang_ttc.xml:media.ALT.uploads_formlabel, --linebreak--, target, --linebreak--, imagecaption;LLL:EXT:cms/locallang_ttc.xml:imagecaption.ALT.uploads_formlabel, titleText;LLL:EXT:cms/locallang_ttc.xml:titleText_formlabel, --linebreak--, altText;LLL:EXT:cms/locallang_ttc.xml:altText_formlabel',
 			'canNotCollapse' => 1,
 		),
 		'mailform' => array(
@@ -2016,12 +2087,12 @@ $TCA['tt_content'] = array(
 			'showitem' => 'pages;LLL:EXT:cms/locallang_ttc.xml:pages.ALT.searchform',
 			'canNotCollapse' => 1,
 		),
-		'loginform' => array(
-			'showitem' => 'pages;LLL:EXT:cms/locallang_ttc.xml:pages.ALT.loginform',
-			'canNotCollapse' => 1,
-		),
 		'menu' => array(
 			'showitem' => 'menu_type;LLL:EXT:cms/locallang_ttc.xml:menu_type_formlabel, --linebreak--, pages;LLL:EXT:cms/locallang_ttc.xml:pages.ALT.menu_formlabel',
+			'canNotCollapse' => 1,
+		),
+		'menu_accessibility' => array(
+			'showitem' => 'accessibility_title;LLL:EXT:cms/locallang_ttc.xml:menu.ALT.accessibility_title_formlabel, --linebreak--, accessibility_bypass;LLL:EXT:cms/locallang_ttc.xml:menu.ALT.accessibility_bypass_formlabel, accessibility_bypass_text;LLL:EXT:cms/locallang_ttc.xml:menu.ALT.accessibility_bypass_text_formlabel',
 			'canNotCollapse' => 1,
 		),
 		'visibility' => array(

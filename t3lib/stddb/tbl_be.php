@@ -25,9 +25,8 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Contains the dynamic configuation of the fields in the core tables of TYPO3: be_users, be_groups and sys_filemounts
+ * Contains the dynamic configuration of the fields in the core tables of TYPO3: be_users, be_groups and sys_filemounts
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
@@ -124,7 +123,7 @@ $TCA['be_users'] = array(
 				'internal_type' => 'db',
 				'allowed' => 'pages',
 				'size' => '3',
-				'maxitems' => '10',
+				'maxitems' => 25,
 				'autoSizeMax' => 10,
 				'show_thumbs' => '1',
 				'wizards' => array(
@@ -141,7 +140,7 @@ $TCA['be_users'] = array(
 				'foreign_table' => 'sys_filemounts',
 				'foreign_table_where' => ' AND sys_filemounts.pid=0 ORDER BY sys_filemounts.title',
 				'size' => '3',
-				'maxitems' => '10',
+				'maxitems' => 25,
 				'autoSizeMax' => 10,
 				'iconsInOptionTags' => 1,
 				'wizards' => array(
@@ -248,18 +247,17 @@ $TCA['be_users'] = array(
 				'type' => 'check',
 				'items' => array(
 					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_live', 0),
-					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_draft', 0),
 				),
-				'default' => 3
+				'default' => 1
 			)
 		),
 		'starttime' => array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.starttime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '8',
+				'size' => '13',
 				'max' => '20',
-				'eval' => 'date',
+				'eval' => 'datetime',
 				'default' => '0',
 			)
 		),
@@ -267,9 +265,9 @@ $TCA['be_users'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.endtime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '8',
+				'size' => '13',
 				'max' => '20',
-				'eval' => 'date',
+				'eval' => 'datetime',
 				'default' => '0',
 				'range' => array(
 					'upper' => mktime(0, 0, 0, 12, 31, 2020),
@@ -282,56 +280,7 @@ $TCA['be_users'] = array(
 				'type' => 'select',
 				'items' => array(
 					array('English', ''),
-					array('Albanian', 'sq'),
-					array('Arabic', 'ar'),
-					array('Basque', 'eu'),
-					array('Bosnian', 'ba'),
-					array('Brazilian Portuguese', 'br'),
-					array('Bulgarian', 'bg'),
-					array('Catalan', 'ca'),
-					array('Chinese (Simpl.)', 'ch'),
-					array('Chinese (Trad.)', 'hk'),
-					array('Croatian', 'hr'),
-					array('Czech', 'cz'),
-					array('Danish', 'dk'),
-					array('Dutch', 'nl'),
-					array('Esperanto', 'eo'),
-					array('Estonian', 'et'),
-					array('Faroese', 'fo'),
-					array('Finnish', 'fi'),
-					array('French', 'fr'),
-					array('French (Canada)', 'qc'),
-					array('Galician', 'ga'),
-					array('Georgian', 'ge'),
-					array('German', 'de'),
-					array('Greek', 'gr'),
-					array('Greenlandic', 'gl'),
-					array('Hebrew', 'he'),
-					array('Hindi', 'hi'),
-					array('Hungarian', 'hu'),
-					array('Icelandic', 'is'),
-					array('Italian', 'it'),
-					array('Japanese', 'jp'),
-					array('Khmer', 'km'),
-					array('Korean', 'kr'),
-					array('Latvian', 'lv'),
-					array('Lithuanian', 'lt'),
-					array('Malay', 'my'),
-					array('Norwegian', 'no'),
-					array('Persian', 'fa'),
-					array('Polish', 'pl'),
-					array('Portuguese', 'pt'),
-					array('Romanian', 'ro'),
-					array('Russian', 'ru'),
-					array('Serbian', 'sr'),
-					array('Slovak', 'sk'),
-					array('Slovenian', 'si'),
-					array('Spanish', 'es'),
-					array('Swedish', 'se'),
-					array('Thai', 'th'),
-					array('Turkish', 'tr'),
-					array('Ukrainian', 'ua'),
-					array('Vietnamese', 'vn'),
+					// Other languages are dynamically populated below
 				)
 			)
 		),
@@ -408,6 +357,17 @@ $TCA['be_users'] = array(
 	),
 );
 
+	// Populate available languages
+/** @var $locales t3lib_l10n_locales */
+$locales = t3lib_div::makeInstance('t3lib_l10n_Locales');
+$languageItems = $locales->getLanguages();
+
+unset($languageItems['default']);
+asort($languageItems);
+
+foreach ($languageItems as $locale => $name) {
+	$TCA['be_users']['columns']['lang']['config']['items'][] = array($name, $locale);
+}
 
 /**
  * Backend usergroups - Much permission criterias are based on membership of backend groups.
@@ -434,7 +394,7 @@ $TCA['be_groups'] = array(
 				'internal_type' => 'db',
 				'allowed' => 'pages',
 				'size' => '3',
-				'maxitems' => 20,
+				'maxitems' => 25,
 				'autoSizeMax' => 10,
 				'show_thumbs' => '1',
 				'wizards' => array(
@@ -451,7 +411,7 @@ $TCA['be_groups'] = array(
 				'foreign_table' => 'sys_filemounts',
 				'foreign_table_where' => ' AND sys_filemounts.pid=0 ORDER BY sys_filemounts.title',
 				'size' => '3',
-				'maxitems' => 20,
+				'maxitems' => 25,
 				'autoSizeMax' => 10,
 				'iconsInOptionTags' => 1,
 				'wizards' => array(
@@ -509,7 +469,6 @@ $TCA['be_groups'] = array(
 				'type' => 'check',
 				'items' => array(
 					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_live', 0),
-					array('LLL:EXT:lang/locallang_tca.xml:workspace_perms_draft', 0),
 				),
 				'default' => 0
 			)
@@ -741,6 +700,173 @@ $TCA['sys_filemounts'] = array(
 	)
 );
 
+/**
+ * tca-record collections
+ */
+$TCA['sys_collection'] = array(
+	'ctrl' => $TCA['sys_collection']['ctrl'],
+	'interface' => array (
+		'showRecordFieldList' => 'title, description, table_name, items'
+	),
+	'feInterface' => $TCA['sys_collection']['feInterface'],
+	'columns' => array(
+		't3ver_label' => array(
+			'label'  => 'LLL:EXT:lang/locallang_general.xml:LGL.versionLabel',
+			'config' => array(
+				'type' => 'input',
+				'size' => '30',
+				'max'  => '30',
+			)
+		),
+		'sys_language_uid' => array(
+			'exclude' => 1,
+			'label'  => 'LLL:EXT:lang/locallang_general.xml:LGL.language',
+			'config' => array(
+				'type'                => 'select',
+				'foreign_table'       => 'sys_language',
+				'foreign_table_where' => 'ORDER BY sys_language.title',
+				'items' => array(
+					array('LLL:EXT:lang/locallang_general.xml:LGL.allLanguages', -1),
+					array('LLL:EXT:lang/locallang_general.xml:LGL.default_value', 0)
+				)
+			)
+		),
+		'l10n_parent' => array (
+			'displayCond' => 'FIELD:sys_language_uid:>:0',
+			'exclude'     => 1,
+			'label'       => 'LLL:EXT:lang/locallang_general.xml:LGL.l18n_parent',
+			'config'      => array(
+				'type'  => 'select',
+				'items' => array(
+					array('', 0),
+				),
+				'foreign_table'       => 'sys_file_collection',
+				'foreign_table_where' => 'AND sys_file_collection.pid=###CURRENT_PID### AND sys_file_collection.sys_language_uid IN (-1,0)',
+			)
+		),
+		'l10n_diffsource' => array(
+			'config' => array (
+				'type' => 'passthrough'
+			)
+		),
+		'hidden' => array(
+			'exclude' => 1,
+			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.hidden',
+			'config'  => array (
+				'type'    => 'check',
+				'default' => '0'
+			)
+		),
+		'starttime' => array(
+			'exclude' => 1,
+			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.starttime',
+			'config'  => array (
+				'type'     => 'input',
+				'size'     => '8',
+				'max'      => '20',
+				'eval'     => 'date',
+				'default'  => '0',
+				'checkbox' => '0'
+			)
+		),
+		'endtime' => array(
+			'exclude' => 1,
+			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.endtime',
+			'config'  => array (
+				'type'     => 'input',
+				'size'     => '8',
+				'max'      => '20',
+				'eval'     => 'date',
+				'checkbox' => '0',
+				'default'  => '0',
+				'range'    => array(
+					'upper' => mktime(3, 14, 7, 1, 19, 2038),
+					'lower' => mktime(0, 0, 0, date('m')-1, date('d'), date('Y'))
+				)
+			)
+		),
+		'fe_group' => array(
+			'exclude' => 1,
+			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.fe_group',
+			'config'  => array(
+				'type'  => 'select',
+				'items' => array(
+					array('', 0),
+					array('LLL:EXT:lang/locallang_general.xml:LGL.hide_at_login', -1),
+					array('LLL:EXT:lang/locallang_general.xml:LGL.any_login', -2),
+					array('LLL:EXT:lang/locallang_general.xml:LGL.usergroups', '--div--')
+				),
+				'foreign_table' => 'fe_groups'
+			)
+		),
+		'table_name' => array(
+			'exclude' => 0,
+			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_collection.table_name',
+			'config' => array (
+				'type' => 'select',
+				'special' => 'tables'
+			)
+		),
+		'items' => array(
+			'exclude' => 0,
+			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_collection.items',
+			'config' => array(
+				'type' => 'group',
+				'internal_type' => 'db',
+				'prepend_tname' => TRUE,
+				'allowed' => '*',
+				'MM' => 'sys_collection_entries',
+				'MM_hasUidField' => TRUE,
+				'multiple' => TRUE,
+
+			)
+		),
+		'title' => array(
+			'exclude' => 0,
+			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_collection.title',
+			'config' => array(
+				'type' => 'input',
+				'size' => '60',
+				'eval' => 'required'
+			)
+		),
+		'description' => array(
+			'exclude' => 0,
+			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_collection.description',
+			'config' => array(
+				'type' => 'text',
+				'cols' => '60',
+				'rows' => '5'
+			)
+		),
+		'type' => array(
+			'exclude' => 0,
+			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_collection.type',
+			'config' => array(
+				'type' => 'select',
+				'items' => array(
+					array('LLL:EXT:lang/locallang_tca.xlf:sys_collection.type.static', 'static'),
+					array('LLL:EXT:lang/locallang_tca.xlf:sys_collection.type.filter', 'filter')
+				),
+				'default' => 'static'
+			)
+		),
+		'criteria' => array(
+			'exclude' => 0,
+			'label' => '[filter]',
+			'config' => array(
+				'type' => 'passthrough'
+			)
+		)
+	),
+	'types' => array (
+		'static' => array('showitem' => 'title;;1,type, description,table_name, items'),
+		'filter' => array('showitem' => 'title;;1,type, description,table_name')
+	),
+	'palettes' => array (
+		'1' => array('showitem' => 'starttime, endtime, fe_group, sys_language_uid, l10n_parent, l10n_diffsource, hidden')
+	)
+);
 
 /**
  * System languages - Defines possible languages used for translation of records in the system
@@ -826,9 +952,9 @@ $TCA['sys_news'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.starttime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '8',
+				'size' => '13',
 				'max' => '20',
-				'eval' => 'date',
+				'eval' => 'datetime',
 				'default' => '0'
 			)
 		),
@@ -837,9 +963,9 @@ $TCA['sys_news'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.endtime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '8',
+				'size' => '13',
 				'max' => '20',
-				'eval' => 'date',
+				'eval' => 'datetime',
 				'default' => '0'
 			)
 		),

@@ -32,11 +32,10 @@ class Tx_Fluid_ViewHelpers_DebugViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 	 *
 	 * @param string $title
 	 * @return string the altered string.
-	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function render($title = NULL) {
 		ob_start();
-		t3lib_div::debug($this->renderChildren(), $title);
+		t3lib_utility_Debug::debug($this->renderChildren(), $title);
 		$output = ob_get_contents();
 		ob_end_clean();
 		return $output;

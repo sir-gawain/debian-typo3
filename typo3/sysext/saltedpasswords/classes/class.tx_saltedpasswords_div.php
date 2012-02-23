@@ -28,8 +28,6 @@
 /**
  * Contains class "tx_saltedpasswords_div"
  * that provides various helper functions.
- *
- * $Id$
  */
 
 /**
@@ -48,6 +46,22 @@ class tx_saltedpasswords_div {
 		 */
 		const EXTKEY = 'saltedpasswords';
 
+		/**
+		 * Calculates number of backend users, who have no saltedpasswords
+		 * protection.
+		 *
+		 * @static
+		 * @return int
+		 */
+		public static function getNumberOfBackendUsersWithInsecurePassword() {
+			$userCount = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+				'*',
+				'be_users',
+				'password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('$%', 'be_users')
+					. ' AND password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('M$%', 'be_users')
+			);
+			return $userCount;
+		}
 
 		/**
 		 * Returns extension configuration data from $TYPO3_CONF_VARS (configurable in Extension Manager)
@@ -138,7 +152,7 @@ class tx_saltedpasswords_div {
 			$securityLevel = $GLOBALS['TYPO3_CONF_VARS'][$mode]['loginSecurityLevel'];
 			if ($mode == 'BE' && $extConf['enabled']) {
 				return (($securityLevel =='normal' && $GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL'] > 0) || $securityLevel == 'rsa');
-			} else if ($mode =='FE' && $extConf['enabled']) {
+			} elseif ($mode =='FE' && $extConf['enabled']) {
 				return t3lib_div::inList('normal,rsa', $securityLevel);
 			}
 

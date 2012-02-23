@@ -27,7 +27,7 @@
 /**
  * Value object containing the relevant informations for a class,
  * this object is build by the classInfoFactory - or could also be restored from a cache
- * 
+ *
  * @author Daniel Pötzinger
  */
 class Tx_Extbase_Object_Container_ClassInfo {
@@ -48,54 +48,98 @@ class Tx_Extbase_Object_Container_ClassInfo {
 	 *     ),
 	 *     1 => ...
 	 *   )
-	 * 
+	 *
 	 * @var array
 	 */
 	private $constructorArguments;
-	
+
 	/**
 	 * All setter injections in the format
 	 * 	array (<nameOfMethod> => <classNameToInject> )
-	 * 
+	 *
 	 * @var array
 	 */
 	private $injectMethods;
 
 	/**
-	 * 
+	 * Indicates if the class is a singleton or not.
+	 *
+	 * @var boolean
+	 */
+	private $isSingleton = FALSE;
+
+	/**
+	 * Indicates if the class has the method initializeObject
+	 *
+	 * @var boolean
+	 */
+	private $isInitializeable = FALSE;
+
+	/**
+	 *
 	 * @param string $className
 	 * @param array $constructorArguments
 	 * @param array $injectMethods
+	 * @param boolean $isSingleton
+	 * @param boolean $isInitializeable
 	 */
-	public function __construct($className, array $constructorArguments, array $injectMethods) {
+	public function __construct($className, array $constructorArguments, array $injectMethods, $isSingleton = FALSE, $isInitializeable = FALSE) {
 		$this->className = $className;
 		$this->constructorArguments = $constructorArguments;
 		$this->injectMethods = $injectMethods;
+		$this->isSingleton = $isSingleton;
+		$this->isInitializeable = $isInitializeable;
 	}
-	
+
 	/**
-	 * @return the $className
+	 * Gets the class name passed to constructor
+	 *
+	 * @return string
 	 */
 	public function getClassName() {
 		return $this->className;
 	}
 
 	/**
-	 * @return the $constructorArguments
+	 * Get arguments passed to constructor
+	 *
+	 * @return array
 	 */
 	public function getConstructorArguments() {
 		return $this->constructorArguments;
 	}
 
 	/**
-	 * @return the $injectMethods
+	 * Returns an array with the inject methods.
+	 *
+	 * @return array
 	 */
 	public function getInjectMethods() {
 		return $this->injectMethods;
 	}
-	
+
 	/**
-	 * @return the $injectMethods
+	 * Asserts if the class is a singleton or not.
+	 *
+	 * @return boolean
+	 */
+	public function getIsSingleton() {
+		return $this->isSingleton;
+	}
+
+	/**
+	 * Asserts if the class is initializeable with initializeObject.
+	 *
+	 * @return boolean
+	 */
+	public function getIsInitializeable() {
+		return $this->isInitializeable;
+	}
+
+	/**
+	 * Asserts if the class has Dependency Injection methods
+	 *
+	 * @return boolean
 	 */
 	public function hasInjectMethods() {
 		return (count($this->injectMethods) > 0);

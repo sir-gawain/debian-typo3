@@ -22,15 +22,15 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
 /**
  * A cache handling helper class
  *
- * @author	Ingo Renner <ingo@typo3.org>
+ * @author Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
 class t3lib_cache {
+
 	/**
 	 * @var	boolean
 	 */
@@ -45,8 +45,8 @@ class t3lib_cache {
 	public static function initializeCachingFramework() {
 		if (!self::isCachingFrameworkInitialized()) {
 			$GLOBALS['typo3CacheManager'] = t3lib_div::makeInstance('t3lib_cache_Manager');
-			$GLOBALS['typo3CacheFactory'] = t3lib_div::makeInstance('t3lib_cache_Factory');
-			$GLOBALS['typo3CacheFactory']->setCacheManager($GLOBALS['typo3CacheManager']);
+			$GLOBALS['typo3CacheManager']->setCacheConfigurations($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']);
+			$GLOBALS['typo3CacheFactory'] = t3lib_div::makeInstance('t3lib_cache_Factory', 'production', $GLOBALS['typo3CacheManager']);
 			self::$isCachingFrameworkInitialized = TRUE;
 		}
 	}
@@ -56,18 +56,10 @@ class t3lib_cache {
 	 *
 	 * @return	void
 	 * @author	Ingo Renner <ingo@typo3.org>
+	 * @deprecated since TYPO3 4.6, will be removed in 4.8 - cacheManager->getCache() now initializes caches automatically
 	 */
 	public static function initPageCache() {
-		try {
-			$GLOBALS['typo3CacheFactory']->create(
-				'cache_pages',
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_pages']['frontend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_pages']['backend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_pages']['options']
-			);
-		} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
-			// do nothing, a cache_pages cache already exists
-		}
+		t3lib_div::logDeprecatedFunction();
 	}
 
 	/**
@@ -75,18 +67,10 @@ class t3lib_cache {
 	 *
 	 * @return	void
 	 * @author	Ingo Renner <ingo@typo3.org>
+	 * @deprecated since TYPO3 4.6, will be removed in 4.8 - cacheManager->getCache() now initializes caches automatically
 	 */
 	public static function initPageSectionCache() {
-		try {
-			$GLOBALS['typo3CacheFactory']->create(
-				'cache_pagesection',
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_pagesection']['frontend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_pagesection']['backend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_pagesection']['options']
-			);
-		} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
-			// do nothing, a cache_pagesection cache already exists
-		}
+		t3lib_div::logDeprecatedFunction();
 	}
 
 	/**
@@ -94,27 +78,19 @@ class t3lib_cache {
 	 *
 	 * @return	void
 	 * @author	Ingo Renner <ingo@typo3.org>
+	 * @deprecated since TYPO3 4.6, will be removed in 4.8 - cacheManager->getCache() now initializes caches automatically
 	 */
 	public static function initContentHashCache() {
-		try {
-			$GLOBALS['typo3CacheFactory']->create(
-				'cache_hash',
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_hash']['frontend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_hash']['backend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_hash']['options']
-			);
-		} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
-			// do nothing, a cache_hash cache already exists
-		}
+		t3lib_div::logDeprecatedFunction();
 	}
 
 	/**
 	 * Determines whether the caching framework is initialized.
 	 * The caching framework could be disabled for the core but used by an extension.
 	 *
-	 * @return	boolean
+	 * @return boolean True if caching framework is initialized
 	 */
-	public function isCachingFrameworkInitialized() {
+	public static function isCachingFrameworkInitialized() {
 		if (!self::$isCachingFrameworkInitialized
 				&& isset($GLOBALS['typo3CacheManager']) && $GLOBALS['typo3CacheManager'] instanceof t3lib_cache_Manager
 				&& isset($GLOBALS['typo3CacheFactory']) && $GLOBALS['typo3CacheFactory'] instanceof t3lib_cache_Factory
@@ -130,24 +106,30 @@ class t3lib_cache {
 	 * This method can be called by extensions in their ext_localconf.php. Calling it later would not work,
 	 * since rendering is already started using the defined caches.
 	 *
-	 * @return	void
+	 * @deprecated since 4.6, will be removed in 4.8: The caching framework is enabled by default
+	 * @return void
 	 */
-	public function enableCachingFramework() {
-		if (!defined('TYPO3_UseCachingFramework')) {
-			$GLOBALS['TYPO3_CONF_VARS']['SYS']['useCachingFramework'] = 1;
-		} elseif (!TYPO3_UseCachingFramework) {
-			throw new RuntimeException(
-				'The caching framework was already defined to be disabled and cannot be changed. ' .
-						'Please put your call to t3lib_cache::enableCachingFramework() into ext_localconf.php.',
-				1253273131
-			);
+	public static function enableCachingFramework() {
+		t3lib_div::logDeprecatedFunction();
+	}
+
+	/**
+	 * Helper method for install tool and extension manager to determine
+	 * required table structure of all caches that depend on it
+	 *
+	 * This is not a public API method!
+	 *
+	 * @return string Required table structure of all registered caches
+	 */
+	public static function getDatabaseTableDefinitions() {
+		$tableDefinitions = '';
+		foreach ($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'] as $cacheName => $_) {
+			$backend = $GLOBALS['typo3CacheManager']->getCache($cacheName)->getBackend();
+			if (method_exists($backend, 'getTableDefinitions')) {
+				$tableDefinitions .= LF . $backend->getTableDefinitions();
+			}
 		}
+		return $tableDefinitions;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_cache.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_cache.php']);
-}
-
 ?>

@@ -28,6 +28,11 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	protected $configurationManager;
 
 	/**
+	 * @var Tx_Extbase_Service_ExtensionService
+	 */
+	protected $extensionService;
+
+	/**
 	 * An instance of tslib_cObj
 	 *
 	 * @var tslib_cObj
@@ -59,6 +64,11 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	 * @var boolean
 	 */
 	protected $createAbsoluteUri = FALSE;
+
+	/**
+	 * @var string
+	 */
+	protected $absoluteUriScheme = NULL;
 
 	/**
 	 * @var boolean
@@ -114,6 +124,14 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	}
 
 	/**
+	 * @param Tx_Extbase_Service_ExtensionService $extensionService
+	 * @return void
+	 */
+	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
+		$this->extensionService = $extensionService;
+	}
+
+	/**
 	 * Life-cycle method that is called by the DI container as soon as this object is completely built
 	 *
 	 * @return void
@@ -125,10 +143,10 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	/**
 	 * Sets the current request
 	 *
-	 * @param Tx_Extbase_MVC_Web_Request $request
+	 * @param Tx_Extbase_MVC_Request $request
 	 * @return Tx_Extbase_MVC_Web_Routing_UriBuilder the current UriBuilder to allow method chaining
 	 */
-	public function setRequest(Tx_Extbase_MVC_Web_Request $request) {
+	public function setRequest(Tx_Extbase_MVC_Request $request) {
 		$this->request = $request;
 		return $this;
 	}
@@ -185,7 +203,7 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	/**
 	 * Specifies the format of the target (e.g. "html" or "xml")
 	 *
-	 * @param string $section
+	 * @param string $format
 	 * @return Tx_Extbase_MVC_Web_Routing_UriBuilder the current UriBuilder to allow method chaining
 	 * @api
 	 */
@@ -220,6 +238,24 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 	 */
 	public function getCreateAbsoluteUri() {
 		return $this->createAbsoluteUri;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAbsoluteUriScheme() {
+		return $this->absoluteUriScheme;
+	}
+
+	/**
+	 * Sets the scheme that should be used for absolute URIs in FE mode
+	 *
+	 * @param string $absoluteUriScheme the scheme to be used for absolute URIs
+	 * @return Tx_Extbase_MVC_Web_Routing_UriBuilder the current UriBuilder to allow method chaining
+	 */
+	public function setAbsoluteUriScheme($absoluteUriScheme) {
+		$this->absoluteUriScheme = $absoluteUriScheme;
+		return $this;
 	}
 
 	/**
@@ -448,13 +484,16 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 			$extensionName = $this->request->getControllerExtensionName();
 		}
 		if ($pluginName === NULL && TYPO3_MODE === 'FE') {
-			$pluginName = Tx_Extbase_Utility_Extension::getPluginNameByAction($extensionName, $controllerArguments['controller'], $controllerArguments['action']);
+			$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controllerArguments['controller'], $controllerArguments['action']);
 		}
 		if ($pluginName === NULL) {
 			$pluginName = $this->request->getPluginName();
 		}
+		if (TYPO3_MODE === 'FE' && $this->configurationManager->isFeatureEnabled('skipDefaultArguments')) {
+			$controllerArguments = $this->removeDefaultControllerAndAction($controllerArguments, $extensionName, $pluginName);
+		}
 		if ($this->targetPageUid === NULL && TYPO3_MODE === 'FE') {
-			$this->targetPageUid = Tx_Extbase_Utility_Extension::getTargetPidByPlugin($extensionName, $pluginName);
+			$this->targetPageUid = $this->extensionService->getTargetPidByPlugin($extensionName, $pluginName);
 		}
 		if ($this->format !== '') {
 			$controllerArguments['format'] = $this->format;
@@ -462,12 +501,37 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 		if ($this->argumentPrefix !== NULL) {
 			$prefixedControllerArguments = array($this->argumentPrefix => $controllerArguments);
 		} else {
-			$pluginNamespace = Tx_Extbase_Utility_Extension::getPluginNamespace($extensionName, $pluginName);
+			$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 			$prefixedControllerArguments = array($pluginNamespace => $controllerArguments);
 		}
 		$this->arguments = t3lib_div::array_merge_recursive_overrule($this->arguments, $prefixedControllerArguments);
 
 		return $this->build();
+	}
+
+	/**
+	 * This removes controller and/or action arguments from given controllerArguments
+	 * if they are equal to the default controller/action of the target plugin.
+	 * Note: This is only active in FE mode and if feature "skipDefaultArguments" is enabled
+	 * @see Tx_Extbase_Configuration_ConfigurationManagerInterface::isFeatureEnabled()
+	 *
+	 * @param array $controllerArguments the current controller arguments to be modified
+	 * @param string $extensionName target extension name
+	 * @param string $pluginName target plugin name
+	 * @return array
+	 */
+	protected function removeDefaultControllerAndAction(array $controllerArguments, $extensionName, $pluginName) {
+		$defaultControllerName = $this->extensionService->getDefaultControllerNameByPlugin($extensionName, $pluginName);
+		if (isset($controllerArguments['action'])) {
+			$defaultActionName = $this->extensionService->getDefaultActionNameByPluginAndController($extensionName, $pluginName, $controllerArguments['controller']);
+			if ($controllerArguments['action'] === $defaultActionName) {
+				unset($controllerArguments['action']);
+			}
+		}
+		if ($controllerArguments['controller'] === $defaultControllerName) {
+			unset($controllerArguments['controller']);
+		}
+		return $controllerArguments;
 	}
 
 	/**
@@ -515,7 +579,7 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 			$uri .= '#' . $this->section;
 		}
 		if ($this->createAbsoluteUri === TRUE) {
-			$uri = $this->request->getBaseURI() . $uri;
+			$uri = $this->request->getBaseUri() . $uri;
 		}
 		return $uri;
 	}
@@ -531,6 +595,9 @@ class Tx_Extbase_MVC_Web_Routing_UriBuilder {
 
 		if ($this->createAbsoluteUri === TRUE) {
 			$typolinkConfiguration['forceAbsoluteUrl'] = TRUE;
+			if ($this->absoluteUriScheme !== NULL) {
+				$typolinkConfiguration['forceAbsoluteUrl.']['scheme'] = $this->absoluteUriScheme;
+			}
 		}
 
 		$uri = $this->contentObject->typoLink_URL($typolinkConfiguration);

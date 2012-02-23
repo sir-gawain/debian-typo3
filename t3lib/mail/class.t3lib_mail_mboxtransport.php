@@ -31,8 +31,6 @@
  * This will use the setting in TYPO3_CONF_VARS to choose the correct transport
  * for it to work out-of-the-box.
  *
- * $Id$
- *
  * @author Ernesto Baschny <ernst@cron-it.de>
  * @package TYPO3
  * @subpackage t3lib
@@ -79,7 +77,7 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 	 * @return int
 	 * @throws Exception
 	 */
-	public function send(Swift_Mime_Message $message, &$failedRecipients = null) {
+	public function send(Swift_Mime_Message $message, &$failedRecipients = NULL) {
 		$message->generateId();
 
 			// Create a mbox-like header
@@ -91,21 +89,26 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 		$messageStr .= $message->toString();
 		$messageStr .= LF . LF;
 
+		$lockObject = t3lib_div::makeInstance('t3lib_lock', $this->debugFile, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
+		/** @var t3lib_lock $lockObject */
+		$lockObject->acquire();
+
 			// Write the mbox file
 		$file = @fopen($this->debugFile, 'a');
 		if (!$file) {
-			throw new Exception(
+			$lockObject->release();
+			throw new RuntimeException(
 				sprintf('Could not write to file "%s" when sending an email to debug transport', $this->debugFile),
 				1291064151
 			);
 		}
 
-		flock($file, LOCK_EX);
 		@fwrite($file, $messageStr);
-		flock($file, LOCK_UN);
 		@fclose($file);
 
 		t3lib_div::fixPermissions($this->debugFile);
+
+		$lockObject->release();
 
 			// Return every receipient as "delivered"
 		$count = (
@@ -120,7 +123,7 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 	 * Determine the best-use reverse path for this message
 	 *
 	 * @param Swift_Mime_Message $message
-	 * @return mixed|null
+	 * @return mixed|NULL
 	 */
 	private function getReversePath(Swift_Mime_Message $message) {
 		$return = $message->getReturnPath();

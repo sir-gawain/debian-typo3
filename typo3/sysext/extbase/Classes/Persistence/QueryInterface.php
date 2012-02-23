@@ -122,7 +122,6 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 * Executes the query against the database and returns the number of matching objects
 	 *
 	 * @return integer The number of matching objects
-	 * @api
 	 * @deprecated since Extbase 1.3.0; was removed in FLOW3; will be removed in Extbase 1.5.0
 	 */
 	public function count();
@@ -196,16 +195,6 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 * @api
 	 */
 	public function logicalNot($constraint);
-
-	/**
-	 * Matches against the (internal) identifier.
-	 *
-	 * @param string $uid An identifier to match against
-	 * @return object
-	 * @api
-	 * @deprecated since Extbase 1.2.0; was removed in FLOW3; will be removed in Extbase 1.4.0; use equals() instead
-	 */
-	public function withUid($uid);
 
 	/**
 	 * Returns an equals criterion used for matching objects against a query

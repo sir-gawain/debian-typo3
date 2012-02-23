@@ -27,61 +27,10 @@
 /**
  * Contains a base class for authentication of users in TYPO3, both frontend and backend.
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author	René Fritz <r.fritz@colorcube.de>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *  111: class t3lib_userAuth
- *  195:	 function start()
- *  329:	 function checkAuthentication()
- *
- *			  SECTION: User Sessions
- *  569:	 function createUserSession ($tempuser)
- *  606:	 function fetchUserSession()
- *  657:	 function logoff()
- *
- *			  SECTION: SQL Functions
- *  713:	 function user_where_clause()
- *  727:	 function ipLockClause()
- *  745:	 function ipLockClause_remoteIPNumber($parts)
- *  766:	 function hashLockClause()
- *  777:	 function hashLockClause_getHashInt()
- *
- *			  SECTION: Session and Configuration Handling
- *  809:	 function writeUC($variable='')
- *  824:	 function unpack_uc($theUC='')
- *  840:	 function pushModuleData($module,$data,$noSave=0)
- *  853:	 function getModuleData($module,$type='')
- *  866:	 function getSessionData($key)
- *  879:	 function setAndSaveSessionData($key,$data)
- *
- *			  SECTION: Misc
- *  912:	 function getLoginFormData()
- *  939:	 function processLoginData($loginData, $security_level='')
- *  981:	 function getAuthInfoArray()
- * 1011:	 function compareUident($user, $loginData, $security_level='')
- * 1050:	 function gc()
- * 1064:	 function redirect()
- * 1086:	 function writelog($type,$action,$error,$details_nr,$details,$data,$tablename,$recuid,$recpid)
- * 1095:	 function checkLogFailures()
- * 1108:	 function setBeUserByUid($uid)
- * 1120:	 function setBeUserByName($name)
- * 1131:	 function getRawUserByUid($uid)
- * 1149:	 function getRawUserByName($name)
- *
- *			  SECTION: Create/update user - EXPERIMENTAL
- * 1188:	 function fetchUserRecord($dbUser, $username, $extraWhere='' )
- *
- * TOTAL FUNCTIONS: 29
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -101,7 +50,7 @@ require_once(t3lib_extMgm::extPath('sv') . 'class.tx_sv_authbase.php');
  * @package TYPO3
  * @subpackage t3lib
  */
-class t3lib_userAuth {
+abstract class t3lib_userAuth {
 	var $global_database = ''; // Which global database to connect to
 	var $session_table = ''; // Table to use for session data.
 	var $name = ''; // Session/Cookie name
@@ -114,7 +63,7 @@ class t3lib_userAuth {
 	var $lastLogin_column = '';
 
 	var $enablecolumns = array(
-		'rootLevel' => '', // Boolean: If true, 'AND pid=0' will be a part of the query...
+		'rootLevel' => '', // Boolean: If TRUE, 'AND pid=0' will be a part of the query...
 		'disabled' => '',
 		'starttime' => '',
 		'endtime' => '',
@@ -125,11 +74,17 @@ class t3lib_userAuth {
 	var $formfield_uident = ''; // formfield with password
 	var $formfield_chalvalue = ''; // formfield with a unique value which is used to encrypt the password and username
 	var $formfield_status = ''; // formfield with status: *'login', 'logout'. If empty login is not verified.
-	var $security_level = 'normal'; // sets the level of security. *'normal' = clear-text. 'challenged' = hashed password/username from form in $formfield_uident. 'superchallenged' = hashed password hashed again with username.
 
-	var $auth_include = ''; // this is the name of the include-file containing the login form. If not set, login CAN be anonymous. If set login IS needed.
+	/**
+	 * Sets the level of security. *'normal' = clear-text. 'challenged' = hashed password/username.
+	 * from form in $formfield_uident. 'superchallenged' = hashed password hashed again with username.
+	 *
+	 * @var	string
+	 * @deprecated since 4.7 will be removed in 4.9
+	 */
+	public $security_level = 'normal';
 
-	var $auth_timeout_field = 0; // Server session lifetime. If > 0: session-timeout in seconds. If false or <0: no timeout. If string: The string is a fieldname from the usertable where the timeout can be found.
+	var $auth_timeout_field = 0; // Server session lifetime. If > 0: session-timeout in seconds. If FALSE or <0: no timeout. If string: The string is a fieldname from the usertable where the timeout can be found.
 	var $lifetime = 0; // Client session lifetime. 0 = Session-cookies. If session-cookies, the browser will stop the session when the browser is closed. Otherwise this specifies the lifetime of a cookie that keeps the session.
 	var $gc_time = 0; // GarbageCollection. Purge all server session data older than $gc_time seconds. 0 = default to $this->timeout or use 86400 seconds (1 day) if $this->lifetime is 0
 	var $gc_probability = 1; // Possibility (in percent) for GarbageCollection to be run.
@@ -138,9 +93,9 @@ class t3lib_userAuth {
 	var $sendNoCacheHeaders = TRUE; // If this is set, headers is sent to assure, caching is NOT done
 	var $getFallBack = FALSE; // If this is set, authentication is also accepted by the $_GET. Notice that the identification is NOT 128bit MD5 hash but reduced. This is done in order to minimize the size for mobile-devices, such as WAP-phones
 	var $hash_length = 32; // The ident-hash is normally 32 characters and should be! But if you are making sites for WAP-devices og other lowbandwidth stuff, you may shorten the length. Never let this value drop below 6. A length of 6 would give you more than 16 mio possibilities.
-	var $getMethodEnabled = FALSE; // Setting this flag true lets user-authetication happen from GET_VARS if POST_VARS are not set. Thus you may supply username/password from the URL.
+	var $getMethodEnabled = FALSE; // Setting this flag TRUE lets user-authetication happen from GET_VARS if POST_VARS are not set. Thus you may supply username/password from the URL.
 	var $lockIP = 4; // If set, will lock the session to the users IP address (all four numbers. Reducing to 1-3 means that only first, second or third part of the IP address is used).
-	var $lockHashKeyWords = 'useragent'; // Keyword list (commalist with no spaces!): "useragent". Each keyword indicates some information that can be included in a integer hash made to lock down usersessions. Configurable through $TYPO3_CONF_VARS[TYPO3_MODE]['lockHashKeyWords']
+	var $lockHashKeyWords = 'useragent'; // Keyword list (commalist with no spaces!): "useragent". Each keyword indicates some information that can be included in a integer hash made to lock down usersessions. Configurable through $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['lockHashKeyWords']
 
 	var $warningEmail = ''; // warning -emailaddress:
 	var $warningPeriod = 3600; // Period back in time (in seconds) in which number of failed logins are collected
@@ -152,18 +107,18 @@ class t3lib_userAuth {
 	var $id; // Internal: Will contain session_id (MD5-hash)
 	var $cookieId; // Internal: Will contain the session_id gotten from cookie or GET method. This is used in statistics as a reliable cookie (one which is known to come from $_COOKIE).
 	var $loginFailure = FALSE; // Indicates if an authentication was started but failed
-	var $loginSessionStarted = FALSE; // Will be set to true if the login session is actually written during auth-check.
+	var $loginSessionStarted = FALSE; // Will be set to TRUE if the login session is actually written during auth-check.
 
 	var $user; // Internal: Will contain user- AND session-data from database (joined tables)
-	var $get_URL_ID = ''; // Internal: Will will be set to the url--ready (eg. '&login=ab7ef8d...') GET-auth-var if getFallBack is true. Should be inserted in links!
+	var $get_URL_ID = ''; // Internal: Will will be set to the url--ready (eg. '&login=ab7ef8d...') GET-auth-var if getFallBack is TRUE. Should be inserted in links!
 
-	var $newSessionID = FALSE; // Will be set to true if a new session ID was created
+	var $newSessionID = FALSE; // Will be set to TRUE if a new session ID was created
 	var $forceSetCookie = FALSE; // Will force the session cookie to be set everytime (lifetime must be 0)
 	var $dontSetCookie = FALSE; // Will prevent the setting of the session cookie (takes precedence over forceSetCookie)
 	var $challengeStoredInCookie = FALSE; // If set, the challenge value will be stored in a session as well so the server can check that is was not forged.
 	var $loginType = ''; // Login type, used for services.
 
-	var $svConfig = array(); // "auth" services configuration array from $TYPO3_CONF_VARS['SVCONF']['auth']
+	var $svConfig = array(); // "auth" services configuration array from $GLOBALS['TYPO3_CONF_VARS']['SVCONF']['auth']
 	var $writeDevLog = FALSE; // write messages into the devlog?
 
 
@@ -179,25 +134,25 @@ class t3lib_userAuth {
 	 * @return	void
 	 */
 	function start() {
-		global $TYPO3_CONF_VARS;
-
 			// backend or frontend login - used for auth services
-		$this->loginType = ($this->name == 'fe_typo_user') ? 'FE' : 'BE';
+		if (empty($this->loginType)) {
+			throw new t3lib_exception('No loginType defined, should be set explicitly by subclass');
+		}
 
 			// set level to normal if not already set
 		if (!$this->security_level) {
 				// Notice: cannot use TYPO3_MODE here because BE user can be logged in and operate inside FE!
-			$this->security_level = trim($TYPO3_CONF_VARS[$this->loginType]['loginSecurityLevel']);
+			$this->security_level = trim($GLOBALS['TYPO3_CONF_VARS'][$this->loginType]['loginSecurityLevel']);
 			if (!$this->security_level) {
 				$this->security_level = 'normal';
 			}
 		}
 
 			// enable dev logging if set
-		if ($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['writeDevLog']) {
+		if ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['writeDevLog']) {
 			$this->writeDevLog = TRUE;
 		}
-		if ($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['writeDevLog' . $this->loginType]) {
+		if ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['writeDevLog' . $this->loginType]) {
 			$this->writeDevLog = TRUE;
 		}
 		if (TYPO3_DLOG) {
@@ -211,9 +166,9 @@ class t3lib_userAuth {
 			// Init vars.
 		$mode = '';
 		$this->newSessionID = FALSE;
-			// $id is set to ses_id if cookie is present. Else set to false, which will start a new session
+			// $id is set to ses_id if cookie is present. Else set to FALSE, which will start a new session
 		$id = $this->getCookie($this->name);
-		$this->svConfig = $TYPO3_CONF_VARS['SVCONF']['auth'];
+		$this->svConfig = $GLOBALS['TYPO3_CONF_VARS']['SVCONF']['auth'];
 
 			// if we have a flash client, take the ID from the GP
 		if (!$id && $GLOBALS['CLIENT']['BROWSER'] == 'flash') {
@@ -247,7 +202,7 @@ class t3lib_userAuth {
 		}
 
 			// Set session hashKey lock keywords from configuration; currently only 'useragent' can be used.
-		$this->lockHashKeyWords = $TYPO3_CONF_VARS[$this->loginType]['lockHashKeyWords'];
+		$this->lockHashKeyWords = $GLOBALS['TYPO3_CONF_VARS'][$this->loginType]['lockHashKeyWords'];
 
 			// Make certain that NO user is set initially
 		$this->user = '';
@@ -291,18 +246,13 @@ class t3lib_userAuth {
 		}
 
 			// Hook for alternative ways of filling the $this->user array (is used by the "timtaw" extension)
-		if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['postUserLookUp'])) {
-			foreach ($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['postUserLookUp'] as $funcName) {
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['postUserLookUp'])) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['postUserLookUp'] as $funcName) {
 				$_params = array(
 					'pObj' => &$this,
 				);
 				t3lib_div::callUserFunction($funcName, $_params, $this);
 			}
-		}
-
-			// If any redirection (inclusion of file) then it will happen in this function
-		if (!$this->userid && $this->auth_url) { // if no userid AND an include-document for login is given
-			$this->redirect();
 		}
 
 			// Set $this->gc_time if not explicitely specified
@@ -367,7 +317,7 @@ class t3lib_userAuth {
 
 	/**
 	 * Gets the domain to be used on setting cookies.
-	 * The information is taken from the value in $TYPO3_CONF_VARS[SYS][cookieDomain].
+	 * The information is taken from the value in $GLOBALS['TYPO3_CONF_VARS']['SYS']['cookieDomain'].
 	 *
 	 * @return	string		The domain to be used on setting cookies
 	 */
@@ -828,12 +778,12 @@ class t3lib_userAuth {
 
 		if ($statement && $user) {
 				// A user was found
-			if (t3lib_div::testInt($this->auth_timeout_field)) {
+			if (t3lib_Utility_Math::canBeInterpretedAsInteger($this->auth_timeout_field)) {
 				$timeout = intval($this->auth_timeout_field); // Get timeout from object
 			} else {
 				$timeout = intval($user[$this->auth_timeout_field]); // Get timeout-time from usertable
 			}
-				// If timeout > 0 (true) and currenttime has not exceeded the latest sessions-time plus the timeout in seconds then accept user
+				// If timeout > 0 (TRUE) and currenttime has not exceeded the latest sessions-time plus the timeout in seconds then accept user
 				// Option later on: We could check that last update was at least x seconds ago in order not to update twice in a row if one script redirects to another...
 			if ($timeout > 0 && ($GLOBALS['EXEC_TIME'] < ($user['ses_tstamp'] + $timeout))) {
 				if (!$skipSessionUpdate) {
@@ -900,7 +850,7 @@ class t3lib_userAuth {
 	 * in the database. Don't care if session record is still valid or not.
 	 *
 	 * @param	integer		Claimed Session ID
-	 * @return	boolean		Returns true if a corresponding session was found in the database
+	 * @return	boolean		Returns TRUE if a corresponding session was found in the database
 	 */
 	function isExistingSessionRecord($id) {
 		$statement = $GLOBALS['TYPO3_DB']->prepare_SELECTquery(
@@ -1027,7 +977,7 @@ class t3lib_userAuth {
 		if ($parts >= 4) {
 			return $IP;
 		} else {
-			$parts = t3lib_div::intInRange($parts, 1, 3);
+			$parts = t3lib_utility_Math::forceIntegerInRange($parts, 1, 3);
 			$IPparts = explode('.', $IP);
 			for ($a = 4; $a > $parts; $a--) {
 				unset($IPparts[$a - 1]);
@@ -1102,7 +1052,7 @@ class t3lib_userAuth {
 	}
 
 	/**
-	 * Sets $theUC as the internal variable ->uc IF $theUC is an array. If $theUC is false, the 'uc' content from the ->user array will be unserialized and restored in ->uc
+	 * Sets $theUC as the internal variable ->uc IF $theUC is an array. If $theUC is FALSE, the 'uc' content from the ->user array will be unserialized and restored in ->uc
 	 *
 	 * @param	mixed		If an array, then set as ->uc, otherwise load from user record
 	 * @return	void
@@ -1210,44 +1160,48 @@ class t3lib_userAuth {
 
 	/**
 	 * Processes Login data submitted by a form or params depending on the
-	 * security_level
+	 * passwordTransmissionStrategy
 	 *
 	 * @param	array		login data array
-	 * @param	string		Alternative security_level. Used when authentication services wants to override the default.
+	 * @param	string		Alternative passwordTransmissionStrategy. Used when authentication services wants to override the default.
 	 * @return	array		processed login data array
 	 * @internal
 	 */
-	function processLoginData($loginData, $security_level = '') {
-		global $TYPO3_CONF_VARS;
+	function processLoginData($loginData, $passwordTransmissionStrategy = '') {
+		$passwordTransmissionStrategy = $passwordTransmissionStrategy ? $passwordTransmissionStrategy : ($GLOBALS['TYPO3_CONF_VARS'][$this->loginType]['loginSecurityLevel'] ? trim($GLOBALS['TYPO3_CONF_VARS'][$this->loginType]['loginSecurityLevel']) : $this->security_level);
 
-		$loginSecurityLevel = $security_level ? $security_level : ($TYPO3_CONF_VARS[$this->loginType]['loginSecurityLevel'] ? $TYPO3_CONF_VARS[$this->loginType]['loginSecurityLevel'] : $this->security_level);
-
-			// Processing data according to the state it was submitted in.
-			// ($loginSecurityLevel should reflect the security level used on the data being submitted in the login form)
-		if ($loginSecurityLevel == 'normal') {
-			$loginData['uident_text'] = $loginData['uident'];
-			$loginData['uident_challenged'] = (string) md5($loginData['uname'] . ':' . $loginData['uident'] . ':' . $loginData['chalvalue']);
-			$loginData['uident_superchallenged'] = (string) md5($loginData['uname'] . ':' . (md5($loginData['uident'])) . ':' . $loginData['chalvalue']);
-		} elseif ($loginSecurityLevel == 'challenged') {
-			$loginData['uident_text'] = '';
-			$loginData['uident_challenged'] = $loginData['uident'];
-			$loginData['uident_superchallenged'] = '';
-		} elseif ($loginSecurityLevel == 'superchallenged') {
-			$loginData['uident_text'] = '';
-			$loginData['uident_challenged'] = '';
-			$loginData['uident_superchallenged'] = $loginData['uident'];
+		if ($this->writeDevLog) {
+			t3lib_div::devLog('Login data before processing: ' . t3lib_div::arrayToLogString($loginData), 't3lib_userAuth');
 		}
 
-			// The password "uident" is set based on the internal security setting of TYPO3
-			// Example:
-			// $this->security_level for the backend must be "superchallenged" because passwords are stored as md5-hashes in the be_users table
-			// $this->security_level for the frontend must be "normal" or "challenged" because passwords are stored as clear-text in the fe_users tables
-		if ($this->security_level == 'normal') {
-			$loginData['uident'] = $loginData['uident_text'];
-		} elseif ($this->security_level == 'challenged') {
-			$loginData['uident'] = $loginData['uident_challenged'];
-		} elseif ($this->security_level == 'superchallenged') {
-			$loginData['uident'] = $loginData['uident_superchallenged'];
+		$serviceChain = '';
+		$subType = 'processLoginData' . $this->loginType;
+		$authInfo = $this->getAuthInfoArray();
+		$isLoginDataProcessed = FALSE;
+		$processedLoginData = $loginData;
+		while (is_object($serviceObject = t3lib_div::makeInstanceService('auth', $subType, $serviceChain))) {
+			$serviceChain .= ',' . $serviceObject->getServiceKey();
+			$serviceObject->initAuth($subType, $loginData, $authInfo, $this);
+
+			$serviceResult = $serviceObject->processLoginData($processedLoginData, $passwordTransmissionStrategy);
+
+			if (!empty($serviceResult)) {
+				$isLoginDataProcessed = TRUE;
+
+					// if the service returns >=200 then no more processing is needed
+				if (intval($serviceResult) >= 200)	{
+					unset($serviceObject);
+					break;
+				}
+			}
+			unset($serviceObject);
+		}
+
+		if ($isLoginDataProcessed) {
+			$loginData = $processedLoginData;
+			if ($this->writeDevLog) {
+				t3lib_div::devLog('Processed login data: '.t3lib_div::arrayToLogString($processedLoginData), 't3lib_userAuth');
+			}
 		}
 
 		return $loginData;
@@ -1266,6 +1220,7 @@ class t3lib_userAuth {
 		$authInfo['HTTP_HOST'] = t3lib_div::getIndpEnv('HTTP_HOST');
 		$authInfo['REMOTE_ADDR'] = t3lib_div::getIndpEnv('REMOTE_ADDR');
 		$authInfo['REMOTE_HOST'] = t3lib_div::getIndpEnv('REMOTE_HOST');
+		/** @deprecated the usage of $authInfo['security_level'] is deprecated since 4.7 */
 		$authInfo['security_level'] = $this->security_level;
 		$authInfo['showHiddenRecords'] = $this->showHiddenRecords;
 			// can be overidden in localconf by SVCONF:
@@ -1286,15 +1241,15 @@ class t3lib_userAuth {
 	 *
 	 * @param	array		user data array
 	 * @param	array		login data array
-	 * @param	string		Alternative security_level. Used when authentication services wants to override the default.
-	 * @return	boolean		true if login data matched
+	 * @param	string		Alternative passwordCompareStrategy. Used when authentication services wants to override the default.
+	 * @return	boolean		TRUE if login data matched
 	 */
-	function compareUident($user, $loginData, $security_level = '') {
+	function compareUident($user, $loginData, $passwordCompareStrategy = '') {
 
 		$OK = FALSE;
-		$security_level = $security_level ? $security_level : $this->security_level;
+		$passwordCompareStrategy = $passwordCompareStrategy ? $passwordCompareStrategy : $this->security_level;
 
-		switch ($security_level) {
+		switch ($passwordCompareStrategy) {
 			case 'superchallenged': // If superchallenged the password in the database ($user[$this->userident_column]) must be a md5-hash of the original password.
 			case 'challenged':
 
@@ -1310,12 +1265,12 @@ class t3lib_userAuth {
 					}
 				}
 
-				if ((string) $loginData['uident'] === (string) md5($user[$this->username_column] . ':' . $user[$this->userident_column] . ':' . $loginData['chalvalue'])) {
+				if ((string) $loginData['uident_' . $passwordCompareStrategy] === (string) md5($user[$this->username_column] . ':' . $user[$this->userident_column] . ':' . $loginData['chalvalue'])) {
 					$OK = TRUE;
 				}
 			break;
 			default: // normal
-				if ((string) $loginData['uident'] === (string) $user[$this->userident_column]) {
+				if ((string) $loginData['uident_text'] === (string) $user[$this->userident_column]) {
 					$OK = TRUE;
 				}
 			break;
@@ -1339,20 +1294,6 @@ class t3lib_userAuth {
 	}
 
 	/**
-	 * Redirect to somewhere (obsolete).
-	 *
-	 * @return	void
-	 * @deprecated since TYPO3 3.6, this function will be removed in TYPO3 4.6.
-	 * @obsolete
-	 * @ignore
-	 */
-	function redirect() {
-		t3lib_div::logDeprecatedFunction();
-		include ($this->auth_include);
-		exit;
-	}
-
-	/**
 	 * DUMMY: Writes to log database table (in some extension classes)
 	 *
 	 * @param	integer		$type: denotes which module that has submitted the entry. This is the current list:  1=tce_db; 2=tce_file; 3=system (eg. sys_history save); 4=modules; 254=Personal settings changed; 255=login / out action: 1=login, 2=logout, 3=failed login (+ errorcode 3), 4=failure_warning_email sent
@@ -1373,10 +1314,13 @@ class t3lib_userAuth {
 	/**
 	 * DUMMY: Check login failures (in some extension classes)
 	 *
-	 * @return	void
+	 * @param string $email Email address
+	 * @param integer $secondsBack Number of sections back in time to check. This is a kind of limit for how many failures an hour for instance
+	 * @param integer $maxFailures Max allowed failures before a warning mail is sent
+	 * @return void
 	 * @ignore
 	 */
-	function checkLogFailures() {
+	function checkLogFailures($email, $secondsBack, $maxFailures) {
 	}
 
 	/**

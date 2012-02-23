@@ -70,7 +70,7 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	 */
 	public function createValidatorResolvesAndReturnsAValidatorAndPassesTheGivenOptions() {
 		$className = uniqid('Test');
-		$mockValidator = $this->getMock('Tx_Extbase_Validation_Validator_ObjectValidatorInterface', array(), array(), $className);
+		$mockValidator = $this->getMock('Tx_Extbase_Validation_Validator_ObjectValidatorInterface', array('setOptions', 'canValidate', 'isPropertyValid'), array(), $className);
 		$mockValidator->expects($this->once())->method('setOptions')->with(array('foo' => 'bar'));
 
 		$mockObjectManager = $this->getMock('Tx_Extbase_Object_ObjectManagerInterface');
@@ -306,7 +306,7 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	 * @test
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
-	public function unifyDataTypeCorrectlyRenamesPHPDataTypes() {
+	public function unifyDataTypeCorrectlyRenamesPhpDataTypes() {
 		$mockValidatorResolver = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Validation_ValidatorResolver'), array('dummy'));
 		$this->assertEquals('Integer', $mockValidatorResolver->_call('unifyDataType', 'integer'));
 		$this->assertEquals('Integer', $mockValidatorResolver->_call('unifyDataType', 'int'));

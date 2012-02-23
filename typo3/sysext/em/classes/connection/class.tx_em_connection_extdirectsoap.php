@@ -70,11 +70,18 @@ class tx_em_Connection_ExtDirectSoap {
 	/**
 	 * Login test with user credentials
 	 *
+	 * @deprecated since 4.6, will be removed in 4.8
 	 * @return array
 	 */
 	public function testUserLogin() {
+
+			// There is a theory which states that if ever anybody discovers exactly what this method is for and why it is here,
+			// it will instantly disappear and be replaced by something even more bizarre and inexplicable.
+			// There is another theory which states that this has already happened.
+		t3lib_div::logDeprecatedFunction();
+
 		if (is_array($this->accountData)) {
-			$login = false;
+			$login = FALSE;
 			if ($login) {
 				$data = array(
 					'success' => TRUE,
@@ -323,7 +330,7 @@ class tx_em_Connection_ExtDirectSoap {
 
 	/**
 	 * @param  $data
-	 * @return bool|null|string|tx_em_Settings|unknown
+	 * @return bool|NULL|string|tx_em_Settings|unknown
 	 */
 	protected function addUploads($data) {
 		if (count((array) $data) === 0) {

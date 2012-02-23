@@ -27,8 +27,6 @@
 /**
  * Module: Extension manager, (un-)install extensions
  *
- * $Id: class.tx_em_install.php 2073 2010-03-19 10:42:38Z steffenk $
- *
  * @author	Steffen Kamper <info@sk-typo3.de>
  */
 
@@ -55,6 +53,10 @@ class tx_em_Install {
 	 */
 	public $install;
 
+	/**
+	 * @var t3lib_install_Sql
+	 */
+	protected $installerSql = NULL;
 
 	/**
 	 * @var integer
@@ -76,6 +78,7 @@ class tx_em_Install {
 		$this->parentObject = $parentObject;
 		$this->api = t3lib_div::makeInstance('tx_em_API');
 		$this->install = t3lib_div::makeInstance('t3lib_install');
+		$this->installerSql = t3lib_div::makeInstance('t3lib_install_Sql');
 		$this->install->INSTALL = t3lib_div::_GP('TYPO3_INSTALL');
 		$this->systemInstall = isset($GLOBALS['TYPO3_CONF_VARS']['EXT']['allowSystemInstall']) && $GLOBALS['TYPO3_CONF_VARS']['EXT']['allowSystemInstall'];
 	}
@@ -224,7 +227,7 @@ class tx_em_Install {
 										if (!$content) {
 											$messageContent = sprintf($GLOBALS['LANG']->getLL('ext_import_success_folder'), $extDirPath) . '<br />';
 
-											$uploadSucceed = true;
+											$uploadSucceed = TRUE;
 
 											// Fix TYPO3_MOD_PATH for backend modules in extension:
 											$modules = t3lib_div::trimExplode(',', $EM_CONF['module'], 1);
@@ -417,8 +420,8 @@ class tx_em_Install {
 	 */
 	function checkDependencies($extKey, $conf, $instExtInfo) {
 		$content = '';
-		$depError = false;
-		$depIgnore = false;
+		$depError = FALSE;
+		$depIgnore = FALSE;
 		$msg = array();
 		$depsolver = t3lib_div::_POST('depsolver');
 
@@ -428,7 +431,7 @@ class tx_em_Install {
 					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ignored'),
 						$depK) . '
 						<input type="hidden" value="1" name="depsolver[ignore][' . $depK . ']" />';
-					$depIgnore = true;
+					$depIgnore = TRUE;
 					continue;
 				}
 				if ($depK == 'php') {
@@ -442,14 +445,14 @@ class tx_em_Install {
 							$phpv, $versionRange[0]);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
-						$depError = true;
+						$depError = TRUE;
 						continue;
 					} elseif ($versionRange[1] != '0.0.0' && version_compare($phpv, $versionRange[1], '>')) {
 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_php_too_high'),
 							$phpv, $versionRange[1]);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
-						$depError = true;
+						$depError = TRUE;
 						continue;
 					}
 
@@ -475,14 +478,14 @@ class tx_em_Install {
 							$t3version, $versionRange[0]);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
-						$depError = true;
+						$depError = TRUE;
 						continue;
 					} elseif ($versionRange[1] != '0.0.0' && version_compare($t3version, $versionRange[1], '>')) {
 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_typo3_too_high'),
 							$t3version, $versionRange[1]);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
-						$depError = true;
+						$depError = TRUE;
 						continue;
 					}
 				} elseif (strlen($depK) && !t3lib_extMgm::isLoaded($depK)) { // strlen check for braindead empty dependencies coming from extensions...
@@ -490,29 +493,29 @@ class tx_em_Install {
 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_not_available'),
 							$depK);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . t3lib_iconWorks::getSpriteIcon('actions-system-extension-import', array('title' => $GLOBALS['LANG']->getLL('checkDependencies_import_ext'))) . '&nbsp;
-							<a href="' . t3lib_div::linkThisUrl($this->parentObject->script, array(
+							<a href="#" onclick="window.open(\'' . t3lib_div::linkThisUrl($this->parentObject->script, array(
 							'CMD[importExt]' => $depK,
 							'CMD[loc]' => 'L',
 							'CMD[standAlone]' => 1
-						)) . '" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
+						)) . '\', \'' . md5($instExtInfo[$depK]['EM_CONF']['title']) . '\', \'width=650,height=500,scrollbars=yes\'); return false;" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_ext_requirement') . '</label>';
 					} else {
 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_not_installed'),
 							$depK, $instExtInfo[$depK]['EM_CONF']['title']);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . tx_em_Tools::installButton() . '&nbsp;
-							<a href="' . t3lib_div::linkThisUrl($this->parentObject->script, array(
+							<a href="#" onclick="window.open(\'' . t3lib_div::linkThisUrl($this->parentObject->script, array(
 							'CMD[showExt]' => $depK,
 							'CMD[load]' => 1,
 							'CMD[clrCmd]' => 1,
 							'CMD[standAlone]' => 1,
 							'SET[singleDetails]' => 'info'
 						)) .
-								'" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_install_now') . '</a>';
+								'\', \'' . md5($instExtInfo[$depK]['EM_CONF']['title']) . '\', \'width=650,height=500,scrollbars=yes\'); return false; " target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_install_now') . '</a>';
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_ext_requirement') . '</label>';
 					}
-					$depError = true;
+					$depError = TRUE;
 				} else {
 					$versionRange = tx_em_Tools::splitVersionRange($depV);
 					if ($versionRange[0] != '0.0.0' && version_compare($instExtInfo[$depK]['EM_CONF']['version'], $versionRange[0], '<')) {
@@ -520,14 +523,14 @@ class tx_em_Install {
 							$depK, $instExtInfo[$depK]['EM_CONF']['version'], $versionRange[0]);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
-						$depError = true;
+						$depError = TRUE;
 						continue;
 					} elseif ($versionRange[1] != '0.0.0' && version_compare($instExtInfo[$depK]['EM_CONF']['version'], $versionRange[1], '>')) {
 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_too_high'),
 							$depK, $instExtInfo[$depK]['EM_CONF']['version'], $versionRange[1]);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
 							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
-						$depError = true;
+						$depError = TRUE;
 						continue;
 					}
 				}
@@ -551,8 +554,8 @@ class tx_em_Install {
 		}
 
 		// Check conflicts with other extensions:
-		$conflictError = false;
-		$conflictIgnore = false;
+		$conflictError = FALSE;
+		$conflictIgnore = FALSE;
 		$msg = array();
 
 		if (isset($conf['constraints']['conflicts']) && is_array($conf['constraints']['conflicts'])) {
@@ -561,7 +564,7 @@ class tx_em_Install {
 					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_conflict_ignored'),
 						$conflictK) . '
 						<input type="hidden" value="1" name="depsolver[ignore][' . $conflictK . ']" />';
-					$conflictIgnore = true;
+					$conflictIgnore = TRUE;
 					continue;
 				}
 				if (t3lib_extMgm::isLoaded($conflictK)) {
@@ -585,7 +588,7 @@ class tx_em_Install {
 							'" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_remove_now') . '</a>';
 					$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $conflictK . ']" id="checkIgnore_' . $conflictK . '" />
 						<label for="checkIgnore_' . $conflictK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_conflict') . '</label>';
-					$conflictError = true;
+					$conflictError = TRUE;
 				}
 			}
 		}
@@ -607,15 +610,15 @@ class tx_em_Install {
 
 		// Check suggests on other extensions:
 		if (isset($conf['constraints']['suggests']) && is_array($conf['constraints']['suggests'])) {
-			$suggestion = false;
-			$suggestionIgnore = false;
+			$suggestion = FALSE;
+			$suggestionIgnore = FALSE;
 			$msg = array();
 			foreach ($conf['constraints']['suggests'] as $suggestK => $suggestV) {
 				if ($depsolver['ignore'][$suggestK]) {
 					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggestion_ignored'),
 						$suggestK) . '
 				<input type="hidden" value="1" name="depsolver[ignore][' . $suggestK . ']" />';
-					$suggestionIgnore = true;
+					$suggestionIgnore = TRUE;
 					continue;
 				}
 				if (!t3lib_extMgm::isLoaded($suggestK)) {
@@ -623,29 +626,29 @@ class tx_em_Install {
 						$msg[] = sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggest_import'),
 							$suggestK);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . t3lib_iconWorks::getSpriteIcon('actions-system-extension-import', array('title' => $GLOBALS['LANG']->getLL('checkDependencies_import_ext'))) . '&nbsp;
-							<a href="' . t3lib_div::linkThisScript(array(
+							<a href="#" onclick="window.open(\'' . t3lib_div::linkThisScript(array(
 							'CMD[importExt]' => $suggestK,
 							'CMD[loc]' => 'L',
 							'CMD[standAlone]' => 1
-						)) . '" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
+						)) . '\', \'' . md5($suggestK) . '\', \'width=650,height=500,scrollbars=yes\'); return false; " target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $suggestK . ']" id="checkIgnore_' . $suggestK . '" />
 							<label for="checkIgnore_' . $suggestK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_suggestion') . '</label>';
 					} else {
 						$msg[] = sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggest_installation'),
 							$suggestK, $instExtInfo[$suggestK]['EM_CONF']['title']);
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . tx_em_Tools::installButton() . '&nbsp;
-							<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array(
+							<a href="#" onclick="window.open(\''  . htmlspecialchars(t3lib_div::linkThisScript(array(
 							'CMD[showExt]' => $suggestK,
 							'CMD[load]' => 1,
 							'CMD[clrCmd]' => 1,
 							'CMD[standAlone]' => 1,
 							'SET[singleDetails]' => 'info'
 						))) .
-								'" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_install_now') . '</a>';
+								'\', \'' . md5($suggestK) . '\', \'width=650,height=500,scrollbars=yes\'); return false; " target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_install_now') . '</a>';
 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $suggestK . ']" id="checkIgnore_' . $suggestK . '" />
 							<label for="checkIgnore_' . $suggestK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_suggestion') . '</label>';
 					}
-					$suggestion = true;
+					$suggestion = TRUE;
 				}
 			}
 
@@ -837,53 +840,75 @@ class tx_em_Install {
 	 * Prints form for changes if any. If none, returns blank. If an update is ordered, empty is returned as well.
 	 * DBAL compliant (based on Install Tool code)
 	 *
-	 * @param	string		Extension key
-	 * @param	array		Extension information array
-	 * @param	boolean		If true, returns array with info.
-	 * @return	mixed		If $infoOnly, returns array with information. Otherwise performs update.
+	 * @param string $extKey Extension key
+	 * @param array $extInfo Extension information array
+	 * @param boolean $infoOnly If TRUE, returns array with info
+	 * @param boolean $showCachingTables If FALSE, don't take the caching tables into account
+	 * @return mixed If $infoOnly, returns array with information. Otherwise performs update.
 	 */
-	function checkDBupdates($extKey, $extInfo, $infoOnly = 0) {
-
+	function checkDBupdates($extKey, $extInfo, $infoOnly = FALSE, $showCachingTables = TRUE) {
 
 		$dbStatus = array();
 		$content = '';
+		$hookObjects = array();
+
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/mod/tools/em/index.php']['checkDBupdates'])) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/mod/tools/em/index.php']['checkDBupdates'] as $classData) {
+				/** @var $hookObject tx_em_Index_CheckDatabaseUpdatesHook **/
+				$hookObject = t3lib_div::getUserObj($classData);
+				if (!($hookObject instanceof tx_em_Index_CheckDatabaseUpdatesHook)) {
+					throw new UnexpectedValueException('$hookObject must implement interface em_index_checkDatabaseUpdatesHook', 1288418476);
+				}
+				$hookObjects[] = $hookObject;
+			}
+		}
 
 		// Updating tables and fields?
 		$showUpdateStatements = TRUE;
 		if (is_array($extInfo['files']) && in_array('ext_tables.sql', $extInfo['files'])) {
 			$path = tx_em_Tools::getExtPath($extKey, $extInfo['type']);
 			$fileContent = t3lib_div::getUrl($path . 'ext_tables.sql');
+				// Take caching tables into account only if necessary
+				// (this is not always the case, because this method is also called, for example,
+				// to list all tables for which to dump data for in the extension maintenance operations)
+			if ($showCachingTables) {
+				$fileContent .= t3lib_cache::getDatabaseTableDefinitions();
+			}
+			foreach ($hookObjects as $hookObject) {
+				/** @var $hookObject tx_em_Index_CheckDatabaseUpdatesHook **/
+				$appendableTableDefinitions = $hookObject->appendTableDefinitions($extKey, $extInfo, $fileContent, $this->install, $this->installerSql, $this);
+				if ($appendableTableDefinitions) {
+					$fileContent .= $appendableTableDefinitions;
+					break;
+				}
+			}
 
-			$FDfile = $this->install->getFieldDefinitions_fileContent($fileContent);
+			$FDfile = $this->installerSql->getFieldDefinitions_fileContent($fileContent);
 			if (count($FDfile)) {
-				$FDdb = $this->install->getFieldDefinitions_database(TYPO3_db);
-				$diff = $this->install->getDatabaseExtra($FDfile, $FDdb);
-				$update_statements = $this->install->getUpdateSuggestions($diff);
+				$FDdb = $this->installerSql->getFieldDefinitions_database(TYPO3_db);
+				$diff = $this->installerSql->getDatabaseExtra($FDfile, $FDdb);
+				$update_statements = $this->installerSql->getUpdateSuggestions($diff);
 
 				$dbStatus['structure']['tables_fields'] = $FDfile;
 				$dbStatus['structure']['diff'] = $diff;
 
 				// Updating database...
 				if (!$infoOnly && is_array($this->install->INSTALL['database_update'])) {
-					$this->install->performUpdateQueries($update_statements['add'], $this->install->INSTALL['database_update']);
-					$this->install->performUpdateQueries($update_statements['change'], $this->install->INSTALL['database_update']);
-					$this->install->performUpdateQueries($update_statements['create_table'], $this->install->INSTALL['database_update']);
+					$this->installerSql->performUpdateQueries($update_statements['add'], $this->install->INSTALL['database_update']);
+					$this->installerSql->performUpdateQueries($update_statements['change'], $this->install->INSTALL['database_update']);
+					$this->installerSql->performUpdateQueries($update_statements['create_table'], $this->install->INSTALL['database_update']);
 				} else {
-					if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/mod/tools/em/index.php']['checkDBupdates'])) {
-						foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/mod/tools/em/index.php']['checkDBupdates'] as $classData) {
-							$hookObject = t3lib_div::getUserObj($classData);
-
-							if (!($hookObject instanceof tx_em_Index_CheckDatabaseUpdatesHook)) {
-								throw new UnexpectedValueException('$hookObject must implement interface em_index_checkDatabaseUpdatesHook', 1288418476);
-							}
-
-							/* @var $hookObject tx_em_Index_CheckDatabaseUpdatesHook */
-							$preprocessContent = $hookObject->preProcessDatabaseUpdates($extKey, $extInfo, $diff, $this->install, $this);
-							if ($preprocessContent) {
-								$content .= $preprocessContent;
-								$showUpdateStatements = FALSE;
-								break;
-							}
+					foreach ($hookObjects as $hookObject) {
+						/** @var $hookObject tx_em_Index_CheckDatabaseUpdatesHook **/
+							// Hook that allows pre-processing of database structure modifications.
+							// The hook implementation may return a user form that will temporarily
+							// replace the standard database update form. This allows additional
+							// operations to be performed before the database structure gets updated.
+						$preprocessContent = $hookObject->preProcessDatabaseUpdates($extKey, $extInfo, $diff, $this->install, $this);
+						if ($preprocessContent) {
+							$content .= $preprocessContent;
+							$showUpdateStatements = FALSE;
+							break;
 						}
 					}
 					if ($showUpdateStatements) {
@@ -902,8 +927,8 @@ class tx_em_Install {
 		if (is_array($extInfo['files']) && in_array('ext_tables_static+adt.sql', $extInfo['files'])) {
 			$fileContent = t3lib_div::getUrl(tx_em_Tools::getExtPath($extKey, $extInfo['type']) . 'ext_tables_static+adt.sql');
 
-			$statements = $this->install->getStatementarray($fileContent, 1);
-			list($statements_table, $insertCount) = $this->install->getCreateTables($statements, 1);
+			$statements = $this->installerSql->getStatementarray($fileContent, 1);
+			list($statements_table, $insertCount) = $this->installerSql->getCreateTables($statements, 1);
 
 			// Execute import of static table content:
 			if (!$infoOnly && is_array($this->install->INSTALL['database_import'])) {
@@ -915,7 +940,7 @@ class tx_em_Install {
 						$GLOBALS['TYPO3_DB']->admin_query($statements_table[$table]);
 
 						if ($insertCount[$table]) {
-							$statements_insert = $this->install->getTableInsertStatements($statements, $table);
+							$statements_insert = $this->installerSql->getTableInsertStatements($statements, $table);
 
 							foreach ($statements_insert as $v) {
 								$GLOBALS['TYPO3_DB']->admin_query($v);
@@ -924,7 +949,7 @@ class tx_em_Install {
 					}
 				}
 			} else {
-				$whichTables = $this->install->getListOfTables();
+				$whichTables = $this->installerSql->getListOfTables();
 				if (count($statements_table)) {
 					$out = '';
 					foreach ($statements_table as $table => $definition) {
@@ -934,8 +959,8 @@ class tx_em_Install {
 						$dbStatus['static'][$table]['count'] = $insertCount[$table];
 
 						$out .= '<tr>
-							<td><input type="checkbox" name="TYPO3_INSTALL[database_import][' . $table . ']" checked="checked" value="' . md5($definition) . '" /></td>
-							<td><strong>' . $table . '</strong></td>
+							<td><input type="checkbox" id="check_table_' . $table . '" name="TYPO3_INSTALL[database_import][' . $table . ']" checked="checked" value="' . md5($definition) . '" /></td>
+							<td><strong><label for="check_table_' . $table . '">' . $table . '</label></strong></td>
 							<td><img src="clear.gif" width="10" height="1" alt="" /></td>
 							<td nowrap="nowrap">' .
 								($insertCount[$table] ?
@@ -1050,14 +1075,15 @@ class tx_em_Install {
 	/**
 	 * Perform a detailed, technical analysis of the available extension on server!
 	 * Includes all kinds of verifications
-	 * Takes some time to process, therfore use with care, in particular in listings.
+	 * Takes some time to process, therefore use with care, in particular in listings.
 	 *
-	 * @param	string		Extension key
-	 * @param	array		Extension information
-	 * @param	boolean		If set, checks for validity of classes etc.
-	 * @return	array		Information in an array.
+	 * @param string $extKey Extension key
+	 * @param array $extInfo Extension information
+	 * @param boolean $validity If set, checks for validity of classes etc.
+	 * @param boolean $showCachingTables If FALSE, don't take the caching tables into account
+	 * @return array Information in an array
 	 */
-	function makeDetailedExtensionAnalysis($extKey, $extInfo, $validity = 0) {
+	function makeDetailedExtensionAnalysis($extKey, $extInfo, $validity = FALSE, $showCachingTables = TRUE) {
 
 		// Get absolute path of the extension
 		$absPath = tx_em_Tools::getExtPath($extKey, $extInfo['type']);
@@ -1067,8 +1093,8 @@ class tx_em_Install {
 		$table_class_prefix = substr($extKey, 0, 5) == 'user_' ? 'user_' : 'tx_' . str_replace('_', '', $extKey) . '_';
 		$module_prefix = substr($extKey, 0, 5) == 'user_' ? 'u' : 'tx' . str_replace('_', '', $extKey);
 
-		// Database status:
-		$dbInfo = $this->checkDBupdates($extKey, $extInfo, 1);
+			// Database status:
+		$dbInfo = $this->checkDBupdates($extKey, $extInfo, TRUE, $showCachingTables);
 
 		// Database structure required:
 		if (is_array($dbInfo['structure']['tables_fields'])) {
@@ -1240,6 +1266,10 @@ class tx_em_Install {
 			}
 		}
 
+		if ($this->extensionHasCacheConfiguration($absPath)) {
+			$infoArray['hasCacheConfiguration'] = TRUE;
+		}
+
 		if (@is_file($absPath . 'ext_typoscript_constants.txt')) {
 			$infoArray['TSfiles'][] = $GLOBALS['LANG']->getLL('detailedExtAnalysis_constants');
 		}
@@ -1299,7 +1329,7 @@ class tx_em_Install {
 	 *
 	 * @param	string		Extension key
 	 * @param	array		Extension information array
-	 * @param	boolean		If true, the form HTML content is returned, otherwise the content is set in $this->content.
+	 * @param	boolean		If TRUE, the form HTML content is returned, otherwise the content is set in $this->content.
 	 * @param	string		Submit-to URL (supposedly)
 	 * @param	string		Additional form fields to include.
 	 * @return	string		Depending on $output. Can return the whole form.
@@ -1314,8 +1344,7 @@ class tx_em_Install {
 		$form = '';
 
 			// Look for template file for form:
-		if (t3lib_extMgm::isLoaded($extKey) && @is_file($absPath . 'ext_conf_template.txt')) {
-
+		if (t3lib_extMgm::isLoaded($extKey) && (@is_file($absPath . 'ext_conf_template.txt') || $this->extensionHasCacheConfiguration($absPath))) {
 				// Load tsStyleConfig class and parse configuration template:
 			$tsStyleConfig = t3lib_div::makeInstance('t3lib_tsStyleConfig');
 			$tsStyleConfig->doNotSortCategoriesBeforeMakingForm = TRUE;
@@ -1414,9 +1443,24 @@ class tx_em_Install {
 				</table>';
 		}
 
-
 		return $form;
+	}
 
+	/**
+	 * Determine if an extension defines own caching framework caches
+	 *
+	 * @param string $extensionAbsolutePath Path to extension
+	 * @return boolean TRUE if extension defines own caches
+	 */
+	protected function extensionHasCacheConfiguration($extensionAbsolutePath) {
+		$result = FALSE;
+		if (@is_file($extensionAbsolutePath . 'ext_localconf.php')) {
+			$content = t3lib_div::getUrl($extensionAbsolutePath . 'ext_localconf.php');
+			if (stristr($content, 'cacheConfigurations')) {
+				$result = TRUE;
+			}
+		}
+		return $result;
 	}
 
 	/**
@@ -1476,7 +1520,7 @@ class tx_em_Install {
 		$updates .= $extensionDetails->checkUploadFolder($extKey, $extInfo);
 
 		$absPath = tx_em_Tools::getExtPath($extKey, $extInfo['type']);
-		if ($notSilent && @is_file($absPath . 'ext_conf_template.txt')) {
+		if ($notSilent && @is_file($absPath . 'ext_conf_template.txt') || $this->extensionHasCacheConfiguration($absPath)) {
 			$configForm = $this->tsStyleConfigForm($extKey, $extInfo, 1, $script, $updates . $addFields . '<br />');
 		}
 
@@ -1547,6 +1591,7 @@ class tx_em_Install {
 		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] = $newExtList;
 		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList_FE'] = $strippedExtensionList;
 		t3lib_extMgm::removeCacheFiles();
+		$GLOBALS['typo3CacheManager']->getCache('cache_phpcode')->flushByTag('t3lib_autoloader');
 	}
 
 	/**
@@ -1577,17 +1622,22 @@ class tx_em_Install {
 	 * @return	void
 	 */
 	function forceDBupdates($extKey, $extInfo) {
-		$instObj = new t3lib_install;
-
 		// Updating tables and fields?
 		if (is_array($extInfo['files']) && in_array('ext_tables.sql', $extInfo['files'])) {
-			$fileContent = t3lib_div::getUrl(tx_em_Tools::getExtPath($extKey, $extInfo['type']) . 'ext_tables.sql');
+				// Update the cache configurations with information of new extensions,
+				// that have been installed during the current process
+			$GLOBALS['typo3CacheManager']->setCacheConfigurations(
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']
+			);
 
-			$FDfile = $instObj->getFieldDefinitions_fileContent($fileContent);
+			$fileContent = t3lib_div::getUrl(tx_em_Tools::getExtPath($extKey, $extInfo['type']) . 'ext_tables.sql');
+			$fileContent .= t3lib_cache::getDatabaseTableDefinitions();
+
+			$FDfile = $this->installerSql->getFieldDefinitions_fileContent($fileContent);
 			if (count($FDfile)) {
-				$FDdb = $instObj->getFieldDefinitions_database(TYPO3_db);
-				$diff = $instObj->getDatabaseExtra($FDfile, $FDdb);
-				$update_statements = $instObj->getUpdateSuggestions($diff);
+				$FDdb = $this->installerSql->getFieldDefinitions_database(TYPO3_db);
+				$diff = $this->installerSql->getDatabaseExtra($FDfile, $FDdb);
+				$update_statements = $this->installerSql->getUpdateSuggestions($diff);
 
 				foreach ((array) $update_statements['add'] as $string) {
 					$GLOBALS['TYPO3_DB']->admin_query($string);
@@ -1605,8 +1655,8 @@ class tx_em_Install {
 		if (is_array($extInfo['files']) && in_array('ext_tables_static+adt.sql', $extInfo['files'])) {
 			$fileContent = t3lib_div::getUrl(tx_em_Tools::getExtPath($extKey, $extInfo['type']) . 'ext_tables_static+adt.sql');
 
-			$statements = $instObj->getStatementarray($fileContent, 1);
-			list($statements_table, $insertCount) = $instObj->getCreateTables($statements, 1);
+			$statements = $this->installerSql->getStatementarray($fileContent, 1);
+			list($statements_table, $insertCount) = $this->installerSql->getCreateTables($statements, 1);
 
 			// Traverse the tables
 			foreach ($statements_table as $table => $query) {
@@ -1614,7 +1664,7 @@ class tx_em_Install {
 				$GLOBALS['TYPO3_DB']->admin_query($query);
 
 				if ($insertCount[$table]) {
-					$statements_insert = $instObj->getTableInsertStatements($statements, $table);
+					$statements_insert = $this->installerSql->getTableInsertStatements($statements, $table);
 
 					foreach ($statements_insert as $v) {
 						$GLOBALS['TYPO3_DB']->admin_query($v);

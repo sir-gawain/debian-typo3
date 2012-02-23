@@ -30,11 +30,15 @@
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_Workspaces {
+class Tx_Workspaces_Service_Workspaces implements t3lib_Singleton {
+	/**
+	 * @var array
+	 */
+	protected $pageCache = array();
+
 	const TABLE_WORKSPACE = 'sys_workspace';
 	const SELECT_ALL_WORKSPACES = -98;
 	const LIVE_WORKSPACE_ID = 0;
-	const DRAFT_WORKSPACE_ID = -1;
 
 	/**
 	 * retrieves the available workspaces from the database and checks whether
@@ -48,9 +52,6 @@ class tx_Workspaces_Service_Workspaces {
 			// add default workspaces
 		if ($GLOBALS['BE_USER']->checkWorkspace(array('uid' => (string) self::LIVE_WORKSPACE_ID))) {
 			$availableWorkspaces[self::LIVE_WORKSPACE_ID] = self::getWorkspaceTitle(self::LIVE_WORKSPACE_ID);
-		}
-		if ($GLOBALS['BE_USER']->checkWorkspace(array('uid' => (string) self::DRAFT_WORKSPACE_ID))) {
-			$availableWorkspaces[self::DRAFT_WORKSPACE_ID] = self::getWorkspaceTitle(self::DRAFT_WORKSPACE_ID);
 		}
 
 			// add custom workspaces (selecting all, filtering by BE_USER check):
@@ -66,6 +67,19 @@ class tx_Workspaces_Service_Workspaces {
 		return $availableWorkspaces;
 	}
 
+	/**
+	 * Gets the current workspace ID.
+	 *
+	 * @return integer The current workspace ID
+	 */
+	public function getCurrentWorkspace() {
+		$workspaceId = $GLOBALS['BE_USER']->workspace;
+		if ($GLOBALS['BE_USER']->isAdmin()) {
+			$activeId = $GLOBALS['BE_USER']->getSessionData('tx_workspace_activeWorkspace');
+			$workspaceId = $activeId !== NULL ? $activeId : $workspaceId;
+		}
+		return $workspaceId;
+	}
 
 	/**
 	 * Find the title for the requested workspace.
@@ -78,9 +92,6 @@ class tx_Workspaces_Service_Workspaces {
 		switch ($wsId) {
 			case self::LIVE_WORKSPACE_ID:
 				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:shortcut_onlineWS');
-				break;
-			case self::DRAFT_WORKSPACE_ID:
-				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:shortcut_offlineWS');
 				break;
 			default:
 				$labelField = $GLOBALS['TCA']['sys_workspace']['ctrl']['label'];
@@ -141,7 +152,7 @@ class tx_Workspaces_Service_Workspaces {
 	 * Building tcemain CMD-array for releasing all versions in a workspace.
 	 *
 	 * @param	integer		Real workspace ID, cannot be ONLINE (zero).
-	 * @param	boolean		Run Flush (true) or ClearWSID (false) command
+	 * @param	boolean		Run Flush (TRUE) or ClearWSID (FALSE) command
 	 * @param	integer		$pageId: ...
 	 * @return	array		Command array for tcemain
 	 */
@@ -191,7 +202,7 @@ class tx_Workspaces_Service_Workspaces {
 			// Contains either nothing or a list with live-uids
 		if ($pageId != -1 && $recursionLevel > 0) {
 			$pageList = $this->getTreeUids($pageId, $wsid, $recursionLevel);
-		} else if ($pageId != -1) {
+		} elseif ($pageId != -1) {
 			$pageList = $pageId;
 		} else {
 			$pageList = '';
@@ -226,13 +237,14 @@ class tx_Workspaces_Service_Workspaces {
 	 *
 	 * @param string $table
 	 * @param string $pageList
+	 * @param integer $wsid
 	 * @param integer $filter
 	 * @param integer $stage
 	 * @return array
 	 */
 	protected function selectAllVersionsFromPages($table, $pageList, $wsid, $filter, $stage) {
 
-		$fields = 'A.uid, A.t3ver_oid,' . ($table==='pages' ? ' A.t3ver_swapmode,' : '') . 'B.pid AS wspid, B.pid AS livepid';
+		$fields = 'A.uid, A.t3ver_oid, A.t3ver_stage, ' . ($table==='pages' ? ' A.t3ver_swapmode,' : '') . 'B.pid AS wspid, B.pid AS livepid';
 		if (t3lib_BEfunc::isTableLocalizable($table)) {
 			$fields .= ', A.' . $GLOBALS['TCA'][$table]['ctrl']['languageField'];
 		}
@@ -253,7 +265,7 @@ class tx_Workspaces_Service_Workspaces {
 		 */
 		if ($wsid > self::SELECT_ALL_WORKSPACES) {
 			$where .= ' AND A.t3ver_wsid=' . $wsid;
-		} else if ($wsid === self::SELECT_ALL_WORKSPACES) {
+		} elseif ($wsid === self::SELECT_ALL_WORKSPACES) {
 			$where .= ' AND A.t3ver_wsid!=0';
 		}
 
@@ -308,7 +320,7 @@ class tx_Workspaces_Service_Workspaces {
 
 		if ($wsid > self::SELECT_ALL_WORKSPACES) {
 			$where .= ' AND A.t3ver_wsid=' . $wsid . ' AND C.t3ver_wsid=' . $wsid;
-		} else if ($wsid === self::SELECT_ALL_WORKSPACES) {
+		} elseif ($wsid === self::SELECT_ALL_WORKSPACES) {
 			$where .= ' AND A.t3ver_wsid!=0 AND C.t3ver_wsid!=0 ';
 		}
 
@@ -371,6 +383,7 @@ class tx_Workspaces_Service_Workspaces {
 			}
 			$pageList = implode(',', $newList);
 		}
+
 		unset($searchObj);
 		if (intval($GLOBALS['TCA']['pages']['ctrl']['versioningWS']) === 2 && $pageList) {
 				// Remove the "subbranch" if a page was moved away
@@ -387,6 +400,7 @@ class tx_Workspaces_Service_Workspaces {
 
 				// move all pages away
 			$newList = array_diff($pageIds, array_keys($movedAwayPages));
+
 				// keep current page in the list
 			$newList[] = $pageId;
 				// move back in if still connected to the "remaining" pages
@@ -399,8 +413,8 @@ class tx_Workspaces_Service_Workspaces {
 					}
 				}
 			} while ($changed);
-
 			$pageList = implode(',', $newList);
+
 				// In case moving pages is enabled we need to replace all move-to pointer with their origin
 			$pages = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 				'uid, t3ver_move_id',
@@ -530,7 +544,7 @@ class tx_Workspaces_Service_Workspaces {
 	 * @param  $record
 	 * @return string
 	 */
-	public static function viewSingleRecord($table, $uid, $record=null) {
+	public static function viewSingleRecord($table, $uid, $record=NULL) {
 		$viewUrl = '';
 		if ($table == 'pages') {
 			$viewUrl = t3lib_BEfunc::viewOnClick(t3lib_BEfunc::getLiveVersionIdOfRecord('pages', $uid));
@@ -567,6 +581,81 @@ class tx_Workspaces_Service_Workspaces {
 			$result = FALSE;
 		}
 		return $result;
+	}
+
+	/**
+	 * Generates a workspace preview link.
+	 *
+	 * @param integer $uid The ID of the record to be linked
+	 * @return string the full domain including the protocol http:// or https://, but without the trailing '/'
+	 */
+	public function generateWorkspacePreviewLink($uid) {
+		$previewObject = t3lib_div::makeInstance('Tx_Version_Preview');
+		$timeToLiveHours = $previewObject->getPreviewLinkLifetime();
+		$previewKeyword = $previewObject->compilePreviewKeyword('', $GLOBALS['BE_USER']->user['uid'], ($timeToLiveHours*3600), $this->getCurrentWorkspace());
+
+		$linkParams = array(
+			'ADMCMD_prev' => $previewKeyword,
+			'id' => $uid
+		);
+		return t3lib_BEfunc::getViewDomain($uid) . '/index.php?' . t3lib_div::implodeArrayForUrl('', $linkParams);
+	}
+
+	/**
+	 * Generates a workspace splitted preview link.
+	 *
+	 * @param integer $uid The ID of the record to be linked
+	 * @param boolean $addDomain Parameter to decide if domain should be added to the generated link, FALSE per default
+	 * @return string the preview link without the trailing '/'
+	 */
+	public function generateWorkspaceSplittedPreviewLink($uid, $addDomain = FALSE) {
+			// In case a $pageUid is submitted we need to make sure it points to a live-page
+		if ($uid >  0) {
+			$uid = $this->getLivePageUid($uid);
+		}
+
+		$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		/** @var $uriBuilder Tx_Extbase_MVC_Web_Routing_UriBuilder */
+		$uriBuilder = $objectManager->create('Tx_Extbase_MVC_Web_Routing_UriBuilder');
+		/**
+		 *  This seems to be very harsh to set this directly to "/typo3 but the viewOnClick also
+		 *  has /index.php as fixed value here and dealing with the backPath is very error-prone
+		 *
+		 *  @todo make sure this would work in local extension installation too
+		 */
+		$backPath = '/' . TYPO3_mainDir;
+		$redirect = $backPath . 'index.php?redirect_url=';
+			// @todo why do we need these additional params? the URIBuilder should add the controller, but he doesn't :(
+		$additionalParams = '&tx_workspaces_web_workspacesworkspaces%5Bcontroller%5D=Preview&M=web_WorkspacesWorkspaces&id=';
+		$viewScript = $backPath . $uriBuilder->setArguments(array('tx_workspaces_web_workspacesworkspaces' => array('previewWS' => $GLOBALS['BE_USER']->workspace)))
+												->uriFor('index', array(), 'Tx_Workspaces_Controller_PreviewController', 'workspaces', 'web_workspacesworkspaces') . $additionalParams;
+
+		if ($addDomain === TRUE) {
+			return t3lib_BEfunc::getViewDomain($uid) . $redirect . urlencode($viewScript) . $uid;
+		} else {
+			return $viewScript;
+		}
+	}
+
+	/**
+	 * Find the Live-Uid for a given page,
+	 * the results are cached at run-time to avoid too many database-queries
+	 *
+	 * @throws InvalidArgumentException
+	 * @param integer $uid
+	 * @return integer
+	 */
+	public function getLivePageUid($uid) {
+		if (!isset($this->pageCache[$uid])) {
+			$pageRecord = t3lib_beFunc::getRecord('pages', $uid);
+			if (is_array($pageRecord)) {
+				$this->pageCache[$uid] = ($pageRecord['t3ver_oid'] ? $pageRecord['t3ver_oid'] : $uid);
+			} else {
+				throw new InvalidArgumentException('uid is supposed to point to an existing page - given value was:' . $uid, 1290628113);
+			}
+		}
+
+		return $this->pageCache[$uid];
 	}
 }
 

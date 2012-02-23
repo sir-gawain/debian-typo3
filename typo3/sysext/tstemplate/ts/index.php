@@ -42,7 +42,7 @@ require($BACK_PATH . 'init.php');
 require($BACK_PATH . 'template.php');
 $GLOBALS['LANG']->includeLLFile('EXT:tstemplate/ts/locallang.xml');
 
-$BE_USER->modAccess($MCONF, true);
+$BE_USER->modAccess($MCONF, TRUE);
 
 
 // ***************************
@@ -134,8 +134,9 @@ class SC_mod_web_ts_index extends t3lib_SCbase {
 			$this->doc->inDocStylesArray[] = '
 				TABLE#typo3-objectBrowser A { text-decoration: none; }
 				TABLE#typo3-objectBrowser .comment { color: maroon; font-weight: bold; }
+				TABLE#ts-analyzer { border: 1px solid #a2aab8; }
 				TABLE#ts-analyzer tr.t3-row-header { background-color: #A2AAB8; }
-				TABLE#ts-analyzer tr td {padding: 0 2px;}
+				TABLE#ts-analyzer tr td {padding: 0 4px;}
 				TABLE#ts-analyzer tr.t3-row-header td { padding: 2px 4px; font-weight:bold; color: #fff; }
 				.tsob-menu label, .tsob-menu-row2 label, .tsob-conditions label {padding: 0 5px; vertical-align: text-top;}
 				.tsob-menu-row2 {margin-top: 10px;}
@@ -333,32 +334,6 @@ class SC_mod_web_ts_index extends t3lib_SCbase {
 	// OTHER FUNCTIONS:
 	// ***************************
 
-	/**
-	* Counts the records in the system cache_* tables and returns these values.
-	*
-	* @param boolean $humanReadable: Returns human readable string instead of an array
-	* @return mixed The number of records in cache_* tables as array or string
-	* @deprecated since TYPO3 4.2.0, will be removed in TYPO3 4.6
-	*/
-	function getCountCacheTables($humanReadable) {
-		t3lib_div::logDeprecatedFunction();
-
-		$out = array();
-
-		$out['cache_pages'] = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('id', 'cache_pages');
-		$out['cache_pagesection'] = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('id', 'cache_pagesection');
-		$out['cache_hash'] = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('id', 'cache_hash');
-
-		if ($humanReadable) {
-			$newOut = array();
-			foreach ($out as $k => $v) {
-				$newOut[] = $k . ":" . $v;
-			}
-			$out = implode(', ', $newOut);
-		}
-		return $out;
-	}
-
 	function linkWrapTemplateTitle($title, $onlyKey = '') {
 		if ($onlyKey) {
 			$title = '<a href="index.php?id=' . htmlspecialchars($GLOBALS['SOBE']->id . '&e[' . $onlyKey . ']=1&SET[function]=tx_tstemplateinfo') . '">' . htmlspecialchars($title) . '</a>';
@@ -372,7 +347,7 @@ class SC_mod_web_ts_index extends t3lib_SCbase {
 
 		$tmpl = t3lib_div::makeInstance('t3lib_tsparser_ext');	// Defined global here!
 		/* @var $tmpl t3lib_tsparser_ext */
-		$tmpl->tt_track = false;	// Do not log time-performance information
+		$tmpl->tt_track = FALSE;	// Do not log time-performance information
 		$tmpl->init();
 
 			// No template
@@ -429,7 +404,7 @@ class SC_mod_web_ts_index extends t3lib_SCbase {
 	function templateMenu() {
 		$tmpl = t3lib_div::makeInstance('t3lib_tsparser_ext');	// Defined global here!
 		/* @var $tmpl t3lib_tsparser_ext */
-		$tmpl->tt_track = false;	// Do not log time-performance information
+		$tmpl->tt_track = FALSE;	// Do not log time-performance information
 		$tmpl->init();
 		$all = $tmpl->ext_getAllTemplates($this->id, $this->perms_clause);
 		$menu = '';
@@ -526,7 +501,7 @@ page.10.value = HELLO WORLD!
 			reset($pArray);
 			static $i;
 			foreach ($pArray as $k => $v) {
-				if (t3lib_div::testInt($k)) {
+				if (t3lib_utility_Math::canBeInterpretedAsInteger($k)) {
 					if (isset($pArray[$k . "_"])) {
 						$lines[] = '<tr class="' . ($i++ % 2 == 0 ? 'bgColor4' : 'bgColor6') . '">
 							<td nowrap><img src="clear.gif" width="1" height="1" hspace=' . ($c * 10) . ' align="top">' .

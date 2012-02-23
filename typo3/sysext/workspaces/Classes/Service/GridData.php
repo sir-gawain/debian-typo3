@@ -30,7 +30,7 @@
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_GridData {
+class Tx_Workspaces_Service_GridData {
 	protected $currentWorkspace = NULL;
 	protected $dataArray = array();
 	protected $sort = '';
@@ -50,7 +50,7 @@ class tx_Workspaces_Service_GridData {
 			// Read the given parameters from grid. If the parameter is not set use default values.
 		$filterTxt = isset($parameter->filterTxt) ? $parameter->filterTxt : '';
 		$start = isset($parameter->start) ? intval($parameter->start) : 0;
-		$limit = isset($parameter->limit) ? intval($parameter->limit) : 10;
+		$limit = isset($parameter->limit) ? intval($parameter->limit) : 30;
 		$this->sort = isset($parameter->sort) ? $parameter->sort : 't3ver_oid';
 		$this->sortDir = isset($parameter->dir) ? $parameter->dir : 'ASC';
 
@@ -112,7 +112,7 @@ class tx_Workspaces_Service_GridData {
 						$recordState = $this->workspaceState($versionRecord['t3ver_state']);
 					}
 					$isDeletedPage = ($table == 'pages' && $recordState == 'deleted');
-					$viewUrl =  tx_Workspaces_Service_Workspaces::viewSingleRecord($table, $record['t3ver_oid'], $origRecord);
+					$viewUrl =  Tx_Workspaces_Service_Workspaces::viewSingleRecord($table, $record['t3ver_oid'], $origRecord);
 
 					$pctChange = $this->calculateChangePercentage($table, $origRecord, $versionRecord);
 					$versionArray['uid'] = $record['uid'];
@@ -123,7 +123,7 @@ class tx_Workspaces_Service_GridData {
 					$versionArray['change'] = $pctChange;
 					$versionArray['path_Live'] = htmlspecialchars(t3lib_BEfunc::getRecordPath($record['livepid'], '', 999));
 					$versionArray['path_Workspace'] = htmlspecialchars(t3lib_BEfunc::getRecordPath($record['wspid'], '', 999));
-					$versionArray['workspace_Title'] = htmlspecialchars(tx_Workspaces_Service_Workspaces::getWorkspaceTitle($versionRecord['t3ver_wsid']));
+					$versionArray['workspace_Title'] = htmlspecialchars(Tx_Workspaces_Service_Workspaces::getWorkspaceTitle($versionRecord['t3ver_wsid']));
 
 					$versionArray['workspace_Tstamp'] = $versionRecord['tstamp'];
 					$versionArray['workspace_Formated_Tstamp'] = t3lib_BEfunc::datetime($versionRecord['tstamp']);
@@ -188,19 +188,7 @@ class tx_Workspaces_Service_GridData {
 	 * @return void
 	 */
 	protected function initializeWorkspacesCachingFramework() {
-		if (TYPO3_UseCachingFramework === TRUE) {
-			try {
-				$GLOBALS['typo3CacheFactory']->create(
-					'workspaces_cache',
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['frontend'],
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['backend'],
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['options']);
-			} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
-				// do nothing, a workspace cache already exists
-			}
-
-			$this->workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
-		}
+		$this->workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
 	}
 
 
@@ -213,9 +201,7 @@ class tx_Workspaces_Service_GridData {
 	protected function setDataArrayIntoCache (array $versions, $filterTxt) {
 		if (TYPO3_UseCachingFramework === TRUE) {
 			$hash = $this->calculateHash($versions, $filterTxt);
-			$content = serialize($this->dataArray);
-
-			$this->workspacesCache->set($hash, $content, array($this->currentWorkspace));
+			$this->workspacesCache->set($hash, $this->dataArray, array($this->currentWorkspace));
 		}
 	}
 
@@ -225,6 +211,7 @@ class tx_Workspaces_Service_GridData {
 	 *
 	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
 	 * @param string $filterTxt The given filter text from the grid.
+	 * @return boolean TRUE if cache entry was successfully fetched from cache and content put to $this->dataArray
 	 */
 	protected function getDataArrayFromCache (array $versions, $filterTxt) {
 		$cacheEntry = FALSE;
@@ -234,8 +221,8 @@ class tx_Workspaces_Service_GridData {
 
 			$content = $this->workspacesCache->get($hash);
 
-			if ($content != FALSE) {
-				$this->dataArray = unserialize($content);
+			if ($content !== FALSE) {
+				$this->dataArray = $content;
 				$cacheEntry = TRUE;
 			}
 		}
@@ -291,7 +278,7 @@ class tx_Workspaces_Service_GridData {
 					break;
 			}
 		} else {
-			t3lib_div::sysLog('Try to sort "' . $this->sort . '" in "tx_Workspaces_Service_GridData::sortDataArray" but $this->dataArray is empty! This might be the Bug #26422 which could not reproduced yet.', 3);
+			t3lib_div::sysLog('Try to sort "' . $this->sort . '" in "Tx_Workspaces_Service_GridData::sortDataArray" but $this->dataArray is empty! This might be the Bug #26422 which could not reproduced yet.', 3);
 		}
 	}
 
@@ -395,7 +382,6 @@ class tx_Workspaces_Service_GridData {
 	 * @return integer
 	 */
 	public function calculateChangePercentage($table, array $diffRecordOne, array $diffRecordTwo) {
-		global $TCA;
 
 			// Initialize:
 		$changePercentage = 0;
@@ -411,15 +397,15 @@ class tx_Workspaces_Service_GridData {
 
 				// Traversing the first record and process all fields which are editable:
 			foreach ($diffRecordOne as $fieldName => $fieldValue) {
-				if ($TCA[$table]['columns'][$fieldName] && $TCA[$table]['columns'][$fieldName]['config']['type'] != 'passthrough' && !t3lib_div::inList('t3ver_label', $fieldName)) {
+				if ($GLOBALS['TCA'][$table]['columns'][$fieldName] && $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['type'] != 'passthrough' && !t3lib_div::inList('t3ver_label', $fieldName)) {
 
 					if (strcmp(trim($diffRecordOne[$fieldName]), trim($diffRecordTwo[$fieldName]))
-							&& $TCA[$table]['columns'][$fieldName]['config']['type'] == 'group'
-							&& $TCA[$table]['columns'][$fieldName]['config']['internal_type'] == 'file'
+							&& $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['type'] == 'group'
+							&& $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['internal_type'] == 'file'
 					) {
 
 							// Initialize:
-						$uploadFolder = $TCA[$table]['columns'][$fieldName]['config']['uploadfolder'];
+						$uploadFolder = $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['uploadfolder'];
 						$files1 = array_flip(t3lib_div::trimExplode(',', $diffRecordOne[$fieldName], 1));
 						$files2 = array_flip(t3lib_div::trimExplode(',', $diffRecordTwo[$fieldName], 1));
 

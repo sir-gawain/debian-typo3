@@ -78,6 +78,16 @@ class Tx_Extbase_MVC_Request implements Tx_Extbase_MVC_RequestInterface {
 	protected $arguments = array();
 
 	/**
+	 * Framework-internal arguments for this request, such as __referrer.
+	 * All framework-internal arguments start with double underscore (__),
+	 * and are only used from within the framework. Not for user consumption.
+	 * Internal Arguments can be objects, in contrast to public arguments
+	 *
+	 * @var array
+	 */
+	protected $internalArguments = array();
+
+	/**
 	 * @var string The requested representation format
 	 */
 	protected $format = 'txt';
@@ -88,7 +98,22 @@ class Tx_Extbase_MVC_Request implements Tx_Extbase_MVC_RequestInterface {
 	protected $dispatched = FALSE;
 
 	/**
+	 * If this request is a forward because of an error, the original request gets filled.
+	 *
+	 * @var Tx_Extbase_MVC_Request
+	 */
+	protected $originalRequest = NULL;
+
+	/**
+	 * If the request is a forward because of an error, these mapping results get filled here.
+	 *
+	 * @var Tx_Extbase_Error_Result
+	 */
+	protected $originalRequestMappingResults = NULL;
+
+	/**
 	 * @var array Errors that occured during this request
+	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 1.6.0.
 	 */
 	protected $errors = array();
 
@@ -310,7 +335,31 @@ class Tx_Extbase_MVC_Request implements Tx_Extbase_MVC_RequestInterface {
 	 */
 	public function setArgument($argumentName, $value) {
 		if (!is_string($argumentName) || strlen($argumentName) == 0) throw new Tx_Extbase_MVC_Exception_InvalidArgumentName('Invalid argument name.', 1210858767);
-		$this->arguments[$argumentName] = $value;
+
+		if ($argumentName[0] === '_' && $argumentName[1] === '_') {
+			$this->internalArguments[$argumentName] = $value;
+			return;
+		}
+
+		switch ($argumentName) {
+			case '@extension':
+				$this->setControllerExtensionName($value);
+				break;
+			case '@subpackage':
+				$this->setControllerSubpackageKey($value);
+				break;
+			case '@controller':
+				$this->setControllerName($value);
+				break;
+			case '@action':
+				$this->setControllerActionName($value);
+				break;
+			case '@format':
+				$this->setFormat($value);
+				break;
+			default:
+				$this->arguments[$argumentName] = $value;
+		}
 	}
 
 	/**
@@ -321,7 +370,10 @@ class Tx_Extbase_MVC_Request implements Tx_Extbase_MVC_RequestInterface {
 	 * @return void
 	 */
 	public function setArguments(array $arguments) {
-		$this->arguments = $arguments;
+		$this->arguments = array();
+		foreach ($arguments as $argumentName => $argumentValue) {
+			$this->setArgument($argumentName, $argumentValue);
+		}
 	}
 
 	/**
@@ -385,6 +437,7 @@ class Tx_Extbase_MVC_Request implements Tx_Extbase_MVC_RequestInterface {
 	 *
 	 * @param array $errors An array of Tx_Extbase_Error_Error objects
 	 * @return void
+	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 1.6.0.
 	 */
 	public function setErrors(array $errors) {
 		$this->errors = $errors;
@@ -394,9 +447,68 @@ class Tx_Extbase_MVC_Request implements Tx_Extbase_MVC_RequestInterface {
 	 * Get errors that occured during the request (e.g. argument mapping errors)
 	 *
 	 * @return array The errors that occured during the request
+	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 1.6.0.
 	 */
 	public function getErrors() {
 		return $this->errors;
+	}
+
+	/**
+	 * Returns the original request. Filled only if a property mapping error occured.
+	 *
+	 * @return Tx_Extbase_MVC_Request the original request.
+	 */
+	public function getOriginalRequest() {
+		return $this->originalRequest;
+	}
+
+	/**
+	 * @param Tx_Extbase_MVC_Request $originalRequest
+	 * @return void
+	 */
+	public function setOriginalRequest(Tx_Extbase_MVC_Request $originalRequest) {
+		$this->originalRequest = $originalRequest;
+	}
+
+	/**
+	 * Get the request mapping results for the original request.
+	 *
+	 * @return Tx_Extbase_Error_Result
+	 */
+	public function getOriginalRequestMappingResults() {
+		if ($this->originalRequestMappingResults === NULL) {
+			return new Tx_Extbase_Error_Result();
+		}
+		return $this->originalRequestMappingResults;
+	}
+
+	/**
+	 *
+	 * @param Tx_Extbase_Error_Result $originalRequestMappingResults
+	 */
+	public function setOriginalRequestMappingResults(Tx_Extbase_Error_Result $originalRequestMappingResults) {
+		$this->originalRequestMappingResults = $originalRequestMappingResults;
+	}
+
+	/**
+	 * Get the internal arguments of the request, i.e. every argument starting
+	 * with two underscores.
+	 *
+	 * @return array
+	 */
+	public function getInternalArguments() {
+		return $this->internalArguments;
+	}
+
+	/**
+	 * Returns the value of the specified argument
+	 *
+	 * @param string $argumentName Name of the argument
+	 * @return string Value of the argument, or NULL if not set.
+	 */
+	public function getInternalArgument($argumentName) {
+		if (!isset($this->internalArguments[$argumentName])) return NULL;
+		return $this->internalArguments[$argumentName];
 	}
 
 }

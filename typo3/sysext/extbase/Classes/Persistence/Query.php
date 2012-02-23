@@ -230,7 +230,6 @@ class Tx_Extbase_Persistence_Query implements Tx_Extbase_Persistence_QueryInterf
 	 * Executes the number of matching objects for the query
 	 *
 	 * @return integer The number of matching objects
-	 * @api
 	 * @deprecated since Extbase 1.3.0; was removed in FLOW3; will be removed in Extbase 1.5.0; use Query::execute()::count() instead
 	 */
 	public function count() {
@@ -280,6 +279,18 @@ class Tx_Extbase_Persistence_Query implements Tx_Extbase_Persistence_QueryInterf
 	public function setLimit($limit) {
 		if (!is_int($limit) || $limit < 1) throw new InvalidArgumentException('The limit must be an integer >= 1', 1245071870);
 		$this->limit = $limit;
+		return $this;
+	}
+
+	/**
+	 * Resets a previously set maximum size of the result set. Returns $this to allow
+	 * for chaining (fluid interface)
+	 *
+	 * @return Tx_Extbase_Persistence_QueryInterface
+	 * @api
+	 */
+	public function unsetLimit() {
+		unset($this->limit);
 		return $this;
 	}
 
@@ -426,22 +437,6 @@ class Tx_Extbase_Persistence_Query implements Tx_Extbase_Persistence_QueryInterf
 	 */
 	public function logicalNot($constraint) {
 		return $this->qomFactory->not($constraint);
-	}
-
-	/**
-	 * Matches against the (internal) uid.
-	 *
-	 * @param int $uid The uid to match against
-	 * @return Tx_Extbase_Persistence_QOM_ComparisonInterface
-	 * @deprecated since Extbase 1.2.0; was removed in FLOW3; will be removed in Extbase 1.4.0; use equals() instead
-	 */
-	public function withUid($operand) {
-		t3lib_div::logDeprecatedFunction();
-		return $this->qomFactory->comparison(
-			$this->qomFactory->propertyValue('uid', $this->getSelectorName()),
-			Tx_Extbase_Persistence_QueryInterface::OPERATOR_EQUAL_TO,
-			$operand
-			);
 	}
 
 	/**

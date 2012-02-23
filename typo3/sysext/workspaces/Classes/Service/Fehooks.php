@@ -30,21 +30,15 @@
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_Fehooks {
+class Tx_Workspaces_Service_Fehooks {
 
 	/**
 	 * @param tslib_fe $pObj
 	 * @return void
 	 */
 	public function hook_eofe($params, $pObj) {
-		if ($pObj->fePreview != 2 || $pObj->whichWorkspace() === 0) {
+		if ($pObj->fePreview != 2) {
 			return;
-		}
-
-		if(!$GLOBALS['BE_USER']->getSessionData('workspaces.backend_domain')) {
-			$backendDomain = t3lib_div::getIndpEnv('TYPO3_HOST_ONLY');
-		} else {
-			$backendDomain = $GLOBALS['BE_USER']->getSessionData('workspaces.backend_domain');
 		}
 
 		$previewParts = $GLOBALS['TSFE']->cObj->cObjGetSingle(
@@ -53,7 +47,7 @@ class tx_Workspaces_Service_Fehooks {
 				'file' => 'EXT:workspaces/Resources/Private/Templates/Preview/Preview.html',
 				'variables.' => array(
 					'backendDomain' => 'TEXT',
-					'backendDomain.' => array('value' => $backendDomain)
+					'backendDomain.' => array('value' => $GLOBALS['BE_USER']->getSessionData('workspaces.backend_domain'))
 				)
 			)
 		);

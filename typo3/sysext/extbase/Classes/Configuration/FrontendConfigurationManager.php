@@ -34,6 +34,20 @@
 class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_Configuration_AbstractConfigurationManager {
 
 	/**
+	 * @var Tx_Extbase_Service_FlexFormService
+	 */
+	protected $flexFormService;
+
+	/**
+	 * @param Tx_Extbase_Service_FlexFormService $flexFormService
+	 * @return void
+	 */
+	public function injectFlexFormService(Tx_Extbase_Service_FlexFormService $flexFormService) {
+		$this->flexFormService = $flexFormService;
+	}
+
+
+	/**
 	 * Returns TypoScript Setup array from current Environment.
 	 *
 	 * @return array the raw TypoScript setup
@@ -54,11 +68,11 @@ class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_C
 		$setup = $this->getTypoScriptSetup();
 		$pluginConfiguration = array();
 		if (is_array($setup['plugin.']['tx_' . strtolower($extensionName) . '.'])) {
-			$pluginConfiguration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['plugin.']['tx_' . strtolower($extensionName) . '.']);
+			$pluginConfiguration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['plugin.']['tx_' . strtolower($extensionName) . '.']);
 		}
 		$pluginSignature = strtolower($extensionName . '_' . $pluginName);
 		if (is_array($setup['plugin.']['tx_' . $pluginSignature . '.'])) {
-			$pluginConfiguration = t3lib_div::array_merge_recursive_overrule($pluginConfiguration, Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['plugin.']['tx_' . $pluginSignature . '.']));
+			$pluginConfiguration = t3lib_div::array_merge_recursive_overrule($pluginConfiguration, $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['plugin.']['tx_' . $pluginSignature . '.']));
 		}
 		return $pluginConfiguration;
 	}
@@ -85,7 +99,7 @@ class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_C
 	/**
 	 * Get context specific framework configuration.
 	 * - Overrides storage PID with setting "Startingpoint"
-	 * - merge flexform configuration, if needed
+	 * - merge flexForm configuration, if needed
 	 *
 	 * @param array $frameworkConfiguration The framework configuration to modify
 	 * @return array the modified framework configuration
@@ -93,7 +107,7 @@ class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_C
 	protected function getContextSpecificFrameworkConfiguration(array $frameworkConfiguration) {
 		$frameworkConfiguration = $this->overrideStoragePidIfStartingPointIsSet($frameworkConfiguration);
 		$frameworkConfiguration = $this->overrideConfigurationFromPlugin($frameworkConfiguration);
-		$frameworkConfiguration = $this->overrideConfigurationFromFlexform($frameworkConfiguration);
+		$frameworkConfiguration = $this->overrideConfigurationFromFlexForm($frameworkConfiguration);
 
 		return $frameworkConfiguration;
 	}
@@ -138,7 +152,7 @@ class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_C
 		$pluginSignature = strtolower($frameworkConfiguration['extensionName'] . '_' . $frameworkConfiguration['pluginName']);
 		$pluginConfiguration = $setup['plugin.']['tx_' . $pluginSignature . '.'];
 		if (is_array($pluginConfiguration)) {
-			$pluginConfiguration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($pluginConfiguration);
+			$pluginConfiguration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($pluginConfiguration);
 			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $pluginConfiguration, 'settings');
 			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $pluginConfiguration, 'persistence');
 			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $pluginConfiguration, 'view');
@@ -147,115 +161,50 @@ class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_C
 	}
 
 	/**
-	 * Overrides configuration settings from flexforms.
-	 * This merges the whole flexform data, and overrides switchable controller actions.
+	 * Overrides configuration settings from flexForms.
+	 * This merges the whole flexForm data, and overrides switchable controller actions.
 	 *
 	 * @param array the framework configuration
-	 * @return array the framework configuration with overridden data from flexform
+	 * @return array the framework configuration with overridden data from flexForm
 	 */
-	protected function overrideConfigurationFromFlexform(array $frameworkConfiguration) {
+	protected function overrideConfigurationFromFlexForm(array $frameworkConfiguration) {
 		if (strlen($this->contentObject->data['pi_flexform']) > 0) {
-			$flexformConfiguration = $this->convertFlexformContentToArray($this->contentObject->data['pi_flexform']);
+			$flexFormConfiguration = $this->flexFormService->convertFlexFormContentToArray($this->contentObject->data['pi_flexform']);
 
-			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexformConfiguration, 'settings');
-			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexformConfiguration, 'persistence');
-			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexformConfiguration, 'view');
+			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexFormConfiguration, 'settings');
+			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexFormConfiguration, 'persistence');
+			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexFormConfiguration, 'view');
 
-			$frameworkConfiguration = $this->overrideSwitchableControllerActionsFromFlexform($frameworkConfiguration, $flexformConfiguration);
+			$frameworkConfiguration = $this->overrideSwitchableControllerActionsFromFlexForm($frameworkConfiguration, $flexFormConfiguration);
 		}
 		return $frameworkConfiguration;
 	}
 
 	/**
-	 * Parses the FlexForm content and converts it to an array
+	 * Parses the flexForm content and converts it to an array
 	 * The resulting array will be multi-dimensional, as a value "bla.blubb"
 	 * results in two levels, and a value "bla.blubb.bla" results in three levels.
 	 *
-	 * Note: multi-language FlexForms are not supported yet
+	 * Note: multi-language flexForms are not supported yet
 	 *
-	 * @param string $flexFormContent FlexForm xml string
+	 * @param string $flexFormContent flexForm xml string
 	 * @return array the processed array
+	 * @deprecated since Extbase 1.4; will be removed in Extbase 1.6
 	 */
 	protected function convertFlexformContentToArray($flexFormContent) {
-		$settings = array();
-		$languagePointer = 'lDEF';
-		$valuePointer = 'vDEF';
-
-		$flexFormArray = t3lib_div::xml2array($flexFormContent);
-		$flexFormArray = isset($flexFormArray['data']) ? $flexFormArray['data'] : array();
-		foreach(array_values($flexFormArray) as $languages) {
-			if (!is_array($languages[$languagePointer])) {
-				continue;
-			}
-
-			foreach($languages[$languagePointer] as $valueKey => $valueDefinition) {
-				if (strpos($valueKey, '.') === false) {
-					$settings[$valueKey] = $this->walkFlexformNode($valueDefinition, $valuePointer);
-				} else {
-					$valueKeyParts = explode('.', $valueKey);
-					$currentNode =& $settings;
-					foreach ($valueKeyParts as $valueKeyPart) {
-						$currentNode =& $currentNode[$valueKeyPart];
-					}
-					if (is_array($valueDefinition)) {
-						if (array_key_exists($valuePointer, $valueDefinition)) {
-							$currentNode = $valueDefinition[$valuePointer];
-						} else {
-							$currentNode = $this->walkFlexformNode($valueDefinition, $valuePointer);
-						}
-					} else {
-						$currentNode = $valueDefinition;
-					}
-				}
-			}
-		}
-		return $settings;
+		t3lib_div::logDeprecatedFunction();
+		return $this->flexFormService->convertFlexFormContentToArray($flexFormContent);
 	}
 
 	/**
-	 * Parses a flexform node recursively and takes care of sections etc
-	 * @param array $nodeArray The flexform node to parse
+	 * Parses a flexForm node recursively and takes care of sections etc
+	 * @param array $nodeArray The flexForm node to parse
 	 * @param string $valuePointer The valuePointer to use for value retrieval
+	 * @deprecated since Extbase 1.4; will be removed in Extbase 1.6
 	 */
 	protected function walkFlexformNode($nodeArray, $valuePointer = 'vDEF') {
-		if (is_array($nodeArray)) {
-			$return = array();
-
-			foreach ($nodeArray as $nodeKey => $nodeValue) {
-				if ($nodeKey === $valuePointer) {
-					return $nodeValue;	
-				}
-
-				if (in_array($nodeKey, array('el', '_arrayContainer'))) {
-					return $this->walkFlexformNode($nodeValue, $valuePointer);
-				}
-
-				if (substr($nodeKey, 0, 1) === '_') {
-					continue;
-				}
-
-				if (strpos($nodeKey, '.')) {
-					$nodeKeyParts = explode('.', $nodeKey);
-					$currentNode =& $return;
-					for ($i = 0; $i < count($nodeKeyParts) - 1; $i++) {
-						$currentNode =& $currentNode[$nodeKeyParts[$i]];
-					}
-					$newNode = array(next($nodeKeyParts) => $nodeValue);
-					$currentNode = $this->walkFlexformNode($newNode, $valuePointer);
-				} else if (is_array($nodeValue)) {
-					if (array_key_exists($valuePointer, $nodeValue)) {
-						$return[$nodeKey] = $nodeValue[$valuePointer];
-					} else {
-						$return[$nodeKey] = $this->walkFlexformNode($nodeValue, $valuePointer);
-					}
-				} else {
-					$return[$nodeKey] = $nodeValue;
-				}
-			}
-			return $return;
-		}
-
-		return $nodeArray;
+		t3lib_div::logDeprecatedFunction();
+		return $this->flexFormService->walkFlexFormNode($nodeArray, $valuePointer);
 	}
 
 	/**
@@ -274,31 +223,31 @@ class Tx_Extbase_Configuration_FrontendConfigurationManager extends Tx_Extbase_C
 	}
 
 	/**
-	 * Overrides the switchable controller actions from the flexform.
+	 * Overrides the switchable controller actions from the flexForm.
 	 *
 	 * @param array $frameworkConfiguration The original framework configuration
-	 * @param array $flexformConfiguration The full flexform configuration
+	 * @param array $flexFormConfiguration The full flexForm configuration
 	 * @return array the modified framework configuration, if needed
 	 */
-	protected function overrideSwitchableControllerActionsFromFlexform(array $frameworkConfiguration, array $flexformConfiguration) {
-		if (!isset($flexformConfiguration['switchableControllerActions']) || is_array($flexformConfiguration['switchableControllerActions'])) {
+	protected function overrideSwitchableControllerActionsFromFlexForm(array $frameworkConfiguration, array $flexFormConfiguration) {
+		if (!isset($flexFormConfiguration['switchableControllerActions']) || is_array($flexFormConfiguration['switchableControllerActions'])) {
 			return $frameworkConfiguration;
 		}
 
-			// As "," is the flexform field value delimiter, we need to use ";" as in-field delimiter. That's why we need to replace ; by  , first.
+			// As "," is the flexForm field value delimiter, we need to use ";" as in-field delimiter. That's why we need to replace ; by  , first.
 			// The expected format is: "Controller1->action2;Controller2->action3;Controller2->action1"
-		$switchableControllerActionPartsFromFlexform = t3lib_div::trimExplode(',', str_replace(';', ',', $flexformConfiguration['switchableControllerActions']), TRUE);
+		$switchableControllerActionPartsFromFlexForm = t3lib_div::trimExplode(',', str_replace(';', ',', $flexFormConfiguration['switchableControllerActions']), TRUE);
 
-		$newSwitchableControllerActionsFromFlexform = array();
-		foreach ($switchableControllerActionPartsFromFlexform as $switchableControllerActionPartFromFlexform) {
-			list($controller, $action) = t3lib_div::trimExplode('->', $switchableControllerActionPartFromFlexform);
+		$newSwitchableControllerActionsFromFlexForm = array();
+		foreach ($switchableControllerActionPartsFromFlexForm as $switchableControllerActionPartFromFlexForm) {
+			list($controller, $action) = t3lib_div::trimExplode('->', $switchableControllerActionPartFromFlexForm);
 			if (empty($controller) || empty($action)) {
-				throw new Tx_Extbase_Configuration_Exception_ParseError('Controller or action were empty when overriding switchableControllerActions from flexform.', 1257146403);
+				throw new Tx_Extbase_Configuration_Exception_ParseError('Controller or action were empty when overriding switchableControllerActions from flexForm.', 1257146403);
 			}
-			$newSwitchableControllerActionsFromFlexform[$controller][] = $action;
+			$newSwitchableControllerActionsFromFlexForm[$controller][] = $action;
 		}
-		if (count($newSwitchableControllerActionsFromFlexform) > 0) {
-			$this->overrideSwitchableControllerActions($frameworkConfiguration, $newSwitchableControllerActionsFromFlexform);
+		if (count($newSwitchableControllerActionsFromFlexForm) > 0) {
+			$this->overrideSwitchableControllerActions($frameworkConfiguration, $newSwitchableControllerActionsFromFlexForm);
 		}
 		return $frameworkConfiguration;
 	}
