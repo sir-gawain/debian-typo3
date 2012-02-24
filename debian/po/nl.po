@@ -1,0 +1,120 @@
+# Dutch translation of typo3-src debconf templates.
+# Copyright (C) 2012 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the typo3-src package.
+# Jeroen Schot <schot@a-eskwadraat.nl>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: typo3-src 4.5.11+dfsg1-1\n"
+"Report-Msgid-Bugs-To: typo3-dummy@packages.debian.org\n"
+"POT-Creation-Date: 2010-06-20 22:03+0200\n"
+"PO-Revision-Date: 2012-02-24 12:33+0100\n"
+"Last-Translator: Jeroen Schot <schot@a-eskwadraat.nl>\n"
+"Language-Team: Debian l10n Dutch <debian-l10n-dutch@lists.debian.org>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "vhost"
+msgstr "vhost"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "directory"
+msgstr "map"
+
+#. Type: select
+#. Choices
+#: ../typo3-dummy.templates:2001
+msgid "none"
+msgstr "niet"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid "Apache integration mode:"
+msgstr "Apache-integratie:"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+"Please choose the method that should be used for integrating the TYPO3 "
+"installation with the apache2 web server:"
+msgstr ""
+"Op welke manier moet TYPO3 worden geïntegreerd met de apache2-webserver?"
+
+#. Type: select
+#. Description
+#: ../typo3-dummy.templates:2002
+msgid ""
+" vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
+"            as http://typo3.example.com/;\n"
+" directory: fits TYPO3 within the existing site, making it available\n"
+"            at an address like http://www.example.com/cms/;\n"
+" none:      does not configure TYPO3 automatically. The server will\n"
+"            need manual configuration. Choose this option if you are\n"
+"            using a web server other than apache2."
+msgstr ""
+" vhost: Genereert URL's met TYPO3 als onderdeel van de domeinnaam zoals\n"
+"        http://typo3.example.com.\n"
+" map:   Plaatst TYPO3 onder een bestaande website, waarbij het beschikbaar\n"
+"        wordt gemaakt op een adres zoals http://www.example.com/cms/.\n"
+" niet:  Configureert TYPO3 niet automatisch. De server zal handmatige\n"
+"        configuratie vereisen. Kies deze optie als u geen apache2 gebruikt\n"
+"        maar een andere webserver."
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid "Should apache2 be restarted after installation?"
+msgstr "Wilt u apache2 na de installatie herstarten?"
+
+#. Type: boolean
+#. Description
+#: ../typo3-dummy.templates:3001
+msgid ""
+"Apache's configuration has been changed to include TYPO3 and activate the "
+"rewrite module. For these changes to take effect, apache2 must be reloaded."
+msgstr ""
+"Apache's configuratie is aangepast zodat TYPO3 toegevoegd en de rewrite-"
+"modules geactiveerd is. Om deze veranderingen door te voeren moet apache2 "
+"herladen worden."
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid "Old symlink in /etc/apache2/conf.d/"
+msgstr "Oude symbolische koppeling in /etc/apache2/conf.d/"
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
+"configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
+msgstr ""
+"Oudere versies (voor 4.3.0-3) van typo3-dummy installeerden de symbolische "
+"koppeling van de apache2-configuratie als /etc/apache2/conf.d/typo3-dummy."
+"conf."
+
+#. Type: note
+#. Description
+#: ../typo3-dummy.templates:4001
+msgid ""
+"This has been changed and newer versions place two new symlinks into /etc/"
+"apache2/sites-available/. To prevent failures due to overlapping "
+"configuration directives you should remove the symlink typo3-dummy.conf "
+"from /etc/apache2/conf.d/ and merge its contents into one of the new "
+"configuration files."
+msgstr ""
+"Dit is veranderd en nieuwere versies plaatste twee nieuwe symbolische "
+"koppelingen in /etc/apache2/sites-available/. Om storingen door overlappende "
+"configuratie-opdrachten te voorkomen dient u de symbolische koppeling typo3-"
+"dummy.conf te verwijderen uit /etc/apache2/conf.d/ en zijn inhoud "
+"samenvoegen met een van de nieuwe configuratiebestanden."
