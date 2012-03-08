@@ -254,29 +254,32 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 		} else {
 			/** @var tx_saltedpasswords_emconfhelper $configCheck */
 			$configCheck = t3lib_div::makeInstance('tx_saltedpasswords_emconfhelper');
-			$message .= '<p>' . $GLOBALS['LANG']->getLL('status_saltedPasswords_infoText') . '</p>';
+			$message = '<p>' . $GLOBALS['LANG']->getLL('status_saltedPasswords_infoText') . '</p>';
+			$messageDetail = '';
 			$flashMessage = $configCheck->checkConfigurationBackend(array(), new t3lib_tsStyleConfig());
 
-			if (strpos($flashMessage, 'message-error') !== FALSE ||
-				strpos($flashMessage, 'message-warning') !== FALSE ||
-				strpos($flashMessage, 'message-information') !== FALSE
-			) {
-				$value    = $GLOBALS['LANG']->getLL('status_insecure');
+			if (strpos($flashMessage, 'message-error') !== FALSE) {
+				$value = $GLOBALS['LANG']->getLL('status_insecure');
 				$severity = tx_reports_reports_status_Status::ERROR;
+				$messageDetail .= $flashMessage;
+			}
+			if (strpos($flashMessage, 'message-warning') !== FALSE ||
+				strpos($flashMessage, 'message-information') !== FALSE) {
+				$severity = tx_reports_reports_status_Status::WARNING;
 				$message .= $flashMessage;
 			}
 
-			$unsecureUserCount = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
-				'*',
-				'be_users',
-				'password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('$%', 'be_users')
-					. ' AND password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('M$%', 'be_users')
-			);
+			$unsecureUserCount = tx_saltedpasswords_div::getNumberOfBackendUsersWithInsecurePassword();
 			if ($unsecureUserCount > 0) {
 				$value    = $GLOBALS['LANG']->getLL('status_insecure');
 				$severity = tx_reports_reports_status_Status::ERROR;
-				$message .= '<div class="typo3-message message-warning">' .
+				$messageDetail .= '<div class="typo3-message message-warning">' .
 						$GLOBALS['LANG']->getLL('status_saltedPasswords_notAllPasswordsHashed') .'</div>';
+			}
+
+			$message .= $messageDetail;
+			if (empty($messageDetail)) {
+				$message = '';
 			}
 		}
 

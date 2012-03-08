@@ -3621,18 +3621,13 @@ final class t3lib_div {
 	 * @return	integer		The bytes value (e.g. 102400)
 	 */
 	public static function getBytesFromSizeMeasurement($measurement) {
+		$bytes = doubleval($measurement);
 		if (stripos($measurement, 'G')) {
-			$bytes = doubleval($measurement) * 1024 * 1024 * 1024;
-		} else {
-			if (stripos($measurement, 'M')) {
-				$bytes = doubleval($measurement) * 1024 * 1024;
-			} else {
-				if (stripos($measurement, 'K')) {
-					$bytes = doubleval($measurement) * 1024;
-				} else {
-					$bytes = doubleval($measurement);
-				}
-			}
+			$bytes *= 1024 * 1024 * 1024;
+		} elseif (stripos($measurement, 'M')) {
+			$bytes *= 1024 * 1024;
+		} elseif (stripos($measurement, 'K')) {
+			$bytes *= 1024;
 		}
 		return $bytes;
 	}
@@ -4369,7 +4364,7 @@ final class t3lib_div {
 	 * @todo	Possible improvement: Should it rawurldecode the string first to check if any of these characters is encoded ?
 	 */
 	public static function validPathStr($theFile) {
-		if (strpos($theFile, '//') === FALSE && strpos($theFile, '\\') === FALSE && !preg_match('#(?:^\.\.|/\.\./|[[:cntrl:]])#', $theFile)) {
+		if (strpos($theFile, '//') === FALSE && strpos($theFile, '\\') === FALSE && !preg_match('#(?:^\.\.|/\.\./|[[:cntrl:]])#u', $theFile)) {
 			return TRUE;
 		}
 	}
