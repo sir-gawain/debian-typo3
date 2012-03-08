@@ -1,3 +1,10 @@
+typo3-src (4.5.12+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Added Dutch debconf translation (Closes: 661129)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 08 Mar 2012 15:10:06 +0100
+
 typo3-src (4.5.11+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
