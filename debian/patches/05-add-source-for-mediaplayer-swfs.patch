@@ -1,28 +1,6 @@
-Description: Upstream changes introduced in version 4.5.0+dfsg1~beta2-1
- This patch has been created by dpkg-source during the package build.
- Here's the last changelog entry, hopefully it gives details on why
- those changes were made:
- .
- typo3-src (4.5.0+dfsg1~beta2-1) experimental; urgency=low
- .
-   * New upstream release.
-   * Added source for player.swf and flvplayer.swf (see #591969).
- .
- The person named in the Author field signed this changelog entry.
-Author: Christian Welzel <gawain@camlann.de>
-
----
-The information above should follow the Patch Tagging Guidelines, please
-checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
-are templates for supplementary fields that you might want to add:
-
-Origin: <vendor|upstream|other>, <url of original patch>
-Bug: <url in upstream bugtracker>
-Bug-Debian: http://bugs.debian.org/<bugnumber>
-Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
-Forwarded: <no|not-needed|url proving that it has been forwarded>
-Reviewed-By: <name and email of someone who approved the patch>
-Last-Update: <YYYY-MM-DD>
+## 05-add-source-for-mediaplayer-swfs.patch by Christian Welzel <gawain@camlann.de>
+##
+## DP: add source code of for player.swf and flvplayer.swf (see #591969).
 
 --- /dev/null
 +++ typo3-src-4.5.0+dfsg1~beta2/typo3/contrib/flashmedia/src/flvplayer.as
