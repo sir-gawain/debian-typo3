@@ -1,3 +1,7 @@
+## 06-fix-im-command.patch by Christian Welzel <gawain@camlann.de>
+##
+## DP: fix the command used to quote the imagemagick command for shell invocation.
+
 --- typo3.orig/t3lib/utility/class.t3lib_utility_command.php
 +++ typo3/t3lib/utility/class.t3lib_utility_command.php
 @@ -86,7 +86,7 @@
