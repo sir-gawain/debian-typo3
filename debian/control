@@ -11,7 +11,7 @@ Depends: ttf-dejavu, libjs-swfobject, libjs-prototype (>=1.6.0), libjs-scriptacu
 Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache | php-apc, typo3-database, typo3-dummy
 Suggests: catdoc, ghostscript, php5-curl, ppthtml, unrtf, xlhtml, xpdf-utils
 Homepage: http://www.typo3.com
-Description: TYPO3 - The enterprise level open source WebCMS (Core)
+Description: web content management system (core)
  TYPO3 is a free Open Source content management system for enterprise purposes
  on the web and in intranets. It offers full flexibility and extendability while
  featuring an accomplished set of ready-made interfaces, functions and modules.
@@ -35,7 +35,7 @@ Architecture: all
 Depends: mysql-server, dbconfig-common (>= 1.8.39), debconf, ${misc:Depends}
 Recommends: typo3-dummy, typo3-src-4.5
 Homepage: http://www.typo3.com
-Description: TYPO3 - The enterprise level open source WebCMS (Database)
+Description: web content management system (database)
  TYPO3 is a free Open Source content management system for enterprise purposes
  on the web and in intranets. It offers full flexibility and extendability while
  featuring an accomplished set of ready-made interfaces, functions and modules.
@@ -60,7 +60,7 @@ Package: typo3-dummy
 Architecture: all
 Depends: exim4 | mail-transport-agent, dbconfig-common, debconf, graphicsmagick, lsb-base (>= 3.0-6), php5, php5-cli, php5-gd, php5-mysql, typo3-src-4.5, ${misc:Depends}
 Recommends: apache2.2-common, catdoc, ghostscript, memcached, php5-curl, php5-memcache, php5-suhosin, php5-xcache | php-apc, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
-Description: web content management system
+Description: web content management system (basic site structure)
  TYPO3 is an enterprise-level content management system for use on the web
  and in intranets. It is flexible, extensible, and well supplied with
  ready-made interfaces, functions, and modules.
