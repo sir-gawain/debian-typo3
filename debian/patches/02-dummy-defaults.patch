@@ -4,7 +4,7 @@
 
 --- typo3-src-4.5.8+dfsg1.orig/dummy/typo3conf/localconf.php
 +++ typo3-src-4.5.8+dfsg1/dummy/typo3conf/localconf.php
-@@ -8,10 +8,145 @@
+@@ -8,10 +8,150 @@
  	// Default password is "joh316" :
  $TYPO3_CONF_VARS['BE']['installToolPassword'] = 'bacb98acf97e0b6112b1d1b650b84971';
  
@@ -52,6 +52,11 @@
 +
  ## INSTALL SCRIPT EDIT POINT TOKEN - all lines after this points may be changed by the install script!
  
++// configure login forms to use rsa security level
++$TYPO3_CONF_VARS['FE']['loginSecurityLevel'] = "rsa";
++$TYPO3_CONF_VARS['BE']['loginSecurityLevel'] = "rsa";
++$TYPO3_CONF_VARS['EXT']['extConf']['saltedpasswords'] = 'a:2:{s:3:"FE.";a:2:{s:7:"enabled";s:1:"1";s:21:"saltedPWHashingMethod";s:28:"tx_saltedpasswords_salts_md5";}s:3:"BE.";a:2:{s:7:"enabled";s:1:"1";s:21:"saltedPWHashingMethod";s:28:"tx_saltedpasswords_salts_md5";}}';
++
 +// encryption key. set is to a long unique string.
 +$TYPO3_CONF_VARS['SYS']['encryptionKey'] = '###ENCKEY###';
 +
