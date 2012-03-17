@@ -4,3 +4,5 @@
 04-remove-jsmin-dfsg.patch
 05-add-source-for-mediaplayer-swfs.patch
 06-fix-im-command.patch
+07-add-source-for-modernizr.patch
+08-add-source-for-swfupload.patch
