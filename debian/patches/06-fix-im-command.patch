@@ -1,21 +1,24 @@
---- typo3-src-4.5.3+dfsg1.orig/t3lib/utility/class.t3lib_utility_command.php
-+++ typo3-src-4.5.3+dfsg1/t3lib/utility/class.t3lib_utility_command.php
-@@ -81,12 +81,12 @@
- 			// Compile the path & command
- 		if ($im_version === 'gm') {
- 			$switchCompositeParameters = TRUE;
--			$path = escapeshellarg($path . 'gm' . $isExt) . ' ' . $command;
-+			$path = escapeshellcmd($path . 'gm' . $isExt) . ' ' . $command;
- 		} else {
- 			if ($im_version === 'im6') {
- 				$switchCompositeParameters = TRUE;
+--- typo3.orig/t3lib/utility/class.t3lib_utility_command.php
++++ typo3/t3lib/utility/class.t3lib_utility_command.php
+@@ -86,7 +86,7 @@
+ 				setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
  			}
--			$path = escapeshellarg($path . (($command == 'composite') ? $combineScript : $command) . $isExt);
-+			$path = escapeshellcmd($path . (($command == 'composite') ? $combineScript : $command) . $isExt);
- 		}
- 
- 			// strip profile information for thumbnails and reduce their size
-@@ -120,4 +120,4 @@
+ 			$originalPath = $path . 'gm' . $isExt;
+-			$path = escapeshellarg($originalPath);
++			$path = escapeshellcmd($originalPath);
+ 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+ 				setlocale(LC_CTYPE, $currentLocale);
+ 			}
+@@ -105,7 +105,7 @@
+ 				setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
+ 			}
+ 			$originalPath = $path . (($command == 'composite') ? $combineScript : $command) . $isExt;
+-			$path = escapeshellarg($originalPath);
++			$path = escapeshellcmd($originalPath);
+ 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+ 				setlocale(LC_CTYPE, $currentLocale);
+ 			}
+@@ -147,4 +147,4 @@
  
  }
  
