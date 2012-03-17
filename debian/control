@@ -87,7 +87,7 @@ Package: typo3
 Architecture: all
 Depends: typo3-database, typo3-dummy, typo3-src-4.5, ${misc:Depends}
 Homepage: http://www.typo3.com
-Description: The enterprise level open source WebCMS (Meta)
+Description: web content management system (meta)
  TYPO3 is a free Open Source content management system for enterprise purposes
  on the web and in intranets. It offers full flexibility and extendability while
  featuring an accomplished set of ready-made interfaces, functions and modules.
