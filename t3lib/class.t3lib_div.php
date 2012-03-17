@@ -739,9 +739,9 @@ final class t3lib_div {
 	/**
 	 * Match IPv4 number with list of numbers with wildcard
 	 *
-	 * @param	string		$baseIP is the current remote IP address for instance, typ. REMOTE_ADDR
-	 * @param	string		$list is a comma-list of IP-addresses to match with. *-wildcard allowed instead of number, plus leaving out parts in the IP number is accepted as wildcard (eg. 192.168.*.* equals 192.168)
-	 * @return	boolean		True if an IP-mask from $list matches $baseIP
+	 * @param string $baseIP is the current remote IP address for instance, typ. REMOTE_ADDR
+	 * @param string $list is a comma-list of IP-addresses to match with. *-wildcard allowed instead of number, plus leaving out parts in the IP number is accepted as wildcard (eg. 192.168.*.* equals 192.168), could also contain IPv6 addresses
+	 * @return boolean  True if an IP-mask from $list matches $baseIP
 	 */
 	public static function cmpIPv4($baseIP, $list) {
 		$IPpartsReq = explode('.', $baseIP);
@@ -749,7 +749,12 @@ final class t3lib_div {
 			$values = self::trimExplode(',', $list, 1);
 
 			foreach ($values as $test) {
-				list($test, $mask) = explode('/', $test);
+				$testList = explode('/', $test);
+				if (count($testList) == 2) {
+					list($test, $mask) = $testList;
+				} else {
+					$mask = FALSE;
+				}
 
 				if (intval($mask)) {
 						// "192.168.3.0/24"
@@ -766,7 +771,7 @@ final class t3lib_div {
 					$yes = 1;
 					foreach ($IPparts as $index => $val) {
 						$val = trim($val);
-						if (strcmp($val, '*') && strcmp($IPpartsReq[$index], $val)) {
+						if (($val !== '*') && ($IPpartsReq[$index] !== $val)) {
 							$yes = 0;
 						}
 					}
@@ -4657,6 +4662,17 @@ final class t3lib_div {
 	}
 
 	/**
+	 * Returns true if the "l18n_cfg" field value is not set to hide
+	 * pages in the default language
+	 *
+	 * @param int $localizationConfiguration
+	 * @return boolean
+	 */
+	public static function hideIfDefaultLanguage($localizationConfiguration) {
+		return ($localizationConfiguration & 1);
+	}
+
+	/**
 	 * Includes a locallang file and returns the $LOCAL_LANG array found inside.
 	 *
 	 * @param	string		Input is a file-reference (see t3lib_div::getFileAbsFileName). That file is expected to be a 'locallang.php' file containing a $LOCAL_LANG array (will be included!) or a 'locallang.xml' file conataining a valid XML TYPO3 language structure.
@@ -5720,6 +5736,8 @@ final class t3lib_div {
 		$matches = preg_split('/(.?###.+###.?|\(|\))/', $line, -1, PREG_SPLIT_NO_EMPTY);
 		foreach ($matches as $part) {
 			$oldPart = $part;
+			$partWasQuoted = ($part{0} == '"');
+			$part = trim($part, '"');
 			switch ((string) $enc) {
 				case 'base64':
 					$part = '=?' . $charset . '?B?' . base64_encode($part) . '?=';
@@ -5737,6 +5755,9 @@ final class t3lib_div {
 						$part = '=?' . $charset . '?Q?' . $qpValue . '?=';
 					}
 					break;
+			}
+			if ($partWasQuoted) {
+				$part = '"' . $part . '"';
 			}
 			$line = str_replace($oldPart, $part, $line);
 		}
@@ -5934,14 +5955,17 @@ final class t3lib_div {
 
 				// write message to a file
 			if ($type == 'file') {
+				$lockObject = t3lib_div::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
+				/** @var t3lib_lock $lockObject */
+				$lockObject->setEnableLogging(FALSE);
+				$lockObject->acquire();
 				$file = fopen($destination, 'a');
 				if ($file) {
-					flock($file, LOCK_EX); // try locking, but ignore if not available (eg. on NFS and FAT)
 					fwrite($file, date($dateFormat . ' ' . $timeFormat) . $msgLine . LF);
-					flock($file, LOCK_UN); // release the lock
 					fclose($file);
 					self::fixPermissions($destination);
 				}
+				$lockObject->release();
 			}
 				// send message per mail
 			elseif ($type == 'mail') {
@@ -6021,14 +6045,17 @@ final class t3lib_div {
 		if (stripos($log, 'file') !== FALSE) {
 				// write a longer message to the deprecation log
 			$destination = self::getDeprecationLogFileName();
+			$lockObject = t3lib_div::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
+			/** @var t3lib_lock $lockObject */
+			$lockObject->setEnableLogging(FALSE);
+			$lockObject->acquire();
 			$file = @fopen($destination, 'a');
 			if ($file) {
-				flock($file, LOCK_EX); // try locking, but ignore if not available (eg. on NFS and FAT)
 				@fwrite($file, $date . $msg . LF);
-				flock($file, LOCK_UN); // release the lock
 				@fclose($file);
 				self::fixPermissions($destination);
 			}
+			$lockObject->release();
 		}
 
 		if (stripos($log, 'devlog') !== FALSE) {

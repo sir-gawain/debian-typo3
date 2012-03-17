@@ -749,7 +749,7 @@ class t3lib_TStemplate {
 	 * @return	void		Row is passed by reference.
 	 */
 	function versionOL(&$row) {
-		if (is_object($GLOBALS['TSFE'])) { // Frontend:
+		if (TYPO3_MODE === 'FE') { // Frontend:
 			$GLOBALS['TSFE']->sys_page->versionOL('sys_template', $row);
 		} else { // Backend:
 			t3lib_BEfunc::workspaceOL('sys_template', $row);
@@ -1587,8 +1587,8 @@ class t3lib_TStemplate {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 				'uid,pid,doktype,mount_pid,mount_pid_ol',
 				'pages',
-				'pid=' . intval($id) . ' AND deleted=0 AND doktype!=' . t3lib_pageSelect::DOKTYPE_RECYCLER .
-				' AND doktype!=' . t3lib_pageSelect::DOKTYPE_BE_USER_SECTION
+				'pid=' . intval($id) . ' AND deleted=0 AND doktype<>' . t3lib_pageSelect::DOKTYPE_RECYCLER .
+				' AND doktype<>' . t3lib_pageSelect::DOKTYPE_BE_USER_SECTION
 			);
 			while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 
