@@ -1,3 +1,15 @@
+typo3-src (4.5.14+dfsg1-1)
+
+  * base of this package is now the blankpackage.zip of TYPO3
+    instead of the tar.gz. This simplifies package building because
+    dummy has not to be integrated anymore.
+    Use debian/rules get-orig-source to download and repack the
+    source package.
+  * Running debian/rules get-orig-source also removes embedded code
+    copies during repacking step.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 5 Jan 2011 22:00:00 +0200
+
 typo3-src (4.5.0+dfsg1~beta2-1)
 
   * added source of player.swf and flvplayer.swf.
