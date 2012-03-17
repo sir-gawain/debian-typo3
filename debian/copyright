@@ -1,66 +1,146 @@
-Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
-Name: typo3-src
-Maintainer: Christian Welzel <gawain@camlann.de>
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: typo3
+Upstream-Contact: http://www.typo3.org
 Source: http://typo3.org/download/packages/
-
-Copyright: 2003-2010 Kasper Skaarhoj (kasperYYYY@typo3.com)
-License: GPL-2+
 
 Files: debian/*
 Copyright: 2003, Michael Stucki <mundaun@gmx.ch>
            2004-2005, Christian Leutloff <leutloff@debian.org>
-           2006-2010, Christian Welzel <gawain@camlann.de>
-License: GPL-2+
+           2006-2011, Christian Welzel <gawain@camlann.de>
+License: GPL-2
+
+Files: fileadmin/* t3lib/* typo3conf/* typo3temp/* uploads/*
+       typo3/classes/* typo3/ext/* typo3/gfx/* typo3/interfaces/* typo3/install/*
+       typo3/js/* typo3/mod/* typo3/stylesheets/* typo3/sysext/* typo3/templates/*
+       typo3/*
+       ChangeLog GPL.txt index.php LICENSE.txt README.txt clear.gif _.htaccess
+       INSTALL.txt NEWS.txt RELEASE_NOTES.txt
+Copyright: 2003-2010 Kasper Skaarhoj (kasperYYYY@typo3.com)
+License: GPL-2
+
+Files: t3lib/mail/class.t3lib_mail_rfc822addressesparser.php
+Copyright: 2001-2010, Richard Heyes
+License: BSD
+
+Files: t3lib/js/extjs/ux/ext.resizable.js
+Copyright: Nigel White
+License: LGPL-3
+
+Files: t3lib/js/extjs/ux/ext.ux.tabclosemenu.js
+       t3lib/js/extjs/ux/Ext.grid.RowExpander.js
+       t3lib/js/extjs/ux/Ext.app.SearchField.js
+Copyright: 2006-2010, Ext JS, LLC.
+License: GPL-2
 
 Files: typo3/sysext/adodb/adodb/*
 Copyright: 2000-2004, John Lim
 License: BSD or LGPL-2.1
 
-Files: typo3/sysext/rtehtmlarea/rtehtmlarea/*
+Files: typo3/sysext/rtehtmlarea/htmlarea/*
 Copyright: 2002-2004, interactivetools.com, inc.
            2003-2004, dynarch.com
 License:
  All rights reserved.
-
+ .
  Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are
- met:
-
- * Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-
- * Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-
- * Neither the name of interactivetools.com, inc. nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
- OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ modification, are permitted provided that the following conditions are met:
+ .
+ 1) Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ .
+ 2) Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ .
+ 3) Neither the name of interactivetools.com, inc. nor the names of its
+    contributors may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
 
 Files: t3lib/fonts/nimbus.ttf
 Copyright: 1999, (URW)++ Design & Development
            2001-2002, Cyrillic glyphs added by Valek Filippov
-License: GPL-2+
+License: GPL-2
  nimbus.ttf was downloaded as n019003l.ttf from
  <ftp://ftp.gnome.ru/fonts/urw/release/urw-fonts-1.0.7pre18-ttf.tar.bz2>.
  nimbus.sfd.gz was downladed as NimbusSansL-Regu.sfd from
  <ftp://ftp.gnome.ru/fonts/sources/urw-fonts-1.0.7pre40-src.tar.bz2>
 
+Files: t3lib/fonts/vera.ttf
+Copyright: 2003, Bitstream, Inc.
+License:
+ Bitstream Vera Fonts Copyright
+ .
+ The fonts have a generous copyright, allowing derivative works (as
+ long as "Bitstream" or "Vera" are not in the names), and full
+ redistribution (so long as they are not *sold* by themselves). They
+ can be be bundled, redistributed and sold with any software.
+ .
+ The fonts are distributed under the following copyright:
+ .
+ Copyright
+ =========
+ .
+ Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream
+ Vera is a trademark of Bitstream, Inc.
+ .
+ Permission is hereby granted, free of charge, to any person obtaining
+ a copy of the fonts accompanying this license ("Fonts") and associated
+ documentation files (the "Font Software"), to reproduce and distribute
+ the Font Software, including without limitation the rights to use,
+ copy, merge, publish, distribute, and/or sell copies of the Font
+ Software, and to permit persons to whom the Font Software is furnished
+ to do so, subject to the following conditions:
+ .
+ The above copyright and trademark notices and this permission notice
+ shall be included in all copies of one or more of the Font Software
+ typefaces.
+ .
+ The Font Software may be modified, altered, or added to, and in
+ particular the designs of glyphs or characters in the Fonts may be
+ modified and additional glyphs or characters may be added to the
+ Fonts, only if the fonts are renamed to names not containing either
+ the words "Bitstream" or the word "Vera".
+ .
+ This License becomes null and void to the extent applicable to Fonts
+ or Font Software that has been modified and is distributed under the
+ "Bitstream Vera" names.
+ .
+ The Font Software may be sold as part of a larger software package but
+ no copy of one or more of the Font Software typefaces may be sold by
+ itself.
+ .
+ THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+ OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL
+ BITSTREAM OR THE GNOME FOUNDATION BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ OTHER LIABILITY, INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL,
+ OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO USE THE FONT
+ SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.
+ .
+ Except as contained in this notice, the names of Gnome, the Gnome
+ Foundation, and Bitstream Inc., shall not be used in advertising or
+ otherwise to promote the sale, use or other dealings in this Font
+ Software without prior written authorization from the Gnome Foundation
+ or Bitstream Inc., respectively. For further information, contact:
+ fonts at gnome dot org.
+
 Files: typo3/sysext/t3editor/*
 Copyright: 2007-2008, Tobias Liebig <mail@etobi.de>
-License: GPL-2+
+License: GPL-2
 
 Files: typo3/contrib/codemirror/*
 Copyright: 2007-2010, Marijn Haverbeke <marijnh@gmail.com>
@@ -70,24 +150,24 @@ Files: typo3/contrib/codemirror/contrib/lua/*
 Copyright: 2009, Franciszek Wawrzak
 License:
  All rights reserved.
-
+ .
  This software is provided for use in connection with the
  CodeMirror suite of modules and utilities, hosted and maintained
  at http://codemirror.net/.
-
+ .
  Redistribution and use of this software in source and binary forms,
  with or without modification, are permitted provided that the
  following conditions are met:
-
+ .
  * Redistributions of source code must retain the above
    copyright notice, this list of conditions and the
    following disclaimer.
-
+ .
  * Redistributions in binary form must reproduce the above
    copyright notice, this list of conditions and the
    following disclaimer in the documentation and/or other
    materials provided with the distribution.
-
+ .
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -109,29 +189,29 @@ Files: typo3/contrib/codemirror/contrib/php/*
 Copyright: 2008-2009, Yahoo! Inc.
 License:
  All rights reserved.
-
+ .
  This software is provided for use in connection with the
  CodeMirror suite of modules and utilities, hosted and maintained
  at http://codemirror.net/.
-
+ .
  Redistribution and use of this software in source and binary forms,
  with or without modification, are permitted provided that the
  following conditions are met:
-
+ .
  * Redistributions of source code must retain the above
    copyright notice, this list of conditions and the
    following disclaimer.
-
+ .
  * Redistributions in binary form must reproduce the above
    copyright notice, this list of conditions and the
    following disclaimer in the documentation and/or other
    materials provided with the distribution.
-
+ .
  * Neither the name of Yahoo! Inc. nor the names of its
    contributors may be used to endorse or promote products
    derived from this software without specific prior
    written permission of Yahoo! Inc.
-
+ .
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -153,24 +233,24 @@ Files: typo3/contrib/codemirror/contrib/python/*
 Copyright: 2009, Timothy Farrell
 License:
  All rights reserved.
-
+ .
  This software is provided for use in connection with the
  CodeMirror suite of modules and utilities, hosted and maintained
  at http://codemirror.net/.
-
+ .
  Redistribution and use of this software in source and binary forms,
  with or without modification, are permitted provided that the
  following conditions are met:
-
+ .
  * Redistributions of source code must retain the above
    copyright notice, this list of conditions and the
    following disclaimer.
-
+ .
  * Redistributions in binary form must reproduce the above
    copyright notice, this list of conditions and the
    following disclaimer in the documentation and/or other
    materials provided with the distribution.
-
+ .
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -192,11 +272,37 @@ Files: typo3/contrib/codemirror/contrib/sql/*
 Copyright: 2009, John Benediktsson
 License: ZLIB
 
+Files: typo3/contrib/websvg/*
+Copyright: James Hight, Rick Masters, Google Inc.
+License: Apache-2.0
+
+Files: typo3/contrib/RemoveXSS/*
+Copyright: Travis Puderbaugh <kallahar@quickwired.com>, Jigal van Hemert <jigal@xs4all.nl>
+License:
+ This code is public domain, you are free to do whatever you want with it,
+ including adding it to your own project which can be under any license.
+
+Files: typo3/contrib/pear/data/HTTP_Request2/public-suffix-list.php
+Copyright: 2007, Jo Hermans <jo.hermans@gmail.com>
+License: MPL or GPL-2 or LGPL-2.1
+
+Files: typo3/contrib/pear/HTTP/Request2/* typo3/contrib/pear/HTTP/Request2.php
+Copyright: 2008-2011, Alexey Borzov <avb@php.net>
+License: BSD
+
+Files: typo3/contrib/pear/Net/URL2.php
+Copyright: 2007-2009, Peytz & Co. A/S
+License: BSD
+
+Files: typo3/contrib/pear/PEAR/*
+Copyright: 1997-2009, Tomas V. V. Cox <cox@idecnet.com>, Hans Lellelid <hans@velum.net>, Bertrand Mansion <bmansion@mamasam.com>, Greg Beaver <cellog@php.net>
+License: BSD
+
 Files: typo3/sysext/openid/lib/php-openid/*
 Copyright:
 License: Apache-2.0
 
-Files: typo3/gfx/magnifier.png, typo3/gfx/lightning.png
+Files: typo3/gfx/magnifier.png typo3/gfx/lightning.png
 Copyright: 2006, Mark James <mjames@gmail.com>
 License: CC-BY
  These icons are retrieved from the "Silk" icon set of Mark James, which
@@ -211,22 +317,22 @@ License:
  ------------------------------------------------------------------------------------------
  Ext is licensed under the terms of the Open Source GPL 3.0 license.
  http://www.gnu.org/licenses/gpl.html
-
+ .
  There are several FLOSS exceptions available for use with this release for
  open source applications that are distributed under a license other than the GPL.
-
+ .
  TYPO3 makes use of this FLOSS exception.
  * Open Source License Exception for Applications
     http://extjs.com/products/floss-exception.php
  * Open Source License Exception for Development
    http://extjs.com/products/ux-exception.php
-
+ .
  Commercial License
  ------------------------------------------------------------------------------------------
- This is the appropriate option if you are creating proprietary applications and you are 
- not prepared to distribute and share the source code of your application under the 
+ This is the appropriate option if you are creating proprietary applications and you are
+ not prepared to distribute and share the source code of your application under the
  GPL v3 license. Please visit http://extjs.com/license for more details.
-
+ .
  OEM / Reseller License
  ------------------------------------------------------------------------------------------
  For more details, please visit: http://extjs.com/license.
@@ -253,7 +359,7 @@ Files: typo3/sysext/rsaauth/resources/jsbn/*
 Copyright: 2003-2005, Tom Wu <tjw@cs.Stanford.EDU>
 License:
  All rights reserved.
-
+ .
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -261,32 +367,28 @@ License:
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
-
+ .
  The above copyright notice and this permission notice shall be
  included in all copies or substantial portions of the Software.
-
+ .
  THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
  EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
  WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
+ .
  IN NO EVENT SHALL TOM WU BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
  INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER
  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT ADVISED OF
  THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY, ARISING OUT
  OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
+ .
  In addition, the following condition applies:
-
+ .
  All redistributions must retain an intact copy of this copyright notice
  and disclaimer.
 
 Files: typo3/contrib/flashmedia/player.swf
 Copyright: 2005-2006  Martin Laine <martin@1pixelout.net>
-License: GPL-2+
-
-Files: typo3/contrib/swiftmailer/*
-Copyright: 2009, Chris Corbyn
-License: LGPL-3
+License: GPL-2
 
 Files: typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/*
 Copyright:
@@ -295,6 +397,61 @@ License: MPL
 Files: typo3/contrib/modernizr/*
 Copyright: 2009-2010, Faruk Ateş
 License: MIT or BSD
+
+Files: typo3/contrib/idna/*
+Copyright: 2004-2011 phlyLabs Berlin, http://phlylabs.de
+License: LGPL-2.1
+
+Files: typo3/contrib/videojs/video-js/*
+Copyright: 2010, Zencoder, Inc.
+License: LGPL-3
+
+Files: typo3/contrib/flowplayer/*
+Copyright:
+License: GPL-3
+
+Files: typo3/contrib/flowplayer/flowplayer.audio/*
+Copyright: 2008-2009, Flowplayer Oy
+License: MIT
+
+Files: typo3/contrib/flowplayer/flowplayer.captions/*
+Copyright: 2009, Flowplayer Ltd
+License: MIT
+
+Files: typo3/contrib/flowplayer/flowplayer.content/*
+Copyright: 2008-2009, Flowplayer Oy
+License: MIT
+
+Files: typo3/contrib/flowplayer/lib/corelib/*
+Copyright: 2005, Adobe Systems Incorporated
+License:
+ Adobe Systems Incorporated grants to you a perpetual, worldwide,
+ non-exclusive, no-charge, royalty-free, irrevocable copyright license,
+ to reproduce, prepare derivative works of, publicly display, publicly
+ perform, and distribute this source code and such derivative works in
+ source or object code form without any attribution requirements.
+ .
+ The name "Adobe Systems Incorporated" must not be used to endorse or
+ promote products derived from the source code without prior written
+ permission.
+ .
+ You agree to indemnify, hold harmless and defend Adobe Systems
+ Incorporated from and against any loss, damage, claims or lawsuits,
+ including attorney's fees that arise or result from your use or
+ distribution of the source code.
+ .
+ THIS SOURCE CODE IS PROVIDED "AS IS" AND "WITH ALL FAULTS", WITHOUT ANY
+ TECHNICAL SUPPORT OR ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING,
+ BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. ALSO, THERE IS NO
+ WARRANTY OF NON-INFRINGEMENT, TITLE OR QUIET ENJOYMENT. IN NO EVENT
+ SHALL MACROMEDIA OR ITS SUPPLIERS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOURCE CODE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 License: ZLIB
  This software is provided 'as-is', without any express or implied
@@ -333,6 +490,10 @@ License: GPL-2
 X-Comment: On Debian GNU/Linux systems, the complete text of the GNU General
  Public License can be found in the /usr/share/common-licenses/GPL-2 file.
 
+License: GPL-3
+ On Debian GNU/Linux systems, the complete text of the GNU General Public
+ License 3 can be found in the /usr/share/common-licenses/GPL-3 file.
+
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -357,9 +518,120 @@ License: LGPL-2.1
  License 2.1 can be found in the /usr/share/common-licenses/LGPL-2.1 file.
 
 License: LGPL-3
- On Debian GNU/Linux systems, the complete text of the GNU Lesser General
- Public License 3 can be found in the /usr/share/common-licenses/GPL-3 file.
+ On Debian GNU/Linux systems, the complete text of the GNU Lesser General Public
+ License 3 can be found in the /usr/share/common-licenses/LGPL-3 file.
 
 License: Apache-2.0
  On Debian GNU/Linux systems, the complete text of the Apache License Version
  2.0 can be found in the /usr/share/common-licenses/Apache-2.0 file.
+
+License: MPL
+ A SOURCE CODE VERSION OF CERTAIN THUNDERBIRD E-MAIL FUNCTIONALITY THAT YOU MAY
+ USE, MODIFY AND DISTRIBUTE IS AVAILABLE TO YOU FREE-OF-CHARGE FROM
+ WWW.MOZILLA.ORG UNDER THE MOZILLA PUBLIC LICENSE and other open source software
+ licenses.
+ The accompanying executable code version of Mozilla Thunderbird and related
+ documentation (the "Product") is made available to you under the terms of this
+ MOZILLA THUNDERBIRD END-USER SOFTWARE LICENSE AGREEMENT (THE "AGREEMENT").  BY
+ CLICKING THE "ACCEPT" BUTTON, OR BY INSTALLING OR USING THE MOZILLA THUNDERBIRD
+ E-MAIL CLIENT, YOU ARE CONSENTING TO BE BOUND BY THE AGREEMENT.  IF YOU DO NOT
+ AGREE TO THE TERMS AND CONDITIONS OF THIS AGREEMENT, DO NOT CLICK THE "ACCEPT"
+ BUTTON, AND DO NOT INSTALL OR USE ANY PART OF THE MOZILLA THUNDERBIRD E-MAIL
+ CLIENT.
+ DURING THE MOZILLA THUNDERBIRD INSTALLATION PROCESS, AND AT LATER TIMES, YOU
+ MAY BE GIVEN THE OPTION OF INSTALLING ADDITIONAL COMPONENTS FROM THIRD-PARTY
+ SOFTWARE PROVIDERS.  THE INSTALLATION AND USE OF THOSE THIRD-PARTY COMPONENTS
+ MAY BE GOVERNED BY ADDITIONAL LICENSE AGREEMENTS.
+ 1. LICENSE GRANT. The Mozilla Foundation grants you a non-exclusive license to
+ use the executable code version of the Product.  This Agreement will also
+ govern any software upgrades provided by Mozilla that replace and/or supplement
+ the original Product, unless such upgrades are accompanied by a separate
+ license, in which case the terms of that license will govern.
+ 2.  TERMINATION.  If you breach this Agreement your right to use the Product
+ will terminate immediately and without notice, but all provisions of this
+ Agreement except the License Grant (Paragraph 1) will survive termination and
+ continue in effect.  Upon termination, you must destroy all copies of the
+ Product.
+ 3.  PROPRIETARY RIGHTS.  Portions of the Product are available in source code
+ form under the terms of the Mozilla Public License and other open source
+ licenses (collectively, "Open Source Licenses") at http://www.mozilla.org.
+ Nothing in this Agreement will be construed to limit any rights granted under
+ the Open Source Licenses.  Subject to the foregoing, Mozilla, for itself and on
+ behalf of its licensors, hereby reserves all intellectual property rights in
+ the Product, except for the rights expressly granted in this Agreement.  You
+ may not remove or alter any trademark, logo, copyright or other proprietary
+ notice in or on the Product.  This license does not grant you any right to use
+ the trademarks, service marks or logos of Mozilla or its licensors.
+ 4.  DISCLAIMER OF WARRANTY.  THE PRODUCT IS PROVIDED "AS IS" WITH ALL FAULTS.
+ TO THE EXTENT PERMITTED BY LAW, MOZILLA AND MOZILLA'S LICENSORS HEREBY DISCLAIM
+ ALL WARRANTIES, WHETHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
+ WARRANTIES THAT THE PRODUCT IS FREE OF DEFECTS, MERCHANTABLE, FIT FOR A
+ PARTICULAR PURPOSE AND NON-INFRINGING.  YOU BEAR ENTIRE RISK AS TO SELECTING
+ THE PRODUCT FOR YOUR PURPOSES AND AS TO THE QUALITY AND PERFORMANCE OF THE
+ PRODUCT.  THIS LIMITATION WILL APPLY NOTWITHSTANDING THE FAILURE OF ESSENTIAL
+ PURPOSE OF ANY REMEDY.   SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR
+ LIMITATION OF IMPLIED WARRANTIES, SO THIS DISCLAIMER MAY NOT APPLY TO YOU.
+ 5.  LIMITATION OF LIABILITY.  EXCEPT AS REQUIRED BY LAW, MOZILLA AND ITS
+ DIRECTORS, LICENSORS, CONTRIBUTORS AND AGENTS (COLLECTIVELY, THE "MOZILLA
+ GROUP") WILL NOT BE LIABLE FOR ANY INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL
+ OR EXEMPLARY DAMAGES ARISING OUT OF OR IN ANY WAY RELATING TO THIS AGREEMENT OR
+ THE USE OF OR INABILITY TO USE THE PRODUCT, INCLUDING WITHOUT LIMITATION
+ DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, LOST PROFITS, LOSS OF DATA, AND
+ COMPUTER FAILURE OR MALFUNCTION, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ DAMAGES AND REGARDLESS OF THE THEORY (CONTRACT, TORT OR OTHERWISE) UPON WHICH
+ SUCH CLAIM IS BASED.  THE MOZILLA GROUP'S COLLECTIVE LIABILITY UNDER THIS
+ AGREEMENT WILL NOT EXCEED THE GREATER OF $500 (FIVE HUNDRED DOLLARS) AND THE
+ FEES PAID BY YOU UNDER THIS LICENSE (IF ANY).  SOME JURISDICTIONS DO NOT ALLOW
+ THE EXCLUSION OR LIMITATION OF INCIDENTAL, CONSEQUENTIAL OR SPECIAL DAMAGES, SO
+ THIS EXCLUSION AND LIMITATION MAY NOT APPLY TO YOU.
+ 6.  EXPORT CONTROLS.  This license is subject to all applicable export
+ restrictions.  You must comply with all export and import laws and restrictions
+ and regulations of any United States or foreign agency or authority relating to
+ the Product and its use.
+ 7.  U.S. GOVERNMENT END-USERS.  The Product is a "commercial item," as that
+ term is defined in 48 C.F.R. 2.101, consisting of "commercial computer
+ software" and "commercial computer software documentation," as such terms are
+ used in 48 C.F.R. 12.212 (Sept. 1995) and 48 C.F.R. 227.7202 (June 1995).
+ Consistent with 48 C.F.R. 12.212, 48 C.F.R. 27.405(b)(2) (June 1998) and 48
+ C.F.R. 227.7202, all U.S. Government End Users acquire the Product with only
+ those rights as set forth herein.
+ 8.  MISCELLANEOUS.  (a) This Agreement constitutes the entire agreement between
+ Mozilla and you concerning the subject matter hereof, and it may only be
+ modified by a written amendment signed by an authorized executive of Mozilla.
+ (b) Except to the extent applicable law, if any, provides otherwise, this
+ Agreement will be governed by the laws of the state of California, U.S.A.,
+ excluding its conflict of law provisions.  (c) This Agreement will not be
+ governed by the United Nations Convention on Contracts for the International
+ Sale of Goods.  (d) If any part of this Agreement is held invalid or
+ unenforceable, that part will be construed to reflect the parties' original
+ intent, and the remaining portions will remain in full force and effect.  (e) A
+ waiver by either party of any term or condition of this Agreement or any breach
+ thereof, in any one instance, will not waive such term or condition or any
+ subsequent breach thereof.  (f) Except as required by law, the controlling
+ language of this Agreement is English.  (g) You may assign your rights under
+ this Agreement to any party that consents to, and agrees to be bound by, its
+ terms; the Mozilla Foundation may assign its rights under this Agreement
+ without condition.  (h) This Agreement will be binding upon and will inure to
+ the benefit of the parties, their successors and permitted assigns.
+
+License: BSD
+ Redistribution and use in source and binary forms, with or withoutmodification,
+ are permitted provided that the following conditionsare met:
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
