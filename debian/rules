@@ -62,6 +62,7 @@ install: build
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer
+	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
 
 binary-indep: build install
 	dh_testdir
