@@ -1,8 +1,16 @@
-typo3-src (4.5.13+dfsg1-1) UNRELEASED; urgency=low
+typo3-src (4.5.13+dfsg1-1) unstable; urgency=low
 
+  * New upstream release.
   * Added Dutch debconf translation (Closes: 661129)
+  * Ported patch 06-fix-im-command.patch to new class.t3lib_utility_command.php
+  * Added description to patches
+  * Removed embedded copy of swfobject, added depends on libjs-swfobject
+  * Remove .gitignore from linkvalidator subfolder
+  * Added lintian override typo3-dummy: init.d-script-does-not-implement-optional-option
+  * Added lintian override for typo3-src-4.5: font-in-non-font-package (nimbus.ttf)
+  * Rewritten short description of binary package typo3.
 
- -- Christian Welzel <gawain@camlann.de>  Sat, 17 Mar 2012 10:30:28 +0100
+ -- Christian Welzel <gawain@camlann.de>  Sat, 17 Mar 2012 13:44:38 +0100
 
 typo3-src (4.5.11+dfsg1-1) unstable; urgency=low
 
