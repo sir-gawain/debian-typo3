@@ -111,12 +111,11 @@ get-orig-source:
 	tar -czf $(DEBTAR).gz -C _unpack $(ORIG_DIR)
 	rm -rf _unpack
 
-dfsg:
+prepare-source:
 	dh_testdir
-	gunzip -f $(ORIGTAR).gz
-	tar --delete --wildcards -f $(ORIGTAR) typo3_src-*/typo3/contrib/jsmin/jsmin.php
-	gzip $(ORIGTAR)
-	rm -f typo3/contrib/jsmin/jsmin.php
+	mv $(ORIGTAR).gz ../
+	mv $(DEBTAR).gz ../
+	tar --strip-components 1 -C . -xzf ../$(DEBTAR).gz
 
 # Build architecture-dependent files here.
 binary-arch: build install
