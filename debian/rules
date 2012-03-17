@@ -94,6 +94,23 @@ binary-indep: build install
 build-arch: build
 build-indep: build
 
+get-orig-source:
+# get source
+       uscan --no-conf --force-download --rename --repack --download-current-version --destdir=.
+# unpack and rename
+       mkdir -p _unpack
+       tar -xzf $(ORIGTAR).gz -C _unpack
+       mv _unpack/$(BLANK_DIR) _unpack/$(ORIG_DIR)
+# remove dfsg non complient files
+       rm -f _unpack/$(ORIG_DIR)/typo3/contrib/jsmin/jsmin.php
+# remove embedded libraries
+       rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swiftmailer
+       rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/prototype
+       rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/scriptaculous
+# repack
+       tar -czf $(DEBTAR).gz -C _unpack $(ORIG_DIR)
+       rm -rf _unpack
+
 # Note to me: how to find all sql files:
 find-sql:
 	cat ../t3lib/stddb/tables.sql ../typo3/sysext/sys_note/ext_tables.sql ../typo3/sysext/extbase/ext_tables.sql \
