@@ -1,21 +1,29 @@
 #!/usr/bin/make -f
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+# export DH_VERBOSE=1
 
-SOURCEVERSION=4.5
-PACKAGENAME=typo3_src-$(SOURCEVERSION)
-SOURCEPACKAGE=typo3-src-$(SOURCEVERSION)
+SOURCEVERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Source: typo3-src(-.+),\1,p')
 
-T3SRCDIR=usr/share/typo3/$(PACKAGENAME)
+PACKAGENAME:=typo3_src$(SOURCEVERSION)
+SOURCEPACKAGE:=typo3-src$(SOURCEVERSION)
 
-SOURCEINSTALLDIR=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
+T3SRCDIR:=usr/share/typo3/$(PACKAGENAME)
+
+SOURCEINSTALLDIR:=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 
 DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
 ETCDIR=debian/typo3-dummy/etc/typo3-dummy
 
-TGZVERSION=$(shell dpkg-parsechangelog | sed -n 's/^Version: //p' | cut -d "-" -f 1)
-ORIGTAR=../typo3-src_$(TGZVERSION).orig.tar
+MAIN_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^+]+).*,\1,p')
+SUB_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: (.*)\+dfsg1~([^-]+).*,\2,p')
+SUB2_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: (.*)\+dfsg1([^-]+).*,\2,p')
+
+ORIG_DIR:=$(SOURCEPACKAGE)_$(MAIN_TGZ_VERSION)+dfsg1$(SUB2_TGZ_VERSION)
+BLANK_DIR:=blankpackage-$(MAIN_TGZ_VERSION)$(SUB_TGZ_VERSION)
+
+ORIGTAR:=$(SOURCEPACKAGE)_$(MAIN_TGZ_VERSION)$(SUB_TGZ_VERSION).orig.tar
+DEBTAR:=$(SOURCEPACKAGE)_$(MAIN_TGZ_VERSION)+dfsg1$(SUB2_TGZ_VERSION).orig.tar
 
 clean:
 	dh_testdir
@@ -33,7 +41,9 @@ install: build
 	cp -r index.php t3lib typo3 $(SOURCEINSTALLDIR)
 	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
 #set correct permissions for cron script
-	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh $(SOURCEINSTALLDIR)/typo3/cli_dispatch.phpsh
+	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh \
+		  $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh \
+		  $(SOURCEINSTALLDIR)/typo3/cli_dispatch.phpsh
 #remove additional license files
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
@@ -65,6 +75,7 @@ install: build
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
 # fix other stuff
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
+	rmdir $(SOURCEINSTALLDIR)/typo3/contrib/jsmin
 
 binary-indep: build install
 	dh_testdir
