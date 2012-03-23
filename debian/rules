@@ -76,7 +76,6 @@ install: build
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
 # fix other stuff
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
-	rmdir $(SOURCEINSTALLDIR)/typo3/contrib/jsmin
 
 binary-indep: build install
 	dh_testdir
