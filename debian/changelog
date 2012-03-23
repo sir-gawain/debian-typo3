@@ -1,3 +1,23 @@
+typo3-src (4.5.13+dfsg2-1) UNRELEASED; urgency=low
+
+  * Package descriptions rewritten
+  * Reworked copyright file
+  * Add RSA-Auth to default configuration
+  * Fix description of patch 05-add-source-for-mediaplayer-swfs.patch
+  * Added source for modernizr and and swfupload as debian-patches
+  * Added target "get-orig-source" to rules to fetch upstream blankpackage.zip
+    file and repack it to .tar.gz
+  * Removed find-sql target from rules
+  * Added target prepare-source to rules
+  * Adopted watch file for zip download
+  * Added note about creation of source package to README.source
+  * Changed depend from ttf-dejavu to ttf-bitstream-vera. Adjusted symlink of
+    vera.tff accordingly.
+  * Imported Upstream version 4.5.13+dfsg2
+  * Refreshed patches for removed "dummy" directory.
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 23 Mar 2012 19:43:34 +0100
+
 typo3-src (4.5.13+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
