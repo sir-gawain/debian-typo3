@@ -1,0 +1,170 @@
+## DP: Fixes SecBull-TYPO3-SA-2012-001 (taken from Core.git
+## DP: branch TYPO3_4-4)
+
+--- typo3.orig/t3lib/class.t3lib_beuserauth.php
++++ typo3/t3lib/class.t3lib_beuserauth.php
+@@ -240,7 +240,7 @@
+ 						if (!$this->isAdmin())	{
+ 							return TRUE;
+ 						} else die('ERROR: CLI backend user "'.$userName.'" was ADMIN which is not allowed!'.chr(10).chr(10));
+-					} else die('ERROR: No backend user named "'.$userName.'" was found! [Database: '.TYPO3_db.']'.chr(10).chr(10));
++					} else die('ERROR: No backend user named "'.$userName.'" was found!'.chr(10).chr(10));
+ 				} else die('ERROR: Module name, "'.$GLOBALS['MCONF']['name'].'", was not prefixed with "_CLI_"'.chr(10).chr(10));
+ 			} else die('ERROR: Another user was already loaded which is impossible in CLI mode!'.chr(10).chr(10));
+ 		}
+--- typo3.orig/typo3/contrib/RemoveXSS/RemoveXSS.php
++++ typo3/typo3/contrib/RemoveXSS/RemoveXSS.php
+@@ -55,7 +55,7 @@
+ 		// remove all non-printable characters. CR(0a) and LF(0b) and TAB(9) are allowed
+ 		// this prevents some character re-spacing such as <java\0script>
+ 		// note that you have to handle splits with \n, \r, and \t later since they *are* allowed in some inputs
+-		$val = preg_replace('/([\x00-\x08][\x0b-\x0c][\x0e-\x19])/', '', $val);
++		$val = preg_replace('/([\x00-\x08]|[\x0b-\x0c]|[\x0e-\x19])/', '', $val);
+ 
+ 		// straight replacements, the user should never need these since they're normal characters
+ 		// this prevents like <IMG SRC=&#X40&#X61&#X76&#X61&#X73&#X63&#X72&#X69&#X70&#X74&#X3A&#X61&#X6C&#X65&#X72&#X74&#X28&#X27&#X58&#X53&#X53&#X27&#X29>
+--- typo3.orig/typo3/file_rename.php
++++ typo3/typo3/file_rename.php
+@@ -139,7 +139,7 @@
+ 		$this->shortPath = substr($this->target,strlen($GLOBALS['FILEMOUNTS'][$key]['path']));
+ 
+ 			// Setting title:
+-		$this->title = $this->icon . htmlspecialchars($GLOBALS['FILEMOUNTS'][$key]['name']) . ': ' . $this->shortPath;
++		$this->title = $this->icon . htmlspecialchars($GLOBALS['FILEMOUNTS'][$key]['name']) . ': ' . htmlspecialchars($this->shortPath);
+ 
+ 			// Setting template object
+ 		$this->doc = t3lib_div::makeInstance('template');
+@@ -233,4 +233,4 @@
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
+--- typo3.orig/typo3/show_item.php
++++ typo3/typo3/show_item.php
+@@ -498,12 +498,12 @@
+ 		}
+ 		foreach($rows as $row)	{
+ 			$infoData[] = '<tr class="bgColor4"">' .
+-					'<td>'.$row['tablename'].'</td>' .
+-					'<td>'.$row['recuid'].'</td>' .
+-					'<td>'.$row['field'].'</td>'.
+-					'<td>'.$row['flexpointer'].'</td>'.
+-					'<td>'.$row['softref_key'].'</td>'.
+-					'<td>'.$row['sorting'].'</td>'.
++					'<td>'.htmlspecialchars($row['tablename']).'</td>' .
++					'<td>'.htmlspecialchars($row['recuid']).'</td>' .
++					'<td>'.htmlspecialchars($row['field']).'</td>'.
++					'<td>'.htmlspecialchars($row['flexpointer']).'</td>'.
++					'<td>'.htmlspecialchars($row['softref_key']).'</td>'.
++					'<td>'.htmlspecialchars($row['sorting']).'</td>'.
+ 					'</tr>';
+ 		}
+ 
+@@ -542,13 +542,13 @@
+ 		}
+ 		foreach($rows as $row)	{
+ 			$infoData[] = '<tr class="bgColor4"">' .
+-					'<td>'.$row['field'].'</td>'.
+-					'<td>'.$row['flexpointer'].'</td>'.
+-					'<td>'.$row['softref_key'].'</td>'.
+-					'<td>'.$row['sorting'].'</td>'.
+-					'<td>'.$row['ref_table'].'</td>' .
+-					'<td>'.$row['ref_uid'].'</td>' .
+-					'<td>'.$row['ref_string'].'</td>' .
++					'<td>'.htmlspecialchars($row['field']).'</td>'.
++					'<td>'.htmlspecialchars($row['flexpointer']).'</td>'.
++					'<td>'.htmlspecialchars($row['softref_key']).'</td>'.
++					'<td>'.htmlspecialchars($row['sorting']).'</td>'.
++					'<td>'.htmlspecialchars($row['ref_table']).'</td>' .
++					'<td>'.htmlspecialchars($row['ref_uid']).'</td>' .
++					'<td>'.htmlspecialchars($row['ref_string']).'</td>' .
+ 					'</tr>';
+ 		}
+ 
+--- typo3.orig/typo3/sysext/about/mod/index.php
++++ typo3/typo3/sysext/about/mod/index.php
+@@ -157,8 +157,10 @@
+ 
+ 				$emconf = $EM_CONF['']; // ext key is not set when loading the ext_emconf.php directly
+ 
+-				$content.= '<tr><td>'.$emconf['title'].' ('.$extensionKey.')</td>'.
+-								'<td><a href="mailto:'.$emconf['author_email'].'?subject='.rawurlencode('Thanks for your '.$emconf['title'].' extension').'">'.$emconf['author'].'</a></td></tr>';
++				$content.= '<tr><td>' . htmlspecialchars($emconf['title']) . ' (' . htmlspecialchars($extensionKey) . ')</td>' .
++					'<td><a href="mailto:' . htmlspecialchars($emconf['author_email']) . '?subject=' .
++					htmlspecialchars(rawurlencode('Thanks for your ' . $emconf['title'] . ' extension')) . '">' .
++					htmlspecialchars($emconf['author']) . '</a></td></tr>';
+ 			}
+ 		}
+ 
+--- typo3.orig/typo3/sysext/cms/layout/class.tx_cms_layout.php
++++ typo3/typo3/sysext/cms/layout/class.tx_cms_layout.php
+@@ -838,7 +838,7 @@
+ 
+ 							$theData['__cmds__']= $this->getIcon('sys_note',$row);
+ 							$theData['info'] = $head.$cont;
+-							$theData['note'] = nl2br($row['message']);
++							$theData['note'] = nl2br(htmlspecialchars($row['message']));
+ 
+ 							$out.=$this->addelement(1,'',$theData,$tdparams,20);
+ 
+--- typo3.orig/typo3/sysext/css_styled_content/static/setup.txt
++++ typo3/typo3/sysext/css_styled_content/static/setup.txt
+@@ -813,6 +813,7 @@
+ 				data = register:description
+ 				wrap = <p class="csc-uploads-description">|</p>
+ 				required = 1
++				htmlSpecialChars = 1
+ 			}
+ 
+ 			30 = TEXT
+--- typo3.orig/typo3/sysext/css_styled_content/static/v3.8/setup.txt
++++ typo3/typo3/sysext/css_styled_content/static/v3.8/setup.txt
+@@ -586,6 +586,7 @@
+ 				data = register:description
+ 				wrap = <p class="csc-uploads-description">|</p>
+ 				required = 1
++				htmlSpecialChars = 1
+ 			}
+ 
+ 			30 = TEXT
+--- typo3.orig/typo3/sysext/css_styled_content/static/v3.9/setup.txt
++++ typo3/typo3/sysext/css_styled_content/static/v3.9/setup.txt
+@@ -679,6 +679,7 @@
+ 				data = register:description
+ 				wrap = <p class="csc-uploads-description">|</p>
+ 				required = 1
++				htmlSpecialChars = 1
+ 			}
+ 
+ 			30 = TEXT
+--- typo3.orig/typo3/sysext/css_styled_content/static/v4.2/setup.txt
++++ typo3/typo3/sysext/css_styled_content/static/v4.2/setup.txt
+@@ -695,6 +695,7 @@
+ 				data = register:description
+ 				wrap = <p class="csc-uploads-description">|</p>
+ 				required = 1
++				htmlSpecialChars = 1
+ 			}
+ 
+ 			30 = TEXT
+--- typo3.orig/typo3/sysext/scheduler/mod1/index.php
++++ typo3/typo3/sysext/scheduler/mod1/index.php
+@@ -180,6 +180,7 @@
+ 
+ 			// Get submitted data
+ 		$this->submittedData = t3lib_div::_GPmerged('tx_scheduler');
++		$this->submittedData['uid'] = intval($this->submittedData['uid']);
+ 
+ 			// If a save command was submitted, handle saving now
+ 		if ($this->CMD == 'save') {
+@@ -809,7 +810,7 @@
+ 			// Frequency input field
+ 		$table[$tr][] = t3lib_BEfunc::cshItem($this->cshKey, 'task_frequency', $this->backPath, '|', false, 'margin-bottom:0px;');
+ 		$table[$tr][] = '<label for="task_frequency">' . $GLOBALS['LANG']->getLL('label.frequency.long') . '</label>';
+-		$cell = '<input type="text" name="tx_scheduler[frequency]" id="task_frequency" value="' . $taskInfo['frequency'] . '" />';
++		$cell = '<input type="text" name="tx_scheduler[frequency]" id="task_frequency" value="' . htmlspecialchars($taskInfo['frequency']) . '" />';
+ 		$table[$tr][] = $cell;
+ 		$tableLayout[$tr] = array (
+ 			'tr'     => array('<tr id="task_frequency_row"' . $style . '>', '</tr>'),
