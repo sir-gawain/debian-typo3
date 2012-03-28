@@ -1,5 +1,8 @@
-typo3-src (4.5.14+dfsg1-1) UNRELEASED; urgency=low
+typo3-src (4.5.14+dfsg1-1) unstable; urgency=high
 
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2012-001: Several
+      Vulnerabilities in TYPO3 Core" (Closes: 666074)
   * Package descriptions rewritten
   * Reworked copyright file
   * Add RSA-Auth to default configuration
@@ -13,10 +16,11 @@ typo3-src (4.5.14+dfsg1-1) UNRELEASED; urgency=low
   * Added note about creation of source package to README.source
   * Changed depend from ttf-dejavu to ttf-bitstream-vera. Adjusted symlink of
     vera.tff accordingly.
-  * Imported Upstream version 4.5.13+dfsg2
   * Refreshed patches for removed "dummy" directory.
+  * Bumped standards version to 3.9.3
+  * Added description to patches 07 and 08.
 
- -- Christian Welzel <gawain@camlann.de>  Fri, 23 Mar 2012 19:43:34 +0100
+ -- Christian Welzel <gawain@camlann.de>  Wed, 28 Mar 2012 15:47:41 +0200
 
 typo3-src (4.5.13+dfsg1-1) unstable; urgency=low
 
