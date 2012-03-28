@@ -2196,7 +2196,7 @@ final class t3lib_div {
 	 * @param	array	Array by reference which should be remapped
 	 * @param	array	Array with remap information, array/$oldKey => $newKey)
 	 */
-	function remapArrayKeys(&$array, $mappingTable) {
+	public static function remapArrayKeys(&$array, $mappingTable) {
 		if (is_array($mappingTable)) {
 			foreach ($mappingTable as $old => $new) {
 				if ($new && isset($array[$old])) {
@@ -2795,7 +2795,7 @@ final class t3lib_div {
 	 * @return	mixed		If the parsing had errors, a string with the error message is returned. Otherwise an array with the content.
 	 * @see array2xml()
 	 */
-	protected function xml2arrayProcess($string, $NSprefix = '', $reportDocTag = FALSE) {
+	protected static function xml2arrayProcess($string, $NSprefix = '', $reportDocTag = FALSE) {
 		global $TYPO3_CONF_VARS;
 
 			// Create parser:
@@ -5403,7 +5403,7 @@ final class t3lib_div {
 	 * @param	string		Base class name to evaluate
 	 * @return	string		Final class name to instantiate with "new [classname]"
 	 */
-	protected function getClassName($className) {
+	protected static function getClassName($className) {
 		if (class_exists($className)) {
 			while (class_exists('ux_' . $className, FALSE)) {
 				$className = 'ux_' . $className;
@@ -6043,6 +6043,10 @@ final class t3lib_div {
 		}
 
 		if (stripos($log, 'file') !== FALSE) {
+				// In case lock is acquired before autoloader was defined:
+			if (class_exists('t3lib_lock') === FALSE) {
+				require_once PATH_t3lib . 'class.t3lib_lock.php';
+			}
 				// write a longer message to the deprecation log
 			$destination = self::getDeprecationLogFileName();
 			$lockObject = t3lib_div::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
