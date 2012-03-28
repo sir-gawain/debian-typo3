@@ -104,5 +104,5 @@ Description: web content management system (meta)
     TypoScript configuration interface or the plugin API
   * Thousands of plugins are available in the online TYPO3 extension repository
  .
- This package depends on all TYPO3 packages that are necessary to build a local
- running TYPO3 installation.
+ This package is a metapackage and depends on all TYPO3 packages that are
+ necessary to build a local running TYPO3 installation.
