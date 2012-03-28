@@ -1,3 +1,7 @@
+Description: Add source of modernizr to comply to GPL
+Author: Christian Welzel <gawain@camlann.de>
+Last-Update: 2012-03-28
+
 --- /dev/null
 +++ typo3-src-4.6_4.6.3+dfsg1/typo3/contrib/modernizr/modernizr.js
 @@ -0,0 +1,892 @@
