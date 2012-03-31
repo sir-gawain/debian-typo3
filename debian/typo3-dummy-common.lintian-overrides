@@ -1,0 +1,3 @@
+typo3-dummy-common: non-standard-dir-perm
+typo3-dummy-common: non-standard-file-perm
+typo3-dummy-common: init.d-script-does-not-implement-optional-option

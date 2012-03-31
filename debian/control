@@ -4,11 +4,12 @@ Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
 Build-Depends: debhelper (>= 7), po-debconf
 Standards-Version: 3.9.3
+Vcs-Browser: http://forge.typo3.org/projects/extension-packaging/repository/show/trunk/debian/src
 
 Package: typo3-src-4.5
 Architecture: all
 Depends: libjs-swfobject, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libphp-adodb (>=5.07), libphp-swiftmailer (>=4.0.6), ttf-bitstream-vera, ${misc:Depends}
-Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache | php-apc, typo3-database, typo3-dummy
+Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache | php-apc, typo3-database, typo3-dummy-common | typo3-dummy-apache2
 Suggests: catdoc, ghostscript, php5-curl, ppthtml, unrtf, xlhtml, xpdf-utils
 Homepage: http://www.typo3.com
 Description: web content management system (core)
@@ -33,7 +34,7 @@ Description: web content management system (core)
 Package: typo3-database
 Architecture: all
 Depends: mysql-server, dbconfig-common (>= 1.8.39), debconf, ${misc:Depends}
-Recommends: typo3-dummy, typo3-src-4.5
+Recommends: typo3-dummy-common, typo3-src-4.5
 Homepage: http://www.typo3.com
 Description: web content management system (database)
  TYPO3 is a free Open Source content management system for enterprise purposes
@@ -58,8 +59,40 @@ Description: web content management system (database)
 
 Package: typo3-dummy
 Architecture: all
+Depends: typo3-dummy-common (>= 4.5.14+dfsg1-2), ${misc:Depends}
+Recommends: typo3-dummy-apache2
+Homepage: http://www.typo3.com
+Section: oldlibs
+Priority: extra
+Description: web content management system (transitional package)
+ TYPO3 is a free Open Source content management system for enterprise purposes
+ on the web and in intranets. It offers full flexibility and extendability while
+ featuring an accomplished set of ready-made interfaces, functions and modules.
+ .
+ The most important key features of TYPO3 are:
+  * Simple creation of multi language websites with fallback to a default
+    language
+  * Handling of multi domain websites within a single page tree
+  * Multi user backend editing with complete GUI customisation using an
+    advanced ACL system
+  * An integrated workflow management system based on an multi step architecture
+    with editor and supervisor privileges
+  * Unlimited redefinition of the rendering process using the build-in
+    TypoScript configuration interface or the plugin API
+  * Thousands of plugins are available in the online TYPO3 extension repository
+ .
+ This is a transitional package to migrate typo3-dummy to typo3-dummy-apache2.
+ It can get savely removed.
+
+Package: typo3-dummy-common
+Architecture: all
+Replaces: typo3-dummy (<< 4.5.14+dfsg1-2)
+Breaks: typo3-dummy (<< 4.5.14+dfsg1-2)
+Provides: typo3-dummy
 Depends: exim4 | mail-transport-agent, dbconfig-common, debconf, graphicsmagick, lsb-base (>= 3.0-6), php5, php5-cli, php5-gd, php5-mysql, typo3-src-4.5, ${misc:Depends}
-Recommends: apache2.2-common, catdoc, ghostscript, memcached, php5-curl, php5-memcache, php5-suhosin, php5-xcache | php-apc, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
+Recommends: catdoc, ghostscript, memcached, php5-curl, php5-memcache, php5-suhosin, php5-xcache | php-apc, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
+Suggests: typo3-dummy-apache2
+Homepage: http://www.typo3.com
 Description: web content management system (basic site structure)
  TYPO3 is an enterprise-level content management system for use on the web
  and in intranets. It is flexible, extensible, and well supplied with
@@ -78,14 +111,37 @@ Description: web content management system (basic site structure)
   * thousands of plugins available in the online TYPO3 extension repository.
  .
  This package provides the basic directory structure to start a fresh
- website based on TYPO3. It includes scripts to register the site in
- Apache, with a default configuration intended for single vhost
- installations. TYPO3 can also be configured to work with several vhosts
- and a single src-dir, but such setups require some manual configuration.
+ website based on TYPO3.
+
+Package: typo3-dummy-apache2
+Architecture: all
+Depends: apache2.2-common, typo3-dummy-common, ${misc:Depends}
+Homepage: http://www.typo3.com
+Description: web content management system (apache2 integration)
+ TYPO3 is an enterprise-level content management system for use on the web
+ and in intranets. It is flexible, extensible, and well supplied with
+ ready-made interfaces, functions, and modules.
+ .
+ Its key features are:
+  * simple creation of multi-language websites with fallback to a default
+    language;
+  * handling of multi-domain websites within a single page tree;
+  * multi-user backend editing via a completely customizable GUI using an
+    advanced ACL system;
+  * an integrated workflow management system based on a multi-tier
+    architecture with editor and supervisor privileges;
+  * unlimited redefinition of the rendering process using the built-in
+    TypoScript configuration interface or the plugin API;
+  * thousands of plugins available in the online TYPO3 extension repository.
+ .
+ This package includes scripts to register the site in Apache, with a default
+ configuration intended for single vhost installations. TYPO3 can also be
+ configured to work with several vhosts and a single src-dir, but such setups
+ require some manual configuration.
 
 Package: typo3
 Architecture: all
-Depends: typo3-database, typo3-dummy, typo3-src-4.5, ${misc:Depends}
+Depends: typo3-database, typo3-dummy-apache2 | typo3-dummy-common, typo3-src-4.5, ${misc:Depends}
 Homepage: http://www.typo3.com
 Description: web content management system (meta)
  TYPO3 is a free Open Source content management system for enterprise purposes

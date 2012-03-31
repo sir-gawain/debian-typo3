@@ -1,0 +1,8 @@
+typo3-dummy-apache2 for Debian
+------------------------------
+
+This package installs TYPO3 into an existing apache2 webserver.
+For more details to typo3-dummy look there.
+
+ -- Christian Welzel <gawain@camlann.de>, Sun, 18 Sep 2011 23:00:00
+

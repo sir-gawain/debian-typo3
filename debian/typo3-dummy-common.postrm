@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -e
+#set -x
+
+PACKAGE=typo3-dummy
+T3DIR=/var/lib/$PACKAGE
+T3CONFDIR=$T3DIR/typo3conf
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
+if [ -f /usr/share/dbconfig-common/dpkg/frontend.postrm.mysql ]; then
+    . /usr/share/dbconfig-common/dpkg/frontend.postrm.mysql
+    dbc_go typo3-dummy-common $@
+fi
+
+
+if [ "$1" = "purge" ]; then
+	rm -f /etc/typo3-dummy/debian-db.php
+	if which ucf >/dev/null 2>&1; then
+		ucf --purge /etc/typo3-dummy/debian-db.php
+	fi
+
+	if [ -d $T3CONFDIR ] ; then
+		rm -f $T3CONFDIR/temp_CACHED*
+	fi
+	if [ -d $T3DIR ] ; then
+		rm -rf $T3DIR/*
+	fi
+fi
+
+#DEBHELPER#

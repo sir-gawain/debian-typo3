@@ -17,40 +17,41 @@ msgstr ""
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy.templates:2001
+#: ../typo3-dummy-apache2.templates:2001
 msgid "vhost"
 msgstr "仮想ホスト"
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy.templates:2001
+#: ../typo3-dummy-apache2.templates:2001
 msgid "directory"
 msgstr "ディレクトリ"
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy.templates:2001
+#: ../typo3-dummy-apache2.templates:2001
 msgid "none"
 msgstr "設定しない"
 
 #. Type: select
 #. Description
-#: ../typo3-dummy.templates:2002
+#: ../typo3-dummy-apache2.templates:2002
 msgid "Apache integration mode:"
 msgstr "apache への統合方法:"
 
 #. Type: select
 #. Description
-#: ../typo3-dummy.templates:2002
+#: ../typo3-dummy-apache2.templates:2002
 msgid ""
 "Please choose the method that should be used for integrating the TYPO3 "
 "installation with the apache2 web server:"
 msgstr ""
-"apache2 ウェブサーバに対して TYPO3 のインストールを統合する方法を選んでください:"
+"apache2 ウェブサーバに対して TYPO3 のインストールを統合する方法を選んでくださ"
+"い:"
 
 #. Type: select
 #. Description
-#: ../typo3-dummy.templates:2002
+#: ../typo3-dummy-apache2.templates:2002
 msgid ""
 " vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
 "            as http://typo3.example.com/;\n"
@@ -64,45 +65,48 @@ msgstr ""
 "               として URL を生成します。\n"
 " ディレクトリ: TYPO3 を既存のサイトに合わせて http://www.example.com/cms/ \n"
 "               のようなアドレスで利用できるようにします。\n"
-" 設定しない:   TYPO3 を自動的には設定しません。サーバは手動で設定が必要です。\n"
+" 設定しない:   TYPO3 を自動的には設定しません。サーバは手動で設定が必要で"
+"す。\n"
 "               apache2 以外のウェブサーバを利用している場合はこのオプション\n"
 "               を選んでください"
 
 #. Type: boolean
 #. Description
-#: ../typo3-dummy.templates:3001
+#: ../typo3-dummy-apache2.templates:3001
 msgid "Should apache2 be restarted after installation?"
 msgstr "インストール後に apache2 を再起動しますか?"
 
 #. Type: boolean
 #. Description
-#: ../typo3-dummy.templates:3001
+#: ../typo3-dummy-apache2.templates:3001
 msgid ""
 "Apache's configuration has been changed to include TYPO3 and activate the "
 "rewrite module. For these changes to take effect, apache2 must be reloaded."
 msgstr ""
-"Apache の設定は TYPO3 を含めて rewrite モジュールを有効にするように変更されました。"
-"これらの変更を有効にするには、apache2 の設定を再読み込みする必要があります。"
+"Apache の設定は TYPO3 を含めて rewrite モジュールを有効にするように変更されま"
+"した。これらの変更を有効にするには、apache2 の設定を再読み込みする必要があり"
+"ます。"
 
 #. Type: note
 #. Description
-#: ../typo3-dummy.templates:4001
+#: ../typo3-dummy-apache2.templates:4001
 msgid "Old symlink in /etc/apache2/conf.d/"
 msgstr "/etc/apache2/conf.d/ 中の古いシンボリックリンク"
 
 #. Type: note
 #. Description
-#: ../typo3-dummy.templates:4001
+#: ../typo3-dummy-apache2.templates:4001
 msgid ""
 "Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
 "configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
 msgstr ""
 "(4.3.0-3 より前の) 古いバージョンの typo3-dummy は apache2 の設定シンボリック"
-"リンクを /etc/apache2/conf.d/typo3-dummy.conf としてインストールしていました。"
+"リンクを /etc/apache2/conf.d/typo3-dummy.conf としてインストールしていまし"
+"た。"
 
 #. Type: note
 #. Description
-#: ../typo3-dummy.templates:4001
+#: ../typo3-dummy-apache2.templates:4001
 msgid ""
 "This has been changed and newer versions place two new symlinks into /etc/"
 "apache2/sites-available/. To prevent failures due to overlapping "
@@ -113,5 +117,5 @@ msgstr ""
 "この動作は変更され、新しいバージョンでは 2 つのシンボリックリンクを /etc/"
 "apache2/sites-available/ に配置するようになりました。設定ディレクティブの上書"
 "きによる失敗を防ぐため、/etc/apache2/conf.d/ からシンボリックリンク typo3-"
-"dummy.conf を削除し、内容を新しい設定ファイルのどちらかにマージする必要が"
-"あります。"
+"dummy.conf を削除し、内容を新しい設定ファイルのどちらかにマージする必要があり"
+"ます。"

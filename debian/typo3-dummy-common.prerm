@@ -5,7 +5,7 @@ set -e
 
 . /usr/share/debconf/confmodule
 . /usr/share/dbconfig-common/dpkg/frontend.prerm.mysql 
-dbc_go typo3-dummy $@
+dbc_go typo3-dummy-common $@
 
 #DEBHELPER#
 
