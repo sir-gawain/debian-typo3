@@ -1,4 +1,9 @@
+# TYPO3 ships its own modified php-openid (TYPO3 specific addons)
 typo3-src-4.5: embedded-php-library usr/share/typo3/typo3_src-4.5/typo3/sysext/openid/lib/php-openid/Auth/OpenID.php
 typo3-src-4.5: embedded-php-library usr/share/typo3/typo3_src-4.5/typo3/sysext/openid/lib/php-openid/Auth/Yadis/Yadis.php
+
+# flvplayer.swf is part of TYPO3 and selfmade.
 typo3-src-4.5: non-free-flash usr/share/typo3/typo3_src-4.5/typo3/contrib/flashmedia/flvplayer.swf
+
+# nimbus.ttf is not shipped within debian.
 typo3-src-4.5: font-in-non-font-package usr/share/typo3/typo3_src-4.5/t3lib/fonts/nimbus.ttf
