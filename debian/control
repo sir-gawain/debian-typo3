@@ -4,8 +4,9 @@ Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
 Build-Depends: debhelper (>= 7), po-debconf
 Standards-Version: 3.9.3
-Homepage: http://www.typo3.com
-Vcs-Browser: http://forge.typo3.org/projects/extension-packaging/repository/show/trunk/debian/src
+Homepage: http://www.typo3.org
+Vcs-Git: git://github.com/sir-gawain/debian-typo3.git
+Vcs-Browser: https://github.com/sir-gawain/debian-typo3
 
 Package: typo3-src-4.5
 Architecture: all
