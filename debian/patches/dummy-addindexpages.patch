@@ -3,160 +3,202 @@
 ## DP: add some missing html pages to protect against directory listing
 
 --- /dev/null
-+++ typo3-dummy-4.3.0/fileadmin/index.html
-@@ -0,0 +1,7 @@
++++ typo3/fileadmin/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
---- typo3-dummy-4.3.0.orig/fileadmin/_temp_/index.html
-+++ typo3-dummy-4.3.0/fileadmin/_temp_/index.html
-@@ -4,4 +4,4 @@
- 	<TITLE></TITLE>
- <META http-equiv=Refresh Content="0; Url=/">
+--- typo3.orig/fileadmin/_temp_/index.html
++++ typo3/fileadmin/_temp_/index.html
+@@ -1,7 +1,9 @@
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+ <HTML>
+ <HEAD>
+-	<TITLE></TITLE>
+-<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
  </HEAD>
 -</HTML>
 \ No newline at end of file
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/fileadmin/user_upload/index.html
-@@ -0,0 +1,7 @@
++++ typo3/fileadmin/user_upload/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/fileadmin/user_upload/_temp_/index.html
-@@ -0,0 +1,7 @@
++++ typo3/fileadmin/user_upload/_temp_/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3conf/ext/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3conf/ext/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3conf/l10n/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3conf/l10n/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3temp/cs/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3temp/cs/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3temp/GB/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3temp/GB/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3temp/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3temp/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3temp/llxml/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3temp/llxml/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3temp/pics/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3temp/pics/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/typo3temp/temp/index.html
-@@ -0,0 +1,7 @@
++++ typo3/typo3temp/temp/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
---- typo3-dummy-4.3.0.orig/uploads/index.html
-+++ typo3-dummy-4.3.0/uploads/index.html
-@@ -4,4 +4,4 @@
- 	<TITLE></TITLE>
- <META http-equiv=Refresh Content="0; Url=../">
+--- typo3.orig/uploads/index.html
++++ typo3/uploads/index.html
+@@ -1,7 +1,9 @@
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+ <HTML>
+ <HEAD>
+-	<TITLE></TITLE>
+-<META http-equiv=Refresh Content="0; Url=../">
++	<TITLE>Directory listing not allowed!</TITLE>
  </HEAD>
 -</HTML>
 \ No newline at end of file
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/uploads/media/index.html
-@@ -0,0 +1,7 @@
++++ typo3/uploads/media/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/uploads/pics/index.html
-@@ -0,0 +1,7 @@
++++ typo3/uploads/pics/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
 --- /dev/null
-+++ typo3-dummy-4.3.0/uploads/tf/index.html
-@@ -0,0 +1,7 @@
++++ typo3/uploads/tf/index.html
+@@ -0,0 +1,9 @@
 +<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 +<HTML>
 +<HEAD>
-+	<TITLE></TITLE>
-+<META http-equiv=Refresh Content="0; Url=/">
++	<TITLE>Directory listing not allowed!</TITLE>
 +</HEAD>
++<BODY>
++    The listing of files of this directory is not allowed.
++</BODY>
 +</HTML>
