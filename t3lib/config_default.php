@@ -672,7 +672,7 @@ if (TYPO3_MODE === 'BE') {
 $T3_VAR = array();	// Initialize.
 
 	// TYPO3 version
-$TYPO_VERSION = '4.5.14';	// deprecated: use the constants defined below
+$TYPO_VERSION = '4.5.15';	// deprecated: use the constants defined below
 define('TYPO3_version', $TYPO_VERSION);
 define('TYPO3_branch', '4.5');
 define('TYPO3_copyright_year', '1998-2012');
@@ -704,7 +704,7 @@ define('TYPO3_URL_DONATE', 'http://typo3.org/donate/');
 
 	// Include localconf.php. Use this file to configure TYPO3 for your needs and database
 if (!@is_file(PATH_typo3conf . 'localconf.php')) {
-	throw new Exception('localconf.php is not found!');
+	throw new RuntimeException('localconf.php is not found!', 1333754332);
 }
 require(PATH_typo3conf.'localconf.php');
 

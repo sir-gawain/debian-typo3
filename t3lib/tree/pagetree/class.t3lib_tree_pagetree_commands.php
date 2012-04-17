@@ -134,11 +134,20 @@ final class t3lib_tree_pagetree_Commands {
 	 */
 	public static function createNode(t3lib_tree_pagetree_Node $parentNode, $targetId, $pageType) {
 		$placeholder = 'NEW12345';
-		$data['pages'][$placeholder] = array(
-			'pid' => $parentNode->getWorkspaceId(),
-			'doktype' => $pageType,
-			'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:tree.defaultPageTitle', TRUE),
-		);
+		$pid = $parentNode->getWorkspaceId();
+
+			// Use page TsConfig as default page initialization
+		$pageTs = t3lib_BEfunc::getPagesTSconfig($pid);
+		if (array_key_exists('TCAdefaults.', $pageTs) && array_key_exists('pages.', $pageTs['TCAdefaults.'])) {
+			$data['pages'][$placeholder] = $pageTs['TCAdefaults.']['pages.'];
+		} else {
+			$data['pages'][$placeholder] = array();
+		}
+
+		$data['pages'][$placeholder]['pid'] = $pid;
+		$data['pages'][$placeholder]['doktype'] = $pageType;
+		$data['pages'][$placeholder]['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:tree.defaultPageTitle', TRUE);
+
 		$newPageId = self::processTceCmdAndDataMap(array(), $data);
 		$node = self::getNode($newPageId[$placeholder]);
 
@@ -162,7 +171,7 @@ final class t3lib_tree_pagetree_Commands {
 	 *
 	 * @param array $cmd
 	 * @param array $data
-	 * @throws Exception if an error happened while the TCE processing
+	 * @throws RuntimeException if an error happened while the TCE processing
 	 * @return array
 	 */
 	protected static function processTceCmdAndDataMap(array $cmd, array $data = array()) {
@@ -182,7 +191,7 @@ final class t3lib_tree_pagetree_Commands {
 
 			// check errors
 		if (count($tce->errorLog)) {
-			throw new Exception(implode(chr(10), $tce->errorLog));
+			throw new RuntimeException(implode(chr(10), $tce->errorLog), 1333754629);
 		}
 
 		return $returnValues;
