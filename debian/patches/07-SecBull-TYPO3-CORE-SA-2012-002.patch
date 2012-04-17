@@ -1,0 +1,26 @@
+--- typo3.orig/t3lib/error/class.t3lib_error_debugexceptionhandler.php
++++ typo3/t3lib/error/class.t3lib_error_debugexceptionhandler.php
+@@ -104,10 +104,10 @@
+ 				">
+ 				<div style="width: 100%; background-color: #515151; color: white; padding: 2px; margin: 0 0 6px 0;">Uncaught TYPO3 Exception</div>
+ 				<div style="width: 100%; padding: 2px; margin: 0 0 6px 0;">
+-					<strong style="color: #BE0027;">' . $exceptionCodeNumber . $exception->getMessage() . '</strong> ' ./* $moreInformationLink .*/ '<br />
++					<strong style="color: #BE0027;">' . $exceptionCodeNumber . htmlspecialchars($exception->getMessage()) . '</strong> ' ./* $moreInformationLink .*/ '<br />
+ 					<br />
+ 					<span class="ExceptionProperty">' . get_class($exception) . '</span> thrown in file<br />
+-					<span class="ExceptionProperty">' . $filePathAndName . '</span> in line
++					<span class="ExceptionProperty">' . htmlspecialchars($filePathAndName) . '</span> in line
+ 					<span class="ExceptionProperty">' . $exception->getLine() . '</span>.<br />
+ 					<br />
+ 					' . $backtraceCode . '
+--- typo3.orig/t3lib/error/class.t3lib_error_productionexceptionhandler.php
++++ typo3/t3lib/error/class.t3lib_error_productionexceptionhandler.php
+@@ -56,7 +56,7 @@
+ 		}
+ 		$this->writeLogEntries($exception,self::CONTEXT_WEB);
+ 
+-		t3lib_timeTrack::debug_typo3PrintError(get_class($exception), $exception->getMessage(), 0, t3lib_div::getIndpEnv('TYPO3_SITE_URL'));
++		t3lib_timeTrack::debug_typo3PrintError(get_class($exception), htmlspecialchars($exception->getMessage()), 0, t3lib_div::getIndpEnv('TYPO3_SITE_URL'));
+ 	}
+ 
+ 	/**

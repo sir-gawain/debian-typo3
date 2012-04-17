@@ -1,3 +1,11 @@
+typo3-src (4.3.9+dfsg1-1+squeeze4) squeeze-security; urgency=medium
+
+  * Security patch backported from new upstream release 4.4.15:
+    - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2012-002: Cross-Site
+      Scripting Vulnerability in TYPO3 Core" (Closes: 669158)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 17 Apr 2012 22:30:00 +0200
+
 typo3-src (4.3.9+dfsg1-1+squeeze3) squeeze-security; urgency=high
 
   * Security patch backported from new upstream release 4.4.14:
