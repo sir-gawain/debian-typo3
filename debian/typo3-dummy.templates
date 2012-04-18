@@ -7,7 +7,7 @@
 # Even minor modifications require translation updates and such
 # changes should be coordinated with translators and reviewers.
 
-Template: typo3-dummy-apache2/apache_mode
+Template: typo3-dummy/apache_mode
 Type: select
 __Choices: vhost, directory, none
 Default: directory
@@ -23,14 +23,14 @@ _Description: Apache integration mode:
              need manual configuration. Choose this option if you are
              using a web server other than apache2.
 
-Template: typo3-dummy-apache2/apache_restart
+Template: typo3-dummy/apache_restart
 Type: boolean
 _Description: Should apache2 be restarted after installation?
  Apache's configuration has been changed to include TYPO3 and
  activate the rewrite module. For these changes to take effect,
  apache2 must be reloaded.
 
-Template: typo3-dummy-apache2/old_symlink
+Template: typo3-dummy/old_symlink
 Type: note
 _Description: Old symlink in /etc/apache2/conf.d/
  Older versions (before 4.3.0-3) of typo3-dummy installed the apache2

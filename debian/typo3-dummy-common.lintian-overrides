@@ -1,6 +1,0 @@
-# both are for enabling safe-mode in PHP with safe_mode_id=on
-typo3-dummy-common: non-standard-dir-perm
-typo3-dummy-common: non-standard-file-perm
-
-# option "status" is not used and has no meaning.
-typo3-dummy-common: init.d-script-does-not-implement-optional-option

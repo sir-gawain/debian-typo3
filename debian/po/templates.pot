@@ -19,31 +19,31 @@ msgstr ""
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy-apache2.templates:2001
+#: ../typo3-dummy.templates:2001
 msgid "vhost"
 msgstr ""
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy-apache2.templates:2001
+#: ../typo3-dummy.templates:2001
 msgid "directory"
 msgstr ""
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy-apache2.templates:2001
+#: ../typo3-dummy.templates:2001
 msgid "none"
 msgstr ""
 
 #. Type: select
 #. Description
-#: ../typo3-dummy-apache2.templates:2002
+#: ../typo3-dummy.templates:2002
 msgid "Apache integration mode:"
 msgstr ""
 
 #. Type: select
 #. Description
-#: ../typo3-dummy-apache2.templates:2002
+#: ../typo3-dummy.templates:2002
 msgid ""
 "Please choose the method that should be used for integrating the TYPO3 "
 "installation with the apache2 web server:"
@@ -51,7 +51,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../typo3-dummy-apache2.templates:2002
+#: ../typo3-dummy.templates:2002
 msgid ""
 " vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
 "            as http://typo3.example.com/;\n"
@@ -64,13 +64,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../typo3-dummy-apache2.templates:3001
+#: ../typo3-dummy.templates:3001
 msgid "Should apache2 be restarted after installation?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../typo3-dummy-apache2.templates:3001
+#: ../typo3-dummy.templates:3001
 msgid ""
 "Apache's configuration has been changed to include TYPO3 and activate the "
 "rewrite module. For these changes to take effect, apache2 must be reloaded."
@@ -78,13 +78,13 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../typo3-dummy-apache2.templates:4001
+#: ../typo3-dummy.templates:4001
 msgid "Old symlink in /etc/apache2/conf.d/"
 msgstr ""
 
 #. Type: note
 #. Description
-#: ../typo3-dummy-apache2.templates:4001
+#: ../typo3-dummy.templates:4001
 msgid ""
 "Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
 "configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
@@ -92,7 +92,7 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../typo3-dummy-apache2.templates:4001
+#: ../typo3-dummy.templates:4001
 msgid ""
 "This has been changed and newer versions place two new symlinks into /etc/"
 "apache2/sites-available/. To prevent failures due to overlapping "

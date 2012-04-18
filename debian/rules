@@ -13,8 +13,8 @@ T3SRCDIR:=usr/share/typo3/$(PACKAGENAME)
 
 SOURCEINSTALLDIR:=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 
-DOCROOTDIR=debian/typo3-dummy-common/var/lib/typo3-dummy
-ETCDIR=debian/typo3-dummy-common/etc/typo3-dummy
+DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
+ETCDIR=debian/typo3-dummy/etc/typo3-dummy
 
 MAIN_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^+]+).*,\1,p')
 SUB_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: (.*)\+dfsg1~([^-]+).*,\2,p')
@@ -82,13 +82,13 @@ binary-indep: build install
 	dh_testroot
 	dh_lintian
 	dh_installdebconf
-	dh_installchangelogs -Ntypo3 -Ntypo3-dummy -A ChangeLog
+	dh_installchangelogs -Ntypo3 -A ChangeLog
 	dh_installcron
-	dh_installdocs -Ntypo3 -Ntypo3-dummy -A RELEASE_NOTES.txt README.txt NEWS.txt
+	dh_installdocs -Ntypo3 -A RELEASE_NOTES.txt README.txt NEWS.txt
 	dh_installexamples
 	dh_installinit
 	dh_link
-	dh_compress -Ntypo3 -Ntypo3-dummy
+	dh_compress -Ntypo3
 	dh_fixperms
 	chown -hR root:www-data $(SOURCEINSTALLDIR)
 	chown -hR www-data:www-data $(DOCROOTDIR)
