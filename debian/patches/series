@@ -7,3 +7,4 @@ fix-im-command.patch
 fontsreadme.patch
 remove-jsmin-dfsg.patch
 0001-BUGFIX-Pagetree-broken-due-to-JavaScript-exception.patch
+0001-BUGFIX-Exclude-E_STRICT-from-exceptionalErrors.patch
