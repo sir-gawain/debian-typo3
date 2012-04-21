@@ -1,0 +1,28 @@
+From: Steffen Ritter <info@rs-websystems.de>
+Date: Tue, 18 Oct 2011 13:44:51 +0200
+Subject: [PATCH] [BUGFIX] Pagetree broken due to JavaScript exception
+Description: 
+Sometimes (especially with empty DB Mount) the Pagetree is
+broken and stops with a JavaScript Exception. This is due to
+some problems with the state-restore logic, where the state
+of not-yet-rendered nodes is applied.
+---
+ .../pagetree/javascript/Ext.ux.state.TreePanel.js  |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/t3lib/js/extjs/components/pagetree/javascript/Ext.ux.state.TreePanel.js b/t3lib/js/extjs/components/pagetree/javascript/Ext.ux.state.TreePanel.js
+index 469890f..83bdd96 100644
+--- a/t3lib/js/extjs/components/pagetree/javascript/Ext.ux.state.TreePanel.js
++++ b/t3lib/js/extjs/components/pagetree/javascript/Ext.ux.state.TreePanel.js
+@@ -93,7 +93,7 @@ Ext.override(Ext.ux.state.TreePanel, {
+ 								fn: this.restoreState
+ 							}
+ 						});
+-						if (pageNode.expanded === false) {
++						if (pageNode.expanded === false && pageNode.rendered == true) {
+ 							pageNode.expand();
+ 						}
+ 					}
+-- 
+1.7.9.5
+
