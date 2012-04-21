@@ -4,3 +4,4 @@ debian/mysql/4.5.0~beta1-1        usr/share/dbconfig-common/data/typo3-database/
 debian/mysql/4.5.0+dfsg1~beta2    usr/share/dbconfig-common/data/typo3-database/upgrade/mysql
 debian/mysql/4.5.0+dfsg1~beta3-1  usr/share/dbconfig-common/data/typo3-database/upgrade/mysql
 debian/mysql/4.5.0+dfsg1          usr/share/dbconfig-common/data/typo3-database/upgrade/mysql
+debian/mysql/4.5.15+dfsg1-1       usr/share/dbconfig-common/data/typo3-database/upgrade/mysql
