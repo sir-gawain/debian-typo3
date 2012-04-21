@@ -1,3 +1,25 @@
+typo3-src (4.5.15+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2012-002: Cross-Site
+      Scripting Vulnerability in TYPO3 Core" (Closes: 669158)
+  * Database update for field uc in be_users.
+  * Added bugfix patch for TYPO3 bug #36238.
+  * Added patch for errors with PHP 5.4
+  * Move Homepage field to source package.
+  * Added Vcs-Git, changed Vcs-Browser to point to github
+  * changed Homepage field to typo3.org
+  * Cleanup of watch file.
+  * Added comments to lintian overrides.
+  * Raised compat level to 7.
+  * Deleted typo3-src-4.5.examples because its empty.
+  * Removed numbering from patches, changed order to alphabetical.
+  * Changed index.html files to print warning about directory listing only,
+    not redirect anymore.
+  * Disable directory listing globally in apache config.
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 21 Apr 2012 12:32:23 +0200
+
 typo3-src (4.5.14+dfsg1-1) unstable; urgency=high
 
   * New upstream release:
