@@ -4,13 +4,13 @@ TYPO3 for Debian
 WHAT IS THIS PACKAGE FOR?
 =========================
 
-This package contains an empty TYPO3 database structure and provides a 
+This package contains an empty TYPO3 database structure and provides a
 dependency to the mysql server package.
 
 Q: Why did you make another package and didn't use typo3-dummy as before?
 
 A: The problem with integrating the database dependency into typo3-dummy is
-that all people who want to use this package are forced to install a full 
+that all people who want to use this package are forced to install a full
 mysql server. But as everyone knows the database can/should be installed on a
 separate server to get some level of load balancing. Thats why typo3-database
 was created and typo3-dummy only suggests its installation. This way the
@@ -44,7 +44,7 @@ your chosen password and imports the database dump into the database.
 * second step: install the package typo3-dummy and anwser the only question
 for the password with your chosen one from above.
 
-The install script now checks whether the password is correct or not, and 
+The install script now checks whether the password is correct or not, and
 if it is correct the connection parameters are saved for later use.
 
 You are done.
@@ -53,14 +53,14 @@ You are done.
 REMOTE INSTALLATION
 ===================
 
-The remote installation is similar to the local one but has a third step 
+The remote installation is similar to the local one but has a third step
 to accomplish.
 
 * first step: install this package on the remote (database) machine, before
 you install typo3-dummy. Follow the steps 1-3 from above.
 
 * second step: install the package typo3-dummy and anwser the only question
-for the password with your chosen one from above. Note, that you cannot 
+for the password with your chosen one from above. Note, that you cannot
 choose the database host here, this is done next.
 
 * third step: reconfigure typo3-dummy using the priority "low":
@@ -77,4 +77,3 @@ Feel free to send me your package-specific comments or suggestions.
 Have fun!
 
  -- Christian Welzel <gawain@camlann.de>, Sun, 07 Jun 2009 23:00:00
-

@@ -1,11 +1,11 @@
 TYPO3 for Debian
 ----------------
 
-This package is the master package to install TYPO3 for Debian.
+This package provides the core of the TYPO3 installation for Debian.
 
 
-NEWBIE INFORMATION ABOUT THE TYPO3 FILESYSTEM STRUCTURE
-=======================================================
+INFORMATION ABOUT THE TYPO3 FILESYSTEM STRUCTURE
+================================================
 
 A Unix TYPO3 installation consists of two parts:
      1) The "source" package
@@ -19,138 +19,41 @@ that TYPO3 needs to run.
 In other words: You can have several TYPO3 installations with just one
 source package. A typical directory structure looks like this:
 
-/usr/share/typo3/typo3_src-3.8.1/   # the untared 3.8.0 source package
-/usr/share/typo3/typo3_src-4.1/     # the untared 4.1 source package
-/var/www/installation1/     # the untared dummy package of a TYPO3
-                            # installation running on TYPO3 3.8.1
-    /typo3_src  --> /usr/share/typo3/typo3_src-3.8.1/   # a symlink to the 3.8.1
-    /typo3conf/                                         # source
-    /typo3temp/
-    /fileadmin/
-    /.../
-/var/www/installation2/     # the untared dummy package of a TYPO3
-                            # installation running on TYPO3 4.1
-    /typo3_src  --> /usr/share/typo3/typo3_src-4.1/     # a symlink to the 4.1
-    /typo3conf/                                         # source
-    /typo3temp/
-    /fileadmin/
-    /.../
+/usr/share/typo3/typo3_src-4.3/     # the core files for 4.3
+/usr/share/typo3/typo3_src-4.5/     # the core files for 4.5
+
+/var/www/installation1/     # dummy package for TYPO3 4.3
+ ./typo3_src  --> /usr/share/typo3/typo3_src-4.3/   # a symlink to the 4.3 core
+ ./typo3conf/
+ ./typo3temp/
+ ./fileadmin/
+ ./.../
+
+/var/www/installation2/     # dummy package for TYPO3 4.5
+ ./typo3_src  --> /usr/share/typo3/typo3_src-4.5/   # a symlink to the 4.5 core
+ ./typo3conf/
+ ./typo3temp/
+ ./fileadmin/
+ ./.../
 
 As you see, the two TYPO3-installations (possibly with different domains)
 can use the same TYPO3 source package. You can even change the source
 package simply be changing the symlink inside the installation directory.
 
 
-MANUAL INSTALL TYPO3 IN YOUR RUNNING APACHE
-===========================================
+UPGRADE A TYPO3 INSTALLATION
+============================
 
-The following eight steps are necessary to get started with TYPO3 with
-the provided Debian packages:
+For upgrading a TYPO3 installation you have to do the following:
 
-1 Install typo3-dummy 
-
-2 Check that the PHP itself and the extensions gd and mysql are enabled.
-
-  To load mod_php5 check that the following symlinks are set:
-
-  # cd /etc/apache2/mods-enabled; ls -l php5*
-  php5.conf -> /etc/apache2/mods-available/php5.conf
-  php5.load -> /etc/apache2/mods-available/php5.load
-
-
-  The PHP configuration file php.ini (/etc/php5/apache[2]/php.ini)
-  should contain the following lines:
-
-  # grep -v '\;' /etc/php5/apache2/php.ini | grep 'extension='
-  extension=gd.so
-  extension=mysql.so
-
-  Please note: newer versions of php packages in debian handle the addition
-  of modules through the directory /etc/php5/conf.d. So make sure, gd.ini
-  and mysql.ini are in that directory if you cannot find the above two lines
-  in your php.ini.
-
-3 Enabling the webserver to use the provided directories.
-
-  The database packages builds a directory that can be used as
-  DocumentRoot within a (virtual)host or as directory within an
-  existing host. An example configuration for the Apache is located in
-  /etc/typo3-dummy/apache.conf.
-
-  WARNING: The configuration that will be enabled through the
-  following steps is meant for the configuration of TYPO3 and not for a
-  production environment.  It is necessary to disable the TYPO3 1-2-3
-  install tool standard login before going into production.  The 1-2-3
-  install tool gives appropriate advice.
-
-  For Apache 2.x this may be achieved through:
-  # cd /etc/apache2/sites-available
-  # ln -s /etc/typo3-dummy/apache.conf typo3-dummy
-  # cd /etc/apache2/sites-enabled
-  # ln -s ../sites-available/typo3-dummy .
-  
-  Please check that the configuration meets your needs. Don't forget
-  to reload the apache configuration, e.g. through:
-  # /etc/init.d/apache2 reload
-
-
-4 Fix permissions
-
-  The provided example configuration for the apache uses the PHP safe
-  mode. Therefor it is necessary to change the ownership of the used
-  files to WWWUSER/WWWGROUP.  In Debian standard configuration these
-  are set to www-data/www-data.
-
-
-5 Prepare the MySQL access
-
-  Create empty databases for the packages, e.g.
-  # mysqladmin create typo3-dummy
-
-  Grants access to these databases for a local user, e.g.
-  # mysql --exec="GRANT ALL PRIVILEGES ON \
-     \`typo3-dummy\`.* TO 'typo3'@'localhost' IDENTIFIED BY 'mypass' ; "
-
-
-6 Using a browser, visit http://[your.site.name]/<this_site_name>/
-
-  Using the standard Debian configuration access to the 1-2-3 install
-  tool is gotten by pointing the browser to
-  http://localhost/typo3/
-
-  The standard password for the install tool is joh316. Be sure to
-  change it, before connecting to the Internet!
-
-  If a normal page is delivered, the 1-2-3 install tool may be accessed
-  directly
-  http://localhost/typo3/typo3/install/
-
-
-7 Following the instructions in the 1-2-3 install tool will lead
-  quickly to the TPYO3 site.
-
-
-8 From this point, you can access the backend through
-  http://[your.site.name]/<this_site_name>/typo3/
-  with the username "admin" and password "password".
-  
-  For example:
-  http://localhost/typo3/typo3/
-
-  Remember to change the admin password and to protect the install
-  tool access mentioned above.
-
-That's it :-)
-
-
-AND NOW ?
-=========
-
-There are two packages on typo3.org website that are provided to demonstrate
-the abilities of typo3: quickstart and testside.
-It's proposed to deliver these packages through EM in the near future but in 
-the meantime you have to install them manually.
-Take a look on <http://typo3.org/download/packages/> for more information.
+1) install the new core package (typo3-src-*)
+2) install the new database package (typo3-database), which will prompt you to
+   update the mysql database.
+3) change the symbolic link typo3_src to the new core directory.
+4) enable and enter the install tool of TYPO3 and use the TYPO3 update wizard
+   to set the compat version of TYPO3 to the new version. If you don't take
+   this step, TYPO3 will run in an emulation mode, emulating the behaviour of
+   the old version.
 
 
 WHAT SHOULD YOU DO IF YOU HAVE A PROBLEM?
@@ -175,12 +78,11 @@ Here are some typical pitfalls:
 WHAT SHOULD YOU DO IF PROBLEM STILL REMAINS?
 ============================================
 
-TYPO3 is a powerful and complex professional application. When you start
-out there will be many things you don't understand, or that don't seem to
-make sense. There is a widely used mailing list (more information on
-typo3.com & typo3.org) where many experienced users and developers
-lurk... they are always willing to help, provided you followed these steps
-BEFORE you ask your question:
+TYPO3 is a powerful and complex professional application. When you start out
+there will be many things you don't understand, or that don't seem to make
+sense. There is a widely used mailing list (more information on typo3.org)
+where many experienced users and developers lurk... they are always willing to
+help, provided you followed these steps BEFORE you ask your question:
 
 1 - Read all available documentation carefully
 
@@ -212,11 +114,11 @@ BEFORE you ask your question:
     Debian Bug Tracking System, e.g. using a tool like reportbug.
 
 6 - If you have identified a genuine new bug, report it at
-    http://bugs.typo3.org/ ...do not post to the list about it
+    http://forge.typo3.org/projects/typo3v4-core/issues
 
-Please be aware that if you ask questions that are answered in the
-available documentation, you may not get a reply, or any help from the
-developers or any experienced users!
+Please be aware that if you ask questions that are answered in the available
+documentation, you may not get a reply, or any help from the developers or
+any experienced users!
 
 We are aware that there is still some work to be done on the
 documentation, and the platform for user support... please forgive us for
@@ -231,5 +133,4 @@ can do what is necessary. You could also volunteer to help with the work!
     Debian specific additions mady by Christian Leutloff and Christian
     Welzel
 
- -- Christian Welzel <gawain@camlann.de>, Fri, 20 Jun 2008 23:00:00
-
+ -- Christian Welzel <gawain@camlann.de>, Sun, 22 Apr 2012 20:00:00

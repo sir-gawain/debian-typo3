@@ -1,9 +1,19 @@
 typo3-dummy for Debian
 ----------------------
 
-The required steps to install this database with TYPO3 is described in
-/usr/share/doc/typo3/README.Debian. That file contains additional
+The required steps to install the database with TYPO3 are described in
+/usr/share/doc/typo3-database/README.Debian. That file contains additional
 information, too.
+
+URIs of the backend
+-------------------
+
+Depending on the method of integration you choose during installation, the
+TYPO3 backend is either available under
+http://[typo3.your.domain]/typo3
+or
+http://[www.domain.name]/cms/typo3
+
 
 Situations of time out or out-of-memory
 ---------------------------------------
