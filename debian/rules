@@ -93,10 +93,10 @@ binary-indep: build install
 	dh_fixperms
 	chown -hR root:www-data $(SOURCEINSTALLDIR)
 	chown -hR www-data:www-data $(DOCROOTDIR)
-	chown     www-data:www-data $(ETCDIR)/localconf.php
+	chown     www-data:www-data $(ETCDIR)/localconf.php_template
 	find $(DOCROOTDIR) -type d -print0 | xargs -0 chmod 0750
 	find $(DOCROOTDIR) -type f -print0 | xargs -0 chmod 0640
-	chmod 600 $(ETCDIR)/localconf.php
+	chmod 600 $(ETCDIR)/localconf.php_template
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
