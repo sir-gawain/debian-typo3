@@ -5,19 +5,18 @@ set -e
 
 PACKAGE=typo3-dummy
 T3CONFDIR=/var/lib/$PACKAGE/typo3conf
-APCONFDIR=sites-available
 
 if [ "$1" = "configure" ] ; then
 	if [ -d $T3CONFDIR ] ; then
 		rm -f $T3CONFDIR/temp_CACHED*
 	fi
 
-	for webserver in apache2; do
-		if [ -d /etc/$webserver/$APCONFDIR -a ! -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory -a ! -h /etc/$webserver/$APCONFDIR/typo3-dummy-directory ]; then
-			ln -s /etc/typo3-dummy/apache-directory.conf /etc/$webserver/$APCONFDIR/typo3-dummy-directory
+	for confdir in "sites-available conf-available"; do
+		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-directory -a ! -L /etc/apache2/$confdir/typo3-dummy-directory ]; then
+			ln -s /etc/typo3-dummy/apache-directory.conf /etc/apache2/$confdir/typo3-dummy-directory
 		fi
-		if [ -d /etc/$webserver/$APCONFDIR -a ! -f /etc/$webserver/$APCONFDIR/typo3-dummy-vhost -a ! -h /etc/$webserver/$APCONFDIR/typo3-dummy-vhost ]; then
-			ln -s /etc/typo3-dummy/apache-vhost.conf   /etc/$webserver/$APCONFDIR/typo3-dummy-vhost
+		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-vhost -a ! -L /etc/apache2/$confdir/typo3-dummy-vhost ]; then
+			ln -s /etc/typo3-dummy/apache-vhost.conf     /etc/apache2/$confdir/typo3-dummy-vhost
 		fi
 	done
 fi
@@ -40,19 +39,34 @@ dbc_go typo3-dummy $@
 
 db_get typo3-dummy/apache_mode
 if [ "$RET" = "vhost" ]; then
-	a2ensite typo3-dummy-vhost
+    if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+        . /usr/share/apache2/apache2-maintscript-helper apache2_invoke enconf typo3-dummy-vhost
+    elif dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+        /usr/sbin/a2ensite typo3-dummy-vhost
+    fi
 fi
 if [ "$RET" = "directory" ]; then
-	a2ensite typo3-dummy-directory
+    if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+        . /usr/share/apache2/apache2-maintscript-helper apache2_invoke enconf typo3-dummy-directory
+    elif dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+        /usr/sbin/a2ensite typo3-dummy-directory
+    fi
 fi
 
 if [ "$RET" = "vhost" -o "$RET" = "directory" ]; then
-	a2enmod rewrite
+    if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+        . /usr/share/apache2/apache2-maintscript-helper apache2_invoke enmod rewrite
+    elif dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+        /usr/sbin/a2enmod rewrite
+    fi
 
-	db_get typo3-dummy/apache_restart
-	if [ "$RET" = "true" ]; then
-		apache2ctl restart
-	fi
+    db_get typo3-dummy/apache_restart
+    if [ "$RET" = "true" ]; then
+        if dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+            /usr/sbin/apache2ctl restart
+        fi
+    fi
 fi
 
 #DEBHELPER#
+

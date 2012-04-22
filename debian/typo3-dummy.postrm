@@ -5,7 +5,6 @@ set -e
 
 PACKAGE=typo3-dummy
 T3CONFDIR=/var/lib/$PACKAGE/typo3conf
-APCONFDIR=sites-available
 
 if [ -f /usr/share/debconf/confmodule ]; then
     . /usr/share/debconf/confmodule
@@ -29,14 +28,22 @@ if [ "$1" = "purge" ]; then
 fi
 
 case "$1" in "remove"|"purge" )
-	for webserver in apache2; do
-		if [ -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory -o -h /etc/$webserver/$APCONFDIR/typo3-dummy-directory ]; then
-			a2dissite typo3-dummy-directory
-			rm -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory
+	for confdir in "sites-available conf-available"; do
+		if [ -f /etc/apache2/$confdir/typo3-dummy-directory -o -L /etc/apache2/$confdir/typo3-dummy-directory ]; then
+			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+			    . /usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf typo3-dummy-directory
+			elif  dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+			    /usr/sbin/a2dissite typo3-dummy-directory
+			fi
+			rm -f /etc/apache2/$confdir/typo3-dummy-directory
 		fi
-		if [ -f /etc/$webserver/$APCONFDIR/typo3-dummy-vhost -o -h /etc/$webserver/$APCONFDIR/typo3-dummy-vhost ]; then
-			a2dissite typo3-dummy-vhost
-			rm -f /etc/$webserver/$APCONFDIR/typo3-dummy-vhost
+		if [ -f /etc/apache2/$confdir/typo3-dummy-vhost -o -L /etc/apache2/$confdir/typo3-dummy-vhost ]; then
+			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+			    . /usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf typo3-dummy-vhost
+			elif  dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+			    /usr/sbin/a2dissite typo3-dummy-vhost
+			fi
+			rm -f /etc/apache2/$confdir/typo3-dummy-vhost
 		fi
 	done
 	;;
