@@ -41,6 +41,7 @@ install: build
 	dh_install
 	cp -r index.php t3lib typo3 $(SOURCEINSTALLDIR)
 	cp debian/nimbus.sfd.gz $(SOURCEINSTALLDIR)/t3lib/fonts
+	mv typo3conf/localconf.php $(ETCDIR)/localconf.php_template
 #set correct permissions for cron script
 	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh \
 		  $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh \

@@ -12,7 +12,7 @@ if [ "$1" = "configure" ] ; then
 		rm -f $T3CONFDIR/temp_CACHED*
 	fi
 
-	for webserver in apache apache2; do
+	for webserver in apache2; do
 		if [ -d /etc/$webserver/$APCONFDIR -a ! -f /etc/$webserver/$APCONFDIR/typo3-dummy-directory -a ! -h /etc/$webserver/$APCONFDIR/typo3-dummy-directory ]; then
 			ln -s /etc/typo3-dummy/apache-directory.conf /etc/$webserver/$APCONFDIR/typo3-dummy-directory
 		fi
@@ -22,9 +22,13 @@ if [ "$1" = "configure" ] ; then
 	done
 fi
 
-# genarate a random encryption key and set in into localconf.php
-KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
-sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/localconf.php
+if [ ! -e /etc/typo3-dummy/localconf.php ]; then
+    cp /etc/typo3-dummy/localconf.php_template /etc/typo3-dummy/localconf.php
+
+    # genarate a random encryption key and set in into localconf.php
+    KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
+    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/localconf.php
+fi
 
 # do database handling
 . /usr/share/debconf/confmodule
@@ -52,4 +56,3 @@ if [ "$RET" = "vhost" -o "$RET" = "directory" ]; then
 fi
 
 #DEBHELPER#
-
