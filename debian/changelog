@@ -1,3 +1,13 @@
+typo3-src (4.5.15+dfsg1-2) unstable; urgency=low
+
+  * Install localconf.php as localconf.php_template, and create localconf.php
+    from it at install time. (Closes: 666237)
+  * Added support for apache2.4, protected apache2.2 commands by check for
+    apache2.2-common. (Closes: 669793, 618381)
+  * Updated README.debian files. (Closes: 614140)
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 22 Apr 2012 14:54:15 +0200
+
 typo3-src (4.5.15+dfsg1-1) unstable; urgency=medium
 
   * New upstream release:
