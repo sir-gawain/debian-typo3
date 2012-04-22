@@ -11,7 +11,7 @@ if [ "$1" = "configure" ] ; then
 		rm -f $T3CONFDIR/temp_CACHED*
 	fi
 
-	for confdir in "sites-available conf-available"; do
+	for confdir in sites-available conf-available; do
 		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-directory -a ! -L /etc/apache2/$confdir/typo3-dummy-directory ]; then
 			ln -s /etc/typo3-dummy/apache-directory.conf /etc/apache2/$confdir/typo3-dummy-directory
 		fi
