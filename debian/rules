@@ -66,12 +66,16 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/plugins/swfobject_license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/idna/LICENCE
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.audio/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.captions/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.content/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/lib/corelib/license.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
-	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
