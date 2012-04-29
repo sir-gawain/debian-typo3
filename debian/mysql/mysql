@@ -1556,3 +1556,9 @@ CREATE TABLE tx_linkvalidator_link (
 -- 4.5.15+dfsg1-1
 
 ALTER TABLE be_users CHANGE uc uc mediumtext;
+
+-- 4.7.0+dfsg1
+
+LOCK TABLES `be_users` WRITE;
+INSERT INTO `be_users` (`uid`, `pid`, `tstamp`, `username`, `password`, `admin`, `usergroup`, `disable`, `starttime`, `endtime`, `lang`, `email`, `db_mountpoints`, `options`, `crdate`, `cruser_id`, `realName`, `userMods`, `allowed_languages`, `uc`, `file_mountpoints`, `fileoper_perms`, `workspace_perms`, `lockToDomain`, `disableIPlock`, `deleted`, `TSconfig`, `lastlogin`, `createdByAction`, `usergroup_cached_list`, `workspace_id`, `workspace_preview`, `tx_openid_openid`) VALUES(2, 0, 1319640360, '_cli_scheduler', 'M$1$ZMe6Ooex$0kgFhnCidyFxW1AUHiT/f0', 0, '', 0, 0, 0, '', '', '', 3, 1319640360, 1, '', '', '', NULL, '', 0, 1, '', 0, 0, NULL, 0, 0, '', 0, 1, '');
+UNLOCK TABLES;
