@@ -28,8 +28,6 @@
 /**
  * Class to handle system commands.
  *
- * $Id: class.t3lib_utility_command.php $
- *
  * @author	Steffen Kamper <steffen@typo3.org>
  */
 final class t3lib_utility_Command {
@@ -37,18 +35,15 @@ final class t3lib_utility_Command {
 
 	/**
 	 * Wrapper function for php exec function
-	 * Needs to be central to have better control and possible fix for safe_mode/low php version restrictions as occurred with IM/GM issues
+	 * Needs to be central to have better control and possible fix for issues
 	 *
 	 * @static
 	 * @param  string  $command
-	 * @param  null|array $output
+	 * @param  NULL|array $output
 	 * @param  integer $returnValue
-	 * @return null|array
+	 * @return NULL|array
 	 */
 	public static function exec($command, &$output = NULL, &$returnValue = 0) {
-		if (TYPO3_OS == 'WIN' && version_compare(phpversion(), '5.3.0', '<')) {
-			$command = '"' . $command . '"';
-		}
 		$lastLine = exec($command, $output, $returnValue);
 		return $lastLine;
 	}
@@ -81,39 +76,12 @@ final class t3lib_utility_Command {
 			// Compile the path & command
 		if ($im_version === 'gm') {
 			$switchCompositeParameters = TRUE;
-			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
-				$currentLocale = setlocale(LC_CTYPE, 0);
-				setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
-			}
-			$originalPath = $path . 'gm' . $isExt;
-			$path = escapeshellarg($originalPath);
-			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
-				setlocale(LC_CTYPE, $currentLocale);
-			}
-				// if escapeshellarg didn't change anything and if there is no whitespace in the original string
-				// keep the original for (partial) safe_mode compatibility
-			if (trim($path, '"\'') === $originalPath && !preg_match('/[[:space:]]/', $originalPath)) {
-				$path = $originalPath;
-			}
-			$path .= ' ' . $command;
+			$path = escapeshellarg($path . 'gm' . $isExt) . ' ' . $command;
 		} else {
 			if ($im_version === 'im6') {
 				$switchCompositeParameters = TRUE;
 			}
-			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
-				$currentLocale = setlocale(LC_CTYPE, 0);
-				setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
-			}
-			$originalPath = $path . (($command == 'composite') ? $combineScript : $command) . $isExt;
-			$path = escapeshellarg($originalPath);
-			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
-				setlocale(LC_CTYPE, $currentLocale);
-			}
-				// if escapeshellarg didn't change anything and if there is no whitespace in the original string
-				// keep the original for (partial) safe_mode compatibility
-			if (trim($path, '"\'') === $originalPath && !preg_match('/[[:space:]]/', $originalPath)) {
-				$path = $originalPath;
-			}
+			$path = escapeshellarg($path . (($command == 'composite') ? $combineScript : $command) . $isExt);
 		}
 
 			// strip profile information for thumbnails and reduce their size

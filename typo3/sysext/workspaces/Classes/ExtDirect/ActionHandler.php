@@ -30,7 +30,8 @@
  * @package Workspaces
  * @subpackage ExtDirect
  */
-class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_AbstractHandler {
+class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_AbstractHandler {
+
 	/**
 	 * @var Tx_Workspaces_Service_Stages
 	 */
@@ -50,17 +51,11 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 * @return string the full domain including the protocol http:// or https://, but without the trailing '/'
 	 */
 	public function generateWorkspacePreviewLink($uid) {
-		$ttlHours = intval($GLOBALS['BE_USER']->getTSConfigVal('options.workspaces.previewLinkTTLHours'));
-		$ttlHours = ($ttlHours ? $ttlHours : 24*2) * 3600;
-		$linkParams = array(
-			'ADMCMD_prev'	=> t3lib_BEfunc::compilePreviewKeyword('', $GLOBALS['BE_USER']->user['uid'], $ttlHours, $this->getCurrentWorkspace()),
-			'id'			=> $uid
-		);
-		return t3lib_BEfunc::getViewDomain($uid) . '/index.php?' . t3lib_div::implodeArrayForUrl('', $linkParams);
+		return $this->getWorkspaceService()->generateWorkspacePreviewLink($uid);
 	}
 
 	/**
-	 * Swaps a sisngle record.
+	 * Swaps a single record.
 	 *
 	 * @param string $table
 	 * @param integer $t3ver_oid
@@ -76,9 +71,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 			'swapIntoWS' => 1
 		);
 
-		$tce = t3lib_div::makeInstance ('t3lib_TCEmain');
-		$tce->start(array(), $cmd);
-		$tce->process_cmdmap();
+		$this->processTcaCmd($cmd);
 	}
 
 	/**
@@ -95,9 +88,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 			'action' => 'clearWSID'
 		);
 
-		$tce = t3lib_div::makeInstance ('t3lib_TCEmain');
-		$tce->start(array(), $cmd);
-		$tce->process_cmdmap();
+		$this->processTcaCmd($cmd);
 	}
 
 	/**
@@ -105,10 +96,10 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 *
 	 * @param string $table
 	 * @param string $uid
-	 * @return void
+	 * @return string
 	 */
 	public function viewSingleRecord($table, $uid) {
-		return tx_Workspaces_Service_Workspaces::viewSingleRecord($table, $uid);
+		return Tx_Workspaces_Service_Workspaces::viewSingleRecord($table, $uid);
 	}
 
 	/**
@@ -227,16 +218,34 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 *
 	 * @param array list of recipients
 	 * @param string given user string of additional recipients
+	 * @param integer stage id
 	 * @return array
 	 */
-	public function getRecipientList(array $uidOfRecipients, $additionalRecipients) {
+	public function getRecipientList(array $uidOfRecipients, $additionalRecipients, $stageId) {
 		$finalRecipients = array();
-
+		if (!$this->getStageService()->isValid($stageId)) {
+			throw new InvalidArgumentException($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:error.stageId.integer'));
+		} else {
+			$stageId = (int)$stageId;
+		}
 		$recipients = array();
 		foreach ($uidOfRecipients as $userUid) {
 			$beUserRecord = t3lib_befunc::getRecord('be_users',intval($userUid));
 			if(is_array($beUserRecord) && $beUserRecord['email'] != '') {
 				$recipients[] = $beUserRecord['email'];
+			}
+		}
+
+			// the notification mode can be configured in the workspace stage record
+		$notification_mode = $this->getStageService()->getNotificationMode($stageId);
+		if (intval($notification_mode) === Tx_Workspaces_Service_Stages::MODE_NOTIFY_ALL || intval($notification_mode) === Tx_Workspaces_Service_Stages::MODE_NOTIFY_ALL_STRICT) {
+				// get the default recipients from the stage configuration
+				// the default recipients needs to be added in some cases of the notification_mode
+			$default_recipients = $this->getStageService()->getResponsibleBeUser($stageId, TRUE);
+			foreach ($default_recipients as $default_recipient_uid => $default_recipient_record) {
+				if (!in_array($default_recipient_record['email'],$recipients)) {
+					$recipients[] = $default_recipient_record['email'];
+				}
 			}
 		}
 
@@ -260,6 +269,104 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	}
 
 	/**
+	 * Discard all items from given page id.
+	 *
+	 * @param  integer $pageId
+	 * @return array
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function discardStagesFromPage($pageId) {
+		$cmdMapArray      = array();
+			/** @var $workspaceService Tx_Workspaces_Service_Workspaces */
+		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+			/** @var $stageService Tx_Workspaces_Service_Stages */
+		$stageService     = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
+		$workspaceItemsArray = $workspaceService->selectVersionsInWorkspace($stageService->getWorkspaceId(), $filter = 1, $stage = -99, $pageId, $recursionLevel = 0, $selectionType = 'tables_modify');
+
+		foreach ($workspaceItemsArray as $tableName => $items) {
+			foreach ($items as $item) {
+				$cmdMapArray[$tableName][$item['uid']]['version']['action'] = 'clearWSID';
+			}
+		}
+
+		$this->processTcaCmd($cmdMapArray);
+
+		return array (
+			'success' => TRUE,
+		);
+	}
+
+	/**
+	 * Push the given element collection to the next workspace stage.
+	 *
+	 * <code>
+	 * $parameters->additional = your@mail.com
+	 * $parameters->affects->__TABLENAME__
+	 * $parameters->comments
+	 * $parameters->receipients
+	 * $parameters->stageId
+	 * </code>
+	 *
+	 * @param stdClass $parameters
+	 * @return array
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function sentCollectionToStage(stdClass $parameters) {
+		$cmdMapArray = array();
+		$comment     = $parameters->comments;
+		$stageId     = $parameters->stageId;
+
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($stageId) === FALSE) {
+			throw new InvalidArgumentException('Missing "stageId" in $parameters array.', 1319488194);
+		}
+		if (!is_object($parameters->affects) || count($parameters->affects) == 0) {
+			throw new InvalidArgumentException('Missing "affected items" in $parameters array.', 1319488195);
+		}
+
+		$recipients  = $this->getRecipientList($parameters->receipients, $parameters->additional, $stageId);
+
+		foreach ($parameters->affects as $tableName => $items) {
+			foreach ($items as $item) {
+				if ($stageId == Tx_Workspaces_Service_Stages::STAGE_PUBLISH_EXECUTE_ID) {
+					$cmdMapArray[$tableName][$item->t3ver_oid]['version']['action'] = 'swap';
+					$cmdMapArray[$tableName][$item->t3ver_oid]['version']['swapWith'] = $item->uid;
+					$cmdMapArray[$tableName][$item->t3ver_oid]['version']['comment'] = $comment;
+					$cmdMapArray[$tableName][$item->t3ver_oid]['version']['notificationAlternativeRecipients'] = $recipients;
+				} else {
+					$cmdMapArray[$tableName][$item->uid]['version']['action'] = 'setStage';
+					$cmdMapArray[$tableName][$item->uid]['version']['stageId'] = $stageId;
+					$cmdMapArray[$tableName][$item->uid]['version']['comment'] = $comment;
+					$cmdMapArray[$tableName][$item->uid]['version']['notificationAlternativeRecipients'] = $recipients;
+				}
+			}
+		}
+
+		$this->processTcaCmd($cmdMapArray);
+
+		return array (
+			'success' => TRUE,
+				// force refresh after publishing changes
+			'refreshLivePanel' => ($parameters->stageId == -20) ? TRUE : FALSE
+		);
+	}
+
+	/**
+	 * Process TCA command map array.
+	 *
+	 * @param  array $cmdMapArray
+	 * @return void
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	protected function processTcaCmd(array $cmdMapArray) {
+		$tce = t3lib_div::makeInstance('t3lib_TCEmain');
+		$tce->start(array(), $cmdMapArray);
+		$tce->process_cmdmap();
+	}
+
+	/**
 	 * Gets an object with this structure:
 	 *
 	 *	affects: object
@@ -271,7 +378,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 *	additional: string
 	 *	comments: string
 	 *
-	 * @param stdObject $parameters
+	 * @param stdClass $parameters
 	 * @return array
 	 */
 	public function sendToNextStageExecute(stdClass $parameters) {
@@ -283,7 +390,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 		$table = $parameters->affects->table;
 		$uid = $parameters->affects->uid;
 		$t3ver_oid = $parameters->affects->t3ver_oid;
-		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional);
+		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional, $setStageId);
 
 		if ($setStageId == Tx_Workspaces_Service_Stages::STAGE_PUBLISH_EXECUTE_ID) {
 			$cmdArray[$table][$t3ver_oid]['version']['action'] = 'swap';
@@ -297,9 +404,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 			$cmdArray[$table][$uid]['version']['notificationAlternativeRecipients'] = $recipients;
 		}
 
-		$tce = t3lib_div::makeInstance('t3lib_TCEmain');
-		$tce->start(array(), $cmdArray);
-		$tce->process_cmdmap();
+		$this->processTcaCmd($cmdArray);
 
 		$result = array(
 			'success' => TRUE,
@@ -319,7 +424,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 *	additional: string
 	 *	comments: string
 	 *
-	 * @param stdObject $parameters
+	 * @param stdClass $parameters
 	 * @return array
 	 */
 	public function sendToPrevStageExecute(stdClass $parameters) {
@@ -330,16 +435,14 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 		$comments = $parameters->comments;
 		$table = $parameters->affects->table;
 		$uid = $parameters->affects->uid;
-		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional);
+		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional, $setStageId);
 
 		$cmdArray[$table][$uid]['version']['action'] = 'setStage';
 		$cmdArray[$table][$uid]['version']['stageId'] = $setStageId;
 		$cmdArray[$table][$uid]['version']['comment'] = $comments;
 		$cmdArray[$table][$uid]['version']['notificationAlternativeRecipients'] = $recipients;
 
-		$tce = t3lib_div::makeInstance('t3lib_TCEmain');
-		$tce->start(array(), $cmdArray);
-		$tce->process_cmdmap();
+		$this->processTcaCmd($cmdArray);
 
 		$result = array(
 			'success' => TRUE,
@@ -366,7 +469,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 *	additional: string
 	 *	comments: string
 	 *
-	 * @param stdObject $parameters
+	 * @param stdClass $parameters
 	 * @return array
 	 */
 	public function sendToSpecificStageExecute(stdClass $parameters) {
@@ -375,7 +478,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 		$setStageId = $parameters->affects->nextStage;
 		$comments = $parameters->comments;
 		$elements = $parameters->affects->elements;
-		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional);
+		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional, $setStageId);
 
 		foreach($elements as $key=>$element) {
 			if ($setStageId == Tx_Workspaces_Service_Stages::STAGE_PUBLISH_EXECUTE_ID) {
@@ -391,9 +494,7 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 			}
 		}
 
-		$tce = t3lib_div::makeInstance('t3lib_TCEmain');
-		$tce->start(array(), $cmdArray);
-		$tce->process_cmdmap();
+		$this->processTcaCmd($cmdArray);
 
 		$result = array(
 			'success' => TRUE,
@@ -409,41 +510,68 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 	 * @return array
 	 */
 	protected function getSentToStageWindow($nextStageId) {
+		$workspaceRec = t3lib_BEfunc::getRecord('sys_workspace', $this->getStageService()->getWorkspaceId());
+		$showNotificationFields = FALSE;
 		$stageTitle = $this->getStageService()->getStageTitle($nextStageId);
 		$result = array(
-			'title' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:actionSendToStage'),
+			'title' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:actionSendToStage'),
 			'items' => array(
 				array(
 					'xtype' => 'panel',
 					'bodyStyle' => 'margin-bottom: 7px; border: none;',
-					'html' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:window.sendToNextStageWindow.itemsWillBeSentTo') . ' ' . $stageTitle,
-				),
-				array(
-					'fieldLabel' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:window.sendToNextStageWindow.sendMailTo'),
-					'xtype' => 'checkboxgroup',
-					'itemCls' => 'x-check-group-alt',
-					'columns' => 1,
-					'style' => 'max-height: 200px',
-					'autoScroll' => true,
-					'items' => array(
-						$this->getReceipientsOfStage($nextStageId)
-					)
-				),
-				array(
-					'fieldLabel' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:window.sendToNextStageWindow.additionalRecipients'),
-					'name' => 'additional',
-					'xtype' => 'textarea',
-					'width' => 250,
-				),
-				array(
-					'fieldLabel' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:window.sendToNextStageWindow.comments'),
+					'html' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:window.sendToNextStageWindow.itemsWillBeSentTo') . ' ' . $stageTitle,
+				)
+			)
+		);
+
+		switch ($nextStageId) {
+			case Tx_Workspaces_Service_Stages::STAGE_PUBLISH_EXECUTE_ID:
+			case Tx_Workspaces_Service_Stages::STAGE_PUBLISH_ID:
+				if (!empty($workspaceRec['publish_allow_notificaton_settings'])) {
+					$showNotificationFields = TRUE;
+				}
+				break;
+			case Tx_Workspaces_Service_Stages::STAGE_EDIT_ID:
+				if (!empty($workspaceRec['edit_allow_notificaton_settings'])) {
+					$showNotificationFields = TRUE;
+				}
+				break;
+			default:
+				$allow_notificaton_settings = $this->getStageService()->getPropertyOfCurrentWorkspaceStage($nextStageId, 'allow_notificaton_settings');
+				if (!empty($allow_notificaton_settings)) {
+					$showNotificationFields = TRUE;
+				}
+				break;
+		}
+
+		if ($showNotificationFields == TRUE) {
+			$result['items'][] = array(
+						'fieldLabel' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:window.sendToNextStageWindow.sendMailTo'),
+						'xtype' => 'checkboxgroup',
+						'itemCls' => 'x-check-group-alt',
+						'columns' => 1,
+						'style' => 'max-height: 200px',
+						'autoScroll' => TRUE,
+						'items' => array(
+							$this->getReceipientsOfStage($nextStageId)
+						)
+					);
+
+			$result['items'][] = array(
+						'fieldLabel' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:window.sendToNextStageWindow.additionalRecipients'),
+						'name' => 'additional',
+						'xtype' => 'textarea',
+						'width' => 250,
+					);
+		}
+
+		$result['items'][] = array(
+					'fieldLabel' => $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:window.sendToNextStageWindow.comments'),
 					'name' => 'comments',
 					'xtype' => 'textarea',
 					'width' => 250,
 					'value' => $this->getDefaultCommentOfStage($nextStageId),
-				),
-			)
-		);
+				);
 
 		return $result;
 	}
@@ -458,14 +586,38 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 		$result = array();
 
 		$recipients = $this->getStageService()->getResponsibleBeUser($stage);
+		$default_recipients = $this->getStageService()->getResponsibleBeUser($stage, TRUE);
 
 		foreach ($recipients as $id => $user) {
 			if (t3lib_div::validEmail($user['email'])) {
+				$checked = FALSE;
+				$disabled = FALSE;
 				$name = $user['realName'] ? $user['realName'] : $user['username'];
+
+					// the notification mode can be configured in the workspace stage record
+				$notification_mode = $this->getStageService()->getNotificationMode($stage);
+				if (intval($notification_mode) === Tx_Workspaces_Service_Stages::MODE_NOTIFY_SOMEONE) {
+						// all responsible users are checked per default, as in versions before
+					$checked = TRUE;
+				} elseif (intval($notification_mode) === Tx_Workspaces_Service_Stages::MODE_NOTIFY_ALL) {
+						// the default users are checked only
+					if (!empty($default_recipients[$id])) {
+						$checked = TRUE;
+						$disabled = TRUE;
+					} else {
+						$checked = FALSE;
+					}
+				} elseif (intval($notification_mode) === Tx_Workspaces_Service_Stages::MODE_NOTIFY_ALL_STRICT) {
+						// all responsible users are checked
+					$checked = TRUE;
+					$disabled = TRUE;
+				}
+
 				$result[] = array(
 					'boxLabel' => sprintf('%s (%s)', $name, $user['email']),
 					'name' => 'receipients-' . $id,
-					'checked' => TRUE,
+					'checked' => $checked,
+					'disabled' => $disabled,
 				);
 			}
 		}
@@ -495,6 +647,89 @@ class tx_Workspaces_ExtDirect_ActionHandler extends tx_Workspaces_ExtDirect_Abst
 			$this->stageService = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
 		}
 		return $this->stageService;
+	}
+
+	/**
+	 * Send all available workspace records to the previous stage.
+	 *
+	 * @param  integer $id Current page id to process items to previous stage.
+	 * @return array
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function sendPageToPreviousStage($id) {
+		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+		$workspaceItemsArray = $workspaceService->selectVersionsInWorkspace($this->stageService->getWorkspaceId(), $filter = 1, $stage = -99, $id, $recursionLevel = 0, $selectionType = 'tables_modify');
+		list($currentStage, $previousStage) = $this->getStageService()->getPreviousStageForElementCollection($workspaceItemsArray);
+
+			// get only the relevant items for processing
+		$workspaceItemsArray = $workspaceService->selectVersionsInWorkspace($this->stageService->getWorkspaceId(), $filter = 1, $currentStage['uid'], $id, $recursionLevel = 0, $selectionType = 'tables_modify');
+
+		return array (
+			'title' => 'Status message: Page send to next stage - ID: ' . $id . ' - Next stage title: ' . $previousStage['title'],
+			'items' => $this->getSentToStageWindow($previousStage['uid']),
+			'affects' => $workspaceItemsArray,
+			'stageId' => $previousStage['uid'],
+		);
+	}
+
+	/**
+	 *
+	 * @param integer $id Current Page id to select Workspace items from.
+	 *
+	 * @return array
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function sendPageToNextStage($id) {
+		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+		$workspaceItemsArray = $workspaceService->selectVersionsInWorkspace($this->stageService->getWorkspaceId(), $filter = 1, $stage = -99, $id, $recursionLevel = 0, $selectionType = 'tables_modify');
+		list($currentStage, $nextStage) = $this->getStageService()->getNextStageForElementCollection($workspaceItemsArray);
+			// get only the relevant items for processing
+		$workspaceItemsArray = $workspaceService->selectVersionsInWorkspace($this->stageService->getWorkspaceId(), $filter = 1, $currentStage['uid'], $id, $recursionLevel = 0, $selectionType = 'tables_modify');
+
+		return array (
+			'title' => 'Status message: Page send to next stage - ID: ' . $id . ' - Next stage title: ' . $nextStage['title'],
+			'items' => $this->getSentToStageWindow($nextStage['uid']),
+			'affects' => $workspaceItemsArray,
+			'stageId' => $nextStage['uid'],
+		);
+	}
+
+	/**
+	 * Fetch the current label and visible state of the buttons.
+	 *
+	 * @param integer $id
+	 * @return array Contains the visibility state and label of the stage change buttons.
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function updateStageChangeButtons($id) {
+
+		$stageService = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
+		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+
+			// fetch the next and previous stage
+		$workspaceItemsArray   = $workspaceService->selectVersionsInWorkspace($stageService->getWorkspaceId(), $filter = 1, $stage = -99, $id, $recursionLevel = 0, $selectionType = 'tables_modify');
+		list(, $nextStage)     = $stageService->getNextStageForElementCollection($workspaceItemsArray);
+		list(, $previousStage) = $stageService->getPreviousStageForElementCollection($workspaceItemsArray);
+
+		$toolbarButtons = array(
+			'feToolbarButtonNextStage' => array(
+				'visible' => is_array($nextStage) && count($nextStage) > 0,
+				'text' => $nextStage['title'],
+			),
+			'feToolbarButtonPreviousStage' => array(
+				'visible' => is_array($previousStage) && count($previousStage),
+				'text' => $previousStage['title'],
+			),
+			'feToolbarButtonDiscardStage' => array(
+				'visible' => (is_array($nextStage) && count($nextStage) > 0) || (is_array($previousStage) && count($previousStage) > 0),
+				'text' =>  $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:label_doaction_discard', TRUE),
+			),
+		);
+
+		return $toolbarButtons;
 	}
 }
 

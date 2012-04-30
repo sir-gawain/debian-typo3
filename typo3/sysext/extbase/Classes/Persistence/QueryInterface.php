@@ -115,6 +115,13 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	const CHARSET = 'utf-8';
 
 	/**
+	 * Gets the node-tuple source for this query.
+	 *
+	 * @return Tx_Extbase_Persistence_QOM_SourceInterface the node-tuple source; non-NULL
+	 */
+	public function getSource();
+
+	/**
 	 * Executes the query against the backend and returns the result
 	 *
 	 * @return Tx_Extbase_Persistence_QueryResultInterface|array The query result object or an array if $this->getQuerySettings()->getReturnRawQueryResult() is TRUE
@@ -126,7 +133,6 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 * Executes the query against the database and returns the number of matching objects
 	 *
 	 * @return integer The number of matching objects
-	 * @api
 	 * @deprecated since Extbase 1.3.0; was removed in FLOW3; will be removed in Extbase 1.5.0
 	 */
 	public function count();
@@ -200,16 +206,6 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 * @api
 	 */
 	public function logicalNot($constraint);
-
-	/**
-	 * Matches against the (internal) identifier.
-	 *
-	 * @param string $uid An identifier to match against
-	 * @return object
-	 * @api
-	 * @deprecated since Extbase 1.2.0; was removed in FLOW3; will be removed in Extbase 1.4.0; use equals() instead
-	 */
-	public function withUid($uid);
 
 	/**
 	 * Returns an equals criterion used for matching objects against a query

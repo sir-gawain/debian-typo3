@@ -24,8 +24,6 @@
  ***************************************************************/
 /**
  * Module: Extension manager - Extension.xml pull-parser
- *
- * $Id: class.tx_em_parser_extensionxmlpullparser.php 1913 2010-02-21 15:47:37Z mkrause $
  */
 
 /**
@@ -47,7 +45,7 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 	/**
 	 * Keeps list of attached observers.
 	 *
-	 * @var  array
+	 * @var  SplObserver[]
 	 */
 	protected $observers = array();
 
@@ -69,13 +67,13 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 	 *
 	 * @param   string  $file: GZIP stream resource
 	 * @return  void
-	 * @throws  em_extensionxml_Exception  in case of XML parser errors
+	 * @throws  tx_em_ExtensionXmlException  in case of XML parser errors
 	 */
 	public function parseXML($file) {
 		if (!(is_object($this->objXML) && (get_class($this->objXML) == 'XMLReader'))) {
 			$this->throwException('Unable to create XML parser.');
 		}
-		$this->objXML->open($file, 'utf-8') || $this->throwException(sprintf('Unable to open file ressource %s.', htmlspecialchars($file)));
+		$this->objXML->open($file, 'utf-8') || $this->throwException(sprintf('Unable to open file resource %s.', htmlspecialchars($file)));
 
 		while ($this->objXML->read()) {
 
@@ -223,8 +221,8 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 	 * @return  void
 	 */
 	public function detach(SplObserver $observer) {
-		$key = array_search($observer, $this->observers, true);
-		if (!($key === false)) {
+		$key = array_search($observer, $this->observers, TRUE);
+		if (!($key === FALSE)) {
 			unset($this->observers[$key]);
 		}
 	}

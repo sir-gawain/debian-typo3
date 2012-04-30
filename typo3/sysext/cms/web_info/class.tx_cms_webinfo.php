@@ -27,26 +27,9 @@
 /**
  * Contains a class with functions for page related statistics added to the backend Info module
  *
- * $Id$
  * Revised for TYPO3 3.6 5/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   66: class tx_cms_webinfo_page extends t3lib_extobjbase
- *   73:     function modMenu()
- *  100:     function main()
- *
- *
- *  198: class tx_cms_webinfo_hits extends tx_cms_webinfo_page
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 require_once(PATH_typo3.'class.db_list.inc');
@@ -135,7 +118,8 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 			$dblist->generateList();
 
 
-			$theOutput.= $this->pObj->doc->section($LANG->getLL('hits_title'),
+			$theOutput .= $this->pObj->doc->header($LANG->getLL('hits_title'));
+			$theOutput .= $this->pObj->doc->section('',
 				t3lib_BEfunc::cshItem($dblist->descrTable, 'stat', $GLOBALS['BACK_PATH'], '|<br />') . // CSH
 					$h_func.
 					$header.
@@ -149,7 +133,8 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 			$dblist->generateList();
 
 				// CSH
-			$theOutput.=$this->pObj->doc->section($LANG->getLL('page_title'),
+			$theOutput .= $this->pObj->doc->header($LANG->getLL('page_title'));
+			$theOutput .=$this->pObj->doc->section('',
 				t3lib_BEfunc::cshItem($dblist->descrTable, 'pagetree_overview', $GLOBALS['BACK_PATH'], '|<br />') . // CSH
 					$h_func.
 					$dblist->HTMLcode,

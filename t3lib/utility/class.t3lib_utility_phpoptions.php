@@ -28,8 +28,6 @@
 /**
  * Class to handle php environment specific options / functions
  *
- * $Id$
- *
  * @author	 Christian Kuhn <lolli@schwarzbu.ch>
  * @package TYPO3
  * @subpackage t3lib
@@ -41,7 +39,22 @@ final class t3lib_utility_PhpOptions {
 	 * @return boolean TRUE if safe_mode is enabled, FALSE if disabled
 	 */
 	public static function isSafeModeEnabled() {
-		return self::getIniValueBoolean('safe_mode');
+		if (version_compare(phpversion(), '5.4', '<')) {
+			return self::getIniValueBoolean('safe_mode');
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Check if php magic_quotes_gpc is enabled
+	 *
+	 * @return boolean TRUE if magic_quotes_gpc is enabled, FALSE if disabled
+	 */
+	public static function isMagicQuotesGpcEnabled() {
+		if (version_compare(phpversion(), '5.4', '<')) {
+			return self::getIniValueBoolean('magic_quotes_gpc');
+		}
+		return FALSE;
 	}
 
 	/**
@@ -51,6 +64,15 @@ final class t3lib_utility_PhpOptions {
 	 */
 	public static function isSqlSafeModeEnabled() {
 		return self::getIniValueBoolean('sql.safe_mode');
+	}
+
+	/**
+	 * Check if php session.auto_start is enabled
+	 *
+	 * @return boolean TRUE if session.auto_start is enabled, FALSE if disabled
+	 */
+	public static function isSessionAutoStartEnabled() {
+		return self::getIniValueBoolean('session.auto_start');
 	}
 
 	/**

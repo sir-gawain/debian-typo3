@@ -3,9 +3,16 @@ if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
 t3lib_extMgm::addPItoST43($_EXTKEY);
 
-t3lib_extMgm::addTypoScript($_EXTKEY,'editorcfg','
-	tt_content.CSS_editor.ch.tx_indexedsearch = < plugin.tx_indexedsearch.CSS_editor
-',43);
+if (t3lib_extMgm::isLoaded('extbase')) {
+	// Configure the Extbase Plugin
+	Tx_Extbase_Utility_Extension::configurePlugin(
+		$_EXTKEY, 'Pi2',
+			// array holding the controller-action-combinations that are accessible
+		array('Search' => 'form,search'),
+			// array of non-cachable controller-action-combinations (they must already be enabled above)
+		array('Search' => 'form,search')
+	);
+}
 
 	// Attach to hooks:
 $TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['pageIndexing'][] = 'EXT:indexed_search/class.indexer.php:tx_indexedsearch_indexer';
@@ -42,6 +49,19 @@ $TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers'] = array(
 	'jpeg' => 'EXT:indexed_search/class.external_parser.php:&tx_indexed_search_extparse',
 	'tif' => 'EXT:indexed_search/class.external_parser.php:&tx_indexed_search_extparse',
 );
+
+$TYPO3_CONF_VARS['EXTCONF']['indexed_search']['use_tables'] = 'index_phash,index_fulltext,index_rel,index_words,index_section,index_grlist,index_stat_search,index_stat_word,index_debug,index_config';
+
+  // unserializing the configuration so we can use it here:
+$_EXTCONF = unserialize($_EXTCONF);
+
+	// Use the advanced doubleMetaphone parser instead of the internal one (usage of metaphone parsers is generally disabled by default)
+if (isset($_EXTCONF['enableMetaphoneSearch']) && intval($_EXTCONF['enableMetaphoneSearch'])==2) {
+	$TYPO3_CONF_VARS['EXTCONF']['indexed_search']['metaphone'] = 'EXT:indexed_search/class.doublemetaphone.php:&user_DoubleMetaPhone';
+}
+
+
+
 
 
 	// EXAMPLE configuration of hooks:

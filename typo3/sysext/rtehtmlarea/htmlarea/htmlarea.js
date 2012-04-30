@@ -3,7 +3,7 @@
 *
 *  (c) 2002-2004 interactivetools.com, inc.
 *  (c) 2003-2004 dynarch.com
-*  (c) 2004-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,24 +30,12 @@
 ***************************************************************/
 /*
  * Main script of TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
 	// Avoid re-initialization on AJax call when HTMLArea object was already initialized
 if (typeof(HTMLArea) == 'undefined') {
 	// Establish HTMLArea name space
 Ext.namespace('HTMLArea.CSS', 'HTMLArea.util.TYPO3', 'HTMLArea.util.Tips', 'HTMLArea.util.Color', 'Ext.ux.form', 'Ext.ux.menu', 'Ext.ux.Toolbar');
 Ext.apply(HTMLArea, {
-	/*************************************************************************
-	 * THESE BROWSER IDENTIFICATION CONSTANTS ARE DEPRECATED AS OF TYPO3 4.4 *
-	 *************************************************************************/
-		// Browser identification
-	is_gecko	: Ext.isGecko || Ext.isOpera || Ext.isWebKit,
-	is_ff2		: Ext.isGecko2,
-	is_ie		: Ext.isIE,
-	is_safari	: Ext.isWebKit,
-	is_chrome	: Ext.isChrome,
-	is_opera	: Ext.isOpera,
 	/***************************************************
 	 * COMPILED REGULAR EXPRESSIONS                    *
 	 ***************************************************/
@@ -55,52 +43,110 @@ Ext.apply(HTMLArea, {
 	RE_tagName		: /(<\/|<)\s*([^ \t\n>]+)/ig,
 	RE_head			: /<head>((.|\n)*?)<\/head>/i,
 	RE_body			: /<body>((.|\n)*?)<\/body>/i,
+		// This expression is deprecated as of TYPO3 4.7
 	Reg_body		: new RegExp('<\/?(body)[^>]*>', 'gi'),
 	reservedClassNames	: /htmlarea/,
 	RE_email		: /([0-9a-z]+([a-z0-9_-]*[0-9a-z])*){1}(\.[0-9a-z]+([a-z0-9_-]*[0-9a-z])*)*@([0-9a-z]+([a-z0-9_-]*[0-9a-z])*\.)+[a-z]{2,9}/i,
 	RE_url			: /(([^:/?#]+):\/\/)?(([a-z0-9_]+:[a-z0-9_]+@)?[a-z0-9_-]{2,}(\.[a-z0-9_-]{2,})+\.[a-z]{2,5}(:[0-9]+)?(\/\S+)*\/?)/i,
-	RE_blockTags		: /^(body|p|h1|h2|h3|h4|h5|h6|ul|ol|pre|dl|dt|dd|div|noscript|blockquote|form|hr|table|caption|fieldset|address|td|tr|th|li|tbody|thead|tfoot|iframe)$/i,
+		// This expression is deprecated as of TYPO3 4.6
+	RE_blockTags		: /^(address|article|aside|body|blockquote|caption|dd|div|dl|dt|fieldset|footer|form|header|hr|h1|h2|h3|h4|h5|h6|iframe|li|ol|p|pre|nav|noscript|section|table|tbody|td|tfoot|th|thead|tr|ul)$/i,
+		// This expression is deprecated as of TYPO3 4.6
 	RE_closingTags		: /^(p|blockquote|a|li|ol|ul|dl|dt|td|th|tr|tbody|thead|tfoot|caption|colgroup|table|div|b|bdo|big|cite|code|del|dfn|em|i|ins|kbd|label|q|samp|small|span|strike|strong|sub|sup|tt|u|var|abbr|acronym|font|center|object|embed|style|script|title|head)$/i,
-	RE_noClosingTag		: /^(img|br|hr|col|input|area|base|link|meta|param)$/i,
+		// This expression is deprecated as of TYPO3 4.6
+	RE_noClosingTag		: /^(area|base|br|col|command|embed|hr|img|input|keygen|meta|param|source|track|wbr)$/i,
 	RE_numberOrPunctuation	: /[0-9.(),;:!¡?¿%#$'"_+=\\\/-]*/g,
-	/***************************************************
-	 * TROUBLESHOOTING                                 *
-	 ***************************************************/
-	_appendToLog: function(str){
-		if (HTMLArea.enableDebugMode) {
-			var log = document.getElementById('HTMLAreaLog');
-			if(log) {
-				log.appendChild(document.createTextNode(str));
-				log.appendChild(document.createElement('br'));
-			}
-		}
-	},
-	appendToLog: function (editorId, objectName, functionName, text) {
-		HTMLArea._appendToLog(editorId + '[' + objectName + '::' + functionName + ']: ' + text);
-	},
 	/***************************************************
 	 * LOCALIZATION                                    *
 	 ***************************************************/
-	localize: function (label) {
-		return HTMLArea.I18N.dialogs[label] || HTMLArea.I18N.tooltips[label] || HTMLArea.I18N.msg[label] || '';
+	localize: function (label, plural) {
+		var i = plural || 0;
+		var localized = HTMLArea.I18N.dialogs[label] || HTMLArea.I18N.tooltips[label] || HTMLArea.I18N.msg[label] || '';
+		if (typeof localized === 'object' && typeof localized[i] !== 'undefined') {
+			localized = localized[i]['target'];
+		}
+		return localized;
 	},
 	/***************************************************
 	 * INITIALIZATION                                  *
 	 ***************************************************/
 	init: function () {
-			// Apply global configuration settings
-		Ext.apply(HTMLArea, RTEarea[0]);
-		Ext.applyIf(HTMLArea, {
-			editorSkin	: HTMLArea.editorUrl + 'skins/default/',
-			editorCSS	: HTMLArea.editorUrl + 'skins/default/htmlarea.css'
-		});
-		if (!Ext.isString(HTMLArea.editedContentCSS)) {
-			HTMLArea.editedContentCSS = HTMLArea.editorSkin + 'htmlarea-edited-content.css';
+		if (!HTMLArea.isReady) {
+				// Apply global configuration settings
+			Ext.apply(HTMLArea, RTEarea[0]);
+			Ext.applyIf(HTMLArea, {
+				editorSkin	: HTMLArea.editorUrl + 'skins/default/',
+				editorCSS	: HTMLArea.editorUrl + 'skins/default/htmlarea.css'
+			});
+			if (!Ext.isString(HTMLArea.editedContentCSS)) {
+				HTMLArea.editedContentCSS = HTMLArea.editorSkin + 'htmlarea-edited-content.css';
+			}
+			HTMLArea.isReady = true;
+			HTMLArea.appendToLog('', 'HTMLArea', 'init', 'Editor url set to: ' + HTMLArea.editorUrl, 'info');
+			HTMLArea.appendToLog('', 'HTMLArea', 'init', 'Editor skin CSS set to: ' + HTMLArea.editorCSS, 'info');
+			HTMLArea.appendToLog('', 'HTMLArea', 'init', 'Editor content skin CSS set to: ' + HTMLArea.editedContentCSS, 'info');
 		}
-		HTMLArea.isReady = true;
-		HTMLArea._appendToLog("[HTMLArea::init]: Editor url set to: " + HTMLArea.editorUrl);
-		HTMLArea._appendToLog("[HTMLArea::init]: Editor skin CSS set to: " + HTMLArea.editorCSS);
-		HTMLArea._appendToLog("[HTMLArea::init]: Editor content skin CSS set to: " + HTMLArea.editedContentCSS);
+	},
+	/*
+	 * Create an editor when HTMLArea is loaded and when Ext is ready
+	 *
+	 * @param	string		editorId: the id of the editor
+	 *
+	 * @return 	boolean		false if successful
+	 */
+	initEditor: function (editorId) {
+		if (document.getElementById('pleasewait' + editorId)) {
+			if (HTMLArea.checkSupportedBrowser()) {
+				document.getElementById('pleasewait' + editorId).style.display = 'block';
+				document.getElementById('editorWrap' + editorId).style.visibility = 'hidden';
+				if (!HTMLArea.isReady) {
+					HTMLArea.initEditor.defer(150, null, [editorId]);
+				} else {
+						// Create an editor for the textarea
+					var editor = new HTMLArea.Editor(Ext.apply(new HTMLArea.Config(editorId), RTEarea[editorId]));
+					editor.generate();
+					return false;
+				}
+			} else {
+				document.getElementById('pleasewait' + editorId).style.display = 'none';
+				document.getElementById('editorWrap' + editorId).style.visibility = 'visible';
+			}
+		}
+		return true;
+	},
+	/*
+	 * Check if the client agent is supported
+	 *
+	 * @return	boolean		true if the client is supported
+	 */
+	checkSupportedBrowser: function () {
+		return Ext.isGecko || Ext.isWebKit || Ext.isOpera || Ext.isIE;
+	},
+	/*
+	 * Write message to JavaScript console
+	 *
+	 * @param	string		editorId: the id of the editor issuing the message
+	 * @param	string		objectName: the name of the object issuing the message
+	 * @param	string		functionName: the name of the function issuing the message
+	 * @param	string		text: the text of the message
+	 * @param	string		type: the type of message: 'log', 'info', 'warn' or 'error'
+	 *
+	 * @return	void
+	 */
+	appendToLog: function (editorId, objectName, functionName, text, type) {
+		var str = 'RTE[' + editorId + '][' + objectName + '::' + functionName + ']: ' + text;
+		if (typeof(type) === 'undefined') {
+			var type = 'info';
+		}
+		if (typeof(console) !== 'undefined' && typeof(console) === 'object') {
+				// If console is TYPO3.Backend.DebugConsole, write only error messages
+			if (Ext.isFunction(console.addTab)) {
+				if (type === 'error') {
+					console[type](str);
+				}
+			} else {
+				console[type](str);
+			}
+		}
 	}
 });
 /***************************************************
@@ -120,6 +166,8 @@ HTMLArea.Config = function (editorId) {
 	this.editedContentStyle = HTMLArea.editedContentCSS;
 		// content style
 	this.pageStyle = "";
+		// Maximum attempts at accessing the stylesheets
+	this.styleSheetsMaximumAttempts = 20;
 		// Remove tags (must be a regular expression)
 	this.htmlRemoveTags = /none/i;
 		// Remove tags and their contents (must be a regular expression)
@@ -213,7 +261,7 @@ HTMLArea.Config = Ext.extend(HTMLArea.Config, {
 	registerButton: function (config) {
 		config.itemId = config.id;
 		if (Ext.type(this.buttonsConfig[config.id])) {
-			HTMLArea._appendToLog('[HTMLArea.Config::registerButton]: A toolbar item with the same Id: ' + config.id + ' already exists and will be overidden.');
+			HTMLArea.appendToLog('', 'HTMLArea.Config', 'registerButton', 'A toolbar item with the same Id: ' + config.id + ' already exists and will be overidden.', 'warn');
 		}
 			// Apply defaults
 		config = Ext.applyIf(config, this.configDefaults['all']);
@@ -257,14 +305,13 @@ HTMLArea.Config = Ext.extend(HTMLArea.Config, {
 	 */
 	registerHotKey: function (hotKeyConfiguration) {
 		if (Ext.isDefined(this.hotKeyList[hotKeyConfiguration.id])) {
-			HTMLArea._appendToLog('[HTMLArea.Config::registerHotKey]: A hotkey with the same key ' + hotKeyConfiguration.id + ' already exists and will be overidden.');
+			HTMLArea.appendToLog('', 'HTMLArea.Config', 'registerHotKey', 'A hotkey with the same key ' + hotKeyConfiguration.id + ' already exists and will be overidden.', 'warn');
 		}
 		if (Ext.isDefined(hotKeyConfiguration.cmd) && !Ext.isEmpty(hotKeyConfiguration.cmd) && Ext.isDefined(this.buttonsConfig[hotKeyConfiguration.cmd])) {
 			this.hotKeyList[hotKeyConfiguration.id] = hotKeyConfiguration;
-			HTMLArea._appendToLog('[HTMLArea.Config::registerHotKey]: A hotkey with key ' + hotKeyConfiguration.id + ' was registered for toolbar item ' + hotKeyConfiguration.cmd + '.');
 			return true;
 		} else {
-			HTMLArea._appendToLog('[HTMLArea.Config::registerHotKey]: A hotkey with key ' + hotKeyConfiguration.id + ' could not be registered because toolbar item with id ' + hotKeyConfiguration.cmd + ' was not registered.');
+			HTMLArea.appendToLog('', 'HTMLArea.Config', 'registerHotKey', 'A hotkey with key ' + hotKeyConfiguration.id + ' could not be registered because toolbar item with id ' + hotKeyConfiguration.cmd + ' was not registered.', 'warn');
 			return false;
 		}
 	},
@@ -525,18 +572,16 @@ Ext.ux.form.HTMLAreaCombo = Ext.extend(Ext.form.ComboBox, {
 			var editor = this.getEditor();
 				// In IE, reclaim lost focus on the editor iframe and restore the bookmarked selection
 			if (Ext.isIE) {
-				editor.focus();
 				if (!Ext.isEmpty(this.savedRange)) {
-					editor.selectRange(this.savedRange);
+					editor.getSelection().selectRange(this.savedRange);
 					this.savedRange = null;
 				}
 			}
 				// Invoke the plugin onChange handler
 			this.plugins[this.action](editor, combo, record, index);
 				// In IE, bookmark the updated selection as the editor will be loosing focus
-			if (Ext.isIE) { 
-				editor.focus();
-				this.savedRange = editor._createRange(editor._getSelection());
+			if (Ext.isIE) {
+				this.savedRange = editor.getSelection().createRange();
 				this.triggered = true;
 			}
 			if (Ext.isOpera) {
@@ -571,7 +616,7 @@ Ext.ux.form.HTMLAreaCombo = Ext.extend(Ext.form.ComboBox, {
 	saveSelection: function (event) {
 		var editor = this.getEditor();
 		if (editor.document.hasFocus()) {
-			this.savedRange = editor._createRange(editor._getSelection());
+			this.savedRange = editor.getSelection().createRange();
 		}
 	},
 	/*
@@ -579,7 +624,7 @@ Ext.ux.form.HTMLAreaCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	restoreSelection: function (event) {
 		if (!Ext.isEmpty(this.savedRange) && this.triggered) {
-			this.getEditor().selectRange(this.savedRange);
+			this.getEditor().getSelection().selectRange(this.savedRange);
 			this.triggered = false;
 		}
 	},
@@ -761,13 +806,14 @@ HTMLArea.Toolbar = Ext.extend(Ext.Container, {
 	update: function() {
 		var editor = this.getEditor(),
 			mode = editor.getMode(),
+			selection = editor.getSelection(),
 			selectionEmpty = true,
 			ancestors = null,
 			endPointsInSameBlock = true;
 		if (editor.getMode() === 'wysiwyg') {
-			selectionEmpty = editor._selectionEmpty(editor._getSelection());
-			ancestors = editor.getAllAncestors();
-			endPointsInSameBlock = editor.endPointsInSameBlock();
+			selectionEmpty = selection.isEmpty();
+			ancestors = selection.getAllAncestors();
+			endPointsInSameBlock = selection.endPointsInSameBlock();
 		}
 		this.fireEvent('HTMLAreaEventToolbarUpdate', mode, selectionEmpty, ancestors, endPointsInSameBlock);
 	},
@@ -836,7 +882,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 	/*
 	 * The editor iframe may become hidden with style.display = "none" on some parent div
 	 * This breaks the editor in Firefox: the designMode attribute needs to be reset after the style.display of the container div is reset to "block"
-	 * In all browsers, it breaks the evaluation of the framework dimensions: see HTMLArea.Framework.render and HTMLArea.Framework.doLayout
+	 * In all browsers, it breaks the evaluation of the framework dimensions
 	 */
 	initStyleChangeEventListener: function () {
 		if (this.isNested  && Ext.isGecko) {
@@ -931,7 +977,18 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 			this.getEditor()._doc = this.document;
 			this.getEditor()._iframe = iframe;
 			this.createHead();
-			this.getStyleSheets();
+				// Style the document body
+			Ext.get(this.document.body).addClass('htmlarea-content-body');
+				// Start listening to things happening in the iframe
+				// For some unknown reason, this is too early for Opera
+			if (!Ext.isOpera) {
+				this.startListening();
+			}
+				// Hide the iframe
+			this.hide();
+				// Set iframe ready
+			this.ready = true;
+			this.fireEvent('HTMLAreaEventIframeReady');
 		}
 	},
 	/*
@@ -950,7 +1007,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 				base.href = this.config.baseURL;
 				head.appendChild(base);
 			}
-			HTMLArea._appendToLog('[HTMLArea.Iframe::createHead]: Iframe baseURL set to: ' + base.href);
+			this.getEditor().appendToLog('HTMLArea.Iframe', 'createHead', 'Iframe baseURL set to: ' + base.href, 'info');
 		}
 		var link0 = this.document.getElementsByTagName('link')[0];
 		if (!link0) {
@@ -961,7 +1018,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 				// Therefore, for versions before 3.6.8, we prepend the url with the base, if the url is not absolute
 			link0.href = ((Ext.isGecko && navigator.productSub < 2010072200 && !/^http(s?):\/{2}/.test(this.config.editedContentStyle)) ? this.config.baseURL : '') + this.config.editedContentStyle;
 			head.appendChild(link0);
-			HTMLArea._appendToLog('[HTMLArea.Iframe::createHead]: Skin CSS set to: ' + link0.href);
+			this.getEditor().appendToLog('HTMLArea.Iframe', 'createHead', 'Skin CSS set to: ' + link0.href, 'info');
 		}
 		if (this.config.defaultPageStyle) {
 			var link = this.document.getElementsByTagName('link')[1];
@@ -972,7 +1029,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 				link.href = ((Ext.isGecko && navigator.productSub < 2010072200 && !/^https?:\/{2}/.test(this.config.defaultPageStyle)) ? this.config.baseURL : '') + this.config.defaultPageStyle;
 				head.appendChild(link);
 			}
-			HTMLArea._appendToLog('[HTMLArea.Iframe::createHead]: Override CSS set to: ' + link.href);
+			this.getEditor().appendToLog('HTMLArea.Iframe', 'createHead', 'Override CSS set to: ' + link.href, 'info');
 		}
 		if (this.config.pageStyle) {
 			var link = this.document.getElementsByTagName('link')[2];
@@ -983,100 +1040,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 				link.href = ((Ext.isGecko && navigator.productSub < 2010072200 && !/^https?:\/{2}/.test(this.config.pageStyle)) ? this.config.baseURL : '') + this.config.pageStyle;
 				head.appendChild(link);
 			}
-			HTMLArea._appendToLog('[HTMLArea.Iframe::createHead]: Content CSS set to: ' + link.href);
-		}
-		HTMLArea._appendToLog('[HTMLArea.Iframe::createHead]: Editor iframe document head successfully built.');
-	},
-	/*
-	 * Fire event 'HTMLAreaEventIframeReady' when the iframe style sheets become accessible
-	 */
-	getStyleSheets: function () {
-		var stylesAreLoaded = true;
-		var errorText = '';
-		var rules;
-		if (Ext.isOpera) {
-			if (this.document.readyState != 'complete') {
-				stylesAreLoaded = false;
-				errorText = 'Document.readyState not complete';
-			}
-		} else {
-				// Test if the styleSheets array is at all accessible
-			if (Ext.isIE) {
-				try {
-					var rules = this.document.styleSheets[0].rules;
-					var imports = this.document.styleSheets[0].imports;
-					if (!rules.length && !imports.length) {
-						stylesAreLoaded = false;
-						errorText = 'Empty rules and imports arrays';
-					}
-				} catch(e) {
-					stylesAreLoaded = false;
-					errorText = e;
-				}
-			} else {
-				try {
-					this.document.styleSheets && this.document.styleSheets[0] && this.document.styleSheets[0].rules;
-				} catch(e) {
-					stylesAreLoaded = false;
-					errorText = e;
-				}
-			}
-				// Then test if all stylesheets are accessible
-			if (stylesAreLoaded) {
-					// Expecting 3 stylesheets...
-				if (this.document.styleSheets.length > 2) {
-					Ext.each(this.document.styleSheets, function (styleSheet, index) {
-						if (Ext.isIE) {
-							try { 
-								var rules = styleSheet.rules;
-								var imports = styleSheet.imports;
-									// Default page style may contain only a comment
-								if (!rules.length && !imports.length && index != 1) {
-									stylesAreLoaded = false;
-									errorText = 'Empty rules and imports arrays of styleSheets[' + index + ']';
-									return false;
-								}
-							} catch(e) {
-								stylesAreLoaded = false;
-								errorText = e;
-								return false;
-							}
-						} else {
-							try {
-								var rules = styleSheet.cssRules;
-							} catch(e) {
-								stylesAreLoaded = false;
-								errorText = e;
-								return false;
-							}
-						}
-					});
-				} else {
-					stylesAreLoaded = false;
-					errorText = 'Empty stylesheets array or missing linked stylesheets';
-				}
-			}
-		}
-		if (!stylesAreLoaded) {
-			this.getStyleSheets.defer(100, this);
-			HTMLArea._appendToLog('[HTMLArea.Iframe::getStyleSheets]: Stylesheets not yet loaded (' + errorText + '). Retrying...');
-			if (/Security/i.test(errorText)) {
-				HTMLArea._appendToLog('ERROR [HTMLArea.Iframe::getStyleSheets]: A security error occurred. Make sure all stylesheets are accessed from the same domain/subdomain and using the same protocol as the current script.');
-			}
-		} else {
-			HTMLArea._appendToLog('[HTMLArea.Iframe::getStyleSheets]: Stylesheets successfully accessed.');
-				// Style the document body
-			Ext.get(this.document.body).addClass('htmlarea-content-body');
-				// Start listening to things happening in the iframe
-				// For some unknown reason, this is too early for Opera
-			if (!Ext.isOpera) {
-				this.startListening();
-			}
-				// Hide the iframe
-			this.hide();
-				// Set iframe ready
-			this.ready = true;
-			this.fireEvent('HTMLAreaEventIframeReady');
+			this.getEditor().appendToLog('HTMLArea.Iframe', 'createHead', 'Content CSS set to: ' + link.href, 'info');
 		}
 	},
 	/*
@@ -1292,30 +1256,11 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 		if (this.inhibitKeyboardInput(event)) {
 			return false;
 		}
-		/*****************************************************
-		 * onKeyPress DEPRECATED AS OF TYPO3 4.4             *
-		 *****************************************************/
-		if (this.getEditor().hasPluginWithOnKeyPressHandler) {
-			var letBubble = true;
-			Ext.iterate(this.getEditor().plugins, function (pluginId) {
-				var plugin = this.getEditor().getPlugin(pluginId);
-				if (Ext.isFunction(plugin.onKeyPress)) {
-					if (!plugin.onKeyPress(event.browserEvent)) {
-						event.stopEvent();
-						letBubble = false;
-					}
-				}
-				return letBubble;
-			}, this);
-			if (!letBubble) {
-				return letBubble;
-			}
-		}
 		this.fireEvent('HTMLAreaEventWordCountChange', 100);
 		if (!event.altKey && !event.ctrlKey) {
 				// Detect URL in non-IE browsers
 			if (!Ext.isIE && (event.getKey() != Ext.EventObject.ENTER || (event.shiftKey && !Ext.isWebKit))) {
-				this.getEditor()._detectURL(event);
+				this.getEditor().getSelection().detectURL(event);
 			}
 				// Handle option+SPACE for Mac users
 			if (Ext.isMac && event.browserEvent.charCode == 160) {
@@ -1342,7 +1287,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 	onMouse: function (event, target) {
 			// In WebKit, select the image when it is clicked
 		if (Ext.isWebKit && /^(img)$/i.test(target.nodeName) && event.browserEvent.type == 'click') {
-			this.getEditor().selectNode(target);
+			this.getEditor().getSelection().selectNode(target);
 		}
 		this.getToolbar().updateLater.delay(100);
 		return true;
@@ -1405,7 +1350,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 			return false;
 		}
 		if ((!Ext.isIE && !event.shiftKey) || Ext.isIE) {
-			if (this.getEditor()._checkBackspace()) {
+			if (this.getEditor().getSelection().handleBackSpace()) {
 				event.stopEvent();
 			}
 		}
@@ -1420,8 +1365,8 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 		if (this.inhibitKeyboardInput(event)) {
 			return false;
 		}
-		this.getEditor()._detectURL(event);
-		if (this.getEditor()._checkInsertP()) {
+		this.getEditor().getSelection().detectURL(event);
+		if (this.getEditor().getSelection().checkInsertParagraph()) {
 			event.stopEvent();
 		}
 			// Update the toolbar state after some time
@@ -1437,7 +1382,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 		}
 		if (event.shiftKey || this.config.disableEnterParagraphs) {
 			var editor = this.getEditor();
-			editor._detectURL(event);
+			editor.getSelection().detectURL(event);
 			if (Ext.isSafari) {
 				var brNode = editor.document.createElement('br');
 				editor.insertNodeAtSelection(brNode);
@@ -1450,7 +1395,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 					var secondBrNode = editor.document.createElement('br');
 					secondBrNode = brNode.parentNode.appendChild(secondBrNode);
 				}
-				editor.selectNode(brNode, false);
+				editor.getSelection().selectNode(brNode, false);
 				event.stopEvent();
 			}
 		}
@@ -1465,7 +1410,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 		if (this.inhibitKeyboardInput(event)) {
 			return false;
 		}
-		this.getEditor().insertHTML('&nbsp;');
+		this.getEditor().getSelection().insertHtml('&nbsp;');
 		event.stopEvent();
 		return false;
 	},
@@ -1476,7 +1421,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 		if (this.inhibitKeyboardInput(event)) {
 			return false;
 		}
-		this.getEditor().insertHTML('&nbsp;');
+		this.getEditor().getSelection().insertHtml('&nbsp;');
 		event.stopEvent();
 		return false;
 	},
@@ -1589,13 +1534,13 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 			id: this.editorId + '-statusBarTree',
 			tag: 'span',
 			cls: 'statusBarTree',
-			html: HTMLArea.I18N.msg['Path'] + ': '
+			html: HTMLArea.localize('Path') + ': '
 		}, true).setVisibilityMode(Ext.Element.DISPLAY).setVisible(true);
 		this.statusBarTextMode = Ext.DomHelper.append(this.getEl(), {
 			id: this.editorId + '-statusBarTextMode',
 			tag: 'span',
 			cls: 'statusBarTextMode',
-			html: HTMLArea.I18N.msg['TEXT_MODE']
+			html: HTMLArea.localize('TEXT_MODE')
 		}, true).setVisibilityMode(Ext.Element.DISPLAY).setVisible(false);
 	},
 	/*
@@ -1628,7 +1573,7 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 			this.clear();
 			var path = Ext.DomHelper.append(this.statusBarTree, {
 				tag: 'span',
-				html: HTMLArea.I18N.msg['Path'] + ': '
+				html: HTMLArea.localize('Path') + ': '
 			},true);
 			Ext.each(ancestors, function (ancestor, index) {
 				if (!ancestor) {
@@ -1658,7 +1603,7 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 				var element = Ext.DomHelper.insertAfter(path, {
 					tag: 'a',
 					href: '#',
-					'ext:qtitle': HTMLArea.I18N.dialogs['statusBarStyle'],
+					'ext:qtitle': HTMLArea.localize('statusBarStyle'),
 					'ext:qtip': ancestor.style.cssText.split(';').join('<br />'),
 					html: text
 				}, true);
@@ -1706,7 +1651,7 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 			}
 		}
 			// Update the word count of the status bar
-		this.statusBarWordCount.dom.innerHTML = wordCount ? ( wordCount + ' ' + HTMLArea.I18N.dialogs[(wordCount == 1) ? 'word' : 'words']) : '&nbsp;';
+		this.statusBarWordCount.dom.innerHTML = wordCount ? ( wordCount + ' ' + HTMLArea.localize((wordCount == 1) ? 'word' : 'words')) : '&nbsp;';
 	},
 	/*
 	 * Adapt status bar to current editor mode
@@ -1741,7 +1686,7 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 	 *
 	 * @param	object	element: set the status bar selection to the given element
 	 */
-	setSelection: function(element) {
+	setSelection: function (element) {
 		this.selected = element ? element : null;
 	},
 	/*
@@ -1752,9 +1697,9 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 		element.blur();
 		if (!Ext.isIE) {
 			if (/^(img|table)$/i.test(element.ancestor.nodeName)) {
-				editor.selectNode(element.ancestor);
+				editor.getSelection().selectNode(element.ancestor);
 			} else {
-				editor.selectNodeContents(element.ancestor);
+				editor.getSelection().selectNodeContents(element.ancestor);
 			}
 		} else {
 			if (/^(img|table)$/i.test(element.ancestor.nodeName)) {
@@ -1762,7 +1707,7 @@ HTMLArea.StatusBar = Ext.extend(Ext.Container, {
 				range.addElement(element.ancestor);
 				range.select();
 			} else {
-				editor.selectNode(element.ancestor);
+				editor.getSelection().selectNode(element.ancestor);
 			}
 		}
 		this.setSelection(element.ancestor);
@@ -2166,6 +2111,50 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 	 */
 	mode: 'textmode',
 	/*
+	 * Determine whether the editor document is currently contentEditable
+	 *
+	 * @return	boolean		true, if the document is contentEditable	
+	 */
+ 	isEditable: function () {
+ 		return Ext.isIE ? this.document.body.contentEditable : (this.document.designMode === 'on');
+	},
+	/*
+	 * The selection object
+	 */
+	selection: null,
+	getSelection: function () {
+		if (!this.selection) {
+			this.selection = new HTMLArea.DOM.Selection({
+				editor: this
+			});
+		}
+		return this.selection;
+	},
+	/*
+	 * The bookmark object
+	 */
+	bookMark: null,
+	getBookMark: function () {
+		if (!this.bookMark) {
+			this.bookMark = new HTMLArea.DOM.BookMark({
+				editor: this
+			});
+		}
+		return this.bookMark;
+	},
+	/*
+	 * The DOM node object
+	 */
+	domNode: null,
+	getDomNode: function () {
+		if (!this.domNode) {
+			this.domNode = new HTMLArea.DOM.Node({
+				editor: this
+			});
+		}
+		return this.domNode;
+	},
+	/*
 	 * Create the htmlArea framework
 	 */
 	generate: function () {
@@ -2257,6 +2246,12 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 	onFrameworkReady: function () {
 			// Initialize editor mode
 		this.setMode('wysiwyg');
+			// Create the selection object
+		this.getSelection();
+			// Create the bookmark object
+		this.getBookMark();
+			// Create the DOM node object
+		this.getDomNode();
 			// Initiate events listening
 		this.initEventsListening();
 			// Generate plugins
@@ -2278,7 +2273,7 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 		}, this);
 		this.ready = true;
 		this.fireEvent('HTMLAreaEventEditorReady');
-		HTMLArea._appendToLog('[HTMLArea.Editor::onFrameworkReady]: Editor ready.');
+		this.appendToLog('HTMLArea.Editor', 'onFrameworkReady', 'Editor ready.', 'info');
 	},
 	/*
 	 * Set editor mode
@@ -2300,10 +2295,10 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 				try {
 					this.document.body.innerHTML = this.getHTML();
 				} catch(e) {
-					HTMLArea._appendToLog('[HTMLArea.Editor::setMode]: The HTML document is not well-formed.');
+					this.appendToLog('HTMLArea.Editor', 'setMode', 'The HTML document is not well-formed.', 'warn');
 					TYPO3.Dialog.ErrorDialog({
 						title: 'htmlArea RTE',
-						msg: HTMLArea.I18N.msg['HTML-document-not-well-formed']
+						msg: HTMLArea.localize('HTML-document-not-well-formed')
 					});
 					break;
 				}
@@ -2386,53 +2381,30 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 	 * @return	boolean		true if the plugin was successfully registered
 	 */
 	registerPlugin: function (pluginName) {
-		var plugin = null;
-		if (Ext.isString(pluginName)) {
-			/*******************************************************************************
-			 * USE OF PLUGIN NAME OUTSIDE HTMLArea NAMESPACE IS DEPRECATED AS OF TYPO3 4.4 *
-			 *******************************************************************************/
-			try {
-				plugin = eval(pluginName);
-			} catch (e) {
-				try {
-					plugin = eval('HTMLArea.' + pluginName);
-				} catch (error) {
-					HTMLArea._appendToLog('ERROR [HTMLArea.Editor::registerPlugin]: Cannot register invalid plugin: ' + error);
-					return false;
-				}
+		var plugin = HTMLArea[pluginName],
+			isRegistered = false;
+		if (typeof(plugin) !== 'undefined' && Ext.isFunction(plugin)) {
+			var pluginInstance = new plugin(this, pluginName);
+			if (pluginInstance) {
+				var pluginInformation = pluginInstance.getPluginInformation();
+				pluginInformation.instance = pluginInstance;
+				this.plugins[pluginName] = pluginInformation;
+				isRegistered = true;
 			}
 		}
-		if (!Ext.isFunction(plugin)) {
-			HTMLArea._appendToLog('ERROR [HTMLArea.Editor::registerPlugin]: Cannot register undefined plugin.');
-			return false;
+		if (!isRegistered) {
+			this.appendToLog('HTMLArea.Editor', 'registerPlugin', 'Could not register plugin ' + pluginName + '.', 'warn');
 		}
-		var pluginInstance = new plugin(this, pluginName);
-		if (pluginInstance) {
-			var pluginInformation = pluginInstance.getPluginInformation();
-			pluginInformation.instance = pluginInstance;
-			this.plugins[pluginName] = pluginInformation;
-			HTMLArea._appendToLog('[HTMLArea.Editor::registerPlugin]: Plugin ' + pluginName + ' was successfully registered.');
-			return true;
-		} else {
-			HTMLArea._appendToLog("ERROR [HTMLArea.Editor::registerPlugin]: Can't register plugin " + pluginName + '.');
-			return false;
-		}
+		return isRegistered;
 	},
 	/*
 	 * Generate registered plugins
 	 */
 	generatePlugins: function () {
-		this.hasPluginWithOnKeyPressHandler = false;
 		Ext.iterate(this.plugins, function (pluginId) {
 			var plugin = this.getPlugin(pluginId);
 			plugin.onGenerate();
-				// onKeyPress deprecated as of TYPO3 4.4
-			if (Ext.isFunction(plugin.onKeyPress)) {
-				this.hasPluginWithOnKeyPressHandler = true;
-				HTMLArea._appendToLog('[HTMLArea.Editor::generatePlugins]: Deprecated use of onKeyPress function by plugin ' + pluginId + '. Use keyMap instead.');
-			}
 		}, this);
-		HTMLArea._appendToLog('[HTMLArea.Editor::generatePlugins]: All plugins successfully generated.');
 	},
 	/*
 	 * Get the instance of the specified plugin, if it exists
@@ -2454,6 +2426,12 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 		delete this.plugins[pluginName];
 	},
 	/*
+	 * Update the edito toolbar
+	 */
+	updateToolbar: function (noStatus) {
+		this.toolbar.update(noStatus);
+	},
+	/*
 	 * Focus on the editor
 	 */
 	focus: function () {
@@ -2464,6 +2442,21 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 			case 'textmode':
 				this.textArea.focus();
 				break;
+		}
+	},
+	/*
+	 * Scroll the editor window to the current caret position
+	 */
+	scrollToCaret: function () {
+		if (!Ext.isIE) {
+			var e = this.getSelection().getParentElement(),
+				w = this.iframe.getEl().dom.contentWindow ? this.iframe.getEl().dom.contentWindow : window,
+				h = w.innerHeight || w.height,
+				d = this.document,
+				t = d.documentElement.scrollTop || d.body.scrollTop;
+			if (e.offsetTop > h+t || e.offsetTop < t) {
+				this.getSelection().getParentElement().scrollIntoView();
+			}
 		}
 	},
 	/*
@@ -2489,11 +2482,12 @@ HTMLArea.Editor = Ext.extend(Ext.util.Observable, {
 	 *
 	 * @param	string		functionName: the name of the editor function writing to the log
 	 * @param	string		text: the text of the message
+	 * @param	string		type: the type of message
 	 *
 	 * @return	void
 	 */
-	appendToLog: function (objectName, functionName, text) {
-		HTMLArea.appendToLog(this.editorId, objectName, functionName, text);
+	appendToLog: function (objectName, functionName, text, type) {
+		HTMLArea.appendToLog(this.editorId, objectName, functionName, text, type);
 	},
 	/*
 	 * Iframe unload handler: Update the textarea for submission and cleanup
@@ -2539,7 +2533,6 @@ HTMLArea.Ajax = Ext.extend(HTMLArea.Ajax, {
 	getJavascriptFile: function (url, callback, scope) {
 		var success = false;
 		var self = this;
-		this.editor.appendToLog('HTMLArea.Ajax', 'getJavascriptFile', 'Requesting script ' + url);
 		Ext.Ajax.request({
 			method: 'GET',
 			url: url,
@@ -2549,7 +2542,7 @@ HTMLArea.Ajax = Ext.extend(HTMLArea.Ajax, {
 			},
 			failure: function (response) {
 				self.editor.inhibitKeyboardInput = false;
-				self.editor.appendToLog('HTMLArea.Ajax', 'getJavascriptFile', 'Unable to get ' + url + ' . Server reported ' + response.status);
+				self.editor.appendToLog('HTMLArea.Ajax', 'getJavascriptFile', 'Unable to get ' + url + ' . Server reported ' + response.status, 'error');
 			},
 			scope: scope
 		});
@@ -2574,7 +2567,6 @@ HTMLArea.Ajax = Ext.extend(HTMLArea.Ajax, {
 			params += (params.length ? '&' : '') + parameter + '=' + encodeURIComponent(value);
 		});
 		params += this.editor.config.RTEtsConfigParams;
-		this.editor.appendToLog('HTMLArea.Ajax', 'postData', 'Posting to ' + url + '. Data: ' + params);
 		Ext.Ajax.request({
 			method: 'POST',
 			headers: {
@@ -2583,17 +2575,15 @@ HTMLArea.Ajax = Ext.extend(HTMLArea.Ajax, {
 			url: url,
 			params: params,
 			callback: Ext.isFunction(callback) ? callback: function (options, success, response) {
-				if (success) {
-					self.editor.appendToLog('HTMLArea.Ajax', 'postData', 'Post request to ' + url + ' successful. Server response: ' + response.responseText);
-				} else {
-					self.editor.appendToLog('HTMLArea.Ajax', 'postData', 'Post request to ' + url + ' failed. Server reported ' + response.status);
+				if (!success) {
+					self.editor.appendToLog('HTMLArea.Ajax', 'postData', 'Post request to ' + url + ' failed. Server reported ' + response.status, 'error');
 				}
 			},
 			success: function (response) {
 				success = true;
 			},
 			failure: function (response) {
-				self.editor.appendToLog('HTMLArea.Ajax', 'postData', 'Unable to post ' + url + ' . Server reported ' + response.status);
+				self.editor.appendToLog('HTMLArea.Ajax', 'postData', 'Unable to post ' + url + ' . Server reported ' + response.status, 'error');
 			},
 			scope: scope
 		});
@@ -2706,292 +2696,116 @@ HTMLArea.util.TYPO3 = function () {
 		}
 	}
 }();
-/*
- * Load a stylesheet file
+ /*
  ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
- ***********************************************
- */
-HTMLArea.loadStyle = function(style, plugin, url) {
-	if (typeof(url) == "undefined") {
-		var url = HTMLArea.editorUrl || '';
-		if (typeof(plugin) != "undefined") { url += "plugins/" + plugin + "/"; }
-		url += style;
-		if (/^\//.test(style)) { url = style; }
-	}
-	var head = document.getElementsByTagName("head")[0];
-	var link = document.createElement("link");
-	link.rel = "stylesheet";
-	link.href = url;
-	head.appendChild(link);
-};
-
-/*
- * Get the url of some popup
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
  ***********************************************
  */
-HTMLArea.Editor.prototype.popupURL = function(file) {
-	var url = "";
-	if(file.match(/^plugin:\/\/(.*?)\/(.*)/)) {
-		var pluginId = RegExp.$1;
-		var popup = RegExp.$2;
-		if(!/\.html$/.test(popup)) popup += ".html";
-		if (this.config.pathToPluginDirectory[pluginId]) {
-			url = this.config.pathToPluginDirectory[pluginId] + "popups/" + popup;
-		} else {
-			url = HTMLArea.editorUrl + "plugins/" + pluginId + "/popups/" + popup;
-		}
-	} else {
-		url = HTMLArea.editorUrl + this.config.popupURL + file;
-	}
-	return url;
-};
-
-/***************************************************
- *  EDITOR UTILITIES
- ***************************************************/
-HTMLArea.getInnerText = function(el) {
-	var txt = '', i;
-	if(el.firstChild) {
-		for(i=el.firstChild;i;i =i.nextSibling) {
-			if(i.nodeType == 3) txt += i.data;
-			else if(i.nodeType == 1) txt += HTMLArea.getInnerText(i);
-		}
-	} else {
-		if(el.nodeType == 3) txt = el.data;
-	}
-	return txt;
-};
-
 HTMLArea.Editor.prototype.forceRedraw = function() {
+	this.appendToLog('HTMLArea.Editor', 'forceRedraw', 'Reference to deprecated method', 'warn');
 	this.htmlArea.doLayout();
 };
-
-/*
- * Focus the editor iframe window or the textarea.
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
- ***********************************************
- */
-HTMLArea.Editor.prototype.focusEditor = function() {
-	this.focus();
-	return this.document;
-};
-
-/*
- * Check if any plugin has an opened window
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
- ***********************************************
- */
-HTMLArea.Editor.prototype.hasOpenedWindow = function () {
-	for (var plugin in this.plugins) {
-		if (this.plugins.hasOwnProperty(plugin)) {
-			if (HTMLArea.Dialog[plugin.name] && HTMLArea.Dialog[plugin.name].hasOpenedWindow && HTMLArea.Dialog[plugin.name].hasOpenedWindow()) {
-				return true;
-			}
-		}
-	}
-	return false
-};
-HTMLArea.Editor.prototype.updateToolbar = function(noStatus) {
-	this.toolbar.update(noStatus);
-};
-/***************************************************
- *  DOM TREE MANIPULATION
- ***************************************************/
-
 /*
  * Surround the currently selected HTML source code with the given tags.
  * Delete the selection, if any.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.surroundHTML = function(startTag,endTag) {
-	this.insertHTML(startTag + this.getSelectedHTML().replace(HTMLArea.Reg_body, "") + endTag);
+	this.appendToLog('HTMLArea.Editor', 'surroundHTML', 'Reference to deprecated method', 'warn');
+	this.getSelection().surroundHtml(startTag, endTag);
 };
 
 /*
  * Change the tag name of a node.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.convertNode = function(el,newTagName) {
-	var newel = this.document.createElement(newTagName), p = el.parentNode;
-	while (el.firstChild) newel.appendChild(el.firstChild);
-	p.insertBefore(newel, el);
-	p.removeChild(el);
-	return newel;
-};
-
-/*
- * Find a parent of an element with a specified tag
- */
-HTMLArea.getElementObject = function(el,tagName) {
-	var oEl = el;
-	while (oEl != null && oEl.nodeName.toLowerCase() != tagName) oEl = oEl.parentNode;
-	return oEl;
+	this.appendToLog('HTMLArea.Editor', 'surroundHTML', 'Reference to deprecated method', 'warn');
+	return HTMLArea.DOM.convertNode(el, newTagName);
 };
 
 /*
  * This function removes the given markup element
  *
- * @param	object	element: the inline element to be removed, content being preserved
+ * @param	object	element: the inline element to be removed, content and selection being preserved
  *
  * @return	void
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.removeMarkup = function(element) {
-	var bookmark = this.getBookmark(this._createRange(this._getSelection()));
-	var parent = element.parentNode;
-	while (element.firstChild) {
-		parent.insertBefore(element.firstChild, element);
-	}
-	parent.removeChild(element);
-	this.selectRange(this.moveToBookmark(bookmark));
+	this.appendToLog('HTMLArea.Editor', 'removeMarkup', 'Reference to deprecated method', 'warn');
+	this.getDomNode().removeMarkup(element);
 };
-
-/*
- * This function verifies if the element has any allowed attributes
- *
- * @param	object	element: the DOM element
- * @param	array	allowedAttributes: array of allowed attribute names
- *
- * @return	boolean	true if the element has one of the allowed attributes
- */
-HTMLArea.hasAllowedAttributes = function(element,allowedAttributes) {
-	var value;
-	for (var i = allowedAttributes.length; --i >= 0;) {
-		value = element.getAttribute(allowedAttributes[i]);
-		if (value) {
-			if (allowedAttributes[i] == "style" && element.style.cssText) {
-				return true;
-			} else {
-				return true;
-			}
-		}
-	}
-	return false;
-};
-
-/***************************************************
- *  SELECTIONS AND RANGES
- ***************************************************/
-
 /*
  * Return true if we have some selected content
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.hasSelectedText = function() {
-	return this.getSelectedHTML() != "";
+	this.appendToLog('HTMLArea.Editor', 'hasSelectedText', 'Reference to deprecated method', 'warn');
+	return !this.getSelection().isEmpty();
 };
 
 /*
- * Get an array with all the ancestor nodes of the selection.
+ * Get an array with all the ancestor nodes of the selection
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.getAllAncestors = function() {
-	var p = this.getParentElement();
-	var a = [];
-	while (p && (p.nodeType === 1) && (p.nodeName.toLowerCase() !== "body")) {
-		a.push(p);
-		p = p.parentNode;
-	}
-	a.push(this.document.body);
-	return a;
-};
-
-/*
- * Get the block ancestors of an element within a given block
- */
-HTMLArea.Editor.prototype.getBlockAncestors = function(element, withinBlock) {
-	var ancestors = new Array();
-	var ancestor = element;
-	while (ancestor && (ancestor.nodeType === 1) && !/^(body)$/i.test(ancestor.nodeName) && ancestor != withinBlock) {
-		if (HTMLArea.isBlockElement(ancestor)) {
-			ancestors.unshift(ancestor);
-		}
-		ancestor = ancestor.parentNode;
-	}
-	ancestors.unshift(ancestor);
-	return ancestors;
+	this.appendToLog('HTMLArea.Editor', 'getAllAncestors', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getAllAncestors();
 };
 
 /*
  * Get the block elements containing the start and the end points of the selection
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.getEndBlocks = function(selection) {
-	var range = this._createRange(selection);
-	if (!Ext.isIE) {
-		var parentStart = range.startContainer;
-		if (/^(body)$/i.test(parentStart.nodeName)) {
-			parentStart = parentStart.firstChild;
-		}
-		var parentEnd = range.endContainer;
-		if (/^(body)$/i.test(parentEnd.nodeName)) {
-			parentEnd = parentEnd.lastChild;
-		}
-	} else {
-		if (selection.type !== "Control" ) {
-			var rangeEnd = range.duplicate();
-			range.collapse(true);
-			var parentStart = range.parentElement();
-			rangeEnd.collapse(false);
-			var parentEnd = rangeEnd.parentElement();
-		} else {
-			var parentStart = range.item(0);
-			var parentEnd = parentStart;
-		}
-	}
-	while (parentStart && !HTMLArea.isBlockElement(parentStart)) {
-		parentStart = parentStart.parentNode;
-	}
-	while (parentEnd && !HTMLArea.isBlockElement(parentEnd)) {
-		parentEnd = parentEnd.parentNode;
-	}
-	return {	start	: parentStart,
-			end	: parentEnd
-	};
+	this.appendToLog('HTMLArea.Editor', 'getEndBlocks', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getEndBlocks();
 };
 
 /*
  * This function determines if the end poins of the current selection are within the same block
  *
  * @return	boolean	true if the end points of the current selection are inside the same block element
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.endPointsInSameBlock = function() {
-	var selection = this._getSelection();
-	if (this._selectionEmpty(selection)) {
-		return true;
-	} else {
-		var parent = this.getParentElement(selection);
-		var endBlocks = this.getEndBlocks(selection);
-		return (endBlocks.start === endBlocks.end && !/^(table|thead|tbody|tfoot|tr)$/i.test(parent.nodeName));
-	}
+	this.appendToLog('HTMLArea.Editor', 'endPointsInSameBlock', 'Reference to deprecated method', 'warn');
+	return this.getSelection().endPointsInSameBlock();
 };
 
 /*
  * Get the deepest ancestor of the selection that is of the specified type
  * Borrowed from Xinha (is not htmlArea) - http://xinha.gogo.co.nz/
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype._getFirstAncestor = function(sel,types) {
-	var prnt = this._activeElement(sel);
-	if (prnt == null) {
-		try {
-			prnt = (Ext.isIE ? this._createRange(sel).parentElement() : this._createRange(sel).commonAncestorContainer);
-		} catch(e) {
-			return null;
-		}
-	}
-	if (typeof(types) == 'string') types = [types];
-
-	while (prnt) {
-		if (prnt.nodeType == 1) {
-			if (types == null) return prnt;
-			for (var i = 0; i < types.length; i++) {
-				if(prnt.tagName.toLowerCase() == types[i]) return prnt;
-			}
-			if(prnt.tagName.toLowerCase() == 'body') break;
-			if(prnt.tagName.toLowerCase() == 'table') break;
-		}
-		prnt = prnt.parentNode;
-	}
-	return null;
+	this.appendToLog('HTMLArea.Editor', '_getFirstAncestor', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getFirstAncestorOfType(types);
 };
 /*
  * Get the node whose contents are currently fully selected
@@ -3001,189 +2815,67 @@ HTMLArea.Editor.prototype._getFirstAncestor = function(sel,types) {
  * @param 	array		ancestors: the array of ancestors node of the current selection
  *
  * @return	object		the fully selected node, if any, null otherwise
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.getFullySelectedNode = function (selection, range, ancestors) {
-	var node, fullNodeSelected = false;
-	if (!selection) {
-		var selection = this._getSelection();
-	}
-	if (!this._selectionEmpty(selection)) {
-		if (!range) {
-			var range = this._createRange(selection);
-		}
-		if (!ancestors) {
-			var ancestors = this.getAllAncestors();
-		}
-		Ext.each(ancestors, function (ancestor) {
-			if (Ext.isIE) {
-				fullNodeSelected = (selection.type !== 'Control' && ancestor.innerText == range.text) || (selection.type === 'Control' && ancestor.innerText == range.item(0).text);
-			} else {
-				fullNodeSelected = (ancestor.textContent == range.toString());
-			}
-			if (fullNodeSelected) {
-				node = ancestor;
-				return false;
-			}
-		});
-			// Working around bug with WebKit selection
-		if (Ext.isWebKit && !fullNodeSelected) {
-			var statusBarSelection = this.statusBar ? this.statusBar.getSelection() : null;
-			if (statusBarSelection && statusBarSelection.textContent == range.toString()) {
-				fullNodeSelected = true;
-				node = statusBarSelection;
-			}
-		}
-	}
-	return fullNodeSelected ? node : null;
+	this.appendToLog('HTMLArea.Editor', 'getFullySelectedNode', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getFullySelectedNode();
 };
-/***************************************************
- *  Category: EVENT HANDLERS
- ***************************************************/
-
 /*
  * Intercept some native execCommand commands
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
  */
 HTMLArea.Editor.prototype.execCommand = function(cmdID, UI, param) {
-	this.focus();
-	switch (cmdID) {
-		default:
-			try {
-				this.document.execCommand(cmdID, UI, param);
-			} catch(e) {
-				HTMLArea._appendToLog('[HTMLArea.Editor::execCommand]: ' + e + 'by execCommand(' + cmdID + ')');
-			}
-	}
-	this.toolbar.update();
-	return false;
+	this.appendToLog('HTMLArea.Editor', 'execCommand', 'Reference to deprecated method', 'warn');
+	return this.getSelection().execCommand(cmdID, UI, param);
 };
 
-HTMLArea.Editor.prototype.scrollToCaret = function() {
-	if (!Ext.isIE) {
-		var e = this.getParentElement(),
-			w = this._iframe.contentWindow ? this._iframe.contentWindow : window,
-			h = w.innerHeight || w.height,
-			d = this.document,
-			t = d.documentElement.scrollTop || d.body.scrollTop;
-		if (e.offsetTop > h+t || e.offsetTop < t) {
-			this.getParentElement().scrollIntoView();
-		}
-	}
-};
 /***************************************************
  *  UTILITY FUNCTIONS
  ***************************************************/
-
-/*
- * Check if the client agent is supported
- */
-HTMLArea.checkSupportedBrowser = function() {
-	return Ext.isGecko || Ext.isWebKit || Ext.isOpera || Ext.isIE;
-};
-/*
- * Remove a class name from the class attribute of an element
- *
- * @param	object		el: the element
- * @param	string		className: the class name to remove
- * @param	boolean		substring: if true, remove the first class name starting with the given string
- * @return	void
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.5 *
- ***********************************************
- */
-HTMLArea._removeClass = function(el, className, substring) {
-	HTMLArea.DOM.removeClass(el, className, substring);
-};
-/*
- * Add a class name to the class attribute
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.5 *
- ***********************************************
- */
-HTMLArea._addClass = function(el, className) {
-	HTMLArea.DOM.addClass(el, className);
-};
-/*
- * Check if a class name is in the class attribute of an element
- *
- * @param	object		el: the element
- * @param	string		className: the class name to look for
- * @param	boolean		substring: if true, look for a class name starting with the given string
- * @return	boolean		true if the class name was found
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.5 *
- ***********************************************
- */
-HTMLArea._hasClass = function(el, className, substring) {
-	return HTMLArea.DOM.hasClass(el, className, substring);
-};
-
-HTMLArea.isBlockElement = function(el) { return el && el.nodeType == 1 && HTMLArea.RE_blockTags.test(el.nodeName.toLowerCase()); };
-HTMLArea.needsClosingTag = function(el) { return el && el.nodeType == 1 && !HTMLArea.RE_noClosingTag.test(el.tagName.toLowerCase()); };
-
-/*
- * Perform HTML encoding of some given string
- * Borrowed in part from Xinha (is not htmlArea) - http://xinha.gogo.co.nz/
- */
-HTMLArea.htmlDecode = function(str) {
-	str = str.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-	str = str.replace(/&nbsp;/g, "\xA0"); // Decimal 160, non-breaking-space
-	str = str.replace(/&quot;/g, "\x22");
-	str = str.replace(/&#39;/g, "'") ;
-	str = str.replace(/&amp;/g, "&");
-	return str;
-};
-HTMLArea.htmlEncode = function(str) {
-	if (typeof(str) != 'string') str = str.toString(); // we don't need regexp for that, but.. so be it for now.
-	str = str.replace(/&/g, "&amp;");
-	str = str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-	str = str.replace(/\xA0/g, "&nbsp;"); // Decimal 160, non-breaking-space
-	str = str.replace(/\x22/g, "&quot;"); // \x22 means '"'
-	return str;
-};
-/*
- * Retrieve the HTML code from the given node.
- * This is a replacement for getting innerHTML, using standard DOM calls.
- * Wrapper catches a Mozilla-Exception with non well-formed html source code.
- ***********************************************
- * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.5 *
- ***********************************************
- */
-HTMLArea.getHTML = function(root, outputRoot, editor){
-	try {
-		return editor.iframe.htmlRenderer.render(root, outputRoot);
-	} catch(e) {
-		HTMLArea._appendToLog('[HTMLArea::getHTML]: The HTML document is not well-formed.');
-		if (!HTMLArea.enableDebugMode) {
-			TYPO3.Dialog.ErrorDialog({
-				title: 'htmlArea RTE',
-				msg: HTMLArea.I18N.msg['HTML-document-not-well-formed']
-			});
-			return editor.document.body.innerHTML;
-		} else {
-			return editor.iframe.htmlRenderer.render(root, outputRoot);
+Ext.apply(HTMLArea.util, {
+	/*
+	 * Perform HTML encoding of some given string
+	 * Borrowed in part from Xinha (is not htmlArea) - http://xinha.gogo.co.nz/
+	 */
+	htmlDecode: function (str) {
+		str = str.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+		str = str.replace(/&nbsp;/g, '\xA0'); // Decimal 160, non-breaking-space
+		str = str.replace(/&quot;/g, '\x22');
+		str = str.replace(/&#39;/g, "'") ;
+		str = str.replace(/&amp;/g, '&');
+		return str;
+	},
+	htmlEncode: function (str) {
+		if (typeof(str) != 'string') {
+			str = str.toString();
 		}
+		str = str.replace(/&/g, '&amp;');
+		str = str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		str = str.replace(/\xA0/g, '&nbsp;'); // Decimal 160, non-breaking-space
+		str = str.replace(/\x22/g, '&quot;'); // \x22 means '"'
+		return str;
 	}
-};
-HTMLArea.getPrevNode = function(node) {
-	if(!node)                return null;
-	if(node.previousSibling) return node.previousSibling;
-	if(node.parentNode)      return node.parentNode;
-	return null;
-};
+});
+/*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.htmlDecode = HTMLArea.util.htmlDecode;
+/*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.htmlEncode = HTMLArea.util.htmlEncode;
 
-HTMLArea.getNextNode = function(node) {
-	if(!node)            return null;
-	if(node.nextSibling) return node.nextSibling;
-	if(node.parentNode)  return node.parentNode;
-	return null;
-};
-
-HTMLArea.removeFromParent = function(el) {
-	if(!el.parentNode) return;
-	var pN = el.parentNode;
-	pN.removeChild(el);
-	return el;
-};
 /*****************************************************************
  * HTMLArea.DOM: Utility functions for dealing with the DOM tree *
  *****************************************************************/
@@ -3205,6 +2897,35 @@ HTMLArea.DOM = function () {
 		DOCUMENT_TYPE_NODE: 10,
 		DOCUMENT_FRAGMENT_NODE: 11,
 		NOTATION_NODE: 12,
+		/***************************************************
+		*  DOM-RELATED REGULAR EXPRESSIONS
+		***************************************************/
+		RE_blockTags: /^(address|article|aside|body|blockquote|caption|dd|div|dl|dt|fieldset|footer|form|header|hr|h1|h2|h3|h4|h5|h6|iframe|li|ol|p|pre|nav|noscript|section|table|tbody|td|tfoot|th|thead|tr|ul)$/i,
+		RE_noClosingTag: /^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i,
+		RE_bodyTag: new RegExp('<\/?(body)[^>]*>', 'gi'),
+		/***************************************************
+		*  STATIC METHODS ON DOM NODE
+		***************************************************/
+		/*
+		 * Determine whether an element node is a block element
+		 *
+		 * @param	object		element: the element node
+		 *
+		 * @return	boolean		true, if the element node is a block element
+		 */
+		isBlockElement: function (element) {
+			return element && element.nodeType === HTMLArea.DOM.ELEMENT_NODE && HTMLArea.DOM.RE_blockTags.test(element.nodeName);
+		},
+		/*
+		 * Determine whether an element node needs a closing tag
+		 *
+		 * @param	object		element: the element node
+		 *
+		 * @return	boolean		true, if the element node needs a closing tag
+		 */
+		needsClosingTag: function (element) {
+			return element && element.nodeType === HTMLArea.DOM.ELEMENT_NODE && !HTMLArea.DOM.RE_noClosingTag.test(element.nodeName);
+		},
 		/*
 		 * Gets the class names assigned to a node, reserved classes removed
 		 *
@@ -3307,6 +3028,168 @@ HTMLArea.DOM = function () {
 					}
 				}
 			}
+		},
+		/*
+		 * Get the innerText of a given node
+		 *
+		 * @param	object		node: the node
+		 *
+		 * @return	string		the text inside the node
+		 */
+		getInnerText: function (node) {
+			return (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) ? node.innerText : node.textContent;;
+		},
+		/*
+		 * Get the block ancestors of a node within a given block
+		 *
+		 * @param	object		node: the given node
+		 * @param	object		withinBlock: the containing node
+		 *
+		 * @return	array		array of block ancestors
+		 */
+		getBlockAncestors: function (node, withinBlock) {
+			var ancestors = [];
+			var ancestor = node;
+			while (ancestor && (ancestor.nodeType === HTMLArea.DOM.ELEMENT_NODE) && !/^(body)$/i.test(ancestor.nodeName) && ancestor != withinBlock) {
+				if (HTMLArea.DOM.isBlockElement(ancestor)) {
+					ancestors.unshift(ancestor);
+				}
+				ancestor = ancestor.parentNode;
+			}
+			ancestors.unshift(ancestor);
+			return ancestors;
+		},
+		/*
+		 * Get the deepest element ancestor of a given node that is of one of the specified types
+		 *
+		 * @param	object		node: the given node
+		 * @param	array		types: an array of nodeNames
+		 *
+		 * @return	object		the found ancestor of one of the given types or null
+		 */
+		getFirstAncestorOfType: function (node, types) {
+			var ancestor = null,
+				parent = node;
+			if (!Ext.isEmpty(types)) {
+				if (Ext.isString(types)) {
+					var types = [types];
+				}
+				types = new RegExp( '^(' + types.join('|') + ')$', 'i');
+				while (parent && parent.nodeType === HTMLArea.DOM.ELEMENT_NODE && !/^(body)$/i.test(parent.nodeName)) {
+					if (types.test(parent.nodeName)) {
+						ancestor = parent;
+						break;
+					}
+					parent = parent.parentNode;
+				}
+			}
+			return ancestor;
+		},
+		/*
+		 * Determine whether a given node has any allowed attributes
+		 *
+		 * @param	object		node: the DOM node
+		 * @param	array		allowedAttributes: array of allowed attribute names
+		 *
+		 * @return	boolean		true if the node has one of the allowed attributes
+		 */
+		 hasAllowedAttributes: function (node, allowedAttributes) {
+			var value,
+				hasAllowedAttributes = false;
+			if (Ext.isString(allowedAttributes)) {
+				allowedAttributes = [allowedAttributes];
+			}
+			allowedAttributes = allowedAttributes || [];
+			for (var i = allowedAttributes.length; --i >= 0;) {
+				value = node.getAttribute(allowedAttributes[i]);
+				if (value) {
+					if (allowedAttributes[i] === 'style') {
+						if (node.style.cssText) {
+							hasAllowedAttributes = true;
+							break;
+						}
+					} else {
+						hasAllowedAttributes = true;
+						break;
+					}
+				}
+			}
+			return hasAllowedAttributes;
+		},
+		/*
+		 * Remove the given node from its parent
+		 *
+		 * @param	object		node: the DOM node
+		 *
+		 * @return	void
+		 */
+		removeFromParent: function (node) {
+			var parent = node.parentNode;
+			if (parent) {
+				parent.removeChild(node);
+			}
+		},
+		/*
+		 * Change the nodeName of an element node
+		 *
+		 * @param	object		node: the node to convert (must belong to a document)
+		 * @param	string		nodeName: the nodeName of the converted node
+		 *
+		 * @retrun	object		the converted node or the input node
+		 */
+		convertNode: function (node, nodeName) {
+			var convertedNode = node,
+				ownerDocument = node.ownerDocument;
+			if (ownerDocument && node.nodeType === HTMLArea.DOM.ELEMENT_NODE) {
+				var convertedNode = ownerDocument.createElement(nodeName),
+					parent = node.parentNode;
+				while (node.firstChild) {
+					convertedNode.appendChild(node.firstChild);
+				}
+				parent.insertBefore(convertedNode, node);
+				parent.removeChild(node);
+			}
+			return convertedNode;
+		},
+		/*
+		 * Determine whether a given range intersects a given node
+		 *
+		 * @param	object		range: the range
+		 * @param	object		node: the DOM node (must belong to a document)
+		 *
+		 * @return	boolean		true if the range intersects the node
+		 */
+		rangeIntersectsNode: function (range, node) {
+			var rangeIntersectsNode = false,
+				ownerDocument = node.ownerDocument;
+			if (ownerDocument) {
+				if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+					var nodeRange = ownerDocument.body.createTextRange();
+					nodeRange.moveToElementText(node);
+					rangeIntersectsNode = (range.compareEndPoints('EndToStart', nodeRange) == -1 && range.compareEndPoints('StartToEnd', nodeRange) == 1) ||
+						(range.compareEndPoints('EndToStart', nodeRange) == 1 && range.compareEndPoints('StartToEnd', nodeRange) == -1);
+				} else {
+					var nodeRange = ownerDocument.createRange();
+					try {
+						nodeRange.selectNode(node);
+					} catch (e) {
+						if (Ext.isWebKit) {
+							nodeRange.setStart(node, 0);
+							if (node.nodeType === HTMLArea.DOM.TEXT_NODE || node.nodeType === HTMLArea.DOM.COMMENT_NODE || node.nodeType === HTMLArea.DOM.CDATA_SECTION_NODE) {
+								nodeRange.setEnd(node, node.textContent.length);
+							} else {
+								nodeRange.setEnd(node, node.childNodes.length);
+							}
+						} else {
+							nodeRange.selectNodeContents(node);
+						}
+					}
+						// Note: sometimes WebKit inverts the end points
+					rangeIntersectsNode = (range.compareBoundaryPoints(range.END_TO_START, nodeRange) == -1 && range.compareBoundaryPoints(range.START_TO_END, nodeRange) == 1) ||
+						(range.compareBoundaryPoints(range.END_TO_START, nodeRange) == 1 && range.compareBoundaryPoints(range.START_TO_END, nodeRange) == -1);
+				}
+			}
+			return rangeIntersectsNode;
 		},
 		/*
 		 * Make url's absolute in the DOM tree under the root node
@@ -3452,7 +3335,7 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 				}
 				break;
 			case HTMLArea.DOM.TEXT_NODE:
-				html += /^(script|style)$/i.test(node.parentNode.nodeName) ? node.data : HTMLArea.htmlEncode(node.data);
+				html += /^(script|style)$/i.test(node.parentNode.nodeName) ? node.data : HTMLArea.util.htmlEncode(node.data);
 				break;
 			case HTMLArea.DOM.ENTITY_NODE:
 				html += node.nodeValue;
@@ -3484,7 +3367,7 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 	 */
 	renderNodeEnd: function (node) {
 		var html = '';
-		if (node.nodeType == HTMLArea.DOM.ELEMENT_NODE) {
+		if (node.nodeType === HTMLArea.DOM.ELEMENT_NODE) {
 			if (this.keepTags.test(node.nodeName) && !this.removeTags.test(node.nodeName)) {
 				html += this.setClosingTag(node);
 			}
@@ -3528,7 +3411,7 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 					// Ignore special values reported by Mozilla
 				if (/(_moz|^$)/.test(attributeValue)) {
 					continue;
-					// Pasted/moved/dropped internal url's are made relative by Mozilla: https://bugzilla.mozilla.org/show_bug.cgi?id=613517
+					// Pasted internal url's are made relative by Mozilla: https://bugzilla.mozilla.org/show_bug.cgi?id=613517
 				} else if (attributeName === 'href' || attributeName === 'src') {
 					attributeValue = HTMLArea.DOM.addBaseUrl(attributeValue, this.baseUrl);
 				}
@@ -3538,8 +3421,8 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 				continue;
 			}
 			filterededAttributes.push({
-					attributeName: attributeName,
-					attributeValue: attributeValue
+				attributeName: attributeName,
+				attributeValue: attributeValue
 			});
 		}
 		return (Ext.isWebKit || Ext.isOpera) ? filterededAttributes.reverse() : filterededAttributes;
@@ -3559,7 +3442,7 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 				return html;
 				// In Gecko, whenever some text is entered in an empty block, a trailing br tag is added by the browser.
 				// If the br element is a trailing br in a block element with no other content or with content other than a br, it may be configured to be removed
-			} else if (this.removeTrailingBR && !node.nextSibling && HTMLArea.isBlockElement(node.parentNode) && (!node.previousSibling || !/^br$/i.test(node.previousSibling.nodeName))) {
+			} else if (this.removeTrailingBR && !node.nextSibling && HTMLArea.DOM.isBlockElement(node.parentNode) && (!node.previousSibling || !/^br$/i.test(node.previousSibling.nodeName))) {
 						// If an empty paragraph with a class attribute, insert a non-breaking space so that RTE transform does not clean it away
 					if (!node.previousSibling && node.parentNode && /^p$/i.test(node.parentNode.nodeName) && node.parentNode.className) {
 						html += "&nbsp;";
@@ -3570,9 +3453,9 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 			// Normal node
 		var attributes = this.getAttributes(node);
 		for (var i = 0, n = attributes.length; i < n; i++) {
-			html +=  ' ' + attributes[i]['attributeName'] + '="' + HTMLArea.htmlEncode(attributes[i]['attributeValue']) + '"';
+			html +=  ' ' + attributes[i]['attributeName'] + '="' + HTMLArea.util.htmlEncode(attributes[i]['attributeValue']) + '"';
 		}
-		html = '<' + node.nodeName.toLowerCase() + html + (HTMLArea.RE_noClosingTag.test(node.nodeName) ? ' />' : '>');
+		html = '<' + node.nodeName.toLowerCase() + html + (HTMLArea.DOM.RE_noClosingTag.test(node.nodeName) ? ' />' : '>');
 			// Fix orphan list elements
 		if (/^li$/i.test(node.nodeName) && !/^[ou]l$/i.test(node.parentNode.nodeName)) {
 			html = '<ul>' + html;
@@ -3586,7 +3469,7 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 	 * @return	object		closing tag, if required
 	 */
 	setClosingTag: function (node) {
-		var html = HTMLArea.RE_noClosingTag.test(node.nodeName) ? '' : '</' + node.nodeName.toLowerCase() + '>';
+		var html = HTMLArea.DOM.RE_noClosingTag.test(node.nodeName) ? '' : '</' + node.nodeName.toLowerCase() + '>';
 			// Fix orphan list elements
 		if (/^li$/i.test(node.nodeName) && !/^[ou]l$/i.test(node.parentNode.nodeName)) {
 			html += '</ul>';
@@ -3605,6 +3488,1665 @@ HTMLArea.DOM.Walker = Ext.extend(HTMLArea.DOM.Walker, {
 	}
 });
 /***************************************************
+ *  HTMLArea.DOM.Selection: Selection object
+ ***************************************************/
+HTMLArea.DOM.Selection = function (config) {
+};
+HTMLArea.DOM.Selection = Ext.extend(HTMLArea.DOM.Selection, {
+	/*
+	 * Reference to the editor MUST be set in config
+	 */
+	editor: null,
+	/*
+	 * Reference to the editor document
+	 */
+	document: null,
+	/*
+	 * Reference to the editor iframe window
+	 */
+	window: null,
+	/*
+	 * The current selection
+	 */
+	selection: null,
+	/*
+	 * HTMLArea.DOM.Selection constructor
+	 */
+	constructor: function (config) {
+		 	// Apply config
+		Ext.apply(this, config);
+			// Initialize references
+		this.document = this.editor.document;
+		this.window = this.editor.iframe.getEl().dom.contentWindow;
+			// Set current selection
+		this.get();
+	},
+	/*
+	 * Get the current selection object
+	 *
+	 * @return	object		this
+	 */		
+	get: function () {
+		this.editor.focus();
+	 	this.selection = this.window.getSelection ? this.window.getSelection() : this.document.selection;
+	 	return this;
+	},
+	/*
+	 * Get the type of the current selection
+	 *
+	 * @return	string		the type of selection ("None", "Text" or "Control")
+	 */
+	getType: function() {
+			// By default set the type to "Text"
+		var type = 'Text';
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isFunction(this.selection.getRangeAt)) {
+					// Check if the current selection is a Control
+				if (this.selection && this.selection.rangeCount == 1) {
+					var range = this.selection.getRangeAt(0);
+					if (range.startContainer.nodeType === HTMLArea.DOM.ELEMENT_NODE) {
+						if (
+								// Gecko
+							(range.startContainer == range.endContainer && (range.endOffset - range.startOffset) == 1) ||
+								// Opera and WebKit
+							(range.endContainer.nodeType === HTMLArea.DOM.TEXT_NODE && range.endOffset == 0 && range.startContainer.childNodes[range.startOffset].nextSibling == range.endContainer)
+						) {
+							if (/^(img|hr|li|table|tr|td|embed|object|ol|ul|dl)$/i.test(range.startContainer.childNodes[range.startOffset].nodeName)) {
+								type = 'Control';
+							}
+						}
+					}
+				}
+			} else {
+					// IE8 or IE7
+				type = this.selection.type;
+			}
+		}
+		return type;
+	},
+	/*
+	 * Empty the current selection
+	 *
+	 * @return	object		this
+	 */
+	empty: function () {
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isFunction(this.selection.removeAllRanges)) {
+				this.selection.removeAllRanges();
+			} else {
+					// IE8, IE7 or old version of WebKit
+				this.selection.empty();
+			}
+			if (Ext.isOpera) {
+				this.editor.focus();
+			}
+		}
+		return this;
+	},
+	/*
+	 * Determine whether the current selection is empty or not
+	 *
+	 * @return	boolean		true, if the selection is empty
+	 */
+	isEmpty: function () {
+		var isEmpty = true;
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+				switch (this.selection.type) {
+					case 'None':
+						isEmpty = true;
+						break;
+					case 'Text':
+						isEmpty = !this.createRange().text;
+						break;
+					default:
+						isEmpty = !this.createRange().htmlText;
+						break;
+				}
+			} else {
+				isEmpty = this.selection.isCollapsed;
+			}
+		}
+		return isEmpty;
+	},
+	/*
+	 * Get a range corresponding to the current selection
+	 *
+	 * @return	object		the range of the selection
+	 */
+	createRange: function () {
+		var range;
+		this.get();
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			range = this.selection.createRange();
+		} else {
+			if (Ext.isEmpty(this.selection)) {
+				range = this.document.createRange();
+			} else {
+					// Older versions of WebKit did not support getRangeAt
+				if (Ext.isWebKit && !Ext.isFunction(this.selection.getRangeAt)) {
+					range = this.document.createRange();
+					if (this.selection.baseNode == null) {
+						range.setStart(this.document.body, 0);
+						range.setEnd(this.document.body, 0);
+					} else {
+						range.setStart(this.selection.baseNode, this.selection.baseOffset);
+						range.setEnd(this.selection.extentNode, this.selection.extentOffset);
+						if (range.collapsed != this.selection.isCollapsed) {
+							range.setStart(this.selection.extentNode, this.selection.extentOffset);
+							range.setEnd(this.selection.baseNode, this.selection.baseOffset);
+						}
+					}
+				} else {
+					try {
+						range = this.selection.getRangeAt(0);
+					} catch (e) {
+						range = this.document.createRange();
+					}
+				}
+			}
+		}
+		return range;
+	},
+	/*
+	 * Return the ranges of the selection
+	 *
+	 * @return	array		array of ranges
+	 */
+	getRanges: function () {
+		this.get();
+		var ranges = [];
+			// Older versions of WebKit, IE7 and IE8 did not support getRangeAt
+		if (!Ext.isEmpty(this.selection) && Ext.isFunction(this.selection.getRangeAt)) {
+			for (var i = this.selection.rangeCount; --i >= 0;) {
+				ranges.push(this.selection.getRangeAt(i));
+			}
+		} else {
+			ranges.push(this.createRange());
+		}
+		return ranges;
+	},
+	/*
+	 * Add a range to the selection
+	 *
+	 * @param	object		range: the range to be added to the selection
+	 *
+	 * @return	object		this
+	 */
+	addRange: function (range) {
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isFunction(this.selection.addRange)) {
+				this.selection.addRange(range);
+			} else if (Ext.isWebKit) {
+				this.selection.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+			}
+		}
+		return this;
+	},
+	/*
+	 * Set the ranges of the selection
+	 *
+	 * @param	array		ranges: array of range to be added to the selection
+	 *
+	 * @return	object		this
+	 */
+	setRanges: function (ranges) {
+		this.get();
+		this.empty();
+		for (var i = ranges.length; --i >= 0;) {
+			this.addRange(ranges[i]);
+		}
+		return this;
+	},
+	/*
+	 * Set the selection to a given range
+	 *
+	 * @param	object		range: the range to be selected
+	 *
+	 * @return	object		this
+	 */
+	selectRange: function (range) {
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isFunction(this.selection.getRangeAt)) {
+				this.empty().addRange(range);
+			} else {
+					// IE8 or IE7
+				range.select();
+			}
+		}
+		return this;
+	},
+	/*
+	 * Set the selection to a given node
+	 *
+	 * @param	object		node: the node to be selected
+	 * @param	boolean		endPoint: collapse the selection at the start point (true) or end point (false) of the node
+	 *
+	 * @return	object		this
+	 */
+	selectNode: function (node, endPoint) {
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+					// IE8/7/6 cannot set this type of selection
+				this.selectNodeContents(node, endPoint);
+			} else if (Ext.isWebKit && /^(img)$/i.test(node.nodeName)) {
+				this.selection.setBaseAndExtent(node, 0, node, 1);
+			} else {
+				var range = this.document.createRange();
+				if (node.nodeType === HTMLArea.DOM.ELEMENT_NODE && /^(body)$/i.test(node.nodeName)) {
+					if (Ext.isWebKit) {
+						range.setStart(node, 0);
+						range.setEnd(node, node.childNodes.length);
+					} else {
+						range.selectNodeContents(node);
+					}
+				} else {
+					range.selectNode(node);
+				}
+				if (typeof(endPoint) !== 'undefined') {
+					range.collapse(endPoint);
+				}
+				this.selectRange(range);
+			}
+		}
+		return this;
+	},
+	/*
+	 * Set the selection to the inner contents of a given node
+	 *
+	 * @param	object		node: the node of which the contents are to be selected
+	 * @param	boolean		endPoint: collapse the selection at the start point (true) or end point (false)
+	 *
+	 * @return	object		this
+	 */
+	selectNodeContents: function (node, endPoint) {
+		var range;
+		this.get();
+		if (!Ext.isEmpty(this.selection)) {
+			if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+				range = this.document.body.createTextRange();
+				range.moveToElementText(node);
+			} else {
+				range = this.document.createRange();
+				if (Ext.isWebKit) {
+					range.setStart(node, 0);
+					if (node.nodeType === HTMLArea.DOM.TEXT_NODE || node.nodeType === HTMLArea.DOM.COMMENT_NODE || node.nodeType === HTMLArea.DOM.CDATA_SECTION_NODE) {
+						range.setEnd(node, node.textContent.length);
+					} else {
+						range.setEnd(node, node.childNodes.length);
+					}
+				} else {
+					range.selectNodeContents(node);
+				}
+			}
+			if (typeof(endPoint) !== 'undefined') {
+				range.collapse(endPoint);
+			}
+			this.selectRange(range);
+		}
+		return this;
+	},
+	/*
+	 * Get the deepest node that contains both endpoints of the current selection.
+	 *
+	 * @return	object		the deepest node that contains both endpoints of the current selection.	
+	 */
+	getParentElement: function () {
+		var parentElement,
+			range;
+		this.get();
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			range = this.createRange();
+			switch (this.selection.type) {
+				case 'Text':
+				case 'None':
+					parentElement = range.parentElement();
+					if (/^(form)$/i.test(parentElement.nodeName)) {
+						parentElement = this.document.body;
+					} else if (/^(li)$/i.test(parentElement.nodeName) && range.htmlText.replace(/\s/g, '') == parentElement.parentNode.outerHTML.replace(/\s/g, '')) {
+						parentElement = parentElement.parentNode;
+					}
+					break;
+				case 'Control':
+					parentElement = range.item(0);
+					break;
+				default:
+					parentElement = this.document.body;
+					break;
+			}
+		} else {
+			if (this.getType() === 'Control') {
+				parentElement = this.getElement();
+			} else {
+				range = this.createRange();
+				parentElement = range.commonAncestorContainer;
+					// Firefox 3 may report the document as commonAncestorContainer
+				if (parentElement.nodeType === HTMLArea.DOM.DOCUMENT_NODE) {
+					parentElement = this.document.body;
+				} else {
+					while (parentElement && parentElement.nodeType === HTMLArea.DOM.TEXT_NODE) {
+						parentElement = parentElement.parentNode;
+					}
+				}
+			}
+		}
+		return parentElement;
+	},
+	/*
+	 * Get the selected element (if any), in the case that a single element (object like and image or a table) is selected
+	 * In IE language, we have a range of type 'Control'
+	 *
+	 * @return	object		the selected node
+	 */
+	getElement: function () {
+		var element = null;
+		this.get();
+		if (!Ext.isEmpty(this.selection) && this.selection.anchorNode && this.selection.anchorNode.nodeType === HTMLArea.DOM.ELEMENT_NODE && this.getType() == 'Control') {
+			element = this.selection.anchorNode.childNodes[this.selection.anchorOffset];
+				// For Safari, the anchor node for a control selection is the control itself
+			if (!element) {
+				element = this.selection.anchorNode;
+			} else if (element.nodeType !== HTMLArea.DOM.ELEMENT_NODE) {
+				element = null;
+			}
+		}
+		return element;
+	},
+	/*
+	 * Get the deepest element ancestor of the selection that is of one of the specified types
+	 *
+	 * @param	array		types: an array of nodeNames
+	 *
+	 * @return	object		the found ancestor of one of the given types or null
+	 */
+	getFirstAncestorOfType: function (types) {
+		var node = this.getParentElement();
+		return HTMLArea.DOM.getFirstAncestorOfType(node, types);
+	},
+	/*
+	 * Get an array with all the ancestor nodes of the current selection
+	 *
+	 * @return	array		the ancestor nodes
+	 */
+	getAllAncestors: function () {
+		var parent = this.getParentElement(),
+			ancestors = [];
+		while (parent && parent.nodeType === HTMLArea.DOM.ELEMENT_NODE && !/^(body)$/i.test(parent.nodeName)) {
+			ancestors.push(parent);
+			parent = parent.parentNode;
+		}
+		ancestors.push(this.document.body);
+		return ancestors;
+	},
+	/*
+	 * Get an array with the parent elements of a multiple selection
+	 *
+	 * @return	array		the selected elements
+	 */
+	getElements: function () {
+		var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null,
+			elements = [];
+		if (statusBarSelection) {
+			elements.push(statusBarSelection);
+		} else {
+			var ranges = this.getRanges();
+				parent;
+			if (ranges.length > 1) {
+				for (var i = ranges.length; --i >= 0;) {
+					parent = range[i].commonAncestorContainer;
+						// Firefox 3 may report the document as commonAncestorContainer
+					if (parent.nodeType === HTMLArea.DOM.DOCUMENT_NODE) {
+						parent = this.document.body;
+					} else {
+						while (parent && parent.nodeType === HTMLArea.DOM.TEXT_NODE) {
+							parent = parent.parentNode;
+						}
+					}
+					elements.push(parent);
+				}
+			} else {
+				elements.push(this.getParentElement());
+			}
+		}
+		return elements;
+	},
+	/*
+	 * Get the node whose contents are currently fully selected
+	 *
+	 * @return	object		the fully selected node, if any, null otherwise
+	 */
+	getFullySelectedNode: function () {
+		var node = null,
+			isFullySelected = false;
+		this.get();
+		if (!this.isEmpty()) {
+			var type = this.getType();
+			var range = this.createRange();
+			var ancestors = this.getAllAncestors();
+			Ext.each(ancestors, function (ancestor) {
+				if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+					isFullySelected = (type !== 'Control' && ancestor.innerText == range.text) || (type === 'Control' && ancestor.innerText == range.item(0).text);
+				} else {
+					isFullySelected = (ancestor.textContent == range.toString());
+				}
+				if (isFullySelected) {
+					node = ancestor;
+					return false;
+				}
+			});
+				// Working around bug with WebKit selection
+			if (Ext.isWebKit && !isFullySelected) {
+				var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
+				if (statusBarSelection && statusBarSelection.textContent == range.toString()) {
+					isFullySelected = true;
+					node = statusBarSelection;
+				}
+			}
+		}
+		return node;
+	},
+	/*
+	 * Get the block elements containing the start and the end points of the selection
+	 *
+	 * @return	object		object with properties start and end set to the end blocks of the selection
+	 */
+	getEndBlocks: function () {
+		var range = this.createRange(),
+			parentStart,
+			parentEnd;
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			if (this.getType() === 'Control') {
+				parentStart = range.item(0);
+				parentEnd = parentStart;
+			} else {
+				var rangeEnd = range.duplicate();
+				range.collapse(true);
+				parentStart = range.parentElement();
+				rangeEnd.collapse(false);
+				parentEnd = rangeEnd.parentElement();
+			}
+		} else {
+			parentStart = range.startContainer;
+			if (/^(body)$/i.test(parentStart.nodeName)) {
+				parentStart = parentStart.firstChild;
+			}
+			parentEnd = range.endContainer;
+			if (/^(body)$/i.test(parentEnd.nodeName)) {
+				parentEnd = parentEnd.lastChild;
+			}
+		}
+		while (parentStart && !HTMLArea.DOM.isBlockElement(parentStart)) {
+			parentStart = parentStart.parentNode;
+		}
+		while (parentEnd && !HTMLArea.DOM.isBlockElement(parentEnd)) {
+			parentEnd = parentEnd.parentNode;
+		}
+		return {
+			start: parentStart,
+			end: parentEnd
+		};
+	},
+	/*
+	 * Determine whether the end poins of the current selection are within the same block
+	 *
+	 * @return	boolean		true if the end points of the current selection are in the same block
+	 */
+	endPointsInSameBlock: function() {
+		var endPointsInSameBlock = true;
+		this.get();
+		if (!this.isEmpty()) {
+			var parent = this.getParentElement();
+			var endBlocks = this.getEndBlocks();
+			endPointsInSameBlock = (endBlocks.start === endBlocks.end && !/^(table|thead|tbody|tfoot|tr)$/i.test(parent.nodeName));
+		}
+		return endPointsInSameBlock;
+	},
+	/*
+	 * Retrieve the HTML contents of the current selection
+	 *
+	 * @return	string		HTML text of the current selection
+	 */
+	getHtml: function () {
+		var range = this.createRange(),
+			html = '';
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			if (this.getType() === 'Control') {
+					// We have a controlRange collection
+				var bodyRange = this.document.body.createTextRange();
+				bodyRange.moveToElementText(range(0));
+				html = bodyRange.htmlText;
+			} else {
+				html = range.htmlText;
+			}
+		} else if (!range.collapsed) {
+			var cloneContents = range.cloneContents();
+			if (!cloneContents) {
+				cloneContents = this.document.createDocumentFragment();
+			}
+			html = this.editor.iframe.htmlRenderer.render(cloneContents, false);
+		}
+		return html;
+	},
+	 /*
+	 * Insert a node at the current position
+	 * Delete the current selection, if any.
+	 * Split the text node, if needed.
+	 *
+	 * @param	object		toBeInserted: the node to be inserted
+	 *
+	 * @return	object		this
+	 */
+	insertNode: function (toBeInserted) {
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			this.insertHtml(toBeInserted.outerHTML);
+		} else {
+			var range = this.createRange();
+			range.deleteContents();
+			toBeSelected = (toBeInserted.nodeType === HTMLArea.DOM.DOCUMENT_FRAGMENT_NODE) ? toBeInserted.lastChild : toBeInserted;
+			range.insertNode(toBeInserted);
+			this.selectNodeContents(toBeSelected, false);
+		}
+		return this;
+	},
+	/*
+	 * Insert HTML source code at the current position
+	 * Delete the current selection, if any.
+	 *
+	 * @param	string		html: the HTML source code
+	 *
+	 * @return	object		this
+	 */
+	insertHtml: function (html) {
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			this.get();
+			if (this.getType() === 'Control') {
+				this.selection.clear();
+				this.get();
+			}
+			var range = this.createRange();
+			range.pasteHTML(html);
+		} else {
+			this.editor.focus();
+			var fragment = this.document.createDocumentFragment();
+			var div = this.document.createElement('div');
+			div.innerHTML = html;
+			while (div.firstChild) {
+				fragment.appendChild(div.firstChild);
+			}
+			this.insertNode(fragment);
+		}
+		return this;
+	},
+	/*
+	 * Surround the selection with an element specified by its start and end tags
+	 * Delete the selection, if any.
+	 *
+	 * @param	string		startTag: the start tag
+	 * @param	string		endTag: the end tag
+	 *
+	 * @return	void
+	 */
+	surroundHtml: function (startTag, endTag) {
+		this.insertHtml(startTag + this.getHtml().replace(HTMLArea.DOM.RE_bodyTag, '') + endTag);
+	},
+	/*
+	 * Execute some native execCommand command on the current selection
+	 *
+	 * @param	string		cmdID: the command name or id
+	 * @param	object		UI: 
+	 * @param	object		param:
+	 *
+	 * @return	boolean		false
+	 */
+	execCommand: function (cmdID, UI, param) {
+		this.editor.focus();
+		switch (cmdID) {
+			default:
+				try {
+					this.document.execCommand(cmdID, UI, param);
+				} catch(e) {
+					this.editor.appendToLog('HTMLArea.DOM.Selection', 'execCommand', e + ' by execCommand(' + cmdID + ')', 'error');
+				}
+		}
+		this.editor.updateToolbar();
+		return false;
+	},
+	/*
+	 * Handle backspace event on the current selection
+	 *
+	 * @return	boolean		true to stop the event and cancel the default action
+	 */
+	handleBackSpace: function () {
+		var range = this.createRange();
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			if (this.getType() === 'Control') {
+					// Deleting or backspacing on a control selection : delete the element
+				var element = this.getParentElement();
+				var parent = element.parentNode;
+				parent.removeChild(el);
+				return true;
+			} else if (this.isEmpty()) {
+					// Check if deleting an empty block with a table as next sibling
+				var element = this.getParentElement();
+				if (!element.innerHTML && HTMLArea.DOM.isBlockElement(element) && element.nextSibling && /^table$/i.test(element.nextSibling.nodeName)) {
+					var previous = element.previousSibling;
+					if (!previous) {
+						this.selectNodeContents(element.nextSibling.rows[0].cells[0], true);
+					} else if (/^table$/i.test(previous.nodeName)) {
+						this.selectNodeContents(previous.rows[previous.rows.length-1].cells[previous.rows[previous.rows.length-1].cells.length-1], false);
+					} else {
+						range.moveStart('character', -1);
+						range.collapse(true);
+						range.select();
+					}
+					el.parentNode.removeChild(element);
+					return true;
+				}
+			} else {
+					// Backspacing into a link
+				var range2 = range.duplicate();
+				range2.moveStart('character', -1);
+				var a = range2.parentElement();
+				if (a != range.parentElement() && /^a$/i.test(a.nodeName)) {
+					range2.collapse(true);
+					range2.moveEnd('character', 1);
+					range2.pasteHTML('');
+					range2.select();
+					return true;
+				}
+				return false;
+			}
+		} else {
+			var self = this;
+			window.setTimeout(function() {
+				var range = self.createRange();
+				var startContainer = range.startContainer;
+				var startOffset = range.startOffset;
+					// If the selection is collapsed...
+				if (self.isEmpty()) {
+						// ... and the cursor lies in a direct child of body...
+					if (/^(body)$/i.test(startContainer.nodeName)) {
+						var node = startContainer.childNodes[startOffset];
+					} else if (/^(body)$/i.test(startContainer.parentNode.nodeName)) {
+						var node = startContainer;
+					} else {
+						return false;
+					}
+						// ... which is a br or text node containing no non-whitespace character
+					if (/^(br|#text)$/i.test(node.nodeName) && !/\S/.test(node.textContent)) {
+							// Get a meaningful previous sibling in which to reposition de cursor
+						var previousSibling = node.previousSibling;
+						while (previousSibling && /^(br|#text)$/i.test(previousSibling.nodeName) && !/\S/.test(previousSibling.textContent)) {
+							previousSibling = previousSibling.previousSibling;
+						}
+							// If there is no meaningful previous sibling, the cursor is at the start of body
+						if (previousSibling) {
+								// Remove the node
+							HTMLArea.DOM.removeFromParent(node);
+								// Position the cursor
+							if (/^(ol|ul|dl)$/i.test(previousSibling.nodeName)) {
+								self.selectNodeContents(previousSibling.lastChild, false);
+							} else if (/^(table)$/i.test(previousSibling.nodeName)) {
+								self.selectNodeContents(previousSibling.rows[previousSibling.rows.length-1].cells[previousSibling.rows[previousSibling.rows.length-1].cells.length-1], false);
+							} else if (!/\S/.test(previousSibling.textContent) && previousSibling.firstChild) {
+								self.selectNode(previousSibling.firstChild, true);
+							} else {
+								self.selectNodeContents(previousSibling, false);
+							}
+						}
+					}
+				}
+			}, 10);
+			return false;	
+		}
+	},
+	/*
+	 * Detect emails and urls as they are typed in non-IE browsers
+	 * Borrowed from Xinha (is not htmlArea) - http://xinha.gogo.co.nz/
+	 *
+	 * @param	object		event: the ExtJS key event 
+	 *
+	 * @return	void
+	 */
+	detectURL: function (event) {
+		var ev = event.browserEvent;
+		var editor = this.editor;
+		var selection = this.get().selection;
+		if (!/^(a)$/i.test(this.getParentElement().nodeName)) {
+			var autoWrap = function (textNode, tag) {
+				var rightText = textNode.nextSibling;
+				if (typeof(tag) === 'string') {
+					tag = editor.document.createElement(tag);
+				}
+				var a = textNode.parentNode.insertBefore(tag, rightText);
+				HTMLArea.DOM.removeFromParent(textNode);
+				a.appendChild(textNode);
+				selection.collapse(rightText, 0);
+				rightText.parentNode.normalize();
+		
+				editor.unLink = function() {
+					var t = a.firstChild;
+					a.removeChild(t);
+					a.parentNode.insertBefore(t, a);
+					HTMLArea.DOM.removeFromParent(a);
+					t.parentNode.normalize();
+					editor.unLink = null;
+					editor.unlinkOnUndo = false;
+				};
+		
+				editor.unlinkOnUndo = true;
+				return a;
+			};
+			switch (ev.which) {
+					// Space or Enter or >, see if the text just typed looks like a URL, or email address and link it accordingly
+				case 13:
+				case 32:
+					if (selection && selection.isCollapsed && selection.anchorNode.nodeType === HTMLArea.DOM.TEXT_NODE && selection.anchorNode.data.length > 3 && selection.anchorNode.data.indexOf('.') >= 0) {
+						var midStart = selection.anchorNode.data.substring(0,selection.anchorOffset).search(/[a-zA-Z0-9]+\S{3,}$/);
+						if (midStart == -1) {
+							break;
+						}
+						if (this.getFirstAncestorOfType('a')) {
+								// already in an anchor
+							break;
+						}
+						var matchData = selection.anchorNode.data.substring(0,selection.anchorOffset).replace(/^.*?(\S*)$/, '$1');
+						if (matchData.indexOf('@') != -1) {
+							var m = matchData.match(HTMLArea.RE_email);
+							if (m) {
+								var leftText  = selection.anchorNode;
+								var rightText = leftText.splitText(selection.anchorOffset);
+								var midText   = leftText.splitText(midStart);
+								var midEnd = midText.data.search(/[^a-zA-Z0-9\.@_\-]/);
+								if (midEnd != -1) {
+									var endText = midText.splitText(midEnd);
+								}
+								autoWrap(midText, 'a').href = 'mailto:' + m[0];
+								break;
+							}
+						}
+						var m = matchData.match(HTMLArea.RE_url);
+						if (m) {
+							var leftText  = selection.anchorNode;
+							var rightText = leftText.splitText(selection.anchorOffset);
+							var midText   = leftText.splitText(midStart);
+							var midEnd = midText.data.search(/[^a-zA-Z0-9\._\-\/\&\?=:@]/);
+							if (midEnd != -1) {
+								var endText = midText.splitText(midEnd);
+							}
+							autoWrap(midText, 'a').href = (m[1] ? m[1] : 'http://') + m[3];
+							break;
+						}
+					}
+					break;
+				default:
+					if (ev.keyCode == 27 || (editor.unlinkOnUndo && ev.ctrlKey && ev.which == 122)) {
+						if (editor.unLink) {
+							editor.unLink();
+							event.stopEvent();
+						}
+						break;
+					} else if (ev.which || ev.keyCode == 8 || ev.keyCode == 46) {
+						editor.unlinkOnUndo = false;
+						if (selection.anchorNode && selection.anchorNode.nodeType === HTMLArea.DOM.TEXT_NODE) {
+								// See if we might be changing a link
+							var a = this.getFirstAncestorOfType('a');
+							if (!a) {
+								break;
+							}
+							if (!a.updateAnchorTimeout) {
+								if (selection.anchorNode.data.match(HTMLArea.RE_email) && (a.href.match('mailto:' + selection.anchorNode.data.trim()))) {
+									var textNode = selection.anchorNode;
+									var fn = function() {
+										a.href = 'mailto:' + textNode.data.trim();
+										a.updateAnchorTimeout = setTimeout(fn, 250);
+									};
+									a.updateAnchorTimeout = setTimeout(fn, 250);
+									break;
+								}
+								var m = selection.anchorNode.data.match(HTMLArea.RE_url);
+								if (m &&  a.href.match(selection.anchorNode.data.trim())) {
+									var textNode = selection.anchorNode;
+									var fn = function() {
+										var m = textNode.data.match(HTMLArea.RE_url);
+										a.href = (m[1] ? m[1] : 'http://') + m[3];
+										a.updateAnchorTimeout = setTimeout(fn, 250);
+									}
+									a.updateAnchorTimeout = setTimeout(fn, 250);
+								}
+							}
+						}
+					}
+					break;
+			}
+		}
+	},
+	/*
+	 * Enter event handler
+	 *
+	 * @return	boolean		true to stop the event and cancel the default action
+	 */
+	checkInsertParagraph: function() {
+		var editor = this.editor;
+		var i, left, right, rangeClone,
+			sel	= this.get().selection,
+			range	= this.createRange(),
+			p	= this.getAllAncestors(),
+			block	= null,
+			a	= null,
+			doc	= this.document;
+		for (i = 0; i < p.length; ++i) {
+			if (HTMLArea.DOM.isBlockElement(p[i]) && !/^(html|body|table|tbody|thead|tfoot|tr|dl)$/i.test(p[i].nodeName)) {
+				block = p[i];
+				break;
+			}
+		}
+		if (block && /^(td|th|tr|tbody|thead|tfoot|table)$/i.test(block.nodeName) && this.editor.config.buttons.table && this.editor.config.buttons.table.disableEnterParagraphs) {
+			return false;
+		}
+		if (!range.collapsed) {
+			range.deleteContents();
+		}
+		this.empty();
+		if (!block || /^(td|div|article|aside|footer|header|nav|section)$/i.test(block.nodeName)) {
+			if (!block) {
+				block = doc.body;
+			}
+			if (block.hasChildNodes()) {
+				rangeClone = range.cloneRange();
+				if (range.startContainer == block) {
+						// Selection is directly under the block
+					var blockOnLeft = null;
+					var leftSibling = null;
+						// Looking for the farthest node on the left that is not a block
+					for (var i = range.startOffset; --i >= 0;) {
+						if (HTMLArea.DOM.isBlockElement(block.childNodes[i])) {
+							blockOnLeft = block.childNodes[i];
+							break;
+						} else {
+							rangeClone.setStartBefore(block.childNodes[i]);
+						}
+					}
+				} else {
+						// Looking for inline or text container immediate child of block
+					var inlineContainer = range.startContainer;
+					while (inlineContainer.parentNode != block) {
+						inlineContainer = inlineContainer.parentNode;
+					}
+						// Looking for the farthest node on the left that is not a block
+					var leftSibling = inlineContainer;
+					while (leftSibling.previousSibling && !HTMLArea.DOM.isBlockElement(leftSibling.previousSibling)) {
+						leftSibling = leftSibling.previousSibling;
+					}
+					rangeClone.setStartBefore(leftSibling);
+					var blockOnLeft = leftSibling.previousSibling;
+				}
+					// Avoiding surroundContents buggy in Opera and Safari
+				left = doc.createElement('p');
+				left.appendChild(rangeClone.extractContents());
+				if (!left.textContent && !left.getElementsByTagName('img').length && !left.getElementsByTagName('table').length) {
+					left.innerHTML = '<br />';
+				}
+				if (block.hasChildNodes()) {
+					if (blockOnLeft) {
+						left = block.insertBefore(left, blockOnLeft.nextSibling);
+					} else {
+						left = block.insertBefore(left, block.firstChild);
+					}
+				} else {
+					left = block.appendChild(left);
+				}
+				block.normalize();
+					// Looking for the farthest node on the right that is not a block
+				var rightSibling = left;
+				while (rightSibling.nextSibling && !HTMLArea.DOM.isBlockElement(rightSibling.nextSibling)) {
+					rightSibling = rightSibling.nextSibling;
+				}
+				var blockOnRight = rightSibling.nextSibling;
+				range.setEndAfter(rightSibling);
+				range.setStartAfter(left);
+					// Avoiding surroundContents buggy in Opera and Safari
+				right = doc.createElement('p');
+				right.appendChild(range.extractContents());
+				if (!right.textContent && !right.getElementsByTagName('img').length && !right.getElementsByTagName('table').length) {
+					right.innerHTML = '<br />';
+				}
+				if (!(left.childNodes.length == 1 && right.childNodes.length == 1 && left.firstChild.nodeName.toLowerCase() == 'br' && right.firstChild.nodeName.toLowerCase() == 'br')) {
+					if (blockOnRight) {
+						right = block.insertBefore(right, blockOnRight);
+					} else {
+						right = block.appendChild(right);
+					}
+					this.selectNodeContents(right, true);
+				} else {
+					this.selectNodeContents(left, true);
+				}
+				block.normalize();
+			} else {
+				var first = block.firstChild;
+				if (first) {
+					block.removeChild(first);
+				}
+				right = doc.createElement('p');
+				if (Ext.isWebKit || Ext.isOpera) {
+					right.innerHTML = '<br />';
+				}
+				right = block.appendChild(right);
+				this.selectNodeContents(right, true);
+			}
+		} else {
+			range.setEndAfter(block);
+			var df = range.extractContents(), left_empty = false;
+			if (!/\S/.test(block.innerHTML) || (!/\S/.test(block.textContent) && !/<(img|hr|table)/i.test(block.innerHTML))) {
+				if (!Ext.isOpera) {
+					block.innerHTML = '<br />';
+				}
+				left_empty = true;
+			}
+			p = df.firstChild;
+			if (p) {
+				if (!/\S/.test(p.innerHTML) || (!/\S/.test(p.textContent) && !/<(img|hr|table)/i.test(p.innerHTML))) {
+					if (/^h[1-6]$/i.test(p.nodeName)) {
+						p = HTMLArea.DOM.convertNode(p, 'p');
+					}
+					if (/^(dt|dd)$/i.test(p.nodeName)) {
+						 p = HTMLArea.DOM.convertNode(p, /^(dt)$/i.test(p.nodeName) ? 'dd' : 'dt');
+					}
+					if (!Ext.isOpera) {
+						p.innerHTML = '<br />';
+					}
+					if (/^li$/i.test(p.nodeName) && left_empty && (!block.nextSibling || !/^li$/i.test(block.nextSibling.nodeName))) {
+						left = block.parentNode;
+						left.removeChild(block);
+						range.setEndAfter(left);
+						range.collapse(false);
+						p = HTMLArea.DOM.convertNode(p, /^(li|dd|td|th|p|h[1-6])$/i.test(left.parentNode.nodeName) ? 'br' : 'p');
+					}
+				}
+				range.insertNode(df);
+					// Remove any anchor created empty on both sides of the selection
+				if (p.previousSibling) {
+					var a = p.previousSibling.lastChild;
+					if (a && /^a$/i.test(a.nodeName) && !/\S/.test(a.innerHTML)) {
+						HTMLArea.DOM.convertNode(a, 'br');
+					}
+				}
+				var a = p.lastChild;
+				if (a && /^a$/i.test(a.nodeName) && !/\S/.test(a.innerHTML)) {
+					HTMLArea.DOM.convertNode(a, 'br');
+				}
+					// Walk inside the deepest child element (presumably inline element)
+				while (p.firstChild && p.firstChild.nodeType === HTMLArea.DOM.ELEMENT_NODE && !/^(br|img|hr|table)$/i.test(p.firstChild.nodeName)) {
+					p = p.firstChild;
+				}
+				if (/^br$/i.test(p.nodeName)) {
+					p = p.parentNode.insertBefore(doc.createTextNode('\x20'), p);
+				} else if (!/\S/.test(p.innerHTML)) {
+						// Need some element inside the deepest element
+					p.appendChild(doc.createElement('br'));
+				}
+				this.selectNodeContents(p, true);
+			} else {
+				if (/^(li|dt|dd)$/i.test(block.nodeName)) {
+					p = doc.createElement(block.nodeName);
+				} else {
+					p = doc.createElement('p');
+				}
+				if (!Ext.isOpera) {
+					p.innerHTML = '<br />';
+				}
+				if (block.nextSibling) {
+					p = block.parentNode.insertBefore(p, block.nextSibling);
+				} else {
+					p = block.parentNode.appendChild(p);
+				}
+				this.selectNodeContents(p, true);
+			}
+		}
+		this.editor.scrollToCaret();
+		return true;
+	}
+});
+/***************************************************
+ *  HTMLArea.DOM.BookMark: BookMark object
+ ***************************************************/
+HTMLArea.DOM.BookMark = function (config) {
+};
+HTMLArea.DOM.BookMark = Ext.extend(HTMLArea.DOM.BookMark, {
+	/*
+	 * Reference to the editor MUST be set in config
+	 */
+	editor: null,
+	/*
+	 * Reference to the editor document
+	 */
+	document: null,
+	/*
+	 * Reference to the editor selection object
+	 */
+	selection: null,
+	/*
+	 * HTMLArea.DOM.Selection constructor
+	 */
+	constructor: function (config) {
+		 	// Apply config
+		Ext.apply(this, config);
+			// Initialize references
+		this.document = this.editor.document;
+		this.selection = this.editor.getSelection();
+	},
+	/*
+	 * Get a bookMark
+	 * Adapted from FCKeditor
+	 * This is an "intrusive" way to create a bookMark. It includes <span> tags
+	 * in the range boundaries. The advantage of it is that it is possible to
+	 * handle DOM mutations when moving back to the bookMark.
+	 *
+	 * @param	object		range: the range to bookMark
+	 *
+	 * @return	object		the bookMark
+	 */
+	get: function (range) {
+		var bookMark;
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+				// Bookmarking will not work on control ranges
+			try {
+				bookMark = range.getBookmark();
+			} catch (e) {
+				bookMark = null;
+			}
+		} else {
+				// Create the bookmark info (random IDs).
+			var bookMark = {
+				startId : (new Date()).valueOf() + Math.floor(Math.random()*1000) + 'S',
+				endId   : (new Date()).valueOf() + Math.floor(Math.random()*1000) + 'E'
+			};
+			var startSpan;
+			var endSpan;
+			var rangeClone = range.cloneRange();
+				// For collapsed ranges, add just the start marker
+			if (!range.collapsed ) {
+				endSpan = this.document.createElement('span');
+				endSpan.style.display = 'none';
+				endSpan.id = bookMark.endId;
+				endSpan.setAttribute('data-htmlarea-bookmark', true);
+				endSpan.innerHTML = '&nbsp;';
+				rangeClone.collapse(false);
+				rangeClone.insertNode(endSpan);
+			}
+			startSpan = this.document.createElement('span');
+			startSpan.style.display = 'none';
+			startSpan.id = bookMark.startId;
+			startSpan.setAttribute('data-htmlarea-bookmark', true);
+			startSpan.innerHTML = '&nbsp;';
+			var rangeClone = range.cloneRange();
+			rangeClone.collapse(true);
+			rangeClone.insertNode(startSpan);
+			bookMark.startNode = startSpan;
+			bookMark.endNode = endSpan;
+				// Update the range position.
+			if (endSpan) {
+				range.setEndBefore(endSpan);
+				range.setStartAfter(startSpan);
+			} else {
+				range.setEndAfter(startSpan);
+				range.collapse(false);
+			}
+			return bookMark;
+		}
+	},
+	/*
+	 * Get the end point of the bookMark
+	 * Adapted from FCKeditor
+	 *
+	 * @param	object		bookMark: the bookMark
+	 * @param	boolean		endPoint: true, for startPoint, false for endPoint
+	 *
+	 * @return	object		the endPoint node
+	 */
+	getEndPoint: function (bookMark, endPoint) {
+		if (endPoint) {
+			return this.document.getElementById(bookMark.startId);
+		} else {
+			return this.document.getElementById(bookMark.endId);
+		}
+	},
+	/*
+	 * Move the range to the bookmark
+	 * Adapted from FCKeditor
+	 *
+	 * @param	object		bookMark: the bookmark to move to
+	 *
+	 * @return	object		the range that was bookmarked
+	 */
+	moveTo: function (bookMark) {
+		var range = this.selection.createRange();
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			if (bookMark) {
+				range.moveToBookmark(bookMark);
+			}
+		} else {
+			var startSpan  = this.getEndPoint(bookMark, true);
+			var endSpan    = this.getEndPoint(bookMark, false);
+			var parent;
+			if (startSpan) {
+					// If the previous sibling is a text node, let the anchorNode have it as parent
+				if (startSpan.previousSibling && startSpan.previousSibling.nodeType === HTMLArea.DOM.TEXT_NODE) {
+					range.setStart(startSpan.previousSibling, startSpan.previousSibling.data.length);
+				} else {
+					range.setStartBefore(startSpan);
+				}
+				HTMLArea.DOM.removeFromParent(startSpan);
+			} else {
+					// For some reason, the startSpan was removed or its id attribute was removed so that it cannot be retrieved
+				range.setStart(this.document.body, 0);
+			}
+				// If the bookmarked range was collapsed, the end span will not be available
+			if (endSpan) {
+					// If the next sibling is a text node, let the focusNode have it as parent
+				if (endSpan.nextSibling && endSpan.nextSibling.nodeType === HTMLArea.DOM.TEXT_NODE) {
+					range.setEnd(endSpan.nextSibling, 0);
+				} else {
+					range.setEndBefore(endSpan);
+				}
+				HTMLArea.DOM.removeFromParent(endSpan);
+			} else {
+				range.collapse(true);
+			}
+		}
+		return range;
+	}
+});
+/***************************************************
+ *  HTMLArea.DOM.Node: Node object
+ ***************************************************/
+HTMLArea.DOM.Node = function (config) {
+};
+HTMLArea.DOM.Node = Ext.extend(HTMLArea.DOM.Node, {
+	/*
+	 * Reference to the editor MUST be set in config
+	 */
+	editor: null,
+	/*
+	 * Reference to the editor document
+	 */
+	document: null,
+	/*
+	 * Reference to the editor selection object
+	 */
+	selection: null,
+	/*
+	 * Reference to the editor bookmark object
+	 */
+	bookMark: null,
+	/*
+	 * HTMLArea.DOM.Selection constructor
+	 */
+	constructor: function (config) {
+		 	// Apply config
+		Ext.apply(this, config);
+			// Initialize references
+		this.document = this.editor.document;
+		this.selection = this.editor.getSelection();
+		this.bookMark = this.editor.getBookMark();
+	},
+	/*
+	 * Remove the given element
+	 *
+	 * @param	object		element: the element to be removed, content and selection being preserved
+	 *
+	 * @return	void
+	 */
+	removeMarkup: function (element) {
+		var bookMark = this.bookMark.get(this.selection.createRange());
+		var parent = element.parentNode;
+		while (element.firstChild) {
+			parent.insertBefore(element.firstChild, element);
+		}
+		parent.removeChild(element);
+		this.selection.selectRange(this.bookMark.moveTo(bookMark));
+	},
+	/*
+	 * Wrap the range with an inline element
+	 *
+	 * @param	string	element: the node that will wrap the range
+	 * @param	object	range: the range to be wrapped
+	 *
+	 * @return	void
+	 */
+	wrapWithInlineElement: function (element, range) {
+		if (Ext.isIE8 || Ext.isIE7 || Ext.isIE6) {
+			var nodeName = element.nodeName;
+			var bookMark = this.bookMark.get(range);
+			if (range.parentElement) {
+				var parent = range.parentElement();
+				var rangeStart = range.duplicate();
+				rangeStart.collapse(true);
+				var parentStart = rangeStart.parentElement();
+				var rangeEnd = range.duplicate();
+				rangeEnd.collapse(true);
+				var newRange = this.selection.createRange();
+				
+				var parentEnd = rangeEnd.parentElement();
+				var upperParentStart = parentStart;
+				if (parentStart !== parent) {
+					while (upperParentStart.parentNode !== parent) {
+						upperParentStart = upperParentStart.parentNode;
+					}
+				}
+				
+				element.innerHTML = range.htmlText;
+					// IE eats spaces on the start boundary
+				if (range.htmlText.charAt(0) === '\x20') {
+					element.innerHTML = '&nbsp;' + element.innerHTML;
+				}
+				var elementClone = element.cloneNode(true);
+				range.pasteHTML(element.outerHTML);
+					// IE inserts the element as the last child of the start container
+				if (parentStart !== parent
+						&& parentStart.lastChild
+						&& parentStart.lastChild.nodeType === HTMLArea.DOM.ELEMENT_NODE
+						&& parentStart.lastChild.nodeName.toLowerCase() === nodeName) {
+					parent.insertBefore(elementClone, upperParentStart.nextSibling);
+					parentStart.removeChild(parentStart.lastChild);
+						// Sometimes an empty previous sibling was created
+					if (elementClone.previousSibling
+							&& elementClone.previousSibling.nodeType === HTMLArea.DOM.ELEMENT_NODE
+							&& !elementClone.previousSibling.innerText) {
+						parent.removeChild(elementClone.previousSibling);
+					}
+						// The bookmark will not work anymore
+					newRange.moveToElementText(elementClone);
+					newRange.collapse(false);
+					newRange.select();
+				} else {
+						// Working around IE boookmark bug
+					if (parentStart != parentEnd) {
+						var newRange = this.selection.createRange();
+						if (newRange.moveToBookmark(bookMark)) {
+							newRange.collapse(false);
+							newRange.select();
+						}
+					} else {
+						range.collapse(false);
+					}
+				}
+				parent.normalize();
+			} else {
+				var parent = range.item(0);
+				element = parent.parentNode.insertBefore(element, parent);
+				element.appendChild(parent);
+				this.bookMark.moveTo(bookMark);
+			}
+		} else {
+			element.appendChild(range.extractContents());
+			range.insertNode(element);
+			element.normalize();
+				// Sometimes Firefox inserts empty elements just outside the boundaries of the range
+			var neighbour = element.previousSibling;
+			if (neighbour && (neighbour.nodeType !== HTMLArea.DOM.TEXT_NODE) && !/\S/.test(neighbour.textContent)) {
+				HTMLArea.DOM.removeFromParent(neighbour);
+			}
+			neighbour = element.nextSibling;
+			if (neighbour && (neighbour.nodeType !== HTMLArea.DOM.TEXT_NODE) && !/\S/.test(neighbour.textContent)) {
+				HTMLArea.DOM.removeFromParent(neighbour);
+			}
+			this.selection.selectNodeContents(element, false);
+		}
+	},
+	/*
+	 * Clean Apple wrapping span and font elements under the specified node
+	 *
+	 * @param	object		node: the node in the subtree of which cleaning is performed
+	 *
+	 * @return	void
+	 */
+	cleanAppleStyleSpans: function (node) {
+		if (Ext.isWebKit) {
+			if (node.getElementsByClassName) {
+				var spans = node.getElementsByClassName('Apple-style-span');
+				for (var i = spans.length; --i >= 0;) {
+					this.removeMarkup(spans[i]);
+				}
+			} else {
+				var spans = node.getElementsByTagName('span');
+				for (var i = spans.length; --i >= 0;) {
+					if (HTMLArea.DOM.hasClass(spans[i], 'Apple-style-span')) {
+						this.removeMarkup(spans[i]);
+					}
+				}
+				var fonts = node.getElementsByTagName('font');
+				for (i = fonts.length; --i >= 0;) {
+					if (HTMLArea.DOM.hasClass(fonts[i], 'Apple-style-span')) {
+						this.removeMarkup(fonts[i]);
+					}
+				}
+			}
+		}
+	}
+});
+ /*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.getInnerText = HTMLArea.DOM.getInnerText;
+ /*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.removeFromParent = HTMLArea.DOM.removeFromParent;
+/*
+ * Get the block ancestors of an element within a given block
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getBlockAncestors = HTMLArea.DOM.getBlockAncestors;
+/*
+ * This function verifies if the element has any allowed attributes
+ *
+ * @param	object	element: the DOM element
+ * @param	array	allowedAttributes: array of allowed attribute names
+ *
+ * @return	boolean	true if the element has one of the allowed attributes
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.hasAllowedAttributes = HTMLArea.DOM.hasAllowedAttributes;
+/*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.isBlockElement = HTMLArea.DOM.isBlockElement;
+/*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.needsClosingTag = HTMLArea.DOM.needsClosingTag;
+/*
+ * Get the current selection object
+ * 
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype._getSelection = function() {
+	this.appendToLog('HTMLArea.Editor', '_getSelection', 'Reference to deprecated method', 'warn');
+	return this.getSelection().get().selection;
+};
+/*
+ * Empty the selection object
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.emptySelection = function (selection) {
+	this.appendToLog('HTMLArea.Editor', 'emptySelection', 'Reference to deprecated method', 'warn');
+	this.getSelection().empty();
+};
+/*
+ * Add a range to the selection
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.addRangeToSelection = function(selection, range) {
+	this.appendToLog('HTMLArea.Editor', 'addRangeToSelection', 'Reference to deprecated method', 'warn');
+	this.getSelection().addRange(range);
+};
+/*
+ * Create a range for the current selection
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype._createRange = function(sel) {
+	this.appendToLog('HTMLArea.Editor', '_createRange', 'Reference to deprecated method', 'warn');
+	return this.getSelection().createRange();
+};
+/*
+ * Select a node AND the contents inside the node
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.selectNode = function(node, endPoint) {
+	this.appendToLog('HTMLArea.Editor', 'selectNode', 'Reference to deprecated method', 'warn');
+	this.getSelection().selectNode(node, endPoint);
+};
+/*
+ * Select ONLY the contents inside the given node
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.selectNodeContents = function(node, endPoint) {
+	this.appendToLog('HTMLArea.Editor', 'selectNodeContents', 'Reference to deprecated method', 'warn');
+	this.getSelection().selectNodeContents(node, endPoint);
+};
+/*
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.rangeIntersectsNode = function(range, node) {
+	this.appendToLog('HTMLArea.Editor', 'rangeIntersectsNode', 'Reference to deprecated method', 'warn');
+	this.focus();
+	return HTMLArea.DOM.rangeIntersectsNode(range, node);
+};
+/*
+ * Get the selection type
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getSelectionType = function(selection) {
+	this.appendToLog('HTMLArea.Editor', 'getSelectionType', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getType();
+};
+/*
+ * Return the ranges of the selection
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getSelectionRanges = function(selection) {
+	this.appendToLog('HTMLArea.Editor', 'getSelectionRanges', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getRanges();
+};
+/*
+ * Add ranges to the selection
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.setSelectionRanges = function(ranges, selection) {
+	this.appendToLog('HTMLArea.Editor', 'setSelectionRanges', 'Reference to deprecated method', 'warn');
+	this.getSelection().setRanges(ranges);
+};
+/*
+ * Retrieves the selected element (if any), just in the case that a single element (object like and image or a table) is selected.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getSelectedElement = function(selection) {
+	this.appendToLog('HTMLArea.Editor', 'getSelectedElement', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getElement();
+};
+/*
+ * Retrieve the HTML contents of selected block
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getSelectedHTML = function() {
+	this.appendToLog('HTMLArea.Editor', 'getSelectedHTML', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getHtml();
+};
+/*
+ * Retrieve simply HTML contents of the selected block, IE ignoring control ranges
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getSelectedHTMLContents = function() {
+	this.appendToLog('HTMLArea.Editor', 'getSelectedHTMLContents', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getHtml();
+};
+/*
+ * Get the deepest node that contains both endpoints of the current selection.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getParentElement = function(selection, range) {
+	this.appendToLog('HTMLArea.Editor', 'getParentElement', 'Reference to deprecated method', 'warn');
+	return this.getSelection().getParentElement();
+};
+/*
+ * Determine if the current selection is empty or not.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype._selectionEmpty = function(sel) {
+	this.appendToLog('HTMLArea.Editor', '_selectionEmpty', 'Reference to deprecated method', 'warn');
+	return this.getSelection().isEmpty();
+};
+/*
+ * Get a bookmark
+ * Adapted from FCKeditor
+ * This is an "intrusive" way to create a bookmark. It includes <span> tags
+ * in the range boundaries. The advantage of it is that it is possible to
+ * handle DOM mutations when moving back to the bookmark.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getBookmark = function (range) {
+	this.appendToLog('HTMLArea.Editor', 'getBookmark', 'Reference to deprecated method', 'warn');
+	return this.getBookMark().get(range);
+};
+/*
+ * Get the end point of the bookmark
+ * Adapted from FCKeditor
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.getBookmarkNode = function(bookmark, endPoint) {
+	this.appendToLog('HTMLArea.Editor', 'getBookmarkNode', 'Reference to deprecated method', 'warn');
+	return this.getBookMark().getEndPoint(bookmark, endPoint);
+};
+/*
+ * Move the range to the bookmark
+ * Adapted from FCKeditor
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.moveToBookmark = function (bookmark) {
+	this.appendToLog('HTMLArea.Editor', 'moveToBookmark', 'Reference to deprecated method', 'warn');
+	return this.getBookMark().moveTo(bookmark);
+};
+/*
+ * Select range
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.selectRange = function (range) {
+	this.appendToLog('HTMLArea.Editor', 'selectRange', 'Reference to deprecated method', 'warn');
+	this.selection.selectRange(range);
+};
+ /*
+ * Insert a node at the current position.
+ * Delete the current selection, if any.
+ * Split the text node, if needed.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.insertNodeAtSelection = function(toBeInserted) {
+	this.appendToLog('HTMLArea.Editor', 'insertNodeAtSelection', 'Reference to deprecated method', 'warn');
+	this.getSelection().insertNode(toBeInserted);
+};
+/*
+ * Insert HTML source code at the current position.
+ * Delete the current selection, if any.
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.insertHTML = function(html) {
+	this.appendToLog('HTMLArea.Editor', 'insertHTML', 'Reference to deprecated method', 'warn');
+	this.getSelection().insertHtml(html);
+};
+/*
+ * Wrap the range with an inline element
+ *
+ * @param	string	element: the node that will wrap the range
+ * @param	object	range: the range to be wrapped
+ *
+ * @return	void
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.wrapWithInlineElement = function(element, selection,range) {
+	this.appendToLog('HTMLArea.Editor', 'wrapWithInlineElement', 'Reference to deprecated method', 'warn');
+	this.getDomNode().wrapWithInlineElement(element, range);
+};
+/*
+ * Clean Apple wrapping span and font elements under the specified node
+ *
+ * @param	object		node: the node in the subtree of which cleaning is performed
+ *
+ * @return	void
+ *
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.7 *
+ ***********************************************
+ */
+HTMLArea.Editor.prototype.cleanAppleStyleSpans = function(node) {
+	this.appendToLog('HTMLArea.Editor', 'cleanAppleStyleSpans', 'Reference to deprecated method', 'warn');
+	this.getDomNode().cleanAppleStyleSpans(node);
+};
+/***************************************************
  *  HTMLArea.CSS.Parser: CSS Parser
  ***************************************************/
 HTMLArea.CSS.Parser = Ext.extend(Ext.util.Observable, {
@@ -3614,7 +5156,7 @@ HTMLArea.CSS.Parser = Ext.extend(Ext.util.Observable, {
 	constructor: function (config) {
 		HTMLArea.CSS.Parser.superclass.constructor.call(this, {});
 		var configDefaults = {
-			parseAttemptsMaximumNumber: 17,
+			parseAttemptsMaximumNumber: 20,
 			prefixLabelWithClassName: false,
 			postfixLabelWithClassName: false,
 			showTagFreeClasses: false,
@@ -3622,6 +5164,9 @@ HTMLArea.CSS.Parser = Ext.extend(Ext.util.Observable, {
 			editor: null
 		};
 		Ext.apply(this, config, configDefaults);
+		if (this.editor.config.styleSheetsMaximumAttempts) {
+			this.parseAttemptsMaximumNumber = this.editor.config.styleSheetsMaximumAttempts;
+		}
 		this.addEvents(
 			/*
 			 * @event HTMLAreaEventCssParsingComplete
@@ -3674,10 +5219,9 @@ HTMLArea.CSS.Parser = Ext.extend(Ext.util.Observable, {
 					try {
 						if (typeof(HTMLArea.classesLabels) === 'undefined') {
 							eval(response.responseText);
-							this.editor.appendToLog('HTMLArea.CSS.Parser', 'initiateParsing', 'Javascript file successfully evaluated: ' + this.editor.config.classesUrl);
 						}
 					} catch(e) {
-						this.editor.appendToLog('HTMLArea.CSS.Parser', 'initiateParsing', 'Error evaluating contents of Javascript file: ' + this.editor.config.classesUrl);
+						this.editor.appendToLog('HTMLArea.CSS.Parser', 'initiateParsing', 'Error evaluating contents of Javascript file: ' + this.editor.config.classesUrl, 'error');
 					}
 				}
 				this.parse();
@@ -3695,11 +5239,14 @@ HTMLArea.CSS.Parser = Ext.extend(Ext.util.Observable, {
 		if (this.editor.document) {
 			this.parseStyleSheets();
 			if (!this.cssLoaded) {
-				if (this.parseAttemptsCounter < this.parseAttemptsMaximumNumber) {
-					this.attemptTimeout = this.parse.defer(200, this);
+				if (/Security/i.test(this.error)) {
+					this.editor.appendToLog('HTMLArea.CSS.Parser', 'parse', 'A security error occurred. Make sure all stylesheets are accessed from the same domain/subdomain and using the same protocol as the current script.', 'error');
+					this.fireEvent('HTMLAreaEventCssParsingComplete');
+				} else if (this.parseAttemptsCounter < this.parseAttemptsMaximumNumber) {
 					this.parseAttemptsCounter++;
+					this.attemptTimeout = this.parse.defer(200, this);
 				} else {
-					this.editor.appendToLog('HTMLArea.CSS.Parser', 'parse', 'The stylesheets could not be parsed. Reported error: ' + this.error);
+					this.editor.appendToLog('HTMLArea.CSS.Parser', 'parse', 'The stylesheets could not be parsed. Reported error: ' + this.error, 'error');
 					this.fireEvent('HTMLAreaEventCssParsingComplete');
 				}
 			} else {
@@ -3719,28 +5266,67 @@ HTMLArea.CSS.Parser = Ext.extend(Ext.util.Observable, {
 	parseStyleSheets: function () {
 		this.cssLoaded = true;
 		this.error = null;
-		for (var i = 0; i < this.editor.document.styleSheets.length; i++) {
-			if (!Ext.isIE) {
+			// Test if the styleSheets array is at all accessible
+		if (Ext.isOpera) {
+			if (this.editor.document.readyState !== 'complete') {
+				this.cssLoaded = false;
+				this.error = 'Document.readyState not complete';
+			}
+		} else {
+			if (Ext.isIE) {
 				try {
-					this.parseRules(this.editor.document.styleSheets[i].cssRules);
-				} catch (e) {
-					this.error = e;
+					var rules = this.editor.document.styleSheets[0].rules;
+					var imports = this.editor.document.styleSheets[0].imports;
+					if (!rules.length && !imports.length) {
+						this.cssLoaded = false;
+						this.error = 'Empty rules and imports arrays';
+					}
+				} catch(e) {
 					this.cssLoaded = false;
-					this.parsedClasses = {};
+					this.error = e;
 				}
 			} else {
-				try{
-					if (this.editor.document.styleSheets[i].imports) {
-						this.parseIeRules(this.editor.document.styleSheets[i].imports);
-					}
-					if (this.editor.document.styleSheets[i].rules) {
-						this.parseRules(this.editor.document.styleSheets[i].rules);
-					}
-				} catch (e) {
-					this.error = e;
+				try {
+					this.editor.document.styleSheets && this.editor.document.styleSheets[0] && this.editor.document.styleSheets[0].rules;
+				} catch(e) {
 					this.cssLoaded = false;
-					this.parsedClasses = {};
+					this.error = e;
 				}
+			}
+		}
+		if (this.cssLoaded) {
+				// Expecting 3 stylesheets...
+			if (this.editor.document.styleSheets.length > 2) {
+				Ext.each(this.editor.document.styleSheets, function (styleSheet, index) {
+					try {
+						if (Ext.isIE) {
+							var rules = styleSheet.rules;
+							var imports = styleSheet.imports;
+								// Default page style may contain only a comment
+							if (!rules.length && !imports.length && index != 1) {
+								this.cssLoaded = false;
+								this.error = 'Empty rules and imports arrays of styleSheets[' + index + ']';
+								return false;
+							}
+							if (styleSheet.imports) {
+								this.parseIeRules(styleSheet.imports);
+							}
+							if (styleSheet.rules) {
+								this.parseRules(styleSheet.rules);
+							}
+						} else {
+							this.parseRules(styleSheet.cssRules);
+						}
+					} catch (e) {
+						this.error = e;
+						this.cssLoaded = false;
+						this.parsedClasses = {};
+						return false;
+					}
+				}, this);
+			} else {
+				this.cssLoaded = false;
+				this.error = 'Empty stylesheets array or missing linked stylesheets';
 			}
 		}
 	},
@@ -3995,7 +5581,7 @@ HTMLArea.util.Color = function () {
 					var b = parseInt(RegExp.$3);
 					return ('#' + hex(r) + hex(g) + hex(b)).toUpperCase();
 				}
-				return null;
+				return '';
 			}
 			if (v.substr(0, 1) === '#') {
 				return v;
@@ -4015,11 +5601,6 @@ HTMLArea.util.Color = function () {
 		}
 	}
 }();
-/*
- * Interim backward compatibility
- */
-HTMLArea._makeColor = HTMLArea.util.Color.colorToRgb;
-HTMLArea._colorToRgb = HTMLArea.util.Color.colorToHex;
 /*
  * Intercept Ext.ColorPalette.prototype.select
  */
@@ -4225,180 +5806,49 @@ Ext.ux.form.ColorPaletteField = Ext.extend(Ext.form.TriggerField, {
 	}
 });
 Ext.reg('colorpalettefield', Ext.ux.form.ColorPaletteField);
-/**
- * Internet Explorer returns an item having the _name_ equal to the given id, even if it's not having any id.
- * This way it can return a different form field even if it's not a textarea.  This works around the problem by
- * specifically looking to search only elements having a certain tag name.
- */
-HTMLArea.getElementById = function(tag, id) {
-	var el, i, objs = document.getElementsByTagName(tag);
-	for (i = objs.length; --i >= 0 && (el = objs[i]);) {
-		if (el.id == id) return el;
-	}
-	return null;
-};
-
 /***************************************************
  * TYPO3-SPECIFIC FUNCTIONS
  ***************************************************/
 /*
  * Extending the TYPO3 Lorem Ipsum extension
  */
-var lorem_ipsum = function(element,text) {
-	if (element.tagName.toLowerCase() == "textarea" && element.id && element.id.substr(0,7) == "RTEarea") {
-		var editor = RTEarea[element.id.substr(7, element.id.length)]["editor"];
-		editor.insertHTML(text);
-		editor.toolbar.update();
+var lorem_ipsum = function (element, text) {
+	if (/^textarea$/i.test(element.nodeName) && element.id && element.id.substr(0,7) === 'RTEarea') {
+		var editor = RTEarea[element.id.substr(7, element.id.length)]['editor'];
+		editor.getSelection().insertHtml(text);
+		editor.updateToolbar();
 	}
 };
-/*
- * Create the editor when HTMLArea is loaded and when Ext is ready
- */
-HTMLArea.initEditor = function(editorNumber) {
-	if (document.getElementById('pleasewait' + editorNumber)) {
-		if (HTMLArea.checkSupportedBrowser()) {
-			document.getElementById('pleasewait' + editorNumber).style.display = 'block';
-			document.getElementById('editorWrap' + editorNumber).style.visibility = 'hidden';
-			if (!HTMLArea.isReady) {
-				HTMLArea.initEditor.defer(150, null, [editorNumber]);
-			} else {
-					// Create an editor for the textarea
-				HTMLArea._appendToLog("[HTMLArea::initEditor]: Initializing editor with editor Id: " + editorNumber + ".");
-				var editor = new HTMLArea.Editor(Ext.apply(new HTMLArea.Config(editorNumber), RTEarea[editorNumber]));
-				editor.generate();
-				return false;
-			}
-		} else {
-			document.getElementById('pleasewait' + editorNumber).style.display = 'none';
-			document.getElementById('editorWrap' + editorNumber).style.visibility = 'visible';
-		}
-	}
-};
-
-/**
- *	Base, version 1.0.2
- *	Copyright 2006, Dean Edwards
- *	License: http://creativecommons.org/licenses/LGPL/2.1/
- */
-
-HTMLArea.Base = function() {
-	if (arguments.length) {
-		if (this == window) { // cast an object to this class
-			HTMLArea.Base.prototype.extend.call(arguments[0], arguments.callee.prototype);
-		} else {
-			this.extend(arguments[0]);
-		}
-	}
-};
-
-HTMLArea.Base.version = "1.0.2";
-
-HTMLArea.Base.prototype = {
-	extend: function(source, value) {
-		var extend = HTMLArea.Base.prototype.extend;
-		if (arguments.length == 2) {
-			var ancestor = this[source];
-			// overriding?
-			if ((ancestor instanceof Function) && (value instanceof Function) &&
-				ancestor.valueOf() != value.valueOf() && /\bbase\b/.test(value)) {
-				var method = value;
-			//	var _prototype = this.constructor.prototype;
-			//	var fromPrototype = !Base._prototyping && _prototype[source] == ancestor;
-				value = function() {
-					var previous = this.base;
-				//	this.base = fromPrototype ? _prototype[source] : ancestor;
-					this.base = ancestor;
-					var returnValue = method.apply(this, arguments);
-					this.base = previous;
-					return returnValue;
-				};
-				// point to the underlying method
-				value.valueOf = function() {
-					return method;
-				};
-				value.toString = function() {
-					return String(method);
-				};
-			}
-			return this[source] = value;
-		} else if (source) {
-			var _prototype = {toSource: null};
-			// do the "toString" and other methods manually
-			var _protected = ["toString", "valueOf"];
-			// if we are prototyping then include the constructor
-			if (HTMLArea.Base._prototyping) _protected[2] = "constructor";
-			for (var i = 0; (name = _protected[i]); i++) {
-				if (source[name] != _prototype[name]) {
-					extend.call(this, name, source[name]);
-				}
-			}
-			// copy each of the source object's properties to this object
-			for (var name in source) {
-				if (!_prototype[name]) {
-					extend.call(this, name, source[name]);
-				}
-			}
-		}
-		return this;
-	},
-
-	base: function() {
-		// call this method from any other method to invoke that method's ancestor
-	}
-};
-
-HTMLArea.Base.extend = function(_instance, _static) {
-	var extend = HTMLArea.Base.prototype.extend;
-	if (!_instance) _instance = {};
-	// build the prototype
-	HTMLArea.Base._prototyping = true;
-	var _prototype = new this;
-	extend.call(_prototype, _instance);
-	var constructor = _prototype.constructor;
-	_prototype.constructor = this;
-	delete HTMLArea.Base._prototyping;
-	// create the wrapper for the constructor function
-	var klass = function() {
-		if (!HTMLArea.Base._prototyping) constructor.apply(this, arguments);
-		this.constructor = klass;
-	};
-	klass.prototype = _prototype;
-	// build the class interface
-	klass.extend = this.extend;
-	klass.implement = this.implement;
-	klass.toString = function() {
-		return String(constructor);
-	};
-	extend.call(klass, _static);
-	// single instance
-	var object = constructor ? klass : _prototype;
-	// class initialisation
-	//if (object.init instanceof Function) object.init();
-	return object;
-};
-
-HTMLArea.Base.implement = function(_interface) {
-	if (_interface instanceof Function) _interface = _interface.prototype;
-	this.prototype.extend(_interface);
-};
-
 /**
  * HTMLArea.plugin class
  *
  * Every plugin should be a subclass of this class
  *
  */
-HTMLArea.Plugin = HTMLArea.Base.extend({
-
+HTMLArea.Plugin = function (editor, pluginName) {
+};
+/**
+ ***********************************************
+ * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.6 *
+ ***********************************************
+ * Extends class HTMLArea.Plugin
+ *
+ * Defined for backward compatibility only
+ * Use Ext.extend(SubClassName, config) directly
+ */
+HTMLArea.Plugin.extend = function (config) {
+	return Ext.extend(HTMLArea.Plugin, config);
+};
+HTMLArea.Plugin = Ext.extend(HTMLArea.Plugin, {
 	/**
-	 * HTMLArea.plugin constructor
+	 * HTMLArea.Plugin constructor
 	 *
 	 * @param	object		editor: instance of RTE
 	 * @param	string		pluginName: name of the plugin
 	 *
 	 * @return	boolean		true if the plugin was configured
 	 */
-	constructor : function(editor, pluginName) {
+	constructor: function (editor, pluginName) {
 		this.editor = editor;
 		this.editorNumber = editor.editorId;
 		this.editorId = editor.editorId;
@@ -4409,9 +5859,20 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 		} catch(e) {
 			this.I18N = new Object();
 		}
-		return this.configurePlugin(editor);
+		this.configurePlugin(editor);
+		/**
+		 ***********************************************
+		 * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.6 *
+		 ***********************************************
+		 * Extends class HTMLArea[pluginName]
+		 *
+		 * Defined for backward compatibility only
+		 * Use Ext.extend(SubClassName, config) directly
+		 */
+		HTMLArea[pluginName].extend = function (config) {
+			return Ext.extend(HTMLArea[pluginName], config);
+		};
 	},
-
 	/**
 	 * Configures the plugin
 	 * This function is invoked by the class constructor.
@@ -4424,10 +5885,22 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @return	boolean		true if the plugin was configured
 	 */
-	configurePlugin : function(editor) {
+	configurePlugin: function (editor) {
 		return false;
 	},
-
+	/**
+	 ***********************************************
+	 * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.6 *
+	 ***********************************************
+	 * Invove the base class constructor
+	 *
+	 * Defined for backward compatibility only
+	 * Note: this.base will exclusively refer to the HTMLArea.Plugin class constructor
+	 */
+	base: function (editor, pluginName) {
+		HTMLArea.appendToLog(editor.editorId, 'HTMLArea.' + pluginName, 'base', 'Deprecated use of base function. Use Ext superclass reference instead.', 'warn');
+		HTMLArea.Plugin.prototype.constructor.call(this, editor, pluginName);
+	},
 	/**
 	 * Registers the plugin "About" information
 	 *
@@ -4442,17 +5915,13 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @return	boolean		true if the information was registered
 	 */
-	registerPluginInformation : function(pluginInformation) {
-		if (typeof(pluginInformation) !== "object") {
-			this.appendToLog("registerPluginInformation", "Plugin information was not provided");
+	registerPluginInformation: function (pluginInformation) {
+		if (typeof(pluginInformation) !== 'object') {
+			this.appendToLog('registerPluginInformation', 'Plugin information was not provided', 'warn');
 			return false;
 		} else {
 			this.pluginInformation = pluginInformation;
 			this.pluginInformation.name = this.name;
-				/* Ensure backwards compatibility */
-			this.pluginInformation.developer_url = this.pluginInformation.developerUrl;
-			this.pluginInformation.c_owner = this.pluginInformation.copyrightOwner;
-			this.pluginInformation.sponsor_url = this.pluginInformation.sponsorUrl;
 			return true;
 		}
 	},
@@ -4462,7 +5931,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @return	object		the plugin information object
 	 */
-	getPluginInformation : function() {
+	getPluginInformation: function () {
 		return this.pluginInformation;
 	},
 
@@ -4472,7 +5941,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 * @param	string		pluinName: the name of some plugin
 	 * @return	object		the plugin object or null
 	 */
-	getPluginInstance : function(pluginName) {
+	getPluginInstance: function (pluginName) {
 		return this.editor.getPlugin(pluginName);
 	},
 
@@ -4481,7 +5950,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @return	string		editor mode
 	 */
-	getEditorMode : function() {
+	getEditorMode: function () {
 		return this.editor.getMode();
 	},
 
@@ -4492,7 +5961,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @return	boolean		true if the button is enabled in the toolbar configuration
 	 */
-	isButtonInToolbar : function(buttonId) {
+	isButtonInToolbar: function (buttonId) {
 		var index = -1;
 		Ext.each(this.editorConfiguration.toolbar, function (row) {
 			Ext.each(row, function (group) {
@@ -4511,7 +5980,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @return	object		the toolbar button object
 	 */
-	getButton: function(buttonId) {
+	getButton: function (buttonId) {
 		return this.editor.toolbar.getButton(buttonId);
 	},
 	/**
@@ -4568,7 +6037,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 					return true;
 				}
 			} else {
-				this.appendToLog("registerButton", "Function " + buttonConfiguration.action + " was not defined when registering button " + buttonConfiguration.id);
+				this.appendToLog('registerButton', 'Function ' + buttonConfiguration.action + ' was not defined when registering button ' + buttonConfiguration.id, 'error');
 			}
 		}
 		return false;
@@ -4597,7 +6066,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 				}
 				return this.editorConfiguration.registerButton(dropDownConfiguration);
 			} else {
-				this.appendToLog('registerDropDown', 'Function ' + dropDownConfiguration.action + ' was not defined when registering drop-down ' + dropDownConfiguration.id);
+				this.appendToLog('registerDropDown', 'Function ' + dropDownConfiguration.action + ' was not defined when registering drop-down ' + dropDownConfiguration.id, 'error');
 			}
 		}
 		return false;
@@ -4698,20 +6167,6 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 */
 	onUpdateToolbar: Ext.emptyFn,
 	/**
-	 ***********************************************
-	 * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
-	 ***********************************************
-	 * Register the key handler to the editor keyMap in onGenerate function
-	 * The keyPress event handler
-	 * This function may be defined by the plugin subclass.
-	 * If defined, the function is invoked whenever a key is pressed.
-	 *
-	 * @param	event		keyEvent: the event that was triggered when a key was pressed
-	 *
-	 * @return	boolean
-	 */
-	onKeyPress: null,
-	/**
 	 * The onMode event handler
 	 * This function may be redefined by the plugin subclass.
 	 * The function is invoked whenever the editor changes mode.
@@ -4721,7 +6176,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 * @return	boolean
 	 */
 	onMode: function(mode) {
-		if (mode === "textmode" && this.dialog && HTMLArea.Dialog[this.name] == this.dialog && !(this.dialog.buttonId && this.editorConfiguration.buttons[this.dialog.buttonId] && this.editorConfiguration.buttons[this.dialog.buttonId].textMode)) {
+		if (mode === "textmode" && this.dialog && !(this.dialog.buttonId && this.editorConfiguration.buttons[this.dialog.buttonId] && this.editorConfiguration.buttons[this.dialog.buttonId].textMode)) {
 			this.dialog.close();
 		}
 	},
@@ -4734,29 +6189,21 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 */
 	onGenerate: Ext.emptyFn,
 	/**
-	 * Make function reference in order to avoid memory leakage in IE
-	 ***********************************************
-	 * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
-	 ***********************************************
-	 *
-	 * @param	string		functionName: the name of the plugin function to be invoked
-	 *
-	 * @return	function	function definition invoking the specified function of the plugin
-	 */
-	makeFunctionReference: function (functionName) {
-		var self = this;
-		return (function(arg1, arg2, arg3) {
-			return (self[functionName](arg1, arg2, arg3));});
-	},
-	/**
 	 * Localize a string
 	 *
 	 * @param	string		label: the name of the label to localize
 	 *
 	 * @return	string		the localization of the label
 	 */
-	localize: function (label) {
-		return this.I18N[label] || HTMLArea.localize(label);
+	localize: function (label, plural) {
+		var i = plural || 0;
+		var localized = this.I18N[label];
+		if (typeof localized === 'object' && typeof localized[i] !== 'undefined') {
+			localized = localized[i]['target'];
+		} else {
+			localized = HTMLArea.localize(label, plural);
+		}
+		return localized;
 	},
 	/**
 	 * Get localized label wrapped with contextual help markup when available
@@ -4770,6 +6217,9 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	getHelpTip: function (fieldName, label, pluginName) {
 		if (Ext.isDefined(TYPO3.ContextHelp)) {
 			var pluginName = Ext.isDefined(pluginName) ? pluginName : this.name;
+			if (!Ext.isEmpty(fieldName)) {
+				fieldName = fieldName.replace(/-|\s/gi, '_');
+			}
 			return '<span class="t3-help-link" href="#" data-table="xEXT_rtehtmlarea_' + pluginName + '" data-field="' + fieldName + '"><abbr class="t3-help-teaser">' + (this.localize(label) || label) + '</abbr></span>';
 		} else {
 			return this.localize(label) || label;
@@ -4784,7 +6234,6 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 * @return	boolean		true on success of the request submission
 	 */
 	getJavascriptFile: function (url, callback) {
-		this.appendToLog('getJavascriptFile', 'Requesting script ' + url);
 		return this.editor.ajax.getJavascriptFile(url, callback, this);
 	},
 	/**
@@ -4797,49 +6246,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 * @return	boolean		true on success
 	 */
 	postData: function (url, data, callback) {
-	 	this.appendToLog('postData', 'Posting to ' + url + '.');
 	 	return this.editor.ajax.postData(url, data, callback, this);
-	},
-	/**
-	 ***********************************************
-	 * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
-	 ***********************************************
-	 * Open a dialog window or bring focus to it if is already opened
-	 *
-	 * @param	string		buttonId: buttonId requesting the opening of the dialog
-	 * @param	string		url: name, without extension, of the html file to be loaded into the dialog window
-	 * @param	string		action: name of the plugin function to be invoked when the dialog ends
-	 * @param	object		arguments: object of variable type to be passed to the dialog
-	 * @param	object		dimensions: object giving the width and height of the dialog window
-	 * @param	string		showScrollbars: specifies by "yes" or "no" whether or not the dialog window should have scrollbars
-	 * @param	object		dialogOpener: reference to the opener window
-	 *
-	 * @return	object		the dialogue object
-	 */
-	openDialog : function (buttonId, url, action, arguments, dimensions, showScrollbars, dialogOpener) {
-		if (this.dialog && this.dialog.hasOpenedWindow() && this.dialog.buttonId === buttonId) {
-			this.dialog.focus();
-			return this.dialog;
-		} else {
-			var actionFunctionReference = action;
-			if (typeof(action) === "string") {
-				if (typeof(this[action]) === "function") {
-					var actionFunctionReference = this.makeFunctionReference(action);
-				} else {
-					this.appendToLog("openDialog", "Function " + action + " was not defined when opening dialog for " + buttonId);
-				}
-			}
-			return new HTMLArea.Dialog(
-					this,
-					buttonId,
-					url,
-					actionFunctionReference,
-					arguments,
-					this.getWindowDimensions(dimensions, buttonId),
-					(showScrollbars?showScrollbars:"no"),
-					dialogOpener
-				);
-		}
 	},
 	/*
 	 * Open a window with container iframe
@@ -4927,19 +6334,6 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 		return this.dialogueWindowDimensions;
 	},
 	/**
-	 ***********************************************
-	 * THIS FUNCTION IS DEPRECATED AS OF TYPO3 4.4 *
-	 ***********************************************
-	 * Make url from the name of a popup of the plugin
-	 *
-	 * @param	string		popupName: name, without extension, of the html file to be loaded into the dialog window
-	 *
-	 * @return	string		the url
-	 */
-	makeUrlFromPopupName: function(popupName) {
-		return (popupName ? this.editor.popupURL("plugin://" + this.name + "/" + popupName) : this.editor.popupURL("blank.html"));
-	},
-	/**
 	 * Make url from module path
 	 *
 	 * @param	string		modulePath: module path
@@ -4948,18 +6342,19 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 * @return	string		the url
 	 */
 	makeUrlFromModulePath: function(modulePath, parameters) {
-		return modulePath + '?' + this.editorConfiguration.RTEtsConfigParams + '&editorNo=' + this.editor.editorId + '&sys_language_content=' + this.editorConfiguration.sys_language_content + '&contentTypo3Language=' + this.editorConfiguration.typo3ContentLanguage + '&contentTypo3Charset=' + encodeURIComponent(this.editorConfiguration.typo3ContentCharset) + (parameters?parameters:'');
+		return modulePath + '?' + this.editorConfiguration.RTEtsConfigParams + '&editorNo=' + this.editor.editorId + '&sys_language_content=' + this.editorConfiguration.sys_language_content + '&contentTypo3Language=' + this.editorConfiguration.typo3ContentLanguage + (parameters?parameters:'');
 	},
 	/**
 	 * Append an entry at the end of the troubleshooting log
 	 *
 	 * @param	string		functionName: the name of the plugin function writing to the log
 	 * @param	string		text: the text of the message
+	 * @param	string		type: the typeof of message: 'log', 'info', 'warn' or 'error'
 	 *
 	 * @return	void
 	 */
-	appendToLog: function (functionName, text) {
-		this.editor.appendToLog(this.name, functionName, text);
+	appendToLog: function (functionName, text, type) {
+		this.editor.appendToLog(this.name, functionName, text, type);
 	},
 	/*
 	 * Add a config element to config array if not empty
@@ -5027,7 +6422,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	saveSelection: function () {
 			// If IE, save the current selection
 		if (Ext.isIE) {
-			this.savedRange = this.editor._createRange(this.editor._getSelection());
+			this.savedRange = this.editor.getSelection().createRange();
 		}
 	},
 	/*
@@ -5039,7 +6434,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 		if (Ext.isIE && this.savedRange) {
 				// Restoring the selection will not work if the inner html was replaced by the plugin
 			try {
-				this.editor.selectRange(this.savedRange);
+				this.editor.getSelection().selectRange(this.savedRange);
 			} catch (e) {}
 		}
 	},
@@ -5048,7 +6443,7 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 	 *
 	 * @param	string		button: the text of the button
 	 * @param	function	handler: button handler
-	 * 
+	 *
 	 * @return	object		the button configuration object
 	 */
 	buildButtonConfig: function (button, handler) {
@@ -5063,423 +6458,5 @@ HTMLArea.Plugin = HTMLArea.Base.extend({
 			}
 		};
 	}
-});
-
-/**
- * HTMLArea.Dialog class
- *********************************************
- * THIS OBJECT IS DEPRECATED AS OF TYPO3 4.4 *
- *********************************************
- */
-HTMLArea.Dialog = HTMLArea.Base.extend({
-
-	/**
-	 * HTMLArea.Dialog constructor
-	 *
-	 * @param	object		plugin: reference to the invoking plugin
-	 * @param	string		buttonId: buttonId triggering the opening of the dialog
-	 * @param	string		url: url of the html document to load into the dialog window
-	 * @param	function	action: function to be executed when the the dialog ends
-	 * @param	object		arguments: object of variable type to be passed to the dialog
-	 * @param	object		dimensions: object giving the width and height of the dialog window
-	 * @param	string		showScrollbars: specifies by "yes" or "no" whether or not the dialog window should have scrollbars
-	 * @param	object		dialogOpener: reference to the opener window
-	 *
-	 * @return	boolean		true if the dialog window was opened
-	 */
-	constructor : function (plugin, buttonId, url, action, arguments, dimensions, showScrollbars, dialogOpener) {
-		this.window = window.window ? window.window : window.self;
-		this.plugin = plugin;
-		this.buttonId = buttonId;
-		this.action = action;
-		if (typeof(arguments) !== "undefined") {
-			this.arguments = arguments;
-		}
-		this.plugin.dialog = this;
-
-		if (HTMLArea.Dialog[this.plugin.name] && HTMLArea.Dialog[this.plugin.name].hasOpenedWindow() && HTMLArea.Dialog[this.plugin.name].plugin != this.plugin) {
-			HTMLArea.Dialog[this.plugin.name].close();
-		}
-		HTMLArea.Dialog[this.plugin.name] = this;
-		this.dialogWindow = window.open(url, this.plugin.name + "Dialog", "toolbar=no,location=no,directories=no,menubar=no,resizable=yes,top=" + dimensions.top + ",left=" + dimensions.left + ",dependent=yes,dialog=yes,chrome=no,width=" + dimensions.width + ",height=" + dimensions.height + ",scrollbars=" + showScrollbars);
-		if (!this.dialogWindow) {
-			this.plugin.appendToLog("openDialog", "Dialog window could not be opened with url " + url);
-			return false;
-		}
-
-		if (typeof(dialogOpener) !== "undefined") {
-			this.dialogWindow.opener = dialogOpener;
-			this.dialogWindow.opener.openedDialog = this;
-		}
-		if (!this.dialogWindow.opener) {
-			this.dialogWindow.opener = this.window;
-		}
-		return true;
-	},
-	/**
-	 * Adds OK and Cancel buttons to the dialogue window
-	 *
-	 * @return	void
-	 */
-	addButtons : function() {
-		var self = this;
-		var div = this.document.createElement("div");
-		this.content.appendChild(div);
-		div.className = "buttons";
-		for (var i = 0; i < arguments.length; ++i) {
-			var btn = arguments[i];
-			var button = this.document.createElement("button");
-			div.appendChild(button);
-			switch (btn) {
-				case "ok":
-					button.innerHTML = this.plugin.localize("OK");
-					button.onclick = function() {
-						try {
-							self.callFormInputHandler();
-						} catch(e) { };
-						return false;
-					};
-					break;
-				case "cancel":
-					button.innerHTML = this.plugin.localize("Cancel");
-					button.onclick = function() {
-						self.close();
-						return false;
-					};
-					break;
-			}
-		}
-	},
-
-	/**
-	 * Call the form input handler
-	 *
-	 * @return	boolean		false
-	 */
-	callFormInputHandler : function() {
-		var tags = ["input", "textarea", "select"];
-		var params = new Object();
-		for (var ti = tags.length; --ti >= 0;) {
-			var tag = tags[ti];
-			var els = this.content.getElementsByTagName(tag);
-			for (var j = 0; j < els.length; ++j) {
-				var el = els[j];
-				var val = el.value;
-				if (el.nodeName.toLowerCase() == "input") {
-					if (el.type == "checkbox") {
-						val = el.checked;
-					}
-				}
-				params[el.name] = val;
-			}
-		}
-		this.action(this, params);
-		return false;
-	},
-
-	/**
-	 * Cheks if the dialogue has an open dialogue window
-	 *
-	 * @return	boolean		true if the dialogue has an open window
-	 */
-	hasOpenedWindow : function () {
-		return this.dialogWindow && !this.dialogWindow.closed;
-	},
-
-	/**
-	 * Initialize the dialog window: load the stylesheets, localize labels, resize if required, etc.
-	 * This function MUST be invoked from the dialog window in the onLoad event handler
-	 *
-	 * @param	boolean		noResize: if true the window in not resized, but may be centered
-	 *
-	 * @return	void
-	 */
-	initialize : function (noLocalize, noResize, noStyle) {
-		this.dialogWindow.HTMLArea = HTMLArea;
-		this.dialogWindow.dialog = this;
-			// Capture unload and escape events
-		this.captureEvents();
-			// Get stylesheets for the dialog window
-		if (!noStyle) this.loadStyle();
-			// Localize the labels of the popup window
-		if (!noLocalize) this.localize();
-			// Resize the dialog window to its contents
-		if (!noResize) this.resize(noResize);
-	},
-	/**
-	 * Load the stylesheets in the dialog window
-	 *
-	 * @return	void
-	 */
-	loadStyle : function () {
-		var head = this.dialogWindow.document.getElementsByTagName("head")[0];
-		var link = this.dialogWindow.document.createElement("link");
-		link.rel = "stylesheet";
-		link.type = "text/css";
-		link.href = HTMLArea.editorCSS;
-		if (link.href.indexOf("http") == -1 && !Ext.isIE) link.href = HTMLArea.hostUrl + link.href;
-		head.appendChild(link);
-	},
-
-	/**
-	 * Localize the labels contained in the dialog window
-	 *
-	 * @return	void
-	 */
-	localize : function () {
-		var label;
-		var types = ["input", "label", "option", "select", "legend", "span", "td", "button", "div", "h1", "h2", "a"];
-		for (var type = 0; type < types.length; ++type) {
-			var elements = this.dialogWindow.document.getElementsByTagName(types[type]);
-			for (var i = elements.length; --i >= 0;) {
-				var element = elements[i];
-				if (element.firstChild && element.firstChild.data) {
-					label = this.plugin.localize(element.firstChild.data);
-					if (label) element.firstChild.data = label;
-				}
-				if (element.title) {
-					label = this.plugin.localize(element.title);
-					if (label) element.title = label;
-				}
-					// resetting the selected option for Mozilla
-				if (types[type] == "option" && element.selected ) {
-					element.selected = false;
-					element.selected = true;
-				}
-			}
-		}
-		label = this.plugin.localize(this.dialogWindow.document.title);
-		if (label) this.dialogWindow.document.title = label;
-	},
-
-	/**
-	 * Resize the dialog window to its contents
-	 *
-	 * @param	boolean		noResize: if true the window in not resized, but may be centered
-	 *
-	 * @return	void
-	 */
-	resize : function (noResize) {
-		var buttonConfiguration = this.plugin.editorConfiguration.buttons[this.plugin.editorConfiguration.convertButtonId[this.buttonId]];
-		if (!this.plugin.editorConfiguration.dialogueWindows.doNotResize
-				&& (!buttonConfiguration  || !buttonConfiguration.dialogueWindow || !buttonConfiguration.dialogueWindow.doNotResize)) {
-				// Resize if allowed
-			var dialogWindow = this.dialogWindow;
-			var doc = dialogWindow.document;
-			var content = doc.getElementById("content");
-				// As of Google Chrome build 1798, window resizeTo and resizeBy are completely erratic: do nothing
-			if (Ext.isGecko || ((Ext.isIE || Ext.isOpera || (Ext.isWebKit && !Ext.isChrome)) && content)) {
-				var self = this;
-				setTimeout( function() {
-					if (!noResize) {
-						if (content) {
-							self.resizeToContent(content);
-						} else if (dialogWindow.sizeToContent) {
-							dialogWindow.sizeToContent();
-						}
-					}
-					self.centerOnParent();
-				}, 75);
-			} else if (!noResize) {
-				var body = doc.body;
-				if (Ext.isIE) {
-					var innerX = (doc.documentElement && doc.documentElement.clientWidth) ? doc.documentElement.clientWidth : body.clientWidth;
-					var innerY = (doc.documentElement && doc.documentElement.clientHeight) ? doc.documentElement.clientHeight : body.clientHeight;
-					var pageY = Math.max(body.scrollHeight, body.offsetHeight);
-					if (innerY == pageY) {
-						dialogWindow.resizeTo(body.scrollWidth, body.scrollHeight + 80);
-					} else {
-						dialogWindow.resizeBy((innerX < body.scrollWidth) ? (Math.max(body.scrollWidth, body.offsetWidth) - innerX) : 0, (body.scrollHeight - body.offsetHeight));
-					}
-					// As of Google Chrome build 1798, window resizeTo and resizeBy are completely erratic: do nothing
-				} else if (Ext.isSafari || Ext.isOpera) {
-					dialogWindow.resizeTo(dialogWindow.innerWidth, body.offsetHeight + 10);
-					if (dialogWindow.innerHeight < body.scrollHeight) {
-						dialogWindow.resizeBy(0, (body.scrollHeight - dialogWindow.innerHeight) + 10);
-					}
-				}
-				this.centerOnParent();
-			} else {
-				this.centerOnParent();
-			}
-		} else {
-			this.centerOnParent();
-		}
-	},
-
-	/**
-	 * Resize the Opera dialog window to its contents, based on size of content div
-	 *
-	 * @param	object		content: reference to the div (may also be form) section containing the contents of the dialog window
-	 *
-	 * @return	void
-	 */
-	resizeToContent : function(content) {
-		var dialogWindow = this.dialogWindow;
-		var doc = dialogWindow.document;
-		var docElement = doc.documentElement;
-		var body = doc.body;
-		var width = 0, height = 0;
-
-		var contentWidth = content.offsetWidth;
-		var contentHeight = content.offsetHeight;
-		if (Ext.isGecko || Ext.isWebKit) {
-			dialogWindow.resizeTo(contentWidth, contentHeight + (Ext.isWebKit ? 40 : (Ext.isGecko2 ? 75 : 95)));
-		} else {
-			dialogWindow.resizeTo(contentWidth + 200, contentHeight + 200);
-			if (dialogWindow.innerWidth) {
-				width = dialogWindow.innerWidth;
-				height = dialogWindow.innerHeight;
-			} else if (docElement && docElement.clientWidth) {
-				width = docElement.clientWidth;
-				height = docElement.clientHeight;
-			} else if (body && body.clientWidth) {
-				width = body.clientWidth;
-				height = body.clientHeight;
-			}
-			dialogWindow.resizeTo(contentWidth + ((contentWidth + 200 ) - width), contentHeight + ((contentHeight + 200) - (height - 16)));
-		}
-	},
-
-	/**
-	 * Center the dialogue window on the parent window
-	 *
-	 * @return	void
-	 */
-	centerOnParent : function () {
-		var buttonConfiguration = this.plugin.editorConfiguration.buttons[this.plugin.editorConfiguration.convertButtonId[this.buttonId]];
-		if (!this.plugin.editorConfiguration.dialogueWindows.doNotCenter && (!buttonConfiguration  || !buttonConfiguration.dialogueWindow || !buttonConfiguration.dialogueWindow.doNotCenter)) {
-			var dialogWindow = this.dialogWindow;
-			var doc = dialogWindow.document;
-			var body = doc.body;
-				// Center on parent if allowed
-			if (!Ext.isIE) {
-				var x = dialogWindow.opener.screenX + (dialogWindow.opener.outerWidth - dialogWindow.outerWidth) / 2;
-				var y = dialogWindow.opener.screenY + (dialogWindow.opener.outerHeight - dialogWindow.outerHeight) / 2;
-			} else {
-				var W = body.offsetWidth;
-				var H = body.offsetHeight;
-				var x = (screen.availWidth - W) / 2;
-				var y = (screen.availHeight - H) / 2;
-			}
-				// As of build 1798, Google Chrome moveTo breaks the window dimensions: do nothing
-			if (!Ext.isChrome) {
-				try {
-					dialogWindow.moveTo(x, y);
-				} catch(e) { }
-			}
-		}
-	},
-
-	/**
-	 * Perform the action function when the dialog end
-	 *
-	 * @return	void
-	 */
-	performAction : function (val) {
-		if (val && this.action) {
-			this.action(val);
-		}
-	},
-
-	/**
-	 * Bring the focus on the dialog window
-	 *
-	 * @return	void
-	 */
-	focus : function () {
-		if (this.hasOpenedWindow()) {
-			this.dialogWindow.focus();
-		}
-	},
-	/**
-	 * Close the dialog window
-	 *
-	 * @return	void
-	 */
-	close : function () {
-		if (this.dialogWindow) {
-			try {
-				if (this.dialogWindow.openedDialog) {
-					this.dialogWindow.openedDialog.close();
-				}
-			} catch(e) { }
-			HTMLArea.Dialog[this.plugin.name] = null;
-			if (!this.dialogWindow.closed) {
-				this.dialogWindow.dialog = null;
-				if (Ext.isWebKit || Ext.isIE) {
-					this.dialogWindow.blur();
-				}
-				this.dialogWindow.close();
-					// Safari 3.1.2 does not set the closed flag
-				if (!this.dialogWindow.closed) {
-					this.dialogWindow = null;
-				}
-			}
-				// Opera unload event may be triggered after the editor iframe is gone
-			if (this.plugin.editor._iframe) {
-				this.plugin.editor.toolbar.update();
-			}
-		}
-		return false;
-	},
-
-	/**
-	 * Make function reference in order to avoid memory leakage in IE
-	 *
-	 * @param	string		functionName: the name of the dialog function to be invoked
-	 *
-	 * @return	function	function definition invoking the specified function of the dialog
-	 */
-	makeFunctionReference : function (functionName) {
-		var self = this;
-		return (function(arg1, arg2) {
-			self[functionName](arg1, arg2);});
-	},
-
-	/**
-	 * Escape event handler
-	 *
-	 * @param	object		ev: the event
-	 *
-	 * @return	boolean		false if the event was handled
-	 */
-	closeOnEscape : function(event) {
-		var ev = event.browserEvent;
-		if (ev.keyCode == 27) {
-			if (!Ext.isIE) {
-				var parentWindow = ev.currentTarget.defaultView;
-			} else {
-				var parentWindow = ev.srcElement.parentNode.parentNode.parentWindow;
-			}
-			if (parentWindow && parentWindow.dialog) {
-					// If the dialogue window as an onEscape function, invoke it
-				if (typeof(parentWindow.onEscape) == "function") {
-					parentWindow.onEscape(ev);
-				}
-				if (parentWindow.dialog) {
-					parentWindow.dialog.close();
-				}
-				return false;
-			}
-		}
-		return true;
-	},
-	/**
-	 * Capture unload and escape events
-	 *
-	 * @return	void
-	 */
-	captureEvents : function (skipUnload) {
-			// Capture unload events on the dialogue window and the editor frame
-		if (!Ext.isIE && this.plugin.editor._iframe.contentWindow) {
-			Ext.EventManager.on(this.plugin.editor._iframe.contentWindow, 'unload', this.close, this, {single: true});
-		}
-		if (!skipUnload) {
-			Ext.EventManager.on(this.dialogWindow, 'unload', this.close, this, {single: true});
-		}
-			// Capture escape key on the dialogue window
-		Ext.EventManager.on(this.dialogWindow.document, 'keypress', this.closeOnEscape, this, {single: true});
-	 }
 });
 }

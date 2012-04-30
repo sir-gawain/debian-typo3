@@ -31,8 +31,6 @@
  * For documentation on how to use this class, please see the documentation of
  * the corresponding subclasses, e.g. t3lib_formprotection_BackendFormProtection.
  *
- * $Id$
- *
  * @package TYPO3
  * @subpackage t3lib
  *
@@ -99,7 +97,7 @@ abstract class t3lib_formprotection_Abstract {
 		$formName, $action = '', $formInstanceName = ''
 	) {
 		if ($formName == '') {
-			throw new InvalidArgumentException('$formName must not be empty.');
+			throw new InvalidArgumentException('$formName must not be empty.', 1294586643);
 		}
 
 		$tokenId = t3lib_div::hmac(

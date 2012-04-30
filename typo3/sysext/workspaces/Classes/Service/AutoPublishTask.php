@@ -30,17 +30,17 @@
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_AutoPublishTask extends tx_scheduler_Task {
+class Tx_Workspaces_Service_AutoPublishTask extends tx_scheduler_Task {
 
 	/**
 	 * Method executed from the Scheduler.
 	 * Call on the workspace logic to publish workspaces whose publication date
 	 * is in the past
 	 *
-	 * @return	void
+	 * @return	boolean
 	 */
 	public function execute() {
-		$autopubObj = t3lib_div::makeInstance('tx_Workspaces_Service_AutoPublish');
+		$autopubObj = t3lib_div::makeInstance('Tx_Workspaces_Service_AutoPublish');
 			// Publish the workspaces that need to be
 		$autopubObj->autoPublishWorkspaces();
 			// There's no feedback from the publishing process,

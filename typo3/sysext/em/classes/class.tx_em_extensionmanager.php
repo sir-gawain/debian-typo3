@@ -27,8 +27,6 @@
 /**
  * Module: Extension manager, developer module
  *
- * $Id: class.em_extensionmanager.php 2106 2010-03-24 00:56:22Z steffenk $
- *
  * @author	Steffen Kamper <info@sk-typo3.de>
  */
 
@@ -141,6 +139,8 @@ class tx_em_ExtensionManager {
 				'selectedLanguages' => '',
 				'inlineToWindow' => 1,
 			);
+		} elseif (!isset($globalSettings['inlineToWindow'])) {
+			$globalSettings['inlineToWindow'] = 1;
 		}
 		$settings = $this->parentObject->MOD_SETTINGS;
 		$mirrors = unserialize($settings['extMirrors']);

@@ -29,20 +29,6 @@
  *
  * @author	René Fritz <r.fritz@colorcube.de>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   56: class tx_sv_auth extends tx_sv_authbase
- *   64:     function getUser()
- *   89:     function authUser($user)
- *  129:     function getGroups($user, $knownGroups)
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 
 
@@ -55,14 +41,72 @@
  */
 class tx_sv_auth extends tx_sv_authbase 	{
 
+	/**
+	 * Process the submitted credentials.
+	 * In this case hash the clear text password if it has been submitted.
+	 *
+	 * @param array $loginData Credentials that are submitted and potentially modified by other services
+	 * @param string $passwordTransmissionStrategy Keyword of how the password has been hashed or encrypted before submission
+	 * @return bool
+	 */
+	public function processLoginData(array &$loginData, $passwordTransmissionStrategy) {
+		$isProcessed = TRUE;
+
+			// Processing data according to the state it was submitted in.
+		switch ($passwordTransmissionStrategy) {
+			case 'normal':
+				$loginData['uident_text'] = $loginData['uident'];
+			break;
+			case 'challenged':
+				$loginData['uident_text'] = '';
+				$loginData['uident_challenged'] = $loginData['uident'];
+				$loginData['uident_superchallenged'] = '';
+			break;
+			case 'superchallenged':
+				$loginData['uident_text'] = '';
+				$loginData['uident_challenged'] = '';
+				$loginData['uident_superchallenged'] = $loginData['uident'];
+			break;
+			default:
+				$isProcessed = FALSE;
+		}
+
+		if (!empty($loginData['uident_text'])) {
+			$loginData['uident_challenged'] = (string) md5($loginData['uname'] . ':' . $loginData['uident_text'] . ':' . $loginData['chalvalue']);
+			$loginData['uident_superchallenged'] = (string) md5($loginData['uname'] . ':' . (md5($loginData['uident_text'])) . ':' . $loginData['chalvalue']);
+
+			$this->processOriginalPasswordValue($loginData);
+
+			$isProcessed = TRUE;
+		}
+
+		return $isProcessed;
+	}
+
+	/**
+	 * This method ensures backwards compatibility of the processed loginData
+	 * with older TYPO3 versions.
+	 * Starting with TYPO3 4.9 $loginData['uident'] will always contain the raw
+	 * value of the submitted password field and will not be processed any further.
+	 *
+	 * @param array $loginData
+	 * @deprecated will be removed with 4.9
+	 */
+	protected function processOriginalPasswordValue(&$loginData) {
+		if ($this->authInfo['security_level'] === 'superchallenged') {
+			$loginData['uident'] = $loginData['uident_superchallenged'];
+		} elseif ($this->authInfo['security_level'] === 'challenged') {
+			$loginData['uident'] = $loginData['uident_challenged'];
+		}
+	}
 
 	/**
 	 * Find a user (eg. look up the user record in database when a login is sent)
 	 *
-	 * @return	mixed		user array or false
+	 * @return	mixed		user array or FALSE
 	 */
 	function getUser()	{
-		$user = false;
+		$user = FALSE;
 
 		if ($this->login['status'] == 'login') {
 			if ($this->login['uident']) {
@@ -122,7 +166,7 @@ class tx_sv_auth extends tx_sv_authbase 	{
 	 * @param	array		Data of user.
 	 * @return	boolean
 	 */
-	function authUser($user)	{
+	public function authUser(array $user) {
 		$OK = 100;
 
 		if ($this->login['uident'] && $this->login['uname'])	{
@@ -158,7 +202,7 @@ class tx_sv_auth extends tx_sv_authbase 	{
 						0
 					);
 				}
-				$OK = false;
+				$OK = FALSE;
 			}
 		}
 

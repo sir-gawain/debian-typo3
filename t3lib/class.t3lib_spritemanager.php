@@ -62,7 +62,7 @@ class t3lib_SpriteManager {
 	/**
 	 * Check if the icon cache has to be rebuild, instantiate and call the handler class if so.
 	 *
-	 * @param boolean Suppress regeneration if false (useful for feediting)
+	 * @param boolean Suppress regeneration if FALSE (useful for feediting)
 	 * @return void
 	 */
 	function __construct($allowRegeneration = TRUE) {
@@ -70,9 +70,6 @@ class t3lib_SpriteManager {
 		if (!is_dir(PATH_site . self::$tempPath)) {
 			t3lib_div::mkdir(PATH_site . self::$tempPath);
 		}
-
-			// Backwards compatibility handling for API calls <= 4.3, will be removed in 4.7
-		$this->compatibilityCalls();
 
 			// Create cache filename, the hash includes all icons, registered CSS styles registered and the extension list
 		$this->tempFileName = PATH_site . self::$tempPath .
@@ -92,9 +89,11 @@ class t3lib_SpriteManager {
 
 					// Throw exception if handler class does not implement required interface
 				if (!$this->handler || !($this->handler instanceof t3lib_spritemanager_SpriteIconGenerator)) {
-					throw new Exception(
-						"class in TYPO3_CONF_VARS[BE][spriteIconGenerator_handler] does not exist,
-						or does not implement t3lib_spritemanager_SpriteIconGenerator"
+					throw new RuntimeException(
+						'Class in $TYPO3_CONF_VARS[BE][spriteIconGenerator_handler] (' .
+						$GLOBALS['TYPO3_CONF_VARS']['BE']['spriteIconGenerator_handler'] .
+						') does not exist or does not implement t3lib_spritemanager_SpriteIconGenerator.',
+						1294586333
 					);
 				}
 
@@ -141,38 +140,6 @@ class t3lib_SpriteManager {
 
 			// Write new cache file
 		t3lib_div::writeFile($this->tempFileName, $fileContent);
-	}
-
-	/**
-	 * Backwards compatibility methods, log usage to deprecation log.
-	 * Will be removed in 4.7
-	 *
-	 * @return void
-	 */
-	private function compatibilityCalls() {
-			// Fallback for $TYPE_ICONS "contains-module" icons
-		foreach ((array) $GLOBALS['ICON_TYPES'] as $module => $icon) {
-			$iconFile = $icon['icon'];
-			t3lib_div::deprecationLog('Usage of $ICON_TYPES is deprecated since 4.4.' . LF .
-									  'The extTables.php entry $ICON_TYPES[\'' . $module . '\'] = \'' . $iconFile . '\'; should be replaced with' . LF .
-									  't3lib_SpriteManager::addTcaTypeIcon(\'pages\', \'contains-' . $module . '\', \'' . $iconFile . '\');' . LF .
-									  'instead.'
-			);
-			t3lib_SpriteManager::addTcaTypeIcon('pages', 'contains-' . $module, $iconFile);
-		}
-
-			// Fallback for $PAGE_TYPES icons
-		foreach ((array) $GLOBALS['PAGES_TYPES'] as $type => $icon) {
-			if (isset($icon['icon'])) {
-				$iconFile = $icon['icon'];
-				t3lib_div::deprecationLog('Usage of $PAGES_TYPES[\'icon\'] is deprecated since 4.4.' . LF .
-										  'The extTables.php entry $PAGE_TYPES[\'' . $type . '\'][\'icon\'] = \'' . $iconFile . '\'; should be replaced with' . LF .
-										  't3lib_SpriteManager::addTcaTypeIcon(\'pages\', \'' . $type . '\', \'' . $iconFile . '\');' . LF .
-										  'instead.'
-				);
-				t3lib_SpriteManager::addTcaTypeIcon('pages', $module, $iconFile);
-			}
-		}
 	}
 
 	/**

@@ -1,29 +1,19 @@
 <?php
 
 /*                                                                        *
- * This script belongs to the FLOW3 package "Fluid".                      *
+ * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License as published by the *
- * Free Software Foundation, either version 3 of the License, or (at your *
- * option) any later version.                                             *
- *                                                                        *
- * This script is distributed in the hope that it will be useful, but     *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
- * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
- * General Public License for more details.                               *
- *                                                                        *
- * You should have received a copy of the GNU Lesser General Public       *
- * License along with the script.                                         *
- * If not, see http://www.gnu.org/licenses/lgpl.html                      *
+ * the terms of the GNU Lesser General Public License, either version 3   *
+ *  of the License, or (at your option) any later version.                *
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
 
+
 /**
  *
  *
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Rendering_RenderingContextInterface {
 
@@ -57,20 +47,18 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	protected $viewHelperVariableContainer;
 
 	/**
+	 * Inject the object manager
+	 *
 	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
-		$this->templateVariableContainer = $this->objectManager->create('Tx_Fluid_Core_ViewHelper_TemplateVariableContainer');
-		$this->viewHelperVariableContainer = $this->objectManager->create('Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer');
 	}
 
 	/**
 	 * Returns the object manager. Only the ViewHelperNode should do this.
 	 *
 	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function getObjectManager() {
 		return $this->objectManager;
@@ -81,9 +69,8 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	 * in the template
 	 *
 	 * @param Tx_Fluid_Core_ViewHelper_TemplateVariableContainer $templateVariableContainer The template variable container to set
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
-	public function setTemplateVariableContainer(Tx_Fluid_Core_ViewHelper_TemplateVariableContainer $templateVariableContainer) {
+	public function injectTemplateVariableContainer(Tx_Fluid_Core_ViewHelper_TemplateVariableContainer $templateVariableContainer) {
 		$this->templateVariableContainer = $templateVariableContainer;
 	}
 
@@ -91,7 +78,6 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	 * Get the template variable container
 	 *
 	 * @return Tx_Fluid_Core_ViewHelper_TemplateVariableContainer The Template Variable Container
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function getTemplateVariableContainer() {
 		return $this->templateVariableContainer;
@@ -101,7 +87,6 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	 * Set the controller context which will be passed to the ViewHelper
 	 *
 	 * @param Tx_Extbase_MVC_Controller_ControllerContext $controllerContext The controller context to set
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function setControllerContext(Tx_Extbase_MVC_Controller_ControllerContext $controllerContext) {
 		$this->controllerContext = $controllerContext;
@@ -111,7 +96,6 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	 * Get the controller context which will be passed to the ViewHelper
 	 *
 	 * @return Tx_Extbase_MVC_Controller_ControllerContext The controller context to set
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function getControllerContext() {
 		return $this->controllerContext;
@@ -122,9 +106,8 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	 *
 	 * @param Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer $viewHelperVariableContainer
 	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
-	public function setViewHelperVariableContainer(Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer $viewHelperVariableContainer) {
+	public function injectViewHelperVariableContainer(Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer $viewHelperVariableContainer) {
 		$this->viewHelperVariableContainer = $viewHelperVariableContainer;
 	}
 
@@ -132,7 +115,6 @@ class Tx_Fluid_Core_Rendering_RenderingContext implements Tx_Fluid_Core_Renderin
 	 * Get the ViewHelperVariableContainer
 	 *
 	 * @return Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function getViewHelperVariableContainer() {
 		return $this->viewHelperVariableContainer;

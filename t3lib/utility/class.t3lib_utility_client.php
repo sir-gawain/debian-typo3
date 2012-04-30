@@ -28,8 +28,6 @@
 /**
  * Class to handle and determine browser specific information.
  *
- * $Id$
- *
  * @author	Oliver Hader <oliver@typo3.org>
  */
 final class t3lib_utility_Client {
@@ -45,7 +43,7 @@ final class t3lib_utility_Client {
 		$getBrowserInfoHooks =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getBrowserInfo'];
 		if (is_array($getBrowserInfoHooks)) {
 			foreach ($getBrowserInfoHooks as $hookFunction) {
-				$returnResult = true;
+				$returnResult = TRUE;
 				$hookParameters = array(
 					'userAgent' => &$userAgent,
 					'returnResult' => &$returnResult,
@@ -104,7 +102,7 @@ final class t3lib_utility_Client {
 		}
 
 			// Microsoft Documentation about Platform tokens: http://msdn.microsoft.com/en-us/library/ms537503(VS.85).aspx
-			// 'system' is deprecated, use 'all_systems' (array) in future!
+			// @deprecated: 'system' is deprecated since TYPO3 4.6, use 'all_systems' (array) in future! Will be removed in TYPO3 4.8
 		$browserInfo['system'] = '';
 		$browserInfo['all_systems'] = array();
 		if (strstr($userAgent, 'Win')) {

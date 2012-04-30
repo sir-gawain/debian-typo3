@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,17 +28,12 @@
 ***************************************************************/
 /*
  * Default Link Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function(editor) {
+	configurePlugin: function (editor) {
 		this.baseURL = this.editorConfiguration.baseURL;
 		this.pageTSConfiguration = this.editorConfiguration.buttons.link;
 		this.stripBaseUrl = this.pageTSConfiguration && this.pageTSConfiguration.stripBaseUrl && this.pageTSConfiguration.stripBaseUrl;
@@ -47,7 +42,7 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.1',
+			version		: '2.3',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -118,27 +113,18 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress: function(editor, id, target) {
+	onButtonPress: function (editor, id, target) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		this.editor.focus();
-		this.link = this.editor.getParentElement();
-		var el = HTMLArea.getElementObject(this.link, 'a');
-		if (el && /^a$/i.test(el.nodeName)) {
-			this.link = el;
-		}
-		if (!this.link || !/^a$/i.test(this.link.nodeName)) {
-			this.link = null;
-		}
+		this.link = this.editor.getSelection().getFirstAncestorOfType('a');
 		switch (buttonId) {
 			case 'UnLink':
 				this.unLink();
 				break;
 			case 'CreateLink':
 				if (!this.link) {
-					var selection = this.editor._getSelection();
-					if (this.editor._selectionEmpty(selection)) {
+					if (this.editor.getSelection().isEmpty()) {
 						TYPO3.Dialog.InformationDialog({
 							title: this.getButton(buttonId).tooltip.title,
 							msg: this.localize('Select some text')
@@ -333,21 +319,20 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 	createLink: function (href, title, target) {
 		var a = this.link;
 		if (!a) {
-			this.editor.focus();
 			this.restoreSelection();
-			this.editor.document.execCommand('CreateLink', false, href);
-			a = this.editor.getParentElement();
+			this.editor.getSelection().execCommand('CreateLink', false, href);
+			a = this.editor.getSelection().getParentElement();
 			if (!Ext.isIE && !/^a$/i.test(a.nodeName)) {
-				var range = this.editor._createRange(this.editor._getSelection());
-				if (range.startContainer.nodeType != 3) {
+				var range = this.editor.getSelection().createRange();
+				if (range.startContainer.nodeType !== HTMLArea.DOM.TEXT_NODE) {
 					a = range.startContainer.childNodes[range.startOffset];
 				} else {
 					a = range.startContainer.nextSibling;
 				}
-				this.editor.selectNode(a);
+				this.editor.getSelection().selectNode(a);
 			}
-			var el = HTMLArea.getElementObject(a, 'a');
-			if (el != null && /^a$/i.test(el.nodeName)) {
+			var el = this.editor.getSelection().getFirstAncestorOfType('a');
+			if (el != null) {
 				a = el;
 			}
 		} else {
@@ -357,9 +342,9 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 			a.title = title;
 			a.target = target;
 			if (Ext.isOpera) {
-				this.editor.selectNodeContents(a, false);
+				this.editor.getSelection().selectNodeContents(a, false);
 			} else {
-				this.editor.selectNodeContents(a);
+				this.editor.getSelection().selectNodeContents(a);
 			}
 		}
 	},
@@ -367,12 +352,11 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 	 * Unlink the selection
 	 */
 	unLink: function () {
-		this.editor.focus();
 		this.restoreSelection();
 		if (this.link) {
-			this.editor.selectNode(this.link);
+			this.editor.getSelection().selectNode(this.link);
 		}
-		this.editor.document.execCommand('Unlink', false, '');
+		this.editor.getSelection().execCommand('Unlink', false, '');
 	},
 	/*
 	 * IE makes relative links absolute. This function reverts this conversion.
@@ -401,9 +385,9 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 				case 'CreateLink':
 					button.setDisabled(selectionEmpty && !button.isInContext(mode, selectionEmpty, ancestors));
 					if (!button.disabled) {
-						var node = this.editor.getParentElement();
-						var el = HTMLArea.getElementObject(node, 'a');
-						if (el != null && /^a$/i.test(el.nodeName)) {
+						var node = this.editor.getSelection().getParentElement();
+						var el = this.editor.getSelection().getFirstAncestorOfType('a');
+						if (el != null) {
 							node = el;
 						}
 						if (node != null && /^a$/i.test(node.nodeName)) {
@@ -417,8 +401,8 @@ HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
 					var link = false;
 						// Let's see if a link was double-clicked in Firefox
 					if (Ext.isGecko && !selectionEmpty) {
-						var range = this.editor._createRange(this.editor._getSelection());
-						if (range.startContainer.nodeType == 1 && range.startContainer == range.endContainer && (range.endOffset - range.startOffset == 1)) {
+						var range = this.editor.getSelection().createRange();
+						if (range.startContainer.nodeType === HTMLArea.DOM.ELEMENT_NODE && range.startContainer == range.endContainer && (range.endOffset - range.startOffset == 1)) {
 							var node = range.startContainer.childNodes[range.startOffset];
 							if (node && /^a$/i.test(node.nodeName) && node.textContent == range.toString()) {
 								link = true;

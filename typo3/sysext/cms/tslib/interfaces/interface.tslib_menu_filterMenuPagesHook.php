@@ -42,9 +42,9 @@ interface tslib_menu_filterMenuPagesHook {
 	 * @param	array		Array of page uids which are to be excluded
 	 * @param	boolean		If set, then the page is a spacer.
 	 * @param	tslib_menu	The menu object
-	 * @return	boolean		Returns true if the page can be safely included.
+	 * @return	boolean		Returns TRUE if the page can be safely included.
 	 */
-	public function tslib_menu_filterMenuPagesHook (array &$data, array $banUidArray, $spacer, tslib_menu $obj);
+	public function processFilter (array &$data, array $banUidArray, $spacer, tslib_menu $obj);
 }
 
 ?>

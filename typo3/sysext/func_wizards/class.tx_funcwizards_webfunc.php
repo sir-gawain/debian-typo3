@@ -32,20 +32,6 @@
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   66: class tx_funcwizards_webfunc extends t3lib_extobjbase
- *   78:     function init(&$pObj,$conf)
- *   92:     function modMenu()
- *  111:     function main()
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 /**
  * The Wizard function in the Web>Info module
@@ -108,7 +94,7 @@ class tx_funcwizards_webfunc extends t3lib_extobjbase {
 
 		$content = '';
 		$content.=$theOutput;
-		$content.=$this->pObj->doc->spacer(5);
+		$content.=$this->pObj->doc->spacer(20);
 		$content.=$this->extObjContent();
 
 		return $content;

@@ -26,8 +26,6 @@
 
 /**
  * class to handle the backend search
- *
- * $Id$
  */
 var BackendSearch = Class.create({
 
@@ -119,7 +117,7 @@ var BackendSearch = Class.create({
 						break;
 					case 'search':
 						this.jump(
-							unescape(TYPO3.configuration.listModulePath + 'db_list.php?id=' + jsonResponse.firstMountPoint + '&search_field=' + jsonResponse.searchFor + '&search_levels=4'),
+							unescape(TYPO3.configuration.listModulePath + 'db_list.php?id=' + jsonResponse.firstMountPoint + '&search_field=' + jsonResponse.searchFor + '&search_levels=' + (jsonResponse.firstMountPoint > 0 ? '4' : '-1')),
 							'web_list',
 							'web'
 						);

@@ -35,20 +35,31 @@
 class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controller_AbstractController {
 
 	/**
+	 * @var Tx_Workspaces_Service_Stages
+	 */
+	protected $stageService;
+
+	/**
+	 * @var Tx_Workspaces_Service_Workspaces
+	 */
+	protected $workspaceService;
+
+	/**
 	 * Initializes the controller before invoking an action method.
 	 *
 	 * @return void
 	 */
 	protected function initializeAction() {
 		parent::initializeAction();
-
+		$this->stageService = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
+		$this->workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
 		$this->template->setExtDirectStateProvider();
 
-		$resourcePath = t3lib_extMgm::extRelPath('workspaces') . 'Resources/Public/';
-		$GLOBALS['TBE_STYLES']['extJS']['theme'] = $resourcePath . 'StyleSheet/preview.css';
+		$resourcePath = t3lib_extMgm::extRelPath('workspaces') . 'Resources/Public/StyleSheet/preview.css';
+		$GLOBALS['TBE_STYLES']['extJS']['theme'] = $resourcePath;
+
 		$this->pageRenderer->loadExtJS();
 		$this->pageRenderer->enableExtJSQuickTips();
-
 
 			// Load  JavaScript:
 		$this->pageRenderer->addExtDirectCode(array(
@@ -64,7 +75,20 @@ class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controlle
 		$this->pageRenderer->addJsFile($this->backPath . '../t3lib/js/extjs/ux/flashmessages.js');
 		$this->pageRenderer->addJsFile($this->backPath . 'js/extjs/iframepanel.js');
 
-		$this->pageRenderer->addJsFile($resourcePath . 'JavaScript/Ext.ux.plugins.TabStripContainer.js');
+		$this->pageRenderer->addJsFile($this->backPath . '../t3lib/js/extjs/notifications.js');
+
+		$resourcePathJavaScript = t3lib_extMgm::extRelPath('workspaces') . 'Resources/Public/JavaScript/';
+
+		$jsFiles = array(
+			'Ext.ux.plugins.TabStripContainer.js',
+			'Store/mainstore.js',
+			'helpers.js',
+			'actions.js',
+		);
+
+		foreach ($jsFiles as $jsFile) {
+			$this->pageRenderer->addJsFile($resourcePathJavaScript . $jsFile);
+		}
 
 			// todo this part should be done with inlineLocallanglabels
 		$this->pageRenderer->addJsInlineCode('workspace-inline-code', $this->generateJavascript());
@@ -75,14 +99,33 @@ class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controlle
 	 * The preview itself consists of three frames, so there are
 	 * only the frames-urls we've to generate here
 	 *
+	 * @param integer $previewWS
+	 *
 	 * @return void
 	 */
-	public function indexAction() {
+	public function indexAction($previewWS = NULL) {
 		// @todo language doesn't always come throught the L parameter
 		// @todo Evaluate how the intval() call can be used with Extbase validators/filters
 		$language = intval(t3lib_div::_GP('L'));
 
-		$controller = t3lib_div::makeInstance('Tx_Workspaces_Controller_ReviewController', TRUE);
+			// fetch the next and previous stage
+		$workspaceItemsArray = $this->workspaceService->selectVersionsInWorkspace($this->stageService->getWorkspaceId(), $filter = 1, $stage = -99, $this->pageId, $recursionLevel = 0, $selectionType = 'tables_modify');
+		list(, $nextStage) = $this->stageService->getNextStageForElementCollection($workspaceItemsArray);
+		list(, $previousStage) = $this->stageService->getPreviousStageForElementCollection($workspaceItemsArray);
+
+		/** @var $wsService Tx_Workspaces_Service_Workspaces */
+		$wsService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+		$wsList = $wsService->getAvailableWorkspaces();
+		$activeWorkspace = $GLOBALS['BE_USER']->workspace;
+
+		if (!is_null($previewWS)) {
+			if (in_array($previewWS, array_keys($wsList)) && $activeWorkspace != $previewWS) {
+				$activeWorkspace = $previewWS;
+				$GLOBALS['BE_USER']->setWorkspace($activeWorkspace);
+				t3lib_BEfunc::setUpdateSignal('updatePageTree');
+			}
+		}
+
 		/** @var $uriBuilder Tx_Extbase_MVC_Web_Routing_UriBuilder */
 		$uriBuilder = $this->objectManager->create('Tx_Extbase_MVC_Web_Routing_UriBuilder');
 
@@ -96,7 +139,7 @@ class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controlle
 
 		// @todo - handle new pages here
 		// branchpoints are not handled anymore because this feature is not supposed anymore
-		if (tx_Workspaces_Service_Workspaces::isNewPage($this->pageId)) {
+		if (Tx_Workspaces_Service_Workspaces::isNewPage($this->pageId)) {
 			$wsNewPageUri = $uriBuilder->uriFor('newPage', array(), 'Tx_Workspaces_Controller_PreviewController', 'workspaces', 'web_workspacesworkspaces');
 			$wsNewPageParams = '&tx_workspaces_web_workspacesworkspaces[controller]=Preview';
 			$this->view->assign('liveUrl', $wsSettingsPath . $wsNewPageUri . $wsNewPageParams);
@@ -106,21 +149,52 @@ class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controlle
 		$this->view->assign('wsUrl', $wsBaseUrl . '&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS=' . $GLOBALS['BE_USER']->workspace);
 		$this->view->assign('wsSettingsUrl', $wsSettingsUrl);
 		$this->view->assign('backendDomain', t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'));
+
+		$splitPreviewTsConfig = t3lib_BEfunc::getModTSconfig($this->pageId, 'workspaces.splitPreviewModes');
+		$splitPreviewModes = t3lib_div::trimExplode(',', $splitPreviewTsConfig['value']);
+		$allPreviewModes = array('slider', 'vbox', 'hbox');
+		if (!array_intersect($splitPreviewModes, $allPreviewModes)) {
+			$splitPreviewModes = $allPreviewModes;
+		}
+		$this->pageRenderer->addInlineSetting('Workspaces', 'SplitPreviewModes', $splitPreviewModes);
+
 		$GLOBALS['BE_USER']->setAndSaveSessionData('workspaces.backend_domain', t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'));
-		$this->pageRenderer->addJsInlineCode("workspaces.preview.lll" , "TYPO3.LLL.Workspaces = {
-			visualPreview: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.visualPreview', true) . "',
-			listView: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.listView', true) . "',
-			livePreview: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreview', true) . "',
-			livePreviewDetail: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreviewDetail', true) . "',
-			workspacePreview: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreview', true) . "',
-			workspacePreviewDetail: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreviewDetail', true) . "',
-			modeSlider: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeSlider', true) . "',
-			modeVbox: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeVbox', true) . "',
-			modeHbox: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeHbox', true) . "'
-		};\n");
+
+		$this->pageRenderer->addInlineSetting('Workspaces', 'disableNextStageButton', $this->isInvalidStage($nextStage));
+		$this->pageRenderer->addInlineSetting('Workspaces', 'disablePreviousStageButton', $this->isInvalidStage($previousStage));
+		$this->pageRenderer->addInlineSetting('Workspaces', 'disableDiscardStageButton', $this->isInvalidStage($nextStage) && $this->isInvalidStage($previousStage));
+		$resourcePath = t3lib_extMgm::extRelPath('lang') . 'res/js/be/';
+		$this->pageRenderer->addJsFile($resourcePath . 'typo3lang.js');
+		$this->pageRenderer->addJsInlineCode("workspaces.preview.lll", "
+		TYPO3.lang = {
+			visualPreview: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.visualPreview', TRUE) . "',
+			listView: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.listView', TRUE) . "',
+			livePreview: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreview', TRUE) . "',
+			livePreviewDetail: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreviewDetail', TRUE) . "',
+			workspacePreview: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreview', TRUE) . "',
+			workspacePreviewDetail: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreviewDetail', TRUE) . "',
+			modeSlider: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeSlider', TRUE) . "',
+			modeVbox: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeVbox', TRUE) . "',
+			modeHbox: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeHbox', TRUE) . "',
+			discard: '" . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:label_doaction_discard', TRUE) . "',
+			nextStage: '" . $nextStage['title'] . "',
+			previousStage: '" . $previousStage['title'] . "'
+		};TYPO3.l10n.initialize();\n");
 
 		$resourcePath = t3lib_extMgm::extRelPath('workspaces') . 'Resources/Public/';
 		$this->pageRenderer->addJsFile($resourcePath . 'JavaScript/preview.js');
+	}
+
+	/**
+	 * Evaluate the activate state based on given $stageArray.
+	 *
+	 * @param array $stageArray
+	 * @return boolean
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	protected function isInvalidStage($stageArray) {
+		return !(is_array($stageArray) && count($stageArray) > 0);
 	}
 
 	/**
@@ -141,7 +215,7 @@ class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controlle
 	 * and since we're loading a backend module outside of the actual backend
 	 * this copies parts of the backend.php
 	 *
-	 * @return	void
+	 * @return	string
 	 */
 	protected function generateJavascript() {
 		$pathTYPO3 = t3lib_div::dirname(t3lib_div::getIndpEnv('SCRIPT_NAME')) . '/';
@@ -220,12 +294,6 @@ class Tx_Workspaces_Controller_PreviewController extends Tx_Workspaces_Controlle
 			'donateWindow_button_disable' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:donateWindow.button_disable'),
 			'donateWindow_button_postpone' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:donateWindow.button_postpone'),
 		);
-
-			// Convert labels/settings back to UTF-8 since json_encode() only works with UTF-8:
-		if ($GLOBALS['LANG']->charSet !== 'utf-8') {
-			$t3Configuration['username'] = $GLOBALS['LANG']->csConvObj->conv($t3Configuration['username'], $GLOBALS['LANG']->charSet, 'utf-8');
-			$GLOBALS['LANG']->csConvObj->convArray($t3LLLcore, $GLOBALS['LANG']->charSet, 'utf-8');
-		}
 
 		$js = '
 		TYPO3.configuration = ' . json_encode($t3Configuration) . ';

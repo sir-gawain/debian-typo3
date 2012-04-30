@@ -24,86 +24,13 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Contains the class "t3lib_db" containing functions for building SQL queries
  * and mysql wrappers, thus providing a foundational API to all database
  * interaction.
  * This class is instantiated globally as $TYPO3_DB in TYPO3 scripts.
  *
- * $Id$
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *  138: class t3lib_DB
- *
- *			  SECTION: Query execution
- *  175:	 function exec_INSERTquery($table,$fields_values,$no_quote_fields=FALSE)
- *  192:	 function exec_UPDATEquery($table,$where,$fields_values,$no_quote_fields=FALSE)
- *  206:	 function exec_DELETEquery($table,$where)
- *  225:	 function exec_SELECTquery($select_fields,$from_table,$where_clause,$groupBy='',$orderBy='',$limit='')
- *  250:	 function exec_SELECT_mm_query($select,$local_table,$mm_table,$foreign_table,$whereClause='',$groupBy='',$orderBy='',$limit='')
- *  278:	 function exec_SELECT_queryArray($queryParts)
- *  301:	 function exec_SELECTgetRows($select_fields,$from_table,$where_clause,$groupBy='',$orderBy='',$limit='',$uidIndexField='')
- *
- *			  SECTION: Query building
- *  346:	 function INSERTquery($table,$fields_values,$no_quote_fields=FALSE)
- *  381:	 function UPDATEquery($table,$where,$fields_values,$no_quote_fields=FALSE)
- *  422:	 function DELETEquery($table,$where)
- *  451:	 function SELECTquery($select_fields,$from_table,$where_clause,$groupBy='',$orderBy='',$limit='')
- *  492:	 function listQuery($field, $value, $table)
- *  506:	 function searchQuery($searchWords,$fields,$table)
- *
- *			  SECTION: Various helper functions
- *  552:	 function fullQuoteStr($str, $table)
- *  569:	 function fullQuoteArray($arr, $table, $noQuote=FALSE)
- *  596:	 function quoteStr($str, $table)
- *  612:	 function escapeStrForLike($str, $table)
- *  625:	 function cleanIntArray($arr)
- *  641:	 function cleanIntList($list)
- *  655:	 function stripOrderBy($str)
- *  669:	 function stripGroupBy($str)
- *  681:	 function splitGroupOrderLimit($str)
- *
- *			  SECTION: MySQL wrapper functions
- *  749:	 function sql($db,$query)
- *  763:	 function sql_query($query)
- *  776:	 function sql_error()
- *  788:	 function sql_num_rows($res)
- *  800:	 function sql_fetch_assoc($res)
- *  813:	 function sql_fetch_row($res)
- *  825:	 function sql_free_result($res)
- *  836:	 function sql_insert_id()
- *  847:	 function sql_affected_rows()
- *  860:	 function sql_data_seek($res,$seek)
- *  873:	 function sql_field_type($res,$pointer)
- *  887:	 function sql_pconnect($TYPO3_db_host, $TYPO3_db_username, $TYPO3_db_password)
- *  915:	 function sql_select_db($TYPO3_db)
- *
- *			  SECTION: SQL admin functions
- *  947:	 function admin_get_dbs()
- *  965:	 function admin_get_tables()
- *  984:	 function admin_get_fields($tableName)
- * 1002:	 function admin_get_keys($tableName)
- * 1020:	 function admin_query($query)
- *
- *			  SECTION: Connecting service
- * 1048:	 function connectDB()
- *
- *			  SECTION: Debugging
- * 1086:	 function debug($func)
- *
- * TOTAL FUNCTIONS: 42
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
-
-/**
  * TYPO3 "database wrapper" class (new in 3.6.0)
  * This class contains
  * - abstraction functions for executing INSERT/UPDATE/DELETE/SELECT queries ("Query execution"; These are REQUIRED for all future connectivity to the database, thus ensuring DBAL compliance!)
@@ -129,9 +56,8 @@
  */
 class t3lib_DB {
 
-
 		// Debug:
-	var $debugOutput = FALSE; // Set "TRUE" or "1" if you want database errors outputted. Set to "2" if you also want successfull database actions outputted.
+	var $debugOutput = FALSE; // Set "TRUE" or "1" if you want database errors outputted. Set to "2" if you also want successful database actions outputted.
 	var $debug_lastBuiltQuery = ''; // Internally: Set to last built query (not necessarily executed...)
 	var $store_lastBuiltQuery = FALSE; // Set "TRUE" if you want the last built query to be stored in $debug_lastBuiltQuery independent of $this->debugOutput
 	var $explainOutput = 0; // Set this to 1 to get queries explained (devIPmask must match). Set the value to 2 to the same but disregarding the devIPmask. There is an alternative option to enable explain output in the admin panel under "TypoScript", which will produce much nicer output, but only works in FE.
@@ -141,6 +67,16 @@ class t3lib_DB {
 
 		// Default character set, applies unless character set or collation are explicitely set
 	var $default_charset = 'utf8';
+
+	/**
+	 * @var t3lib_DB_preProcessQueryHook[]
+	 */
+	protected $preProcessHookObjects = array();
+
+	/**
+	 * @var t3lib_DB_postProcessQueryHook[]
+	 */
+	protected $postProcessHookObjects = array();
 
 
 	/************************************
@@ -159,7 +95,6 @@ class t3lib_DB {
 	/**
 	 * Creates and executes an INSERT SQL-statement for $table from the array with field/value pairs $fields_values.
 	 * Using this function specifically allows us to handle BLOB and CLOB fields depending on DB
-	 * Usage count/core: 47
 	 *
 	 * @param	string		Table name
 	 * @param	array		Field values as key=>value pairs. Values will be escaped internally. Typically you would fill an array like "$insertFields" with 'fieldname'=>'value' and pass it to this function as argument.
@@ -170,6 +105,9 @@ class t3lib_DB {
 		$res = mysql_query($this->INSERTquery($table, $fields_values, $no_quote_fields), $this->link);
 		if ($this->debugOutput) {
 			$this->debug('exec_INSERTquery');
+		}
+		foreach ($this->postProcessHookObjects as $hookObject) {
+			$hookObject->exec_INSERTquery_postProcessAction($table, $fields_values, $no_quote_fields, $this);
 		}
 		return $res;
 	}
@@ -188,13 +126,15 @@ class t3lib_DB {
 		if ($this->debugOutput) {
 			$this->debug('exec_INSERTmultipleRows');
 		}
+		foreach ($this->postProcessHookObjects as $hookObject) {
+			$hookObject->exec_INSERTmultipleRows_postProcessAction($table, $fields, $rows, $no_quote_fields, $this);
+		}
 		return $res;
 	}
 
 	/**
 	 * Creates and executes an UPDATE SQL-statement for $table where $where-clause (typ. 'uid=...') from the array with field/value pairs $fields_values.
 	 * Using this function specifically allow us to handle BLOB and CLOB fields depending on DB
-	 * Usage count/core: 50
 	 *
 	 * @param	string		Database tablename
 	 * @param	string		WHERE clause, eg. "uid=1". NOTICE: You must escape values in this argument with $this->fullQuoteStr() yourself!
@@ -207,12 +147,14 @@ class t3lib_DB {
 		if ($this->debugOutput) {
 			$this->debug('exec_UPDATEquery');
 		}
+		foreach ($this->postProcessHookObjects as $hookObject) {
+			$hookObject->exec_UPDATEquery_postProcessAction($table, $where, $fields_values, $no_quote_fields, $this);
+		}
 		return $res;
 	}
 
 	/**
 	 * Creates and executes a DELETE SQL-statement for $table where $where-clause
-	 * Usage count/core: 40
 	 *
 	 * @param	string		Database tablename
 	 * @param	string		WHERE clause, eg. "uid=1". NOTICE: You must escape values in this argument with $this->fullQuoteStr() yourself!
@@ -223,13 +165,15 @@ class t3lib_DB {
 		if ($this->debugOutput) {
 			$this->debug('exec_DELETEquery');
 		}
+		foreach ($this->postProcessHookObjects as $hookObject) {
+			$hookObject->exec_DELETEquery_postProcessAction($table, $where, $this);
+		}
 		return $res;
 	}
 
 	/**
 	 * Creates and executes a SELECT SQL-statement
 	 * Using this function specifically allow us to handle the LIMIT feature independently of DB.
-	 * Usage count/core: 340
 	 *
 	 * @param	string		List of fields to select from the table. This is what comes right after "SELECT ...". Required value.
 	 * @param	string		Table(s) from which to select. This is what comes right after "FROM ...". Required value.
@@ -257,9 +201,7 @@ class t3lib_DB {
 	 * Creates and executes a SELECT query, selecting fields ($select) from two/three tables joined
 	 * Use $mm_table together with $local_table or $foreign_table to select over two tables. Or use all three tables to select the full MM-relation.
 	 * The JOIN is done with [$local_table].uid <--> [$mm_table].uid_local  / [$mm_table].uid_foreign <--> [$foreign_table].uid
-	 * The function is very useful for selecting MM-relations between tables adhering to the MM-format used by TCE (TYPO3 Core Engine). See the section on $TCA in Inside TYPO3 for more details.
-	 *
-	 * Usage: 12 (spec. ext. sys_action, sys_messages, sys_todos)
+	 * The function is very useful for selecting MM-relations between tables adhering to the MM-format used by TCE (TYPO3 Core Engine). See the section on $GLOBALS['TCA'] in Inside TYPO3 for more details.
 	 *
 	 * @param	string		Field list for SELECT
 	 * @param	string		Tablename, local table
@@ -300,8 +242,6 @@ class t3lib_DB {
 
 	/**
 	 * Executes a select based on input query parts array
-	 *
-	 * Usage: 9
 	 *
 	 * @param	array		Query parts array
 	 * @return	pointer		MySQL select result pointer / DBAL object
@@ -390,7 +330,7 @@ class t3lib_DB {
 	 * @param	string		$field: Name of the field to use in the COUNT() expression (e.g. '*')
 	 * @param	string		$table: Name of the table to count rows for
 	 * @param	string		$where: (optional) WHERE statement of the query
-	 * @return	mixed		Number of rows counter (integer) or false if something went wrong (boolean)
+	 * @return	mixed		Number of rows counter (integer) or FALSE if something went wrong (boolean)
 	 */
 	public function exec_SELECTcountRows($field, $table, $where = '') {
 		$count = FALSE;
@@ -414,6 +354,9 @@ class t3lib_DB {
 		if ($this->debugOutput) {
 			$this->debug('exec_TRUNCATEquery');
 		}
+		foreach ($this->postProcessHookObjects as $hookObject) {
+			$hookObject->exec_TRUNCATEquery_postProcessAction($table, $this);
+		}
 		return $res;
 	}
 
@@ -426,18 +369,20 @@ class t3lib_DB {
 
 	/**
 	 * Creates an INSERT SQL-statement for $table from the array with field/value pairs $fields_values.
-	 * Usage count/core: 4
 	 *
 	 * @param	string		See exec_INSERTquery()
 	 * @param	array		See exec_INSERTquery()
 	 * @param	string/array		See fullQuoteArray()
-	 * @return	string		Full SQL query for INSERT (unless $fields_values does not contain any elements in which case it will be false)
+	 * @return	string		Full SQL query for INSERT (unless $fields_values does not contain any elements in which case it will be FALSE)
 	 */
 	function INSERTquery($table, $fields_values, $no_quote_fields = FALSE) {
 
 			// Table and fieldnames should be "SQL-injection-safe" when supplied to this
 			// function (contrary to values in the arrays which may be insecure).
 		if (is_array($fields_values) && count($fields_values)) {
+			foreach ($this->preProcessHookObjects as $hookObject) {
+				$hookObject->INSERTquery_preProcessAction($table, $fields_values, $no_quote_fields, $this);
+			}
 
 				// quote and escape values
 			$fields_values = $this->fullQuoteArray($fields_values, $table, $no_quote_fields);
@@ -462,12 +407,16 @@ class t3lib_DB {
 	 * @param	array		Field names
 	 * @param	array		Table rows. Each row should be an array with field values mapping to $fields
 	 * @param	string/array		See fullQuoteArray()
-	 * @return	string		Full SQL query for INSERT (unless $rows does not contain any elements in which case it will be false)
+	 * @return	string		Full SQL query for INSERT (unless $rows does not contain any elements in which case it will be FALSE)
 	 */
 	public function INSERTmultipleRows($table, array $fields, array $rows, $no_quote_fields = FALSE) {
 			// Table and fieldnames should be "SQL-injection-safe" when supplied to this
 			// function (contrary to values in the arrays which may be insecure).
 		if (count($rows)) {
+			foreach ($this->preProcessHookObjects as $hookObject) {
+				$hookObject->INSERTmultipleRows_preProcessAction($table, $fields, $rows, $no_quote_fields, $this);
+			}
+
 				// Build query:
 			$query = 'INSERT INTO ' . $table .
 					' (' . implode(', ', $fields) . ') VALUES ';
@@ -492,7 +441,6 @@ class t3lib_DB {
 
 	/**
 	 * Creates an UPDATE SQL-statement for $table where $where-clause (typ. 'uid=...') from the array with field/value pairs $fields_values.
-	 * Usage count/core: 6
 	 *
 	 * @param	string		See exec_UPDATEquery()
 	 * @param	string		See exec_UPDATEquery()
@@ -504,6 +452,10 @@ class t3lib_DB {
 			// Table and fieldnames should be "SQL-injection-safe" when supplied to this
 			// function (contrary to values in the arrays which may be insecure).
 		if (is_string($where)) {
+			foreach ($this->preProcessHookObjects as $hookObject) {
+				$hookObject->UPDATEquery_preProcessAction($table, $where, $fields_values, $no_quote_fields, $this);
+			}
+
 			$fields = array();
 			if (is_array($fields_values) && count($fields_values)) {
 
@@ -533,7 +485,6 @@ class t3lib_DB {
 
 	/**
 	 * Creates a DELETE SQL-statement for $table where $where-clause
-	 * Usage count/core: 3
 	 *
 	 * @param	string		See exec_DELETEquery()
 	 * @param	string		See exec_DELETEquery()
@@ -541,6 +492,9 @@ class t3lib_DB {
 	 */
 	function DELETEquery($table, $where) {
 		if (is_string($where)) {
+			foreach ($this->preProcessHookObjects as $hookObject) {
+				$hookObject->DELETEquery_preProcessAction($table, $where, $this);
+			}
 
 				// Table and fieldnames should be "SQL-injection-safe" when supplied to this function
 			$query = 'DELETE FROM ' . $table .
@@ -560,7 +514,6 @@ class t3lib_DB {
 
 	/**
 	 * Creates a SELECT SQL-statement
-	 * Usage count/core: 11
 	 *
 	 * @param	string		See exec_SELECTquery()
 	 * @param	string		See exec_SELECTquery()
@@ -623,6 +576,10 @@ class t3lib_DB {
 	 * @return	string		Full SQL query for TRUNCATE TABLE
 	 */
 	public function TRUNCATEquery($table) {
+		foreach ($this->preProcessHookObjects as $hookObject) {
+			$hookObject->TRUNCATEquery_preProcessAction($table, $this);
+		}
+
 			// Table should be "SQL-injection-safe" when supplied to this function
 			// Build basic query:
 		$query = 'TRUNCATE TABLE ' . $table;
@@ -652,7 +609,7 @@ class t3lib_DB {
 	public function listQuery($field, $value, $table) {
 		$value = (string) $value;
 		if (strpos(',', $value) !== FALSE) {
-			throw new InvalidArgumentException('$value must not contain a comma (,) in $this->listQuery() !');
+			throw new InvalidArgumentException('$value must not contain a comma (,) in $this->listQuery() !', 1294585862);
 		}
 		$pattern = $this->quoteStr($value, $table);
 		$where = 'FIND_IN_SET(\'' . $pattern . '\',' . $field . ')';
@@ -761,7 +718,6 @@ class t3lib_DB {
 
 	/**
 	 * Escaping and quoting values for SQL statements.
-	 * Usage count/core: 100
 	 *
 	 * @param	string		Input string
 	 * @param	string		Table name for which to quote string. Just enter the table that the field-value is selected from (and any DBAL will look up which handler to use and then how to quote the string!).
@@ -802,8 +758,6 @@ class t3lib_DB {
 	 * Use this function instead of the PHP addslashes() function when you build queries - this will prepare your code for DBAL.
 	 * NOTICE: You must wrap the output of this function in SINGLE QUOTES to be DBAL compatible. Unless you have to apply the single quotes yourself you should rather use ->fullQuoteStr()!
 	 *
-	 * Usage count/core: 20
-	 *
 	 * @param	string		Input string
 	 * @param	string		Table name for which to quote string. Just enter the table that the field-value is selected from (and any DBAL will look up which handler to use and then how to quote the string!).
 	 * @return	string		Output string; Quotes (" / ') and \ will be backslashed (or otherwise based on DBAL handler)
@@ -828,7 +782,6 @@ class t3lib_DB {
 	/**
 	 * Will convert all values in the one-dimensional array to integers.
 	 * Useful when you want to make sure an array contains only integers before imploding them in a select-list.
-	 * Usage count/core: 7
 	 *
 	 * @param	array		Array with values
 	 * @return	array		The input array with all values passed through intval()
@@ -844,7 +797,6 @@ class t3lib_DB {
 	/**
 	 * Will force all entries in the input comma list to integers
 	 * Useful when you want to make sure a commalist of supposed integers really contain only integers; You want to know that when you don't trust content that could go into an SQL statement.
-	 * Usage count/core: 6
 	 *
 	 * @param	string		List of comma-separated values which should be integers
 	 * @return	string		The input list but with every value passed through intval()
@@ -858,7 +810,6 @@ class t3lib_DB {
 	 * Removes the prefix "ORDER BY" from the input string.
 	 * This function is used when you call the exec_SELECTquery() function and want to pass the ORDER BY parameter by can't guarantee that "ORDER BY" is not prefixed.
 	 * Generally; This function provides a work-around to the situation where you cannot pass only the fields by which to order the result.
-	 * Usage count/core: 11
 	 *
 	 * @param	string		eg. "ORDER BY title, uid"
 	 * @return	string		eg. "title, uid"
@@ -872,7 +823,6 @@ class t3lib_DB {
 	 * Removes the prefix "GROUP BY" from the input string.
 	 * This function is used when you call the SELECTquery() function and want to pass the GROUP BY parameter by can't guarantee that "GROUP BY" is not prefixed.
 	 * Generally; This function provides a work-around to the situation where you cannot pass only the fields by which to order the result.
-	 * Usage count/core: 1
 	 *
 	 * @param	string		eg. "GROUP BY title, uid"
 	 * @return	string		eg. "title, uid"
@@ -885,7 +835,6 @@ class t3lib_DB {
 	/**
 	 * Takes the last part of a query, eg. "... uid=123 GROUP BY title ORDER BY title LIMIT 5,2" and splits each part into a table (WHERE, GROUPBY, ORDERBY, LIMIT)
 	 * Work-around function for use where you know some userdefined end to an SQL clause is supplied and you need to separate these factors.
-	 * Usage count/core: 13
 	 *
 	 * @param	string		Input string
 	 * @return	array
@@ -939,31 +888,9 @@ class t3lib_DB {
 
 	/**
 	 * Executes query
-	 * mysql() wrapper function
-	 * Usage count/core: 0
-	 *
-	 * @param	string		Database name
-	 * @param	string		Query to execute
-	 * @return	pointer		Result pointer / DBAL object
-	 * @deprecated since TYPO3 3.6, will be removed in TYPO3 4.6
-	 * @see sql_query()
-	 */
-	function sql($db, $query) {
-		t3lib_div::logDeprecatedFunction();
-
-		$res = mysql_query($query, $this->link);
-		if ($this->debugOutput) {
-			$this->debug('sql', $query);
-		}
-		return $res;
-	}
-
-	/**
-	 * Executes query
 	 * mysql_query() wrapper function
 	 * Beware: Use of this method should be avoided as it is experimentally supported by DBAL. You should consider
 	 *         using exec_SELECTquery() and similar methods instead.
-	 * Usage count/core: 1
 	 *
 	 * @param	string		Query to execute
 	 * @return	pointer		Result pointer / DBAL object
@@ -979,7 +906,6 @@ class t3lib_DB {
 	/**
 	 * Returns the error status on the last sql() execution
 	 * mysql_error() wrapper function
-	 * Usage count/core: 32
 	 *
 	 * @return	string		MySQL error string.
 	 */
@@ -1000,7 +926,6 @@ class t3lib_DB {
 	/**
 	 * Returns the number of selected rows.
 	 * mysql_num_rows() wrapper function
-	 * Usage count/core: 85
 	 *
 	 * @param	pointer		MySQL result pointer (of SELECT query) / DBAL object
 	 * @return	integer		Number of resulting rows
@@ -1016,7 +941,6 @@ class t3lib_DB {
 	/**
 	 * Returns an associative array that corresponds to the fetched row, or FALSE if there are no more rows.
 	 * mysql_fetch_assoc() wrapper function
-	 * Usage count/core: 307
 	 *
 	 * @param	pointer		MySQL result pointer (of SELECT query) / DBAL object
 	 * @return	array		Associative array of result row.
@@ -1033,7 +957,6 @@ class t3lib_DB {
 	 * Returns an array that corresponds to the fetched row, or FALSE if there are no more rows.
 	 * The array contains the values in numerical indices.
 	 * mysql_fetch_row() wrapper function
-	 * Usage count/core: 56
 	 *
 	 * @param	pointer		MySQL result pointer (of SELECT query) / DBAL object
 	 * @return	array		Array with result rows.
@@ -1049,7 +972,6 @@ class t3lib_DB {
 	/**
 	 * Free result memory
 	 * mysql_free_result() wrapper function
-	 * Usage count/core: 3
 	 *
 	 * @param	pointer		MySQL result pointer to free / DBAL object
 	 * @return	boolean		Returns TRUE on success or FALSE on failure.
@@ -1065,7 +987,6 @@ class t3lib_DB {
 	/**
 	 * Get the ID generated from the previous INSERT operation
 	 * mysql_insert_id() wrapper function
-	 * Usage count/core: 13
 	 *
 	 * @return	integer		The uid of the last inserted record.
 	 */
@@ -1076,7 +997,6 @@ class t3lib_DB {
 	/**
 	 * Returns the number of rows affected by the last INSERT, UPDATE or DELETE query
 	 * mysql_affected_rows() wrapper function
-	 * Usage count/core: 1
 	 *
 	 * @return	integer		Number of rows affected by last query
 	 */
@@ -1087,7 +1007,6 @@ class t3lib_DB {
 	/**
 	 * Move internal result pointer
 	 * mysql_data_seek() wrapper function
-	 * Usage count/core: 3
 	 *
 	 * @param	pointer		MySQL result pointer (of SELECT query) / DBAL object
 	 * @param	integer		Seek result number.
@@ -1104,7 +1023,6 @@ class t3lib_DB {
 	/**
 	 * Get the type of the specified field in a result
 	 * mysql_field_type() wrapper function
-	 * Usage count/core: 2
 	 *
 	 * @param	pointer		MySQL result pointer (of SELECT query) / DBAL object
 	 * @param	integer		Field index.
@@ -1121,7 +1039,6 @@ class t3lib_DB {
 	/**
 	 * Open a (persistent) connection to a MySQL server
 	 * mysql_pconnect() wrapper function
-	 * Usage count/core: 12
 	 *
 	 * @param	string		Database host IP/domain
 	 * @param	string		Username to connect with.
@@ -1144,7 +1061,7 @@ class t3lib_DB {
 		$isLocalhost = ($TYPO3_db_host == 'localhost' || $TYPO3_db_host == '127.0.0.1');
 		if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['no_pconnect']) {
 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['dbClientCompress'] && !$isLocalhost) {
-					// We use PHP's default value for 4th parameter (new_link), which is false.
+					// We use PHP's default value for 4th parameter (new_link), which is FALSE.
 					// See PHP sources, for example: file php-5.2.5/ext/mysql/php_mysql.c,
 					// function php_mysql_do_connect(), near line 525
 				$this->link = @mysql_connect($TYPO3_db_host, $TYPO3_db_username, $TYPO3_db_password, FALSE, MYSQL_CLIENT_COMPRESS);
@@ -1216,7 +1133,6 @@ class t3lib_DB {
 	/**
 	 * Select a MySQL database
 	 * mysql_select_db() wrapper function
-	 * Usage count/core: 8
 	 *
 	 * @param	string		Database to connect to.
 	 * @return	boolean		Returns TRUE on success or FALSE on failure.
@@ -1246,7 +1162,6 @@ class t3lib_DB {
 	 * This is only used as a service function in the (1-2-3 process) of the Install Tool.
 	 * In any case a lookup should be done in the _DEFAULT handler DBMS then.
 	 * Use in Install Tool only!
-	 * Usage count/core: 1
 	 *
 	 * @return	array		Each entry represents a database name
 	 */
@@ -1265,7 +1180,6 @@ class t3lib_DB {
 	 * Returns the list of tables from the default database, TYPO3_db (quering the DBMS)
 	 * In a DBAL this method should 1) look up all tables from the DBMS  of
 	 * the _DEFAULT handler and then 2) add all tables *configured* to be managed by other handlers
-	 * Usage count/core: 2
 	 *
 	 * @return	array		Array with tablenames as key and arrays with status information as value
 	 */
@@ -1357,7 +1271,6 @@ class t3lib_DB {
 
 	/**
 	 * mysql() wrapper function, used by the Install Tool and EM for all queries regarding management of the database!
-	 * Usage count/core: 10
 	 *
 	 * @param	string		Query to execute
 	 * @return	pointer		Result pointer
@@ -1387,13 +1300,17 @@ class t3lib_DB {
 	 * @return	void
 	 */
 	function connectDB($host = TYPO3_db_host, $user = TYPO3_db_username, $password = TYPO3_db_password, $db = TYPO3_db) {
+			// If no db is given we throw immediately. This is a sign for a fresh (not configured)
+			// TYPO3 installation and is used in FE to redirect to 1-2-3 install tool
+		if (!$db) {
+			throw new RuntimeException(
+				'TYPO3 Fatal Error: No database selected!',
+				1270853882
+			);
+		}
+
 		if ($this->sql_pconnect($host, $user, $password)) {
-			if (!$db) {
-				throw new RuntimeException(
-					'TYPO3 Fatal Error: No database selected!',
-					1270853882
-				);
-			} elseif (!$this->sql_select_db($db)) {
+			if (!$this->sql_select_db($db)) {
 				throw new RuntimeException(
 					'TYPO3 Fatal Error: Cannot connect to the current database, "' . $db . '"!',
 					1270853883
@@ -1404,6 +1321,25 @@ class t3lib_DB {
 				'TYPO3 Fatal Error: The current username, password or host was not accepted when the connection to the database was attempted to be established!',
 				1270853884
 			);
+		}
+
+			// Prepare user defined objects (if any) for hooks which extend query methods
+		$this->preProcessHookObjects = array();
+		$this->postProcessHookObjects = array();
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_db.php']['queryProcessors'])) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_db.php']['queryProcessors'] as $classRef) {
+				$hookObject = t3lib_div::getUserObj($classRef);
+
+				if (!($hookObject instanceof t3lib_DB_preProcessQueryHook || $hookObject instanceof t3lib_DB_postProcessQueryHook)) {
+					throw new UnexpectedValueException('$hookObject must either implement interface t3lib_DB_preProcessQueryHook or interface t3lib_DB_postProcessQueryHook', 1299158548);
+				}
+				if ($hookObject instanceof t3lib_DB_preProcessQueryHook) {
+					$this->preProcessHookObjects[] = $hookObject;
+				}
+				if ($hookObject instanceof t3lib_DB_postProcessQueryHook) {
+					$this->postProcessHookObjects[] = $hookObject;
+				}
+			}
 		}
 	}
 
@@ -1451,7 +1387,7 @@ class t3lib_DB {
 	 * Checks if recordset is valid and writes debugging inormation into devLog if not.
 	 *
 	 * @param	resource	$res	Recordset
-	 * @return	boolean	<code>false</code> if recordset is not valid
+	 * @return	boolean	<code>FALSE</code> if recordset is not valid
 	 */
 	function debug_check_recordset($res) {
 		if (!$res) {
@@ -1497,7 +1433,7 @@ class t3lib_DB {
 	 * @param	string		SQL query
 	 * @param	string		Table(s) from which to select. This is what comes right after "FROM ...". Required value.
 	 * @param	integer		Number of resulting rows
-	 * @return	boolean		True if explain was run, false otherwise
+	 * @return	boolean		TRUE if explain was run, FALSE otherwise
 	 */
 	protected function explain($query, $from_table, $row_count) {
 

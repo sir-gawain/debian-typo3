@@ -27,8 +27,6 @@
 
 /**
  * Displays warnings and information about the database character set
- *
- * @version $Id$
  */
 class tx_coreupdates_charsetDefaults extends Tx_Install_Updates_Base {
 	protected $title = 'Database Character Set';
@@ -39,10 +37,12 @@ class tx_coreupdates_charsetDefaults extends Tx_Install_Updates_Base {
 	 *
 	 * @param	string		&$description: The description for the update
 	 * @param	string		&$showUpdate: 0=dont show update; 1=show update and next button; 2=only show description
-	 * @return	boolean		whether an update is needed (true) or not (false)
+	 * @return	boolean		whether an update is needed (TRUE) or not (FALSE)
 	 */
 	public function checkForUpdate(&$description, &$showUpdate = FALSE) {
-		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] === '-1' ||
+		if ((isset($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'])
+			&& $GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] != ''
+			&& $GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] != 'utf-8') ||
 				$GLOBALS['TYPO3_CONF_VARS']['SYS']['setDBinit'] === '-1') {
 
 			$description = 'The configuration variables $TYPO3_CONF_VARS[\'SYS\'][\'setDBinit\'] and/or
@@ -73,7 +73,7 @@ class tx_coreupdates_charsetDefaults extends Tx_Install_Updates_Base {
 		}
 
 			// Update the "forceCharset" setting
-		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] === '-1') {
+		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] != '') {
 			$this->pObj->setValueInLocalconfFile($localconf, '$TYPO3_CONF_VARS[\'BE\'][\'forceCharset\']', '');
 		}
 

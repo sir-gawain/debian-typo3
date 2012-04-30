@@ -27,26 +27,10 @@
 /**
  * Generate a page-tree, browsable.
  *
- * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @coauthor	René Fritz <r.fritz@colorcube.de>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   74: class t3lib_browseTree extends t3lib_treeView
- *   83:	 function init($clause='')
- *  116:	 function getTitleAttrib($row)
- *  128:	 function wrapIcon($icon,$row)
- *  150:	 function getTitleStr($row,$titleLen=30)
- *
- * TOTAL FUNCTIONS: 4
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -65,10 +49,11 @@ class t3lib_browseTree extends t3lib_treeView {
 	 * Initialize, setting what is necessary for browsing pages.
 	 * Using the current user.
 	 *
-	 * @param	string		Additional clause for selecting pages.
-	 * @return	void
+	 * @param string $clause Additional clause for selecting pages.
+	 * @param string $orderByFields record ORDER BY field
+	 * @return void
 	 */
-	function init($clause = '') {
+	function init($clause = '', $orderByFields = '') {
 
 			// this will hide records from display - it has nothing todo with user rights!!
 		$clauseExludePidList = '';

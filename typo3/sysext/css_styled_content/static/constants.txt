@@ -26,7 +26,7 @@ styles.content.links {
     # cat=content/links; type=small; label= Target for external links
   extTarget = _blank
   target = {$PAGE_TARGET}
-  allowTags = b,i,u,a,img,br,div,center,pre,font,hr,sub,sup,p,strong,em,li,ul,ol,blockquote,strike,del,ins,span,h1,h2,h3,h4,h5,h6,address,dl,dt,dd
+  allowTags = a, abbr, acronym, address, article, aside, b, bdo, big, blockquote, br, caption, center, cite, code, col, colgroup, dd, del, dfn, dl, div, dt, em, font, footer, header, h1, h2, h3, h4, h5, h6, hr, i, img, ins, kbd, label, li, link, meta, nav, ol, p, pre, q, samp, sdfield, section, small, span, strike, strong, style, sub, sup, table, thead, tbody, tfoot, td, th, tr, title, tt, u, ul, var
 }
 
 styles.content.imgtext {
@@ -72,7 +72,7 @@ styles.content.imgtext {
     # cat=content/cImage/i3; type=int+; label= Image border, padding: Padding left and right to the image, around the border.
   borderSpace = 0
     # cat=content/cImage/i4; type=string; label= Image border CSS-selector: If you want your border to apply elsewhere, change this setting. E.g. to apply to the whole image+caption, use 'DIV.csc-textpic-border DIV.csc-textpic-imagewrap .csc-textpic-image'.
-  borderSelector = DIV.{$styles.content.imgtext.borderClass} DIV.csc-textpic-imagewrap .csc-textpic-image IMG, DIV.{$styles.content.imgtext.borderClass} DIV.csc-textpic-single-image IMG
+  borderSelector = DIV.{$styles.content.imgtext.borderClass} DIV.csc-textpic-imagewrap IMG
     # cat=content/cImage/i5; type=string; label= Image border class: The name of the CSS class for creating image borders
   borderClass = csc-textpic-border
     # cat=content/cImage/i5; type=boolean; label= Image row separation: Whether images should be rendered/wrapped in separated rows, e.g. inside a DIV.csc-textpic-imagerow element
@@ -82,6 +82,7 @@ styles.content.imgtext {
 }
 
 styles.content.uploads {
+  target = _blank
   jumpurl_secure =
   jumpurl_secure_mimeTypes = pdf=application/pdf, doc=application/msword
   jumpurl =
@@ -103,6 +104,8 @@ styles.content.loginform {
   pid =
     # cat=content/cLogin; type=; label= Message, Login: This is the message (if any) that is popped-up when a user logs in as a front-end user
   goodMess =
+    # cat=content/cLogin; type=; label= Login template: Enter the path for the HTML template to be used
+  templateFile = EXT:felogin/template.html
 }
 
 styles.content.searchform {
@@ -128,11 +131,29 @@ styles.content.media {
   defaultAudioWidth = 300
     # cat=content/cMedia/j6; type=int+; label= Media Audio Height: define the default height for the media audio
   defaultAudioHeight = 30
+   	# cat=content/cMedia/j7; type=; label= Flow Player: configure the path to the flow-player
+  flowPlayer = typo3/contrib/flowplayer/flowplayer-3.2.7.swf
+}
+
+styles.content.table {
+    # cat=content/cTable/k2; type=color; label= Table background color, Color 1: Background color for table when "Backgr. Color" has been set to "Color 1"
+  backgroundColor.1 = #EDEBF1
+    # cat=content/cTable/k3; type=color; label= Table background color, Color 2: Background color for table when "Backgr. Color" has been set to "Color 2"
+  backgroundColor.2 = #F5FFAA
+    # cat=content/cTable/k5; type=color; label= Table background color, Black: Background color for table when "Backgr. Color" has been set to "Black"
+  backgroundColor.240 = black
+    # cat=content/cTable/k6; type=color; label= Table background color, White: Background color for table when "Backgr. Color" has been set to "White"
+  backgroundColor.241 = white
+    # cat=content/cTable/k7; type=color; label= Table background color, Dark Gray: Background color for table when "Backgr. Color" has been set to "Dark Gray"
+  backgroundColor.242 = #333333
+    # cat=content/cTable/k8; type=color; label= Table background color, Gray: Background color for table when "Backgr. Color" has been set to "Gray"
+  backgroundColor.243 = gray
+    # cat=content/cTable/k9; type=color; label= Table background color, Silver: Background color for table when "Backgr. Color" has been set to "Silver"
+  backgroundColor.244 = silver
 }
 
  # cat=advanced/links; type=small; label= Target for internal links: Should match the name of the content PAGE-object in TypoScript when used with frames. Most cases: set to "" (empty). If you have frames in the template set to "page"
 PAGE_TARGET =
 
 
-# TYPO3 SVN ID: $Id$
 

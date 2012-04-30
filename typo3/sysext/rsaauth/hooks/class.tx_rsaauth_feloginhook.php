@@ -22,14 +22,6 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- * $Id$
- */
-
-require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/backends/class.tx_rsaauth_backendfactory.php');
-require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/storage/class.tx_rsaauth_storagefactory.php');
 
 /**
  * This class contains a hook to implement RSA authentication for the TYPO3
@@ -49,7 +41,7 @@ class tx_rsaauth_feloginhook {
 	public function loginFormHook() {
 		$result = array(0 => '', 1 => '');
 
-		if ($GLOBALS['TYPO3_CONF_VARS']['FE']['loginSecurityLevel'] == 'rsa') {
+		if (trim($GLOBALS['TYPO3_CONF_VARS']['FE']['loginSecurityLevel']) === 'rsa') {
 			$backend = tx_rsaauth_backendfactory::getBackend();
 			if ($backend) {
 				$result[0] = 'tx_rsaauth_feencrypt(this);';

@@ -27,35 +27,9 @@
 /**
  * Contains the TypoScript parser class
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   80: class t3lib_TSparser
- *  133:	 function parse($string,$matchObj='')
- *  169:	 function nextDivider()
- *  185:	 function parseSub(&$setup)
- *  389:	 function rollParseSub($string,&$setup)
- *  413:	 function getVal($string,$setup)
- *  439:	 function setVal($string,&$setup,$value,$wipeOut=0)
- *  485:	 function error($err,$num=2)
- *  497:	 function checkIncludeLines($string, $cycle_counter=1, $returnFiles=false)
- *  541:	 function checkIncludeLines_array($array)
- *
- *			  SECTION: Syntax highlighting
- *  584:	 function doSyntaxHighlight($string,$lineNum='',$highlightBlockMode=0)
- *  605:	 function regHighLight($code,$pointer,$strlen=-1)
- *  623:	 function syntaxHighlight_print($lineNumDat,$highlightBlockMode)
- *
- * TOTAL FUNCTIONS: 12
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -65,7 +39,7 @@
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
- * @see t3lib_tstemplate, t3lib_matchcondition, t3lib_BEfunc::getPagesTSconfig(), t3lib_userAuthGroup::fetchGroupData(), t3lib_TStemplate::generateConfig()
+ * @see t3lib_tstemplate, t3lib_BEfunc::getPagesTSconfig(), t3lib_userAuthGroup::fetchGroupData(), t3lib_TStemplate::generateConfig()
  */
 class t3lib_TSparser {
 	var $strict = 1; // If set, then key names cannot contain characters other than [:alnum:]_\.-
@@ -80,7 +54,7 @@ class t3lib_TSparser {
 	var $multiLineObject = ''; // Internally set, when multiline value is accumulated
 	var $multiLineValue = array(); // Internally set, when multiline value is accumulated
 	var $inBrace = 0; // Internally set, when in brace. Counter.
-	var $lastConditionTrue = 1; // For each condition this flag is set, if the condition is true, else it's cleared. Then it's used by the [ELSE] condition to determine if the next part should be parsed.
+	var $lastConditionTrue = 1; // For each condition this flag is set, if the condition is TRUE, else it's cleared. Then it's used by the [ELSE] condition to determine if the next part should be parsed.
 	var $sections = array(); // Tracking all conditions found
 	var $sectionsMatch = array(); // Tracking all matching conditions found
 	var $syntaxHighLight = 0; // If set, then syntax highlight mode is on; Call the function syntaxHighlight() to use this function
@@ -118,7 +92,7 @@ class t3lib_TSparser {
 	 * Start parsing the input TypoScript text piece. The result is stored in $this->setup
 	 *
 	 * @param	string		The TypoScript text
-	 * @param	object		If is object (instance of t3lib_matchcondition), then this is used to match conditions found in the TypoScript code. If matchObj not specified, then no conditions will work! (Except [GLOBAL])
+	 * @param	object		If is object, then this is used to match conditions found in the TypoScript code. If matchObj not specified, then no conditions will work! (Except [GLOBAL])
 	 * @return	void
 	 */
 	function parse($string, $matchObj = '') {
@@ -182,8 +156,6 @@ class t3lib_TSparser {
 	 * @return	string		Returns the string of the condition found, the exit signal or possible nothing (if it completed parsing with no interruptions)
 	 */
 	function parseSub(&$setup) {
-		global $TYPO3_CONF_VARS;
-
 		while (isset($this->raw[$this->rawP])) {
 			$line = ltrim($this->raw[$this->rawP]);
 			$lineP = $this->rawP;
@@ -202,7 +174,7 @@ class t3lib_TSparser {
 				$this->commentSet = 1;
 			}
 
-			if (!$this->commentSet && ($line || $this->multiLineEnabled)) { // If $this->multiLineEnabled we will go and get the line values here because we know, the first if() will be true.
+			if (!$this->commentSet && ($line || $this->multiLineEnabled)) { // If $this->multiLineEnabled we will go and get the line values here because we know, the first if() will be TRUE.
 				if ($this->multiLineEnabled) { // If multiline is enabled. Escape by ')'
 					if (substr($line, 0, 1) == ')') { // Multiline ends...
 						if ($this->syntaxHighLight) {
@@ -298,8 +270,8 @@ class t3lib_TSparser {
 											}
 										break;
 										default:
-											if (isset($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc])) {
-												$hookMethod = $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc];
+											if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc])) {
+												$hookMethod = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc];
 												$params = array('currentValue' => $currentValue, 'functionArgument' => $tsFuncArg);
 												$fakeThis = FALSE;
 												$newValue = t3lib_div::callUserFunction($hookMethod, $params, $fakeThis);
@@ -500,9 +472,6 @@ class t3lib_TSparser {
 				} else {
 					$lnRegisDone = 0;
 					if ($wipeOut && $this->strict) {
-						if ((isset($setup[$string]) && !isset($value[0])) || (isset($setup[$string . '.']) && !isset($value[1]))) {
-							$this->error('Line ' . ($this->lineNumberOffset + $this->rawP - 1) . ': Object copied in this line "' . trim($this->raw[($this->rawP - 1)]) . '" would leave either the value or properties untouched in TypoScript Version 1. Please check that this is not a problem for you.', 1);
-						}
 						unset($setup[$string]);
 						unset($setup[$string . '.']);
 						if ($this->regLinenumbers) {
@@ -558,7 +527,7 @@ class t3lib_TSparser {
 	 * @return	string		Complete TypoScript with includes added.
 	 * @static
 	 */
-	function checkIncludeLines($string, $cycle_counter = 1, $returnFiles = FALSE) {
+	public static function checkIncludeLines($string, $cycle_counter = 1, $returnFiles = FALSE) {
 		$includedFiles = array();
 		if ($cycle_counter > 100) {
 			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags', 'Core', 2);
@@ -590,7 +559,7 @@ class t3lib_TSparser {
 									$filename = t3lib_div::getFileAbsFileName(trim($sourceParts[1]));
 									if (strcmp($filename, '')) { // Must exist and must not contain '..' and must be relative
 										if (t3lib_div::verifyFilenameAgainstDenyPattern($filename)) { // Check for allowed files
-											if (@is_file($filename) && filesize($filename) < 100000) { // Max. 100 KB include files!
+											if (@is_file($filename)) {
 													// check for includes in included text
 												$includedFiles[] = $filename;
 												$included_text = self::checkIncludeLines(t3lib_div::getUrl($filename), $cycle_counter + 1, $returnFiles);
@@ -601,8 +570,12 @@ class t3lib_TSparser {
 													$included_text = $included_text['typoscript'];
 												}
 												$newString .= $included_text . LF;
+											} else {
+												$newString .= "\n###\n### ERROR: File \"" . $filename . "\" was not was not found.\n###\n\n";
+												t3lib_div::sysLog('File "' . $filename . '" was not found.', 'Core', 2);
 											}
 										} else {
+											$newString .= "\n###\n### ERROR: File \"" . $filename . "\" was not included since it is not allowed due to fileDenyPattern\n###\n\n";
 											t3lib_div::sysLog('File "' . $filename . '" was not included since it is not allowed due to fileDenyPattern', 'Core', 2);
 										}
 									}
@@ -637,9 +610,9 @@ class t3lib_TSparser {
 	 * @param	array		Array with TypoScript in each value
 	 * @return	array		Same array but where the values has been parsed for include-commands
 	 */
-	function checkIncludeLines_array($array) {
+	public static function checkIncludeLines_array($array) {
 		foreach ($array as $k => $v) {
-			$array[$k] = t3lib_TSparser::checkIncludeLines($array[$k]);
+			$array[$k] = self::checkIncludeLines($array[$k]);
 		}
 		return $array;
 	}
@@ -653,7 +626,7 @@ class t3lib_TSparser {
 	 * @return	 string	 template content with uncommented include statements
 	 * @author	 Fabrizio Branca <typo3@fabrizio-branca.de>
 	 */
-	function extractIncludes($string, $cycle_counter = 1, $extractedFileNames = array()) {
+	public static function extractIncludes($string, $cycle_counter = 1, $extractedFileNames = array()) {
 
 		if ($cycle_counter > 10) {
 			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags', 'Core', 2);
@@ -713,15 +686,15 @@ class t3lib_TSparser {
 
 						// some file checks
 					if (empty($realFileName)) {
-						throw new Exception(sprintf('"%s" is not a valid file location.', $fileName));
+						throw new UnexpectedValueException(sprintf('"%s" is not a valid file location.', $fileName), 1294586441);
 					}
 
 					if (!is_writable($realFileName)) {
-						throw new Exception(sprintf('"%s" is not writable.', $fileName));
+						throw new RuntimeException(sprintf('"%s" is not writable.', $fileName), 1294586442);
 					}
 
 					if (in_array($realFileName, $extractedFileNames)) {
-						throw new Exception(sprintf('Recursive/multiple inclusion of file "%s"', $realFileName));
+						throw new RuntimeException(sprintf('Recursive/multiple inclusion of file "%s"', $realFileName), 1294586443);
 					}
 					$extractedFileNames[] = $realFileName;
 
@@ -729,7 +702,7 @@ class t3lib_TSparser {
 					$fileContentString = self::extractIncludes($fileContentString, $cycle_counter + 1, $extractedFileNames);
 
 					if (!t3lib_div::writeFile($realFileName, $fileContentString)) {
-						throw new Exception(sprintf('Could not write file "%s"', $realFileName));
+						throw new RuntimeException(sprintf('Could not write file "%s"', $realFileName), 1294586444);
 					}
 
 						// insert reference to the file in the rest content
@@ -768,7 +741,7 @@ class t3lib_TSparser {
 	 * @return	array		Same array but where the values has been processed with extractIncludes
 	 * @author	 Fabrizio Branca <typo3@fabrizio-branca.de>
 	 */
-	function extractIncludes_array($array) {
+	public static function extractIncludes_array($array) {
 		foreach ($array as $k => $v) {
 			$array[$k] = t3lib_TSparser::extractIncludes($array[$k]);
 		}

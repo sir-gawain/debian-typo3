@@ -1,15 +1,13 @@
 <?php
 /*
  * Register necessary class names with autoloader
- *
- * $Id: ext_autoload.php 6536 2009-11-25 14:07:18Z stucki $
  */
 return array(
 	'tslib_adminpanel' => PATH_tslib . 'class.tslib_adminpanel.php',
 	'tslib_cobj' => PATH_tslib . 'class.tslib_content.php',
-	'tslib_frameset' => PATH_tslib . 'class.tslib_content.php',
-	'tslib_tableoffset' => PATH_tslib . 'class.tslib_content.php',
-	'tslib_controltable' => PATH_tslib . 'class.tslib_content.php',
+	'tslib_frameset' => PATH_tslib . 'class.tslib_frameset.php',
+	'tslib_tableoffset' => PATH_tslib . 'class.tslib_tableoffset.php',
+	'tslib_controltable' => PATH_tslib . 'class.tslib_controltable.php',
 	'tslib_eidtools' => PATH_tslib . 'class.tslib_eidtools.php',
 	'tslib_fe' => PATH_tslib . 'class.tslib_fe.php',
 	'tslib_fecompression' => PATH_tslib . 'class.tslib_fecompression.php',
@@ -36,6 +34,7 @@ return array(
 	'tslib_cobj_getimgresourcehook' => PATH_tslib . 'interfaces/interface.tslib_content_getimgresourcehook.php',
 	'tslib_content_postinithook' => PATH_tslib . 'interfaces/interface.tslib_content_postinithook.php',
 	'tslib_content_stdwraphook' => PATH_tslib . 'interfaces/interface.tslib_content_stdwraphook.php',
+	'tslib_adminpanelhook' => PATH_tslib . 'interfaces/interface.tslib_adminPanelHook.php',
 	'user_various' => PATH_tslib . 'media/scripts/example_callfunction.php',
 	'tslib_gmenu_foldout' => PATH_tslib . 'media/scripts/gmenu_foldout.php',
 	'tslib_gmenu_layers' => PATH_tslib . 'media/scripts/gmenu_layers.php',
@@ -74,6 +73,7 @@ return array(
 	'tslib_content_scalablevectorgraphics' => PATH_tslib . 'content/class.tslib_content_scalablevectorgraphics.php',
 	'tslib_content_searchresult' => PATH_tslib . 'content/class.tslib_content_searchresult.php',
 	'tslib_content_shockwaveflashobject' => PATH_tslib . 'content/class.tslib_content_shockwaveflashobject.php',
+	'tslib_content_flowplayer' => PATH_tslib . 'content/class.tslib_content_flowplayer.php',
 	'tslib_content_template' => PATH_tslib . 'content/class.tslib_content_template.php',
 	'tslib_content_text' => PATH_tslib . 'content/class.tslib_content_text.php',
 	'tslib_content_userinternal' => PATH_tslib . 'content/class.tslib_content_userinternal.php',

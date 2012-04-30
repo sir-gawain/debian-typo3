@@ -146,7 +146,7 @@ class t3lib_extjs_ExtDirectRouter {
 
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName])) {
 			if (!isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName]['callbackClass'])) {
-				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName);
+				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName, 1294586450);
 			}
 
 			$callbackClass = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName]['callbackClass'];
@@ -164,7 +164,7 @@ class t3lib_extjs_ExtDirectRouter {
 
 		} else {
 			if (!isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName])) {
-				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName);
+				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName, 1294586450);
 			}
 
 			$callbackClass = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName];

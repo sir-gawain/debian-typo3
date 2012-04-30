@@ -30,8 +30,6 @@
  *
  * @author	Kasper Skårhøj <kasper@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
- *
- * $Id$  *
  */
 require_once(PATH_typo3.'class.browse_links.php');
 
@@ -54,7 +52,7 @@ class tx_rtehtmlarea_image_folderTree extends t3lib_folderTree {
 	 */
 	function wrapTitle($title,$v)	{
 		$title = htmlspecialchars($title);
-		
+
 		if ($this->ext_isLinkable($v))	{
 			$aOnClick = 'return jumpToUrl(\'?editorNo='.$GLOBALS['SOBE']->browser->editorNo.'&expandFolder='.rawurlencode($v['path']).'\');';
 			return '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.$title.'</a>';
@@ -64,10 +62,10 @@ class tx_rtehtmlarea_image_folderTree extends t3lib_folderTree {
 	}
 
 	/**
-	 * Returns true if the input "record" contains a folder which can be linked.
+	 * Returns TRUE if the input "record" contains a folder which can be linked.
 	 *
 	 * @param	array		Array with information about the folder element. Contains keys like title, uid, path, _title
-	 * @return	boolean		True is returned if the path is found in the web-part of the the server and is NOT a recycler or temp folder
+	 * @return	boolean		TRUE is returned if the path is found in the web-part of the the server and is NOT a recycler or temp folder
 	 */
 	function ext_isLinkable($v)	{
 		$webpath=t3lib_BEfunc::getPathType_web_nonweb($v['path']);
@@ -169,10 +167,6 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		$this->fileProcessor->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
 
 		$this->allowedItems = $this->getAllowedItems('magic,plain,image');
-		reset($this->allowedItems);
-		if (!in_array($this->act,$this->allowedItems))	{
-			$this->act = current($this->allowedItems);
-		}
 
 		$this->insertImage();
 
@@ -194,7 +188,11 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	void
 	 */
 	public function initVariables() {
-
+			// Get "act"
+		$this->act = t3lib_div::_GP('act');
+		if (!$this->act) {
+			$this->act = FALSE;
+		}
 			// Process bparams
 		$this->bparams = t3lib_div::_GP('bparams');
 		$pArr = explode('|', $this->bparams);
@@ -227,12 +225,6 @@ class tx_rtehtmlarea_select_image extends browse_links {
 
 			// the script to link to
 		$this->thisScript = t3lib_div::getIndpEnv('SCRIPT_NAME');
-
-			// Get "act"
-		$this->act = t3lib_div::_GP('act');
-		if (!$this->act) {
-			$this->act = 'magic';
-		}
 	}
 
 	/**
@@ -339,11 +331,11 @@ class tx_rtehtmlarea_select_image extends browse_links {
 					$destName = $fileFunc->getUniqueName($basename,$destPath);
 					@copy($imgInfo[3],$destName);
 					t3lib_div::fixPermissions($destName);
-					$cWidth = t3lib_div::intInRange(t3lib_div::_GP('cWidth'), 0, $this->magicMaxWidth);
-					$cHeight = t3lib_div::intInRange(t3lib_div::_GP('cHeight'), 0, $this->magicMaxHeight);
+					$cWidth = t3lib_utility_Math::forceIntegerInRange(t3lib_div::_GP('cWidth'), 0, $this->magicMaxWidth);
+					$cHeight = t3lib_utility_Math::forceIntegerInRange(t3lib_div::_GP('cHeight'), 0, $this->magicMaxHeight);
 					if (!$cWidth)	$cWidth = $this->magicMaxWidth;
 					if (!$cHeight)	$cHeight = $this->magicMaxHeight;
-	
+
 					$imgI = $this->imgObj->imageMagickConvert($filepath,'WEB',$cWidth.'m',$cHeight.'m');	// ($imagefile,$newExt,$w,$h,$params,$frame,$options,$mustCreate=0)
 					if ($imgI[3])	{
 						$fI=pathinfo($imgI[3]);
@@ -365,7 +357,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 			}
 		} else {
 			t3lib_div::sysLog('Attempt at creating a magic image failed due to missing image file info.', $this->extKey . '/tx_rtehtmlarea_select_image', t3lib_div::SYSLOG_SEVERITY_ERROR);
-		}	
+		}
 	}
 
 	/**
@@ -439,7 +431,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				$removedProperties = t3lib_div::trimExplode(',',$this->buttonConfig['properties.']['removeItems'],1);
 			}
 		}
-
+			// The following property is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
 		if ($this->thisConfig['classesImage']) {
 			$classesImageArray = t3lib_div::trimExplode(',', $this->thisConfig['classesImage'], 1);
 			$classesImageJSOptions = '<option value=""></option>';
@@ -447,7 +439,13 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				$classesImageJSOptions .= '<option value="' .$class . '">' . $class . '</option>';
 			}
 		}
-
+		if ($this->buttonConfig['properties.']['class.']['allowedClasses']) {
+			$classesImageArray = t3lib_div::trimExplode(',', $this->buttonConfig['properties.']['class.']['allowedClasses'], 1);
+			$classesImageJSOptions = '<option value=""></option>';
+			foreach ($classesImageArray as $class) {
+				$classesImageJSOptions .= '<option value="' .$class . '">' . $class . '</option>';
+			}
+		}
 		$lockPlainWidth = 'false';
 		$lockPlainHeight = 'false';
 		if (is_array($this->thisConfig['proc.']) && $this->thisConfig['proc.']['plainImageMode']) {
@@ -495,7 +493,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				}
 			}
 			function printCurrentImageOptions() {
-				var classesImage = ' . ($this->thisConfig['classesImage']?'true':'false') . ';
+				var classesImage = ' . (($this->buttonConfig['properties.']['class.']['allowedClasses'] || $this->thisConfig['classesImage']) ? 'true' : 'false') . ';
 				if (classesImage) var styleSelector=\'<select id="iClass" name="iClass" style="width:140px;">' . $classesImageJSOptions  . '</select>\';
 				var floatSelector=\'<select id="iFloat" name="iFloat"><option value="">' . $LANG->getLL('notSet') . '</option><option value="none">' . $LANG->getLL('nonFloating') . '</option><option value="left">' . $LANG->getLL('left') . '</option><option value="right">' . $LANG->getLL('right') . '</option></select>\';
 				if (plugin.getButton("Language")) {
@@ -540,14 +538,14 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				if (plugin.getButton("Language")) {
 					sz+=\'<tr><td\'+bgColor+\'><label for="iLang">\' + plugin.editor.getPlugin("Language").localize(\'Language-Tooltip\') + \': </label></td><td>\' + languageSelector + \'</td></tr>\';
 				}')
-				.(in_array('clickenlarge', $removedProperties)?'':'
+				.((in_array('clickenlarge', $removedProperties) || in_array('data-htmlarea-clickenlarge', $removedProperties)) ?'':'
 				sz+=\'<tr><td\'+bgColor+\'><label for="iClickEnlarge">'.$LANG->sL('LLL:EXT:cms/locallang_ttc.php:image_zoom',1).' </label></td><td><input type="checkbox" name="iClickEnlarge" id="iClickEnlarge" value="0" /></td></tr>\';').'
 				sz+=\'<tr><td><input type="submit" value="'.$LANG->getLL('update').'" onClick="return setImageProperties();"></td></tr>\';
 				sz+=\'</form></table>\';
 				return sz;
 			}
 			function setImageProperties() {
-				var classesImage = ' . ($this->thisConfig['classesImage']?'true':'false') . ';
+				var classesImage = ' . (($this->buttonConfig['properties.']['class.']['allowedClasses'] || $this->thisConfig['classesImage']) ? 'true' : 'false') . ';
 				if (selectedImageRef)	{
 					if (document.imageData.iWidth) {
 						if (document.imageData.iWidth.value && parseInt(document.imageData.iWidth.value)) {
@@ -640,8 +638,9 @@ class tx_rtehtmlarea_select_image extends browse_links {
 					}
 					if (document.imageData.iClickEnlarge) {
 						if (document.imageData.iClickEnlarge.checked) {
-							selectedImageRef.setAttribute("clickenlarge","1");
+							selectedImageRef.setAttribute("data-htmlarea-clickenlarge","1");
 						} else {
+							selectedImageRef.removeAttribute("data-htmlarea-clickenlarge");
 							selectedImageRef.removeAttribute("clickenlarge");
 						}
 					}
@@ -650,7 +649,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				return false;
 			}
 			function insertImagePropertiesInForm()	{
-				var classesImage = ' . ($this->thisConfig['classesImage']?'true':'false') . ';
+				var classesImage = ' . (($this->buttonConfig['properties.']['class.']['allowedClasses'] || $this->thisConfig['classesImage']) ? 'true' : 'false') . ';
 				if (selectedImageRef)	{
 					var styleWidth, styleHeight, padding;
 					if (document.imageData.iWidth) {
@@ -735,7 +734,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 						}
 					}
 					if (document.imageData.iClickEnlarge) {
-						if (selectedImageRef.getAttribute("clickenlarge") == "1") {
+						if (selectedImageRef.getAttribute("data-htmlarea-clickenlarge") == "1" || selectedImageRef.getAttribute("clickenlarge") == "1") {
 							document.imageData.iClickEnlarge.checked = 1;
 						} else {
 							document.imageData.iClickEnlarge.checked = 0;
@@ -757,12 +756,12 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	array		Session data and boolean which indicates that data needs to be stored in session because it's changed
 	 */
 	function processSessionData($data) {
-		$store = false;
+		$store = FALSE;
 
 		if ($this->act != 'image') {
 			if (isset($this->act))	{
 				$data['act'] = $this->act;
-				$store = true;
+				$store = TRUE;
 			} else {
 				$this->act = $data['act'];
 			}
@@ -770,7 +769,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 
 		if (isset($this->expandFolder))	{
 			$data['expandFolder'] = $this->expandFolder;
-			$store = true;
+			$store = TRUE;
 		} else {
 			$this->expandFolder = $data['expandFolder'];
 		}
@@ -784,42 +783,50 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	[type]		...
 	 */
 	function main_rte()	{
-		global $LANG, $TYPO3_CONF_VARS, $FILEMOUNTS, $BE_USER;
-
 			// Starting content:
-		$this->content = $this->doc->startPage($LANG->getLL('Insert Image',1));
+		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('Insert Image',1));
 
 			// Making menu in top:
 		$menuDef = array();
-		if (in_array('image',$this->allowedItems) && ($this->act=='image' || t3lib_div::_GP('cWidth'))) {
-			$menuDef['page']['isActive'] = $this->act=='image';
-			$menuDef['page']['label'] = $LANG->getLL('currentImage',1);
-			$menuDef['page']['url'] = '#';
-			$menuDef['page']['addParams'] = 'onClick="jumpToUrl(\'?act=image&bparams='.$this->bparams.'\');return false;"';
+		if (in_array('image', $this->allowedItems) && (($this->act === 'image') || t3lib_div::_GP('cWidth'))) {
+			$menuDef['image']['isActive'] = FALSE;
+			$menuDef['image']['label'] = $GLOBALS['LANG']->getLL('currentImage', 1);
+			$menuDef['image']['url'] = '#';
+			$menuDef['image']['addParams'] = 'onClick="jumpToUrl(\'?act=image&bparams=' . $this->bparams . '\');return false;"';
 		}
-		if (in_array('magic',$this->allowedItems)){
-			$menuDef['file']['isActive'] = $this->act=='magic';
-			$menuDef['file']['label'] = $LANG->getLL('magicImage',1);
-			$menuDef['file']['url'] = '#';
-			$menuDef['file']['addParams'] = 'onClick="jumpToUrl(\'?act=magic&bparams='.$this->bparams.'\');return false;"';
+		if (in_array('magic', $this->allowedItems)){
+			$menuDef['magic']['isActive'] = FALSE;
+			$menuDef['magic']['label'] = $GLOBALS['LANG']->getLL('magicImage', 1);
+			$menuDef['magic']['url'] = '#';
+			$menuDef['magic']['addParams'] = 'onClick="jumpToUrl(\'?act=magic&bparams=' . $this->bparams . '\');return false;"';
 		}
-		if (in_array('plain',$this->allowedItems)) {
-			$menuDef['url']['isActive'] = $this->act=='plain';
-			$menuDef['url']['label'] = $LANG->getLL('plainImage',1);
-			$menuDef['url']['url'] = '#';
-			$menuDef['url']['addParams'] = 'onClick="jumpToUrl(\'?act=plain&bparams='.$this->bparams.'\');return false;"';
+		if (in_array('plain', $this->allowedItems)) {
+			$menuDef['plain']['isActive'] = FALSE;
+			$menuDef['plain']['label'] = $GLOBALS['LANG']->getLL('plainImage', 1);
+			$menuDef['plain']['url'] = '#';
+			$menuDef['plain']['addParams'] = 'onClick="jumpToUrl(\'?act=plain&bparams=' . $this->bparams . '\');return false;"';
 		}
-		if (in_array('dragdrop',$this->allowedItems)) {
-			$menuDef['mail']['isActive'] = $this->act=='dragdrop';
-			$menuDef['mail']['label'] = $LANG->getLL('dragDropImage',1);
-			$menuDef['mail']['url'] = '#';
-			$menuDef['mail']['addParams'] = 'onClick="jumpToUrl(\'?act=dragdrop&bparams='.$this->bparams.'\');return false;"';
+		if (in_array('dragdrop', $this->allowedItems)) {
+			$menuDef['dragdrop']['isActive'] = FALSE;
+			$menuDef['dragdrop']['label'] = $GLOBALS['LANG']->getLL('dragDropImage', 1);
+			$menuDef['dragdrop']['url'] = '#';
+			$menuDef['dragdrop']['addParams'] = 'onClick="jumpToUrl(\'?act=dragdrop&bparams=' . $this->bparams . '\');return false;"';
 		}
 
 			// Call hook for extra options
 		foreach ($this->hookObjects as $hookObject) {
 			$menuDef = $hookObject->modifyMenuDefinition($menuDef);
 		}
+
+			// Order the menu items as specified in Page TSconfig
+		$menuDef = $this->orderMenuDefinition($menuDef);
+
+			// Set active menu item
+		reset($menuDef);
+		if (($this->act === FALSE) || !in_array($this->act, $this->allowedItems)) {
+			$this->act = key($menuDef);
+		}
+		$menuDef[$this->act]['isActive'] = TRUE;
 
 		$this->content .= $this->doc->getTabMenuRaw($menuDef);
 
@@ -835,14 +842,14 @@ class tx_rtehtmlarea_select_image extends browse_links {
 					// Adding upload form, if allowed
 				$this->content .= $this->insertUploadForm($this->expandFolder);
 					// Getting flag for showing/not showing thumbnails:
-				$noThumbs = $BE_USER->getTSConfigVal('options.noThumbsInRTEimageSelect');
+				$noThumbs = $GLOBALS['BE_USER']->getTSConfigVal('options.noThumbsInRTEimageSelect');
 				if (!$noThumbs)	{
 						// MENU-ITEMS, fetching the setting for thumbnails from File>List module:
 					$_MOD_MENU = array('displayThumbs' => '');
 					$_MCONF['name']='file_list';
 					$_MOD_SETTINGS = t3lib_BEfunc::getModuleData($_MOD_MENU, t3lib_div::_GP('SET'), $_MCONF['name']);
 					$addParams = '&act='.$this->act.'&editorNo='.$this->editorNo.'&expandFolder='.rawurlencode($this->expandFolder);
-					$thumbNailCheck = t3lib_BEfunc::getFuncCheck('','SET[displayThumbs]',$_MOD_SETTINGS['displayThumbs'],'select_image.php',$addParams,'id="checkDisplayThumbs"').' <label for="checkDisplayThumbs">'.$LANG->sL('LLL:EXT:lang/locallang_mod_file_list.php:displayThumbs',1).'</label>';
+					$thumbNailCheck = t3lib_BEfunc::getFuncCheck('','SET[displayThumbs]',$_MOD_SETTINGS['displayThumbs'],'select_image.php',$addParams,'id="checkDisplayThumbs"').' <label for="checkDisplayThumbs">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.php:displayThumbs',1).'</label>';
 				} else {
 					$thumbNailCheck='';
 				}
@@ -853,7 +860,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				$files = $this->expandFolder($foldertree->specUIDmap[$specUid],$this->act=='plain',$noThumbs?$noThumbs:!$_MOD_SETTINGS['displayThumbs']);
 				$this->content.= '<table border="0" cellpadding="0" cellspacing="0">
 				<tr>
-					<td style="vertical-align: top;">'.$this->barheader($LANG->getLL('folderTree').':').$tree.'</td>
+					<td style="vertical-align: top;">'.$this->barheader($GLOBALS['LANG']->getLL('folderTree').':').$tree.'</td>
 					<td>&nbsp;</td>
 					<td style="vertical-align: top;">'.$files.'</td>
 				</tr>
@@ -868,13 +875,13 @@ class tx_rtehtmlarea_select_image extends browse_links {
 			case 'dragdrop':
 				$foldertree = t3lib_div::makeInstance('TBE_FolderTree');
 				$foldertree->thisScript=$this->thisScript;
-				$foldertree->ext_noTempRecyclerDirs = true;
+				$foldertree->ext_noTempRecyclerDirs = TRUE;
 				$tree = $foldertree->getBrowsableTree();
 				list(,,$specUid) = explode('_',t3lib_div::_GP('PM'));
 				$files = $this->TBE_dragNDrop($foldertree->specUIDmap[$specUid], implode(',', $this->allowedFileTypes));
 				$this->content.= '<table border="0" cellpadding="0" cellspacing="0">
 				<tr>
-					<td style="vertical-align: top;">'.$this->barheader($LANG->getLL('folderTree').':').$tree.'</td>
+					<td style="vertical-align: top;">'.$this->barheader($GLOBALS['LANG']->getLL('folderTree').':').$tree.'</td>
 					<td>&nbsp;</td>
 					<td style="vertical-align: top;">'.$files.'</td>
 				</tr>
@@ -934,7 +941,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	[type]		...
 	 */
 	function expandFolder($expandFolder=0,$plainFlag=0,$noThumbs=0)	{
-		global $LANG, $BE_USER, $BACK_PATH;
+		global $LANG, $BACK_PATH;
 
 		$expandFolder = $expandFolder ? $expandFolder :t3lib_div::_GP('expandFolder');
 		$out='';
@@ -944,7 +951,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 			if (is_array($files))	{
 				$out.=$this->barheader(sprintf($LANG->getLL('images').' (%s):',count($files)));
 
-				$titleLen = intval($BE_USER->uc['titleLen']);
+				$titleLen = intval($GLOBALS['BE_USER']->uc['titleLen']);
 				$picon='<img'.t3lib_iconWorks::skinImg($BACK_PATH,'gfx/i/_icon_webfolders.gif','width="18" height="16"').' alt="" />';
 				$picon.=htmlspecialchars(t3lib_div::fixed_lgd_cs(basename($expandFolder),$titleLen));
 				$out.='<span class="nobr">'.$picon.'</span><br />';
@@ -1125,10 +1132,8 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 * @return	array		RTE configuration array
 	 */
 	protected function getRTEConfig()	{
-		global $BE_USER;
-
 		$RTEtsConfigParts = explode(':', $this->RTEtsConfigParams);
-		$RTEsetup = $BE_USER->getTSConfig('RTE',t3lib_BEfunc::getPagesTSconfig($RTEtsConfigParts[5]));
+		$RTEsetup = $GLOBALS['BE_USER']->getTSConfig('RTE',t3lib_BEfunc::getPagesTSconfig($RTEtsConfigParts[5]));
 		return t3lib_BEfunc::RTEsetup($RTEsetup['properties'],$RTEtsConfigParts[0],$RTEtsConfigParts[2],$RTEtsConfigParts[4]);
 	}
 
@@ -1175,9 +1180,30 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		if (is_array($this->buttonConfig['options.']) && $this->buttonConfig['options.']['removeItems']) {
 			$allowedItems = array_diff($allowedItems, t3lib_div::trimExplode(',', $this->buttonConfig['options.']['removeItems'], 1));
 		} else {
+				// This PageTSConfig property is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
 			$allowedItems = array_diff($allowedItems, t3lib_div::trimExplode(',', $this->thisConfig['blindImageOptions'], 1));
 		}
 		return $allowedItems;
+	}
+
+	/**
+	 * Order the definition of menu items according to configured order
+	 *
+	 * @param array $menuDefinition: definition of menu items
+	 * @return array ordered menu definition
+	 */
+	public function orderMenuDefinition($menuDefinition) {
+		$orderedMenuDefinition = array();
+		if (is_array($this->buttonConfig['options.']) && $this->buttonConfig['options.']['orderItems']) {
+			$orderItems = t3lib_div::trimExplode(',', $this->buttonConfig['options.']['orderItems'], TRUE);
+			$orderItems = array_intersect($orderItems, $this->allowedItems);
+			foreach ($orderItems as $item) {
+				$orderedMenuDefinition[$item] = $menuDefinition[$item];
+			}
+		} else {
+			$orderedMenuDefinition = $menuDefinition;
+		}
+		return $orderedMenuDefinition;
 	}
 
 	/**
