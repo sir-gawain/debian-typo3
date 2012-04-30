@@ -1,3 +1,12 @@
+typo3-src-4.7 (4.7.0+dfsg1-1) UNRELEASED; urgency=low
+
+  * Renamed source and binary packages to typo3-src-4.7
+  * Add database user for scheduler to database on installation.
+  * Adopted im-fix patch to 4.7
+  * Adopted defaults patch to 4.7.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 29 Apr 2012 18:53:06 +0200
+
 typo3-src (4.5.15+dfsg1-2) unstable; urgency=low
 
   * Install localconf.php as localconf.php_template, and create localconf.php
