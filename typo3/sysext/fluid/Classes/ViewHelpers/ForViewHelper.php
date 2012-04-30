@@ -1,24 +1,15 @@
 <?php
 
 /*                                                                        *
- * This script belongs to the FLOW3 package "Fluid".                      *
+ * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License as published by the *
- * Free Software Foundation, either version 3 of the License, or (at your *
- * option) any later version.                                             *
- *                                                                        *
- * This script is distributed in the hope that it will be useful, but     *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
- * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
- * General Public License for more details.                               *
- *                                                                        *
- * You should have received a copy of the GNU Lesser General Public       *
- * License along with the script.                                         *
- * If not, see http://www.gnu.org/licenses/lgpl.html                      *
+ * the terms of the GNU Lesser General Public License, either version 3   *
+ *  of the License, or (at your option) any later version.                *
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
+
 
 /**
  * Loop view helper which can be used to interate over array.
@@ -65,10 +56,9 @@
  * </ul>
  * </output>
  *
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
  */
-class Tx_Fluid_ViewHelpers_ForViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class Tx_Fluid_ViewHelpers_ForViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper implements Tx_Fluid_Core_ViewHelper_Facets_CompilableInterface {
 
 	/**
 	 * Iterates through elements of $each and renders child nodes
@@ -79,55 +69,62 @@ class Tx_Fluid_ViewHelpers_ForViewHelper extends Tx_Fluid_Core_ViewHelper_Abstra
 	 * @param boolean $reverse If enabled, the iterator will start with the last element and proceed reversely
 	 * @param string $iteration The name of the variable to store iteration information (index, cycle, isFirst, isLast, isEven, isOdd)
 	 * @return string Rendered string
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @author Bastian Waidelich <bastian@typo3.org>
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function render($each, $as, $key = '', $reverse = FALSE, $iteration = NULL) {
-		$output = '';
-		if ($each === NULL) {
+		return self::renderStatic($this->arguments, $this->buildRenderChildrenClosure(), $this->renderingContext);
+	}
+
+	/**
+	 * @param array $arguments
+	 * @param Closure $renderChildrenClosure
+	 * @param Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext
+	 * @return string
+	 */
+	static public function renderStatic(array $arguments, Closure $renderChildrenClosure, Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext) {
+		$templateVariableContainer = $renderingContext->getTemplateVariableContainer();
+		if ($arguments['each'] === NULL) {
 			return '';
 		}
-		if (is_object($each) && !$each instanceof Traversable) {
+		if (is_object($arguments['each']) && !$arguments['each'] instanceof Traversable) {
 			throw new Tx_Fluid_Core_ViewHelper_Exception('ForViewHelper only supports arrays and objects implementing Traversable interface' , 1248728393);
 		}
 
-		if ($reverse === TRUE) {
+		if ($arguments['reverse'] === TRUE) {
 				// array_reverse only supports arrays
-			if (is_object($each)) {
-				$each = iterator_to_array($each);
+			if (is_object($arguments['each'])) {
+				$arguments['each'] = iterator_to_array($arguments['each']);
 			}
-			$each = array_reverse($each);
+			$arguments['each'] = array_reverse($arguments['each']);
 		}
 		$iterationData = array(
 			'index' => 0,
 			'cycle' => 1,
-			'total' => count($each)
+			'total' => count($arguments['each'])
 		);
 
 		$output = '';
-		foreach ($each as $keyValue => $singleElement) {
-			$this->templateVariableContainer->add($as, $singleElement);
-			if ($key !== '') {
-				$this->templateVariableContainer->add($key, $keyValue);
+		foreach ($arguments['each'] as $keyValue => $singleElement) {
+			$templateVariableContainer->add($arguments['as'], $singleElement);
+			if ($arguments['key'] !== '') {
+				$templateVariableContainer->add($arguments['key'], $keyValue);
 			}
-			if ($iteration !== NULL) {
+			if ($arguments['iteration'] !== NULL) {
 				$iterationData['isFirst'] = $iterationData['cycle'] === 1;
 				$iterationData['isLast'] = $iterationData['cycle'] === $iterationData['total'];
 				$iterationData['isEven'] = $iterationData['cycle'] % 2 === 0;
 				$iterationData['isOdd'] = !$iterationData['isEven'];
-				$this->templateVariableContainer->add($iteration, $iterationData);
+				$templateVariableContainer->add($arguments['iteration'], $iterationData);
 				$iterationData['index'] ++;
 				$iterationData['cycle'] ++;
 			}
-			$output .= $this->renderChildren();
-			$this->templateVariableContainer->remove($as);
-			if ($key !== '') {
-				$this->templateVariableContainer->remove($key);
+			$output .= $renderChildrenClosure();
+			$templateVariableContainer->remove($arguments['as']);
+			if ($arguments['key'] !== '') {
+				$templateVariableContainer->remove($arguments['key']);
 			}
-			if ($iteration !== NULL) {
-				$this->templateVariableContainer->remove($iteration);
+			if ($arguments['iteration'] !== NULL) {
+				$templateVariableContainer->remove($arguments['iteration']);
 			}
 		}
 		return $output;

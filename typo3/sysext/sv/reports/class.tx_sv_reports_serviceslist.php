@@ -30,8 +30,6 @@
  * @author	Francois Suter <francois@typo3.org>
  * @package TYPO3
  * @subpackage sv
- *
- * $Id$
  */
 class tx_sv_reports_ServicesList implements tx_reports_Report {
 
@@ -45,7 +43,7 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 	/**
 	 * Constructor for class tx_sv_reports_ServicesList
 	 *
-	 * @param	tx_reports_Module	Back-reference to the calling reports module
+	 * @param tx_reports_Module $reportsModule Back-reference to the calling reports module
 	 */
 	public function __construct(tx_reports_Module $reportsModule) {
 		$this->reportsModule = $reportsModule;
@@ -80,7 +78,7 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 	 * @return	string	The help content for this module.
 	 */
 	protected function renderHelp() {
-		$help .= '<p class="help">'
+		$help = '<p class="help">'
 			. $GLOBALS['LANG']->getLL('report_explanation')
 			. '</p>';
 		$help .= '<p class="help">'
@@ -109,8 +107,9 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 	/**
 	 * Renders the services list for a single service type.
 	 *
-	 * @param	string	$serviceType the service type to render the installed services list for.
-	 * @return	string	Service list as HTML for one service type.
+	 * @param string $serviceType The service type to render the installed services list for
+	 * @param array $services List of services for the given type
+	 * @return string Service list as HTML for one service type
 	 */
 	protected function renderServiceTypeList($serviceType, $services) {
 		$header = '<h4>' . sprintf(
@@ -118,7 +117,7 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 			$serviceType
 		) . '</h4>';
 
-		$serviceList .= '
+		$serviceList = '
 		<table cellspacing="1" cellpadding="2" border="0" class="tx_sv_reportlist services">
 			<tr class="t3-row-header">
 				<td style="width: 35%">' . $GLOBALS['LANG']->getLL('service') . '</td>
@@ -144,7 +143,7 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 	/**
 	 * Renders a single service's row.
 	 *
-	 * @param	string	$sericeKey The service key to access the service.
+	 * @param	string	$serviceKey The service key to access the service.
 	 * @param	array	$serviceInformation registration information of the service.
 	 * @return	string	HTML row for the service.
 	 */
@@ -153,11 +152,12 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 			<p class="service-header">
 				<span class="service-title">' . $serviceInformation['title'] . '</span> (' . $serviceInformation['extKey'] . ': ' . $serviceKey . ')
 			</p>';
+
 		if (!empty($serviceInformation['description'])) {
 			$serviceDescription .= '<p class="service-description">' . $serviceInformation['description']. '</p>';
 		}
 
-		$sericeSubtypes = empty($serviceInformation['serviceSubTypes']) ?
+		$serviceSubtypes = empty($serviceInformation['serviceSubTypes']) ?
 			'-' :
 			implode(', ', $serviceInformation['serviceSubTypes']);
 
@@ -171,9 +171,15 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 
 		$serviceAvailabilityClass = 'typo3-message message-error';
 		$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
-		if (t3lib_extmgm::findService($serviceKey, '*')) {
-			$serviceAvailabilityClass = 'typo3-message message-ok';
-			$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
+		try {
+			$serviceDetails = t3lib_extmgm::findServiceByKey($serviceKey);
+			if ($serviceDetails['available']) {
+				$serviceAvailabilityClass = 'typo3-message message-ok';
+				$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
+			}
+		}
+		catch (t3lib_exception $e) {
+			// Nothing to do, the default display is already not available
 		}
 
 		$serviceRow = '
@@ -181,7 +187,7 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 			<td class="first-cell ' . $serviceAvailabilityClass . '">' . $serviceDescription . '</td>
 			<td class="cell ' . $serviceAvailabilityClass . '">' . $serviceInformation['priority'] . '</td>
 			<td class="cell ' . $serviceAvailabilityClass . '">' . $serviceInformation['quality'] . '</td>
-			<td class="cell ' . $serviceAvailabilityClass . '">' . $sericeSubtypes . '</td>
+			<td class="cell ' . $serviceAvailabilityClass . '">' . $serviceSubtypes . '</td>
 			<td class="cell ' . $serviceAvailabilityClass . '">' . $serviceOperatingSystem . '</td>
 			<td class="cell ' . $serviceAvailabilityClass . '">' . $serviceRequiredExecutables . '</td>
 			<td class="last-cell ' . $serviceAvailabilityClass . '">' . $serviceAvailable . '</td>
@@ -268,10 +274,10 @@ class tx_sv_reports_ServicesList implements tx_reports_Report {
 	 * Utility method used to sort services according to their priority and
 	 * quality.
 	 *
-	 * @param	array		First service to compare
-	 * @param	array		Second service to compare
+	 * @param array $a First service to compare
+	 * @param array $b Second service to compare
 	 *
-	 * @return	integer		1, 0 or -1 if a is smaller, equal or greater than b, respectively
+	 * @return integer 1, 0 or -1 if a is smaller, equal or greater than b, respectively
 	 */
 	protected function sortServices(array $a, array $b) {
 		$result = 0;

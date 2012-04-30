@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext "aboutmodules".
 #
-# Auto generated 26-01-2011 20:08
+# Auto generated 23-04-2012 12:55
 #
 # Manual updates:
 # Only the data in the array - everything else is removed by next
@@ -33,12 +33,14 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '1.0.0',
-	'_md5_values_when_last_written' => 'a:5:{s:12:"ext_icon.gif";s:4:"6101";s:14:"ext_tables.php";s:4:"920d";s:20:"mod/aboutmodules.gif";s:4:"711d";s:12:"mod/conf.php";s:4:"d61c";s:21:"mod/locallang_mod.xml";s:4:"f533";}',
+	'version' => '4.7.0',
+	'_md5_values_when_last_written' => 'a:8:{s:35:"class.tx_aboutmodules_functions.php";s:4:"b1a4";s:16:"ext_autoload.php";s:4:"06c5";s:12:"ext_icon.gif";s:4:"6101";s:14:"ext_tables.php";s:4:"aede";s:40:"Classes/Controller/ModulesController.php";s:4:"f6e2";s:44:"Resources/Private/Language/locallang_mod.xlf";s:4:"8645";s:38:"Resources/Private/Layouts/Default.html";s:4:"42e7";s:46:"Resources/Private/Templates/Modules/Index.html";s:4:"0596";}',
 	'constraints' => array(
 		'depends' => array(
-			'php' => '5.1.0-0.0.0',
-			'typo3' => '4.4.0-0.0.0',
+			'php' => '5.3.0-0.0.0',
+			'typo3' => '4.6.0-0.0.0',
+			'extbase' => '',
+			'fluid' => ''
 		),
 		'conflicts' => array(
 		),

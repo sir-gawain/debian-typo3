@@ -27,65 +27,7 @@
 /**
  * The Inline-Relational-Record-Editing (IRRE) functions as part of the TCEforms.
  *
- * $Id$
- *
  * @author	Oliver Hader <oliver@typo3.org>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   88: class t3lib_TCEforms_inline
- *  109:	 function init(&$tceForms)
- *  127:	 function getSingleField_typeInline($table,$field,$row,&$PA)
- *
- *			  SECTION: Regular rendering of forms, fields, etc.
- *  263:	 function renderForeignRecord($parentUid, $rec, $config = array())
- *  319:	 function renderForeignRecordHeader($parentUid, $foreign_table,$rec,$config = array())
- *  375:	 function renderForeignRecordHeaderControl($table,$row,$config = array())
- *  506:	 function renderCombinationTable(&$rec, $appendFormFieldNames, $config = array())
- *  560:	 function renderPossibleRecordsSelector($selItems, $conf, $uniqueIds=array())
- *  627:	 function addJavaScript()
- *  643:	 function addJavaScriptSortable($objectId)
- *
- *			  SECTION: Handling of AJAX calls
- *  665:	 function createNewRecord($domObjectId, $foreignUid = 0)
- *  755:	 function getJSON($jsonArray)
- *  770:	 function getNewRecordLink($objectPrefix, $conf = array())
- *
- *			  SECTION: Get data from database and handle relations
- *  807:	 function getRelatedRecords($table,$field,$row,&$PA,$config)
- *  839:	 function getPossibleRecords($table,$field,$row,$conf,$checkForConfField='foreign_selector')
- *  885:	 function getUniqueIds($records, $conf=array())
- *  905:	 function getRecord($pid, $table, $uid, $cmd='')
- *  929:	 function getNewRecord($pid, $table)
- *
- *			  SECTION: Structure stack for handling inline objects/levels
- *  951:	 function pushStructure($table, $uid, $field = '', $config = array())
- *  967:	 function popStructure()
- *  984:	 function updateStructureNames()
- * 1000:	 function getStructureItemName($levelData)
- * 1015:	 function getStructureLevel($level)
- * 1032:	 function getStructurePath($structureDepth = -1)
- * 1057:	 function parseStructureString($string, $loadConfig = false)
- *
- *			  SECTION: Helper functions
- * 1098:	 function checkConfiguration(&$config)
- * 1123:	 function checkAccess($cmd, $table, $theUid)
- * 1185:	 function compareStructureConfiguration($compare)
- * 1199:	 function normalizeUid($string)
- * 1213:	 function wrapFormsSection($section, $styleAttrs = array(), $tableAttrs = array())
- * 1242:	 function isInlineChildAndLabelField($table, $field)
- * 1258:	 function getStructureDepth()
- * 1295:	 function arrayCompareComplex($subjectArray, $searchArray, $type = '')
- * 1349:	 function isAssociativeArray($object)
- * 1364:	 function getPossibleRecordsFlat($possibleRecords)
- * 1383:	 function skipField($table, $field, $row, $config)
- *
- * TOTAL FUNCTIONS: 35
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -171,7 +113,7 @@ class t3lib_TCEforms_inline {
 	 * @return	string		The HTML code for the TCEform field
 	 */
 	function getSingleField_typeInline($table, $field, $row, &$PA) {
-			// check the TCA configuration - if false is returned, something was wrong
+			// check the TCA configuration - if FALSE is returned, something was wrong
 		if ($this->checkConfiguration($PA['fieldConf']['config']) === FALSE) {
 			return FALSE;
 		}
@@ -189,8 +131,8 @@ class t3lib_TCEforms_inline {
 		if (t3lib_BEfunc::isTableLocalizable($table)) {
 			$language = intval($row[$GLOBALS['TCA'][$table]['ctrl']['languageField']]);
 		}
-		$minitems = t3lib_div::intInRange($config['minitems'], 0);
-		$maxitems = t3lib_div::intInRange($config['maxitems'], 0);
+		$minitems = t3lib_utility_Math::forceIntegerInRange($config['minitems'], 0);
+		$maxitems = t3lib_utility_Math::forceIntegerInRange($config['maxitems'], 0);
 		if (!$maxitems) {
 			$maxitems = 100000;
 		}
@@ -203,7 +145,7 @@ class t3lib_TCEforms_inline {
 		if (!isset($this->inlineFirstPid)) {
 				// if this record is not new, try to fetch the inlineView states
 				// @TODO: Add checking/cleaning for unused tables, records, etc. to save space in uc-field
-			if (t3lib_div::testInt($row['uid'])) {
+			if (t3lib_utility_Math::canBeInterpretedAsInteger($row['uid'])) {
 				$inlineView = unserialize($GLOBALS['BE_USER']->uc['inlineView']);
 				$this->inlineView = $inlineView[$table][$row['uid']];
 			}
@@ -272,7 +214,7 @@ class t3lib_TCEforms_inline {
 		}
 
 			// if it's required to select from possible child records (reusable children), add a selector box
-		if ($config['foreign_selector']) {
+		if ($config['foreign_selector'] && $config['appearance']['showPossibleRecordsSelector'] !== FALSE) {
 				// if not already set by the foreign_unique, set the possibleRecords here and the uniqueIds to an empty array
 			if (!$config['foreign_unique']) {
 				$possibleRecords = $this->getPossibleRecords($table, $field, $row, $config);
@@ -327,6 +269,22 @@ class t3lib_TCEforms_inline {
 			$item .= $levelLinks;
 		}
 
+		if (is_array($config['customControls'])) {
+			$item .= '<div id="' . $nameObject . '_customControls">';
+			foreach ($config['customControls'] as $customControlConfig) {
+				$parameters = array(
+					'table' => $table,
+					'field' => $field,
+					'row' => $row,
+					'nameObject' => $nameObject,
+					'nameForm' => $nameForm,
+					'config' => $config
+				);
+				$item .= t3lib_div::callUserFunction($customControlConfig, $parameters, $this);
+			}
+			$item .= '</div>';
+		}
+
 			// add Drag&Drop functions for sorting to TCEforms::$additionalJS_post
 		if (count($relationList) > 1 && $config['appearance']['useSortable']) {
 			$this->addJavaScriptSortable($nameObject . '_records');
@@ -378,7 +336,7 @@ class t3lib_TCEforms_inline {
 		$this->inlineData['map'][$this->inlineNames['form']] = $this->inlineNames['object'];
 
 			// Set this variable if we handle a brand new unsaved record:
-		$isNewRecord = t3lib_div::testInt($rec['uid']) ? FALSE : TRUE;
+		$isNewRecord = t3lib_utility_Math::canBeInterpretedAsInteger($rec['uid']) ? FALSE : TRUE;
 			// Set this variable if the record is virtual and only show with header and not editable fields:
 		$isVirtualRecord = (isset($rec['__virtual']) && $rec['__virtual']);
 			// If there is a selector field, normalize it:
@@ -412,7 +370,9 @@ class t3lib_TCEforms_inline {
 				// Render full content ONLY IF this is a AJAX-request, a new record, the record is not collapsed or AJAX-loading is explicitly turned off
 			if ($isNewRecord || $isExpanded || !$ajaxLoad) {
 				$combination = $this->renderCombinationTable($rec, $appendFormFieldNames, $config);
-				$fields = $this->renderMainFields($foreign_table, $rec);
+
+				$overruleTypesArray = isset($config['foreign_types']) ? $config['foreign_types'] : array();
+				$fields = $this->renderMainFields($foreign_table, $rec, $overruleTypesArray);
 				$fields = $this->wrapFormsSection($fields);
 					// Replace returnUrl in Wizard-Code, if this is an AJAX call
 				$ajaxArguments = t3lib_div::_GP('ajax');
@@ -463,11 +423,12 @@ class t3lib_TCEforms_inline {
 	/**
 	 * Wrapper for TCEforms::getMainFields().
 	 *
-	 * @param	string		$table: The table name
-	 * @param	array		$row: The record to be rendered
-	 * @return	string		The rendered form
+	 * @param string $table: The table name
+	 * @param array $row: The record to be rendered
+	 * @param array $overruleTypesArray: Overrule TCA [types] array, e.g to overrride [showitem] configuration of a particular type
+	 * @return string The rendered form
 	 */
-	protected function renderMainFields($table, $row) {
+	protected function renderMainFields($table, array $row, array $overruleTypesArray = array()) {
 			// The current render depth of t3lib_TCEforms:
 		$depth = $this->fObj->renderDepth;
 			// If there is some information about already rendered palettes of our parent, store this info:
@@ -475,7 +436,7 @@ class t3lib_TCEforms_inline {
 			$palettesRendered = $this->fObj->palettesRendered[$depth][$table];
 		}
 			// Render the form:
-		$content = $this->fObj->getMainFields($table, $row, $depth);
+		$content = $this->fObj->getMainFields($table, $row, $depth, $overruleTypesArray);
 			// If there was some info about rendered palettes stored, write it back for our parent:
 		if (isset($palettesRendered)) {
 			$this->fObj->palettesRendered[$depth][$table] = $palettesRendered;
@@ -752,7 +713,7 @@ class t3lib_TCEforms_inline {
 			$comboRecord = array();
 
 				// If record does already exist, load it:
-			if ($rec[$foreign_selector] && t3lib_div::testInt($rec[$foreign_selector])) {
+			if ($rec[$foreign_selector] && t3lib_utility_Math::canBeInterpretedAsInteger($rec[$foreign_selector])) {
 				$comboRecord = $this->getRecord(
 					$this->inlineFirstPid,
 					$comboConfig['foreign_table'],
@@ -856,7 +817,7 @@ class t3lib_TCEforms_inline {
 				// Put together the selector box:
 			$selector_itemListStyle = isset($config['itemListStyle']) ? ' style="' . htmlspecialchars($config['itemListStyle']) . '"' : ' style="' . $this->fObj->defaultMultipleSelectorStyle . '"';
 			$size = intval($conf['size']);
-			$size = $conf['autoSizeMax'] ? t3lib_div::intInRange(count($selItems) + 1, t3lib_div::intInRange($size, 1), $conf['autoSizeMax']) : $size;
+			$size = $conf['autoSizeMax'] ? t3lib_utility_Math::forceIntegerInRange(count($selItems) + 1, t3lib_utility_Math::forceIntegerInRange($size, 1), $conf['autoSizeMax']) : $size;
 			$onChange = "return inline.importNewRecord('" . $this->inlineNames['object'] . self::Structure_Separator . $conf['foreign_table'] . "')";
 			$item = '
 				<select id="' . $this->inlineNames['object'] . self::Structure_Separator . $conf['foreign_table'] . '_selector"' .
@@ -961,21 +922,6 @@ class t3lib_TCEforms_inline {
 
 
 	/**
-	 * Creates a link/button to create new records
-	 *
-	 * @param	string		$objectPrefix: The "path" to the child record to create (e.g. 'data-parentPageId-partenTable-parentUid-parentField-childTable')
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @return	string		The HTML code for the new record link
-	 * @deprecated	since TYPO3 4.2.0-beta1, this function will be removed in TYPO3 4.6.
-	 */
-	function getNewRecordLink($objectPrefix, $conf = array()) {
-		t3lib_div::logDeprecatedFunction();
-
-		return $this->getLevelInteractionLink('newRecord', $objectPrefix, $conf);
-	}
-
-
-	/**
 	 * Add Sortable functionality using script.acolo.us "Sortable".
 	 *
 	 * @param	string		$objectId: The container id of the object - elements inside will be sortable
@@ -1045,45 +991,43 @@ class t3lib_TCEforms_inline {
 	 * @return	void
 	 */
 	protected function processAjaxRequestConstruct(&$ajaxArguments) {
-		global $SOBE, $BE_USER, $TYPO3_CONF_VARS;
-
 		require_once(PATH_typo3 . 'template.php');
 
 		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_alt_doc.xml');
 
 			// Create a new anonymous object:
-		$SOBE = new stdClass();
-		$SOBE->MOD_MENU = array(
+		$GLOBALS['SOBE'] = new stdClass();
+		$GLOBALS['SOBE']->MOD_MENU = array(
 			'showPalettes' => '',
 			'showDescriptions' => '',
 			'disableRTE' => ''
 		);
 			// Setting virtual document name
-		$SOBE->MCONF['name'] = 'xMOD_alt_doc.php';
+		$GLOBALS['SOBE']->MCONF['name'] = 'xMOD_alt_doc.php';
 			// CLEANSE SETTINGS
-		$SOBE->MOD_SETTINGS = t3lib_BEfunc::getModuleData(
-			$SOBE->MOD_MENU,
+		$GLOBALS['SOBE']->MOD_SETTINGS = t3lib_BEfunc::getModuleData(
+			$GLOBALS['SOBE']->MOD_MENU,
 			t3lib_div::_GP('SET'),
-			$SOBE->MCONF['name']
+			$GLOBALS['SOBE']->MCONF['name']
 		);
 			// Create an instance of the document template object
-		$SOBE->doc = t3lib_div::makeInstance('template');
-		$SOBE->doc->backPath = $GLOBALS['BACK_PATH'];
+		$GLOBALS['SOBE']->doc = t3lib_div::makeInstance('template');
+		$GLOBALS['SOBE']->doc->backPath = $GLOBALS['BACK_PATH'];
 			// Initialize TCEforms (rendering the forms)
-		$SOBE->tceforms = t3lib_div::makeInstance('t3lib_TCEforms');
-		$SOBE->tceforms->inline = $this;
-		$SOBE->tceforms->RTEcounter = intval(array_shift($ajaxArguments));
-		$SOBE->tceforms->initDefaultBEMode();
-		$SOBE->tceforms->palettesCollapsed = !$SOBE->MOD_SETTINGS['showPalettes'];
-		$SOBE->tceforms->disableRTE = $SOBE->MOD_SETTINGS['disableRTE'];
-		$SOBE->tceforms->enableClickMenu = TRUE;
-		$SOBE->tceforms->enableTabMenu = TRUE;
+		$GLOBALS['SOBE']->tceforms = t3lib_div::makeInstance('t3lib_TCEforms');
+		$GLOBALS['SOBE']->tceforms->inline = $this;
+		$GLOBALS['SOBE']->tceforms->RTEcounter = intval(array_shift($ajaxArguments));
+		$GLOBALS['SOBE']->tceforms->initDefaultBEMode();
+		$GLOBALS['SOBE']->tceforms->palettesCollapsed = !$GLOBALS['SOBE']->MOD_SETTINGS['showPalettes'];
+		$GLOBALS['SOBE']->tceforms->disableRTE = $GLOBALS['SOBE']->MOD_SETTINGS['disableRTE'];
+		$GLOBALS['SOBE']->tceforms->enableClickMenu = TRUE;
+		$GLOBALS['SOBE']->tceforms->enableTabMenu = TRUE;
 			// Clipboard is initialized:
-		$SOBE->tceforms->clipObj = t3lib_div::makeInstance('t3lib_clipboard'); // Start clipboard
-		$SOBE->tceforms->clipObj->initializeClipboard(); // Initialize - reads the clipboard content from the user session
+		$GLOBALS['SOBE']->tceforms->clipObj = t3lib_div::makeInstance('t3lib_clipboard'); // Start clipboard
+		$GLOBALS['SOBE']->tceforms->clipObj->initializeClipboard(); // Initialize - reads the clipboard content from the user session
 			// Setting external variables:
-		if ($BE_USER->uc['edit_showFieldHelp'] != 'text' && $SOBE->MOD_SETTINGS['showDescriptions']) {
-			$SOBE->tceforms->edit_showFieldHelp = 'text';
+		if ($GLOBALS['BE_USER']->uc['edit_showFieldHelp'] != 'text' && $GLOBALS['SOBE']->MOD_SETTINGS['showDescriptions']) {
+			$GLOBALS['SOBE']->tceforms->edit_showFieldHelp = 'text';
 		}
 	}
 
@@ -1109,24 +1053,6 @@ class t3lib_TCEforms_inline {
 			// if TCEforms has some JavaScript code to be executed, just do it
 		if ($this->fObj->extJSCODE) {
 			$jsonArray['scriptCall'][] = $this->fObj->extJSCODE;
-		}
-	}
-
-
-	/**
-	 * Initialize environment for AJAX calls
-	 *
-	 * @param	string		$method: Name of the method to be called
-	 * @param	array		$arguments: Arguments to be delivered to the method
-	 * @return	void
-	 * @deprecated	since TYPO3 4.2.0-alpha3, this function will be removed in TYPO3 4.6.
-	 */
-	function initForAJAX($method, &$arguments) {
-		t3lib_div::logDeprecatedFunction();
-
-			// Set t3lib_TCEforms::$RTEcounter to the given value:
-		if ($method == 'createNewRecord') {
-			$this->fObj->RTEcounter = intval(array_shift($arguments));
 		}
 	}
 
@@ -1174,7 +1100,7 @@ class t3lib_TCEforms_inline {
 		$this->fObj->pushToDynNestedStack('inline', $this->inlineNames['object']);
 
 			// dynamically create a new record using t3lib_transferData
-		if (!$foreignUid || !t3lib_div::testInt($foreignUid) || $config['foreign_selector']) {
+		if (!$foreignUid || !t3lib_utility_Math::canBeInterpretedAsInteger($foreignUid) || $config['foreign_selector']) {
 			$record = $this->getNewRecord($this->inlineFirstPid, $current['table']);
 				// Set language of new child record to the language of the parent record:
 			if ($config['localizationMode'] == 'select') {
@@ -1257,7 +1183,7 @@ class t3lib_TCEforms_inline {
 	 */
 	protected function synchronizeLocalizeRecords($domObjectId, $type) {
 		$jsonArray = FALSE;
-		if (t3lib_div::inList('localize,synchronize', $type) || t3lib_div::testInt($type)) {
+		if (t3lib_div::inList('localize,synchronize', $type) || t3lib_utility_Math::canBeInterpretedAsInteger($type)) {
 				// The current level:
 			$current = $this->inlineStructure['unstable'];
 				// The parent level:
@@ -1385,7 +1311,6 @@ class t3lib_TCEforms_inline {
 			}
 		}
 		if ($data) {
-			$data = $GLOBALS['LANG']->csConvObj->utf8_encode($data, $GLOBALS['LANG']->charSet);
 			$jsonArray['data'] = $data;
 			array_unshift(
 				$jsonArrayScriptCall,
@@ -1414,7 +1339,7 @@ class t3lib_TCEforms_inline {
 		$top = $this->getStructureLevel(0);
 
 			// only do some action if the top record and the current record were saved before
-		if (t3lib_div::testInt($top['uid'])) {
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($top['uid'])) {
 			$inlineView = (array) unserialize($GLOBALS['BE_USER']->uc['inlineView']);
 			$inlineViewCurrent =& $inlineView[$top['table']][$top['uid']];
 
@@ -1539,6 +1464,7 @@ class t3lib_TCEforms_inline {
 			$parts = explode('|', $value, 2);
 			$value = $parts[0];
 		}
+		unset($value);
 		return $itemArray;
 	}
 
@@ -1591,7 +1517,7 @@ class t3lib_TCEforms_inline {
 	 * @param	array		The record data array where the value(s) for the field can be found
 	 * @param	array		An array with additional configuration options.
 	 * @param	string		$checkForConfField: For which field in the foreign_table the possible records should be fetched
-	 * @return	mixed		Array of possible record items; false if type is "group/db", then everything could be "possible"
+	 * @return	mixed		Array of possible record items; FALSE if type is "group/db", then everything could be "possible"
 	 */
 	function getPossibleRecords($table, $field, $row, $conf, $checkForConfField = 'foreign_selector') {
 			// ctrl configuration from TCA:
@@ -1693,9 +1619,9 @@ class t3lib_TCEforms_inline {
 	protected function getNewRecordPid($table, $parentPid = NULL) {
 		$newRecordPid = $this->inlineFirstPid;
 		$pageTS = t3lib_beFunc::getPagesTSconfig($parentPid, TRUE);
-		if (isset($pageTS['TCAdefaults.'][$table . '.']['pid']) && t3lib_div::testInt($pageTS['TCAdefaults.'][$table . '.']['pid'])) {
+		if (isset($pageTS['TCAdefaults.'][$table . '.']['pid']) && t3lib_utility_Math::canBeInterpretedAsInteger($pageTS['TCAdefaults.'][$table . '.']['pid'])) {
 			$newRecordPid = $pageTS['TCAdefaults.'][$table . '.']['pid'];
-		} elseif (isset($parentPid) && t3lib_div::testInt($parentPid)) {
+		} elseif (isset($parentPid) && t3lib_utility_Math::canBeInterpretedAsInteger($parentPid)) {
 			$newRecordPid = $parentPid;
 		}
 		return $newRecordPid;
@@ -1727,8 +1653,7 @@ class t3lib_TCEforms_inline {
 		$trData->disableRTE = $GLOBALS['SOBE']->MOD_SETTINGS['disableRTE'];
 			// if a new record should be created
 		$trData->fetchRecord($table, $uid, ($cmd === 'new' ? 'new' : ''));
-		reset($trData->regTableItems_data);
-		$rec = current($trData->regTableItems_data);
+		$rec = reset($trData->regTableItems_data);
 
 		return $rec;
 	}
@@ -1902,7 +1827,7 @@ class t3lib_TCEforms_inline {
 	 *  - 'unstable': Containting partly filled data (e.g. only table and possibly field)
 	 *
 	 * @param	string		$domObjectId: The DOM object-id
-	 * @param	boolean		$loadConfig: Load the TCA configuration for that level (default: true)
+	 * @param	boolean		$loadConfig: Load the TCA configuration for that level (default: TRUE)
 	 * @return	void
 	 */
 	function parseStructureString($string, $loadConfig = TRUE) {
@@ -1958,7 +1883,7 @@ class t3lib_TCEforms_inline {
 	 * @param	string		$table: The table name of the record
 	 * @param	string		$field: The field name which this element is supposed to edit
 	 * @param	array		$row: The record data array of the parent
-	 * @return	boolean		If critical configuration errors were found, false is returned
+	 * @return	boolean		If critical configuration errors were found, FALSE is returned
 	 */
 	function checkConfiguration(&$config) {
 		$foreign_table = $config['foreign_table'];
@@ -1970,11 +1895,6 @@ class t3lib_TCEforms_inline {
 			// Init appearance if not set:
 		if (!isset($config['appearance']) || !is_array($config['appearance'])) {
 			$config['appearance'] = array();
-		}
-			// 'newRecordLinkPosition' is deprecated since TYPO3 4.2.0-beta1, this is for backward compatibility:
-		if (!isset($config['appearance']['levelLinksPosition']) && isset($config['appearance']['newRecordLinkPosition']) && $config['appearance']['newRecordLinkPosition']) {
-			t3lib_div::deprecationLog('TCA contains a deprecated definition using "newRecordLinkPosition"');
-			$config['appearance']['levelLinksPosition'] = $config['appearance']['newRecordLinkPosition'];
 		}
 			// Set the position/appearance of the "Create new record" link:
 		if (isset($config['foreign_selector']) && $config['foreign_selector'] && (!isset($config['appearance']['useCombination']) || !$config['appearance']['useCombination'])) {
@@ -2009,7 +1929,7 @@ class t3lib_TCEforms_inline {
 	 * @param	string		$cmd: The command that sould be performed ('new' or 'edit')
 	 * @param	string		$table: The table to check access for
 	 * @param	string		$theUid: The record uid of the table
-	 * @return	boolean		Returns true is the user has access, or false if not
+	 * @return	boolean		Returns TRUE is the user has access, or FALSE if not
 	 */
 	function checkAccess($cmd, $table, $theUid) {
 			// Checking if the user has permissions? (Only working as a precaution, because the final permission check is always down in TCE. But it's good to notify the user on beforehand...)
@@ -2024,7 +1944,7 @@ class t3lib_TCEforms_inline {
 			// If the command is to create a NEW record...:
 		if ($cmd == 'new') {
 				// If the pid is numerical, check if it's possible to write to this page:
-			if (t3lib_div::testInt($this->inlineFirstPid)) {
+			if (t3lib_utility_Math::canBeInterpretedAsInteger($this->inlineFirstPid)) {
 				$calcPRec = t3lib_BEfunc::getRecord('pages', $this->inlineFirstPid);
 				if (!is_array($calcPRec)) {
 					return FALSE;
@@ -2264,18 +2184,18 @@ class t3lib_TCEforms_inline {
 					}
 				}
 
-					// if one or more matches are required ('OR'), return true after the first successful match
+					// if one or more matches are required ('OR'), return TRUE after the first successful match
 				if ($type == '%OR' && $localMatches > 0) {
 					return TRUE;
 				}
-					// if all matches are required ('AND') and we have no result after the first run, return false
+					// if all matches are required ('AND') and we have no result after the first run, return FALSE
 				if ($type == '%AND' && $localMatches == 0) {
 					return FALSE;
 				}
 			}
 		}
 
-			// return the result for '%AND' (if nothing was checked, true is returned)
+			// return the result for '%AND' (if nothing was checked, TRUE is returned)
 		return $localEntries == $localMatches ? TRUE : FALSE;
 	}
 
@@ -2284,7 +2204,7 @@ class t3lib_TCEforms_inline {
 	 * Checks whether an object is an associative array.
 	 *
 	 * @param	mixed		$object: The object to be checked
-	 * @return	boolean		Returns true, if the object is an associative array
+	 * @return	boolean		Returns TRUE, if the object is an associative array
 	 */
 	function isAssociativeArray($object) {
 		return is_array($object) && count($object) && (array_keys($object) !== range(0, sizeof($object) - 1))
@@ -2316,7 +2236,7 @@ class t3lib_TCEforms_inline {
 	 * the value of the flat array is the label of the record.
 	 *
 	 * @param	array		$possibleRecords: The possibleRecords array (for select fields)
-	 * @return	mixed		A flat array with key=uid, value=label; if $possibleRecords isn't an array, false is returned.
+	 * @return	mixed		A flat array with key=uid, value=label; if $possibleRecords isn't an array, FALSE is returned.
 	 */
 	function getPossibleRecordsFlat($possibleRecords) {
 		$flat = FALSE;
@@ -2332,7 +2252,7 @@ class t3lib_TCEforms_inline {
 	 * Determine the configuration and the type of a record selector.
 	 *
 	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @return	array		Associative array with the keys 'PA' and 'type', both are false if the selector was not valid.
+	 * @return	array		Associative array with the keys 'PA' and 'type', both are FALSE if the selector was not valid.
 	 */
 	function getPossibleRecordsSelectorConfig($conf, $field = '') {
 		$foreign_table = $conf['foreign_table'];
@@ -2372,7 +2292,7 @@ class t3lib_TCEforms_inline {
 	 * Determine the type of a record selector, e.g. select or group/db.
 	 *
 	 * @param	array		$config: TCE configuration of the selector
-	 * @return	mixed		The type of the selector, 'select' or 'groupdb' - false not valid
+	 * @return	mixed		The type of the selector, 'select' or 'groupdb' - FALSE not valid
 	 */
 	function getPossibleRecordsSelectorType($config) {
 		$type = FALSE;
@@ -2445,26 +2365,11 @@ class t3lib_TCEforms_inline {
 
 
 	/**
-	 * Creates recursively a JSON literal from a mulidimensional associative array.
-	 * Uses Services_JSON (http://mike.teczno.com/JSON/doc/)
-	 *
-	 * @param	array		$jsonArray: The array (or part of) to be transformed to JSON
-	 * @return	string		If $level>0: part of JSON literal; if $level==0: whole JSON literal wrapped with <script> tags
-	 * @deprecated			Since TYPO3 4.2: Moved to t3lib_div::array2json, will be removed in TYPO3 4.6
-	 */
-	function getJSON($jsonArray) {
-		t3lib_div::logDeprecatedFunction();
-
-		return json_encode($jsonArray);
-	}
-
-
-	/**
 	 * Checks if a uid of a child table is in the inline view settings.
 	 *
 	 * @param	string		$table: Name of the child table
 	 * @param	integer		$uid: uid of the the child record
-	 * @return	boolean		true=expand, false=collapse
+	 * @return	boolean		TRUE=expand, FALSE=collapse
 	 */
 	function getExpandedCollapsedState($table, $uid) {
 		if (isset($this->inlineView[$table]) && is_array($this->inlineView[$table])) {

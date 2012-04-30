@@ -99,7 +99,7 @@ class Tx_Extbase_Tests_Unit_Persistence_Storage_Typo3DbBackendTest extends Tx_Ex
 		$mockDataMapper->expects($this->once())->method('convertPropertyNameToColumnName')->with('fooProperty', 'Tx_MyExt_ClassName')->will($this->returnValue('converted_fieldname'));
 
 		$sql = array();
-		$orderings = array('fooProperty' => Tx_Extbase_Persistence_QOM_QueryObjectModelConstantsInterface::JCR_ORDER_ASCENDING);
+		$orderings = array('fooProperty' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING);
 		$mockTypo3DbBackend = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Persistence_Storage_Typo3DbBackend'), array('parserOrderings'), array(), '', FALSE);
 		$mockTypo3DbBackend->_set('dataMapper', $mockDataMapper);
 		$mockTypo3DbBackend->_callRef('parseOrderings', $orderings, $mockSource, $sql);
@@ -140,8 +140,8 @@ class Tx_Extbase_Tests_Unit_Persistence_Storage_Typo3DbBackendTest extends Tx_Ex
 
 		$sql = array();
 		$orderings = array(
-			'fooProperty' => Tx_Extbase_Persistence_QOM_QueryObjectModelConstantsInterface::JCR_ORDER_ASCENDING,
-			'barProperty' => Tx_Extbase_Persistence_QOM_QueryObjectModelConstantsInterface::JCR_ORDER_DESCENDING
+			'fooProperty' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING,
+			'barProperty' => Tx_Extbase_Persistence_QueryInterface::ORDER_DESCENDING
 			);
 		$mockTypo3DbBackend = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Persistence_Storage_Typo3DbBackend'), array('parserOrderings'), array(), '', FALSE);
 		$mockTypo3DbBackend->_set('dataMapper', $mockDataMapper);
@@ -151,5 +151,52 @@ class Tx_Extbase_Tests_Unit_Persistence_Storage_Typo3DbBackendTest extends Tx_Ex
 		$this->assertSame($expecedSql, $sql);
 	}
 
+	/**
+	 * @test
+	 */
+	public function doLanguageAndWorkspaceOverlayChangesUidIfInPreview() {
+		$comparisonRow = array(
+			'uid' => '43',
+			'pid' => '42',
+			'_ORIG_pid' => '-1',
+			'_ORIG_uid' => '43'
+		);
+
+		$row = array(
+			'uid' => '42',
+			'pid' => '42',
+		);
+
+		$workspaceVersion = array(
+			'uid' => '43',
+			'pid' => '-1',
+		);
+
+		$languageUid = 2;
+		$workspaceUid = 2;
+
+		$sourceMock = new Tx_Extbase_Persistence_QOM_Selector('tx_foo', 'Tx_Foo');
+
+		$pageSelectMock = $this->getMock('t3lib_pageSelect', array('movePlhOL', 'getWorkspaceVersionOfRecord'));
+		$pageSelectMock->versioningPreview = 1;
+
+		$pageSelectMock->expects($this->once())
+			->method('getWorkspaceVersionOfRecord')
+			->with($workspaceUid, 'tx_foo', '42')
+			->will($this->returnValue($workspaceVersion));
+
+		$mockTypo3DbBackend = $this->getAccessibleMock(
+			'Tx_Extbase_Persistence_Storage_Typo3DbBackend',
+			array('dummy'),
+			array(), '', FALSE);
+
+
+		$mockTypo3DbBackend->_set('pageSelectObject', $pageSelectMock);
+
+		$this->assertSame(
+			array($comparisonRow),
+			$mockTypo3DbBackend->_call('doLanguageAndWorkspaceOverlay', $sourceMock, array($row), $languageUid, $workspaceUid)
+		);
+	}
 }
 ?>

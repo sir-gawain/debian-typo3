@@ -34,10 +34,10 @@ class tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider imp
 	/**
 	 * Add a multi select box with all available cache backends.
 	 *
-	 * @param array Reference to the array containing the info used in the add/edit form
-	 * @param object When editing, reference to the current task object. Null when adding.
-	 * @param tx_scheduler_Module Reference to the calling object (Scheduler's BE module)
-	 * @return array Array containg all the information pertaining to the additional fields
+	 * @param array $taskInfo Reference to the array containing the info used in the add/edit form
+	 * @param object $task When editing, reference to the current task object. Null when adding.
+	 * @param tx_scheduler_Module $parentObject Reference to the calling object (Scheduler's BE module)
+	 * @return array Array containing all the information pertaining to the additional fields
 	 */
 	public function getAdditionalFields(array &$taskInfo, $task, tx_scheduler_Module $parentObject) {
 			// Initialize selected fields
@@ -62,7 +62,7 @@ class tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider imp
 				$fieldOptions .
 			'</select>';
 
-		$additionalFields[$fieldID] = array(
+		$additionalFields[$fieldId] = array(
 			'code' => $fieldHtml,
 			'label' => 'LLL:EXT:scheduler/mod1/locallang.xml:label.cachingFrameworkGarbageCollection.selectBackends',
 			'cshKey' => '_MOD_tools_txschedulerM1',
@@ -75,16 +75,22 @@ class tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider imp
 	/**
 	 * Checks that all selected backends exist in available backend list
 	 *
-	 * @param array Reference to the array containing the data submitted by the user
-	 * @param tx_scheduler_Module Reference to the calling object (Scheduler's BE module)
-	 * @return boolean True if validation was ok (or selected class is not relevant), false otherwise
+	 * @param array $submittedData Reference to the array containing the data submitted by the user
+	 * @param tx_scheduler_Module $parentObject Reference to the calling object (Scheduler's BE module)
+	 * @return boolean TRUE if validation was ok (or selected class is not relevant), FALSE otherwise
 	 */
 	public function validateAdditionalFields(array &$submittedData, tx_scheduler_Module $parentObject) {
 		$validData = TRUE;
 
 		$availableBackends = $this->getRegisteredBackends();
-		$invalidBackends = array_diff($submittedData['scheduler_cachingFrameworkGarbageCollection_selectedBackends'], $availableBackends);
-		if (!empty($invalidBackends)) {
+		if(is_array($submittedData['scheduler_cachingFrameworkGarbageCollection_selectedBackends'])) {
+			$invalidBackends = array_diff($submittedData['scheduler_cachingFrameworkGarbageCollection_selectedBackends'], $availableBackends);
+			if (!empty($invalidBackends)) {
+				$parentObject->addMessage($GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:msg.selectionOfNonExistingCacheBackends'), t3lib_FlashMessage::ERROR);
+				$validData = FALSE;
+			}
+		} else {
+			$parentObject->addMessage($GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:msg.noCacheBackendSelected'), t3lib_FlashMessage::ERROR);
 			$validData = FALSE;
 		}
 
@@ -94,8 +100,8 @@ class tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider imp
 	/**
 	 * Save selected backends in task object
 	 *
-	 * @param array Contains data submitted by the user
-	 * @param tx_scheduler_Task Reference to the current task object
+	 * @param array $submittedData Contains data submitted by the user
+	 * @param tx_scheduler_Task $task Reference to the current task object
 	 * @return void
 	 */
 	public function saveAdditionalFields(array $submittedData, tx_scheduler_Task $task) {
@@ -105,7 +111,7 @@ class tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider imp
 	/**
 	 * Build select options of available backends and set currently selected backends
 	 *
-	 * @param array Selected backends
+	 * @param array $selectedBackends Selected backends
 	 * @return string HTML of selectbox options
 	 */
 	protected function getCacheBackendOptions(array $selectedBackends) {
@@ -134,10 +140,17 @@ class tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider imp
 	 */
 	protected function getRegisteredBackends() {
 		$backends = array();
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheBackends'])) {
-			$backends = $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheBackends'];
+		$cacheConfigurations = $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'];
+		if (is_array($cacheConfigurations)) {
+			foreach ($cacheConfigurations as $cacheConfiguration) {
+				$backend = $cacheConfiguration['backend'];
+				if (!in_array($backend, $backends)) {
+					$backends[] = $backend;
+				}
+			}
 		}
-		return array_keys($backends);
+
+		return $backends;
 	}
 } // End of class
 

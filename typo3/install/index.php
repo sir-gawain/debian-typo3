@@ -27,8 +27,6 @@
 /**
  * Starter-script for install screen
  *
- * $Id$
- *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
@@ -40,11 +38,7 @@
 // Insert some security here, if you don't trust the Install Tool Password:
 // **************************************************************************
 
-if (defined('E_DEPRECATED')) {
-	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
-} else {
-	error_reporting(E_ALL ^ E_NOTICE);
-}
+error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
 
 $PATH_thisScript = str_replace('//', '/', str_replace('\\', '/',
 	(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
@@ -110,9 +104,10 @@ if (1==2 || !is_file($enableInstallToolFile) || $removeInstallToolFileFailed) {
 					case sensitive, but the file itself can simply be an empty file.
 				</li>
 				<li class="t3-install-locked-user-settings">
-					Alternatively, in the Backend, go to <a href="javascript:top.goToModule(\'user_setup\',1);">User tools &gt; User settings</a>
-					and let TYPO3 create this file for you. When you\'re finished, you can also visit
-					<a href="javascript:top.goToModule(\'user_setup\',1);">User tools &gt; User settings</a> and delete the file from there.
+					Alternatively, in the Backend, go to <a href="javascript:top.goToModule(\'tools_install\',1);">Admin tools &gt; Install</a>
+					and let TYPO3 create this file for you.<br />
+					You are recommended to log out from the Install Tool after finishing your work.
+					The file will then automatically be deleted.
 				</li>
 			</ul>
 			<p>

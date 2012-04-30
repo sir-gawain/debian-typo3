@@ -31,7 +31,6 @@
  * Used by the update wizard in the install tool.
  *
  * @author	Benjamin Mack <benni@typo3.org>
- * @version $Id$
  */
 abstract class Tx_Install_Updates_Base {
 
@@ -53,7 +52,7 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * current TYPO3 version number, set from outside
-	 * version number coming from t3lib_div::int_from_ver()
+	 * version number coming from t3lib_utility_VersionNumber::convertVersionNumberToInteger()
 	 */
 	public $versionNumber;
 
@@ -64,20 +63,6 @@ abstract class Tx_Install_Updates_Base {
 	 * API functions
 	 *
 	 **/
-
-	/**
-	 * The first function in the update wizard steps
-	 *
-	 * it works like this:
-	 * @param	$explanation	string	HTML that is outputted on the first
-	 * @param	$showUpdate		int	that informs you whether to show this update wizard or not. Possible values that checkForUpdate() should set:
-	 * 			0 = don't show this update wizard at all (because it's not needed)
-	 * 			1 = show the update wizard (explanation + next step button)
-	 * 			2 = show the update wizard (explanation but not the "next step" button), useful for showing a status of a wizard
-	 * @return	deprecated since TYPO3 4.5, in previous versions it was used to determine whether the update wizards should be shown, now, the $showUpdate parameter is used for that
-	 */
-	// public abstract function checkForUpdate(&$explanation, &$showUpdate);
-
 
 	/**
 	 * second step: get user input if needed
@@ -93,7 +78,7 @@ abstract class Tx_Install_Updates_Base {
 	 *
 	 * @param	array		&$dbQueries: queries done in this update
 	 * @param	mixed		&$customMessages: custom messages
-	 * @return	boolean		whether it worked (true) or not (false)
+	 * @return	boolean		whether it worked (TRUE) or not (FALSE)
 	 */
 	// public abstract function performUpdate(&$dbQueries, &$customMessages);
 
@@ -101,7 +86,7 @@ abstract class Tx_Install_Updates_Base {
 	 * Checks if user input is valid
 	 *
 	 * @param	string		pointer to output custom messages
-	 * @return	boolean		true if user input is correct, then the update is performed. When false, return to getUserInput
+	 * @return	boolean		TRUE if user input is correct, then the update is performed. When FALSE, return to getUserInput
 	 */
 	// public abstract function checkUserInput(&$customMessages);
 

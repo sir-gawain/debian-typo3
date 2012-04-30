@@ -28,8 +28,6 @@
 /**
  * Class to handle debug
  *
- * $Id: $
- *
  *
  * @author	 Steffen Kamper <steffen@typo3.org>
  * @package TYPO3
@@ -248,8 +246,7 @@ final class t3lib_utility_Debug {
 	 */
 	public static function debugRows($rows, $header = '', $returnHTML = FALSE) {
 		if (is_array($rows)) {
-			reset($rows);
-			$firstEl = current($rows);
+			$firstEl = reset($rows);
 			if (is_array($firstEl)) {
 				$headerColumns = array_keys($firstEl);
 				$tRows = array();
@@ -320,7 +317,7 @@ final class t3lib_utility_Debug {
 	/**
 	 * Returns HTML-code, which is a visual representation of a multidimensional array
 	 * use t3lib_div::print_array() in order to print an array
-	 * Returns false if $array_in is not an array
+	 * Returns FALSE if $array_in is not an array
 	 *
 	 * @param	mixed		Array to view
 	 * @return	string		HTML output
@@ -380,7 +377,7 @@ final class t3lib_utility_Debug {
 	 *
 	 * @param	mixed		Array to print visually (in a table).
 	 * @return	void
-	 * @see view_array()
+	 * @see viewArray()
 	 */
 	public static function printArray($array_in) {
 		echo self::viewArray($array_in);

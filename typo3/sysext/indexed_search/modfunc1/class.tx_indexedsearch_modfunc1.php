@@ -26,59 +26,6 @@
  *
  * @author    Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *  106: class tx_indexedsearch_modfunc1 extends t3lib_extobjbase
- *  120:     function modMenu()
- *  144:     function main()
- *
- *              SECTION: Drawing table of indexed pages
- *  248:     function drawTableOfIndexedPages()
- *  299:     function indexed_info($data, $firstColContent)
- *  386:     function printPhashRow($row,$grouping=0,$extraGrListRows)
- *  527:     function printPhashRowHeader()
- *  582:     function returnNumberOfColumns()
- *
- *              SECTION: Details display, phash row
- *  618:     function showDetailsForPhash($phash)
- *  737:     function listWords($ftrows,$header, $stopWordBoxes=FALSE, $page='')
- *  787:     function listMetaphoneStat($ftrows,$header)
- *  824:     function linkWordDetails($string,$wid)
- *  836:     function linkMetaPhoneDetails($string,$metaphone)
- *  846:     function flagsMsg($flags)
- *
- *              SECTION: Details display, words / metaphone
- *  877:     function showDetailsForWord($wid)
- *  936:     function showDetailsForMetaphone($metaphone)
- *
- *              SECTION: Helper functions
- * 1007:     function printRemoveIndexed($phash,$alt)
- * 1020:     function printReindex($resultRow,$alt)
- * 1035:     function linkDetails($string,$phash)
- * 1044:     function linkList()
- * 1055:     function showPageDetails($string,$id)
- * 1065:     function printExtraGrListRows($extraGrListRows)
- * 1082:     function printRootlineInfo($row)
- * 1116:     function makeItemTypeIcon($it,$alt='')
- * 1141:     function utf8_to_currentCharset($string)
- *
- *              SECTION: Reindexing
- * 1173:     function reindexPhash($phash, $pageId)
- * 1227:     function getUidRootLineForClosestTemplate($id)
- *
- *              SECTION: SQL functions
- * 1270:     function removeIndexedPhashRow($phashList,$clearPageCache=1)
- * 1314:     function getGrListEntriesForPhash($phash,$gr_list)
- * 1334:     function processStopWords($stopWords)
- * 1354:     function processPageKeywords($pageKeywords, $pageUid)
- *
- * TOTAL FUNCTIONS: 30
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
 
 require_once(t3lib_extMgm::extPath('indexed_search').'class.indexer.php');
@@ -97,6 +44,8 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 	var $allPhashListed = array();		// phash values accumulations for link to clear all
 	var $external_parsers = array();	// External content parsers - objects set here with file extensions as keys.
 	var $iconFileNameCache = array();	// File extensions - icon map/cache.
+	var $indexerConfig = array();	// Indexer configuration, coming from $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['indexed_search']
+	var $enableMetaphoneSearch = FALSE;
 
 	/**
 	 * Indexer object
@@ -142,6 +91,12 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 			// Return if no page id:
 		if ($this->pObj->id<=0)		return;
 
+			// Indexer configuration from Extension Manager interface:
+		$this->indexerConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['indexed_search']);
+
+			// Workaround: If the extension configuration was not updated yet, the value is not existing
+		$this->enableMetaphoneSearch = isset($this->indexerConfig['enableMetaphoneSearch']) ? ($this->indexerConfig['enableMetaphoneSearch'] ? TRUE : FALSE) : TRUE;
+
 			// Initialize max-list items
 		$this->maxListPerPage = t3lib_div::_GP('listALL') ? 100000 : 100;
 
@@ -166,7 +121,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 			foreach($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers'] as $extension => $_objRef)	{
 				$this->external_parsers[$extension] = t3lib_div::getUserObj($_objRef);
 
-					// Init parser and if it returns false, unset its entry again:
+					// Init parser and if it returns FALSE, unset its entry again:
 				if (!$this->external_parsers[$extension]->softInit($extension))	{
 					unset($this->external_parsers[$extension]);
 				}
@@ -194,7 +149,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 			$theOutput.=$this->pObj->doc->spacer(5);
 			$theOutput.=$this->pObj->doc->section('Details for a word:',$this->showDetailsForWord(t3lib_div::_GET('wid')),0,1);
 
-		} elseif (t3lib_div::_GET('metaphone'))	{
+		} elseif ($this->enableMetaphoneSearch && t3lib_div::_GET('metaphone')) {
 				// Show title / function menu:
 			$theOutput.=$this->pObj->doc->spacer(5);
 			$theOutput.=$this->pObj->doc->section('Details for metaphone value:',$this->showDetailsForMetaphone(t3lib_div::_GET('metaphone')),0,1);
@@ -206,14 +161,14 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 
 		} else {	// Detail listings:
 				// Depth function menu:
-			$h_func = t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[type]',$this->pObj->MOD_SETTINGS['type'],$this->pObj->MOD_MENU['type'],'index.php');
-			$h_func.= t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[depth]',$this->pObj->MOD_SETTINGS['depth'],$this->pObj->MOD_MENU['depth'],'index.php');
+			$h_func = t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[type]', $this->pObj->MOD_SETTINGS['type'], $this->pObj->MOD_MENU['type'], 'index.php');
+			$h_func .= t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[depth]', $this->pObj->MOD_SETTINGS['depth'], $this->pObj->MOD_MENU['depth'], 'index.php');
 
 				// Show title / function menu:
-			$theOutput.=$this->pObj->doc->spacer(5);
-			$theOutput.=$this->pObj->doc->section($LANG->getLL('title'),$h_func,0,1);
+			$theOutput .= $this->pObj->doc->header($LANG->getLL('title'));
+			$theOutput .= $this->pObj->doc->section('', $h_func, 0, 1);
 
-			$theOutput.=$this->drawTableOfIndexedPages();
+			$theOutput .= $this->drawTableOfIndexedPages();
 		}
 
         return $theOutput;
@@ -436,7 +391,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 				$arr = unserialize($row['cHashParams']);
 				if (!is_array($arr)) {
 					$arr = array(
-						'cHash' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.error', true)
+						'cHash' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.error', TRUE)
 					);
 				}
 				$theCHash = $arr['cHash'];
@@ -632,7 +587,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 			// If found, display:
 		if (is_array($phashRecord))	{
 			$content.= '<h4>phash row content:</h4>'.
-						$this->utf8_to_currentCharset(t3lib_div::view_array($phashRecord));
+						$this->utf8_to_currentCharset(t3lib_utility_Debug::viewArray($phashRecord));
 
 				// Getting debug information if any:
 			$ftrows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
@@ -646,7 +601,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 				unset($debugInfo['lexer']);
 
 				$content.= '<h3>Debug information:</h3>'.
-						$this->utf8_to_currentCharset(t3lib_div::view_array($debugInfo));
+						$this->utf8_to_currentCharset(t3lib_utility_Debug::viewArray($debugInfo));
 
 				$content.= '<h4>Debug information / lexer splitting:</h4>'.
 						'<hr/><strong>'.
@@ -672,12 +627,14 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 			$showStopWordCheckBox = $GLOBALS['BE_USER']->isAdmin();
 			$content.= $this->listWords($ftrows, 'All words found on page ('.count($ftrows).'):', $showStopWordCheckBox, $pageRec);
 
-				// Group metaphone hash:
-			$metaphone = array();
-			foreach($ftrows as $row)	{
-				$metaphone[$row['metaphone']][] = $row['baseword'];
+			if ($this->enableMetaphoneSearch) {
+					// Group metaphone hash:
+				$metaphone = array();
+				foreach ($ftrows as $row) {
+					$metaphone[$row['metaphone']][] = $row['baseword'];
+				}
+				$content .= $this->listMetaphoneStat($metaphone, 'Metaphone stats:');
 			}
-			$content.= $this->listMetaphoneStat($metaphone, 'Metaphone stats:');
 
 				// Finding top-20 on frequency for this phash:
 			$ftrows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
@@ -717,7 +674,7 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 						'',
 						''
 					);
-			$content.= t3lib_div::view_array($ftrows);
+			$content .= t3lib_utility_Debug::viewArray($ftrows);
 
 				// Add go-back link:
 			$content = $this->linkList().$content.$this->linkList();
@@ -1138,12 +1095,11 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 	 *
 	 * @param	string		String to convert (utf-8)
 	 * @return	string		Converted string (backend charset if different from utf-8)
+	 * @deprecated since 4.7, will be removed in 4.9
 	 */
-	function utf8_to_currentCharset($string)	{
-		global $LANG;
-		if ($LANG->charSet != 'utf-8')	{
-			$string = $LANG->csConvObj->utf8_decode($string, $LANG->charSet, TRUE);
-		}
+	function utf8_to_currentCharset($string) {
+		t3lib_div::logDeprecatedFunction();
+
 		return $string;
 	}
 
@@ -1202,13 +1158,13 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 				}
 
 				$content.='<h4>Log for re-indexing of "'.htmlspecialchars($resultRow['data_filename']).'":</h4>';
-				$content.=t3lib_div::view_array($indexerObj->internal_log);
+				$content.=t3lib_utility_Debug::viewArray($indexerObj->internal_log);
 
 				$content.='<h4>Hash-array, page:</h4>';
-				$content.=t3lib_div::view_array($indexerObj->hash);
+				$content.=t3lib_utility_Debug::viewArray($indexerObj->hash);
 
 				$content.='<h4>Hash-array, file:</h4>';
-				$content.=t3lib_div::view_array($indexerObj->file_phash_arr);
+				$content.=t3lib_utility_Debug::viewArray($indexerObj->file_phash_arr);
 			}
 		}
 
@@ -1291,13 +1247,9 @@ class tx_indexedsearch_modfunc1 extends t3lib_extobjbase {
 							$idList[] = (int)$row['page_id'];
 						}
 
-						if (TYPO3_UseCachingFramework) {
-							$pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
-							foreach ($idList as $pageId) {
-								$pageCache->flushByTag('pageId_' . $pageId);
-							}
-						} else {
-							$GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_pages', 'page_id IN (' . implode(',', $idList) . ')');
+						$pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
+						foreach ($idList as $pageId) {
+							$pageCache->flushByTag('pageId_' . $pageId);
 						}
 					}
 				}

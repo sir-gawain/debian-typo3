@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,8 +28,6 @@
  * Configuration of the htmlArea RTE extension
  *
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
- *
- * $Id$  *
  */
 
 if (!defined ("TYPO3_MODE")) 	die ('Access denied.');
@@ -49,7 +47,7 @@ $_EXTCONF = unserialize($_EXTCONF);
 	// Add default RTE transformation configuration
 t3lib_extMgm::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:' . $_EXTKEY . '/res/proc/pageTSConfig.txt">');
 
-	// Add default Page TSonfig RTE configuration
+	// Add default Page TS Config RTE configuration
 if (strstr($_EXTCONF['defaultConfiguration'],'Minimal')) {
 	$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['defaultConfiguration'] = 'Advanced';
 } elseif (strstr($_EXTCONF['defaultConfiguration'],'Demo')) {
@@ -59,45 +57,18 @@ if (strstr($_EXTCONF['defaultConfiguration'],'Minimal')) {
 }
 t3lib_extMgm::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:' . $_EXTKEY . '/res/' . strtolower($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['defaultConfiguration']) . '/pageTSConfig.txt">');
 
-	// Add default User TSonfig RTE configuration
+	// Add default User TS Config RTE configuration
 t3lib_extMgm::addUserTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:' . $_EXTKEY . '/res/' . strtolower($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['defaultConfiguration']) . '/userTSConfig.txt">');
 
-	// Add Clear RTE Cache to Clear Cache menu
-require_once(t3lib_extMgm::extPath('rtehtmlarea') . 'hooks/clearrtecache/ext_localconf.php');
 	// Add Status Report about Conflicting Extensions
 require_once(t3lib_extMgm::extPath('rtehtmlarea') . 'hooks/statusreport/ext_localconf.php');
-
-	// Troubleshooting and script compression
-$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableDebugMode'] = isset($_EXTCONF['enableDebugMode']) ? $_EXTCONF['enableDebugMode'] : 0;
-$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableCompressedScripts'] = (isset($_EXTCONF['enableCompressedScripts']) && !$_EXTCONF['enableCompressedScripts']) ? 0 : 1;
-	// Disable script compression when in troubleshooting mode
-if ($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableDebugMode']) {
-	$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableCompressedScripts'] = 0;
-}
-
-	// Integrating with DAM
-	// DAM browser may be enabled here only for DAM version lower than 1.1
-	// If DAM 1.1+ is installed, the setting must be unset, DAM own EM setting should be used
-$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableDAMBrowser'] = 0;
-if (t3lib_extMgm::isLoaded('dam')) {
-	$saveExtKey = $_EXTKEY;
-	$_EXTKEY = 'dam';
-	require(t3lib_extMgm::extPath('dam') . 'ext_emconf.php');
-	$_EXTKEY = $saveExtKey;
-	if (t3lib_div::int_from_ver($EM_CONF['dam']['version']) < 1001000) {
-			// Register DAM element browser rendering
-		$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableDAMBrowser'] = $_EXTCONF['enableDAMBrowser'] ? $_EXTCONF['enableDAMBrowser'] : 0;
-		if ($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableDAMBrowser']) {
-			$TYPO3_CONF_VARS['SC_OPTIONS']['typo3/browse_links.php']['browserRendering'][] = 'EXT:'.$_EXTKEY.'/mod4/class.tx_rtehtmlarea_dam_browse_media.php:&tx_rtehtmlarea_dam_browse_media';
-			$TYPO3_CONF_VARS['SC_OPTIONS']['typo3/browse_links.php']['browserRendering'][] = 'EXT:'.$_EXTKEY.'/mod3/class.tx_rtehtmlarea_dam_browse_links.php:&tx_rtehtmlarea_dam_browse_links';
-		}
-	}
-}
 
 	// Configure Lorem Ipsum hook to insert nonsense in wysiwyg mode
 if (t3lib_extMgm::isLoaded('lorem_ipsum') && (TYPO3_MODE == 'BE')) {
     $TYPO3_CONF_VARS['EXTCONF']['lorem_ipsum']['RTE_insert'][] = 'tx_rtehtmlarea_base->loremIpsumInsert';
 }
+	// Set warning in the Update Wizard of the Install Tool for deprecated Page TS Config properties
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForDeprecatedRtePageTSConfigProperties'] = 'EXT:'.$_EXTKEY.'/hooks/install/class.tx_rtehtmlarea_deprecatedrteproperties.php:&tx_rtehtmlarea_deprecatedRteProperties';
 
 	// Initialize plugin registration array
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins'] = array();
@@ -109,6 +80,10 @@ $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['EditElement'] = array();
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['EditElement']['objectReference'] = 'EXT:'.$_EXTKEY.'/extensions/EditElement/class.tx_rtehtmlarea_editelement.php:&tx_rtehtmlarea_editelement';
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['EditElement']['addIconsToSkin'] = 0;
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['EditElement']['disableInFE'] = 0;
+$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['MicrodataSchema'] = array();
+$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['MicrodataSchema']['objectReference'] = 'EXT:'.$_EXTKEY.'/extensions/MicrodataSchema/class.tx_rtehtmlarea_microdataschema.php:&tx_rtehtmlarea_microdataschema';
+$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['MicrodataSchema']['addIconsToSkin'] = 0;
+$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['MicrodataSchema']['disableInFE'] = 0;
 	// Inline Elements configuration
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['DefaultInline'] = array();
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['DefaultInline']['objectReference'] = 'EXT:'.$_EXTKEY.'/extensions/DefaultInline/class.tx_rtehtmlarea_defaultinline.php:&tx_rtehtmlarea_defaultinline';
@@ -162,7 +137,7 @@ $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['UserElements']['disableInFE'] 
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['TextStyle'] = array();
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['TextStyle']['objectReference'] = 'EXT:'.$_EXTKEY.'/extensions/TextStyle/class.tx_rtehtmlarea_textstyle.php:&tx_rtehtmlarea_textstyle';
 
-	// Enable images and add default Page TSonfig RTE configuration for enabling images with the Minimal and Typical default configuration
+	// Enable images and add default Page TS Config RTE configuration for enabling images with the Minimal and Typical default configuration
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableImages'] = $_EXTCONF['enableImages'] ? $_EXTCONF['enableImages'] : 0;
 if ($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['defaultConfiguration'] == 'Demo') {
 	$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableImages'] = 1;
@@ -187,7 +162,7 @@ $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['TYPO3Link']['objectReference']
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['TYPO3Link']['addIconsToSkin'] = 0;
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['TYPO3Link']['disableInFE'] = 1;
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['TYPO3Link']['additionalAttributes'] = 'rel';
-	// Add default Page TSonfig RTE configuration for enabling links accessibility icons
+	// Add default Page TS Config RTE configuration for enabling links accessibility icons
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableAccessibilityIcons'] = $_EXTCONF['enableAccessibilityIcons'] ? $_EXTCONF['enableAccessibilityIcons'] : 0;
 if ($TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['enableAccessibilityIcons']) {
 	t3lib_extMgm::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:' . $_EXTKEY . '/res/accessibilityicons/pageTSConfig.txt">');
@@ -228,9 +203,6 @@ $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['SpellChecker']['disableInFE'] 
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['SpellChecker']['AspellDirectory'] = $_EXTCONF['AspellDirectory'] ? $_EXTCONF['AspellDirectory'] : '/usr/bin/aspell';
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['SpellChecker']['noSpellCheckLanguages'] = $_EXTCONF['noSpellCheckLanguages'] ? $_EXTCONF['noSpellCheckLanguages'] : 'ja,km,ko,lo,th,zh,b5,gb';
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['SpellChecker']['forceCommandMode'] = $_EXTCONF['forceCommandMode'] ? $_EXTCONF['forceCommandMode'] : 0;
-	// The following two properties DEPRECATED as of TYPO3 4.3.0
-$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['SpellChecker']['dictionaryList'] = $_EXTCONF['dictionaryList'] ? $_EXTCONF['dictionaryList'] : 'en';
-$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['SpellChecker']['defaultDictionary'] = $_EXTCONF['defaultDictionary'] ? $_EXTCONF['defaultDictionary'] : 'en';
 
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['FindReplace'] = array();
 $TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['plugins']['FindReplace']['objectReference'] = 'EXT:'.$_EXTKEY.'/extensions/FindReplace/class.tx_rtehtmlarea_findreplace.php:&tx_rtehtmlarea_findreplace';

@@ -9,7 +9,7 @@ t3lib_extMgm::addService($_EXTKEY,  'auth' /* sv type */,  'tx_rsaauth_sv1' /* s
 		'title' => 'RSA authentication',
 		'description' => 'Authenticates users by using encrypted passwords',
 
-		'subtype' => 'getUserBE,authUserBE,getUserFE,authUserFE',
+		'subtype' => 'processLoginDataBE,processLoginDataFE',
 
 		'available' => TRUE,
 		'priority' => 60,	// tx_svauth_sv1 has 50, t3sec_saltedpw has 55. This service must have higher priority!
@@ -26,6 +26,10 @@ t3lib_extMgm::addService($_EXTKEY,  'auth' /* sv type */,  'tx_rsaauth_sv1' /* s
 // Add a hook to the BE login form
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/index.php']['loginFormHook'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_loginformhook.php:tx_rsaauth_loginformhook->getLoginFormTag';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/index.php']['loginScriptHook'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_loginformhook.php:tx_rsaauth_loginformhook->getLoginScripts';
+
+// Add hook for user setup module
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['setupScriptHook'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_usersetuphook.php:tx_rsaauth_usersetuphook->getLoginScripts';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['modifyUserDataBeforeSave'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_usersetuphook.php:tx_rsaauth_usersetuphook->decryptPassword';
 
 // Add a hook to the FE login form (felogin system extension)
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['loginFormOnSubmitFuncs'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_feloginhook.php:tx_rsaauth_feloginhook->loginFormHook';

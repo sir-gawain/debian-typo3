@@ -1,17 +1,11 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Logout-Button
 
-$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 #login-info p {
 	padding-bottom: 30px;
 	padding-top: 5px;
-}
-
-#logout-button {
-	padding-left: 4px;
-	padding-right: 7px;
 }
 
 #logout-button input {

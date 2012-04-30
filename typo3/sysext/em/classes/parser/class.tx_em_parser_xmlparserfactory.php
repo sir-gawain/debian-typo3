@@ -27,8 +27,6 @@
  *
  * Module: Extension manager - XML parser factory
  *
- * $Id: class.tx_em_parser_xmlparserfactory.php 1911 2010-02-21 14:50:40Z mkrause $
- *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -79,14 +77,14 @@ class tx_em_Parser_XmlParserFactory {
 	 * Obtains a xml parser instance.
 	 *
 	 * This function will return an instance of a class that implements
-	 * em_extensionxml_abstract_parser.
+	 * tx_em_ExtensionXml_Abstract_Parser.
 	 *
 	 * TODO use autoload if possible (might require EM to be moved in a sysext)
 	 *
 	 * @access  public
 	 * @param   string	  $parserType: type of parser, one of extension and mirror
 	 * @param	string		$excludeClassNames: (optional) comma-separated list of class names
-	 * @return	em_extensionxml_abstract_parser	an instance of an extension.xml parser
+	 * @return	tx_em_ExtensionXml_Abstract_Parser	an instance of an extension.xml parser
 	 */
 	static public function getParserInstance($parserType, $excludeClassNames = '') {
 		if (!isset(self::$instance[$parserType]) || !is_object(self::$instance[$parserType]) || !empty($excludeClassNames)) {
@@ -94,7 +92,6 @@ class tx_em_Parser_XmlParserFactory {
 			self::$instance[$parserType] = $objParser = NULL;
 			foreach (self::$parsers[$parserType] as $className => $file) {
 				if (!t3lib_div::inList($excludeClassNames, $className)) {
-					//require_once(dirname(__FILE__) . '/' . $file);
 					$objParser = t3lib_div::makeInstance($className);
 					if ($objParser->isAvailable()) {
 						self::$instance[$parserType] = &$objParser;

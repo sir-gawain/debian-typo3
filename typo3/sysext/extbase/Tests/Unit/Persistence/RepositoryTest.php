@@ -159,7 +159,10 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 	public function modelAndRepositoryClassNames() {
 		return array(
 			array('Tx_BlogExample_Domain_Repository_BlogRepository', 'Tx_BlogExample_Domain_Model_Blog'),
-			array('﻿_Domain_Repository_Content_PageRepository', '﻿_Domain_Model_Content_Page')
+			array('﻿_Domain_Repository_Content_PageRepository', '﻿_Domain_Model_Content_Page'),
+			array('Tx_RepositoryExample_Domain_Repository_SomeModelRepository', 'Tx_RepositoryExample_Domain_Model_SomeModel'),
+			array('Tx_RepositoryExample_Domain_Repository_RepositoryRepository', 'Tx_RepositoryExample_Domain_Model_Repository'),
+			array('Tx_Repository_Domain_Repository_RepositoryRepository', 'Tx_Repository_Domain_Model_Repository'),
 		);
 	}
 
@@ -229,33 +232,6 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 
 		$this->mockIdentityMap->expects($this->once())->method('hasIdentifier')->with($fakeUid, 'someObjectType')->will($this->returnValue(TRUE));
 		$this->mockIdentityMap->expects($this->once())->method('getObjectByIdentifier')->with($fakeUid)->will($this->returnValue($object));
-
-		$expectedResult = $object;
-		$actualResult = $this->repository->findByUid($fakeUid);
-		$this->assertSame($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function findByUidQueriesObjectAndRegistersItIfItWasNotFoundInIdentityMap() {
-		$fakeUid = '123';
-		$object = new stdClass();
-		$this->repository->_set('objectType', 'someObjectType');
-
-		$mockQuerySettings = $this->getMock('Tx_Extbase_Persistence_QuerySettingsInterface');
-		$this->mockQuery->expects($this->atLeastOnce())->method('getQuerySettings')->will($this->returnValue($mockQuerySettings));
-
-		$mockQueryResult = $this->getMock('Tx_Extbase_Persistence_QueryResultInterface');
-
-		$this->mockQuery->expects($this->once())->method('equals')->with('uid', $fakeUid)->will($this->returnValue('matchingConstraint'));
-		$this->mockQuery->expects($this->once())->method('matching')->with('matchingConstraint')->will($this->returnValue($this->mockQuery));
-		$this->mockQuery->expects($this->once())->method('execute')->will($this->returnValue($mockQueryResult));
-		$mockQueryResult->expects($this->once())->method('getFirst')->will($this->returnValue($object));
-
-		$this->mockIdentityMap->expects($this->once())->method('hasIdentifier')->with($fakeUid, 'someObjectType')->will($this->returnValue(FALSE));
-		$this->mockIdentityMap->expects($this->once())->method('registerObject')->with($object, $fakeUid);
-		$this->mockQueryFactory->expects($this->once())->method('create')->with('someObjectType')->will($this->returnValue($this->mockQuery));
 
 		$expectedResult = $object;
 		$actualResult = $this->repository->findByUid($fakeUid);
@@ -438,7 +414,7 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 
 	/**
 	 * @test
-	 * @expectedException Exception
+	 * @expectedException Tx_Extbase_Persistence_Exception_UnsupportedMethod
 	 */
 	public function magicCallMethodTriggersAnErrorIfUnknownMethodsAreCalled() {
 		$this->repository->__call('foo', array());

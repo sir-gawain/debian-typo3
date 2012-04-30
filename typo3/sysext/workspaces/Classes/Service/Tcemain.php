@@ -31,7 +31,7 @@
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_Tcemain {
+class Tx_Workspaces_Service_Tcemain {
 
 	/**
 	 * In case a sys_workspace_stage record is deleted we do a hard reset
@@ -49,7 +49,7 @@ class tx_Workspaces_Service_Tcemain {
 		if ($command === 'delete') {
 			if ($table === Tx_Workspaces_Service_Stages::TABLE_STAGE) {
 				$this->resetStageOfElements($id);
-			} elseif ($table === tx_Workspaces_Service_Workspaces::TABLE_WORKSPACE) {
+			} elseif ($table === Tx_Workspaces_Service_Workspaces::TABLE_WORKSPACE) {
 				$this->flushWorkspaceElements($id);
 			}
 		}
@@ -149,22 +149,9 @@ class tx_Workspaces_Service_Tcemain {
 	 * @return void
 	 */
 	protected function flushWorkspaceCacheEntriesByWorkspaceId($workspaceId) {
-		if (TYPO3_UseCachingFramework === TRUE) {
-			try {
-				$GLOBALS['typo3CacheFactory']->create(
-					'workspaces_cache',
-					't3lib_cache_frontend_StringFrontend',
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['backend'],
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['options']);
-			} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
-				// do nothing, a workspace cache already exists
-			}
-	
-			$workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
-	
-			$workspacesCache->flushByTag($workspaceId);
-			$workspacesCache->flushByTag(tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES);
-		}
+		$workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
+		$workspacesCache->flushByTag($workspaceId);
+		$workspacesCache->flushByTag(Tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES);
 	}
 }
 

@@ -264,7 +264,7 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 
 		var indicator = Ext.getCmp(this.id + '-indicatorBar').add(component);
 		this.doLayout();
-		
+
 		return indicator;
 	},
 

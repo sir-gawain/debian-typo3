@@ -1,8 +1,6 @@
 /***************************************************************
  * extJS for TCEforms
  *
- * $Id$
- *
  * Copyright notice
  *
  * (c) 2009-2011 Steffen Kamper <info@sk-typo3.de>
@@ -46,9 +44,7 @@ TYPO3.TCEFORMS = {
 		dateFields.each(function(element) {
 			var index = element.dom.id.match(/tceforms-datefield-/) ? 0 : 1;
 			var format = TYPO3.settings.datePickerUSmode ? TYPO3.settings.dateFormatUS : TYPO3.settings.dateFormat;
-
-			var datepicker = element.next('span');
-			var oldValue = Date.parseDate(element.dom.value, format[index]);
+			var datepicker = element.next('span'), menu;
 
 			// check for daterange
 			var lowerMatch = element.dom.className.match(/lower-(\d+)\b/);
@@ -56,33 +52,53 @@ TYPO3.TCEFORMS = {
 			var upperMatch = element.dom.className.match(/upper-(\d+)\b/);
 			maxDate = Ext.isArray(upperMatch) ? new Date(upperMatch[1] * 1000) : null;
 
-			var menu = new Ext.menu.DateMenu({
-				id:			'p' + element.dom.id,
-				format:		format[index],
-				value:		oldValue,
-				minDate:	minDate,
-				maxDate:	maxDate,
-				handler: 	function(picker, date){
-					var relElement = Ext.getDom(picker.ownerCt.id.substring(1));
-					if (index === 1 && oldValue !== undefined) {
-							//datetimefield, preserve time information
-						date.setHours(oldValue.getHours());
-						date.setMinutes(oldValue.getMinutes());
-					}
-					relElement.value = date.format(format[index]);
-					if (Ext.isFunction(relElement.onchange)) {
-						relElement.onchange.call(relElement);
-					}
-				},
-				listeners:	{
-					beforeshow:	function(obj) {
-						var relElement = Ext.getDom(obj.picker.ownerCt.id.substring(1));
-						if (relElement.value) {
-							obj.picker.setValue(Date.parseDate(relElement.value, format[index]));
+			if (index === 0) {
+				menu = new Ext.menu.DateMenu({
+					id: 'p' + element.dom.id,
+					format: format[index],
+					value: Date.parseDate(element.dom.value, format[index]),
+					minDate: minDate,
+					maxDate: maxDate,
+					handler: function(picker, date){
+						var relElement = Ext.getDom(picker.ownerCt.id.substring(1));
+						relElement.value = date.format(format[index]);
+						if (Ext.isFunction(relElement.onchange)) {
+							relElement.onchange.call(relElement);
+						}
+					},
+					listeners: {
+						beforeshow: function(obj) {
+							var relElement = Ext.getDom(obj.picker.ownerCt.id.substring(1));
+							if (relElement.value) {
+								obj.picker.setValue(Date.parseDate(relElement.value, format[index]));
+							}
 						}
 					}
-				}
-			});
+				});
+			} else {
+				menu = new Ext.ux.menu.DateTimeMenu({
+					id: 'p' + element.dom.id,
+					format: format[index],
+					value: Date.parseDate(element.dom.value, format[index]),
+					minDate: minDate,
+					maxDate: maxDate,
+					listeners: {
+						beforeshow: function(obj) {
+							var relElement = Ext.getDom(obj.picker.ownerCt.id.substring(1));
+							if (relElement.value) {
+								obj.picker.setValue(Date.parseDate(relElement.value, format[index]));
+							}
+						},
+						select: function(picker) {
+							var relElement = Ext.getDom(picker.ownerCt.id.substring(1));
+							relElement.value = picker.getValue().format(format[index]);
+							if (Ext.isFunction(relElement.onchange)) {
+								relElement.onchange.call(relElement);
+							}
+						}
+					}
+				});
+			}
 
 			datepicker.removeAllListeners();
 			datepicker.on('click', function(){
@@ -105,7 +121,6 @@ TYPO3.TCEFORMS = {
 				var dwrapped = new Ext.Resizable(element.dom.id, {
 					minWidth:  300,
 					minHeight: 50,
-					maxHeight: TYPO3.settings.textareaMaxHeight,
 					dynamic:   true
 				});
 			}
@@ -114,3 +129,28 @@ TYPO3.TCEFORMS = {
 
 }
 Ext.onReady(TYPO3.TCEFORMS.init, TYPO3.TCEFORMS);
+
+	// Fix for slider TCA control in IE9
+Ext.override(Ext.dd.DragTracker, {
+	onMouseMove:function (e, target) {
+		var isIE9 = Ext.isIE && (/msie 9/.test(navigator.userAgent.toLowerCase())) && document.documentMode != 6;
+		if (this.active && Ext.isIE && !isIE9 && !e.browserEvent.button) {
+			e.preventDefault();
+			this.onMouseUp(e);
+			return;
+		}
+		e.preventDefault();
+		var xy = e.getXY(), s = this.startXY;
+		this.lastXY = xy;
+		if (!this.active) {
+			if (Math.abs(s[0] - xy[0]) > this.tolerance || Math.abs(s[1] - xy[1]) > this.tolerance) {
+				this.triggerStart(e);
+			} else {
+				return;
+			}
+		}
+		this.fireEvent('mousemove', this, e);
+		this.onDrag(e);
+		this.fireEvent('drag', this, e);
+	}
+});

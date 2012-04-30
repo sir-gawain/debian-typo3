@@ -36,14 +36,14 @@ class tx_felogin_pi1 extends tslib_pibase {
 	var $prefixId      = 'tx_felogin_pi1';		// Same as class name
 	var $scriptRelPath = 'pi1/class.tx_felogin_pi1.php';	// Path to this script relative to the extension dir.
 	var $extKey        = 'felogin';	// The extension key.
-	public $pi_checkCHash = false;
-	public $pi_USER_INT_obj = true;
+	public $pi_checkCHash = FALSE;
+	public $pi_USER_INT_obj = TRUE;
 
 	protected $userIsLoggedIn;	// Is user logged in?
 	protected $template;	// holds the template for FE rendering
 	protected $uploadDir;	// upload dir, used for flexform template files
 	protected $redirectUrl;	// URL for the redirect
-	protected $noRedirect = false;	// flag for disable the redirect
+	protected $noRedirect = FALSE;	// flag for disable the redirect
 	protected $logintype;	// logintype (given as GPvar), possible: login, logout
 
 	/**
@@ -133,6 +133,18 @@ class tx_felogin_pi1 extends tslib_pibase {
 			if (!$GLOBALS['TSFE']->fe_user->cookieId) {
 				$content .= $this->cObj->stdWrap($this->pi_getLL('cookie_warning', '', 1), $this->conf['cookieWarning_stdWrap.']);
 			} else {
+					// Add hook for extra processing before redirect
+				if (isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['beforeRedirect']) && is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['beforeRedirect'])) {
+					$_params = array(
+						'loginType'   => $this->logintype,
+						'redirectUrl' => &$this->redirectUrl,
+					);
+					foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['beforeRedirect'] as $_funcRef) {
+						if ($_funcRef) {
+							t3lib_div::callUserFunction($_funcRef, $_params, $this);
+						}
+					}
+				}
 				t3lib_utility_Http::redirect($this->redirectUrl);
 			}
 		}
@@ -183,15 +195,19 @@ class tx_felogin_pi1 extends tslib_pibase {
 					$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 				}
 
+				$error = NULL;
 				if ($row) {
-							// generate an email with the hashed link
-						$error = $this->generateAndSendHash($row);
+						// generate an email with the hashed link
+					$error = $this->generateAndSendHash($row);
+				} elseif ($this->conf['exposeNonexistentUserInForgotPasswordDialog']) {
+					$error = $this->pi_getLL('ll_forgot_reset_message_error');
 				}
+
 					// generate message
 				if ($error) {
-					$markerArray['###STATUS_MESSAGE###'] = $this->cObj->stdWrap($error, $this->conf['forgotMessage_stdWrap.']);
+					$markerArray['###STATUS_MESSAGE###'] = $this->cObj->stdWrap($error, $this->conf['forgotErrorMessage_stdWrap.']);
 				} else {
-					$markerArray['###STATUS_MESSAGE###'] = $this->cObj->stdWrap($this->pi_getLL('ll_forgot_reset_message_emailSent', '', 1), $this->conf['forgotMessage_stdWrap.']);
+					$markerArray['###STATUS_MESSAGE###'] = $this->cObj->stdWrap($this->pi_getLL('ll_forgot_reset_message_emailSent', '', 1), $this->conf['forgotResetMessageEmailSentMessage_stdWrap.']);
 				}
 				$subpartArray['###FORGOT_FORM###'] = '';
 
@@ -209,8 +225,8 @@ class tx_felogin_pi1 extends tslib_pibase {
 		$markerArray['###BACKLINK_LOGIN###'] = $this->getPageLink($this->pi_getLL('ll_forgot_header_backToLogin', '', 1), array());
 		$markerArray['###STATUS_HEADER###'] = $this->getDisplayText('forgot_header', $this->conf['forgotHeader_stdWrap.']);
 
-		$markerArray['###LEGEND###'] = $this->pi_getLL('reset_password', '', 1);
-		$markerArray['###ACTION_URI###'] = $this->getPageLink('', array($this->prefixId . '[forgot]'=>1), true);
+		$markerArray['###LEGEND###'] = $this->pi_getLL('legend', $this->pi_getLL('reset_password', '', 1), 1);
+		$markerArray['###ACTION_URI###'] = $this->getPageLink('', array($this->prefixId . '[forgot]'=>1), TRUE);
 		$markerArray['###EMAIL_LABEL###'] = $this->pi_getLL('your_email', '', 1);
 		$markerArray['###FORGOT_PASSWORD_ENTEREMAIL###'] = $this->pi_getLL('forgot_password_enterEmail', '', 1);
 		$markerArray['###FORGOT_EMAIL###'] = $this->prefixId.'[forgot_email]';
@@ -241,7 +257,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	protected function changePassword() {
 
 		$subpartArray = $linkpartArray = array();
-		$done = false;
+		$done = FALSE;
 
 		$minLength = intval($this->conf['newPasswordMinLength']) ? intval($this->conf['newPasswordMinLength']) : 6;
 
@@ -256,7 +272,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 
 		$hash = explode('|', $piHash);
 		if (intval($uid) == 0) {
-			$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_notvalid_message', $this->conf['changePasswordMessage_stdWrap.']);
+			$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_notvalid_message', $this->conf['changePasswordNotValidMessage_stdWrap.']);
 			$subpartArray['###CHANGEPASSWORD_FORM###'] = '';
 		} else {
 			$user = $this->pi_getRecord('fe_users', intval($uid));
@@ -264,7 +280,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 			$compareHash = explode('|', $userHash);
 
 			if (!$compareHash || !$compareHash[1] || $compareHash[0] < time() ||  $hash[0] != $compareHash[0] ||  md5($hash[1]) != $compareHash[1]) {
-				$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_notvalid_message',$this->conf['changePasswordMessage_stdWrap.']);
+				$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_notvalid_message',$this->conf['changePasswordNotValidMessage_stdWrap.']);
 				$subpartArray['###CHANGEPASSWORD_FORM###'] = '';
 			} else {
 					// all is fine, continue with new password
@@ -272,9 +288,9 @@ class tx_felogin_pi1 extends tslib_pibase {
 
 				if (isset($postData['changepasswordsubmit'])) {
 					if (strlen($postData['password1']) < $minLength) {
-			 			$markerArray['###STATUS_MESSAGE###'] = sprintf($this->getDisplayText('change_password_tooshort_message', $this->conf['changePasswordMessage_stdWrap.']), $minLength);
+						$markerArray['###STATUS_MESSAGE###'] = sprintf($this->getDisplayText('change_password_tooshort_message', $this->conf['changePasswordTooShortMessage_stdWrap.']), $minLength);
 					} elseif ($postData['password1'] != $postData['password2']) {
-						$markerArray['###STATUS_MESSAGE###'] = sprintf($this->getDisplayText('change_password_notequal_message', $this->conf['changePasswordMessage_stdWrap.']), $minLength);
+						$markerArray['###STATUS_MESSAGE###'] = sprintf($this->getDisplayText('change_password_notequal_message', $this->conf['changePasswordNotEqualMessage_stdWrap.']), $minLength);
 					} else {
 						$newPass = $postData['password1'];
 
@@ -297,10 +313,13 @@ class tx_felogin_pi1 extends tslib_pibase {
 								'uid=' . $user['uid'],
 								array('password' => $newPass, 'felogin_forgotHash' => '')
 							);
-						$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_done_message', $this->conf['changePasswordMessage_stdWrap.']);
-						$done = true;
+						$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_done_message', $this->conf['changePasswordDoneMessage_stdWrap.']);
+						$done = TRUE;
 						$subpartArray['###CHANGEPASSWORD_FORM###'] = '';
-						$markerArray['###BACKLINK_LOGIN###'] = $this->getPageLink($this->pi_getLL('ll_forgot_header_backToLogin', '', 1), array());
+						$markerArray['###BACKLINK_LOGIN###'] = $this->getPageLink(
+							$this->pi_getLL('ll_forgot_header_backToLogin', '', 1),
+							array($this->prefixId . '[redirectReferrer]' => 'off')
+						);
 					}
 				}
 
@@ -377,6 +396,21 @@ class tx_felogin_pi1 extends tslib_pibase {
 
 		$msg = sprintf($this->pi_getLL('ll_forgot_validate_reset_password', '', 0), $user['username'], $link, $validEndString);
 
+			// Add hook for extra processing of mail message
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['forgotPasswordMail']) &&
+				is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['forgotPasswordMail'])
+		) {
+			$params = array(
+				'message' => &$msg,
+				'user' => &$user,
+			);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['forgotPasswordMail'] as $reference) {
+				if ($reference) {
+					t3lib_div::callUserFunction($reference, $params, $this);
+				}
+			}
+		}
+
 			// no RDCT - Links for security reasons
 		$oldSetting = $GLOBALS['TSFE']->config['config']['notification_email_urlmode'];
 		$GLOBALS['TSFE']->config['config']['notification_email_urlmode'] = 0;
@@ -398,10 +432,11 @@ class tx_felogin_pi1 extends tslib_pibase {
 		$subpartArray = $linkpartArray = array();
 
 		$markerArray['###STATUS_HEADER###'] = $this->getDisplayText('status_header',$this->conf['logoutHeader_stdWrap.']);
-		$markerArray['###STATUS_MESSAGE###']=$this->getDisplayText('status_message',$this->conf['logoutMessage_stdWrap.']);$this->cObj->stdWrap($this->flexFormValue('message','s_status'),$this->conf['logoutMessage_stdWrap.']);
+		$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('status_message', $this->conf['logoutMessage_stdWrap.']);
+		$this->cObj->stdWrap($this->flexFormValue('message', 's_status'), $this->conf['logoutMessage_stdWrap.']);
 
 		$markerArray['###LEGEND###'] = $this->pi_getLL('logout', '', 1);
-		$markerArray['###ACTION_URI###'] = $this->getPageLink('',array(),true);
+		$markerArray['###ACTION_URI###'] = $this->getPageLink('',array(),TRUE);
 		$markerArray['###LOGOUT_LABEL###'] = $this->pi_getLL('logout', '', 1);
 		$markerArray['###NAME###'] = htmlspecialchars($GLOBALS['TSFE']->fe_user->user['name']);
 		$markerArray['###STORAGE_PID###'] = $this->spid;
@@ -426,7 +461,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 */
 	 protected function showLogin() {
 		$subpart = $this->cObj->getSubpart($this->template, '###TEMPLATE_LOGIN###');
-		$subpartArray = $linkpartArray = array();
+		$subpartArray = $linkpartArray = $markerArray = array();
 
 		$gpRedirectUrl = '';
 
@@ -463,8 +498,8 @@ class tx_felogin_pi1 extends tslib_pibase {
 		} else {
 			if($this->logintype === 'logout') {
 					// login form after logout
-				$markerArray['###STATUS_HEADER###'] = $this->getDisplayText('logout_header',$this->conf['welcomeHeader_stdWrap.']);
-				$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('logout_message',$this->conf['welcomeMessage_stdWrap.']);
+				$markerArray['###STATUS_HEADER###'] = $this->getDisplayText('logout_header', $this->conf['logoutHeader_stdWrap.']);
+				$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('logout_message', $this->conf['logoutMessage_stdWrap.']);
 			} else {
 					// login form
 				$markerArray['###STATUS_HEADER###'] = $this->getDisplayText('welcome_header',$this->conf['welcomeHeader_stdWrap.']);
@@ -486,6 +521,9 @@ class tx_felogin_pi1 extends tslib_pibase {
 			$referer = $this->referer ? $this->referer : t3lib_div::getIndpEnv('HTTP_REFERER');
 			if ($referer) {
 				$extraHiddenAr[] = '<input type="hidden" name="referer" value="' . htmlspecialchars($referer) . '" />';
+				if ($this->piVars['redirectReferrer'] === 'off') {
+					$extraHiddenAr[] = '<input type="hidden" name="' . $this->prefixId . '[redirectReferrer]" value="off" />';
+				}
 			}
 		}
 
@@ -509,7 +547,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 		}
 
 			// Login form
-		$markerArray['###ACTION_URI###'] = $this->getPageLink('',array(),true);
+		$markerArray['###ACTION_URI###'] = $this->getPageLink('',array(),TRUE);
 		$markerArray['###EXTRA_HIDDEN###'] = $extraHidden; // used by kb_md5fepw extension...
 		$markerArray['###LEGEND###'] = $this->pi_getLL('login', '', 1);
 		$markerArray['###LOGIN_LABEL###'] = $this->pi_getLL('login', '', 1);
@@ -589,24 +627,28 @@ class tx_felogin_pi1 extends tslib_pibase {
 							$redirect_url[] = $this->redirectUrl;
 						break;
 						case 'referer':
-								// avoid forced logout, when trying to login immediatly after a logout
-							$redirect_url[] = preg_replace('/[&?]logintype=[a-z]+/', '', $this->referer);
+								// avoid redirect when logging in after changing password
+							if ($this->piVars['redirectReferrer'] !== 'off') {
+									// avoid forced logout, when trying to login immediatly after a logout
+								$redirect_url[] = preg_replace('/[&?]logintype=[a-z]+/', '', $this->referer);
+							}
 						break;
 						case 'refererDomains':
 								// Auto redirect.
 								// Feature to redirect to the page where the user came from (HTTP_REFERER).
 								// Allowed domains to redirect to, can be configured with plugin.tx_felogin_pi1.domains
 								// Thanks to plan2.net / Martin Kutschker for implementing this feature.
-							if ($this->conf['domains']) {
+								// also avoid redirect when logging in after changing password
+							if ($this->conf['domains'] && $this->piVars['redirectReferrer'] !== 'off') {
 								$url = $this->referer;
 									// is referring url allowed to redirect?
 								$match = array();
 								if (preg_match('/^http://([[:alnum:]._-]+)//', $url, $match)) {
 									$redirect_domain = $match[1];
-									$found = false;
+									$found = FALSE;
 									foreach(t3lib_div::trimExplode(',', $this->conf['domains'], TRUE) as $d) {
 										if (preg_match('/(^|\.)/'.$d.'$', $redirect_domain)) {
-											$found = true;
+											$found = TRUE;
 											break;
 										}
 									}
@@ -618,11 +660,11 @@ class tx_felogin_pi1 extends tslib_pibase {
 									// Avoid forced logout, when trying to login immediatly after a logout
 								if ($url) {
 									$redirect_url[] = preg_replace('/[&?]logintype=[a-z]+/', '', $url);
-							}
+								}
 							}
 						break;
 					}
-				} else if ($this->logintype === 'login') { // after login-error
+				} elseif ($this->logintype === 'login') { // after login-error
 					switch ($redirMethod) {
 						case 'loginError':
 							if ($this->conf['redirectPageLoginError']) {
@@ -760,11 +802,11 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @param	string		linktext
 	 * @param	array		link vars
-	 * @param	boolean		true: returns only url  false (default) returns the link)
+	 * @param	boolean		TRUE: returns only url  FALSE (default) returns the link)
 	 *
 	 * @return	string		link or url
 	 */
-	 protected function getPageLink($label, $piVars,$returnUrl = false) {
+	 protected function getPageLink($label, $piVars,$returnUrl = FALSE) {
 		$additionalParams = '';
 
 		if (count($piVars)) {
@@ -803,7 +845,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 		$getVars = t3lib_div::_GET();
 
 		foreach ($getVars as $key => $val) {
-			if (stristr($key,$this->prefixId) === false) {
+			if (stristr($key,$this->prefixId) === FALSE) {
 				if (is_array($val)) {
 					foreach ($val as $key1 => $val1) {
 						if ($this->conf['preserveGETvars'] == 'all' || in_array($key . '[' . $key1 .']', $preserveVars)) {

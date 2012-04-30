@@ -27,28 +27,10 @@
 /**
  * Class for displaying an array as a tree
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  * XHTML compliant
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   77: class t3lib_arrayBrowser
- *   96:	 function tree($arr, $depth_in, $depthData)
- *  160:	 function wrapValue($theValue,$depth)
- *  172:	 function wrapArrayKey($label,$depth,$theValue)
- *  196:	 function getSearchKeys($keyArr, $depth_in, $searchString, $keyArray)
- *  228:	 function fixed_lgd($string,$chars)
- *  245:	 function depthKeys($arr,$settings)
- *
- * TOTAL FUNCTIONS: 6
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -122,7 +104,6 @@ class t3lib_arrayBrowser {
 				$theValue = $arr[$key];
 				if ($this->fixedLgd) {
 					$imgBlocks = ceil(1 + strlen($depthData) / 77);
-						//					debug($imgBlocks);
 					$lgdChars = 68 - ceil(strlen('[' . $key . ']') * 0.8) - $imgBlocks * 3;
 					$theValue = $this->fixed_lgd($theValue, $lgdChars);
 				}
@@ -174,7 +155,7 @@ class t3lib_arrayBrowser {
 			// If varname is set:
 		if ($this->varName && !$this->dontLinkVar) {
 			$variableName = $this->varName . '[\'' . str_replace('.', '\'][\'', $depth) . '\'] = ' .
-				(!t3lib_div::testInt($theValue) ? '\'' . addslashes($theValue) . '\'' : $theValue) . '; ';
+				(!t3lib_utility_Math::canBeInterpretedAsInteger($theValue) ? '\'' . addslashes($theValue) . '\'' : $theValue) . '; ';
 			$label = '<a href="index.php?varname=' . urlencode($variableName) . '#varname">' . $label . '</a>';
 		}
 

@@ -29,7 +29,6 @@
  * Contains the update class for the compatibility version. Used by the update wizard in the install tool.
  *
  * @author Sebastian Kurfürst <sebastian@garbage-group.de
- * @version $Id$
  */
 class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 	protected $title = 'Version Compatibility';
@@ -38,54 +37,12 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 	 * Function which checks if update is needed. Called in the beginning of an update process.
 	 *
 	 * @param	string		pointer to description for the update
-	 * @return	boolean		true if update is needs to be performed, false otherwise.
+	 * @return	boolean		TRUE if update is needs to be performed, FALSE otherwise.
 	 */
 	function checkForUpdate(&$description)	{
 		global $TYPO3_CONF_VARS;
 
-		if ($this->compatVersionIsCurrent())	{
-			$description = '
-				<p>
-					<strong>Up to date!</strong>
-					<br />
-					If you do not use the wizard, your current TYPO3
-					installation is configured to use all the features included
-					in the current release ' . TYPO3_version . '.
-					<br />
-					There are two possibilities that you see this screen:
-				</p>
-				<ol>
-					<li>
-						<strong>You just updated from a previous version of
-						TYPO3:</strong>
-						Because of some new features, the frontend output of
-						your site might have changed. To emulate the "old"
-						frontend behavior, change the compatibility version
-						by continuing to step 2.
-						This is <strong>recommended</strong> after every update
-						to make sure the frontend output is not altered. When
-						re-running the wizard, you will see the changes needed
-						for using the new features.
-						<em>Please continue to step two.</em>
-					</li>
-					<li>
-						<strong>You just made a fresh install of TYPO3:</strong>
-						Perfect! All new features will be used.
-						<em>You can stop here and do not need this wizard now.</em>
-					</li>
-				</ol>
-			';
-
-			if (!$TYPO3_CONF_VARS['SYS']['compat_version'])	{
-				$description .= '
-					<p>
-						The compatibility version has been set to the current
-						TYPO3 version. This is a stamp and has no impact for
-						your installation.
-					</p>
-				';
-			}
-		} else {
+		if (!$this->compatVersionIsCurrent()) {
 			$description = '
 				<p>
 					Your current TYPO3 installation is configured to
@@ -101,9 +58,10 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 					features.
 				</p>
 			';
+			return 1;
 		}
 
-		return 1;	// Return 1 in any case so user has possibility to switch back to a previous compat_version.
+		return 0;
 	}
 
 	/**
@@ -130,7 +88,8 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 				'4.1' => '<= 4.1',
 				'4.2' => '<= 4.2',
 				'4.3' => '<= 4.3',
-				'4.4' => '<= 4.4'
+				'4.4' => '<= 4.4',
+				'4.5' => '<= 4.5',
 			);
 			foreach ($versions as $singleVersion => $caption)	{
 				$content .= '
@@ -183,7 +142,7 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 	 * Checks if user input is valid
 	 *
 	 * @param	string		pointer to output custom messages
-	 * @return	boolean		true if user input is correct, then the update is performed. When false, return to getUserInput
+	 * @return	boolean		TRUE if user input is correct, then the update is performed. When FALSE, return to getUserInput
 	 */
 	function checkUserInput(&$customMessages)	{
 		global $TYPO3_CONF_VARS;
@@ -195,8 +154,8 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 				return 1;
 			} else {
 				$performUpdate = 1;
-				$oldVersion = t3lib_div::int_from_ver($TYPO3_CONF_VARS['SYS']['compat_version']);
-				$currentVersion = t3lib_div::int_from_ver(TYPO3_branch);
+				$oldVersion = t3lib_utility_VersionNumber::convertVersionNumberToInteger($TYPO3_CONF_VARS['SYS']['compat_version']);
+				$currentVersion = t3lib_utility_VersionNumber::convertVersionNumberToInteger(TYPO3_branch);
 
 				foreach ($TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['compat_version'] as $internalName => $details)	{
 					if ($details['version'] > $oldVersion && $details['version'] <= $currentVersion)	{
@@ -217,7 +176,7 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 	 *
 	 * @param	array		pointer where to insert all DB queries made, so they can be shown to the user if wanted
 	 * @param	string		pointer to output custom messages
-	 * @return	boolean		true if update succeeded, false otherwise
+	 * @return	boolean		TRUE if update succeeded, FALSE otherwise
 	 */
 	function performUpdate(&$dbQueries, &$customMessages)	{
 		$customMessages = '';
@@ -245,7 +204,7 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 	/**
 	 * checks if compatibility version is set to current version
 	 *
-	 * @return	boolean		true if compat version is equal the current version
+	 * @return	boolean		TRUE if compat version is equal the current version
 	 */
 	function compatVersionIsCurrent()	{
 		global $TYPO3_CONF_VARS;
@@ -264,8 +223,8 @@ class tx_coreupdates_compatversion extends Tx_Install_Updates_Base {
 	 */
 	function showChangesNeeded($inputPrefix = '')	{
 		global $TYPO3_CONF_VARS;
-		$oldVersion = t3lib_div::int_from_ver($TYPO3_CONF_VARS['SYS']['compat_version']);
-		$currentVersion = t3lib_div::int_from_ver(TYPO3_branch);
+		$oldVersion = t3lib_utility_VersionNumber::convertVersionNumberToInteger($TYPO3_CONF_VARS['SYS']['compat_version']);
+		$currentVersion = t3lib_utility_VersionNumber::convertVersionNumberToInteger(TYPO3_branch);
 
 		$tableContents = '';
 

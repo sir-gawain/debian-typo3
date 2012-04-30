@@ -1,7 +1,6 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 TYPO3 styles for basic elements
 
-$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 h1,
@@ -158,6 +157,10 @@ table.t3-table-info {
 	line-height: 19px;
 	height: 20px;
 	font-weight: bold;
+}
+
+.section {
+	margin-bottom: 15px;
 }
 
 .nobr {

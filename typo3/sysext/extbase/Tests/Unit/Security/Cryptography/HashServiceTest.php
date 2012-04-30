@@ -92,5 +92,64 @@ class Tx_Extbase_Tests_Unit_Security_Cryptography_HashServiceTest extends Tx_Ext
 		$hash = 'myhash';
 		$this->assertFalse($this->hashService->validateHash($string, $hash));
 	}
+
+	/**
+	 * @test
+	 * @expectedException Tx_Extbase_Security_Exception_InvalidArgumentForHashGeneration
+	 */
+	public function appendHmacThrowsExceptionIfNoStringGiven() {
+		$this->hashService->appendHmac(NULL);
+	}
+
+	/**
+	 * @test
+	 */
+	public function appendHmacAppendsHmacToGivenString() {
+		$string = 'This is some arbitrary string ';
+		$hashedString = $this->hashService->appendHmac($string);
+		$this->assertSame($string, substr($hashedString, 0, -40));
+	}
+
+	/**
+	 * @test
+	 * @expectedException Tx_Extbase_Security_Exception_InvalidArgumentForHashGeneration
+	 */
+	public function validateAndStripHmacThrowsExceptionIfNoStringGiven() {
+		$this->hashService->validateAndStripHmac(NULL);
+	}
+
+	/**
+	 * @test
+	 * @expectedException Tx_Extbase_Security_Exception_InvalidArgumentForHashGeneration
+	 */
+	public function validateAndStripHmacThrowsExceptionIfGivenStringIsTooShort() {
+		$this->hashService->validateAndStripHmac('string with less than 40 characters');
+	}
+
+	/**
+	 * @test
+	 * @expectedException Tx_Extbase_Security_Exception_InvalidHash
+	 */
+	public function validateAndStripHmacThrowsExceptionIfGivenStringHasNoHashAppended() {
+		$this->hashService->validateAndStripHmac('string with exactly a length 40 of chars');
+	}
+
+	/**
+	 * @test
+	 * @expectedException Tx_Extbase_Security_Exception_InvalidHash
+	 */
+	public function validateAndStripHmacThrowsExceptionIfTheAppendedHashIsInvalid() {
+		$this->hashService->validateAndStripHmac('some Stringac43682075d36592d4cb320e69ff0aa515886eab');
+	}
+
+	/**
+	 * @test
+	 */
+	public function validateAndStripHmacReturnsTheStringWithoutHmac() {
+		$string = ' Some arbitrary string with special characters: öäüß!"§$ ';
+		$hashedString = $this->hashService->appendHmac($string);
+		$actualResult = $this->hashService->validateAndStripHmac($hashedString);
+		$this->assertSame($string, $actualResult);
+	}
 }
 ?>

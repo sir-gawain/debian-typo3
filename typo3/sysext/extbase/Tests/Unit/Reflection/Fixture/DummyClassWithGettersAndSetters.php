@@ -38,7 +38,7 @@ class Tx_Extbase_Tests_Unit_Reflection_Fixture_DummyClassWithGettersAndSetters {
 
 	protected $protectedProperty;
 
-	protected $unexposedProperty;
+	protected $unexposedProperty = 'unexposed';
 
 	public $publicProperty;
 	public $publicProperty2 = 42;
@@ -74,8 +74,11 @@ class Tx_Extbase_Tests_Unit_Reflection_Fixture_DummyClassWithGettersAndSetters {
 		$this->protectedProperty = $value;
 	}
 
+	/**
+	 * @return boolean
+	 */
 	public function isBooleanProperty() {
-		return 'method called ' . $this->booleanProperty;
+		return $this->booleanProperty;
 	}
 
 	protected function getPrivateProperty() {

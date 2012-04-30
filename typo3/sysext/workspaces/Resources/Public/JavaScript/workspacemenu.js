@@ -86,26 +86,6 @@ var WorkspaceMenu = Class.create({
 	},
 
 	/**
-	 * toggles the workspace frontend preview
-	 */
-	toggleFrontendPreview: function(event) {
-		var clickedElement = Event.element(event);
-		var toggle = TYPO3.Ajax.ExtDirect.ToolbarMenu.toggleWorkspacePreviewMode({}, function(response) {
-			var stateActiveClass = 't3-icon t3-icon-status t3-icon-status-status t3-icon-status-checked';
-			var stateInactiveClass = 't3-icon t3-icon-empty t3-icon-empty-empty t3-icon-empty';
-			if (response.newWorkspacePreviewState === '1') {
-				TYPO3.configuration.workspaceFrontendPreviewEnabled = 1;
-				clickedElement.previous().removeClassName(stateInactiveClass).addClassName(stateActiveClass);
-			} else {
-				TYPO3.configuration.workspaceFrontendPreviewEnabled = 0;
-				clickedElement.previous().removeClassName(stateActiveClass).addClassName(stateInactiveClass);
-			}
-			top.TYPO3.ModuleMenu.App.reloadFrames();
-		});
-		this.toggleMenu(event);
-	},
-
-	/**
 	 * redirects the user to the workspace module
 	 */
 	goToWorkspaceModule: function(event) {
@@ -182,11 +162,10 @@ var WorkspaceMenu = Class.create({
 			} else {
 				userItem = Ext.select ('#username');
 			}
-			userItem.insertHtml('beforeEnd', '<span id="typo3-topbar-workspaces-title">@' + workspaceTitle + '</span>')
+			userItem.insertHtml('beforeEnd', '<span id="typo3-topbar-workspaces-title">@' + Ext.util.Format.htmlEncode(workspaceTitle) + '</span>')
 		}
 	}
 
 });
 
 var TYPO3BackendWorkspaceMenu = new WorkspaceMenu();
-//TYPO3BackendWorkspaceMenu.initialize();

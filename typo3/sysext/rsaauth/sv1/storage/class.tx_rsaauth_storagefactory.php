@@ -22,13 +22,6 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- * $Id$
- */
-
-require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/storage/class.tx_rsaauth_abstract_storage.php'));
 
 /**
  * This class contains a factory for the RSA backends.
@@ -57,7 +50,7 @@ class tx_rsaauth_storagefactory {
 	 *
 	 * @var	tx_rsaauth_abstract_storage
 	 */
-	static protected $storageInstance = null;
+	static protected $storageInstance = NULL;
 
 	/**
 	 * Obtains a storage. This function will return a non-abstract class, which

@@ -73,6 +73,7 @@ class tx_cms_BackendLayout {
 		$tsConfig  = t3lib_BEfunc::getModTSconfig($id, 'TCEFORM.tt_content.colPos');
 		$tcaConfig = $GLOBALS['TCA']['tt_content']['columns']['colPos']['config'];
 
+		/** @var $tceForms t3lib_TCEForms */
 		$tceForms = t3lib_div::makeInstance('t3lib_TCEForms');
 
 		$tcaItems = $tcaConfig['items'];
@@ -97,7 +98,7 @@ class tx_cms_BackendLayout {
 	 * Gets the selected backend layout
 	 *
 	 * @param  int  $id
-	 * @return array|null  $backendLayout
+	 * @return array|NULL  $backendLayout
 	 */
 	public function getSelectedBackendLayout($id) {
 		$rootline = t3lib_BEfunc::BEgetRootLine($id);
@@ -105,10 +106,13 @@ class tx_cms_BackendLayout {
 
 		for ($i = count($rootline); $i > 0; $i--) {
 			$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-				'uid, backend_layout, backend_layout_next_level',
+					// pid and t3ver_swapmode needed here for workspaceOL()
+				'uid, pid, t3ver_swapmode, backend_layout, backend_layout_next_level',
 				'pages',
 				'uid=' . intval($rootline[$i]['uid'])
 			);
+			t3lib_BEfunc::workspaceOL('pages', $page);
+
 			$selectedBackendLayout = intval($page['backend_layout']);
 			$selectedBackendLayoutNextLevel = intval($page['backend_layout_next_level']);
 			if ($selectedBackendLayout != 0 && $page['uid'] == $id) {
@@ -117,10 +121,10 @@ class tx_cms_BackendLayout {
 					$backendLayoutUid = $selectedBackendLayout;
 				}
 				break;
-			} else if ($selectedBackendLayoutNextLevel == -1 && $page['uid'] != $id) {
+			} elseif ($selectedBackendLayoutNextLevel == -1 && $page['uid'] != $id) {
 					// Some previous page in our rootline sets layout_next to "None"
 				break;
-			} else if ($selectedBackendLayoutNextLevel > 0 && $page['uid'] != $id) {
+			} elseif ($selectedBackendLayoutNextLevel > 0 && $page['uid'] != $id) {
 					// Some previous page in our rootline sets some backend_layout, use it
 				$backendLayoutUid = $selectedBackendLayoutNextLevel;
 				break;
@@ -136,6 +140,7 @@ class tx_cms_BackendLayout {
 			);
 
 			if ($backendLayout) {
+				/** @var $parser t3lib_TSparser */
 				$parser = t3lib_div::makeInstance('t3lib_TSparser');
 				$parser->parse($backendLayout['config']);
 

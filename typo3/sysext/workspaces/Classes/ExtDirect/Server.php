@@ -30,7 +30,7 @@
  * @package Workspaces
  * @subpackage ExtDirect
  */
-class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHandler {
+class Tx_Workspaces_ExtDirect_Server extends Tx_Workspaces_ExtDirect_AbstractHandler {
 	/**
 	 * Get List of workspace changes
 	 *
@@ -41,10 +41,10 @@ class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHan
 			// To avoid too much work we use -1 to indicate that every page is relevant
 		$pageId = $parameter->id > 0 ? $parameter->id : -1;
 
-		$wslibObj = t3lib_div::makeInstance('tx_Workspaces_Service_Workspaces');
+		$wslibObj = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
 		$versions = $wslibObj->selectVersionsInWorkspace($this->getCurrentWorkspace(), 0, -99, $pageId, $parameter->depth);
 
-		$workspacesService = t3lib_div::makeInstance('tx_Workspaces_Service_GridData');
+		$workspacesService = t3lib_div::makeInstance('Tx_Workspaces_Service_GridData');
 		$data = $workspacesService->generateGridListFromVersions($versions, $parameter, $this->getCurrentWorkspace());
 		return $data;
 	}
@@ -58,7 +58,7 @@ class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHan
 	public function getStageActions($parameter) {
 		$currentWorkspace = $this->getCurrentWorkspace();
 		$stages = array();
-		if ($currentWorkspace != tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES) {
+		if ($currentWorkspace != Tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES) {
 			$stagesService = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
 			$stages = $stagesService->getStagesForWSUser();
 		}
@@ -77,11 +77,12 @@ class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHan
 	 * @return array $data
 	 */
 	public function getRowDetails($parameter) {
-		global $TCA,$BE_USER;
 		$diffReturnArray = array();
 		$liveReturnArray = array();
 
+		/** @var $t3lib_diff t3lib_diff */
 		$t3lib_diff = t3lib_div::makeInstance('t3lib_diff');
+		/** @var $stagesService Tx_Workspaces_Service_Stages */
 		$stagesService = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
 		$parseObj = t3lib_div::makeInstance('t3lib_parsehtml_proc');
 
@@ -95,16 +96,16 @@ class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHan
 
 		// get field list from TCA configuration, if available
 		t3lib_div::loadTCA($parameter->table);
-		if ($TCA[$parameter->table]) {
-			if ($TCA[$parameter->table]['interface']['showRecordFieldList']) {
-				$fieldsOfRecords = $TCA[$parameter->table]['interface']['showRecordFieldList'];
+		if ($GLOBALS['TCA'][$parameter->table]) {
+			if ($GLOBALS['TCA'][$parameter->table]['interface']['showRecordFieldList']) {
+				$fieldsOfRecords = $GLOBALS['TCA'][$parameter->table]['interface']['showRecordFieldList'];
 				$fieldsOfRecords = t3lib_div::trimExplode(',',$fieldsOfRecords,1);
 			}
 		}
 
 		foreach ($fieldsOfRecords as $fieldName) {
 				// check for exclude fields
-			if ($GLOBALS['BE_USER']->isAdmin() || ($TCA[$parameter->table]['columns'][$fieldName]['exclude'] == 0) || t3lib_div::inList($BE_USER->groupData['non_exclude_fields'],$parameter->table.':'.$fieldName)) {
+			if ($GLOBALS['BE_USER']->isAdmin() || ($GLOBALS['TCA'][$parameter->table]['columns'][$fieldName]['exclude'] == 0) || t3lib_div::inList($GLOBALS['BE_USER']->groupData['non_exclude_fields'],$parameter->table.':'.$fieldName)) {
 					// call diff class only if there is a difference
 				if (strcmp($liveRecord[$fieldName],$versionRecord[$fieldName]) !== 0) {
 						// Select the human readable values before diff
@@ -117,7 +118,7 @@ class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHan
 						$fieldTitle = $fieldName;
 					}
 
-					if ($TCA[$parameter->table]['columns'][$fieldName]['config']['type'] == 'group' && $TCA[$parameter->table]['columns'][$fieldName]['config']['internal_type'] == 'file') {
+					if ($GLOBALS['TCA'][$parameter->table]['columns'][$fieldName]['config']['type'] == 'group' && $GLOBALS['TCA'][$parameter->table]['columns'][$fieldName]['config']['internal_type'] == 'file') {
 						$versionThumb = t3lib_BEfunc::thumbCode($versionRecord, $parameter->table, $fieldName, '');
 						$liveThumb = t3lib_BEfunc::thumbCode($liveRecord, $parameter->table, $fieldName, '');
 
@@ -179,7 +180,8 @@ class tx_Workspaces_ExtDirect_Server extends tx_Workspaces_ExtDirect_AbstractHan
 	 * Gets an array with all sys_log entries and their comments for the given record uid and table
 	 *
 	 * @param integer $uid uid of changed element to search for in log
-	 * @return string $table table name
+	 * @param string $table table name
+	 * @return array
 	 */
 	public function getCommentsForRecord($uid, $table) {
 		$stagesService = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');

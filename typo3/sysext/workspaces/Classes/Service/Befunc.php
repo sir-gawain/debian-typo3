@@ -30,9 +30,7 @@
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_Befunc {
-
-	protected static $pageCache = array();
+class Tx_Workspaces_Service_Befunc {
 
 	/**
 	 * Hooks into the t3lib_beFunc::viewOnClick and redirects to the workspace preview
@@ -48,27 +46,8 @@ class tx_Workspaces_Service_Befunc {
 	 * @return void
 	 */
 	public function preProcess(&$pageUid, $backPath, $rootLine, $anchorSection, &$viewScript, $additionalGetVars, $switchFocus) {
-
-			// In case a $pageUid is submitted we need to make sure it points to a live-page
-		if ($pageUid >  0) {
-			$pageUid = $this->getLivePageUid($pageUid);
-		}
-
 		if ($GLOBALS['BE_USER']->workspace !== 0) {
-			$ctrl = t3lib_div::makeInstance('Tx_Workspaces_Controller_PreviewController', FALSE);
-			$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-			/** @var $uriBuilder Tx_Extbase_MVC_Web_Routing_UriBuilder */
-			$uriBuilder = $objectManager->create('Tx_Extbase_MVC_Web_Routing_UriBuilder');
-			/**
-			 *  This seems to be very harsh to set this directly to "/typo3 but the viewOnClick also
-			 *  has /index.php as fixed value here and dealing with the backPath is very error-prone
-			 *
-			 *  @todo make sure this would work in local extension installation too
-			 */
-			$backPath = '/' . TYPO3_mainDir;
-				// @todo why do we need these additional params? the URIBuilder should add the controller, but he doesn't :(
-			$additionalParams = '&tx_workspaces_web_workspacesworkspaces%5Bcontroller%5D=Preview&M=web_WorkspacesWorkspaces&id=';
-			$viewScript = $backPath . $uriBuilder->uriFor('index', array(), 'Tx_Workspaces_Controller_PreviewController', 'workspaces', 'web_workspacesworkspaces') . $additionalParams;
+			$viewScript = $this->getWorkspaceService()->generateWorkspaceSplittedPreviewLink($pageUid);
 		}
 	}
 
@@ -77,19 +56,51 @@ class tx_Workspaces_Service_Befunc {
 	 * the results are cached at run-time to avoid too many database-queries
 	 *
 	 * @throws InvalidArgumentException
-	 * @param  $uid
-	 * @return void
+	 * @param integer $uid
+	 * @return integer
+	 * @deprecated since TYPO3 4.6 - use Tx_Workspaces_Service_Workspaces::getLivePageUid() instead
 	 */
 	protected function getLivePageUid($uid) {
-		if (!isset(self::$pageCache[$uid])) {
-			$rec = t3lib_beFunc::getRecord('pages', $uid);
-			if (is_array($rec)) {
-				self::$pageCache[$uid] = $rec['t3ver_oid'] ? $rec['t3ver_oid'] : $uid;
-			} else {
-				throw new InvalidArgumentException('uid is supposed to point to an existing page - given value was:' . $uid, 1290628113);
+		t3lib_div::deprecationLog(__METHOD__ . ' is deprected since TYPO3 4.6 - use Tx_Workspaces_Service_Workspaces::getLivePageUid() instead');
+		return $this->getWorkspaceService()->getLivePageUid($uid);
+	}
+
+	/**
+	 * Gets an instance of the workspaces service.
+	 *
+	 * @return Tx_Workspaces_Service_Workspaces
+	 */
+	protected function getWorkspaceService() {
+		return t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+	}
+
+	/**
+	 * Use that hook to show a info message in case someone starts editing
+	 * a staged element
+	 *
+	 * @param  $params
+	 * @param  $form
+	 * @return boolean
+	 */
+	public function makeEditForm_accessCheck($params, &$form) {
+		if ($GLOBALS['BE_USER']->workspace !== 0 && $GLOBALS['TCA'][$params['table']]['ctrl']['versioningWS']) {
+			$record = t3lib_BEfunc::getRecordWSOL($params['table'], $params['uid']);
+			if (abs($record['t3ver_stage']) > Tx_Workspaces_Service_Stages::STAGE_EDIT_ID) {
+				$stages = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
+				$stageName = $stages->getStageTitle($record['t3ver_stage']);
+				$editingName = $stages->getStageTitle(Tx_Workspaces_Service_Stages::STAGE_EDIT_ID);
+				$message = $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:info.elementAlreadyModified');
+				$flashMessage = t3lib_div::makeInstance(
+					't3lib_FlashMessage',
+					sprintf($message, $stageName, $editingName),
+					'',
+					t3lib_FlashMessage::INFO,
+					TRUE
+				);
+				t3lib_FlashMessageQueue::addMessage($flashMessage);
 			}
 		}
-		return self::$pageCache[$uid];
+		return $params['hasAccess'];
 	}
 }
 

@@ -27,34 +27,15 @@
 /**
  * Web>File: Upload of files
  *
- * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   77: class SC_file_upload
- *  103:     function init()
- *  171:     function main()
- *  241:     function printContent()
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 $BACK_PATH = '';
 require('init.php');
 require('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_misc.xml');
-
-
-
-
 
 
 /**
@@ -119,7 +100,7 @@ class SC_file_upload {
 		if (empty($this->number)) {
 			$this->number = $GLOBALS['BE_USER']->getTSConfigVal('options.defaultFileUploads');
 		}
-		$this->number = t3lib_div::intInRange($this->number, 1, $this->uploadNumber);
+		$this->number = t3lib_utility_Math::forceIntegerInRange($this->number, 1, $this->uploadNumber);
 
 			// Init basic-file-functions object:
 		$this->basicff = t3lib_div::makeInstance('t3lib_basicFileFunctions');
@@ -129,13 +110,12 @@ class SC_file_upload {
 		$this->charsetConversion = t3lib_div::makeInstance('t3lib_cs');
 
 			// Cleaning and checking target
-		$this->target = $this->charsetConversion->conv($this->target, 'utf-8', $GLOBALS['LANG']->charSet);
 		$this->target = $this->basicff->is_directory($this->target);
 		$key = $this->basicff->checkPathAgainstMounts($this->target . '/');
 		if (!$this->target || !$key) {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', TRUE);
 			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', TRUE);
-			throw new RuntimeException($title . ': ' . $message);
+			throw new RuntimeException($title . ': ' . $message, 1294586845);
 		}
 
 			// Finding the icon
@@ -175,9 +155,7 @@ class SC_file_upload {
 
 			function reload(a) {	//
 				if (!changed || (changed ' . $confirm . ')) {
-					var params = "&target="+encodeURIComponent(path)+"&number="+a+"&returnUrl='
-							. urlencode($this->charsetConversion->conv($this->returnUrl, $GLOBALS['LANG']->charSet, 'utf-8'))
-							. '";
+					var params = "&target="+encodeURIComponent(path)+"&number="+a+"&returnUrl=' . rawurlencode($this->returnUrl) . '";
 					window.location.href = "file_upload.php?"+params;
 				}
 			}

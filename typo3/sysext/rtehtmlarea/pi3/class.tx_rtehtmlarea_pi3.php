@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,11 +25,9 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /**
- * Render custom attribute clickenlarge
+ * Render custom attribute data-htmlarea-clickenlarge
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
- *
- * $Id$  *
  */
 class tx_rtehtmlarea_pi3 extends tslib_pibase {
 
@@ -47,7 +45,7 @@ class tx_rtehtmlarea_pi3 extends tslib_pibase {
 	var $cObj;
 
 	/**
-	 * Rendering the "clickenlarge" custom attribute, called from TypoScript
+	 * Rendering the "data-htmlarea-clickenlarge" custom attribute, called from TypoScript
 	 *
 	 * @param	string		Content input. Not used, ignore.
 	 * @param	array		TypoScript configuration
@@ -56,20 +54,27 @@ class tx_rtehtmlarea_pi3 extends tslib_pibase {
 	 */
 	function render_clickenlarge($content,$conf) {
 
-		$clickenlarge = isset($this->cObj->parameters['clickenlarge']) ? $this->cObj->parameters['clickenlarge'] : 0;
+		$clickenlarge = isset($this->cObj->parameters['data-htmlarea-clickenlarge']) ? $this->cObj->parameters['data-htmlarea-clickenlarge'] : 0;
+		if (!$clickenlarge) {
+				// Backward compatibility
+			$clickenlarge = isset($this->cObj->parameters['clickenlarge']) ? $this->cObj->parameters['clickenlarge'] : 0;
+		}
 		$path = $this->cObj->parameters['src'];
 		$pathPre = $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'] . 'RTEmagicC_';
-		if (t3lib_div::isFirstPartOfStr($path,$pathPre)) {
+		if (t3lib_div::isFirstPartOfStr($path, $pathPre)) {
 				// Find original file:
-			$pI = pathinfo(substr($path,strlen($pathPre)));
-			$filename = substr($pI['basename'],0,-strlen('.'.$pI['extension']));
+			$pI = pathinfo(substr($path, strlen($pathPre)));
+			$filename = substr($pI['basename'],0,-strlen('.' . $pI['extension']));
 			$file = $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'] . 'RTEmagicP_' . $filename;
 		} else {
 			$file = $this->cObj->parameters['src'];
 		}
-
+			// Unset clickenlarge custom attribute
+		unset($this->cObj->parameters['data-htmlarea-clickenlarge']);
+			// Backward compatibility
 		unset($this->cObj->parameters['clickenlarge']);
 		unset($this->cObj->parameters['allParams']);
+
 		$content = '<img '. t3lib_div::implodeAttributes($this->cObj->parameters, TRUE, TRUE) . ' />';
 
 		if ($clickenlarge && is_array($conf['imageLinkWrap.'])) {
@@ -82,16 +87,14 @@ class tx_rtehtmlarea_pi3 extends tslib_pibase {
 				if ($this->cObj->parameters['alt']) {
 					$conf['imageLinkWrap.']['alt'] = $this->cObj->parameters['alt'];
 				}
-				$content = $this->cObj->imageLinkWrap($content,$theImage,$conf['imageLinkWrap.']);
-				$content = $this->cObj->stdWrap($content,$conf['stdWrap.']);
+				$content = $this->cObj->imageLinkWrap($content, $theImage, $conf['imageLinkWrap.']);
+				$content = $this->cObj->stdWrap($content, $conf['stdWrap.']);
 			}
 		}
 		return $content;
 	}
 }
-
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi3/class.tx_rtehtmlarea_pi3.php'])) {
 	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi3/class.tx_rtehtmlarea_pi3.php']);
 }
-
 ?>

@@ -27,27 +27,7 @@
 /**
  * Contains a class with functions for page related overview of translations.
  *
- * $Id$
- *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   66: class tx_cms_webinfo_lang extends t3lib_extobjbase
- *   73:     function modMenu()
- *  102:     function main()
- *  171:     function renderL10nTable(&$tree)
- *  342:     function getSystemLanguages()
- *  364:     function getLangStatus($pageId, $langId)
- *  393:     function getLocalizedElementInfo($pageId,$sysLang)
- *  471:     function getContentElementCount($pageId,$sysLang)
- *
- * TOTAL FUNCTIONS: 7
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 /**
  * Class for displaying translation status of pages in the tree.
@@ -96,9 +76,9 @@ class tx_cms_webinfo_lang extends t3lib_extobjbase {
 	function main()	{
 		global $BACK_PATH,$LANG,$SOBE;
 
-		if ($this->pObj->id)	{
-			$theOutput = '';
+		$theOutput = $this->pObj->doc->header($GLOBALS['LANG']->getLL('lang_title'));
 
+		if ($this->pObj->id) {
 				// Depth selector:
 			$h_func = t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[depth]',$this->pObj->MOD_SETTINGS['depth'],$this->pObj->MOD_MENU['depth'],'index.php');
 			$h_func.= t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[lang]',$this->pObj->MOD_SETTINGS['lang'],$this->pObj->MOD_MENU['lang'],'index.php');

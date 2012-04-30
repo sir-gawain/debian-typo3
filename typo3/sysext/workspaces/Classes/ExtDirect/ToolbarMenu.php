@@ -30,7 +30,7 @@
  * @package Workspaces
  * @subpackage ExtDirect
  */
-class tx_Workspaces_ExtDirect_ToolbarMenu {
+class Tx_Workspaces_ExtDirect_ToolbarMenu {
 
 	/**
 	 * @param $parameter
@@ -45,14 +45,14 @@ class tx_Workspaces_ExtDirect_ToolbarMenu {
 
 	/**
 	 * @param $parameter
-	 * @return
+	 * @return array
 	 */
 	public function setWorkspace($parameter) {
 		$workspaceId = intval($parameter->workSpaceId);
 
 		$GLOBALS['BE_USER']->setWorkspace($workspaceId);
 		return array(
-			'title' => tx_Workspaces_Service_Workspaces::getWorkspaceTitle($workspaceId),
+			'title' => Tx_Workspaces_Service_Workspaces::getWorkspaceTitle($workspaceId),
 			'id' => $workspaceId
 		);
 	}

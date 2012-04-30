@@ -27,23 +27,9 @@
 /**
  * Contains a class for formmail
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   69: class t3lib_formmail
- *   95:	 function start($V,$base64=false)
- *  172:	 function addAttachment($file, $filename)
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -100,7 +86,7 @@ class t3lib_formmail {
 	 * @param	boolean		Whether to base64 encode the mail content
 	 * @return	void
 	 */
-	function start($valueList, $base64 = false) {
+	function start($valueList, $base64 = FALSE) {
 
 		$this->mailMessage = t3lib_div::makeInstance('t3lib_mail_Message');
 
@@ -110,6 +96,9 @@ class t3lib_formmail {
 		} elseif ($GLOBALS['TSFE']->metaCharset != $GLOBALS['TSFE']->renderCharset) {
 				// Use metaCharset for mail if different from renderCharset
 			$this->characterSet = $GLOBALS['TSFE']->metaCharset;
+		} else {
+				// Otherwise use renderCharset as default
+			$this->characterSet = $GLOBALS['TSFE']->renderCharset;
 		}
 
 		if ($base64 || $valueList['use_base64']) {
@@ -144,7 +133,7 @@ class t3lib_formmail {
 
 			$this->replyToAddress = ($valueList['replyto_email']) ? $valueList['replyto_email'] : $this->fromAddress;
 
-			$this->priority = ($valueList['priority']) ? t3lib_div::intInRange($valueList['priority'], 1, 5) : 3;
+			$this->priority = ($valueList['priority']) ? t3lib_utility_Math::forceIntegerInRange($valueList['priority'], 1, 5) : 3;
 
 				// auto responder
 			$this->autoRespondMessage = (trim($valueList['auto_respond_msg']) && $this->fromAddress)
@@ -191,10 +180,10 @@ class t3lib_formmail {
 			$this->plainContent = $plainTextContent;
 
 			if ($valueList['html_enabled']) {
-				$this->mailMessage->setBody($htmlContent, 'text/html');
-				$this->mailMessage->addPart($plainTextContent, 'text/plain');
+				$this->mailMessage->setBody($htmlContent, 'text/html', $this->characterSet);
+				$this->mailMessage->addPart($plainTextContent, 'text/plain', $this->characterSet);
 			} else {
-				$this->mailMessage->setBody($plainTextContent, 'text/plain');
+				$this->mailMessage->setBody($plainTextContent, 'text/plain', $this->characterSet);
 			}
 
 			for ($a = 0; $a < 10; $a++) {
@@ -234,9 +223,8 @@ class t3lib_formmail {
 			if ($valueList['recipient_copy']) {
 				$this->mailMessage->setCc($this->parseAddresses($valueList['recipient_copy']));
 			}
-			if ($this->characterSet) {
-				$this->mailMessage->setCharset($this->characterSet);
-			}
+			$this->mailMessage->setCharset($this->characterSet);
+
 				// Ignore target encoding. This is handled automatically by Swift Mailer and overriding the defaults
 				// is not worth the trouble
 
@@ -264,7 +252,7 @@ class t3lib_formmail {
 		}
 		return $string;
 	}
-	
+
 	/**
 	 * Parses mailbox headers and turns them into an array.
 	 *

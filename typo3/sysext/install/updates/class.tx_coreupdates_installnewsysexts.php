@@ -29,8 +29,6 @@
 /**
  * Contains the update class for adding the system extension "simulate static".
  *
- * $Id$
- *
  * @author  Benjamin Mack <benni@typo3.org>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -42,7 +40,7 @@ class tx_coreupdates_installnewsysexts extends Tx_Install_Updates_Base {
 	 * Checks if an update is needed
 	 *
 	 * @param	string		&$description: The description for the update
-	 * @return	boolean		whether an update is needed (true) or not (false)
+	 * @return	boolean		whether an update is needed (TRUE) or not (FALSE)
 	 */
 	public function checkForUpdate(&$description) {
 		$result = FALSE;
@@ -134,7 +132,7 @@ class tx_coreupdates_installnewsysexts extends Tx_Install_Updates_Base {
 	 *
 	 * @param	array		&$dbQueries: queries done in this update
 	 * @param	mixed		&$customMessages: custom messages
-	 * @return	boolean		whether it worked (true) or not (false)
+	 * @return	boolean		whether it worked (TRUE) or not (FALSE)
 	 */
 	public function performUpdate(&$dbQueries, &$customMessages) {
 
@@ -151,55 +149,6 @@ class tx_coreupdates_installnewsysexts extends Tx_Install_Updates_Base {
 		$this->markWizardAsDone();
 
 		return TRUE;
-	}
-
-
-	/**
-	 * Adds extension to extension list and returns new list. If -1 is returned, an error happend.
-	 * Does NOT check dependencies yet.
-	 *
-	 * @param	array		Extension keys to add
-	 * @return	string		New list of installed extensions or -1 if error
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7 - Should not be needed anymore. Extensions should be installed directly by calling Tx_Install_Updates_Base::installExtensions()
-	 */
-	function addExtToList(array $extKeys) {
-		t3lib_div::logDeprecatedFunction();
-			// Get list of installed extensions and add this one.
-		$tmpLoadedExt = $GLOBALS['TYPO3_LOADED_EXT'];
-		if (isset($tmpLoadedExt['_CACHEFILE'])) {
-			unset($tmpLoadedExt['_CACHEFILE']);
-		}
-
-		$listArr = array_keys($tmpLoadedExt);
-		$listArr = array_merge($listArr, $extKeys);
-
-			// Implode unique list of extensions to load and return:
-		return implode(',', array_unique($listArr));
-	}
-
-
-	/**
-	 * Writes the extension list to "localconf.php" file
-	 * Removes the temp_CACHED* files before return.
-	 *
-	 * @param	string		List of extensions
-	 * @return	void
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7 - Use Tx_Install_Updates_Base::installExtensions() instead
-	 */
-	protected function writeNewExtensionList($newExtList) {
-		t3lib_div::logDeprecatedFunction();
-			// Instance of install tool
-		$instObj = new t3lib_install;
-		$instObj->allowUpdateLocalConf = 1;
-		$instObj->updateIdentity = 'TYPO3 Core Update Manager';
-
-			// Get lines from localconf file
-		$lines = $instObj->writeToLocalconf_control();
-		$instObj->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'EXT\'][\'extList\']', $newExtList);
-		$instObj->writeToLocalconf_control($lines);
-
-		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] = $newExtList;
-		t3lib_extMgm::removeCacheFiles();
 	}
 }
 ?>

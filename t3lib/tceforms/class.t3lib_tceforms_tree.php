@@ -28,8 +28,6 @@
 /**
  * TCEforms wizard for rendering an AJAX selector for records
  *
- * $Id: class.t3lib_tceforms_suggest.php 7905 2010-06-13 14:42:33Z ohader $
- *
  * @author Steffen Ritter <info@steffen-ritter.net>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -198,9 +196,10 @@ class t3lib_TCEforms_Tree {
 					}
 				},
 				tcaMaxItems: ' . ($PA['fieldConf']['config']['maxitems'] ? intval($PA['fieldConf']['config']['maxitems']) : 99999) . ',
-				tcaExclusiveKeys: "' . (
-		$PA['fieldConf']['config']['exclusiveKeys']
-				? $PA['fieldConf']['config']['exclusiveKeys'] : '') . '",
+				tcaSelectRecursiveAllowed: ' . ($appearance['allowRecursiveMode'] ? 'true' : 'false')  . ',
+				tcaSelectRecursive: false,
+				tcaExclusiveKeys: "' .
+				($PA['fieldConf']['config']['exclusiveKeys'] ? $PA['fieldConf']['config']['exclusiveKeys'] : '') . '",
 				ucId: "' . md5($table . '|' . $field) . '",
 				selModel: TYPO3.Components.Tree.EmptySelectionModel,
 				disabled: ' . ($PA['fieldConf']['config']['readOnly'] ? 'true' : 'false') . '
@@ -215,7 +214,7 @@ class t3lib_TCEforms_Tree {
 
 		$formField = '
 			<div class="typo3-tceforms-tree">
-				<input type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" id="treeinput' . $id . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />
+				<input class="treeRecord" type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" id="treeinput' . $id . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />
 			</div>
 			<div id="tree_' . $id . '">
 

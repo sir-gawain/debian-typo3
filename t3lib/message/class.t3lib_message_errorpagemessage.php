@@ -33,90 +33,21 @@
  * @package TYPO3
  * @subpackage t3lib/message
  */
-class t3lib_message_ErrorpageMessage extends t3lib_message_AbstractMessage {
+class t3lib_message_ErrorpageMessage extends t3lib_message_AbstractStandaloneMessage {
+
 
 	/**
-	 * defines whether the message should be stored in the session
-	 * (to survive redirects) or only for one request (default)
+	 * Constructor for an Error message
 	 *
-	 * @var string
+	 * @param string $message The error message
+	 * @param string $title Title of the message, can be empty
+	 * @param integer $severity Optional severity, must be either of t3lib_message_AbstractMessage::INFO, t3lib_message_AbstractMessage::OK,
+	 *     t3lib_message_AbstractMessage::WARNING or t3lib_message_AbstractMessage::ERROR. Default is t3lib_message_AbstractMessage::ERROR.
 	 */
-	protected $htmlTemplate;
-
-	/**
-	 * Constructor for a error message
-	 *
-	 * @param	string	The message.
-	 * @param	string	message title.
-	 * @param	integer	Optional severity, must be either of t3lib_message_ErrorpageMessage::INFO, t3lib_message_ErrorpageMessage::OK,
-	 *				  t3lib_message_ErrorpageMessage::WARNING or t3lib_message_ErrorpageMessage::ERROR. Default is t3lib_message_ErrorpageMessage::ERROR.
-	 * @return	void
-	 */
-	public function __construct($message, $title, $severity = self::ERROR) {
-		$this->htmlTemplate = TYPO3_mainDir . 'sysext/t3skin/templates/errorpage-message.html';
-		$this->setMessage($message);
-		$this->setTitle(strlen($title) > 0 ? $title : 'Error!');
-		$this->setSeverity($severity);
+	public function __construct($message = '', $title = '', $severity = t3lib_message_AbstractMessage::ERROR) {
+		$this->setHtmlTemplate(TYPO3_mainDir . 'sysext/t3skin/templates/errorpage-message.html');
+		parent::__construct($message, $title, $severity);
 	}
-
-
-	/**
-	 * Gets the filename of the HTML template.
-	 *
-	 * @return	string	The filename of the HTML template.
-	 */
-	public function getHtmlTemplate() {
-		return $this->htmlTemplate;
-	}
-
-	/**
-	 * Sets the filename to the HTML template
-	 *
-	 * @param	string	The filename to the HTML template.
-	 * @return	void
-	 */
-	public function setHtmlTemplate($htmlTemplate) {
-		$this->htmlTemplate = (string) $htmlTemplate;
-	}
-
-	/**
-	 * Renders the flash message.
-	 *
-	 * @return	string	The flash message as HTML.
-	 */
-	public function render() {
-		$classes = array(
-			self::NOTICE  => 'notice',
-			self::INFO    => 'information',
-			self::OK      => 'ok',
-			self::WARNING => 'warning',
-			self::ERROR   => 'error',
-		);
-
-		$markers = array(
-			'###CSS_CLASS###'     => $classes[$this->severity],
-			'###TITLE###'         => $this->title,
-			'###MESSAGE###'       => $this->message,
-			'###BASEURL###'       => t3lib_div::getIndpEnv('TYPO3_SITE_URL'),
-			'###TYPO3_mainDir###' => TYPO3_mainDir,
-			'###TYPO3_copyright_year###' => TYPO3_copyright_year,
-		);
-
-		$content = t3lib_div::getUrl(PATH_site . $this->htmlTemplate);
-		$content = t3lib_parseHtml::substituteMarkerArray($content, $markers, '', FALSE, TRUE);
-		return $content;
-	}
-
-	/**
-	 * Renders the flash message and echoes it.
-	 *
-	 * @return	void
-	 */
-	public function output() {
-		$content = $this->render();
-		echo $content;
-	}
-
 }
 
 

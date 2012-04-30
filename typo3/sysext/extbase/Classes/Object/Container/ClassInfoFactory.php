@@ -46,7 +46,10 @@ class Tx_Extbase_Object_Container_ClassInfoFactory {
 		}
 		$constructorArguments = $this->getConstructorArguments($reflectedClass);
 		$injectMethods = $this->getInjectMethods($reflectedClass);
-		return new Tx_Extbase_Object_Container_ClassInfo($className, $constructorArguments, $injectMethods);
+		$injectProperties = $this->getInjectProperties($reflectedClass);
+		$isSingleton = $this->getIsSingleton($className);
+		$isInitializeable = $this->getIsInitializeable($className);
+		return new Tx_Extbase_Object_Container_ClassInfo($className, $constructorArguments, $injectMethods, $isSingleton, $isInitializeable, $injectProperties);
 	}
 
 	/**
@@ -106,5 +109,57 @@ class Tx_Extbase_Object_Container_ClassInfoFactory {
 			}
 		}
 		return $result;
+	}
+
+	/**
+	 * Build a list of properties to be injected for the given class.
+	 *
+	 * @param ReflectionClass $reflectedClass
+	 * @return array (nameOfInjectProperty => nameOfClassToBeInjected)
+	 */
+	private function getInjectProperties(ReflectionClass $reflectedClass) {
+		$result = array();
+		$reflectionProperties = $reflectedClass->getProperties();
+
+		if (is_array($reflectionProperties)) {
+			foreach ($reflectionProperties as $reflectionProperty) {
+				$reflectedProperty = t3lib_div::makeInstance(
+					'Tx_Extbase_Reflection_PropertyReflection',
+					$reflectedClass->getName(),
+					$reflectionProperty->getName()
+				);
+
+				if ($reflectedProperty->isTaggedWith('inject')
+					&& $reflectedProperty->getName() !== 'settings') {
+
+					$varValues = $reflectedProperty->getTagValues('var');
+					if (count($varValues) == 1) {
+						$result[$reflectedProperty->getName()] = $varValues[0];
+					}
+				}
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * This method is used to determin if a class is a singleton or not.
+	 *
+	 * @param string $classname
+	 * @return boolean
+	 */
+	private function getIsSingleton($classname) {
+		return in_array('t3lib_Singleton', class_implements($classname));
+	}
+
+	/**
+	 * This method is used to determine of the object is initializeable with the
+	 * method initializeObject.
+	 *
+	 * @param string $classname
+	 * @return boolean
+	 */
+	private function getIsInitializeable($classname) {
+		return method_exists($classname, 'initializeObject');
 	}
 }

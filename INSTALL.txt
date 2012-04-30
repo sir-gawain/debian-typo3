@@ -21,11 +21,12 @@ cover using TYPO3 with other databases or web servers.
 
 The following configuration is the minimum required:
 - a web server capable of running PHP
-- PHP 5.2.0 or newer with the following extensions:
+- PHP 5.3.0 or newer with the following extensions:
 	- filter
 	- GD2
 	- JSON
 	- mysql
+	- openssl
 	- pcre
 	- session
 	- SOAP
@@ -44,7 +45,7 @@ The following configuration is the minimum required:
 The following configuration is recommended:
 - Apache 2.x
 - mod_expires and mod_rewrite enabled in the Apache configuration
-- PHP 5.2.0 or newer with the following extensions:
+- PHP 5.3.0 or newer with the following extensions:
 	- cURL
 	- filter
 	- GD2
@@ -62,9 +63,11 @@ The following configuration is recommended:
 	- zlib
 	Some extensions can be optionally compiled into PHP. A list of loaded
 	extensions can be checked using the phpinfo() function.
+- Safe mode is not supported, thus it must not be activated
+- Magic Quotes is deprecated, thus it should be deactivated
 - memory_limit set to 128M or more in php.ini
 - MySQL 5.1 or newer
-- GraphicsMagick
+- GraphicsMagick or ImageMagick v6 or newer
 - 200 MB or more of disk space
 - AllowOverride in the Apache configuration includes "Indexes" and "FileInfo"
   (see FAQ below)
@@ -81,7 +84,7 @@ Obtaining TYPO3
 ===============================================================================
 
 To get TYPO3, navigate to the following location:
-	http://typo3.org/download/packages/
+	http://typo3.org/download/
 
 TYPO3 consists of two packages: source and dummy. The source package contains
 files that are the same for every TYPO3 web site. The dummy package contains
@@ -100,8 +103,8 @@ the web server.
 
 To install TYPO3, unpack the source package locally. Unpacking will produce a
 directory with a name like typo3_src-x.y.z, where x, y and z correspond to the
-TYPO3 version. For example, the TYPO3 4.5.0 source package will create a
-directory named typo3_src-4.5.0.
+TYPO3 version. For example, the TYPO3 x.y.z source package will create a
+directory named typo3_src-x.y.z.
 
 Next unpack the dummy package. This will create a directory with the name
 dummy-x.y.z. Now create a new directory and copy all files and folders from
@@ -127,8 +130,8 @@ Installation: recommended
 To install TYPO3, unpack the source package outside of the web site root
 directory on your server. The location must be accessible to the web server.
 Unpacking will produce a directory with a name like typo3_src-x.y.z, where x,
-y and z correspond to the TYPO3 version. For example, the TYPO3 4.5.0 source
-package will create a directory named typo3_src-4.5.0.
+y and z correspond to the TYPO3 version. For example, the TYPO3 4.6.0 source
+package will create a directory named typo3_src-4.6.0.
 
 Unpack the dummy package in the temporary location on the server. This will
 create a dummy-x.y.z directory. Move all files and directories from the
@@ -144,11 +147,11 @@ packages.
 
 On Linux, Unix or Mac OS X systems create a symbolic link named typo3_src
 pointing to the source package:
-	ln -s /var/www/typo3_src-4.5.0 /var/www/example.com/typo3_src
+	ln -s /var/www/typo3_src-4.6.0 /var/www/example.com/typo3_src
 
 On Windows Vista or Windows 7 create a symbolic link named typo3_src
 pointing to the source package:
-	mklink /D C:\<dir>\typo3_src-4.5.0 C:\<dir>\example.com\typo3_src
+	mklink /D C:\<dir>\typo3_src-4.6.0 C:\<dir>\example.com\typo3_src
 
 Users of Windows XP/2000 or newer can use the "junction" program by
 Marc Russinovich to create links. The program can be obtained at:
@@ -177,6 +180,9 @@ If "sudo" is not available, ask your hosting company to change the permissions.
 ===============================================================================
 Setting up TYPO3
 ===============================================================================
+
+Create an empty file called ENABLE_INSTALL_TOOL in typ3conf/ folder, for example
+on a unix system using "touch /var/www/example.com/typo3conf/ENABLE_INSTALL_TOOL"
 
 To set up TYPO3, navigate to your web site. The TYPO3 installer will run in the
 1-2-3 mode to easily guide you through the installation.

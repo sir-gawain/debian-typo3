@@ -27,8 +27,6 @@
  *
  * Module: Extension manager - Repository
  *
- * $Id: class.tx_em_repository.php 2082 2010-03-21 17:19:42Z steffenk $
- *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -84,7 +82,7 @@ class tx_em_Repository {
 	/**
 	 * Keeps repository mirrors object.
 	 *
-	 * @var  em_repository_mirrors
+	 * @var  tx_em_Repository_Mirrors
 	 */
 	protected $mirrors;
 
@@ -240,7 +238,7 @@ class tx_em_Repository {
 	}
 
 	/**
-	 * Method returns URL of a ressource that contains repository mirrors.
+	 * Method returns URL of a resource that contains repository mirrors.
 	 *
 	 * @access  public
 	 * @return  string  URL of file that contains repository mirros
@@ -251,12 +249,12 @@ class tx_em_Repository {
 	}
 
 	/**
-	 * Method sets URL of a ressource that contains repository mirrors.
+	 * Method sets URL of a resource that contains repository mirrors.
 	 *
 	 * Parameter is typically a remote gzipped xml file.
 	 *
 	 * @access  public
-	 * @param   string  $url  URL of file that contains repository mirros
+	 * @param   string  $url  URL of file that contains repository mirrors
 	 * @return  void
 	 * @see	 $mirrorListUrl, getMirrorListUrl()
 	 */
@@ -316,7 +314,7 @@ class tx_em_Repository {
 	 * Method returns extension count
 	 *
 	 * @access  public
-	 * @return  int count of readed extensions
+	 * @return  int count of read extensions
 	 */
 	public function getExtensionCount() {
 		return $this->extensionCount;
@@ -326,7 +324,7 @@ class tx_em_Repository {
 	 * Method sets extension count
 	 *
 	 * @access  public
-	 * @param   string  $count count of readed extensions
+	 * @param   string  $count count of read extensions
 	 * @return  void
 	 */
 	public function setExtensionCount($count) {
@@ -339,11 +337,11 @@ class tx_em_Repository {
 	 * Repository mirrors object is passed by reference.
 	 *
 	 * @access  public
-	 * @param   em_repository_mirrors  &$mirrors  instance of {@link em_repository_mirrors repository mirrors} class
+	 * @param   tx_em_Repository_Mirrors  $mirrors  instance of {@link tx_em_Repository_Mirrors repository mirrors} class
 	 * @return  void
 	 * @see	 $mirrors, getMirrors(), hasMirrors(), removeMirrors()
 	 */
-	public function addMirrors(tx_em_Repository_Mirrors &$mirrors) {
+	public function addMirrors(tx_em_Repository_Mirrors $mirrors) {
 		$this->mirrors = $mirrors;
 	}
 
@@ -352,7 +350,7 @@ class tx_em_Repository {
 	 * object has been registered to this repository.
 	 *
 	 * @access  public
-	 * @return  boolean  true, if a repository mirrors object has been registered, otherwise false
+	 * @return  boolean  TRUE, if a repository mirrors object has been registered, otherwise FALSE
 	 * @see	 $mirrors, addMirrors(), getMirrors(), removeMirrors()
 	 */
 	public function hasMirrors() {
@@ -367,7 +365,7 @@ class tx_em_Repository {
 	 * Method returns a repository mirrors object.
 	 *
 	 * @access  public
-	 * @return  em_repository_mirrors  registered instance of {@link em_repository_mirrors repository mirrors} class or NULL
+	 * @return  tx_em_Repository_Mirrors  registered instance of {@link tx_em_Repository_Mirrors repository mirrors} class or NULL
 	 * @see	 $mirrors, addMirrors(), hasMirrors(), removeMirrors()
 	 */
 	public function getMirrors() {

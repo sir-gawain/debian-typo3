@@ -24,197 +24,6 @@
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Contains classes for Content Rendering based on TypoScript Template configuration
- *
- * $Id$
- * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * class tslib_cObj			:		All main TypoScript features, rendering of content objects (cObjects). This class is the backbone of TypoScript Template rendering.
- * class tslib_controlTable		:		Makes a table CTABLE (TS cObject)
- * class tslib_tableOffset		:		Makes a table-offset (TS)
- * class tslib_frameset			: 		Generates framesets (TS)
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- * 256: class tslib_cObj
- * 353:     function start($data,$table='')
- * 387:     function setParent($data,$currentRecord)
- *
- * SECTION: CONTENT_OBJ:
- * 412:     function getCurrentVal()
- * 423:     function setCurrentVal($value)
- * 436:     function cObjGet($setup,$addKey='')
- * 460:     function cObjGetSingle($name,$conf,$TSkey='__')
- *
- * SECTION: Functions rendering content objects (cObjects)
- * 629:     function HTML($conf)
- * 640:     function TEXT($conf)
- * 651:     function CLEARGIF($conf)
- * 670:     function COBJ_ARRAY($conf,$ext='')
- * 706:     function USER($conf,$ext='')
- * 733:     function FILE($conf)
- * 749:     function IMAGE($conf)
- * 768:     function IMG_RESOURCE($conf)
- * 780:     function IMGTEXT($conf)
- * 1203:     function CONTENT($conf)
- * 1290:     function RECORDS($conf)
- * 1370:     function HMENU($conf)
- * 1402:     function CTABLE ($conf)
- * 1440:     function OTABLE ($conf)
- * 1455:     function COLUMNS ($conf)
- * 1534:     function HRULER ($conf)
- * 1559:     function CASEFUNC ($conf)
- * 1584:     function LOAD_REGISTER($conf,$name)
- * 1624:     function FORM($conf,$formData='')
- * 2145:     function SEARCHRESULT($conf)
- * 2311:     function PHP_SCRIPT($conf,$ext='')
- * 2354:     function TEMPLATE($conf)
- * 2505:     function MULTIMEDIA($conf)
- *
- * SECTION: Various helper functions for content objects:
- * 2592:     function getSlidePids($pidList, $pidConf)
- * 2623:     function getFieldDefaultValue($noValueInsert, $fieldName, $defaultVal)
- * 2641:     function cImage($file,$conf)
- * 2669:     function getBorderAttr($borderAttr)
- * 2685:     function imageLinkWrap($string,$imageFile,$conf)
- * 2765:     function fileResource($fName, $addParams='alt="" title=""')
- * 2788:     function lastChanged($tstamp)
- * 2805:     function linkWrap($content,$wrap)
- * 2824:     function getAltParam($conf, $longDesc=TRUE)
- * 2859:     function cleanFormName($name)
- * 2875:     function getATagParams($conf, $addGlobal=1)
- *
- * SECTION: HTML template processing functions
- * 2922:     function getSubpart($content, $marker)
- * 2938:     function substituteSubpart($content,$marker,$subpartContent,$recursive=1)
- * 2951:     function substituteMarker($content,$marker,$markContent)
- * 2971:     function substituteMarkerArrayCached($content,$markContentArray=array(),$subpartContentArray=array(),$wrappedSubpartContentArray=array())
- * 3069:     function substituteMarkerArray($content,$markContentArray,$wrap='',$uppercase=0)
- * 3081:     function substituteMarkerInObject(&$tree, $markContentArray)
- * 3104:     function fillInMarkerArray($markContentArray, $row, $fieldList='', $nl2br=TRUE, $prefix='FIELD_', $HSC=FALSE)
- *
- * SECTION: "stdWrap" + sub functions
- * 3167:     function stdWrap($content,$conf)
- * 3364:     function numRows($conf)
- * 3388:     function listNum($content,$listNum,$char)
- * 3408:     function checkIf($conf)
- * 3471:     function filelist($data)
- * 3553:     function clean_directory($theDir)
- * 3571:     function HTMLparser_TSbridge($theValue, $conf)
- * 3585:     function dataWrap($content,$wrap)
- * 3598:     function insertData($str)
- * 3628:     function prefixComment($str,$conf,$content)
- * 3652:     function substring($content,$options)
- * 3670:     function crop($content,$options)
- * 3702:     function removeBadHTML($text, $conf)
- * 3746:     function textStyle($theValue, $conf)
- * 3813:     function tableStyle($theValue, $conf)
- * 3854:     function addParams($content,$conf)
- * 3895:     function filelink($theValue, $conf)
- * 3966:     function locDataJU($jumpUrl,$conf)
- * 3997:     function calc($val)
- * 4026:     function calcIntExplode($delim, $string)
- * 4046:     function splitObj($value, $conf)
- * 4108:     function parseFunc($theValue, $conf, $ref='')
- * 4218:     function _parseFunc ($theValue, $conf)
- * 4424:     function encaps_lineSplit($theValue, $conf)
- * 4507:     function http_makelinks($data,$conf)
- * 4574:     function mailto_makelinks($data,$conf)
- * 4617:     function getImgResource($file,$fileArray)
- *
- * SECTION: Data retrieval etc.
- * 4810:     function getFieldVal($field)
- * 4830:     function getData($string,$fieldArray)
- * 4975:     function rootLineValue($key,$field,$slideBack=0,$altRootLine='')
- * 4997:     function getGlobal($var, $source=NULL)
- * 5033:     function getKey($key,$arr)
- * 5056:     function TCAlookup($inputValue,$conf)
- *
- * SECTION: Link functions (typolink)
- * 5116:     function typoLink($linktxt, $conf)
- * 5481:     function typoLink_URL($conf)
- * 5499:     function getTypoLink($label,$params,$urlParameters=array(),$target='')
- * 5526:     function getTypoLink_URL($params,$urlParameters=array(),$target='')
- * 5538:     function typolinkWrap($conf)
- * 5551:     function currentPageUrl($urlParameters=array(),$id=0)
- * 5564:     function getClosestMPvalueForPage($pageId, $raw=FALSE)
- * 5619:     function getMailTo($mailAddress,$linktxt,$initP='?')
- * 5658:     function getQueryArguments($conf,$overruleQueryArgs=array(),$forceArgs=FALSE)
- *
- * SECTION: Miscellaneous functions, stand alone
- * 5754:     function wrap($content,$wrap,$char='|')
- * 5770:     function noTrimWrap($content,$wrap)
- * 5784:     function wrapSpace($content, $wrap)
- * 5810:     function callUserFunction($funcName,$conf,$content)
- * 5851:     function processParams($params)
- * 5869:     function keywords($content)
- * 5886:     function caseshift($theValue, $case)
- * 5911:     function HTMLcaseshift($theValue, $case)
- * 5940:     function bytes($sizeInBytes,$labels)
- * 5951:     function calcAge($seconds,$labels)
- * 5983:     function sendNotifyEmail($msg, $recipients, $cc, $email_from, $email_fromName='', $replyTo='')
- * 6010:     function URLqMark($url,$params)
- * 6026:     function checkEmail($email)
- * 6038:     function clearTSProperties($TSArr,$propList)
- * 6057:     function mergeTSRef($confArr,$prop)
- * 6080:     function joinTSarrays($conf,$old_conf)
- * 6103:     function gifBuilderTextBox($gifbuilderConf, $conf, $text)
- * 6159:     function linebreaks($string,$chars,$maxLines=0)
- * 6190:     function getUpdateJS($dataArray, $formName, $arrPrefix, $fieldList)
- *
- * SECTION: Database functions, making of queries
- * 6260:     function DBgetDelete($table, $uid, $doExec=FALSE)
- * 6292:     function DBgetUpdate($table, $uid, $dataArr, $fieldList, $doExec=FALSE)
- * 6334:     function DBgetInsert($table, $pid, $dataArr, $fieldList, $doExec=FALSE)
- * 6371:     function DBmayFEUserEdit($table,$row, $feUserRow, $allowedGroups='',$feEditSelf=0)
- * 6411:     function DBmayFEUserEditSelect($table,$feUserRow,$allowedGroups='',$feEditSelf=0)
- * 6451:     function enableFields($table,$show_hidden=0)
- * 6475:     function getTreeList($id,$depth,$begin=0,$dontCheckEnableFields=FALSE,$addSelectFields='',$moreWhereClauses='', $prevId_array=array(), $recursionLevel=0)
- * 6583:     function whereSelectFromList($field,$value)
- * 6601:     function exec_mm_query($select,$local_table,$mm_table,$foreign_table,$whereClause='',$groupBy='',$orderBy='',$limit='')
- * 6628:     function exec_mm_query_uidList($select,$local_table_uidlist,$mm_table,$foreign_table='',$whereClause='',$groupBy='',$orderBy='',$limit='')
- * 6649:     function searchWhere($sw,$searchFieldList,$searchTable='')
- * 6685:     function exec_getQuery($table, $conf)
- * 6703:     function getQuery($table, $conf, $returnQueryArray=FALSE)
- * 6783:     function getWhere($table,$conf, $returnQueryArray=FALSE)
- * 6878:     function checkPidArray($listArr)
- * 6902:     function checkPid($uid)
- *
- * SECTION: Frontend editing functions
- * 6959:     function editPanel($content, $conf, $currentRecord='', $dataArr=array())
- * 7146:     function editIcons($content,$params, $conf=array(), $currentRecord='', $dataArr=array(),$addUrlParamStr='')
- * 7228:     function editPanelLinkWrap($string,$formName,$cmd,$currentRecord='',$confirm='',$nPid='')
- * 7270:     function editPanelLinkWrap_doWrap($string,$url,$currentRecord)
- * 7298:     function editPanelPreviewBorder($table,$row,$content,$thick,$conf=array())
- * 7320:     function isDisabled($table,$row)
- *
- *
- * 7351: class tslib_frameset
- * 7361:     function make($setup)
- * 7398:     function frameParams($setup, $typeNum)
- * 7426:     function framesetParams($setup)
- *
- *
- * 7459: class tslib_tableOffset
- * 7471:     function start($content,$offset)
- *
- *
- * 7549: class tslib_controlTable
- * 7584:     function start($offset,$cMargins)
- *
- * TOTAL FUNCTIONS: 135
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
-
 
 /**
  * This class contains all main TypoScript features.
@@ -244,6 +53,7 @@ class tslib_cObj {
 	 */
 	var $stdWrapOrder = array(
 		'stdWrapPreProcess' => 'hook', // this is a placeholder for the first Hook
+		'cacheRead' => 'hook', // this is a placeholder for checking if the content is available in cache
 		'setContentToCurrent' => 'boolean',
 		'setContentToCurrent.' => 'array',
 		'setCurrent' => 'string',
@@ -289,13 +99,20 @@ class tslib_cObj {
 		'HTMLparser' => 'boolean',
 		'HTMLparser.' => 'array',
 		'split.' => 'array',
+		'replacement.' => 'array',
 		'prioriCalc' => 'boolean',
 		'prioriCalc.' => 'array',
 		'char' => 'integer',
 		'char.' => 'array',
 		'intval' => 'boolean',
 		'intval.' => 'array',
+		'hash' => 'string',
+		'hash.' => 'array',
+		'round' => 'boolean',
+		'round.' => 'array',
 		'numberFormat.' => 'array',
+		'expandList' => 'boolean',
+		'expandList.' => 'array',
 		'date' => 'dateconf',
 		'date.' => 'array',
 		'strftime' => 'strftimeconf',
@@ -367,6 +184,8 @@ class tslib_cObj {
 		'append.' => 'array',
 		'wrap3' => 'wrap',
 		'wrap3.' => 'array',
+		'orderedStdWrap' => 'stdWrap',
+		'orderedStdWrap.' => 'array',
 		'outerWrap' => 'wrap',
 		'outerWrap.' => 'array',
 		'insertData' => 'boolean',
@@ -381,6 +200,7 @@ class tslib_cObj {
 		'editIcons.' => 'array',
 		'editPanel' => 'boolean',
 		'editPanel.' => 'array',
+		'cacheStore' => 'hook', // this is a placeholder for storing the content in cache
 		'stdWrapPostProcess' => 'hook', // this is a placeholder for the last Hook
 		'debug' => 'boolean',
 		'debug.' => 'array',
@@ -840,6 +660,7 @@ class tslib_cObj {
 			'MULTIMEDIA' => 'Multimedia',
 			'MEDIA' => 'Media',
 			'SWFOBJECT' => 'ShockwaveFlashObject',
+			'FLOWPLAYER' => 'FlowPlayer',
 			'QTOBJECT' => 'QuicktimeObject',
 			'SVG' => 'ScalableVectorGraphics',
 			'EDITPANEL' => 'EditPanel',
@@ -872,6 +693,17 @@ class tslib_cObj {
 	function HTML($conf) {
 		return $this->getContentObject('HTML')->render($conf);
 	}
+
+	/**
+	 * Rendering the cObject, FLOWPLAYER
+	 *
+	 * @param array $conf array of TypoScript properties
+	 * @return string Output
+	 */
+	function FLOWPLAYER($conf) {
+		return $this->getContentObject('FLOWPLAYER')->render($conf);
+	}
+
 
 	/**
 	 * Rendering the cObject, TEXT
@@ -1322,19 +1154,6 @@ class tslib_cObj {
 			$GLOBALS['TSFE']->imagesOnPage[] = $info[3]; // This array is used to collect the image-refs on the page...
 
 
-				// Backwards compatibility if altText is not set and alttext is set
-				// @deprecated since TYPO3 4.3, will be removed in TYPO3 4.6
-			if (strlen($conf['alttext']) || is_array($conf['alttext.'])) {
-				$GLOBALS['TSFE']->logDeprecatedTyposcript(
-					'IMAGE.alttext',
-					'use IMAGE.altText instead - src: ' . $info[3] . ' - original image: ' . $info['origFile']
-				);
-				if (!strlen($conf['altText']) && !is_array($conf['altText.'])) {
-					$conf['altText'] = $conf['alttext'];
-					$conf['altText.'] = $conf['alttext.'];
-				}
-			}
-
 			$altParam = $this->getAltParam($conf);
 			if($conf['params'] && !isset($conf['params.'])) {
 				$params = ' ' . $conf['params'];
@@ -1347,7 +1166,9 @@ class tslib_cObj {
 				t3lib_div::rawUrlEncodeFP($info[3])) . '" width="' . $info[0] . '" height="' . $info[1] . '"' .
 				$this->getBorderAttr(' border="' . intval($conf['border']) . '"') .
 				$params .
-				($altParam) . ' />';
+				($altParam) .
+				(!empty($GLOBALS['TSFE']->xhtmlDoctype) ? ' /' : '') .
+				'>';
 			$linkWrap = isset($conf['linkWrap.'])
 				? $this->stdWrap($conf['linkWrap'], $conf['linkWrap.'])
 				: $conf['linkWrap'];
@@ -1435,7 +1256,7 @@ class tslib_cObj {
 
 				$params = '&md5=' . $md5_value;
 				foreach (str_split($parametersEncoded, 64) as $index => $chunk) {
-					$params .= '&parameters[' . $index . ']=' . rawurlencode($chunk);
+					$params .= '&parameters' . rawurlencode('[') . $index . rawurlencode(']') . '=' . rawurlencode($chunk);
 				}
 
 				$url = $GLOBALS['TSFE']->absRefPrefix . 'index.php?eID=tx_cms_showpic&file=' . rawurlencode($imageFile) . $params;
@@ -1594,9 +1415,11 @@ class tslib_cObj {
 		$titleText = isset($conf['titleText.'])
 			? trim($this->stdWrap($conf['titleText'], $conf['titleText.']))
 			: trim($conf['titleText']);
-		$longDesc = isset($conf['longdescURL.'])
-			? trim($this->stdWrap($conf['longdescURL'], $conf['longdescURL.']))
-			: trim($conf['longdescURL']);
+		if (isset($conf['longdescURL.']) && $GLOBALS['TSFE']->config['config']['doctype'] != 'html5') {
+			$longDesc = $this->typoLink_URL($conf['longdescURL.']);
+		} else {
+			$longDesc = trim($conf['longdescURL']);
+		}
 
 			// "alt":
 		$altParam = ' alt="' . htmlspecialchars($altText) . '"';
@@ -1654,6 +1477,19 @@ class tslib_cObj {
 		if ($addGlobal) {
 			$aTagParams = ' ' . trim($GLOBALS['TSFE']->ATagParams . $aTagParams);
 		}
+
+			// extend params
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['getATagParamsPostProc']) && is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['getATagParamsPostProc'])) {
+			$_params = array(
+				'conf' => &$conf,
+				'aTagParams' => &$aTagParams
+			);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['getATagParamsPostProc'] as $objRef) {
+				$processor = &t3lib_div::getUserObj($objRef);
+				$aTagParams = $processor->process( $_params, $this);
+			}
+		}
+
 		return $aTagParams;
 	}
 
@@ -1919,6 +1755,24 @@ class tslib_cObj {
 	}
 
 	/**
+	 * Replaces all markers and subparts in a template with the content provided in the structured array.
+	 *
+	 * @param $content
+	 * @param array $markersAndSubparts
+	 * @param string $wrap
+	 * @param bool $uppercase
+	 * @param bool $deleteUnused
+	 * @return string
+	 * @see t3lib_parsehtml::substituteMarkerAndSubpartArrayRecursive()
+	 */
+	public function substituteMarkerAndSubpartArrayRecursive($content, array $markersAndSubparts, $wrap = '', $uppercase = FALSE,
+															 $deleteUnused = FALSE) {
+		return t3lib_parsehtml::substituteMarkerAndSubpartArrayRecursive(
+			$content, $markersAndSubparts, $wrap, $uppercase, $deleteUnused
+		);
+	}
+
+	/**
 	 * Adds elements to the input $markContentArray based on the values from
 	 * the fields from $fieldList found in $row
 	 *
@@ -1934,17 +1788,19 @@ class tslib_cObj {
 		if ($fieldList) {
 			$fArr = t3lib_div::trimExplode(',', $fieldList, 1);
 			foreach ($fArr as $field) {
-				$markContentArray['###' . $prefix . $field . '###'] = $nl2br ? nl2br($row[$field]) : $row[$field];
+				$markContentArray['###' . $prefix . $field . '###'] =
+					$nl2br ? nl2br($row[$field], !empty($GLOBALS['TSFE']->xhtmlDoctype)) : $row[$field];
 			}
 		} else {
 			if (is_array($row)) {
 				foreach ($row as $field => $value) {
-					if (!t3lib_div::testInt($field)) {
+					if (!t3lib_utility_Math::canBeInterpretedAsInteger($field)) {
 						if ($HSC) {
 							$value = htmlspecialchars($value);
 						}
 
-						$markContentArray['###' . $prefix . $field . '###'] = $nl2br ? nl2br($value) : $value;
+						$markContentArray['###' . $prefix . $field . '###'] =
+							$nl2br ? nl2br($value, !empty($GLOBALS['TSFE']->xhtmlDoctype)) : $value;
 					}
 				}
 			}
@@ -1991,31 +1847,17 @@ class tslib_cObj {
 				;
 			}
 		}
+
 		if (is_array($conf) && count($conf)) {
-				// Temporary workaround (to maintain compatibility for security fix! @see #26876)
-				// If the fontTag property is set and the dataWrap property is set to the default value
-				// then this indicates that we have a custom setup.
-			if (isset($conf['fontTag']) && isset($conf['dataWrap']) && preg_match(
-					'|<h[0-9]\{register:headerStyle\}\{register:headerClass\}>\|</h[0-9]>|',
-					$conf['dataWrap']
-				)) {
-				// Write the fontTag property value to dataWrap like before the security fix was introduced.
-				$conf['dataWrap'] = $conf['fontTag'];
 
-				// Unset fontTag and insertData properties
-				// insertData is removed because it would reintroduce the security issue which was already fixed.
-				// In theory this may again break a site if someone really intended to let users write getData
-				// values in the headline. However, unlike before the layout is no longer affected as only content
-				// would change...
-				unset($conf['fontTag']);
-				if (isset($conf['insertData'])) {
-					unset($conf['insertData']);
-				}
+			// cache handling
+			if (is_array($conf['cache.'])) {
+				$conf['cache.']['key'] = $this->stdWrap($conf['cache.']['key'], $conf['cache.']['key.']);
+				$conf['cache.']['tags'] = $this->stdWrap($conf['cache.']['tags'], $conf['cache.']['tags.']);
+				$conf['cache.']['lifetime'] = $this->stdWrap($conf['cache.']['lifetime'], $conf['cache.']['lifetime.']);
 
-				// Since this is magic, log the action
-				$message = 'For security reasons, the properties "fontTag" and "insertData" have replaced in lib.stdheader.10 with a dataWrap (see http://forge.typo3.org/issues/28847)';
-				$GLOBALS['TT']->setTSlogMessage($message, 2);
-				t3lib_div::sysLog($message, 'cms', t3lib_div::SYSLOG_SEVERITY_WARNING);
+				$conf['cacheRead'] = 1;
+				$conf['cacheStore'] = 1;
 			}
 
 			// check, which of the available stdWrap functions is needed for the current conf Array
@@ -2026,12 +1868,12 @@ class tslib_cObj {
 			// additional Array to check whether a function has already been executed
 			$isExecuted = array();
 			// additional switch to make sure 'required', 'if' and 'fieldRequired'
-			// will still stop rendering immediately in case they return false
+			// will still stop rendering immediately in case they return FALSE
 
 			$this->stdWrapRecursionLevel++;
-			$this->stopRendering[$this->stdWrapRecursionLevel] = false;
+			$this->stopRendering[$this->stdWrapRecursionLevel] = FALSE;
 
-			// execute each funtion in the predefined order
+			// execute each function in the predefined order
 			foreach ($sortedConf as $stdWrapName => $functionType) {
 				// eliminate the second key of a pair 'key'|'key.' to make sure functions get called only once and check if rendering has been stopped
 				if (!$isExecuted[$stdWrapName] &&
@@ -2067,8 +1909,8 @@ class tslib_cObj {
 					if ((isset($conf[$functionName]) || $conf[$functionProperties]) &&
 							!($functionType == 'boolean' && !$conf[$functionName])) {
 						//add both keys - with and without the dot - to the set of executed functions
-						$isExecuted[$functionName] = true;
-						$isExecuted[$functionProperties] = true;
+						$isExecuted[$functionName] = TRUE;
+						$isExecuted[$functionProperties] = TRUE;
 						// call the function with the prefix stdWrap_ to make sure nobody can execute functions just by adding their name to the TS Array
 						$functionName = 'stdWrap_' . $functionName;
 						$content = $this->$functionName(
@@ -2102,6 +1944,24 @@ class tslib_cObj {
 	public function stdWrap_stdWrapPreProcess($content = '', $conf = array()) {
 		foreach ($this->stdWrapHookObjects as $hookObject) {
 			$content = $hookObject->stdWrapPreProcess($content, $conf, $this);
+		}
+		return $content;
+	}
+
+	/**
+	 * Check if content was cached before (depending on the given cache key)
+	 *
+	 * @param	string		Input value undergoing processing in these functions.
+	 * @param	array		All stdWrap properties, not just the ones for a particular function.
+	 * @return	string		The processed input value
+	 */
+	public function stdWrap_cacheRead($content = '', $conf = array()) {
+		if (!empty($conf['cache.']['key'])) {
+			$cacheFrontend = $GLOBALS['typo3CacheManager']->getCache('cache_hash'); /* @var $cacheFrontend t3lib_cache_frontend_VariableFrontend */
+			if ($cacheFrontend && $cacheFrontend->has($conf['cache.']['key'])) {
+				$content = $cacheFrontend->get($conf['cache.']['key']);
+				$this->stopRendering[$this->stdWrapRecursionLevel] = TRUE;
+			}
 		}
 		return $content;
 	}
@@ -2276,7 +2136,7 @@ class tslib_cObj {
 	/**
 	 * preIfEmptyListNum
 	 * Gets a value off a CSV list before the following ifEmpty check
-	 * Makes sure that the result of ifEmpty will be true in case the CSV does not contain a value at the position given by preIfEmptyListNum
+	 * Makes sure that the result of ifEmpty will be TRUE in case the CSV does not contain a value at the position given by preIfEmptyListNum
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for preIfEmptyListNum.
@@ -2289,7 +2149,7 @@ class tslib_cObj {
 
 	/**
 	 * ifEmpty
-	 * Will set content to a replacement value in case the trimmed value of content returns false
+	 * Will set content to a replacement value in case the trimmed value of content returns FALSE
 	 * 0 (zero) will be replaced as well
 	 *
 	 * @param	string		Input value undergoing processing in this function.
@@ -2399,7 +2259,7 @@ class tslib_cObj {
 	/**
 	 * if
 	 * Will immediately stop rendering and return an empty value
-	 * when the result of the checks returns false
+	 * when the result of the checks returns FALSE
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for if.
@@ -2488,6 +2348,19 @@ class tslib_cObj {
 	}
 
 	/**
+	 * replacement
+	 * Will execute replacements on the content (optionally with preg-regex)
+	 *
+	 * @param	string		Input value undergoing processing in this function.
+	 * @param	array		stdWrap properties for replacement.
+	 * @return	string		The processed input value
+	 */
+	public function stdWrap_replacement($content = '', $conf = array()) {
+		$content = $this->replacement($content, $conf['replacement.']);
+		return $content;
+	}
+
+	/**
 	 * prioriCalc
 	 * Will use the content as a mathematical term and calculate the result
 	 * Can be set to 1 to just get a calculated value or 'intval' to get the integer of the result
@@ -2497,7 +2370,7 @@ class tslib_cObj {
 	 * @return	string		The processed input value
 	 */
 	public function stdWrap_prioriCalc($content = '', $conf = array()) {
-		$content = t3lib_div::calcParenthesis($content);
+		$content = t3lib_utility_Math::calculateWithParentheses($content);
 		if ($conf['prioriCalc'] == 'intval')
 			$content = intval($content);
 		return $content;
@@ -2530,6 +2403,40 @@ class tslib_cObj {
 	}
 
 	/**
+	 * Will return a hashed value of the current content
+	 *
+	 * @param string Input value undergoing processing in this function.
+	 * @param array stdWrap properties for hash.
+	 * @return string The processed input value
+	 * @link http://php.net/manual/de/function.hash-algos.php for a list of supported hash algorithms
+	 */
+	public function stdWrap_hash($content = '', array $conf = array()) {
+		$algorithm = isset($conf['hash.'])
+				? $this->stdWrap($conf['hash'], $conf['hash.'])
+				: $conf['hash'];
+		if (function_exists('hash') && in_array($algorithm, hash_algos())) {
+			$content = hash($algorithm, $content);
+		} else {
+				// non-existing hashing algorithm
+			$content = '';
+		}
+		return $content;
+	}
+
+	/**
+	 * stdWrap_round will return a rounded number with ceil(), floor() or round(), defaults to round()
+	 * Only the english number format is supported . (dot) as decimal point
+	 *
+	 * @param	string		Input value undergoing processing in this function.
+	 * @param	array		stdWrap properties for round.
+	 * @return	string		The processed input value
+	 */
+	public function stdWrap_round($content = '', $conf = array()){
+		$content = $this->round($content, $conf['round.']);
+		return $content;
+	}
+
+	/**
 	 * numberFormat
 	 * Will return a formatted number based on configuration given as stdWrap properties
 	 *
@@ -2543,9 +2450,22 @@ class tslib_cObj {
 	}
 
 	/**
+	 * expandList
+	 * Will return a formatted number based on configuration given as stdWrap properties
+	 *
+	 * @param	string		Input value undergoing processing in this function.
+	 * @param	array		stdWrap properties for expandList.
+	 * @return	string		The processed input value
+	 */
+	public function stdWrap_expandList($content = '', $conf = array()) {
+		$content = t3lib_div::expandList($content);
+		return $content;
+	}
+
+	/**
 	 * date
 	 * Will return a formatted date based on configuration given according to PHP date/gmdate properties
-	 * Will return gmdate when the property GMT returns true
+	 * Will return gmdate when the property GMT returns TRUE
 	 *
 	 * @param string $content Input value undergoing processing in this function.
 	 * @param array $conf stdWrap properties for date.
@@ -2561,7 +2481,7 @@ class tslib_cObj {
 	/**
 	 * strftime
 	 * Will return a formatted date based on configuration given according to PHP strftime/gmstrftime properties
-	 * Will return gmstrftime when the property GMT returns true
+	 * Will return gmstrftime when the property GMT returns TRUE
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for strftime.
@@ -2697,7 +2617,7 @@ class tslib_cObj {
 	/**
 	 * htmlSpecialChars
 	 * Transforms HTML tags to readable text by replacing special characters with their HTML entity
-	 * When preserveEntities returns true, existing entities will be left untouched
+	 * When preserveEntities returns TRUE, existing entities will be left untouched
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for htmlSpecalChars.
@@ -2725,14 +2645,15 @@ class tslib_cObj {
 
 	/**
 	 * br
-	 * Searches for single line breaks and replaces them with a <br /> tag
+	 * Searches for single line breaks and replaces them with a <br />/<br> tag
+	 * according to the doctype
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for br.
 	 * @return	string		The processed input value
 	 */
 	public function stdWrap_br($content = '', $conf = array()) {
-		$content = nl2br($content);
+		$content = nl2br($content, !empty($GLOBALS['TSFE']->xhtmlDoctype));
 		return $content;
 	}
 
@@ -2950,7 +2871,7 @@ class tslib_cObj {
 	/**
 	 * spaceBefore
 	 * Will add space before the current content
-	 * By default this is done with a clear.gif but it can be done with CSS margins by setting the property space.useDiv to true
+	 * By default this is done with a clear.gif but it can be done with CSS margins by setting the property space.useDiv to TRUE
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for spaceBefore and space.
@@ -2964,7 +2885,7 @@ class tslib_cObj {
 	/**
 	 * spaceAfter
 	 * Will add space after the current content
-	 * By default this is done with a clear.gif but it can be done with CSS margins by setting the property space.useDiv to true
+	 * By default this is done with a clear.gif but it can be done with CSS margins by setting the property space.useDiv to TRUE
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for spaceAfter and space.
@@ -2978,7 +2899,7 @@ class tslib_cObj {
 	/**
 	 * space
 	 * Will add space before or after the current content
-	 * By default this is done with a clear.gif but it can be done with CSS margins by setting the property space.useDiv to true
+	 * By default this is done with a clear.gif but it can be done with CSS margins by setting the property space.useDiv to TRUE
 	 * See wrap
 	 *
 	 * @param	string		Input value undergoing processing in this function.
@@ -3090,6 +3011,21 @@ class tslib_cObj {
 	}
 
 	/**
+	 * orderedStdWrap
+	 * Calls stdWrap for each entry in the provided array
+	 *
+	 * @param	string		Input value undergoing processing in this function.
+	 * @param	array		stdWrap properties for orderedStdWrap.
+	 * @return	string		The processed input value
+	 */
+	public function stdWrap_orderedStdWrap($content = '', $conf = array()) {
+		$sortedKeysArray = t3lib_TStemplate::sortedKeyList($conf['orderedStdWrap.'], TRUE);
+		foreach ($sortedKeysArray as $key) {
+			$content = $this->stdWrap($content, $conf['orderedStdWrap.'][$key . '.']);
+		}
+		return $content;
+	}
+	/**
 	 * outerWrap
 	 * Eighth of a set of different wraps which will be applied in a certain order before or after other functions that modify the content
 	 *
@@ -3103,7 +3039,7 @@ class tslib_cObj {
 	}
 
 	/**
-	 * inserData
+	 * insertData
 	 * Can fetch additional content the same way data does and replaces any occurence of {field:whatever} with this content
 	 *
 	 * @param	string		Input value undergoing processing in this function.
@@ -3223,6 +3159,55 @@ class tslib_cObj {
 	}
 
 	/**
+	 * Store content into cache
+	 *
+	 * @param	string		Input value undergoing processing in these functions.
+	 * @param	array		All stdWrap properties, not just the ones for a particular function.
+	 * @return	string		The processed input value
+	 */
+	public function stdWrap_cacheStore($content = '', $conf = array()) {
+		if (!empty($conf['cache.']['key'])) {
+			if (defined('TYPO3_UseCachingFramework') && TYPO3_UseCachingFramework) {
+				$cacheFrontend = $GLOBALS['typo3CacheManager']->getCache('cache_hash'); /* @var $cacheFrontend t3lib_cache_frontend_VariableFrontend */
+				if ($cacheFrontend) {
+
+					$tags = !empty($conf['cache.']['tags']) ? t3lib_div::trimExplode(',', $conf['cache.']['tags']) : array();
+
+					if (strtolower($conf['cache.']['lifetime']) == 'unlimited') {
+						$lifetime = 0; // unlimited
+					} elseif (strtolower($conf['cache.']['lifetime']) == 'default') {
+						$lifetime = NULL; // default lifetime
+					} elseif (intval($conf['cache.']['lifetime']) > 0) {
+						$lifetime = intval($conf['cache.']['lifetime']); // lifetime in seconds
+					} else {
+						$lifetime = NULL; // default lifetime
+					}
+
+					if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['stdWrap_cacheStore'])) {
+						foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['stdWrap_cacheStore'] as $_funcRef) {
+							$params = array(
+								'key' => $conf['cache.']['key'],
+								'content' => $content,
+								'lifetime' => $lifetime,
+								'tags' => $tags
+							);
+							t3lib_div::callUserFunction($_funcRef, $params, $this);
+						}
+					}
+
+					$cacheFrontend->set(
+						$conf['cache.']['key'],
+						$content,
+						$tags,
+						$lifetime
+					);
+				}
+			}
+		}
+		return $content;
+	}
+
+	/**
 	 * stdWrap post process hook
 	 * can be used by extensions authors to modify the behaviour of stdWrap functions to their needs
 	 * this hook executes functions at after the content has been modified by the rest of the stdWrap functions but still before debugging
@@ -3317,11 +3302,15 @@ class tslib_cObj {
 	 */
 	function listNum($content, $listNum, $char) {
 		$char = $char ? $char : ',';
-		if (t3lib_div::testInt($char)) {
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($char)) {
 			$char = chr($char);
 		}
 		$temp = explode($char, $content);
 		$last = '' . (count($temp) - 1);
+			// take a random item if requested
+		if ($listNum === 'rand') {
+			$listNum = rand(0, count($temp) - 1);
+		}
 		$index = $this->calc(str_ireplace('last', $last, $listNum));
 		return $temp[$index];
 	}
@@ -4042,6 +4031,15 @@ class tslib_cObj {
 		if (@is_file($theFile)) {
 			$theFileEnc = str_replace('%2F', '/', rawurlencode($theFile));
 
+			$title = $conf['title'];
+			if (isset($conf['title.'])) {
+				$title = $this->stdWrap($title, $conf['title.']);
+			}
+
+			$target = $conf['target'];
+			if (isset($conf['target.'])) {
+				$target = $this->stdWrap($target, $conf['target.']);
+			}
 				// the jumpURL feature will be taken care of by typoLink, only "jumpurl.secure = 1" is applyable needed for special link creation
 			if ($conf['jumpurl.']['secure']) {
 				$alternativeJumpUrlParameter = isset($conf['jumpurl.']['parameter.'])
@@ -4049,14 +4047,16 @@ class tslib_cObj {
 					: $conf['jumpurl.']['parameter'];
 				$typoLinkConf = array(
 					'parameter' => ($alternativeJumpUrlParameter ? $alternativeJumpUrlParameter : ($GLOBALS['TSFE']->id . ',' . $GLOBALS['TSFE']->type)),
-					'fileTarget' => $conf['target'],
+					'fileTarget' => $target,
+					'title' => $title,
 					'ATagParams' => $this->getATagParams($conf),
 					'additionalParams' => '&jumpurl=' . rawurlencode($theFileEnc) . $this->locDataJU($theFileEnc, $conf['jumpurl.']['secure.']) . $GLOBALS['TSFE']->getMethodUrlIdToken
 				);
 			} else {
 				$typoLinkConf = array(
 					'parameter' => $theFileEnc,
-					'fileTarget' => $conf['target'],
+					'fileTarget' => $target,
+					'title' => $title,
 					'ATagParams' => $this->getATagParams($conf)
 				);
 			}
@@ -4067,7 +4067,7 @@ class tslib_cObj {
 			if ($globalJumpUrlEnabled && isset($conf['jumpurl']) && $conf['jumpurl'] == 0) {
 				$GLOBALS['TSFE']->config['config']['jumpurl_enable'] = 0;
 					// if the global jumpURL feature is deactivated, but is wanted for this link, then activate it for now
-			} else if (!$globalJumpUrlEnabled && $conf['jumpurl']) {
+			} elseif (!$globalJumpUrlEnabled && $conf['jumpurl']) {
 				$GLOBALS['TSFE']->config['config']['jumpurl_enable'] = 1;
 			}
 			$theLinkWrap = $this->typoLink('|', $typoLinkConf);
@@ -4078,8 +4078,15 @@ class tslib_cObj {
 			$theSize = filesize($theFile);
 			$fI = t3lib_div::split_fileref($theFile);
 			if ($conf['icon']) {
-				$iconP = t3lib_extMgm::siteRelPath('cms') . 'tslib/media/fileicons/';
-				$icon = @is_file($iconP . $fI['fileext'] . '.gif') ? $iconP . $fI['fileext'] . '.gif' : $iconP . 'default.gif';
+				$conf['icon.']['path'] = isset($conf['icon.']['path.'])
+					? $this->stdWrap($conf['icon.']['path'], $conf['icon.']['path.'])
+					: $conf['icon.']['path'];
+				$iconP = !empty($conf['icon.']['path']) ? $conf['icon.']['path'] : t3lib_extMgm::siteRelPath('cms') . 'tslib/media/fileicons/';
+				$conf['icon.']['ext'] = isset($conf['icon.']['ext.'])
+					? $this->stdWrap($conf['icon.']['ext'], $conf['icon.']['ext.'])
+					: $conf['icon.']['ext'];
+				$iconExt = !empty($conf['icon.']['ext']) ? '.' . $conf['icon.']['ext'] : '.gif';
+				$icon = @is_file($iconP . $fI['fileext'] . $iconExt) ? $iconP . $fI['fileext'] . $iconExt : $iconP . 'default' . $iconExt;
 					// Checking for images: If image, then return link to thumbnail.
 				$IEList = isset($conf['icon_image_ext_list.'])
 					? $this->stdWrap($conf['icon_image_ext_list'], $conf['icon_image_ext_list.'])
@@ -4097,8 +4104,8 @@ class tslib_cObj {
 									: $conf['icon_thumbSize']);
 							}
 							$check = basename($theFile) . ':' . filemtime($theFile) . ':' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'];
-							$md5sum = '&md5sum=' . t3lib_div::shortMD5($check);
-							$icon = 't3lib/thumbs.php?dummy=' . $GLOBALS['EXEC_TIME'] . '&file=' .
+							$md5sum = '&md5sum=' . md5($check);
+							$icon = 't3lib/thumbs.php?file=' .
 								rawurlencode('../' . $theFile) . $thumbSize . $md5sum;
 						} else {
 							$icon = t3lib_extMgm::siteRelPath('cms') . 'tslib/media/miscicons/notfound_thumb.gif';
@@ -4107,11 +4114,19 @@ class tslib_cObj {
 							$this->getBorderAttr(' border="0"') . '' . $this->getAltParam($conf) . ' />';
 					}
 				} else {
+					$conf['icon.']['widthAttribute'] = isset($conf['icon.']['widthAttribute.'])
+						? $this->stdWrap($conf['icon.']['widthAttribute'], $conf['icon.']['widthAttribute.'])
+						: $conf['icon.']['widthAttribute'];
+					$iconWidth = !empty($conf['icon.']['widthAttribute']) ? $conf['icon.']['widthAttribute'] : 18;
+					$conf['icon.']['heightAttribute'] = isset($conf['icon.']['heightAttribute.'])
+						? $this->stdWrap($conf['icon.']['heightAttribute'], $conf['icon.']['heightAttribute.'])
+						: $conf['icon.']['heightAttribute'];
+					$iconHeight = !empty($conf['icon.']['heightAttribute']) ? $conf['icon.']['heightAttribute'] : 16;
 					$icon = '<img src="' . htmlspecialchars($GLOBALS['TSFE']->absRefPrefix . $icon) .
-						'" width="18" height="16"' . $this->getBorderAttr(' border="0"') .
+						'" width="' . $iconWidth . '" height="' . $iconHeight . '"' . $this->getBorderAttr(' border="0"') .
 						$this->getAltParam($conf) . ' />';
 				}
-				if ($conf['icon_link']) {
+				if ($conf['icon_link'] && !$conf['combinedLink']) {
 					$icon = $this->wrap($icon, $theLinkWrap);
 				}
 				$icon = isset($conf['icon.'])
@@ -4136,16 +4151,30 @@ class tslib_cObj {
 			$wrap = isset($conf['wrap.'])
 				? $this->stdWrap($conf['wrap'], $conf['wrap.'])
 				: $conf['wrap'];
-			if ($conf['ATagBeforeWrap']) {
-				$theValue = $this->wrap($this->wrap($theValue, $wrap), $theLinkWrap);
+			if ($conf['combinedLink']) {
+				$theValue = $icon . $theValue;
+				if ($conf['ATagBeforeWrap']) {
+					$theValue = $this->wrap($this->wrap($theValue, $wrap), $theLinkWrap);
+				} else {
+					$theValue = $this->wrap($this->wrap($theValue, $theLinkWrap), $wrap);
+				}
+				$file = isset($conf['file.'])
+					? $this->stdWrap($theValue, $conf['file.'])
+					: $theValue;
+					// output
+				$output = $file . $size;
 			} else {
-				$theValue = $this->wrap($this->wrap($theValue, $theLinkWrap), $wrap);
+				if ($conf['ATagBeforeWrap']) {
+					$theValue = $this->wrap($this->wrap($theValue, $wrap), $theLinkWrap);
+				} else {
+					$theValue = $this->wrap($this->wrap($theValue, $theLinkWrap), $wrap);
+				}
+				$file = isset($conf['file.'])
+					? $this->stdWrap($theValue, $conf['file.'])
+					: $theValue;
+					// output
+				$output = $icon . $file . $size;
 			}
-			$file = isset($conf['file.'])
-				? $this->stdWrap($theValue, $conf['file.'])
-				: $theValue;
-				// output
-			$output = $icon . $file . $size;
 			if(isset($conf['stdWrap.'])) {
 				$output = $this->stdWrap($output, $conf['stdWrap.']);
 			}
@@ -4189,11 +4218,11 @@ class tslib_cObj {
 	}
 
 	/**
-	 * Performs basic mathematical evaluation of the input string. Does NOT take parathesis and operator precedence into account! (for that, see t3lib_div::calcPriority())
+	 * Performs basic mathematical evaluation of the input string. Does NOT take parathesis and operator precedence into account! (for that, see t3lib_utility_Math::calculateWithPriorityToAdditionAndSubtraction())
 	 *
 	 * @param	string		The string to evaluate. Example: "3+4*10/5" will generate "35". Only integer numbers can be used.
 	 * @return	integer		The result (might be a float if you did a division of the numbers).
-	 * @see t3lib_div::calcPriority()
+	 * @see t3lib_utility_Math::calculateWithPriorityToAdditionAndSubtraction()
 	 */
 	function calc($val) {
 		$parts = t3lib_div::splitCalc($val, '+-*/');
@@ -4267,7 +4296,7 @@ class tslib_cObj {
 
 		$valArr = explode($conf['token'], $value);
 
-		if (count($valArr) && (t3lib_div::testInt($conf['returnKey']) || $conf['returnKey.'])) {
+		if (count($valArr) && (t3lib_utility_Math::canBeInterpretedAsInteger($conf['returnKey']) || $conf['returnKey.'])) {
 			$key = isset($conf['returnKey.'])
 				? intval($this->stdWrap($conf['returnKey'], $conf['returnKey.']))
 				: intval($conf['returnKey']);
@@ -4320,6 +4349,104 @@ class tslib_cObj {
 				}
 				$content .= $value;
 			}
+		}
+		return $content;
+	}
+
+	/**
+	 * Processes ordered replacements on content data.
+	 *
+	 * @param string $content The content to be processed
+	 * @param array $configuration The TypoScript configuration for stdWrap.replacement
+	 * @return string The processed content data
+	 */
+	protected function replacement($content, array $configuration) {
+			// Sorts actions in configuration by numeric index
+		ksort($configuration, SORT_NUMERIC);
+
+		foreach ($configuration as $index => $action) {
+				// Checks whether we have an valid action and a numeric key ending with a dot ("10.")
+			if (is_array($action)
+				&& substr($index, -1) === '.'
+				&& t3lib_utility_Math::canBeInterpretedAsInteger(substr($index, 0, -1))) {
+				$content = $this->replacementSingle($content, $action);
+			}
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Processes a single search/replace on content data.
+	 *
+	 * @param	string		$content: The content to be processed
+	 * @param	array		$configuration: The TypoScript of the search/replace action to be processed
+	 * @return	string		The processed content data
+	 */
+	protected function replacementSingle($content, array $configuration) {
+		if ((isset($configuration['search']) || isset($configuration['search.']))
+			&& (isset($configuration['replace']) || isset($configuration['replace.']))) {
+
+				// Gets the strings
+			$search = isset($configuration['search.'])
+				? $this->stdWrap($configuration['search'], $configuration['search.']) : $configuration['search'];
+			$replace = isset($configuration['replace.'])
+				? $this->stdWrap($configuration['replace'], $configuration['replace.']) : $configuration['replace'];
+
+				// Determines whether regular expression shall be used:
+			if (isset($configuration['useRegExp']) || $configuration['useRegExp.']) {
+				$useRegularExpression = isset($configuration['useRegExp.'])
+					? $this->stdWrap($configuration['useRegExp'], $configuration['useRegExp.']) : $configuration['useRegExp'];
+			}
+
+				// Performs a replacement by preg_replace()
+			if (isset($useRegularExpression)) {
+					// Get separator-character which precedes the string and separates search-string from the modifiers
+				$separator = $search[0];
+				$startModifiers = strrpos($search, $separator);
+				if (($separator !== FALSE) && ($startModifiers > 0)) {
+					$modifiers = substr($search, $startModifiers + 1);
+						// remove "e" (eval-modifier), which would otherwise allow to run arbitrary PHP-code
+					$modifiers = str_replace('e', '', $modifiers);
+					$search = substr($search, 0, $startModifiers + 1) . $modifiers;
+				}
+				$content = preg_replace($search, $replace, $content);
+			} else {
+				$content = str_replace($search, $replace, $content);
+			}
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Implements the "round" property of stdWrap
+	 * This is a Wrapper function for PHP's rounding functions (round,ceil,floor), defaults to round()
+	 *
+	 * @param	string	Value to process
+	 * @param	array	TypoScript configuration for round
+	 * @return	string	The formatted number
+	 */
+	protected function round($content, array $conf = array()) {
+		$decimals = isset($conf['decimals.'])
+				? $this->stdWrap($conf['decimals'], $conf['decimals.'])
+				: $conf['decimals'];
+		$type = isset($conf['roundType.'])
+				? $this->stdWrap($conf['roundType'], $conf['roundType.'])
+				: $conf['roundType'];
+
+		$floatVal = floatval($content);
+		switch ($type) {
+			case 'ceil':
+				$content = ceil($floatVal);
+				break;
+			case 'floor':
+				$content = floor($floatVal);
+				break;
+			case 'round':
+			default:
+				$content = round($floatVal, intval($decimals));
+				break;
 		}
 		return $content;
 	}
@@ -4839,7 +4966,17 @@ class tslib_cObj {
 						$linktxt = substr($linktxt, 0, -1);
 					}
 				}
-				$target = isset($conf['extTarget']) ? $conf['extTarget'] : $GLOBALS['TSFE']->extTarget;
+
+				if (isset($conf['extTarget'])) {
+					if (isset($conf['extTarget.'])) {
+						$target = $this->stdWrap($conf['extTarget'], $conf['extTarget.']);
+					} else {
+						$target = $conf['extTarget'];
+					}
+				} else {
+					$target = $GLOBALS['TSFE']->extTarget;
+				}
+
 				if ($GLOBALS['TSFE']->config['config']['jumpurl_enable']) {
 					$res = '<a' . ' href="' . htmlspecialchars($GLOBALS['TSFE']->absRefPrefix .
 						$GLOBALS['TSFE']->config['mainScript'] . $initP .
@@ -4973,6 +5110,9 @@ class tslib_cObj {
 						$fileArray['noScale'] = isset($fileArray['noScale.'])
 							? $this->stdWrap($fileArray['noScale'], $fileArray['noScale.'])
 							: $fileArray['noScale'];
+						$fileArray['params'] = isset($fileArray['params.'])
+							? $this->stdWrap($fileArray['params'], $fileArray['params.'])
+							: $fileArray['params'];
 						$maskArray = $fileArray['m.'];
 						$maskImages = array();
 						if (is_array($fileArray['m.'])) { // Must render mask images and include in hash-calculating - else we cannot be sure the filename is unique for the setup!
@@ -5093,7 +5233,7 @@ class tslib_cObj {
 								}
 									// Finish off
 								if (($fileArray['reduceColors'] || ($imgExt == 'png' && !$gifCreator->png_truecolor)) && is_file($dest)) {
-									$reduced = $gifCreator->IMreduceColors($dest, t3lib_div::intInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
+									$reduced = $gifCreator->IMreduceColors($dest, t3lib_utility_Math::forceIntegerInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
 									if (is_file($reduced)) {
 										unlink($dest);
 										rename($reduced, $dest);
@@ -5103,8 +5243,8 @@ class tslib_cObj {
 							} else { // Normal situation:
 								$fileArray['params'] = $this->modifyImageMagickStripProfileParameters($fileArray['params'], $fileArray);
 								$GLOBALS['TSFE']->tmpl->fileCache[$hash] = $gifCreator->imageMagickConvert($theImage, $fileArray['ext'], $fileArray['width'], $fileArray['height'], $fileArray['params'], $fileArray['frame'], $options);
-								if (($fileArray['reduceColors'] || ($imgExt == 'png' && !$gifCreator->png_truecolor)) && is_file($GLOBALS['TSFE']->tmpl->fileCache[$hash][3])) {
-									$reduced = $gifCreator->IMreduceColors($GLOBALS['TSFE']->tmpl->fileCache[$hash][3], t3lib_div::intInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
+								if (($fileArray['reduceColors'] || ($fileArray['ext'] == 'png' && !$gifCreator->png_truecolor)) && is_file($GLOBALS['TSFE']->tmpl->fileCache[$hash][3])) {
+									$reduced = $gifCreator->IMreduceColors($GLOBALS['TSFE']->tmpl->fileCache[$hash][3], t3lib_utility_Math::forceIntegerInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
 									if (is_file($reduced)) {
 										unlink($GLOBALS['TSFE']->tmpl->fileCache[$hash][3]);
 										rename($reduced, $GLOBALS['TSFE']->tmpl->fileCache[$hash][3]);
@@ -5213,9 +5353,6 @@ class tslib_cObj {
 			if ((string) $key != '') {
 				$type = strtolower(trim($parts[0]));
 				switch ($type) {
-					case 'gpvar' :
-						t3lib_div::deprecationLog('Using gpvar in TypoScript getText is deprecated since TYPO3 4.3 - Use gp instead of gpvar.');
-						// Fall Through
 					case 'gp' :
 							// Merge GET and POST and get $key out of the merged array
 						$retVal = $this->getGlobal($key, t3lib_div::array_merge_recursive_overrule(t3lib_div::_GET(), t3lib_div::_POST()));
@@ -5424,8 +5561,6 @@ class tslib_cObj {
 	 * @todo	It would be nice it this function basically looked up any type of value, db-relations etc.
 	 */
 	function TCAlookup($inputValue, $conf) {
-		global $TCA;
-
 		$table = $conf['table'];
 		$field = $conf['field'];
 		$delimiter = $conf['delimiter'] ? $conf['delimiter'] : ' ,';
@@ -5433,12 +5568,13 @@ class tslib_cObj {
 		$GLOBALS['TSFE']->includeTCA();
 		t3lib_div::loadTCA($table);
 
-		if (is_array($TCA[$table]) && is_array($TCA[$table]['columns'][$field]) && is_array($TCA[$table]['columns'][$field]['config']['items'])) {
+		if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$field])
+			&& is_array($GLOBALS['TCA'][$table]['columns'][$field]['config']['items'])) {
 			$values = t3lib_div::trimExplode(',', $inputValue);
 			$output = array();
 			foreach ($values as $value) {
 					// Traverse the items-array...
-				foreach ($TCA[$table]['columns'][$field]['config']['items'] as $item) {
+				foreach ($GLOBALS['TCA'][$table]['columns'][$field]['config']['items'] as $item) {
 						// ... and return the first found label where the value was equal to $key
 					if (!strcmp($item[1], trim($value))) {
 						$output[] = $GLOBALS['TSFE']->sL($item[0]);
@@ -5485,7 +5621,7 @@ class tslib_cObj {
 		$sectionMark = isset($conf['section.'])
 			? trim($this->stdWrap($conf['section'], $conf['section.']))
 			: trim($conf['section']);
-		$sectionMark = $sectionMark ? (t3lib_div::testInt($sectionMark) ? '#c' : '#') . $sectionMark : '';
+		$sectionMark = $sectionMark ? (t3lib_utility_Math::canBeInterpretedAsInteger($sectionMark) ? '#c' : '#') . $sectionMark : '';
 		$initP = '?id=' . $GLOBALS['TSFE']->id . '&type=' . $GLOBALS['TSFE']->type;
 		$this->lastTypoLinkUrl = '';
 		$this->lastTypoLinkTarget = '';
@@ -5541,7 +5677,11 @@ class tslib_cObj {
 			}
 
 				// Internal target:
-			$target = isset($conf['target']) ? $conf['target'] : $GLOBALS['TSFE']->intTarget;
+			if ($GLOBALS['TSFE']->dtdAllowsFrames) {
+				$target = isset($conf['target']) ? $conf['target'] : $GLOBALS['TSFE']->intTarget;
+			} else {
+				$target = isset($conf['target']) ? $conf['target'] : '';
+			}
 			if ($conf['target.']) {
 				$target = $this->stdWrap($target, $conf['target.']);
 			}
@@ -5567,7 +5707,7 @@ class tslib_cObj {
 				$urlChar = intval(strpos($link_param, '.'));
 
 					// Firsts, test if $link_param is numeric and page with such id exists. If yes, do not attempt to link to file
-				if (!t3lib_div::testInt($link_param) || count($GLOBALS['TSFE']->sys_page->getPage_noCheck($link_param)) == 0) {
+				if (!t3lib_utility_Math::canBeInterpretedAsInteger($link_param) || count($GLOBALS['TSFE']->sys_page->getPage_noCheck($link_param)) == 0) {
 						// Detects if a file is found in site-root (or is a 'virtual' simulateStaticDocument file!) and if so it will be treated like a normal file.
 					list ($rootFileDat) = explode('?', rawurldecode($link_param));
 					$containsSlash = strstr($rootFileDat, '/');
@@ -5580,7 +5720,11 @@ class tslib_cObj {
 				}
 
 				if ($pU['scheme'] || ($isLocalFile != 1 && $urlChar && (!$containsSlash || $urlChar < $fileChar))) { // url (external): If doubleSlash or if a '.' comes before a '/'.
-					$target = isset($conf['extTarget']) ? $conf['extTarget'] : $GLOBALS['TSFE']->extTarget;
+					if ($GLOBALS['TSFE']->dtdAllowsFrames) {
+						$target = isset($conf['extTarget']) ? $conf['extTarget'] : $GLOBALS['TSFE']->extTarget;
+					} else {
+						$target = isset($conf['extTarget']) ? $conf['extTarget'] : '';
+					}
 					if ($conf['extTarget.']) {
 						$target = $this->stdWrap($target, $conf['extTarget.']);
 					}
@@ -5642,7 +5786,9 @@ class tslib_cObj {
 						);
 						return $linktxt;
 					}
-				} else { // integer or alias (alias is without slashes or periods or commas, that is 'nospace,alphanum_x,lower,unique' according to definition in $TCA!)
+				} else {
+					// integer or alias (alias is without slashes or periods or commas, that is
+					// 'nospace,alphanum_x,lower,unique' according to definition in $GLOBALS['TCA']!)
 					if ($conf['no_cache.']) {
 						$conf['no_cache'] = $this->stdWrap($conf['no_cache'], $conf['no_cache.']);
 					}
@@ -5656,7 +5802,7 @@ class tslib_cObj {
 					} // If no id or alias is given
 					if ($link_params_parts[1] && !$sectionMark) {
 						$sectionMark = trim($link_params_parts[1]);
-						$sectionMark = (t3lib_div::testInt($sectionMark) ? '#c' : '#') . $sectionMark;
+						$sectionMark = (t3lib_utility_Math::canBeInterpretedAsInteger($sectionMark) ? '#c' : '#') . $sectionMark;
 					}
 
 					if (count($pairParts) > 1) {
@@ -5664,7 +5810,7 @@ class tslib_cObj {
 						$conf['additionalParams'] .= isset($pairParts[2]) ? $pairParts[2] : '';
 					}
 						// Checking if the id-parameter is an alias.
-					if (!t3lib_div::testInt($link_param)) {
+					if (!t3lib_utility_Math::canBeInterpretedAsInteger($link_param)) {
 						$link_param = $GLOBALS['TSFE']->sys_page->getPageIdFromAlias($link_param);
 					}
 
@@ -5716,7 +5862,10 @@ class tslib_cObj {
 								// Mind the order below! See http://bugs.typo3.org/view.php?id=5117
 							$params = $GLOBALS['TSFE']->linkVars . $addQueryParams;
 							if (trim($params, '& ') != '') {
-								$addQueryParams .= '&cHash=' . t3lib_div::generateCHash($params);
+								/* @var $cacheHash t3lib_cacheHash */
+								$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+								$cHash = $cacheHash->generateForParameters($params);
+								$addQueryParams .=  $cHash ? '&cHash=' . $cHash : '';
 							}
 							unset($params);
 						}
@@ -5779,7 +5928,16 @@ class tslib_cObj {
 							$GLOBALS['TYPO3_DB']->sql_free_result($res);
 
 								// Set targetDomain to first found domain record if the target page cannot be reached within the current domain
-							if (count($foundDomains) > 0 && (!in_array($currentDomain, $foundDomains) || count($firstFoundForcedDomains) > 0)) {
+							if(
+								count($foundDomains) > 0 &&
+								(
+									(
+										!in_array($currentDomain, $foundDomains) &&
+										!in_array($currentDomain . trim(preg_replace('/\/[^\/]*$/', '', t3lib_div::getIndpEnv('SCRIPT_NAME'))), $foundDomains)
+									) ||
+									count($firstFoundForcedDomains) > 0
+								)
+							) {
 								foreach ($targetPageRootlinePids as $pid) {
 										// Always use the 'forced' domain if we found one
 									if (isset($firstFoundForcedDomains[$pid])) {
@@ -5830,6 +5988,13 @@ class tslib_cObj {
 								$target = $forceTarget;
 							}
 							$LD['target'] = $target;
+								// Convert IDNA-like domain (if any)
+							if (!preg_match('/^[a-z0-9\.\-]*$/i', $targetDomain)) {
+								require_once(PATH_typo3 . 'contrib/idna/idna_convert.class.php');
+								$IDN = new idna_convert();
+								$targetDomain = $IDN->encode($targetDomain);
+								unset($IDN);
+							}
 							$this->lastTypoLinkUrl = $this->URLqMark(
 								$absoluteUrlScheme . '://' . $targetDomain . '/index.php?id=' . $page['uid'], $addQueryParams
 							) . $sectionMark;
@@ -6368,9 +6533,8 @@ class tslib_cObj {
 	 * @see USER(), stdWrap(), typoLink(), _parseFunc()
 	 */
 	function callUserFunction($funcName, $conf, $content) {
-		$pre = $GLOBALS['TSFE']->TYPO3_CONF_VARS['FE']['userFuncClassPrefix'];
-		if ($pre && !t3lib_div::hasValidClassPrefix($funcName, array($pre))) {
-			$GLOBALS['TT']->setTSlogMessage('Function "' . $funcName . '" was not prepended with "' . $pre . '"', 3);
+		if (!t3lib_div::hasValidClassPrefix($funcName)) {
+			$GLOBALS['TT']->setTSlogMessage('Function "' . $funcName . '" was not prepended with one of "' . implode(', ', t3lib_div::getValidClassPrefixes()) . '"', 3);
 			return $content;
 		}
 			// Split parts
@@ -6448,10 +6612,19 @@ class tslib_cObj {
 		switch ($case) {
 			case 'upper' :
 				$theValue = $GLOBALS['TSFE']->csConvObj->conv_case($GLOBALS['TSFE']->renderCharset, $theValue, 'toUpper');
-			break;
+				break;
 			case 'lower' :
 				$theValue = $GLOBALS['TSFE']->csConvObj->conv_case($GLOBALS['TSFE']->renderCharset, $theValue, 'toLower');
-			break;
+				break;
+			case 'capitalize':
+				$theValue = ucwords($theValue);
+				break;
+			case 'ucfirst':
+				$theValue = $GLOBALS['TSFE']->csConvObj->convCaseFirst($GLOBALS['TSFE']->renderCharset, $theValue, 'toUpper');
+				break;
+			case 'lcfirst':
+				$theValue = $GLOBALS['TSFE']->csConvObj->convCaseFirst($GLOBALS['TSFE']->renderCharset, $theValue, 'toLower');
+				break;
 		}
 		return $theValue;
 	}
@@ -6485,21 +6658,6 @@ class tslib_cObj {
 	}
 
 	/**
-	 * Formats a number to GB, Mb or Kb or just bytes
-	 *
-	 * @param	integer		Number of bytes to format.
-	 * @param	string		Labels for bytes, kilo, mega and giga separated by vertical bar (|) and possibly encapsulated in "". Eg: " | K| M| G" (which is the default value)
-	 * @return	string
-	 * @see t3lib_div::formatSize(), stdWrap()
-	 * @deprecated since TYPO3 3.6, will be removed in TYPO3 4.6 - Use t3lib_div::formatSize() instead
-	 */
-	function bytes($sizeInBytes, $labels) {
-		t3lib_div::logDeprecatedFunction();
-
-		return t3lib_div::formatSize($sizeInBytes, $labels);
-	}
-
-	/**
 	 * Returns the 'age' of the tstamp $seconds
 	 *
 	 * @param	integer		Seconds to return age for. Example: "70" => "1 min", "3601" => "1 hrs"
@@ -6507,7 +6665,7 @@ class tslib_cObj {
 	 * @return	string		The formatted string
 	 */
 	function calcAge($seconds, $labels) {
-		if (t3lib_div::testInt($labels)) {
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($labels)) {
 			$labels = ' min| hrs| days| yrs| min| hour| day| year';
 		} else {
 			$labels = str_replace('"', '', $labels);
@@ -6585,20 +6743,6 @@ class tslib_cObj {
 		} else {
 			return $url . $params;
 		}
-	}
-
-	/**
-	 * Checking syntax of input email address
-	 *
-	 * @param	string		Input string to evaluate
-	 * @return	boolean		Returns TRUE if the $email address (input string) is valid; Has a "@", domain name with at least one period and only allowed a-z characters.
-	 * @see t3lib_div::validEmail()
-	 * @deprecated since TYPO3 3.6, will be removed in TYPO3 4.6 - Use t3lib_div::validEmail() instead
-	 */
-	function checkEmail($email) {
-		t3lib_div::logDeprecatedFunction();
-
-		return t3lib_div::validEmail($email);
 	}
 
 	/**
@@ -6844,9 +6988,9 @@ class tslib_cObj {
 
 	/**
 	 * Returns an UPDATE/DELETE sql query which will "delete" the record.
-	 * If the $TCA config for the table tells us to NOT "physically" delete the record but rather set the "deleted" field to "1" then an UPDATE query is returned doing just that. Otherwise it truely is a DELETE query.
+	 * If the $GLOBALS['TCA'] config for the table tells us to NOT "physically" delete the record but rather set the "deleted" field to "1" then an UPDATE query is returned doing just that. Otherwise it truely is a DELETE query.
 	 *
-	 * @param	string		The table name, should be in $TCA
+	 * @param	string		The table name, should be in $GLOBALS['TCA']
 	 * @param	integer		The UID of the record from $table which we are going to delete
 	 * @param	boolean		If set, the query is executed. IT'S HIGHLY RECOMMENDED TO USE THIS FLAG to execute the query directly!!!
 	 * @return	string		The query, ready to execute unless $doExec was TRUE in which case the return value is FALSE.
@@ -6876,11 +7020,11 @@ class tslib_cObj {
 
 	/**
 	 * Returns an UPDATE sql query.
-	 * If a "tstamp" field is configured for the $table tablename in $TCA then that field is automatically updated to the current time.
+	 * If a "tstamp" field is configured for the $table tablename in $GLOBALS['TCA'] then that field is automatically updated to the current time.
 	 * Notice: It is YOUR responsibility to make sure the data being updated is valid according the tablefield types etc. Also no logging is performed of the update. It's just a nice general usage API function for creating a quick query.
 	 * NOTICE: From TYPO3 3.6.0 this function ALWAYS adds slashes to values inserted in the query.
 	 *
-	 * @param	string		The table name, should be in $TCA
+	 * @param	string		The table name, should be in $GLOBALS['TCA']
 	 * @param	integer		The UID of the record from $table which we are going to update
 	 * @param	array		The data array where key/value pairs are fieldnames/values for the record to update.
 	 * @param	string		Comma list of fieldnames which are allowed to be updated. Only values from the data record for fields in this list will be updated!!
@@ -6917,12 +7061,12 @@ class tslib_cObj {
 	}
 
 	/**
-	 * Returns an INSERT sql query which automatically added "system-fields" according to $TCA
-	 * Automatically fields for "tstamp", "crdate", "cruser_id", "fe_cruser_id" and "fe_crgroup_id" is updated if they are configured in the "ctrl" part of $TCA.
+	 * Returns an INSERT sql query which automatically added "system-fields" according to $GLOBALS['TCA']
+	 * Automatically fields for "tstamp", "crdate", "cruser_id", "fe_cruser_id" and "fe_crgroup_id" is updated if they are configured in the "ctrl" part of $GLOBALS['TCA'].
 	 * The "pid" field is overridden by the input $pid value if >= 0 (zero). "uid" can never be set as a field
 	 * NOTICE: From TYPO3 3.6.0 this function ALWAYS adds slashes to values inserted in the query.
 	 *
-	 * @param	string		The table name, should be in $TCA
+	 * @param	string		The table name, should be in $GLOBALS['TCA']
 	 * @param	integer		The PID value for the record to insert
 	 * @param	array		The data array where key/value pairs are fieldnames/values for the record to insert
 	 * @param	string		Comma list of fieldnames which are allowed to be inserted. Only values from the data record for fields in this list will be inserted!!
@@ -6982,11 +7126,11 @@ class tslib_cObj {
 	/**
 	 * Checks if a frontend user is allowed to edit a certain record
 	 *
-	 * @param	string		The table name, found in $TCA
+	 * @param	string		The table name, found in $GLOBALS['TCA']
 	 * @param	array		The record data array for the record in question
 	 * @param	array		The array of the fe_user which is evaluated, typ. $GLOBALS['TSFE']->fe_user->user
 	 * @param	string		Commalist of the only fe_groups uids which may edit the record. If not set, then the usergroup field of the fe_user is used.
-	 * @param	boolean		True, if the fe_user may edit his own fe_user record.
+	 * @param	boolean		TRUE, if the fe_user may edit his own fe_user record.
 	 * @return	boolean
 	 * @see user_feAdmin
 	 */
@@ -7032,7 +7176,7 @@ class tslib_cObj {
 	 * @param	string		The table name
 	 * @param	array		The array of the fe_user which is evaluated, typ. $GLOBALS['TSFE']->fe_user->user
 	 * @param	string		Commalist of the only fe_groups uids which may edit the record. If not set, then the usergroup field of the fe_user is used.
-	 * @param	boolean		True, if the fe_user may edit his own fe_user record.
+	 * @param	boolean		TRUE, if the fe_user may edit his own fe_user record.
 	 * @return	string		The where clause part. ALWAYS returns a string. If no access at all, then " AND 1=0"
 	 * @see DBmayFEUserEdit(), user_feAdmin::displayEditScreen()
 	 */
@@ -7292,21 +7436,7 @@ class tslib_cObj {
 	}
 
 	/**
-	 * Returns a part for a WHERE clause (without preceeding operator) which will select records based on the presence of a certain string in a string-list inside the record.
-	 * Example: If you have a record with a field, "usergroup" and that field might contain a list like "1,2,3" (with no spaces between the values) then you can select all records having eg. "2" in this list by calling this function. This is regardless of whether the number "2" is in the start, end or middle of the list - or the only value at all.
-	 *
-	 * @param	string		The field name to look in
-	 * @param	string		The value to look for.
-	 * @return	string
-	 * @deprecated since TYPO3 3.6, will be removed in TYPO3 4.6 - Use $GLOBALS['TYPO3_DB']->listQuery() directly!
-	 */
-	function whereSelectFromList($field, $value) {
-		t3lib_div::logDeprecatedFunction();
-		return $GLOBALS['TYPO3_DB']->listQuery($field, $value, '');
-	}
-
-	/**
-	 * Executes a SELECT query for joining three tables according to the MM-relation standards used for tables configured in $TCA. That means MM-joins where the join table has the fields "uid_local" and "uid_foreign"
+	 * Executes a SELECT query for joining three tables according to the MM-relation standards used for tables configured in $GLOBALS['TCA']. That means MM-joins where the join table has the fields "uid_local" and "uid_foreign"
 	 *
 	 * @param	string		List of fields to select
 	 * @param	string		The local table
@@ -7333,7 +7463,7 @@ class tslib_cObj {
 	}
 
 	/**
-	 * Executes a SELECT query for joining two tables according to the MM-relation standards used for tables configured in $TCA. That means MM-joins where the join table has the fields "uid_local" and "uid_foreign"
+	 * Executes a SELECT query for joining two tables according to the MM-relation standards used for tables configured in $GLOBALS['TCA']. That means MM-joins where the join table has the fields "uid_local" and "uid_foreign"
 	 * The two tables joined is the join table ($mm_table) and the foreign table ($foreign_table) - so the "local table" is not included but instead you can supply a list of UID integers from the local table to match in the join-table.
 	 *
 	 * @param	string		List of fields to select
@@ -7423,6 +7553,23 @@ class tslib_cObj {
 	 */
 	function getQuery($table, $conf, $returnQueryArray = FALSE) {
 
+			// Resolve stdWrap in these properties first
+		$properties = array(
+			'pidInList', 'uidInList', 'languageField', 'selectFields', 'max', 'begin', 'groupBy', 'orderBy', 'join', 'leftjoin', 'rightjoin'
+		);
+		foreach ($properties as $property) {
+			$conf[$property] = isset($conf[$property . '.'])
+					? trim($this->stdWrap($conf[$property], $conf[$property . '.']))
+					: trim($conf[$property]);
+			if ($conf[$property] === '') {
+				unset($conf[$property]);
+			}
+			if (isset($conf[$property . '.'])) {
+					// stdWrapping already done, so remove the sub-array
+				unset($conf[$property . '.']);
+			}
+		}
+
 			// Handle PDO-style named parameter markers first
 		$queryMarkers = $this->getQueryMarkers($table, $conf);
 
@@ -7439,14 +7586,12 @@ class tslib_cObj {
 		}
 
 			// Construct WHERE clause:
-		$conf['pidInList'] = isset($conf['pidInList.'])
-			? trim($this->stdWrap($conf['pidInList'], $conf['pidInList.']))
-			: trim($conf['pidInList']);
 
 			// Handle recursive function for the pidInList
 		if (isset($conf['recursive'])) {
 			$conf['recursive'] = intval($conf['recursive']);
 			if ($conf['recursive'] > 0) {
+				$pidList = '';
 				foreach (explode(',', $conf['pidInList']) as $value) {
 					if ($value === 'this') {
 						$value = $GLOBALS['TSFE']->id;
@@ -7486,8 +7631,8 @@ class tslib_cObj {
 				$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			}
 			if (!$error) {
-				$conf['begin'] = t3lib_div::intInRange(ceil($this->calc($conf['begin'])), 0);
-				$conf['max'] = t3lib_div::intInRange(ceil($this->calc($conf['max'])), 0);
+				$conf['begin'] = t3lib_utility_Math::forceIntegerInRange(ceil($this->calc($conf['begin'])), 0);
+				$conf['max'] = t3lib_utility_Math::forceIntegerInRange(ceil($this->calc($conf['max'])), 0);
 				if ($conf['begin'] && !$conf['max']) {
 					$conf['max'] = 100000;
 				}
@@ -7505,11 +7650,11 @@ class tslib_cObj {
 				// Setting up tablejoins:
 			$joinPart = '';
 			if ($conf['join']) {
-				$joinPart = 'JOIN ' . trim($conf['join']);
+				$joinPart = 'JOIN ' . $conf['join'];
 			} elseif ($conf['leftjoin']) {
-				$joinPart = 'LEFT OUTER JOIN ' . trim($conf['leftjoin']);
+				$joinPart = 'LEFT OUTER JOIN ' . $conf['leftjoin'];
 			} elseif ($conf['rightjoin']) {
-				$joinPart = 'RIGHT OUTER JOIN ' . trim($conf['rightjoin']);
+				$joinPart = 'RIGHT OUTER JOIN ' . $conf['rightjoin'];
 			}
 
 				// Compile and return query:
@@ -7521,6 +7666,7 @@ class tslib_cObj {
 				foreach ($queryParts as $queryPartKey => &$queryPartValue) {
 					$queryPartValue = str_replace('###' . $marker . '###', $markerValue, $queryPartValue);
 				}
+				unset($queryPartValue);
 			}
 
 			$query = $GLOBALS['TYPO3_DB']->SELECTquery(
@@ -7547,7 +7693,6 @@ class tslib_cObj {
 	 * @see getQuery()
 	 */
 	function getWhere($table, $conf, $returnQueryArray = FALSE) {
-		global $TCA;
 
 		// Init:
 		$query = '';
@@ -7588,13 +7733,18 @@ class tslib_cObj {
 		if (!$pid_uid_flag) { // If not uid and not pid then uid is set to 0 - which results in nothing!!
 			$query .= ' AND ' . $table . '.uid=0';
 		}
-		if ($where = trim($conf['where'])) {
+
+		$where = isset($conf['where.'])
+			? trim($this->stdWrap($conf['where'], $conf['where.']))
+			: trim($conf['where']);
+
+		if ($where) {
 			$query .= ' AND ' . $where;
 		}
 
 		if ($conf['languageField']) {
-			if ($GLOBALS['TSFE']->sys_language_contentOL && $TCA[$table] && $TCA[$table]['ctrl']['languageField']
-				&& $TCA[$table]['ctrl']['transOrigPointerField']) {
+			if ($GLOBALS['TSFE']->sys_language_contentOL && $GLOBALS['TCA'][$table] && $GLOBALS['TCA'][$table]['ctrl']['languageField']
+				&& $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']) {
 					// Sys language content is set to zero/-1 - and it is expected that whatever routine processes the output will
 					// OVERLAY the records with localized versions!
 				$sys_language_content = '0,-1';
@@ -7607,6 +7757,7 @@ class tslib_cObj {
 		$andWhere = isset($conf['andWhere.'])
 			? trim($this->stdWrap($conf['andWhere'], $conf['andWhere.']))
 			: trim($conf['andWhere']);
+
 		if ($andWhere) {
 			$query .= ' AND ' . $andWhere;
 		}
@@ -7717,7 +7868,7 @@ class tslib_cObj {
 	 * Checks if a page UID is available due to enableFields() AND the list of bad doktype numbers ($this->checkPid_badDoktypeList)
 	 *
 	 * @param	integer		Page UID to test
-	 * @return	boolean		True if OK
+	 * @return	boolean		TRUE if OK
 	 * @access private
 	 * @see getWhere(), checkPidArray()
 	 */
@@ -7892,387 +8043,20 @@ class tslib_cObj {
 	 * @see editPanelPreviewBorder()
 	 */
 	function isDisabled($table, $row) {
-		global $TCA;
-		if (($TCA[$table]['ctrl']['enablecolumns']['disabled']
-			&& $row[$TCA[$table]['ctrl']['enablecolumns']['disabled']])
-			|| ($TCA[$table]['ctrl']['enablecolumns']['fe_group'] && $GLOBALS['TSFE']->simUserGroup
-			&& $row[$TCA[$table]['ctrl']['enablecolumns']['fe_group']] == $GLOBALS['TSFE']->simUserGroup)
-			|| ($TCA[$table]['ctrl']['enablecolumns']['starttime']
-			&& $row[$TCA[$table]['ctrl']['enablecolumns']['starttime']] > $GLOBALS['EXEC_TIME'])
-			|| ($TCA[$table]['ctrl']['enablecolumns']['endtime']
-			&& $row[$TCA[$table]['ctrl']['enablecolumns']['endtime']]
-			&& $row[$TCA[$table]['ctrl']['enablecolumns']['endtime']] < $GLOBALS['EXEC_TIME'])) {
+		if (($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled']
+				&& $row[$GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled']])
+			|| ($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['fe_group'] && $GLOBALS['TSFE']->simUserGroup
+				&& $row[$GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['fe_group']] == $GLOBALS['TSFE']->simUserGroup)
+			|| ($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['starttime']
+				&& $row[$GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['starttime']] > $GLOBALS['EXEC_TIME'])
+			|| ($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['endtime']
+				&& $row[$GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['endtime']]
+				&& $row[$GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['endtime']] < $GLOBALS['EXEC_TIME'])) {
 
 			return TRUE;
 		}
 	}
 }
-
-
-
-/**
- * Rendering of framesets
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage tslib
- */
-class tslib_frameset {
-
-	/**
-	 * Generates a frameset based on input configuration in a TypoScript array.
-	 *
-	 * @param	array		The TypoScript properties of the PAGE object property "frameSet.". See link.
-	 * @return	string		A <frameset> tag.
-	 * @see TSpagegen::renderContentWithHeader()
-	 */
-	function make($setup) {
-		$content = '';
-		if (is_array($setup)) {
-			$sKeyArray = t3lib_TStemplate::sortedKeyList($setup);
-			foreach ($sKeyArray as $theKey) {
-				$theValue = $setup[$theKey];
-				if (intval($theKey) && $conf = $setup[$theKey . '.']) {
-					switch ($theValue) {
-						case 'FRAME' :
-							$typeNum = intval($GLOBALS['TSFE']->tmpl->setup[$conf['obj'] . '.']['typeNum']);
-							if (!$conf['src'] && !$typeNum) {
-								$typeNum = -1;
-							}
-							$content .= '<frame' . $this->frameParams($conf, $typeNum) . ' />' . LF;
-						break;
-						case 'FRAMESET' :
-							$frameset = t3lib_div::makeInstance('tslib_frameset');
-							$content .= $frameset->make($conf) . LF;
-						break;
-					}
-				}
-			}
-			return '<frameset' . $this->framesetParams($setup) . '>' . LF . $content . '</frameset>';
-		}
-	}
-
-	/**
-	 * Creates the attributes for a <frame> tag based on a $conf array and the type number
-	 *
-	 * @param	array		Configuration for the parameter generation for the FRAME set. See link
-	 * @param	integer		The typenumber to use for the link.
-	 * @return	string		String with attributes for the frame-tag. With a prefixed space character.
-	 * @access private
-	 * @link http://typo3.org/documentation/document-library/references/doc_core_tsref/current/view/7/9/
-	 * @see make(), t3lib_TStemplate::linkData()
-	 */
-	function frameParams($setup, $typeNum) {
-		$paramStr = '';
-		$name = $setup['obj'];
-
-		if ($setup['src'] || $setup['src.']) {
-			$src = $setup['src'];
-			if (is_array($setup['src.'])) {
-				$src = $GLOBALS['TSFE']->cObj->stdWrap($src, $setup['src.']);
-			}
-			$paramStr .= ' src="' . htmlspecialchars($src) . '"';
-		} else {
-			$LD = $GLOBALS['TSFE']->tmpl->linkData(
-				$GLOBALS['TSFE']->page,
-				'',
-				$GLOBALS['TSFE']->no_cache,
-				'',
-				'',
-				($setup['options'] ? '&' . $setup['options'] : '') .
-					$GLOBALS['TSFE']->cObj->getClosestMPvalueForPage($GLOBALS['TSFE']->page['uid']), intval($typeNum)
-			);
-			$finalURL = $LD['totalURL'];
-			$paramStr .= ' src="' . htmlspecialchars($finalURL) . '"';
-		}
-		if ($setup['name']) {
-			$paramStr .= ' name="' . $setup['name'] . '"';
-		} else {
-			$paramStr .= ' name="' . $name . '"';
-		}
-		if ($setup['params']) {
-			$paramStr .= ' ' . $setup['params'];
-		}
-		return $paramStr;
-	}
-
-	/**
-	 * Creates the attributes for a <frameset> tag based on a conf array($setup)
-	 *
-	 * @param	array		The setup array(TypoScript properties)
-	 * @return	string		Attributes with preceeding space.
-	 * @access private
-	 * @see make()
-	 */
-	function framesetParams($setup) {
-		$paramStr = '';
-		if ($setup['cols']) {
-			$paramStr .= ' cols="' . $setup['cols'] . '"';
-		}
-		if ($setup['rows']) {
-			$paramStr .= ' rows="' . $setup['rows'] . '"';
-		}
-		if ($setup['params']) {
-			$paramStr .= ' ' . $setup['params'];
-		}
-		return $paramStr;
-	}
-}
-
-
-
-/**
- * Rendering of tables for offset
- *
- * @see	tslib_cObj::OTABLE(), tslib_cObj::stdWrap()
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage tslib
- */
-class tslib_tableOffset {
-	var $tableParams = 'border="0" cellspacing="0" cellpadding="0"';
-	var $default_tableParams = 'border="0" cellspacing="0" cellpadding="0"';
-	var $tdParams = ' width="99%" valign="top"';
-
-	/**
-	 * Wrapping the input content string in a table which will space it out from top/left/right/bottom
-	 *
-	 * @param	string		The HTML content string
-	 * @param	string		List of offset parameters; x,y,r,b,w,h
-	 * @return	string		The HTML content string being wrapped in a <table> offsetting the content as the $offset parameters defined
-	 */
-	function start($content, $offset) {
-		$valPairs = t3lib_div::intExplode(',', $offset . ',,,,,');
-
-		if ($valPairs[0] || $valPairs[1] || $valPairs[2] || $valPairs[3] || $valPairs[4] || $valPairs[5]) {
-				// If width is defined AND there has been no change to the default table params, then extend them to a tablewidth of 1
-			if ($valPairs[4] && $this->default_tableParams == $this->tableParams) {
-				$this->tableParams .= ' width="1"';
-			}
-				// Init:
-			$this->begin = LF . '<table ' . $this->tableParams . '>';
-			$this->end = '</table>';
-			$rows = array();
-			$widthImg = '';
-			$heightImg = '';
-				// If width is required, set so bottom column will display for sure
-			if ($valPairs[4]) {
-				if (!$valPairs[3])
-					$valPairs[3] = 1;
-				$widthImg = '<img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
-					$valPairs[4] . '" height="1" alt="" title="" />';
-			}
-				// If height is required, set so right column will display for sure
-			if ($valPairs[5]) {
-				if (!$valPairs[2])
-					$valPairs[2] = 1;
-				$valPairs[2] = 1;
-				$heightImg = '<img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="1" height="' .
-					$valPairs[5] . '" alt="" title="" />';
-			}
-
-				// First row:
-			if ($valPairs[1]) { // top
-				$rows[1] .= '<tr>';
-				$rows[1] .= '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
-					($valPairs[0] ? $valPairs[0] : 1) . '" height="' . $valPairs[1] . '" alt="" title="" /></td>';
-				if ($valPairs[0])
-					$rows[1] .= '<td></td>';
-				if ($valPairs[2])
-					$rows[1] .= '<td></td>';
-				$rows[1] .= '</tr>';
-			}
-				// Middle row:
-			$rows[2] .= '<tr>';
-			if ($valPairs[0]) {
-				$rows[2] .= $valPairs[1] ? '<td></td>' : '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" width="' . $valPairs[0] . '" height="1" alt="" title="" /></td>';
-			}
-			$rows[2] .= '<td' . $this->tdParams . '>' . $content . '</td>';
-			if ($valPairs[2]) {
-				$rows[2] .= $valPairs[3] ? '<td>' . $heightImg . '</td>' : '<td><img src="' .
-					$GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' . $valPairs[2] . '" height="' .
-					($valPairs[5] ? $valPairs[5] : 1) . '" alt="" title="" /></td>';
-			}
-			$rows[2] .= '</tr>';
-				// Bottom row:
-			if ($valPairs[3]) { // bottom
-				$rows[3] .= '<tr>';
-				if ($valPairs[0])
-					$rows[3] .= '<td></td>';
-				if ($valPairs[2])
-					$rows[3] .= '<td>' . $widthImg . '</td>';
-				$rows[3] .= '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
-					($valPairs[2] ? $valPairs[2] : ($valPairs[4] ? $valPairs[4] : 1)) . '" height="' .
-					$valPairs[3] . '" alt="" title="" /></td>';
-				$rows[3] .= '</tr>';
-			}
-			return $this->begin . implode('', $rows) . $this->end;
-		} else
-			return $content;
-	}
-}
-
-
-
-/**
- * Rendering of tables for content positioning
- *
- * @see tslib_cObj::CTABLE()
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage tslib
- */
-class tslib_controlTable {
-	var $offX = 0; // offset, x
-	var $offY = 0; // offset, y
-
-
-	var $tm = ''; // top menu
-	var $lm = ''; // left menu
-	var $rm = ''; // right menu
-	var $bm = ''; // bottom menu
-	var $content = ''; // content
-
-
-	var $tmTDparams = 'valign="top"'; // top menu TDparams
-	var $lmTDparams = 'valign="top"'; // left menu TDparams
-	var $rmTDparams = 'valign="top"'; // right menu TDparams
-	var $bmTDparams = 'valign="top"'; // bottom menu TDparams
-	var $contentTDparams = 'valign="top"'; // content TDparams
-
-
-	var $cMl = 1; // content margin, left
-	var $cMr = 1; // content margin, right
-	var $cMt = 0; // content margin, top
-	var $cMb = 1; // content margin, bottom
-
-
-	var $contentW = 0; // Places a little gif-spacer in the bottom of the content frame
-
-
-	var $tableParams = 'border="0" cellspacing="0" cellpadding="0"';
-
-	/**
-	 * Wrapping internal vars ->tm, ->lm, ->rm, ->bm and ->content in a table where each content part is stored in a cell.
-	 * The two arguments to this function defines some offsets and margins to use in the arrangement of the content in the table.
-	 *
-	 * @param	string		List of offset parameters; x,y
-	 * @param	string		List of margin parameters; left, top, right, bottom
-	 * @return	string		The content strings wrapped in a <table> as the parameters defined
-	 * @see tslib_cObj::CTABLE()
-	 */
-	function start($offset, $cMargins) {
-		$offArr = t3lib_div::intExplode(',', $offset);
-		$cMargArr = t3lib_div::intExplode(',', $cMargins);
-
-		$cols = 0;
-		$rows = 0;
-
-		if ($this->lm)
-			$cols++;
-		if ($this->rm)
-			$cols++;
-		if ($cMargArr[0])
-			$cols++;
-		if ($cMargArr[2])
-			$cols++;
-		if ($cMargArr[1] || $cMargArr[3] || $this->tm || $this->bm || $this->content || $this->contentW)
-			$cols++;
-
-		if ($cMargArr[1])
-			$rows++;
-		if ($cMargArr[3])
-			$rows++;
-		if ($this->tm)
-			$rows++;
-		if ($this->bm)
-			$rows++;
-		if ($this->content)
-			$rows++;
-		if ($this->contentW)
-			$rows++;
-		if (!$rows && $cols)
-			$rows = 1; // If there are no rows in the middle but still som columns...
-
-
-		if ($rows && $cols) {
-			$res = LF . '<table ' . $this->tableParams . '>';
-				// top offset:
-			if ($offArr[1]) {
-				$xoff = $offArr[0] ? 1 : 0;
-				if ($cols + $xoff > 1) {
-					$colspan = ' colspan="' . ($cols + $xoff) . '"';
-				}
-				$res .= '<tr><td' . $colspan . '><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" width="1" height="' . $offArr[1] . '" alt="" title="" /></td></tr>';
-			}
-				// The rows:
-			if ($rows > 1) {
-				$rowspan = ' rowspan="' . ($rows) . '"';
-			}
-			$res .= '<tr>';
-			if ($offArr[0]) {
-				$res .= '<td' . $rowspan . '><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" height="1" width="' . $offArr[0] . '" alt="" title="" /></td>';
-			}
-			if ($this->lm) {
-				$res .= '<td' . $rowspan . ' ' . $this->lmTDparams . '>' . $this->lm . '</td>';
-			}
-			if ($cMargArr[0]) {
-				$res .= '<td' . $rowspan . '><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" height="1" width="' . $cMargArr[0] . '" alt="" title="" /></td>';
-			}
-				// content...
-
-
-			$middle = array();
-			if ($this->tm) {
-				$middle[] = '<td ' . $this->tmTDparams . '>' . $this->tm . '</td>';
-			}
-			if ($cMargArr[1]) {
-				$middle[] = '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" width="1" height="' . $cMargArr[1] . '" alt="" title="" /></td>';
-			}
-			if ($this->content) {
-				$middle[] = '<td ' . $this->contentTDparams . '>' . $this->content . '</td>';
-			}
-			if ($cMargArr[3]) {
-				$middle[] = '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" width="1" height="' . $cMargArr[3] . '" alt="" title="" /></td>';
-			}
-			if ($this->bm) {
-				$middle[] = '<td ' . $this->bmTDparams . '>' . $this->bm . '</td>';
-			}
-			if ($this->contentW) {
-				$middle[] = '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" height="1" width="' . $this->contentW . '" alt="" title="" /></td>';
-			}
-			if (isset($middle[0])) {
-				$res .= $middle[0];
-			}
-
-				// Left of content
-			if ($cMargArr[2]) {
-				$res .= '<td' . $rowspan . '><img src="' . $GLOBALS['TSFE']->absRefPrefix .
-					'clear.gif" height="1" width="' . $cMargArr[2] . '" alt="" title="" /></td>';
-			}
-			if ($this->rm) {
-				$res .= '<td' . $rowspan . ' ' . $this->rmTDparams . '>' . $this->rm . '</td>';
-			}
-			$res .= '</tr>';
-
-				// More than the two rows
-			$mCount = count($middle);
-			for ($a = 1; $a < $mCount; $a++) {
-				$res .= '<tr>' . $middle[$a] . '</tr>';
-			}
-			$res .= '</table>';
-			return $res;
-		}
-	}
-}
-
 
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_content.php'])) {
 	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_content.php']);

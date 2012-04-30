@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,24 +25,19 @@
 ***************************************************************/
 /**
  * TYPO3HtmlParser Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.TYPO3HtmlParser = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.TYPO3HtmlParser = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function(editor) {
+	configurePlugin: function (editor) {
 		this.pageTSConfiguration = this.editorConfiguration.buttons.cleanword;
 		this.parseHtmlModulePath = this.pageTSConfiguration.pathParseHtmlModule;
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '1.8',
+			version		: '1.10',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -89,9 +84,9 @@ HTMLArea.TYPO3HtmlParser = HTMLArea.Plugin.extend({
 		this.editor.inhibitKeyboardInput = true;
 		var editor = this.editor;
 		if (Ext.isWebKit) {
-			editor.cleanAppleStyleSpans(editor._doc.body);
+			editor.getDomNode().cleanAppleStyleSpans(editor.document.body);
 		}
-		var bookmark = editor.getBookmark(editor._createRange(editor._getSelection()));
+		var bookmark = editor.getBookMark().get(editor.getSelection().createRange());
 		var url = this.parseHtmlModulePath;
 		var content = {
 			editorNo : this.editorId,
@@ -103,10 +98,9 @@ HTMLArea.TYPO3HtmlParser = HTMLArea.Plugin.extend({
 				function (options, success, response) {
 					if (success) {
 						editor.setHTML(response.responseText);
-						editor.selectRange(editor.moveToBookmark(bookmark));
-						this.appendToLog('clean', 'Post request to ' + url + ' successful. Server response: ' + response.responseText);
+						editor.getSelection().selectRange(editor.getBookMark().moveTo(bookmark));
 					} else {
-						this.appendToLog('clean', 'Post request to ' + url + ' failed. Server reported ' + response.status);
+						this.appendToLog('clean', 'Post request to ' + url + ' failed. Server reported ' + response.status, 'error');
 					}
 					this.editor.inhibitKeyboardInput = false;
 				}

@@ -92,6 +92,7 @@ class Tx_Extbase_Persistence_Manager implements Tx_Extbase_Persistence_ManagerIn
 	 * Returns the current persistence session
 	 *
 	 * @return Tx_Extbase_Persistence_Session
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function getSession() {
 		return $this->session;
@@ -101,6 +102,7 @@ class Tx_Extbase_Persistence_Manager implements Tx_Extbase_Persistence_ManagerIn
 	 * Returns the persistence backend
 	 *
 	 * @return Tx_Extbase_Persistence_BackendInterface
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function getBackend() {
 		return $this->backend;
@@ -115,7 +117,7 @@ class Tx_Extbase_Persistence_Manager implements Tx_Extbase_Persistence_ManagerIn
 	public function registerRepositoryClassName($className) {
 		$this->repositoryClassNames[] = $className;
 	}
-	
+
 	/**
 	 * Returns the number of records matching the query.
 	 *
@@ -136,6 +138,35 @@ class Tx_Extbase_Persistence_Manager implements Tx_Extbase_Persistence_ManagerIn
 	 */
 	public function getObjectDataByQuery(Tx_Extbase_Persistence_QueryInterface $query) {
 		return $this->backend->getObjectDataByQuery($query);
+	}
+
+	/**
+	 * Returns the (internal) identifier for the object, if it is known to the
+	 * backend. Otherwise NULL is returned.
+	 *
+	 * Note: this returns an identifier even if the object has not been
+	 * persisted in case of AOP-managed entities. Use isNewObject() if you need
+	 * to distinguish those cases.
+	 *
+	 * @param object $object
+	 * @return mixed The identifier for the object if it is known, or NULL
+	 * @api
+	 */
+	public function getIdentifierByObject($object) {
+		return $this->backend->getIdentifierByObject($object);
+	}
+
+	/**
+	 * Returns the object with the (internal) identifier, if it is known to the
+	 * backend. Otherwise NULL is returned.
+	 *
+	 * @param mixed $identifier
+	 * @param string $objectType
+	 * @return object The object for the identifier if it is known, or NULL
+	 * @api
+	 */
+	public function getObjectByIdentifier($identifier, $objectType) {
+		return $this->backend->getObjectByIdentifier($identifier, $objectType);
 	}
 
 	/**
