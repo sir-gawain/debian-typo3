@@ -3,8 +3,8 @@
 # Uncomment this to turn on verbose mode.
 # export DH_VERBOSE=1
 
-# SOURCEVERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Source: typo3-src(-.+),\1,p')
-SOURCEVERSION:=-4.5
+ SOURCEVERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Source: typo3-src(-.+),\1,p')
+#SOURCEVERSION:=-4.7
 
 PACKAGENAME:=typo3_src$(SOURCEVERSION)
 SOURCEPACKAGE:=typo3-src$(SOURCEVERSION)
