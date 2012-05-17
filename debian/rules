@@ -32,6 +32,13 @@ clean:
 	dh_clean
 	debconf-updatepo
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
+	rm -rf build
+
+build_pre:
+	dh_testdir
+	mkdir -p build
+
+build: build_pre build/svg.swf build/svg.js build/svg.htc
 
 install: build
 	dh_testdir
@@ -49,8 +56,11 @@ install: build
 #remove additional license files
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/lua/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/ometa/LICENSE
@@ -59,14 +69,8 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/python/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/plugins/swfobject_license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/idna/LICENCE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.audio/LICENSE.txt
@@ -74,13 +78,12 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.content/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/lib/corelib/license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
-	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer
-	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
 # fix other stuff
-	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
 
 binary-indep: build install
 	dh_testdir
@@ -119,12 +122,17 @@ get-orig-source:
 	mv _unpack/$(BLANK_DIR) _unpack/$(ORIG_DIR)
 # remove dfsg non complient files
 	rm -f _unpack/$(ORIG_DIR)/typo3/contrib/jsmin/jsmin.php
+	rm -f _unpack/$(ORIG_DIR)/typo3/sysext/em/res/js/ux/jslint.js
 # remove embedded libraries
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swiftmailer
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/prototype
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/scriptaculous
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/flashmedia/swfobject
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swfupload
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/charts.swf
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
 # repack
-	tar -czf $(DEBTAR).gz -C _unpack $(ORIG_DIR)
+	tar -cf - -C _unpack $(ORIG_DIR) | gzip -9 - > $(DEBTAR).gz
 	rm -rf _unpack
 
 prepare-source:
@@ -138,3 +146,16 @@ binary-arch: build install
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
+
+RELEASE_NAME=
+RELEASE_NUMBER=$(shell svnversion)
+COMPILER_CONSTANTS=--define BUILD::releaseName,\'$(RELEASE_NAME)\' --define BUILD::releaseNumber,\'$(RELEASE_NUMBER)\'
+
+build/svg.swf: debian/contrib/websvg/src/org/svgweb/SVGViewerWeb.as debian/contrib/websvg/src/org/svgweb/core/*.as debian/contrib/websvg/src/org/svgweb/nodes/*.as debian/contrib/websvg/src/org/svgweb/utils/*.as debian/contrib/websvg/src/org/svgweb/smil/*.as
+#	cd debian/contrib/websvg/src/org/svgweb && as3compile $(COMPILER_CONSTANTS) -o ../../../../../build/svg.swf -I ../../ SVGViewerWeb.as
+
+build/svg.js: debian/contrib/websvg/src/svg.js
+	yui-compressor --type js --preserve-semi -o build/svg.js debian/contrib/websvg/src/svg.js
+
+build/svg.htc: debian/contrib/websvg/src/svg.htc
+	cp debian/contrib/websvg/src/svg.htc build/svg.htc
