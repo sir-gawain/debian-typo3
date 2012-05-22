@@ -3150,10 +3150,10 @@ final class t3lib_div {
 			)
 			);
 
-			$content = file_get_contents($url, FALSE, $ctx);
+			$content = @file_get_contents($url, FALSE, $ctx);
 
 			if ($content === FALSE && isset($report)) {
-				$report['error']   = -1;
+				$report['error'] = -1;
 				$report['message'] = 'Couldn\'t get URL: ' . implode(LF, $http_response_header);
 			}
 		} else {
@@ -3161,10 +3161,10 @@ final class t3lib_div {
 				$report['lib'] = 'file';
 			}
 
-			$content = file_get_contents($url);
+			$content = @file_get_contents($url);
 
 			if ($content === FALSE && isset($report)) {
-				$report['error']   = -1;
+				$report['error'] = -1;
 				$report['message'] = 'Couldn\'t get URL: ' . implode(LF, $http_response_header);
 			}
 		}
@@ -4148,7 +4148,7 @@ final class t3lib_div {
 				if ($proxySSL == '*') {
 					$proxySSL = $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyIP'];
 				}
-				if (self::cmpIP($_SERVER['REMOTE_ADDR'], $proxySSL)) {
+				if (self::cmpIP(self::getIndpEnv('REMOTE_ADDR'), $proxySSL)) {
 					$retVal = TRUE;
 				} else {
 					$retVal = $_SERVER['SSL_SESSION_ID'] || !strcasecmp($_SERVER['HTTPS'], 'on') || !strcmp($_SERVER['HTTPS'], '1') ? TRUE : FALSE; // see http://bugs.typo3.org/view.php?id=3909
