@@ -3861,6 +3861,10 @@ class t3lib_TCEmain {
 											// Set override values:
 										$overrideValues[$TCA[$Ttable]['ctrl']['languageField']] = $langRec['uid'];
 										$overrideValues[$TCA[$Ttable]['ctrl']['transOrigPointerField']] = $uid;
+											// Copy the type (if defined in both tables) from the original record so that translation has same type as original record
+										if (isset($TCA[$table]['ctrl']['type']) && isset($TCA[$Ttable]['ctrl']['type'])) {
+											$overrideValues[$TCA[$Ttable]['ctrl']['type']] = $row[$TCA[$table]['ctrl']['type']];
+										}
 
 											// Set exclude Fields:
 										foreach ($TCA[$Ttable]['columns'] as $fN => $fCfg) {
@@ -6075,21 +6079,22 @@ class t3lib_TCEmain {
 		$previousLocalizedRecordUid = $uid;
 		if ($GLOBALS['TCA'][$table] && $GLOBALS['TCA'][$table]['ctrl']['sortby']) {
 			$sortRow = $GLOBALS['TCA'][$table]['ctrl']['sortby'];
+			$select = $sortRow . ',pid,uid';
 				// For content elements, we also need the colPos
 			if ($table === 'tt_content') {
-				$sortRow .= ',colPos';
+				$select .= ',colPos';
 			}
 				// Get the sort value of the default language record
-			$row = t3lib_BEfunc::getRecord($table, $uid, $sortRow . ',pid,uid');
+			$row = t3lib_BEfunc::getRecord($table, $uid, $select);
 			if (is_array($row)) {
 					// Find the previous record in default language on the same page
 				$where = 'pid=' . intval($pid) . ' AND ' . 'sys_language_uid=0' . ' AND ' . $sortRow . '<' . intval($row[$sortRow]);
 
 					// Respect the colPos for content elements
 				if ($table === 'tt_content') {
-					$where .= ' AND colPos=' . $row['colPos'];
+					$where .= ' AND colPos=' . intval($row['colPos']);
 				}
-				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($sortRow . ',pid,uid', $table, $where . $this->deleteClause($table), '', $sortRow . ' DESC', '1');
+				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($select, $table, $where . $this->deleteClause($table), '', $sortRow . ' DESC', '1');
 					// If there is an element, find its localized record in specified localization language
 				if ($previousRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					$previousLocalizedRecord = t3lib_BEfunc::getRecordLocalization($table, $previousRow['uid'], $language);
