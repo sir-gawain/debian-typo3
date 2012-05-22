@@ -2,6 +2,7 @@ Source: typo3-src
 Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
+DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7), po-debconf
 Standards-Version: 3.9.3
 Homepage: http://www.typo3.org
