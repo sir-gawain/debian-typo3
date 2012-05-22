@@ -1,3 +1,9 @@
+typo3-src (4.5.16+dfsg1-1) UNRELEASED; urgency=low
+
+  * Fixed upstream version mangling for alpha/beta/rc upstream packages.
+
+ -- Christian Welzel <gawain@camlann.de>  Tue, 22 May 2012 14:11:03 +0200
+
 typo3-src (4.5.15+dfsg1-2) unstable; urgency=low
 
   * Install localconf.php as localconf.php_template, and create localconf.php
