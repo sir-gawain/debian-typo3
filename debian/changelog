@@ -1,8 +1,12 @@
-typo3-src (4.5.16+dfsg1-1) UNRELEASED; urgency=low
+typo3-src (4.5.16+dfsg1-1) unstable; urgency=low
 
+  * New upstream release.
   * Fixed upstream version mangling for alpha/beta/rc upstream packages.
+  * Added DM-Upload-Allowed: yes
+  * Removed 0001-BUGFIX-Pagetree-broken-due-to-JavaScript-exception.patch
+    (applied upstream).
 
- -- Christian Welzel <gawain@camlann.de>  Tue, 22 May 2012 14:11:03 +0200
+ -- Christian Welzel <gawain@camlann.de>  Tue, 22 May 2012 17:00:53 +0200
 
 typo3-src (4.5.15+dfsg1-2) unstable; urgency=low
 
