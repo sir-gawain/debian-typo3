@@ -116,7 +116,7 @@ get-orig-source:
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swfupload
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/charts.swf
 # repack
-	tar -czf $(DEBTAR).gz -C _unpack $(ORIG_DIR)
+	tar -cf - -C _unpack $(ORIG_DIR) | gzip -9 - > $(DEBTAR).gz
 	rm -rf _unpack
 
 prepare-source:
