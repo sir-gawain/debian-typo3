@@ -68,7 +68,6 @@ install: build
 # remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
-	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
 # fix other stuff
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
 
@@ -113,8 +112,10 @@ get-orig-source:
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swiftmailer
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/prototype
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/scriptaculous
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/flashmedia/swfobject
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swfupload
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/charts.swf
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
 # repack
 	tar -cf - -C _unpack $(ORIG_DIR) | gzip -9 - > $(DEBTAR).gz
 	rm -rf _unpack
