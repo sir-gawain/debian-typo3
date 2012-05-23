@@ -49,8 +49,11 @@ install: build
 #remove additional license files
 	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/lua/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/ometa/LICENSE
@@ -59,24 +62,17 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/python/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/plugins/swfobject_license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/license.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/plugins/swfobject_license.txt
 # remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/prototype/prototype.js
-	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/scriptaculous
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
-	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/swiftmailer
 	rm -rf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/swfobject
 # fix other stuff
-	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
+	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
 
 binary-indep: build install
 	dh_testdir
