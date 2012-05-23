@@ -1,3 +1,10 @@
+typo3-src (4.5.16+dfsg1-2)
+
+  * remove typo3/contrib/extjs/resources/charts.swf during repacking
+    because we have no source for it.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 23 Mai 2012 22:00:00 +0200
+
 typo3-src (4.5.14+dfsg1-1)
 
   * base of this package is now the blankpackage.zip of TYPO3
