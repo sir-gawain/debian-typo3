@@ -65,8 +65,6 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/swfupload/plugins/swfobject_license.txt
 # remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
@@ -115,6 +113,7 @@ get-orig-source:
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swiftmailer
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/prototype
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/scriptaculous
+	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swfupload
 # repack
 	tar -czf $(DEBTAR).gz -C _unpack $(ORIG_DIR)
 	rm -rf _unpack

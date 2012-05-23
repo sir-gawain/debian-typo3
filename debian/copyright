@@ -342,15 +342,6 @@ License:
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  General Public License for more details.
 
-Files: typo3/contrib/swfupload/*
-Copyright: 2006-2007, Lars Huring, Olov Nilzén and Mammon Media
-           2007-2008, Jake Roberts
-License: MIT
-
-Files: typo3/contrib/swfupload/plugins/swfupload.swfobject.js
-Copyright: 2007, Geoff Stearns, Michael Williams, and Bobby van der Sluis
-License: MIT
-
 Files: typo3/contrib/flashmedia/qtobject/*
 Copyright: 2004, Geoff Stearns
 License: MIT

@@ -1,6 +1,5 @@
 add-source-for-mediaplayer-swfs.patch
 add-source-for-modernizr.patch
-add-source-for-swfupload.patch
 dummy-defaults.patch
 dummy-addindexpages.patch
 fix-im-command.patch
