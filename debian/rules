@@ -32,6 +32,13 @@ clean:
 	dh_clean
 	debconf-updatepo
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/nimbus.sfd.gz
+	rm -rf build
+
+build_pre:
+	dh_testdir
+	mkdir -p build
+
+build: build_pre build/svg.swf build/svg.js build/svg.htc
 
 install: build
 	dh_testdir
@@ -131,3 +138,16 @@ binary-arch: build install
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
+
+RELEASE_NAME=
+RELEASE_NUMBER=$(shell svnversion)
+COMPILER_CONSTANTS=--define BUILD::releaseName,\'$(RELEASE_NAME)\' --define BUILD::releaseNumber,\'$(RELEASE_NUMBER)\'
+
+build/svg.swf: debian/contrib/websvg/src/org/svgweb/SVGViewerWeb.as debian/contrib/websvg/src/org/svgweb/core/*.as debian/contrib/websvg/src/org/svgweb/nodes/*.as debian/contrib/websvg/src/org/svgweb/utils/*.as debian/contrib/websvg/src/org/svgweb/smil/*.as
+#	cd debian/contrib/websvg/src/org/svgweb && as3compile $(COMPILER_CONSTANTS) -o ../../../../../build/svg.swf -I ../../ SVGViewerWeb.as
+
+build/svg.js: debian/contrib/websvg/src/svg.js
+	yui-compressor --type js --preserve-semi -o build/svg.js debian/contrib/websvg/src/svg.js
+
+build/svg.htc: debian/contrib/websvg/src/svg.htc
+	cp debian/contrib/websvg/src/svg.htc build/svg.htc
