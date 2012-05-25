@@ -1,9 +1,16 @@
-typo3-src (4.5.16+dfsg1-2)
+typo3-src (4.5.16+dfsg2-1)
 
   * remove typo3/contrib/extjs/resources/charts.swf during repacking
     because we have no source for it.
+  * Added source code of typo3/contrib/websvg from svn repository of svgweb
+    at http://svgweb.googlecode.com/svn/trunk at revision 1232. Unfortunately
+    the version used by upstream cannot determined by an embedded version
+    number but has to be researched by comparing file sizes in the svgweb
+    distribution zip and this package. These match in the
+    svgweb-2010-08-30-Owlephant.zip which is based on r1232 according to the
+    wiki page http://code.google.com/p/svgweb/wiki/ReleaseNotes.
 
- -- Christian Welzel <gawain@camlann.de>  Wed, 23 Mai 2012 22:00:00 +0200
+ -- Christian Welzel <gawain@camlann.de>  Wed, 25 Mai 2012 22:00:00 +0200
 
 typo3-src (4.5.14+dfsg1-1)
 
