@@ -21,6 +21,10 @@ Files: debian/contrib/modernizr/*
 Copyright: 2009-2010, Faruk Ateş
 License: MIT or BSD
 
+Files: debian/contrib/websvg/*
+Copyright: James Hight, Rick Masters, Google Inc.
+License: Apache-2.0
+
 Files: fileadmin/* t3lib/* typo3conf/* typo3temp/* uploads/*
        typo3/classes/* typo3/ext/* typo3/gfx/* typo3/interfaces/* typo3/install/*
        typo3/js/* typo3/mod/* typo3/stylesheets/* typo3/sysext/* typo3/templates/*
