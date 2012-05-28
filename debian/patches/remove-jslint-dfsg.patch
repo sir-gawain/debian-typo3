@@ -1,3 +1,9 @@
+From: Christian Welzel <gawain@camlann.de>
+Date: Mon, 28 Mai 2012 12:26:57 +0200
+Subject: Remove jsmin.js
+Description: remove invocation code of jslint.js, which is not dfsg compliant
+and therefore removed during packaging.
+
 --- typo3.orig/typo3/sysext/em/classes/class.tx_em_extensionmanager.php
 +++ typo3/typo3/sysext/em/classes/class.tx_em_extensionmanager.php
 @@ -116,7 +116,6 @@
