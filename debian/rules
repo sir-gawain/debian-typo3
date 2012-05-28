@@ -115,6 +115,7 @@ get-orig-source:
 	mv _unpack/$(BLANK_DIR) _unpack/$(ORIG_DIR)
 # remove dfsg non complient files
 	rm -f _unpack/$(ORIG_DIR)/typo3/contrib/jsmin/jsmin.php
+	rm -f _unpack/$(ORIG_DIR)/typo3/sysext/em/res/js/ux/jslint.js
 # remove embedded libraries
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swiftmailer
 	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/prototype

@@ -1,3 +1,13 @@
+typo3-src (4.5.16+dfsg3-1)
+
+  * typo3/sysext/em/res/js/ux/jslint.js contains code that is under a non free
+    license -> DFSG #6 "No Discrimination Against Fields of Endeavor".
+    This file has been removed from orig.tgz and the only files refencing it
+    (typo3/sysext/em/classes/class.tx_em_extensionmanager.php and
+    typo3/sysext/em/res/js/em_files.js) have been patched to not use it anymore.
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 28 May 2012 17:00:00 +0200
+
 typo3-src (4.5.16+dfsg2-1)
 
   * remove typo3/contrib/extjs/resources/charts.swf during repacking

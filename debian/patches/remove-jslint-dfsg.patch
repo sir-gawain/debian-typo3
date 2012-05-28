@@ -1,0 +1,53 @@
+--- typo3.orig/typo3/sysext/em/classes/class.tx_em_extensionmanager.php
++++ typo3/typo3/sysext/em/classes/class.tx_em_extensionmanager.php
+@@ -116,7 +116,6 @@
+ 			.x-btn-download { background-image:url(' . $iconsGfxPath . 'down.gif) !important;}
+ 			.x-btn-undo { background-image:url(' . $this->resPath . 'icons/arrow_undo.png) !important;}
+ 			.x-btn-redo { background-image:url(' . $this->resPath . 'icons/arrow_redo.png) !important;}
+-			.x-btn-jslint { background-image:url(' . $this->resPath . 'icons/jslint.gif) !important;}
+ 			.x-btn-indent { background-image:url(' . $this->resPath . 'icons/text_indent.png) !important;}
+ 		');
+ 
+@@ -215,7 +214,6 @@
+ 		$this->pageRenderer->addJsFile($this->resPath . 'js/ux/filter/ListFilter.js');
+ 		$this->pageRenderer->addJsFile($this->resPath . 'js/ux/filter/NumericFilter.js');
+ 		$this->pageRenderer->addJsFile($this->resPath . 'js/ux/filter/StringFilter.js');
+-		$this->pageRenderer->addJsFile($this->resPath . 'js/ux/jslint.js');
+ 
+ 		//Scripts
+ 		$this->pageRenderer->addJsFile($this->resPath . 'js/em_layouts.js');
+--- typo3.orig/typo3/sysext/em/res/js/em_files.js
++++ typo3/typo3/sysext/em/res/js/em_files.js
+@@ -315,6 +315,7 @@
+ 						this.highlightEditor.codeMirrorEditor.reindent();
+ 					}
+ 				},
++/*
+ 				{
+ 					iconCls: 'x-btn-jslint',
+ 					tooltip: TYPO3.lang.cmd_jslint,
+@@ -343,6 +344,7 @@
+ 						}
+ 					}
+ 				},
++*/
+ 				'->',
+ 				{
+ 					xtype: 'tbtext',
+@@ -422,11 +424,11 @@
+ 			centerPanel.redoButton.enable();
+ 			centerPanel.indentButton.enable();
+ 			centerPanel.diffButton.disable();
+-			if (node.attributes.ext == 'js') {
+-				centerPanel.jslintButton.enable();
+-			} else {
+-				centerPanel.jslintButton.disable();
+-			}
++//			if (node.attributes.ext == 'js') {
++//				centerPanel.jslintButton.enable();
++//			} else {
++//				centerPanel.jslintButton.disable();
++//			}
+ 
+ 		}, this);
+ 	},
