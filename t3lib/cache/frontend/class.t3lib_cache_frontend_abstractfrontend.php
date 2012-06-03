@@ -143,22 +143,14 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 			);
 		}
 
-		$this->backend->flushByTag($tag);
-	}
-
-	/**
-	 * Removes all cache entries of this cache which are tagged by
-	 * one of the specified tags.
-	 * @param array $tags Array of tags to search for
-	 * @return void
-	 * @deprecated since 4.6, will be removed in 4.8
-	 * @api
-	 */
-	public function flushByTags(array $tags) {
-		t3lib_div::deprecationLog('flushByTags is deprecated since 4.6 and will be removed in 4.8');
-		foreach ($tags as $tag) {
-			$this->backend->flushByTag($tag);
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/cache/frontend/class.t3lib_cache_frontend_abstractfrontend.php']['flushByTag'])) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/cache/frontend/class.t3lib_cache_frontend_abstractfrontend.php']['flushByTag'] as $_funcRef) {
+				$params = array('tag' => $tag);
+				t3lib_div::callUserFunction($_funcRef, $params, $this);
+			}
 		}
+
+		$this->backend->flushByTag($tag);
 	}
 
 	/**
@@ -169,22 +161,6 @@ abstract class t3lib_cache_frontend_AbstractFrontend implements t3lib_cache_fron
 	 */
 	public function collectGarbage() {
 		$this->backend->collectGarbage();
-	}
-
-	/**
-	 * Renders a tag which can be used to mark a cache entry as "depends on this class".
-	 * Whenever the specified class is modified, all cache entries tagged with the
-	 * class are flushed.
-	 *
-	 * If an empty string is specified as class name, the returned tag means "depends on any class".
-	 *
-	 * @param string $className The class name
-	 * @return string Class Tag
-	 * @api
-	 * @deprecated since TYPO3 4.6 - Use t3lib_cache_Manager::getClassTag() instead
-	 */
-	public function getClassTag($className = '') {
-		return t3lib_cache_Manager::getClassTag($className);
 	}
 
 	/**

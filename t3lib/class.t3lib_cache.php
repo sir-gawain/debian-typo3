@@ -40,48 +40,21 @@ class t3lib_cache {
 	 * Initializes the caching framework by loading the cache manager and factory
 	 * into the global context.
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	public static function initializeCachingFramework() {
 		if (!self::isCachingFrameworkInitialized()) {
-			$GLOBALS['typo3CacheManager'] = t3lib_div::makeInstance('t3lib_cache_Manager');
+				// New operator used on purpose, makeInstance() is not ready to be used so early in bootstrap
+			$GLOBALS['typo3CacheManager'] = new t3lib_cache_Manager();
+			t3lib_div::setSingletonInstance('t3lib_cache_Manager', $GLOBALS['typo3CacheManager']);
+			t3lib_div::addClassNameToMakeInstanceCache('t3lib_cache_Manager', 't3lib_cache_Manager');
 			$GLOBALS['typo3CacheManager']->setCacheConfigurations($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']);
-			$GLOBALS['typo3CacheFactory'] = t3lib_div::makeInstance('t3lib_cache_Factory', 'production', $GLOBALS['typo3CacheManager']);
+				// New operator used on purpose, makeInstance() is not ready to be used so early in bootstrap
+			$GLOBALS['typo3CacheFactory'] = new t3lib_cache_Factory('production', $GLOBALS['typo3CacheManager']);
+			t3lib_div::setSingletonInstance('t3lib_cache_Factory', $GLOBALS['typo3CacheFactory']);
+			t3lib_div::addClassNameToMakeInstanceCache('t3lib_cache_Factory', 't3lib_cache_Factory');
 			self::$isCachingFrameworkInitialized = TRUE;
 		}
-	}
-
-	/**
-	 * initializes the cache_pages cache
-	 *
-	 * @return	void
-	 * @author	Ingo Renner <ingo@typo3.org>
-	 * @deprecated since TYPO3 4.6, will be removed in 4.8 - cacheManager->getCache() now initializes caches automatically
-	 */
-	public static function initPageCache() {
-		t3lib_div::logDeprecatedFunction();
-	}
-
-	/**
-	 * initializes the cache_pagesection cache
-	 *
-	 * @return	void
-	 * @author	Ingo Renner <ingo@typo3.org>
-	 * @deprecated since TYPO3 4.6, will be removed in 4.8 - cacheManager->getCache() now initializes caches automatically
-	 */
-	public static function initPageSectionCache() {
-		t3lib_div::logDeprecatedFunction();
-	}
-
-	/**
-	 * initializes the cache_hash cache
-	 *
-	 * @return	void
-	 * @author	Ingo Renner <ingo@typo3.org>
-	 * @deprecated since TYPO3 4.6, will be removed in 4.8 - cacheManager->getCache() now initializes caches automatically
-	 */
-	public static function initContentHashCache() {
-		t3lib_div::logDeprecatedFunction();
 	}
 
 	/**
@@ -99,18 +72,6 @@ class t3lib_cache {
 		}
 
 		return self::$isCachingFrameworkInitialized;
-	}
-
-	/**
-	 * Enables the caching framework for the core caches like cache_pages, cache_pagesection and cache_hash.
-	 * This method can be called by extensions in their ext_localconf.php. Calling it later would not work,
-	 * since rendering is already started using the defined caches.
-	 *
-	 * @deprecated since 4.6, will be removed in 4.8: The caching framework is enabled by default
-	 * @return void
-	 */
-	public static function enableCachingFramework() {
-		t3lib_div::logDeprecatedFunction();
 	}
 
 	/**

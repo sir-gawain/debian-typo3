@@ -84,7 +84,7 @@ class SC_wizard_colorpicker {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 			// Setting GET vars (used in frameset script):
 		$this->P = t3lib_div::_GP('P',1);
 
@@ -100,9 +100,9 @@ class SC_wizard_colorpicker {
 
 			// Resolving image (checking existence etc.)
 		$this->imageError = '';
-		if ($this->exampleImg)	{
+		if ($this->exampleImg) {
 			$this->pickerImage = t3lib_div::getFileAbsFileName($this->exampleImg,1,1);
-			if (!$this->pickerImage || !@is_file($this->pickerImage))	{
+			if (!$this->pickerImage || !@is_file($this->pickerImage)) {
 				$this->imageError = 'ERROR: The image, "'.$this->exampleImg.'", could not be found!';
 			}
 		}
@@ -112,7 +112,7 @@ class SC_wizard_colorpicker {
 		$update = '';
 		if ($this->areFieldChangeFunctionsValid()) {
 			unset($fieldChangeFuncArr['alert']);
-			foreach($fieldChangeFuncArr as $v)	{
+			foreach($fieldChangeFuncArr as $v) {
 				$update.= '
 				parent.opener.'.$v;
 			}
@@ -123,24 +123,24 @@ class SC_wizard_colorpicker {
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->JScode = $this->doc->wrapScriptTags('
 			function checkReference()	{	//
-				if (parent.opener && parent.opener.document && parent.opener.document.'.$this->formName.' && parent.opener.document.'.$this->formName.'["'.$this->fieldName.'"])	{
+				if (parent.opener && parent.opener.document && parent.opener.document.'.$this->formName.' && parent.opener.document.'.$this->formName.'["'.$this->fieldName.'"]) {
 					return parent.opener.document.'.$this->formName.'["'.$this->fieldName.'"];
 				} else {
 					close();
 				}
 			}
 			function changeBGcolor(color) {	// Changes the color in the table sample back in the TCEform.
-			    if (parent.opener.document.layers)	{
+			    if (parent.opener.document.layers) {
 			        parent.opener.document.layers["'.$this->md5ID.'"].bgColor = color;
-			    } else if (parent.opener.document.all)	{
+			    } else if (parent.opener.document.all) {
 			        parent.opener.document.all["'.$this->md5ID.'"].style.background = color;
-				} else if (parent.opener.document.getElementById && parent.opener.document.getElementById("'.$this->md5ID.'"))	{
+				} else if (parent.opener.document.getElementById && parent.opener.document.getElementById("'.$this->md5ID.'")) {
 					parent.opener.document.getElementById("'.$this->md5ID.'").bgColor = color;
 				}
 			}
 			function setValue(input)	{	//
 				var field = checkReference();
-				if (field)	{
+				if (field) {
 					field.value = input;
 					'.$update.'
 					changeBGcolor(input);
@@ -161,7 +161,7 @@ class SC_wizard_colorpicker {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 		if(!t3lib_div::_GP('showPicker')) {	// Show frameset by default:
 			$this->frameSet();
 		} else {
@@ -211,7 +211,7 @@ class SC_wizard_colorpicker {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		$this->content.= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
@@ -228,7 +228,7 @@ class SC_wizard_colorpicker {
 			// Set doktype:
 		$GLOBALS['TBE_TEMPLATE']->docType = 'xhtml_frames';
 		$GLOBALS['TBE_TEMPLATE']->JScode = $GLOBALS['TBE_TEMPLATE']->wrapScriptTags('
-				if (!window.opener)	{
+				if (!window.opener) {
 					alert("ERROR: Sorry, no link to main window... Closing");
 					close();
 				}
@@ -282,15 +282,15 @@ class SC_wizard_colorpicker {
 	 *
 	 * @return	void
 	 */
-	function colorMatrix()	{
+	function colorMatrix() {
 		$steps = 51;
 
 			// Get colors:
 		$color = array();
 
-		for($rr=0;$rr<256;$rr+=$steps)	{
-			for($gg=0;$gg<256;$gg+=$steps)	{
-				for($bb=0;$bb<256;$bb+=$steps)	{
+		for($rr=0;$rr<256;$rr+=$steps) {
+			for($gg=0;$gg<256;$gg+=$steps) {
+				for($bb=0;$bb<256;$bb+=$steps) {
 					$color[] = '#'.
 						substr('0'.dechex($rr),-2).
 						substr('0'.dechex($gg),-2).
@@ -304,9 +304,9 @@ class SC_wizard_colorpicker {
 
 		$rows = 0;
 		$tRows = array();
-		while(isset($color[$columns*$rows]))	{
+		while(isset($color[$columns*$rows])) {
 			$tCells = array();
-			for($i=0;$i<$columns;$i++)	{
+			for($i=0;$i<$columns;$i++) {
 				$tCells[] = '
 					<td bgcolor="'.$color[$columns*$rows+$i].'" onclick="document.colorform.colorValue.value = \''.$color[$columns*$rows+$i].'\'; document.colorform.submit();" title="'.$color[$columns*$rows+$i].'">&nbsp;&nbsp;</td>';
 			}
@@ -329,7 +329,7 @@ class SC_wizard_colorpicker {
 	 *
 	 * @return	void
 	 */
-	function colorList()	{
+	function colorList() {
 			// Initialize variables:
 		$colors = explode(',',$this->HTMLcolorList);
 		$currentValue = strtolower($this->colorValue);
@@ -337,7 +337,7 @@ class SC_wizard_colorpicker {
 		$opt[] = '<option value=""></option>';
 
 			// Traverse colors, making option tags for selector box.
-		foreach($colors as $colorName)	{
+		foreach($colors as $colorName) {
 			$opt[] = '<option style="background-color: '.$colorName.';" value="'.htmlspecialchars($colorName).'"'.($currentValue==$colorName ? ' selected="selected"' : '').'>'.htmlspecialchars($colorName).'</option>';
 		}
 
@@ -357,10 +357,10 @@ class SC_wizard_colorpicker {
 	 *
 	 * @return	void
 	 */
-	function colorImage()	{
+	function colorImage() {
 			// Handling color-picker image if any:
-		if (!$this->imageError)	{
-			if ($this->pickerImage)	{
+		if (!$this->imageError) {
+			if ($this->pickerImage) {
 				if(t3lib_div::_POST('coords_x')) {
 					$this->colorValue = '#'.$this->getIndex(t3lib_stdgraphic::imageCreateFromFile($this->pickerImage),t3lib_div::_POST('coords_x'),t3lib_div::_POST('coords_y'));
 				}
@@ -418,13 +418,6 @@ class SC_wizard_colorpicker {
 		);
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_colorpicker.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_colorpicker.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_wizard_colorpicker');

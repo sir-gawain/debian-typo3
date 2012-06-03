@@ -198,7 +198,7 @@ class tx_scheduler_Module extends t3lib_SCbase {
 		}
 
 			// Handle chosen action
-		switch((string)$this->MOD_SETTINGS['function'])	{
+		switch((string)$this->MOD_SETTINGS['function']) {
 			case 'scheduler':
 					// Scheduler's main screen
 				$content .= $this->executeTasks();
@@ -520,6 +520,25 @@ class tx_scheduler_Module extends t3lib_SCbase {
 	}
 
 	/**
+	 * Renders the task progress bar.
+	 *
+	 * @param float $progress Task progress
+	 * @return string Progress bar markup
+	 */
+	protected function renderTaskProgressBar($progress) {
+		$progressText .= $GLOBALS['LANG']->getLL('status.progress')
+			. ': ' . $progress . '%';
+
+		$progressBar = '<div class="progress"> <div class="bar" style="width: '
+			. round($progress)
+			. '%;">'
+			. $progressText
+			. '</div> </div>';
+
+		return $progressBar;
+	}
+
+	/**
 	 * Delete a task from the execution queue
 	 *
 	 * @return void
@@ -758,10 +777,23 @@ class tx_scheduler_Module extends t3lib_SCbase {
 			$cell .= '<input type="hidden" name="tx_scheduler[class]" id="task_class" value="' . $taskInfo['class'] . '" />';
 		} else {
 			$cell = '<select name="tx_scheduler[class]" id="task_class" class="wide" onchange="actOnChangedTaskClass(this)">';
-				// Loop on all registered classes to display a selector
+
+				// Group registered classes by classname
+			$groupedClasses = array();
 			foreach ($registeredClasses as $class => $classInfo) {
-				$selected = ($class == $taskInfo['class']) ? ' selected="selected"' : '';
-				$cell .= '<option value="' . $class . '"' . $selected . '>' . $classInfo['title'] . ' (' . $classInfo['extension'] . ')' . '</option>';
+				$groupedClasses[$classInfo['extension']][$class] = $classInfo;
+			}
+			ksort($groupedClasses);
+				// Loop on all grouped classes to display a selector
+			foreach ($groupedClasses as $extension => $class) {
+				$cell .= '<optgroup label="' . $extension .'">';
+				foreach ($groupedClasses[$extension] as $class => $classInfo) {
+					$selected = ($class == $taskInfo['class']) ? ' selected="selected"' : '';
+					$cell .= '<option value="' . $class . '"'
+							. 'title="' . $classInfo['description'] . '"'
+							.  $selected . '>' . $classInfo['title'] . '</option>';
+				}
+				$cell .= '</optgroup>';
 			}
 			$cell .= '</select>';
 		}
@@ -1065,6 +1097,12 @@ class tx_scheduler_Module extends t3lib_SCbase {
 
 					$name = htmlspecialchars($registeredClasses[$schedulerRecord['classname']]['title']. ' (' . $registeredClasses[$schedulerRecord['classname']]['extension'] . ')');
 					$additionalInformation = $task->getAdditionalInformation();
+
+					if ($task instanceof tx_scheduler_ProgressProvider) {
+						$progress = round(floatval($task->getProgress()), 2);
+						$name .= $this->renderTaskProgressBar($progress);
+					}
+
 					if (!empty($additionalInformation)) {
 						$name .= '<br />[' . htmlspecialchars($additionalInformation) . ']';
 					}
@@ -1569,7 +1607,7 @@ class tx_scheduler_Module extends t3lib_SCbase {
 			'shortcut' => $this->getShortcutButton(),
 		);
 
-		if (empty($this->CMD) || $this->CMD == 'list') {
+		if (empty($this->CMD) || $this->CMD == 'list' || $this->CMD == 'delete') {
 			$buttons['reload'] = '<a href="' . $GLOBALS['MCONF']['_'] . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.reload', TRUE) . '">' .
 				t3lib_iconWorks::getSpriteIcon('actions-system-refresh') .
 				'</a>';
@@ -1608,9 +1646,5 @@ class tx_scheduler_Module extends t3lib_SCbase {
 
 		return $result;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_module.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_module.php']);
 }
 ?>

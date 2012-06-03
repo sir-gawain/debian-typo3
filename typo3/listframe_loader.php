@@ -59,7 +59,7 @@ class SC_listframe_loader {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 		$GLOBALS['TBE_TEMPLATE']->divClass='';
 		$this->content.=$GLOBALS['TBE_TEMPLATE']->startPage('List Frame Loader');
 		$this->content.=$GLOBALS['TBE_TEMPLATE']->wrapScriptTags('
@@ -73,13 +73,6 @@ class SC_listframe_loader {
 		echo $this->content;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/listframe_loader.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/listframe_loader.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_listframe_loader');

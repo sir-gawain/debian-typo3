@@ -53,14 +53,14 @@
 class localRecordList extends recordList {
 
 		// External:
-	var $alternateBgColors=FALSE;			// If TRUE, table rows in the list will alternate in background colors (and have background colors at all!)
-	var $allowedNewTables=array();			// Used to indicate which tables (values in the array) that can have a create-new-record link. If the array is empty, all tables are allowed.
-	var $deniedNewTables=array();			// Used to indicate which tables (values in the array) that cannot have a create-new-record link. If the array is empty, all tables are allowed.
-	var $newWizards=FALSE;					// If TRUE, the control panel will contain links to the create-new wizards for pages and tt_content elements (normally, the link goes to just creating a new element without the wizards!).
+	var $alternateBgColors = FALSE;			// If TRUE, table rows in the list will alternate in background colors (and have background colors at all!)
+	var $allowedNewTables = array();			// Used to indicate which tables (values in the array) that can have a create-new-record link. If the array is empty, all tables are allowed.
+	var $deniedNewTables = array();			// Used to indicate which tables (values in the array) that cannot have a create-new-record link. If the array is empty, all tables are allowed.
+	var $newWizards = FALSE;					// If TRUE, the control panel will contain links to the create-new wizards for pages and tt_content elements (normally, the link goes to just creating a new element without the wizards!).
 
-	var $dontShowClipControlPanels=FALSE;	// If TRUE, will disable the rendering of clipboard + control panels.
-	var $showClipboard=FALSE;				// If TRUE, will show the clipboard in the field list.
- 	var $noControlPanels = FALSE;			// If TRUE, will DISABLE all control panels in lists. (Takes precedence)
+	var $dontShowClipControlPanels = FALSE;	// If TRUE, will disable the rendering of clipboard + control panels.
+	var $showClipboard = FALSE;				// If TRUE, will show the clipboard in the field list.
+	var $noControlPanels = FALSE;			// If TRUE, will DISABLE all control panels in lists. (Takes precedence)
 	var $clickMenuEnabled = TRUE;			// If TRUE, clickmenus will be rendered
 
 	var $totalRowCount;						// count of record rows in view
@@ -105,7 +105,7 @@ class localRecordList extends recordList {
 	 *
 	 * @return	array	all available buttons as an assoc. array
 	 */
-	public function getButtons()	{
+	public function getButtons() {
 		$buttons = array(
 			'csh' => '',
 			'view' => '',
@@ -127,7 +127,7 @@ class localRecordList extends recordList {
 		$localCalcPerms = $GLOBALS['BE_USER']->calcPerms($this->pageRow);
 
 			// CSH
-		if (!strlen($this->id))	{
+		if (!strlen($this->id)) {
 			$buttons['csh'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'list_module_noId', $GLOBALS['BACK_PATH'], '', TRUE);
 		} elseif(!$this->id) {
 			$buttons['csh'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'list_module_root', $GLOBALS['BACK_PATH'], '', TRUE);
@@ -158,39 +158,14 @@ class localRecordList extends recordList {
 			}
 
 				// If edit permissions are set (see class.t3lib_userauthgroup.php)
-			if ($localCalcPerms&2 && !empty($this->id))	{
+			if ($localCalcPerms&2 && !empty($this->id)) {
 
 					// Edit
 				$params = '&edit[pages][' . $this->pageRow['uid'] . ']=edit';
 				$buttons['edit'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) . '" title="' . $GLOBALS['LANG']->getLL('editPage', TRUE) . '">' .
 									t3lib_iconWorks::getSpriteIcon('actions-page-open') .
 								'</a>';
-					// Unhide
-				if ($this->pageRow['hidden'])	{
-					$params = '&data[pages][' . $this->pageRow['uid'] . '][hidden]=0';
-					$buttons['hide_unhide'] = '<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('unHidePage', TRUE) . '">' .
-										t3lib_iconWorks::getSpriteIcon('actions-edit-unhide') .
-									'</a>';
-					// Hide
-				} else {
-					$params = '&data[pages][' . $this->pageRow['uid'] . '][hidden]=1';
-					$buttons['hide_unhide'] = '<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('hidePage', TRUE) . '">'.
-										t3lib_iconWorks::getSpriteIcon('actions-edit-hide') .
-									'</a>';
-				}
-
-					// Move
-				$buttons['move'] = '<a href="#" onclick="' . htmlspecialchars('return jumpExt(\'' . $this->backPath . 'move_el.php?table=pages&uid=' . $this->pageRow['uid'] . '\');') . '" title="' . $GLOBALS['LANG']->getLL('move_page', TRUE) . '">' .
-									(($this->table == 'tt_content') ? t3lib_iconWorks::getSpriteIcon('actions-document-move') : t3lib_iconWorks::getSpriteIcon('actions-page-move')) .
-								'</a>';
-
-					// Up one level
-				$buttons['level_up'] = '<a href="' . htmlspecialchars($this->listURL($this->pageRow['pid'], '-1', 'firstElementNumber')) . '" onclick="setHighlight(' . $this->pageRow['pid'] . ')" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.upOneLevel', TRUE) . '">' .
-								t3lib_iconWorks::getSpriteIcon('actions-view-go-up') .
-							'</a>';
-
 			}
-
 
 				// Paste
 			if (($localCalcPerms&8) || ($localCalcPerms&16)) {
@@ -253,7 +228,7 @@ class localRecordList extends recordList {
 	 * @param	string		List of fields to show in the listing. Pseudo fields will be added including the record header.
 	 * @return	string		HTML table with the listing for the record.
 	 */
-	function getTable($table,$id,$rowlist)	{
+	function getTable($table,$id,$rowlist) {
 			// Loading all TCA details for this table:
 		t3lib_div::loadTCA($table);
 
@@ -270,39 +245,46 @@ class localRecordList extends recordList {
 
 			// Cleaning rowlist for duplicates and place the $titleCol as the first column always!
 		$this->fieldArray=array();
+
 			// title Column
 		$this->fieldArray[] = $titleCol;	// Add title column
+
 			// Control-Panel
-		if (!t3lib_div::inList($rowlist,'_CONTROL_'))	{
+		if (!t3lib_div::inList($rowlist, '_CONTROL_')) {
 			$this->fieldArray[] = '_CONTROL_';
 			$this->fieldArray[] = '_AFTERCONTROL_';
 		}
+
 			// Clipboard
-		if ($this->showClipboard)	{
+		if ($this->showClipboard) {
 			$this->fieldArray[] = '_CLIPBOARD_';
 		}
+
 			// Ref
-		if (!$this->dontShowClipControlPanels)	{
+		if (!$this->dontShowClipControlPanels) {
 			$this->fieldArray[]='_REF_';
 			$this->fieldArray[]='_AFTERREF_';
 		}
+
 			// Path
-		if ($this->searchLevels)	{
+		if ($this->searchLevels) {
 			$this->fieldArray[]='_PATH_';
 		}
+
 			// Localization
-		if ($this->localizationView && $l10nEnabled)	{
+		if ($this->localizationView && $l10nEnabled) {
 			$this->fieldArray[] = '_LOCALIZATION_';
 			$this->fieldArray[] = '_LOCALIZATION_b';
-			$addWhere.=' AND (
+			$addWhere .= ' AND (
 				' . $GLOBALS['TCA'][$table]['ctrl']['languageField'] . '<=0
 				OR
 				' . $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'] . ' = 0
 			)';
 		}
+
 			// Cleaning up:
-		$this->fieldArray=array_unique(array_merge($this->fieldArray,t3lib_div::trimExplode(',',$rowlist,1)));
-		if ($this->noControlPanels)	{
+		$this->fieldArray=array_unique(array_merge($this->fieldArray, t3lib_div::trimExplode(',', $rowlist, 1)));
+		if ($this->noControlPanels) {
 			$tempArray = array_flip($this->fieldArray);
 			unset($tempArray['_CONTROL_']);
 			unset($tempArray['_CLIPBOARD_']);
@@ -314,8 +296,8 @@ class localRecordList extends recordList {
 		$selectFields[] = 'uid';
 		$selectFields[] = 'pid';
 		if ($thumbsCol)	$selectFields[] = $thumbsCol;	// adding column for thumbnails
-		if ($table=='pages')	{
-			if (t3lib_extMgm::isLoaded('cms'))	{
+		if ($table=='pages') {
+			if (t3lib_extMgm::isLoaded('cms')) {
 				$selectFields[] = 'module';
 				$selectFields[] = 'extendToSubpages';
 				$selectFields[] = 'nav_hide';
@@ -337,11 +319,11 @@ class localRecordList extends recordList {
 			$selectFields[] = 't3ver_wsid';
 			$selectFields[] = 't3ver_swapmode';		// Filtered out when pages in makeFieldList()
 		}
-		if ($l10nEnabled)	{
+		if ($l10nEnabled) {
 			$selectFields[] = $GLOBALS['TCA'][$table]['ctrl']['languageField'];
 			$selectFields[] = $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'];
 		}
-		if ($GLOBALS['TCA'][$table]['ctrl']['label_alt'])	{
+		if ($GLOBALS['TCA'][$table]['ctrl']['label_alt']) {
 			$selectFields = array_merge(
 				$selectFields,
 				t3lib_div::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['label_alt'], 1)
@@ -413,7 +395,7 @@ class localRecordList extends recordList {
 		$listOnlyInSingleTableMode = $this->listOnlyInSingleTableMode && !$this->table;
 
 			// If the count query returned any number of records, we perform the real query, selecting records.
-		if ($this->totalItems)	{
+		if ($this->totalItems) {
 			// Fetch records only if not in single table mode or if in multi table mode and not collapsed
 			if ($listOnlyInSingleTableMode || (!$this->table && $tableCollapsed)) {
 				$dbCount = $this->totalItems;
@@ -429,17 +411,19 @@ class localRecordList extends recordList {
 		}
 
 			// If any records was selected, render the list:
-		if ($dbCount)	{
+		if ($dbCount) {
 
 				// Half line is drawn between tables:
-			if (!$listOnlyInSingleTableMode)	{
+			if (!$listOnlyInSingleTableMode) {
 				$theData = Array();
-				if (!$this->table && !$rowlist)	{
-					$theData[$titleCol] = '<img src="clear.gif" width="'.($GLOBALS['SOBE']->MOD_SETTINGS['bigControlPanel']?'230':'350').'" height="1" alt="" />';
-					if (in_array('_CONTROL_',$this->fieldArray))	$theData['_CONTROL_']='';
-					if (in_array('_CLIPBOARD_',$this->fieldArray))	$theData['_CLIPBOARD_']='';
+				if (!$this->table && !$rowlist) {
+					$theData[$titleCol] = '<img src="clear.gif" width="' . ($GLOBALS['SOBE']->MOD_SETTINGS['bigControlPanel'] ? '230' : '350') . '" height="1" alt="" />';
+					if (in_array('_CONTROL_', $this->fieldArray))
+						$theData['_CONTROL_']='';
+					if (in_array('_CLIPBOARD_', $this->fieldArray))
+						$theData['_CLIPBOARD_']='';
 				}
-				$out.=$this->addelement(0,'',$theData,'class="c-table-row-spacer"',$this->leftMargin);
+				$out .= $this->addelement(0, '', $theData, 'class="c-table-row-spacer"', $this->leftMargin);
 			}
 
 			$tableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title'], TRUE);
@@ -448,17 +432,16 @@ class localRecordList extends recordList {
 			}
 				// Header line is drawn
 			$theData = array();
-			if ($this->disableSingleTableView)	{
+			if ($this->disableSingleTableView) {
 				$theData[$titleCol] = '<span class="c-table">' .
 						t3lib_BEfunc::wrapInHelp($table, '', $tableTitle) .
 						'</span> (' . $this->totalItems . ')';
 			} else {
 				$theData[$titleCol] = $this->linkWrapTable($table, '<span class="c-table">' . $tableTitle . '</span> (' . $this->totalItems . ') ' .
-						($this->table ? t3lib_iconWorks::getSpriteIcon('actions-view-table-collapse', array('title' => $GLOBALS['LANG']->getLL('contractView', TRUE))) : t3lib_iconWorks::getSpriteIcon('actions-view-table-expand', array('title' => $GLOBALS['LANG']->getLL('expandView', TRUE))))
-					);
+					($this->table ? t3lib_iconWorks::getSpriteIcon('actions-view-table-collapse', array('title' => $GLOBALS['LANG']->getLL('contractView', TRUE))) : t3lib_iconWorks::getSpriteIcon('actions-view-table-expand', array('title' => $GLOBALS['LANG']->getLL('expandView', TRUE)))));
 			}
 
-			if ($listOnlyInSingleTableMode)	{
+			if ($listOnlyInSingleTableMode) {
 				$out.='
 					<tr>
 						<td class="t3-row-header" style="width:95%;">' . t3lib_BEfunc::wrapInHelp($table, '', $theData[$titleCol]) . '</td>
@@ -493,16 +476,20 @@ class localRecordList extends recordList {
 				}
 
 				$accRows = array();	// Accumulate rows here
-				while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($result))	{
+				while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($result)) {
+
+					if (!$this->isRowListingConditionFulfilled($table, $row)) {
+						continue;
+					}
 
 						// In offline workspace, look for alternative record:
 					t3lib_BEfunc::workspaceOL($table, $row, $GLOBALS['BE_USER']->workspace, TRUE);
 
-					if (is_array($row))	{
+					if (is_array($row)) {
 						$accRows[] = $row;
 						$currentIdList[] = $row['uid'];
-						if ($doSort)	{
-							if ($prevUid)	{
+						if ($doSort) {
+							if ($prevUid) {
 								$this->currentTable['prev'][$row['uid']] = $prevPrevUid;
 								$this->currentTable['next'][$prevUid] = '-'.$row['uid'];
 								$this->currentTable['prevUid'][$row['uid']] = $prevUid;
@@ -527,28 +514,28 @@ class localRecordList extends recordList {
 				$iOut = '';
 				$cc = 0;
 
-				foreach($accRows as $row)	{
+				foreach($accRows as $row) {
 					// Render item row if counter < limit
 					if ($cc < $this->iLimit) {
 						$cc++;
 						$this->translations = FALSE;
-						$iOut.= $this->renderListRow($table,$row,$cc,$titleCol,$thumbsCol);
+						$iOut.= $this->renderListRow($table, $row, $cc, $titleCol, $thumbsCol);
 
 							// If localization view is enabled it means that the selected records are either default or All language and here we will not select translations which point to the main record:
-						if ($this->localizationView && $l10nEnabled)	{
+						if ($this->localizationView && $l10nEnabled) {
 								// For each available translation, render the record:
 							if (is_array($this->translations)) {
 								foreach ($this->translations as $lRow) {
 										// $lRow isn't always what we want - if record was moved we've to work with the placeholder records otherwise the list is messed up a bit
 									if ($row['_MOVE_PLH_uid'] && $row['_MOVE_PLH_pid']) {
 										$tmpRow = t3lib_BEfunc::getRecordRaw($table, 't3ver_move_id="'.intval($lRow['uid']) . '" AND pid="' . $row['_MOVE_PLH_pid'] . '" AND t3ver_wsid=' . $row['t3ver_wsid'] . t3lib_beFunc::deleteClause($table), $selFieldList);
-										$lRow = is_array($tmpRow)?$tmpRow:$lRow;
+										$lRow = is_array($tmpRow) ? $tmpRow : $lRow;
 									}
 										// In offline workspace, look for alternative record:
 									t3lib_BEfunc::workspaceOL($table, $lRow, $GLOBALS['BE_USER']->workspace, TRUE);
 									if (is_array($lRow) && $GLOBALS['BE_USER']->checkLanguageAccess($lRow[$GLOBALS['TCA'][$table]['ctrl']['languageField']])) {
 										$currentIdList[] = $lRow['uid'];
-										$iOut.=$this->renderListRow($table,$lRow,$cc,$titleCol,$thumbsCol,18);
+										$iOut .= $this->renderListRow($table, $lRow, $cc, $titleCol, $thumbsCol, 18);
 									}
 								}
 							}
@@ -577,7 +564,7 @@ class localRecordList extends recordList {
 				}
 
 					// The header row for the table is now created:
-				$out .= $this->renderListHeader($table,$currentIdList);
+				$out .= $this->renderListHeader($table, $currentIdList);
 			}
 
 				// The list of records is added after the header:
@@ -604,6 +591,20 @@ class localRecordList extends recordList {
 		return $out;
 	}
 
+
+	/**
+	 * Check if all row listing conditions are fulfilled.
+	 *
+	 * This function serves as a dummy method to be overriden in extending classes.
+	 *
+	 * @param   string  $table Table name
+	 * @param   array   $row Record
+	 * @return  bool    True, if all conditions are fulfilled.
+	 */
+	protected function isRowListingConditionFulfilled($table, $row) {
+		return TRUE;
+	}
+
 	/**
 	 * Rendering a single row for the list
 	 *
@@ -617,15 +618,15 @@ class localRecordList extends recordList {
 	 * @access private
 	 * @see getTable()
 	 */
-	function renderListRow($table,$row,$cc,$titleCol,$thumbsCol,$indent=0)	{
+	function renderListRow($table, $row, $cc, $titleCol, $thumbsCol, $indent = 0) {
 		$iOut = '';
 
-		if (strlen($this->searchString))	{	// If in search mode, make sure the preview will show the correct page
+		if (strlen($this->searchString)) {	// If in search mode, make sure the preview will show the correct page
 			$id_orig = $this->id;
 			$this->id = $row['pid'];
 		}
 
-		if (is_array($row))	{
+		if (is_array($row)) {
 				// add special classes for first and last row
 			$rowSpecial = '';
 			if ($cc == 1 && $indent == 0) {
@@ -637,28 +638,28 @@ class localRecordList extends recordList {
 
 				// Background color, if any:
 			if ($this->alternateBgColors) {
-				$row_bgColor = ($cc%2) ? ' class="db_list_normal'.$rowSpecial.'"' : ' class="db_list_alt'.$rowSpecial.'"';
+				$row_bgColor = ($cc%2) ? ' class="db_list_normal' . $rowSpecial . '"' : ' class="db_list_alt' . $rowSpecial . '"';
 			} else {
-				$row_bgColor = ' class="db_list_normal'.$rowSpecial.'"';
+				$row_bgColor = ' class="db_list_normal' . $rowSpecial . '"';
 			}
 				// Overriding with versions background color if any:
-			$row_bgColor = $row['_CSSCLASS'] ? ' class="'.$row['_CSSCLASS'].'"' : $row_bgColor;
+			$row_bgColor = $row['_CSSCLASS'] ? ' class="' . $row['_CSSCLASS'] . '"' : $row_bgColor;
 
 				// Incr. counter.
 			$this->counter++;
 
 				// The icon with link
-			$alttext = t3lib_BEfunc::getRecordIconAltText($row,$table);
+			$alttext = t3lib_BEfunc::getRecordIconAltText($row, $table);
 			$iconImg = t3lib_iconWorks::getSpriteIconForRecord($table, $row, array('title' => htmlspecialchars($alttext), 'style' => ($indent ? ' margin-left: ' . $indent . 'px;' : '')));
 
 
-			$theIcon = $this->clickMenuEnabled ? $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg,$table,$row['uid']) : $iconImg;
+			$theIcon = $this->clickMenuEnabled ? $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg, $table, $row['uid']) : $iconImg;
 
 				// Preparing and getting the data-array
 			$theData = Array();
-			foreach($this->fieldArray as $fCol)	{
-				if ($fCol==$titleCol)	{
-					$recTitle = t3lib_BEfunc::getRecordTitle($table,$row,FALSE,TRUE);
+			foreach($this->fieldArray as $fCol) {
+				if ($fCol == $titleCol) {
+					$recTitle = t3lib_BEfunc::getRecordTitle($table, $row, FALSE, TRUE);
 						// If the record is edit-locked	by another user, we will show a little warning sign:
 					if (($lockInfo = t3lib_BEfunc::isRecordLocked($table, $row['uid']))) {
 						$warning = '<a href="#" onclick="' . htmlspecialchars('alert(' . $GLOBALS['LANG']->JScharCode($lockInfo['msg']) . '); return false;') . '" title="' . htmlspecialchars($lockInfo['msg']) . '">' .
@@ -669,7 +670,7 @@ class localRecordList extends recordList {
 
 						// Render thumbsnails if a thumbnail column exists and there is content in it:
 					if ($this->thumbs && trim($row[$thumbsCol])) {
-						$theData[$fCol] .= '<br />' . $this->thumbCode($row,$table,$thumbsCol);
+						$theData[$fCol] .= '<br />' . $this->thumbCode($row, $table, $thumbsCol);
 					}
 
 					$localizationMarkerClass = '';
@@ -680,9 +681,9 @@ class localRecordList extends recordList {
 						$localizationMarkerClass = ' localization';
 					}
 				} elseif ($fCol == 'pid') {
-					$theData[$fCol]=$row[$fCol];
+					$theData[$fCol] = $row[$fCol];
 				} elseif ($fCol == '_PATH_') {
-					$theData[$fCol]=$this->recPath($row['pid']);
+					$theData[$fCol] = $this->recPath($row['pid']);
 				} elseif ($fCol == '_REF_') {
 					$theData[$fCol] = $this->createReferenceHtml($table, $row['uid']);
 				} elseif ($fCol == '_CONTROL_') {
@@ -692,9 +693,9 @@ class localRecordList extends recordList {
 				} elseif ($fCol == '_CLIPBOARD_') {
 					$theData[$fCol]=$this->makeClip($table,$row);
 				} elseif ($fCol == '_LOCALIZATION_') {
-					list($lC1, $lC2) = $this->makeLocalizationPanel($table,$row);
+					list($lC1, $lC2) = $this->makeLocalizationPanel($table, $row);
 					$theData[$fCol] = $lC1;
-					$theData[$fCol.'b'] = $lC2;
+					$theData[$fCol . 'b'] = $lC2;
 				} elseif ($fCol == '_LOCALIZATION_b') {
 					// Do nothing, has been done above.
 				} else {
@@ -706,7 +707,7 @@ class localRecordList extends recordList {
 				}
 			}
 
-			if (strlen($this->searchString))	{	// Reset the ID if it was overwritten
+			if (strlen($this->searchString)) {	// Reset the ID if it was overwritten
 				$this->id = $id_orig;
 			}
 
@@ -727,7 +728,7 @@ class localRecordList extends recordList {
 			$this->addElement_tdCssClass['_LOCALIZATION_b'] = 'col-localizationb';
 
 				// Create element in table cells:
-			$iOut.=$this->addelement(1,$theIcon,$theData,$row_bgColor);
+			$iOut .= $this->addelement(1, $theIcon, $theData, $row_bgColor);
 
 				// Finally, return table row element:
 			return $iOut;
@@ -773,35 +774,35 @@ class localRecordList extends recordList {
 	 * @access private
 	 * @see getTable()
 	 */
-	function renderListHeader($table, $currentIdList)	{
+	function renderListHeader($table, $currentIdList) {
 			// Init:
 		$theData = Array();
 
 			// Traverse the fields:
-		foreach($this->fieldArray as $fCol)	{
+		foreach($this->fieldArray as $fCol) {
 
 				// Calculate users permissions to edit records in the table:
-			$permsEdit = $this->calcPerms & ($table=='pages'?2:16);
+			$permsEdit = $this->calcPerms & ($table=='pages' ? 2 : 16);
 
-			switch((string)$fCol)	{
+			switch((string)$fCol) {
 				case '_PATH_':			// Path
 					$theData[$fCol] = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels._PATH_', 1) . ']</i>';
-				break;
+					break;
 				case '_REF_':			// References
 					$theData[$fCol] = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:c__REF_', 1) . ']</i>';
-				break;
+					break;
 				case '_LOCALIZATION_':			// Path
 					$theData[$fCol] = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels._LOCALIZATION_', 1) . ']</i>';
-				break;
+					break;
 				case '_LOCALIZATION_b':			// Path
 					$theData[$fCol] = $GLOBALS['LANG']->getLL('Localize', 1);
-				break;
+					break;
 				case '_CLIPBOARD_':		// Clipboard:
 					$cells=array();
 
 						// If there are elements on the clipboard for this table, then display the "paste into" icon:
 					$elFromTable = $this->clipObj->elFromTable($table);
-					if (count($elFromTable))	{
+					if (count($elFromTable)) {
 						$cells['pasteAfter'] = '<a href="' . htmlspecialchars($this->clipObj->pasteUrl($table, $this->id)) .
 							'" onclick="' . htmlspecialchars('return ' . $this->clipObj->confirmMsg('pages', $this->pageRow, 'into' ,$elFromTable)) .
 							'" title="' . $GLOBALS['LANG']->getLL('clip_paste', TRUE) . '">' .
@@ -809,7 +810,7 @@ class localRecordList extends recordList {
 					}
 
 						// If the numeric clipboard pads are enabled, display the control icons for that:
-					if ($this->clipObj->current!='normal')	{
+					if ($this->clipObj->current!='normal') {
 
 							// The "select" link:
 						$cells['copyMarked'] = $this->linkClipboardHeaderIcon(
@@ -821,10 +822,10 @@ class localRecordList extends recordList {
 							'setCB');
 
 							// The "edit marked" link:
-						$editIdList = implode(',',$currentIdList);
-						$editIdList = "'+editList('".$table."','".$editIdList."')+'";
-						$params='&edit['.$table.']['.$editIdList.']=edit&disHelp=1';
-						$cells['edit'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params,$this->backPath, -1)) .
+						$editIdList = implode(',', $currentIdList);
+						$editIdList = "'+editList('" . $table . "','" . $editIdList . "')+'";
+						$params = '&edit[' . $table . '][' . $editIdList . ']=edit&disHelp=1';
+						$cells['edit'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) .
 								'" title="' . $GLOBALS['LANG']->getLL('clip_editMarked', TRUE) . '">' .
 								t3lib_iconWorks::getSpriteIcon('actions-document-open') .
 								'</a>';
@@ -849,94 +850,98 @@ class localRecordList extends recordList {
 					} else {
 						$cells['empty']='';
 					}
+
 					/**
 					 * @hook			renderListHeaderActions: Allows to change the clipboard icons of the Web>List table headers
 					 * @date			2007-11-20
 					 * @request		Bernhard Kraft  <krafbt@kraftb.at>
 					 * @usage		Above each listed table in Web>List a header row is shown. This hook allows to modify the icons responsible for the clipboard functions (shown above the clipboard checkboxes when a clipboard other than "Normal" is selected), or other "Action" functions which perform operations on the listed records.
 					 */
-					if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions']))	{
-						foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData)	{
+
+					if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'])) {
+						foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData) {
 							$hookObject = t3lib_div::getUserObj($classData);
-							if(!($hookObject instanceof localRecordList_actionsHook))	{
+							if (!($hookObject instanceof localRecordList_actionsHook)) {
 								throw new UnexpectedValueException('$hookObject must implement interface localRecordList_actionsHook', 1195567850);
 							}
 							$cells = $hookObject->renderListHeaderActions($table, $currentIdList, $cells, $this);
 						}
 					}
-					$theData[$fCol]=implode('',$cells);
-				break;
+					$theData[$fCol] = implode('', $cells);
+					break;
 				case '_CONTROL_':		// Control panel:
 					if (!$GLOBALS['TCA'][$table]['ctrl']['readOnly']) {
 
 							// If new records can be created on this page, add links:
-						if ($this->calcPerms&($table=='pages'?8:16) && $this->showNewRecLink($table))	{
-							if ($table=="tt_content" && $this->newWizards)	{
+						if ($this->calcPerms & ($table == 'pages'?8:16) && $this->showNewRecLink($table)) {
+							if ($table == "tt_content" && $this->newWizards) {
 									//  If mod.web_list.newContentWiz.overrideWithExtension is set, use that extension's create new content wizard instead:
 								$tmpTSc = t3lib_BEfunc::getModTSconfig($this->pageinfo['uid'],'mod.web_list');
 								$tmpTSc = $tmpTSc['properties']['newContentWiz.']['overrideWithExtension'];
 								$newContentWizScriptPath = $this->backPath.t3lib_extMgm::isLoaded($tmpTSc) ? (t3lib_extMgm::extRelPath($tmpTSc).'mod1/db_new_content_el.php') : 'sysext/cms/layout/db_new_content_el.php';
 
-								$icon = '<a href="#" onclick="' . htmlspecialchars('return jumpExt(\'' . $newContentWizScriptPath . '?id=' . $this->id . '\');') . '" title="' . $GLOBALS['LANG']->getLL('new', TRUE) . '">'.
-													($table == 'pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
-												'</a>';
-							} elseif ($table=='pages' && $this->newWizards)	{
+								$icon = '<a href="#" onclick="' . htmlspecialchars('return jumpExt(\'' . $newContentWizScriptPath . '?id=' . $this->id . '\');') . '" title="' . $GLOBALS['LANG']->getLL('new', TRUE) . '">' .
+										($table == 'pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
+										'</a>';
+							} elseif ($table=='pages' && $this->newWizards) {
 								$icon = '<a href="' . htmlspecialchars($this->backPath . 'db_new.php?id=' . $this->id . '&pagesOnly=1&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))) . '" title="' . $GLOBALS['LANG']->getLL('new', TRUE) . '">'.
-													($table=='pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
-												'</a>';
+										($table=='pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
+										'</a>';
 
 							} else {
-								$params = '&edit['.$table.']['.$this->id.']=new';
+								$params = '&edit[' . $table . '][' . $this->id . ']=new';
 								if ($table == 'pages_language_overlay') {
 									$params .= '&overrideVals[pages_language_overlay][doktype]=' . (int) $this->pageRow['doktype'];
 								}
-								$icon   = '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) . '" title="' . $GLOBALS['LANG']->getLL('new', TRUE) . '">'.
-													($table=='pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
-												'</a>';
+								$icon   = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) . '" title="' . $GLOBALS['LANG']->getLL('new', TRUE) . '">' .
+										($table == 'pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
+										'</a>';
 							}
 						}
 
 							// If the table can be edited, add link for editing ALL SHOWN fields for all listed records:
-						if ($permsEdit && $this->table && is_array($currentIdList))	{
-							$editIdList = implode(',',$currentIdList);
-							if ($this->clipNumPane()) $editIdList = "'+editList('".$table."','".$editIdList."')+'";
-							$params = '&edit['.$table.']['.$editIdList.']=edit&columnsOnly='.implode(',',$this->fieldArray).'&disHelp=1';
-							$icon  .= '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1 )) . '" title="' . $GLOBALS['LANG']->getLL('editShownColumns', TRUE) . '">' .
-												t3lib_iconWorks::getSpriteIcon('actions-document-open') .
-											'</a>';
+						if ($permsEdit && $this->table && is_array($currentIdList)) {
+							$editIdList = implode(',', $currentIdList);
+							if ($this->clipNumPane())
+								$editIdList = "'+editList('" . $table . "','" . $editIdList . "')+'";
+							$params = '&edit[' . $table . '][' . $editIdList . ']=edit&columnsOnly=' . implode(',', $this->fieldArray) . '&disHelp=1';
+							$icon  .= '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1 )) . '" title="' . $GLOBALS['LANG']->getLL('editShownColumns', TRUE) . '">' .
+									t3lib_iconWorks::getSpriteIcon('actions-document-open') .
+									'</a>';
 						}
 							// add an empty entry, so column count fits again after moving this into $icon
 						$theData[$fCol] = '&nbsp;';
 					}
-				break;
+					break;
 				case '_AFTERCONTROL_':  // space column
 				case '_AFTERREF_':	// space column
 					$theData[$fCol] = '&nbsp;';
-				break;
+					break;
 				default:			// Regular fields header:
-					$theData[$fCol]='';
-					if ($this->table && is_array($currentIdList))	{
+					$theData[$fCol] = '';
+					if ($this->table && is_array($currentIdList)) {
 
 							// If the numeric clipboard pads are selected, show duplicate sorting link:
 						if ($this->clipNumPane()) {
 							$theData[$fCol] .= '<a href="' . htmlspecialchars($this->listURL('', -1) . '&duplicateField=' . $fCol) . '" title="' . $GLOBALS['LANG']->getLL('clip_duplicates', TRUE) . '">' .
-												t3lib_iconWorks::getSpriteIcon('actions-document-duplicates-select') .
-											'</a>';
+									t3lib_iconWorks::getSpriteIcon('actions-document-duplicates-select') .
+									'</a>';
 						}
 
 							// If the table can be edited, add link for editing THIS field for all listed records:
 						if (!$GLOBALS['TCA'][$table]['ctrl']['readOnly'] && $permsEdit && $GLOBALS['TCA'][$table]['columns'][$fCol]) {
-							$editIdList = implode(',',$currentIdList);
-							if ($this->clipNumPane()) $editIdList = "'+editList('".$table."','".$editIdList."')+'";
-							$params='&edit['.$table.']['.$editIdList.']=edit&columnsOnly='.$fCol.'&disHelp=1';
+							$editIdList = implode(',', $currentIdList);
+							if ($this->clipNumPane())
+								$editIdList = "'+editList('" . $table . "','" . $editIdList . "')+'";
+							$params = '&edit[' . $table . '][' . $editIdList . ']=edit&columnsOnly=' . $fCol . '&disHelp=1';
 							$iTitle = sprintf($GLOBALS['LANG']->getLL('editThisColumn'), rtrim(trim($GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel($table, $fCol))), ':'));
-							$theData[$fCol].='<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick($params,$this->backPath,-1)).'" title="'.htmlspecialchars($iTitle).'">'.
-												t3lib_iconWorks::getSpriteIcon('actions-document-open') .
-											'</a>';
+							$theData[$fCol] .= '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) . '" title="' . htmlspecialchars($iTitle) . '">' .
+									t3lib_iconWorks::getSpriteIcon('actions-document-open') .
+									'</a>';
 						}
 					}
 					$theData[$fCol] .= $this->addSortLink($GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel($table, $fCol, '<i>[|]</i>')), $fCol, $table);
-				break;
+					break;
 			}
 
 		}
@@ -947,10 +952,10 @@ class localRecordList extends recordList {
 		 * @request		Bernhard Kraft  <krafbt@kraftb.at>
 		 * @usage		Above each listed table in Web>List a header row is shown. Containing the labels of all shown fields and additional icons to create new records for this table or perform special clipboard tasks like mark and copy all listed records to clipboard, etc.
 		 */
-		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions']))	{
-			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData)	{
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'])) {
+			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData) {
 				$hookObject = t3lib_div::getUserObj($classData);
-				if(!($hookObject instanceof localRecordList_actionsHook))	{
+				if (!($hookObject instanceof localRecordList_actionsHook)) {
 					throw new UnexpectedValueException('$hookObject must implement interface localRecordList_actionsHook', 1195567855);
 				}
 				$theData = $hookObject->renderListHeader($table, $currentIdList, $theData, $this);
@@ -988,7 +993,7 @@ class localRecordList extends recordList {
 
 				$first = '<a href="' . $listURL . '&pointer=0">' .
 					t3lib_iconWorks::getSpriteIcon('actions-view-paging-first', array('title'=> $labelFirst)) .
-				'</a>';
+					'</a>';
 			} else {
 				$first = t3lib_iconWorks::getSpriteIcon('actions-view-paging-first-disabled');
 			}
@@ -1106,8 +1111,9 @@ class localRecordList extends recordList {
 	 * @param	array		The record for which to make the control panel.
 	 * @return	string		HTML table with the control panel (unless disabled)
 	 */
-	function makeControl($table,$row)	{
-		if ($this->dontShowClipControlPanels)	return '';
+	function makeControl($table,$row) {
+		if ($this->dontShowClipControlPanels)
+			return '';
 
 		$rowUid = $row['uid'];
 		if (t3lib_extMgm::isLoaded('version') && isset($row['_ORIG_uid'])) {
@@ -1116,10 +1122,10 @@ class localRecordList extends recordList {
 
 			// Initialize:
 		t3lib_div::loadTCA($table);
-		$cells=array();
+		$cells = array();
 
 			// If the listed table is 'pages' we have to request the permission settings for each page:
-		if ($table=='pages')	{
+		if ($table=='pages') {
 			$localCalcPerms = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$row['uid']));
 		}
 
@@ -1127,7 +1133,7 @@ class localRecordList extends recordList {
 		$permsEdit = ($table=='pages' && ($localCalcPerms&2)) || ($table!='pages' && ($this->calcPerms&16));
 
 			// "Show" link (only pages and tt_content elements)
-		if ($table=='pages' || $table=='tt_content')	{
+		if ($table=='pages' || $table=='tt_content') {
 			$params='&edit['.$table.']['.$row['uid'].']=edit';
 			$cells['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick(
 					$table=='tt_content' ? $this->id . '#' . $row['uid'] : $row['uid'],
@@ -1139,7 +1145,7 @@ class localRecordList extends recordList {
 		}
 
 			// "Edit" link: ( Only if permissions to edit the page-record of the content of the parent page ($this->id)
-		if ($permsEdit)	{
+		if ($permsEdit) {
 			$params='&edit['.$table.']['.$row['uid'].']=edit';
 			$cells['edit'] = '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) .
 				'" title="' . $GLOBALS['LANG']->getLL('edit', TRUE) . '">' .
@@ -1150,7 +1156,7 @@ class localRecordList extends recordList {
 		}
 
 			// "Move" wizard link for pages/tt_content elements:
-		if (($table=="tt_content" && $permsEdit) || ($table=='pages'))	{
+		if (($table=="tt_content" && $permsEdit) || ($table=='pages')) {
 			$cells['move'] = '<a href="#" onclick="' .
 				htmlspecialchars(
 					'return jumpExt(\'' . $this->backPath . 'move_el.php?table=' . $table . '&uid='.$row['uid'] . '\');'
@@ -1162,7 +1168,7 @@ class localRecordList extends recordList {
 		}
 
 			// If the extended control panel is enabled OR if we are seeing a single table:
-		if ($GLOBALS['SOBE']->MOD_SETTINGS['bigControlPanel'] || $this->table)	{
+		if ($GLOBALS['SOBE']->MOD_SETTINGS['bigControlPanel'] || $this->table) {
 
 				// "Info": (All records)
 			$cells['viewBig'] = '<a href="#" onclick="' . htmlspecialchars(
@@ -1199,7 +1205,7 @@ class localRecordList extends recordList {
 				}
 
 					// "Edit Perms" link:
-				if ($table == 'pages' && $GLOBALS['BE_USER']->check('modules','web_perm') && t3lib_extMgm::isLoaded('perm'))	{
+				if ($table == 'pages' && $GLOBALS['BE_USER']->check('modules','web_perm') && t3lib_extMgm::isLoaded('perm')) {
 					$cells['perms'] =
 						'<a href="' .
 							htmlspecialchars(
@@ -1217,10 +1223,10 @@ class localRecordList extends recordList {
 					// "New record after" link (ONLY if the records in the table are sorted by a "sortby"-row or if default values can depend on previous record):
 				if ($GLOBALS['TCA'][$table]['ctrl']['sortby'] || $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues']) {
 					if (
-						($table!='pages' && ($this->calcPerms&16)) || 	// For NON-pages, must have permission to edit content on this parent page
+						($table!='pages' && ($this->calcPerms&16)) ||	// For NON-pages, must have permission to edit content on this parent page
 						($table=='pages' && ($this->calcPerms&8))		// For pages, must have permission to create new pages here.
 						)	{
-						if ($this->showNewRecLink($table))	{
+						if ($this->showNewRecLink($table)) {
 							$params='&edit['.$table.']['.(-($row['_MOVE_PLH']?$row['_MOVE_PLH_uid']:$row['uid'])).']=new';
 							$cells['new'] = '<a href="#" onclick="' . htmlspecialchars(
 								t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) .
@@ -1234,7 +1240,7 @@ class localRecordList extends recordList {
 				}
 
 					// "Up/Down" links
-				if ($permsEdit && $GLOBALS['TCA'][$table]['ctrl']['sortby']  && !$this->sortField && !$this->searchLevels) {
+				if ($permsEdit && $GLOBALS['TCA'][$table]['ctrl']['sortby'] && !$this->sortField && !$this->searchLevels) {
 					if (isset($this->currentTable['prev'][$row['uid']]))	{	// Up
 						$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['prev'][$row['uid']];
 						$cells['moveUp'] = '<a href="#" onclick="' . htmlspecialchars(
@@ -1261,7 +1267,7 @@ class localRecordList extends recordList {
 					// "Hide/Unhide" links:
 				$hiddenField = $GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'];
 				if ($permsEdit && $hiddenField && $GLOBALS['TCA'][$table]['columns'][$hiddenField] && (!$GLOBALS['TCA'][$table]['columns'][$hiddenField]['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $table . ':' . $hiddenField))) {
-					if ($row[$hiddenField])	{
+					if ($row[$hiddenField]) {
 						$params = '&data[' . $table . '][' . $rowUid . '][' . $hiddenField . ']=0';
 						$cells['hide']='<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="'.$GLOBALS['LANG']->getLL('unHide' . ($table == 'pages' ? 'Page' : ''), TRUE) . '">' .
 									t3lib_iconWorks::getSpriteIcon('actions-edit-unhide') .
@@ -1299,19 +1305,19 @@ class localRecordList extends recordList {
 				}
 
 					// "Levels" links: Moving pages into new levels...
-				if ($permsEdit && $table=='pages' && !$this->searchLevels)	{
+				if ($permsEdit && $table=='pages' && !$this->searchLevels) {
 
 						// Up (Paste as the page right after the current parent page)
-					if ($this->calcPerms&8)	{
+					if ($this->calcPerms&8) {
 						$params='&cmd['.$table.']['.$row['uid'].'][move]='.-$this->id;
 						$cells['moveLeft'] = '<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('prevLevel', TRUE) . '">' .
 									t3lib_iconWorks::getSpriteIcon('actions-move-left') .
 								'</a>';
 					}
 						// Down (Paste as subpage to the page right above)
-					if ($this->currentTable['prevUid'][$row['uid']])	{
+					if ($this->currentTable['prevUid'][$row['uid']]) {
 						$localCalcPerms = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$this->currentTable['prevUid'][$row['uid']]));
-						if ($localCalcPerms&8)	{
+						if ($localCalcPerms&8) {
 							$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['prevUid'][$row['uid']];
 							$cells['moveRight'] = '<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('nextLevel', TRUE) . '">' .
 										t3lib_iconWorks::getSpriteIcon('actions-move-right') .
@@ -1335,10 +1341,10 @@ class localRecordList extends recordList {
 		 * @date			2007-09-22
 		 * @request		Kasper Skårhøj  <kasper2007@typo3.com>
 		 */
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']))	{
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'])) {
 			$stat='';
 			$_params = array($table,$row['uid']);
-			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'] as $_funcRef)	{
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'] as $_funcRef) {
 				$stat.=t3lib_div::callUserFunction($_funcRef,$_params,$this);
 			}
 			$cells['stat'] = $stat;
@@ -1352,7 +1358,7 @@ class localRecordList extends recordList {
 		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'])) {
 			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData) {
 				$hookObject = t3lib_div::getUserObj($classData);
-				if(!($hookObject instanceof localRecordList_actionsHook))	{
+				if(!($hookObject instanceof localRecordList_actionsHook)) {
 					throw new UnexpectedValueException('$hookObject must implement interface localRecordList_actionsHook', 1195567840);
 				}
 				$cells = $hookObject->makeControl($table, $row, $cells, $this);
@@ -1372,7 +1378,7 @@ class localRecordList extends recordList {
 	 * @param	array		The record for which to make the clipboard panel.
 	 * @return	string		HTML table with the clipboard panel (unless disabled)
 	 */
-	function makeClip($table,$row)	{
+	function makeClip($table,$row) {
 			// Return blank, if disabled:
 		if ($this->dontShowClipControlPanels)	return '';
 		$cells=array();
@@ -1403,9 +1409,9 @@ class localRecordList extends recordList {
 			$checked = ($this->clipObj->isSelected($table,$row['uid'])?' checked="checked"':'');
 
 				// If the "duplicateField" value is set then select all elements which are duplicates...
-			if ($this->duplicateField && isset($row[$this->duplicateField]))	{
+			if ($this->duplicateField && isset($row[$this->duplicateField])) {
 				$checked='';
-				if (in_array($row[$this->duplicateField], $this->duplicateStack))	{
+				if (in_array($row[$this->duplicateField], $this->duplicateStack)) {
 					$checked=' checked="checked"';
 				}
 				$this->duplicateStack[] = $row[$this->duplicateField];
@@ -1426,7 +1432,7 @@ class localRecordList extends recordList {
 
 			// Now, looking for elements in general:
 		$elFromTable = $this->clipObj->elFromTable('');
-		if ($table=='pages' && count($elFromTable))	{
+		if ($table=='pages' && count($elFromTable)) {
 			$cells['pasteInto'] = '<a href="' . htmlspecialchars($this->clipObj->pasteUrl('', $row['uid'])) . '" onclick="' . htmlspecialchars('return ' . $this->clipObj->confirmMsg($table, $row, 'into', $elFromTable)) . '" title="' . $GLOBALS['LANG']->getLL('clip_pasteInto', TRUE) . '">' .
 						t3lib_iconWorks::getSpriteIcon('actions-document-paste-into') .
 					'</a>';
@@ -1441,7 +1447,7 @@ class localRecordList extends recordList {
 		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'])) {
 			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData) {
 				$hookObject = t3lib_div::getUserObj($classData);
-				if(!($hookObject instanceof localRecordList_actionsHook))	{
+				if(!($hookObject instanceof localRecordList_actionsHook)) {
 					throw new UnexpectedValueException('$hookObject must implement interface localRecordList_actionsHook', 1195567845);
 				}
 				$cells = $hookObject->makeClip($table, $row, $cells, $this);
@@ -1512,7 +1518,7 @@ class localRecordList extends recordList {
 	 * @param	array		The record for which to make the localization panel.
 	 * @return	array		Array with key 0/1 with content for column 1 and 2
 	 */
-	function makeLocalizationPanel($table,$row)	{
+	function makeLocalizationPanel($table,$row) {
 		$out = array(
 			0 => '',
 			1 => '',
@@ -1524,12 +1530,12 @@ class localRecordList extends recordList {
 			// Language title and icon:
 		$out[0] = $this->languageFlag($row[$GLOBALS['TCA'][$table]['ctrl']['languageField']]);
 
-		if (is_array($translations))	{
+		if (is_array($translations)) {
 
 				// Traverse page translations and add icon for each language that does NOT yet exist:
 			$lNew = '';
-			foreach($this->pageOverlays as $lUid_OnPage => $lsysRec)	{
-				if (!isset($translations['translations'][$lUid_OnPage]) && $GLOBALS['BE_USER']->checkLanguageAccess($lUid_OnPage))	{
+			foreach($this->pageOverlays as $lUid_OnPage => $lsysRec) {
+				if (!isset($translations['translations'][$lUid_OnPage]) && $GLOBALS['BE_USER']->checkLanguageAccess($lUid_OnPage)) {
 					$url = substr($this->listURL(), strlen($this->backPath));
 					$href = $GLOBALS['SOBE']->doc->issueCommand(
 						'&cmd[' . $table . '][' . $row['uid'] . '][localize]=' . $lUid_OnPage,
@@ -1563,12 +1569,12 @@ class localRecordList extends recordList {
 	 * @param	boolean		If TRUE, form-fields will be wrapped around the table.
 	 * @return	string		HTML table with the selector box (name: displayFields['.$table.'][])
 	 */
-	function fieldSelectBox($table,$formFields=1)	{
+	function fieldSelectBox($table,$formFields=1) {
 
 			// Init:
 		t3lib_div::loadTCA($table);
 		$formElements=array('','');
-		if ($formFields)	{
+		if ($formFields) {
 			$formElements=array('<form action="'.htmlspecialchars($this->listURL()).'" method="post">','</form>');
 		}
 
@@ -1588,7 +1594,7 @@ class localRecordList extends recordList {
 			// Create an option for each field:
 		$opt=array();
 		$opt[] = '<option value=""></option>';
-		foreach($fields as $fN)	{
+		foreach($fields as $fN) {
 				// Field label
 			$fL = (is_array($GLOBALS['TCA'][$table]['columns'][$fN])
 				? rtrim($GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$fN]['label']), ':')
@@ -1604,8 +1610,7 @@ class localRecordList extends recordList {
 				';
 
 			// Table with the field selector::
-		$content.= '
-			'.$formElements[0].'
+		$content = $formElements[0] . '
 
 				<!--
 					Field selector for extended table view:
@@ -1616,8 +1621,9 @@ class localRecordList extends recordList {
 						<td><input type="submit" name="search" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.setFields', 1) . '" /></td>
 					</tr>
 				</table>
-			'.$formElements[1];
-		return $content;
+			' . $formElements[1];
+
+		return '<div class="db_list-fieldSelect">' . $content . '</div>';
 	}
 
 
@@ -1646,7 +1652,7 @@ class localRecordList extends recordList {
 	 * @param	string		Warning text, if any ("delete" uses this for confirmation)
 	 * @return	string		<a> tag wrapped link.
 	 */
-	function linkClipboardHeaderIcon($string,$table,$cmd,$warning='')	{
+	function linkClipboardHeaderIcon($string,$table,$cmd,$warning='') {
 		$onClickEvent = 'document.dblistForm.cmd.value=\''.$cmd.'\';document.dblistForm.cmd_table.value=\''.$table.'\';document.dblistForm.submit();';
 		if ($warning)	$onClickEvent = 'if (confirm('.$GLOBALS['LANG']->JScharCode($warning).')){'.$onClickEvent.'}';
 		return '<a href="#" onclick="'.htmlspecialchars($onClickEvent.'return false;').'">'.$string.'</a>';
@@ -1657,7 +1663,7 @@ class localRecordList extends recordList {
 	 *
 	 * @return	boolean
 	 */
-	function clipNumPane()	{
+	function clipNumPane() {
 		return in_Array('_CLIPBOARD_',$this->fieldArray) && $this->clipObj->current!='normal';
 	}
 
@@ -1671,7 +1677,7 @@ class localRecordList extends recordList {
 	 * @param	string		Table name
 	 * @return	string		Linked $code variable
 	 */
-	function addSortLink($code,$field,$table)	{
+	function addSortLink($code,$field,$table) {
 
 			// Certain circumstances just return string right away (no links):
 		if ($field=='_CONTROL_' || $field=='_LOCALIZATION_' || $field=='_CLIPBOARD_' || $field=='_REF_' || $this->disableSingleTableView)	return $code;
@@ -1696,8 +1702,8 @@ class localRecordList extends recordList {
 	 * @param	integer		The page id for which to get the path
 	 * @return	string		The path.
 	 */
-	function recPath($pid)	{
-		if (!isset($this->recPath_cache[$pid]))	{
+	function recPath($pid) {
+		if (!isset($this->recPath_cache[$pid])) {
 			$this->recPath_cache[$pid] = t3lib_BEfunc::getRecordPath($pid,$this->perms_clause,20);
 		}
 		return $this->recPath_cache[$pid];
@@ -1710,7 +1716,7 @@ class localRecordList extends recordList {
 	 * @return	boolean		Returns TRUE if a link for creating new records should be displayed for $table
 	 * @see		SC_db_new::showNewRecLink
 	 */
-	function showNewRecLink($table)	{
+	function showNewRecLink($table) {
 			// No deny/allow tables are set:
 		if (!count($this->allowedNewTables) && !count($this->deniedNewTables)) {
 			return TRUE;
@@ -1729,7 +1735,7 @@ class localRecordList extends recordList {
 	 *
 	 * @return	string
 	 */
-	function makeReturnUrl()	{
+	function makeReturnUrl() {
 		return '&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
 	}
 
@@ -1808,7 +1814,7 @@ class localRecordList extends recordList {
 	 * @param	array		Array with values to be listed.
 	 * @return	void
 	 */
-	function setCsvRow($csvRow)	{
+	function setCsvRow($csvRow) {
 		$this->csvLines[] = t3lib_div::csvValues($csvRow);
 	}
 
@@ -1819,7 +1825,7 @@ class localRecordList extends recordList {
 	 * @param	string		Filename prefix:
 	 * @return	void		EXITS php execusion!
 	 */
-	function outputCSV($prefix)	{
+	function outputCSV($prefix) {
 
 			// Setting filename:
 		$filename=$prefix.'_'.date('dmy-Hi').'.csv';

@@ -52,7 +52,7 @@ class SC_logout {
 	 *
 	 * @return	void
 	 */
-	function logout()	{
+	function logout() {
 			// Logout written to log
 		$GLOBALS['BE_USER']->writelog(255, 2, 0, 1, 'User %s logged out from TYPO3 Backend', array($GLOBALS['BE_USER']->user['username']));
 		t3lib_formProtection_Factory::get()->removeSessionTokenFromRegistry();
@@ -62,13 +62,6 @@ class SC_logout {
 		t3lib_utility_Http::redirect($redirectUrl);
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/logout.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/logout.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_logout');

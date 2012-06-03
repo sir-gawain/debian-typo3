@@ -211,7 +211,6 @@ class tslib_content_FlowPlayer extends tslib_content_Abstract {
 		if ($GLOBALS['TSFE']->absRefPrefix) {
 			$prefix = $GLOBALS['TSFE']->absRefPrefix;
 		}
-		;
 			// Initialize content
 		$replaceElementIdString = uniqid('mmswf');
 		$GLOBALS['TSFE']->register['MMSWFID'] = $replaceElementIdString;
@@ -798,9 +797,5 @@ class tslib_content_FlowPlayer extends tslib_content_Abstract {
 
 		return $content;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_flowplayer.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_flowplayer.php']);
 }
 ?>

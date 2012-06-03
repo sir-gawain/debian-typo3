@@ -101,12 +101,14 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	}
 
 	/**
-	 * @return tslib_cObj
+	 * @return tslib_cObj|NULL
 	 */
 	public function getContentObject() {
 		if ($this->contentObject !== NULL) {
 			return $this->contentObject;
 		}
+
+		return NULL;
 	}
 
 	/**
@@ -137,14 +139,7 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	 */
 	public function getConfiguration($extensionName = NULL, $pluginName = NULL) {
 		// 1st level cache
-		if ($extensionName !== NULL) {
-			if ($pluginName === NULL) {
-				throw new Tx_Extbase_Configuration_Exception('You\'ll have to specify either both, extensionName and pluginName, or neither.', 1289852422);
-			}
-			$configurationCacheKey = strtolower($extensionName . '_' . $pluginName);
-		} else {
-			$configurationCacheKey = strtolower($this->extensionName . '_' . $this->pluginName);
-		}
+		$configurationCacheKey = strtolower(($extensionName ?: $this->extensionName) . '_' . ($pluginName ?: $this->pluginName));
 		if (isset($this->configurationCache[$configurationCacheKey])) {
 			return $this->configurationCache[$configurationCacheKey];
 		}
@@ -219,8 +214,9 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	}
 
 	/**
-	 * @param array $frameworkConfiguration
-	 * @param array $overriddenSwitchableControllerActions in the format array('Controller1' => array('action1', 'action2'), 'Controller2' => ...)
+	 * @param array &$frameworkConfiguration
+	 * @param array $switchableControllerActions
+	 *        in the format array('Controller1' => array('action1', 'action2'), 'Controller2' => ...)
 	 * @return void
 	 */
 	protected function overrideSwitchableControllerActions(array &$frameworkConfiguration, array $switchableControllerActions) {

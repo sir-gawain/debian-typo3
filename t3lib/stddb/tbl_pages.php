@@ -6,7 +6,7 @@ if (!defined('TYPO3_MODE')) {
 $TCA['pages'] = array(
 	'ctrl' => $TCA['pages']['ctrl'],
 	'interface' => array(
-		'showRecordFieldList' => 'doktype,title,alias,hidden,starttime,endtime,fe_group,url,target,no_cache,shortcut,keywords,description,abstract,newUntil,lastUpdated,cache_timeout,backend_layout,backend_layout_next_level',
+		'showRecordFieldList' => 'doktype,title,alias,hidden,starttime,endtime,fe_group,url,target,no_cache,shortcut,keywords,description,abstract,newUntil,lastUpdated,cache_timeout,cache_tags,backend_layout,backend_layout_next_level',
 		'maxDBListItems' => 30,
 		'maxSingleDBListItems' => 50,
 	),
@@ -448,6 +448,16 @@ $TCA['pages'] = array(
 				'default' => '0',
 			),
 		),
+		'cache_tags' => array(
+			'exclude' => 1,
+			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.cache_tags',
+			'config' => array(
+				'type' => 'input',
+				'size' => '30',
+				'max' => '255',
+				'eval' => '',
+			),
+		),
 		'no_cache' => array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.no_cache',
@@ -600,17 +610,7 @@ $TCA['pages'] = array(
 		'media' => array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.media',
-			'config' => array(
-				'type' => 'group',
-				'internal_type' => 'file',
-				'allowed' => $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] . ',html,htm,ttf,txt,css',
-				'max_size' => $GLOBALS['TYPO3_CONF_VARS']['BE']['maxFileSize'],
-				'uploadfolder' => 'uploads/media',
-				'show_thumbs' => '1',
-				'size' => '3',
-				'maxitems' => '100',
-				'minitems' => '0',
-			),
+			'config' => t3lib_extMgm::getFileFieldTCAConfig('media'),
 		),
 		'is_siteroot' => array(
 			'exclude' => 1,
@@ -727,7 +727,7 @@ $TCA['pages'] = array(
 		),
 		'backend_layout' => array(
 			'exclude' => 1,
-			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.backend_layout',
+			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.backend_layout_formlabel',
 			'config' => array(
 				'type' => 'select',
 				'foreign_table' => 'backend_layout',
@@ -744,7 +744,7 @@ $TCA['pages'] = array(
 		),
 		'backend_layout_next_level' => array(
 			'exclude' => 1,
-			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.backend_layout_next_level',
+			'label' => 'LLL:EXT:cms/locallang_tca.xml:pages.backend_layout_next_level_formlabel',
 			'config' => array(
 				'type' => 'select',
 				'foreign_table' => 'backend_layout',
@@ -907,7 +907,7 @@ $TCA['pages'] = array(
 			'showitem' => 'layout, lastUpdated, newUntil, no_search',
 		),
 		'3' => array(
-			'showitem' => 'alias, target, no_cache, cache_timeout, url_scheme',
+			'showitem' => 'alias, target, no_cache, cache_timeout, cache_tags, url_scheme',
 		),
 		'5' => array(
 			'showitem' => 'author, author_email', 'canNotCollapse' => 1,
@@ -994,7 +994,7 @@ $TCA['pages'] = array(
 			'canNotCollapse' => 1,
 		),
 		'caching' => array(
-			'showitem' => 'cache_timeout;LLL:EXT:cms/locallang_tca.xml:pages.cache_timeout_formlabel, no_cache;LLL:EXT:cms/locallang_tca.xml:pages.no_cache_formlabel',
+			'showitem' => 'cache_timeout;LLL:EXT:cms/locallang_tca.xml:pages.cache_timeout_formlabel, cache_tags, no_cache;LLL:EXT:cms/locallang_tca.xml:pages.no_cache_formlabel',
 			'canNotCollapse' => 1,
 		),
 		'language' => array(
@@ -1034,16 +1034,16 @@ if (!t3lib_div::compat_version('4.2')) {
 		2,
 		0,
 		array(
-			 array(
-				 'LLL:EXT:cms/locallang_tca.xml:pages.doktype.I.0',
-				 '2',
-				 'i/pages.gif',
-			 ),
-			 array(
-				 'LLL:EXT:cms/locallang_tca.xml:pages.doktype.I.3',
-				 '5',
-				 'i/pages_notinmenu.gif',
-			 ),
+			array(
+				'LLL:EXT:cms/locallang_tca.xml:pages.doktype.I.0',
+				'2',
+				'i/pages.gif',
+			),
+			array(
+				'LLL:EXT:cms/locallang_tca.xml:pages.doktype.I.3',
+				'5',
+				'i/pages_notinmenu.gif',
+			),
 		)
 	);
 		// setting the doktype 1 ("Standard") to show less fields
@@ -1071,6 +1071,27 @@ if (!t3lib_div::compat_version('4.2')) {
 				TSconfig;;6;nowrap;6-6-6, storage_pid;;7, l18n_cfg, module, content_from_pid, backend_layout;;8,
 			--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 	');
+}
+
+
+	// keep old code (pre-FAL) for installations that haven't upgraded yet. please remove this code in TYPO3 7.0
+	// @deprecated since TYPO3 6.0, please remove in TYPO3 7.0
+	// existing installation - and files are merged, nothing to do
+if ((!isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard']) || !t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard'], 'pages:media')) && !t3lib_div::compat_version('6.0')) {
+	t3lib_div::deprecationLog('This installation hasn\'t been migrated to FAL for the field $TCA[pages][columns][media] yet. Please do so before TYPO3 v7.');
+		// existing installation and no upgrade wizard was executed - and files haven't been merged: use the old code
+	$TCA['pages']['columns']['media']['config'] = array(
+		'type' => 'group',
+		'internal_type' => 'file',
+		'allowed' => $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] . ',html,htm,ttf,txt,css',
+		'max_size' => $GLOBALS['TYPO3_CONF_VARS']['BE']['maxFileSize'],
+		'uploadfolder' => 'uploads/media',
+		'show_thumbs' => '1',
+		'size' => '3',
+		'maxitems' => '100',
+		'minitems' => '0',
+
+	);
 }
 
 ?>

@@ -557,19 +557,6 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 				($emConf[$key] ? $emConf[$key] : '')
 			);
 
-			$key = 'doNotLoadInFE';
-			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_load_in_frontend');
-			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_doNotLoadInFE', $headerCol);
-			if (!$emConf['doNotLoadInFE']) {
-				$dataCol = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
-			} else {
-				$dataCol = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
-			}
-			$lines[] = array(
-				$headerCol,
-				$dataCol
-			);
-
 			$key = 'modify_tables';
 			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_modifies_tables');
 			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_modify_tables', $headerCol);
@@ -764,9 +751,4 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 		return t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_' . $key, $headerCol);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/extensions/class.tx_em_extensions_details.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/extensions/class.tx_em_extensions_details.php']);
-}
-
 ?>

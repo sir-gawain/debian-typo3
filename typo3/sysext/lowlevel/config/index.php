@@ -76,7 +76,7 @@ class SC_mod_tools_config_index {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 		global $BACK_PATH;
 
 		$this->MCONF = $GLOBALS['MCONF'];
@@ -91,7 +91,7 @@ class SC_mod_tools_config_index {
 		$this->doc->JScode = '
 		<script language="javascript" type="text/javascript">
 			script_ended = 0;
-			function jumpToUrl(URL)	{
+			function jumpToUrl(URL) {
 				window.location.href = URL;
 			}
 		</script>
@@ -105,7 +105,7 @@ class SC_mod_tools_config_index {
 	 *
 	 * @return	void
 	 */
-	function menuConfig()	{
+	function menuConfig() {
 		global $TYPO3_CONF_VARS;
 
 			// MENU-ITEMS:
@@ -138,7 +138,7 @@ class SC_mod_tools_config_index {
 	 *
 	 * @return	[type]		...
 	 */
-	function main()	{
+	function main() {
 
 		$arrayBrowser = t3lib_div::makeInstance('t3lib_arrayBrowser');
 
@@ -157,7 +157,7 @@ class SC_mod_tools_config_index {
 
 		$this->content.= $this->doc->spacer(5);
 
-		switch($this->MOD_SETTINGS['function'])	{
+		switch($this->MOD_SETTINGS['function']) {
 			case 0:
 				$theVar = $GLOBALS['TYPO3_CONF_VARS'];
 				t3lib_div::naturalKeySortRecursive($theVar);
@@ -245,7 +245,7 @@ class SC_mod_tools_config_index {
 		$this->content.= $this->doc->sectionEnd();
 
 			// Variable name:
-		if (t3lib_div::_GP('varname'))	{
+		if (t3lib_div::_GP('varname')) {
 			$line = t3lib_div::_GP('_') ? t3lib_div::_GP('_') : t3lib_div::_GP('varname');
 			if (t3lib_div::_GP('writetoexttables')) { // Write the line to extTables.php
 					// change value to $GLOBALS
@@ -337,7 +337,7 @@ class SC_mod_tools_config_index {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -346,7 +346,7 @@ class SC_mod_tools_config_index {
 	 *
 	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
+	protected function getButtons() {
 
 		$buttons = array(
 			'csh' => '',
@@ -356,7 +356,7 @@ class SC_mod_tools_config_index {
 		//$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_web_func', '', $GLOBALS['BACK_PATH']);
 
 			// Shortcut
-		if ($GLOBALS['BE_USER']->mayMakeShortcut())	{
+		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
 			$buttons['shortcut'] = $this->doc->makeShortcutIcon('','function',$this->MCONF['name']);
 		}
 		return $buttons;
@@ -372,14 +372,6 @@ class SC_mod_tools_config_index {
 		return $funcMenu;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php']);
-}
-
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_tools_config_index');

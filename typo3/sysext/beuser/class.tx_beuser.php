@@ -60,7 +60,7 @@ class tx_beuser {
 	 * @param	integer		UID of clicked item.
 	 * @return	array		Modified $menuItems array
 	 */
-	function main(&$backRef,$menuItems,$table,$uid)	{
+	function main(&$backRef,$menuItems,$table,$uid) {
 		$localItems = array();	// Accumulation of local items.
 
 			// Detecting menu level
@@ -86,15 +86,11 @@ class tx_beuser {
 	 *
 	 * @return	array		Local lang array.
 	 */
-	function includeLL()	{
+	function includeLL() {
 		global $LANG;
 
 		$LOCAL_LANG = $GLOBALS['LANG']->includeLLFile('EXT:extra_page_cm_options/locallang.php', FALSE);
 		return $LOCAL_LANG;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
 }
 ?>

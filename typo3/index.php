@@ -92,7 +92,7 @@ class SC_index {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 			// We need a PHP session session for most login levels
 		session_start();
 
@@ -128,10 +128,6 @@ class SC_index {
 		}
 		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_login.xml');
 
-			// check if labels from $GLOBALS['TYPO3_CONF_VARS']['BE']['loginLabels'] were changed,
-			// and merge them to $GLOBALS['LOCAL_LANG'] if needed
-		$this->mergeOldLoginLabels();
-
 			// Setting the redirect URL to "backend.php" if no alternative input is given
 		$this->redirectToURL = ($this->redirect_url ? $this->redirect_url : 'backend.php');
 
@@ -152,7 +148,7 @@ class SC_index {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 			// Initialize template object:
 		$GLOBALS['TBE_TEMPLATE']->bodyTagAdditions = ' onload="startUp();"';
 		$GLOBALS['TBE_TEMPLATE']->moduleTemplate = $GLOBALS['TBE_TEMPLATE']->getHtmlTemplate('templates/login.html');
@@ -197,7 +193,7 @@ class SC_index {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -213,7 +209,7 @@ class SC_index {
 	 *
 	 * @return	string		HTML output
 	 */
-	function makeLoginForm()	{
+	function makeLoginForm() {
 		$content = t3lib_parsehtml::getSubpart($GLOBALS['TBE_TEMPLATE']->moduleTemplate, '###LOGIN_FORM###');
 		$markers = array(
 			'VALUE_USERNAME' => htmlspecialchars($this->u),
@@ -337,10 +333,10 @@ class SC_index {
 	 *
 	 * @return	void
 	 */
-	function checkRedirect()	{
+	function checkRedirect() {
 			// Do redirect:
 			// If a user is logged in AND a) if either the login is just done (isLoginInProgress) or b) a loginRefresh is done or c) the interface-selector is NOT enabled (If it is on the other hand, it should not just load an interface, because people has to choose then...)
-		if ($GLOBALS['BE_USER']->user['uid'] && ($this->isLoginInProgress() || $this->loginRefresh || !$this->interfaceSelector))	{
+		if ($GLOBALS['BE_USER']->user['uid'] && ($this->isLoginInProgress() || $this->loginRefresh || !$this->interfaceSelector)) {
 
 				// If no cookie has been set previously we tell people that this is a problem. This assumes that a cookie-setting script (like this one) has been hit at least once prior to this instance.
 			if (!$_COOKIE[t3lib_beUserAuth::getCookieName()]) {
@@ -364,7 +360,7 @@ class SC_index {
 			$GLOBALS['BE_USER']->writeUC();
 
 				// Based on specific setting of interface we set the redirect script:
-			switch ($this->GPinterface)	{
+			switch ($this->GPinterface) {
 				case 'backend':
 				case 'backend_old':
 					$this->redirectToURL = 'backend.php';
@@ -376,7 +372,7 @@ class SC_index {
 
 			$formProtection = t3lib_formprotection_Factory::get();
 				// If there is a redirect URL AND if loginRefresh is not set...
-			if (!$this->loginRefresh)	{
+			if (!$this->loginRefresh) {
 				$formProtection->storeSessionTokenInRegistry();
 				t3lib_utility_Http::redirect($this->redirectToURL);
 			} else {
@@ -403,14 +399,14 @@ class SC_index {
 	 *
 	 * @return	void
 	 */
-	function makeInterfaceSelectorBox()	{
+	function makeInterfaceSelectorBox() {
 			// Reset variables:
 		$this->interfaceSelector = '';
 		$this->interfaceSelector_hidden='';
 		$this->interfaceSelector_jump = '';
 
 			// If interfaces are defined AND no input redirect URL in GET vars:
-		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['interfaces'] && ($this->isLoginInProgress() || !$this->redirect_url))	{
+		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['interfaces'] && ($this->isLoginInProgress() || !$this->redirect_url)) {
 			$parts = t3lib_div::trimExplode(',',$GLOBALS['TYPO3_CONF_VARS']['BE']['interfaces']);
 			if (count($parts)>1)	{	// Only if more than one interface is defined will we show the selector:
 
@@ -427,7 +423,7 @@ class SC_index {
 				$jumpScript['frontend']    = '../';
 
 					// Traverse the interface keys:
-				foreach($parts as $valueStr)	{
+				foreach($parts as $valueStr) {
 					$this->interfaceSelector.='
 							<option value="'.htmlspecialchars($valueStr).'"'.(t3lib_div::_GP('interface')==htmlspecialchars($valueStr) ? ' selected="selected"' : '').'>'.htmlspecialchars($labels[$valueStr]).'</option>';
 					$this->interfaceSelector_jump.='
@@ -457,7 +453,7 @@ class SC_index {
 	 *
 	 * @return	string		Text/Image (HTML) for copyright notice.
 	 */
-	function makeCopyrightNotice()	{
+	function makeCopyrightNotice() {
 
 			// Get values from TYPO3_CONF_VARS:
 		$loginCopyrightWarrantyProvider = strip_tags(trim($GLOBALS['TYPO3_CONF_VARS']['SYS']['loginCopyrightWarrantyProvider']));
@@ -465,7 +461,7 @@ class SC_index {
 		$loginImageSmall = (trim($GLOBALS['TBE_STYLES']['loginBoxImageSmall'])) ? trim($GLOBALS['TBE_STYLES']['loginBoxImageSmall']) : 'gfx/loginlogo_transp.gif';
 
 			// Make warranty note:
-		if (strlen($loginCopyrightWarrantyProvider)>=2 && strlen($loginCopyrightWarrantyURL)>=10)	{
+		if (strlen($loginCopyrightWarrantyProvider)>=2 && strlen($loginCopyrightWarrantyURL)>=10) {
 			$warrantyNote = sprintf($GLOBALS['LANG']->getLL('warranty.by'), htmlspecialchars($loginCopyrightWarrantyProvider), '<a href="' . htmlspecialchars($loginCopyrightWarrantyURL) . '" target="_blank">', '</a>');
 		} else {
 			$warrantyNote = sprintf($GLOBALS['LANG']->getLL('no.warranty'), '<a href="' . TYPO3_URL_LICENSE . '" target="_blank">', '</a>');
@@ -474,7 +470,7 @@ class SC_index {
 			// Compile full copyright notice:
 		$copyrightNotice = '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">'.
 					'<img src="' . $loginImageSmall . '" alt="' . $GLOBALS['LANG']->getLL('typo3.logo') . '" align="left" />' .
-					$GLOBALS['LANG']->getLL('typo3.cms') . ($GLOBALS['TYPO3_CONF_VARS']['SYS']['loginCopyrightShowVersion']?' ' . $GLOBALS['LANG']->getLL('version.short') . ' ' . htmlspecialchars($GLOBALS['TYPO_VERSION']):'') .
+					$GLOBALS['LANG']->getLL('typo3.cms') . ($GLOBALS['TYPO3_CONF_VARS']['SYS']['loginCopyrightShowVersion']?' ' . $GLOBALS['LANG']->getLL('version.short') . ' ' . htmlspecialchars(TYPO3_version):'') .
 					'</a>. ' .
 					$GLOBALS['LANG']->getLL('copyright') . ' &copy; ' . TYPO3_copyright_year . ' Kasper Sk&#229;rh&#248;j. ' . $GLOBALS['LANG']->getLL('extension.copyright') . ' ' .
 					sprintf($GLOBALS['LANG']->getLL('details.link'), '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . TYPO3_URL_GENERAL . '</a>') . '<br /> ' .
@@ -491,14 +487,14 @@ class SC_index {
 	 *
 	 * @return	string		HTML image tag.
 	 */
-	function makeLoginBoxImage()	{
+	function makeLoginBoxImage() {
 		$loginboxImage = '';
 		if ($GLOBALS['TBE_STYLES']['loginBoxImage_rotationFolder'])	{		// Look for rotation image folder:
 			$absPath = t3lib_div::resolveBackPath(PATH_typo3.$GLOBALS['TBE_STYLES']['loginBoxImage_rotationFolder']);
 
 				// Get rotation folder:
 			$dir = t3lib_div::getFileAbsFileName($absPath);
-			if ($dir && @is_dir($dir))	{
+			if ($dir && @is_dir($dir)) {
 
 					// Get files for rotation into array:
 				$files = t3lib_div::getFilesInDir($dir,'png,jpg,gif');
@@ -509,10 +505,10 @@ class SC_index {
 					// Get size of random file:
 				$imgSize = @getimagesize($dir.$files[$randImg]);
 
-				$imgAuthor = is_array($GLOBALS['TBE_STYLES']['loginBoxImage_author'])&&$GLOBALS['TBE_STYLES']['loginBoxImage_author'][$files[$randImg]] ? htmlspecialchars($GLOBALS['TBE_STYLES']['loginBoxImage_author'][$files[$randImg]]) : '';
+				$imgAuthor = is_array($GLOBALS['TBE_STYLES']['loginBoxImage_author']) && $GLOBALS['TBE_STYLES']['loginBoxImage_author'][$files[$randImg]] ? htmlspecialchars($GLOBALS['TBE_STYLES']['loginBoxImage_author'][$files[$randImg]]) : '';
 
 					// Create image tag:
-				if (is_array($imgSize))	{
+				if (is_array($imgSize)) {
 					$loginboxImage = '<img src="'.htmlspecialchars($GLOBALS['TBE_STYLES']['loginBoxImage_rotationFolder'].$files[$randImg]).'" '.$imgSize[3].' id="loginbox-image" alt="'.$imgAuthor.'" title="'.$imgAuthor.'" />';
 				}
 			}
@@ -621,7 +617,7 @@ class SC_index {
 	 *
 	 * @return	string		Opening form tag string
 	 */
-	function startForm()	{
+	function startForm() {
 		$output = '';
 
 		// The form defaults to 'no login'. This prevents plain
@@ -658,7 +654,7 @@ class SC_index {
 	 *
 	 * @return	string		JavaScript code
 	 */
-	function getJScode()	{
+	function getJScode() {
 		$JSCode = '';
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/index.php']['loginScriptHook'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/index.php']['loginScriptHook'] as $function) {
@@ -673,7 +669,7 @@ class SC_index {
 			function startUp() {
 					// If the login screen is shown in the login_frameset window for re-login, then try to get the username of the current/former login from opening windows main frame:
 				try {
-					if (parent.opener && parent.opener.TS && parent.opener.TS.username && document.loginform && document.loginform.username)	{
+					if (parent.opener && parent.opener.TS && parent.opener.TS.username && document.loginform && document.loginform.username) {
 						document.loginform.username.value = parent.opener.TS.username;
 					}
 				}
@@ -742,51 +738,6 @@ class SC_index {
 		return $JSCode;
 	}
 
-
-	/**
-	 * Checks if labels from $GLOBALS['TYPO3_CONF_VARS']['BE']['loginLabels'] were changed, and merge them to $GLOBALS['LOCAL_LANG'] if needed
-	 *
-	 * This method keeps backwards compatibility, if you modified your
-	 * labels with the install tool, we recommend to transfer this labels to a locallang.xml file
-	 * using the llxml extension
-	 *
-	 * @return	void
-	 * @deprecated since TYPO3 4.6, remove in TYPO3 4.8
-	 */
-	protected function mergeOldLoginLabels() {
-			// Getting login labels
-		$oldLoginLabels = trim($GLOBALS['TYPO3_CONF_VARS']['BE']['loginLabels']);
-		if ($oldLoginLabels != '') {
-			t3lib_div::deprecationLog('The use of $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'loginLabels\'] has been deprecated as of TYPO3 4.3, please use the according locallang.xml file.');
-				// md5 hash of the default loginLabels string
-			$defaultOldLoginLabelsHash = 'bcf0d32e58c6454ea50c6c956f1f18f0';
-				// compare loginLabels from TYPO3_CONF_VARS to default value
-			if (md5($oldLoginLabels) != $defaultOldLoginLabelsHash) {
-				$lang = $GLOBALS['LANG']->lang;
-				$oldLoginLabelArray = explode('|',$oldLoginLabels);
-				$overrideLabelKeys = array(
-					'labels.username'     => $oldLoginLabelArray[0],
-					'labels.password'     => $oldLoginLabelArray[1],
-					'labels.interface'    => $oldLoginLabelArray[2],
-					'labels.submitLogin'  => $oldLoginLabelArray[3],
-					'labels.submitLogout' => $oldLoginLabelArray[4],
-					'availableInterfaces' => $oldLoginLabelArray[5],
-					'headline'            => $oldLoginLabelArray[6],
-					'info.jscookies'      => $oldLoginLabelArray[7],
-					'newsheadline'        => $oldLoginLabelArray[8],
-					'error.login'         => $oldLoginLabelArray[9],
-				);
-				if (!is_array($GLOBALS['LOCAL_LANG'][$lang])) {
-					$GLOBALS['LOCAL_LANG'][$lang] = array();
-				}
-					// now override the labels from the LOCAL_LANG with the TYPO3_CONF_VARS
-				foreach ($overrideLabelKeys as $labelKey => $label) {
-					$GLOBALS['LANG']->overrideLL($labelKey, $label);
-				}
-			}
-		}
-	}
-
 	/**
 	 * Checks if login credentials are currently submitted
 	 *
@@ -797,13 +748,6 @@ class SC_index {
 		return !(empty($username) && empty($this->commandLI));
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/index.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_index');

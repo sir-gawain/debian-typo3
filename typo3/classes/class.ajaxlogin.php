@@ -1,4 +1,4 @@
-<?php
+ <?php
 /***************************************************************
 *  Copyright notice
 *
@@ -124,7 +124,7 @@ class AjaxLogin {
 		if(is_object($GLOBALS['BE_USER'])) {
 			$ajaxObj->setContentFormat('json');
 			if (@is_file(PATH_typo3conf.'LOCK_BACKEND')) {
-			 	$ajaxObj->addContent('login', array('will_time_out' => FALSE, 'locked' => TRUE));
+				$ajaxObj->addContent('login', array('will_time_out' => FALSE, 'locked' => TRUE));
 				$ajaxObj->setContentFormat('json');
 			} elseif (!isset($GLOBALS['BE_USER']->user['uid'])) {
 				$ajaxObj->addContent('login', array('timed_out' => TRUE));
@@ -164,9 +164,4 @@ class AjaxLogin {
 		$parent->setContentFormat('json');
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.ajaxlogin.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.ajaxlogin.php']);
-}
-
 ?>

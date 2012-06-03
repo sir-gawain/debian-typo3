@@ -53,7 +53,6 @@ abstract class Tx_Extbase_Validation_Validator_AbstractValidator implements Tx_E
 	 * Sets options for the validator
 	 *
 	 * @param array $validationOptions Options for the validator
-	 * @return void
 	 * @api
 	 */
 	public function __construct($validationOptions = array()) {
@@ -78,6 +77,7 @@ abstract class Tx_Extbase_Validation_Validator_AbstractValidator implements Tx_E
 	 * Check if $value is valid. If it is not valid, needs to add an error
 	 * to Result.
 	 *
+	 * @param mixed $value
 	 * @return void
 	 */
 	abstract protected function isValid($value);
@@ -108,15 +108,17 @@ abstract class Tx_Extbase_Validation_Validator_AbstractValidator implements Tx_E
 	 *
 	 * @param string $message The error message
 	 * @param integer $code The error code (a unix timestamp)
+	 * @param array $arguments Arguments to be replaced in message
+	 * @param string $title title of the error
 	 * @return void
 	 */
-	protected function addError($message, $code) {
+	protected function addError($message, $code, array $arguments = array(), $title = '') {
 		if ($this->result !== NULL) {
 				// backwards compatibility before Extbase 1.4.0: we cannot expect the "result" object to be there.
-			$this->result->addError(new Tx_Extbase_Validation_Error($message, $code));
+			$this->result->addError(new Tx_Extbase_Validation_Error($message, $code, $arguments, $title));
 		}
 		// the following is @deprecated since Extbase 1.4.0:
-		$this->errors[] = new Tx_Extbase_Validation_Error($message, $code);
+		$this->errors[] = new Tx_Extbase_Validation_Error($message, $code, $arguments, $title);
 	}
 }
 

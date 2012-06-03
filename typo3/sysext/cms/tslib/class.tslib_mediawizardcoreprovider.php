@@ -137,7 +137,7 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	 * @return string processed url
 	 */
 	protected function process_youtu($url) {
-	    return $this->process_youtube($url);
+		return $this->process_youtube($url);
 	}
 
 	/**
@@ -278,9 +278,4 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	}
 
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_mediawizardcoreprovider.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_mediawizardcoreprovider.php']);
-}
-
 ?>

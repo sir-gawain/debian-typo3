@@ -118,7 +118,7 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
 	 * replace / modify the supporteRequestTypes property or override this
 	 * method.
 	 *
-	 * @param Tx_Extbase_MVC_Request $request The current request
+	 * @param Tx_Extbase_MVC_RequestInterface $request The current request
 	 * @return boolean TRUE if this request type is supported, otherwise FALSE
 	 */
 	public function canProcessRequest(Tx_Extbase_MVC_RequestInterface $request) {
@@ -129,8 +129,8 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
 	/**
 	 * Handles a request. The result output is returned by altering the given response.
 	 *
-	 * @param Tx_Extbase_MVC_Request $request The request object
-	 * @param Tx_Extbase_MVC_Response $response The response, modified by this handler
+	 * @param Tx_Extbase_MVC_RequestInterface $request The request object
+	 * @param Tx_Extbase_MVC_ResponseInterface $response The response, modified by this handler
 	 * @return void
 	 */
 	public function processRequest(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response) {
@@ -138,6 +138,7 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
 			throw new Tx_Extbase_MVC_Exception_UnsupportedRequestType(get_class($this) . ' does not support requests of type "' . get_class($request) . '". Supported types are: ' . implode(' ', $this->supportedRequestTypes) , 1187701131);
 		}
 
+		$response->setRequest($request);
 		$this->request = $request;
 		$this->request->setDispatched(TRUE);
 		$this->response = $response;
@@ -251,7 +252,6 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
 	 * response object. If the action doesn't return anything and a valid
 	 * view exists, the view is rendered automatically.
 	 *
-	 * @param string $actionMethodName Name of the action method to call
 	 * @return void
 	 * @api
 	 */
@@ -320,7 +320,7 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
 	 * By default, this method tries to locate a view with a name matching
 	 * the current action.
 	 *
-	 * @return void
+	 * @return string
 	 * @api
 	 */
 	protected function resolveView() {
@@ -460,7 +460,7 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
 			$message = 'An error occurred while trying to call ' . get_class($this) . '->' . $this->actionMethodName . '().' . PHP_EOL;
 			foreach ($this->arguments->getValidationResults()->getFlattenedErrors() as $propertyPath => $errors) {
 				foreach ($errors as $error) {
-					$message .= 'Error for ' . $propertyPath . ':  ' . $error->getMessage() . PHP_EOL;
+					$message .= 'Error for ' . $propertyPath . ':  ' . $error->render() . PHP_EOL;
 				}
 			}
 

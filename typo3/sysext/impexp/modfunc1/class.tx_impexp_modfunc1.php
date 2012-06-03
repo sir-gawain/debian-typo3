@@ -50,13 +50,13 @@ class tx_impexp_modfunc1 extends mod_user_task {
 	 * @param	object		Parent object
 	 * @return	string		HTML for the task center overview listing.
 	 */
-	function overview_main()	{
+	function overview_main() {
 		global $LANG;
 			// Create preset links:
 		$presets = $this->getPresets();
 		$opt = array();
-		if (is_array($presets))	{
-			foreach($presets as $presetCfg)	{
+		if (is_array($presets)) {
+			foreach($presets as $presetCfg) {
 				$title = strlen($presetCfg['title']) ? $presetCfg['title'] : '['.$presetCfg['uid'].']';
 				$opt[] = '
 					<tr class="bgColor4">
@@ -93,7 +93,7 @@ class tx_impexp_modfunc1 extends mod_user_task {
 			} else {
 				// Thumbnail folder and files:
 				$tempDir = $this->userTempFolder();
-				if ($tempDir)	{
+				if ($tempDir) {
 					$thumbnails = t3lib_div::getFilesInDir($tempDir,'png,gif,jpg',1);
 				}
 
@@ -113,8 +113,8 @@ class tx_impexp_modfunc1 extends mod_user_task {
 				<td>Path:</td>
 				<td>Meta data:</td>
 			</tr>';
-				if (is_array($presets))	{
-					foreach($presets as $presetCfg)	{
+				if (is_array($presets)) {
+					foreach($presets as $presetCfg) {
 						$configuration = unserialize($presetCfg['preset_data']);
 						$thumbnailFile = $thumbnails[$configuration['meta']['thumbnail']];
 						$title = strlen($presetCfg['title']) ? $presetCfg['title'] : '['.$presetCfg['uid'].']';
@@ -170,7 +170,7 @@ class tx_impexp_modfunc1 extends mod_user_task {
 	 *
 	 * @return	array		Array of preset records
 	 */
-	function getPresets()	{
+	function getPresets() {
 		$presets = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 				'*',
 				'tx_impexp_presets',
@@ -187,19 +187,15 @@ class tx_impexp_modfunc1 extends mod_user_task {
 	 *
 	 * @return	string		Absolute path to first "_temp_" folder of the current user, otherwise blank.
 	 */
-	function userTempFolder()	{
+	function userTempFolder() {
 		global $FILEMOUNTS;
 
-		foreach($FILEMOUNTS as $filePathInfo)	{
+		foreach($FILEMOUNTS as $filePathInfo) {
 			$tempFolder = $filePathInfo['path'].'_temp_/';
-			if (@is_dir($tempFolder))	{
+			if (@is_dir($tempFolder)) {
 				return $tempFolder;
 			}
 		}
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/modfunc1/class.tx_impexp_modfunc1.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/modfunc1/class.tx_impexp_modfunc1.php']);
 }
 ?>

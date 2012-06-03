@@ -34,7 +34,7 @@
  */
 class tx_coreupdates_installsysexts extends Tx_Install_Updates_Base {
 	protected $title = 'Install Outsourced System Extensions';
-	protected $outsourcedSystemExtensions = array('info', 'perm', 'func', 'filelist', 'about', 'cshmanual', 'feedit', 'opendocs', 'simulatestatic');
+	protected $outsourcedSystemExtensions = array('info', 'perm', 'func', 'filelist', 'about', 'cshmanual', 'feedit', 'opendocs');
 
 	/**
 	 * Checks if an update is needed
@@ -45,7 +45,7 @@ class tx_coreupdates_installsysexts extends Tx_Install_Updates_Base {
 	public function checkForUpdate(&$description) {
 		$result = FALSE;
 
-        $description = '
+		$description = '
 			<ul>
 		';
 
@@ -85,7 +85,7 @@ class tx_coreupdates_installsysexts extends Tx_Install_Updates_Base {
 	 * @return string HTML output
 	 */
 	public function getUserInput($inputPrefix) {
-        $content = '
+		$content = '
 			<p>
 				<strong>
 					Install the following SystemExtensions:

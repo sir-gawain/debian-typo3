@@ -46,7 +46,7 @@ class tx_lowlevel_syslog extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 		$this->cli_help['name'] = 'syslog -- Show entries from syslog';
@@ -55,19 +55,6 @@ Showing last 25 hour entries from the syslog. More features pending. This is the
 ');
 
 		$this->cli_help['examples'] = '';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_syslog() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_syslog::__construct();
 	}
 
 	/**
@@ -94,7 +81,7 @@ Showing last 25 hour entries from the syslog. More features pending. This is the
 				'sys_log',
 				'tstamp>' . ($GLOBALS['EXEC_TIME'] - 25 * 3600)
 			);
-		foreach($rows as $r)	{
+		foreach($rows as $r) {
 			$l = unserialize($r['log_data']);
 			$explained = '#'.$r['uid'].' '.t3lib_BEfunc::datetime($r['tstamp']).' USER['.$r['userid'].']: '.sprintf($r['details'],$l[0],$l[1],$l[2],$l[3],$l[4],$l[5]);
 			$resultArray['listing'][$r['uid']] = $explained;
@@ -111,7 +98,7 @@ Showing last 25 hour entries from the syslog. More features pending. This is the
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
+	function main_autoFix($resultArray) {
 	}
 }
 

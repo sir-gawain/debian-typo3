@@ -185,7 +185,7 @@ class ModuleMenu {
 		$modules = array();
 
 			// Remove the 'doc' module?
-		if($GLOBALS['BE_USER']->getTSConfigVal('options.disableDocModuleInAB'))	{
+		if($GLOBALS['BE_USER']->getTSConfigVal('options.disableDocModuleInAB')) {
 			unset($this->loadedModules['doc']);
 		}
 
@@ -279,7 +279,7 @@ class ModuleMenu {
 			$icon['size']     = $iconSizes[3];
 			$icon['title']    = htmlspecialchars($iconTitle);
 			$icon['html']     = '<img src="' . $iconFileRelative . '" ' . $iconSizes[3] .
-                    ' title="' . htmlspecialchars($iconTitle) . '" alt="' . htmlspecialchars($iconTitle) . '" />';
+				' title="' . htmlspecialchars($iconTitle) . '" alt="' . htmlspecialchars($iconTitle) . '" />';
 		}
 
 		return $icon;
@@ -296,7 +296,7 @@ class ModuleMenu {
 	 */
 	protected function getModuleIconAbsolute($iconFilename) {
 
-		if(!t3lib_div::isAbsPath($iconFilename))	{
+		if(!t3lib_div::isAbsPath($iconFilename)) {
 			$iconFilename = $this->backPath . $iconFilename;
 		}
 
@@ -325,7 +325,7 @@ class ModuleMenu {
 	 * @param	string		Link URL
 	 * @return	string		link URl appended with ? if there wasn't one
 	 */
-	protected function appendQuestionmarkToLink($link)	{
+	protected function appendQuestionmarkToLink($link) {
 		if(!strstr($link, '?')) {
 			$link .= '?';
 		}
@@ -338,7 +338,7 @@ class ModuleMenu {
 	 *
 	 * @return	string		html code snippet displaying the logout button
 	 */
-	public function renderLogoutButton()	{
+	public function renderLogoutButton() {
 		$buttonLabel      = $GLOBALS['BE_USER']->user['ses_backuserid'] ? 'LLL:EXT:lang/locallang_core.php:buttons.exit' : 'LLL:EXT:lang/locallang_core.php:buttons.logout';
 
 		$buttonForm = '
@@ -363,10 +363,4 @@ class ModuleMenu {
 	}
 
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.modulemenu.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.modulemenu.php']);
-}
-
 ?>

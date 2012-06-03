@@ -276,10 +276,12 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 				$severity = tx_reports_reports_status_Status::ERROR;
 				$messageDetail .= $flashMessage;
 			}
-			if (strpos($flashMessage, 'message-warning') !== FALSE ||
-				strpos($flashMessage, 'message-information') !== FALSE) {
+			if (strpos($flashMessage, 'message-warning') !== FALSE) {
 				$severity = tx_reports_reports_status_Status::WARNING;
-				$message .= $flashMessage;
+				$messageDetail .= $flashMessage;
+			}
+			if (strpos($flashMessage, 'message-information') !== FALSE) {
+				$messageDetail .= $flashMessage;
 			}
 
 			$unsecureUserCount = tx_saltedpasswords_div::getNumberOfBackendUsersWithInsecurePassword();
@@ -352,10 +354,4 @@ class tx_reports_reports_status_SecurityStatus implements tx_reports_StatusProvi
 		);
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_securitystatus.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_securitystatus.php']);
-}
-
 ?>

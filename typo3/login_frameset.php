@@ -64,7 +64,7 @@ class SC_login_frameset {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 			// Set doktype:
 		$GLOBALS['TBE_TEMPLATE']->docType='xhtml_frames';
 
@@ -88,17 +88,10 @@ class SC_login_frameset {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/login_frameset.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/login_frameset.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_login_frameset');

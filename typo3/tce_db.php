@@ -92,7 +92,7 @@ class SC_tce_db {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 
 			// GPvars:
 		$this->flags = t3lib_div::_GP('flags');
@@ -126,19 +126,19 @@ class SC_tce_db {
 		}
 
 		$TCAdefaultOverride = $GLOBALS['BE_USER']->getTSConfigProp('TCAdefaults');
-		if (is_array($TCAdefaultOverride))	{
+		if (is_array($TCAdefaultOverride)) {
 			$this->tce->setDefaultsFromUserTS($TCAdefaultOverride);
 		}
 
 			// Reverse order.
-		if ($this->flags['reverseOrder'])	{
+		if ($this->flags['reverseOrder']) {
 			$this->tce->reverseOrder=1;
 		}
 
 #		$this->tce->disableRTE = $this->_disableRTE;
 
 			// Clipboard?
-		if (is_array($this->CB))	{
+		if (is_array($this->CB)) {
 			$this->include_once[]=PATH_t3lib.'class.t3lib_clipboard.php';
 		}
 	}
@@ -148,15 +148,15 @@ class SC_tce_db {
 	 *
 	 * @return	void
 	 */
-	function initClipboard()	{
-		if (is_array($this->CB))	{
+	function initClipboard() {
+		if (is_array($this->CB)) {
 			$clipObj = t3lib_div::makeInstance('t3lib_clipboard');
 			$clipObj->initializeClipboard();
-			if ($this->CB['paste'])	{
+			if ($this->CB['paste']) {
 				$clipObj->setCurrentPad($this->CB['pad']);
 				$this->cmd = $clipObj->makePasteCmdArray($this->CB['paste'],$this->cmd);
 			}
-			if ($this->CB['delete'])	{
+			if ($this->CB['delete']) {
 				$clipObj->setCurrentPad($this->CB['pad']);
 				$this->cmd = $clipObj->makeDeleteCmdArray($this->cmd);
 			}
@@ -168,7 +168,7 @@ class SC_tce_db {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 			// LOAD TCEmain with data and cmd arrays:
 		$this->tce->start($this->data,$this->cmd);
@@ -191,7 +191,7 @@ class SC_tce_db {
 			$this->tce->clear_cacheCmd($this->cacheCmd);
 
 				// Update page tree?
-			if ($this->uPT && (isset($this->data['pages'])||isset($this->cmd['pages'])))	{
+			if ($this->uPT && (isset($this->data['pages']) || isset($this->cmd['pages']))) {
 				t3lib_BEfunc::setUpdateSignal('updatePageTree');
 			}
 		}
@@ -203,9 +203,9 @@ class SC_tce_db {
 	 *
 	 * @return	void
 	 */
-	function finish()	{
+	function finish() {
 			// Prints errors, if...
-		if ($this->prErr)	{
+		if ($this->prErr) {
 			$this->tce->printLogErrorMessages($this->redirect);
 		}
 
@@ -214,13 +214,6 @@ class SC_tce_db {
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/tce_db.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/tce_db.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_tce_db');

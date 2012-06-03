@@ -61,16 +61,11 @@ class tx_taskcenter_status {
 		$sort = array();
 		$items = explode('&', t3lib_div::_POST('data'));
 		foreach($items as $item) {
-		 $sort[] = substr($item, 12);
+			$sort[] = substr($item, 12);
 		}
 
 		$GLOBALS['BE_USER']->uc['taskcenter']['sorting'] = serialize($sort);
 		$GLOBALS['BE_USER']->writeUC();
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/taskcenter/classes/class.tx_taskcenter_status.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/taskcenter/classes/class.tx_taskcenter_status.php']);
-}
-
 ?>

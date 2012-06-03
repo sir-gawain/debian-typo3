@@ -250,7 +250,7 @@ class tx_recycler_model_deletedRecords {
 					$table,
 					$deletedField,
 					'1',
-					' AND pid = ' . $id . $filterWhere ,
+					' AND pid = ' . $id . $filterWhere,
 					'',
 					'',
 					$limit,
@@ -432,9 +432,4 @@ class tx_recycler_model_deletedRecords {
 		return $this->table;
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/model/class.tx_recycler_model_deletedRecords.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/model/class.tx_recycler_model_deletedRecords.php']);
-}
-
 ?>

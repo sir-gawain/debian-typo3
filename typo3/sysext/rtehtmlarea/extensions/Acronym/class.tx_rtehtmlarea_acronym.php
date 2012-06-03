@@ -131,7 +131,7 @@ class tx_rtehtmlarea_acronym extends tx_rtehtmlarea_api {
 			}
 			$webMounts = $GLOBALS['BE_USER']->returnWebmounts();
 			$perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
-			$recursive = isset($this->thisConfig['buttons.'][$button.'.']['recursive']) ? intval($this->thisConfig['buttons.'][$button.'.']['recursive']) : 0 ;
+			$recursive = isset($this->thisConfig['buttons.'][$button.'.']['recursive']) ? intval($this->thisConfig['buttons.'][$button.'.']['recursive']) : 0;
 			if (trim($this->thisConfig['buttons.'][$button.'.']['pages'])) {
 				$pids = t3lib_div::trimExplode(',', $this->thisConfig['buttons.'][$button.'.']['pages'], 1);
 				foreach ($pids as $key => $val) {
@@ -157,9 +157,9 @@ class tx_rtehtmlarea_acronym extends tx_rtehtmlarea_api {
 			$whereClause .= ' AND '. $tableA . '.pid IN (' . $GLOBALS['TYPO3_DB']->fullQuoteStr(($pageTree ? $pageTree : ''), $tableA) . ')';
 		}
 			// Restrict to acronyms applicable to the language of current content element
-                if ($this->htmlAreaRTE->contentLanguageUid > -1) {
-                        $whereClause .= ' AND (' . $tableA . '.sys_language_uid=' . $this->htmlAreaRTE->contentLanguageUid . ' OR ' . $tableA . '.sys_language_uid=-1) ';
-                }
+		if ($this->htmlAreaRTE->contentLanguageUid > -1) {
+			$whereClause .= ' AND (' . $tableA . '.sys_language_uid=' . $this->htmlAreaRTE->contentLanguageUid . ' OR ' . $tableA . '.sys_language_uid=-1) ';
+		}
 			// Restrict to acronyms in certain languages
 		if (is_array($this->thisConfig['buttons.']) && is_array($this->thisConfig['buttons.']['language.']) && isset($this->thisConfig['buttons.']['language.']['restrictToItems'])) {
 			$languageList = implode("','", t3lib_div::trimExplode(',', $GLOBALS['TYPO3_DB']->fullQuoteStr(strtoupper($this->thisConfig['buttons.']['language.']['restrictToItems']), $tableB)));
@@ -182,8 +182,5 @@ class tx_rtehtmlarea_acronym extends tx_rtehtmlarea_api {
 		$this->abbreviationIndex = count($abbrArray);
 		return json_encode(array('abbr' => $abbrArray, 'acronym' => $acronymArray));
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/Acronym/class.tx_rtehtmlarea_acronym.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/Acronym/class.tx_rtehtmlarea_acronym.php']);
 }
 ?>

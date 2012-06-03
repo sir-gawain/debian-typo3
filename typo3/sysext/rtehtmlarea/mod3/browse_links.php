@@ -61,7 +61,7 @@ class tx_rtehtmlarea_SC_browse_links {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 			// Setting alternative web browsing mounts (ONLY local to browse_links.php this script so they stay "read-only")
 		$altMountPoints = trim($GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.altElementBrowserMountPoints'));
 
@@ -74,7 +74,7 @@ class tx_rtehtmlarea_SC_browse_links {
 		// Set temporary DB mounts
 		$tempDBmount = intval($GLOBALS['BE_USER']->getSessionData('pageTree_temporaryMountPoint'));
 		if ($tempDBmount) {
-	 		$altMountPoints = $tempDBmount;
+			$altMountPoints = $tempDBmount;
 		}
 
 		if ($altMountPoints) {
@@ -95,7 +95,7 @@ class tx_rtehtmlarea_SC_browse_links {
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/browse_links.php']['browserRendering'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/browse_links.php']['browserRendering'] as $classRef) {
 				$browserRenderObj = t3lib_div::getUserObj($classRef);
-				if (is_object($browserRenderObj) && method_exists($browserRenderObj, 'isValid') && method_exists($browserRenderObj, 'render'))	{
+				if (is_object($browserRenderObj) && method_exists($browserRenderObj, 'isValid') && method_exists($browserRenderObj, 'render')) {
 					if ($browserRenderObj->isValid($this->mode, $this)) {
 						$this->content .=  $browserRenderObj->render($this->mode, $this);
 						$browserRendered = TRUE;
@@ -120,13 +120,9 @@ class tx_rtehtmlarea_SC_browse_links {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod3/browse_links.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod3/browse_links.php']);
 }
 
 	// Make instance:

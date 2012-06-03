@@ -31,6 +31,7 @@
  * - The core of TYPO3
  * - All extensions with an ext_autoload.php file
  * - All extensions that stick to the 'extbase' like naming convention
+ * - Resolves registered XCLASSes
  *
  * @author Dmitry Dulepov <dmitry@typo3.org>
  * @author Martin Kutschker <masi@typo3.org>
@@ -55,6 +56,17 @@ class t3lib_autoloader {
 	protected static $autoloadCacheIdentifier = NULL;
 
 	/**
+	 * Track if the cache file written to disk should be updated.
+	 * This is set to TRUE if during script run new classes are
+	 * found (for example due to new requested extbase classes)
+	 * and is used in unregisterAutoloader() to decide whether or not
+	 * the cache file should be re-written.
+	 *
+	 * @var bool True if mapping changed
+	 */
+	protected static $cacheUpdateRequired = FALSE;
+
+	/**
 	 * The autoloader is static, thus we do not allow instances of this class.
 	 */
 	private function __construct() {
@@ -71,12 +83,20 @@ class t3lib_autoloader {
 	}
 
 	/**
-	 * Uninstalls TYPO3 autoloader. This function is for the sake of completeness.
-	 * It is never called by the TYPO3 core.
+	 * Uninstalls TYPO3 autoloader and writes any additional classes
+	 * found during the script run to the cache file.
+	 *
+	 * This method is called during shutdown of the framework.
 	 *
 	 * @return boolean TRUE in case of success
 	 */
 	public static function unregisterAutoloader() {
+		if (self::$cacheUpdateRequired) {
+			self::updateRegistryCacheEntry(self::$classNameToFileMapping);
+			self::$cacheUpdateRequired = FALSE;
+		}
+		self::$classNameToFileMapping = array();
+
 		return spl_autoload_unregister('t3lib_autoloader::autoload');
 	}
 
@@ -94,6 +114,7 @@ class t3lib_autoloader {
 		$classPath = self::getClassPathByRegistryLookup($className);
 
 		if ($classPath) {
+				// Include the required file that holds the class
 			t3lib_div::requireFile($classPath);
 		} else {
 			try {
@@ -116,14 +137,13 @@ class t3lib_autoloader {
 	protected static function loadCoreAndExtensionRegistry() {
 		$phpCodeCache = $GLOBALS['typo3CacheManager']->getCache('cache_phpcode');
 
-			// Create autoloader cache file if it does not exist yet
-		if (!$phpCodeCache->has(self::getAutoloadCacheIdentifier())) {
+			// Create autoload cache file if it does not exist yet
+		if ($phpCodeCache->has(self::getAutoloadCacheIdentifier())) {
+			$classRegistry = $phpCodeCache->requireOnce(self::getAutoloadCacheIdentifier());
+		} else {
+			self::$cacheUpdateRequired = TRUE;
 			$classRegistry = self::createCoreAndExtensionRegistry();
-			self::updateRegistryCacheEntry($classRegistry);
 		}
-
-			// Require calculated cache file
-		$mappingArray = $phpCodeCache->requireOnce(self::getAutoloadCacheIdentifier());
 
 			// This can only happen if the autoloader was already registered
 			// in the same call once, the requireOnce of the cache file then
@@ -131,28 +151,127 @@ class t3lib_autoloader {
 			// all cache entries manually again.
 			// This can happen in unit tests and if the cache backend was
 			// switched to NullBackend for example to simplify development
-		if (!is_array($mappingArray)) {
-			$mappingArray = self::createCoreAndExtensionRegistry();
+		if (!is_array($classRegistry)) {
+			self::$cacheUpdateRequired = TRUE;
+			$classRegistry = self::createCoreAndExtensionRegistry();
 		}
 
-		self::$classNameToFileMapping = $mappingArray;
+		self::$classNameToFileMapping = $classRegistry;
 	}
 
 	/**
 	 * Get the full path to a class by looking it up in the registry.
 	 * If not found, returns NULL.
 	 *
+	 * Warning: This method is public as it is needed by t3lib_div::makeInstance(),
+	 * but it is _not_ part of the public API and should not be used in own extensions!
+	 *
 	 * @param string $className Class name to find source file of
 	 * @return mixed If String: Full name of the file where $className is declared, NULL if no entry is found
+	 * @internal
 	 */
-	protected static function getClassPathByRegistryLookup($className) {
+	public static function getClassPathByRegistryLookup($className) {
 		$classPath = NULL;
 		$classNameLower = strtolower($className);
+
+			// Try to resolve extbase naming scheme if class is not already in cache file
 		if (!array_key_exists($classNameLower, self::$classNameToFileMapping)) {
 			self::attemptToLoadRegistryWithNamingConventionForGivenClassName($className);
 		}
+
+			// Look up class name in cache file
 		if (array_key_exists($classNameLower, self::$classNameToFileMapping)) {
 			$classPath = self::$classNameToFileMapping[$classNameLower];
+		}
+
+			// Handle deprecated XCLASS lookups
+		$classPath = self::classPathForDeprecatedXclassHandling($classPath, $classNameLower);
+
+		return $classPath;
+	}
+
+	/**
+	 * Resolve 'old' XCLASS registrations from TYPO3_CONF_VARS
+	 *
+	 * @param string $classPath The current class path from previous lookup
+	 * @param string $classNameLower Lower cased class name to be looked up
+	 * @return string Class path
+	 * @deprecated since 6.0, deprecation log is handled in config_default. This method and the call can be safely removed in two versions
+	 */
+	protected static function classPathForDeprecatedXclassHandling($classPath, $classNameLower) {
+			// Start XCLASS handling if the requested class starts with 'ux_'
+			// If so, we need to resolve the base class first
+			// e.g. ux_t3lib_beuserauth => t3lib_beuserauth
+		$baseClassOfXClass = NULL;
+		$xClassRequested = FALSE;
+		if ($classPath === NULL && substr($classNameLower, 0, 3) === 'ux_') {
+			$baseClassOfXClass = substr($classNameLower, 3);
+			$xClassRequested = TRUE;
+		}
+
+			// If a XCLASS was requested for autoloading, the autoloader has to know which class will be extended.
+			// only with this information it is possible to get the "relative path" of the extended class.
+			// The "relative path" is needed to simulate the correct path for $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'][$relativePath]
+			// "relative path" is in quotes, because this is not every time the case.
+			// The old way to include an XCLASS is defined by such a piece of code at the end of a class:
+			//
+			// if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php'])) {
+			// 		include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php']);
+			// }
+		if ($classPath === NULL && array_key_exists($baseClassOfXClass, self::$classNameToFileMapping)) {
+			$classPath = self::$classNameToFileMapping[$baseClassOfXClass];
+		}
+
+			// Try to determine the relative class for the old XCLASS, if:
+			// - We got a physical path for the base class
+			// - An xclass was requested
+			// - The old way of xclassing is still used
+			// $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php']
+		if ($classPath !== NULL && $xClassRequested === TRUE && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'])) {
+
+				// Check if the XCLASS for the requested path is set  a transformation for some paths needs to be done
+			$relativeClassPath = substr($classPath, strlen(PATH_site));
+
+				// Replacements for some special cases
+				// @TODO: This layer should be adapted / finished for further special core cases
+			$relativeClassPath = str_replace(
+				array(
+					'typo3/sysext/cms/tslib',
+					'typo3conf/ext',
+					'typo3/sysext',
+				),
+				array(
+					'tslib',
+					'ext',
+					'ext',
+				),
+				$relativeClassPath
+			);
+
+			if (isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'][$relativeClassPath])) {
+					// If a class path was found: Set it and add to cache file
+				$classPath = $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'][$relativeClassPath];
+				self::addClassToCache(PATH_site . $classPath, $classNameLower);
+			} else {
+					// If an XCLASS was requested AND no XLASS was found,
+					// $classPath is filled with the path of the class which will be extended.
+					//
+					// If no XCLASS is defined, we set $classPath to NULL, because otherwise the autoloader will
+					// load the same class twice
+					//
+					// Example:
+					// Autoload ux_t3lib_l10n_locales. This class will be not find in the autoloader cache.
+					// After this, we try to determine the path of base class, in our case t3lib_l10n_locales
+					// (to determine the relative class for old XCLASS inclusion).
+					// So we determine the relative path ob the base class ('t3lib/l10n/class.t3lib_l10n_locales.php')
+					// and have a look up for defined XCLASSes of t3lib_l10n_locales
+					// ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/l10n/class.t3lib_l10n_locales.php'])
+					// If we found one XCLASS, we will return the physical path of this class
+					// If no XCLASS was found, we MUST set $classPath to NULL
+					// Without this step the physical path of t3lib_l10n_locales will be returned and a
+					// "Cannot re-declare class t3lib_l10n_locales"-Error will occur
+				$classPath = NULL;
+			}
 		}
 		return $classPath;
 	}
@@ -160,7 +279,7 @@ class t3lib_autoloader {
 	/**
 	 * Find all ext_autoload files and merge with core_autoload.
 	 *
-	 * @return void
+	 * @return array
 	 */
 	protected static function createCoreAndExtensionRegistry() {
 		$classRegistry = require(PATH_t3lib . 'core_autoload.php');
@@ -192,14 +311,26 @@ class t3lib_autoloader {
 					// This will throw a BadFunctionCallException if the extension is not loaded
 				$extensionPath = t3lib_extMgm::extPath($extensionKey);
 				$classFilePathAndName = $extensionPath . 'Classes/' . strtr($classNameParts[2], '_', '/') . '.php';
-				if (file_exists($classFilePathAndName)) {
-					self::$classNameToFileMapping[strtolower($className)] = $classFilePathAndName;
-					self::updateRegistryCacheEntry(self::$classNameToFileMapping);
-				}
+				self::addClassToCache($classFilePathAndName, $className);
 			} catch (BadFunctionCallException $exception) {
 					// Catch the exception and do nothing to give
 					// other registered autoloaders a chance to find the file
 			}
+		}
+	}
+
+	/**
+	 * Adds a single class to autoloader cache.
+	 *
+	 * @static
+	 * @param string $classFilePathAndName Physical path of file containing $className
+	 * @param string $className Class name
+	 * @return void
+	 */
+	protected static function addClassToCache($classFilePathAndName, $className) {
+		if (file_exists($classFilePathAndName)) {
+			self::$cacheUpdateRequired = TRUE;
+			self::$classNameToFileMapping[strtolower($className)] = $classFilePathAndName;
 		}
 	}
 
@@ -212,7 +343,7 @@ class t3lib_autoloader {
 	protected static function updateRegistryCacheEntry(array $registry) {
 		$cachedFileContent = 'return array(';
 		foreach ($registry as $className => $classLocation) {
-			$cachedFileContent .= LF . '\'' . $className . '\' => \'' . $classLocation . '\',';
+			$cachedFileContent .= LF . '\'' . strtolower($className) . '\' => \'' . $classLocation . '\',';
 		}
 		$cachedFileContent .= LF . ');';
 		$GLOBALS['typo3CacheManager']->getCache('cache_phpcode')->set(
@@ -224,9 +355,8 @@ class t3lib_autoloader {
 
 	/**
 	 * Gets the identifier used for caching the registry files.
-	 * The identifier depends on whether or not frontend or backend
-	 * is called, on the current TYPO3 version and the installation path
-	 * of the TYPO3 site (PATH_site).
+	 * The identifier depends on the current TYPO3 version and the
+	 * installation path of the TYPO3 site (PATH_site).
 	 *
 	 * In effect, a new registry cache file will be created
 	 * when moving to a newer version with possible new core classes
@@ -236,8 +366,7 @@ class t3lib_autoloader {
 	 */
 	protected static function getAutoloadCacheIdentifier() {
 		if (is_null(self::$autoloadCacheIdentifier)) {
-			$frontendOrBackend = TYPO3_MODE === 'FE' ? 'FE' : 'BE';
-			self::$autoloadCacheIdentifier = sha1($frontendOrBackend . TYPO3_version . PATH_site . 'autoload');
+			self::$autoloadCacheIdentifier = sha1(TYPO3_version . PATH_site . 'autoload');
 		}
 		return self::$autoloadCacheIdentifier;
 	}

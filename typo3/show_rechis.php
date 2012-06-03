@@ -64,7 +64,7 @@ class SC_show_rechis {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 
 			// Create internal template object:
 		$this->doc = t3lib_div::makeInstance('template');
@@ -80,7 +80,7 @@ class SC_show_rechis {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 			// Start history object
 		$historyObj = t3lib_div::makeInstance('recordHistory');
@@ -103,7 +103,7 @@ class SC_show_rechis {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		$this->content .= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
@@ -126,16 +126,12 @@ class SC_show_rechis {
 			// Start history object
 		$historyObj = t3lib_div::makeInstance('recordHistory');
 
-		if ($historyObj->returnUrl)	{
+		if ($historyObj->returnUrl) {
 			$buttons['back'] = '<a href="' . htmlspecialchars($historyObj->returnUrl) . '" class="typo3-goBack">' . t3lib_iconWorks::getSpriteIcon('actions-view-go-back') . '</a>';
 		}
 
 		return $buttons;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_rechis.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_rechis.php']);
 }
 
 // Make instance:

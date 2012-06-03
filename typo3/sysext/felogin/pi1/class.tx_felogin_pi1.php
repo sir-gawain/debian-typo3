@@ -54,7 +54,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @return	string		The	content that is displayed on the website
 	 */
-	public function main($content,$conf)	{
+	public function main($content,$conf) {
 
 			// Loading TypoScript array into object variable:
 		$this->conf = $conf;
@@ -163,12 +163,12 @@ class tx_felogin_pi1 extends tslib_pibase {
 
 	}
 
-	 /**
-	  * Shows the forgot password form
-	  *
-	  * @return	string		content
-	  */
-	 protected function showForgot() {
+	/**
+	 * Shows the forgot password form
+	 *
+	 * @return	string		content
+	 */
+	protected function showForgot() {
 		$subpart = $this->cObj->getSubpart($this->template, '###TEMPLATE_FORGOT###');
 		$subpartArray = $linkpartArray = array();
 		$postData =  t3lib_div::_POST($this->prefixId);
@@ -279,7 +279,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 			$userHash = $user['felogin_forgotHash'];
 			$compareHash = explode('|', $userHash);
 
-			if (!$compareHash || !$compareHash[1] || $compareHash[0] < time() ||  $hash[0] != $compareHash[0] ||  md5($hash[1]) != $compareHash[1]) {
+			if (!$compareHash || !$compareHash[1] || $compareHash[0] < time() || $hash[0] != $compareHash[0] || md5($hash[1]) != $compareHash[1]) {
 				$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText('change_password_notvalid_message',$this->conf['changePasswordNotValidMessage_stdWrap.']);
 				$subpartArray['###CHANGEPASSWORD_FORM###'] = '';
 			} else {
@@ -459,7 +459,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @return	string		content
 	 */
-	 protected function showLogin() {
+	protected function showLogin() {
 		$subpart = $this->cObj->getSubpart($this->template, '###TEMPLATE_LOGIN###');
 		$subpartArray = $linkpartArray = $markerArray = array();
 
@@ -516,7 +516,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 		$onSubmitAr = array();
 		$extraHiddenAr = array();
 
-	 		// check for referer redirect method. if present, save referer in form field
+			// check for referer redirect method. if present, save referer in form field
 		if (t3lib_div::inList($this->conf['redirectMode'], 'referer') || t3lib_div::inList($this->conf['redirectMode'], 'refererDomains')) {
 			$referer = $this->referer ? $this->referer : t3lib_div::getIndpEnv('HTTP_REFERER');
 			if ($referer) {
@@ -589,8 +589,8 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @return	string		redirect url
 	 */
-	 protected function processRedirect() {
-	 	$redirect_url = array();
+	protected function processRedirect() {
+		$redirect_url = array();
 		if ($this->conf['redirectMode']) {
 			$redirectMethods = t3lib_div::trimExplode(',', $this->conf['redirectMode'], TRUE);
 			foreach ($redirectMethods as $redirMethod) {
@@ -604,7 +604,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 								$GLOBALS['TSFE']->fe_user->usergroup_table,
 								'felogin_redirectPid<>\'\' AND uid IN (' . implode(',', $groupData['uid']) . ')'
 							);
-							if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res))	{
+							if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res)) {
 								$redirect_url[] = $this->pi_getPageLink($row[0]); // take the first group with a redirect page
 							}
 						break;
@@ -614,7 +614,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 								$GLOBALS['TSFE']->fe_user->user_table,
 								$GLOBALS['TSFE']->fe_user->userid_column . '=' . $GLOBALS['TSFE']->fe_user->user['uid'] . ' AND felogin_redirectPid<>\'\''
 							);
-							if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res))	{
+							if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res)) {
 								$redirect_url[] = $this->pi_getPageLink($row[0]);
 							}
 						break;
@@ -728,7 +728,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @return	void
 	 */
-	 protected function mergeflexFormValuesIntoConf() {
+	protected function mergeflexFormValuesIntoConf() {
 		$flex = array();
 		if ($this->flexFormValue('showForgotPassword', 'sDEF')) {
 			$flex['showForgotPassword'] = $this->flexFormValue('showForgotPassword','sDEF');
@@ -806,7 +806,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @return	string		link or url
 	 */
-	 protected function getPageLink($label, $piVars,$returnUrl = FALSE) {
+	protected function getPageLink($label, $piVars,$returnUrl = FALSE) {
 		$additionalParams = '';
 
 		if (count($piVars)) {
@@ -815,12 +815,12 @@ class tx_felogin_pi1 extends tslib_pibase {
 			}
 		}
 			// should GETvars be preserved?
-		if ($this->conf['preserveGETvars'])	{
+		if ($this->conf['preserveGETvars']) {
 			$additionalParams .= $this->getPreserveGetVars();
 		}
 
 		$this->conf['linkConfig.']['parameter'] = $GLOBALS['TSFE']->id;
-		if ($additionalParams)	{
+		if ($additionalParams) {
 			$this->conf['linkConfig.']['additionalParams'] =  $additionalParams;
 		}
 
@@ -838,7 +838,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 *
 	 * @return	string		additionalParams-string
 	 */
-	 protected function getPreserveGetVars() {
+	protected function getPreserveGetVars() {
 
 		$params = '';
 		$preserveVars =! ($this->conf['preserveGETvars'] || $this->conf['preserveGETvars']=='all' ? array() : implode(',', (array)$this->conf['preserveGETvars']));
@@ -870,7 +870,7 @@ class tx_felogin_pi1 extends tslib_pibase {
 	 * @param	int			length of new password
 	 * @return	string		new password
 	 */
-	 protected function generatePassword($len) {
+	protected function generatePassword($len) {
 		$pass = '';
 		while ($len--) {
 			$char = rand(0,35);
@@ -1009,11 +1009,4 @@ class tx_felogin_pi1 extends tslib_pibase {
 		return FALSE;
 	}
 }
-
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/felogin/pi1/class.tx_felogin_pi1.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/felogin/pi1/class.tx_felogin_pi1.php']);
-}
-
 ?>

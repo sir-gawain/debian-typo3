@@ -1,7 +1,7 @@
 <?php
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
-if (TYPO3_MODE=='BE')	{
+if (TYPO3_MODE=='BE') {
 	t3lib_extMgm::addModule('user','setup','after:task',t3lib_extMgm::extPath($_EXTKEY).'mod/');
 	t3lib_extMgm::addLLrefForTCAdescr('_MOD_user_setup','EXT:setup/locallang_csh_mod.xml');
 }
@@ -79,10 +79,10 @@ $GLOBALS['TYPO3_USER_SETTINGS'] = array(
 			'label' => 'LLL:EXT:setup/mod/locallang.xml:edit_docModuleUpload',
 			'csh' => 'edit_docModuleUpload',
 		),
-		'disableCMlayers' => array(
+		'showHiddenFilesAndFolders' => array(
 			'type' => 'check',
-			'label' => 'LLL:EXT:setup/mod/locallang.xml:disableCMlayers',
-			'csh' => 'disableCMlayers',
+			'label' => 'LLL:EXT:setup/mod/locallang.xml:showHiddenFilesAndFolders',
+			'csh' => 'showHiddenFilesAndFolders',
 		),
 		'copyLevels' => array(
 			'type' => 'text',
@@ -129,7 +129,7 @@ $GLOBALS['TYPO3_USER_SETTINGS'] = array(
 	),
 	'showitem' => '--div--;LLL:EXT:setup/mod/locallang.xml:personal_data,realName,email,emailMeAtLogin,password,password2,lang,
 			--div--;LLL:EXT:setup/mod/locallang.xml:opening,startModule,thumbnailsByDefault,titleLen,
-			--div--;LLL:EXT:setup/mod/locallang.xml:editFunctionsTab,edit_RTE,edit_wideDocument,edit_docModuleUpload,enableFlashUploader,resizeTextareas,resizeTextareas_Flexible,resizeTextareas_MaxHeight,disableCMlayers,copyLevels,recursiveDelete,
+			--div--;LLL:EXT:setup/mod/locallang.xml:editFunctionsTab,edit_RTE,edit_wideDocument,edit_docModuleUpload,showHiddenFilesAndFolders,enableFlashUploader,resizeTextareas,resizeTextareas_Flexible,resizeTextareas_MaxHeight,copyLevels,recursiveDelete,
 			--div--;LLL:EXT:setup/mod/locallang.xml:adminFunctions,simulate,debugInWindow'
 
 );

@@ -427,7 +427,7 @@ abstract class tx_scheduler_Task {
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 	}
 
- 	/**
+	/**
 	 * Clears all marked executions
 	 *
 	 * @return boolean TRUE if the clearing succeeded, FALSE otherwise
@@ -472,10 +472,4 @@ abstract class tx_scheduler_Task {
 		$this->scheduler->removeTask($this);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_task.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_task.php']);
-}
-
-
 ?>

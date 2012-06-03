@@ -110,7 +110,7 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 	 * @param	string		$buttonId: button id
 	 *
 	 * @return	string		Javascript configuration of font faces
- 	 */
+	 */
 	protected function buildJSFontItemsConfig($RTEcounter, $buttonId) {
 		$configureRTEInJavascriptString = '';
 		$hideItems = '';
@@ -193,8 +193,5 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 			RTEarea['.$RTEcounter.'].buttons.'. $buttonId . '.dataUrl = "' . (($this->htmlAreaRTE->is_FE() && $GLOBALS['TSFE']->absRefPrefix) ? $GLOBALS['TSFE']->absRefPrefix : '') . $this->htmlAreaRTE->writeTemporaryFile('', $buttonId . '_'. $this->htmlAreaRTE->contentLanguageUid, 'js', $itemsJSArray) . '";';
 		return $configureRTEInJavascriptString;
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php']);
 }
 ?>

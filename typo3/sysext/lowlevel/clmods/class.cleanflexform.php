@@ -46,7 +46,7 @@ class tx_lowlevel_cleanflexform extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 			// Setting up help:
@@ -63,19 +63,6 @@ Cleaning XML for FlexForm fields.
 ');
 
 		$this->cli_help['examples'] = '';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_cleanflexform() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_cleanflexform::__construct();
 	}
 
 	/**
@@ -118,21 +105,21 @@ Cleaning XML for FlexForm fields.
 	 * @param	integer		Is root version (see calling function
 	 * @return	void
 	 */
-	function main_parseTreeCallBack($tableName,$uid,$echoLevel,$versionSwapmode,$rootIsVersion)	{
+	function main_parseTreeCallBack($tableName,$uid,$echoLevel,$versionSwapmode,$rootIsVersion) {
 
 		t3lib_div::loadTCA($tableName);
-		foreach($GLOBALS['TCA'][$tableName]['columns'] as $colName => $config)	{
-			if ($config['config']['type']=='flex')	{
+		foreach($GLOBALS['TCA'][$tableName]['columns'] as $colName => $config) {
+			if ($config['config']['type']=='flex') {
 				if ($echoLevel>2)	echo LF.'			[cleanflexform:] Field "'.$colName.'" in '.$tableName.':'.$uid.' was a flexform and...';
 
 				$recRow = t3lib_BEfunc::getRecordRaw($tableName,'uid='.intval($uid));
 				$flexObj = t3lib_div::makeInstance('t3lib_flexformtools');
-				if ($recRow[$colName])	{
+				if ($recRow[$colName]) {
 
 						// Clean XML:
 					$newXML = $flexObj->cleanFlexFormXML($tableName,$colName,$recRow);
 
-					if (md5($recRow[$colName])!=md5($newXML))	{
+					if (md5($recRow[$colName])!=md5($newXML)) {
 						if ($echoLevel>2)	echo ' was DIRTY, needs cleanup!';
 						$this->cleanFlexForm_dirtyFields[t3lib_div::shortMd5($tableName.':'.$uid.':'.$colName)] = $tableName.':'.$uid.':'.$colName;
 					} else {
@@ -150,11 +137,11 @@ Cleaning XML for FlexForm fields.
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
-		foreach($resultArray['dirty'] as $fieldID)	{
+	function main_autoFix($resultArray) {
+		foreach($resultArray['dirty'] as $fieldID) {
 			list($table, $uid, $field) = explode(':',$fieldID);
 			echo 'Cleaning XML in "'.$fieldID.'": ';
-			if ($bypass = $this->cli_noExecutionCheck($fieldID))	{
+			if ($bypass = $this->cli_noExecutionCheck($fieldID)) {
 				echo $bypass;
 			} else {
 
@@ -162,7 +149,7 @@ Cleaning XML for FlexForm fields.
 				$data = array();
 				$recRow = t3lib_BEfunc::getRecordRaw($table,'uid='.intval($uid));
 				$flexObj = t3lib_div::makeInstance('t3lib_flexformtools');
-				if ($recRow[$field])	{
+				if ($recRow[$field]) {
 					$data[$table][$uid][$field] = $flexObj->cleanFlexFormXML($table,$field,$recRow);
 				}
 
@@ -177,7 +164,7 @@ Cleaning XML for FlexForm fields.
 				$tce->process_datamap();
 
 					// Return errors if any:
-				if (count($tce->errorLog))	{
+				if (count($tce->errorLog)) {
 					echo '	ERROR from "TCEmain":'.LF.'TCEmain:'.implode(LF.'TCEmain:',$tce->errorLog);
 				} else echo 'DONE';
 			}

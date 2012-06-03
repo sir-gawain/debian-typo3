@@ -31,12 +31,6 @@
 class Tx_Extbase_Service_CacheService implements t3lib_Singleton {
 
 	/**
-	 * This is a wrapper for the global constant "TYPO3_UseCachingFramework" to make this class testable
-	 * @var boolean
-	 */
-	protected $useCachingFramework = TYPO3_UseCachingFramework;
-
-	/**
 	 * Clears the page cache
 	 *
 	 * @param mixed $pageIdsToClear (int) single or (array) multiple pageIds to clear the cache for
@@ -54,54 +48,36 @@ class Tx_Extbase_Service_CacheService implements t3lib_Singleton {
 	/**
 	 * Flushes cache_pages or cachingframework_cache_pages.
 	 *
-	 * @param array $pageIdsToClear pageIds to clear the cache for
+	 * @param array|NULL $pageIds pageIds to clear the cache for
 	 * @return void
 	 */
 	protected function flushPageCache($pageIds = NULL) {
-		if ($this->useCachingFramework) {
-			$pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
+		$pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
 
-			if ($pageIds !== NULL) {
-				foreach ($pageIds as $pageId) {
-					$pageCache->flushByTag('pageId_' . $pageId);
-				}
-			} else {
-				$pageCache->flush();
+		if ($pageIds !== NULL) {
+			foreach ($pageIds as $pageId) {
+				$pageCache->flushByTag('pageId_' . $pageId);
 			}
-		} elseif ($pageIds !== NULL) {
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery(
-				'cache_pages',
-				'page_id IN (' . implode(',', $GLOBALS['TYPO3_DB']->cleanIntArray($pageIds)) . ')'
-			);
 		} else {
-			$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery('cache_pages');
+			$pageCache->flush();
 		}
 	}
 
 	/**
 	 * Flushes cache_pagesection or cachingframework_cache_pagesection.
 	 *
-	 * @param array $pageIdsToClear pageIds to clear the cache for
+	 * @param array|NULL $pageIds pageIds to clear the cache for
 	 * @return void
 	 */
 	protected function flushPageSectionCache($pageIds = NULL) {
-		if ($this->useCachingFramework) {
-			$pageSectionCache = $GLOBALS['typo3CacheManager']->getCache('cache_pagesection');
+		$pageSectionCache = $GLOBALS['typo3CacheManager']->getCache('cache_pagesection');
 
-			if ($pageIds !== NULL) {
-				foreach ($pageIds as $pageId) {
-					$pageSectionCache->flushByTag('pageId_' . $pageId);
-				}
-			} else {
-				$pageSectionCache->flush();
+		if ($pageIds !== NULL) {
+			foreach ($pageIds as $pageId) {
+				$pageSectionCache->flushByTag('pageId_' . $pageId);
 			}
-		} elseif ($pageIds !== NULL) {
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery(
-				'cache_pagesection',
-				'page_id IN (' . implode(',', $GLOBALS['TYPO3_DB']->cleanIntArray($pageIds)) . ')'
-			);
 		} else {
-			$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery('cache_pagesection');
+			$pageSectionCache->flush();
 		}
 	}
 }

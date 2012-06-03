@@ -48,7 +48,7 @@ class tx_lowlevel_missing_files extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 			// Setting up help:
@@ -73,19 +73,6 @@ Manual repair suggestions:
 
 		$this->cli_help['examples'] = '/.../cli_dispatch.phpsh lowlevel_cleaner missing_files -s -r
 This will show you missing files in the TYPO3 system and only report back if errors were found.';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_missing_files() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_missing_files::__construct();
 	}
 
 	/**
@@ -121,15 +108,15 @@ This will show you missing files in the TYPO3 system and only report back if err
 
 			// Traverse the files and put into a large table:
 		if (is_array($recs)) {
-			foreach($recs as $rec)	{
+			foreach($recs as $rec) {
 
 					// Compile info string for location of reference:
 				$infoString = $this->infoStr($rec);
 
 					// Handle missing file:
-				if (!@is_file(PATH_site.$rec['ref_string']))	{
+				if (!@is_file(PATH_site.$rec['ref_string'])) {
 
-					if ((string)$rec['softref_key']=='')	{
+					if ((string)$rec['softref_key']=='') {
 						$resultArrayIndex = 'managedFilesMissing';
 					} else {
 						$resultArrayIndex = 'softrefFilesMissing';
@@ -154,18 +141,18 @@ This will show you missing files in the TYPO3 system and only report back if err
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
-		foreach($resultArray['managedFilesMissing'] as $key => $value)	{
+	function main_autoFix($resultArray) {
+		foreach($resultArray['managedFilesMissing'] as $key => $value) {
 			echo 'Processing file: '.$key.LF;
 			$c=0;
-			foreach($value as $hash => $recReference)	{
+			foreach($value as $hash => $recReference) {
 				echo '	Removing reference in record "'.$recReference.'": ';
-				if ($bypass = $this->cli_noExecutionCheck($recReference))	{
+				if ($bypass = $this->cli_noExecutionCheck($recReference)) {
 					echo $bypass;
 				} else {
 					$sysRefObj = t3lib_div::makeInstance('t3lib_refindex');
 					$error = $sysRefObj->setReferenceValue($hash,NULL);
-					if ($error)	{
+					if ($error) {
 						echo '		t3lib_refindex::setReferenceValue(): '.$error.LF;
 						echo 'missing_files: exit on error'.LF;
 						exit;

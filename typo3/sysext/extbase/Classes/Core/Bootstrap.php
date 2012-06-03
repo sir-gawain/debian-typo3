@@ -31,7 +31,7 @@
  * @package Extbase
  * @version $ID:$
  */
-class Tx_Extbase_Core_Bootstrap {
+class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 
 	/**
 	 * Back reference to the parent content object
@@ -98,7 +98,6 @@ class Tx_Extbase_Core_Bootstrap {
 		$this->initializeCache();
 		$this->initializeReflection();
 		$this->initializePersistence();
-		$this->initializeBackwardsCompatibility();
 	}
 
 	/**
@@ -181,19 +180,6 @@ class Tx_Extbase_Core_Bootstrap {
 	}
 
 	/**
-	 * Initializes the backwards compatibility. This is necessary because the
-	 * old Dispatcher provided several static methods.
-	 *
-	 * @return void
-	 * @see initialize()
-	 */
-	protected function initializeBackwardsCompatibility() {
-		$dispatcher = t3lib_div::makeInstance('Tx_Extbase_Dispatcher');
-		$dispatcher->injectConfigurationManager($this->configurationManager);
-		$dispatcher->injectPersistenceManager($this->persistenceManager);
-	}
-
-	/**
 	 * Runs the the Extbase Framework by resolving an appropriate Request Handler and passing control to it.
 	 * If the Framework is not initialized yet, it will be initialized.
 	 *
@@ -246,7 +232,7 @@ class Tx_Extbase_Core_Bootstrap {
 		// @see Tx_Extbase_MVC_Web_FrontendRequestHandler::handleRequest()
 		if ($response === NULL) {
 			$this->reflectionService->shutdown();
-			return;
+			return '';
 		}
 		if (count($response->getAdditionalHeaderData()) > 0) {
 			$GLOBALS['TSFE']->additionalHeaderData[] = implode(chr(10), $response->getAdditionalHeaderData());

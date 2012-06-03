@@ -75,7 +75,7 @@ class SC_alt_db_navframe {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 
 			// Setting backPath
 		$this->backPath = $GLOBALS['BACK_PATH'];
@@ -180,14 +180,14 @@ class SC_alt_db_navframe {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 			// Produce browse-tree:
 		$tree = $this->pagetree->getBrowsableTree();
 
 
 			// Outputting Temporary DB mount notice:
-		if ($this->active_tempMountPoint)	{
+		if ($this->active_tempMountPoint) {
 			$flashText = '
 				<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array('setTempDBmount' => 0))) . '">' .
 				$GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xml:labels.temporaryDBmount', 1) .
@@ -247,7 +247,7 @@ class SC_alt_db_navframe {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -256,7 +256,7 @@ class SC_alt_db_navframe {
 	 *
 	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
+	protected function getButtons() {
 		$buttons = array(
 			'csh' => '',
 			'new_page' => '',
@@ -298,7 +298,7 @@ class SC_alt_db_navframe {
 
 			$workspaceInfo = '
 				<div class="bgColor4 workspace-info">' .
-					 t3lib_iconWorks::getSpriteIcon(
+					t3lib_iconWorks::getSpriteIcon(
 						'apps-toolbar-menu-workspace',
 						array(
 							'title' => $wsTitle,
@@ -329,7 +329,7 @@ class SC_alt_db_navframe {
 	function initializeTemporaryDBmount(){
 
 			// Set/Cancel Temporary DB Mount:
-		if (strlen($this->setTempDBmount))	{
+		if (strlen($this->setTempDBmount)) {
 			$set = t3lib_utility_Math::forceIntegerInRange($this->setTempDBmount,0);
 			if ($set > 0 && $GLOBALS['BE_USER']->isInWebMount($set)){
 					// Setting...:
@@ -361,7 +361,7 @@ class SC_alt_db_navframe {
 	 * @param	integer		The page id to set as DB mount
 	 * @return	void
 	 */
-	function settingTemporaryMountPoint($pageId)	{
+	function settingTemporaryMountPoint($pageId) {
 		$GLOBALS['BE_USER']->setAndSaveSessionData('pageTree_temporaryMountPoint',intval($pageId));
 	}
 
@@ -390,13 +390,6 @@ class SC_alt_db_navframe {
 		}
 	}
 }
-
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_db_navframe.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_db_navframe.php']);
-}
-
 
 // Make instance if it is not an AJAX call
 if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {

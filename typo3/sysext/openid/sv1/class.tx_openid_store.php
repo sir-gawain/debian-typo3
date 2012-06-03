@@ -26,12 +26,12 @@
 require_once(t3lib_extMgm::extPath('openid', 'lib/php-openid/Auth/OpenID/Interface.php'));
 
 /**
-  * This class is a TYPO3-specific OpenID store.
-  *
-  * @author Dmitry Dulepov <dmitry.dulepov@gmail.com>
-  * @package TYPO3
-  * @subpackage tx_openid
-  */
+ * This class is a TYPO3-specific OpenID store.
+ *
+ * @author Dmitry Dulepov <dmitry.dulepov@gmail.com>
+ * @package TYPO3
+ * @subpackage tx_openid
+ */
 class tx_openid_store extends Auth_OpenID_OpenIDStore {
 
 	const ASSOCIATION_TABLE_NAME = 'tx_openid_assoc_store';
@@ -251,9 +251,4 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 		$GLOBALS['TYPO3_DB']->exec_UPDATEquery(self::ASSOCIATION_TABLE_NAME, $where, $values);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php']);
-}
-
 ?>

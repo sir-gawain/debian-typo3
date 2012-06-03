@@ -48,7 +48,7 @@ class tx_lowlevel_lost_files extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 		$this->cli_options[] = array('--excludePath [path-list]', 'Comma separated list of paths to exclude. Example: "uploads/[path1],uploads/[path2],..."');
@@ -75,19 +75,6 @@ Automatic Repair of Errors:
 
 		$this->cli_help['examples'] = '/.../cli_dispatch.phpsh lowlevel_cleaner lost_files -s -r
 Will report lost files.';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_lost_files() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_lost_files::__construct();
 	}
 
 	/**
@@ -131,18 +118,18 @@ Will report lost files.';
 		foreach($fileArr as $key => $value) {
 
 			$include = TRUE;
-			foreach($excludePaths as $exclPath)	{
-				if (t3lib_div::isFirstPartOfStr($value,$exclPath))	{
+			foreach($excludePaths as $exclPath) {
+				if (t3lib_div::isFirstPartOfStr($value,$exclPath)) {
 					$include = FALSE;
 				}
 			}
 
 			$shortKey = t3lib_div::shortmd5($value);
 
-			if ($include)	{
+			if ($include) {
 					// First, allow "index.html", ".htaccess" files since they are often used for good reasons
-				if (substr($value,-11) == '/index.html' || substr($value,-10) == '/.htaccess')	{
-					unset($fileArr[$key])	;
+				if (substr($value,-11) == '/index.html' || substr($value,-10) == '/.htaccess') {
+					unset($fileArr[$key]);
 					$resultArray['ignoredFiles'][$shortKey] = $value;
 				} else {
 						// Looking for a reference from a field which is NOT a soft reference (thus, only fields with a proper TCA/Flexform configuration)
@@ -158,19 +145,19 @@ Will report lost files.';
 
 						// If found, unset entry:
 					if (count($recs))		{
-						unset($fileArr[$key])	;
+						unset($fileArr[$key]);
 						$resultArray['managedFiles'][$shortKey] = $value;
-						if (count($recs)>1)	{
+						if (count($recs)>1) {
 							$resultArray['warnings'][$shortKey] = 'Warning: File "'.$value.'" had '.count($recs).' references from group-fields, should have only one!';
 						}
 					} else {
 							// When here it means the file was not found. So we test if it has a RTEmagic-image name and if so, we allow it:
-						if (preg_match('/^RTEmagic[P|C]_/',basename($value)))	{
-							unset($fileArr[$key])	;
+						if (preg_match('/^RTEmagic[P|C]_/',basename($value))) {
+							unset($fileArr[$key]);
 							$resultArray['RTEmagicFiles'][$shortKey] = $value;
 						} else {
 								// We conclude that the file is lost...:
-							unset($fileArr[$key])	;
+							unset($fileArr[$key]);
 							$resultArray['lostFiles'][$shortKey] = $value;
 						}
 					}
@@ -197,14 +184,14 @@ Will report lost files.';
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
-		foreach($resultArray['lostFiles'] as $key => $value)	{
+	function main_autoFix($resultArray) {
+		foreach($resultArray['lostFiles'] as $key => $value) {
 			$absFileName = t3lib_div::getFileAbsFileName($value);
 			echo 'Deleting file: "'.$absFileName.'": ';
-			if ($bypass = $this->cli_noExecutionCheck($absFileName))	{
+			if ($bypass = $this->cli_noExecutionCheck($absFileName)) {
 				echo $bypass;
 			} else {
-				if ($absFileName && @is_file($absFileName))	{
+				if ($absFileName && @is_file($absFileName)) {
 					unlink($absFileName);
 					echo 'DONE';
 				} else {

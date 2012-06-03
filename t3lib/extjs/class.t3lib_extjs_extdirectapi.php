@@ -124,13 +124,6 @@ class t3lib_extjs_ExtDirectApi {
 
 				if (is_array($configuration)) {
 					$className = $configuration['callbackClass'];
-				} else {
-					t3lib_div::deprecationLog('ExtDirect (Namespace: ' . $javascriptName .
-						'): Registration code changed. Use the API method t3lib_extMgm::registerExtDirectComponent(). ' .
-						'More Information: http://wiki.typo3.org/ExtDirect ' .
-						'Will be removed in 4.7.'
-					);
-					$className = $configuration;
 				}
 
 				$serverObject = t3lib_div::getUserObj($className, FALSE);
@@ -192,7 +185,7 @@ class t3lib_extjs_ExtDirectApi {
 			// look up into the cache
 		$cacheIdentifier = 'ExtDirectApi';
 		$cacheHash = md5($cacheIdentifier . implode(',', $filterNamespaces) . t3lib_div::getIndpEnv('TYPO3_SSL') .
-			 serialize($this->settings) . TYPO3_MODE . t3lib_div::getIndpEnv('HTTP_HOST'));
+			serialize($this->settings) . TYPO3_MODE . t3lib_div::getIndpEnv('HTTP_HOST'));
 
 			// with no_cache always generate the javascript content
 		$cacheContent = $noCache ? '' : t3lib_pageSelect::getHash($cacheHash);
@@ -257,10 +250,6 @@ class t3lib_extjs_ExtDirectApi {
 		}
 		return $found;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/extjs/class.t3lib_extjs_extdirectapi.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/extjs/class.t3lib_extjs_extdirectapi.php']);
 }
 
 ?>

@@ -46,7 +46,7 @@ class tx_lowlevel_double_files extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 			// Setting up help:
@@ -70,19 +70,6 @@ Manual repair suggestions:
 
 		$this->cli_help['examples'] = '/.../cli_dispatch.phpsh lowlevel_cleaner double_files -s -r
 This will check the system for double files relations.';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_double_files() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_double_files::__construct();
 	}
 
 	/**
@@ -126,7 +113,7 @@ This will check the system for double files relations.';
 			// Traverse the files and put into a large table:
 		$tempCount = array();
 		if (is_array($recs)) {
-			foreach($recs as $rec)	{
+			foreach($recs as $rec) {
 
 					// Compile info string for location of reference:
 				$infoString = $this->infoStr($rec);
@@ -135,14 +122,14 @@ This will check the system for double files relations.';
 				$resultArray['dirname_registry'][dirname($rec['ref_string'])][$rec['tablename'].':'.$rec['field']]++;
 
 					// Handle missing file:
-				if (!@is_file(PATH_site.$rec['ref_string']))	{
+				if (!@is_file(PATH_site.$rec['ref_string'])) {
 					$resultArray['missingFiles'][$rec['ref_string']][$rec['hash']] = $infoString;
 					ksort($resultArray['missingFiles'][$rec['ref_string']]);	// Sort by array key
 				}
 
 					// Add entry if file has multiple references pointing to it:
-				if (isset($tempCount[$rec['ref_string']]))	{
-					if (!is_array($resultArray['multipleReferencesList'][$rec['ref_string']]))	{
+				if (isset($tempCount[$rec['ref_string']])) {
+					if (!is_array($resultArray['multipleReferencesList'][$rec['ref_string']])) {
 						$resultArray['multipleReferencesList'][$rec['ref_string']] = array();
 						$resultArray['multipleReferencesList'][$rec['ref_string']][$tempCount[$rec['ref_string']][1]] = $tempCount[$rec['ref_string']][0];
 					}
@@ -163,9 +150,9 @@ This will check the system for double files relations.';
 
 			// Sort dirname registry and add warnings for directories outside uploads/
 		ksort($resultArray['dirname_registry']);
-		foreach($resultArray['dirname_registry'] as $dir => $temp)	{
+		foreach($resultArray['dirname_registry'] as $dir => $temp) {
 			ksort($resultArray['dirname_registry'][$dir]);
-			if (!t3lib_div::isFirstPartOfStr($dir,'uploads/'))	{
+			if (!t3lib_div::isFirstPartOfStr($dir,'uploads/')) {
 				$resultArray['warnings'][t3lib_div::shortmd5($dir)] = 'Directory "'.$dir.'" was outside uploads/ which is unusual practice in TYPO3 although not forbidden. Directory used by the following table:field pairs: '.implode(',',array_keys($temp));
 			}
 		}
@@ -180,14 +167,14 @@ This will check the system for double files relations.';
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
-		foreach($resultArray['multipleReferencesList'] as $key => $value)	{
+	function main_autoFix($resultArray) {
+		foreach($resultArray['multipleReferencesList'] as $key => $value) {
 			$absFileName = t3lib_div::getFileAbsFileName($key);
-			if ($absFileName && @is_file($absFileName))	{
+			if ($absFileName && @is_file($absFileName)) {
 				echo 'Processing file: '.$key.LF;
 				$c=0;
-				foreach($value as $hash => $recReference)	{
-					if ($c==0)	{
+				foreach($value as $hash => $recReference) {
+					if ($c==0) {
 						echo '	Keeping '.$key.' for record "'.$recReference.'"'.LF;
 					} else {
 							// Create unique name for file:
@@ -195,16 +182,16 @@ This will check the system for double files relations.';
 						$newName = $fileFunc->getUniqueName(basename($key), dirname($absFileName));
 						echo '	Copying '.$key.' to '.substr($newName,strlen(PATH_site)).' for record "'.$recReference.'": ';
 
-						if ($bypass = $this->cli_noExecutionCheck($recReference))	{
+						if ($bypass = $this->cli_noExecutionCheck($recReference)) {
 							echo $bypass;
 						} else {
 							t3lib_div::upload_copy_move($absFileName,$newName);
 							clearstatcache();
 
-							if (@is_file($newName))	{
+							if (@is_file($newName)) {
 								$sysRefObj = t3lib_div::makeInstance('t3lib_refindex');
 								$error = $sysRefObj->setReferenceValue($hash,basename($newName));
-								if ($error)	{
+								if ($error) {
 									echo '	ERROR:	t3lib_refindex::setReferenceValue(): '.$error.LF;
 									exit;
 								} else echo "DONE";

@@ -134,7 +134,7 @@ class tslib_content_FluidTemplate extends tslib_content_Abstract {
 
 		/**
 		 * 2. variable assignment
- 		 */
+		 */
 		$reservedVariables = array('data', 'current');
 			// accumulate the variables to be replaced
 			// and loop them through cObjGetSingle
@@ -166,10 +166,4 @@ class tslib_content_FluidTemplate extends tslib_content_Abstract {
 	}
 
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_fluidtemplate.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_fluidtemplate.php']);
-}
-
 ?>

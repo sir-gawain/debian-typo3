@@ -53,7 +53,7 @@ class tx_funcwizards_webfunc extends t3lib_extobjbase {
 	 * @return	void
 	 * @see t3lib_extobjbase::handleExternalFunctionValue(), t3lib_extobjbase::init()
 	 */
-	function init(&$pObj,$conf)	{
+	function init(&$pObj,$conf) {
 			// OK, handles ordinary init. This includes setting up the menu array with ->modMenu
 		parent::init($pObj,$conf);
 
@@ -67,7 +67,7 @@ class tx_funcwizards_webfunc extends t3lib_extobjbase {
 	 * @return	array		Items merged with the parent objects.
 	 * @see t3lib_extobjbase::init()
 	 */
-	function modMenu()	{
+	function modMenu() {
 		global $LANG;
 
 		$modMenuAdd = array(
@@ -86,7 +86,7 @@ class tx_funcwizards_webfunc extends t3lib_extobjbase {
 	 * @return	string		The content
 	 * @see t3lib_extobjbase::extObjContent()
 	 */
-	function main()	{
+	function main() {
 		global $SOBE,$LANG;
 
 		$menu= $LANG->getLL('wiz_lWizards',1).': '.t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[wiz]',$this->pObj->MOD_SETTINGS['wiz'],$this->pObj->MOD_MENU['wiz']);
@@ -99,9 +99,5 @@ class tx_funcwizards_webfunc extends t3lib_extobjbase {
 
 		return $content;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/func_wizards/class.tx_funcwizards_webfunc.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/func_wizards/class.tx_funcwizards_webfunc.php']);
 }
 ?>

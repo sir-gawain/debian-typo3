@@ -50,7 +50,11 @@ class SC_alt_file_navframe {
 
 		// Internal, dynamic:
 	var $content;		// Content accumulates in this variable.
-	var $foldertree;	// Folder tree object.
+
+	/**
+	 * @var filelistFolderTree $foldertree the folder tree object
+	 */
+	var $foldertree;
 
 	/**
 	 * document template object
@@ -70,7 +74,7 @@ class SC_alt_file_navframe {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 
 			// Setting backPath
 		$this->backPath = $GLOBALS['BACK_PATH'];
@@ -165,7 +169,7 @@ class SC_alt_file_navframe {
 		Tree.ajaxID = "SC_alt_file_navframe::expandCollapse";
 
 		// Function, loading the list frame from navigation tree:
-		function jumpTo(id, linkObj, highlightID, bank)	{
+		function jumpTo(id, linkObj, highlightID, bank) {
 			var theUrl = top.TS.PATH_typo3 + top.currentSubScript ;
 			if (theUrl.indexOf("?") != -1) {
 				theUrl += "&id=" + id
@@ -189,7 +193,7 @@ class SC_alt_file_navframe {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 			// Produce browse-tree:
 		$tree = $this->foldertree->getBrowsableTree();
@@ -229,7 +233,7 @@ class SC_alt_file_navframe {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -238,7 +242,7 @@ class SC_alt_file_navframe {
 	 *
 	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
+	protected function getButtons() {
 		$buttons = array(
 			'csh' => '',
 			'refresh' => '',
@@ -272,19 +276,13 @@ class SC_alt_file_navframe {
 	public function ajaxExpandCollapse($params, $ajaxObj) {
 		$this->init();
 		$tree = $this->foldertree->getBrowsableTree();
-		if (!$this->foldertree->ajaxStatus)	{
+		if ($this->foldertree->getAjaxStatus() === FALSE) {
 			$ajaxObj->setError($tree);
 		} else	{
 			$ajaxObj->addContent('tree', $tree);
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_file_navframe.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_file_navframe.php']);
-}
-
 
 // Make instance if it is not an AJAX call
 if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {

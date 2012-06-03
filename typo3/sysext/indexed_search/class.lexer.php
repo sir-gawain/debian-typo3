@@ -92,32 +92,19 @@ class tx_indexedsearch_lexer {
 	}
 
 	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_indexedsearch_lexer() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_indexedsearch_lexer::__construct();
-	}
-
-	/**
 	 * Splitting string into words.
 	 * Used for indexing, can also be used to find words in query.
 	 *
 	 * @param	string		String with UTF-8 content to process.
 	 * @return	array		Array of words in utf-8
 	 */
-	function split2Words($wordString)	{
+	function split2Words($wordString) {
 
 			// Reset debug string:
 		$this->debugString = '';
 
 			// Then convert the string to lowercase:
-		if (!$this->lexerConf['casesensitive'])	{
+		if (!$this->lexerConf['casesensitive']) {
 			$wordString = $this->csObj->conv_case('utf-8', $wordString, 'toLower');
 		}
 
@@ -128,13 +115,13 @@ class tx_indexedsearch_lexer {
 		$words = array();
 		$this->debugString = '';
 
-		while(1)	{
+		while(1) {
 			list($start,$len) = $this->get_word($wordString, $pos);
-			if ($len)	{
+			if ($len) {
 
 				$this->addWords($words, $wordString,$start,$len);
 
-				if ($this->debug)	{
+				if ($this->debug) {
 					$this->debugString.= '<span style="color:red">'.htmlspecialchars(substr($wordString,$pos,$start-$pos)).'</span>'.
 										htmlspecialchars(substr($wordString,$start,$len));
 				}
@@ -173,7 +160,7 @@ class tx_indexedsearch_lexer {
 	 * @param	integer		The Length of the word string from start position
 	 * @return	void
 	 */
-	function addWords(&$words, &$wordString, $start, $len)	{
+	function addWords(&$words, &$wordString, $start, $len) {
 
 			// Get word out of string:
 		$theWord = substr($wordString,$start,$len);
@@ -207,19 +194,19 @@ class tx_indexedsearch_lexer {
 
 				[Kasper: As far as I can see this will only work well with or-searches!]
 			*/
-		if ($cType == 'cjk')	{
+		if ($cType == 'cjk') {
 				// Find total string length:
 			$strlen = $this->csObj->utf8_strlen($theWord);
 
 				// Traverse string length and add words as pairs of two chars:
-			for ($a=0; $a<$strlen; $a++)	{
-				if ($strlen==1 || $a<$strlen-1)	{
+			for ($a=0; $a<$strlen; $a++) {
+				if ($strlen==1 || $a<$strlen-1) {
 					$words[] = $this->csObj->utf8_substr($theWord, $a, 2);
 				}
 			}
 		} else {	// Normal "single-byte" chars:
 				// Remove chars:
-			foreach($this->lexerConf['removeChars'] as $skipJoin)	{
+			foreach($this->lexerConf['removeChars'] as $skipJoin) {
 				$theWord = str_replace($this->csObj->UnumberToChar($skipJoin),'',$theWord);
 			}
 				// Add word:
@@ -234,12 +221,12 @@ class tx_indexedsearch_lexer {
 	 * @param	integer		Starting position in input string
 	 * @return	array		0: start, 1: len or FALSE if no word has been found
 	 */
-	function get_word(&$str, $pos=0)	{
+	function get_word(&$str, $pos=0) {
 
 		$len=0;
 
 			// If return is TRUE, a word was found starting at this position, so returning position and length:
-		if ($this->utf8_is_letter($str, $len, $pos))	{
+		if ($this->utf8_is_letter($str, $len, $pos)) {
 			return array($pos,$len);
 		}
 
@@ -259,7 +246,7 @@ class tx_indexedsearch_lexer {
 	 * @param	integer		Starting position in input string
 	 * @return	boolean		letter (or word) found
 	 */
-	function utf8_is_letter(&$str, &$len, $pos=0)	{
+	function utf8_is_letter(&$str, &$len, $pos=0) {
 		global $cs;
 
 		$len = 0;
@@ -272,15 +259,15 @@ class tx_indexedsearch_lexer {
 		while(1) {
 
 				// If characters has been obtained we will know whether the string starts as a sequence of letters or not:
-			if ($len)	{
+			if ($len) {
 				if ($letter)	{	// We are in a sequence of words
 					if (!$cType 	// The char was NOT a letter
 							|| ($cType_prev=='cjk' && t3lib_div::inList('num,alpha',$cType)) || ($cType=='cjk' && t3lib_div::inList('num,alpha',$cType_prev))	// ... or the previous and current char are from single-byte sets vs. asian CJK sets
 							)	{
 							// Check if the non-letter char is NOT a print-join char because then it signifies the end of the word.
-						if (!in_array($cp,$this->lexerConf['printjoins']))	{
+						if (!in_array($cp,$this->lexerConf['printjoins'])) {
 								// If a printjoin start length has been record, set that back now so the length is right (filtering out multiple end chars)
-							if ($printJoinLgd)	{
+							if ($printJoinLgd) {
 								$len = $printJoinLgd;
 							}
 							#debug($cp);
@@ -307,7 +294,7 @@ class tx_indexedsearch_lexer {
 				// Determine the type:
 			$cType_prev = $cType;
 			list($cType) = $this->charType($cp);
-			if ($cType)	{
+			if ($cType) {
 				continue;
 			}
 
@@ -324,7 +311,7 @@ class tx_indexedsearch_lexer {
 	 * @param	integer		Unicode number to evaluate
 	 * @return	array		Type of char; index-0: the main type: num, alpha or CJK (Chinese / Japanese / Korean)
 	 */
-	function charType($cp)	{
+	function charType($cp) {
 
 			// Numeric?
 		if (
@@ -340,15 +327,15 @@ class tx_indexedsearch_lexer {
 
 			// LOOKING for Alpha chars (Latin, Cyrillic, Greek, Hebrew and Arabic):
 		if (
-				($cp >= 0x41 && $cp <= 0x5A) ||		// Basic Latin: capital letters
-				($cp >= 0x61 && $cp <= 0x7A) ||		// Basic Latin: small letters
-				($cp >= 0xC0 && $cp <= 0xFF && $cp != 0xD7 && $cp != 0xF7) || 			// Latin-1 Supplement (0x80-0xFF) excluding multiplication and division sign
-				($cp >= 0x100 && $cp < 0x280) ||	// Latin Extended-A and -B
+				($cp >= 0x41 && $cp <= 0x5A) ||	// Basic Latin: capital letters
+				($cp >= 0x61 && $cp <= 0x7A) ||	// Basic Latin: small letters
+				($cp >= 0xC0 && $cp <= 0xFF && $cp != 0xD7 && $cp != 0xF7) || // Latin-1 Supplement (0x80-0xFF) excluding multiplication and division sign
+				($cp >= 0x100 && $cp < 0x280) || // Latin Extended-A and -B
 				($cp == 0x386 || ($cp >= 0x388 && $cp < 0x400)) || // Greek and Coptic excluding non-letters
-				(($cp >= 0x400 && $cp < 0x482) || ($cp >= 0x48A && $cp < 0x530)) ||		// Cyrillic and Cyrillic Supplement excluding historic miscellaneous
-				(($cp >= 0x590 && $cp < 0x5B0) || ($cp >= 0x5D0 && $cp < 0x5F3)) || 	// Hebrew: only accents and letters
-				(($cp >= 0x621 && $cp <= 0x658) || ($cp >= 0x66E &&  $cp <= 0x6D3)) || 	// Arabic: only letters (there are more letters in the range, we can add them if there is a demand)
-				($cp >= 0x1E00 && $cp < 0x2000)		// Latin Extended Additional and Greek Extended
+				(($cp >= 0x400 && $cp < 0x482) || ($cp >= 0x48A && $cp < 0x530)) ||	// Cyrillic and Cyrillic Supplement excluding historic miscellaneous
+				(($cp >= 0x590 && $cp < 0x5B0) || ($cp >= 0x5D0 && $cp < 0x5F3)) ||	// Hebrew: only accents and letters
+				(($cp >= 0x621 && $cp <= 0x658) || ($cp >= 0x66E && $cp <= 0x6D3)) || // Arabic: only letters (there are more letters in the range, we can add them if there is a demand)
+				($cp >= 0x1E00 && $cp < 0x2000)	// Latin Extended Additional and Greek Extended
 			)	{
 			return array('alpha');
 		}
@@ -357,13 +344,13 @@ class tx_indexedsearch_lexer {
 			// Ranges are not certain - deducted from the translation tables in t3lib/csconvtbl/
 			// Verified with http://www.unicode.org/charts/ (16/2) - may still not be complete.
 		if (
-				($cp >= 0x3040 && $cp <= 0x30FF) ||		// HIRAGANA and KATAKANA letters
-				($cp >= 0x3130 && $cp <= 0x318F) ||		// Hangul Compatibility Jamo
-				($cp >= 0x3400 && $cp <= 0x4DBF) ||		// CJK Unified Ideographs Extension A
-				($cp >= 0x4E00 && $cp <= 0x9FAF) ||		// CJK Unified Ideographs
-				($cp >= 0xAC00 && $cp <= 0xD7AF) ||		// Hangul Syllables
-				($cp >= 0x20000 && $cp <= 0x2FA1F)		// CJK Unified Ideographs Extension B and CJK Compatibility Ideographs Supplement
-														// also include CJK and Kangxi radicals or Bopomofo letter?
+				($cp >= 0x3040 && $cp <= 0x30FF) ||	// HIRAGANA and KATAKANA letters
+				($cp >= 0x3130 && $cp <= 0x318F) ||	// Hangul Compatibility Jamo
+				($cp >= 0x3400 && $cp <= 0x4DBF) ||	// CJK Unified Ideographs Extension A
+				($cp >= 0x4E00 && $cp <= 0x9FAF) ||	// CJK Unified Ideographs
+				($cp >= 0xAC00 && $cp <= 0xD7AF) ||	// Hangul Syllables
+				($cp >= 0x20000 && $cp <= 0x2FA1F)	// CJK Unified Ideographs Extension B and CJK Compatibility Ideographs Supplement
+									// also include CJK and Kangxi radicals or Bopomofo letter?
 			)	{
 			return array('cjk');
 		}
@@ -378,11 +365,11 @@ class tx_indexedsearch_lexer {
 	 * @param	boolean		If set, then a hex. number is returned
 	 * @return	integer		UNICODE codepoint
 	 */
-	function utf8_ord(&$str, &$len, $pos=0, $hex=FALSE)	{
+	function utf8_ord(&$str, &$len, $pos=0, $hex=FALSE) {
 		$ord = ord($str{$pos});
 		$len = 1;
 
-		if ($ord > 0x80)	{
+		if ($ord > 0x80) {
 			for ($bc = -1, $mbs = $ord; $mbs & 0x80; $mbs = $mbs << 1) {
 					// calculate number of extra bytes
 				$bc++;
@@ -396,10 +383,5 @@ class tx_indexedsearch_lexer {
 
 		return $hex ? 'x'.dechex($ord) : $ord;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.lexer.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.lexer.php']);
 }
 ?>
