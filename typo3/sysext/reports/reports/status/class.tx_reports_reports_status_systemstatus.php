@@ -34,7 +34,7 @@ class tx_reports_reports_status_SystemStatus implements tx_reports_StatusProvide
 
 		// PHP modules which are required. Can be changed by hook in getMissingPhpModules()
 	protected $requiredPhpModules = array(
-		'filter', 'gd', 'json', 'mysql', 'pcre', 'session', 'SPL', 'standard', 'openssl', 'xml', 'zlib', 'soap'
+		'fileinfo', 'filter', 'gd', 'json', 'mysql', 'pcre', 'session', 'SPL', 'standard', 'openssl', 'xml', 'zlib', 'soap'
 	);
 
 	/**
@@ -263,10 +263,4 @@ class tx_reports_reports_status_SystemStatus implements tx_reports_StatusProvide
 		);
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_systemstatus.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/reports/reports/status/class.tx_reports_reports_status_systemstatus.php']);
-}
-
 ?>

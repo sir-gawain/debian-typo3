@@ -37,31 +37,10 @@
  * @subpackage tslib
  */
 
-// *******************************
-// Checking PHP version
-// *******************************
-if (version_compare(phpversion(), '5.3', '<'))	die ('TYPO3 requires PHP 5.3.0 or higher.');
-
-
 // ******************
 // Constants defined
 // ******************
-$TYPO3_MISC['microtime_start'] = microtime(TRUE);
-define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
 define('TYPO3_MODE','FE');
-
-if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
-
-define('TYPO3_mainDir', 'typo3/');		// This is the directory of the backend administration for the sites of this TYPO3 installation.
-define('PATH_typo3', PATH_site.TYPO3_mainDir);
-define('PATH_typo3conf', PATH_site.'typo3conf/');
-
-if (!@is_dir(PATH_typo3conf))	die('Cannot find configuration. This file is probably executed from the wrong location.');
-
-// *********************
-// Unset variable(s) in global scope (fixes #13959)
-// *********************
-unset($error);
 
 // *********************
 // Prevent any output until AJAX/compression is initialized to stop
@@ -70,19 +49,14 @@ unset($error);
 ob_start();
 
 
-// *********************
-// Mandatory libraries included
-// *********************
-require_once(PATH_t3lib . 'class.t3lib_div.php');
-require_once(PATH_t3lib . 'class.t3lib_extmgm.php');
-
 
 // **********************
 // Include configuration
 // **********************
 require(PATH_t3lib.'config_default.php');
-if (!defined ('TYPO3_db')) 	die ('The configuration file was not included.');	// the name of the TYPO3 database is stored in this constant. Here the inclusion of the config-file is verified by checking if this var is set.
-if (!t3lib_extMgm::isLoaded('cms'))	die('<strong>Error:</strong> The main frontend extension "cms" was not loaded. Enable it in the extension manager in the backend.');
+if (!t3lib_extMgm::isLoaded('cms')) {
+	die('<strong>Error:</strong> The main frontend extension "cms" was not loaded. Enable it in the extension manager in the backend.');
+}
 
 
 // *********************
@@ -96,43 +70,9 @@ if ($_COOKIE[t3lib_beUserAuth::getCookieName()]) {
 	$TT = new t3lib_timeTrackNull();
 }
 $TT->start();
-$TT->push('', 'Script start');
 
-// *********************
-// Error & Exception handling
-// *********************
-if ($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionHandler'] !== '') {
-	$TT->push('Register Exceptionhandler', '');
-	if ($TYPO3_CONF_VARS['SYS']['errorHandler'] !== '') {
-			// register an error handler for the given errorHandlerErrors
-		$errorHandler = t3lib_div::makeInstance($TYPO3_CONF_VARS['SYS']['errorHandler'], $TYPO3_CONF_VARS['SYS']['errorHandlerErrors']);
-			// set errors which will be converted in an exception
-		$errorHandler->setExceptionalErrors($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionalErrors']);
-	}
-	$exceptionHandler = t3lib_div::makeInstance($TYPO3_CONF_VARS['SC_OPTIONS']['errors']['exceptionHandler']);
-	$TT->pull();
-}
+Typo3_Bootstrap::initializeTypo3DbGlobal(FALSE);
 
-$TYPO3_DB = t3lib_div::makeInstance('t3lib_DB');
-$TYPO3_DB->debugOutput = $TYPO3_CONF_VARS['SYS']['sqlDebug'];
-
-$CLIENT = t3lib_div::clientInfo();				// Set to the browser: net / msie if 4+ browsers
-$TT->pull();
-
-// *******************************
-// Checking environment
-// *******************************
-if (isset($_POST['GLOBALS']) || isset($_GET['GLOBALS'])) {
-	throw new Exception('You cannot set the GLOBALS-array from outside the script.', 1294585200);
-}
-if (!get_magic_quotes_gpc())	{
-	$TT->push('Add slashes to GET/POST arrays','');
-	t3lib_div::addSlashesOnArray($_GET);
-	t3lib_div::addSlashesOnArray($_POST);
-	$HTTP_GET_VARS = $_GET;
-	$HTTP_POST_VARS = $_POST;
-	$TT->pull();
-}
 
 
 // Hook to preprocess the current request:
@@ -149,8 +89,8 @@ if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preprocessReq
 // *********************
 // Look for extension ID which will launch alternative output engine
 // *********************
-if ($temp_extId = t3lib_div::_GP('eID'))	{
-	if ($classPath = t3lib_div::getFileAbsFileName($TYPO3_CONF_VARS['FE']['eID_include'][$temp_extId]))	{
+if ($temp_extId = t3lib_div::_GP('eID')) {
+	if ($classPath = t3lib_div::getFileAbsFileName($TYPO3_CONF_VARS['FE']['eID_include'][$temp_extId])) {
 		// Remove any output produced until now
 		ob_clean();
 
@@ -192,7 +132,7 @@ $TSFE->sendRedirect();
 // *******************
 // Remove any output produced until now
 ob_clean();
-if ($TYPO3_CONF_VARS['FE']['compressionLevel'] && extension_loaded('zlib'))	{
+if ($TYPO3_CONF_VARS['FE']['compressionLevel'] && extension_loaded('zlib')) {
 	if (t3lib_utility_Math::canBeInterpretedAsInteger($TYPO3_CONF_VARS['FE']['compressionLevel'])) {
 		// Prevent errors if ini_set() is unavailable (safe mode)
 		@ini_set('zlib.output_compression_level', $TYPO3_CONF_VARS['FE']['compressionLevel']);
@@ -249,15 +189,12 @@ $TT->pull();
 // Admin Panel & Frontend editing
 // *****************************************
 if ($TSFE->isBackendUserLoggedIn()) {
-		// if a BE User is present load, the sprite manager for frontend-editing
-	$spriteManager = t3lib_div::makeInstance('t3lib_SpriteManager', FALSE);
-	$spriteManager->loadCacheFile();
+	Typo3_Bootstrap::initializeSpriteManager(FALSE);
 
 	$BE_USER->initializeFrontendEdit();
- 	if ($BE_USER->adminPanel instanceof tslib_AdminPanel) {
-		$LANG = t3lib_div::makeInstance('language');
-		$LANG->init($BE_USER->uc['lang']);
- 	}
+	if ($BE_USER->adminPanel instanceof tslib_AdminPanel) {
+		Typo3_Bootstrap::initializeLanguageObject();
+	}
 	if ($BE_USER->frontendEdit instanceof t3lib_frontendedit) {
 		$BE_USER->frontendEdit->initConfigOptions();
 	}
@@ -318,15 +255,9 @@ $TSFE->checkJumpUrlReferer();
 // Check Submission of data.
 // This is done at this point, because we need the config values
 // *******************************
-switch($TSFE->checkDataSubmission())	{
+switch($TSFE->checkDataSubmission()) {
 	case 'email':
 		$TSFE->sendFormmail();
-	break;
-	case 'fe_tce':
-		$TSFE->includeTCA();
-		$TT->push('fe_tce','');
-		$TSFE->fe_tce();
-		$TT->pull();
 	break;
 }
 
@@ -372,47 +303,10 @@ if ($TSFE->isINTincScript())		{
 // Output content
 // ***************
 $sendTSFEContent = FALSE;
-if ($TSFE->isOutputting())	{
+if ($TSFE->isOutputting()) {
 	$TT->push('Print Content','');
 	$TSFE->processOutput();
-
-	// ***************************************
-	// Outputs content / Includes EXT scripts
-	// ***************************************
-	if ($TSFE->isEXTincScript())	{
-		$TT->push('External PHP-script','');
-				// Important global variables here are $EXTiS_*, they must not be overridden in include-scripts!!!
-			$EXTiS_config = $TSFE->config['EXTincScript'];
-			$EXTiS_splitC = explode('<!--EXT_SCRIPT.',$TSFE->content);	// Splits content with the key
-
-				// Special feature: Include libraries
-			foreach ($EXTiS_config as $EXTiS_cPart) {
-				if (isset($EXTiS_cPart['conf']['includeLibs']) && $EXTiS_cPart['conf']['includeLibs']) {
-					$EXTiS_resourceList = t3lib_div::trimExplode(',',$EXTiS_cPart['conf']['includeLibs'], TRUE);
-					$TSFE->includeLibraries($EXTiS_resourceList);
-				}
-			}
-
-			foreach ($EXTiS_splitC as $EXTiS_c => $EXTiS_cPart) {
-				if (substr($EXTiS_cPart,32,3)=='-->')	{	// If the split had a comment-end after 32 characters it's probably a split-string
-					$EXTiS_key = 'EXT_SCRIPT.'.substr($EXTiS_cPart,0,32);
-					if (is_array($EXTiS_config[$EXTiS_key]))	{
-						$REC = $EXTiS_config[$EXTiS_key]['data'];
-						$CONF = $EXTiS_config[$EXTiS_key]['conf'];
-						$content = '';
-						include($EXTiS_config[$EXTiS_key]['file']);
-						echo $content;	// The script MAY return content in $content or the script may just output the result directly!
-					}
-					echo substr($EXTiS_cPart,35);
-				} else {
-					echo ($c?'<!--EXT_SCRIPT.':'').$EXTiS_cPart;
-				}
-			}
-
-		$TT->pull();
-	} else {
-		$sendTSFEContent = TRUE;
-	}
+	$sendTSFEContent = TRUE;
 	$TT->pull();
 }
 
@@ -489,5 +383,7 @@ if(isset($error) && is_object($error) && @is_callable(array($error,'debugOutput'
 if (TYPO3_DLOG) {
 	t3lib_div::devLog('END of FRONTEND session', 'cms', 0, array('_FLUSH' => TRUE));
 }
+
+Typo3_Bootstrap::shutdown();
 
 ?>

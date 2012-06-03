@@ -191,7 +191,7 @@ class TYPO3backend {
 	 *
 	 * @return	void
 	 */
-	public function render()	{
+	public function render() {
 		$this->executeHook('renderPreProcess');
 
 			// prepare the scaffolding, at this point extension may still add javascript and css
@@ -624,9 +624,9 @@ class TYPO3backend {
 	 *
 	 * @return	void
 	 */
-	protected function handlePageEditing()	{
+	protected function handlePageEditing() {
 
-		if(!t3lib_extMgm::isLoaded('cms'))	{
+		if(!t3lib_extMgm::isLoaded('cms')) {
 			return;
 		}
 
@@ -634,25 +634,25 @@ class TYPO3backend {
 		$editId     = preg_replace('/[^[:alnum:]_]/', '', t3lib_div::_GET('edit'));
 		$editRecord = '';
 
-		if($editId)	{
+		if($editId) {
 
 				// Looking up the page to edit, checking permissions:
 			$where = ' AND ('.$GLOBALS['BE_USER']->getPagePermsClause(2)
 					.' OR '.$GLOBALS['BE_USER']->getPagePermsClause(16).')';
 
-			if(t3lib_utility_Math::canBeInterpretedAsInteger($editId))	{
+			if(t3lib_utility_Math::canBeInterpretedAsInteger($editId)) {
 				$editRecord = t3lib_BEfunc::getRecordWSOL('pages', $editId, '*', $where);
 			} else {
 				$records = t3lib_BEfunc::getRecordsByField('pages', 'alias', $editId, $where);
 
-				if(is_array($records))	{
+				if(is_array($records)) {
 					$editRecord = reset($records);
 					t3lib_BEfunc::workspaceOL('pages', $editRecord);
 				}
 			}
 
 				// If the page was accessible, then let the user edit it.
-			if(is_array($editRecord) && $GLOBALS['BE_USER']->isInWebMount($editRecord['uid']))	{
+			if(is_array($editRecord) && $GLOBALS['BE_USER']->isInWebMount($editRecord['uid'])) {
 					// Setting JS code to open editing:
 				$this->js .= '
 		// Load page to edit:
@@ -683,10 +683,10 @@ class TYPO3backend {
 	protected function setStartupModule() {
 		$startModule = preg_replace('/[^[:alnum:]_]/', '', t3lib_div::_GET('module'));
 
-		if(!$startModule)	{
-			if ($GLOBALS['BE_USER']->uc['startModule'])	{
+		if(!$startModule) {
+			if ($GLOBALS['BE_USER']->uc['startModule']) {
 				$startModule = $GLOBALS['BE_USER']->uc['startModule'];
-			} elseif ($GLOBALS['BE_USER']->uc['startInTaskCenter'])	{
+			} elseif ($GLOBALS['BE_USER']->uc['startInTaskCenter']) {
 				$startModule = 'user_task';
 			}
 		}
@@ -763,7 +763,7 @@ class TYPO3backend {
 		if(empty($this->cssFiles[$cssFileName])) {
 			$this->cssFiles[$cssFileName] = $cssFile;
 			$cssFileAdded = TRUE;
- 		}
+		}
 
 		return $cssFileAdded;
 	}
@@ -812,13 +812,6 @@ class TYPO3backend {
 	}
 }
 
-
-	// include XCLASS
-if(defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/backend.php']) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/backend.php']);
-}
-
-
 	// document generation
 $TYPO3backend = t3lib_div::makeInstance('TYPO3backend');
 
@@ -847,5 +840,7 @@ if (is_array($GLOBALS['TBE_MODULES']['_configuration'])) {
 }
 
 $TYPO3backend->render();
+
+Typo3_Bootstrap::shutdown();
 
 ?>

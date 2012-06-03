@@ -47,6 +47,17 @@ class t3lib_TCEforms_ValueSlider {
 
 		$field = $params['field'];
 		$value = $params['row'][$field];
+
+			// If Slider is used in a flexform
+		if (!empty($params['flexFormPath'])) {
+			$flexFormTools = t3lib_div::makeInstance('t3lib_flexformtools');
+			$flexFormValue = $flexFormTools->getArrayValueByPath($params['flexFormPath'], t3lib_div::xml2array($value));
+
+			if ($flexFormValue !== NULL) {
+				$value = $flexFormValue;
+			}
+		}
+
 		$itemName = $params['itemName'];
 			// Set default values (which correspond to those of the JS component)
 		$min = 0;
@@ -103,11 +114,6 @@ class t3lib_TCEforms_ValueSlider {
 
 		return $contents;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_valueslider.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_valueslider.php']);
 }
 
 ?>

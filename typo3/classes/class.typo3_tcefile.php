@@ -62,13 +62,13 @@ class TYPO3_tcefile {
 		// VeriCode - a hash of server specific value and other things which
 		// identifies if a submission is OK. (see $GLOBALS['BE_USER']->veriCode())
 	protected $vC;
-	    // the page where the user should be redirected after everything is done
+		// the page where the user should be redirected after everything is done
 	protected $redirect;
 
 		// Internal, dynamic:
 		// File processor object
 	protected $fileProcessor;
-	    // the result array from the file processor
+		// the result array from the file processor
 	protected $fileData;
 
 
@@ -177,9 +177,4 @@ class TYPO3_tcefile {
 		}
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.typo3_tcefile.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.typo3_tcefile.php']);
-}
-
 ?>

@@ -72,7 +72,7 @@ class SC_alt_doc_nodoc {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 			// Start the template object:
 		$this->doc = t3lib_div::makeInstance('mediumDoc');
 		$this->doc->bodyTagMargins['x']=5;
@@ -108,7 +108,7 @@ class SC_alt_doc_nodoc {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 		$msg=array();
 
 			// Add a message, telling that no documents were open...
@@ -135,7 +135,7 @@ class SC_alt_doc_nodoc {
 
 
 			// If either the Web>List OR Web>Page module are active, show the little message with links to those modules:
-		if ($a_wl || $a_wp)	{
+		if ($a_wl || $a_wp) {
 			$msg_2 = array();
 			if ($a_wp)	{	// Web>Page:
 				$msg_2[] = '<strong><a href="#" onclick="top.goToModule(\'' . $pageModule . '\'); return false;">' . $GLOBALS['LANG']->getLL('noDocuments_pagemodule', 1) . $img_web_layout . '</a></strong>';
@@ -162,19 +162,12 @@ class SC_alt_doc_nodoc {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		$this->content.= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_doc_nodoc.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_doc_nodoc.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_alt_doc_nodoc');

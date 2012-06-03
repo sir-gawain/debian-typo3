@@ -46,7 +46,7 @@ class tx_lowlevel_orphan_records extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	[type]		...
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 			// Setting up help:
@@ -71,19 +71,6 @@ Manual repair suggestions:
 
 		$this->cli_help['examples'] = '/.../cli_dispatch.phpsh lowlevel_cleaner orphan_records -s -r
 Will report orphan uids from TCA tables.';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_orphan_records() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_orphan_records::__construct();
 	}
 
 	/**
@@ -120,7 +107,7 @@ Will report orphan uids from TCA tables.';
 		$resultArray['illegal_record_under_versioned_page'] = $this->recStats['illegal_record_under_versioned_page'];
 
 			// Find orphans:
-		foreach($GLOBALS['TCA'] as $tableName => $cfg)	{
+		foreach($GLOBALS['TCA'] as $tableName => $cfg) {
 
 			$idList = is_array($this->recStats['all'][$tableName]) && count($this->recStats['all'][$tableName]) ? implode(',',$this->recStats['all'][$tableName]) : 0;
 
@@ -132,9 +119,9 @@ Will report orphan uids from TCA tables.';
 									'','uid','','uid'
 								);
 
-			if (count($orphanRecords))	{
+			if (count($orphanRecords)) {
 				$resultArray['orphans'][$tableName] = array();
-				foreach($orphanRecords as $oR)	{
+				foreach($orphanRecords as $oR) {
 					$resultArray['orphans'][$tableName][$oR['uid']] = $oR['uid'];
 				}
 			}
@@ -150,21 +137,21 @@ Will report orphan uids from TCA tables.';
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
+	function main_autoFix($resultArray) {
 
 			// Putting "pages" table in the bottom:
-		if (isset($resultArray['orphans']['pages']))	{
+		if (isset($resultArray['orphans']['pages'])) {
 			$_pages = $resultArray['orphans']['pages'];
 			unset($resultArray['orphans']['pages']);
 			$resultArray['orphans']['pages'] = $_pages;
 		}
 
 			// Traversing records:
-		foreach($resultArray['orphans'] as $table => $list)	{
+		foreach($resultArray['orphans'] as $table => $list) {
 			echo 'Removing orphans from table "'.$table.'":'.LF;
-			foreach($list as $uid)	{
+			foreach($list as $uid) {
 				echo '	Flushing orphan record "'.$table.':'.$uid.'": ';
-				if ($bypass = $this->cli_noExecutionCheck($table.':'.$uid))	{
+				if ($bypass = $this->cli_noExecutionCheck($table.':'.$uid)) {
 					echo $bypass;
 				} else {
 
@@ -175,7 +162,7 @@ Will report orphan uids from TCA tables.';
 					$tce->deleteRecord($table,$uid, TRUE, TRUE);	// Notice, we are deleting pages with no regard to subpages/subrecords - we do this since they should also be included in the set of orphans of course!
 
 						// Return errors if any:
-					if (count($tce->errorLog))	{
+					if (count($tce->errorLog)) {
 						echo '	ERROR from "TCEmain":'.LF.'TCEmain:'.implode(LF.'TCEmain:',$tce->errorLog);
 					} else echo 'DONE';
 				}

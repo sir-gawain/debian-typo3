@@ -142,7 +142,7 @@ class tx_t3editor_hooks_tstemplateinfo {
 			$tplRow = $tmpl->ext_getFirstTemplate($pageId, $template_uid);
 			$existTemplate = (is_array($tplRow) ? TRUE : FALSE);
 
-			if ($existTemplate)	{
+			if ($existTemplate) {
 				$saveId = ($tplRow['_ORIG_uid'] ? $tplRow['_ORIG_uid'] : $tplRow['uid']);
 
 				// Update template ?
@@ -202,10 +202,4 @@ class tx_t3editor_hooks_tstemplateinfo {
 		return $savingsuccess;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/t3editor/classes/class.tx_t3editor_hooks_tstemplateinfo.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/t3editor/classes/class.tx_t3editor_hooks_tstemplateinfo.php']);
-}
-
 ?>

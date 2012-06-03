@@ -572,8 +572,8 @@ class t3lib_treeView {
 		} else {
 
 			$icon = t3lib_iconWorks::getSpriteIconForRecord($this->table, $row, array(
-																					 'title' => ($this->showDefaultTitleAttribute ? 'UID: ' . $row['uid'] : $this->getTitleAttrib($row)),
-																					 'class' => 'c-recIcon'
+																					'title' => ($this->showDefaultTitleAttribute ? 'UID: ' . $row['uid'] : $this->getTitleAttrib($row)),
+																					'class' => 'c-recIcon'
 																				));
 
 		}
@@ -990,11 +990,6 @@ class t3lib_treeView {
 			),
 		)
 */
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_treeview.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_treeview.php']);
 }
 
 ?>

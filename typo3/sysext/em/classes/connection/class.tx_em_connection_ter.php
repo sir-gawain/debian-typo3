@@ -325,7 +325,6 @@ class tx_em_Connection_Ter {
 				'priority' => utf8_encode($uArr['EM_CONF']['priority']),
 				'clearCacheOnLoad' => (boolean) intval($uArr['EM_CONF']['clearCacheOnLoad']),
 				'lockType' => utf8_encode($uArr['EM_CONF']['lockType']),
-				'doNotLoadInFEe' => utf8_encode($uArr['EM_CONF']['doNotLoadInFE']),
 				'docPath' => utf8_encode($uArr['EM_CONF']['docPath']),
 			),
 			'infoData' => array(
@@ -373,9 +372,5 @@ class tx_em_Connection_Ter {
 
 		return $response;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_ter.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_ter.php']);
 }
 ?>

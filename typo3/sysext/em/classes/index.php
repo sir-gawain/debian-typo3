@@ -546,7 +546,7 @@ class SC_mod_tools_em_index extends t3lib_SCbase {
 		$this->content = $this->doc->render(
 			'Extension Manager',
 			$this->content
-	    );
+		);
 
 	}
 
@@ -1018,9 +1018,9 @@ class SC_mod_tools_em_index extends t3lib_SCbase {
 		$content = '<form action="' . $this->script . '" method="post" name="pageform">';
 		$addUrl = '';
 		if ($this->noDocHeader) {
-		   $content .= '<input type="hidden" name="nodoc" value="1" />';
-		   $addUrl = '&nodoc=1';
-	   }
+			$content .= '<input type="hidden" name="nodoc" value="1" />';
+			$addUrl = '&nodoc=1';
+		}
 		// Fetch remote data:
 		$this->xmlHandler->searchExtensionsXMLExact($extKey, '', '', TRUE, TRUE);
 		list($fetchData,) = $this->extensionList->prepareImportExtList(TRUE);
@@ -2571,16 +2571,6 @@ class SC_mod_tools_em_index extends t3lib_SCbase {
 		return tx_em_Tools::getExtPath($extKey, $type, $returnWithoutExtKey);
 	}
 }
-
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['em/index.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['em/index.php']);
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/index.php']);
-}
-
 
 // Make instance:
 /** @var $SOBE SC_mod_tools_em_index */

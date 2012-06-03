@@ -100,13 +100,13 @@ class tslib_search {
 	 * @param	string		$allowedCols: is the list of columns, that MAY be searched. All allowed cols are set as result-fields. All requested cols MUST be in the allowed-fields list.
 	 * @return	void
 	 */
-	function register_tables_and_columns($requestedCols,$allowedCols)	{
+	function register_tables_and_columns($requestedCols,$allowedCols) {
 		$rCols=$this->explodeCols($requestedCols);
 		$aCols=$this->explodeCols($allowedCols);
 
-		foreach ($rCols as $k => $v)	{
+		foreach ($rCols as $k => $v) {
 			$rCols[$k]=trim($v);
-			if (in_array($rCols[$k], $aCols))	{
+			if (in_array($rCols[$k], $aCols)) {
 				$parts = explode('.',$rCols[$k]);
 				$this->tables[$parts[0]]['searchfields'][] = $parts[1];
 			}
@@ -115,7 +115,7 @@ class tslib_search {
 		$this->tables['pages']['resultfields'][] = 'uid';
 		unset($this->tables['pages']['fkey']);
 
-		foreach ($aCols as $k => $v)	{
+		foreach ($aCols as $k => $v) {
 			$aCols[$k]=trim($v);
 			$parts = explode('.',$aCols[$k]);
 			$this->tables[$parts[0]]['resultfields'][] = $parts[1].' AS '.str_replace('.','_',$aCols[$k]);
@@ -123,9 +123,9 @@ class tslib_search {
 		}
 
 		$this->fTable='';
-		foreach ($this->tables as $t => $v)	{
-			if ($t!='pages')	{
-				if (!$this->fTable)	{
+		foreach ($this->tables as $t => $v) {
+			if ($t!='pages') {
+				if (!$this->fTable) {
 					$this->fTable = $t;
 				} else {
 					unset($this->tables[$t]);
@@ -141,13 +141,13 @@ class tslib_search {
 	 * @return	array		An array where the values is "[table].[field]" strings to search
 	 * @see	register_tables_and_columns()
 	 */
-	function explodeCols($in)	{
+	function explodeCols($in) {
 		$theArray = explode(':',$in);
 		$out = Array();
 		foreach ($theArray as $val) {
 			$val=trim($val);
 			$parts = explode('.',$val);
-			if ($parts[0] && $parts[1])	{
+			if ($parts[0] && $parts[1]) {
 				$subparts = explode('-',$parts[1]);
 				foreach ($subparts as $piece) {
 					$piece=trim($piece);
@@ -166,17 +166,17 @@ class tslib_search {
 	 * @param	string		The input search-word string.
 	 * @return	void
 	 */
-	function register_and_explode_search_string($sword)	{
+	function register_and_explode_search_string($sword) {
 		$sword = trim($sword);
-		if ($sword)	{
+		if ($sword) {
 			$components = $this->split($sword);
 			$s_sword = '';	 // the searchword is stored here during the loop
-			if (is_array($components))	{
+			if (is_array($components)) {
 				$i=0;
 				$lastoper = '';
 				foreach ($components as $key => $val) {
 					$operator=$this->get_operator($val);
-					if ($operator)	{
+					if ($operator) {
 						$lastoper = $operator;
 					} elseif (strlen($val)>1) {		// A searchword MUST be at least two characters long!
 						$this->sword_array[$i]['sword'] = $val;
@@ -198,12 +198,12 @@ class tslib_search {
 	 * @param	string		Special chars which are deleted if the append the searchword (+-., is default)
 	 * @return	mixed		Returns an ARRAY if there were search words, othervise the return value may be unset.
 	 */
-	function split($origSword, $specchars='+-', $delchars='+.,-')	{
+	function split($origSword, $specchars='+-', $delchars='+.,-') {
 		$sword = $origSword;
 		$specs = '[' . preg_quote($specchars, '/') . ']';
 
 			// As long as $sword is TRUE (that means $sword MUST be reduced little by little until its empty inside the loop!)
-		while ($sword)	{
+		while ($sword) {
 			if (preg_match('/^"/',$sword))	{		// There was a double-quote and we will then look for the ending quote.
 				$sword = preg_replace('/^"/','',$sword);		// Removes first double-quote
 				preg_match('/^[^"]*/',$sword,$reg);  // Removes everything till next double-quote
@@ -234,22 +234,6 @@ class tslib_search {
 	}
 
 	/**
-	 * Local version of quotemeta. This is the same as the PHP function
-	 * but the vertical line, |, and minus, -, is also escaped with a slash.
-	 *
-	 * @deprecated This function is deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Please, use preg_quote() instead.
-	 * @param	string		String to pass through quotemeta()
-	 * @return	string		Return value
-	 */
-	function quotemeta($str) {
-		t3lib_div::logDeprecatedFunction();
-
-		$str = str_replace('|','\|',quotemeta($str));
-		#$str = str_replace('-','\-',$str);		// Breaks "-" which should NOT have a slash before it inside of [ ] in a regex.
-		return $str;
-	}
-
-	/**
 	 * This creates the search-query.
 	 * In TypoScript this is used for searching only records not hidden, start/endtimed and fe_grouped! (enable-fields, see tt_content)
 	 * Sets $this->queryParts
@@ -261,12 +245,12 @@ class tslib_search {
 	 */
 	function build_search_query($endClause) {
 
-		if (is_array($this->tables))	{
+		if (is_array($this->tables)) {
 			$tables = $this->tables;
 			$primary_table = '';
 
 				// Primary key table is found.
-			foreach($tables as $key => $val)	{
+			foreach($tables as $key => $val) {
 				if ($tables[$key]['primary_key'])	{$primary_table = $key;}
 			}
 
@@ -285,11 +269,11 @@ class tslib_search {
 					// Find tables / field names to select:
 				$fieldArray = array();
 				$tableArray = array();
-				foreach($tables as $key => $val)	{
+				foreach($tables as $key => $val) {
 					$tableArray[] = $key;
 					$resultfields = $tables[$key]['resultfields'];
-					if (is_array($resultfields))	{
-						foreach($resultfields as $key2 => $val2)	{
+					if (is_array($resultfields)) {
+						foreach($resultfields as $key2 => $val2) {
 							$fieldArray[] = $key.'.'.$val2;
 						}
 					}
@@ -302,24 +286,24 @@ class tslib_search {
 
 				$primary_table_and_key = $primary_table.'.'.$tables[$primary_table]['primary_key'];
 				$primKeys = Array();
-				foreach($tables as $key => $val)	{
+				foreach($tables as $key => $val) {
 					$fkey = $tables[$key]['fkey'];
-					if ($fkey)	{
-						 $primKeys[] = $key.'.'.$fkey.'='.$primary_table_and_key;
+					if ($fkey) {
+						$primKeys[] = $key.'.'.$fkey.'='.$primary_table_and_key;
 					}
 				}
-				if (count($primKeys))	{
+				if (count($primKeys)) {
 					$whereArray[] = '('.implode(' OR ',$primKeys).')';
 				}
 
 					// Additional where clause:
-				if (trim($endClause))	{
+				if (trim($endClause)) {
 					$whereArray[] = trim($endClause);
 				}
 
 					// Add search word where clause:
 				$query_part = $this->build_search_query_for_searchwords();
-				if (!$query_part)	{
+				if (!$query_part) {
 					$query_part = '(0!=0)';
 				}
 				$whereArray[] = '('.$query_part.')';
@@ -328,8 +312,8 @@ class tslib_search {
 				$this->queryParts['WHERE'] = implode(' AND ',$whereArray);
 
 					// Group by settings:
-				if ($this->group_by)	{
-					if ($this->group_by == 'PRIMARY_KEY')	{
+				if ($this->group_by) {
+					if ($this->group_by == 'PRIMARY_KEY') {
 						$this->queryParts['GROUPBY'] = $primary_table_and_key;
 					} else {
 						$this->queryParts['GROUPBY'] = $this->group_by;
@@ -345,35 +329,35 @@ class tslib_search {
 	 * @return	string		Part of where class limiting result to the those having the search word.
 	 * @access private
 	 */
-	function build_search_query_for_searchwords()	{
+	function build_search_query_for_searchwords() {
 
-		if (is_array($this->sword_array))	{
+		if (is_array($this->sword_array)) {
 			$main_query_part = array();
 
-			foreach($this->sword_array as $key => $val)	{
+			foreach($this->sword_array as $key => $val) {
 				$s_sword = $this->sword_array[$key]['sword'];
 
 					// Get subQueryPart
 				$sub_query_part = array();
 
 				$this->listOfSearchFields='';
-				foreach($this->tables as $key3 => $val3)	{
+				foreach($this->tables as $key3 => $val3) {
 					$searchfields = $this->tables[$key3]['searchfields'];
-					if (is_array($searchfields))	{
-						foreach($searchfields as $key2 => $val2)	{
+					if (is_array($searchfields)) {
+						foreach($searchfields as $key2 => $val2) {
 							$this->listOfSearchFields.= $key3.'.'.$val2.',';
 							$sub_query_part[] = $key3.'.'.$val2.' LIKE \'%'.$GLOBALS['TYPO3_DB']->quoteStr($s_sword, $key3).'%\'';
 						}
 					}
 				}
 
-				if (count($sub_query_part))	{
+				if (count($sub_query_part)) {
 					$main_query_part[] = $this->sword_array[$key]['oper'];
 					$main_query_part[] = '('.implode(' OR ',$sub_query_part).')';
 				}
 			}
 
-			if (count($main_query_part))	{
+			if (count($main_query_part)) {
 				unset($main_query_part[0]);	// Remove first part anyways.
 				return implode(' ',$main_query_part);
 			}
@@ -387,18 +371,18 @@ class tslib_search {
 	 * @return	string		If found, the SQL operator for the localized input operator.
 	 * @access private
 	 */
-	function get_operator($operator)	{
+	function get_operator($operator) {
 		$operator = trim($operator);
 		$op_array = $this->operator_translate_table;
-		if ($this->operator_translate_table_caseinsensitive)	{
+		if ($this->operator_translate_table_caseinsensitive) {
 			$operator = strtolower($operator);	// case-conversion is charset insensitive, but it doesn't spoil anything if input string AND operator table is already converted
 		}
 		foreach ($op_array as $key => $val) {
 			$item = $op_array[$key][0];
-			if ($this->operator_translate_table_caseinsensitive)	{
+			if ($this->operator_translate_table_caseinsensitive) {
 				$item = strtolower($item);	// See note above.
 			}
-			if ($operator==$item)	{
+			if ($operator==$item) {
 				return $op_array[$key][1];
 			}
 		}
@@ -410,9 +394,9 @@ class tslib_search {
 	 * @return	boolean		TRUE, if $this->query was found
 	 */
 	function count_query() {
-		if (is_array($this->queryParts))	{
+		if (is_array($this->queryParts)) {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($this->queryParts['SELECT'], $this->queryParts['FROM'], $this->queryParts['WHERE'], $this->queryParts['GROUPBY']);
-		    $this->res_count = $GLOBALS['TYPO3_DB']->sql_num_rows($res);
+			$this->res_count = $GLOBALS['TYPO3_DB']->sql_num_rows($res);
 			return TRUE;
 		}
 	}
@@ -423,8 +407,8 @@ class tslib_search {
 	 * @return	boolean		TRUE, if $this->query was set and query performed
 	 */
 	function execute_query() {
-		if (is_array($this->queryParts))	{
-	        $this->result = $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($this->queryParts);
+		if (is_array($this->queryParts)) {
+			$this->result = $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($this->queryParts);
 			return TRUE;
 		}
 	}
@@ -435,10 +419,10 @@ class tslib_search {
 	 *
 	 * @return	string		URL-parameters with the searchwords
 	 */
-	function get_searchwords()	{
+	function get_searchwords() {
 		$SWORD_PARAMS = '';
-		if (is_array($this->sword_array))	{
-			foreach($this->sword_array as $key => $val)	{
+		if (is_array($this->sword_array)) {
+			foreach($this->sword_array as $key => $val) {
 				$SWORD_PARAMS.= '&sword_list[]='.rawurlencode($val['sword']);
 			}
 		}
@@ -450,21 +434,13 @@ class tslib_search {
 	 *
 	 * @return	array		IF the internal sword_array contained search words it will return these, otherwise "void"
 	 */
-	function get_searchwordsArray()	{
-		if (is_array($this->sword_array))	{
-			foreach($this->sword_array as $key => $val)	{
+	function get_searchwordsArray() {
+		if (is_array($this->sword_array)) {
+			foreach($this->sword_array as $key => $val) {
 				$swords[] = $val['sword'];
 			}
 		}
 		return $swords;
 	}
 }
-
-
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_search.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_search.php']);
-}
-
 ?>

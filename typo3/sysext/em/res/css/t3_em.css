@@ -238,6 +238,9 @@ img.removeExtension {
 	background-color: #abd99a;
 }
 
+#em-local-extensions .x-action-col-cell .x-grid3-cell-inner {
+    text-overflow: clip;
+}
 
 .em-extlist-extinfo label,
 .em-info label {
@@ -278,6 +281,10 @@ a.email {
 
 .paddingActionIcon img {
 	margin-right: 5px;
+}
+
+.x-action-col-cell img {
+	margin-top: 3px;
 }
 
 .paddingNoActionIcon img {

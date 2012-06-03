@@ -80,8 +80,8 @@ class tx_sv_loginformhook {
 				' . $GLOBALS['TBE_TEMPLATE']->wrapScriptTags('
 					function doChallengeResponse(superchallenged) {	//
 						password = document.loginform.p_field.value;
-						if (password)	{
-							if (superchallenged)	{
+						if (password) {
+							if (superchallenged) {
 								password = MD5(password);	// this makes it superchallenged!!
 							}
 							str = document.loginform.username.value+":"+password+":"+document.loginform.challenge.value;
@@ -102,15 +102,9 @@ class tx_sv_loginformhook {
 	 *
 	 * @return	string		Challenge value
 	 */
-	protected function getChallenge()	{
+	protected function getChallenge() {
 		$challenge = md5(uniqid('') . getmypid());
 		return $challenge;
 	}
-
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_loginformhook.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_loginformhook.php']);
-}
-
 ?>

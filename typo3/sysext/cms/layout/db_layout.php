@@ -79,7 +79,7 @@ class ext_posMap extends t3lib_positionMap {
 	 * @param	array		The record row.
 	 * @return	string		Wrapped title string.
 	 */
-	function wrapRecordTitle($str,$row)	{
+	function wrapRecordTitle($str,$row) {
 		$aOnClick = 'jumpToUrl(\''.$GLOBALS['SOBE']->local_linkThisScript(array('edit_record'=>'tt_content:'.$row['uid'])).'\');return false;';
 		return '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.$str.'</a>';
 	}
@@ -92,7 +92,7 @@ class ext_posMap extends t3lib_positionMap {
 	 * @return	string
 	 * @see printRecordMap()
 	 */
-	function wrapColumnHeader($str,$vv)	{
+	function wrapColumnHeader($str,$vv) {
 		$aOnClick = 'jumpToUrl(\''.$GLOBALS['SOBE']->local_linkThisScript(array('edit_record'=>'_EDIT_COL:'.$vv)).'\');return false;';
 		return '<a href="#" onclick="'.htmlspecialchars($aOnClick).'">'.$str.'</a>';
 	}
@@ -108,7 +108,7 @@ class ext_posMap extends t3lib_positionMap {
 	 * @return string
 	 */
 	function onClickInsertRecord($row, $vv, $moveUid, $pid, $sys_lang = 0) {
-		if (is_array($row))	{
+		if (is_array($row)) {
 			$location=$GLOBALS['SOBE']->local_linkThisScript(array('edit_record'=>'tt_content:new/-'.$row['uid'].'/'.$row['colPos']));
 		} else {
 			$location=$GLOBALS['SOBE']->local_linkThisScript(array('edit_record'=>'tt_content:new/'.$pid.'/'.$vv));
@@ -123,8 +123,8 @@ class ext_posMap extends t3lib_positionMap {
 	 * @param	array		Record array.
 	 * @return	string		HTML content
 	 */
-	function wrapRecordHeader($str,$row)	{
-		if ($row['uid']==$this->moveUid)	{
+	function wrapRecordHeader($str,$row) {
+		if ($row['uid']==$this->moveUid) {
 			return '<img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/content_client.gif','width="7" height="10"').' alt="" />'.$str;
 		} else return $str;
 	}
@@ -200,7 +200,7 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 
 			// Setting module configuration / page select clause
 		$this->MCONF = $GLOBALS['MCONF'];
@@ -229,10 +229,10 @@ class SC_db_layout {
 		$this->menuConfig();
 
 			// Setting sys language from session var:
- 		$this->current_sys_language=intval($this->MOD_SETTINGS['language']);
+		$this->current_sys_language=intval($this->MOD_SETTINGS['language']);
 
 			// Include scripts: QuickEdit
-		if ($this->MOD_SETTINGS['function']==0)	{
+		if ($this->MOD_SETTINGS['function']==0) {
 			$this->include_once[]=PATH_t3lib.'class.t3lib_tceforms.php';
 			$this->include_once[]=PATH_t3lib.'class.t3lib_clipboard.php';
 			$this->include_once[]=PATH_t3lib.'class.t3lib_loaddbgroup.php';
@@ -240,7 +240,7 @@ class SC_db_layout {
 		}
 
 			// Include scripts: Clear-cache cmd.
-		if ($this->clear_cache)	{
+		if ($this->clear_cache) {
 			$this->include_once[]=PATH_t3lib.'class.t3lib_tcemain.php';
 		}
 
@@ -253,7 +253,7 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function menuConfig()	{
+	function menuConfig() {
 			// MENU-ITEMS:
 		$this->MOD_MENU = array(
 			'tt_content_showHidden' => '',
@@ -290,10 +290,10 @@ class SC_db_layout {
 			}
 		}
 
-			 // First, select all pages_language_overlay records on the current page. Each represents a possibility for a language on the page. Add these to language selector.
+			// First, select all pages_language_overlay records on the current page. Each represents a possibility for a language on the page. Add these to language selector.
 		$res = $this->exec_languageQuery($this->id);
-		while($lrow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
-			if ($GLOBALS['BE_USER']->checkLanguageAccess($lrow['uid']))	{
+		while($lrow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+			if ($GLOBALS['BE_USER']->checkLanguageAccess($lrow['uid'])) {
 				$this->MOD_MENU['language'][$lrow['uid']]=($lrow['hidden']?'('.$lrow['title'].')':$lrow['title']);
 			}
 		}
@@ -324,7 +324,7 @@ class SC_db_layout {
 		}
 
 			// Setting alternative default label:
-		if (($this->modSharedTSconfig['properties']['defaultLanguageLabel'] || $this->modTSconfig['properties']['defaultLanguageLabel']) && isset($this->MOD_MENU['language'][0]))	{
+		if (($this->modSharedTSconfig['properties']['defaultLanguageLabel'] || $this->modTSconfig['properties']['defaultLanguageLabel']) && isset($this->MOD_MENU['language'][0])) {
 			$this->MOD_MENU['language'][0] = $this->modTSconfig['properties']['defaultLanguageLabel'] ? $this->modSharedTSconfig['properties']['defaultLanguageLabel'] : $this->modSharedTSconfig['properties']['defaultLanguageLabel'];
 		}
 
@@ -342,8 +342,8 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function clearCache()	{
-		if ($this->clear_cache)	{
+	function clearCache() {
+		if ($this->clear_cache) {
 			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 			$tce->stripslashes_values=0;
 			$tce->start(Array(),Array());
@@ -357,11 +357,11 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 		// Access check...
 		// The page will show only if there is a valid page and if this page may be viewed by the user
 		$access = is_array($this->pageinfo) ? 1 : 0;
-		if ($this->id && $access)	{
+		if ($this->id && $access) {
 
 				// Initialize permission settings:
 			$this->CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($this->pageinfo);
@@ -410,9 +410,9 @@ class SC_db_layout {
 
 				function DTM_activate(idBase,index,doToogle)	{	//
 						// Hiding all:
-					if (DTM_array[idBase])	{
-						for(cnt = 0; cnt < DTM_array[idBase].length ; cnt++)	{
-							if (DTM_array[idBase][cnt] != idBase+"-"+index)	{
+					if (DTM_array[idBase]) {
+						for(cnt = 0; cnt < DTM_array[idBase].length ; cnt++) {
+							if (DTM_array[idBase][cnt] != idBase+"-"+index) {
 								document.getElementById(DTM_array[idBase][cnt]+"-DIV").style.display = "none";
 								document.getElementById(DTM_array[idBase][cnt]+"-MENU").attributes.getNamedItem("class").nodeValue = "tab";
 							}
@@ -420,8 +420,8 @@ class SC_db_layout {
 					}
 
 						// Showing one:
-					if (document.getElementById(idBase+"-"+index+"-DIV"))	{
-						if (doToogle && document.getElementById(idBase+"-"+index+"-DIV").style.display == "block")	{
+					if (document.getElementById(idBase+"-"+index+"-DIV")) {
+						if (doToogle && document.getElementById(idBase+"-"+index+"-DIV").style.display == "block") {
 							document.getElementById(idBase+"-"+index+"-DIV").style.display = "none";
 							if(DTM_origClass=="") {
 								document.getElementById(idBase+"-"+index+"-MENU").attributes.getNamedItem("class").nodeValue = "tab";
@@ -442,8 +442,8 @@ class SC_db_layout {
 				}
 				function DTM_toggle(idBase,index,isInit)	{	//
 						// Showing one:
-					if (document.getElementById(idBase+"-"+index+"-DIV"))	{
-						if (document.getElementById(idBase+"-"+index+"-DIV").style.display == "block")	{
+					if (document.getElementById(idBase+"-"+index+"-DIV")) {
+						if (document.getElementById(idBase+"-"+index+"-DIV").style.display == "block") {
 							document.getElementById(idBase+"-"+index+"-DIV").style.display = "none";
 							if(isInit) {
 								document.getElementById(idBase+"-"+index+"-MENU").attributes.getNamedItem("class").nodeValue = "tab";
@@ -497,7 +497,7 @@ class SC_db_layout {
 			$this->colPosList = implode(',', array_unique(t3lib_div::intExplode(',',$this->colPosList)));		// Removing duplicates, if any
 
 				// Render the primary module content:
-			if ($this->MOD_SETTINGS['function']==0)	{
+			if ($this->MOD_SETTINGS['function']==0) {
 				$body = $this->renderQuickEdit();	// QuickEdit
 			} else {
 				$body = $this->renderListContent();	// All other listings
@@ -515,13 +515,13 @@ class SC_db_layout {
 					$flashMessage = t3lib_div::makeInstance(
 						't3lib_FlashMessage',
 						'<p>' . $GLOBALS['LANG']->getLL('goToListModuleMessage') . '</p>
-						 <br />
-						 <p>' .
+						<br />
+						<p>' .
 							t3lib_iconWorks::getSpriteIcon('actions-system-list-open') .
 							'<a href="javascript:top.goToModule( \'web_list\',1);">' .
 								$GLOBALS['LANG']->getLL('goToListModule') . '
 							</a>
-						 </p>',
+						</p>',
 						'',
 						t3lib_FlashMessage::INFO
 					);
@@ -622,7 +622,7 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function renderQuickEdit()	{
+	function renderQuickEdit() {
 			// Alternative template
 		$this->doc->setModuleTemplate('templates/db_layout_quickedit.html');
 
@@ -638,7 +638,7 @@ class SC_db_layout {
 		$edit_record = $this->edit_record;
 
 			// If a command to edit all records in a column is issue, then select all those elements, and redirect to alt_doc.php:
-		if (substr($edit_record,0,9)=='_EDIT_COL')	{
+		if (substr($edit_record,0,9)=='_EDIT_COL') {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 						'*',
 						'tt_content',
@@ -650,7 +650,7 @@ class SC_db_layout {
 						'sorting'
 					);
 			$idListA = array();
-			while($cRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+			while($cRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				$idListA[] = $cRow['uid'];
 			}
 
@@ -660,14 +660,14 @@ class SC_db_layout {
 		}
 
 			// If the former record edited was the creation of a NEW record, this will look up the created records uid:
-		if ($this->new_unique_uid)	{
+		if ($this->new_unique_uid) {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 				'*',
 				'sys_log',
 				'userid=' . intval($GLOBALS['BE_USER']->user['uid']) . ' AND NEWid=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->new_unique_uid, 'sys_log')
 			);
 			$sys_log_row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
-			if (is_array($sys_log_row))	{
+			if (is_array($sys_log_row)) {
 				$edit_record=$sys_log_row['tablename'].':'.$sys_log_row['recuid'];
 			}
 		}
@@ -677,10 +677,10 @@ class SC_db_layout {
 		$opt=array();
 		$is_selected=0;
 		$languageOverlayRecord='';
-		if ($this->current_sys_language)	{
+		if ($this->current_sys_language) {
 			list($languageOverlayRecord) = t3lib_BEfunc::getRecordsByField('pages_language_overlay','pid',$this->id,'AND sys_language_uid='.intval($this->current_sys_language));
 		}
-		if (is_array($languageOverlayRecord))	{
+		if (is_array($languageOverlayRecord)) {
 			$inValue = 'pages_language_overlay:'.$languageOverlayRecord['uid'];
 			$is_selected+=intval($edit_record==$inValue);
 			$opt[] = '<option value="' . $inValue . '"' . ($edit_record == $inValue ? ' selected="selected"' : '') . '>[ ' . $GLOBALS['LANG']->getLL('editLanguageHeader', 1) . ' ]</option>';
@@ -704,17 +704,17 @@ class SC_db_layout {
 		$colPos='';
 		$first=1;
 		$prev=$this->id;	// Page is the pid if no record to put this after.
-		while($cRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+		while($cRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			t3lib_BEfunc::workspaceOL('tt_content', $cRow);
 
 			if (is_array($cRow)) 	{
-				if ($first)	{
-					if (!$edit_record)	{
+				if ($first) {
+					if (!$edit_record) {
 						$edit_record='tt_content:'.$cRow['uid'];
 					}
 					$first = 0;
 				}
-				if (strcmp($cRow['colPos'],$colPos))	{
+				if (strcmp($cRow['colPos'],$colPos)) {
 					$colPos=$cRow['colPos'];
 					$opt[]='<option value=""></option>';
 					$opt[] = '<option value="_EDIT_COL:' . $colPos . '">__' . $GLOBALS['LANG']->sL(t3lib_BEfunc::getLabelFromItemlist('tt_content', 'colPos', $colPos), 1) . ':__</option>';
@@ -734,7 +734,7 @@ class SC_db_layout {
 		}
 
 			// If edit_record is not set (meaning, no content elements was found for this language) we simply set it to create a new element:
-		if (!$edit_record)	{
+		if (!$edit_record) {
 			$edit_record='tt_content:new/'.$prev.'/'.$colPos;
 
 			$inValue = 'tt_content:new/'.$prev.'/'.$colPos;
@@ -743,7 +743,7 @@ class SC_db_layout {
 		}
 
 			// If none is yet selected...
-		if (!$is_selected)	{
+		if (!$is_selected) {
 			$opt[]='<option value=""></option>';
 			$opt[] = '<option value="' . $edit_record . '"  selected="selected">[ ' . $GLOBALS['LANG']->getLL('newLabel', 1) . ' ]</option>';
 		}
@@ -755,12 +755,12 @@ class SC_db_layout {
 
 
 			// Delete-button flag?
-		$this->deleteButton = (t3lib_utility_Math::canBeInterpretedAsInteger($this->eRParts[1]) && $edit_record && (($this->eRParts[0]!='pages'&&$this->EDIT_CONTENT) || ($this->eRParts[0]=='pages'&&($this->CALC_PERMS&4))));
+		$this->deleteButton = (t3lib_utility_Math::canBeInterpretedAsInteger($this->eRParts[1]) && $edit_record && (($this->eRParts[0]!='pages' && $this->EDIT_CONTENT) || ($this->eRParts[0]=='pages' && ($this->CALC_PERMS&4))));
 
 			// If undo-button should be rendered (depends on available items in sys_history)
 		$this->undoButton=0;
 		$undoRes = $GLOBALS['TYPO3_DB']->exec_SELECTquery('tstamp', 'sys_history', 'tablename='.$GLOBALS['TYPO3_DB']->fullQuoteStr($this->eRParts[0], 'sys_history').' AND recuid='.intval($this->eRParts[1]), '', 'tstamp DESC', '1');
-		if ($this->undoButtonR = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($undoRes))	{
+		if ($this->undoButtonR = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($undoRes)) {
 			$this->undoButton=1;
 		}
 
@@ -779,7 +779,7 @@ class SC_db_layout {
 		if ($GLOBALS['BE_USER']->uc['condensedMode']) {
 			$this->closeUrl = $GLOBALS['BACK_PATH'] . 'alt_db_navframe.php';
 		}
-		if ($this->returnUrl)	{
+		if ($this->returnUrl) {
 			$this->closeUrl = $this->returnUrl;
 		}
 			// Return-url for JavaScript:
@@ -790,14 +790,14 @@ class SC_db_layout {
 
 			// Creating editing form:
 		if ($GLOBALS['BE_USER']->check('tables_modify',$this->eRParts[0]) && $edit_record
-			&& (($this->eRParts[0] !== 'pages'&& $this->EDIT_CONTENT) || ($this->eRParts[0] === 'pages' && ($this->CALC_PERMS&1)))) {
+			&& (($this->eRParts[0] !== 'pages' && $this->EDIT_CONTENT) || ($this->eRParts[0] === 'pages' && ($this->CALC_PERMS&1)))) {
 
 				// Splitting uid parts for special features, if new:
 			list($uidVal,$ex_pid,$ex_colPos) = explode('/',$this->eRParts[1]);
 
 				// Convert $uidVal to workspace version if any:
-			if ($uidVal!='new')	{
-				if ($draftRecord = t3lib_BEfunc::getWorkspaceVersionOfRecord($GLOBALS['BE_USER']->workspace, $this->eRParts[0], $uidVal, 'uid'))	{
+			if ($uidVal!='new') {
+				if ($draftRecord = t3lib_BEfunc::getWorkspaceVersionOfRecord($GLOBALS['BE_USER']->workspace, $this->eRParts[0], $uidVal, 'uid')) {
 					$uidVal = $draftRecord['uid'];
 				}
 			}
@@ -816,7 +816,7 @@ class SC_db_layout {
 				// Getting/Making the record:
 			reset($trData->regTableItems_data);
 			$rec = current($trData->regTableItems_data);
-			if ($uidVal=='new')	{
+			if ($uidVal=='new') {
 				$new_unique_uid = uniqid('NEW');
 				$rec['uid'] = $new_unique_uid;
 				$rec['pid'] = intval($ex_pid)?intval($ex_pid):$this->id;
@@ -828,7 +828,7 @@ class SC_db_layout {
 				$recordAccess = $GLOBALS['BE_USER']->recordEditAccessInternals($this->eRParts[0], $uidVal);
 			}
 
-			if (!$recordAccess)	{
+			if (!$recordAccess) {
 					// If no edit access, print error message:
 				$content .= $this->doc->section($GLOBALS['LANG']->getLL('noAccess'), $GLOBALS['LANG']->getLL('noAccess_msg') . '<br /><br />' .
 							($GLOBALS['BE_USER']->errorMsg ? 'Reason: ' . $GLOBALS['BE_USER']->errorMsg . '<br /><br />' : ''), 0, 1);
@@ -859,7 +859,7 @@ class SC_db_layout {
 
 					// Add hidden fields:
 				$theCode=$panel;
-				if ($uidVal=='new')	{
+				if ($uidVal=='new') {
 					$theCode.='<input type="hidden" name="data['.$this->eRParts[0].']['.$rec['uid'].'][pid]" value="'.$rec['pid'].'" />';
 				}
 				$theCode.='
@@ -896,7 +896,7 @@ class SC_db_layout {
 		$q_count = $this->getNumberOfHiddenElements();
 		$h_func_b= t3lib_BEfunc::getFuncCheck($this->id,'SET[tt_content_showHidden]',$this->MOD_SETTINGS['tt_content_showHidden'],'db_layout.php','','id="checkTt_content_showHidden"').
 					'<label for="checkTt_content_showHidden">' .
-				   (!$q_count ? $GLOBALS['TBE_TEMPLATE']->dfw($GLOBALS['LANG']->getLL('hiddenCE', 1)) : $GLOBALS['LANG']->getLL('hiddenCE', 1) .
+					(!$q_count ? $GLOBALS['TBE_TEMPLATE']->dfw($GLOBALS['LANG']->getLL('hiddenCE', 1)) : $GLOBALS['LANG']->getLL('hiddenCE', 1) .
 					' (' . $q_count . ')') . '</label>';
 
 		$h_func_b.= '<br />'.
@@ -921,7 +921,7 @@ class SC_db_layout {
 
 
 			// Select element matrix:
-		if ($this->eRParts[0]=='tt_content' && t3lib_utility_Math::canBeInterpretedAsInteger($this->eRParts[1]))	{
+		if ($this->eRParts[0]=='tt_content' && t3lib_utility_Math::canBeInterpretedAsInteger($this->eRParts[1])) {
 			$posMap = t3lib_div::makeInstance('ext_posMap');
 			$posMap->backPath = $GLOBALS['BACK_PATH'];
 			$posMap->cur_sys_language=$this->current_sys_language;
@@ -939,7 +939,7 @@ class SC_db_layout {
 		}
 
 			// Finally, if comments were generated in TCEforms object, print these as a HTML comment:
-		if (count($tceforms->commentMessages))	{
+		if (count($tceforms->commentMessages)) {
 			$content.='
 	<!-- TCEFORM messages
 	'.htmlspecialchars(implode(LF,$tceforms->commentMessages)).'
@@ -995,7 +995,7 @@ class SC_db_layout {
 				// Load full table definitions:
 			t3lib_div::loadTCA($table);
 
-			if (!isset($dblist->externalTables[$table]))	{
+			if (!isset($dblist->externalTables[$table])) {
 				$q_count = $this->getNumberOfHiddenElements();
 				$h_func_b = t3lib_BEfunc::getFuncCheck(
 					$this->id,
@@ -1020,13 +1020,13 @@ class SC_db_layout {
 				if (is_array($GLOBALS['TCA']['tt_content']['columns']['colPos']['config']['items'])) {
 					$colList = array();
 					$tcaItems = t3lib_div::callUserFunction( 'EXT:cms/classes/class.tx_cms_backendlayout.php:tx_cms_BackendLayout->getColPosListItemsParsed' , $this->id, $this );
-					foreach($tcaItems as $temp)	{
+					foreach($tcaItems as $temp) {
 						$colList[] = $temp[1];
 					}
 				} else {	// ... should be impossible that colPos has no array. But this is the fallback should it make any sense:
 					$colList = array('1','0','2','3');
 				}
-				if (strcmp($this->colPosList,''))	{
+				if (strcmp($this->colPosList,'')) {
 					$colList = array_intersect(t3lib_div::intExplode(',',$this->colPosList),$colList);
 				}
 
@@ -1040,7 +1040,7 @@ class SC_db_layout {
 				$dblist->tt_contentConfig['sys_language_uid'] = intval($this->current_sys_language);
 
 					// If the function menu is set to "Language":
-				if ($this->MOD_SETTINGS['function']==2)	{
+				if ($this->MOD_SETTINGS['function']==2) {
 					$dblist->tt_contentConfig['single'] = 0;
 					$dblist->tt_contentConfig['languageMode'] = 1;
 					$dblist->tt_contentConfig['languageCols'] = $this->MOD_MENU['language'];
@@ -1052,7 +1052,7 @@ class SC_db_layout {
 				} else {
 				$h_func = '';
 			}
- 			}
+			}
 
 				// Start the dblist object:
 			$dblist->itemsLimitSingleTable = 1000;
@@ -1099,14 +1099,14 @@ class SC_db_layout {
 		} else {
 
 				// Add the content for each table we have rendered (traversing $tableOutput variable)
-			foreach ($tableOutput as $table => $output)	{
+			foreach ($tableOutput as $table => $output) {
 				$content .= $this->doc->section('', $output, TRUE, TRUE, 0, TRUE);
 				$content .= $this->doc->spacer(15);
 				$content .= $this->doc->sectionEnd();
 			}
 
 				// Making search form:
-			if (!$this->modTSconfig['properties']['disableSearchBox'] && count($tableOutput))	{
+			if (!$this->modTSconfig['properties']['disableSearchBox'] && count($tableOutput)) {
 				$sectionTitle = t3lib_BEfunc::wrapInHelp('xMOD_csh_corebe', 'list_searchbox', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.search', TRUE));
 				$content .= $this->doc->section(
 					$sectionTitle,
@@ -1118,7 +1118,7 @@ class SC_db_layout {
 				// Making display of Sys-notes (from extension "sys_note")
 			$dblist->id=$this->id;
 			$sysNotes = $dblist->showSysNotesForPage();
-			if ($sysNotes)	{
+			if ($sysNotes) {
 				$content.=$this->doc->spacer(10);
 				$content.=$this->doc->section($GLOBALS['LANG']->getLL('internalNotes'), $sysNotes, 0, 1);
 			}
@@ -1138,7 +1138,7 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -1186,7 +1186,7 @@ class SC_db_layout {
 		}
 
 			// Cache
-		if (!$this->modTSconfig['properties']['disableAdvanced'])	{
+		if (!$this->modTSconfig['properties']['disableAdvanced']) {
 			$buttons['cache'] = '<a href="' . htmlspecialchars('db_layout.php?id=' . $this->pageinfo['uid'] . '&clear_cache=1') . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.clear_cache', TRUE) . '">' .
 					t3lib_iconWorks::getSpriteIcon('actions-system-cache-clear') .
 				'</a>';
@@ -1201,32 +1201,16 @@ class SC_db_layout {
 			$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showList')
 		);
 
-		if (!$this->modTSconfig['properties']['disableIconToolbar'])	{
+		if (!$this->modTSconfig['properties']['disableIconToolbar']) {
 
-				// Page history
-			$buttons['history_page'] = '<a href="#" onclick="' . htmlspecialchars('jumpToUrl(\'' . $GLOBALS['BACK_PATH'] . 'show_rechis.php?element=' . rawurlencode('pages:' . $this->id) . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')) . '#latest\');return false;') . '" title="' . $GLOBALS['LANG']->getLL('recordHistory', TRUE) . '">' .
-						t3lib_iconWorks::getSpriteIcon('actions-document-history-open') .
-					'</a>';
-				// New content element
-			$buttons['new_content'] = '<a href="' . htmlspecialchars('db_new_content_el.php?id=' . $this->id . '&sys_language_uid=' . $this->current_sys_language . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))) . '" title="' . $GLOBALS['LANG']->getLL('newContentElement', TRUE) . '">' .
-						t3lib_iconWorks::getSpriteIcon('actions-document-new') .
-					'</a>';
-				// Move page
-			$buttons['move_page'] = '<a href="' . htmlspecialchars($GLOBALS['BACK_PATH'] . 'move_el.php?table=pages&uid=' . $this->id . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))) . '" title="' . $GLOBALS['LANG']->getLL('move_page', TRUE) . '">' .
-						t3lib_iconWorks::getSpriteIcon('actions-page-move') .
-					'</a>';
 				// Move record
 			if (t3lib_utility_Math::canBeInterpretedAsInteger($this->eRParts[1])) {
 				$buttons['move_record'] = '<a href="' . htmlspecialchars($GLOBALS['BACK_PATH'] . 'move_el.php?table=' . $this->eRParts[0] . '&uid=' . $this->eRParts[1] . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'))) . '">' .
 						t3lib_iconWorks::getSpriteIcon('actions-' . ($this->eRParts[0] == 'tt_content' ? 'document' : 'page') . '-move',array('class'=>'c-inputButton','title' => $GLOBALS['LANG']->getLL('move_' . ($this->eRParts[0] == 'tt_content' ? 'record' : 'page'), 1))) .
 						'</a>';
 			}
-				// Create new page (wizard)
-			$buttons['new_page'] = '<a href="#" onclick="' . htmlspecialchars('jumpToUrl(\'' . $GLOBALS['BACK_PATH'] . 'db_new.php?id=' . $this->id . '&pagesOnly=1&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')) . '\');return false;') . '" title="' . $GLOBALS['LANG']->getLL('newPage', TRUE) . '">' .
-						t3lib_iconWorks::getSpriteIcon('actions-page-new') .
-					'</a>';
 				// Edit page properties
-			if ($this->CALC_PERMS&2)	{
+			if ($this->CALC_PERMS&2) {
 				$params='&edit[pages][' . $this->id . ']=edit';
 				$buttons['edit_page'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::editOnClick($params, $GLOBALS['BACK_PATH'])) . '" title="' . $GLOBALS['LANG']->getLL('editPageProperties', TRUE) . '">' .
 							t3lib_iconWorks::getSpriteIcon('actions-page-open') .
@@ -1234,13 +1218,13 @@ class SC_db_layout {
 			}
 
 				// Add CSH (Context Sensitive Help) icon to tool bar
-			if($function == 'quickEdit') {
+			if ($function == 'quickEdit') {
 				$buttons['csh'] = t3lib_BEfunc::cshItem($this->descrTable, 'quickEdit', $GLOBALS['BACK_PATH'], '', TRUE, 'margin-top: 0px; margin-bottom: 0px;');
 			} else {
 				$buttons['csh'] = t3lib_BEfunc::cshItem($this->descrTable, 'columns_' . $this->MOD_SETTINGS['function'], $GLOBALS['BACK_PATH'], '', TRUE, 'margin-top: 0px; margin-bottom: 0px;');
 			}
 
-			if($function == 'quickEdit') {
+			if ($function == 'quickEdit') {
 					// Save record
 				$buttons['savedok'] = '<input class="c-inputButton" type="image" name="savedok"' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/savedok.gif','') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" alt="" />';
 
@@ -1291,7 +1275,7 @@ class SC_db_layout {
 	 *
 	 * @return	void
 	 */
-	function getNumberOfHiddenElements()	{
+	function getNumberOfHiddenElements() {
 		return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
 			'uid',
 			'tt_content',
@@ -1310,7 +1294,7 @@ class SC_db_layout {
 	 * @param	array		Parameters array, merged with global GET vars.
 	 * @return	string		URL
 	 */
-	function local_linkThisScript($params)	{
+	function local_linkThisScript($params) {
 		$params['popView']='';
 		$params['new_unique_uid']='';
 		return t3lib_div::linkThisScript($params);
@@ -1322,8 +1306,8 @@ class SC_db_layout {
 	 * @param	integer		Page id: If zero, the query will select all sys_language records from root level which are NOT hidden. If set to another value, the query will select all sys_language records that has a pages_language_overlay record on that page (and is not hidden, unless you are admin user)
 	 * @return	string		Return query string.
 	 */
-	function exec_languageQuery($id)	{
-		if ($id)	{
+	function exec_languageQuery($id) {
+		if ($id) {
 			$exQ = t3lib_BEfunc::deleteClause('pages_language_overlay') . ($GLOBALS['BE_USER']->isAdmin()?'':' AND sys_language.hidden=0');
 			return $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 							'sys_language.*',
@@ -1343,12 +1327,6 @@ class SC_db_layout {
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/layout/db_layout.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/layout/db_layout.php']);
-}
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_db_layout');

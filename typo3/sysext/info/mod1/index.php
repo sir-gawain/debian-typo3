@@ -71,7 +71,7 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 		// Access check...
 		// The page will show only if there is a valid page and if this page may be viewed by the user
 		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$this->perms_clause);
@@ -114,7 +114,7 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 			$this->doc->form = '<form action="index.php" method="post" name="webinfoForm">';
 
 			$vContent = $this->doc->getVersionSelector($this->id,1);
-			if ($vContent)	{
+			if ($vContent) {
 				$this->content.=$this->doc->section('',$vContent);
 			}
 
@@ -151,7 +151,7 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
 	}
@@ -161,7 +161,7 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 	 *
 	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
+	protected function getButtons() {
 		$buttons = array(
 			'csh' => '',
 			'view' => '',
@@ -197,14 +197,7 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 
 		return $buttons;
 	}
-
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/info/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/info/index.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_web_info_index');

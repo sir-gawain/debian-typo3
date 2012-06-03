@@ -224,16 +224,6 @@ class tslib_AdminPanel {
 	}
 
 	/**
-	 * Returns the comma-separated list of page UIDs to be published.
-	 *
-	 * @return string
-	 * @deprecated since 4.6, will be removed in 4.8
-	 */
-	public function getExtPublishList() {
-		t3lib_div::logDeprecatedFunction();
-	}
-
-	/**
 	 * Returns TRUE if admin panel module is open
 	 *
 	 * @param	string		Module key
@@ -757,9 +747,4 @@ $query . '<table class="typo3-adminPanel">' .
 		return $labelStr;
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/cms/tslib/class.tslib_adminpanel.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/cms/tslib/class.tslib_adminpanel.php']);
-}
-
 ?>

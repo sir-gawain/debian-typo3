@@ -49,7 +49,7 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 
 			// Running parent class constructor
 		parent::__construct();
@@ -64,20 +64,6 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 		$this->cli_help['examples'] = "/.../cli_dispatch.phpsh lowlevel_admin setBElock --redirect=http://url_which_explains_why.com/";
 		$this->cli_help['author'] = "Kasper Skaarhoej, (c) 2009";
 	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_admin_core() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_admin_core::__construct();
-	}
-
 
 
 
@@ -105,7 +91,7 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 
 			// Print help
 		$analysisType = (string)$this->cli_args['_DEFAULT'][1];
-		if (!$analysisType)	{
+		if (!$analysisType) {
 			$this->cli_validateArgs();
 			$this->cli_help();
 			exit;
@@ -114,7 +100,7 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 			// Analysis type:
 		switch((string)$analysisType)    {
 			case 'setBElock':
-				if (@is_file(PATH_typo3conf.'LOCK_BACKEND'))	{
+				if (@is_file(PATH_typo3conf.'LOCK_BACKEND')) {
 					$this->cli_echo("A lockfile already exists. Overwriting it... \n");
 				}
 				$lockFileContent = $this->cli_argValue('--redirect');
@@ -122,9 +108,9 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 				$this->cli_echo("Wrote lock-file to '".PATH_typo3conf."LOCK_BACKEND' with content '".$lockFileContent."'");
 			break;
 			case 'clearBElock':
-				if (@is_file(PATH_typo3conf.'LOCK_BACKEND'))	{
+				if (@is_file(PATH_typo3conf.'LOCK_BACKEND')) {
 					unlink(PATH_typo3conf.'LOCK_BACKEND');
-					if (@is_file(PATH_typo3conf.'LOCK_BACKEND')	)	{
+					if (@is_file(PATH_typo3conf.'LOCK_BACKEND')	) {
 						$this->cli_echo("ERROR: Could not remove lock file '".PATH_typo3conf."LOCK_BACKEND'!!\n",1);
 					} else {
 						$this->cli_echo("Removed lock file '".PATH_typo3conf."LOCK_BACKEND'\n");
@@ -139,12 +125,5 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 		}
 		$this->cli_echo(LF);
 	}
-
-
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/class.tx_lowlevel_admin.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/class.tx_lowlevel_admin.php']);
-}
-
 ?>

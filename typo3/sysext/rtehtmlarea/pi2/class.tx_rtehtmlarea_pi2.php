@@ -127,7 +127,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		$TSFE->initLLvars();
 		$this->language = $TSFE->lang;
 		$this->LOCAL_LANG = t3lib_div::readLLfile('EXT:' . $this->ID . '/locallang.xml', $this->language);
-		if ($this->language == 'default' || !$this->language)	{
+		if ($this->language == 'default' || !$this->language) {
 			$this->language = 'en';
 		}
 		$this->contentLanguageUid = ($row['sys_language_uid'] > 0) ? $row['sys_language_uid'] : 0;
@@ -320,8 +320,5 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 			)
 		);
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php']);
 }
 ?>

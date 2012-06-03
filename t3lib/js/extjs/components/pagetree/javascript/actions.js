@@ -470,6 +470,9 @@ TYPO3.Components.PageTree.Actions = {
 		}
 
 		if (tree.t3ContextInfo.inCopyMode) {
+				 // This is hard stuff to do. So increase the timeout for the AJAX request
+			Ext.Ajax.timeout = 3600000;
+
 			var newNode = tree.t3ContextNode = new Ext.tree.TreeNode(tree.t3ContextNode.attributes);
 			newNode.id = 'fakeNode';
 			node.insertBefore(newNode, node.childNodes[0]);
@@ -500,6 +503,9 @@ TYPO3.Components.PageTree.Actions = {
 		}
 
 		if (tree.t3ContextInfo.inCopyMode) {
+				// This is hard stuff to do. So increase the timeout for the AJAX request
+			Ext.Ajax.timeout = 3600000;
+
 			var newNode = tree.t3ContextNode = new Ext.tree.TreeNode(tree.t3ContextNode.attributes);
 			newNode.id = 'fakeNode';
 			node.parentNode.insertBefore(newNode, node.nextSibling);
@@ -706,6 +712,14 @@ TYPO3.Components.PageTree.Actions = {
 		node.select();
 		if (tree.stateHash) {
 			tree.stateHash.lastSelectedNode = node.id;
+		} else {
+			TYPO3.Components.PageTree.Commands.addRootlineOfNodeToStateHash(
+				TYPO3.Backend.NavigationContainer.PageTree.mainTree.stateId,
+				node.attributes.nodeData.id, function(stateHash) {
+					TYPO3.Backend.NavigationContainer.PageTree.mainTree.stateHash = stateHash;
+					TYPO3.Backend.NavigationContainer.PageTree.mainTree.refreshTree();
+				}
+			);
 		}
 
 		fsMod.recentIds['web'] = node.attributes.nodeData.id;

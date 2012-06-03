@@ -204,7 +204,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				$editActionLink = '<a class="edit" href="' . $link . '">' .
 						'<img class="icon"' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif') . ' title="' . $GLOBALS['LANG']->getLL('edit-sys_action') . '" alt="" />' .
 							$GLOBALS['LANG']->getLL('edit-sys_action') .
-				 		'</a>';
+						'</a>';
 			}
 
 			$actionList[] = array(
@@ -251,10 +251,10 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			$link = t3lib_div::getIndpEnv('TYPO3_REQUEST_DIR') . $GLOBALS['BACK_PATH'] . 'alt_doc.php?returnUrl=' . $returnUrl. '&edit[sys_action][0]=new';
 
 			$content .= '<br />
-						 <a href="' . $link . '" title="' . $GLOBALS['LANG']->getLL('new-sys_action') . '">' .
+						<a href="' . $link . '" title="' . $GLOBALS['LANG']->getLL('new-sys_action') . '">' .
 							'<img class="icon"' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/new_record.gif') . ' title="' . $GLOBALS['LANG']->getLL('new-sys_action') . '" alt="" /> ' .
 							$GLOBALS['LANG']->getLL('new-sys_action') .
-						 '</a>';
+						'</a>';
 		}
 
 		return $content;
@@ -329,7 +329,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 					$GLOBALS['LANG']->getLL('success'),
 					t3lib_FlashMessage::OK
 				);
-				$content .= $flashMessage->render() . '<br />' ;
+				$content .= $flashMessage->render() . '<br />';
 			}
 
 		}
@@ -951,7 +951,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			$dblist->counter++;
 			$dblist->MOD_MENU = array('bigControlPanel' => '', 'clipBoard' => '', 'localization' => '');
 			$dblist->modTSconfig = $this->taskObject->modTSconfig;
-			$dblist->dontShowClipControlPanels = $CLIENT['FORMSTYLE'] && !$this->taskObject->MOD_SETTINGS['bigControlPanel'] && $dblist->clipObj->current=='normal' && !$GLOBALS['BE_USER']->uc['disableCMlayers'] && !$this->modTSconfig['properties']['showClipControlPanelsDespiteOfCMlayers'];
+			$dblist->dontShowClipControlPanels = $CLIENT['FORMSTYLE'] && !$this->taskObject->MOD_SETTINGS['bigControlPanel'] && $dblist->clipObj->current=='normal' && !$this->modTSconfig['properties']['showClipControlPanelsDespiteOfCMlayers'];
 
 				// Initialize the listing object, dblist, for rendering the list:
 			$this->pointer = t3lib_utility_Math::forceIntegerInRange(t3lib_div::_GP('pointer'), 0, 100000);
@@ -1048,12 +1048,5 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 
 		return $content;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sys_action/task/class.tx_sysaction_task.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sys_action/task/class.tx_sysaction_task.php']);
-}
-
 ?>

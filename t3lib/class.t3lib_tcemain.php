@@ -166,6 +166,7 @@ class t3lib_TCEmain {
 	 * @var t3lib_basicFileFunctions
 	 */
 	var $fileFunc; // For "singleTon" file-manipulation object
+
 	var $checkValue_currentRecord = array(); // Set to "currentRecord" during checking of values.
 	var $autoVersioningUpdate = FALSE; // A signal flag used to tell file processing that autoversioning has happend and hence certain action should be applied.
 
@@ -448,7 +449,7 @@ class t3lib_TCEmain {
 				   - table is NOT readOnly
 				   - the table is set with content in the data-array (if not, there's nothing to process...)
 				   - permissions for tableaccess OK
-			   */
+			*/
 			$modifyAccessList = $this->checkModifyAccessList($table);
 			if (!$modifyAccessList) {
 				$id = 0;
@@ -749,8 +750,8 @@ class t3lib_TCEmain {
 															 *		 but you can easily translate it to the real uid of the inserted record using the $this->substNEWwithIDs array.
 															 */
 							$this->hook_processDatamap_afterDatabaseOperations($hookObjectsArr, $status, $table, $id, $fieldArray);
-						} // if ($recordAccess)	{
-					} // if (is_array($incomingFieldArray))	{
+						} // if ($recordAccess) {
+					} // if (is_array($incomingFieldArray)) {
 				}
 			}
 		}
@@ -872,7 +873,7 @@ class t3lib_TCEmain {
 			   - If the field is nothing of the above and the field is configured in TCA, the fieldvalues are evaluated by ->checkValue
 
 			   If everything is OK, the field is entered into $fieldArray[]
-		   */
+		*/
 		foreach ($incomingFieldArray as $field => $fieldValue) {
 			if (!in_array($table . '-' . $field, $this->exclude_array) && !$this->data_disableFields[$table][$id][$field]) { // The field must be editable.
 
@@ -1022,7 +1023,7 @@ class t3lib_TCEmain {
 							$table,
 							'uid=' . intval($id),
 							array(
-								 $eFile['statusField'] => $eFile['relEditFile'] . ' updated ' . date('d-m-Y H:i:s') . ', bytes ' . strlen($mixedRec[$eFile['contentField']])
+								$eFile['statusField'] => $eFile['relEditFile'] . ' updated ' . date('d-m-Y H:i:s') . ', bytes ' . strlen($mixedRec[$eFile['contentField']])
 							)
 						);
 					}
@@ -1070,7 +1071,6 @@ class t3lib_TCEmain {
 				$this->log($table, $id, 5, 0, 1, "You cannot change the 'doktype' of page '%s' to the desired value.", 1, array($propArr['header']), $propArr['event_pid']);
 				return $res;
 			}
-			;
 			if ($status == 'update') {
 					// This checks 1) if we should check for disallowed tables and 2) if there are records from disallowed tables on the current page
 				$onlyAllowedTables = (isset($GLOBALS['PAGES_TYPES'][$value]['onlyAllowedTables'])
@@ -1320,6 +1320,8 @@ class t3lib_TCEmain {
 			// This could be a good spot for parsing the array through a validation-function which checks if the values are alright (except that database references are not in their final form - but that is the point, isn't it?)
 			// NOTE!!! Must check max-items of files before the later check because that check would just leave out filenames if there are too many!!
 
+		$valueArray = $this->applyFiltersToValues($tcaFieldConf, $valueArray);
+
 			// Checking for select / authMode, removing elements from $valueArray if any of them is not allowed!
 		if ($tcaFieldConf['type'] == 'select' && $tcaFieldConf['authMode']) {
 			$preCount = count($valueArray);
@@ -1382,6 +1384,36 @@ class t3lib_TCEmain {
 		}
 
 		return $res;
+	}
+
+	/**
+	 * Applies the filter methods from a column's TCA configuration to a value array.
+	 *
+	 * @param array $tcaFieldConfiguration
+	 * @param array $values
+	 * @return array|mixed
+	 * @throws RuntimeException
+	 */
+	protected function applyFiltersToValues(array $tcaFieldConfiguration, array $values) {
+		if (!is_array($tcaFieldConfiguration['filter'])) {
+			return $values;
+		}
+
+		foreach ($tcaFieldConfiguration['filter'] as $filter) {
+			if (!$filter['userFunc']) {
+				continue;
+			}
+
+			$parameters = $filter['parameters'] ? $filter['parameters'] : array();
+			$parameters['values'] = $values;
+			$parameters['tcaFieldConfig'] = $tcaFieldConfiguration;
+			$values = t3lib_div::callUserFunction($filter['userFunc'], $parameters, $this);
+
+			if (!is_array($values)) {
+				throw new RuntimeException('Failed calling filter userFunc.', 1336051942);
+			}
+		}
+		return $values;
 	}
 
 	/**
@@ -1500,12 +1532,20 @@ class t3lib_TCEmain {
 
 					// Traverse the submitted values:
 				foreach ($valueArray as $key => $theFile) {
-						// NEW FILES? If the value contains '/' it indicates, that the file is new and should be added to the uploadsdir (whether its absolute or relative does not matter here)
+						// Init:
+					$maxSize = intval($tcaFieldConf['max_size']);
+					$theDestFile = ''; // Must be cleared. Else a faulty fileref may be inserted if the below code returns an error!
+
+						// a FAL file was added, now resolve the file object and get the absolute path
+						// @todo in future versions this needs to be modified to handle FAL objects natively
+					if (t3lib_utility_Math::canBeInterpretedAsInteger($theFile)) {
+						$fileObject = t3lib_file_Factory::getInstance()->getFileObject($theFile);
+						$theFile = $fileObject->getForLocalProcessing(FALSE);
+					}
+
+						// NEW FILES? If the value contains '/' it indicates, that the file
+						// is new and should be added to the uploadsdir (whether its absolute or relative does not matter here)
 					if (strstr(t3lib_div::fixWindowsFilePath($theFile), '/')) {
-							// Init:
-						$maxSize = intval($tcaFieldConf['max_size']);
-						$cmd = '';
-						$theDestFile = ''; // Must be cleared. Else a faulty fileref may be inserted if the below code returns an error!
 
 							// Check various things before copying file:
 						if (@is_dir($dest) && (@is_file($theFile) || @is_uploaded_file($theFile))) { // File and destination must exist
@@ -1561,7 +1601,8 @@ class t3lib_TCEmain {
 							$this->log($table, $id, 5, 0, 1, 'The destination (%s) or the source file (%s) does not exist. (%s)', 14, array($dest, $theFile, $recFID), $propArr['event_pid']);
 						}
 
-							// If the destination file was created, we will set the new filename in the value array, otherwise unset the entry in the value array!
+							// If the destination file was created, we will set the new filename in
+							// the value array, otherwise unset the entry in the value array!
 						if (@is_file($theDestFile)) {
 							$info = t3lib_div::split_fileref($theDestFile);
 							$valueArray[$key] = $info['file']; // The value is set to the new filename
@@ -1605,9 +1646,14 @@ class t3lib_TCEmain {
 					$propArr = $this->getRecordProperties($table, $id); // For logging..
 					foreach ($valueArray as &$theFile) {
 
-							// if alernative File Path is set for the file, then it was an import
-						if ($this->alternativeFilePath[$theFile]) {
+							// FAL handling: it's a UID, thus it is resolved to the absolute path
+						if (t3lib_utility_Math::canBeInterpretedAsInteger($theFile)) {
+							$fileObject = t3lib_file_Factory::getInstance()->getFileObject($theFile);
+							$theFile = $fileObject->getForLocalProcessing(FALSE);
+						}
 
+						if ($this->alternativeFilePath[$theFile]) {
+								// if alernative File Path is set for the file, then it was an import
 								// don't import the file if it already exists
 							if (@is_file(PATH_site . $this->alternativeFilePath[$theFile])) {
 								$theFile = PATH_site . $this->alternativeFilePath[$theFile];
@@ -2358,6 +2404,8 @@ class t3lib_TCEmain {
 		$newValue = '';
 		$foreignTable = $tcaFieldConf['foreign_table'];
 
+		$valueArray = $this->applyFiltersToValues($tcaFieldConf, $valueArray);
+
 		/*
 		 * Fetch the related child records by using t3lib_loadDBGroup:
 		 * @var $dbAnalysis t3lib_loadDBGroup
@@ -2567,17 +2615,6 @@ class t3lib_TCEmain {
 			// Only copy if the table is defined in $GLOBALS['TCA'], a uid is given and the record wasn't copied before:
 		if ($GLOBALS['TCA'][$table] && $uid && !$this->isRecordCopied($table, $uid)) {
 			t3lib_div::loadTCA($table);
-			/*
-				   // In case the record to be moved turns out to be an offline version, we have to find the live version and work on that one (this case happens for pages with "branch" versioning type)
-			   if ($lookForLiveVersion = t3lib_BEfunc::getLiveVersionOfRecord($table,$uid,'uid'))	{
-				   $uid = $lookForLiveVersion['uid'];
-			   }
-				   // Get workspace version of the source record, if any: Then we will copy workspace version instead:
-			   if ($WSversion = t3lib_BEfunc::getWorkspaceVersionOfRecord($this->BE_USER->workspace, $table, $uid, 'uid,t3ver_oid'))	{
-				   $uid = $WSversion['uid'];
-			   }
-				   // Now, the $uid is the actual record we will copy while $origUid is the record we asked to get copied - but that could be a live version.
-   */
 			if ($this->doesRecordExist($table, $uid, 'show')) { // This checks if the record can be selected which is all that a copy action requires.
 				$fullLanguageCheckNeeded = ($table != 'pages');
 				if (($language > 0 && $this->BE_USER->checkLanguageAccess($language)) ||
@@ -3224,7 +3261,7 @@ class t3lib_TCEmain {
 							$pI = pathinfo($rec['ref_string']);
 							$copyDestName = dirname($origDestName) . '/RTEmagicC_' . substr(basename($origDestName), 10) . '.' . $pI['extension'];
 							if (!@is_file($copyDestName) && !@is_file($origDestName)
-															  && $origDestName === t3lib_div::getFileAbsFileName($origDestName) && $copyDestName === t3lib_div::getFileAbsFileName($copyDestName)) {
+															&& $origDestName === t3lib_div::getFileAbsFileName($origDestName) && $copyDestName === t3lib_div::getFileAbsFileName($copyDestName)) {
 
 									// Making copies:
 								t3lib_div::upload_copy_move(PATH_site . $fileInfo['original'], $origDestName);
@@ -3694,6 +3731,10 @@ class t3lib_TCEmain {
 											// Set override values:
 										$overrideValues[$GLOBALS['TCA'][$Ttable]['ctrl']['languageField']] = $langRec['uid'];
 										$overrideValues[$GLOBALS['TCA'][$Ttable]['ctrl']['transOrigPointerField']] = $uid;
+											// Copy the type (if defined in both tables) from the original record so that translation has same type as original record
+										if (isset($GLOBALS['TCA'][$table]['ctrl']['type']) && isset($GLOBALS['TCA'][$Ttable]['ctrl']['type'])) {
+											$overrideValues[$GLOBALS['TCA'][$Ttable]['ctrl']['type']] = $row[$GLOBALS['TCA'][$table]['ctrl']['type']];
+										}
 
 											// Set exclude Fields:
 										foreach ($GLOBALS['TCA'][$Ttable]['columns'] as $fN => $fCfg) {
@@ -4072,14 +4113,14 @@ class t3lib_TCEmain {
 									"Record '%s' (%s) was deleted from page '%s' (%s)";
 						}
 						$this->log($table, $uid, $state, 0, 0,
-								   $message, 0,
-								   array(
+								$message, 0,
+								array(
 										$propArr['header'],
 										$table . ':' . $uid,
 										$pagePropArr['header'],
 										$propArr['pid']
-								   ),
-								   $propArr['event_pid']);
+								),
+								$propArr['event_pid']);
 
 					} else {
 						$this->log($table, $uid, $state, 0, 100, $GLOBALS['TYPO3_DB']->sql_error());
@@ -5875,21 +5916,22 @@ class t3lib_TCEmain {
 		$previousLocalizedRecordUid = $uid;
 		if ($GLOBALS['TCA'][$table] && $GLOBALS['TCA'][$table]['ctrl']['sortby']) {
 			$sortRow = $GLOBALS['TCA'][$table]['ctrl']['sortby'];
+			$select = $sortRow . ',pid,uid';
 				// For content elements, we also need the colPos
 			if ($table === 'tt_content') {
-				$sortRow .= ',colPos';
+				$select .= ',colPos';
 			}
 				// Get the sort value of the default language record
-			$row = t3lib_BEfunc::getRecord($table, $uid, $sortRow . ',pid,uid');
+			$row = t3lib_BEfunc::getRecord($table, $uid, $select);
 			if (is_array($row)) {
 					// Find the previous record in default language on the same page
 				$where = 'pid=' . intval($pid) . ' AND ' . 'sys_language_uid=0' . ' AND ' . $sortRow . '<' . intval($row[$sortRow]);
 
 					// Respect the colPos for content elements
 				if ($table === 'tt_content') {
-					$where .= ' AND colPos=' . $row['colPos'];
+					$where .= ' AND colPos=' . intval($row['colPos']);
 				}
-				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($sortRow . ',pid,uid', $table, $where . $this->deleteClause($table), '', $sortRow . ' DESC', '1');
+				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($select, $table, $where . $this->deleteClause($table), '', $sortRow . ' DESC', '1');
 					// If there is an element, find its localized record in specified localization language
 				if ($previousRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					$previousLocalizedRecord = t3lib_BEfunc::getRecordLocalization($table, $previousRow['uid'], $language);
@@ -6035,7 +6077,7 @@ class t3lib_TCEmain {
 				if (
 					!$GLOBALS['TCA'][$table]['columns'][$col]['config']['MM'] && // Do not unset MM relation fields, since equality of the MM count doesn't always mean that relations haven't changed.
 					(!strcmp($val, $currentRecord[$col]) || // Unset fields which matched exactly.
-					 ($cRecTypes[$col] == 'int' && $currentRecord[$col] == 0 && !strcmp($val, '')) // Now, a situation where TYPO3 tries to put an empty string into an integer field, we should not strcmp the integer-zero and '', but rather accept them to be similar.
+					($cRecTypes[$col] == 'int' && $currentRecord[$col] == 0 && !strcmp($val, '')) // Now, a situation where TYPO3 tries to put an empty string into an integer field, we should not strcmp the integer-zero and '', but rather accept them to be similar.
 					)
 				) {
 					unset($fieldArray[$col]);
@@ -6168,7 +6210,6 @@ class t3lib_TCEmain {
 	 */
 	function getTableEntries($table, $TSconfig) {
 		$tA = is_array($TSconfig['table.'][$table . '.']) ? $TSconfig['table.'][$table . '.'] : array();
-		;
 		$dA = is_array($TSconfig['default.']) ? $TSconfig['default.'] : array();
 		return t3lib_div::array_merge_recursive_overrule($dA, $tA);
 	}
@@ -6332,7 +6373,7 @@ class t3lib_TCEmain {
 			foreach ($GLOBALS['TCA'][$table]['columns'] as $field => $configArr) {
 				if ($configArr['config']['type'] == 'group' &&
 					($configArr['config']['internal_type'] == 'file' ||
-					 $configArr['config']['internal_type'] == 'file_reference')) {
+					$configArr['config']['internal_type'] == 'file_reference')) {
 					$listArr[] = $field;
 				}
 			}
@@ -6712,8 +6753,7 @@ class t3lib_TCEmain {
 	 * Note: The following cache_* are intentionally not cleared by
 	 * $cacheCmd='all':
 	 *
-	 * - cache_md5params:	Clearing this table would destroy all simulateStatic
-	 *						 URLs, simulates file name and RDCT redirects.
+	 * - cache_md5params:	RDCT redirects.
 	 * - cache_imagesizes:	Clearing this table would cause a lot of unneeded
 	 *						 Imagemagick calls because the size informations have
 	 *						 to be fetched again after clearing.
@@ -7173,10 +7213,4 @@ class t3lib_TCEmain {
 		return $elements;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tcemain.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tcemain.php']);
-}
-
 ?>

@@ -330,7 +330,7 @@ class tslib_cObj {
 
 
 		// internal
-	var $INT_include = 0; // Is set to 1 if the instance of this cObj is executed from a PHP_SCRIPT_INT -include script (see pagegen, bottom of document)
+	var $INT_include = 0; // Is set to 1 if the instance of this cObj is executed from a *_INT plugin (see pagegen, bottom of document)
 	var $checkPid_cache = array(); // This is used by checkPid, that checks if pages are accessible. The $checkPid_cache['page_uid'] is set TRUE or FALSE upon this check featuring a caching function for the next request.
 	var $checkPid_badDoktypeList = '255';
 	var $lastTypoLinkUrl = ''; // This will be set by typoLink() to the url of the most recent link created.
@@ -346,6 +346,11 @@ class tslib_cObj {
 	 * @var array with members of tslib_content_abstract
 	 */
 	protected $contentObjects = array();
+
+	/**
+	 * @var t3lib_file_File Current file objects (during iterations over files)
+	 */
+	protected $currentFile = NULL;
 
 	/**
 	 * Set to TRUE by doConvertToUserIntObject() if USER object wants to become USER_INT
@@ -384,6 +389,7 @@ class tslib_cObj {
 	 */
 	function start($data, $table = '') {
 		global $TYPO3_CONF_VARS;
+		t3lib_file_Service_BackwardsCompatibility_TslibContentAdapterService::modifyDBRow($data, $table);
 		$this->data = $data;
 		$this->table = $table;
 		$this->currentRecord = $table ? $table . ':' . $this->data['uid'] : '';
@@ -424,6 +430,15 @@ class tslib_cObj {
 				$postInitializationProcessor->postProcessContentObjectInitialization($this);
 			}
 		}
+	}
+
+	/**
+	 * Returns the current table
+	 *
+	 * @return string
+	 */
+	public function getCurrentTable() {
+		return $this->table;
 	}
 
 	/**
@@ -627,7 +642,6 @@ class tslib_cObj {
 	 */
 	public function getContentObject($name) {
 		$classMapping = array(
-			'HTML' => 'Html',
 			'TEXT' => 'Text',
 			'CASE' => 'Case',
 			'CLEARGIF' => 'ClearGif',
@@ -637,6 +651,7 @@ class tslib_cObj {
 			'USER' => 'User',
 			'USER_INT' => 'UserInternal',
 			'FILE' => 'File',
+			'FILES' => 'Files',
 			'IMAGE' => 'Image',
 			'IMG_RESOURCE' => 'ImageResource',
 			'IMGTEXT' => 'ImageText',
@@ -652,9 +667,6 @@ class tslib_cObj {
 			'RESTORE_REGISTER' => 'RestoreRegister',
 			'FORM' => 'Form',
 			'SEARCHRESULT' => 'SearchResult',
-			'PHP_SCRIPT' => 'PhpScript',
-			'PHP_SCRIPT_INT' => 'PhpScriptInternal',
-			'PHP_SCRIPT_EXT' => 'PhpScriptExternal',
 			'TEMPLATE' => 'Template',
 			'FLUIDTEMPLATE' => 'FluidTemplate',
 			'MULTIMEDIA' => 'Multimedia',
@@ -689,9 +701,11 @@ class tslib_cObj {
 	 *
 	 * @param	array		array of TypoScript properties
 	 * @return	string		Output
+	 * @deprecated since 6.0, will be removed in two versions
 	 */
 	function HTML($conf) {
-		return $this->getContentObject('HTML')->render($conf);
+		t3lib_div::logDeprecatedFunction();
+		return '';
 	}
 
 	/**
@@ -801,6 +815,16 @@ class tslib_cObj {
 	}
 
 	/**
+	 * Rendering the cObject, FILES
+	 *
+	 * @param	array		array of TypoScript properties
+	 * @return	string		Output
+	 */
+	function FILES($conf) {
+		return $this->getContentObject('FILES')->render($conf);
+	}
+
+	/**
 	 * Rendering the cObject, IMAGE
 	 *
 	 * @param	array		array of TypoScript properties
@@ -839,7 +863,7 @@ class tslib_cObj {
 	 * @return	string		Output
 	 */
 	function CONTENT($conf) {
- 		return $this->getContentObject('CONTENT')->render($conf);
+		return $this->getContentObject('CONTENT')->render($conf);
 	}
 
 	/**
@@ -955,13 +979,11 @@ class tslib_cObj {
 	 * @param	array		array of TypoScript properties
 	 * @param	string		If "INT", then rendering "PHP_SCRIPT_INT"; If "EXT", then rendering "PHP_SCRIPT_EXT"; Default is rendering "PHP_SCRIPT" (cached)
 	 * @return	string		Output
+	 * @deprecated and unused since 6.0, will be removed two versions later
 	 */
 	function PHP_SCRIPT($conf, $ext = '') {
-		if ($ext === 'INT' || $ext === 'EXT') {
-			return $this->getContentObject('PHP_SCRIPT_INT')->render($conf);
-		} else {
-			return $this->getContentObject('PHP_SCRIPT')->render($conf);
-		}
+		t3lib_div::logDeprecatedFunction();
+		return '';
 	}
 
 	/**
@@ -1766,7 +1788,7 @@ class tslib_cObj {
 	 * @see t3lib_parsehtml::substituteMarkerAndSubpartArrayRecursive()
 	 */
 	public function substituteMarkerAndSubpartArrayRecursive($content, array $markersAndSubparts, $wrap = '', $uppercase = FALSE,
-															 $deleteUnused = FALSE) {
+															$deleteUnused = FALSE) {
 		return t3lib_parsehtml::substituteMarkerAndSubpartArrayRecursive(
 			$content, $markersAndSubparts, $wrap, $uppercase, $deleteUnused
 		);
@@ -1809,6 +1831,24 @@ class tslib_cObj {
 		return $markContentArray;
 	}
 
+	/**
+	 * Sets the current file object during iterations over files.
+	 *
+	 * @param t3lib_file_File $fileObject The file object.
+	 */
+	public function setCurrentFile($fileObject) {
+		$this->currentFile = $fileObject;
+	}
+
+	/**
+	 * Gets the current file object during iterations over files.
+	 *
+	 * @return t3lib_file_File The current file object.
+	 */
+	public function getCurrentFile() {
+		return $this->currentFile;
+	}
+
 	/***********************************************
 	 *
 	 * "stdWrap" + sub functions
@@ -1832,19 +1872,15 @@ class tslib_cObj {
 				if (is_callable(array($hookObject, 'stdWrapPreProcess'))) {
 					$conf['stdWrapPreProcess'] = 1;
 				}
-				;
 				if (is_callable(array($hookObject, 'stdWrapOverride'))) {
 					$conf['stdWrapOverride'] = 1;
 				}
-				;
 				if (is_callable(array($hookObject, 'stdWrapProcess'))) {
 					$conf['stdWrapProcess'] = 1;
 				}
-				;
 				if (is_callable(array($hookObject, 'stdWrapPostProcess'))) {
 					$conf['stdWrapPostProcess'] = 1;
 				}
-				;
 			}
 		}
 
@@ -3167,41 +3203,39 @@ class tslib_cObj {
 	 */
 	public function stdWrap_cacheStore($content = '', $conf = array()) {
 		if (!empty($conf['cache.']['key'])) {
-			if (defined('TYPO3_UseCachingFramework') && TYPO3_UseCachingFramework) {
-				$cacheFrontend = $GLOBALS['typo3CacheManager']->getCache('cache_hash'); /* @var $cacheFrontend t3lib_cache_frontend_VariableFrontend */
-				if ($cacheFrontend) {
+			$cacheFrontend = $GLOBALS['typo3CacheManager']->getCache('cache_hash'); /* @var $cacheFrontend t3lib_cache_frontend_VariableFrontend */
+			if ($cacheFrontend) {
 
-					$tags = !empty($conf['cache.']['tags']) ? t3lib_div::trimExplode(',', $conf['cache.']['tags']) : array();
+				$tags = !empty($conf['cache.']['tags']) ? t3lib_div::trimExplode(',', $conf['cache.']['tags']) : array();
 
-					if (strtolower($conf['cache.']['lifetime']) == 'unlimited') {
-						$lifetime = 0; // unlimited
-					} elseif (strtolower($conf['cache.']['lifetime']) == 'default') {
-						$lifetime = NULL; // default lifetime
-					} elseif (intval($conf['cache.']['lifetime']) > 0) {
-						$lifetime = intval($conf['cache.']['lifetime']); // lifetime in seconds
-					} else {
-						$lifetime = NULL; // default lifetime
-					}
-
-					if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['stdWrap_cacheStore'])) {
-						foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['stdWrap_cacheStore'] as $_funcRef) {
-							$params = array(
-								'key' => $conf['cache.']['key'],
-								'content' => $content,
-								'lifetime' => $lifetime,
-								'tags' => $tags
-							);
-							t3lib_div::callUserFunction($_funcRef, $params, $this);
-						}
-					}
-
-					$cacheFrontend->set(
-						$conf['cache.']['key'],
-						$content,
-						$tags,
-						$lifetime
-					);
+				if (strtolower($conf['cache.']['lifetime']) == 'unlimited') {
+					$lifetime = 0; // unlimited
+				} elseif (strtolower($conf['cache.']['lifetime']) == 'default') {
+					$lifetime = NULL; // default lifetime
+				} elseif (intval($conf['cache.']['lifetime']) > 0) {
+					$lifetime = intval($conf['cache.']['lifetime']); // lifetime in seconds
+				} else {
+					$lifetime = NULL; // default lifetime
 				}
+
+				if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['stdWrap_cacheStore'])) {
+					foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['stdWrap_cacheStore'] as $_funcRef) {
+						$params = array(
+							'key' => $conf['cache.']['key'],
+							'content' => $content,
+							'lifetime' => $lifetime,
+							'tags' => $tags
+						);
+						t3lib_div::callUserFunction($_funcRef, $params, $this);
+					}
+				}
+
+				$cacheFrontend->set(
+					$conf['cache.']['key'],
+					$content,
+					$tags,
+					$lifetime
+				);
 			}
 		}
 		return $content;
@@ -3666,17 +3700,23 @@ class tslib_cObj {
 				</?(?:" . $tags . ")+			# opening tag ('<tag') or closing tag ('</tag')
 				(?:
 					(?:
-						\s+\w+					# EITHER spaces, followed by word characters (attribute names)
 						(?:
-							\s*=?\s*			# equals
-							(?>
-								\".*?\"			# attribute values in double-quotes
-								|
-								'.*?'			# attribute values in single-quotes
-								|
-								[^'\">\s]+		# plain attribute values
-							)
-						)?
+							\s+\w+				# EITHER spaces, followed by word characters (attribute names)
+							(?:
+								\s*=?\s*		# equals
+								(?>
+									\".*?\"		# attribute values in double-quotes
+									|
+									'.*?'		# attribute values in single-quotes
+									|
+									[^'\">\s]+	# plain attribute values
+								)
+							)?
+						)
+						|						# OR a single dash (for TYPO3 link tag)
+						(?:
+							\s+-
+						)
 					)+\s*
 					|							# OR only spaces
 					\s*
@@ -5061,7 +5101,7 @@ class tslib_cObj {
 	 *
 	 * @param	string		A "imgResource" TypoScript data type. Either a TypoScript file resource or the string GIFBUILDER. See description above.
 	 * @param	array		TypoScript properties for the imgResource type
-	 * @return	array		Returns info-array. info[origFile] = original file.
+	 * @return	array		Returns info-array. info[origFile] = original file. [0]/[1] is w/h, [2] is file extension and [3] is the filename.
 	 * @see IMG_RESOURCE(), cImage(), tslib_gifBuilder
 	 */
 	function getImgResource($file, $fileArray) {
@@ -5077,190 +5117,97 @@ class tslib_cObj {
 					}
 					$imageResource = $gifCreator->getImageDimensions($theImage);
 				break;
-				default :
-					if ($fileArray['import.']) {
-						$ifile = $this->stdWrap('', $fileArray['import.']);
-						if ($ifile) {
-							$file = $fileArray['import'] . $ifile;
+				default:
+					if (t3lib_utility_Math::canBeInterpretedAsInteger($file)) {
+						$fileObject = t3lib_file_Factory::getInstance()->retrieveFileOrFolderObject($file);
+					} else {
+						if ($fileArray['import.']) {
+							$ifile = $this->stdWrap('', $fileArray['import.']);
+							if ($ifile) {
+								if (t3lib_utility_Math::canBeInterpretedAsInteger($ifile)) {
+									$file = $ifile;
+								} else {
+									$file = $fileArray['import'] . $ifile;
+								}
+							}
 						}
+
+							// clean ../ sections of the path and resolve to proper string. This is necessary for the Tx_File_BackwardsCompatibility_TslibContentAdapter to work.
+						$file = t3lib_div::resolveBackPath($file);
+						$fileObject = t3lib_file_Factory::getInstance()->retrieveFileOrFolderObject($file);
 					}
-					$theImage = $GLOBALS['TSFE']->tmpl->getFileName($file);
-					if ($theImage) {
-						$fileArray['width'] = isset($fileArray['width.'])
+
+					if ($fileObject instanceof t3lib_file_FileInterface) {
+						$processingConfiguration = array();
+						$processingConfiguration['width'] = isset($fileArray['width.'])
 							? $this->stdWrap($fileArray['width'], $fileArray['width.'])
 							: $fileArray['width'];
-						$fileArray['height'] = isset($fileArray['height.'])
+						$processingConfiguration['height'] = isset($fileArray['height.'])
 							? $this->stdWrap($fileArray['height'], $fileArray['height.'])
 							: $fileArray['height'];
-						$fileArray['ext'] = isset($fileArray['ext.'])
+						$processingConfiguration['fileExtension'] = isset($fileArray['ext.'])
 							? $this->stdWrap($fileArray['ext'], $fileArray['ext.'])
 							: $fileArray['ext'];
-						$fileArray['maxW'] = isset($fileArray['maxW.'])
+						$processingConfiguration['maxWidth'] = isset($fileArray['maxW.'])
 							? intval($this->stdWrap($fileArray['maxW'], $fileArray['maxW.']))
 							: intval($fileArray['maxW']);
-						$fileArray['maxH'] = isset($fileArray['maxH.'])
+						$processingConfiguration['maxHeight'] = isset($fileArray['maxH.'])
 							? intval($this->stdWrap($fileArray['maxH'], $fileArray['maxH.']))
 							: intval($fileArray['maxH']);
-						$fileArray['minW'] = isset($fileArray['minW.'])
+						$processingConfiguration['minWidth'] = isset($fileArray['minW.'])
 							? intval($this->stdWrap($fileArray['minW'], $fileArray['minW.']))
 							: intval($fileArray['minW']);
-						$fileArray['minH'] = isset($fileArray['minH.'])
+						$processingConfiguration['minHeight'] = isset($fileArray['minH.'])
 							? intval($this->stdWrap($fileArray['minH'], $fileArray['minH.']))
 							: intval($fileArray['minH']);
-						$fileArray['noScale'] = isset($fileArray['noScale.'])
+						$processingConfiguration['noScale'] = isset($fileArray['noScale.'])
 							? $this->stdWrap($fileArray['noScale'], $fileArray['noScale.'])
 							: $fileArray['noScale'];
-						$fileArray['params'] = isset($fileArray['params.'])
+						$processingConfiguration['additionalParameters'] = isset($fileArray['params.'])
 							? $this->stdWrap($fileArray['params'], $fileArray['params.'])
 							: $fileArray['params'];
-						$maskArray = $fileArray['m.'];
-						$maskImages = array();
-						if (is_array($fileArray['m.'])) { // Must render mask images and include in hash-calculating - else we cannot be sure the filename is unique for the setup!
-							$maskImages['m_mask'] = $this->getImgResource($maskArray['mask'], $maskArray['mask.']);
-							$maskImages['m_bgImg'] = $this->getImgResource($maskArray['bgImg'], $maskArray['bgImg.']);
-							$maskImages['m_bottomImg'] = $this->getImgResource($maskArray['bottomImg'], $maskArray['bottomImg.']);
-							$maskImages['m_bottomImg_mask'] = $this->getImgResource($maskArray['bottomImg_mask'], $maskArray['bottomImg_mask.']);
-						}
-						$hash = t3lib_div::shortMD5($theImage . serialize($fileArray) . serialize($maskImages));
-						if (!isset($GLOBALS['TSFE']->tmpl->fileCache[$hash])) {
-							$gifCreator = t3lib_div::makeInstance('tslib_gifbuilder');
-							$gifCreator->init();
+
+							// check if we can handle this type of file for editing
+						if (t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileObject->getExtension())) {
+							$maskArray = $fileArray['m.'];
+								// Must render mask images and include in hash-calculating
+								// - otherwise we cannot be sure the filename is unique for the setup!
+							if (is_array($maskArray)) {
+								$processingConfiguration['maskImages']['m_mask'] = $this->getImgResource($maskArray['mask'], $maskArray['mask.']);
+								$processingConfiguration['maskImages']['m_bgImg'] = $this->getImgResource($maskArray['bgImg'], $maskArray['bgImg.']);
+								$processingConfiguration['maskImages']['m_bottomImg'] = $this->getImgResource($maskArray['bottomImg'], $maskArray['bottomImg.']);
+								$processingConfiguration['maskImages']['m_bottomImg_mask'] = $this->getImgResource($maskArray['bottomImg_mask'], $maskArray['bottomImg_mask.']);
+							}
 
 							if ($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']) {
-								$filename = basename($theImage);
-									// remove extension
-								$filename = substr($filename, 0, strrpos($filename, '.'));
-								$tempFilePrefixLength = intval($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']);
-								if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
-										/** @var $t3libCsInstance t3lib_cs */
-									$t3libCsInstance = t3lib_div::makeInstance('t3lib_cs');
-									$filenamePrefix = $t3libCsInstance->substr('utf-8', $filename, 0, $tempFilePrefixLength);
-								} else {
-										// strip everything non-ascii
-									$filename = preg_replace('/[^A-Za-z0-9_-]/', '', trim($filename));
-									$filenamePrefix = substr($filename, 0, $tempFilePrefixLength);
-								}
-								$gifCreator->filenamePrefix = $filenamePrefix . '_';
-								unset($filename);
+								$processingConfiguration['useTargetFileNameAsPrefix'] = 1;
 							}
+							$processedFileObject = $fileObject->process(t3lib_file_ProcessedFile::CONTEXT_IMAGECROPSCALEMASK, $processingConfiguration);
+							$hash = $processedFileObject->calculateChecksum();
 
-							if ($fileArray['sample']) {
-								$gifCreator->scalecmd = '-sample';
-								$GLOBALS['TT']->setTSlogMessage('Sample option: Images are scaled with -sample.');
+								// store info in the TSFE template cache (kept for backwards compatibility)
+							if ($processedFileObject->isProcessed() && !isset($GLOBALS['TSFE']->tmpl->fileCache[$hash])) {
+								$GLOBALS['TSFE']->tmpl->fileCache[$hash] = array(
+									0 => $processedFileObject->getProperty('width'),
+									1 => $processedFileObject->getProperty('height'),
+									2 => $processedFileObject->getExtension(),
+									3 => $processedFileObject->getPublicUrl(),
+									'origFile' => $fileObject->getPublicUrl(),
+									'origFile_mtime' => $fileObject->getModificationTime(), // This is needed by tslib_gifbuilder, ln 100ff in order for the setup-array to create a unique filename hash.
+									'originalFile' => $fileObject,
+									'processedFile' => $processedFileObject,
+									'fileCacheHash' => $hash
+								);
 							}
-							if ($fileArray['alternativeTempPath'] && t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['FE']['allowedTempPaths'], $fileArray['alternativeTempPath'])) {
-								$gifCreator->tempPath = $fileArray['alternativeTempPath'];
-								$GLOBALS['TT']->setTSlogMessage('Set alternativeTempPath: ' . $fileArray['alternativeTempPath']);
-							}
-
-							if (!trim($fileArray['ext'])) {
-								$fileArray['ext'] = 'web';
-							}
-							$options = array();
-							if ($fileArray['maxW']) {
-								$options['maxW'] = $fileArray['maxW'];
-							}
-							if ($fileArray['maxH']) {
-								$options['maxH'] = $fileArray['maxH'];
-							}
-							if ($fileArray['minW']) {
-								$options['minW'] = $fileArray['minW'];
-							}
-							if ($fileArray['minH']) {
-								$options['minH'] = $fileArray['minH'];
-							}
-							if ($fileArray['noScale']) {
-								$options['noScale'] = $fileArray['noScale'];
-							}
-
-								// checks to see if m (the mask array) is defined
-							if (is_array($maskArray) && $GLOBALS['TYPO3_CONF_VARS']['GFX']['im']) {
-									// Filename:
-								$fI = t3lib_div::split_fileref($theImage);
-								$imgExt = (strtolower($fI['fileext']) == $gifCreator->gifExtension ? $gifCreator->gifExtension : 'jpg');
-								$dest = $gifCreator->tempPath . $hash . '.' . $imgExt;
-								if (!file_exists($dest)) { // Generate!
-									$m_mask = $maskImages['m_mask'];
-									$m_bgImg = $maskImages['m_bgImg'];
-									if ($m_mask && $m_bgImg) {
-										$negate = $GLOBALS['TYPO3_CONF_VARS']['GFX']['im_negate_mask'] ? ' -negate' : '';
-
-										$temp_ext = 'png';
-										if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_mask_temp_ext_gif']) { // If ImageMagick version 5+
-											$temp_ext = $gifCreator->gifExtension;
-										}
-
-										$tempFileInfo = $gifCreator->imageMagickConvert($theImage, $temp_ext, $fileArray['width'], $fileArray['height'], $fileArray['params'], $fileArray['frame'], $options);
-										if (is_array($tempFileInfo)) {
-											$m_bottomImg = $maskImages['m_bottomImg'];
-											if ($m_bottomImg) {
-												$m_bottomImg_mask = $maskImages['m_bottomImg_mask'];
-											}
-												//	Scaling:	****
-											$tempScale = array();
-											$command = '-geometry ' . $tempFileInfo[0] . 'x' . $tempFileInfo[1] . '!';
-											$command = $this->modifyImageMagickStripProfileParameters($command, $fileArray);
-											$tmpStr = $gifCreator->randomName();
-
-												//	m_mask
-											$tempScale['m_mask'] = $tmpStr . '_mask.' . $temp_ext;
-											$gifCreator->imageMagickExec($m_mask[3], $tempScale['m_mask'], $command . $negate);
-												//	m_bgImg
-											$tempScale['m_bgImg'] = $tmpStr . '_bgImg.' . trim($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_mask_temp_ext_noloss']);
-											$gifCreator->imageMagickExec($m_bgImg[3], $tempScale['m_bgImg'], $command);
-
-												//	m_bottomImg / m_bottomImg_mask
-											if ($m_bottomImg && $m_bottomImg_mask) {
-												$tempScale['m_bottomImg'] = $tmpStr . '_bottomImg.' . $temp_ext;
-												$gifCreator->imageMagickExec($m_bottomImg[3], $tempScale['m_bottomImg'], $command);
-												$tempScale['m_bottomImg_mask'] = $tmpStr . '_bottomImg_mask.' . $temp_ext;
-												$gifCreator->imageMagickExec($m_bottomImg_mask[3], $tempScale['m_bottomImg_mask'], $command . $negate);
-
-													// BEGIN combining:
-													// The image onto the background
-												$gifCreator->combineExec($tempScale['m_bgImg'], $tempScale['m_bottomImg'], $tempScale['m_bottomImg_mask'], $tempScale['m_bgImg']);
-											}
-												// The image onto the background
-											$gifCreator->combineExec($tempScale['m_bgImg'], $tempFileInfo[3], $tempScale['m_mask'], $dest);
-												// Unlink the temp-images...
-											foreach ($tempScale as $file) {
-												if (@is_file($file)) {
-													unlink($file);
-												}
-											}
-										}
-									}
-								}
-									// Finish off
-								if (($fileArray['reduceColors'] || ($imgExt == 'png' && !$gifCreator->png_truecolor)) && is_file($dest)) {
-									$reduced = $gifCreator->IMreduceColors($dest, t3lib_utility_Math::forceIntegerInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
-									if (is_file($reduced)) {
-										unlink($dest);
-										rename($reduced, $dest);
-									}
-								}
-								$GLOBALS['TSFE']->tmpl->fileCache[$hash] = $gifCreator->getImageDimensions($dest);
-							} else { // Normal situation:
-								$fileArray['params'] = $this->modifyImageMagickStripProfileParameters($fileArray['params'], $fileArray);
-								$GLOBALS['TSFE']->tmpl->fileCache[$hash] = $gifCreator->imageMagickConvert($theImage, $fileArray['ext'], $fileArray['width'], $fileArray['height'], $fileArray['params'], $fileArray['frame'], $options);
-								if (($fileArray['reduceColors'] || ($fileArray['ext'] == 'png' && !$gifCreator->png_truecolor)) && is_file($GLOBALS['TSFE']->tmpl->fileCache[$hash][3])) {
-									$reduced = $gifCreator->IMreduceColors($GLOBALS['TSFE']->tmpl->fileCache[$hash][3], t3lib_utility_Math::forceIntegerInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
-									if (is_file($reduced)) {
-										unlink($GLOBALS['TSFE']->tmpl->fileCache[$hash][3]);
-										rename($reduced, $GLOBALS['TSFE']->tmpl->fileCache[$hash][3]);
-									}
-								}
-							}
-							$GLOBALS['TSFE']->tmpl->fileCache[$hash]['origFile'] = $theImage;
-							$GLOBALS['TSFE']->tmpl->fileCache[$hash]['origFile_mtime'] = @filemtime($theImage); // This is needed by tslib_gifbuilder, ln 100ff in order for the setup-array to create a unique filename hash.
-							$GLOBALS['TSFE']->tmpl->fileCache[$hash]['fileCacheHash'] = $hash;
+							$imageResource = $GLOBALS['TSFE']->tmpl->fileCache[$hash];
+						} else {
+							$imageResource = NULL;
 						}
-						$imageResource = $GLOBALS['TSFE']->tmpl->fileCache[$hash];
 					}
-
 				break;
 			}
 		}
+
 		$theImage = $GLOBALS['TSFE']->tmpl->getFileName($file);
 			// If image was processed by GIFBUILDER:
 			// ($imageResource indicates that it was processed the regular way)
@@ -5369,6 +5316,9 @@ class tslib_cObj {
 					case 'field' :
 						$retVal = $fieldArray[$key];
 					break;
+					case 'file' :
+						$retVal = $this->getFileDataKey($key);
+					break;
 					case 'parameters' :
 						$retVal = $this->parameters[$key];
 					break;
@@ -5467,6 +5417,77 @@ class tslib_cObj {
 		}
 
 		return $retVal;
+	}
+
+	/**
+	 * Gets file information. This is a helper function for the getData() method above, which resolves e.g.
+	 * page.10.data = file:current:title
+	 * or
+	 * page.10.data = file:17:title
+	 *
+	 * @param	string		A colon-separated key, e.g. 17:name or current:sha1, with the first part being a sys_file uid or the keyword "current" and the second part being the key of information to get from file (e.g. "title", "size", "description", etc.)
+	 * @return  The value as retrieved from the file object.
+	 */
+	protected function getFileDataKey($key) {
+		$parts = explode(':', $key);
+		$fileUidOrCurrentKeyword = $parts[0];
+		$requestedFileInformationKey = $parts[1];
+
+		if ($fileUidOrCurrentKeyword === 'current') {
+			$fileObject = $this->getCurrentFile();
+		} elseif (t3lib_utility_Math::canBeInterpretedAsInteger($fileUidOrCurrentKeyword)) {
+			/** @var t3lib_file_Factory $fileFactory */
+			$fileFactory = t3lib_div::makeInstance('t3lib_file_Factory');
+			$fileObject = $fileFactory->getFileObject($fileUidOrCurrentKeyword);
+		} else {
+			$fileObject = NULL;
+		}
+
+		if ($fileObject instanceof t3lib_file_FileInterface) {
+				// All properties of the t3lib_file_FileInterface are available here:
+			switch ($requestedFileInformationKey) {
+				case 'name':
+					return $fileObject->getName();
+					break;
+				case 'uid':
+					return $fileObject->getUid();
+					break;
+				case 'originalUid':
+					if($fileObject instanceof t3lib_file_FileReference) {
+						return $fileObject->getOriginalFile()->getUid();
+					} else {
+						return NULL;
+					}
+					break;
+				case 'size':
+					return $fileObject->getSize();
+					break;
+				case 'sha1':
+					return $fileObject->getSha1();
+					break;
+				case 'extension':
+					return $fileObject->getExtension();
+					break;
+				case 'mimetype':
+					return $fileObject->getMimeType();
+					break;
+				case 'contents':
+					return $fileObject->getContents();
+					break;
+				case 'publicUrl':
+					return $fileObject->getPublicUrl();
+					break;
+				case 'localPath':
+					return $fileObject->getForLocalProcessing();
+					break;
+				default:
+						// Generic alternative here
+					return $fileObject->getProperty($requestedFileInformationKey);
+					break;
+			}
+		} else {
+			return 'Error: no file object'; // TODO: fail silently as is common in tslib_content
+		}
 	}
 
 	/**
@@ -5604,6 +5625,8 @@ class tslib_cObj {
 	 * Generally the concept "typolink" should be used in your own applications as an API for making links to pages with parameters and more. The reason for this is that you will then automatically make links compatible with all the centralized functions for URL simulation and manipulation of parameters into hashes and more.
 	 * For many more details on the parameters and how they are intepreted, please see the link to TSref below.
 	 *
+	 * the FAL API is handled with the namespace/prefix "file:..."
+	 *
 	 * @param	string		The string (text) to link
 	 * @param	array		TypoScript configuration (see link below)
 	 * @return	string		A link-wrapped string.
@@ -5638,6 +5661,28 @@ class tslib_cObj {
 					return $linkHandlerObj->main($linktxt, $conf, $linkHandlerKeyword, $linkHandlerValue, $link_param, $this);
 				}
 			}
+
+				// Resolve FAL-api "file:UID-of-sys_file-record" and "file:combined-identifier"
+			if ($linkHandlerKeyword === 'file') {
+				try {
+					$fileOrFolderObject = t3lib_file_Factory::getInstance()->retrieveFileOrFolderObject($linkHandlerValue);
+
+						// Link to a folder or file
+					if ($fileOrFolderObject instanceof t3lib_file_ResourceInterface) {
+						$link_paramA[0] = $fileOrFolderObject->getPublicUrl();
+
+						// Not resolvable, although it started with file:...
+					} else {
+						$link_paramA[0] = NULL;
+					}
+
+				} catch (RuntimeException $e) {
+					// element wasn't found
+					$link_paramA[0] = NULL;
+				}
+
+			}
+
 
 			$link_param = trim($link_paramA[0]); // Link parameter value
 			$linkClass = trim($link_paramA[2]); // Link class
@@ -5708,7 +5753,7 @@ class tslib_cObj {
 
 					// Firsts, test if $link_param is numeric and page with such id exists. If yes, do not attempt to link to file
 				if (!t3lib_utility_Math::canBeInterpretedAsInteger($link_param) || count($GLOBALS['TSFE']->sys_page->getPage_noCheck($link_param)) == 0) {
-						// Detects if a file is found in site-root (or is a 'virtual' simulateStaticDocument file!) and if so it will be treated like a normal file.
+						// Detects if a file is found in site-root and if so it will be treated like a normal file.
 					list ($rootFileDat) = explode('?', rawurldecode($link_param));
 					$containsSlash = strstr($rootFileDat, '/');
 					$rFD_fI = pathinfo($rootFileDat);
@@ -5978,7 +6023,7 @@ class tslib_cObj {
 							}
 						}
 
-							// If target page has a different domain and the current domain's linking scheme (e.g. simulateStaticDocuments/RealURL/...) should not be used
+							// If target page has a different domain and the current domain's linking scheme (e.g. RealURL/...) should not be used
 						if (strlen($targetDomain) && $targetDomain !== $currentDomain && !$enableLinksAcrossDomains) {
 							$target = isset($conf['extTarget']) ? $conf['extTarget'] : $GLOBALS['TSFE']->extTarget;
 							if ($conf['extTarget.']) {
@@ -6186,7 +6231,7 @@ class tslib_cObj {
 					'scheme' => $matches[1],
 					'delimiter' => '://',
 					'host' => $matches[3],
-				 	'path' => $matches[4]
+					'path' => $matches[4]
 				);
 
 					// Set scheme and host if not yet part of the URL:
@@ -8057,9 +8102,4 @@ class tslib_cObj {
 		}
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_content.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_content.php']);
-}
-
 ?>

@@ -58,7 +58,7 @@ class tx_rtehtmlarea_SC_select_image {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 			// Setting alternative browsing mounts (ONLY local to browse_links.php this script so they stay "read-only")
 		$altMountPoints = trim($GLOBALS['BE_USER']->getTSConfigVal('options.folderTree.altElementBrowserMountPoints'));
 		if ($altMountPoints) {
@@ -98,13 +98,9 @@ class tx_rtehtmlarea_SC_select_image {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod4/select_image.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod4/select_image.php']);
 }
 
 	// Make instance:

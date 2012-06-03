@@ -374,6 +374,7 @@ class t3lib_TCEforms_inline {
 				$overruleTypesArray = isset($config['foreign_types']) ? $config['foreign_types'] : array();
 				$fields = $this->renderMainFields($foreign_table, $rec, $overruleTypesArray);
 				$fields = $this->wrapFormsSection($fields);
+
 					// Replace returnUrl in Wizard-Code, if this is an AJAX call
 				$ajaxArguments = t3lib_div::_GP('ajax');
 				if (isset($ajaxArguments[2]) && trim($ajaxArguments[2]) != '') {
@@ -394,6 +395,11 @@ class t3lib_TCEforms_inline {
 			} else {
 					// set additional field for processing for saving
 				$fields .= '<input type="hidden" name="' . $this->prependCmdFieldNames . $appendFormFieldNames . '[delete]" value="1" disabled="disabled" />';
+				if(!$isExpanded) {
+					$checked = ($rec['hidden'] == 1) ? ' checked="checked"' : '';
+					$fields .= '<input type="checkbox" name="' . $this->prependFormFieldNames . $appendFormFieldNames . '[hidden]_0" value="1"'.$checked.' />';
+					$fields .= '<input type="input" name="' . $this->prependFormFieldNames . $appendFormFieldNames . '[hidden]" value="'.$rec['hidden'].'" />';
+				}
 			}
 				// if this record should be shown collapsed
 			if (!$isExpanded) {
@@ -507,12 +513,39 @@ class t3lib_TCEforms_inline {
 			$recTitle = t3lib_BEfunc::getRecordTitle($foreign_table, $rec, TRUE);
 		}
 
+			// Renders a thumbnail for the header
+		if (!empty($config['appearance']['headerThumbnail'])) {
+			$originalRecord = t3lib_BEfunc::getRecord($foreign_table, $rec['uid']);
+
+			if (is_array($originalRecord)) {
+				$fileUid = $originalRecord[$config['appearance']['headerThumbnail']];
+				list($fileUid) = t3lib_div::intExplode(',', $fileUid);
+
+				if ($fileUid) {
+					$fileObject = t3lib_file_Factory::getInstance()->getFileObject($fileUid);
+					if ($fileObject) {
+						$imageUrl = $fileObject->process(
+							t3lib_file_ProcessedFile::CONTEXT_IMAGEPREVIEW,
+							array('width' => 64, 'height' => 64)
+						)->getPublicUrl(TRUE);
+
+						$thumbnail = '<span class="nobr"><img src="' . $imageUrl . '" alt="' . htmlspecialchars($recTitle) . '" /></span>';
+					}
+				}
+			}
+		}
+
 		$altText = t3lib_BEfunc::getRecordIconAltText($rec, $foreign_table);
 		$iconImg = t3lib_iconWorks::getSpriteIconForRecord($foreign_table, $rec, array('title' => htmlspecialchars($altText), 'id' => $objectId . '_icon'));
 		$label = '<span id="' . $objectId . '_label">' . $recTitle . '</span>';
+
 		if (!$isVirtualRecord) {
 			$iconImg = $this->wrapWithAnchor($iconImg, '#', array('onclick' => $onClick));
 			$label = $this->wrapWithAnchor($label, '#', array('onclick' => $onClick, 'style' => 'display: block;'));
+
+			if (!empty($config['appearance']['headerThumbnail'])) {
+				$thumbnail = $this->wrapWithAnchor($thumbnail, '#', array('onclick' => $onClick, 'style' => 'display: block;'));
+			}
 		}
 
 		$ctrl = $this->renderForeignRecordHeaderControl($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
@@ -522,7 +555,14 @@ class t3lib_TCEforms_inline {
 				'<table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-right: ' . $this->inlineStyles['margin-right'] . 'px;"' .
 				($this->fObj->borderStyle[2] ? ' background="' . htmlspecialchars($this->backPath . $this->fObj->borderStyle[2]) . '"' : '') .
 				($this->fObj->borderStyle[3] ? ' class="' . htmlspecialchars($this->fObj->borderStyle[3]) . '"' : '') . '>' .
-				'<tr class="class-main12"><td width="18" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td><td align="left"><strong>' . $label . '</strong></td><td align="right">' . $ctrl . '</td></tr></table>';
+				'<tr class="class-main12">' .
+					(!empty($config['appearance']['headerThumbnail']) && !empty($thumbnail)
+						?	'<td width="75" id="' . $objectId . '_thumbnailcontainer">' . $thumbnail . '</td>'
+						:	'<td width="18" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td>') .
+					'<td align="left"><strong>' . $label . '</strong></td>' .
+					'<td align="right">' . $ctrl . '</td>' .
+				'</tr>' .
+				'</table>';
 
 		return $header;
 	}
@@ -585,8 +625,8 @@ class t3lib_TCEforms_inline {
 			// "Info": (All records)
 		if ($enabledControls['info'] && !$isNewItem) {
 			$cells['info'] = '<a href="#" onclick="' . htmlspecialchars('top.launchView(\'' . $foreign_table . '\', \'' . $rec['uid'] . '\'); return false;') . '">' .
-							 t3lib_iconWorks::getSpriteIcon('status-dialog-information', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:showInfo', TRUE))) .
-							 '</a>';
+							t3lib_iconWorks::getSpriteIcon('status-dialog-information', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:showInfo', TRUE))) .
+							'</a>';
 		}
 			// If the table is NOT a read-only table, then show these links:
 		if (!$tcaTableCtrl['readOnly'] && !$isVirtualRecord) {
@@ -604,9 +644,9 @@ class t3lib_TCEforms_inline {
 					}
 					$cells['new'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '"' . $class . $style . '>' .
 									t3lib_iconWorks::getSpriteIcon('actions-' . ($isPagesTable ? 'page' : 'document') . '-new',
-																   array(
+																array(
 																		'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:new' . ($isPagesTable ? 'Page' : 'Record'), 1)
-																   )
+																)
 									) .
 									'</a>';
 				}
@@ -628,8 +668,8 @@ class t3lib_TCEforms_inline {
 				$onClick = "return inline.changeSorting('" . $nameObjectFtId . "', '-1')"; // Down
 				$style = $config['inline']['last'] == $rec['uid'] ? 'style="visibility: hidden;"' : '';
 				$cells['sort.down'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '" class="sortingDown" ' . $style . '>' .
-									  t3lib_iconWorks::getSpriteIcon('actions-move-down', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:moveDown', TRUE))) .
-									  '</a>';
+									t3lib_iconWorks::getSpriteIcon('actions-move-down', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:moveDown', TRUE))) .
+									'</a>';
 			}
 
 				// "Hide/Unhide" links:
@@ -641,21 +681,21 @@ class t3lib_TCEforms_inline {
 											t3lib_iconWorks::getSpriteIcon(
 												'actions-edit-unhide',
 												array(
-													 'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:unHide' . ($isPagesTable ? 'Page' : ''), 1),
-													 'id' => $nameObjectFtId . '_disabled'
+													'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:unHide' . ($isPagesTable ? 'Page' : ''), 1),
+													'id' => $nameObjectFtId . '_disabled'
 												)
 											) .
 											'</a>';
 				} else {
 					$cells['hide.hide'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
-										  t3lib_iconWorks::getSpriteIcon(
-											  'actions-edit-hide',
-											  array(
-												   'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:hide' . ($isPagesTable ? 'Page' : ''), 1),
-												   'id' => $nameObjectFtId . '_disabled'
-											  )
-										  ) .
-										  '</a>';
+										t3lib_iconWorks::getSpriteIcon(
+											'actions-edit-hide',
+											array(
+												'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:hide' . ($isPagesTable ? 'Page' : ''), 1),
+												'id' => $nameObjectFtId . '_disabled'
+											)
+										) .
+										'</a>';
 				}
 			}
 
@@ -663,24 +703,24 @@ class t3lib_TCEforms_inline {
 			if ($enabledControls['delete'] && ($isPagesTable && $localCalcPerms & 4 || !$isPagesTable && $calcPerms & 16)) {
 				$onClick = "inline.deleteRecord('" . $nameObjectFtId . "');";
 				$cells['delete'] = '<a href="#" onclick="' . htmlspecialchars('if (confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning')) . ')) {	' . $onClick . ' } return false;') . '">' .
-								   t3lib_iconWorks::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:delete', TRUE))) .
-								   '</a>';
+								t3lib_iconWorks::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:delete', TRUE))) .
+								'</a>';
 			}
 				// If this is a virtual record offer a minimized set of icons for user interaction:
 		} elseif ($isVirtualRecord) {
 			if ($enabledControls['localize'] && isset($rec['__create'])) {
 				$onClick = "inline.synchronizeLocalizeRecords('" . $nameObjectFt . "', " . $rec['uid'] . ");";
 				$cells['localize'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
-									 t3lib_iconWorks::getSpriteIcon('actions-document-localize', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:localize', TRUE))) .
-									 '</a>';
+									t3lib_iconWorks::getSpriteIcon('actions-document-localize', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:localize', TRUE))) .
+									'</a>';
 			}
 		}
 
 			// If the record is edit-locked	by another user, we will show a little warning sign:
 		if ($lockInfo = t3lib_BEfunc::isRecordLocked($foreign_table, $rec['uid'])) {
 			$cells['locked'] = '<a href="#" onclick="' . htmlspecialchars('alert(' . $GLOBALS['LANG']->JScharCode($lockInfo['msg']) . ');return false;') . '">' .
-							   t3lib_iconWorks::getSpriteIcon('status-warning-in-use', array('title' => htmlspecialchars($lockInfo['msg']))) .
-							   '</a>';
+							t3lib_iconWorks::getSpriteIcon('status-warning-in-use', array('title' => htmlspecialchars($lockInfo['msg']))) .
+							'</a>';
 		}
 
 			// Hook: Post-processing of single controls for specific child records:
@@ -808,9 +848,9 @@ class t3lib_TCEforms_inline {
 				}
 				if (!in_array($p[1], $uniqueIds)) {
 					$opt[] = '<option value="' . htmlspecialchars($p[1]) . '"' .
-							 ' style="' . (in_array($p[1], $uniqueIds) ? '' : '') .
-							 ($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) : '') . '">' .
-							 htmlspecialchars($p[0]) . '</option>';
+							' style="' . (in_array($p[1], $uniqueIds) ? '' : '') .
+							($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) : '') . '">' .
+							htmlspecialchars($p[0]) . '</option>';
 				}
 			}
 
@@ -835,7 +875,12 @@ class t3lib_TCEforms_inline {
 				// this is neccessary, if the size of the selector is "1" or if
 				// there is only one record item in the select-box, that is selected by default
 				// the selector-box creates a new relation on using a onChange event (see some line above)
-			$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
+			if (!empty($conf['appearance']['createNewRelationLinkTitle'])) {
+				$createNewRelationText = $GLOBALS['LANG']->sL($conf['appearance']['createNewRelationLinkTitle'], TRUE);
+			} else {
+				$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
+			}
+
 			$item .=
 					'<a href="#" onclick="' . htmlspecialchars($onChange) . '" align="abstop">' .
 					t3lib_iconWorks::getSpriteIcon('actions-document-new', array('title' => $createNewRelationText)) . $createNewRelationText .
@@ -858,17 +903,22 @@ class t3lib_TCEforms_inline {
 	 */
 	function renderPossibleRecordsSelectorTypeGroupDB($conf, &$PA) {
 		$foreign_table = $conf['foreign_table'];
-
 		$config = $PA['fieldConf']['config'];
 		$allowed = $config['allowed'];
 		$objectPrefix = $this->inlineNames['object'] . self::Structure_Separator . $foreign_table;
 
-		$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
-		$onClick = "setFormValueOpenBrowser('db','" . ('|||' . $allowed . '|' . $objectPrefix . '|inline.checkUniqueElement||inline.importElement') . "'); return false;";
-		$item =
-				'<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
-				t3lib_iconWorks::getSpriteIcon('actions-insert-record', array('title' => $createNewRelationText)) . $createNewRelationText .
-				'</a>';
+		if (!empty($conf['appearance']['createNewRelationLinkTitle'])) {
+			$createNewRelationText  = $GLOBALS['LANG']->sL($conf['appearance']['createNewRelationLinkTitle'], TRUE);
+		} else {
+			$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
+		}
+
+		$browserParams = ('|||' . $allowed . '|' . $objectPrefix . '|inline.checkUniqueElement||inline.importElement');
+
+		$onClick = "setFormValueOpenBrowser('db','" . $browserParams . "'); return false;";
+		$item = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
+			t3lib_iconWorks::getSpriteIcon('actions-insert-record', array('title' => $createNewRelationText)) . $createNewRelationText .
+			'</a>';
 
 		return $item;
 	}
@@ -2266,6 +2316,11 @@ class t3lib_TCEforms_inline {
 		if ($field) {
 			$PA = array();
 			$PA['fieldConf'] = $GLOBALS['TCA'][$foreign_table]['columns'][$field];
+
+			if ($PA['fieldConf'] && $conf['foreign_selector_fieldTcaOverride']) {
+				$PA['fieldConf'] = t3lib_div::array_merge_recursive_overrule($PA['fieldConf'], $conf['foreign_selector_fieldTcaOverride']);
+			}
+
 			$PA['fieldConf']['config']['form_type'] = $PA['fieldConf']['config']['form_type'] ? $PA['fieldConf']['config']['form_type'] : $PA['fieldConf']['config']['type']; // Using "form_type" locally in this script
 			$PA['fieldTSConfig'] = $this->fObj->setTSconfig($foreign_table, array(), $field);
 			$config = $PA['fieldConf']['config'];
@@ -2505,11 +2560,6 @@ class t3lib_TCEforms_inline {
 		$result .= '>' . $text . '</a>';
 		return $result;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tceforms_inline.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tceforms_inline.php']);
 }
 
 ?>

@@ -667,16 +667,6 @@ $TCA['sys_filemounts'] = array(
 				'eval' => 'required,trim'
 			)
 		),
-		'path' => array(
-			'label' => 'LLL:EXT:lang/locallang_tca.xml:sys_filemounts.path',
-			'config' => array(
-				'type' => 'input',
-				'size' => '40',
-				'max' => '120',
-				'eval' => 'required,trim',
-				'softref' => 'substitute'
-			)
-		),
 		'hidden' => array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.disable',
 			'config' => array(
@@ -684,19 +674,28 @@ $TCA['sys_filemounts'] = array(
 			)
 		),
 		'base' => array(
-			'label' => 'LLL:EXT:lang/locallang_tca.xml:sys_filemounts.base',
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.baseStorage',
 			'config' => array(
-				'type' => 'radio',
-				'items' => array(
-					array('LLL:EXT:lang/locallang_tca.xml:sys_filemounts.base_absolute', 0),
-					array('LLL:EXT:lang/locallang_tca.xml:sys_filemounts.base_relative', 1)
-				),
-				'default' => 0
+				'type' => 'select',
+				'foreign_table' => 'sys_file_storage',
+				'size' => 1,
+				'maxitems' => 1,
 			)
-		)
+		),
+		'path' => array(
+			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.folder',
+			'config' => array(
+				'type' => 'select',
+				'items' => array(),
+				'itemsProcFunc' => 't3lib/file/Service/UserfilemountService.php:t3lib_file_Service_UserfilemountService->renderTceformsSelectDropdown'
+			)
+		),
 	),
 	'types' => array(
-		'0' => array('showitem' => 'hidden;;;;1-1-1,title;;;;3-3-3,path,base')
+		'0' => array('showitem' => '--palette--;;mount, base, path'),
+	),
+	'palettes' => array(
+		'mount' => array('showitem' => 'title,hidden', 'canNotCollapse' => 1)
 	)
 );
 
@@ -849,21 +848,75 @@ $TCA['sys_collection'] = array(
 				'default' => 'static'
 			)
 		),
-		'criteria' => array(
-			'exclude' => 0,
-			'label' => '[filter]',
-			'config' => array(
-				'type' => 'passthrough'
-			)
-		)
 	),
 	'types' => array(
 		'static' => array('showitem' => 'title;;1,type, description,table_name, items'),
-		'filter' => array('showitem' => 'title;;1,type, description,table_name')
 	),
 	'palettes' => array(
 		'1' => array('showitem' => 'starttime, endtime, fe_group, sys_language_uid, l10n_parent, l10n_diffsource, hidden')
 	)
+);
+
+/**
+ * System log history - keeps a trail of record edits
+ */
+$TCA['sys_history'] = array(
+	'ctrl' => $TCA['sys_history']['ctrl'],
+	'columns' => array(
+		'sys_log_uid' => array(
+			'label' => 'sys_log_uid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'history_data' => array(
+			'label' => 'history_data',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'fieldlist' => array(
+			'label' => 'fieldlist',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'recuid' => array(
+			'label' => 'recuid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'tablename' => array(
+			'label' => 'tablename',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'tstamp' => array(
+			'label' => 'tstamp',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'history_files' => array(
+			'label' => 'history_files',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'snapshot' => array(
+			'label' => 'snapshot',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+	),
+	'types' => array(
+		'1' => array(
+			'showitem' => 'sys_log_uid, history_data, fieldlist, recuid, tablename, tstamp, history_files, snapshot',
+		),
+	),
 );
 
 /**
@@ -927,6 +980,109 @@ $TCA['sys_language'] = array(
 	)
 );
 
+/**
+ * System log
+ */
+$TCA['sys_log'] = array(
+	'ctrl' => $TCA['sys_log']['ctrl'],
+	'columns' => array(
+		'tstamp' => array(
+			'label' => 'tstamp',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'userid' => array(
+			'label' => 'userid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'action' => array(
+			'label' => 'action',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'recuid' => array(
+			'label' => 'recuid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'tablename' => array(
+			'label' => 'tablename',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'recpid' => array(
+			'label' => 'recpid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'error' => array(
+			'label' => 'error',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'details' => array(
+			'label' => 'details',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'type' => array(
+			'label' => 'type',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'detail_nr' => array(
+			'label' => 'detail_nr',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'IP' => array(
+			'label' => 'IP',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'log_data' => array(
+			'label' => 'log_data',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'event_pid' => array(
+			'label' => 'event_pid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'workspace' => array(
+			'label' => 'workspace',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+		'NEWid' => array(
+			'label' => 'NEWid',
+			'config' => array(
+				'type' => 'input',
+			),
+		),
+	),
+	'types' => array(
+		'1' => array(
+			'showitem' => 'tstamp, userid, action, recuid, tablename, recpid, error, details, type, details_nr, IP, log_data, event_pid, workspace, NEWid',
+		),
+	),
+);
 
 /**
  * System News (displayed on Login screen)

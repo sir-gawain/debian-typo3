@@ -76,7 +76,7 @@ class SC_wizard_list {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 		$this->P = t3lib_div::_GP('P');
 		$this->table = t3lib_div::_GP('table');
 		$this->id = t3lib_div::_GP('id');
@@ -88,7 +88,7 @@ class SC_wizard_list {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 			// Get this record
 		$origRow = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
@@ -97,7 +97,7 @@ class SC_wizard_list {
 		$TSconfig = t3lib_BEfunc::getTCEFORM_TSconfig($this->table,is_array($origRow)?$origRow:array('pid'=>$this->P['pid']));
 
 			// Set [params][pid]
-		if (substr($this->P['params']['pid'],0,3)=='###' && substr($this->P['params']['pid'],-3)=='###')	{
+		if (substr($this->P['params']['pid'],0,3)=='###' && substr($this->P['params']['pid'],-3)=='###') {
 			$this->pid = intval($TSconfig['_'.substr($this->P['params']['pid'],3,-3)]);
 		} else $this->pid = intval($this->P['params']['pid']);
 
@@ -114,13 +114,6 @@ class SC_wizard_list {
 		t3lib_utility_Http::redirect($redirectUrl);
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_list.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_list.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_wizard_list');

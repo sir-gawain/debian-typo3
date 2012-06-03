@@ -256,7 +256,7 @@ class tx_em_Connection_ExtDirectServer {
 			}
 			return $update ? $update : $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:ext_details_dbUpToDate');
 		} else {
-			return sprintf($GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:msg_extNotInstalled') ,htmlspecialchars($extKey));
+			return sprintf($GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:msg_extNotInstalled'), htmlspecialchars($extKey));
 		}
 	}
 
@@ -904,7 +904,7 @@ class tx_em_Connection_ExtDirectServer {
 			$where = ' AND (cache_extensions.extkey LIKE \'%' . $quotedSearch . '%\' OR cache_extensions.title LIKE \'%' . $quotedSearch . '%\')';
 
 		}
-	    	// check for filter
+			// check for filter
 		$where .= $this->makeFilterQuery(get_object_vars($parameters));
 
 		if ($installedOnly) {
@@ -1561,11 +1561,11 @@ class tx_em_Connection_ExtDirectServer {
 	 * @return string
 	 */
 	protected function replaceLinks($string) {
-		 return str_replace(
+		return str_replace(
 			'ajax.php?ajaxID=ExtDirect%3A%3Aroute&amp;namespace=TYPO3.EM',
 			'mod.php?M=tools_em',
 			$string
-		 );
+		);
 	}
 
 	/**
@@ -1685,11 +1685,5 @@ class tx_em_Connection_ExtDirectServer {
 
 		return $fileData;
 	}
-
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_extdirectserver.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_extdirectserver.php']);
-}
-
 ?>

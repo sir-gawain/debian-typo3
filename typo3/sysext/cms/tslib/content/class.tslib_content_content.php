@@ -104,6 +104,7 @@ class tslib_content_Content extends tslib_content_Abstract {
 				} else {
 					$this->cObj->currentRecordTotal = $GLOBALS['TYPO3_DB']->sql_num_rows($res);
 					$GLOBALS['TT']->setTSlogMessage('NUMROWS: ' . $GLOBALS['TYPO3_DB']->sql_num_rows($res));
+					/** @var $cObj tslib_cObj */
 					$cObj = t3lib_div::makeInstance('tslib_cObj');
 					$cObj->setParent($this->cObj->data, $this->cObj->currentRecord);
 					$this->cObj->currentRecordNumber = 0;
@@ -124,12 +125,14 @@ class tslib_content_Content extends tslib_content_Abstract {
 
 						if (is_array($row)) { // Might be unset in the sys_language_contentOL
 								// Call hook for possible manipulation of database row for cObj->data
-							if (is_array($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow']))	{
-								foreach($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'] as $_classRef)	{
+							if (is_array($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'])) {
+								foreach($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'] as $_classRef) {
 									$_procObj = t3lib_div::getUserObj($_classRef);
 									$_procObj->modifyDBRow($row, $conf['table']);
 								}
 							}
+
+							t3lib_file_Service_BackwardsCompatibility_TslibContentAdapterService::modifyDBRow($row, $conf['table']);
 
 							if (!$GLOBALS['TSFE']->recordRegister[$conf['table'] . ':' . $row['uid']]) {
 								$this->cObj->currentRecordNumber++;
@@ -183,12 +186,5 @@ class tslib_content_Content extends tslib_content_Abstract {
 		return $theValue;
 
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_content.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_content.php']);
-}
-
 ?>

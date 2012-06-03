@@ -78,8 +78,8 @@ class SC_wizard_backend_layout {
 		$pageRenderer = $this->doc->getPageRenderer();
 		$pageRenderer->addJsFile($GLOBALS['BACK_PATH'] . TYPO3_MOD_PATH . 'res/grideditor.js');
 		$pageRenderer->addJsInlineCode('storeData', '
-			function storeData(data)	{
-				if (parent.opener && parent.opener.document && parent.opener.document.' . $this->formName . ' && parent.opener.document.' . $this->formName . '["' . $this->fieldName . '"])	{
+			function storeData(data) {
+				if (parent.opener && parent.opener.document && parent.opener.document.' . $this->formName . ' && parent.opener.document.' . $this->formName . '["' . $this->fieldName . '"]) {
 					parent.opener.document.' . $this->formName . '["' . $this->fieldName . '"].value = data;
 					parent.opener.TBE_EDITOR.fieldChanged("backend_layout","' . $uid . '","config","data[backend_layout][' . $uid . '][config]");
 				}
@@ -215,7 +215,7 @@ class SC_wizard_backend_layout {
 
 		$content .= '<a href="#" title="' .
 			$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" onclick="storeData(t3Grid.export2LayoutRecord());return true;">' .
-			 t3lib_iconWorks::getSpriteIcon('actions-document-save') . '</a>';
+			t3lib_iconWorks::getSpriteIcon('actions-document-save') . '</a>';
 
 		$content .= '<a href="#" title="' .
 			$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', TRUE) . '" onclick="storeData(t3Grid.export2LayoutRecord());window.close();return true;">' .
@@ -223,7 +223,7 @@ class SC_wizard_backend_layout {
 
 		$content .= '<a href="#" title="'.
 			$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE) . '" onclick="window.close();return true;">' .
-			 t3lib_iconWorks::getSpriteIcon('actions-document-close') . '</a>';
+			t3lib_iconWorks::getSpriteIcon('actions-document-close') . '</a>';
 
 
 		$content .= $this->doc->spacer(10);
@@ -271,14 +271,7 @@ class SC_wizard_backend_layout {
 			$this->content
 		);
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_backend_layout.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_backend_layout.php']);
-}
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_wizard_backend_layout');

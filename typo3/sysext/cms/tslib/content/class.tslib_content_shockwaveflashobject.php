@@ -48,7 +48,6 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 		if ($GLOBALS['TSFE']->absRefPrefix) {
 			$prefix = $GLOBALS['TSFE']->absRefPrefix;
 		}
-		;
 
 		$type = isset($conf['type.'])
 			? $this->cObj->stdWrap($conf['type'], $conf['type.'])
@@ -151,7 +150,7 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 			$width = $conf[$type . '.']['defaultWidth'];
 		}
 
-        $height = isset($conf['height.'])
+		$height = isset($conf['height.'])
 			? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 			: $conf['height'];
 		if(!$height) {
@@ -171,12 +170,5 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 
 		return $content;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_shockwaveflashobject.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_shockwaveflashobject.php']);
-}
-
 ?>

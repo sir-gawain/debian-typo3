@@ -46,13 +46,13 @@ class tx_rtehtmlarea_parse_html {
 	/**
 	 * @return	[type]		...
 	 */
-	function init()	{
+	function init() {
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->JScode='';
 
 		$this->modData = $GLOBALS['BE_USER']->getModuleData($GLOBALS['MCONF']['name'], 'ses');
-		if (t3lib_div::_GP('OC_key'))	{
+		if (t3lib_div::_GP('OC_key')) {
 			$parts = explode('|',t3lib_div::_GP('OC_key'));
 			$this->modData['openKeys'][$parts[1]] = $parts[0]=='O' ? 1 : 0;
 			$GLOBALS['BE_USER']->pushModuleData($GLOBALS['MCONF']['name'], $this->modData);
@@ -64,7 +64,7 @@ class tx_rtehtmlarea_parse_html {
 	 *
 	 * @return	[type]		...
 	 */
-	function main()	{
+	function main() {
 		$this->content .= $this->main_parse_html($this->modData['openKeys']);
 		header('Content-Type: text/plain; charset=utf-8');
 	}
@@ -74,7 +74,7 @@ class tx_rtehtmlarea_parse_html {
 	 *
 	 * @return	[type]		...
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -84,7 +84,7 @@ class tx_rtehtmlarea_parse_html {
 	 * @param	[type]		$openKeys: ...
 	 * @return	[type]		...
 	 */
-	function main_parse_html($openKeys)	{
+	function main_parse_html($openKeys) {
 		global $TYPO3_CONF_VARS;
 
 		$editorNo = t3lib_div::_GP('editorNo');
@@ -160,8 +160,5 @@ class tx_rtehtmlarea_parse_html {
 			}
 		}
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod6/class.tx_rtehtmlarea_parse_html.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod6/class.tx_rtehtmlarea_parse_html.php']);
 }
 ?>

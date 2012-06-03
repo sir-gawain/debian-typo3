@@ -28,10 +28,9 @@
 /**
  * Uses frontend hooks to show preview informations
  *
-  * @package TYPO3
+ * @package TYPO3
  * @subpackage cms
  */
-
 class tx_cms_fehooks {
 
 	/**
@@ -55,11 +54,5 @@ class tx_cms_fehooks {
 		}
 		return $message;
 	}
-}
-
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/hooks/class.tx_cms_fehooks.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/hooks/class.tx_cms_fehooks.php']);
 }
 ?>

@@ -89,7 +89,7 @@ class Tx_Extbase_Reflection_ObjectAccess {
 	 */
 	static public function getPropertyInternal($subject, $propertyName, $forceDirectAccess, &$propertyExists) {
 		if ($subject === NULL) {
-			return;
+			return NULL;
 		}
 		$propertyExists = TRUE;
 		if (is_array($subject)) {
@@ -97,7 +97,7 @@ class Tx_Extbase_Reflection_ObjectAccess {
 				return $subject[$propertyName];
 			}
 			$propertyExists = FALSE;
-			return;
+			return NULL;
 		}
 		if ($forceDirectAccess === TRUE) {
 			if (property_exists(get_class($subject), $propertyName)) {
@@ -124,6 +124,8 @@ class Tx_Extbase_Reflection_ObjectAccess {
 			return $subject->$propertyName;
 		}
 		$propertyExists = FALSE;
+
+		return NULL;
 	}
 
 	/**
@@ -199,22 +201,6 @@ class Tx_Extbase_Reflection_ObjectAccess {
 	}
 
 	/**
-	 * Returns an array of properties which can be get/set with the getProperty
-	 * and setProperty methods.
-	 * Includes the following properties:
-	 * - which can be set through a public setter method.
-	 * - public properties which can be directly set.
-	 *
-	 * @param object $object Object to receive property names for
-	 * @return array Array of all declared property names
-	 * @deprecated since Extbase 1.3.0; will be removed in Extbase 1.5.0. Please use getGettablePropertyNames() instead
-	 */
-	static public function getAccessiblePropertyNames($object) {
-		t3lib_div::logDeprecatedFunction();
-		return self::getGettablePropertyNames($object);
-	}
-
-	/**
 	 * Returns an array of properties which can be get with the getProperty()
 	 * method.
 	 * Includes the following properties:
@@ -281,19 +267,6 @@ class Tx_Extbase_Reflection_ObjectAccess {
 	}
 
 	/**
-	 * Get all properties (names and their current values) of the current
-	 * $object that are accessible through this class.
-	 *
-	 * @param object $object Object to get all properties from.
-	 * @return array Associative array of all properties.
-	 * @deprecated since Extbase 1.3.0; will be removed in Extbase 1.5.0. Please use getGettableProperties() instead
-	 */
-	static public function getAccessibleProperties($object) {
-		t3lib_div::logDeprecatedFunction();
-		return self::getGettableProperties($object);
-	}
-
-	/**
 	 * Tells if the value of the specified property can be set by this Object Accessor.
 	 *
 	 * @param object $object Object containting the property
@@ -357,7 +330,7 @@ class Tx_Extbase_Reflection_ObjectAccess {
 	 * Build the setter method name for a given property by capitalizing the
 	 * first letter of the property, and prepending it with "set".
 	 *
-	 * @param string $property Name of the property
+	 * @param string $propertyName Name of the property
 	 * @return string Name of the setter method name
 	 */
 	static public function buildSetterMethodName($propertyName) {

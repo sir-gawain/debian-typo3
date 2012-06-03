@@ -168,7 +168,7 @@ class Tx_IndexedSearch_Domain_Repository_IndexSearchRepository {
 			$count = $GLOBALS['TYPO3_DB']->sql_num_rows($res);
 
 				// The pointer is set to the result page that is currently being viewed
-			$pointer = t3lib_div::intInRange($this->resultpagePointer, 0, floor($count / $this->resultsPerPage));
+			$pointer = t3lib_utility_Math::forceIntegerInRange($this->resultpagePointer, 0, floor($count / $this->resultsPerPage));
 
 				// Initialize result accumulation variables:
 			$c = 0;	// Result pointer: Counts up the position in the current search-result
@@ -692,7 +692,7 @@ class Tx_IndexedSearch_Domain_Repository_IndexSearchRepository {
 
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 						'ISEC.*, IP.*, '
-						 . $grsel,
+						. $grsel,
 						'index_words IW,
 							index_rel IR,
 							index_section ISEC,
@@ -902,11 +902,4 @@ class Tx_IndexedSearch_Domain_Repository_IndexSearchRepository {
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/Classes/Repository/IndexSearchRepository.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/Classes/Repository/IndexSearchRepository.php']);
-}
-
-
 ?>

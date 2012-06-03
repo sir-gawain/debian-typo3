@@ -286,6 +286,7 @@ class ShortcutMenu implements backend_toolbarItem {
 			}
 
 				// check for module access
+			$pageId = $this->getLinkedPageId($row['url']);
 			if(!$GLOBALS['BE_USER']->isAdmin()) {
 				if(!isset($GLOBALS['LANG']->moduleLabels['tabs_images'][implode('_', $moduleParts).'_tab'])) {
 						// nice hack to check if the user has access to this module
@@ -293,7 +294,6 @@ class ShortcutMenu implements backend_toolbarItem {
 					continue;
 				}
 
-				$pageId = $this->getLinkedPageId($row['url']);
 				if(t3lib_utility_Math::canBeInterpretedAsInteger($pageId)) {
 						// check for webmount access
 					if(!$GLOBALS['BE_USER']->isInWebMount($pageId)) {
@@ -322,7 +322,7 @@ class ShortcutMenu implements backend_toolbarItem {
 			$shortcut['group']     = $shortcutGroup;
 			$shortcut['icon']      = $this->getShortcutIcon($row, $shortcut);
 			$shortcut['iconTitle'] = $this->getShortcutIconTitle($shortcutLabel, $row['module_name'], $row['M_module_name']);
-			$shortcut['action']    = 'jump(unescape(\''.rawurlencode($row['url']).'\'),\''.implode('_',$moduleParts).'\',\''.$moduleParts[0].'\');';
+			$shortcut['action']    = 'jump(unescape(\''.rawurlencode($row['url']).'\'),\''.implode('_',$moduleParts).'\',\''.$moduleParts[0].'\', ' . intval($pageId) . ');';
 
 			$lastGroup   = $row['sc_group'];
 			$shortcuts[] = $shortcut;
@@ -533,7 +533,7 @@ class ShortcutMenu implements backend_toolbarItem {
 				}
 			} else {
 				$dirName = urldecode($pageId);
-				if (preg_match('/\/$/', $dirName))	{
+				if (preg_match('/\/$/', $dirName)) {
 						// if $pageId is a string and ends with a slash,
 						// assume it is a fileadmin reference and set
 						// the description to the basename of that path
@@ -781,15 +781,9 @@ class ShortcutMenu implements backend_toolbarItem {
 	 * @param	string		The URL of the current shortcut link
 	 * @return	string		If a page ID was found, it is returned. Otherwise: 0
 	 */
-	protected function getLinkedPageId($url)	{
+	protected function getLinkedPageId($url) {
 		return preg_replace('/.*[\?&]id=([^&]+).*/', '$1', $url);
 	}
 
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.shortcutmenu.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.shortcutmenu.php']);
-}
-
 ?>

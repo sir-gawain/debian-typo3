@@ -187,8 +187,8 @@ class t3lib_Compressor {
 			$filenameFromMainDir = $this->getFilenameFromMainDir($fileOptions['file']);
 				// if $options['baseDirectories'] set, we only include files below these directories
 			if ((!isset($options['baseDirectories'])
-			  || $this->checkBaseDirectory($filenameFromMainDir, array_merge($options['baseDirectories'], array($this->targetDirectory))))
-			  && ($fileOptions['media'] === 'all')
+				|| $this->checkBaseDirectory($filenameFromMainDir, array_merge($options['baseDirectories'], array($this->targetDirectory))))
+				&& ($fileOptions['media'] === 'all')
 			) {
 				$filesToInclude[] = $filenameFromMainDir;
 					// remove the file from the incoming file array
@@ -663,10 +663,6 @@ class t3lib_Compressor {
 		return $filename;
 	}
 
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_compressor.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_compressor.php']);
 }
 
 ?>

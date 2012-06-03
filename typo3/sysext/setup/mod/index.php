@@ -97,18 +97,6 @@ class SC_mod_user_setup_index {
 	protected $settingsAreResetToDefault = FALSE;
 
 	/**
-	 * @var bool
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8
-	 */
-	protected $installToolFileExists = FALSE;
-
-	/**
-	 * @var bool
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8
-	 */
-	protected $installToolFileKeep = FALSE;
-
-	/**
 	 * Form protection instance
 	 *
 	 * @var t3lib_formprotection_BackendFormProtection
@@ -281,15 +269,8 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	void
 	 */
-	function init()	{
+	function init() {
 		$this->MCONF = $GLOBALS['MCONF'];
-
-			// check Install Tool enable file
-			// @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8
-		$this->installToolFileExists = is_file(PATH_typo3conf . 'ENABLE_INSTALL_TOOL');
-		if ($this->installToolFileExists) {
-			$this->installToolFileKeep = (trim(file_get_contents(PATH_typo3conf . 'ENABLE_INSTALL_TOOL')) === 'KEEP_FILE');
-		}
 
 			// Returns the script user - that is the REAL logged in user! ($GLOBALS[BE_USER] might be another user due to simulation!)
 		$scriptUser = $this->getRealScriptUserObj();
@@ -344,7 +325,7 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 		global $LANG;
 
 		if ($this->languageUpdate) {
@@ -479,55 +460,11 @@ class SC_mod_user_setup_index {
 	}
 
 	/**
-	 * Sets existance of Install Tool file
-	 *
-	 * @return void
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8 - use Tx_Install_Service_BasicService
-	 */
-	public function setInstallToolFileExists() {
-		t3lib_div::logDeprecatedFunction();
-		$this->installToolFileExists = is_file(PATH_typo3conf . 'ENABLE_INSTALL_TOOL');
-	}
-
-	/**
-	 * Sets property if Install Tool file contains "KEEP_FILE"
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8 - use Tx_Install_Service_BasicService
-	 */
-	public function setInstallToolFileKeep() {
-		t3lib_div::logDeprecatedFunction();
-		if ($this->installToolFileExists) {
-			$this->installToolFileKeep = (trim(file_get_contents(PATH_typo3conf . 'ENABLE_INSTALL_TOOL')) === 'KEEP_FILE');
-		}
-	}
-
-	/**
-	 * Gets property installToolFileExists
-	 *
-	 * @return boolean $this->installToolFileExists
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8 - use Tx_Install_Service_BasicService
-	 */
-	public function getInstallToolFileExists() {
-		t3lib_div::logDeprecatedFunction();
-		return $this->installToolFileExists;
-	}
-
-	/**
-	 * Gets property installToolFileKeep
-	 *
-	 * @return boolean $this->installToolFileKeep
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8 - use Tx_Install_Service_BasicService
-	 */
-	public function getInstallToolFileKeep() {
-		t3lib_div::logDeprecatedFunction();
-		return $this->installToolFileKeep;
-	}
-
-	/**
 	 * Prints the content / ends page
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -536,7 +473,7 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
+	protected function getButtons() {
 		$buttons = array(
 			'csh' => '',
 			'save' => '',
@@ -567,7 +504,7 @@ class SC_mod_user_setup_index {
 	 ******************************/
 
 
-	 /**
+	/**
 	 * renders the data for all tabs in the user setup and returns
 	 * everything that is needed with tabs and dyntab menu
 	 *
@@ -733,7 +670,7 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	object		The REAL user is returned - the one logged in.
 	 */
-	protected function getRealScriptUserObj()	{
+	protected function getRealScriptUserObj() {
 		return is_object($this->OLD_BE_USER) ? $this->OLD_BE_USER : $GLOBALS['BE_USER'];
 	}
 
@@ -808,7 +745,7 @@ class SC_mod_user_setup_index {
 	*/
 	public function renderStartModuleSelect($params, $pObj) {
 			// start module select
-		if (empty($GLOBALS['BE_USER']->uc['startModule']))	{
+		if (empty($GLOBALS['BE_USER']->uc['startModule'])) {
 			$GLOBALS['BE_USER']->uc['startModule'] = $GLOBALS['BE_USER']->uc_default['startModule'];
 		}
 		$startModuleSelect = '<option value=""></option>';
@@ -823,42 +760,7 @@ class SC_mod_user_setup_index {
 			}
 		}
 
-
 		return '<select id="field_startModule" name="data[startModule]" class="select">' . $startModuleSelect . '</select>';
-		}
-
- 	/**
-	 *
-	 * @param array $params                    config of the field
-	 * @param SC_mod_user_setup_index $parent  this class as reference
-	 * @return string	                       html with description and button
-	 * @deprecated since TYPO3 4.6 - will be removed with TYPO3 4.8
-	 */
-	public function renderInstallToolEnableFileButton(array $params, SC_mod_user_setup_index $parent) {
-		t3lib_div::logDeprecatedFunction();
-
-			// Install Tool access file
-		$installToolEnableFile = PATH_typo3conf . 'ENABLE_INSTALL_TOOL';
-		if ($parent->getInstallToolFileExists() && ($GLOBALS['EXEC_TIME'] - filemtime($installToolEnableFile) > 3600)) {
-			if (!$parent->getInstallToolFileKeep()) {
-					// Delete the file if it is older than 3600s (1 hour)
-				unlink($installToolEnableFile);
-				$parent->setInstallToolFileExists();
-			}
-		}
-
-		if ($parent->getInstallToolFileExists()) {
-			return '<input type="button" name="deleteInstallToolEnableFile"' .
-					($parent->getInstallToolFileKeep() ? ' disabled="disabled"' : '') .
-					' value="' . $GLOBALS['LANG']->sL('LLL:EXT:setup/mod/locallang.xml:enableInstallTool.deleteFile') . '" onclick="document.getElementById(\'deleteInstallToolEnableFile\').value=1;this.form.submit();" />
-					<input type="hidden" name="deleteInstallToolEnableFile" value="0" id="deleteInstallToolEnableFile" />
-					';
-
-		} else {
-			return '<input type="button" name="createInstallToolEnableFile" value="' .
-					$GLOBALS['LANG']->sL('LLL:EXT:setup/mod/locallang.xml:enableInstallTool.createFile') . '" onclick="document.getElementById(\'createInstallToolEnableFile\').value=1;this.form.submit();" />
-					<input type="hidden" name="createInstallToolEnableFile" value="0" id="createInstallToolEnableFile" />';
-		}
 	}
 
 	/**
@@ -867,7 +769,7 @@ class SC_mod_user_setup_index {
 	 *
 	 * @return	void
 	 */
-	public function simulateUser()	{
+	public function simulateUser() {
 
 		// *******************************************************************************
 		// If admin, allow simulation of another user
@@ -925,7 +827,7 @@ class SC_mod_user_setup_index {
 			// check for hook
 		if (t3lib_div::hasValidClassPrefix($access)) {
 			$accessObject = t3lib_div::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['setup']['accessLevelCheck'][$access] . ':&' . $access);
-			if (is_object($accessObject) && method_exists($accessObject, 'accessLevelCheck'))	{
+			if (is_object($accessObject) && method_exists($accessObject, 'accessLevelCheck')) {
 					// initialize vars. If method fails, $set will be set to FALSE
 				return $accessObject->accessLevelCheck($config);
 			}
@@ -944,15 +846,15 @@ class SC_mod_user_setup_index {
 	 * @param	string		Alternative id for use in "for" attribute of <label> tag. By default the $str key is used prepended with "field_".
 	 * @return	string		HTML output.
 	 */
-	protected function getLabel($str, $key='', $addLabelTag=TRUE, $altLabelTagId='')	{
+	protected function getLabel($str, $key='', $addLabelTag=TRUE, $altLabelTagId='') {
 		if (substr($str, 0, 4) == 'LLL:') {
 			$out = $GLOBALS['LANG']->sL($str);
 		} else {
 			$out = htmlspecialchars($str);
- 		}
+		}
 
 
-		if (isset($this->overrideConf[($key?$key:$str)]))	{
+		if (isset($this->overrideConf[($key?$key:$str)])) {
 			$out = '<span style="color:#999999">'.$out.'</span>';
 		}
 
@@ -979,7 +881,7 @@ class SC_mod_user_setup_index {
 			$field = $strParts[1];
 		} elseif (!t3lib_div::inList('language,simuser', $str)) {
 			$field = 'option_' . $str;
- 		}
+		}
 		return t3lib_BEfunc::wrapInHelp($context, $field, $label);
 	}
 	/**
@@ -1000,13 +902,6 @@ class SC_mod_user_setup_index {
 		return $fieldArray;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/setup/mod/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/setup/mod/index.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_user_setup_index');

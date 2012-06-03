@@ -60,11 +60,20 @@ class SC_browser {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 			// Setting GPvars:
 		$mode =t3lib_div::_GP('mode');
 		$bparams = t3lib_div::_GP('bparams');
+
+		// workaround for FAL: previously, we had file as a mode, now we have sys_file db records
+		// check if we need to "translate" sys_file queries to mode=file queries
+		// @todo: handle this the right way in the TYPO3 core
+		$bParamElements = explode('|', $bparams);
+		if ($mode == 'db' && $bParamElements[3] == 'sys_file') {
+			$mode = 'file';
+		}
+
 
 
 			// Set doktype:
@@ -76,7 +85,7 @@ class SC_browser {
 				function setParams(mode,params)	{	//
 					parent.content.location.href = "browse_links.php?mode="+mode+"&bparams="+params;
 				}
-				if (!window.opener)	{
+				if (!window.opener) {
 					alert("ERROR: Sorry, no link to main window... Closing");
 					close();
 				}
@@ -105,17 +114,10 @@ class SC_browser {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/browser.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/browser.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_browser');

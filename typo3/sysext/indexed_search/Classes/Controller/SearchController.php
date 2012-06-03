@@ -137,7 +137,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 			$searchData['freeIndexUid'] = $searchData['_freeIndexUid'];
 		}
 
-		$searchData['results'] = t3lib_div::intInRange($searchData['results'], 1, 100000, $this->defaultResultNumber);
+		$searchData['results'] = t3lib_utility_Math::forceIntegerInRange($searchData['results'], 1, 100000, $this->defaultResultNumber);
 
 
 			// This gets the search-words into the $searchWordArray
@@ -207,7 +207,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 				// Get result rows
 			$tstamp1 = t3lib_div::milliseconds();
 			if ($hookObj = $this->hookRequest('getResultRows')) {
-			 	$resultData = $hookObj->getResultRows($this->searchWords, $freeIndexUid);
+				$resultData = $hookObj->getResultRows($this->searchWords, $freeIndexUid);
 			} else {
 				$resultData = $this->searchRepository->doSearch($this->searchWords, $freeIndexUid);
 			}
@@ -280,7 +280,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 
 					// could we get this in the view?
 				if ($this->searchData['group'] == 'sections' && $freeIndexUid <= 0) {
-				 	$result['sectionText'] = sprintf(Tx_Extbase_Utility_Localization::translate('result.' . (count($this->resultSections) > 1 ? 'inNsections' : 'inNsection'), 'indexed_search'), count($this->resultSections));
+					$result['sectionText'] = sprintf(Tx_Extbase_Utility_Localization::translate('result.' . (count($this->resultSections) > 1 ? 'inNsections' : 'inNsection'), 'indexed_search'), count($this->resultSections));
 				}
 			}
 		}
@@ -288,7 +288,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 			// Print a message telling which words in which sections we searched for
 		if (substr($this->searchData['sections'], 0, 2) == 'rl') {
 			$result['searchedInSectionInfo'] = Tx_Extbase_Utility_Localization::translate('result.inSection', 'indexed_search')
-			 . ' "' . substr($this->getPathFromPageId(substr($this->searchData['sections'], 4)), 1) . '"';
+			. ' "' . substr($this->getPathFromPageId(substr($this->searchData['sections'], 4)), 1) . '"';
 		}
 		return $result;
 	}
@@ -545,17 +545,17 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 
 				// Close to top of page
 			case 'rank_first':
-				return ceil(t3lib_div::intInRange(255 - $row['order_val'], 1, 255) / 255 * 100) . '%';
+				return ceil(t3lib_utility_Math::forceIntegerInRange(255 - $row['order_val'], 1, 255) / 255 * 100) . '%';
 			break;
 
 				// Based on priority assigned to <title> / <meta-keywords> / <meta-description> / <body>
 			case 'rank_flag':
 				if ($this->firstRow['order_val2']) {
-					 // (3 MSB bit, 224 is highest value of order_val1 currently)
+						// (3 MSB bit, 224 is highest value of order_val1 currently)
 					$base = $row['order_val1'] * 256;
 						// 15-3 MSB = 12
 					$freqNumber = $row['order_val2'] / $this->firstRow['order_val2'] * pow(2, 12);
-					$total = t3lib_div::intInRange($base + $freqNumber, 0, 32767);
+					$total = t3lib_utility_Math::forceIntegerInRange($base + $freqNumber, 0, 32767);
 					return ceil(log($total) / log(32767) * 100) . '%';
 				}
 			break;
@@ -563,7 +563,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 				// Based on frequency
 			case 'rank_freq':
 				$max = 10000;
-				$total = t3lib_div::intInRange($row['order_val'], 0, $max);
+				$total = t3lib_utility_Math::forceIntegerInRange($row['order_val'], 0, $max);
 				return ceil(log($total) / log($max) * 100) . '%';
 			break;
 
@@ -609,7 +609,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 					'flag, title',
 					'sys_language',
 					'uid=' . intval($row['sys_language_uid'])
-					 . $GLOBALS['TSFE']->cObj->enableFields('sys_language')
+					. $GLOBALS['TSFE']->cObj->enableFields('sys_language')
 				);
 
 					// Flag code:
@@ -756,7 +756,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 
 		$occurencies = (count($parts)-1)/2;
 		if ($occurencies) {
-			$postPreLgd = t3lib_div::intInRange($summaryMax / $occurencies, $postPreLgd, $summaryMax / 2);
+			$postPreLgd = t3lib_utility_Math::forceIntegerInRange($summaryMax / $occurencies, $postPreLgd, $summaryMax / 2);
 		}
 
 			// Variable:
@@ -1241,7 +1241,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 					'uid,title',
 					'index_config',
 					'uid IN (' . implode(',', $uidList).  ')'
-					 . $GLOBALS['TSFE']->cObj->enableFields('index_config'),
+					. $GLOBALS['TSFE']->cObj->enableFields('index_config'),
 					'',
 					'',
 					'',
@@ -1517,7 +1517,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 			'domainName',
 			'sys_domain',
 			'pid=' . intval($id)
-			 . $GLOBALS['TSFE']->cObj->enableFields('sys_domain'),
+			. $GLOBALS['TSFE']->cObj->enableFields('sys_domain'),
 			'',
 			'sorting'
 		);
@@ -1575,13 +1575,5 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 	protected function multiplePagesType($item_type) {
 		return is_object($this->externalParsers[$item_type]) && $this->externalParsers[$item_type]->isMultiplePageExtension($item_type);
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/Classes/Controller/SearchController.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/Classes/Controller/SearchController.php']);
-}
-
-
 ?>

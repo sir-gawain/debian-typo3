@@ -46,7 +46,7 @@ class tx_lowlevel_rte_images extends tx_lowlevel_cleaner_core {
 	 *
 	 * @return	void
 	 */
-	function __construct()	{
+	function __construct() {
 		parent::__construct();
 
 			// Setting up help:
@@ -71,19 +71,6 @@ Manual repair suggestions:
 
 		$this->cli_help['examples'] = '/.../cli_dispatch.phpsh lowlevel_cleaner rte_images -s -r
 Reports problems with RTE images';
-	}
-
-	/**
-	 * Compatibility constructor.
-	 *
-	 * @deprecated since TYPO3 4.6 and will be removed in TYPO3 4.8. Use __construct() instead.
-	 */
-	public function tx_lowlevel_rte_images() {
-		t3lib_div::logDeprecatedFunction();
-			// Note: we cannot call $this->__construct() here because it would call the derived class constructor and cause recursion
-			// This code uses official PHP behavior (http://www.php.net/manual/en/language.oop5.basic.php) when $this in the
-			// statically called non-static method inherits $this from the caller's scope.
-		tx_lowlevel_rte_images::__construct();
 	}
 
 	/**
@@ -125,9 +112,9 @@ Reports problems with RTE images';
 
 			// Traverse the files and put into a large table:
 		if (is_array($recs)) {
-			foreach($recs as $rec)	{
+			foreach($recs as $rec) {
 				$filename = basename($rec['ref_string']);
-				if (t3lib_div::isFirstPartOfStr($filename,'RTEmagicC_'))	{
+				if (t3lib_div::isFirstPartOfStr($filename,'RTEmagicC_')) {
 					$original = 'RTEmagicP_'.preg_replace('/\.[[:alnum:]]+$/','',substr($filename,10));
 					$infoString = $this->infoStr($rec);
 
@@ -142,10 +129,10 @@ Reports problems with RTE images';
 					$resultArray['completeFileList'][$rec['ref_string']]++;
 
 						// Missing files:
-					if (!$resultArray['RTEmagicFilePairs'][$rec['ref_string']]['exists'])	{
+					if (!$resultArray['RTEmagicFilePairs'][$rec['ref_string']]['exists']) {
 						$resultArray['missingFiles'][$rec['ref_string']] = $resultArray['RTEmagicFilePairs'][$rec['ref_string']]['usedIn'];
 					}
-					if (!$resultArray['RTEmagicFilePairs'][$rec['ref_string']]['original_exists'])	{
+					if (!$resultArray['RTEmagicFilePairs'][$rec['ref_string']]['original_exists']) {
 						$resultArray['missingFiles'][$resultArray['RTEmagicFilePairs'][$rec['ref_string']]['original']] = $resultArray['RTEmagicFilePairs'][$rec['ref_string']]['usedIn'];
 					}
 				}
@@ -163,7 +150,7 @@ Reports problems with RTE images';
 		$cleanerModules = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['lowlevel']['cleanerModules'];
 		$cleanerMode = t3lib_div::getUserObj($cleanerModules['lost_files'][0]);
 		$resLostFiles = $cleanerMode->main(array(),FALSE,TRUE);
-		if (is_array($resLostFiles['RTEmagicFiles']))	{
+		if (is_array($resLostFiles['RTEmagicFiles'])) {
 			foreach($resLostFiles['RTEmagicFiles'] as $fileName) {
 				if (!isset($resultArray['completeFileList'][$fileName])) 	{
 					$resultArray['lostFiles'][$fileName] = $fileName;
@@ -189,12 +176,12 @@ Reports problems with RTE images';
 	 * @param	array		Result array from main() function
 	 * @return	void
 	 */
-	function main_autoFix($resultArray)	{
+	function main_autoFix($resultArray) {
 
 		$limitTo = $this->cli_args['--AUTOFIX'][0];
 
-		if (is_array($resultArray['doubleFiles']))	{
-			if (!$limitTo || $limitTo==='doubleFiles')	{
+		if (is_array($resultArray['doubleFiles'])) {
+			if (!$limitTo || $limitTo==='doubleFiles') {
 
 				echo 'FIXING double-usages of RTE files in uploads/: '.LF;
 				foreach($resultArray['RTEmagicFilePairs'] as $fileName => $fileInfo) {
@@ -204,8 +191,8 @@ Reports problems with RTE images';
 
 							// Traverse all records using the file:
 						$c=0;
-						foreach($fileInfo['usedIn'] as $hash => $recordID)	{
-							if ($c==0)	{
+						foreach($fileInfo['usedIn'] as $hash => $recordID) {
+							if ($c==0) {
 								echo '	Keeping file '.$fileName.' for record '.$recordID.LF;
 							} else {
 									// CODE below is adapted from "class.tx_impexp.php" where there is support for duplication of RTE images:
@@ -226,11 +213,11 @@ Reports problems with RTE images';
 									$pI = pathinfo($fileName);
 									$copyDestName = dirname($origDestName).'/RTEmagicC_'.substr(basename($origDestName),10).'.'.$pI['extension'];
 									if (!@is_file($copyDestName) && !@is_file($origDestName)
-										&& $origDestName===t3lib_div::getFileAbsFileName($origDestName) && $copyDestName===t3lib_div::getFileAbsFileName($copyDestName))	{
+										&& $origDestName===t3lib_div::getFileAbsFileName($origDestName) && $copyDestName===t3lib_div::getFileAbsFileName($copyDestName)) {
 
 										echo ' to '.basename($copyDestName);
 
-										if ($bypass = $this->cli_noExecutionCheck($fileName))	{
+										if ($bypass = $this->cli_noExecutionCheck($fileName)) {
 											echo $bypass;
 										} else {
 												// Making copies:
@@ -238,10 +225,10 @@ Reports problems with RTE images';
 											t3lib_div::upload_copy_move(PATH_site.$fileName,$copyDestName);
 											clearstatcache();
 
-											if (@is_file($copyDestName))	{
+											if (@is_file($copyDestName)) {
 												$sysRefObj = t3lib_div::makeInstance('t3lib_refindex');
 												$error = $sysRefObj->setReferenceValue($hash,substr($copyDestName,strlen(PATH_site)));
-												if ($error)	{
+												if ($error) {
 													echo '	- ERROR:	t3lib_refindex::setReferenceValue(): '.$error.LF;
 													exit;
 												} else echo " - DONE";
@@ -261,17 +248,17 @@ Reports problems with RTE images';
 		}
 
 
-		if (is_array($resultArray['lostFiles']))	{
-			if ($limitTo==='lostFiles')	{
+		if (is_array($resultArray['lostFiles'])) {
+			if ($limitTo==='lostFiles') {
 				echo 'Removing lost RTEmagic files from folders inside uploads/: '.LF;
 
-				foreach($resultArray['lostFiles'] as $key => $value)	{
+				foreach($resultArray['lostFiles'] as $key => $value) {
 					$absFileName = t3lib_div::getFileAbsFileName($value);
 					echo 'Deleting file: "'.$absFileName.'": ';
-					if ($bypass = $this->cli_noExecutionCheck($absFileName))	{
+					if ($bypass = $this->cli_noExecutionCheck($absFileName)) {
 						echo $bypass;
 					} else {
-						if ($absFileName && @is_file($absFileName))	{
+						if ($absFileName && @is_file($absFileName)) {
 							unlink($absFileName);
 							echo 'DONE';
 						} else {
@@ -290,7 +277,7 @@ Reports problems with RTE images';
 	 * @return	object		File processor object
 	 */
 	function getFileProcObj() {
-		if (!is_object($this->fileProcObj))	{
+		if (!is_object($this->fileProcObj)) {
 			$this->fileProcObj = t3lib_div::makeInstance('t3lib_extFileFunctions');
 			$this->fileProcObj->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
 			$this->fileProcObj->init_actionPerms($GLOBALS['BE_USER']->getFileoperationPermissions());

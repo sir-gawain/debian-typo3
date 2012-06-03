@@ -24,57 +24,22 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * This is the MAIN DOCUMENT of the TypoScript driven standard front-end (from the "cms" extension)
  * Basically this is the "index.php" script which all requests for TYPO3 delivered pages goes to in the frontend (the website)
  *
- * @author	René Fritz <r.fritz@colorcube.de>
+ * @author René Fritz <r.fritz@colorcube.de>
  * @package TYPO3
  * @subpackage tslib
  */
 
-// *******************************
-// Set error reporting
-// *******************************
+require('typo3/Bootstrap.php');
+Typo3_Bootstrap::checkEnvironmentOrDie();
+Typo3_Bootstrap::defineBaseConstants();
+Typo3_Bootstrap::defineAndCheckPaths('');
+Typo3_Bootstrap::requireBaseClasses();
+Typo3_Bootstrap::setUpEnvironment();
 
-error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
-
-
-// ******************
-// Constants defined
-// ******************
-
-define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
-	(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
-	($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
-	($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
-	($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
-
-define('PATH_site', dirname(PATH_thisScript).'/');
-
-if (@is_dir(PATH_site.'typo3/sysext/cms/tslib/')) {
-	define('PATH_tslib', PATH_site.'typo3/sysext/cms/tslib/');
-} elseif (@is_dir(PATH_site.'tslib/')) {
-	define('PATH_tslib', PATH_site.'tslib/');
-} else {
-
-	// define path to tslib/ here:
-	$configured_tslib_path = '';
-
-	// example:
-	// $configured_tslib_path = '/var/www/mysite/typo3/sysext/cms/tslib/';
-
-	define('PATH_tslib', $configured_tslib_path);
-}
-
-if (PATH_tslib=='') {
-	die('Cannot find tslib/. Please set path by defining $configured_tslib_path in ' . htmlspecialchars(basename(PATH_thisScript)) . '.');
-}
-
-// ******************
-// include TSFE
-// ******************
-
-require (PATH_tslib.'index_ts.php');
-
+require(PATH_tslib . 'index_ts.php');
 ?>

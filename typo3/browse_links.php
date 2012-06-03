@@ -96,11 +96,11 @@ class SC_browse_links {
 	 *
 	 * @return	void
 	 */
-	function init ()	{
+	function init() {
 
 			// Find "mode"
 		$this->mode = t3lib_div::_GP('mode');
-		if (!$this->mode)	{
+		if (!$this->mode) {
 			$this->mode = 'rte';
 		}
 
@@ -116,7 +116,7 @@ class SC_browse_links {
 	 *
 	 * @return	void
 	 */
-	function main()	{
+	function main() {
 
 		// Clear temporary DB mounts
 		$tmpMount = t3lib_div::_GET('setTempDBmount');
@@ -127,18 +127,18 @@ class SC_browse_links {
 		// Set temporary DB mounts
 		$tempDBmount = intval($GLOBALS['BE_USER']->getSessionData('pageTree_temporaryMountPoint'));
 		if ($tempDBmount) {
-	 		$altMountPoints = $tempDBmount;
+			$altMountPoints = $tempDBmount;
 		}
 
- 		if ($altMountPoints) {
- 			$GLOBALS['BE_USER']->groupData['webmounts'] = implode(',', array_unique(t3lib_div::intExplode(',', $altMountPoints)));
- 			$GLOBALS['WEBMOUNTS'] = $GLOBALS['BE_USER']->returnWebmounts();
- 		}
+		if ($altMountPoints) {
+			$GLOBALS['BE_USER']->groupData['webmounts'] = implode(',', array_unique(t3lib_div::intExplode(',', $altMountPoints)));
+			$GLOBALS['WEBMOUNTS'] = $GLOBALS['BE_USER']->returnWebmounts();
+		}
 
 		$this->content = '';
 
 			// look for alternativ mountpoints
-		switch((string)$this->mode)	{
+		switch((string)$this->mode) {
 			case 'rte':
 			case 'db':
 			case 'wizard':
@@ -152,10 +152,11 @@ class SC_browse_links {
 			case 'filedrag':
 			case 'folder':
 					// Setting additional read-only browsing file mounts
+					// @todo: add this feature for FAL and TYPO3 6.0
 				$altMountPoints = trim($GLOBALS['BE_USER']->getTSConfigVal('options.folderTree.altElementBrowserMountPoints'));
 				if ($altMountPoints) {
 					$altMountPoints = t3lib_div::trimExplode(',', $altMountPoints);
-					foreach($altMountPoints as $filePathRelativeToFileadmindir)	{
+					foreach($altMountPoints as $filePathRelativeToFileadmindir) {
 						$GLOBALS['BE_USER']->addFileMount('', $filePathRelativeToFileadmindir, $filePathRelativeToFileadmindir, 1, 'readonly');
 					}
 					$GLOBALS['FILEMOUNTS'] = $GLOBALS['BE_USER']->returnFilemounts();
@@ -188,7 +189,7 @@ class SC_browse_links {
 			$GLOBALS['BE_USER']->pushModuleData('browse_links.php', $modData);
 
 				// Output the correct content according to $this->mode
-			switch((string)$this->mode)	{
+			switch((string)$this->mode) {
 				case 'rte':
 					$this->content = $this->browser->main_rte();
 				break;
@@ -214,20 +215,10 @@ class SC_browse_links {
 	 *
 	 * @return	void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
-
-
 }
-
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/browse_links.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/browse_links.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_browse_links');

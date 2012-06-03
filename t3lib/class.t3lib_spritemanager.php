@@ -62,8 +62,7 @@ class t3lib_SpriteManager {
 	/**
 	 * Check if the icon cache has to be rebuild, instantiate and call the handler class if so.
 	 *
-	 * @param boolean Suppress regeneration if FALSE (useful for feediting)
-	 * @return void
+	 * @param boolean $allowRegeneration Suppress regeneration if FALSE (useful for feediting)
 	 */
 	function __construct($allowRegeneration = TRUE) {
 			// Create temp directory if missing
@@ -73,9 +72,9 @@ class t3lib_SpriteManager {
 
 			// Create cache filename, the hash includes all icons, registered CSS styles registered and the extension list
 		$this->tempFileName = PATH_site . self::$tempPath .
-							  md5(serialize($GLOBALS['TBE_STYLES']['spritemanager']) .
-								  md5(serialize($GLOBALS['TBE_STYLES']['spriteIconApi']['coreSpriteImageNames'])) .
-								  $GLOBALS['TYPO3_CONF_VARS']['EXT']['extList']) . '.inc';
+							md5(serialize($GLOBALS['TBE_STYLES']['spritemanager']) .
+								md5(serialize($GLOBALS['TBE_STYLES']['spriteIconApi']['coreSpriteImageNames'])) .
+								$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList']) . '.inc';
 
 			// Regenerate cache file if not already existing
 		if (!@file_exists($this->tempFileName)) {
@@ -209,7 +208,4 @@ class t3lib_SpriteManager {
 	}
 }
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_spritemanager.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_spritemanager.php']);
-}
 ?>

@@ -369,13 +369,13 @@ class SC_mod_web_ts_index extends t3lib_SCbase {
 					if (substr(trim($row['title']), 0, 8) == 'template') {
 						$opt .= '<option value="' . $row['uid'] . '">' . htmlspecialchars($row['title']) . '</option>';
 					}
- 				}
+				}
 				$selector = '<select name="createStandard"><option></option>' . $opt . '</select><br />';
 				$staticsText = ', optionally based on one of the standard templates';
 			} else {
 				$selector = '<input type="hidden" name="createStandard" value="" />';
 				$staticsText = '';
- 			}
+			}
 
 				// Extension?
 			$theOutput .= $this->doc->section($GLOBALS['LANG']->getLL('newWebsite') . $staticsText, $GLOBALS['LANG']->getLL('newWebsiteDescription') . '<br /><br />' .
@@ -528,13 +528,6 @@ page.10.value = HELLO WORLD!
 		return $lines;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/tstemplate/ts/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/tstemplate/ts/index.php']);
-}
-
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_web_ts_index');

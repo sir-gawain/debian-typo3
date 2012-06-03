@@ -65,7 +65,7 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 		$exceptionCodeNumber = ($exception->getCode() > 0) ? '#' . $exception->getCode() . ': ' : '';
 		$logTitle = 'Core: Exception handler (' . $context . ')';
 		$logMessage = 'Uncaught TYPO3 Exception: ' . $exceptionCodeNumber . $exception->getMessage() . ' | ' .
-					  get_class($exception) . ' thrown in file ' . $filePathAndName . ' in line ' . $exception->getLine();
+					get_class($exception) . ' thrown in file ' . $filePathAndName . ' in line ' . $exception->getLine();
 		if ($context === 'WEB') {
 			$logMessage .= '. Requested URL: ' . t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
 		}
@@ -160,10 +160,6 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 			}
 		}
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/error/class.t3lib_error_abstractexceptionhandler.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/error/class.t3lib_error_abstractexceptionhandler.php']);
 }
 
 ?>
