@@ -3,8 +3,7 @@
 # Uncomment this to turn on verbose mode.
 # export DH_VERBOSE=1
 
- SOURCEVERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Source: typo3-src(-.+),\1,p')
-#SOURCEVERSION:=-4.7
+SOURCEVERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Source: typo3-src(-.+),\1,p')
 
 PACKAGENAME:=typo3_src$(SOURCEVERSION)
 SOURCEPACKAGE:=typo3-src$(SOURCEVERSION)
@@ -16,15 +15,15 @@ SOURCEINSTALLDIR:=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
 ETCDIR=debian/typo3-dummy/etc/typo3-dummy
 
-MAIN_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^+]+).*,\1,p')
-SUB_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: (.*)\+dfsg1~([^-]+).*,\2,p')
-SUB2_TGZ_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: (.*)\+dfsg1([^-]+).*,\2,p')
+DEBIAN_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
+UPSTREAM_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+dfsg1),,p')
+UPSTREAM_DIR_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+dfsg1[~]*),,p')
 
-ORIG_DIR:=$(SOURCEPACKAGE)_$(MAIN_TGZ_VERSION)+dfsg1$(SUB2_TGZ_VERSION)
-BLANK_DIR:=blankpackage-$(MAIN_TGZ_VERSION)$(SUB_TGZ_VERSION)
+UPSTREAM_DIR:=blankpackage-$(UPSTREAM_DIR_VERSION)
+DEBIAN_DIR:=$(SOURCEPACKAGE)_$(DEBIAN_VERSION)
 
-ORIGTAR:=$(SOURCEPACKAGE)_$(MAIN_TGZ_VERSION)$(SUB_TGZ_VERSION).orig.tar
-DEBTAR:=$(SOURCEPACKAGE)_$(MAIN_TGZ_VERSION)+dfsg1$(SUB2_TGZ_VERSION).orig.tar
+UPSTREAM_TAR:=$(SOURCEPACKAGE)_$(UPSTREAM_VERSION).orig.tar
+DEBIAN_TAR:=$(SOURCEPACKAGE)_$(DEBIAN_VERSION).orig.tar
 
 clean:
 	dh_testdir
@@ -118,28 +117,28 @@ get-orig-source:
 	uscan --no-conf --force-download --rename --repack --download-current-version --destdir=.
 # unpack and rename
 	mkdir -p _unpack
-	tar -xzf $(ORIGTAR).gz -C _unpack
-	mv _unpack/$(BLANK_DIR) _unpack/$(ORIG_DIR)
+	tar -xzf $(UPSTREAM_TAR).gz -C _unpack
+	mv _unpack/$(UPSTREAM_DIR) _unpack/$(DEBIAN_DIR)
 # remove dfsg non complient files
-	rm -f _unpack/$(ORIG_DIR)/typo3/contrib/jsmin/jsmin.php
-	rm -f _unpack/$(ORIG_DIR)/typo3/sysext/em/res/js/ux/jslint.js
+	rm -f _unpack/$(DEBIAN_DIR)/typo3/contrib/jsmin/jsmin.php
+	rm -f _unpack/$(DEBIAN_DIR)/typo3/sysext/em/res/js/ux/jslint.js
 # remove embedded libraries
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swiftmailer
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/prototype
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/scriptaculous
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/flashmedia/swfobject
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/swfupload
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/charts.swf
-	rm -rf _unpack/$(ORIG_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/swiftmailer
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/prototype
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/scriptaculous
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/flashmedia/swfobject
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/swfupload
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/charts.swf
+	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
 # repack
-	tar -cf - -C _unpack $(ORIG_DIR) | gzip -9 - > $(DEBTAR).gz
+	tar -cf - -C _unpack $(DEBIAN_DIR) | gzip -9 - > $(DEBIAN_TAR).gz
 	rm -rf _unpack
 
 prepare-source:
 	dh_testdir
-	mv $(ORIGTAR).gz ../
-	mv $(DEBTAR).gz ../
-	tar --strip-components 1 -C . -xzf ../$(DEBTAR).gz
+	mv $(UPSTREAM_TAR).gz ../
+	mv $(DEBIAN_TAR).gz ../
+	tar --strip-components 1 -C . -xzf ../$(DEBIAN_TAR).gz
 
 # Build architecture-dependent files here.
 binary-arch: build install
