@@ -5,7 +5,7 @@
 
 --- typo3.orig/t3lib/class.t3lib_div.php
 +++ typo3/t3lib/class.t3lib_div.php
-@@ -2549,16 +2549,17 @@
+@@ -2474,16 +2474,17 @@
  	 * @return string Minified script or source string if error happened
  	 */
  	public static function minifyJavaScript($script, &$error = '') {
