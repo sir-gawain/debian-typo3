@@ -144,7 +144,7 @@
 +$TYPO3_CONF_VARS['GFX']['enable_typo3temp_db_tracking'] = '1';
 +
 +// Set compat level to current version
-+$TYPO3_CONF_VARS['SYS']['compat_version'] = '4.7';
++$TYPO3_CONF_VARS['SYS']['compat_version'] = '6.0';
 +
 +// disable the donate now! popup window
 +$TYPO3_CONF_VARS['BE']['allowDonateWindow'] = '0';

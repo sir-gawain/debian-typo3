@@ -1,4 +1,4 @@
-Source: typo3-src-4.7
+Source: typo3-src-6.0
 Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
@@ -9,7 +9,7 @@ Homepage: http://www.typo3.org
 Vcs-Git: git://github.com/sir-gawain/debian-typo3.git
 Vcs-Browser: https://github.com/sir-gawain/debian-typo3
 
-Package: typo3-src-4.7
+Package: typo3-src-6.0
 Architecture: all
 Depends: libjs-swfobject, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libjs-swfupload, libphp-adodb (>=5.07), libphp-swiftmailer (>=4.0.6), ttf-bitstream-vera, ${misc:Depends}
 Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache | php-apc, typo3-database, typo3-dummy
@@ -36,7 +36,7 @@ Description: web content management system (core)
 Package: typo3-database
 Architecture: all
 Depends: mysql-server, dbconfig-common (>= 1.8.39), debconf, ${misc:Depends}
-Recommends: typo3-dummy, typo3-src-4.7
+Recommends: typo3-dummy, typo3-src-6.0
 Description: web content management system (database)
  TYPO3 is a free Open Source content management system for enterprise purposes
  on the web and in intranets. It offers full flexibility and extendability while
@@ -60,7 +60,7 @@ Description: web content management system (database)
 
 Package: typo3-dummy
 Architecture: all
-Depends: exim4 | mail-transport-agent, dbconfig-common, debconf, graphicsmagick, lsb-base (>= 3.0-6), php5, php5-cli, php5-gd, php5-mysql, typo3-src-4.7, ${misc:Depends}
+Depends: exim4 | mail-transport-agent, dbconfig-common, debconf, graphicsmagick, lsb-base (>= 3.0-6), php5, php5-cli, php5-gd, php5-mysql, typo3-src-6.0, ${misc:Depends}
 Recommends: apache2 | http, catdoc, ghostscript, memcached, php5-curl, php5-memcache, php5-suhosin, php5-xcache | php-apc, ppthtml, typo3-database, unrtf, xlhtml, xpdf-utils
 Description: web content management system (basic site structure)
  TYPO3 is an enterprise-level content management system for use on the web
@@ -87,7 +87,7 @@ Description: web content management system (basic site structure)
 
 Package: typo3
 Architecture: all
-Depends: typo3-database, typo3-dummy, typo3-src-4.7, ${misc:Depends}
+Depends: typo3-database, typo3-dummy, typo3-src-6.0, ${misc:Depends}
 Description: web content management system (meta)
  TYPO3 is a free Open Source content management system for enterprise purposes
  on the web and in intranets. It offers full flexibility and extendability while

@@ -1,0 +1,4 @@
+typo3-src-6.0: embedded-php-library usr/share/typo3/typo3_src-6.0/typo3/sysext/openid/lib/php-openid/Auth/OpenID.php
+typo3-src-6.0: embedded-php-library usr/share/typo3/typo3_src-6.0/typo3/sysext/openid/lib/php-openid/Auth/Yadis/Yadis.php
+typo3-src-6.0: non-free-flash usr/share/typo3/typo3_src-6.0/typo3/contrib/flashmedia/flvplayer.swf
+typo3-src-6.0: font-in-non-font-package usr/share/typo3/typo3_src-6.0/t3lib/fonts/nimbus.ttf
