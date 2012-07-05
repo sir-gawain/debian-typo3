@@ -64,6 +64,10 @@ Ext.apply(HTMLArea, {
 	RE_noClosingTag		: /^(img|br|hr|col|input|area|base|link|meta|param)$/i,
 	RE_numberOrPunctuation	: /[0-9.(),;:!¡?¿%#$'"_+=\\\/-]*/g,
 	/***************************************************
+	 * BROWSER IDENTIFICATION                          *
+	 ***************************************************/
+	isIEBeforeIE9: Ext.isIE6 || Ext.isIE7 || Ext.isIE8 || (Ext.isIE && typeof(document.documentMode) !== 'undefined' && document.documentMode < 9),
+	/***************************************************
 	 * TROUBLESHOOTING                                 *
 	 ***************************************************/
 	_appendToLog: function(str){
@@ -126,8 +130,8 @@ HTMLArea.Config = function (editorId) {
 	this.htmlRemoveTagsAndContents = /none/i;
 		// Remove comments
 	this.htmlRemoveComments = false;
-		// Custom tags (must be a regular expression)
-	this.customTags = /none/i;
+		// Array of custom tags
+	this.customTags = [];
 		// BaseURL to be included in the iframe document
 	this.baseURL = document.baseURI;
 		// IE does not support document.baseURI
@@ -930,8 +934,22 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 			this.getEditor().document = this.document;
 			this.getEditor()._doc = this.document;
 			this.getEditor()._iframe = iframe;
+			this.initializeCustomTags();
 			this.createHead();
 			this.getStyleSheets();
+		}
+	},
+	/*
+	 * Create one of each of the configured custom tags so they are properly parsed by the walker when using IE
+	 * See: http://en.wikipedia.org/wiki/HTML5_Shiv
+	 * 
+	 * @return	void
+	 */
+	initializeCustomTags: function () {
+		if (HTMLArea.isIEBeforeIE9) {
+			Ext.each(this.config.customTags, function (tag) {
+				this.document.createElement(tag);
+			}, this);
 		}
 	},
 	/*
@@ -1001,7 +1019,7 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 			}
 		} else {
 				// Test if the styleSheets array is at all accessible
-			if (Ext.isIE) {
+			if (HTMLArea.isIEBeforeIE9) {
 				try {
 					var rules = this.document.styleSheets[0].rules;
 					var imports = this.document.styleSheets[0].imports;
@@ -1026,12 +1044,12 @@ HTMLArea.Iframe = Ext.extend(Ext.BoxComponent, {
 					// Expecting 3 stylesheets...
 				if (this.document.styleSheets.length > 2) {
 					Ext.each(this.document.styleSheets, function (styleSheet, index) {
-						if (Ext.isIE) {
+						if (HTMLArea.isIEBeforeIE9) {
 							try { 
 								var rules = styleSheet.rules;
 								var imports = styleSheet.imports;
 									// Default page style may contain only a comment
-								if (!rules.length && !imports.length && index != 1) {
+								if (!rules.length && !imports.length && styleSheet.href.indexOf('defaultPageStyle') === -1) {
 									stylesAreLoaded = false;
 									errorText = 'Empty rules and imports arrays of styleSheets[' + index + ']';
 									return false;
