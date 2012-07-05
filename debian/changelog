@@ -1,3 +1,14 @@
+typo3-src (4.5.17+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Added all linked external resources to open_basedir.
+  * Increased max_post_size to match upload_max_filesize (both 10M now)
+  * Removed PHP safe_mode options as they are removed from PHP 5.4 (and
+    cause errors with external resources and the TYPO3 compressor)
+  * Removed E_STRICT patch for PHP 5.4 (applied upstream).
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 05 Jul 2012 22:40:03 +0200
+
 typo3-src (4.5.16+dfsg3-1) unstable; urgency=low
 
   * Remove jslint.js because of non free license.
