@@ -230,8 +230,7 @@ class tx_rtehtmlarea_base extends t3lib_rteapi {
 	 * @param	integer		PID value of record (true parent page id)
 	 * @return	string		HTML code for RTE!
 	 */
-
-	function drawRTE($parentObject, $table, $field, $row, $PA, $specConf, $thisConfig, $RTEtypeVal, $RTErelPath, $thePidValue) {
+	function drawRTE(&$parentObject, $table, $field, $row, $PA, $specConf, $thisConfig, $RTEtypeVal, $RTErelPath, $thePidValue) {
 		global $BE_USER, $LANG, $TYPO3_DB, $TYPO3_CONF_VARS;
 
 		$this->TCEform = $parentObject;
@@ -913,9 +912,17 @@ class tx_rtehtmlarea_base extends t3lib_rteapi {
 		}
 
 			// Setting the list of tags to be removed with their contents if specified in the RTE config
-		if (trim($this->thisConfig['removeTagsAndContents']))  {
+		if (trim($this->thisConfig['removeTagsAndContents'])) {
 			$configureRTEInJavascriptString .= '
 			RTEarea[editornumber].htmlRemoveTagsAndContents = /^(' . implode('|', t3lib_div::trimExplode(',', $this->thisConfig['removeTagsAndContents'], 1)) . ')$/i;';
+		}
+			// Setting array of custom tags if specified in the RTE config
+		if (!empty($this->thisConfig['customTags'])) {
+			$customTags = t3lib_div::trimExplode(',', $this->thisConfig['customTags'], 1);
+			if (!empty($customTags)) {
+				$configureRTEInJavascriptString .= '
+				RTEarea[editornumber].customTags= ' . json_encode($customTags) . ';';
+			}
 		}
 			// Process default style configuration
 		$configureRTEInJavascriptString .= '
