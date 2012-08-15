@@ -7,6 +7,14 @@ typo3-src-6.0 (6.0.0+dfsg1~alpha3-1) UNRELEASED; urgency=low
 
  -- Christian Welzel <gawain@camlann.de>  Sun, 29 Apr 2012 18:53:06 +0200
 
+typo3-src (4.5.19+dfsg1-1) unstable; urgency=high
+
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2012-004: Several
+      Vulnerabilities in TYPO3 Core" (Closes: 685011)
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 15 Aug 2012 22:40:03 +0200
+
 typo3-src (4.5.17+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
