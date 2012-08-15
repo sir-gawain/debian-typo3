@@ -1,3 +1,11 @@
+typo3-src (4.5.19+dfsg1-1) unstable; urgency=high
+
+  * New upstream release:
+    - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2012-004: Several
+      Vulnerabilities in TYPO3 Core" (Closes: 685011)
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 15 Aug 2012 22:40:03 +0200
+
 typo3-src (4.5.17+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
