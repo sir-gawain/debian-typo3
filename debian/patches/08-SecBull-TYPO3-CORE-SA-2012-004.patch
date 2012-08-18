@@ -1,0 +1,545 @@
+diff --git a/t3lib/class.t3lib_div.php b/t3lib/class.t3lib_div.php
+index c8eaa73..8d82dd5 100644
+--- a/t3lib/class.t3lib_div.php
++++ b/t3lib/class.t3lib_div.php
+@@ -5749,9 +5749,7 @@ final class t3lib_div {
+ 
+ 
+ 	/**
+-	 * Quotes a string for usage as JS parameter. Depends whether the value is
+-	 * used in script tags (it doesn't need/must not get htmlspecialchar'ed in
+-	 * this case).
++	 * Quotes a string for usage as JS parameter.
+ 	 *
+ 	 * @param string $value the string to encode, may be empty
+ 	 * @param boolean $withinCData
+@@ -5762,12 +5760,7 @@ final class t3lib_div {
+ 	 *                will not be empty
+ 	 */
+ 	static public function quoteJSvalue($value, $withinCData = false)	{
+-		$escapedValue = addcslashes(
+-			$value, '\'' . '"' . '\\' . chr(9) . chr(10) . chr(13)
+-		);
+-		if (!$withinCData) {
+-			$escapedValue = htmlspecialchars($escapedValue);
+-		}
++		$escapedValue = t3lib_div::makeInstance('t3lib_codec_JavaScriptEncoder')->encode($value);
+ 		return '\'' . $escapedValue . '\'';
+ 	}
+ 
+diff --git a/t3lib/class.t3lib_tceforms.php b/t3lib/class.t3lib_tceforms.php
+index 0db6dc1..ddc5cd9 100644
+--- a/t3lib/class.t3lib_tceforms.php
++++ b/t3lib/class.t3lib_tceforms.php
+@@ -1512,7 +1512,7 @@ class t3lib_TCEforms	{
+ 			if (in_array($p[1],$removeItems) || $languageDeny || $authModeDeny)	{
+ 				unset($selItems[$tk]);
+ 			} elseif (isset($PA['fieldTSConfig']['altLabels.'][$p[1]])) {
+-				$selItems[$tk][0]=$this->sL($PA['fieldTSConfig']['altLabels.'][$p[1]]);
++				$selItems[$tk][0] = htmlspecialchars($this->sL($PA['fieldTSConfig']['altLabels.'][$p[1]]));
+ 			}
+ 
+ 				// Removing doktypes with no access:
+@@ -5084,6 +5084,8 @@ class t3lib_TCEforms	{
+ 					'field' => $field,
+ 					'title' => $fieldTitle
+ 				)));
++				$hash = t3lib_div::hmac($params);
++				$params .= $hash;
+ 				$aOnClick = 'vHWin=window.open(\''.$this->backPath.'view_help.php?ffID=' . $params . '\',\'viewFieldHelp\',\'height=400,width=600,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;';
+ 				return '<a href="#" class="typo3-csh-link" onclick="'.htmlspecialchars($aOnClick).'">'.
+ 						'<img'.t3lib_iconWorks::skinImg($this->backPath,'gfx/helpbubble.gif','width="14" height="14"').' hspace="2" border="0" class="absmiddle"'.($GLOBALS['CLIENT']['FORMSTYLE']?' style="cursor:help;"':'').' alt="" />' . $hoverText .
+diff --git a/t3lib/class.t3lib_tceforms_inline.php b/t3lib/class.t3lib_tceforms_inline.php
+index f61b70f..4547fda 100644
+--- a/t3lib/class.t3lib_tceforms_inline.php
++++ b/t3lib/class.t3lib_tceforms_inline.php
+@@ -1529,7 +1529,7 @@ class t3lib_TCEforms_inline {
+ 				if (in_array($p[1],$removeItems) || $languageDeny || $authModeDeny)	{
+ 					unset($selItems[$tk]);
+ 				} elseif (isset($PA['fieldTSConfig']['altLabels.'][$p[1]])) {
+-					$selItems[$tk][0]=$this->fObj->sL($PA['fieldTSConfig']['altLabels.'][$p[1]]);
++					$selItems[$tk][0] = htmlspecialchars($this->fObj->sL($PA['fieldTSConfig']['altLabels.'][$p[1]]));
+ 				}
+ 
+ 					// Removing doktypes with no access:
+diff --git a/t3lib/codec/class.t3lib_codec_javascriptencoder.php b/t3lib/codec/class.t3lib_codec_javascriptencoder.php
+new file mode 100644
+index 0000000..41a39a8
+--- /dev/null
++++ b/t3lib/codec/class.t3lib_codec_javascriptencoder.php
+@@ -0,0 +1,189 @@
++<?php
++/***************************************************************
++ * Copyright notice
++ *
++ * (c) 2012 Franz G. Jahn <franzjahn@cron-it.de>
++ * (c) 2012 Helmut Hummel <helmut.hummel@typo3.org>
++ * All rights reserved
++ *
++ * This script is part of the TYPO3 project. The TYPO3 project is
++ * free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * The GNU General Public License can be found at
++ * http://www.gnu.org/copyleft/gpl.html.
++ *
++ * This script is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * This copyright notice MUST APPEAR in all copies of the script!
++ ***************************************************************/
++
++/**
++ * Adopted from OWASP Enterprise Security API (ESAPI) reference implementation for the JavaScript Codec.
++ * Original Author: Mike Boberski
++ *
++ * This class provides encoding for user input that is intended to be used in a JavaScript context.
++ * It encodes all characters except alphanumericals and the immune characters to a hex representation.
++ *
++ * @package TYPO3
++ * @subpackage t3lib
++ *
++ * @author Mike Boberski <boberski_michael@bah.com>
++ * @copyright 2009-2010 The OWASP Foundation
++ * @link http://www.owasp.org/index.php/ESAPI
++ *
++ * @author Franz G. Jahn <franzjahn@cron-it.de>
++ * @author Helmut Hummel <helmut.hummel@typo3.org>
++ */
++class t3lib_codec_JavaScriptEncoder implements t3lib_Singleton {
++	/**
++	 * A map where the keys are ordinal values of non-alphanumeric single-byte
++	 * characters and the values are hexadecimal equivalents as strings.
++	 *
++	 * @var array
++	 */
++	protected $hexMatrix = array();
++
++	/**
++	 * Characters that are immune (not dangerous) in the JavaScript context
++	 *
++	 * @var array
++	 */
++	protected $immuneCharacters = array(',', '.', '_' );
++
++	/**
++	 * Encoding that is used in the current context
++	 *
++	 * @var string
++	 */
++	protected $encoding;
++
++	/**
++	 * TYPO3 charset encoding object
++	 *
++	 * @var t3lib_cs
++	 */
++	protected $charsetConversion = NULL;
++
++	/**
++	 * Populates the $hex map of non-alphanumeric single-byte characters.
++	 *
++	 * Alphanumerical character are set to NULL in the matrix.
++	 */
++	public function __construct() {
++		$this->charsetConversion = t3lib_div::makeInstance('t3lib_cs');
++		$this->encoding = $this->getEncoding();
++
++		for ($i = 0; $i < 256; $i++) {
++			if (($i >= ord('0') && $i <= ord('9')) || ($i >= ord('A') && $i <= ord('Z')) || ($i >= ord('a') && $i <= ord('z'))) {
++				$this->hexMatrix[$i] = NULL;
++			} else {
++				$this->hexMatrix[$i] = dechex($i);
++			}
++		}
++	}
++
++	/**
++	 * Encodes a string for JavaScript.
++	 *
++	 * @param string $input The string to encode, may be empty.
++	 * @return string The encoded string.
++	 */
++	public function encode($input) {
++		$normalizedInput = $this->charsetConversion->conv($input, $this->encoding, 'utf-8');
++		$stringLength = $this->charsetConversion->strlen('utf-8', $normalizedInput);
++		$encodedString = '';
++		for ($i = 0; $i < $stringLength; $i++) {
++			$c = $this->charsetConversion->substr('utf-8', $normalizedInput, $i, 1);
++			$encodedString .= $this->encodeCharacter($c);
++		}
++
++		return $encodedString;
++	}
++
++	/**
++	 * Returns backslash encoded numeric format. Does not use backslash
++	 * character escapes such as, \" or \' as these may cause parsing problems.
++	 * For example, if a javascript attribute, such as onmouseover, contains
++	 * a \" that will close the entire attribute and allow an attacker to inject
++	 * another script attribute.
++	 *
++	 * @param string $character utf-8 character that needs to be encoded
++	 * @return string encoded character
++	 */
++	protected function encodeCharacter($character) {
++		if ($this->isImmuneCharacter($character)) {
++			return $character;
++		}
++
++		$ordinalValue = $this->charsetConversion->utf8CharToUnumber($character);
++
++			// Check for alphanumeric characters
++		$hex = $this->getHexForNonAlphanumeric($ordinalValue);
++		if ($hex === NULL) {
++			return $character;
++		}
++
++			// Encode up to 256 with \\xHH
++		if ($ordinalValue < 256) {
++			$pad = substr('00', strlen($hex));
++			return '\\x' . $pad . strtoupper($hex);
++		}
++
++			// Otherwise encode with \\uHHHH
++		$pad = substr('0000', strlen($hex));
++		return '\\u' . $pad . strtoupper($hex);
++	}
++
++	/**
++	 * Checks if the given character is one of the immune characters
++	 *
++	 * @param string $character utf-8 character to search for, must not be empty
++	 * @return boolean TRUE if character is immune, FALSE otherwise
++	 */
++	protected function isImmuneCharacter($character) {
++		return in_array($character, $this->immuneCharacters, TRUE);
++	}
++
++	/**
++	 * Returns the ordinal value as a hex string of any character that is not a
++	 * single-byte alphanumeric. The character should be supplied as a string in
++	 * the utf-8 character encoding.
++	 * If the character is an alphanumeric character with ordinal value below 255,
++	 * then this method will return NULL.
++	 *
++	 * @param integer $ordinalValue Ordinal value of the character
++	 * @return string hexadecimal ordinal value of non-alphanumeric characters or NULL otherwise.
++	 */
++	protected function getHexForNonAlphanumeric($ordinalValue) {
++		if ($ordinalValue <= 255) {
++			return $this->hexMatrix[$ordinalValue];
++		}
++		return dechex($ordinalValue);
++	}
++
++    /**
++	 * Gets the encoding depending on the current context (TYPO3_MODE)
++	 *
++	 * @return string
++	 */
++	protected function getEncoding() {
++		if (TYPO3_MODE == 'FE') {
++			$charset = $GLOBALS['TSFE']->renderCharset;
++		} elseif (is_object($GLOBALS['LANG'])) {
++			$charset = $GLOBALS['LANG']->charSet;
++		} else if (!empty($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'])) {
++			$charset = $GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'];
++		} else {
++			$charset = 'utf-8';
++		}
++
++		return $charset;
++	}
++}
++?>
+\ No newline at end of file
+diff --git a/t3lib/core_autoload.php b/t3lib/core_autoload.php
+index 9f72d0d..d9466e5 100644
+--- a/t3lib/core_autoload.php
++++ b/t3lib/core_autoload.php
+@@ -17,6 +17,7 @@ return array(
+ 	't3lib_cache' => PATH_t3lib . 'class.t3lib_cache.php',
+ 	't3lib_cli' => PATH_t3lib . 'class.t3lib_cli.php',
+ 	't3lib_clipboard' => PATH_t3lib . 'class.t3lib_clipboard.php',
++	't3lib_codec_javascriptencoder' => PATH_t3lib . 'codec/class.t3lib_codec_javascriptencoder.php',
+ 	't3lib_cs' => PATH_t3lib . 'class.t3lib_cs.php',
+ 	't3lib_db' => PATH_t3lib . 'class.t3lib_db.php',
+ 	't3lib_diff' => PATH_t3lib . 'class.t3lib_diff.php',
+@@ -154,4 +155,4 @@ return array(
+ 	'tslib_gmenu_layers' => PATH_tslib . 'media/scripts/gmenu_layers.php',
+ 	'tslib_tmenu_layers' => PATH_tslib . 'media/scripts/tmenu_layers.php',
+ );
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/contrib/RemoveXSS/RemoveXSS.php b/typo3/contrib/RemoveXSS/RemoveXSS.php
+index 59d8a13..f56acdc 100644
+--- a/typo3/contrib/RemoveXSS/RemoveXSS.php
++++ b/typo3/contrib/RemoveXSS/RemoveXSS.php
+@@ -43,12 +43,12 @@ final class RemoveXSS {
+ 	 *
+ 	 * Using an external class by Travis Puderbaugh <kallahar@quickwired.com>
+ 	 *
+-	 * @param	string		Input string
+-	 * @param	string		replaceString for inserting in keywords (which destroyes the tags)
+-	 * @return	string		Input string with potential XSS code removed
++	 * @param string $val Input string
++	 * @param string $replaceString replaceString for inserting in keywords (which destroys the tags)
++	 * @return string Input string with potential XSS code removed
+ 	 */
+ 	public static function process($val, $replaceString = '<x>') {
+-		// don't use empty $replaceString because then no XSS-remove will be done
++			// don't use empty $replaceString because then no XSS-remove will be done
+ 		if ($replaceString == '') {
+ 			$replaceString = '<x>';
+ 		}
+@@ -57,8 +57,8 @@ final class RemoveXSS {
+ 		// note that you have to handle splits with \n, \r, and \t later since they *are* allowed in some inputs
+ 		$val = preg_replace('/([\x00-\x08]|[\x0b-\x0c]|[\x0e-\x19])/', '', $val);
+ 
+-		// straight replacements, the user should never need these since they're normal characters
+-		// this prevents like <IMG SRC=&#X40&#X61&#X76&#X61&#X73&#X63&#X72&#X69&#X70&#X74&#X3A&#X61&#X6C&#X65&#X72&#X74&#X28&#X27&#X58&#X53&#X53&#X27&#X29>
++			// straight replacements, the user should never need these since they're normal characters
++			// this prevents like <IMG SRC=&#X40&#X61&#X76&#X61&#X73&#X63&#X72&#X69&#X70&#X74&#X3A&#X61&#X6C&#X65&#X72&#X74&#X28&#X27&#X58&#X53&#X53&#X27&#X29>
+ 		$searchHexEncodings = '/&#[xX]0{0,8}(21|22|23|24|25|26|27|28|29|2a|2b|2d|2f|30|31|32|33|34|35|36|37|38|39|3a|3b|3d|3f|40|41|42|43|44|45|46|47|48|49|4a|4b|4c|4d|4e|4f|50|51|52|53|54|55|56|57|58|59|5a|5b|5c|5d|5e|5f|60|61|62|63|64|65|66|67|68|69|6a|6b|6c|6d|6e|6f|70|71|72|73|74|75|76|77|78|79|7a|7b|7c|7d|7e);?/ie';
+ 		$searchUnicodeEncodings = '/&#0{0,8}(33|34|35|36|37|38|39|40|41|42|43|45|47|48|49|50|51|52|53|54|55|56|57|58|59|61|63|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89|90|91|92|93|94|95|96|97|98|99|100|101|102|103|104|105|106|107|108|109|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126);?/ie';
+ 		while (preg_match($searchHexEncodings, $val) || preg_match($searchUnicodeEncodings, $val)) {
+@@ -66,10 +66,40 @@ final class RemoveXSS {
+ 			$val = preg_replace($searchUnicodeEncodings, "chr('\\1')", $val);
+ 		}
+ 
+-		// now the only remaining whitespace attacks are \t, \n, and \r
+-		$ra1 = array('javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base', 'onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate', 'onbeforecopy', 'onbeforecut', 'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload', 'onbeforeupdate', 'onblur', 'onbounce', 'oncellchange', 'onchange', 'onclick', 'oncontextmenu', 'oncontrolselect', 'oncopy', 'oncut', 'ondataavailable', 'ondatasetchanged', 'ondatasetcomplete', 'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onerror', 'onerrorupdate', 'onfilterchange', 'onfinish', 'onfocus', 'onfocusin', 'onfocusout', 'onhelp', 'onkeydown', 'onkeypress', 'onkeyup', 'onlayoutcomplete', 'onload', 'onlosecapture', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onpaste', 'onpropertychange', 'onreadystatechange', 'onreset', 'onresize', 'onresizeend', 'onresizestart', 'onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted', 'onscroll', 'onselect', 'onselectionchange', 'onselectstart', 'onstart', 'onstop', 'onsubmit', 'onunload');
+-		$ra_tag = array('applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base');
+-		$ra_attribute = array('style', 'onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate', 'onbeforecopy', 'onbeforecut', 'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload', 'onbeforeupdate', 'onblur', 'onbounce', 'oncellchange', 'onchange', 'onclick', 'oncontextmenu', 'oncontrolselect', 'oncopy', 'oncut', 'ondataavailable', 'ondatasetchanged', 'ondatasetcomplete', 'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onerror', 'onerrorupdate', 'onfilterchange', 'onfinish', 'onfocus', 'onfocusin', 'onfocusout', 'onhelp', 'onkeydown', 'onkeypress', 'onkeyup', 'onlayoutcomplete', 'onload', 'onlosecapture', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onpaste', 'onpropertychange', 'onreadystatechange', 'onreset', 'onresize', 'onresizeend', 'onresizestart', 'onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted', 'onscroll', 'onselect', 'onselectionchange', 'onselectstart', 'onstart', 'onstop', 'onsubmit', 'onunload');
++			// now the only remaining whitespace attacks are \t, \n, and \r
++		$ra1 = array('javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed',
++			'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base', 'video', 'audio', 'track',
++			'canvas', 'onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate', 'onbeforecopy', 'onbeforecut',
++			'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload', 'onbeforeupdate',
++			'onblur', 'onbounce', 'oncanplay', 'oncanplaythrough', 'oncellchange', 'onchange', 'onclick', 'oncontextmenu',
++			'oncontrolselect', 'oncopy', 'oncuechange', 'oncut', 'ondataavailable', 'ondatasetchanged', 'ondatasetcomplete',
++			'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart',
++			'ondrop', 'ondurationchange', 'onemptied', 'onended', 'onerror', 'onerrorupdate', 'onfilterchange', 'onfinish',
++			'onfocus', 'onfocusin', 'onfocusout', 'onhashchange', 'onhelp', 'oninput', 'oninvalid', 'onkeydown', 'onkeypress',
++			'onkeyup', 'onlayoutcomplete', 'onload', 'onloadeddata', 'onloadedmetadata', 'onloadstart', 'onlosecapture',
++			'onmessage', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup',
++			'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onoffline', 'ononline', 'onpagehide', 'onpageshow', 'onpaste',
++			'onpause', 'onplay', 'onplaying', 'onpopstate', 'onprogress', 'onpropertychange', 'onratechange', 'onreadystatechange',
++			'onreset', 'onresize', 'onresizeend', 'onresizestart', 'onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted',
++			'onscroll', 'onseeked', 'onseeking','onselect', 'onselectionchange', 'onselectstart', 'onshow', 'onstalled', 'onstart',
++			'onstop', 'onstorage', 'onsubmit', 'onsuspend', 'ontimeupdate', 'onunload', 'onvolumechange', 'onwaiting');
++		$ra_tag = array('applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame',
++			'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base', 'video', 'audio', 'track', 'canvas');
++		$ra_attribute = array('style', 'onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate',
++			'onbeforecopy', 'onbeforecut', 'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint',
++			'onbeforeunload', 'onbeforeupdate', 'onblur', 'onbounce', 'oncanplay', 'oncanplaythrough', 'oncellchange', 'onchange',
++			'onclick', 'oncontextmenu', 'oncontrolselect', 'oncopy', 'oncuechange', 'oncut', 'ondataavailable', 'ondatasetchanged',
++			'ondatasetcomplete', 'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover',
++			'ondragstart', 'ondrop', 'ondurationchange', 'onemptied', 'onended', 'onerror', 'onerrorupdate', 'onfilterchange',
++			'onfinish', 'onfocus', 'onfocusin', 'onfocusout', 'onhashchange', 'onhelp', 'oninput', 'oninvalid,', 'onkeydown',
++			'onkeypress', 'onkeyup', 'onlayoutcomplete', 'onload', 'onloadeddata', 'onloadedmetadata', 'onloadstart',
++			'onlosecapture', 'onmessage', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout',
++			'onmouseover', 'onmouseup', 'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onoffline', 'ononline',
++			'onpagehide', 'onpageshow', 'onpaste', 'onpause', 'onplay', 'onplaying', 'onpopstate', 'onprogress',
++			'onpropertychange', 'onratechange', 'onreadystatechange', 'onredo', 'onreset', 'onresize', 'onresizeend',
++			'onresizestart','onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted', 'onscroll', 'onseeked', 'onseeking',
++			'onselect', 'onselectionchange', 'onselectstart', 'onshow', 'onstalled', 'onstart', 'onstop', 'onstorage', 'onsubmit',
++			'onsuspend', 'ontimeupdate', 'onundo', 'onunload', 'onvolumechange', 'onwaiting');
+ 		$ra_protocol = array('javascript', 'vbscript', 'expression');
+ 
+ 		//remove the potential &#xxx; stuff for testing
+@@ -77,29 +107,28 @@ final class RemoveXSS {
+ 		$ra = array();
+ 
+ 		foreach ($ra1 as $ra1word) {
+-			//stripos is faster than the regular expressions used later
+-			//and because the words we're looking for only have chars < 0x80
+-			//we can use the non-multibyte safe version
+-			if (stripos($val2, $ra1word ) !== false ) {
+-				//keep list of potential words that were found
+-				if (in_array($ra1word, $ra_protocol)) {
++				// stripos is faster than the regular expressions used later and because the words we're looking for only have
++				// chars < 0x80 we can use the non-multibyte safe version
++			if (stripos($val2, $ra1word ) !== FALSE ) {
++					//keep list of potential words that were found
++				if (in_array($ra1word, $ra_protocol, TRUE)) {
+ 					$ra[] = array($ra1word, 'ra_protocol');
+ 				}
+-				if (in_array($ra1word, $ra_tag)) {
++				if (in_array($ra1word, $ra_tag, TRUE)) {
+ 					$ra[] = array($ra1word, 'ra_tag');
+ 				}
+-				if (in_array($ra1word, $ra_attribute)) {
++				if (in_array($ra1word, $ra_attribute, TRUE)) {
+ 					$ra[] = array($ra1word, 'ra_attribute');
+ 				}
+-				//some keywords appear in more than one array
+-				//these get multiple entries in $ra, each with the appropriate type
++					//some keywords appear in more than one array
++					//these get multiple entries in $ra, each with the appropriate type
+ 			}
+ 		}
+-		//only process potential words
++			//only process potential words
+ 		if (count($ra) > 0) {
+-			// keep replacing as long as the previous round replaced something
+-			$found = true;
+-			while ($found == true) {
++				// keep replacing as long as the previous round replaced something
++			$found = TRUE;
++			while ($found == TRUE) {
+ 				$val_before = $val;
+ 				for ($i = 0; $i < sizeof($ra); $i++) {
+ 					$pattern = '';
+@@ -109,7 +138,7 @@ final class RemoveXSS {
+ 						}
+ 						$pattern .= $ra[$i][0][$j];
+ 					}
+-					//handle each type a little different (extra conditions to prevent false positives a bit better)
++						//handle each type a little different (extra conditions to prevent false positives a bit better)
+ 					switch ($ra[$i][1]) {
+ 						case 'ra_protocol':
+ 							//these take the form of e.g. 'javascript:'
+@@ -120,24 +149,23 @@ final class RemoveXSS {
+ 							$pattern = '(?<=<)' . $pattern . '((&#[xX]0{0,8}([9ab]);?)|(&#0{0,8}(9|10|13);?)|\s)*(?=[^\da-z])';
+ 							break;
+ 						case 'ra_attribute':
+-							//these take the form of e.g. 'onload='  Beware that a lot of characters are allowed
+-							//between the attribute and the equal sign!
++								//these take the form of e.g. 'onload='  Beware that a lot of characters are allowed
++								//between the attribute and the equal sign!
+ 							$pattern .= '[\s\!\#\$\%\&\(\)\*\~\+\-\_\.\,\:\;\?\@\[\/\|\\\\\]\^\`]*(?==)';
+ 							break;
+ 					}
+ 					$pattern = '/' . $pattern . '/i';
+-					// add in <x> to nerf the tag
++						// add in <x> to nerf the tag
+ 					$replacement = substr_replace($ra[$i][0], $replaceString, 2, 0);
+-					// filter out the hex tags
++						// filter out the hex tags
+ 					$val = preg_replace($pattern, $replacement, $val);
+ 					if ($val_before == $val) {
+-						// no replacements were made, so exit the loop
+-						$found = false;
++							// no replacements were made, so exit the loop
++						$found = FALSE;
+ 					}
+ 				}
+ 			}
+ 		}
+-
+ 		return $val;
+ 	}
+ }
+diff --git a/typo3/sysext/cms/tslib/class.tslib_content.php b/typo3/sysext/cms/tslib/class.tslib_content.php
+index e4241ea..7727aec 100644
+--- a/typo3/sysext/cms/tslib/class.tslib_content.php
++++ b/typo3/sysext/cms/tslib/class.tslib_content.php
+@@ -6169,7 +6169,7 @@ class tslib_cObj {
+ 						}
+ 
+ 						$this->lastTypoLinkTarget = $LD['target'];
+-						$targetPart = $LD['target'] ? ' target="'.$LD['target'].'"' : '';
++						$targetPart = $LD['target'] ? ' target="' . htmlspecialchars($LD['target']) . '"' : '';
+ 
+ 							// If sectionMark is set, there is no baseURL AND the current page is the page the link is to, check if there are any additional parameters or addQueryString parameters and if not, drop the url.
+ 						if ($sectionMark && !$GLOBALS['TSFE']->config['config']['baseURL'] &&
+diff --git a/typo3/sysext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php b/typo3/sysext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php
+index 03e59fa..7e4cb8e 100644
+--- a/typo3/sysext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php
++++ b/typo3/sysext/indexed_search/modfunc2/class.tx_indexedsearch_modfunc2.php
+@@ -164,7 +164,7 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
+ 		if ($res)	{
+ 			while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+ 				$i++;
+-				$table1.='<tr class="bgColor4"><td>'.$i.'.</td><td>'.$row['word'].'</td><td>&nbsp;&nbsp;'.$row['c'].'</td></tr>';
++				$table1 .= '<tr class="bgColor4"><td>' . $i . '.</td><td>' . htmlspecialchars($row['word']) . '</td><td>&nbsp;&nbsp;' . $row['c'] . '</td></tr>';
+ 			}
+ 		}
+ 
+diff --git a/typo3/sysext/lowlevel/config/index.php b/typo3/sysext/lowlevel/config/index.php
+index a563584..995e91b 100644
+--- a/typo3/sysext/lowlevel/config/index.php
++++ b/typo3/sysext/lowlevel/config/index.php
+@@ -246,6 +246,12 @@ class SC_mod_tools_config_index {
+ 			$arrayBrowser->depthKeys=$arrayBrowser->getSearchKeys($theVar, '',	$search_field, array());
+ 		}
+ 
++			// mask the encryption key to not show it as plaintext in the configuration module
++		if ($theVar == $GLOBALS['TYPO3_CONF_VARS']) {
++			$theVar['SYS']['encryptionKey'] = '***** (length: ' .
++				strlen($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']) . ' characters)';
++		}
++
+ 		$tree = $arrayBrowser->tree($theVar, '', '');
+ 
+ 		$label = $this->MOD_MENU['function'][$this->MOD_SETTINGS['function']];
+diff --git a/typo3/sysext/scheduler/examples/class.tx_scheduler_testtask_additionalfieldprovider.php b/typo3/sysext/scheduler/examples/class.tx_scheduler_testtask_additionalfieldprovider.php
+index 25aa837..cfea43d 100644
+--- a/typo3/sysext/scheduler/examples/class.tx_scheduler_testtask_additionalfieldprovider.php
++++ b/typo3/sysext/scheduler/examples/class.tx_scheduler_testtask_additionalfieldprovider.php
+@@ -67,7 +67,7 @@ class tx_scheduler_TestTask_AdditionalFieldProvider implements tx_scheduler_Addi
+ 
+ 			// Write the code for the field
+ 		$fieldID = 'task_email';
+-		$fieldCode = '<input type="text" name="tx_scheduler[email]" id="' . $fieldID . '" value="' . $taskInfo['email'] . '" size="30" />';
++		$fieldCode = '<input type="text" name="tx_scheduler[email]" id="' . $fieldID . '" value="' . htmlspecialchars($taskInfo['email']) . '" size="30" />';
+ 		$additionalFields = array();
+ 		$additionalFields[$fieldID] = array(
+ 			'code'     => $fieldCode,
+diff --git a/typo3/view_help.php b/typo3/view_help.php
+index cc64987..3bb514a 100644
+--- a/typo3/view_help.php
++++ b/typo3/view_help.php
+@@ -152,8 +152,9 @@ class SC_view_help {
+ 			$this->tfID = '';
+ 		}
+ 		if (!$this->tfID) {
+-			if (($this->ffID = t3lib_div::_GP('ffID'))) {
+-				$this->ffID = unserialize(base64_decode($this->ffID));
++			$ffID = t3lib_div::_GP('ffID');
++			if (!empty($ffID)) {
++				$this->ffID = unserialize(base64_decode($this->validateAndStripHmac($ffID)));
+ 			}
+ 		}
+ 		$this->back = t3lib_div::_GP('back');
+@@ -168,6 +169,26 @@ class SC_view_help {
+ 	}
+ 
+ 	/**
++	 * @param $string
++	 * @return string
++	 * @throws InvalidArgumentException
++	 */
++	protected function validateAndStripHmac($string) {
++		if (!is_string($string)) {
++			throw new InvalidArgumentException('A hash can only be validated for a string, but "' . gettype($string) . '" was given.', 1320829762);
++		}
++		if (strlen($string) < 40) {
++			throw new InvalidArgumentException('A hashed string must contain at least 40 characters, the given string was only ' . strlen($string) . ' characters long.', 1320830276);
++		}
++		$stringWithoutHmac = substr($string, 0, -40);
++		if (t3lib_div::hmac($stringWithoutHmac) !== substr($string, -40)) {
++			throw new InvalidArgumentException('The given string was not appended with a valid HMAC.', 1320830018);
++		}
++		return $stringWithoutHmac;
++
++	}
++
++	/**
+ 	 * Main function, rendering the display
+ 	 *
+ 	 * @return	void
+@@ -888,4 +909,4 @@ $SOBE->init();
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
