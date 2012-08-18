@@ -5877,7 +5877,7 @@ class tslib_cObj {
 						}
 
 						$this->lastTypoLinkTarget = $LD['target'];
-						$targetPart = $LD['target'] ? ' target="' . $LD['target'] . '"' : '';
+						$targetPart = $LD['target'] ? ' target="' . htmlspecialchars($LD['target']) . '"' : '';
 
 							// If sectionMark is set, there is no baseURL AND the current page is the page the link is to, check if there are any additional parameters or addQueryString parameters and if not, drop the url.
 						if ($sectionMark && !$GLOBALS['TSFE']->config['config']['baseURL']
@@ -7669,7 +7669,9 @@ class tslib_cObj {
 		$necessaryFields = array('uid', 'pid');
 		$wsFields = array('t3ver_state');
 
-		if (isset($GLOBALS['TCA'][$table]) && strpos($selectPart, '*')!== FALSE) {
+		if (isset($GLOBALS['TCA'][$table])
+			&& !preg_match($matchStart . '\*' . $matchEnd, $selectPart)
+			&& !preg_match('/(count|max|min|avg|sum)\([^\)]+\)/i', $selectPart)) {
 			foreach ($necessaryFields as $field) {
 				$match = $matchStart . $field . $matchEnd;
 				if (!preg_match($match, $selectPart)) {
