@@ -31,9 +31,6 @@
  * @author	Kasper Skårhøj <kasper@typo3.com>
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
  */
-require_once(PATH_typo3 . 'class.browse_links.php');
-require_once(PATH_t3lib . 'file/Service/MagicImageService.php');
-
 /**
  * Local Folder Tree
  *
@@ -55,7 +52,7 @@ class tx_rtehtmlarea_image_folderTree extends TBE_FolderTree {
 		if ($this->ext_isLinkable($folderObject)) {
 			$aOnClick = 'return jumpToUrl(\'' . $this->thisScript .
 				'?editorNo=' . $GLOBALS['SOBE']->browser->editorNo .
-				'&act=' . $GLOBALS['SOBE']->browser->act . 
+				'&act=' . $GLOBALS['SOBE']->browser->act .
 				'&mode=' . $GLOBALS['SOBE']->browser->mode .
 				'&expandFolder=' . rawurlencode($folderObject->getCombinedIdentifier()) . '\');';
 			return '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . $title . '</a>';
@@ -186,7 +183,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		$pArr[1] = implode(':', array($this->editorNo, $this->sys_language_content));
 		$pArr[2] = $this->RTEtsConfigParams;
 		if ($this->act == 'dragdrop' || $this->act == 'plain') {
-			$this->allowedFileTypes = explode(',','jpg,jpeg,gif,png');
+			$this->allowedFileTypes = explode(',', 'jpg,jpeg,gif,png');
 		}
 		$pArr[3] = implode(',', $this->allowedFileTypes);
 		$this->bparams = implode('|', $pArr);
@@ -358,7 +355,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 <body>
 <script type="text/javascript">
 /*<![CDATA[*/
-	insertImage('.t3lib_div::quoteJSvalue($url,1).','.$width.','.$height.','.t3lib_div::quoteJSvalue($altText,1).','.t3lib_div::quoteJSvalue($titleText,1).','.t3lib_div::quoteJSvalue($additionalParams, 1).');
+	insertImage('.t3lib_div::quoteJSvalue($url, 1).','.$width.','.$height.','.t3lib_div::quoteJSvalue($altText, 1).','.t3lib_div::quoteJSvalue($titleText, 1).','.t3lib_div::quoteJSvalue($additionalParams, 1).');
 /*]]>*/
 </script>
 </body>
@@ -379,15 +376,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 		$removedProperties = array();
 		if (is_array($this->buttonConfig['properties.'])) {
 			if ($this->buttonConfig['properties.']['removeItems']) {
-				$removedProperties = t3lib_div::trimExplode(',',$this->buttonConfig['properties.']['removeItems'],1);
-			}
-		}
-			// The following property is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
-		if ($this->thisConfig['classesImage']) {
-			$classesImageArray = t3lib_div::trimExplode(',', $this->thisConfig['classesImage'], 1);
-			$classesImageJSOptions = '<option value=""></option>';
-			foreach ($classesImageArray as $class) {
-				$classesImageJSOptions .= '<option value="' .$class . '">' . $class . '</option>';
+				$removedProperties = t3lib_div::trimExplode(',', $this->buttonConfig['properties.']['removeItems'], 1);
 			}
 		}
 		if ($this->buttonConfig['properties.']['class.']['allowedClasses']) {
@@ -421,10 +410,10 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				}
 			}
 			function jumpToUrl(URL,anchor) {
-				var add_act = URL.indexOf("act=")==-1 ? "&act='.$act.'" : "";
-				var add_editorNo = URL.indexOf("editorNo=")==-1 ? "&editorNo='.$editorNo.'" : "";
-				var add_sys_language_content = URL.indexOf("sys_language_content=")==-1 ? "&sys_language_content='.$sys_language_content.'" : "";
-				var RTEtsConfigParams = "&RTEtsConfigParams='.rawurlencode($this->RTEtsConfigParams).'";
+				var add_act = URL.indexOf("act=")==-1 ? "&act=' . $act . '" : "";
+				var add_editorNo = URL.indexOf("editorNo=")==-1 ? "&editorNo=' . $editorNo . '" : "";
+				var add_sys_language_content = URL.indexOf("sys_language_content=")==-1 ? "&sys_language_content=' . $sys_language_content . '" : "";
+				var RTEtsConfigParams = "&RTEtsConfigParams=' . rawurlencode($this->RTEtsConfigParams) . '";
 
 				var cur_width = selectedImageRef ? "&cWidth="+selectedImageRef.style.width : "";
 				var cur_height = selectedImageRef ? "&cHeight="+selectedImageRef.style.height : "";
@@ -434,11 +423,11 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				return false;
 			}
 			function insertImage(file,width,height) {
-				plugin.insertImage(\'<img src="\'+file+\'"' . ($this->defaultClass?(' class="'.$this->defaultClass.'"'):'') . ' width="\'+parseInt(width)+\'" height="\'+parseInt(height)+\'" />\');
+				plugin.insertImage(\'<img src="\'+file+\'"' . ($this->defaultClass ? (' class="' . $this->defaultClass . '"') : '') . ' width="\'+parseInt(width)+\'" height="\'+parseInt(height)+\'" />\');
 			}
 			function launchView(url) {
 				var thePreviewWindow="";
-				thePreviewWindow = window.open("'.t3lib_div::getIndpEnv('TYPO3_SITE_URL').TYPO3_mainDir.'show_item.php?table="+url,"ShowItem","height=300,width=410,status=0,menubar=0,resizable=0,location=0,directories=0,scrollbars=1,toolbar=0");
+				thePreviewWindow = window.open("' . t3lib_div::getIndpEnv('TYPO3_SITE_URL') . TYPO3_mainDir . 'show_item.php?table="+url,"ShowItem","height=300,width=410,status=0,menubar=0,resizable=0,location=0,directories=0,scrollbars=1,toolbar=0");
 				if (thePreviewWindow && thePreviewWindow.focus) {
 					thePreviewWindow.focus();
 				}
@@ -464,7 +453,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 				var bgColor=\' class="bgColor4"\';
 				var sz="";
 				sz+=\'<table border="0" cellpadding="1" cellspacing="1"><form action="" name="imageData">\';
-				'.(in_array('class', $removedProperties)?'':'
+				' . (in_array('class', $removedProperties)?'':'
 				if(classesImage) {
 					sz+=\'<tr><td\'+bgColor+\'><label for="iClass">'.$GLOBALS['LANG']->getLL('class').': </label></td><td>\'+styleSelector+\'</td></tr>\';
 				}')
@@ -497,7 +486,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 					sz+=\'<tr><td\'+bgColor+\'><label for="iLang">\' + plugin.editor.getPlugin("Language").localize(\'Language-Tooltip\') + \': </label></td><td>\' + languageSelector + \'</td></tr>\';
 				}')
 				.((in_array('clickenlarge', $removedProperties) || in_array('data-htmlarea-clickenlarge', $removedProperties)) ?'':'
-				sz+=\'<tr><td\'+bgColor+\'><label for="iClickEnlarge">'.$GLOBALS['LANG']->sL('LLL:EXT:cms/locallang_ttc.php:image_zoom',1).' </label></td><td><input type="checkbox" name="iClickEnlarge" id="iClickEnlarge" value="0" /></td></tr>\';').'
+				sz+=\'<tr><td\'+bgColor+\'><label for="iClickEnlarge">'.$GLOBALS['LANG']->sL('LLL:EXT:cms/locallang_ttc.php:image_zoom', 1).' </label></td><td><input type="checkbox" name="iClickEnlarge" id="iClickEnlarge" value="0" /></td></tr>\';').'
 				sz+=\'<tr><td><input type="submit" value="'.$GLOBALS['LANG']->getLL('update').'" onClick="return setImageProperties();"></td></tr>\';
 				sz+=\'</form></table>\';
 				return sz;
@@ -742,7 +731,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 */
 	function main_rte() {
 			// Starting content:
-		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('Insert Image',1));
+		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('Insert Image', 1));
 
 			// Making menu in top:
 		$menuDef = array();
@@ -932,7 +921,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 *
 	 * @return	void
 	 */
-	public function initConfiguration(){
+	public function initConfiguration() {
 		$this->thisConfig = $this->getRTEConfig();
 		$this->buttonConfig = $this->getButtonConfig();
 		$this->imgPath = $this->getImgPath();
@@ -948,8 +937,8 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 */
 	protected function getRTEConfig() {
 		$RTEtsConfigParts = explode(':', $this->RTEtsConfigParams);
-		$RTEsetup = $GLOBALS['BE_USER']->getTSConfig('RTE',t3lib_BEfunc::getPagesTSconfig($RTEtsConfigParts[5]));
-		return t3lib_BEfunc::RTEsetup($RTEsetup['properties'],$RTEtsConfigParts[0],$RTEtsConfigParts[2],$RTEtsConfigParts[4]);
+		$RTEsetup = $GLOBALS['BE_USER']->getTSConfig('RTE', t3lib_BEfunc::getPagesTSconfig($RTEtsConfigParts[5]));
+		return t3lib_BEfunc::RTEsetup($RTEsetup['properties'], $RTEtsConfigParts[0], $RTEtsConfigParts[2], $RTEtsConfigParts[4]);
 	}
 
 	/**
@@ -994,9 +983,6 @@ class tx_rtehtmlarea_select_image extends browse_links {
 			// Remove options according to RTE configuration
 		if (is_array($this->buttonConfig['options.']) && $this->buttonConfig['options.']['removeItems']) {
 			$allowedItems = array_diff($allowedItems, t3lib_div::trimExplode(',', $this->buttonConfig['options.']['removeItems'], 1));
-		} else {
-				// This PageTSConfig property is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
-			$allowedItems = array_diff($allowedItems, t3lib_div::trimExplode(',', $this->thisConfig['blindImageOptions'], 1));
 		}
 		return $allowedItems;
 	}
@@ -1043,18 +1029,34 @@ class tx_rtehtmlarea_select_image extends browse_links {
 	 */
 	protected function setMaximumImageDimensions() {
 		if (is_array($this->buttonConfig['options.']) && is_array($this->buttonConfig['options.']['plain.'])) {
-			if ($this->buttonConfig['options.']['plain.']['maxWidth']) $this->plainMaxWidth = $this->buttonConfig['options.']['plain.']['maxWidth'];
-			if ($this->buttonConfig['options.']['plain.']['maxHeight']) $this->plainMaxHeight = $this->buttonConfig['options.']['plain.']['maxHeight'];
+			if ($this->buttonConfig['options.']['plain.']['maxWidth']) {
+				$this->plainMaxWidth = $this->buttonConfig['options.']['plain.']['maxWidth'];
+			}
+			if ($this->buttonConfig['options.']['plain.']['maxHeight']) {
+				$this->plainMaxHeight = $this->buttonConfig['options.']['plain.']['maxHeight'];
+			}
 		}
-		if (!$this->plainMaxWidth) $this->plainMaxWidth = 640;
-		if (!$this->plainMaxHeight) $this->plainMaxHeight = 680;
+		if (!$this->plainMaxWidth) {
+			$this->plainMaxWidth = 640;
+		}
+		if (!$this->plainMaxHeight) {
+			$this->plainMaxHeight = 680;
+		}
 		if (is_array($this->buttonConfig['options.']) && is_array($this->buttonConfig['options.']['magic.'])) {
-			if ($this->buttonConfig['options.']['magic.']['maxWidth']) $this->magicMaxWidth = $this->buttonConfig['options.']['magic.']['maxWidth'];
-			if ($this->buttonConfig['options.']['magic.']['maxHeight']) $this->magicMaxHeight = $this->buttonConfig['options.']['magic.']['maxHeight'];
+			if ($this->buttonConfig['options.']['magic.']['maxWidth']) {
+				$this->magicMaxWidth = $this->buttonConfig['options.']['magic.']['maxWidth'];
+			}
+			if ($this->buttonConfig['options.']['magic.']['maxHeight']) {
+				$this->magicMaxHeight = $this->buttonConfig['options.']['magic.']['maxHeight'];
+			}
 		}
 			// These defaults allow images to be based on their width - to a certain degree - by setting a high height. Then we're almost certain the image will be based on the width
-		if (!$this->magicMaxWidth) $this->magicMaxWidth = 300;
-		if (!$this->magicMaxHeight) $this->magicMaxHeight = 1000;
+		if (!$this->magicMaxWidth) {
+			$this->magicMaxWidth = 300;
+		}
+		if (!$this->magicMaxHeight) {
+			$this->magicMaxHeight = 1000;
+		}
 	}
 
 	/**
@@ -1167,43 +1169,43 @@ class tx_rtehtmlarea_select_image extends browse_links {
 						'fileExt'  => $fileExtension,
 						'fileIcon' => $icon,
 					);
-					$ATag = "<a href=\"#\" onclick=\"return BrowseLinks.File.insertElement('file_$filesIndex');\">";
-					$ATag_alt = substr($ATag,0,-4).",1);\">";
-					$ATag_e='</a>';
+					$ATag = '<a href="#" onclick="return BrowseLinks.File.insertElement(\'file_' . $filesIndex . '\');">';
+					$ATag_alt = substr($ATag, 0, -4) . ',1);">';
+					$ATag_e = '</a>';
 				}
 
 					// Create link to showing details about the file in a window:
-				$Ahref = $GLOBALS['BACK_PATH'].'show_item.php?type=file&table='.rawurlencode($fileObject->getCombinedIdentifier()).'&returnUrl='.rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
-				$ATag2='<a href="'.htmlspecialchars($Ahref).'">';
-				$ATag2_e='</a>';
+				$Ahref = $GLOBALS['BACK_PATH'] . 'show_item.php?type=file&table=' . rawurlencode($fileObject->getCombinedIdentifier()) . '&returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
+				$ATag2 = '<a href="' . htmlspecialchars($Ahref) . '">';
+				$ATag2_e = '</a>';
 
 					// Combine the stuff:
 				$filenameAndIcon = $ATag_alt . $icon . htmlspecialchars(t3lib_div::fixed_lgd_cs($fileObject->getName(), $titleLen)) . $ATag_e;
 
 					// Show element:
 				if ($pDim)	{		// Image...
-					$lines[]='
+					$lines[] = '
 						<tr class="file_list_normal">
-							<td nowrap="nowrap">'.$filenameAndIcon.'&nbsp;</td>
-							<td nowrap="nowrap">' . ($ATag2 . '<img'.t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
+							<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
+							<td nowrap="nowrap">' . ($ATag2 . '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
 							<td nowrap="nowrap">&nbsp;'.$pDim.'</td>
 						</tr>';
-					$lines[]='
+					$lines[] = '
 						<tr>
 							<td class="filelistThumbnail" colspan="4">' . $ATag_alt . $clickIcon . $ATag_e . '</td>
 						</tr>';
 				} else {
-					$lines[]='
+					$lines[] = '
 						<tr class="file_list_normal">
-							<td nowrap="nowrap">'.$filenameAndIcon.'&nbsp;</td>
-							<td nowrap="nowrap">' . ($ATag2 . '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'],'gfx/zoom2.gif','width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
+							<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
+							<td nowrap="nowrap">' . ($ATag2 . '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
 							<td>&nbsp;</td>
 						</tr>';
 				}
 			}
 
 				// Wrap all the rows in table tags:
-			$out.='
+			$out .= '
 
 
 
@@ -1211,7 +1213,7 @@ class tx_rtehtmlarea_select_image extends browse_links {
 			File listing
 		-->
 				<table cellpadding="0" cellspacing="0" id="typo3-filelist">
-					'.implode('',$lines).'
+					' . implode('', $lines) . '
 				</table>';
 		}
 			// Return accumulated content for filelisting:

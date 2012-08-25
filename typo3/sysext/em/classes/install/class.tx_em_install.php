@@ -24,13 +24,14 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Module: Extension manager, (un-)install extensions
  *
  * @author	Steffen Kamper <info@sk-typo3.de>
+ * @package TYPO3
+ * @subpackage em
  */
-
-
 class tx_em_Install {
 
 	/**
@@ -259,11 +260,8 @@ class tx_em_Install {
 											// Remove cache files:
 											$updateContent = '';
 											if (t3lib_extMgm::isLoaded($extKey)) {
-												if (t3lib_extMgm::removeCacheFiles()) {
-													$messageContent .= $GLOBALS['LANG']->getLL('ext_import_cache_files_removed') . '<br />';
-												}
-													// Flush autoloader cache
-												$GLOBALS['typo3CacheManager']->getCache('cache_phpcode')->flushByTag('t3lib_autoloader');
+												t3lib_extMgm::removeCacheFiles();
+												$messageContent .= $GLOBALS['LANG']->getLL('ext_import_cache_files_removed') . '<br />';
 
 												list($new_list) = $this->parentObject->extensionList->getInstalledExtensions();
 												$updateContent = $this->updatesForm($extKey, $new_list[$extKey], 1, t3lib_div::linkThisScript(array(
@@ -282,7 +280,6 @@ class tx_em_Install {
 											} else {
 												$content = $updateContent;
 											}
-
 
 											// Install / Uninstall:
 											if (!$this->parentObject->CMD['standAlone']) {
@@ -738,7 +735,7 @@ class tx_em_Install {
 			} else {
 				$areYouSure = $GLOBALS['LANG']->getLL('extDelete_sure');
 				$deleteFromServer = $GLOBALS['LANG']->getLL('extDelete_from_server');
-				$onClick = "if (confirm('$areYouSure')) {window.location.href='" . t3lib_div::linkThisScript(array(
+				$onClick = "if (confirm('" . $areYouSure . "')) {window.location.href='" . t3lib_div::linkThisScript(array(
 					'CMD[showExt]' => $extKey,
 					'CMD[doDelete]' => 1,
 					'CMD[absPath]' => rawurlencode($absPath)
@@ -870,6 +867,10 @@ class tx_em_Install {
 		if (is_array($extInfo['files']) && in_array('ext_tables.sql', $extInfo['files'])) {
 			$path = tx_em_Tools::getExtPath($extKey, $extInfo['type']);
 			$fileContent = t3lib_div::getUrl($path . 'ext_tables.sql');
+
+				// Add SQL content coming from the category registry
+			$fileContent .= t3lib_category_Registry::getInstance()->getDatabaseTableDefinition($extKey);
+
 				// Take caching tables into account only if necessary
 				// (this is not always the case, because this method is also called, for example,
 				// to list all tables for which to dump data for in the extension maintenance operations)
@@ -1185,9 +1186,6 @@ class tx_em_Install {
 								$shouldBePath
 							);
 						}
-					} else {
-						// It seems like TYPO3_MOD_PATH and therefore also this warning is no longer needed.
-						// $infoArray['errors'][] = 'No definition of TYPO3_MOD_PATH constant found inside!';
 					}
 					if (is_array($confFileInfo['MCONF_name'])) {
 						$mName = $confFileInfo['MCONF_name'][1][1];
@@ -1357,9 +1355,6 @@ class tx_em_Install {
 				$GLOBALS['BACK_PATH']
 			);
 
-				// Load the list of resources.
-			$tsStyleConfig->ext_loadResources($absPath . 'res/');
-
 				// Load current value:
 			$arr = unserialize($TYPO3_CONF_VARS['EXT']['extConf'][$extKey]);
 			$arr = is_array($arr) ? $arr : array();
@@ -1467,27 +1462,19 @@ class tx_em_Install {
 
 	/**
 	 * Writes the TSstyleconf values to "localconf.php"
-	 * Removes the temp_CACHED* files before return.
+	 * Removes the cached core files before return.
 	 *
-	 * @param	string		Extension key
-	 * @param	array		Configuration array to write back
-	 * @return	void
+	 * @param string $extensionKey Extension key
+	 * @param array $configuration Configuration array to write back
+	 * @return void
 	 */
-	function writeTsStyleConfig($extKey, $arr) {
-
-		// Instance of install tool
-		$instObj = t3lib_div::makeInstance('t3lib_install');
-		$instObj->allowUpdateLocalConf = 1;
-		$instObj->updateIdentity = 'TYPO3 Extension Manager';
-
-		// Get lines from localconf file
-		$lines = $instObj->writeToLocalconf_control();
-		$instObj->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'EXT\'][\'extConf\'][\'' . $extKey . '\']', serialize($arr)); // This will be saved only if there are no linebreaks in it !
-		$instObj->writeToLocalconf_control($lines);
-
+	function writeTsStyleConfig($extensionKey, array $configuration) {
+		t3lib_Configuration::setLocalConfigurationValueByPath(
+			'EXT/extConf/' . $extensionKey,
+			serialize($configuration)
+		);
 		t3lib_extMgm::removeCacheFiles();
 	}
-
 
 	/**
 	 * Creates a form for an extension which contains all options for configuration, updates of database, clearing of cache etc.
@@ -1570,27 +1557,16 @@ class tx_em_Install {
 	}
 
 	/**
-	 * Writes the extension list to "localconf.php" file
-	 * Removes the temp_CACHED* files before return.
+	 * Writes the extension list to local configuration
+	 * Removes the cached core files before return.
 	 *
-	 * @param	string		List of extensions
-	 * @return	void
+	 * @param string $newExtList List of extensions
+	 * @return void
 	 */
 	function writeNewExtensionList($newExtList) {
-
-		// Instance of install tool
-		$instObj = t3lib_div::makeInstance('t3lib_install');
-		$instObj->allowUpdateLocalConf = 1;
-		$instObj->updateIdentity = 'TYPO3 Extension Manager';
-
-		// Get lines from localconf file
-		$lines = $instObj->writeToLocalconf_control();
-		$instObj->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'EXT\'][\'extList\']', $newExtList);
-		$instObj->writeToLocalconf_control($lines);
-
-		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] = $newExtList;
-		t3lib_extMgm::removeCacheFiles();
-		$GLOBALS['typo3CacheManager']->getCache('cache_phpcode')->flushByTag('t3lib_autoloader');
+		t3lib_extMgm::writeNewExtensionList(
+			t3lib_div::trimExplode(',', $newExtList)
+		);
 	}
 
 	/**

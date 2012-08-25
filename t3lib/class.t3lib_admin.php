@@ -111,7 +111,7 @@ class t3lib_admin {
 
 		if ($versions) {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-				'uid,title,doktype,deleted,t3ver_wsid,t3ver_id,t3ver_count,t3ver_swapmode' . (t3lib_extMgm::isLoaded('cms') ? ',hidden' : ''),
+				'uid,title,doktype,deleted,t3ver_wsid,t3ver_id,t3ver_count' . (t3lib_extMgm::isLoaded('cms') ? ',hidden' : ''),
 				'pages',
 				'pid=-1 AND t3ver_oid=' . intval($theID) . ' ' . ((!$this->genTree_includeDeleted) ? 'AND deleted=0' : '') . $this->perms_clause,
 				'',
@@ -195,6 +195,8 @@ class t3lib_admin {
 				$this->genTree($newID, $this->genTree_HTML ? $genHTML : '', TRUE);
 			}
 		}
+
+		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 	}
 
 	/**
@@ -269,6 +271,8 @@ class t3lib_admin {
 				$this->genTree_records($newID, $genHTML, $table, TRUE);
 			}
 		}
+
+		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 	}
 
 	/**
@@ -323,6 +327,9 @@ class t3lib_admin {
 					);
 					$lostIdList[] = $row['uid'];
 				}
+
+				$GLOBALS['TYPO3_DB']->sql_free_result($garbage);
+
 				if ($table == 'pages') {
 					$this->lostPagesList = implode(',', $lostIdList);
 				}
@@ -657,6 +664,9 @@ class t3lib_admin {
 							$result .= 'Strange Error. ...<br />';
 						}
 					}
+
+					$GLOBALS['TYPO3_DB']->sql_free_result($mres);
+
 					foreach ($dbArr as $theId => $theC) {
 						$result .= 'There are ' . $theC . ' records pointing to this missing or deleted record; [' . $table . '][' . $theId . ']<br />';
 					}
@@ -736,6 +746,8 @@ class t3lib_admin {
 					}
 				}
 			}
+
+			$GLOBALS['TYPO3_DB']->sql_free_result($mres);
 		}
 		return $theRecordList;
 	}

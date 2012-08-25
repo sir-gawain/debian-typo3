@@ -28,14 +28,13 @@
  * Cleaner module: cleanflexform
  * User function called from tx_lowlevel_cleaner_core configured in ext_localconf.php
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-
 
 /**
  * cleanflexform
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -43,8 +42,6 @@ class tx_lowlevel_cleanflexform extends tx_lowlevel_cleaner_core {
 
 	/**
 	 * Constructor
-	 *
-	 * @return	void
 	 */
 	function __construct() {
 		parent::__construct();
@@ -69,7 +66,7 @@ Cleaning XML for FlexForm fields.
 	 * Find orphan records
 	 * VERY CPU and memory intensive since it will look up the whole page tree!
 	 *
-	 * @return	array
+	 * @return array
 	 */
 	function main() {
 		global $TYPO3_DB;
@@ -78,18 +75,19 @@ Cleaning XML for FlexForm fields.
 		$resultArray = array(
 			'message' => $this->cli_help['name'].LF.LF.$this->cli_help['description'],
 			'headers' => array(
-				'dirty' => array('','',2),
+				'dirty' => array('', '', 2),
 			),
 			'dirty' => array()
 		);
 
-		$startingPoint = $this->cli_isArg('--pid') ? t3lib_utility_Math::forceIntegerInRange($this->cli_argValue('--pid'),0) : 0;
-		$depth = $this->cli_isArg('--depth') ? t3lib_utility_Math::forceIntegerInRange($this->cli_argValue('--depth'),0) : 1000;
+		$startingPoint = $this->cli_isArg('--pid') ? t3lib_utility_Math::forceIntegerInRange($this->cli_argValue('--pid'), 0) : 0;
+		$depth = $this->cli_isArg('--depth') ? t3lib_utility_Math::forceIntegerInRange($this->cli_argValue('--depth'), 0) : 1000;
 
 		$this->cleanFlexForm_dirtyFields = &$resultArray['dirty'];
-		$this->genTree_traverseDeleted = FALSE;	// Do not repair flexform data in deleted records.
+			// Do not repair flexform data in deleted records.
+		$this->genTree_traverseDeleted = FALSE;
 
-		$this->genTree($startingPoint,$depth,(int)$this->cli_argValue('--echotree'),'main_parseTreeCallBack');
+		$this->genTree($startingPoint, $depth, (int)$this->cli_argValue('--echotree'), 'main_parseTreeCallBack');
 
 		asort($resultArray);
 		return $resultArray;
@@ -98,34 +96,42 @@ Cleaning XML for FlexForm fields.
 	/**
 	 * Call back function for page tree traversal!
 	 *
-	 * @param	string		Table name
-	 * @param	integer		UID of record in processing
-	 * @param	integer		Echo level  (see calling function
-	 * @param	string		Version swap mode on that level (see calling function
-	 * @param	integer		Is root version (see calling function
-	 * @return	void
+	 * @param string $tableName Table name
+	 * @param integer $uid UID of record in processing
+	 * @param integer $echoLevel Echo level  (see calling function
+	 * @param string $versionSwapmode Version swap mode on that level (see calling function
+	 * @param integer $rootIsVersion Is root version (see calling function
+	 * @return void
 	 */
-	function main_parseTreeCallBack($tableName,$uid,$echoLevel,$versionSwapmode,$rootIsVersion) {
+	function main_parseTreeCallBack($tableName, $uid, $echoLevel, $versionSwapmode, $rootIsVersion) {
 
 		t3lib_div::loadTCA($tableName);
-		foreach($GLOBALS['TCA'][$tableName]['columns'] as $colName => $config) {
+		foreach ($GLOBALS['TCA'][$tableName]['columns'] as $colName => $config) {
 			if ($config['config']['type']=='flex') {
-				if ($echoLevel>2)	echo LF.'			[cleanflexform:] Field "'.$colName.'" in '.$tableName.':'.$uid.' was a flexform and...';
+				if ($echoLevel > 2) {
+					echo LF.'			[cleanflexform:] Field "'.$colName.'" in '.$tableName.':'.$uid.' was a flexform and...';
+				}
 
-				$recRow = t3lib_BEfunc::getRecordRaw($tableName,'uid='.intval($uid));
+				$recRow = t3lib_BEfunc::getRecordRaw($tableName, 'uid='.intval($uid));
 				$flexObj = t3lib_div::makeInstance('t3lib_flexformtools');
 				if ($recRow[$colName]) {
 
 						// Clean XML:
-					$newXML = $flexObj->cleanFlexFormXML($tableName,$colName,$recRow);
+					$newXML = $flexObj->cleanFlexFormXML($tableName, $colName, $recRow);
 
 					if (md5($recRow[$colName])!=md5($newXML)) {
-						if ($echoLevel>2)	echo ' was DIRTY, needs cleanup!';
+						if ($echoLevel > 2) {
+							echo ' was DIRTY, needs cleanup!';
+						}
 						$this->cleanFlexForm_dirtyFields[t3lib_div::shortMd5($tableName.':'.$uid.':'.$colName)] = $tableName.':'.$uid.':'.$colName;
 					} else {
-						if ($echoLevel>2)	echo ' was CLEAN';
+						if ($echoLevel > 2) {
+							echo ' was CLEAN';
+						}
 					}
-				} elseif ($echoLevel>2)	echo ' was EMPTY';
+				} elseif ($echoLevel > 2) {
+					echo ' was EMPTY';
+				}
 			}
 		}
 	}
@@ -134,12 +140,12 @@ Cleaning XML for FlexForm fields.
 	 * Mandatory autofix function
 	 * Will run auto-fix on the result array. Echos status during processing.
 	 *
-	 * @param	array		Result array from main() function
-	 * @return	void
+	 * @param array $resultArray Result array from main() function
+	 * @return void
 	 */
 	function main_autoFix($resultArray) {
-		foreach($resultArray['dirty'] as $fieldID) {
-			list($table, $uid, $field) = explode(':',$fieldID);
+		foreach ($resultArray['dirty'] as $fieldID) {
+			list($table, $uid, $field) = explode(':', $fieldID);
 			echo 'Cleaning XML in "'.$fieldID.'": ';
 			if ($bypass = $this->cli_noExecutionCheck($fieldID)) {
 				echo $bypass;
@@ -147,10 +153,10 @@ Cleaning XML for FlexForm fields.
 
 					// Clean XML:
 				$data = array();
-				$recRow = t3lib_BEfunc::getRecordRaw($table,'uid='.intval($uid));
+				$recRow = t3lib_BEfunc::getRecordRaw($table, 'uid='.intval($uid));
 				$flexObj = t3lib_div::makeInstance('t3lib_flexformtools');
 				if ($recRow[$field]) {
-					$data[$table][$uid][$field] = $flexObj->cleanFlexFormXML($table,$field,$recRow);
+					$data[$table][$uid][$field] = $flexObj->cleanFlexFormXML($table, $field, $recRow);
 				}
 
 					// Execute Data array:
@@ -160,13 +166,16 @@ Cleaning XML for FlexForm fields.
 				$tce->bypassWorkspaceRestrictions = TRUE;
 				$tce->bypassFileHandling = TRUE;
 
-				$tce->start($data,array());	// check has been done previously that there is a backend user which is Admin and also in live workspace
+					// Check has been done previously that there is a backend user which is Admin and also in live workspace
+				$tce->start($data, array());
 				$tce->process_datamap();
 
 					// Return errors if any:
 				if (count($tce->errorLog)) {
-					echo '	ERROR from "TCEmain":'.LF.'TCEmain:'.implode(LF.'TCEmain:',$tce->errorLog);
-				} else echo 'DONE';
+					echo '	ERROR from "TCEmain":'.LF.'TCEmain:'.implode(LF.'TCEmain:', $tce->errorLog);
+				} else {
+					echo 'DONE';
+				}
 			}
 			echo LF;
 		}

@@ -86,7 +86,7 @@ class tx_indexedsearch_mysql {
 			// Traverse searchwords and prefix them with corresponding operator
 		foreach ($searchWordArray as $searchWordData) {
 				// Making the query for a single search word based on the search-type
-			$searchWord = $searchWordData['sword'];	// $GLOBALS['TSFE']->csConvObj->conv_case('utf-8', $v['sword'], 'toLower');	// lower-case all of them...
+			$searchWord = $searchWordData['sword'];
 			$wildcard = '';
 
 			if (strstr($searchWord, ' ')) {
@@ -198,7 +198,7 @@ class tx_indexedsearch_mysql {
 		$resource = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 				'index_fulltext.*, ISEC.*, IP.*',
 				'index_fulltext, index_section ISEC, index_phash IP' . $pageJoin,
-				'MATCH ('.$searchData['fulltextIndex'].') AGAINST (' . $GLOBALS['TYPO3_DB']->fullQuoteStr($searchData['searchString'],'index_fulltext') . $searchBoolean . ') '.
+				'MATCH ('.$searchData['fulltextIndex'].') AGAINST (' . $GLOBALS['TYPO3_DB']->fullQuoteStr($searchData['searchString'], 'index_fulltext') . $searchBoolean . ') '.
 					$this->pObj->mediaTypeWhere() . ' ' .
 					$this->pObj->languageWhere() .
 					$freeIndexUidClause . '

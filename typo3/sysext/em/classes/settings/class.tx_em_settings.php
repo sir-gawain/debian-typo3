@@ -24,16 +24,14 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+ $GLOBALS['LANG']->includeLLFile(t3lib_extMgm::extPath('em', 'language/locallang.xml'));
+
 /**
  * Module: Extension manager, developer module
  *
  * @author	Steffen Kamper <info@sk-typo3.de>
  */
-
-
-$GLOBALS['LANG']->includeLLFile(t3lib_extMgm::extPath('em', 'language/locallang.xml'));
-
-
 class tx_em_Settings implements t3lib_Singleton {
 
 	public $MOD_MENU = array(); // Module menu items
@@ -137,8 +135,6 @@ class tx_em_Settings implements t3lib_Singleton {
 			'display_files' => '',
 			'hide_shy' => 0,
 			'hide_obsolete' => 0,
-
-
 			'singleDetails' => array(
 				'info' => $GLOBALS['LANG']->getLL('details_info'),
 				'edit' => $GLOBALS['LANG']->getLL('details_edit'),
@@ -149,7 +145,6 @@ class tx_em_Settings implements t3lib_Singleton {
 			),
 			'fe_u' => '',
 			'fe_p' => '',
-
 			'mirrorListURL' => '',
 			'rep_url' => '',
 			'extMirrors' => '',

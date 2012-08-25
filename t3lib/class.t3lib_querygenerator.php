@@ -799,6 +799,8 @@ class t3lib_queryGenerator {
 								}
 							}
 						}
+
+						$GLOBALS['TYPO3_DB']->sql_free_result($checkres);
 					}
 				}
 			} else {
@@ -877,6 +879,8 @@ class t3lib_queryGenerator {
 						while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 							$this->tableArray[$from_table][] = $row;
 						}
+
+						$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					}
 					foreach ($this->tableArray[$from_table] as $key => $val) {
 						if ($useSelectLabels) {
@@ -954,7 +958,7 @@ class t3lib_queryGenerator {
 	function mkOperatorSelect($name, $op, $draw, $submit) {
 		if ($draw) {
 			$out = '<select name="' . $name . '[operator]"' . ($submit ? ' onChange="submit();"' : '') . '>'; //
-			$out .= '<option value="AND"' . (!$op || $op == "AND" ? ' selected' : '') . '>' . $this->lang["AND"] . '</option>';
+			$out .= '<option value="AND"' . (!$op || $op == 'AND' ? ' selected' : '') . '>' . $this->lang['AND'] . '</option>';
 			$out .= '<option value="OR"' . ($op == 'OR' ? ' selected' : '') . '>' . $this->lang['OR'] . '</option>';
 			$out .= '</select>';
 		} else {
@@ -1339,7 +1343,6 @@ class t3lib_queryGenerator {
 			}
 			if (in_array('order', $enableArr) && !$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableOrderBy']) {
 				$orderByArr = explode(',', $this->extFieldLists['queryOrder']);
-					//		debug($orderByArr);
 				$orderBy = '';
 				$orderBy .= $this->mkTypeSelect('SET[queryOrder]', $orderByArr[0], '') .
 							'&nbsp;' . t3lib_BEfunc::getFuncCheck($GLOBALS['SOBE']->id, 'SET[queryOrderDesc]', $modSettings['queryOrderDesc'], '', '', 'id="checkQueryOrderDesc"') . '&nbsp;<label for="checkQueryOrderDesc">Descending</label>';
@@ -1419,6 +1422,8 @@ class t3lib_queryGenerator {
 					$theList .= $this->getTreeList($row['uid'], $depth - 1, $begin - 1, $perms_clause);
 				}
 			}
+
+			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		}
 		return $theList;
 	}

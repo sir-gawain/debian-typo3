@@ -37,8 +37,8 @@ class tslib_content_Columns extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, COLUMNS
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 		$content = '';
@@ -87,16 +87,16 @@ class tslib_content_Columns extends tslib_content_Abstract {
 						$gapLine = intval($gapConf['gapLineThickness']);
 						if ($gapLine) {
 							$gapSurround = t3lib_utility_Math::forceIntegerInRange(($gapWidth - $gapLine) / 2, 1, 1000);
-							// right gap
+								// right gap
 							$content .= '<td' . $tdPar . '><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$gapSurround . '" height="1" alt="" title="" /></td>';
 							$tdRowCount++;
-							// line:
+								// line:
 							$GtdPar = $gapConf['gapLineCol'] ? ' bgcolor="' . $gapConf['gapLineCol'] . '"' : ' bgcolor="black"';
 							$content .= '<td' . $GtdPar . '><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$gapLine . '" height="1" alt="" title="" /></td>';
 							$tdRowCount++;
-							// left gap
+								// left gap
 							$content .= '<td' . $tdPar . '><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$gapSurround . '" height="1" alt="" title="" /></td>';
 							$tdRowCount++;
@@ -110,7 +110,7 @@ class tslib_content_Columns extends tslib_content_Abstract {
 			}
 			$content = '<tr>' . $content . '</tr>';
 			$content = '<table' . $tableParams . '>' . $content . '</table>';
-			if($conf['after'] || isset($conf['after.'])) {
+			if ($conf['after'] || isset($conf['after.'])) {
 				$content .= $this->cObj->cObjGetSingle($conf['after'], $conf['after.'], 'after');
 			}
 			if (isset($conf['stdWrap.'])) {

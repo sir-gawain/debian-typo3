@@ -24,16 +24,10 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * TSParser extension class to t3lib_TStemplate
- *
- * Contains functions for the TS module in TYPO3 backend
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
 
 /**
  * TSParser extension class to t3lib_TStemplate
+ * Contains functions for the TS module in TYPO3 backend
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
@@ -83,8 +77,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 		'cscript' => Array('Content: \'Script\'', 'mp'),
 		'chtml' => Array('Content: \'HTML\'', 'mq')
 	);
-	var $resourceDimensions = array();
-	var $dirResources = array();
 
 	var $backend_info = 1;
 
@@ -108,10 +100,8 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 	var $ext_lineNumberOffset_mode = '';
 		// Dont change...
 	var $ext_dontCheckIssetValues = 0;
-	var $ext_noCEUploadAndCopying = 0;
 	var $ext_printAll = 0;
 	var $ext_CEformName = 'forms[0]';
-	var $ext_defaultOnlineResourceFlag = 0;
 	var $doNotSortCategoriesBeforeMakingForm = FALSE;
 
 		// Ts analyzer
@@ -344,10 +334,14 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 				if ($PM == 'join') {
 					$HTML .= $theIcon;
 				} else {
-					$aHref = 'index.php?id=' . $GLOBALS['SOBE']->id .
-							'&tsbr[' . $depth . ']=' . ($deeper ? 0 : 1) .
-							(t3lib_div::_GP("breakPointLN") ? '&breakPointLN=' . t3lib_div::_GP("breakPointLN") : '') .
-							'#' . $goto;
+					$urlParameters = array(
+							'id' => $GLOBALS['SOBE']->id,
+							'tsbr[' . $depth . ']' => ($deeper ? 0 : 1),
+						);
+					if (t3lib_div::_GP('breakPointLN')) {
+						$urlParameters['breakPointLN'] = t3lib_div::_GP('breakPointLN');
+					}
+					$aHref = t3lib_BEfunc::getModuleUrl('web_ts', $urlParameters) . '#' . $goto;
 					$HTML .= '<a name="' . $goto . '" href="' . htmlspecialchars($aHref) . '">' . $theIcon . '</a>';
 				}
 
@@ -357,9 +351,14 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 					$label = '<font color="#666666">' . $label . '</font>';
 				} else {
 					if ($this->linkObjects) {
-						$aHref = 'index.php?id=' . $GLOBALS['SOBE']->id .
-								'&sObj=' . $depth .
-								(t3lib_div::_GP("breakPointLN") ? '&breakPointLN=' . t3lib_div::_GP("breakPointLN") : '');
+						$urlParameters = array(
+								'id' => $GLOBALS['SOBE']->id,
+								'sObj' => $depth,
+							);
+						if (t3lib_div::_GP('breakPointLN')) {
+							$urlParameters['breakPointLN'] = t3lib_div::_GP('breakPointLN');
+						}
+						$aHref = t3lib_BEfunc::getModuleUrl('web_ts', $urlParameters);
 						if ($this->bType != 'const') {
 							$ln = is_array($arr[$key . '.ln..']) ? 'Defined in: ' . $this->lineNumberToScript($arr[$key . '.ln..']) : 'N/A';
 						} else {
@@ -583,7 +582,12 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 					: t3lib_iconWorks::getSpriteIcon('mimetypes-x-content-template-static', array('title' => $alttext))
 			);
 			if (in_array($row['templateID'], $this->clearList_const) || in_array($row['templateID'], $this->clearList_setup)) {
-				$A_B = '<a href="index.php?id=' . htmlspecialchars($GLOBALS['SOBE']->id . '&template=' . $row['templateID']) . '">';
+				$urlParameters = array(
+						'id' => $GLOBALS['SOBE']->id,
+						'template' => $row['templateID'],
+					);
+				$aHref = t3lib_BEfunc::getModuleUrl('web_ts', $urlParameters);
+				$A_B = '<a href="'. htmlspecialchars($aHref) . '">';
 				$A_E = '</a>';
 				if (t3lib_div::_GP('template') == $row['templateID']) {
 					$A_B = '<strong>' . $A_B;
@@ -703,7 +707,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 	 * @return string
 	 */
 	function ext_lnBreakPointWrap($lineNumber, $str) {
-		return '<a href="#" id="line-' . $lineNumber . '" onClick="return brPoint(' . $lineNumber . ',' . ($this->ext_lineNumberOffset_mode == "setup" ? 1 : 0) . ');">' . $str . '</a>';
+		return '<a href="#" id="line-' . $lineNumber . '" onClick="return brPoint(' . $lineNumber . ',' . ($this->ext_lineNumberOffset_mode == 'setup' ? 1 : 0) . ');">' . $str . '</a>';
 	}
 
 	/**
@@ -743,7 +747,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 					unset($cArr[$k]);
 				}
 			}
-
 
 		}
 		$output = implode($cArr, '<br />') . '<br />';
@@ -1006,82 +1009,9 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 				$f = substr($iFile, strlen(PATH_site));
 				$tFile = $GLOBALS['BACK_PATH'] . '../' . $f;
 			}
-		} else {
-			$f = 'uploads/tf/' . $this->extractFromResources($this->setup['resources'], $imgConf);
-			$iFile = PATH_site . $f;
-			$tFile = $GLOBALS['BACK_PATH'] . '../' . $f;
 		}
 		$imageInfo = @getImagesize($iFile);
 		return '<img src="' . $tFile . '" ' . $imageInfo[3] . '>';
-	}
-
-	/**
-	 * [Describe function...]
-	 *
-	 * @return	[type]		...
-	 */
-	function ext_resourceDims() {
-		if ($this->setup['resources']) {
-			$rArr = explode(',', $this->setup['resources']);
-			foreach ($rArr as $c => $val) {
-				$val = trim($val);
-				$theFile = PATH_site . 'uploads/tf/' . $val;
-				if ($val && @is_file($theFile)) {
-					$imgInfo = @getimagesize($theFile);
-				}
-				if (is_array($imgInfo)) {
-					$this->resourceDimensions[$val] = ' (' . $imgInfo[0] . 'x' . $imgInfo[1] . ')';
-				}
-			}
-		}
-		foreach ($this->dirResources as $c => $val) {
-			$val = trim($val);
-			$imgInfo = @getimagesize(PATH_site . $val);
-			if (is_array($imgInfo)) {
-				$this->resourceDimensions[$val] = ' (' . $imgInfo[0] . 'x' . $imgInfo[1] . ')';
-			}
-		}
-	}
-
-	/**
-	 * [Describe function...]
-	 *
-	 * @param	[type]		$path: ...
-	 * @return	[type]		...
-	 */
-	function ext_readDirResources($path) {
-		$path = trim($path);
-		if ($path && strstr($path, $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'])) {
-			$path = rtrim($path, '/');
-			$this->readDirectory(PATH_site . $path);
-		}
-	}
-
-	/**
-	 * [Describe function...]
-	 *
-	 * @param	[type]		$path: ...
-	 * @param	[type]		$type: ...
-	 * @return	[type]		...
-	 */
-	function readDirectory($path, $type = 'file') {
-		if (@is_dir($path)) {
-			$d = @dir($path);
-			$tempArray = Array();
-			if (is_object($d)) {
-				while ($entry = $d->read()) {
-					if ($entry != '.' && $entry != '..') {
-							// Because of odd PHP-error where  <BR>-tag is sometimes placed after a filename!!
-						$wholePath = $path . '/' . $entry;
-						if (file_exists($wholePath) && (!$type || filetype($wholePath) == $type)) {
-							$fI = t3lib_div::split_fileref($wholePath);
-							$this->dirResources[] = substr($wholePath, strlen(PATH_site));
-						}
-					}
-				}
-				$d->close();
-			}
-		}
 	}
 
 	/**
@@ -1117,7 +1047,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 		if (is_array($this->categories[$category])) {
 
 			$help = $this->helpConfig;
-			$this->rArr = explode(',', $this->setup['resources'] . ',' . implode($this->dirResources, ','));
 
 			if (!$this->doNotSortCategoriesBeforeMakingForm) {
 				asort($this->categories[$category]);
@@ -1249,73 +1178,15 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 						case 'file':
 							$p_field = '<option value=""></option>';
 							$theImage = '';
-							$selectThisFile = $this->extractFromResources($this->setup['resources'], $params['value']);
-							if ($params['value'] && !$selectThisFile) {
-								if (in_array($params['value'], $this->dirResources)) {
-									$selectThisFile = $params['value'];
-								}
-							}
+
 								// extensionlist
 							$extList = $typeDat['paramstr'];
 							$p_field = '<option value="">(' . $extList . ')</option>';
 							if ($extList == 'IMAGE_EXT') {
 								$extList = $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'];
 							}
-							$onlineResourceFlag = $this->ext_defaultOnlineResourceFlag;
 
-							foreach ($this->rArr as $c => $val) {
-								$val = trim($val);
-								$fI = t3lib_div::split_fileref($val);
-								if ($val && (!$extList || t3lib_div::inList($extList, $fI['fileext']))) {
-									if ($onlineResourceFlag <= 0 && strstr($fI['path'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'])) {
-										if ($onlineResourceFlag < 0) {
-											$p_field .= '<option value=""></option>';
-										}
-										$p_field .= '<option value="">__' . $fI['path'] . '__:</option>';
-										$onlineResourceFlag = 1;
-									}
-									$dims = $this->resourceDimensions[$val];
-									$sel = '';
-
-										// Check if $params['value'] is in the list of resources.
-									if ($selectThisFile && $selectThisFile == $val) {
-										$sel = ' selected';
-										if ($onlineResourceFlag <= 0) {
-											$theImage = t3lib_BEfunc::thumbCode(
-												array(
-													'resources' => $selectThisFile
-												),
-												'sys_template',
-												'resources',
-												$GLOBALS['BACK_PATH'],
-												''
-											);
-										} else {
-											$theImage = t3lib_BEfunc::thumbCode(
-												array(
-													'resources' => $fI['file']
-												),
-												'sys_template',
-												'resources',
-												$GLOBALS['BACK_PATH'],
-												'',
-												$fI['path']
-											);
-										}
-									}
-
-									if ($onlineResourceFlag <= 0) {
-										$onlineResourceFlag--;
-											// Value is set with a *
-										$val = $this->ext_setStar($val);
-										$p_field .= '<option value="' . htmlspecialchars($val) . '"' . $sel . '>' . $val . $dims . '</option>';
-									} else {
-										$p_field .= '<option value="' . htmlspecialchars($val) . '"' . $sel . '>' . $fI['file'] . $dims . '</option>';
-									}
-								}
-							}
-
-							if (trim($params['value']) && !$selectThisFile) {
+							if (trim($params['value'])) {
 								$val = $params['value'];
 								$p_field .= '<option value=""></option>';
 								$p_field .= '<option value="' . htmlspecialchars($val) . '" selected>' . $val . '</option>';
@@ -1323,32 +1194,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 
 							$p_field = '<select id="' . $fN . '" name="' . $fN . '" onChange="uFormUrl(' . $aname . ')">' . $p_field . '</select>';
 							$p_field .= $theImage;
-
-							if (!$this->ext_noCEUploadAndCopying) {
-									// Copy a resource
-								$copyFile = $this->extractFromResources($this->setup['resources'], $params['value']);
-								if (!$copyFile) {
-									if ($params['value']) {
-										$copyFile = PATH_site . $this->ext_detectAndFixExtensionPrefix($params['value']);
-									}
-								} else {
-									$copyFile = '';
-								}
-
-								if ($copyFile && @is_file($copyFile)) {
-									$p_field .= '<img src="clear.gif" width="20" ' . 'height="1" alt="" />' .
-												t3lib_iconWorks::getSpriteIcon('actions-edit-copy') . '<input type="checkbox" ' .
-												'name="_copyResource[' . $params['name'] . ']" value="' . htmlspecialchars($copyFile) .
-												'" onclick="uFormUrl(' . $aname . ');if (this.checked && !confirm(\'' .
-												t3lib_div::slashJS(htmlspecialchars(sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tsparser.xml:tsparser_ext.make_copy'), $params['value']))) .
-												'\')) this.checked=false;" />';
-								}
-
-									// Upload?
-								$p_field .= '<br />';
-								$p_field .= '<input id="' . $fN . '" type="file" name="upload_' . $fN . '"' . $GLOBALS['TBE_TEMPLATE']->formWidth() .
-											' onChange="uFormUrl(' . $aname . ')" size="50" />';
-							}
 						break;
 						case 'user':
 							$userFunction = $typeDat['paramstr'];
@@ -1390,22 +1235,21 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 							$defaultTyposcriptStyle = '';
 						}
 
-
 						$deleteIconHTML = t3lib_iconWorks::getSpriteIcon(
 							'actions-edit-undo',
 							array(
-								'class' => "typo3-tstemplate-ceditor-control undoIcon",
-								'alt' => "Revert to default Constant",
-								'title' => "Revert to default Constant",
+								'class' => 'typo3-tstemplate-ceditor-control undoIcon',
+								'alt' => 'Revert to default Constant',
+								'title' => 'Revert to default Constant',
 								'rel' => $params['name']
 							)
 						);
 						$editIconHTML = t3lib_iconWorks::getSpriteIcon(
 							'actions-document-open',
 							array(
-								'class' => "typo3-tstemplate-ceditor-control editIcon",
-								'alt' => "Edit this Constant",
-								'title' => "Edit this Constant",
+								'class' => 'typo3-tstemplate-ceditor-control editIcon',
+								'alt' => 'Edit this Constant',
+								'title' => 'Edit this Constant',
 								'rel' => $params['name']
 							)
 						);
@@ -1478,7 +1322,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 			$this->rawP++;
 			if ($line) {
 				if (substr($line, 0, 1) == '[') {
-					// return $line;
 				} elseif (strcspn($line, '}#/') != 0) {
 					$varL = strcspn($line, ' {=<');
 					$var = substr($line, 0, $varL);
@@ -1580,7 +1423,7 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 	 * [Describe function...]
 	 *
 	 * @param	[type]		$http_post_vars: ...
-	 * @param	[type]		$http_post_files: ...
+	 * @param	array (not used anymore)
 	 * @param	[type]		$theConstants: ...
 	 * @param	[type]		$tplRow: ...
 	 * @return	[type]		...
@@ -1588,7 +1431,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 	function ext_procesInput($http_post_vars, $http_post_files, $theConstants, $tplRow) {
 		$data = $http_post_vars['data'];
 		$check = $http_post_vars['check'];
-		$copyResource = $http_post_vars['_copyResource'];
 		$Wdata = $http_post_vars['Wdata'];
 		$W2data = $http_post_vars['W2data'];
 		$W3data = $http_post_vars['W3data'];
@@ -1672,26 +1514,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 									$var = $typeDat['paramstr'] ? $typeDat['paramstr'] : 1;
 								}
 							break;
-							case 'file':
-								if (!$this->ext_noCEUploadAndCopying) {
-									if ($http_post_files['upload_data']['name'][$key] && $http_post_files['upload_data']['tmp_name'][$key] != 'none') {
-										$var = $this->upload_copy_file(
-											$typeDat,
-											$tplRow,
-											trim($http_post_files['upload_data']['name'][$key]),
-											$http_post_files['upload_data']['tmp_name'][$key]
-										);
-									}
-									if ($copyResource[$key]) {
-										$var = $this->upload_copy_file(
-											$typeDat,
-											$tplRow,
-											basename($copyResource[$key]),
-											$copyResource[$key]
-										);
-									}
-								}
-							break;
 						}
 						if ($this->ext_printAll || strcmp($theConstants[$key]['value'], $var)) {
 								// Put value in, if changed.
@@ -1719,58 +1541,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$typeDat: ...
-	 * @param	[type]		$tplRow: ...
-	 * @param	[type]		$theRealFileName: ...
-	 * @param	[type]		$tmp_name: ...
-	 * @return	[type]		...
-	 */
-	function upload_copy_file($typeDat, &$tplRow, $theRealFileName, $tmp_name) {
-
-			// extensions
-		$extList = $typeDat['paramstr'];
-		if ($extList == 'IMAGE_EXT') {
-			$extList = $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'];
-		}
-		$fI = t3lib_div::split_fileref($theRealFileName);
-		if ($theRealFileName && (!$extList || t3lib_div::inList($extList, $fI['fileext']))) {
-				// If there is an uploaded file, move it.
-			$tmp_upload_name = t3lib_div::upload_to_tempfile($tmp_name);
-
-				// Saving resource
-			$alternativeFileName = array();
-			$alternativeFileName[$tmp_upload_name] = $theRealFileName;
-				// Making list of resources
-			$resList = $tplRow['resources'];
-			$resList = $tmp_upload_name . ',' . $resList;
-			$resList = implode(t3lib_div::trimExplode(',', $resList, 1), ',');
-				// Making data-array
-			$saveId = $tplRow['_ORIG_uid'] ? $tplRow['_ORIG_uid'] : $tplRow['uid'];
-
-			$recData = array();
-			$recData['sys_template'][$saveId]['resources'] = $resList;
-				// Saving
-			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
-			$tce->stripslashes_values = 0;
-			$tce->alternativeFileName = $alternativeFileName;
-			$tce->start($recData, Array());
-			$tce->process_datamap();
-
-			t3lib_div::unlink_tempfile($tmp_upload_name);
-
-			$tmpRow = t3lib_BEfunc::getRecordWSOL('sys_template', $saveId, 'resources');
-
-			$tplRow['resources'] = $tmpRow['resources'];
-
-				// Setting the value
-			$var = $this->ext_setStar($theRealFileName);
-		}
-		return $var;
-	}
-
-	/**
-	 * [Describe function...]
-	 *
 	 * @param	[type]		$id: ...
 	 * @param	[type]		$perms_clause: ...
 	 * @return	[type]		...
@@ -1781,36 +1551,6 @@ class t3lib_tsparser_ext extends t3lib_TStemplate {
 			if ($this->ext_getFirstTemplate($p['uid'])) {
 				return $p;
 			}
-		}
-	}
-
-	/**
-	 * [Describe function...]
-	 *
-	 * @param	[type]		$val: ...
-	 * @return	[type]		...
-	 */
-	function ext_setStar($val) {
-		$fParts = explode('.', strrev($val), 2);
-		$val = preg_replace('/_[0-9][0-9]$/', '', strrev($fParts[1])) . '*.' . strrev($fParts[0]);
-		return $val;
-	}
-
-	/**
-	 * [Describe function...]
-	 *
-	 * @param	[type]		$value: ...
-	 * @return	[type]		...
-	 */
-	function ext_detectAndFixExtensionPrefix($value) {
-		if (substr($value, 0, 4) == 'EXT:') {
-			$parts = explode('/', substr($value, 4), 2);
-
-			$extPath = t3lib_extMgm::siteRelPath($parts[0]);
-			$value = $extPath . $parts[1];
-			return $value;
-		} else {
-			return $value;
 		}
 	}
 }

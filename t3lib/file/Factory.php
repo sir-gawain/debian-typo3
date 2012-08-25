@@ -25,7 +25,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
+	// TODO implement constructor-level caching
 /**
  * Factory class for FAL objects.
  *
@@ -35,8 +35,6 @@
  * @package TYPO3
  * @subpackage t3lib
  */
-
-	// TODO implement constructor-level caching
 class t3lib_file_Factory implements t3lib_Singleton {
 
 	/**
@@ -132,7 +130,7 @@ class t3lib_file_Factory implements t3lib_Singleton {
 				/**  @var $storage t3lib_file_Storage */
 				$storageObject = $storageRepository->findByUid($uid);
 			}
-			if(!($storageObject instanceof t3lib_file_Storage)) {
+			if (!($storageObject instanceof t3lib_file_Storage)) {
 				$storageObject = $this->createStorageObject($recordData, $storageConfiguration);
 			}
 			$this->storageInstances[$uid] = $storageObject;
@@ -435,7 +433,6 @@ class t3lib_file_Factory implements t3lib_Singleton {
 		if (!is_numeric($uid)) {
 			throw new InvalidArgumentException('uid of fileusage (sys_file_reference) has to be numeric.', 1300086584);
 		}
-
 
 		if (!$this->fileReferenceInstances[$uid]) {
 				// Fetches data in case $fileData is empty

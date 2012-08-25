@@ -25,20 +25,27 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+/**
+ * Backend layout for CMS
+ *
+ * @author GridView Team
+ * @package TYPO3
+ * @subpackage core
+ */
 class tx_cms_BackendLayout {
 
 	/**
 	 * ItemProcFunc for colpos items
 	 *
-	 * @param  array $params
+	 * @param array $params
 	 * @return void
 	 */
 	public function colPosListItemProcFunc(&$params) {
 		if ($params['row']['pid'] > 0) {
 			$params['items'] = $this->addColPosListLayoutItems($params['row']['pid'], $params['items']);
 		} else {
-			// negative uid_pid values indicate that the element has been inserted after an existing element
-			// so there is no pid to get the backendLayout for and we have to get that first
+				// Negative uid_pid values indicate that the element has been inserted after an existing element
+				// so there is no pid to get the backendLayout for and we have to get that first
 			$existingElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('pid', 'tt_content', 'uid=' . -(intval($params['row']['pid'])));
 			if ($existingElement['pid'] > 0) {
 				$params['items'] = $this->addColPosListLayoutItems($existingElement['pid'], $params['items']);
@@ -49,8 +56,8 @@ class tx_cms_BackendLayout {
 	/**
 	 * Adds items to a colpos list
 	 *
-	 * @param  int  $pageId
-	 * @param  array  $items
+	 * @param integer $pageId
+	 * @param array $items
 	 * @return array
 	 */
 	protected function addColPosListLayoutItems($pageId, $items) {
@@ -66,8 +73,8 @@ class tx_cms_BackendLayout {
 	/**
 	 * Gets the list of available columns for a given page id
 	 *
-	 * @param  int  $id
-	 * @return  array  $tcaItems
+	 * @param integer $id
+	 * @return array $tcaItems
 	 */
 	public function getColPosListItemsParsed($id) {
 		$tsConfig  = t3lib_BEfunc::getModTSconfig($id, 'TCEFORM.tt_content.colPos');
@@ -97,8 +104,8 @@ class tx_cms_BackendLayout {
 	/**
 	 * Gets the selected backend layout
 	 *
-	 * @param  int  $id
-	 * @return array|NULL  $backendLayout
+	 * @param integer $id
+	 * @return array|NULL $backendLayout
 	 */
 	public function getSelectedBackendLayout($id) {
 		$rootline = t3lib_BEfunc::BEgetRootLine($id);
@@ -106,8 +113,8 @@ class tx_cms_BackendLayout {
 
 		for ($i = count($rootline); $i > 0; $i--) {
 			$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-					// pid and t3ver_swapmode needed here for workspaceOL()
-				'uid, pid, t3ver_swapmode, backend_layout, backend_layout_next_level',
+					// pid is needed here for workspaceOL()
+				'uid, pid, backend_layout, backend_layout_next_level',
 				'pages',
 				'uid=' . intval($rootline[$i]['uid'])
 			);

@@ -350,10 +350,6 @@ final class t3lib_iconWorks {
 			$GLOBALS['TBE_STYLES']['skinImg'][$srcKey] = array($src, $wHattribs); // Set default...
 		}
 
-			// DEBUG: This doubles the size of all icons - for testing/debugging:
-			// if (preg_match('/^width="([0-9]+)" height="([0-9]+)"$/', $wHattribs, $reg))	$wHattribs='width="'.($reg[1]*2).'" height="'.($reg[2]*2).'"';
-
-
 			// Rendering disabled (greyed) icons using _i (inactive) as name suffix ("_d" is already used)
 		$matches = array();
 		$srcBasename = basename($src);
@@ -364,7 +360,6 @@ final class t3lib_iconWorks {
 				$src = self::makeIcon($backPath . $srcOrg, 'disabled', 0, FALSE, $temp_path . $backPath . $srcOrg, $srcBasename);
 			}
 		}
-
 
 			// Return icon source/wHattributes:
 		$output = '';
@@ -406,7 +401,6 @@ final class t3lib_iconWorks {
 		$iconFileName = 'icon_' . t3lib_div::shortMD5($iconfile . '|' . $mode . '|-' . $user . '|' . $protectSection) . '_' . $iconFileName_stateTagged . '.' . ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png'] ? 'png' : 'gif');
 		$mainpath = '../typo3temp/' . $iconFileName;
 		$path = PATH_site . 'typo3temp/' . $iconFileName;
-
 
 		if (file_exists(PATH_typo3 . 'icons/' . $iconFileName)) { // Returns if found in typo3/icons/
 			return 'icons/' . $iconFileName;
@@ -861,7 +855,7 @@ final class t3lib_iconWorks {
 	 * We wanted to not have these icons blown over by tons of overlays, so this is limited
 	 * to just one.
 	 *
-	 * see t3lib/config_default.php for the default options, you will find
+	 * see t3lib/stddb/DefaultSettings for the default options, you will find
 	 * $GLOBALS['TYPO3_CONF_VARS']['BE']['spriteIconRecordOverlayNames'] that shows
 	 * the list of CSS classes that will be used for the sprites, mapped to the statuses here
 	 *

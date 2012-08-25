@@ -229,7 +229,6 @@ class t3lib_file_Service_IndexerService implements t3lib_Singleton {
 			// signal before the files are modified
 		$this->emitPreGatherFileInformationSignal($file, $fileInfo, $gatherDefaultInformation);
 
-
 			// the check helps you to disable the regular file fetching,
 			// so a signal could actually remotely access the service
 		if ($gatherDefaultInformation->getDefaultFileInfo) {
@@ -332,7 +331,7 @@ class t3lib_file_Service_IndexerService implements t3lib_Singleton {
 	 */
 	protected function emitPreFileIndexSignal(t3lib_file_File $fileObject, $fileInfo) {
 		$this->getSignalSlotDispatcher()->dispatch(
-			't3lib_file_Storage',
+			't3lib_file_Service_IndexerService',
 			'preFileIndex',
 			array($fileObject, $fileInfo)
 		);
@@ -347,7 +346,7 @@ class t3lib_file_Service_IndexerService implements t3lib_Singleton {
 	 */
 	protected function emitPostFileIndexSignal(t3lib_file_File $fileObject, $fileInfo) {
 		$this->getSignalSlotDispatcher()->dispatch(
-			't3lib_file_Storage',
+			't3lib_file_Service_IndexerService',
 			'postFileIndex',
 			array($fileObject, $fileInfo)
 		);

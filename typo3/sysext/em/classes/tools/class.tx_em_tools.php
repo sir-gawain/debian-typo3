@@ -135,20 +135,14 @@ final class tx_em_Tools {
 	 * @return void
 	 */
 	public static function refreshGlobalExtList() {
-		$GLOBALS['TYPO3_LOADED_EXT'] = t3lib_extMgm::typo3_loadExtensions();
-		if ($GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE']) {
-			require(PATH_typo3conf . $GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'] . '_ext_localconf.php');
-		} else {
-			$temp_TYPO3_LOADED_EXT = $GLOBALS['TYPO3_LOADED_EXT'];
-			foreach ($temp_TYPO3_LOADED_EXT as $_EXTKEY => $temp_lEDat) {
-				if (is_array($temp_lEDat) && $temp_lEDat['ext_localconf.php']) {
-						// Make sure $TYPO3_CONF_VARS is also available within the included files
-					global $TYPO3_CONF_VARS;
-					$_EXTCONF = $TYPO3_CONF_VARS['EXT']['extConf'][$_EXTKEY];
-					require($temp_lEDat['ext_localconf.php']);
-				}
-			}
-		}
+			// Set new extlist / extlistArray for extension load changes at runtime
+		$localConfiguration = t3lib_Configuration::getLocalConfiguration();
+		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] = $localConfiguration['EXT']['extList'];
+		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extListArray'] = $localConfiguration['EXT']['extListArray'];
+
+		Typo3_Bootstrap::getInstance()
+			->populateTypo3LoadedExtGlobal(FALSE)
+			->loadAdditionalConfigurationFromExtensions(FALSE);
 	}
 
 	/**
@@ -558,7 +552,7 @@ final class tx_em_Tools {
 
 		if ($typePath) {
 			$path = $typePath . ($returnWithoutExtKey ? '' : $extKey . '/');
-			return $path; # @is_dir($path) ? $path : '';
+			return $path;
 		} else {
 			return '';
 		}
@@ -901,7 +895,7 @@ final class tx_em_Tools {
 									$out['NSerrors']['classfilename'][] = $baseName;
 								} else {
 									$out['NSok']['classfilename'][] = $baseName;
-									if (is_array($out['files'][$fileName]['classes']) && tx_em_Tools::first_in_array($testName, $out['files'][$fileName]['classes'], 1)) {
+									if (is_array($out['files'][$fileName]['classes']) && self::first_in_array($testName, $out['files'][$fileName]['classes'], 1)) {
 										$out['msg'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_class_ok'),
 																$fileName, $testName
 										);
@@ -941,7 +935,7 @@ final class tx_em_Tools {
 								} else {
 									$out['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_xclass_filename'), $fileName);
 								}
-							} elseif (!tx_em_Tools::first_in_array('ux_', $out['files'][$fileName]['classes'])) {
+							} elseif (!self::first_in_array('ux_', $out['files'][$fileName]['classes'])) {
 									// No Xclass definition required if classname starts with 'ux_'
 								$out['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_xclass_found'), $fileName);
 							}
@@ -1084,7 +1078,6 @@ final class tx_em_Tools {
 		if (substr($folder, -1) !== '/') {
 			$folder .= '/';
 		}
-
 
 		$newFile = t3lib_div::resolveBackPath(PATH_site . $folder . $file);
 

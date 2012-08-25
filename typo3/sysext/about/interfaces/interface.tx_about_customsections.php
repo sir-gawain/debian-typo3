@@ -25,7 +25,13 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
+/**
+ * Interface for custom sections
+ *
+ * @author Steffen Kamper <steffen@typo3.org>
+ * @package TYPO3
+ * @subpackage about
+ */
 interface tx_about_customSections {
 
 	/**
@@ -34,7 +40,7 @@ interface tx_about_customSections {
 	 * @abstract
 	 * @param  array $sections
 	 * @return void
-	 * @deprecated since 4.7, will be removed in 4.9. Use fluid overrides to change the view
+	 * @deprecated since 4.7, will be removed in 6.1. Use fluid overrides to change the view
 	 */
 	public function addSection(array &$sections);
 }

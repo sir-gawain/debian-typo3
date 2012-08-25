@@ -37,8 +37,8 @@ class tslib_content_Text extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, TEXT
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 		$content = '';
@@ -46,7 +46,7 @@ class tslib_content_Text extends tslib_content_Abstract {
 			$content = $conf['value'];
 			unset($conf['value']);
 		}
-		if(count($conf)) {
+		if (count($conf)) {
 			$content = $this->cObj->stdWrap($content, $conf);
 		}
 		return $content;

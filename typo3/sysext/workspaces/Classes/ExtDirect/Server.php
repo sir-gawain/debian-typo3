@@ -26,6 +26,8 @@
 ***************************************************************/
 
 /**
+ * ExtDirect server
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage ExtDirect
@@ -99,18 +101,18 @@ class Tx_Workspaces_ExtDirect_Server extends Tx_Workspaces_ExtDirect_AbstractHan
 		if ($GLOBALS['TCA'][$parameter->table]) {
 			if ($GLOBALS['TCA'][$parameter->table]['interface']['showRecordFieldList']) {
 				$fieldsOfRecords = $GLOBALS['TCA'][$parameter->table]['interface']['showRecordFieldList'];
-				$fieldsOfRecords = t3lib_div::trimExplode(',',$fieldsOfRecords,1);
+				$fieldsOfRecords = t3lib_div::trimExplode(',', $fieldsOfRecords, 1);
 			}
 		}
 
 		foreach ($fieldsOfRecords as $fieldName) {
 				// check for exclude fields
-			if ($GLOBALS['BE_USER']->isAdmin() || ($GLOBALS['TCA'][$parameter->table]['columns'][$fieldName]['exclude'] == 0) || t3lib_div::inList($GLOBALS['BE_USER']->groupData['non_exclude_fields'],$parameter->table.':'.$fieldName)) {
+			if ($GLOBALS['BE_USER']->isAdmin() || ($GLOBALS['TCA'][$parameter->table]['columns'][$fieldName]['exclude'] == 0) || t3lib_div::inList($GLOBALS['BE_USER']->groupData['non_exclude_fields'], $parameter->table . ':' . $fieldName)) {
 					// call diff class only if there is a difference
-				if (strcmp($liveRecord[$fieldName],$versionRecord[$fieldName]) !== 0) {
+				if (strcmp($liveRecord[$fieldName], $versionRecord[$fieldName]) !== 0) {
 						// Select the human readable values before diff
-					$liveRecord[$fieldName] = t3lib_BEfunc::getProcessedValue($parameter->table,$fieldName,$liveRecord[$fieldName],0,1);
-					$versionRecord[$fieldName] = t3lib_BEfunc::getProcessedValue($parameter->table,$fieldName,$versionRecord[$fieldName],0,1);
+					$liveRecord[$fieldName] = t3lib_BEfunc::getProcessedValue($parameter->table, $fieldName, $liveRecord[$fieldName], 0, 1);
+					$versionRecord[$fieldName] = t3lib_BEfunc::getProcessedValue($parameter->table, $fieldName, $versionRecord[$fieldName], 0, 1);
 
 						// Get the field's label. If not available, use the field name
 					$fieldTitle = $GLOBALS['LANG']->sL(t3lib_BEfunc::getItemLabel($parameter->table, $fieldName));
@@ -150,7 +152,7 @@ class Tx_Workspaces_ExtDirect_Server extends Tx_Workspaces_ExtDirect_AbstractHan
 			// Hook for modifying the difference and live arrays
 			// (this may be used by custom or dynamically-defined fields)
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['workspaces']['modifyDifferenceArray'])) {
-			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['workspaces']['modifyDifferenceArray'] as $className) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['workspaces']['modifyDifferenceArray'] as $className) {
 				$hookObject = &t3lib_div::getUserObj($className);
 				$hookObject->modifyDifferenceArray($parameter, $diffReturnArray, $liveReturnArray, $t3lib_diff);
 			}
@@ -191,13 +193,13 @@ class Tx_Workspaces_ExtDirect_Server extends Tx_Workspaces_ExtDirect_AbstractHan
 				'log_data,tstamp,userid',
 				'sys_log',
 				'action=6 and details_nr=30
-				AND tablename='.$GLOBALS['TYPO3_DB']->fullQuoteStr($table,'sys_log').'
-				AND recuid='.intval($uid),
+				AND tablename='.$GLOBALS['TYPO3_DB']->fullQuoteStr($table, 'sys_log') . '
+				AND recuid=' . intval($uid),
 				'',
 				'tstamp DESC'
 		);
 
-		foreach($sysLogRows as $sysLogRow)	{
+		foreach ($sysLogRows as $sysLogRow) {
 			$sysLogEntry = array();
 			$data = unserialize($sysLogRow['log_data']);
 			$beUserRecord = t3lib_BEfunc::getRecord('be_users', $sysLogRow['userid']);
@@ -213,10 +215,5 @@ class Tx_Workspaces_ExtDirect_Server extends Tx_Workspaces_ExtDirect_AbstractHan
 
 		return $sysLogReturnArray;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/Server.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/Server.php']);
 }
 ?>

@@ -83,7 +83,7 @@ class t3lib_autoloader {
 	}
 
 	/**
-	 * Uninstalls TYPO3 autoloader and writes any additional classes
+	 * Unload TYPO3 autoloader and write any additional classes
 	 * found during the script run to the cache file.
 	 *
 	 * This method is called during shutdown of the framework.
@@ -135,6 +135,7 @@ class t3lib_autoloader {
 	 * @return void
 	 */
 	protected static function loadCoreAndExtensionRegistry() {
+		/** @var $phpCodeCache t3lib_cache_frontend_PhpFrontend */
 		$phpCodeCache = $GLOBALS['typo3CacheManager']->getCache('cache_phpcode');
 
 			// Create autoload cache file if it does not exist yet
@@ -142,7 +143,7 @@ class t3lib_autoloader {
 			$classRegistry = $phpCodeCache->requireOnce(self::getAutoloadCacheIdentifier());
 		} else {
 			self::$cacheUpdateRequired = TRUE;
-			$classRegistry = self::createCoreAndExtensionRegistry();
+			$classRegistry = self::lowerCaseClassRegistry(self::createCoreAndExtensionRegistry());
 		}
 
 			// This can only happen if the autoloader was already registered
@@ -153,7 +154,7 @@ class t3lib_autoloader {
 			// switched to NullBackend for example to simplify development
 		if (!is_array($classRegistry)) {
 			self::$cacheUpdateRequired = TRUE;
-			$classRegistry = self::createCoreAndExtensionRegistry();
+			$classRegistry = self::lowerCaseClassRegistry(self::createCoreAndExtensionRegistry());
 		}
 
 		self::$classNameToFileMapping = $classRegistry;
@@ -172,7 +173,8 @@ class t3lib_autoloader {
 	 */
 	public static function getClassPathByRegistryLookup($className) {
 		$classPath = NULL;
-		$classNameLower = strtolower($className);
+
+		$classNameLower = t3lib_div::strtolower($className);
 
 			// Try to resolve extbase naming scheme if class is not already in cache file
 		if (!array_key_exists($classNameLower, self::$classNameToFileMapping)) {
@@ -184,95 +186,15 @@ class t3lib_autoloader {
 			$classPath = self::$classNameToFileMapping[$classNameLower];
 		}
 
-			// Handle deprecated XCLASS lookups
-		$classPath = self::classPathForDeprecatedXclassHandling($classPath, $classNameLower);
-
-		return $classPath;
-	}
-
-	/**
-	 * Resolve 'old' XCLASS registrations from TYPO3_CONF_VARS
-	 *
-	 * @param string $classPath The current class path from previous lookup
-	 * @param string $classNameLower Lower cased class name to be looked up
-	 * @return string Class path
-	 * @deprecated since 6.0, deprecation log is handled in config_default. This method and the call can be safely removed in two versions
-	 */
-	protected static function classPathForDeprecatedXclassHandling($classPath, $classNameLower) {
-			// Start XCLASS handling if the requested class starts with 'ux_'
-			// If so, we need to resolve the base class first
-			// e.g. ux_t3lib_beuserauth => t3lib_beuserauth
-		$baseClassOfXClass = NULL;
-		$xClassRequested = FALSE;
-		if ($classPath === NULL && substr($classNameLower, 0, 3) === 'ux_') {
-			$baseClassOfXClass = substr($classNameLower, 3);
-			$xClassRequested = TRUE;
+		if (
+			$classPath === NULL
+			&& substr($classNameLower, 0, 3) === 'ux_'
+			&& !array_key_exists($classNameLower, self::$classNameToFileMapping)
+		) {
+			self::$cacheUpdateRequired = TRUE;
+			self::$classNameToFileMapping[$classNameLower] = NULL;
 		}
 
-			// If a XCLASS was requested for autoloading, the autoloader has to know which class will be extended.
-			// only with this information it is possible to get the "relative path" of the extended class.
-			// The "relative path" is needed to simulate the correct path for $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'][$relativePath]
-			// "relative path" is in quotes, because this is not every time the case.
-			// The old way to include an XCLASS is defined by such a piece of code at the end of a class:
-			//
-			// if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php'])) {
-			// 		include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php']);
-			// }
-		if ($classPath === NULL && array_key_exists($baseClassOfXClass, self::$classNameToFileMapping)) {
-			$classPath = self::$classNameToFileMapping[$baseClassOfXClass];
-		}
-
-			// Try to determine the relative class for the old XCLASS, if:
-			// - We got a physical path for the base class
-			// - An xclass was requested
-			// - The old way of xclassing is still used
-			// $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_beuserauth.php']
-		if ($classPath !== NULL && $xClassRequested === TRUE && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'])) {
-
-				// Check if the XCLASS for the requested path is set  a transformation for some paths needs to be done
-			$relativeClassPath = substr($classPath, strlen(PATH_site));
-
-				// Replacements for some special cases
-				// @TODO: This layer should be adapted / finished for further special core cases
-			$relativeClassPath = str_replace(
-				array(
-					'typo3/sysext/cms/tslib',
-					'typo3conf/ext',
-					'typo3/sysext',
-				),
-				array(
-					'tslib',
-					'ext',
-					'ext',
-				),
-				$relativeClassPath
-			);
-
-			if (isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'][$relativeClassPath])) {
-					// If a class path was found: Set it and add to cache file
-				$classPath = $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS'][$relativeClassPath];
-				self::addClassToCache(PATH_site . $classPath, $classNameLower);
-			} else {
-					// If an XCLASS was requested AND no XLASS was found,
-					// $classPath is filled with the path of the class which will be extended.
-					//
-					// If no XCLASS is defined, we set $classPath to NULL, because otherwise the autoloader will
-					// load the same class twice
-					//
-					// Example:
-					// Autoload ux_t3lib_l10n_locales. This class will be not find in the autoloader cache.
-					// After this, we try to determine the path of base class, in our case t3lib_l10n_locales
-					// (to determine the relative class for old XCLASS inclusion).
-					// So we determine the relative path ob the base class ('t3lib/l10n/class.t3lib_l10n_locales.php')
-					// and have a look up for defined XCLASSes of t3lib_l10n_locales
-					// ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/l10n/class.t3lib_l10n_locales.php'])
-					// If we found one XCLASS, we will return the physical path of this class
-					// If no XCLASS was found, we MUST set $classPath to NULL
-					// Without this step the physical path of t3lib_l10n_locales will be returned and a
-					// "Cannot re-declare class t3lib_l10n_locales"-Error will occur
-				$classPath = NULL;
-			}
-		}
 		return $classPath;
 	}
 
@@ -283,10 +205,9 @@ class t3lib_autoloader {
 	 */
 	protected static function createCoreAndExtensionRegistry() {
 		$classRegistry = require(PATH_t3lib . 'core_autoload.php');
-			// At this point localconf.php was already initialized
-			// we have a current extList and extMgm is also known
-		$loadedExtensions = array_unique(t3lib_div::trimExplode(',', t3lib_extMgm::getEnabledExtensionList(), TRUE));
-		foreach ($loadedExtensions as $extensionKey) {
+			// At this point during bootstrap the local configuration is initialized,
+			// extMgm is ready to get the list of enabled extensions
+		foreach (t3lib_extMgm::getLoadedExtensionListArray() as $extensionKey) {
 			$extensionAutoloadFile = t3lib_extMgm::extPath($extensionKey, 'ext_autoload.php');
 			if (file_exists($extensionAutoloadFile)) {
 				$classRegistry = array_merge($classRegistry, require($extensionAutoloadFile));
@@ -304,13 +225,24 @@ class t3lib_autoloader {
 	 * @return void
 	 */
 	protected static function attemptToLoadRegistryWithNamingConventionForGivenClassName($className) {
-		$classNameParts = explode('_', $className, 3);
+
+		$delimiter = '_';
+		$tempClassName = $className;
+
+			// To handle namespaced class names, get rid of the first backslash
+			// and replace the remaining ones with underscore. This will simulate
+			// a 'usual' "extbase" structure like 'Tx_ExtensionName_Foo_bar'
+		if(strpos($className, '\\') !== FALSE) {
+			$tempClassName = ltrim($className, '\\');
+			$delimiter = '\\';
+		}
+		$classNameParts = explode($delimiter, $tempClassName, 3);
 		$extensionKey = t3lib_div::camelCaseToLowerCaseUnderscored($classNameParts[1]);
 		if ($extensionKey) {
 			try {
 					// This will throw a BadFunctionCallException if the extension is not loaded
 				$extensionPath = t3lib_extMgm::extPath($extensionKey);
-				$classFilePathAndName = $extensionPath . 'Classes/' . strtr($classNameParts[2], '_', '/') . '.php';
+				$classFilePathAndName = $extensionPath . 'Classes/' . strtr($classNameParts[2], $delimiter, '/') . '.php';
 				self::addClassToCache($classFilePathAndName, $className);
 			} catch (BadFunctionCallException $exception) {
 					// Catch the exception and do nothing to give
@@ -330,12 +262,13 @@ class t3lib_autoloader {
 	protected static function addClassToCache($classFilePathAndName, $className) {
 		if (file_exists($classFilePathAndName)) {
 			self::$cacheUpdateRequired = TRUE;
-			self::$classNameToFileMapping[strtolower($className)] = $classFilePathAndName;
+			self::$classNameToFileMapping[t3lib_div::strtolower($className)] = $classFilePathAndName;
 		}
 	}
 
 	/**
-	 * Set or update autoloader cache entry
+	 * Set or update autoloader cache entry.
+	 * It is expected that all class names (keys) are already lowercased!
 	 *
 	 * @param array $registry Current registry entries
 	 * @return void
@@ -343,13 +276,14 @@ class t3lib_autoloader {
 	protected static function updateRegistryCacheEntry(array $registry) {
 		$cachedFileContent = 'return array(';
 		foreach ($registry as $className => $classLocation) {
-			$cachedFileContent .= LF . '\'' . strtolower($className) . '\' => \'' . $classLocation . '\',';
+			$nullOrLocation = is_string($classLocation) ? '\'' . $classLocation . '\',' : 'NULL,';
+			$cachedFileContent .= LF . '\'' . $className . '\' => ' . $nullOrLocation;
 		}
 		$cachedFileContent .= LF . ');';
 		$GLOBALS['typo3CacheManager']->getCache('cache_phpcode')->set(
 			self::getAutoloadCacheIdentifier(),
 			$cachedFileContent,
-			array('t3lib_autoloader')
+			array('t3lib_autoloader', 'core')
 		);
 	}
 
@@ -366,9 +300,26 @@ class t3lib_autoloader {
 	 */
 	protected static function getAutoloadCacheIdentifier() {
 		if (is_null(self::$autoloadCacheIdentifier)) {
-			self::$autoloadCacheIdentifier = sha1(TYPO3_version . PATH_site . 'autoload');
+			self::$autoloadCacheIdentifier = 'autoload_' . sha1(TYPO3_version . PATH_site . 'autoload');
 		}
 		return self::$autoloadCacheIdentifier;
+	}
+
+	/**
+	 * Lowercase all keys of the class registry.
+	 *
+	 * Use the multi byte safe version of strtolower from t3lib_div,
+	 * so array_change_key_case() can not be used
+	 *
+	 * @param array $registry Given registry entries
+	 * @return array with lower cased keys
+	 */
+	protected static function lowerCaseClassRegistry($registry) {
+		$lowerCasedClassRegistry = array();
+		foreach ($registry as $className => $classFile) {
+			$lowerCasedClassRegistry[t3lib_div::strtolower($className)] = $classFile;
+		}
+		return $lowerCasedClassRegistry;
 	}
 }
 ?>

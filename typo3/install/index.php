@@ -37,25 +37,44 @@ ob_start();
 define('TYPO3_MODE', 'BE');
 define('TYPO3_enterInstallScript', '1');
 
-require('../Bootstrap.php');
-Typo3_Bootstrap::checkEnvironmentOrDie();
-Typo3_Bootstrap::defineBaseConstants();
-Typo3_Bootstrap::defineAndCheckPaths('typo3/install/');
-Typo3_Bootstrap::requireBaseClasses();
-Typo3_Bootstrap::setUpEnvironment();
+	// We use require instead of require_once here so we get a fatal error if classes/Bootstrap.php is accidentally included twice
+	// (which would indicate a clear bug).
+require('../classes/Bootstrap.php');
+Typo3_Bootstrap::getInstance()->baseSetup('typo3/install/');
 
-require('../Bootstrap_Install.php');
+require('../classes/Bootstrap/Install.php');
 Typo3_Bootstrap_Install::checkEnabledInstallToolOrDie();
 
-require(PATH_t3lib . 'config_default.php');
-
-Typo3_Bootstrap::initializeTypo3DbGlobal(FALSE);
-
-Typo3_Bootstrap::checkLockedBackendAndRedirectOrDie();
-
-Typo3_Bootstrap::checkBackendIpOrDie();
-
-Typo3_Bootstrap::checkSslBackendAndRedirectIfNeeded();
+Typo3_Bootstrap::getInstance()
+	->registerExtDirectComponents()
+	->populateLocalConfiguration()
+	->initializeCachingFramework()
+	->registerAutoloader()
+	->checkUtf8DatabaseSettingsOrDie()
+	->transferDeprecatedCurlSettings()
+	->setCacheHashOptions()
+	->enforceCorrectProxyAuthScheme()
+	->setDefaultTimezone()
+	->initializeL10nLocales()
+	->configureImageProcessingOptions()
+	->convertPageNotFoundHandlingToBoolean()
+	->registerGlobalDebugFunctions()
+	->registerSwiftMailer()
+	->configureExceptionHandling()
+	->setMemoryLimit()
+	->defineTypo3RequestTypes()
+	->populateTypo3LoadedExtGlobal(FALSE)
+	->loadAdditionalConfigurationFromExtensions(FALSE)
+	->deprecationLogForOldExtCacheSetting()
+	->initializeExceptionHandling()
+	->requireAdditionalExtensionFiles()
+	->setFinalCachingFrameworkCacheConfiguration()
+	->defineLoggingAndExceptionConstants()
+	->unsetReservedGlobalVariables()
+	->initializeTypo3DbGlobal(FALSE)
+	->checkLockedBackendAndRedirectOrDie()
+	->checkBackendIpOrDie()
+	->checkSslBackendAndRedirectIfNeeded();
 
 	// Run install script
 if (!t3lib_extMgm::isLoaded('install')) {

@@ -159,8 +159,6 @@ class tx_em_Extensions_List {
 	 * @see getInstalledExtensions()
 	 */
 	function getFlatInstExtList($path, &$list, $type) {
-
-
 		if (@is_dir($path)) {
 			$extList = t3lib_div::get_dirs($path);
 			if (is_array($extList)) {
@@ -196,8 +194,6 @@ class tx_em_Extensions_List {
 				$key = count($list);
 				$loaded = t3lib_extMgm::isLoaded($extKey);
 
-
-
 				$exist = $this->findIndex($extKey, $list);
 				if ($exist !== FALSE) {
 					$key = $exist;
@@ -223,7 +219,6 @@ class tx_em_Extensions_List {
 				$list[$key]['type'] = $this->types[$type];
 				$list[$key]['typeShort'] = $type;
 				$list[$key]['installed'] = $loaded ? 1 : 0;
-
 
 				$state = htmlspecialchars($emConf['state']);
 				$list[$key]['state'] = $this->states[$state];
@@ -254,13 +249,12 @@ class tx_em_Extensions_List {
 
 				$list[$key]['categoryShort'] = $list[$key]['category'];
 				$list[$key]['category'] = isset($this->categories[$list[$key]['category']]) ? $this->categories[$list[$key]['category']] : $list[$key]['category'];
-				$list[$key]['required'] = t3lib_div::inList(t3lib_extMgm::getRequiredExtensionList(), $extKey);
+				$list[$key]['required'] = in_array($extKey, t3lib_extMgm::getRequiredExtensionListArray(), TRUE);
 
 				$constraints = $this->humanizeConstraints($list[$key]['constraints']);
 				$list[$key]['depends'] = $constraints['depends'];
 				$list[$key]['conflicts'] = $constraints['conflicts'];
 				$list[$key]['suggests'] = $constraints['suggests'];
-
 
 				unset($list[$key]['_md5_values_when_last_written']);
 			}
@@ -936,9 +930,9 @@ EXTENSION KEYS:
 	 * @see removeExtFromList(), addExtToList()
 	 */
 	function removeRequiredExtFromListArr($listArr) {
-		$requiredExtensions = t3lib_div::trimExplode(',', t3lib_extMgm::getRequiredExtensionList(), 1);
+		$requiredExtensions = t3lib_extMgm::getRequiredExtensionListArray();
 		foreach ($listArr as $k => $ext) {
-			if (in_array($ext, $requiredExtensions) || !strcmp($ext, '_CACHEFILE')) {
+			if (in_array($ext, $requiredExtensions)) {
 				unset($listArr[$k]);
 			}
 		}

@@ -24,19 +24,19 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Contains class with layout/output function for TYPO3 Backend Scripts
  *
  * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML-trans compliant
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-
-
-if (!defined('TYPO3_MODE'))	die("Can't include this file directly.");
-
+if (!defined('TYPO3_MODE')) {
+	die('Can\'t include this file directly.');
+}
 
 /**
  * TYPO3 Backend Template Class
@@ -60,41 +60,70 @@ if (!defined('TYPO3_MODE'))	die("Can't include this file directly.");
 class template {
 
 		// Vars you typically might want to/should set from outside after making instance of this class:
-	var $backPath = '';				// 'backPath' pointing back to the PATH_typo3
-	var $form='';					// This can be set to the HTML-code for a formtag. Useful when you need a form to span the whole page; Inserted exactly after the body-tag.
-	var $JScodeLibArray = array();		// Similar to $JScode (see below) but used as an associative array to prevent double inclusion of JS code. This is used to include certain external Javascript libraries before the inline JS code. <script>-Tags are not wrapped around automatically
-	var $JScode='';					// Additional header code (eg. a JavaScript section) could be accommulated in this var. It will be directly outputted in the header.
-	var $extJScode = '';				// Additional header code for ExtJS. It will be included in document header and inserted in a Ext.onReady(function()
-	var $JScodeArray = array();		// Similar to $JScode but for use as array with associative keys to prevent double inclusion of JS code. a <script> tag is automatically wrapped around.
-	var $postCode='';				// Additional 'page-end' code could be accommulated in this var. It will be outputted at the end of page before </body> and some other internal page-end code.
-	var $docType = '';				// Doc-type used in the header. Default is xhtml_trans. You can also set it to 'html_3', 'xhtml_strict' or 'xhtml_frames'.
-	var $moduleTemplate = '';		// HTML template with markers for module
-	protected $moduleTemplateFilename = '';	// the base file (not overlaid by TBE_STYLES) for the current module, useful for hooks when finding out which modules is rendered currently
+		// 'backPath' pointing back to the PATH_typo3
+	var $backPath = '';
+		// This can be set to the HTML-code for a formtag. Useful when you need a form to span the whole page; Inserted exactly after the body-tag.
+	var $form = '';
+		// Similar to $JScode (see below) but used as an associative array to prevent double inclusion of JS code. This is used to include certain external Javascript libraries before the inline JS code. <script>-Tags are not wrapped around automatically
+	var $JScodeLibArray = array();
+		// Additional header code (eg. a JavaScript section) could be accommulated in this var. It will be directly outputted in the header.
+	var $JScode = '';
+		// Additional header code for ExtJS. It will be included in document header and inserted in a Ext.onReady(function()
+	var $extJScode = '';
+		// Similar to $JScode but for use as array with associative keys to prevent double inclusion of JS code. a <script> tag is automatically wrapped around.
+	var $JScodeArray = array();
+		// Additional 'page-end' code could be accommulated in this var. It will be outputted at the end of page before </body> and some other internal page-end code.
+	var $postCode = '';
+		// Doc-type used in the header. Default is xhtml_trans. You can also set it to 'html_3', 'xhtml_strict' or 'xhtml_frames'.
+	var $docType = '';
+		// HTML template with markers for module
+	var $moduleTemplate = '';
+		// the base file (not overlaid by TBE_STYLES) for the current module, useful for hooks when finding out which modules is rendered currently
+	protected $moduleTemplateFilename = '';
 
 		// Other vars you can change, but less frequently used:
-	var $scriptID='';				// Script ID.
-	var $bodyTagId='';				// Id which can be set for the body tag. Default value is based on script ID
-	var $bodyTagAdditions='';		// You can add additional attributes to the body-tag through this variable.
-	var $inDocStyles='';			// Additional CSS styles which will be added to the <style> section in the header
-	var $inDocStylesArray=array();		// Like $inDocStyles but for use as array with associative keys to prevent double inclusion of css code
-	var $form_rowsToStylewidth = 9.58;	// Multiplication factor for formWidth() input size (default is 48* this value).
-	var $form_largeComp = 1.33;		// Compensation for large documents (used in class.t3lib_tceforms.php)
-	var $endJS=1;					// If set, then a JavaScript section will be outputted in the bottom of page which will try and update the top.busy session expiry object.
+		// Script ID.
+	var $scriptID = '';
+		// Id which can be set for the body tag. Default value is based on script ID
+	var $bodyTagId = '';
+		// You can add additional attributes to the body-tag through this variable.
+	var $bodyTagAdditions = '';
+		// Additional CSS styles which will be added to the <style> section in the header
+	var $inDocStyles = '';
+		// Like $inDocStyles but for use as array with associative keys to prevent double inclusion of css code
+	var $inDocStylesArray = array();
+		// Multiplication factor for formWidth() input size (default is 48* this value).
+	var $form_rowsToStylewidth = 9.58;
+		// Compensation for large documents (used in class.t3lib_tceforms.php)
+	var $form_largeComp = 1.33;
+		// If set, then a JavaScript section will be outputted in the bottom of page which will try and update the top.busy session expiry object.
+	var $endJS = 1;
 
 		// TYPO3 Colorscheme.
 		// If you want to change this, please do so through a skin using the global var $GLOBALS['TBE_STYLES']
-	var $bgColor = '#F7F3EF';		// Light background color
-	var $bgColor2 = '#9BA1A8';		// Steel-blue
-	var $bgColor3 = '#F6F2E6';		// dok.color
-	var $bgColor4 = '#D9D5C9';		// light tablerow background, brownish
-	var $bgColor5 = '#ABBBB4';		// light tablerow background, greenish
-	var $bgColor6 = '#E7DBA8';		// light tablerow background, yellowish, for section headers. Light.
+		// Light background color
+	var $bgColor = '#F7F3EF';
+		// Steel-blue
+	var $bgColor2 = '#9BA1A8';
+		// dok.color
+	var $bgColor3 = '#F6F2E6';
+		// light tablerow background, brownish
+	var $bgColor4 = '#D9D5C9';
+		// light tablerow background, greenish
+	var $bgColor5 = '#ABBBB4';
+		// light tablerow background, yellowish, for section headers. Light.
+	var $bgColor6 = '#E7DBA8';
 	var $hoverColor = '#254D7B';
-	var $styleSheetFile = '';	// Filename of stylesheet (relative to PATH_typo3)
-	var $styleSheetFile2 = '';		// Filename of stylesheet #2 - linked to right after the $this->styleSheetFile script (relative to PATH_typo3)
-	var $styleSheetFile_post = '';	// Filename of a post-stylesheet - included right after all inline styles.
-	var $backGroundImage = '';		// Background image of page (relative to PATH_typo3)
-	var $inDocStyles_TBEstyle = '';	// Inline css styling set from TBE_STYLES array
+		// Filename of stylesheet (relative to PATH_typo3)
+	var $styleSheetFile = '';
+		// Filename of stylesheet #2 - linked to right after the $this->styleSheetFile script (relative to PATH_typo3)
+	var $styleSheetFile2 = '';
+		// Filename of a post-stylesheet - included right after all inline styles.
+	var $styleSheetFile_post = '';
+		// Background image of page (relative to PATH_typo3)
+	var $backGroundImage = '';
+		// Inline css styling set from TBE_STYLES array
+	var $inDocStyles_TBEstyle = '';
 
 	/**
 	 * Whether to use the X-UA-Compatible meta tag
@@ -116,7 +145,7 @@ class template {
 		'generatedSprites' => '../typo3temp/sprites/',
 	);
 
-		// include these CSS directories from skins by default
+		// Include these CSS directories from skins by default
 	protected $stylesheetsSkins = array(
 		'structure' => 'stylesheets/structure/',
 		'visual' => 'stylesheets/visual/',
@@ -131,13 +160,16 @@ class template {
 	);
 
 		// DEV:
-	var $parseTimeFlag = 0;			// Will output the parsetime of the scripts in milliseconds (for admin-users). Set this to FALSE when releasing TYPO3. Only for dev.
+		// Will output the parsetime of the scripts in milliseconds (for admin-users). Set this to FALSE when releasing TYPO3. Only for dev.
+	var $parseTimeFlag = 0;
 
 		// INTERNAL
-	var $charset = 'utf-8';			// Default charset. see function initCharset()
-
-	var $sectionFlag=0;				// Internal: Indicates if a <div>-output section is open
-	var $divClass = '';				// (Default) Class for wrapping <DIV>-tag of page. Is set in class extensions.
+		// Default charset. see function initCharset()
+	var $charset = 'utf-8';
+		// Internal: Indicates if a <div>-output section is open
+	var $sectionFlag = 0;
+		// (Default) Class for wrapping <DIV>-tag of page. Is set in class extensions.
+	var $divClass = '';
 
 	var $pageHeaderBlock = '';
 	var $endOfPageJsBlock = '';
@@ -148,7 +180,8 @@ class template {
 	 * @var t3lib_PageRenderer
 	 */
 	protected $pageRenderer;
-	protected $pageHeaderFooterTemplateFile = '';	// alternative template file
+		// Alternative template file
+	protected $pageHeaderFooterTemplateFile = '';
 
 	protected $extDirectStateProvider = FALSE;
 
@@ -178,34 +211,62 @@ class template {
 		} else {
 			$this->scriptID = preg_replace('/^.*\/(sysext|ext)\//', 'ext/', substr(PATH_thisScript, strlen(PATH_site)));
 		}
-		if (TYPO3_mainDir!='typo3/' && substr($this->scriptID,0,strlen(TYPO3_mainDir)) == TYPO3_mainDir) {
-			$this->scriptID = 'typo3/'.substr($this->scriptID,strlen(TYPO3_mainDir));	// This fixes if TYPO3_mainDir has been changed so the script ids are STILL "typo3/..."
+		if (TYPO3_mainDir!='typo3/' && substr($this->scriptID, 0, strlen(TYPO3_mainDir)) == TYPO3_mainDir) {
+				// This fixes if TYPO3_mainDir has been changed so the script ids are STILL "typo3/..."
+			$this->scriptID = 'typo3/'.substr($this->scriptID, strlen(TYPO3_mainDir));
 		}
 
-		$this->bodyTagId = preg_replace('/[^A-Za-z0-9-]/','-',$this->scriptID);
+		$this->bodyTagId = preg_replace('/[^A-Za-z0-9-]/', '-', $this->scriptID);
 
 			// Individual configuration per script? If so, make a recursive merge of the arrays:
 		if (is_array($GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID])) {
-			$ovr = $GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID];		// Make copy
-			$GLOBALS['TBE_STYLES'] = t3lib_div::array_merge_recursive_overrule($GLOBALS['TBE_STYLES'],$ovr);		// merge styles.
-			unset($GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID]);	// Have to unset - otherwise the second instantiation will do it again!
+				// Make copy
+			$ovr = $GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID];
+				// merge styles.
+			$GLOBALS['TBE_STYLES'] = t3lib_div::array_merge_recursive_overrule($GLOBALS['TBE_STYLES'], $ovr);
+				// Have to unset - otherwise the second instantiation will do it again!
+			unset($GLOBALS['TBE_STYLES']['scriptIDindex'][$this->scriptID]);
 		}
 
 			// Color scheme:
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor'])	$this->bgColor=$GLOBALS['TBE_STYLES']['mainColors']['bgColor'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor1'])	$this->bgColor1=$GLOBALS['TBE_STYLES']['mainColors']['bgColor1'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor2'])	$this->bgColor2=$GLOBALS['TBE_STYLES']['mainColors']['bgColor2'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor3'])	$this->bgColor3=$GLOBALS['TBE_STYLES']['mainColors']['bgColor3'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor4'])	$this->bgColor4=$GLOBALS['TBE_STYLES']['mainColors']['bgColor4'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor5'])	$this->bgColor5=$GLOBALS['TBE_STYLES']['mainColors']['bgColor5'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor6'])	$this->bgColor6=$GLOBALS['TBE_STYLES']['mainColors']['bgColor6'];
-		if ($GLOBALS['TBE_STYLES']['mainColors']['hoverColor'])	$this->hoverColor=$GLOBALS['TBE_STYLES']['mainColors']['hoverColor'];
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor']) {
+			$this->bgColor = $GLOBALS['TBE_STYLES']['mainColors']['bgColor'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor1']) {
+			$this->bgColor1 = $GLOBALS['TBE_STYLES']['mainColors']['bgColor1'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor2']) {
+			$this->bgColor2 = $GLOBALS['TBE_STYLES']['mainColors']['bgColor2'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor3']) {
+			$this->bgColor3 = $GLOBALS['TBE_STYLES']['mainColors']['bgColor3'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor4']) {
+			$this->bgColor4 = $GLOBALS['TBE_STYLES']['mainColors']['bgColor4'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor5']) {
+			$this->bgColor5 = $GLOBALS['TBE_STYLES']['mainColors']['bgColor5'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['bgColor6']) {
+			$this->bgColor6 = $GLOBALS['TBE_STYLES']['mainColors']['bgColor6'];
+		}
+		if ($GLOBALS['TBE_STYLES']['mainColors']['hoverColor']) {
+			$this->hoverColor = $GLOBALS['TBE_STYLES']['mainColors']['hoverColor'];
+		}
 
 			// Main Stylesheets:
-		if ($GLOBALS['TBE_STYLES']['stylesheet'])	$this->styleSheetFile = $GLOBALS['TBE_STYLES']['stylesheet'];
-		if ($GLOBALS['TBE_STYLES']['stylesheet2'])	$this->styleSheetFile2 = $GLOBALS['TBE_STYLES']['stylesheet2'];
-		if ($GLOBALS['TBE_STYLES']['styleSheetFile_post'])	$this->styleSheetFile_post = $GLOBALS['TBE_STYLES']['styleSheetFile_post'];
-		if ($GLOBALS['TBE_STYLES']['inDocStyles_TBEstyle'])	$this->inDocStyles_TBEstyle = $GLOBALS['TBE_STYLES']['inDocStyles_TBEstyle'];
+		if ($GLOBALS['TBE_STYLES']['stylesheet']) {
+			$this->styleSheetFile = $GLOBALS['TBE_STYLES']['stylesheet'];
+		}
+		if ($GLOBALS['TBE_STYLES']['stylesheet2']) {
+			$this->styleSheetFile2 = $GLOBALS['TBE_STYLES']['stylesheet2'];
+		}
+		if ($GLOBALS['TBE_STYLES']['styleSheetFile_post']) {
+			$this->styleSheetFile_post = $GLOBALS['TBE_STYLES']['styleSheetFile_post'];
+		}
+		if ($GLOBALS['TBE_STYLES']['inDocStyles_TBEstyle']) {
+			$this->inDocStyles_TBEstyle = $GLOBALS['TBE_STYLES']['inDocStyles_TBEstyle'];
+		}
 
 			// include all stylesheets
 		foreach ($this->getSkinStylesheetDirectories() as $stylesheetDirectory) {
@@ -213,7 +274,9 @@ class template {
 		}
 
 			// Background image
-		if ($GLOBALS['TBE_STYLES']['background'])	$this->backGroundImage = $GLOBALS['TBE_STYLES']['background'];
+		if ($GLOBALS['TBE_STYLES']['background']) {
+			$this->backGroundImage = $GLOBALS['TBE_STYLES']['background'];
+		}
 	}
 
 	/**
@@ -232,7 +295,7 @@ class template {
 			$this->pageRenderer->enableCompressCss();
 			$this->pageRenderer->enableCompressJavascript();
 
-				// add all JavaScript files defined in $this->jsFiles to the PageRenderer
+				// Add all JavaScript files defined in $this->jsFiles to the PageRenderer
 			foreach ($this->jsFiles as $file) {
 				$this->pageRenderer->addJsFile($GLOBALS['BACK_PATH'] . $file);
 			}
@@ -243,8 +306,6 @@ class template {
 		return $this->pageRenderer;
 	}
 
-
-
 	/**
 	 * Sets inclusion of StateProvider
 	 *
@@ -253,14 +314,6 @@ class template {
 	public function setExtDirectStateProvider() {
 		$this->extDirectStateProvider = TRUE;
 	}
-
-
-
-
-
-
-
-
 
 	/*****************************************
 	 *
@@ -285,7 +338,7 @@ class template {
 	 */
 	function wrapClickMenuOnIcon($str, $table, $uid = 0, $listFr = TRUE, $addParams = '', $enDisItems = '', $returnOnClick = FALSE) {
 		$backPath = rawurlencode($this->backPath).'|'.t3lib_div::shortMD5($this->backPath.'|'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
-		$onClick = 'showClickmenu("' . $table . '","' . ($uid !== 0) ? $uid : '' . '","' . strval($listFr) . '","' . str_replace('+', '%2B', $enDisItems) . '","' . str_replace('&', '&amp;', addcslashes($backPath, '"')) . '","' . str_replace('&', '&amp;', addcslashes($addParams, '"')) . '");return false;';
+		$onClick = 'showClickmenu("' . $table . '","' . ($uid !== 0 ? $uid : '') . '","' . strval($listFr) . '","' . str_replace('+', '%2B', $enDisItems) . '","' . str_replace('&', '&amp;', addcslashes($backPath, '"')) . '","' . str_replace('&', '&amp;', addcslashes($addParams, '"')) . '");return false;';
 		return $returnOnClick ? $onClick : '<a href="#" onclick="'.htmlspecialchars($onClick).'" oncontextmenu="'.htmlspecialchars($onClick).'">'.$str.'</a>';
 	}
 
@@ -312,8 +365,8 @@ class template {
 		);
 
 			// Make link to view page
-		$str.= '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::viewOnClick($id,$backPath,t3lib_BEfunc::BEgetRootLine($id))).'">'.
-				'<img'.t3lib_iconWorks::skinImg($backPath,'gfx/zoom.gif','width="12" height="12"').' title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage',1).'"'.($addParams?' '.trim($addParams):"").' hspace="3" alt="" />'.
+		$str.= '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::viewOnClick($id, $backPath, t3lib_BEfunc::BEgetRootLine($id))).'">'.
+				'<img' . t3lib_iconWorks::skinImg($backPath, 'gfx/zoom.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1). '"' . ($addParams ? ' '.trim($addParams) : '') . ' hspace="3" alt="" />' .
 				'</a>';
 		return $str;
 	}
@@ -344,7 +397,7 @@ class template {
 	 * Use this to test if click-menus (context sensitive menus) can and should be displayed in the backend.
 	 *
 	 * @return boolean
-	 * @deprecated since TYPO3 4.7, will be removed in TYPO3 4.9 - This function makes no sense anymore
+	 * @deprecated since TYPO3 4.7, will be removed in TYPO3 6.1 - This function makes no sense anymore
 	 */
 	function isCMlayers() {
 		t3lib_div::logDeprecatedFunction();
@@ -369,9 +422,10 @@ class template {
 		if (is_array($row) && $row['uid']) {
 			$iconImgTag = t3lib_iconWorks::getSpriteIconForRecord($table, $row, array('title' => htmlspecialchars($path)));
 			$title = strip_tags(t3lib_BEfunc::getRecordTitle($table, $row));
-			$viewPage = $noViewPageIcon ? '' : $this->viewPageIcon($row['uid'],$this->backPath,'');
-			if ($table == 'pages')
+			$viewPage = $noViewPageIcon ? '' : $this->viewPageIcon($row['uid'], $this->backPath, '');
+			if ($table == 'pages') {
 				$path .= ' - ' . t3lib_BEfunc::titleAttribForPages($row, '', 0);
+			}
 		} else {
 			$iconImgTag = t3lib_iconWorks::getSpriteIcon('apps-pagetree-page-domain', array('title' => htmlspecialchars($path)));
 			$title = $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'];
@@ -395,8 +449,8 @@ class template {
 	 */
 	function getFileheader($title, $path, $iconfile) {
 		$fileInfo = t3lib_div::split_fileref($title);
-		$title = htmlspecialchars(t3lib_div::fixed_lgd_cs($fileInfo['path'],-35)).'<strong>'.htmlspecialchars($fileInfo['file']).'</strong>';
-		return '<span class="typo3-moduleHeader"><img'.t3lib_iconWorks::skinImg($this->backPath,$iconfile,'width="18" height="16"').' title="'.htmlspecialchars($path).'" alt="" />'.$title.'</span>';
+		$title = htmlspecialchars(t3lib_div::fixed_lgd_cs($fileInfo['path'], -35)).'<strong>'.htmlspecialchars($fileInfo['file']).'</strong>';
+		return '<span class="typo3-moduleHeader"><img'.t3lib_iconWorks::skinImg($this->backPath, $iconfile, 'width="18" height="16"').' title="'.htmlspecialchars($path).'" alt="" />'.$title.'</span>';
 	}
 
 	/**
@@ -410,7 +464,7 @@ class template {
 	 */
 	function makeShortcutIcon($gvList, $setList, $modName, $motherModName = '') {
 		$backPath=$this->backPath;
-		$storeUrl=$this->makeShortcutUrl($gvList,$setList);
+		$storeUrl=$this->makeShortcutUrl($gvList, $setList);
 		$pathInfo = parse_url(t3lib_div::getIndpEnv('REQUEST_URI'));
 
 			// Add the module identifier automatically if typo3/mod.php is used:
@@ -418,17 +472,19 @@ class template {
 			$storeUrl = '&M='.$modName.$storeUrl;
 		}
 
-		if (!strcmp($motherModName,'1')) {
-			$mMN="&motherModName='+top.currentModuleLoaded+'";
+		if (!strcmp($motherModName, '1')) {
+			$mMN = "&motherModName='+top.currentModuleLoaded+'";
 		} elseif ($motherModName) {
-			$mMN='&motherModName='.rawurlencode($motherModName);
-		} else $mMN='';
+			$mMN = '&motherModName='.rawurlencode($motherModName);
+		} else {
+			$mMN = '';
+		}
 
 		$onClick = 'top.ShortcutManager.createShortcut('
 			.$GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.makeBookmark')).', '
 			.'\''.$backPath.'\', '
 			.'\''.rawurlencode($modName).'\', '
-			.'\''.rawurlencode($pathInfo['path']."?".$storeUrl).$mMN.'\''
+			. '\'' . rawurlencode($pathInfo['path'] . '?' . $storeUrl) . $mMN . '\''
 		.');return false;';
 
 		$sIcon = '<a href="#" onclick="' . htmlspecialchars($onClick).'" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.makeBookmark', TRUE) . '">'
@@ -449,10 +505,10 @@ class template {
 	function makeShortcutUrl($gvList, $setList) {
 		$GET = t3lib_div::_GET();
 		$storeArray = array_merge(
-			t3lib_div::compileSelectedGetVarsFromArray($gvList,$GET),
-			array('SET'=>t3lib_div::compileSelectedGetVarsFromArray($setList, (array)$GLOBALS['SOBE']->MOD_SETTINGS))
+			t3lib_div::compileSelectedGetVarsFromArray($gvList, $GET),
+			array('SET' => t3lib_div::compileSelectedGetVarsFromArray($setList, (array)$GLOBALS['SOBE']->MOD_SETTINGS))
 		);
-		$storeUrl = t3lib_div::implodeArrayForUrl('',$storeArray);
+		$storeUrl = t3lib_div::implodeArrayForUrl('', $storeArray);
 		return $storeUrl;
 	}
 
@@ -469,7 +525,8 @@ class template {
 	 */
 	function formWidth($size = 48, $textarea = FALSE, $styleOverride = '') {
 		$wAttrib = $textarea?'cols':'size';
-		if (!$GLOBALS['CLIENT']['FORMSTYLE'])	{	// If not setting the width by style-attribute
+			// If not setting the width by style-attribute
+		if (!$GLOBALS['CLIENT']['FORMSTYLE']) {
 			$retVal = ' '.$wAttrib.'="'.$size.'"';
 		} else {	// Setting width by style-attribute. 'cols' MUST be avoided with NN6+
 			$pixels = ceil($size*$this->form_rowsToStylewidth);
@@ -481,9 +538,9 @@ class template {
 	/**
 	 * This function is dedicated to textareas, which has the wrapping on/off option to observe.
 	 * EXAMPLE:
-	 * 		<textarea rows="10" wrap="off" '.$GLOBALS["TBE_TEMPLATE"]->formWidthText(48,"","off").'>
+	 * 		<textarea rows="10" wrap="off" '.$GLOBALS["TBE_TEMPLATE"]->formWidthText(48, "", "off").'>
 	 *   or
-	 * 		<textarea rows="10" wrap="virtual" '.$GLOBALS["TBE_TEMPLATE"]->formWidthText(48,"","virtual").'>
+	 * 		<textarea rows="10" wrap="virtual" '.$GLOBALS["TBE_TEMPLATE"]->formWidthText(48, "", "virtual").'>
 	 *
 	 * @param integer $size A relative number which multiplied with approx. 10 will lead to the width in pixels
 	 * @param string $styleOverride A string which will be returned as attribute-value for style="" instead of the calculated width (if CSS is enabled)
@@ -492,10 +549,10 @@ class template {
 	 * @see formWidth()
 	 */
 	function formWidthText($size = 48, $styleOverride = '', $wrap = '') {
-		$wTags = $this->formWidth($size,1,$styleOverride);
+		$wTags = $this->formWidth($size, 1, $styleOverride);
 			// Netscape 6+/Mozilla seems to have this ODD problem where there WILL ALWAYS be wrapping with the cols-attribute set and NEVER without the col-attribute...
-		if (strtolower(trim($wrap))!='off' && $GLOBALS['CLIENT']['BROWSER']=='net' && $GLOBALS['CLIENT']['VERSION']>=5) {
-			$wTags.=' cols="'.$size.'"';
+		if (strtolower(trim($wrap)) != 'off' && $GLOBALS['CLIENT']['BROWSER']=='net' && $GLOBALS['CLIENT']['VERSION'] >= 5) {
+			$wTags .= ' cols="'.$size.'"';
 		}
 		return $wTags;
 	}
@@ -518,8 +575,8 @@ class template {
 		));
 
 		$out ="
-	var T3_RETURN_URL = '".str_replace('%20','',rawurlencode(t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'))))."';
-	var T3_THIS_LOCATION = '".str_replace('%20','',rawurlencode($thisLocation))."';
+	var T3_RETURN_URL = '".str_replace('%20', '', rawurlencode(t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'))))."';
+	var T3_THIS_LOCATION = '".str_replace('%20', '', rawurlencode($thisLocation))."';
 		";
 		return $out;
 	}
@@ -535,9 +592,9 @@ class template {
 	function formatTime($tstamp, $type) {
 		$dateStr = '';
 		switch($type) {
-			case 1: $dateStr = date($GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'],$tstamp);
+			case 1: $dateStr = date($GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $tstamp);
 			break;
-			case 10: $dateStr = date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'],$tstamp);
+			case 10: $dateStr = date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'], $tstamp);
 			break;
 		}
 		return $dateStr;
@@ -565,17 +622,6 @@ class template {
 	public function useCompatibilityTag($useCompatibilityTag = TRUE) {
 		$this->useCompatibilityTag = (bool) $useCompatibilityTag;
 	}
-
-
-
-
-
-
-
-
-
-
-
 
 	/*****************************************
 	 *
@@ -616,12 +662,10 @@ class template {
 				$this->pageRenderer->setTemplateFile($file);
 			}
 		}
-			// For debugging: If this outputs "QuirksMode"/"BackCompat" (IE) the browser runs in quirks-mode. Otherwise the value is "CSS1Compat"
-#		$this->JScodeArray[]='alert(document.compatMode);';
 
 			// Send HTTP header for selected charset. Added by Robert Lemke 23.10.2003
 		$this->initCharset();
-		header ('Content-Type:text/html;charset='.$this->charset);
+		header('Content-Type:text/html;charset='.$this->charset);
 
 			// Standard HTML tag
 		$htmlTag = '<html xmlns="http://www.w3.org/1999/xhtml">';
@@ -630,7 +674,7 @@ class template {
 			case 'html_3':
 				$headerStart = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">';
 				$htmlTag = '<html>';
-				// disable rendering of XHTML tags
+					// Disable rendering of XHTML tags
 				$this->getPageRenderer()->setRenderXhtml(FALSE);
 				break;
 			case 'xhtml_strict':
@@ -653,20 +697,20 @@ class template {
 					// The fallthrough is intended as HTML5, as this is the default for the BE since TYPO3 4.5
 				$headerStart = '<!DOCTYPE html>' . LF;
 				$htmlTag = '<html>';
-				// disable rendering of XHTML tags
+					// Disable rendering of XHTML tags
 				$this->getPageRenderer()->setRenderXhtml(FALSE);
 				break;
 		}
 
 		$this->pageRenderer->setHtmlTag($htmlTag);
 
-		// This loads the tabulator-in-textarea feature. It automatically modifies
-		// every textarea which is found.
+			// This loads the tabulator-in-textarea feature. It automatically modifies
+			// every textarea which is found.
 		if (!$GLOBALS['BE_USER']->uc['disableTabInTextarea']) {
 			$this->loadJavascriptLib('tab.js');
 		}
 
-			// include the JS for the Context Sensitive Help
+			// Include the JS for the Context Sensitive Help
 		if ($includeCsh) {
 			$this->loadCshJavascript();
 		}
@@ -700,6 +744,7 @@ class template {
 		$this->pageRenderer->setCharSet($this->charset);
 		$this->pageRenderer->addMetaTag($this->generator());
 		$this->pageRenderer->addMetaTag('<meta name="robots" content="noindex,follow" />');
+		$this->pageRenderer->setFavIcon('gfx/favicon.ico');
 		if ($this->useCompatibilityTag) {
 			$this->pageRenderer->addMetaTag($this->xUaCompatible($this->xUaCompatibilityVersion));
 		}
@@ -712,7 +757,7 @@ class template {
 			$this->pageRenderer->addJsFile($this->backPath . '../t3lib/js/extjs/ExtDirect.StateProvider.js');
 		}
 
-			// add jsCode for overriding the console with a debug panel connection
+			// Add jsCode for overriding the console with a debug panel connection
 		$this->pageRenderer->addJsInlineCode(
 			'consoleOverrideWithDebugPanel',
 			'if (typeof top.Ext === "object") {
@@ -773,10 +818,10 @@ class template {
 
 		$this->endOfPageJsBlock = $this->pageRenderer->render(t3lib_PageRenderer::PART_FOOTER);
 
-		if ($this->docType=='xhtml_frames') {
+		if ($this->docType == 'xhtml_frames') {
 			return $str;
-		} else
-			$str.=$this->docBodyTagBegin().
+		} else {
+			$str .= $this->docBodyTagBegin().
 				($this->divClass ?
 '
 
@@ -784,6 +829,7 @@ class template {
 <div class="' . $this->divClass . '">
 '
 					: '' ) . trim($this->form);
+		}
 		return $str;
 	}
 
@@ -801,7 +847,7 @@ class template {
 				$this->parseTime().
 				($this->form?'
 </form>':'');
-			// if something is in buffer like debug, put it to end of page
+			// If something is in buffer like debug, put it to end of page
 		if (ob_get_contents()) {
 			$str .= ob_get_clean();
 			if (!headers_sent()) {
@@ -817,9 +863,10 @@ class template {
 </div>':'') . $this->endOfPageJsBlock;
 		}
 
-
 			// Logging: Can't find better place to put it:
-		if (TYPO3_DLOG)	t3lib_div::devLog('END of BACKEND session', 'template', 0, array('_FLUSH' => TRUE));
+		if (TYPO3_DLOG) {
+			t3lib_div::devLog('END of BACKEND session', 'template', 0, array('_FLUSH' => TRUE));
+		}
 
 		return $str;
 	}
@@ -868,8 +915,8 @@ class template {
 	 * @return string HTML content
 	 * @see icons(), sectionHeader()
 	 */
-	function section($label, $text, $nostrtoupper = FALSE, $sH = FALSE, $type=0, $allowHTMLinHeader = FALSE) {
-		$str='';
+	function section($label, $text, $nostrtoupper = FALSE, $sH = FALSE, $type = 0, $allowHTMLinHeader = FALSE) {
+		$str = '';
 
 			// Setting header
 		if ($label) {
@@ -877,7 +924,7 @@ class template {
 			$str.=$this->sectionHeader($this->icons($type).$label, $sH, $nostrtoupper ? '' : ' class="uppercase"');
 		}
 			// Setting content
-		$str.='
+		$str .= '
 
 	<!-- Section content -->
 '.$text;
@@ -894,7 +941,7 @@ class template {
 	 */
 	function divider($dist) {
 		$dist = intval($dist);
-		$str='
+		$str = '
 
 	<!-- DIVIDER -->
 	<hr style="margin-top: '.$dist.'px; margin-bottom: '.$dist.'px;" />
@@ -909,7 +956,7 @@ class template {
 	 * @return string HTML content
 	 */
 	function spacer($dist) {
-		if ($dist>0) {
+		if ($dist > 0) {
 			return '
 
 	<!-- Spacer element -->
@@ -932,7 +979,7 @@ class template {
 		if ($addAttrib && substr($addAttrib, 0, 1) !== ' ') {
 			$addAttrib = ' ' . $addAttrib;
 		}
-		$str='
+		$str = '
 
 	<!-- Section header -->
 	<' . $tag . $addAttrib . '>' . $label . '</' . $tag . '>
@@ -949,8 +996,8 @@ class template {
 	 */
 	function sectionBegin() {
 		if (!$this->sectionFlag) {
-			$this->sectionFlag=1;
-			$str='
+			$this->sectionFlag = 1;
+			$str = '
 
 	<!-- ***********************
 	      Begin output section.
@@ -958,7 +1005,9 @@ class template {
 	<div>
 ';
 			return $str;
-		} else return '';
+		} else {
+			return '';
+		}
 	}
 
 	/**
@@ -970,14 +1019,16 @@ class template {
 	 */
 	function sectionEnd() {
 		if ($this->sectionFlag) {
-			$this->sectionFlag=0;
+			$this->sectionFlag = 0;
 			return '
 	</div>
 	<!-- *********************
 	      End output section.
 	     ********************* -->
 ';
-		} else return '';
+		} else {
+			return '';
+		}
 	}
 
 	/**
@@ -1066,12 +1117,12 @@ class template {
 	 * @return void
 	 */
 	function addStyleSheetDirectory($path) {
-			// calculation needed, when TYPO3 source is used via a symlink
+			// Calculation needed, when TYPO3 source is used via a symlink
 			// absolute path to the stylesheets
 		$filePath = dirname(t3lib_div::getIndpEnv('SCRIPT_FILENAME')) . '/' . $GLOBALS['BACK_PATH'] . $path;
-			// clean the path
+			// Clean the path
 		$resolvedPath = t3lib_div::resolveBackPath($filePath);
-			// read all files in directory and sort them alphabetically
+			// Read all files in directory and sort them alphabetically
 		$files = t3lib_div::getFilesInDir($resolvedPath, 'css', FALSE, 1);
 		foreach ($files as $file) {
 			$this->pageRenderer->addCssFile($GLOBALS['BACK_PATH'] . $path . $file, 'stylesheet', 'all');
@@ -1086,14 +1137,14 @@ class template {
 	 * @return string content with inserted styles
 	 */
 	function insertStylesAndJS($content) {
-			// insert accumulated CSS
+			// Insert accumulated CSS
 		$this->inDocStylesArray[] = $this->inDocStyles;
 		$styles = LF.implode(LF, $this->inDocStylesArray);
-		$content = str_replace('/*###POSTCSSMARKER###*/',$styles,$content);
+		$content = str_replace('/*###POSTCSSMARKER###*/', $styles, $content);
 
-			// insert accumulated JS
+			// Insert accumulated JS
 		$jscode = $this->JScode.LF.$this->wrapScriptTags(implode(LF, $this->JScodeArray));
-		$content = str_replace('<!--###POSTJSMARKER###-->',$jscode,$content);
+		$content = str_replace('<!--###POSTJSMARKER###-->', $jscode, $content);
 
 		return $content;
 	}
@@ -1106,7 +1157,7 @@ class template {
 	public function getSkinStylesheetDirectories() {
 		$stylesheetDirectories = array();
 
-			// add default core stylesheets
+			// Add default core stylesheets
 		foreach ($this->stylesheetsCore as $stylesheetDir) {
 			$stylesheetDirectories[] = $stylesheetDir;
 		}
@@ -1118,13 +1169,13 @@ class template {
 			foreach ($GLOBALS['TBE_STYLES']['skins'] as $skinExtKey => $skin) {
 				$skinStylesheetDirs = $this->stylesheetsSkins;
 
-					// skins can add custom stylesheetDirectories using
+					// Skins can add custom stylesheetDirectories using
 					// $GLOBALS['TBE_STYLES']['skins'][$_EXTKEY]['stylesheetDirectories']
 				if (is_array($skin['stylesheetDirectories'])) {
 					$skinStylesheetDirs = array_merge($skinStylesheetDirs, $skin['stylesheetDirectories']);
 				}
 
-					// add all registered directories
+					// Add all registered directories
 				foreach ($skinStylesheetDirs as $stylesheetDir) {
 						// for EXT:myskin/stylesheets/ syntax
 					if (substr($stylesheetDir, 0, 4) === 'EXT:') {
@@ -1133,7 +1184,7 @@ class template {
 							$stylesheetDirectories[] = t3lib_extMgm::extRelPath($extKey) . $path;
 						}
 					} else {
-						// for relative paths
+							// For relative paths
 						$stylesheetDirectories[] = t3lib_extMgm::extRelPath($skinExtKey) . $stylesheetDir;
 					}
 				}
@@ -1176,19 +1227,12 @@ class template {
 		return '<meta http-equiv="X-UA-Compatible" content="' . $content . '" />';
 	}
 
-
-
-
-
-
-
 	/*****************************************
 	 *
 	 * OTHER ELEMENTS
 	 * Tables, buttons, formatting dimmed/red strings
 	 *
 	 ******************************************/
-
 
 	/**
 	 * Returns an image-tag with an 18x16 icon of the following types:
@@ -1238,7 +1282,7 @@ class template {
 	}
 
 	/**
-	 * dimmed-fontwrap. Returns the string wrapped in a <span>-tag defining the color to be gray/dimmed
+	 * Dimmed-fontwrap. Returns the string wrapped in a <span>-tag defining the color to be gray/dimmed
 	 *
 	 * @param string $string Input string
 	 * @return string Output string
@@ -1281,16 +1325,16 @@ class template {
 	 * @return string Output string
 	 */
 	function wrapScriptTags($string, $linebreak = TRUE) {
-		if(trim($string)) {
+		if (trim($string)) {
 				// <script wrapped in nl?
 			$cr = $linebreak? LF : '';
 
-				// remove nl from the beginning
+				// Remove nl from the beginning
 			$string = preg_replace ('/^\n+/', '', $string);
-				// re-ident to one tab using the first line as reference
+				// Re-ident to one tab using the first line as reference
 			$match = array();
-			if(preg_match('/^(\t+)/',$string,$match)) {
-				$string = str_replace($match[1],TAB, $string);
+			if (preg_match('/^(\t+)/', $string, $match)) {
+				$string = str_replace($match[1], TAB, $string);
 			}
 			$string = $cr.'<script type="text/javascript">
 /*<![CDATA[*/
@@ -1305,7 +1349,7 @@ class template {
 		// You can override these values from outside if you like.
 	var $tableLayout = array(
 		'defRow' => array(
-			'defCol' => array('<td valign="top">','</td>')
+			'defCol' => array('<td valign="top">', '</td>')
 		)
 	);
 	var $table_TR = '<tr>';
@@ -1363,26 +1407,26 @@ class template {
 	 * @param array $arr3 Third-level items
 	 * @return string HTML content, <table>...</table>
 	 */
-	function menuTable($arr1,$arr2 = array(), $arr3 = array()) {
-		$rows = max(array(count($arr1),count($arr2),count($arr3)));
+	function menuTable($arr1, $arr2 = array(), $arr3 = array()) {
+		$rows = max(array(count($arr1), count($arr2), count($arr3)));
 
-		$menu='
+		$menu = '
 		<table border="0" cellpadding="0" cellspacing="0" id="typo3-tablemenu">';
-		for($a=0;$a<$rows;$a++) {
-			$menu.='<tr>';
-			$cls=array();
-			$valign='middle';
-			$cls[]='<td valign="'.$valign.'">'.$arr1[$a][0].'</td><td>'.$arr1[$a][1].'</td>';
+		for ($a = 0; $a < $rows; $a++) {
+			$menu .= '<tr>';
+			$cls = array();
+			$valign = 'middle';
+			$cls[] = '<td valign="'.$valign.'">'.$arr1[$a][0].'</td><td>'.$arr1[$a][1].'</td>';
 			if (count($arr2)) {
-				$cls[]='<td valign="'.$valign.'">'.$arr2[$a][0].'</td><td>'.$arr2[$a][1].'</td>';
+				$cls[] = '<td valign="'.$valign.'">'.$arr2[$a][0].'</td><td>'.$arr2[$a][1].'</td>';
 				if (count($arr3)) {
-					$cls[]='<td valign="'.$valign.'">'.$arr3[$a][0].'</td><td>'.$arr3[$a][1].'</td>';
+					$cls[] = '<td valign="'.$valign.'">'.$arr3[$a][0].'</td><td>'.$arr3[$a][1].'</td>';
 				}
 			}
-			$menu.=implode($cls,'<td>&nbsp;&nbsp;</td>');
-			$menu.='</tr>';
+			$menu .= implode($cls, '<td>&nbsp;&nbsp;</td>');
+			$menu .= '</tr>';
 		}
-		$menu.='
+		$menu .= '
 		</table>
 		';
 		return $menu;
@@ -1418,13 +1462,11 @@ class template {
 		$this->pageRenderer->addJsFile($this->backPath . $lib);
 	}
 
-
-
 	/**
 	 * Includes the necessary Javascript function for the clickmenu (context sensitive menus) in the document
 	 * @return void
 	 */
-	function getContextMenuCode()   {
+	function getContextMenuCode() {
 		$this->pageRenderer->loadPrototype();
 		$this->loadJavascriptLib('js/clickmenu.js');
 
@@ -1445,7 +1487,7 @@ class template {
 		$this->loadJavascriptLib('js/common.js');
 		$this->loadJavascriptLib('js/tree.js');
 
-			// setting prefs for drag & drop
+			// Setting prefs for drag & drop
 		$this->JScodeArray['dragdrop'] = '
 			DragDrop.changeURL = "'.$this->backPath.'alt_clickmenu.php";
 			DragDrop.backPath  = "'.t3lib_div::shortMD5(''.'|'.$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']).'";
@@ -1485,13 +1527,13 @@ class template {
 			if (!is_array($mainParams)) {
 				$mainParams = array('id' => $mainParams);
 			}
-			$mainParams = t3lib_div::implodeArrayForUrl('',$mainParams);
+			$mainParams = t3lib_div::implodeArrayForUrl('', $mainParams);
 
 			if (!$script) {$script=basename(PATH_thisScript);}
 
 			$menuDef = array();
-			foreach($menuItems as $value => $label) {
-				$menuDef[$value]['isActive'] = !strcmp($currentValue,$value);
+			foreach ($menuItems as $value => $label) {
+				$menuDef[$value]['isActive'] = !strcmp($currentValue, $value);
 				$menuDef[$value]['label'] = t3lib_div::deHSCentities(htmlspecialchars($label));
 				$menuDef[$value]['url'] = $script . '?' . $mainParams . $addparams . '&' . $elementName . '=' . $value;
 			}
@@ -1509,23 +1551,23 @@ class template {
 	 * @access private
 	 */
 	function getTabMenuRaw($menuItems) {
-		$content='';
+		$content = '';
 
 		if (is_array($menuItems)) {
-			$options='';
+			$options = '';
 
 			$count = count($menuItems);
 			$widthLeft = 1;
 			$addToAct = 5;
 
-			$widthRight = max (1,floor(30-pow($count,1.72)));
+			$widthRight = max (1, floor(30-pow($count, 1.72)));
 			$widthTabs = 100 - $widthRight - $widthLeft;
 			$widthNo = floor(($widthTabs - $addToAct)/$count);
-			$addToAct = max ($addToAct,$widthTabs-($widthNo*$count));
+			$addToAct = max ($addToAct, $widthTabs-($widthNo*$count));
 			$widthAct = $widthNo + $addToAct;
 			$widthRight = 100 - ($widthLeft + ($count*$widthNo) + $addToAct);
 
-			foreach($menuItems as $id => $def) {
+			foreach ($menuItems as $id => $def) {
 				$isActive = $def['isActive'];
 				$class = $isActive ? 'tabact' : 'tab';
 				$width = $isActive ? $widthAct : $widthNo;
@@ -1570,7 +1612,7 @@ class template {
 	 * @return string JavaScript section for the HTML header.
 	 */
 	public function getDynTabMenu($menuItems, $identString, $toggle = 0, $foldout = FALSE, $noWrap = TRUE, $fullWidth = FALSE, $defaultTabIndex = 1, $dividers2tabs = 2) {
-			// load the static code, if not already done with the function below
+			// Load the static code, if not already done with the function below
 		$this->loadJavascriptLib('js/tabmenu.js');
 
 		$content = '';
@@ -1585,10 +1627,10 @@ class template {
 			$noWrap = $noWrap ? ' nowrap="nowrap"' : '';
 
 				// Traverse menu items
-			$c=0;
-			$tabRows=0;
+			$c = 0;
+			$tabRows = 0;
 			$titleLenCount = 0;
-			foreach($menuItems as $index => $def) {
+			foreach ($menuItems as $index => $def) {
 					// Need to add one so checking for first index in JavaScript
 					// is different than if it is not set at all.
 				$index += 1;
@@ -1606,7 +1648,7 @@ class template {
 					$onclick = 'this.blur(); DTM_activate("'.$id.'","'.$index.'", '.($toggle<0?1:0).'); return false;';
 				}
 
-				$isEmpty = !(strcmp(trim($def['content']),'') || strcmp(trim($def['icon']),''));
+				$isEmpty = !(strcmp(trim($def['content']), '') || strcmp(trim($def['icon']), ''));
 
 					// "Removes" empty tabs
 				if ($isEmpty && $dividers2tabs == 1) {
@@ -1624,7 +1666,7 @@ class template {
 							$def['icon'].
 							($def['label'] ? htmlspecialchars($def['label']) : '&nbsp;').
 							$requiredIcon.
-							$this->icons($def['stateIcon'],'margin-left: 10px;').
+							$this->icons($def['stateIcon'], 'margin-left: 10px;').
 							($isEmpty ? '' : '</a>').
 							'</td>';
 					$titleLenCount+= strlen($def['label']);
@@ -1666,32 +1708,32 @@ class template {
 					// Tab menu is compiled:
 				if (!$foldout) {
 					$tabContent = '';
-					for($a=0;$a<=$tabRows;$a++) {
-						$tabContent.= '
+					for($a = 0; $a <= $tabRows; $a++) {
+						$tabContent .= '
 
 					<!-- Tab menu -->
 					<table cellpadding="0" cellspacing="0" border="0"'.($fullWidth ? ' width="100%"' : '').' class="typo3-dyntabmenu">
 						<tr>
-								'.implode('',$options[$a]).'
+								'.implode('', $options[$a]).'
 						</tr>
 					</table>';
 					}
-					$content.= '<div class="typo3-dyntabmenu-tabs">'.$tabContent.'</div>';
+					$content .= '<div class="typo3-dyntabmenu-tabs">'.$tabContent.'</div>';
 				}
 
 					// Div layers are added:
-				$content.= '
+				$content .= '
 				<!-- Div layers for tab menu: -->
 				<div class="typo3-dyntabmenu-divs'.($foldout?'-foldout':'').'">
-				'.implode('',$divs).'</div>';
+				'.implode('', $divs).'</div>';
 
 					// Java Script section added:
-				$content.= '
+				$content .= '
 				<!-- Initialization JavaScript for the menu -->
 				<script type="text/javascript">
 					DTM_array["'.$id.'"] = new Array();
-					'.implode('',$JSinit).'
-					'.($toggle<=0 ? 'DTM_activate("'.$id.'", top.DTM_currentTabs["'.$id.'"]?top.DTM_currentTabs["'.$id.'"]:'.intval($defaultTabIndex).', 0);' : '').'
+					'.implode('', $JSinit).'
+					'.($toggle <= 0 ? 'DTM_activate("'.$id.'", top.DTM_currentTabs["'.$id.'"]?top.DTM_currentTabs["'.$id.'"]:'.intval($defaultTabIndex).', 0);' : '').'
 				</script>
 
 				';
@@ -1803,7 +1845,7 @@ class template {
 			if (!empty($flashMessages)) {
 				$markerArray['FLASHMESSAGES'] = '<div id="typo3-messages">' . $flashMessages . '</div>';
 
-					// if there is no dedicated marker for the messages present
+					// If there is no dedicated marker for the messages present
 					// then force them to appear before the content
 				if (strpos($moduleBody, '###FLASHMESSAGES###') === FALSE) {
 					$moduleBody = str_replace(
@@ -1829,7 +1871,7 @@ class template {
 			}
 		}
 
-			// replacing all markers with the finished markers and return the HTML content
+			// Replacing all markers with the finished markers and return the HTML content
 		return t3lib_parsehtml::substituteMarkerArray($moduleBody, $markerArray, '###|###');
 
 	}
@@ -1844,7 +1886,7 @@ class template {
 		$markers = array();
 			// Fill buttons for left and right float
 		$floats = array('left', 'right');
-		foreach($floats as $key) {
+		foreach ($floats as $key) {
 				// Get the template for each float
 			$buttonTemplate = t3lib_parsehtml::getSubpart($this->moduleTemplate, '###BUTTON_GROUPS_' . strtoupper($key) . '###');
 				// Fill the button markers in this float
@@ -1862,7 +1904,7 @@ class template {
 					$buttonTemplate = t3lib_parsehtml::substituteSubpart($buttonTemplate, $buttonMarker, trim($buttonGroup));
 				}
 			}
-				// replace the marker with the template and remove all line breaks (for IE compat)
+				// Replace the marker with the template and remove all line breaks (for IE compat)
 			$markers['BUTTONLIST_' . strtoupper($key)] = str_replace(LF, '', $buttonTemplate);
 		}
 
@@ -1873,7 +1915,7 @@ class template {
 				'markers' 	=> &$markers,
 				'pObj' 		=> &$this
 			);
-			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['docHeaderButtonsHook'] as $funcRef) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['docHeaderButtonsHook'] as $funcRef) {
 				t3lib_div::callUserFunction($funcRef, $params, $this);
 			}
 		}
@@ -1889,9 +1931,9 @@ class template {
 	 */
 	protected function getPagePath($pageRecord) {
 			// Is this a real page
-		if ($pageRecord['uid']) {
+		if (is_array($pageRecord) && $pageRecord['uid']) {
 			$title = substr($pageRecord['_thePathFull'], 0, -1);
-				// remove current page title
+				// Remove current page title
 			$pos = strrpos($title, '/');
 			if ($pos !== FALSE) {
 				$title = substr($title, 0, $pos) . '/';
@@ -1924,7 +1966,8 @@ class template {
 	protected function getPageInfo($pageRecord) {
 
 				// Add icon with clickmenu, etc:
-		if ($pageRecord['uid'])	{	// If there IS a real page
+				// If there IS a real page
+		if (is_array($pageRecord) && $pageRecord['uid']) {
 			$alttext = t3lib_BEfunc::getRecordIconAltText($pageRecord, 'pages');
 			$iconImg = t3lib_iconWorks::getSpriteIconForRecord('pages', $pageRecord, array('title'=>$alttext));
 				// Make Icon:
@@ -2012,17 +2055,12 @@ class template {
 		';
 
 	}
-
-
 }
 
-
-// ******************************
 // Extension classes of the template class.
 // These are meant to provide backend screens with different widths.
 // They still do because of the different class-prefixes used for the <div>-sections
 // but obviously the final width is determined by the stylesheet used.
-// ******************************
 
 /**
  * Extension class for "template" - used for backend pages which are wide. Typically modules taking up all the space in the "content" frame of the backend
@@ -2060,7 +2098,6 @@ class mediumDoc extends template {
 	var $divClass = 'typo3-mediumDoc';
 }
 
-
 /**
  * Extension class for "template" - used in the context of frontend editing.
  */
@@ -2090,7 +2127,7 @@ class frontendDoc extends template {
 		$this->pageRenderer->setBackPath($this->backPath);
 		$this->docStyle();
 
-			// add applied JS/CSS to $GLOBALS['TSFE']
+			// Add applied JS/CSS to $GLOBALS['TSFE']
 		if ($this->JScode) {
 			$this->pageRenderer->addHeaderData($this->JScode);
 		}
@@ -2101,11 +2138,5 @@ class frontendDoc extends template {
 		}
 	}
 }
-
-// ******************************
-// The template is loaded
-// ******************************
-$GLOBALS['TBE_TEMPLATE'] = t3lib_div::makeInstance('template');
-
 
 ?>

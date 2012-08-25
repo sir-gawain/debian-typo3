@@ -186,7 +186,7 @@ class t3lib_TSparser {
 			$lineP = $this->rawP;
 			$this->rawP++;
 			if ($this->syntaxHighLight) {
-				$this->regHighLight("prespace", $lineP, strlen($line));
+				$this->regHighLight('prespace', $lineP, strlen($line));
 			}
 
 				// Breakpoint?
@@ -207,7 +207,7 @@ class t3lib_TSparser {
 						// Multiline ends...
 					if (substr($line, 0, 1) == ')') {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("operator", $lineP, strlen($line) - 1);
+							$this->regHighLight('operator', $lineP, strlen($line) - 1);
 						}
 							// Disable multiline
 						$this->multiLineEnabled = 0;
@@ -227,20 +227,20 @@ class t3lib_TSparser {
 						}
 					} else {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("value", $lineP);
+							$this->regHighLight('value', $lineP);
 						}
 						$this->multiLineValue[] = $this->raw[($this->rawP - 1)];
 					}
 				} elseif ($this->inBrace == 0 && substr($line, 0, 1) == '[') { // Beginning of condition (only on level zero compared to brace-levels
 					if ($this->syntaxHighLight) {
-						$this->regHighLight("condition", $lineP);
+						$this->regHighLight('condition', $lineP);
 					}
 					return $line;
 				} else {
 						// Return if GLOBAL condition is set - no matter what.
 					if (substr($line, 0, 1) == '[' && strtoupper(trim($line)) == '[GLOBAL]') {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("condition", $lineP);
+							$this->regHighLight('condition', $lineP);
 						}
 						$this->error('Line ' . ($this->lineNumberOffset + $this->rawP - 1) . ': On return to [GLOBAL] scope, the script was short of ' . $this->inBrace . ' end brace(s)', 1);
 						$this->inBrace = 0;
@@ -250,7 +250,7 @@ class t3lib_TSparser {
 						$varL = strcspn($line, ' {=<>:(');
 						$objStrName = trim(substr($line, 0, $varL));
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("objstr", $lineP, strlen(substr($line, $varL)));
+							$this->regHighLight('objstr', $lineP, strlen(substr($line, $varL)));
 						}
 						if (strlen($objStrName)) {
 							$r = array();
@@ -259,10 +259,10 @@ class t3lib_TSparser {
 							} else {
 								$line = ltrim(substr($line, $varL));
 								if ($this->syntaxHighLight) {
-									$this->regHighLight("objstr_postspace", $lineP, strlen($line));
+									$this->regHighLight('objstr_postspace', $lineP, strlen($line));
 									if (strlen($line) > 0) {
-										$this->regHighLight("operator", $lineP, strlen($line) - 1);
-										$this->regHighLight("operator_postspace", $lineP, strlen(ltrim(substr($line, 1))));
+										$this->regHighLight('operator', $lineP, strlen($line) - 1);
+										$this->regHighLight('operator_postspace', $lineP, strlen(ltrim(substr($line, 1))));
 									}
 								}
 
@@ -310,7 +310,11 @@ class t3lib_TSparser {
 												$fakeThis = FALSE;
 												$newValue = t3lib_div::callUserFunction($hookMethod, $params, $fakeThis);
 											} else {
-												t3lib_div::sysLog('Missing function definition for ' . $tsFunc . ' on TypoScript line ' . $lineP, 'Core', 2);
+												t3lib_div::sysLog(
+													'Missing function definition for ' . $tsFunc . ' on TypoScript line ' . $lineP,
+													'Core',
+													t3lib_div::SYSLOG_SEVERITY_WARNING
+												);
 											}
 									}
 
@@ -363,7 +367,7 @@ class t3lib_TSparser {
 									break;
 									case '<':
 										if ($this->syntaxHighLight) {
-											$this->regHighLight("value_copy", $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
+											$this->regHighLight('value_copy', $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
 										}
 										$theVal = trim(substr($line, 1));
 										if (substr($theVal, 0, 1) == '.') {
@@ -375,7 +379,7 @@ class t3lib_TSparser {
 									break;
 									case '>':
 										if ($this->syntaxHighLight) {
-											$this->regHighLight("value_unset", $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
+											$this->regHighLight('value_unset', $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
 										}
 										$this->setVal($objStrName, $setup, 'UNSET');
 									break;
@@ -390,7 +394,7 @@ class t3lib_TSparser {
 						$this->inBrace--;
 						$this->lastComment = '';
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("operator", $lineP, strlen($line) - 1);
+							$this->regHighLight('operator', $lineP, strlen($line) - 1);
 						}
 						if ($this->inBrace < 0) {
 							$this->error('Line ' . ($this->lineNumberOffset + $this->rawP - 1) . ': An end brace is in excess.', 1);
@@ -400,7 +404,7 @@ class t3lib_TSparser {
 						}
 					} else {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("comment", $lineP);
+							$this->regHighLight('comment', $lineP);
 						}
 
 							// Comment. The comments are concatenated in this temporary string:
@@ -414,7 +418,7 @@ class t3lib_TSparser {
 				// Unset comment
 			if ($this->commentSet) {
 				if ($this->syntaxHighLight) {
-					$this->regHighLight("comment", $lineP);
+					$this->regHighLight('comment', $lineP);
 				}
 				if (substr($line, 0, 2) == '*/') {
 					$this->commentSet = 0;
@@ -565,7 +569,11 @@ class t3lib_TSparser {
 	public static function checkIncludeLines($string, $cycle_counter = 1, $returnFiles = FALSE) {
 		$includedFiles = array();
 		if ($cycle_counter > 100) {
-			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags', 'Core', 2);
+			t3lib_div::sysLog(
+				'It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags',
+				'Core',
+				t3lib_div::SYSLOG_SEVERITY_WARNING
+			);
 			if ($returnFiles) {
 				return array(
 					'typoscript' => '',
@@ -612,11 +620,19 @@ class t3lib_TSparser {
 												$newString .= $included_text . LF;
 											} else {
 												$newString .= "\n###\n### ERROR: File \"" . $filename . "\" was not was not found.\n###\n\n";
-												t3lib_div::sysLog('File "' . $filename . '" was not found.', 'Core', 2);
+												t3lib_div::sysLog(
+													'File "' . $filename . '" was not found.',
+													'Core',
+													t3lib_div::SYSLOG_SEVERITY_WARNING
+												);
 											}
 										} else {
 											$newString .= "\n###\n### ERROR: File \"" . $filename . "\" was not included since it is not allowed due to fileDenyPattern\n###\n\n";
-											t3lib_div::sysLog('File "' . $filename . '" was not included since it is not allowed due to fileDenyPattern', 'Core', 2);
+											t3lib_div::sysLog(
+												'File "' . $filename . '" was not included since it is not allowed due to fileDenyPattern',
+												'Core',
+												t3lib_div::SYSLOG_SEVERITY_WARNING
+											);
 										}
 									}
 								break;
@@ -670,7 +686,11 @@ class t3lib_TSparser {
 	public static function extractIncludes($string, $cycle_counter = 1, $extractedFileNames = array()) {
 
 		if ($cycle_counter > 10) {
-			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags', 'Core', 2);
+			t3lib_div::sysLog(
+				'It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags',
+				'Core',
+				t3lib_div::SYSLOG_SEVERITY_WARNING
+			);
 			return "\n###\n### ERROR: Recursion!\n###\n";
 		}
 
@@ -748,7 +768,7 @@ class t3lib_TSparser {
 					}
 
 						// Insert reference to the file in the rest content
-					$restContent[] = "<INCLUDE_TYPOSCRIPT: source=\"FILE:$fileName\">";
+					$restContent[] = '<INCLUDE_TYPOSCRIPT: source="FILE: ' . $fileName . '">';
 
 						// Reset variables (preparing for the next commented include statement)
 					$fileContent = array();
@@ -784,7 +804,7 @@ class t3lib_TSparser {
 	 */
 	public static function extractIncludes_array($array) {
 		foreach ($array as $k => $v) {
-			$array[$k] = t3lib_TSparser::extractIncludes($array[$k]);
+			$array[$k] = self::extractIncludes($array[$k]);
 		}
 		return $array;
 	}
@@ -894,7 +914,6 @@ class t3lib_TSparser {
 				}
 				$lineC = $this->highLightStyles['linenum'][0] . str_pad($lineNum, 4, ' ', STR_PAD_LEFT) . ':' . $this->highLightStyles['linenum'][1] . ' ' . $lineC;
 			}
-
 
 			$lines[] = $lineC;
 		}

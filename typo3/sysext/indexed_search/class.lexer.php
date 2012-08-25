@@ -73,7 +73,6 @@ class tx_indexedsearch_lexer {
 			0x3a,	// ":"
 			0x2f,	// "/"
 			0x27,	// "'"
-			// 0x615,	// ARABIC SMALL HIGH TAH
 		),
 		'casesensitive' => FALSE,	// Set, if case sensitive indexing is wanted.
 		'removeChars' => array(		// List of unicode numbers of chars that will be removed before words are returned (eg. "-")
@@ -116,18 +115,22 @@ class tx_indexedsearch_lexer {
 		$this->debugString = '';
 
 		while(1) {
-			list($start,$len) = $this->get_word($wordString, $pos);
+			list($start, $len) = $this->get_word($wordString, $pos);
 			if ($len) {
 
-				$this->addWords($words, $wordString,$start,$len);
+				$this->addWords($words, $wordString, $start, $len);
 
 				if ($this->debug) {
-					$this->debugString.= '<span style="color:red">'.htmlspecialchars(substr($wordString,$pos,$start-$pos)).'</span>'.
-										htmlspecialchars(substr($wordString,$start,$len));
+					$this->debugString .= '<span style="color:red">' .
+						htmlspecialchars(substr($wordString, $pos, $start - $pos)) .
+						'</span>' .
+						htmlspecialchars(substr($wordString, $start, $len));
 				}
 
 				$pos = $start+$len;
-			} else break;
+			} else {
+				break;
+			}
 		}
 		return $words;
 	}
@@ -163,7 +166,7 @@ class tx_indexedsearch_lexer {
 	function addWords(&$words, &$wordString, $start, $len) {
 
 			// Get word out of string:
-		$theWord = substr($wordString,$start,$len);
+		$theWord = substr($wordString, $start, $len);
 
 			// Get next chars unicode number and find type:
 		$bc = 0;
@@ -207,7 +210,7 @@ class tx_indexedsearch_lexer {
 		} else {	// Normal "single-byte" chars:
 				// Remove chars:
 			foreach($this->lexerConf['removeChars'] as $skipJoin) {
-				$theWord = str_replace($this->csObj->UnumberToChar($skipJoin),'',$theWord);
+				$theWord = str_replace($this->csObj->UnumberToChar($skipJoin), '', $theWord);
 			}
 				// Add word:
 			$words[] = $theWord;
@@ -227,15 +230,18 @@ class tx_indexedsearch_lexer {
 
 			// If return is TRUE, a word was found starting at this position, so returning position and length:
 		if ($this->utf8_is_letter($str, $len, $pos)) {
-			return array($pos,$len);
+			return array($pos, $len);
 		}
 
 			// If the return value was FALSE it means a sequence of non-word chars were found (or blank string) - so we will start another search for the word:
 		$pos += $len;
-		if ($str{$pos} == '')	return FALSE;	// check end of string before looking for word of course.
+		if ($str{$pos} == '') {
+				// Check end of string before looking for word of course.
+			return FALSE;
+		}
 
 		$this->utf8_is_letter($str, $len, $pos);
-		return array($pos,$len);
+		return array($pos, $len);
 	}
 
 	/**
@@ -254,7 +260,10 @@ class tx_indexedsearch_lexer {
 		$cType = $cType_prev = FALSE; // Letter type
 		$letter = TRUE; // looking for a letter?
 
-		if ($str{$pos} == '')	return FALSE;	// Return FALSE on end-of-string at this stage
+		if ($str{$pos} == '') {
+				// Return FALSE on end-of-string at this stage
+			return FALSE;
+		}
 
 		while(1) {
 
@@ -262,33 +271,36 @@ class tx_indexedsearch_lexer {
 			if ($len) {
 				if ($letter)	{	// We are in a sequence of words
 					if (!$cType 	// The char was NOT a letter
-							|| ($cType_prev=='cjk' && t3lib_div::inList('num,alpha',$cType)) || ($cType=='cjk' && t3lib_div::inList('num,alpha',$cType_prev))	// ... or the previous and current char are from single-byte sets vs. asian CJK sets
+							|| ($cType_prev == 'cjk' && t3lib_div::inList('num,alpha', $cType)) || ($cType == 'cjk' && t3lib_div::inList('num,alpha', $cType_prev))	// ... or the previous and current char are from single-byte sets vs. asian CJK sets
 							)	{
 							// Check if the non-letter char is NOT a print-join char because then it signifies the end of the word.
-						if (!in_array($cp,$this->lexerConf['printjoins'])) {
+						if (!in_array($cp, $this->lexerConf['printjoins'])) {
 								// If a printjoin start length has been record, set that back now so the length is right (filtering out multiple end chars)
 							if ($printJoinLgd) {
 								$len = $printJoinLgd;
 							}
-							#debug($cp);
 							return TRUE;
 						} else {	// If a printJoin char is found, record the length if it has not been recorded already:
-							if (!$printJoinLgd)	$printJoinLgd = $len;
+							if (!$printJoinLgd) {
+								$printJoinLgd = $len;
+							}
 						}
 					} else {	// When a true letter is found, reset printJoinLgd counter:
 						$printJoinLgd = 0;
 					}
-				}
-				elseif (!$letter && $cType)	{	// end of non-word reached
+				} elseif (!$letter && $cType) {	// end of non-word reached
 					return FALSE;
 				}
 			}
 			$len += $bc;	// add byte-length of last found character
 
-			if ($str{$pos} == '')	return $letter;	// end of string; return status of string till now
+			if ($str{$pos} == '') {
+					// End of string; return status of string till now
+				return $letter;
+			}
 
 				// Get next chars unicode number:
-			$cp = $this->utf8_ord($str,$bc,$pos);
+			$cp = $this->utf8_ord($str, $bc, $pos);
 			$pos += $bc;
 
 				// Determine the type:
@@ -299,7 +311,9 @@ class tx_indexedsearch_lexer {
 			}
 
 				// Setting letter to FALSE if the first char was not a letter!
-			if (!$len)	$letter = FALSE;
+			if (!$len) {
+				$letter = FALSE;
+			}
 		}
 
 		return FALSE;
@@ -316,11 +330,6 @@ class tx_indexedsearch_lexer {
 			// Numeric?
 		if (
 				($cp >= 0x30 && $cp <= 0x39)		// Arabic
-/*
-				($cp >= 0x660 && $cp <= 0x669) ||	// Arabic-Indic
-				($cp >= 0x6F0 && $cp <= 0x6F9) ||	// Arabic-Indic (Iran, Pakistan, and India)
-				($cp >= 0x3021 && $cp <= 0x3029) ||	// Hangzhou
-*/
 			)	{
 			return array('num');
 		}
@@ -377,8 +386,10 @@ class tx_indexedsearch_lexer {
 			$len += $bc;
 
 			$ord = $ord & ((1 << (6-$bc)) - 1);	// mask utf-8 lead-in bytes
-			for ($i=$pos+1; $bc; $bc--, $i++)	// "bring in" data bytes
+				// "bring in" data bytes
+			for ($i = $pos + 1; $bc; $bc--, $i++) {
 				$ord = ($ord << 6) | (ord($str{$i}) & 0x3F);
+			}
 		}
 
 		return $hex ? 'x'.dechex($ord) : $ord;

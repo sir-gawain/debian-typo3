@@ -1,11 +1,12 @@
 <?php
-if (!defined ('TYPO3_MODE'))	die ('Access denied.');
-
+if (!defined('TYPO3_MODE')) {
+	die ('Access denied.');
+}
 
 if (TYPO3_MODE == 'BE') {
-	t3lib_extMgm::addModule('web','layout','top',t3lib_extMgm::extPath($_EXTKEY).'layout/');
-	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_layout','EXT:cms/locallang_csh_weblayout.xml');
-	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_info','EXT:cms/locallang_csh_webinfo.xml');
+	t3lib_extMgm::addModule('web', 'layout', 'top', t3lib_extMgm::extPath($_EXTKEY).'layout/');
+	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_layout', 'EXT:cms/locallang_csh_weblayout.xml');
+	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_info', 'EXT:cms/locallang_csh_webinfo.xml');
 
 	t3lib_extMgm::insertModuleFunction(
 		'web_info',
@@ -21,14 +22,10 @@ if (TYPO3_MODE == 'BE') {
 	);
 }
 
-
 	// Add allowed records to pages:
 t3lib_extMgm::allowTableOnStandardPages('pages_language_overlay,tt_content,sys_template,sys_domain,backend_layout');
 
-
-// ******************************************************************
-// This is the standard TypoScript content table, tt_content
-// ******************************************************************
+	// This is the standard TypoScript content table, tt_content
 $TCA['tt_content'] = array (
 	'ctrl' => array (
 		'label' => 'header',
@@ -101,16 +98,14 @@ $TCA['tt_content'] = array (
 			'html' => 'tt_content_html.gif'
 		),
 		'thumbnail' => 'image',
-		'requestUpdate' => 'list_type,rte_enabled',
+		'requestUpdate' => 'list_type,rte_enabled,menu_type',
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_tt_content.php',
 		'dividers2tabs' => 1,
 		'searchFields' => 'header,header_link,subheader,bodytext,pi_flexform',
 	)
 );
 
-// ******************************************************************
-// fe_users
-// ******************************************************************
+	// fe_users
 $TCA['fe_users'] = array (
 	'ctrl' => array (
 		'label' => 'username',
@@ -139,9 +134,7 @@ $TCA['fe_users'] = array (
 	)
 );
 
-// ******************************************************************
-// fe_groups
-// ******************************************************************
+	// fe_groups
 $TCA['fe_groups'] = array (
 	'ctrl' => array (
 		'label' => 'title',
@@ -164,9 +157,7 @@ $TCA['fe_groups'] = array (
 	)
 );
 
-// ******************************************************************
-// sys_domain
-// ******************************************************************
+	// sys_domain
 $TCA['sys_domain'] = array (
 	'ctrl' => array (
 		'label' => 'domainName',
@@ -187,9 +178,7 @@ $TCA['sys_domain'] = array (
 	)
 );
 
-// ******************************************************************
-// pages_language_overlay
-// ******************************************************************
+	// pages_language_overlay
 $TCA['pages_language_overlay'] = array (
 	'ctrl' => array (
 		'label'                           => 'title',
@@ -222,10 +211,7 @@ $TCA['pages_language_overlay'] = array (
 	)
 );
 
-
-// ******************************************************************
-// sys_template
-// ******************************************************************
+	// sys_template
 $TCA['sys_template'] = array (
 	'ctrl' => array (
 		'label' => 'title',
@@ -260,10 +246,7 @@ $TCA['sys_template'] = array (
 	)
 );
 
-
-// ******************************************************************
-// layouts
-// ******************************************************************
+	// layouts
 $TCA['backend_layout'] = array (
 	'ctrl' => array (
 		'title'     => 'LLL:EXT:cms/locallang_tca.xml:backend_layout',

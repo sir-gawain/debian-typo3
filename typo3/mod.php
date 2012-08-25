@@ -24,17 +24,17 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Module Dispatch script
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
 unset($MCONF);
 require('init.php');
-require('template.php');
 
-// Find module path:
+	// Find module path:
 $temp_M = (string)t3lib_div::_GET('M');
 $isDispatched = FALSE;
 
@@ -61,6 +61,6 @@ if ($isDispatched === FALSE) {
 	throw new UnexpectedValueException('No module "' . htmlspecialchars($temp_M) . '" could be found.', 1294585070);
 }
 
-Typo3_Bootstrap::shutdown();
+Typo3_Bootstrap::getInstance()->shutdown();
 
 ?>

@@ -25,10 +25,10 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
 /**
+ * Sprite build handler
  *
- * @author	Steffen Ritter <info@steffen-ritter.net>
+ * @author Steffen Ritter <info@steffen-ritter.net>
  * @package TYPO3
  * @subpackage t3lib
  */

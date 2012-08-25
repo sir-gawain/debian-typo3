@@ -37,8 +37,8 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, HRULER
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 
@@ -50,7 +50,7 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 		$lineColor = isset($conf['lineColor.'])
 			? $this->cObj->stdWrap($conf['lineColor'], $conf['lineColor.'])
 			: $conf['lineColor'];
-		if(!$lineColor) {
+		if (!$lineColor) {
 			$lineColor = 'black';
 		}
 
@@ -65,7 +65,7 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 		$tableWidth = isset($conf['tableWidth.'])
 			? intval($this->cObj->stdWrap($conf['tableWidth'], $conf['tableWidth.']))
 			: intval($conf['tableWidth']);
-		if(!$tableWidth) {
+		if (!$tableWidth) {
 			$tableWidth = '99%';
 		}
 
@@ -101,7 +101,6 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 		}
 
 		return $theValue;
-
 	}
 }
 ?>

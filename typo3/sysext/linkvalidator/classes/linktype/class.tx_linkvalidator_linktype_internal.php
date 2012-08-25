@@ -289,16 +289,12 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 		if (count($rootLine) > 0) {
 				$protocol = t3lib_div::getIndpEnv('TYPO3_SSL') ? 'https://' : 'http://';
 				$domainRecord = t3lib_BEfunc::firstDomainRecord($rootLine);
-				if(!empty($domainRecord)) {
+				if (!empty($domainRecord)) {
 					$domain = $protocol . $domainRecord;
 				}
 		}
 		return $domain . '/index.php?id=' . $row['url'];
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/linkvalidator/classes/linktypes/class.tx_linkvalidator_linktypes_internal.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/linkvalidator/classes/linktypes/class.tx_linkvalidator_linktypes_internal.php']);
 }
 
 ?>

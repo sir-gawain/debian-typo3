@@ -26,11 +26,12 @@
  ***************************************************************/
 
 /**
+ * Stages service
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage Service
  */
-
 class Tx_Workspaces_Service_Stages {
 	const TABLE_STAGE = 'sys_workspace_stage';
 		// if a record is in the "ready to publish" stage STAGE_PUBLISH_ID the nextStage is STAGE_PUBLISH_EXECUTE_ID, this id wont be saved at any time in db
@@ -237,7 +238,7 @@ class Tx_Workspaces_Service_Stages {
 					'',
 					'uid'
 				);
-				foreach($workspaceStageRecs as $stage) {
+				foreach ($workspaceStageRecs as $stage) {
 					$stage['title'] =  $GLOBALS['LANG']->sL($this->pathToLocallang . ':actionSendToStage') . ' "' . $stage['title'] . '"';
 					$stages[] = $stage;
 				}
@@ -828,10 +829,5 @@ class Tx_Workspaces_Service_Stages {
 				break;
 		}
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/Stages.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/Stages.php']);
 }
 ?>

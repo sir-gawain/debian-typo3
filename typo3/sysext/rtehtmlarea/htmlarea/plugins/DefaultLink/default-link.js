@@ -175,8 +175,6 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
-				// As of ExtJS 3.1, JS error with IE when the window is resizable
-			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				afterrender: {
@@ -322,7 +320,7 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 			this.restoreSelection();
 			this.editor.getSelection().execCommand('CreateLink', false, href);
 			a = this.editor.getSelection().getParentElement();
-			if (!Ext.isIE && !/^a$/i.test(a.nodeName)) {
+			if (!HTMLArea.isIEBeforeIE9 && !/^a$/i.test(a.nodeName)) {
 				var range = this.editor.getSelection().createRange();
 				if (range.startContainer.nodeType !== HTMLArea.DOM.TEXT_NODE) {
 					a = range.startContainer.childNodes[range.startOffset];

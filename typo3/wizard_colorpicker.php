@@ -29,55 +29,59 @@
  *
  * Revised for TYPO3 3.7 May/2004 by Kasper Skårhøj
  *
- * @author	Mathias Schreiber <schreiber@wmdb.de>
- * @author	Peter Kühn <peter@kuehn.com>
- * @author	Kasper Skårhøj <typo3@typo3.com>
+ * @author Mathias Schreiber <schreiber@wmdb.de>
+ * @author Peter Kühn <peter@kuehn.com>
+ * @author Kasper Skårhøj <typo3@typo3.com>
  */
-
 
 $GLOBALS['BACK_PATH'] = '';
 require('init.php');
-require('template.php');
 $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_wizards.xml');
 
 /**
  * Script Class for colorpicker wizard
  *
- * @author	Mathias Schreiber <schreiber@wmdb.de>
- * @author	Peter Kühn <peter@kuehn.com>
- * @author	Kasper Skårhøj <typo3@typo3.com>
+ * @author Mathias Schreiber <schreiber@wmdb.de>
+ * @author Peter Kühn <peter@kuehn.com>
+ * @author Kasper Skårhøj <typo3@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_wizard_colorpicker {
 
 		// GET vars:
-	var $P;				// Wizard parameters, coming from TCEforms linking to the wizard.
-	var $colorValue;	// Value of the current color picked.
-	var $fieldChangeFunc;	// Serialized functions for changing the field... Necessary to call when the value is transferred to the TCEform since the form might need to do internal processing. Otherwise the value is simply not be saved.
+		// Wizard parameters, coming from TCEforms linking to the wizard.
+	var $P;
+		// Value of the current color picked.
+	var $colorValue;
+		// Serialized functions for changing the field... Necessary to call when the value is transferred to the TCEform since the form might need to do internal processing. Otherwise the value is simply not be saved.
+	var $fieldChangeFunc;
 	protected $fieldChangeFuncHash;
-	var $fieldName;		// Form name (from opener script)
-	var $formName;		// Field name (from opener script)
-	var $md5ID;			// ID of element in opener script for which to set color.
-	var $showPicker;	// Internal: If FALSE, a frameset is rendered, if TRUE the content of the picker script.
+		// Form name (from opener script)
+	var $fieldName;
+		// Field name (from opener script)
+	var $formName;
+		// ID of element in opener script for which to set color.
+	var $md5ID;
+		// Internal: If FALSE, a frameset is rendered, if TRUE the content of the picker script.
+	var $showPicker;
 
 		// Static:
-	var $HTMLcolorList = "aqua,black,blue,fuchsia,gray,green,lime,maroon,navy,olive,purple,red,silver,teal,yellow,white";
+	var $HTMLcolorList = 'aqua,black,blue,fuchsia,gray,green,lime,maroon,navy,olive,purple,red,silver,teal,yellow,white';
 
 		// Internal:
 	var $pickerImage = '';
-	var $imageError = '';		// Error message if image not found.
+		// Error message if image not found.
+	var $imageError = '';
 
 	/**
-	 * document template object
+	 * Document template object
 	 *
 	 * @var smallDoc
 	 */
 	var $doc;
-	var $content;				// Accumulated content.
-
-
-
+		// Accumulated content.
+	var $content;
 
 	/**
 	 * Initialises the Class
@@ -86,7 +90,7 @@ class SC_wizard_colorpicker {
 	 */
 	function init() {
 			// Setting GET vars (used in frameset script):
-		$this->P = t3lib_div::_GP('P',1);
+		$this->P = t3lib_div::_GP('P', 1);
 
 			// Setting GET vars (used in colorpicker script):
 		$this->colorValue = t3lib_div::_GP('colorValue');
@@ -97,11 +101,10 @@ class SC_wizard_colorpicker {
 		$this->md5ID = t3lib_div::_GP('md5ID');
 		$this->exampleImg = t3lib_div::_GP('exampleImg');
 
-
 			// Resolving image (checking existence etc.)
 		$this->imageError = '';
 		if ($this->exampleImg) {
-			$this->pickerImage = t3lib_div::getFileAbsFileName($this->exampleImg,1,1);
+			$this->pickerImage = t3lib_div::getFileAbsFileName($this->exampleImg, 1, 1);
 			if (!$this->pickerImage || !@is_file($this->pickerImage)) {
 				$this->imageError = 'ERROR: The image, "'.$this->exampleImg.'", could not be found!';
 			}
@@ -112,7 +115,7 @@ class SC_wizard_colorpicker {
 		$update = '';
 		if ($this->areFieldChangeFunctionsValid()) {
 			unset($fieldChangeFuncArr['alert']);
-			foreach($fieldChangeFuncArr as $v) {
+			foreach ($fieldChangeFuncArr as $v) {
 				$update.= '
 				parent.opener.'.$v;
 			}
@@ -122,7 +125,7 @@ class SC_wizard_colorpicker {
 		$this->doc = t3lib_div::makeInstance('smallDoc');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->JScode = $this->doc->wrapScriptTags('
-			function checkReference()	{	//
+			function checkReference() {	//
 				if (parent.opener && parent.opener.document && parent.opener.document.'.$this->formName.' && parent.opener.document.'.$this->formName.'["'.$this->fieldName.'"]) {
 					return parent.opener.document.'.$this->formName.'["'.$this->fieldName.'"];
 				} else {
@@ -138,7 +141,7 @@ class SC_wizard_colorpicker {
 					parent.opener.document.getElementById("'.$this->md5ID.'").bgColor = color;
 				}
 			}
-			function setValue(input)	{	//
+			function setValue(input) {	//
 				var field = checkReference();
 				if (field) {
 					field.value = input;
@@ -146,7 +149,7 @@ class SC_wizard_colorpicker {
 					changeBGcolor(input);
 				}
 			}
-			function getValue()	{	//
+			function getValue() {	//
 				var field = checkReference();
 				return field.value;
 			}
@@ -162,7 +165,8 @@ class SC_wizard_colorpicker {
 	 * @return	void
 	 */
 	function main() {
-		if(!t3lib_div::_GP('showPicker')) {	// Show frameset by default:
+			// Show frameset by default:
+		if (!t3lib_div::_GP('showPicker')) {
 			$this->frameSet();
 		} else {
 
@@ -174,12 +178,12 @@ class SC_wizard_colorpicker {
 					'.$this->colorImage().'
 
 						<!-- Value box: -->
-					<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_colorValue',1).'</p>
+					<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_colorValue', 1).'</p>
 					<table border="0" cellpadding="0" cellspacing="3">
 						<tr>
 							<td><input type="text" '.$this->doc->formWidth(7).' maxlength="10" name="colorValue" value="'.htmlspecialchars($this->colorValue).'" /></td>
-							<td style="background-color:'.htmlspecialchars($this->colorValue).'; border: 1px solid black;">&nbsp;<span style="color: black;">'.$GLOBALS['LANG']->getLL('colorpicker_black',1).'</span>&nbsp;<span style="color: white;">'.$GLOBALS['LANG']->getLL('colorpicker_white',1).'</span>&nbsp;</td>
-							<td><input type="submit" name="save_close" value="'.$GLOBALS['LANG']->getLL('colorpicker_setClose',1).'" /></td>
+							<td style="background-color:'.htmlspecialchars($this->colorValue).'; border: 1px solid black;">&nbsp;<span style="color: black;">'.$GLOBALS['LANG']->getLL('colorpicker_black', 1).'</span>&nbsp;<span style="color: white;">'.$GLOBALS['LANG']->getLL('colorpicker_white', 1).'</span>&nbsp;</td>
+							<td><input type="submit" name="save_close" value="'.$GLOBALS['LANG']->getLL('colorpicker_setClose', 1).'" /></td>
 						</tr>
 					</table>
 
@@ -194,22 +198,22 @@ class SC_wizard_colorpicker {
 				</form>';
 
 				// If the save/close button is clicked, then close:
-			if(t3lib_div::_GP('save_close')) {
-				$content.=$this->doc->wrapScriptTags('
+			if (t3lib_div::_GP('save_close')) {
+				$content .= $this->doc->wrapScriptTags('
 					setValue(\''.$this->colorValue.'\');
 					parent.close();
 				');
 			}
 
 				// Output:
-			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('colorpicker_title'), $content, 0,1);
+			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('colorpicker_title'), $content, 0, 1);
 		}
 	}
 
 	/**
 	 * Returnes the sourcecode to the browser
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function printContent() {
 		$this->content.= $this->doc->endPage();
@@ -222,7 +226,7 @@ class SC_wizard_colorpicker {
 	 * Took some brains to figure this one out ;-)
 	 * If Peter wouldn't have been I would've gone insane...
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function frameSet() {
 			// Set doktype:
@@ -257,20 +261,6 @@ class SC_wizard_colorpicker {
 </html>';
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	/************************************
 	 *
 	 * Rendering of various color selectors
@@ -280,7 +270,7 @@ class SC_wizard_colorpicker {
 	/**
 	 * Creates a color matrix table
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function colorMatrix() {
 		$steps = 51;
@@ -288,13 +278,13 @@ class SC_wizard_colorpicker {
 			// Get colors:
 		$color = array();
 
-		for($rr=0;$rr<256;$rr+=$steps) {
-			for($gg=0;$gg<256;$gg+=$steps) {
-				for($bb=0;$bb<256;$bb+=$steps) {
+		for ($rr = 0; $rr < 256; $rr+=$steps) {
+			for ($gg = 0; $gg < 256; $gg+=$steps) {
+				for ($bb = 0; $bb < 256; $bb+=$steps) {
 					$color[] = '#'.
-						substr('0'.dechex($rr),-2).
-						substr('0'.dechex($gg),-2).
-						substr('0'.dechex($bb),-2);
+						substr('0'.dechex($rr), -2).
+						substr('0'.dechex($gg), -2).
+						substr('0'.dechex($bb), -2);
 				}
 			}
 		}
@@ -304,21 +294,21 @@ class SC_wizard_colorpicker {
 
 		$rows = 0;
 		$tRows = array();
-		while(isset($color[$columns*$rows])) {
+		while (isset($color[$columns*$rows])) {
 			$tCells = array();
-			for($i=0;$i<$columns;$i++) {
+			for ($i = 0; $i < $columns; $i++) {
 				$tCells[] = '
 					<td bgcolor="'.$color[$columns*$rows+$i].'" onclick="document.colorform.colorValue.value = \''.$color[$columns*$rows+$i].'\'; document.colorform.submit();" title="'.$color[$columns*$rows+$i].'">&nbsp;&nbsp;</td>';
 			}
 			$tRows[] = '
-				<tr>'.implode('',$tCells).'
+				<tr>'.implode('', $tCells).'
 				</tr>';
 			$rows++;
 		}
 
 		$table = '
-			<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_fromMatrix',1).'</p>
-			<table border="0" cellpadding="1" cellspacing="1" style="width:100%; border: 1px solid black; cursor:crosshair;">'.implode('',$tRows).'
+			<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_fromMatrix', 1).'</p>
+			<table border="0" cellpadding="1" cellspacing="1" style="width:100%; border: 1px solid black; cursor:crosshair;">'.implode('', $tRows).'
 			</table>';
 
 		return $table;
@@ -327,26 +317,26 @@ class SC_wizard_colorpicker {
 	/**
 	 * Creates a selector box with all HTML color names.
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function colorList() {
 			// Initialize variables:
-		$colors = explode(',',$this->HTMLcolorList);
+		$colors = explode(',', $this->HTMLcolorList);
 		$currentValue = strtolower($this->colorValue);
 		$opt = array();
 		$opt[] = '<option value=""></option>';
 
 			// Traverse colors, making option tags for selector box.
-		foreach($colors as $colorName) {
+		foreach ($colors as $colorName) {
 			$opt[] = '<option style="background-color: '.$colorName.';" value="'.htmlspecialchars($colorName).'"'.($currentValue==$colorName ? ' selected="selected"' : '').'>'.htmlspecialchars($colorName).'</option>';
 		}
 
 			// Compile selector box and return result:
 		$output = '
-			<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_fromList',1).'</p>
+			<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_fromList', 1).'</p>
 			<select onchange="document.colorform.colorValue.value = this.options[this.selectedIndex].value; document.colorform.submit(); return false;">
-				'.implode('
-				',$opt).'
+				' . implode('
+				', $opt) . '
 			</select><br />';
 
 		return $output;
@@ -355,18 +345,18 @@ class SC_wizard_colorpicker {
 	/**
 	 * Creates a color image selector
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function colorImage() {
 			// Handling color-picker image if any:
 		if (!$this->imageError) {
 			if ($this->pickerImage) {
-				if(t3lib_div::_POST('coords_x')) {
-					$this->colorValue = '#'.$this->getIndex(t3lib_stdgraphic::imageCreateFromFile($this->pickerImage),t3lib_div::_POST('coords_x'),t3lib_div::_POST('coords_y'));
+				if (t3lib_div::_POST('coords_x')) {
+					$this->colorValue = '#'.$this->getIndex(t3lib_stdgraphic::imageCreateFromFile($this->pickerImage), t3lib_div::_POST('coords_x'), t3lib_div::_POST('coords_y'));
 				}
 				$pickerFormImage = '
-				<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_fromImage',1).'</p>
-				<input type="image" src="../'.substr($this->pickerImage,strlen(PATH_site)).'" name="coords" style="cursor:crosshair;" /><br />';
+				<p class="c-head">'.$GLOBALS['LANG']->getLL('colorpicker_fromImage', 1).'</p>
+				<input type="image" src="../'.substr($this->pickerImage, strlen(PATH_site)).'" name="coords" style="cursor:crosshair;" /><br />';
 			} else {
 				$pickerFormImage = '';
 			}
@@ -382,26 +372,26 @@ class SC_wizard_colorpicker {
 	 * Gets the HTML (Hex) Color Code for the selected pixel of an image
 	 * This method handles the correct imageResource no matter what format
 	 *
-	 * @param	pointer		Valid ImageResource returned by t3lib_stdgraphic::imageCreateFromFile
-	 * @param	integer		X-Coordinate of the pixel that should be checked
-	 * @param	integer		Y-Coordinate of the pixel that should be checked
-	 * @return	string		HEX RGB value for color
+	 * @param pointer $im Valid ImageResource returned by t3lib_stdgraphic::imageCreateFromFile
+	 * @param integer $x X-Coordinate of the pixel that should be checked
+	 * @param integer $y Y-Coordinate of the pixel that should be checked
+	 * @return string HEX RGB value for color
 	 * @see colorImage()
 	 */
-	function getIndex($im,$x,$y) {
+	function getIndex($im, $x, $y) {
 		$rgb = ImageColorAt($im, $x, $y);
-		$colorrgb = imagecolorsforindex($im,$rgb);
+		$colorrgb = imagecolorsforindex($im, $rgb);
 		$index['r'] = dechex($colorrgb['red']);
 		$index['g'] = dechex($colorrgb['green']);
 		$index['b'] = dechex($colorrgb['blue']);
 		foreach ($index as $value) {
-			if(strlen($value) == 1) {
+			if (strlen($value) == 1) {
 				$hexvalue[] = strtoupper('0'.$value);
 			} else {
 				$hexvalue[] = strtoupper($value);
 			}
 		}
-		$hex = implode('',$hexvalue);
+		$hex = implode('', $hexvalue);
 		return $hex;
 	}
 
@@ -419,7 +409,7 @@ class SC_wizard_colorpicker {
 	}
 }
 
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_wizard_colorpicker');
 $SOBE->init();
 $SOBE->main();

@@ -387,8 +387,6 @@ HTMLArea.CharacterMap = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
-				// As of ExtJS 3.1, JS error with IE when the window is resizable
-			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				close: {
@@ -467,9 +465,7 @@ HTMLArea.CharacterMap = Ext.extend(HTMLArea.Plugin, {
 		this.restoreSelection();
 		var entity = Ext.get(target).dom.innerHTML;
 		this.insertEntity(entity);
-		if (Ext.isIE) {
-			this.saveSelection();
-		}
+		this.saveSelection();
 		return false;
 	},
 	/*
@@ -480,11 +476,11 @@ HTMLArea.CharacterMap = Ext.extend(HTMLArea.Plugin, {
 	 * @return	void
 	 */
 	insertEntity: function (entity) {
-		if (Ext.isIE) {
+		if (HTMLArea.isIEBeforeIE9) {
 			this.editor.getSelection().insertHtml(entity);
 		} else {
-				// Firefox and WebKit convert '&nbsp;' to '&amp;nbsp;'
-			var node = this.editor.document.createTextNode(((Ext.isGecko || Ext.isWebKit) && entity == '&nbsp;') ? '\xA0' : entity);
+				// Firefox, WebKit and IE convert '&nbsp;' to '&amp;nbsp;'
+			var node = this.editor.document.createTextNode(((Ext.isGecko || Ext.isWebKit || Ext.isIE) && entity == '&nbsp;') ? '\xA0' : entity);
 			this.editor.getSelection().insertNode(node);
 			this.editor.getSelection().selectNode(node, false);
 		}

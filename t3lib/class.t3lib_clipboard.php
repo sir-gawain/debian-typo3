@@ -123,7 +123,7 @@ class t3lib_clipboard {
 	/**
 	 * The array $cmd may hold various keys which notes some action to take.
 	 * Normally perform only one action at a time.
-	 * In scripts like db_list.php / file_list.php the GET-var CB is used to control the clipboard.
+	 * In scripts like db_list.php / filelist/mod1/index.php the GET-var CB is used to control the clipboard.
 	 *
 	 * Selecting / Deselecting elements
 	 * Array $cmd['el'] has keys = element-ident, value = element value (see description of clipData array in header)
@@ -273,8 +273,8 @@ class t3lib_clipboard {
 			// Delete:
 		if ($elCount) {
 			if ($GLOBALS['BE_USER']->jsConfirmation(4)) {
-				$js = "
-			if(confirm(" . $GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.deleteClip'), $elCount)) . ")){
+				$js = '
+			if (confirm(' . $GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.deleteClip'), $elCount)) . ")){
 				window.location.href='" . $this->deleteUrl(0, $this->fileMode ? 1 : 0) . "&redirect='+top.rawurlencode(window.location.href);
 			}
 					";
@@ -301,7 +301,6 @@ class t3lib_clipboard {
 				t3lib_iconWorks::getSpriteIcon('actions-document-close', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:buttons.clear', TRUE))) .
 				'</a></td>
 			</tr>';
-
 
 			// Print header and content for the NORMAL tab:
 		$out[] = '
@@ -376,7 +375,6 @@ class t3lib_clipboard {
 							if ($this->clipData['_setThumb'] && t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileObject->getExtension())) {
 								$thumb = '<br />' . t3lib_BEfunc::getThumbNail($this->backPath . 'thumbs.php', $v, ' vspace="4"');
 							}
-
 
 							$lines[] = '
 								<tr>
@@ -472,7 +470,7 @@ class t3lib_clipboard {
 					$lines[] = '
 					<tr>
 						<td class="' . $bgColClass . '">' .
-							t3lib_iconWorks::getSpriteIconForRecord($table, $rec, array('style' => "margin-left: 38px;")) . '</td>
+							t3lib_iconWorks::getSpriteIconForRecord($table, $rec, array('style' => 'margin-left: 38px;')) . '</td>
 						<td class="' . $bgColClass . '" nowrap="nowrap" width="95%">&nbsp;' . htmlspecialchars(
 						t3lib_div::fixed_lgd_cs(t3lib_BEfunc::getRecordTitle($table, $rec), $GLOBALS['BE_USER']->uc['titleLen'])) .
 							$modeData . '&nbsp;</td>
@@ -529,7 +527,7 @@ class t3lib_clipboard {
 			} else {
 				if (t3lib_extMgm::isLoaded('filelist')) {
 					$str = '<a href="' . htmlspecialchars(
-						$this->backPath . t3lib_extMgm::extRelPath('filelist') . 'mod1/file_list.php?id=' . dirname($rec)
+						$this->backPath . t3lib_BEfunc::getModuleUrl('file_list') . '&id=' . dirname($rec)
 					) . '">' . $str . '</a>';
 				}
 			}

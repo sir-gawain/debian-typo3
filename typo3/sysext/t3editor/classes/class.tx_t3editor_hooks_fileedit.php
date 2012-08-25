@@ -27,6 +27,11 @@
 
 require_once(t3lib_extMgm::extPath('t3editor', 'classes/class.tx_t3editor.php'));
 
+/**
+ * File edit hook for t3editor
+ *
+ * @author Tobias Liebig <mail_typo3@etobi.de>
+ */
 class tx_t3editor_hooks_fileedit {
 
 	/**
@@ -127,7 +132,6 @@ class tx_t3editor_hooks_fileedit {
 			$outCode,
 			$parameters['pageContent']
 		);
-
 	}
 
 	/**
@@ -137,7 +141,6 @@ class tx_t3editor_hooks_fileedit {
 		$savingsuccess = FALSE;
 		if ($parameters['type'] == $this->ajaxSaveType) {
 			require_once('init.php');
-			require_once('classes/class.typo3_tcefile.php');
 
 			$tceFile = t3lib_div::makeInstance('TYPO3_tcefile');
 			$tceFile->processAjaxRequest(array(), $parameters['ajaxObj']);

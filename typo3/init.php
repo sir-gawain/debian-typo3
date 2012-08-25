@@ -24,6 +24,7 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * TYPO3 Backend initialization
  *
@@ -54,80 +55,53 @@
  * @subpackage core
  */
 
-// *******************************
-// Prevent any unwanted output that may corrupt AJAX/compression. Note: this does
-// not interfeer with "die()" or "echo"+"exit()" messages!
-// *******************************
-ob_start();
+define('TYPO3_MODE', 'BE');
 
-// *******************************
-// Define constants
-// *******************************
-define('TYPO3_MODE','BE');
-
-require('Bootstrap.php');
-Typo3_Bootstrap::checkEnvironmentOrDie();
-Typo3_Bootstrap::defineBaseConstants();
-Typo3_Bootstrap::defineAndCheckPaths('typo3/');
-Typo3_Bootstrap::requireBaseClasses();
-Typo3_Bootstrap::setUpEnvironment();
-
-
-require(PATH_t3lib . 'config_default.php');
-
-Typo3_Bootstrap::initializeTypo3DbGlobal(FALSE);
-Typo3_Bootstrap::checkLockedBackendAndRedirectOrDie();
-Typo3_Bootstrap::checkBackendIpOrDie();
-Typo3_Bootstrap::checkSslBackendAndRedirectIfNeeded();
-
-// *************************
-// Connect to the database
-// *************************
-	// Redirect to install tool if database host and database are not defined
-if (!TYPO3_db_host && !TYPO3_db) {
-	t3lib_utility_Http::redirect('install/index.php?mode=123&step=1&password=joh316');
-} else {
-	$TYPO3_DB->connectDB();
-}
-
-
-// *******************************
-// Checks for proper browser
-// *******************************
-if (!$CLIENT['BROWSER']) {
-	throw new RuntimeException('Browser Error: Your browser version looks incompatible with this TYPO3 version!', 1294587023);
-}
-
-	// Include standard tables.php or own file
-if (TYPO3_tables_script) {
-	include(PATH_typo3conf . TYPO3_tables_script);
-} else {
-	include(PATH_t3lib . 'stddb/tables.php');
-}
-	// Load temp_CACHED file of ext_tables or each ext_tables.php of loaded extensions
-if ($TYPO3_LOADED_EXT['_CACHEFILE']) {
-	include(PATH_typo3conf . $TYPO3_LOADED_EXT['_CACHEFILE'] . '_ext_tables.php');
-} else {
-	include(PATH_t3lib . 'stddb/load_ext_tables.php');
-}
-	// Load additional ext tables script
-if (TYPO3_extTableDef_script) {
-	include(PATH_typo3conf . TYPO3_extTableDef_script);
-}
-
-Typo3_Bootstrap::runExtTablesPostProcessingHooks();
-Typo3_Bootstrap::initializeSpriteManager(TRUE);
-Typo3_Bootstrap::initializeBackendUser();
-Typo3_Bootstrap::initializeBackendUserMounts();
-Typo3_Bootstrap::initializeLanguageObject();
-
-	// Compression
-ob_clean();
-if (extension_loaded('zlib') && $TYPO3_CONF_VARS['BE']['compressionLevel']) {
-	if (t3lib_utility_Math::canBeInterpretedAsInteger($TYPO3_CONF_VARS['BE']['compressionLevel'])) {
-		@ini_set('zlib.output_compression_level', $TYPO3_CONF_VARS['BE']['compressionLevel']);
-	}
-	ob_start('ob_gzhandler');
-}
-
+	// We use require instead of require_once here so we get a fatal error if
+	// classes/Bootstrap.php is accidentally included twice (which would indicate a clear bug).
+require('classes/Bootstrap.php');
+Typo3_Bootstrap::getInstance()
+	->startOutputBuffering()
+	->baseSetup('typo3/')
+	->registerExtDirectComponents()
+	->populateLocalConfiguration()
+	->initializeCachingFramework()
+	->registerAutoloader()
+	->checkUtf8DatabaseSettingsOrDie()
+	->transferDeprecatedCurlSettings()
+	->setCacheHashOptions()
+	->enforceCorrectProxyAuthScheme()
+	->setDefaultTimezone()
+	->initializeL10nLocales()
+	->configureImageProcessingOptions()
+	->convertPageNotFoundHandlingToBoolean()
+	->registerGlobalDebugFunctions()
+	->registerSwiftMailer()
+	->configureExceptionHandling()
+	->setMemoryLimit()
+	->defineTypo3RequestTypes()
+	->populateTypo3LoadedExtGlobal(TRUE)
+	->loadAdditionalConfigurationFromExtensions(TRUE)
+	->deprecationLogForOldExtCacheSetting()
+	->initializeExceptionHandling()
+	->requireAdditionalExtensionFiles()
+	->setFinalCachingFrameworkCacheConfiguration()
+	->defineLoggingAndExceptionConstants()
+	->unsetReservedGlobalVariables()
+	->initializeTypo3DbGlobal(FALSE)
+	->checkLockedBackendAndRedirectOrDie()
+	->checkBackendIpOrDie()
+	->checkSslBackendAndRedirectIfNeeded()
+	->redirectToInstallToolIfDatabaseCredentialsAreMissing()
+	->checkValidBrowserOrDie()
+	->establishDatabaseConnection()
+	->loadExtensionTables(TRUE)
+	->initializeSpriteManager(TRUE)
+	->initializeBackendUser()
+	->initializeBackendUserMounts()
+	->initializeLanguageObject()
+	->initializeModuleMenuObject()
+	->initializeBackendTemplate()
+	->endOutputBufferingAndCleanPreviousOutput()
+	->initializeOutputCompression();
 ?>

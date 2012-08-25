@@ -27,12 +27,12 @@
 /**
  * Core functions for admin
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * Core functions for administration
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -46,8 +46,6 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 
 	/**
 	 * Constructor
-	 *
-	 * @return	void
 	 */
 	function __construct() {
 
@@ -60,16 +58,10 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 			// Setting help texts:
 		$this->cli_help['name'] = 'lowlevel_admin -- Various functions for administration and maintenance of TYPO3 from the command line';
 		$this->cli_help['synopsis'] = 'toolkey ###OPTIONS###';
-		$this->cli_help['description'] = "The 'toolkey' keywords are:\n\n  ".implode("\n  ",array_keys($this->adminModules));
-		$this->cli_help['examples'] = "/.../cli_dispatch.phpsh lowlevel_admin setBElock --redirect=http://url_which_explains_why.com/";
-		$this->cli_help['author'] = "Kasper Skaarhoej, (c) 2009";
+		$this->cli_help['description'] = "The 'toolkey' keywords are:\n\n  ".implode("\n  ", array_keys($this->adminModules));
+		$this->cli_help['examples'] = '/.../cli_dispatch.phpsh lowlevel_admin setBElock --redirect=http://url_which_explains_why.com/';
+		$this->cli_help['author'] = 'Kasper Skaarhoej, (c) 2009';
 	}
-
-
-
-
-
-
 
 	/**************************
 	 *
@@ -80,8 +72,8 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 	/**
 	 * CLI engine
 	 *
-	 * @param	array		Command line arguments
-	 * @return	string
+	 * @param array $argv Command line arguments
+	 * @return string
 	 */
 	function cli_main($argv) {
 
@@ -98,7 +90,7 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 		}
 
 			// Analysis type:
-		switch((string)$analysisType)    {
+		switch ((string)$analysisType)    {
 			case 'setBElock':
 				if (@is_file(PATH_typo3conf.'LOCK_BACKEND')) {
 					$this->cli_echo("A lockfile already exists. Overwriting it... \n");
@@ -111,7 +103,7 @@ class tx_lowlevel_admin_core extends t3lib_cli {
 				if (@is_file(PATH_typo3conf.'LOCK_BACKEND')) {
 					unlink(PATH_typo3conf.'LOCK_BACKEND');
 					if (@is_file(PATH_typo3conf.'LOCK_BACKEND')	) {
-						$this->cli_echo("ERROR: Could not remove lock file '".PATH_typo3conf."LOCK_BACKEND'!!\n",1);
+						$this->cli_echo("ERROR: Could not remove lock file '".PATH_typo3conf."LOCK_BACKEND'!!\n", 1);
 					} else {
 						$this->cli_echo("Removed lock file '".PATH_typo3conf."LOCK_BACKEND'\n");
 					}

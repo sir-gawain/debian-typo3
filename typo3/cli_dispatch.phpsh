@@ -37,51 +37,51 @@
  * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
 
-define('TYPO3_MODE','BE');
+define('TYPO3_MODE', 'BE');
 define('TYPO3_cliMode', TRUE);
 
-require('Bootstrap_Cli.php');
+	// We use require instead of require_once here so we get a fatal error if classes/Bootstrap.php is accidentally included twice
+	// (which would indicate a clear bug).
+require('classes/Bootstrap/Cli.php');
 Typo3_Bootstrap_Cli::checkEnvironmentOrDie();
 
-require('Bootstrap.php');
-Typo3_Bootstrap::checkEnvironmentOrDie();
-Typo3_Bootstrap::defineBaseConstants();
-Typo3_Bootstrap::defineAndCheckPaths('typo3/');
-Typo3_Bootstrap::requireBaseClasses();
-Typo3_Bootstrap::setUpEnvironment();
-
-	/** @define "PATH_t3lib" "../t3lib/" */
-require(PATH_t3lib . 'config_default.php');
-
-Typo3_Bootstrap::initializeTypo3DbGlobal(TRUE);
-
+require('classes/Bootstrap.php');
+Typo3_Bootstrap::getInstance()
+	->baseSetup('typo3/')
+	->registerExtDirectComponents()
+	->populateLocalConfiguration()
+	->initializeCachingFramework()
+	->registerAutoloader()
+	->checkUtf8DatabaseSettingsOrDie()
+	->transferDeprecatedCurlSettings()
+	->setCacheHashOptions()
+	->enforceCorrectProxyAuthScheme()
+	->setDefaultTimezone()
+	->initializeL10nLocales()
+	->configureImageProcessingOptions()
+	->convertPageNotFoundHandlingToBoolean()
+	->registerGlobalDebugFunctions()
+	->registerSwiftMailer()
+	->configureExceptionHandling()
+	->setMemoryLimit()
+	->defineTypo3RequestTypes()
+	->populateTypo3LoadedExtGlobal(TRUE)
+	->loadAdditionalConfigurationFromExtensions(TRUE)
+	->deprecationLogForOldExtCacheSetting()
+	->initializeExceptionHandling()
+	->requireAdditionalExtensionFiles()
+	->setFinalCachingFrameworkCacheConfiguration()
+	->defineLoggingAndExceptionConstants()
+	->unsetReservedGlobalVariables()
+	->initializeTypo3DbGlobal(TRUE);
 Typo3_Bootstrap_Cli::initializeCliKeyOrDie();
-
-	// Include standard tables.php or own file
-if (TYPO3_tables_script) {
-	include(PATH_typo3conf . TYPO3_tables_script);
-} else {
-	include(PATH_t3lib . 'stddb/tables.php');
-}
-	// Load temp_CACHED file of ext_tables or each ext_tables.php of loaded extensions
-if ($TYPO3_LOADED_EXT['_CACHEFILE']) {
-	include(PATH_typo3conf . $TYPO3_LOADED_EXT['_CACHEFILE'] . '_ext_tables.php');
-} else {
-	include(PATH_t3lib . 'stddb/load_ext_tables.php');
-}
-	// Load additional ext tables script
-if (TYPO3_extTableDef_script) {
-	include(PATH_typo3conf . TYPO3_extTableDef_script);
-}
-Typo3_Bootstrap::runExtTablesPostProcessingHooks();
-
-// TODO: Check if we really need the sprite manager on the command line
-Typo3_Bootstrap::initializeSpriteManager(TRUE);
-
-Typo3_Bootstrap::initializeBackendUser();
-Typo3_Bootstrap::initializeBackendUserMounts();
-
-Typo3_Bootstrap::initializeLanguageObject();
+Typo3_Bootstrap::getInstance()
+	->loadExtensionTables(TRUE)
+		// TODO: Check if we really need the sprite manager on the command line
+	->initializeSpriteManager(TRUE)
+	->initializeBackendUser()
+	->initializeBackendUserMounts()
+	->initializeLanguageObject();
 
 	// Make sure output is not buffered, so command-line output and interaction can take place
 t3lib_div::flushOutputBuffers();
@@ -93,5 +93,5 @@ try {
 	exit(99);
 }
 
-Typo3_Bootstrap::shutdown();
+Typo3_Bootstrap::getInstance()->shutdown();
 ?>

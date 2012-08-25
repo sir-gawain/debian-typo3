@@ -62,7 +62,7 @@ class tx_indexedsearch_crawlerhook {
 	 * @param	object		Parent Object (from "indexed_search" extension)
 	 * @return	void
 	 */
-	function indexOperation($cfgRec,&$session_data,$params,&$pObj) {
+	function indexOperation($cfgRec, &$session_data, $params, &$pObj) {
 
 			// Init session data array if not already:
 		if (!is_array($session_data)) {
@@ -73,7 +73,6 @@ class tx_indexedsearch_crawlerhook {
 
 			// Increase step counter (this is just an example of how the session data can be used - to track how many instances of indexing is left)
 		$session_data['step']++;
-
 
 		switch((int)$session_data['step']) {
 			case 1:	// Indexing Example: Content accessed with GET parameters added to URL:
@@ -119,9 +118,12 @@ class tx_indexedsearch_crawlerhook {
 						'',
 						'',
 						$item['content'],
-						$GLOBALS['LANG']->charSet,	// Charset of content - MUST be set.
-						$item['tstamp'],			// Last-modified date
-						$item['create_date'],		// Created date
+							// Charset of content - MUST be set.
+						$GLOBALS['LANG']->charSet,
+							// Last-modified date
+						$item['tstamp'],
+							// Created date
+						$item['create_date'],
 						$item['ID']
 					);
 				}

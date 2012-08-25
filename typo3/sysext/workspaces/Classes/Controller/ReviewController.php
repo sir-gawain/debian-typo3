@@ -25,6 +25,13 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+/**
+ * Review controller.
+ *
+ * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ * @package Workspaces
+ * @subpackage Controller
+ */
 class Tx_Workspaces_Controller_ReviewController extends Tx_Workspaces_Controller_AbstractController {
 
 	/**
@@ -149,7 +156,6 @@ class Tx_Workspaces_Controller_ReviewController extends Tx_Workspaces_Controller
 		$states = $GLOBALS['BE_USER']->uc['moduleData']['Workspaces']['States'];
 		$this->pageRenderer->addInlineSetting('Workspaces', 'States', $states);
 
-
 			// Load  JavaScript:
 		$this->pageRenderer->addExtDirectCode(array(
 			'TYPO3.Workspaces'
@@ -192,10 +198,4 @@ class Tx_Workspaces_Controller_ReviewController extends Tx_Workspaces_Controller
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Controller/ReviewController.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Controller/ReviewController.php']);
-}
-
 ?>

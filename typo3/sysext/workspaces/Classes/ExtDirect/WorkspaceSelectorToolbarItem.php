@@ -26,7 +26,7 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-if(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX) {
+if (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX) {
 	require_once(PATH_typo3 . 'interfaces/interface.backend_toolbaritem.php');
 }
 
@@ -109,10 +109,10 @@ class Tx_Workspaces_ExtDirect_WorkspaceSelectorToolbarItem implements backend_to
 		$workspaceMenu[] = '<ul class="toolbar-item-menu" style="display: none;">';
 
 		if (count($availableWorkspaces)) {
-			foreach($availableWorkspaces as $workspaceId => $label) {
+			foreach ($availableWorkspaces as $workspaceId => $label) {
 				$selected = '';
 				$icon = $stateUncheckedIcon;
-				if((int) $GLOBALS['BE_USER']->workspace === $workspaceId) {
+				if ((int) $GLOBALS['BE_USER']->workspace === $workspaceId) {
 					$selected = ' class="selected"';
 					$icon = $stateCheckedIcon;
 				}
@@ -160,12 +160,7 @@ class Tx_Workspaces_ExtDirect_WorkspaceSelectorToolbarItem implements backend_to
 }
 
 
-if(!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {
+if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {
 	$GLOBALS['TYPO3backend']->addToolbarItem('workSpaceSelector', 'Tx_Workspaces_ExtDirect_WorkspaceSelectorToolbarItem');
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/Tx_Workspaces_ExtDirect_WorkspaceSelectorToolbarItem.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/Tx_Workspaces_ExtDirect_WorkspaceSelectorToolbarItem.php']);
 }
 ?>

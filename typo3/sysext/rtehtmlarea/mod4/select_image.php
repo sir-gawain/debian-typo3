@@ -32,11 +32,10 @@
  * @author	Stanislas Rolland <typo3(arobas)jbr.ca>
  */
 
-error_reporting (E_ALL ^ E_NOTICE);
+error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
 unset($MCONF);
 require('conf.php');
 require($BACK_PATH.'init.php');
-require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:lang/locallang_browse_links.xml');
 $LANG->includeLLFile('EXT:rtehtmlarea/mod4/locallang.xml');
 $LANG->includeLLFile('EXT:rtehtmlarea/htmlarea/locallang_dialogs.xml');
@@ -86,9 +85,9 @@ class tx_rtehtmlarea_SC_select_image {
 		if (!$browserRendered) {
 			$GLOBALS['SOBE']->browser = t3lib_div::makeInstance('tx_rtehtmlarea_select_image');
 			$GLOBALS['SOBE']->browser->init();
-			$modData = $GLOBALS['BE_USER']->getModuleData('select_image.php','ses');
+			$modData = $GLOBALS['BE_USER']->getModuleData('select_image.php', 'ses');
 			list($modData, $store) = $GLOBALS['SOBE']->browser->processSessionData($modData);
-			$GLOBALS['BE_USER']->pushModuleData('select_image.php',$modData);
+			$GLOBALS['BE_USER']->pushModuleData('select_image.php', $modData);
 			$this->content = $GLOBALS['SOBE']->browser->main_rte();
 		}
 	}

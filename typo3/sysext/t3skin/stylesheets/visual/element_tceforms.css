@@ -391,15 +391,35 @@ table.typo3-TCEforms .wrapperTable5 .typo3-dyntabmenu-divs {
 TCEforms Inline-Relational-Record-Editing
 - - - - - - - - - - - - - - - - - - - - - */
 .t3-form-field-container-inline {
-	border: 1px solid #c0c0c0;
+	border: 1px solid #dbdbdb;
+    background-color:#f9f9f9;
 }
 
 .t3-form-field-header-inline {
-	background: #DADADA;
+    background-image: linear-gradient(top, rgb(218,218,218) 0%, rgb(192,192,192) 100%);
+    background-image: -o-linear-gradient(top, rgb(218,218,218) 0%, rgb(192,192,192) 100%);
+    background-image: -moz-linear-gradient(top, rgb(218,218,218) 0%, rgb(192,192,192) 100%);
+    background-image: -webkit-linear-gradient(top, rgb(218,218,218) 0%, rgb(192,192,192) 100%);
+    background-image: -ms-linear-gradient(top, rgb(218,218,218) 0%, rgb(192,192,192) 100%);
+
+    background-image: -webkit-gradient(
+    	linear,
+    	left top,
+    	left bottom,
+    	color-stop(0, rgb(218,218,218)),
+    	color-stop(1, rgb(192,192,192))
+    );
+}
+.t3-form-field-header-inline table {
+    vertical-align:top;
+}
+
+.t3-form-field-header-inline td.t3-form-field-header-inline-thumbnail img {
+    border-bottom:1px solid white;
 }
 
 .t3-form-field-record-inline {
-	border-top: 1px solid #c0c0c0;
+
 }
 
 table.typo3-TCEforms .t3-form-field-container-inline .wrapperTable,
@@ -455,4 +475,21 @@ TCEforms Sections
 .ext-chrome:not(.ext-mac) .typo3-TCEforms-select-selectedItemWithBackgroundImage {
 	text-indent: 0px;
 	background-position-x: 5px;
+}
+
+.t3-tceforms-fieldReadOnly {
+    padding:5px;
+    border:1px solid #cccccc;
+    background: #f4f4f4;
+    color: #696362;
+    -webkit-box-shadow: inset 0px 0px 5px 0px #e8e8e8;
+    box-shadow: inset 0px 0px 5px 0px #e8e8e8;
+    padding-right:21px;
+    position:relative;
+}
+
+.t3-tceforms-fieldReadOnly span.t3-icon {
+    position:absolute;
+    right:3px;
+    top:4px;
 }

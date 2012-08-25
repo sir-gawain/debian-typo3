@@ -69,7 +69,7 @@ class tx_linkvalidator_linktype_External extends tx_linkvalidator_linktype_Abstr
 
 		if (isset($this->urlReports[$url])) {
 			if (!$this->urlReports[$url]) {
-				if(is_array($this->urlErrorParams[$url])) {
+				if (is_array($this->urlErrorParams[$url])) {
 					$this->setErrorParams($this->urlErrorParams[$url]);
 				}
 			}
@@ -183,16 +183,12 @@ class tx_linkvalidator_linktype_External extends tx_linkvalidator_linktype_Abstr
 		preg_match_all('/((?:http|https))(?::\/\/)(?:[^\s<>]+)/i', $value['tokenValue'], $urls, PREG_PATTERN_ORDER);
 
 		if (!empty($urls[0][0])) {
-			$type = "external";
+			$type = 'external';
 		}
 
 		return $type;
 	}
 
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/linkvalidator/classes/linktypes/class.tx_linkvalidator_linktypes_external.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/linkvalidator/classes/linktypes/class.tx_linkvalidator_linktypes_external.php']);
 }
 
 ?>

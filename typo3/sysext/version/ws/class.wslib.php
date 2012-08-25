@@ -24,22 +24,6 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/**
- * Library with Workspace related functionality
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Library with Workspace related functionality
@@ -50,9 +34,6 @@
  */
 class wslib {
 
-
-
-
 	/**
 	 * Building tcemain CMD-array for swapping all versions in a workspace.
 	 *
@@ -61,28 +42,28 @@ class wslib {
 	 * @param	[type]		$pageId: ...
 	 * @return	array		Command array for tcemain
 	 */
-	function getCmdArrayForPublishWS($wsid, $doSwap,$pageId=0)	{
+	function getCmdArrayForPublishWS($wsid, $doSwap, $pageId=0) {
 
 		$wsid = intval($wsid);
 		$cmd = array();
 
-		if ($wsid>=-1 && $wsid!==0)	{
+		if ($wsid>=-1 && $wsid!==0) {
 
 				// Define stage to select:
 			$stage = -99;
-			if ($wsid>0)	{
-				$workspaceRec = t3lib_BEfunc::getRecord('sys_workspace',$wsid);
-				if ($workspaceRec['publish_access']&1)	{
+			if ($wsid>0) {
+				$workspaceRec = t3lib_BEfunc::getRecord('sys_workspace', $wsid);
+				if ($workspaceRec['publish_access']&1) {
 					$stage = 10;
 				}
 			}
 
 				// Select all versions to swap:
-			$versions = $this->selectVersionsInWorkspace($wsid,0,$stage,($pageId?$pageId:-1));
+			$versions = $this->selectVersionsInWorkspace($wsid, 0, $stage, ($pageId ? $pageId : -1));
 
 				// Traverse the selection to build CMD array:
-			foreach($versions as $table => $records)	{
-				foreach($records as $rec)	{
+			foreach ($versions as $table => $records) {
+				foreach ($records as $rec) {
 
 						// Build the cmd Array:
 					$cmd[$table][$rec['t3ver_oid']]['version'] = array(
@@ -105,9 +86,9 @@ class wslib {
 	 * @param	integer		Lifecycle filter: 1 = select all drafts (never-published), 2 = select all published one or more times (archive/multiple), anything else selects all.
 	 * @param	integer		Stage filter: -99 means no filtering, otherwise it will be used to select only elements with that stage. For publishing, that would be "10"
 	 * @param	integer		Page id: Live page for which to find versions in workspace!
-	 * @return	array		Array of all records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The REAL pid of the online record is found as "realpid"
+	 * @return	array		Array of all records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid and t3ver_oid fields. The REAL pid of the online record is found as "realpid"
 	 */
-	function selectVersionsInWorkspace($wsid,$filter=0,$stage=-99,$pageId=-1)	{
+	function selectVersionsInWorkspace($wsid, $filter = 0, $stage = -99, $pageId = -1) {
 		$wsid = intval($wsid);
 		$filter = intval($filter);
 		$output = array();
@@ -119,7 +100,7 @@ class wslib {
 					// Select all records from this table in the database from the workspace
 					// This joins the online version with the offline version as tables A and B
 				$recs = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows (
-					'A.uid, A.t3ver_oid,'.($table==='pages' ? ' A.t3ver_swapmode,':'').' B.pid AS realpid',
+					'A.uid, A.t3ver_oid, B.pid AS realpid',
 					$table.' A,'.$table.' B',
 					'A.pid=-1'.	// Table A is the offline version and pid=-1 defines offline
 						($pageId!=-1 ? ($table==='pages' ? ' AND B.uid='.intval($pageId) : ' AND B.pid='.intval($pageId)) : '').
@@ -128,8 +109,8 @@ class wslib {
 						($stage!=-99 ? ' AND A.t3ver_stage='.intval($stage) : '').
 						' AND B.pid>=0'.	// Table B (online) must have PID >= 0 to signify being online.
 						' AND A.t3ver_oid=B.uid'.	// ... and finally the join between the two tables.
-						t3lib_BEfunc::deleteClause($table,'A').
-						t3lib_BEfunc::deleteClause($table,'B'),
+						t3lib_BEfunc::deleteClause($table, 'A') .
+						t3lib_BEfunc::deleteClause($table, 'B'),
 					'',
 					'B.uid'		// Order by UID, mostly to have a sorting in the backend overview module which doesn't "jump around" when swapping.
 				);
@@ -167,7 +148,7 @@ class wslib {
 	 *
 	 * @return	void
 	 */
-	function autoPublishWorkspaces()	{
+	function autoPublishWorkspaces() {
 			// Temporarily set admin rights
 			// FIXME: once workspaces are cleaned up a better solution should be implemented
 		$currentAdminStatus = $GLOBALS['BE_USER']->user['admin'];
@@ -184,11 +165,11 @@ class wslib {
 				t3lib_BEfunc::deleteClause('sys_workspace')
 		);
 
-		foreach($workspaces as $rec)	{
+		foreach ($workspaces as $rec) {
 
 				// First, clear start/end time so it doesn't get select once again:
 			$fieldArray = $rec['publish_time']!=0 ? array('publish_time'=>0) : array('unpublish_time'=>0);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('sys_workspace','uid='.intval($rec['uid']),$fieldArray);
+			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('sys_workspace', 'uid=' . intval($rec['uid']), $fieldArray);
 
 				// Get CMD array:
 			$cmd = $this->getCmdArrayForPublishWS($rec['uid'], $rec['swap_modes']==1);	// $rec['swap_modes']==1 means that auto-publishing will swap versions, not just publish and empty the workspace.
@@ -196,18 +177,12 @@ class wslib {
 				// Execute CMD array:
 			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 			$tce->stripslashes_values = 0;
-			$tce->start(array(),$cmd);
+			$tce->start(array(), $cmd);
 			$tce->process_cmdmap();
 		}
 
 			// Restore admin status
 		$GLOBALS['BE_USER']->user['admin'] = $currentAdminStatus;
 	}
-}
-
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/class.wslib.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/user/ws/class.wslib.php']);
 }
 ?>

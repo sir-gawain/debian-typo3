@@ -157,7 +157,7 @@ HTMLArea.DefinitionList = Ext.extend(HTMLArea.BlockElements, {
 			if (attributeValue) newNode.setAttribute(attributeName, attributeValue);
 		}
 			// In IE, the above fails to update the classname and style attributes.
-		if (Ext.isIE) {
+		if (HTMLArea.isIEBeforeIE9) {
 			if (node.style.cssText) {
 				newNode.style.cssText = node.style.cssText;
 			}
@@ -172,7 +172,7 @@ HTMLArea.DefinitionList = Ext.extend(HTMLArea.BlockElements, {
 				newNode.removeAttribute('className');
 			}
 		}
-		
+
 		if (this.tags && this.tags[nodeName] && this.tags[nodeName].allowedClasses) {
 			if (newNode.className && /\S/.test(newNode.className)) {
 				var allowedClasses = this.tags[nodeName].allowedClasses;
@@ -226,7 +226,7 @@ HTMLArea.DefinitionList = Ext.extend(HTMLArea.BlockElements, {
 		if (this.editor.getSelection().isEmpty() && /^dd$/i.test(parentElement.nodeName)) {
 			var list = parentElement.appendChild(this.editor.document.createElement('dl'));
 			var term = list.appendChild(this.editor.document.createElement('dt'));
-			if (!Ext.isIE) {
+			if (!HTMLArea.isIEBeforeIE9) {
 				if (Ext.isWebKit) {
 					term.innerHTML = '<br />';
 				} else {
@@ -293,7 +293,7 @@ HTMLArea.DefinitionList = Ext.extend(HTMLArea.BlockElements, {
 		}
 		return false;
 	},
-	
+
 	/*
 	 * This function gets called when the toolbar is updated
 	 */

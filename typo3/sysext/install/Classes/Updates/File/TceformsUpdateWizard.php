@@ -34,7 +34,7 @@ class Tx_Install_Updates_File_TceformsUpdateWizard extends Tx_Install_Updates_Ba
 	/**
 	 * @var string
 	 */
-	protected $title = 'Migrate file relations';
+	protected $title = 'Migrate all file relations from tt_content.image and pages.media';
 
 	/**
 	 * @var t3lib_file_Storage
@@ -58,9 +58,7 @@ class Tx_Install_Updates_File_TceformsUpdateWizard extends Tx_Install_Updates_Ba
 	 * @return	boolean		TRUE if an update is needed, FALSE otherwise
 	 */
 	public function checkForUpdate(&$description) {
-		// @todo Function below copied from sysext/install/updates/class.tx_coreupdates_imagelink.php, needs to be adopted
-
-		$description = 'TODO add description of FAL migration';
+		$description = 'This update wizard goes through all files that are referenced in the tt_content.image and pages.media / pages_language_overlay.media filed and adds the files to the new File Index.<br />It also moves the files from uploads/ to the fileadmin/_migrated/ path.<br /><br />This update wizard can be called multiple times in case it didn\'t finish after running once.';
 
 			// make this wizard always available
 		return TRUE;
@@ -76,13 +74,14 @@ class Tx_Install_Updates_File_TceformsUpdateWizard extends Tx_Install_Updates_Ba
 	public function performUpdate(&$dbQueries, &$customMessages) {
 		$this->init();
 
-		### Function below copied from sysext/install/updates/class.tx_coreupdates_imagelink.php
+			// Function below copied from sysext/install/updates/class.tx_coreupdates_imagelink.php
 
 		$tables = array(
 			'tt_content' => array(
 				'image' => array(
 					'sourcePath' => 'uploads/pics/',
-					'targetPath' => '_migrated/pics/', # relative to fileadmin
+						// Relative to fileadmin
+					'targetPath' => '_migrated/pics/',
 					'titleTexts' => 'titleText',
 					'captions' => 'imagecaption',
 					'links' => 'image_link',
@@ -92,17 +91,19 @@ class Tx_Install_Updates_File_TceformsUpdateWizard extends Tx_Install_Updates_Ba
 			'pages' => array(
 				'media' => array(
 					'sourcePath' => 'uploads/media/',
-					'targetPath' => '_migrated/media/', # relative to fileadmin
+						// Relative to fileadmin
+					'targetPath' => '_migrated/media/',
 				),
 			),
 			'pages_language_overlay' => array(
 				'media' => array(
 					'sourcePath' => 'uploads/media/',
-					'targetPath' => '_migrated/media/', # relative to fileadmin
+						// Relative to fileadmin
+					'targetPath' => '_migrated/media/',
 				),
 			),
 		);
-			// we write down the fields that were migrated. Like this: tt_content:media
+			// We write down the fields that were migrated. Like this: tt_content:media
 			// so you can check whether a field was already migrated
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard'])) {
 			$finishedFields = explode(',', $GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard']);
@@ -205,7 +206,9 @@ class Tx_Install_Updates_File_TceformsUpdateWizard extends Tx_Install_Updates_Ba
 		$i = 0;
 		foreach ($fieldItems as $item) {
 
-			if(!PATH_site) throw new Exception('PATH_site was undefined.');
+			if(!PATH_site) {
+				throw new Exception('PATH_site was undefined.');
+			}
 
 				// copy file
 			$sourcePath = PATH_site . $fieldConfiguration['sourcePath'] . $item;
@@ -250,11 +253,11 @@ class Tx_Install_Updates_File_TceformsUpdateWizard extends Tx_Install_Updates_Ba
 			}
 		}
 
-		$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, 'uid=' . $row['uid'], array($fieldname => ''));
+			// Update referencing table's original field to now contain the count of references.
+		$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, 'uid=' . $row['uid'], array($fieldname => $i));
 		$queries[] = str_replace(LF, ' ', $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery);
 
 		return $queries;
-		// TODO update original row
 	}
 }
 

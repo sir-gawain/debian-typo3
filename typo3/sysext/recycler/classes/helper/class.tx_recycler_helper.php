@@ -49,16 +49,15 @@ class tx_recycler_helper {
 		// Checking if the user has permissions? (Only working as a precaution, because the final permission check is always down in TCE. But it's good to notify the user on beforehand...)
 		// First, resetting flags.
 		$hasAccess = 0;
-		$deniedAccessReason = '';
 
 		$calcPRec = $row;
-		t3lib_BEfunc::fixVersioningPid($table,$calcPRec);
+		t3lib_BEfunc::fixVersioningPid($table, $calcPRec);
 		if (is_array($calcPRec)) {
 			if ($table=='pages') {	// If pages:
 				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
 				$hasAccess = $CALC_PERMS & 2 ? 1 : 0;
 			} else {
-				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$calcPRec['pid']));	// Fetching pid-record first.
+				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages', $calcPRec['pid']));	// Fetching pid-record first.
 				$hasAccess = $CALC_PERMS & 16 ? 1 : 0;
 			}
 					// Check internals regarding access:
@@ -67,16 +66,8 @@ class tx_recycler_helper {
 			}
 		}
 
-
 		if (!$GLOBALS['BE_USER']->check('tables_modify', $table)) {
 			$hasAccess = 0;
-		}
-
-		if (!$hasAccess) {
-			$deniedAccessReason = $GLOBALS['BE_USER']->errorMsg;
-			if ($deniedAccessReason) {
-				//fb($deniedAccessReason);
-			}
 		}
 
 		return $hasAccess ? TRUE : FALSE;
@@ -100,7 +91,7 @@ class tx_recycler_helper {
 		while ($uid != 0 && $loopCheck > 0) {
 			$loopCheck--;
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-				'uid,pid,title,deleted,t3ver_oid,t3ver_wsid,t3ver_swapmode',
+				'uid,pid,title,deleted,t3ver_oid,t3ver_wsid',
 				'pages',
 				'uid=' . intval($uid) . (strlen(trim($clause)) ? ' AND ' . $clause : '')
 			);
@@ -113,9 +104,6 @@ class tx_recycler_helper {
 				if (is_array($row)) {
 					t3lib_BEfunc::fixVersioningPid('pages', $row);
 
-					if ($row['_ORIG_pid'] && $row['t3ver_swapmode'] > 0) {	// Branch points
-						$output = ' [#VEP#]' . $output;		// Adding visual token - Versioning Entry Point - that tells that THIS position was where the versionized branch got connected to the main tree. I will have to find a better name or something...
-					}
 					$uid = $row['pid'];
 					$output = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $titleLimit)) . $output;
 
@@ -123,7 +111,9 @@ class tx_recycler_helper {
 						$output = '<span class="deletedPath">' . $output . '</span>';
 					}
 
-					if ($fullTitleLimit) $fullOutput = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $fullTitleLimit)) . $fullOutput;
+					if ($fullTitleLimit) {
+						$fullOutput = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $fullTitleLimit)) . $fullOutput;
+					}
 				} else {
 					break;
 				}

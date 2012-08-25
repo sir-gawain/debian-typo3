@@ -32,7 +32,6 @@
  * @package TYPO3
  * @subpackage t3lib_tree
  */
-
 class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 
 	/**
@@ -63,7 +62,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Sets the expand state
 	 *
-	 * @param  $expanded
+	 * @param $expanded
 	 * @return void
 	 */
 	public function setExpanded($expanded) {
@@ -73,7 +72,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Gets the expand state
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function getExpanded() {
 		return $this->expanded;
@@ -82,7 +81,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Sets the selectable property
 	 *
-	 * @param  $selectable
+	 * @param boolean $selectable
 	 * @return void
 	 */
 	public function setSelectable($selectable) {
@@ -92,7 +91,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Gets the selectable property
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function getSelectable() {
 		return $this->selectable;
@@ -101,7 +100,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Sets the select state
 	 *
-	 * @param  $selected
+	 * @param boolean $selected
 	 * @return void
 	 */
 	public function setSelected($selected) {
@@ -111,7 +110,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Gets the select state
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function getSelected() {
 		return $this->selected;
@@ -120,7 +119,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Gets the hasChildren property
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function hasChildren() {
 		return $this->hasChildren;
@@ -129,7 +128,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	/**
 	 * Sets the hasChildren property
 	 *
-	 * @param  $value
+	 * @param boolean $value
 	 * @return void
 	 */
 	public function setHasChildren($value) {
@@ -145,7 +144,7 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	 * 0 if its equal
 	 *
 	 * @param t3lib_tree_Node $other
-	 * @return int see description above
+	 * @return integer see description above
 	 */
 	public function compareTo($other) {
 		if ($this->equals($other)) {
@@ -173,7 +172,6 @@ class t3lib_tree_Tca_DatabaseNode extends t3lib_tree_RepresentationNode {
 	public function setSortValue($sortValue) {
 		$this->sortValue = $sortValue;
 	}
-
 }
 
 ?>

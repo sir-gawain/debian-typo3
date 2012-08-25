@@ -54,7 +54,7 @@ class user_DoubleMetaPhone
 //  methods
 
 		// TYPO3 specific API to this class. BEGIN
-	function metaphone($string,$sys_language_uid=0)	{
+	function metaphone($string, $sys_language_uid = 0) {
 		$res = $this->DoubleMetaPhone($string);
 		#debug(array($string,$res['primary']));
 		return $res['primary'];
@@ -392,7 +392,7 @@ class user_DoubleMetaPhone
                            array("B","H","D")))
                 // e.g. 'bough'
                 || (($this->current > 2)
-                    &&  $this->StringAt($this->original, $this->current - 3, 1,
+                    && $this->StringAt($this->original, $this->current - 3, 1,
                                array("B","H","D")))
                 // e.g. 'broughton'
                 || (($this->current > 3)
@@ -979,7 +979,7 @@ class user_DoubleMetaPhone
 
     } // end while
 
-    $this->primary   = substr($this->primary,   0, 4);
+    $this->primary   = substr($this->primary, 0, 4);
     $this->secondary = substr($this->secondary, 0, 4);
 
     $result["primary"] = $this->primary ;

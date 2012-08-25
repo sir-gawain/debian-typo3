@@ -129,10 +129,10 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 		}
 			// Get the html text
 		var text = this.editor.getInnerHTML();
-		
+
 		if (newSnapshot) {
 				// If previous slot contains the same text, a new one should not be used
-			if (this.undoPosition == 0  || this.undoQueue[this.undoPosition - 1].text != text) {
+			if (this.undoPosition == 0 || this.undoQueue[this.undoPosition - 1].text != text) {
 				this.undoQueue[this.undoPosition] = this.buildSnapshot();
 				this.undoQueue[this.undoPosition].time = currentTime;
 				this.undoQueue.length = this.undoPosition + 1;
@@ -162,7 +162,7 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 		var bookmark = null, bookmarkedText = null;
 			// Insert a bookmark
 		if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
-			if ((!Ext.isIE && !(Ext.isOpera && navigator.userAgent.toLowerCase().indexOf('presto/2.1') != -1)) || (Ext.isIE && this.editor.getSelection().getType() !== 'Control')) {
+			if ((!HTMLArea.isIEBeforeIE9 && !(Ext.isOpera && navigator.userAgent.toLowerCase().indexOf('presto/2.1') != -1)) || (HTMLArea.isIEBeforeIE9 && this.editor.getSelection().getType() !== 'Control')) {
 					// Catch error in FF when the selection contains no usable range
 				try {
 					bookmark = this.editor.getBookMark().get(this.editor.getSelection().createRange());

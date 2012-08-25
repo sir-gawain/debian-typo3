@@ -27,8 +27,11 @@
 ***************************************************************/
 
 /**
- * Enter description here...
+ * Connection class for SOAP
  *
+ * @author Karsten Dambekalns <karsten@typo3.org>
+ * @package TYPO3
+ * @subpackage em
  */
 class tx_em_Connection_Soap {
 	/**
@@ -192,11 +195,6 @@ class tx_em_Connection_Soap {
 				$this->password = FALSE;
 			}
 		}
-		/*return array(
-						'username' => $this->username,
-						'password' => $this->password,
-			 		'func' => $func
-					);*/
 
 		$result = $this->client->__soapCall($func, $param, NULL, $header);
 
