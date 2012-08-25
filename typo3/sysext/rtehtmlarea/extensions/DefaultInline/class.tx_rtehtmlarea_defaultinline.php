@@ -26,8 +26,6 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id$
- *
  */
 class tx_rtehtmlarea_defaultinline extends tx_rtehtmlarea_api {
 
@@ -80,18 +78,13 @@ class tx_rtehtmlarea_defaultinline extends tx_rtehtmlarea_api {
 			// Change the strong and em tags for gecko browsers
 		if ($this->htmlAreaRTE->client['browser'] == 'gecko') {
 				// change <strong> to <b>
-			$content = preg_replace('/<(\/?)strong/i', "<$1b", $content);
+			$content = preg_replace('/<(\/?)strong/i', '<$1b', $content);
 				// change <em> to <i>
-			$content = preg_replace('/<(\/?)em([^b>]*>)/i', "<$1i$2", $content);
+			$content = preg_replace('/<(\/?)em([^b>]*>)/i', '<$1i$2', $content);
 		}
 
 		return $content;
 	}
 
 } // end of class
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultInline/class.tx_rtehtmlarea_defaultinline.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultInline/class.tx_rtehtmlarea_defaultinline.php']);
-}
-
 ?>

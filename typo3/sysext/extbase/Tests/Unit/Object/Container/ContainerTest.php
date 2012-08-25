@@ -23,6 +23,7 @@
 ***************************************************************/
 
 require_once(t3lib_extMgm::extPath('extbase') . 'Tests/Unit/Object/Container/Fixtures/Testclasses.php');
+require_once(t3lib_extMgm::extPath('extbase') . 'Tests/Unit/Object/Container/Fixtures/NamespaceTestclasses.php');
 
 /**
  * Testcase for class t3lib_object_Container.
@@ -34,10 +35,24 @@ require_once(t3lib_extMgm::extPath('extbase') . 'Tests/Unit/Object/Container/Fix
  */
 class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
+	/**
+	 * @var Tx_Extbase_Object_Container_Container
+	 */
 	private $container;
 
+	/**
+	 * @var Tx_Extbase_Object_Container_ClassInfo
+	 */
+	private $cachedClassInfo;
+
 	public function setUp() {
-		$this->container = $this->getMock('Tx_Extbase_Object_Container_Container', array('log'));
+			//our mocked cache will allways indicate that he has nothing in the cache to force that we get the real classinfo
+		$mockedCache = $this->getMock('Tx_Extbase_Object_Container_ClassInfoCache', array('get'));
+		$mockedCache->expects($this->any())->method('get')->will($this->returnValue(FALSE));
+		$mockedCache->expects($this->never())->method('has');
+
+		$this->container = $this->getMock('Tx_Extbase_Object_Container_Container', array('log', 'getClassInfoCache'));
+		$this->container->expects($this->any())->method('getClassInfoCache')->will($this->returnValue($mockedCache));
 	}
 
 	/**
@@ -45,7 +60,15 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function getInstanceReturnsInstanceOfSimpleClass() {
 		$object = $this->container->getInstance('t3lib_object_tests_c');
-		$this->assertType('t3lib_object_tests_c', $object);
+		$this->assertInstanceOf('t3lib_object_tests_c', $object);
+	}
+
+	/**
+	 * @test
+	 */
+	public function getInstanceReturnsInstanceOfSimpleNamespacedClass() {
+		$object = $this->container->getInstance('Tx\Extbase\Object\Container\Fixtures\NamespacedClass');
+		$this->assertInstanceOf('Tx\Extbase\Object\Container\Fixtures\NamespacedClass', $object);
 	}
 
 	/**
@@ -53,8 +76,8 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function getInstanceReturnsInstanceOfAClassWithConstructorInjection() {
 		$object = $this->container->getInstance('t3lib_object_tests_b');
-		$this->assertType('t3lib_object_tests_b', $object);
-		$this->assertType('t3lib_object_tests_c', $object->c);
+		$this->assertInstanceOf('t3lib_object_tests_b', $object);
+		$this->assertInstanceOf('t3lib_object_tests_c', $object->c);
 	}
 
 	/**
@@ -62,8 +85,8 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function getInstanceReturnsInstanceOfAClassWithTwoLevelDependency() {
 		$object = $this->container->getInstance('t3lib_object_tests_a');
-		$this->assertType('t3lib_object_tests_a', $object);
-		$this->assertType('t3lib_object_tests_c', $object->b->c);
+		$this->assertInstanceOf('t3lib_object_tests_a', $object);
+		$this->assertInstanceOf('t3lib_object_tests_c', $object->b->c);
 	}
 
 	/**
@@ -71,7 +94,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function getInstanceReturnsInstanceOfAClassWithMixedSimpleTypeAndConstructorInjection() {
 		$object = $this->container->getInstance('t3lib_object_tests_amixed_array');
-		$this->assertType('t3lib_object_tests_amixed_array', $object);
+		$this->assertInstanceOf('t3lib_object_tests_amixed_array', $object);
 		$this->assertEquals(array('some' => 'default'), $object->myvalue);
 	}
 
@@ -80,7 +103,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function getInstanceReturnsInstanceOfAClassWithMixedSimpleTypeAndConstructorInjectionWithNullDefaultValue() {
 		$object = $this->container->getInstance('t3lib_object_tests_amixed_null');
-		$this->assertType('t3lib_object_tests_amixed_null', $object);
+		$this->assertInstanceOf('t3lib_object_tests_amixed_null', $object);
 		$this->assertNull($object->myvalue);
 	}
 
@@ -97,8 +120,8 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function getInstanceReturnsInstanceOfAClassWithConstructorInjectionAndDefaultConstructorParameters() {
 		$object = $this->container->getInstance('t3lib_object_tests_amixed_array');
-		$this->assertType('t3lib_object_tests_b', $object->b);
-		$this->assertType('t3lib_object_tests_c', $object->c);
+		$this->assertInstanceOf('t3lib_object_tests_b', $object->b);
+		$this->assertInstanceOf('t3lib_object_tests_c', $object->c);
 		$this->assertEquals(array('some' => 'default'), $object->myvalue);
 	}
 
@@ -109,7 +132,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$mockObject = $this->getMock('t3lib_object_tests_c');
 
 		$object = $this->container->getInstance('t3lib_object_tests_a', array($mockObject));
-		$this->assertType('t3lib_object_tests_a', $object);
+		$this->assertInstanceOf('t3lib_object_tests_a', $object);
 		$this->assertSame($mockObject, $object->c);
 	}
 
@@ -160,9 +183,49 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	/**
 	 * @test
 	 */
+	public function getInstanceUsesClassNameSha1AsCacheKey() {
+		$className = 'Tx\Extbase\Object\Container\Fixtures\NamespacedClass';
+		$classNameHash = sha1($className);
+
+		$mockedCache = $this->getMock('Tx_Extbase_Object_Container_ClassInfoCache', array('has', 'set', 'get'));
+		$container = $this->getMock('Tx_Extbase_Object_Container_Container', array('log', 'getClassInfoCache'));
+		$container->expects($this->any())->method('getClassInfoCache')->will($this->returnValue($mockedCache));
+
+		$mockedCache->expects($this->never())->method('has');
+		$mockedCache->expects($this->once())->method('get')->with($classNameHash)->will($this->returnValue(FALSE));
+		$mockedCache->expects($this->once())->method('set')->with($classNameHash, $this->anything())->will($this->returnCallback(array($this, 'setClassInfoCacheCallback')));
+
+		$container->getInstance($className);
+
+		$this->assertInstanceOf('Tx_Extbase_Object_Container_ClassInfo', $this->cachedClassInfo);
+		$this->assertEquals($className, $this->cachedClassInfo->getClassName());
+	}
+
+	/**
+	 * Callback for getInstanceUsesClassNameSha1AsCacheKey
+	 *
+	 * @param string $id
+	 * @param Tx_Extbase_Object_Container_ClassInfo $value
+	 * @return void
+	 */
+	public function setClassInfoCacheCallback($id, Tx_Extbase_Object_Container_ClassInfo $value) {
+		$this->cachedClassInfo = $value;
+	}
+
+	/**
+	 * @test
+	 */
+	public function getEmptyObjectReturnsInstanceOfSimpleClass() {
+		$object = $this->container->getEmptyObject('t3lib_object_tests_c');
+		$this->assertInstanceOf('t3lib_object_tests_c', $object);
+	}
+
+	/**
+	 * @test
+	 */
 	public function test_canGetChildClass() {
 		$object = $this->container->getInstance('t3lib_object_tests_b_child');
-		$this->assertType('t3lib_object_tests_b_child', $object);
+		$this->assertInstanceOf('t3lib_object_tests_b_child', $object);
 	}
 
 	/**
@@ -171,10 +234,10 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	public function test_canInjectInterfaceInClass() {
 		$this->container->registerImplementation('t3lib_object_tests_someinterface', 't3lib_object_tests_someimplementation');
 		$object = $this->container->getInstance('t3lib_object_tests_needsinterface');
-		$this->assertType('t3lib_object_tests_needsinterface', $object);
+		$this->assertInstanceOf('t3lib_object_tests_needsinterface', $object);
 
-		$this->assertType('t3lib_object_tests_someinterface', $object->dependency);
-		$this->assertType('t3lib_object_tests_someimplementation', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_tests_someinterface', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_tests_someimplementation', $object->dependency);
 	}
 
 	/**
@@ -182,8 +245,8 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 	 */
 	public function test_canBuildCyclicDependenciesOfSingletonsWithSetter() {
 		$object = $this->container->getInstance('t3lib_object_tests_resolveablecyclic1');
-		$this->assertType('t3lib_object_tests_resolveablecyclic1', $object);
-		$this->assertType('t3lib_object_tests_resolveablecyclic1', $object->o2->o3->o1);
+		$this->assertInstanceOf('t3lib_object_tests_resolveablecyclic1', $object);
+		$this->assertInstanceOf('t3lib_object_tests_resolveablecyclic1', $object->o2->o3->o1);
 	}
 
 	/**
@@ -193,7 +256,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->once())->method('log')->with('The singleton "t3lib_object_singletonNeedsPrototype" needs a prototype in "injectDependency". This is often a bad code smell; often you rather want to inject a singleton.', 1);
 
 		$object = $this->container->getInstance('t3lib_object_singletonNeedsPrototype');
-		$this->assertType('t3lib_object_prototype', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_prototype', $object->dependency);
 	}
 
 	/**
@@ -203,7 +266,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->never())->method('log');
 
 		$object = $this->container->getInstance('t3lib_object_singletonNeedsSingleton');
-		$this->assertType('t3lib_object_singleton', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_singleton', $object->dependency);
 	}
 
 	/**
@@ -213,7 +276,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->never())->method('log');
 
 		$object = $this->container->getInstance('t3lib_object_prototypeNeedsPrototype');
-		$this->assertType('t3lib_object_prototype', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_prototype', $object->dependency);
 	}
 
 	/**
@@ -223,7 +286,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->never())->method('log');
 
 		$object = $this->container->getInstance('t3lib_object_prototypeNeedsSingleton');
-		$this->assertType('t3lib_object_singleton', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_singleton', $object->dependency);
 	}
 
 	/**
@@ -233,7 +296,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->once())->method('log')->with('The singleton "t3lib_object_singletonNeedsPrototypeInConstructor" needs a prototype in the constructor. This is often a bad code smell; often you rather want to inject a singleton.', 1);
 
 		$object = $this->container->getInstance('t3lib_object_singletonNeedsPrototypeInConstructor');
-		$this->assertType('t3lib_object_prototype', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_prototype', $object->dependency);
 	}
 
 	/**
@@ -243,7 +306,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->never())->method('log');
 
 		$object = $this->container->getInstance('t3lib_object_singletonNeedsSingletonInConstructor');
-		$this->assertType('t3lib_object_singleton', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_singleton', $object->dependency);
 	}
 
 	/**
@@ -253,7 +316,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->never())->method('log');
 
 		$object = $this->container->getInstance('t3lib_object_prototypeNeedsPrototypeInConstructor');
-		$this->assertType('t3lib_object_prototype', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_prototype', $object->dependency);
 	}
 
 	/**
@@ -263,7 +326,7 @@ class Tx_Extbase_Tests_Unit_Object_Container_ContainerTest extends Tx_Extbase_Te
 		$this->container->expects($this->never())->method('log');
 
 		$object = $this->container->getInstance('t3lib_object_prototypeNeedsSingletonInConstructor');
-		$this->assertType('t3lib_object_singleton', $object->dependency);
+		$this->assertInstanceOf('t3lib_object_singleton', $object->dependency);
 	}
 }
 ?>

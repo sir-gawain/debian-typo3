@@ -23,68 +23,49 @@
 ***************************************************************/
 
 /**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- * $Id$
- */
-
-require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/backends/class.tx_rsaauth_backendfactory.php'));
-
-/**
  * This class contains a hook to the backend warnings collection. It checks
  * RSA configuration and create a warning if the configuration is wrong.
  *
- * @author	Dmitry Dulepov <dmitry@typo3.org>
- * @package	TYPO3
- * @subpackage	tx_rsaauth
+ * @author Dmitry Dulepov <dmitry@typo3.org>
+ * @package TYPO3
+ * @subpackage tx_rsaauth
  */
-
 class tx_rsaauth_backendwarnings {
 
 	/**
 	 * Checks RSA configuration and creates warnings if necessary.
 	 *
-	 * @param	array	$warnings	Warnings
-	 * @return	void
+	 * @param array $warnings Warnings
+	 * @return void
 	 * @see	t3lib_BEfunc::displayWarningMessages()
 	 */
 	public function displayWarningMessages_postProcess(array &$warnings) {
 		$backend = tx_rsaauth_backendfactory::getBackend();
 		if ($backend instanceof tx_rsaauth_cmdline_backend) {
 
-			// Not using the PHP extension!
+				// Not using the PHP extension!
 			$warnings['rsaauth_cmdline'] = $GLOBALS['LANG']->sL('LLL:EXT:rsaauth/hooks/locallang.xml:hook_using_cmdline');
 
-			// Check the path
+				// Check the path
 			$extconf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['rsaauth']);
 			$path = trim($extconf['temporaryDirectory']);
 			if ($path == '') {
-				// Path is empty
+					// Path is empty
 				$warnings['rsaauth'] = $GLOBALS['LANG']->sL('LLL:EXT:rsaauth/hooks/locallang.xml:hook_empty_directory');
-			}
-			elseif (!t3lib_div::isAbsPath($path)) {
-				// Path is not absolute
+			} elseif (!t3lib_div::isAbsPath($path)) {
+					// Path is not absolute
 				$warnings['rsaauth'] = $GLOBALS['LANG']->sL('LLL:EXT:rsaauth/hooks/locallang.xml:hook_directory_not_absolute');
-			}
-			elseif (!@is_dir($path)) {
-				// Path does not represent a directory
+			} elseif (!@is_dir($path)) {
+					// Path does not represent a directory
 				$warnings['rsaauth'] = $GLOBALS['LANG']->sL('LLL:EXT:rsaauth/hooks/locallang.xml:hook_directory_not_exist');
-			}
-			elseif (!@is_writable($path)) {
-				// Directory is not writable
+			} elseif (!@is_writable($path)) {
+					// Directory is not writable
 				$warnings['rsaauth'] = $GLOBALS['LANG']->sL('LLL:EXT:rsaauth/hooks/locallang.xml:hook_directory_not_writable');
-			}
-			elseif (substr($path, 0, strlen(PATH_site)) == PATH_site) {
-				// Directory is inside the site root
+			} elseif (substr($path, 0, strlen(PATH_site)) == PATH_site) {
+					// Directory is inside the site root
 				$warnings['rsaauth'] = $GLOBALS['LANG']->sL('LLL:EXT:rsaauth/hooks/locallang.xml:hook_directory_inside_siteroot');
 			}
 		}
 	}
-
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/hooks/class.tx_rsaauth_backendwarnings.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/hooks/class.tx_rsaauth_backendwarnings.php']);
-}
-
 ?>

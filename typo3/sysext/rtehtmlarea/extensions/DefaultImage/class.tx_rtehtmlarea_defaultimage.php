@@ -26,8 +26,6 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id$
- *
  */
 class tx_rtehtmlarea_defaultimage extends tx_rtehtmlarea_api {
 
@@ -70,9 +68,4 @@ class tx_rtehtmlarea_defaultimage extends tx_rtehtmlarea_api {
 	}
 
 } // end of class
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultImage/class.tx_rtehtmlarea_defaultimage.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/DefaultImage/class.tx_rtehtmlarea_defaultimage.php']);
-}
-
 ?>

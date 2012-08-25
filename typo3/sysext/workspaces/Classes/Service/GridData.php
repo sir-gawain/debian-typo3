@@ -26,31 +26,67 @@
  ***************************************************************/
 
 /**
+ * Grid data service
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_GridData {
+class Tx_Workspaces_Service_GridData {
+	const SIGNAL_GenerateDataArray_BeforeCaching = 'generateDataArray.beforeCaching';
+	const SIGNAL_GenerateDataArray_PostProcesss = 'generateDataArray.postProcess';
+	const SIGNAL_GetDataArray_PostProcesss = 'getDataArray.postProcess';
+	const SIGNAL_SortDataArray_PostProcesss = 'sortDataArray.postProcess';
+	const SIGNAL_CalcChangePercentage_PreProcess = 'calcChangePercentage.preProcess';
+	const SIGNAL_CalcChangePercentage_PostProcess = 'calcChangePercentage.postProcess';
+
+	/**
+	 * Id of the current active workspace.
+	 *
+	 * @var integer
+	 */
 	protected $currentWorkspace = NULL;
+
+	/**
+	 * Version record information (filtered, sorted and limited)
+	 *
+	 * @var array
+	 */
 	protected $dataArray = array();
+
+	/**
+	 * Name of the field used for sorting.
+	 *
+	 * @var string
+	 */
 	protected $sort = '';
+
+	/**
+	 * Direction used for sorting (ASC, DESC).
+	 *
+	 * @var string
+	 */
 	protected $sortDir = '';
+
+	/**
+	 * @var t3lib_cache_frontend_Frontend
+	 */
 	protected $workspacesCache = NULL;
 
 	/**
 	 * Generates grid list array from given versions.
 	 *
-	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
-	 * @param object $parameter
-	 * @return array
+	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid and t3ver_oid fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
+	 * @param object $parameter Parameters as submitted by JavaScript component
+	 * @param integer $currentWorkspace The current workspace
+	 * @return array Version record information (filtered, sorted and limited)
 	 * @throws InvalidArgumentException
 	 */
 	public function generateGridListFromVersions($versions, $parameter, $currentWorkspace) {
-
 			// Read the given parameters from grid. If the parameter is not set use default values.
 		$filterTxt = isset($parameter->filterTxt) ? $parameter->filterTxt : '';
 		$start = isset($parameter->start) ? intval($parameter->start) : 0;
-		$limit = isset($parameter->limit) ? intval($parameter->limit) : 10;
+		$limit = isset($parameter->limit) ? intval($parameter->limit) : 30;
 		$this->sort = isset($parameter->sort) ? $parameter->sort : 't3ver_oid';
 		$this->sortDir = isset($parameter->dir) ? $parameter->dir : 'ASC';
 
@@ -74,27 +110,21 @@ class tx_Workspaces_Service_GridData {
 	/**
 	 * Generates grid list array from given versions.
 	 *
-	 * @param array $versions
-	 * @param string $filterTxt
+	 * @param array $versions All available version records
+	 * @param string $filterTxt Text to be used to filter record result
 	 * @return void
 	 */
 	protected function generateDataArray(array $versions, $filterTxt) {
-		/** @var $stagesObj Tx_Workspaces_Service_Stages */
-		$stagesObj = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
-
-		/** @var $workspacesObj Tx_Workspaces_Service_Workspaces */
-		$workspacesObj = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
-		$availableWorkspaces = $workspacesObj->getAvailableWorkspaces();
-
 		$workspaceAccess = $GLOBALS['BE_USER']->checkWorkspace($GLOBALS['BE_USER']->workspace);
 		$swapStage = ($workspaceAccess['publish_access'] & 1) ? Tx_Workspaces_Service_Stages::STAGE_PUBLISH_ID : 0;
-		$swapAccess =  $GLOBALS['BE_USER']->workspacePublishAccess($GLOBALS['BE_USER']->workspace) &&
-					   $GLOBALS['BE_USER']->workspaceSwapAccess();
+		$swapAccess = ($GLOBALS['BE_USER']->workspacePublishAccess($GLOBALS['BE_USER']->workspace)
+			&& $GLOBALS['BE_USER']->workspaceSwapAccess());
 
 		$this->initializeWorkspacesCachingFramework();
 
 		// check for dataArray in cache
-		if ($this->getDataArrayFromCache($versions, $filterTxt) == FALSE) {
+		if ($this->getDataArrayFromCache($versions, $filterTxt) === FALSE) {
+			/** @var $stagesObj Tx_Workspaces_Service_Stages */
 			$stagesObj = t3lib_div::makeInstance('Tx_Workspaces_Service_Stages');
 
 			foreach ($versions as $table => $records) {
@@ -111,8 +141,9 @@ class tx_Workspaces_Service_GridData {
 					} else {
 						$recordState = $this->workspaceState($versionRecord['t3ver_state']);
 					}
+
 					$isDeletedPage = ($table == 'pages' && $recordState == 'deleted');
-					$viewUrl =  tx_Workspaces_Service_Workspaces::viewSingleRecord($table, $record['t3ver_oid'], $origRecord);
+					$viewUrl =  Tx_Workspaces_Service_Workspaces::viewSingleRecord($table, $record['t3ver_oid'], $origRecord);
 
 					$pctChange = $this->calculateChangePercentage($table, $origRecord, $versionRecord);
 					$versionArray['id'] = $table . ':' . $record['uid'];
@@ -121,10 +152,14 @@ class tx_Workspaces_Service_GridData {
 					$versionArray['label_Workspace'] = htmlspecialchars(t3lib_befunc::getRecordTitle($table, $versionRecord));
 					$versionArray['label_Live'] = htmlspecialchars(t3lib_befunc::getRecordTitle($table, $origRecord));
 					$versionArray['label_Stage'] = htmlspecialchars($stagesObj->getStageTitle($versionRecord['t3ver_stage']));
+					$tempStage = $stagesObj->getNextStage($versionRecord['t3ver_stage']);
+					$versionArray['label_nextStage'] = htmlspecialchars($stagesObj->getStageTitle($tempStage['uid']));
+					$tempStage = $stagesObj->getPrevStage($versionRecord['t3ver_stage']);
+					$versionArray['label_prevStage'] = htmlspecialchars($stagesObj->getStageTitle($tempStage['uid']));
 					$versionArray['change'] = $pctChange;
 					$versionArray['path_Live'] = htmlspecialchars(t3lib_BEfunc::getRecordPath($record['livepid'], '', 999));
 					$versionArray['path_Workspace'] = htmlspecialchars(t3lib_BEfunc::getRecordPath($record['wspid'], '', 999));
-					$versionArray['workspace_Title'] = htmlspecialchars(tx_Workspaces_Service_Workspaces::getWorkspaceTitle($versionRecord['t3ver_wsid']));
+					$versionArray['workspace_Title'] = htmlspecialchars(Tx_Workspaces_Service_Workspaces::getWorkspaceTitle($versionRecord['t3ver_wsid']));
 
 					$versionArray['workspace_Tstamp'] = $versionRecord['tstamp'];
 					$versionArray['workspace_Formated_Tstamp'] = t3lib_BEfunc::datetime($versionRecord['tstamp']);
@@ -144,6 +179,7 @@ class tx_Workspaces_Service_GridData {
 					} else {
 						$versionArray['allowedAction_swap'] = FALSE;
 					}
+
 					$versionArray['allowedAction_delete'] = $isRecordTypeAllowedToModify;
 						// preview and editing of a deleted page won't work ;)
 					$versionArray['allowedAction_view'] = !$isDeletedPage && $viewUrl;
@@ -158,8 +194,22 @@ class tx_Workspaces_Service_GridData {
 				}
 			}
 
+				// Suggested slot method:
+				// methodName(Tx_Workspaces_Service_GridData $gridData, array &$dataArray, array $versions)
+			$this->emitSignal(
+				self::SIGNAL_GenerateDataArray_BeforeCaching,
+				$this->dataArray, $versions
+			);
+
 			$this->setDataArrayIntoCache($versions, $filterTxt);
 		}
+
+			// Suggested slot method:
+			// methodName(Tx_Workspaces_Service_GridData $gridData, array &$dataArray, array $versions)
+		$this->emitSignal(
+			self::SIGNAL_GenerateDataArray_PostProcesss,
+			$this->dataArray, $versions
+		);
 
 		$this->sortDataArray();
 	}
@@ -179,78 +229,66 @@ class tx_Workspaces_Service_GridData {
 			$dataArrayPart[] = $this->dataArray[$i];
 		}
 
+			// Suggested slot method:
+			// methodName(Tx_Workspaces_Service_GridData $gridData, array &$dataArray, $start, $limit)
+		$this->emitSignal(
+			self::SIGNAL_GetDataArray_PostProcesss,
+			$this->dataArray, $start, $limit
+		);
+
 		return $dataArrayPart;
 	}
 
-
 	/**
-	 * Initialize the workspace cache
+	 * Initializes the workspace cache
 	 *
 	 * @return void
 	 */
 	protected function initializeWorkspacesCachingFramework() {
-		if (TYPO3_UseCachingFramework === TRUE) {
-			try {
-				$GLOBALS['typo3CacheFactory']->create(
-					'workspaces_cache',
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['frontend'],
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['backend'],
-					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['options']);
-			} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
-				// do nothing, a workspace cache already exists
-			}
-
-			$this->workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
-		}
+		$this->workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
 	}
-
 
 	/**
-	 * Put the generated dataArray into the workspace cache.
+	 * Puts the generated dataArray into the workspace cache.
 	 *
-	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
+	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid and t3ver_oid fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
 	 * @param string $filterTxt The given filter text from the grid.
 	 */
-	protected function setDataArrayIntoCache (array $versions, $filterTxt) {
-		if (TYPO3_UseCachingFramework === TRUE) {
-			$hash = $this->calculateHash($versions, $filterTxt);
-			$content = serialize($this->dataArray);
-
-			$this->workspacesCache->set($hash, $content, array($this->currentWorkspace));
-		}
+	protected function setDataArrayIntoCache(array $versions, $filterTxt) {
+		$hash = $this->calculateHash($versions, $filterTxt);
+		$this->workspacesCache->set($hash, $this->dataArray, array($this->currentWorkspace));
 	}
-
 
 	/**
 	 * Checks if a cache entry is given for given versions and filter text and tries to load the data array from cache.
 	 *
-	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
+	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid and t3ver_oid fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
 	 * @param string $filterTxt The given filter text from the grid.
+	 * @return boolean TRUE if cache entry was successfully fetched from cache and content put to $this->dataArray
 	 */
-	protected function getDataArrayFromCache (array $versions, $filterTxt) {
+	protected function getDataArrayFromCache(array $versions, $filterTxt) {
 		$cacheEntry = FALSE;
 
-		if (TYPO3_UseCachingFramework === TRUE) {
-			$hash = $this->calculateHash($versions, $filterTxt);
+		$hash = $this->calculateHash($versions, $filterTxt);
 
-			$content = $this->workspacesCache->get($hash);
+		$content = $this->workspacesCache->get($hash);
 
-			if ($content != FALSE) {
-				$this->dataArray = unserialize($content);
-				$cacheEntry = TRUE;
-			}
+		if ($content !== FALSE) {
+			$this->dataArray = $content;
+			$cacheEntry = TRUE;
 		}
 
 		return $cacheEntry;
 	}
 
 	/**
-	 * Calculate the hash value of the used workspace, the user id, the versions array, the filter text, the sorting attribute, the workspace selected in grid and the sorting direction.
+	 * Calculates the hash value of the used workspace, the user id, the versions array, the filter text, the sorting attribute, the workspace selected in grid and the sorting direction.
 	 *
-	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid, t3ver_oid and t3ver_swapmode fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
+	 * @param array $versions All records uids etc. First key is table name, second key incremental integer. Records are associative arrays with uid and t3ver_oid fields. The pid of the online record is found as "livepid" the pid of the offline record is found in "wspid"
 	 * @param string $filterTxt The given filter text from the grid.
+	 * @return string
 	 */
-	protected function calculateHash (array $versions, $filterTxt) {
+	protected function calculateHash(array $versions, $filterTxt) {
 		$hashArray = array(
 			$GLOBALS['BE_USER']->workspace,
 			$GLOBALS['BE_USER']->user['uid'],
@@ -263,7 +301,6 @@ class tx_Workspaces_Service_GridData {
 
 		return $hash;
 	}
-
 
 	/**
 	 * Performs sorting on the data array accordant to the
@@ -292,19 +329,26 @@ class tx_Workspaces_Service_GridData {
 					break;
 			}
 		} else {
-			t3lib_div::sysLog('Try to sort "' . $this->sort . '" in "tx_Workspaces_Service_GridData::sortDataArray" but $this->dataArray is empty! This might be the Bug #26422 which could not reproduced yet.', 3);
+			t3lib_div::sysLog('Try to sort "' . $this->sort . '" in "Tx_Workspaces_Service_GridData::sortDataArray" but $this->dataArray is empty! This might be the Bug #26422 which could not reproduced yet.', 3);
 		}
+
+			// Suggested slot method:
+			// methodName(Tx_Workspaces_Service_GridData $gridData, array &$dataArray, $sortColumn, $sortDirection)
+		$this->emitSignal(
+			self::SIGNAL_SortDataArray_PostProcesss,
+			$this->dataArray, $this->sort, $this->sortDir
+		);
 	}
 
 	/**
 	 * Implements individual sorting for columns based on integer comparison.
 	 *
-	 * @param array $a
-	 * @param array $b
+	 * @param array $a First value
+	 * @param array $b Second value
 	 * @return integer
 	 */
 	protected function intSort(array $a, array $b) {
-			// Als erstes nach dem Pfad sortieren
+			// First sort by using the page-path in current workspace
 		$path_cmp = strcasecmp($a['path_Workspace'], $b['path_Workspace']);
 
 		if ($path_cmp < 0) {
@@ -327,9 +371,9 @@ class tx_Workspaces_Service_GridData {
 	/**
 	 * Implements individual sorting for columns based on string comparison.
 	 *
-	 * @param  $a
-	 * @param  $b
-	 * @return int
+	 * @param string $a First value
+	 * @param string $b Second value
+	 * @return integer
 	 */
 	protected function stringSort($a, $b) {
 		$path_cmp = strcasecmp($a['path_Workspace'], $b['path_Workspace']);
@@ -396,14 +440,21 @@ class tx_Workspaces_Service_GridData {
 	 * @return integer
 	 */
 	public function calculateChangePercentage($table, array $diffRecordOne, array $diffRecordTwo) {
-		global $TCA;
 
 			// Initialize:
+		$processed = FALSE;
 		$changePercentage = 0;
 		$changePercentageArray = array();
 
+			// Suggested slot method:
+			// methodName(Tx_Workspaces_Service_GridData $gridData, &$changePercentage, array $firstRecord, array $secondRecord, &$processed)
+		$this->emitSignal(
+			self::SIGNAL_CalcChangePercentage_PreProcess,
+			$changePercentage, $diffRecordOne, $diffRecordTwo, $processed
+		);
+
 			// Check that records are arrays:
-		if (is_array($diffRecordOne) && is_array($diffRecordTwo)) {
+		if ($processed === FALSE && is_array($diffRecordOne) && is_array($diffRecordTwo)) {
 
 				// Load full table description
 			t3lib_div::loadTCA($table);
@@ -412,15 +463,15 @@ class tx_Workspaces_Service_GridData {
 
 				// Traversing the first record and process all fields which are editable:
 			foreach ($diffRecordOne as $fieldName => $fieldValue) {
-				if ($TCA[$table]['columns'][$fieldName] && $TCA[$table]['columns'][$fieldName]['config']['type'] != 'passthrough' && !t3lib_div::inList('t3ver_label', $fieldName)) {
+				if ($GLOBALS['TCA'][$table]['columns'][$fieldName] && $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['type'] != 'passthrough' && !t3lib_div::inList('t3ver_label', $fieldName)) {
 
 					if (strcmp(trim($diffRecordOne[$fieldName]), trim($diffRecordTwo[$fieldName]))
-							&& $TCA[$table]['columns'][$fieldName]['config']['type'] == 'group'
-							&& $TCA[$table]['columns'][$fieldName]['config']['internal_type'] == 'file'
+							&& $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['type'] == 'group'
+							&& $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['internal_type'] == 'file'
 					) {
 
 							// Initialize:
-						$uploadFolder = $TCA[$table]['columns'][$fieldName]['config']['uploadfolder'];
+						$uploadFolder = $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['uploadfolder'];
 						$files1 = array_flip(t3lib_div::trimExplode(',', $diffRecordOne[$fieldName], 1));
 						$files2 = array_flip(t3lib_div::trimExplode(',', $diffRecordTwo[$fieldName], 1));
 
@@ -458,19 +509,26 @@ class tx_Workspaces_Service_GridData {
 				count($changePercentageArray) > 0 ? $changePercentage = round($sumPctChange / count($changePercentageArray)) : $changePercentage = 0;
 			}
 
+				// Suggested slot method:
+				// methodName(Tx_Workspaces_Service_GridData $gridData, &$changePercentage, array $firstRecord, array $secondRecord, array $changePercentageArray)
+			$this->emitSignal(
+				self::SIGNAL_CalcChangePercentage_PostProcess,
+				$changePercentage, $diffRecordOne, $diffRecordTwo, $changePercentageArray
+			);
 		}
+
 		return $changePercentage;
 	}
 
 	/**
 	 * Gets the state of a given state value.
 	 *
-	 * @param	integer	stateId of offline record
-	 * @param	boolean	hidden flag of online record
-	 * @param	boolean	hidden flag of offline record
-	 * @return	string
+	 * @param integer $stateId stateId of offline record
+	 * @param boolean $hiddenOnline hidden status of online record
+	 * @param boolean $hiddenOffline hidden status of offline record
+	 * @return string
 	 */
-	 protected function workspaceState($stateId, $hiddenOnline = FALSE, $hiddenOffline = FALSE) {
+	protected function workspaceState($stateId, $hiddenOnline = FALSE, $hiddenOffline = FALSE) {
 		switch ($stateId) {
 			case -1:
 				$state = 'new';
@@ -494,10 +552,39 @@ class tx_Workspaces_Service_GridData {
 
 		return $state;
 	}
-}
 
+	/**
+	 * Emits a signal to be handled by any registered slots.
+	 *
+	 * @param string $signalName Name of the signal
+	 * @return void
+	 */
+	protected function emitSignal($signalName) {
+			// Arguments are always ($this, [method argument], [method argument], ...)
+		$signalArguments = array_merge(
+			array($this),
+			array_slice(func_get_args(), 1)
+		);
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/GridData.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/GridData.php']);
+		$this->getSignalSlotDispatcher()->dispatch(
+			'Tx_Workspaces_Service_GridData',
+			$signalName,
+			$signalArguments
+		);
+	}
+
+	/**
+	 * @return Tx_Extbase_SignalSlot_Dispatcher
+	 */
+	protected function getSignalSlotDispatcher() {
+		return $this->getObjectManager()->get('Tx_Extbase_SignalSlot_Dispatcher');
+	}
+
+	/**
+	 * @return Tx_Extbase_Object_ObjectManager
+	 */
+	protected function getObjectManager() {
+		return t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+	}
 }
 ?>

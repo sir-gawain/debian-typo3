@@ -27,22 +27,7 @@
 /**
  * Index search crawler hook example
  *
- * $Id$
- *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   57: class tx_indexedsearch_crawlerhook
- *   64:     function initMessage()
- *   80:     function indexOperation($cfgRec,&$session_data,$params,&$pObj)
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -61,7 +46,7 @@ class tx_indexedsearch_crawlerhook {
 	 *
 	 * @return	string		Return a text string for the first, initiating queue entry for the crawler.
 	 */
-	function initMessage()	{
+	function initMessage() {
 		return 'Start of Custom Example Indexing session!';
 	}
 
@@ -77,10 +62,10 @@ class tx_indexedsearch_crawlerhook {
 	 * @param	object		Parent Object (from "indexed_search" extension)
 	 * @return	void
 	 */
-	function indexOperation($cfgRec,&$session_data,$params,&$pObj)	{
+	function indexOperation($cfgRec, &$session_data, $params, &$pObj) {
 
 			// Init session data array if not already:
-		if (!is_array($session_data))	{
+		if (!is_array($session_data)) {
 			$session_data = array(
 				'step' => 0
 			);
@@ -89,9 +74,8 @@ class tx_indexedsearch_crawlerhook {
 			// Increase step counter (this is just an example of how the session data can be used - to track how many instances of indexing is left)
 		$session_data['step']++;
 
-
-		switch((int)$session_data['step'])	{
-			 case 1:	// Indexing Example: Content accessed with GET parameters added to URL:
+		switch((int)$session_data['step']) {
+			case 1:	// Indexing Example: Content accessed with GET parameters added to URL:
 
 					// Load indexer if not yet [DON'T CHANGE]:
 				$pObj->loadIndexerClass();
@@ -117,7 +101,7 @@ class tx_indexedsearch_crawlerhook {
 				);
 
 					// For each item, index it (this is what you might like to do in batches of like 100 items if all your content spans thousands of items!)
-				foreach($exampleItems as $item)	{
+				foreach($exampleItems as $item) {
 
 						// Prepare the GET variables array that must be added to the page URL in order to view result:
 					parse_str('&itemID='.rawurlencode($item['ID']), $GETparams);
@@ -134,14 +118,17 @@ class tx_indexedsearch_crawlerhook {
 						'',
 						'',
 						$item['content'],
-						$GLOBALS['LANG']->charSet,	// Charset of content - MUST be set.
-						$item['tstamp'],			// Last-modified date
-						$item['create_date'],		// Created date
+							// Charset of content - MUST be set.
+						$GLOBALS['LANG']->charSet,
+							// Last-modified date
+						$item['tstamp'],
+							// Created date
+						$item['create_date'],
 						$item['ID']
 					);
 				}
-			 break;
-			 case 2: // Indexing Example: Content accessed directly in file system:
+			break;
+			case 2: // Indexing Example: Content accessed directly in file system:
 
 					// Load indexer if not yet [DON'T CHANGE]:
 				$pObj->loadIndexerClass();
@@ -160,8 +147,8 @@ class tx_indexedsearch_crawlerhook {
 
 					// Index document:
 				$indexerObj->indexRegularDocument('fileadmin/templates/index.html', TRUE);
-			 break;
-			 case 3: // Indexing Example: Content accessed on External URLs:
+			break;
+			case 3: // Indexing Example: Content accessed on External URLs:
 
 					// Load indexer if not yet.
 				$pObj->loadIndexerClass();
@@ -174,20 +161,14 @@ class tx_indexedsearch_crawlerhook {
 
 					// Index external URL (HTML only):
 				$indexerObj->indexExternalUrl('http://www.google.com/');
-			 break;
+			break;
 		}
 
 			// Finally, set entry for next indexing instance (if all steps are not completed)
-		if ($session_data['step']<=3)	{
+		if ($session_data['step']<=3) {
 			$title = 'Step #'.$session_data['step'].' of 3';	// Just information field. Never mind that the field is called "url" - this is what will be shown in the "crawler" log. Could be a URL - or whatever else tells what that indexing instance will do.
 			$pObj->addQueueEntryForHook($cfgRec, $title);
 		}
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.crawlerhook.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.crawlerhook.php']);
-}
-
 ?>

@@ -24,18 +24,16 @@
 /**
  * Backend user switchback
  *
- * $Id$
- *
  * @author	Sebastian Kurfürst <sebastian@garbage-group.de>
  */
 class tx_beuser_switchbackuser {
-	function switchBack($params, $that)	{
+	function switchBack($params, $that) {
 		if($that->session_table == 'be_sessions' && $that->user['uid'] && $that->user['ses_backuserid']) {
 			$updateData = array(
 				'ses_userid' => $that->user['ses_backuserid'],
 				'ses_backuserid' => 0
 				);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('be_sessions', 'ses_id='.$GLOBALS['TYPO3_DB']->fullQuoteStr($GLOBALS['BE_USER']->id, 'be_sessions').' AND ses_name=\'be_typo_user\' AND ses_userid='.intval($GLOBALS['BE_USER']->user['uid']),$updateData);
+			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('be_sessions', 'ses_id=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($GLOBALS['BE_USER']->id, 'be_sessions') . ' AND ses_name=' . $GLOBALS['TYPO3_DB']->fullQuoteStr(t3lib_beUserAuth::getCookieName(), 'be_sessions') . ' AND ses_userid=' . intval($GLOBALS['BE_USER']->user['uid']), $updateData);
 
 			$redirectUrl = $GLOBALS['BACK_PATH'] . 'index.php' . ($GLOBALS['TYPO3_CONF_VARS']['BE']['interfaces'] ? '' : '?commandLI=1');
 			t3lib_utility_Http::redirect($redirectUrl);

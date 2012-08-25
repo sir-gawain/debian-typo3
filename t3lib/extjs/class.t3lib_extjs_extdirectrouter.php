@@ -29,15 +29,16 @@
 /**
  * Ext Direct Router
  *
- * @author	Sebastian Kurfürst <sebastian@typo3.org>
- * @author	Stefan Galinski <stefan.galinski@gmail.com>
- * @package	TYPO3
+ * @author Sebastian Kurfürst <sebastian@typo3.org>
+ * @author Stefan Galinski <stefan.galinski@gmail.com>
+ * @package TYPO3
+ * @subpackage t3lib
  */
 class t3lib_extjs_ExtDirectRouter {
 	/**
 	 * Dispatches the incoming calls to methods about the ExtDirect API.
 	 *
-	 * @param aray $ajaxParams ajax parameters
+	 * @param aray $ajaxParams Ajax parameters
 	 * @param TYPO3AJAX $ajaxObj typo3ajax instance
 	 * @return void
 	 */
@@ -138,15 +139,19 @@ class t3lib_extjs_ExtDirectRouter {
 	 *
 	 * @param object $singleRequest request object from extJS
 	 * @param string $namespace namespace like TYPO3.Backend
-	 * @throws UnexpectedValueException if the remote method couldn't be found
 	 * @return mixed return value of the called method
+	 * @throws UnexpectedValueException if the remote method couldn't be found
 	 */
 	protected function processRpc($singleRequest, $namespace) {
 		$endpointName = $namespace . '.' . $singleRequest->action;
 
+		if (!isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName])) {
+			throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName, 1294586450);
+		}
+
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName])) {
 			if (!isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName]['callbackClass'])) {
-				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName);
+				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName, 1294586450);
 			}
 
 			$callbackClass = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName]['callbackClass'];
@@ -161,18 +166,6 @@ class t3lib_extjs_ExtDirectRouter {
 					TRUE
 				);
 			}
-
-		} else {
-			if (!isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName])) {
-				throw new UnexpectedValueException('ExtDirect: Call to undefined endpoint: ' . $endpointName);
-			}
-
-			$callbackClass = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ExtDirect'][$endpointName];
-			t3lib_div::deprecationLog('ExtDirect (Namespace: ' . $endpointName .
-				'): Registration code changed. Use the API method t3lib_extMgm::registerExtDirectComponent(). ' .
-				'More Information: http://wiki.typo3.org/ExtDirect — ' .
-				'Will be removed in 4.7.'
-			);
 		}
 
 		$endpointObject = t3lib_div::getUserObj($callbackClass, FALSE);
@@ -182,10 +175,6 @@ class t3lib_extjs_ExtDirectRouter {
 			is_array($singleRequest->data) ? $singleRequest->data : array()
 		);
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/extjs/class.t3lib_extjs_extdirectrouter.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/extjs/class.t3lib_extjs_extdirectrouter.php']);
 }
 
 ?>

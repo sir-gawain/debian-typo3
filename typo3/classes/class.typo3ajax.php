@@ -26,17 +26,17 @@
 ***************************************************************/
 
 /**
- * class to hold all the information about an AJAX call and send
+ * Class to hold all the information about an AJAX call and send
  * the right headers for the request type
  *
- * @author	Benjamin Mack <mack@xnos.org>
- * @package	TYPO3
- * @subpackage	core
+ * @author Benjamin Mack <mack@xnos.org>
+ * @package TYPO3
+ * @subpackage core
  */
 class TYPO3AJAX {
-	protected $ajaxId        = null;
-	protected $errorMessage  = null;
-	protected $isError       = false;
+	protected $ajaxId        = NULL;
+	protected $errorMessage  = NULL;
+	protected $isError       = FALSE;
 	protected $content       = array();
 	protected $contentFormat = 'plain';
 	protected $charset       = 'utf-8';
@@ -50,57 +50,50 @@ class TYPO3AJAX {
 	';
 
 	/**
-	 * sets the charset and the ID for the AJAX call
-	 * due some charset limitations in Javascript (prototype uses encodeURIcomponent, which converts
+	 * Sets the charset and the ID for the AJAX call
+	 * due to some charset limitations in Javascript (prototype uses encodeURIcomponent, which converts
 	 * all data to utf-8), we need to detect if the encoding of the request differs from the
-	 * backend encoding (e.g. forceCharset), and then convert all incoming data (_GET and _POST)
+	 * backend encoding, and then convert all incoming data (_GET and _POST)
 	 * in the expected backend encoding.
 	 *
-	 * @param	string		the AJAX id
-	 * @return	void
+	 * @param string $ajaxId The AJAX id
 	 */
 	public function __construct($ajaxId) {
 
-		if ($GLOBALS['LANG']->charSet != $this->charset) {
-			$this->charset = $GLOBALS['LANG']->charSet;
-		}
-
-			// get charset from current AJAX request (which is expected to be utf-8)
+			// Get charset from current AJAX request (which is expected to be utf-8)
 		preg_match('/;\s*charset\s*=\s*([a-zA-Z0-9_-]*)/i', $_SERVER['CONTENT_TYPE'], $contenttype);
 		$charset = $GLOBALS['LANG']->csConvObj->parse_charset($contenttype[1]);
 		if ($charset && $charset != $this->requestCharset) {
 			$this->requestCharset = $charset;
 		}
 
-				// if the AJAX request does not have the same encoding like the backend
-				// we need to convert the POST and GET parameters in the right charset
+			// If the AJAX request does not have the same encoding like the backend
+			// we need to convert the POST and GET parameters in the right charset
 		if ($this->charset != $this->requestCharset) {
 			$GLOBALS['LANG']->csConvObj->convArray($_POST, $this->requestCharset, $this->charset);
-			$GLOBALS['LANG']->csConvObj->convArray($_GET,  $this->requestCharset, $this->charset);
+			$GLOBALS['LANG']->csConvObj->convArray($_GET, $this->requestCharset, $this->charset);
 		}
 
 		$this->ajaxId = $ajaxId;
 	}
 
-
 	/**
-	 * returns the ID for the AJAX call
+	 * Returns the ID for the AJAX call
 	 *
-	 * @return	string		the AJAX id
+	 * @return string The AJAX id
 	 */
 	public function getAjaxID() {
 		return $this->ajaxId;
 	}
 
-
 	/**
-	 * overwrites the existing content with the first parameter
+	 * Overwrites the existing content with the first parameter
 	 *
-	 * @param	array		the new content
-	 * @return	mixed		the old content as array; if the new content was not an array, false is returned
+	 * @param array $content The new content
+	 * @return mixed The old content as array; if the new content was not an array, FALSE is returned
 	 */
 	public function setContent($content) {
-		$oldcontent = false;
+		$oldcontent = FALSE;
 		if (is_array($content)) {
 			$oldcontent = $this->content;
 			$this->content = $content;
@@ -108,16 +101,15 @@ class TYPO3AJAX {
 		return $oldcontent;
 	}
 
-
 	/**
-	 * adds new content
+	 * Adds new content
 	 *
-	 * @param	string		the new content key where the content should be added in the content array
-	 * @param	string		the new content to add
-	 * @return	mixed		the old content; if the old content didn't exist before, false is returned
+	 * @param string $key The new content key where the content should be added in the content array
+	 * @param string $content The new content to add
+	 * @return mixed The old content; if the old content didn't exist before, FALSE is returned
 	 */
 	public function addContent($key, $content) {
-		$oldcontent = false;
+		$oldcontent = FALSE;
 		if (array_key_exists($key, $this->content)) {
 			$oldcontent = $this->content[$key];
 		}
@@ -131,22 +123,20 @@ class TYPO3AJAX {
 		return $oldcontent;
 	}
 
-
 	/**
-	 * returns the content for the ajax call
+	 * Returns the content for the ajax call
 	 *
-	 * @return	mixed		the content for a specific key or the whole content
+	 * @return mixed The content for a specific key or the whole content
 	 */
 	public function getContent($key = '') {
 		return ($key && array_key_exists($key, $this->content) ? $this->content[$key] : $this->content);
 	}
 
-
 	/**
-	 * sets the content format for the ajax call
+	 * Sets the content format for the ajax call
 	 *
-	 * @param	string		can be one of 'plain' (default), 'xml', 'json', 'javascript', 'jsonbody' or 'jsonhead'
-	 * @return	void
+	 * @param string $format Can be one of 'plain' (default), 'xml', 'json', 'javascript', 'jsonbody' or 'jsonhead'
+	 * @return void
 	 */
 	public function setContentFormat($format) {
 		if (t3lib_div::inArray(array('plain', 'xml', 'json', 'jsonhead', 'jsonbody', 'javascript'), $format)) {
@@ -159,7 +149,7 @@ class TYPO3AJAX {
 	 * The wrap used by default stores the results in a variable "response" and
 	 * adds <script>-Tags around it.
 	 *
-	 * @param string $javascriptCallbackWrap the javascript callback wrap to be used
+	 * @param string $javascriptCallbackWrap The javascript callback wrap to be used
 	 * @return void
 	 */
 	public function setJavascriptCallbackWrap($javascriptCallbackWrap) {
@@ -167,31 +157,29 @@ class TYPO3AJAX {
 	}
 
 	/**
-	 * sets an error message and the error flag
+	 * Sets an error message and the error flag
 	 *
-	 * @param	string		the error message
-	 * @return	void
+	 * @param string $errorMsg The error message
+	 * @return void
 	 */
 	public function setError($errorMsg = '') {
 		$this->errorMessage = $errorMsg;
-		$this->isError = true;
+		$this->isError = TRUE;
 	}
 
-
 	/**
-	 * checks whether an error occured during the execution or not
+	 * Checks whether an error occured during the execution or not
 	 *
-	 * @return	boolean		whether this AJAX call had errors
+	 * @return boolean Whether this AJAX call had errors
 	 */
 	public function isError() {
 		return $this->isError;
 	}
 
-
 	/**
-	 * renders the AJAX call based on the $contentFormat variable and exits the request
+	 * Renders the AJAX call based on the $contentFormat variable and exits the request
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	public function render() {
 		if ($this->isError) {
@@ -216,49 +204,45 @@ class TYPO3AJAX {
 		exit;
 	}
 
-
 	/**
-	 * renders the AJAX call in XML error style to handle with JS
+	 * Renders the AJAX call in XML error style to handle with JS
 	 * the "responseXML" of the transport object will be filled with the error message then
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	protected function renderAsError() {
 		header(t3lib_utility_Http::HTTP_STATUS_500 . ' (AJAX)');
-		header('Content-type: text/xml; charset='.$this->charset);
+		header('Content-type: text/xml; charset=' . $this->charset);
 		header('X-JSON: false');
 		die('<t3err>'.htmlspecialchars($this->errorMessage).'</t3err>');
 	}
 
-
 	/**
-	 * renders the AJAX call with text/html headers
+	 * Renders the AJAX call with text/html headers
 	 * the content will be available in the "responseText" value of the transport object
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	protected function renderAsPlain() {
-		header('Content-type: text/html; charset='.$this->charset);
+		header('Content-type: text/html; charset=' . $this->charset);
 		header('X-JSON: true');
 		echo implode('', $this->content);
 	}
 
-
 	/**
-	 * renders the AJAX call with text/xml headers
+	 * Renders the AJAX call with text/xml headers
 	 * the content will be available in the "responseXML" value of the transport object
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	protected function renderAsXML() {
-		header('Content-type: text/xml; charset='.$this->charset);
+		header('Content-type: text/xml; charset=' . $this->charset);
 		header('X-JSON: true');
 		echo implode('', $this->content);
 	}
 
-
 	/**
-	 * renders the AJAX call with JSON evaluated headers
+	 * Renders the AJAX call with JSON evaluated headers
 	 * note that you need to have requestHeaders: {Accept: 'application/json'},
 	 * in your AJAX options of your AJAX request object in JS
 	 *
@@ -267,10 +251,10 @@ class TYPO3AJAX {
 	 *    - and in the xhr.responseText as a string (except when contentFormat = 'jsonhead')
 	 *         you can evaluate this in JS with xhr.responseText.evalJSON();
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	protected function renderAsJSON() {
-			// if the backend does not run in UTF-8 then we need to convert it to unicode as
+			// If the backend does not run in UTF-8 then we need to convert it to unicode as
 			// the json_encode method will return empty otherwise
 		if ($this->charset != $this->requestCharset) {
 			$GLOBALS['LANG']->csConvObj->convArray($this->content, $this->charset, $this->requestCharset);
@@ -278,10 +262,10 @@ class TYPO3AJAX {
 
 		$content = json_encode($this->content);
 
-		header('Content-type: application/json; charset='.$this->requestCharset);
-		header('X-JSON: '.($this->contentFormat != 'jsonbody' ? $content : true));
+		header('Content-type: application/json; charset=' . $this->requestCharset);
+		header('X-JSON: ' . ($this->contentFormat != 'jsonbody' ? $content : TRUE));
 
-			// bring content in xhr.responseText except when in "json head only" mode
+			// Bring content in xhr.responseText except when in "json head only" mode
 		if ($this->contentFormat != 'jsonhead') {
 			echo $content;
 		}
@@ -291,10 +275,10 @@ class TYPO3AJAX {
 	 * Renders the AJAX call as inline JSON inside a script tag. This is useful
 	 * when an iframe is used as the AJAX transport.
 	 *
-	 * @return	 void
+	 * @return void
 	 */
 	protected function renderAsJavascript() {
-			// if the backend does not run in UTF-8 then we need to convert it to unicode as
+			// If the backend does not run in UTF-8 then we need to convert it to unicode as
 			// the json_encode method will return empty otherwise
 		if ($this->charset != $this->requestCharset) {
 			$GLOBALS['LANG']->csConvObj->convArray($this->content, $this->charset, $this->requestCharset);
@@ -306,10 +290,4 @@ class TYPO3AJAX {
 		echo $content;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.typo3ajax.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.typo3ajax.php']);
-}
-
 ?>

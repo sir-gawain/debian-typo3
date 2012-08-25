@@ -51,7 +51,19 @@ TYPO3.Components.PageTree.PageTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
         var cb = Ext.isBoolean(a.checked),
             nel,
             href = this.getHref(a.href),
-            buf = ['<li class="x-tree-node"><div ext:tree-node-id="',n.id,'" class="x-tree-node-el x-tree-node-leaf x-unselectable ', a.cls,'" unselectable="on">',
+			nodeStyles = '',
+			rootline = '';
+
+			// TYPO3 modification to show the readable rootline above the user mounts
+		if (a.readableRootline !== '') {
+			rootline = '<li class="x-tree-node-readableRootline">' + a.readableRootline + '</li>';
+		}
+
+		if (a.nodeData.backgroundColor) {
+			nodeStyles = 'style="background-color: ' + a.nodeData.backgroundColor + '"';
+		}
+
+		var buf = [rootline,'<li class="x-tree-node" ' + nodeStyles + '><div ext:tree-node-id="',n.id,'" class="x-tree-node-el x-tree-node-leaf x-unselectable ', a.cls,'" unselectable="on">',
             '<span class="x-tree-node-indent">',this.indentMarkup,"</span>",
             '<img alt="" src="', this.emptyIcon, '" class="x-tree-ec-icon x-tree-elbow" />',
 //            '<img alt="" src="', a.icon || this.emptyIcon, '" class="x-tree-node-icon',(a.icon ? " x-tree-node-inline-icon" : ""),(a.iconCls ? " "+a.iconCls : ""),'" unselectable="on" />',
@@ -67,12 +79,6 @@ TYPO3.Components.PageTree.PageTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
         }else{
             this.wrap = Ext.DomHelper.insertHtml("beforeEnd", targetNode, buf);
         }
-
-			// TYPO3 modification to show the readable rootline above the user mounts
-		if (a.readableRootline !== '') {
-			var rootline = '<div class="x-tree-node-readableRootline">' + a.readableRootline + '</div>';
-			Ext.DomHelper.insertHtml("beforeBegin", this.wrap, rootline);
-		}
 
         this.elNode = this.wrap.childNodes[0];
         this.ctNode = this.wrap.childNodes[1];
@@ -110,24 +116,24 @@ TYPO3.Components.PageTree.PageTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 	 * @param {String} title
 	 * @return {void}
 	 */
-    onTipChange : function(node, tip, title) {
+	onTipChange : function(node, tip, title) {
 		TYPO3.Components.PageTree.PageTreeNodeUI.superclass.onTipChange.apply(this, arguments);
 
-        if(this.rendered){
-            var hasTitle = Ext.isDefined(title);
-            if(this.iconNode.setAttributeNS){
-                this.iconNode.setAttributeNS("ext", "qtip", tip);
-                if(hasTitle){
-                    this.iconNode.setAttributeNS("ext", "qtitle", title);
-                }
-            }else{
-                this.iconNode.setAttribute("ext:qtip", tip);
-                if(hasTitle){
-                    this.iconNode.setAttribute("ext:qtitle", title);
-                }
-            }
-        }
-    },
+	if(this.rendered){
+		var hasTitle = Ext.isDefined(title);
+		if(this.iconNode.setAttributeNS){
+			this.iconNode.setAttributeNS("ext", "qtip", tip);
+		if(hasTitle){
+			this.iconNode.setAttributeNS("ext", "qtitle", title);
+		}
+		}else{
+			this.iconNode.setAttribute("ext:qtip", tip);
+		if(hasTitle){
+			this.iconNode.setAttribute("ext:qtitle", title);
+		}
+	}
+	}
+	},
 
 	/**
 	 * Returns the drag and drop handles
@@ -137,7 +143,7 @@ TYPO3.Components.PageTree.PageTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 	getDDHandles: function() {
 		var ddHandles = [this.iconNode, this.textNode, this.elNode];
 		var handlesIndex = ddHandles.length;
-		
+
 		var textNode = Ext.get(this.textNode);
 		for (var i = 0; i < textNode.dom.childNodes.length; ++i) {
 			if (textNode.dom.childNodes[i].nodeName === 'SPAN') {
@@ -149,7 +155,7 @@ TYPO3.Components.PageTree.PageTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 		}
 
 		return ddHandles;
-    },
+	},
 
 	/**
 	 * Only set the onOver class if we are not in dragging mode

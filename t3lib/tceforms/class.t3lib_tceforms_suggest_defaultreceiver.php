@@ -83,7 +83,7 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 	/**
 	 * The list of pages that are allowed to perform the search for records on
 	 *
-	 * @var array of PIDs
+	 * @var array Array of PIDs
 	 */
 	protected $allowedPages = array();
 
@@ -94,6 +94,10 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 	 */
 	protected $maxItems = 10;
 
+	/**
+	 * @var array
+	 */
+	protected $params = array();
 
 	/**
 	 * The constructor of this class
@@ -146,8 +150,8 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 	 * this function itself
 	 *
 	 * @param array $params
-	 * @param object $ref The parent object
-	 * @return mixed array of rows or false if nothing found
+	 * @param integer $ref The parent object
+	 * @return array Array of rows or FALSE if nothing found
 	 */
 	public function queryTable(&$params, $recursionCounter = 0) {
 		$rows = array();
@@ -189,9 +193,9 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 				$path = $this->getRecordPath($row, $uid);
 				if (strlen($path) > 30) {
 					$croppedPath = '<abbr title="' . htmlspecialchars($path) . '">' .
-								   htmlspecialchars($GLOBALS['LANG']->csConvObj->crop($GLOBALS['LANG']->charSet, $path, 10) .
+								htmlspecialchars($GLOBALS['LANG']->csConvObj->crop($GLOBALS['LANG']->charSet, $path, 10) .
 													'...' . $GLOBALS['LANG']->csConvObj->crop($GLOBALS['LANG']->charSet, $path, -20)
-								   ) . '</abbr>';
+								) . '</abbr>';
 				} else {
 					$croppedPath = htmlspecialchars($path);
 				}
@@ -238,11 +242,12 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 		if (strlen($searchString)) {
 			$searchString = $GLOBALS['TYPO3_DB']->quoteStr($searchString, $this->table);
 			$likeCondition = ' LIKE \'' . ($searchWholePhrase ? '%' : '') .
-							 $GLOBALS['TYPO3_DB']->escapeStrForLike($searchString, $this->table) . '%\'';
+							$GLOBALS['TYPO3_DB']->escapeStrForLike($searchString, $this->table) . '%\'';
 
 				// Search in all fields given by label or label_alt
-			$selectFieldsList = $GLOBALS['TCA'][$this->table]['ctrl']['label'] . ',' . $GLOBALS['TCA'][$this->table]['ctrl']['label_alt'];
+			$selectFieldsList = $GLOBALS['TCA'][$this->table]['ctrl']['label'] . ',' . $GLOBALS['TCA'][$this->table]['ctrl']['label_alt'] . ',' . $this->config['additionalSearchFields'];
 			$selectFields = t3lib_div::trimExplode(',', $selectFieldsList, TRUE);
+			$selectFields = array_unique($selectFields);
 
 			$selectParts = array();
 			foreach ($selectFields as $field) {
@@ -327,6 +332,10 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 
 	/**
 	 *  Selects whether the logged in Backend User is allowed to read a specific record
+	 *
+	 * @param array $row
+	 * @param integer $uid
+	 * @return boolean
 	 */
 	protected function checkRecordAccess($row, $uid) {
 		$retValue = TRUE;
@@ -335,6 +344,8 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 			if (!t3lib_BEfunc::readPageAccess($uid, $GLOBALS['BE_USER']->getPagePermsClause(1))) {
 				$retValue = FALSE;
 			}
+		} elseif (isset($GLOBALS['TCA'][$table]['ctrl']['is_static']) && (bool)$GLOBALS['TCA'][$table]['ctrl']['is_static']) {
+			$retValue = TRUE;
 		} else {
 			if (!is_array(t3lib_BEfunc::readPageAccess($row['pid'], $GLOBALS['BE_USER']->getPagePermsClause(1)))) {
 				$retValue = FALSE;
@@ -350,7 +361,7 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 	 * @return void (passed by reference)
 	 */
 	protected function makeWorkspaceOverlay(&$row) {
-			// check for workspace-versions
+			// Check for workspace-versions
 		if ($GLOBALS['BE_USER']->workspace != 0 && $GLOBALS['TCA'][$this->table]['ctrl']['versioningWS'] == TRUE) {
 			t3lib_BEfunc::workspaceOL(($this->mmForeignTable ? $this->mmForeignTable : $this->table), $row);
 		}
@@ -373,8 +384,8 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 	 *
 	 * The path is returned uncut, cutting has to be done by calling function.
 	 *
-	 * @param  array	$row The row
-	 * @param  array	$record The record
+	 * @param array $row The row
+	 * @param array $record The record
 	 * @return string The record-path
 	 */
 	protected function getRecordPath(&$row, $uid) {
@@ -382,7 +393,8 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 
 		if (($this->mmForeignTable ? $this->mmForeignTable : $this->table) == 'pages') {
 			$path = t3lib_BEfunc::getRecordPath($uid, '', $titleLimit);
-				// for pages we only want the first (n-1) parts of the path, because the n-th part is the page itself
+				// For pages we only want the first (n-1) parts of the path,
+				// because the n-th part is the page itself
 			$path = substr($path, 0, strrpos($path, '/', -2)) . '/';
 		} else {
 			$path = t3lib_BEfunc::getRecordPath($row['pid'], '', $titleLimit);
@@ -411,7 +423,7 @@ class t3lib_TCEforms_Suggest_DefaultReceiver {
 	 * @return array The rendered entry (will be put into a <li> later on
 	 */
 	protected function renderRecord($row, $entry) {
-			// call renderlet if available (normal pages etc. usually don't have one)
+			// Call renderlet if available (normal pages etc. usually don't have one)
 		if ($this->config['renderFunc'] != '') {
 			$params = array(
 				'table' => $this->table,

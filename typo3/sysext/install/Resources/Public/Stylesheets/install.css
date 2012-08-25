@@ -162,13 +162,13 @@ h1,
 }
 
 .t3-install-displaytwinimagetextarea {
-	width: 48em; 
+	width: 48em;
 	overflow: scroll;
 	border: 1px #797878 solid;
 }
 
 .t3-install-displaytwinimagetextarea textarea {
-	width: 300em; 
+	width: 300em;
 	border: 0;
 }
 
@@ -225,14 +225,14 @@ h1,
 
 /* 8: phpinfo() */
 #t3-install-debuginformation {
-	width: 48em; 
-	height: 20em; 
+	width: 48em;
+	height: 20em;
 	overflow: scroll;
 	border: 1px #797878 solid;
 }
 
 #t3-install-debuginformation textarea {
-	width: 200em; 
+	width: 200em;
 	height: 68em;
 	border: 0;
 }
@@ -362,11 +362,11 @@ body.standalone .phpinfo h1, .phpinfo h1 {
 /* 9: Edit files in typo3conf/ */
 #t3-install-confeditfilelist dt {
 	float: left;
-	width: 45em;
+	width: 44em;
 }
 
 #t3-install-confeditfilelist dd {
-	padding-left: 45em;
+	margin-left: 44em;
 }
 
 #t3-install-confeditfilelist dt a {

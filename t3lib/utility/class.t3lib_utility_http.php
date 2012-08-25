@@ -26,7 +26,7 @@
 /**
  * HTTP Utility class
  *
- * @author	Ingo Renner <ingo@typo3.org>
+ * @author Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -88,8 +88,8 @@ class t3lib_utility_Http {
 	 * Location redirect header. By default the HTTP status code sent is
 	 * a 'HTTP/1.1 303 See Other'.
 	 *
-	 * @param	string	The target URL to redirect to
-	 * @param	string	An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
+	 * @param string $url The target URL to redirect to
+	 * @param string $httpStatus An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
 	 */
 	public static function redirect($url, $httpStatus = self::HTTP_STATUS_303) {
 		self::setResponseCode($httpStatus);
@@ -116,6 +116,20 @@ class t3lib_utility_Http {
 	public static function setResponseCodeAndExit($httpStatus = self::HTTP_STATUS_303) {
 		self::setResponseCode($httpStatus);
 		exit;
+	}
+
+	/**
+	 * Builds a URL string from an array with the URL parts, as e.g. output by parse_url().
+	 *
+	 * @param array $urlParts
+	 * @return string
+	 * @see http://www.php.net/parse_url
+	 */
+	public static function buildUrl(array $urlParts) {
+		return (isset($urlParts['scheme']) ? $urlParts['scheme'] . '://' : '')
+			. (isset($urlParts['user']) ? $urlParts['user'] . (isset($urlParts['pass']) ? ':' . $urlParts['pass'] : '') . '@' : '')
+			. (isset($urlParts['host']) ? $urlParts['host'] : '') . (isset($urlParts['path']) ? $urlParts['path'] : '')
+			. (isset($urlParts['query']) ? '?' . $urlParts['query'] : '') . (isset($urlParts['fragment']) ? '#' . $urlParts['fragment'] : '');
 	}
 }
 

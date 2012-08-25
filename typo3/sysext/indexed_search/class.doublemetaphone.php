@@ -36,9 +36,9 @@
 
 
 // TYPO3: Had to change name to "user_DoubleMetaPhone" from just "DoubleMetaPhone" because TYPO3 requires a user class to be prefixed so:
-// TYPO3: If you want to use this metaphone method instead of the default in the class.indexer.php you simply configure TYPO3 so by setting the line below in your localconf.php file:
-// TYPO3:			$TYPO3_CONF_VARS['EXTCONF']['indexed_search']['metaphone'] = 'EXT:indexed_search/class.doublemetaphone.php:&user_DoubleMetaPhone';
-// TYPO3: Of course you can write your own metaphone hook methods by taking this class and configuration as example.
+// TYPO3: If you want to use this metaphone method instead of the default in the class.indexer.php you can enable it in the extension configuration
+// TYPO3: Of course you can write your own metaphone hook methods by taking this class and configuration as example (also see ext_localconf.php)
+
 
 class user_DoubleMetaPhone
 {
@@ -54,7 +54,7 @@ class user_DoubleMetaPhone
 //  methods
 
 		// TYPO3 specific API to this class. BEGIN
-	function metaphone($string,$sys_language_uid=0)	{
+	function metaphone($string, $sys_language_uid = 0) {
 		$res = $this->DoubleMetaPhone($string);
 		#debug(array($string,$res['primary']));
 		return $res['primary'];
@@ -392,7 +392,7 @@ class user_DoubleMetaPhone
                            array("B","H","D")))
                 // e.g. 'bough'
                 || (($this->current > 2)
-                    &&  $this->StringAt($this->original, $this->current - 3, 1,
+                    && $this->StringAt($this->original, $this->current - 3, 1,
                                array("B","H","D")))
                 // e.g. 'broughton'
                 || (($this->current > 3)
@@ -979,7 +979,7 @@ class user_DoubleMetaPhone
 
     } // end while
 
-    $this->primary   = substr($this->primary,   0, 4);
+    $this->primary   = substr($this->primary, 0, 4);
     $this->secondary = substr($this->secondary, 0, 4);
 
     $result["primary"] = $this->primary ;

@@ -27,8 +27,6 @@
  *
  * Module: Extension manager - Extension list importer
  *
- * $Id: class.tx_em_import_extensionlistimporter.php 2016 2010-03-14 04:01:47Z mkrause $
- *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -91,8 +89,6 @@ class tx_em_Import_ExtensionListImporter implements SplObserver {
 		'description',
 		'dependencies',
 		'uploadcomment',
-		//'lastversion',
-		//'lastreviewedversion'
 	);
 
 	/**
@@ -220,9 +216,4 @@ class tx_em_Import_ExtensionListImporter implements SplObserver {
 		}
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/import/class.tx_em_import_extensionlistimporter.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/import/class.tx_em_import_extensionlistimporter.php']);
-}
-
 ?>

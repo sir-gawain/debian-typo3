@@ -26,11 +26,13 @@
 ***************************************************************/
 
 /**
+ * ExtDirect toolbar menu
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage ExtDirect
  */
-class tx_Workspaces_ExtDirect_ToolbarMenu {
+class Tx_Workspaces_ExtDirect_ToolbarMenu {
 
 	/**
 	 * @param $parameter
@@ -45,21 +47,16 @@ class tx_Workspaces_ExtDirect_ToolbarMenu {
 
 	/**
 	 * @param $parameter
-	 * @return
+	 * @return array
 	 */
 	public function setWorkspace($parameter) {
 		$workspaceId = intval($parameter->workSpaceId);
 
 		$GLOBALS['BE_USER']->setWorkspace($workspaceId);
 		return array(
-			'title' => tx_Workspaces_Service_Workspaces::getWorkspaceTitle($workspaceId),
+			'title' => Tx_Workspaces_Service_Workspaces::getWorkspaceTitle($workspaceId),
 			'id' => $workspaceId
 		);
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/ToolbarMenu.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/ToolbarMenu.php']);
 }
 ?>

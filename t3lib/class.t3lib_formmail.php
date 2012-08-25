@@ -27,37 +27,23 @@
 /**
  * Contains a class for formmail
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   69: class t3lib_formmail
- *   95:	 function start($V,$base64=false)
- *  172:	 function addAttachment($file, $filename)
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 /**
  * Formmail class, used by the TYPO3 "cms" extension (default frontend) to send email forms.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  * @see tslib_fe::sendFormmail(), t3lib/formmail.php
  */
 class t3lib_formmail {
 	protected $reserved_names = 'recipient,recipient_copy,auto_respond_msg,auto_respond_checksum,redirect,subject,attachment,from_email,from_name,replyto_email,replyto_name,organisation,priority,html_enabled,quoted_printable,submit_x,submit_y';
-	protected $dirtyHeaders = array(); // collection of suspicious header data, used for logging
+		// Collection of suspicious header data, used for logging
+	protected $dirtyHeaders = array();
 
 	protected $characterSet;
 	protected $subject;
@@ -96,11 +82,11 @@ class t3lib_formmail {
 	 * [html_enabled]:		If mail is sent as html
 	 * [use_base64]:		If set, base64 encoding will be used instead of quoted-printable
 	 *
-	 * @param	array		Contains values for the field names listed above (with slashes removed if from POST input)
-	 * @param	boolean		Whether to base64 encode the mail content
-	 * @return	void
+	 * @param array $valueList Contains values for the field names listed above (with slashes removed if from POST input)
+	 * @param boolean $base64 Whether to base64 encode the mail content
+	 * @return void
 	 */
-	function start($valueList, $base64 = false) {
+	function start($valueList, $base64 = FALSE) {
 
 		$this->mailMessage = t3lib_div::makeInstance('t3lib_mail_Message');
 
@@ -120,7 +106,7 @@ class t3lib_formmail {
 		}
 
 		if (isset($valueList['recipient'])) {
-				// convert form data from renderCharset to mail charset
+				// Convert form data from renderCharset to mail charset
 			$this->subject = ($valueList['subject'])
 					? $valueList['subject']
 					: 'Formmail on ' . t3lib_div::getIndpEnv('HTTP_HOST');
@@ -147,9 +133,9 @@ class t3lib_formmail {
 
 			$this->replyToAddress = ($valueList['replyto_email']) ? $valueList['replyto_email'] : $this->fromAddress;
 
-			$this->priority = ($valueList['priority']) ? t3lib_div::intInRange($valueList['priority'], 1, 5) : 3;
+			$this->priority = ($valueList['priority']) ? t3lib_utility_Math::forceIntegerInRange($valueList['priority'], 1, 5) : 3;
 
-				// auto responder
+				// Auto responder
 			$this->autoRespondMessage = (trim($valueList['auto_respond_msg']) && $this->fromAddress)
 					? trim($valueList['auto_respond_msg'])
 					: '';
@@ -159,9 +145,11 @@ class t3lib_formmail {
 				$autoRespondChecksum = $valueList['auto_respond_checksum'];
 				$correctHmacChecksum = t3lib_div::hmac($this->autoRespondMessage);
 				if ($autoRespondChecksum !== $correctHmacChecksum) {
-					t3lib_div::sysLog('Possible misuse of t3lib_formmail auto respond method. Subject: ' . $valueList['subject'],
+					t3lib_div::sysLog(
+						'Possible misuse of t3lib_formmail auto respond method. Subject: ' . $valueList['subject'],
 						'Core',
-						3);
+						t3lib_div::SYSLOG_SEVERITY_ERROR
+					);
 					return;
 				} else {
 					$this->autoRespondMessage = $this->sanitizeHeaderString($this->autoRespondMessage);
@@ -178,7 +166,7 @@ class t3lib_formmail {
 						$space = (strlen($val) > 60) ? LF : '';
 						$val = (is_array($val) ? implode($val, LF) : $val);
 
-							// convert form data from renderCharset to mail charset (HTML may use entities)
+							// Convert form data from renderCharset to mail charset (HTML may use entities)
 						$plainTextValue = $val;
 						$HtmlValue = htmlspecialchars($val);
 
@@ -206,13 +194,21 @@ class t3lib_formmail {
 					continue;
 				}
 				if (!is_uploaded_file($_FILES[$variableName]['tmp_name'])) {
-					t3lib_div::sysLog('Possible abuse of t3lib_formmail: temporary file "' . $_FILES[$variableName]['tmp_name']
-							. '" ("' . $_FILES[$variableName]['name'] . '") was not an uploaded file.', 'Core', 3);
+					t3lib_div::sysLog(
+						'Possible abuse of t3lib_formmail: temporary file "' . $_FILES[$variableName]['tmp_name'] .
+							'" ("' . $_FILES[$variableName]['name'] . '") was not an uploaded file.',
+						'Core',
+						t3lib_div::SYSLOG_SEVERITY_ERROR
+					);
 				}
 				if ($_FILES[$variableName]['tmp_name']['error'] !== UPLOAD_ERR_OK) {
-					t3lib_div::sysLog('Error in uploaded file in t3lib_formmail: temporary file "'
-							. $_FILES[$variableName]['tmp_name'] . '" ("' . $_FILES[$variableName]['name'] . '") Error code: '
-							. $_FILES[$variableName]['tmp_name']['error'], 'Core', 3);
+					t3lib_div::sysLog(
+						'Error in uploaded file in t3lib_formmail: temporary file "' .
+							$_FILES[$variableName]['tmp_name'] . '" ("' . $_FILES[$variableName]['name'] . '") Error code: ' .
+							$_FILES[$variableName]['tmp_name']['error'],
+						'Core',
+						t3lib_div::SYSLOG_SEVERITY_ERROR
+					);
 				}
 				$theFile = t3lib_div::upload_to_tempfile($_FILES[$variableName]['tmp_name']);
 				$theName = $_FILES[$variableName]['name'];
@@ -242,9 +238,13 @@ class t3lib_formmail {
 				// Ignore target encoding. This is handled automatically by Swift Mailer and overriding the defaults
 				// is not worth the trouble
 
-				// log dirty header lines
+				// Log dirty header lines
 			if ($this->dirtyHeaders) {
-				t3lib_div::sysLog('Possible misuse of t3lib_formmail: see TYPO3 devLog', 'Core', 3);
+				t3lib_div::sysLog(
+					'Possible misuse of t3lib_formmail: see TYPO3 devLog',
+					'Core',
+					t3lib_div::SYSLOG_SEVERITY_ERROR
+				);
 				if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['enable_DLOG']) {
 					t3lib_div::devLog('t3lib_formmail: ' . t3lib_div::arrayToLogString($this->dirtyHeaders, '', 200), 'Core', 3);
 				}
@@ -255,8 +255,8 @@ class t3lib_formmail {
 	/**
 	 * Checks string for suspicious characters
 	 *
-	 * @param	string	String to check
-	 * @return	string	Valid or empty string
+	 * @param string $string String to check
+	 * @return string Valid or empty string
 	 */
 	protected function sanitizeHeaderString($string) {
 		$pattern = '/[\r\n\f\e]/';
@@ -266,7 +266,7 @@ class t3lib_formmail {
 		}
 		return $string;
 	}
-	
+
 	/**
 	 * Parses mailbox headers and turns them into an array.
 	 *
@@ -285,10 +285,10 @@ class t3lib_formmail {
 		$addressList = array();
 		foreach ($addresses as $address) {
 			if ($address->personal) {
-				// item with name found ( name <email@example.org> )
+				// Item with name found ( name <email@example.org> )
 				$addressList[$address->mailbox . '@' . $address->host] = $address->personal;
 			} else {
-				// item without name found ( email@example.org )
+				// Item without name found ( email@example.org )
 				$addressList[] = $address->mailbox . '@' . $address->host;
 			}
 		}
@@ -313,8 +313,8 @@ class t3lib_formmail {
 		if ($this->autoRespondMessage) {
 			$theParts = explode('/', $this->autoRespondMessage, 2);
 			$theParts[0] = str_replace('###SUBJECT###', $this->subject, $theParts[0]);
-			$theParts[1] = str_replace("/", LF, $theParts[1]);
-			$theParts[1] = str_replace("###MESSAGE###", $this->plainContent, $theParts[1]);
+			$theParts[1] = str_replace('/', LF, $theParts[1]);
+			$theParts[1] = str_replace('###MESSAGE###', $this->plainContent, $theParts[1]);
 
 				/** @var $autoRespondMail t3lib_mail_Message */
 			$autoRespondMail = t3lib_div::makeInstance('t3lib_mail_Message');
@@ -337,11 +337,6 @@ class t3lib_formmail {
 			}
 		}
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_formmail.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_formmail.php']);
 }
 
 ?>

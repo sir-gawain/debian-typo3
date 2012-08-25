@@ -27,8 +27,6 @@
 ***************************************************************/
 /**
  * class.tx_em_tools.php
- *
- * $Id: class.tx_em_tools.php 2084 2010-03-22 01:46:37Z steffenk $
  */
 
 /**
@@ -102,7 +100,7 @@ final class tx_em_Tools {
 	 *
 	 * @param string $file		Full path to zip file
 	 * @param string $path		Path to change to before extracting
-	 * @return boolean	True on success, false in failure
+	 * @return boolean	TRUE on success, FALSE in failure
 	 */
 	public static function unzip($file, $path) {
 		$unzipPath = trim($GLOBALS['TYPO3_CONF_VARS']['BE']['unzip_path']);
@@ -137,26 +135,14 @@ final class tx_em_Tools {
 	 * @return void
 	 */
 	public static function refreshGlobalExtList() {
-		global $TYPO3_LOADED_EXT;
+			// Set new extlist / extlistArray for extension load changes at runtime
+		$localConfiguration = t3lib_Configuration::getLocalConfiguration();
+		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] = $localConfiguration['EXT']['extList'];
+		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extListArray'] = $localConfiguration['EXT']['extListArray'];
 
-		$TYPO3_LOADED_EXT = t3lib_extMgm::typo3_loadExtensions();
-		if ($TYPO3_LOADED_EXT['_CACHEFILE']) {
-			require(PATH_typo3conf . $TYPO3_LOADED_EXT['_CACHEFILE'] . '_ext_localconf.php');
-		}
-		return;
-
-		$GLOBALS['TYPO3_LOADED_EXT'] = t3lib_extMgm::typo3_loadExtensions();
-		if ($TYPO3_LOADED_EXT['_CACHEFILE']) {
-			require(PATH_typo3conf . $TYPO3_LOADED_EXT['_CACHEFILE'] . '_ext_localconf.php');
-		} else {
-			$temp_TYPO3_LOADED_EXT = $TYPO3_LOADED_EXT;
-			foreach ($temp_TYPO3_LOADED_EXT as $_EXTKEY => $temp_lEDat) {
-				if (is_array($temp_lEDat) && $temp_lEDat['ext_localconf.php']) {
-					$_EXTCONF = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY];
-					require($temp_lEDat['ext_localconf.php']);
-				}
-			}
-		}
+		Typo3_Bootstrap::getInstance()
+			->populateTypo3LoadedExtGlobal(FALSE)
+			->loadAdditionalConfigurationFromExtensions(FALSE);
 	}
 
 	/**
@@ -228,7 +214,7 @@ final class tx_em_Tools {
 	 */
 	public static function noImportMsg() {
 		return t3lib_iconWorks::getSpriteIcon('status-dialog-warning') .
-			   '<strong>' . $GLOBALS['LANG']->getLL('helperFunction_import_not_possible') . '</strong>';
+			'<strong>' . $GLOBALS['LANG']->getLL('helperFunction_import_not_possible') . '</strong>';
 	}
 
 
@@ -438,9 +424,9 @@ final class tx_em_Tools {
 	 */
 	public static function renderVersion($v, $raise = '') {
 		$parts = t3lib_div::intExplode('.', $v . '..');
-		$parts[0] = t3lib_div::intInRange($parts[0], 0, 999);
-		$parts[1] = t3lib_div::intInRange($parts[1], 0, 999);
-		$parts[2] = t3lib_div::intInRange($parts[2], 0, 999);
+		$parts[0] = t3lib_utility_Math::forceIntegerInRange($parts[0], 0, 999);
+		$parts[1] = t3lib_utility_Math::forceIntegerInRange($parts[1], 0, 999);
+		$parts[2] = t3lib_utility_Math::forceIntegerInRange($parts[2], 0, 999);
 
 		switch ((string) $raise) {
 			case 'main':
@@ -485,12 +471,12 @@ final class tx_em_Tools {
 	}
 
 	/**
-	 * Evaluates differences in version numbers with three parts, x.x.x. Returns true if $v1 is greater than $v2
+	 * Evaluates differences in version numbers with three parts, x.x.x. Returns TRUE if $v1 is greater than $v2
 	 *
 	 * @param	string		Version number 1
 	 * @param	string		Version number 2
 	 * @param	integer		Tolerance factor. For instance, set to 1000 to ignore difference in dev-version (third part)
-	 * @return	boolean		True if version 1 is greater than version 2
+	 * @return	boolean		TRUE if version 1 is greater than version 2
 	 */
 	public static function versionDifference($v1, $v2, $div = 1) {
 		return floor(self::makeVersion($v1, 'int') / $div) > floor(self::makeVersion($v2, 'int') / $div);
@@ -498,12 +484,12 @@ final class tx_em_Tools {
 
 
 	/**
-	 * Returns true if the $str is found as the first part of a string in $array
+	 * Returns TRUE if the $str is found as the first part of a string in $array
 	 *
 	 * @param	string		String to test with.
 	 * @param	array		Input array
 	 * @param	boolean		If set, the test is case insensitive
-	 * @return	boolean		True if found.
+	 * @return	boolean		TRUE if found.
 	 */
 	public static function first_in_array($str, $array, $caseInsensitive = FALSE) {
 		if ($caseInsensitive) {
@@ -566,7 +552,7 @@ final class tx_em_Tools {
 
 		if ($typePath) {
 			$path = $typePath . ($returnWithoutExtKey ? '' : $extKey . '/');
-			return $path; # @is_dir($path) ? $path : '';
+			return $path;
 		} else {
 			return '';
 		}
@@ -631,20 +617,6 @@ final class tx_em_Tools {
 	}
 
 	/**
-	 * Reads locallang file into array (for possible include in header)
-	 *
-	 * @param $file
-	 * @return array
-	 * @deprecated  since TYPO3 4.5.1, will be removed in TYPO3 4.7 - use pageRenderer->addInlineLanguageLabelFile() instead
-	 */
-	public static function getArrayFromLocallang($file, $key = 'default') {
-		$content = t3lib_div::getURL($file);
-		$array = t3lib_div::xml2array($content);
-
-		return $array['data'][$key];
-	}
-
-	/**
 	 * Include a locallang file and return the $LOCAL_LANG array serialized.
 	 *
 	 * @param	string		Absolute path to locallang file to include.
@@ -681,7 +653,7 @@ final class tx_em_Tools {
 			if (strlen($k) && is_array($v)) {
 				$lines .= str_repeat(TAB, $level) . "'" . $k . "' => " . self::arrayToCode($v, $level);
 			} elseif (strlen($k)) {
-				$lines .= str_repeat(TAB, $level) . "'" . $k . "' => " . (t3lib_div::testInt($v) ? intval($v) : "'" . t3lib_div::slashJS(trim($v), 1) . "'") . ',' . LF;
+				$lines .= str_repeat(TAB, $level) . "'" . $k . "' => " . (t3lib_utility_Math::canBeInterpretedAsInteger($v) ? intval($v) : "'" . t3lib_div::slashJS(trim($v), 1) . "'") . ',' . LF;
 			}
 		}
 
@@ -816,7 +788,7 @@ final class tx_em_Tools {
 	 *
 	 * @param	string		Scope: G, L, S
 	 * @param	string		Extension lock-type (eg. "L" or "G")
-	 * @return	boolean		True if installation is allowed.
+	 * @return	boolean		TRUE if installation is allowed.
 	 */
 	public static function importAsType($type, $lockType = '') {
 		switch ($type) {
@@ -835,10 +807,10 @@ final class tx_em_Tools {
 	}
 
 	/**
-	 * Returns true if extensions in scope, $type, can be deleted (or installed for that sake)
+	 * Returns TRUE if extensions in scope, $type, can be deleted (or installed for that sake)
 	 *
 	 * @param	string		Scope: "G" or "L"
-	 * @return	boolean		True if possible.
+	 * @return	boolean		TRUE if possible.
 	 */
 	public static function deleteAsType($type) {
 		switch ($type) {
@@ -859,7 +831,7 @@ final class tx_em_Tools {
 	 *
 	 * @param	array		Array of directories to create relative to extDirPath, eg. "blabla", "blabla/blabla" etc...
 	 * @param	string		Absolute path to directory.
-	 * @return	mixed		Returns false on success or an error string
+	 * @return	mixed		Returns FALSE on success or an error string
 	 */
 	public static function createDirsInPath($dirs, $extDirPath) {
 		if (is_array($dirs)) {
@@ -923,13 +895,13 @@ final class tx_em_Tools {
 									$out['NSerrors']['classfilename'][] = $baseName;
 								} else {
 									$out['NSok']['classfilename'][] = $baseName;
-									if (is_array($out['files'][$fileName]['classes']) && tx_em_Tools::first_in_array($testName, $out['files'][$fileName]['classes'], 1)) {
+									if (is_array($out['files'][$fileName]['classes']) && self::first_in_array($testName, $out['files'][$fileName]['classes'], 1)) {
 										$out['msg'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_class_ok'),
 																$fileName, $testName
 										);
 									} else {
 										$out['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_class_not_ok'),
-																   $fileName, $testName
+																$fileName, $testName
 										);
 									}
 								}
@@ -957,13 +929,13 @@ final class tx_em_Tools {
 										}
 									} else {
 										$out['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_xclass_incorrect'),
-																   $reg[1], $cmpF
+																$reg[1], $cmpF
 										);
 									}
 								} else {
 									$out['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_xclass_filename'), $fileName);
 								}
-							} elseif (!tx_em_Tools::first_in_array('ux_', $out['files'][$fileName]['classes'])) {
+							} elseif (!self::first_in_array('ux_', $out['files'][$fileName]['classes'])) {
 									// No Xclass definition required if classname starts with 'ux_'
 								$out['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_xclass_found'), $fileName);
 							}
@@ -1021,7 +993,7 @@ final class tx_em_Tools {
 		if ($flag_B && $flag_M) {
 			t3lib_div::writeFile($confFilePath, implode(LF, $lines));
 			return sprintf($GLOBALS['LANG']->getLL('writeModPath_ok'),
-						   substr($confFilePath, strlen(PATH_site)));
+						substr($confFilePath, strlen(PATH_site)));
 		} elseif ($flag_Dispatch) {
 			return sprintf(
 				$GLOBALS['LANG']->getLL('writeModPath_notRequired'),
@@ -1074,7 +1046,7 @@ final class tx_em_Tools {
 			return rename($file, $newName);
 		}
 
-		return false;
+		return FALSE;
 	}
 
 
@@ -1106,7 +1078,6 @@ final class tx_em_Tools {
 		if (substr($folder, -1) !== '/') {
 			$folder .= '/';
 		}
-
 
 		$newFile = t3lib_div::resolveBackPath(PATH_site . $folder . $file);
 

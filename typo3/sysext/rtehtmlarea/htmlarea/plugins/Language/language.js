@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,20 +26,12 @@
 ***************************************************************/
 /*
  * Language Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.Language = HTMLArea.Plugin.extend({
-
-	constructor : function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
-
+HTMLArea.Language = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin : function (editor) {
-
+	configurePlugin: function (editor) {
 		/*
 		 * Setting up some properties from PageTSConfig
 		 */
@@ -52,26 +44,26 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 		}
 
 			// Importing list of allowed attributes
-		if (this.getPluginInstance("TextStyle")) {
-			this.allowedAttributes = this.getPluginInstance("TextStyle").allowedAttributes;
-		}			
-		if (!this.allowedAttributes && this.getPluginInstance("InlineElements")) {
-			this.allowedAttributes = this.getPluginInstance("InlineElements").allowedAttributes;
+		if (this.getPluginInstance('TextStyle')) {
+			this.allowedAttributes = this.getPluginInstance('TextStyle').allowedAttributes;
 		}
-		if (!this.allowedAttributes && this.getPluginInstance("BlockElements")) {
-			this.allowedAttributes = this.getPluginInstance("BlockElements").allowedAttributes;
+		if (!this.allowedAttributes && this.getPluginInstance('InlineElements')) {
+			this.allowedAttributes = this.getPluginInstance('InlineElements').allowedAttributes;
+		}
+		if (!this.allowedAttributes && this.getPluginInstance('BlockElements')) {
+			this.allowedAttributes = this.getPluginInstance('BlockElements').allowedAttributes;
 		}
 		if (!this.allowedAttributes) {
-			this.allowedAttributes = new Array("id", "title", "lang", "xml:lang", "dir", "class");
-			if (Ext.isIE) {
-				this.allowedAttributes.push("className");
+			this.allowedAttributes = new Array('id', 'title', 'lang', 'xml:lang', 'dir', 'class');
+			if (HTMLArea.isIEBeforeIE9) {
+				this.allowedAttributes.push('className');
 			}
 		}
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '2.2',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -140,10 +132,10 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 					// Monitor the language combo's store being loaded
 				select.mon(select.getStore(), 'load', function () {
 					this.addLanguageMarkingRules();
-					var selection = this.editor._getSelection(),
-						selectionEmpty = this.editor._selectionEmpty(selection),
-						ancestors = this.editor.getAllAncestors(),
-						endPointsInSameBlock = this.editor.endPointsInSameBlock();
+					var selection = this.editor.getSelection(),
+						selectionEmpty = selection.isEmpty(),
+						ancestors = selection.getAllAncestors(),
+						endPointsInSameBlock = selection.endPointsInSameBlock();
 					this.onUpdateToolbar(select, this.getEditorMode(), selectionEmpty, ancestors, endPointsInSameBlock);
 				}, this);
 			}
@@ -157,16 +149,16 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 	addLanguageMarkingRules: function () {
 		var select = this.getButton('Language');
 		if (select) {
-			var styleSheet = this.editor._doc.styleSheets[0];
+			var styleSheet = this.editor.document.styleSheets[0];
 			select.getStore().each(function (option) {
 				var selector = 'body.htmlarea-show-language-marks *[' + 'lang="' + option.get('value') + '"]:before';
 				var style = 'content: "' + option.get('value') + ': ";';
 				var rule = selector + ' { ' + style + ' }';
-				if (!Ext.isIE) {
+				if (!HTMLArea.isIEBeforeIE9) {
 					try {
 						styleSheet.insertRule(rule, styleSheet.cssRules.length);
 					} catch (e) {
-						this.appendToLog("onGenerate", "Error inserting css rule: " + rule + " Error text: " + e);
+						this.appendToLog('onGenerate', 'Error inserting css rule: ' + rule + ' Error text: ' + e, 'warn');
 					}
 				} else {
 					styleSheet.addRule(selector, style);
@@ -183,17 +175,17 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress : function (editor, id, target) {
+	onButtonPress: function (editor, id, target) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		
+
 		switch (buttonId) {
-			case "RightToLeft" :
-			case "LeftToRight" :
+			case 'RightToLeft':
+			case 'LeftToRight':
 				this.setDirAttribute(buttonId);
 				break;
-			case "ShowLanguageMarks":
+			case 'ShowLanguageMarks':
 				this.toggleLanguageMarks();
 				break;
 			default	:
@@ -201,7 +193,6 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 		}
 		return false;
 	},
-	
 	/*
 	 * Sets the dir attribute
 	 *
@@ -209,19 +200,18 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 	 *
 	 * @return	void
 	 */
-	setDirAttribute : function (buttonId) {
-		var direction = (buttonId == "RightToLeft") ? "rtl" : "ltr";
-		var element = this.editor.getParentElement();
+	setDirAttribute: function (buttonId) {
+		var direction = (buttonId == 'RightToLeft') ? 'rtl' : 'ltr';
+		var element = this.editor.getSelection().getParentElement();
 		if (element) {
-			if (element.nodeName.toLowerCase() === "bdo") {
+			if (/^bdo$/i.test(element.nodeName)) {
 				element.dir = direction;
 			} else {
-				element.dir = (element.dir == direction || element.style.direction == direction) ? "" : direction;
+				element.dir = (element.dir == direction || element.style.direction == direction) ? '' : direction;
 			}
-			element.style.direction = "";
+			element.style.direction = '';
 		}
 	 },
-	
 	/*
 	 * Toggles the display of language marks
 	 *
@@ -229,39 +219,36 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 	 *
 	 * @return	void
 	 */
-	toggleLanguageMarks : function (forceLanguageMarks) {
-		var body = this.editor._doc.body;
+	toggleLanguageMarks: function (forceLanguageMarks) {
+		var body = this.editor.document.body;
 		if (!HTMLArea.DOM.hasClass(body, 'htmlarea-show-language-marks')) {
 			HTMLArea.DOM.addClass(body,'htmlarea-show-language-marks');
 		} else if (!forceLanguageMarks) {
 			HTMLArea.DOM.removeClass(body,'htmlarea-show-language-marks');
 		}
 	},
-
 	/*
 	 * This function gets called when some language was selected in the drop-down list
 	 */
-	onChange : function (editor, combo, record, index) {
+	onChange: function (editor, combo, record, index) {
 		this.applyLanguageMark(combo.getValue());
 	},
-
 	/*
 	 * This function applies the langauge mark to the selection
 	 */
-	applyLanguageMark : function (language) {
-		var selection = this.editor._getSelection();
+	applyLanguageMark: function (language) {
 		var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
-		var range = this.editor._createRange(selection);
-		var parent = this.editor.getParentElement(selection, range);
-		var selectionEmpty = this.editor._selectionEmpty(selection);
-		var endPointsInSameBlock = this.editor.endPointsInSameBlock();
+		var range = this.editor.getSelection().createRange();
+		var parent = this.editor.getSelection().getParentElement();
+		var selectionEmpty = this.editor.getSelection().isEmpty();
+		var endPointsInSameBlock = this.editor.getSelection().endPointsInSameBlock();
 		var fullNodeSelected = false;
 		if (!selectionEmpty) {
 			if (endPointsInSameBlock) {
-				var ancestors = this.editor.getAllAncestors();
+				var ancestors = this.editor.getSelection().getAllAncestors();
 				for (var i = 0; i < ancestors.length; ++i) {
-					fullNodeSelected = (statusBarSelection === ancestors[i])
-						&& ((!Ext.isIE && ancestors[i].textContent === range.toString()) || (Ext.isIE && ((selection.type !== "Control" && ancestors[i].innerText === range.text) || (selection.type === "Control" && ancestors[i].innerText === range.item(0).text))));
+					fullNodeSelected =  (!HTMLArea.isIEBeforeIE9 && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())))
+						|| (HTMLArea.isIEBeforeIE9 && statusBarSelection === ancestors[i] && ((this.editor.getSelection().getType() !== 'Control' && ancestors[i].innerText === range.text) || (this.editor.getSelection().getType() === 'Control' && ancestors[i].innerText === range.item(0).text)));
 					if (fullNodeSelected) {
 						parent = ancestors[i];
 						break;
@@ -282,12 +269,12 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 			}
 		} else if (endPointsInSameBlock) {
 				// The selection is not empty, nor full element
-			if (language != "none") {
+			if (language != 'none') {
 					// Add span element with lang attribute(s)
-				var newElement = this.editor._doc.createElement("span");
+				var newElement = this.editor.document.createElement('span');
 				this.setLanguageAttributes(newElement, language);
-				this.editor.wrapWithInlineElement(newElement, selection, range);
-				if (!Ext.isIE) {
+				this.editor.getDomNode().wrapWithInlineElement(newElement, range);
+				if (!HTMLArea.isIEBeforeIE9) {
 					range.detach();
 				}
 			}
@@ -303,15 +290,14 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 	 *
 	 * @return	string		value of the lang attribute, or of the xml:lang attribute
 	 */
-	getLanguageAttribute : function (element) {
-		var xmllang = "none";
+	getLanguageAttribute: function (element) {
+		var xmllang = 'none';
 		try {
 				// IE7 complains about xml:lang
-			xmllang = element.getAttribute("xml:lang") ? element.getAttribute("xml:lang") : "none";
+			xmllang = element.getAttribute('xml:lang') ? element.getAttribute('xml:lang') : 'none';
 		} catch(e) { }
-		return element.getAttribute("lang") ? element.getAttribute("lang") : xmllang;
+		return element.getAttribute('lang') ? element.getAttribute('lang') : xmllang;
 	},
-	
 	/*
 	 * This function sets the language attributes on the given element
 	 *
@@ -330,8 +316,8 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 					element.removeAttribute('xml:lang');
 				} catch(e) { }
 					// Remove the span tag if it has no more attribute
-				if (/^span$/i.test(element.nodeName) && !HTMLArea.hasAllowedAttributes(element, this.allowedAttributes)) {
-					this.editor.removeMarkup(element);
+				if (/^span$/i.test(element.nodeName) && !HTMLArea.DOM.hasAllowedAttributes(element, this.allowedAttributes)) {
+					this.editor.getDomNode().removeMarkup(element);
 				}
 			} else {
 				if (this.useAttribute.lang) {
@@ -346,17 +332,15 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 			}
 		}
 	},
-
 	/*
 	 * This function gets the language attributes from blocks sibling of the block containing the start container of the selection
 	 *
 	 * @return	string		value of the lang attribute, or of the xml:lang attribute, or "none", if all blocks sibling do not have the same attribute value as the block containing the start container
 	 */
-	getLanguageAttributeFromBlockElements : function() {
-		var selection = this.editor._getSelection();
-		var endBlocks = this.editor.getEndBlocks(selection);
-		var startAncestors = this.editor.getBlockAncestors(endBlocks.start);
-		var endAncestors = this.editor.getBlockAncestors(endBlocks.end);
+	getLanguageAttributeFromBlockElements: function () {
+		var endBlocks = this.editor.getSelection().getEndBlocks();
+		var startAncestors = HTMLArea.DOM.getBlockAncestors(endBlocks.start);
+		var endAncestors = HTMLArea.DOM.getBlockAncestors(endBlocks.end);
 		var index = 0;
 		while (index < startAncestors.length && index < endAncestors.length && startAncestors[index] === endAncestors[index]) {
 			++index;
@@ -366,9 +350,9 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 		}
 		var language = this.getLanguageAttribute(startAncestors[index]);
 		for (var block = startAncestors[index]; block; block = block.nextSibling) {
-			if (HTMLArea.isBlockElement(block)) {
-				if (this.getLanguageAttribute(block) != language || this.getLanguageAttribute(block) == "none") {
-					language = "none";
+			if (HTMLArea.DOM.isBlockElement(block)) {
+				if (this.getLanguageAttribute(block) != language || this.getLanguageAttribute(block) == 'none') {
+					language = 'none';
 					break;
 				}
 			}
@@ -378,15 +362,13 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 		}
 		return language;
 	},
-
 	/*
 	 * This function sets the language attributes on blocks sibling of the block containing the start container of the selection
 	 */
-	setLanguageAttributeOnBlockElements : function(language) {
-		var selection = this.editor._getSelection();
-		var endBlocks = this.editor.getEndBlocks(selection);
-		var startAncestors = this.editor.getBlockAncestors(endBlocks.start);
-		var endAncestors = this.editor.getBlockAncestors(endBlocks.end);
+	setLanguageAttributeOnBlockElements: function (language) {
+		var endBlocks = this.editor.getSelection().getEndBlocks();
+		var startAncestors = HTMLArea.DOM.getBlockAncestors(endBlocks.start);
+		var endAncestors = HTMLArea.DOM.getBlockAncestors(endBlocks.end);
 		var index = 0;
 		while (index < startAncestors.length && index < endAncestors.length && startAncestors[index] === endAncestors[index]) {
 			++index;
@@ -395,7 +377,7 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 			--index;
 		}
 		for (var block = startAncestors[index]; block; block = block.nextSibling) {
-			if (HTMLArea.isBlockElement(block)) {
+			if (HTMLArea.DOM.isBlockElement(block)) {
 				this.setLanguageAttributes(block, language);
 			}
 			if (block == endAncestors[index]) {
@@ -409,10 +391,9 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors, endPointsInSameBlock) {
 		if (mode === 'wysiwyg' && this.editor.isEditable()) {
-			var selection = this.editor._getSelection();
 			var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
-			var range = this.editor._createRange(selection);
-			var parent = this.editor.getParentElement(selection);
+			var range = this.editor.getSelection().createRange();
+			var parent = this.editor.getSelection().getParentElement();
 			switch (button.itemId) {
 				case 'RightToLeft':
 				case 'LeftToRight':
@@ -425,7 +406,7 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 					}
 					break;
 				case 'ShowLanguageMarks':
-					button.setInactive(!HTMLArea.DOM.hasClass(this.editor._doc.body, 'htmlarea-show-language-marks'));
+					button.setInactive(!HTMLArea.DOM.hasClass(this.editor.document.body, 'htmlarea-show-language-marks'));
 					break;
 				case 'Language':
 						// Updating the language drop-down
@@ -434,8 +415,8 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 					if (!selectionEmpty) {
 						if (endPointsInSameBlock) {
 							for (var i = 0; i < ancestors.length; ++i) {
-								fullNodeSelected = (statusBarSelection === ancestors[i])
-									&& ((!Ext.isIE && ancestors[i].textContent === range.toString()) || (Ext.isIE && ((selection.type !== "Control" && ancestors[i].innerText === range.text) || (selection.type === "Control" && ancestors[i].innerText === range.item(0).text))));
+								fullNodeSelected =  (!HTMLArea.isIEBeforeIE9 && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())))
+									|| (HTMLArea.isIEBeforeIE9 && statusBarSelection === ancestors[i] && ((this.editor.getSelection().getType() !== 'Control' && ancestors[i].innerText === range.text) || (this.editor.getSelection().getType() === 'Control' && ancestors[i].innerText === range.item(0).text)));
 								if (fullNodeSelected) {
 									parent = ancestors[i];
 									break;
@@ -458,11 +439,10 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 			}
 		}
 	},
-
 	/*
 	* This function updates the language drop-down list
 	*/
-	updateValue : function (select, language, selectionEmpty, fullNodeSelected, endPointsInSameBlock) {
+	updateValue: function (select, language, selectionEmpty, fullNodeSelected, endPointsInSameBlock) {
 		var store = select.getStore();
 		store.removeAt(0);
 		if ((store.findExact('value', language) != -1) && (selectionEmpty || fullNodeSelected || !endPointsInSameBlock)) {
@@ -478,6 +458,6 @@ HTMLArea.Language = HTMLArea.Plugin.extend({
 			}));
 			select.setValue('none');
 		}
-		select.setDisabled(!(store.getCount()>1) || (selectionEmpty && this.editor.getParentElement().nodeName.toLowerCase() === 'body'));
+		select.setDisabled(!(store.getCount()>1) || (selectionEmpty && /^body$/i.test(this.editor.getSelection().getParentElement().nodeName)));
 	}
 });

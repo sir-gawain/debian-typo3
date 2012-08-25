@@ -60,9 +60,9 @@ class t3lib_tree_NodeCollection extends ArrayObject {
 	/**
 	 * Compares a node with another one
 	 *
-	 * @noapi
 	 * @see t3lib_tree_Node::compareTo
 	 * @return void
+	 * @noapi
 	 */
 	public function nodeCompare(t3lib_tree_Node $node, t3lib_tree_Node $otherNode) {
 		return $node->compareTo($otherNode);
@@ -80,14 +80,14 @@ class t3lib_tree_NodeCollection extends ArrayObject {
 	/**
 	 * Initializes the current object with a serialized instance
 	 *
-	 * @throws t3lib_exception if the deserialized is not identical to the current class
 	 * @param string $serializedString
 	 * @return void
+	 * @throws t3lib_exception if the deserialized is not identical to the current class
 	 */
 	public function unserialize($serializedString) {
 		$arrayRepresentation = unserialize($serializedString);
 		if ($arrayRepresentation['serializeClassName'] !== get_class($this)) {
-			throw new t3lib_exception('Deserialized object type is not identical!');
+			throw new t3lib_exception('Deserialized object type is not identical!', 1294586647);
 		}
 		$this->dataFromArray($arrayRepresentation);
 	}

@@ -3,6 +3,7 @@
  *  Copyright notice
  *
  *  (c) 2009-2011 Steffen Kamper <info@sk-typo3.de>
+ *  (c) 2011 Kai Vogel <kai.vogel@speedprogs.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,127 +31,446 @@
  * This class render the HTML of a webpage, usable for BE and FE
  *
  * @author Steffen Kamper <info@sk-typo3.de>
+ * @author Kai Vogel <kai.vogel@speedprogs.de>
  * @package TYPO3
  * @subpackage t3lib
  */
 class t3lib_PageRenderer implements t3lib_Singleton {
-
-	protected $compressJavascript = FALSE;
-	protected $compressCss = FALSE;
-	protected $removeLineBreaksFromTemplate = FALSE;
-
-	protected $concatenateFiles = FALSE;
-
-	protected $moveJsFromHeaderToFooter = FALSE;
-
-	/* @var t3lib_cs Instance of t3lib_cs */
-	protected $csConvObj;
-	protected $lang;
-
-	/* @var t3lib_Compressor Instance of t3lib_Compressor */
-	protected $compressor;
-
-		// arrays containing associative array for the included files
-	protected $jsFiles = array();
-	protected $jsFooterFiles = array();
-	protected $jsLibs = array();
-	protected $jsFooterLibs = array();
-	protected $cssFiles = array();
-
-	protected $title;
-	protected $charSet;
-	protected $favIcon;
-	protected $baseUrl;
-
-	protected $renderXhtml = TRUE;
-
-		// static header blocks
-	protected $xmlPrologAndDocType = '';
-	protected $metaTags = array();
-	protected $inlineComments = array();
-	protected $headerData = array();
-	protected $footerData = array();
-	protected $titleTag = '<title>|</title>';
-	protected $metaCharsetTag = '<meta http-equiv="Content-Type" content="text/html; charset=|" />';
-	protected $htmlTag = '<html>';
-	protected $headTag = '<head>';
-	protected $baseUrlTag = '<base href="|" />';
-	protected $iconMimeType = '';
-	protected $shortcutTag = '<link rel="shortcut icon" href="%1$s"%2$s />
-<link rel="icon" href="%1$s"%2$s />';
-
-		// static inline code blocks
-	protected $jsInline = array();
-	protected $jsFooterInline = array();
-	protected $extOnReadyCode = array();
-	protected $cssInline = array();
-
-	protected $bodyContent;
-
-	protected $templateFile;
-
-	protected $jsLibraryNames = array('prototype', 'scriptaculous', 'extjs');
-
+		// Constants for the part to be rendered
 	const PART_COMPLETE = 0;
 	const PART_HEADER = 1;
 	const PART_FOOTER = 2;
 
-		// paths to contibuted libraries
-	protected $prototypePath = 'contrib/prototype/';
-	protected $scriptaculousPath = 'contrib/scriptaculous/';
-	protected $extCorePath = 'contrib/extjs/';
-	protected $extJsPath = 'contrib/extjs/';
-	protected $svgPath = 'contrib/websvg/';
-
-
-		// internal flags for JS-libraries
-	protected $addPrototype = FALSE;
-	protected $addScriptaculous = FALSE;
-	protected $addScriptaculousModules = array('builder' => FALSE, 'effects' => FALSE, 'dragdrop' => FALSE, 'controls' => FALSE, 'slider' => FALSE);
-	protected $addExtJS = FALSE;
-	protected $addExtCore = FALSE;
-	protected $extJSadapter = 'ext/ext-base.js';
-	protected $extDirectCodeAdded = FALSE;
-
-	protected $enableExtJsDebug = FALSE;
-	protected $enableExtCoreDebug = FALSE;
-
-		// available adapters for extJs
+		// Available adapters for extJs
 	const EXTJS_ADAPTER_JQUERY = 'jquery';
 	const EXTJS_ADAPTER_PROTOTYPE = 'prototype';
 	const EXTJS_ADAPTER_YUI = 'yui';
 
+		// jQuery Core version that is shipped with TYPO3
+	const JQUERY_VERSION_LATEST = '1.8b1';
+
+		// jQuery namespace options
+	const JQUERY_NAMESPACE_NONE = 'none';
+	const JQUERY_NAMESPACE_DEFAULT = 'jQuery';
+	const JQUERY_NAMESPACE_DEFAULT_NOCONFLICT = 'defaultNoConflict';
+
+	/**
+	 * @var boolean
+	 */
+	protected $compressJavascript = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $compressCss = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $removeLineBreaksFromTemplate = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $concatenateFiles = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $concatenateJavascript = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $concatenateCss = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $moveJsFromHeaderToFooter = FALSE;
+
+	/**
+	 * @var t3lib_cs
+	 */
+	protected $csConvObj;
+
+	/**
+	 * @var t3lib_l10n_Locales
+	 */
+	protected $locales;
+
+	/**
+	 * The language key
+	 * Two character string or 'default'
+	 *
+	 * @var string
+	 */
+	protected $lang;
+
+	/**
+	 * @var t3lib_Compressor
+	 */
+	protected $compressor;
+
+	// Arrays containing associative array for the included files
+
+	/**
+	 * @var array
+	 */
+	protected $jsFiles = array();
+
+	/**
+	 * @var array
+	 */
+	protected $jsFooterFiles = array();
+
+	/**
+	 * @var array
+	 */
+	protected $jsLibs = array();
+
+	/**
+	 * @var array
+	 */
+	protected $jsFooterLibs = array();
+
+	/**
+	 * @var array
+	 */
+	protected $cssFiles = array();
+
+	/**
+	 * The title of the page
+	 *
+	 * @var string
+	 */
+	protected $title;
+
+	/**
+	 * Charset for the rendering
+	 *
+	 * @var string
+	 */
+	protected $charSet;
+
+	/**
+	 * @var string
+	 */
+	protected $favIcon;
+
+	/**
+	 * @var string
+	 */
+	protected $baseUrl;
+
+	/**
+	 * @var boolean
+	 */
+	protected $renderXhtml = TRUE;
+
+
+	// Static header blocks
+
+	/**
+	 * @var string
+	 */
+	protected $xmlPrologAndDocType = '';
+
+	/**
+	 * @var array
+	 */
+	protected $metaTags = array();
+
+	/**
+	 * @var array
+	 */
+	protected $inlineComments = array();
+
+	/**
+	 * @var array
+	 */
+	protected $headerData = array();
+
+	/**
+	 * @var array
+	 */
+	protected $footerData = array();
+
+	/**
+	 * @var string
+	 */
+	protected $titleTag = '<title>|</title>';
+
+	/**
+	 * @var string
+	 */
+	protected $metaCharsetTag = '<meta http-equiv="Content-Type" content="text/html; charset=|" />';
+
+	/**
+	 * @var string
+	 */
+	protected $htmlTag = '<html>';
+
+	/**
+	 * @var string
+	 */
+	protected $headTag = '<head>';
+
+	/**
+	 * @var string
+	 */
+	protected $baseUrlTag = '<base href="|" />';
+
+	/**
+	 * @var string
+	 */
+	protected $iconMimeType = '';
+
+	/**
+	 * @var string
+	 */
+	protected $shortcutTag = '<link rel="shortcut icon" href="%1$s"%2$s />
+<link rel="icon" href="%1$s"%2$s />';
+
+	// Static inline code blocks
+
+	/**
+	 * @var array
+	 */
+	protected $jsInline = array();
+
+	/**
+	 * @var array
+	 */
+	protected $jsFooterInline = array();
+
+	/**
+	 * @var array
+	 */
+	protected $extOnReadyCode = array();
+
+	/**
+	 * @var array
+	 */
+	protected $cssInline = array();
+
+	/**
+	 * @var string
+	 */
+	protected $bodyContent;
+
+	/**
+	 * @var string
+	 */
+	protected $templateFile;
+
+	/**
+	 * @var array
+	 */
+	protected $jsLibraryNames = array('prototype', 'scriptaculous', 'extjs');
+
+	// Paths to contibuted libraries
+
+	/**
+	 * @var string
+	 */
+	protected $prototypePath = 'contrib/prototype/';
+
+	/**
+	 * @var string
+	 */
+	protected $scriptaculousPath = 'contrib/scriptaculous/';
+
+	/**
+	 * @var string
+	 */
+	protected $extCorePath = 'contrib/extjs/';
+
+	/**
+	 * @var string
+	 */
+	protected $extJsPath = 'contrib/extjs/';
+
+	/**
+	 * @var string
+	 */
+	protected $svgPath = 'contrib/websvg/';
+
+	/**
+	 * The local directory where one can find jQuery versions and plugins
+	 *
+	 * @var string
+	 */
+	protected $jQueryPath = 'contrib/jquery/';
+
+	// Internal flags for JS-libraries
+
+	/**
+	 * This array holds all jQuery versions that should be included in the
+	 * current page.
+	 * Each version is described by "source", "version" and "namespace"
+	 *
+	 * The namespace of every particular version is the key
+	 * of that array, because only one version per namespace can exist.
+	 *
+	 * The type "source" describes where the jQuery core should be included from
+	 * currently, TYPO3 supports "local" (make use of jQuery path), "google",
+	 * "jquery" and "msn".
+	 * Currently there are downsides to "local" and "jquery", as "local" only
+	 * supports the latest/shipped jQuery core out of the box, and
+	 * "jquery" does not have SSL support.
+	 *
+	 * @var array
+	 */
+	protected $jQueryVersions = array();
+
+	/**
+	 * Array of jQuery version numbers shipped with the core
+	 *
+	 * @var array
+	 */
+	protected $availableLocalJqueryVersions = array(
+		self::JQUERY_VERSION_LATEST,
+	);
+
+	/**
+	 * Array of jQuery CDNs with placeholders
+	 *
+	 * @var array
+	 */
+	protected $jQueryCdnUrls = array(
+		'google' => '//ajax.googleapis.com/ajax/libs/jquery/%1$s/jquery%2$s.js',
+		'msn' => '//ajax.aspnetcdn.com/ajax/jQuery/jquery-%1$s%2$s.js',
+		'jquery' => 'http://code.jquery.com/jquery-%1$s%2$s.js',
+	);
+
+	/**
+	 * @var boolean
+	 */
+	protected $addPrototype = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $addScriptaculous = FALSE;
+
+	/**
+	 * @var array
+	 */
+	protected $addScriptaculousModules = array('builder' => FALSE, 'effects' => FALSE, 'dragdrop' => FALSE, 'controls' => FALSE, 'slider' => FALSE);
+
+	/**
+	 * @var boolean
+	 */
+	protected $addExtJS = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $addExtCore = FALSE;
+
+	/**
+	 * @var string
+	 */
+	protected $extJSadapter = 'ext/ext-base.js';
+
+	/**
+	 * @var boolean
+	 */
+	protected $extDirectCodeAdded = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $enableExtJsDebug = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $enableExtCoreDebug = FALSE;
+
+	/**
+	 * @var boolean
+	 */
+	protected $enableJqueryDebug = FALSE;
+
+	/**
+	 * @var boolean
+	 */
 	protected $extJStheme = TRUE;
+
+	/**
+	 * @var boolean
+	 */
 	protected $extJScss = TRUE;
 
+	/**
+	 * @var boolean
+	 */
 	protected $enableExtJSQuickTips = FALSE;
 
+	/**
+	 * @var array
+	 */
 	protected $inlineLanguageLabels = array();
+
+	/**
+	 * @var array
+	 */
 	protected $inlineLanguageLabelFiles = array();
+
+	/**
+	 * @var array
+	 */
 	protected $inlineSettings = array();
 
+	/**
+	 * @var array
+	 */
 	protected $inlineJavascriptWrap = array();
 
-		// saves error messages generated during compression
+	/**
+	 * Saves error messages generated during compression
+	 *
+	 * @var string
+	 */
 	protected $compressError = '';
 
-		// SVG library
+	/**
+	 * Is empty string for HTML and ' /' for XHTML rendering
+	 *
+	 * @var string
+	 */
+	protected $endingSlash = '';
+
+	/**
+	 * SVG library
+	 *
+	 * @var boolean
+	 */
 	protected $addSvg = FALSE;
+
+	/**
+	 * @var boolean
+	 */
 	protected $enableSvgDebug = FALSE;
 
-		// used by BE modules
+	/**
+	 * Used by BE modules
+	 *
+	 * @var null|string
+	 */
 	public $backPath;
 
 	/**
-	 * Constructor
-	 *
-	 * @param string $templateFile	declare the used template file. Omit this parameter will use default template
-	 * @param string $backPath	relative path to typo3-folder. It varies for BE modules, in FE it will be typo3/
+	 * @param string $templateFile Declare the used template file. Omit this parameter will use default template
+	 * @param string $backPath Relative path to typo3-folder. It varies for BE modules, in FE it will be typo3/
 	 */
 	public function __construct($templateFile = '', $backPath = NULL) {
 
 		$this->reset();
 		$this->csConvObj = t3lib_div::makeInstance('t3lib_cs');
+		$this->locales = t3lib_div::makeInstance('t3lib_l10n_Locales');
 
 		if (strlen($templateFile)) {
 			$this->templateFile = $templateFile;
@@ -165,11 +485,10 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 			'<style type="text/css">' . LF . '/*<![CDATA[*/' . LF . '<!-- ' . LF,
 			'-->' . LF . '/*]]>*/' . LF . '</style>' . LF
 		);
-
 	}
 
 	/**
-	 * reset all vars to initial values
+	 * Reset all vars to initial values
 	 *
 	 * @return void
 	 */
@@ -187,6 +506,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		$this->headerData = array();
 		$this->footerData = array();
 		$this->extOnReadyCode = array();
+		$this->jQueryVersions = array();
 	}
 
 	/*****************************************************/
@@ -206,11 +526,10 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		$this->title = $title;
 	}
 
-
 	/**
 	 * Enables/disables rendering of XHTML code
 	 *
-	 * @param boolean $enable	Enable XHTML
+	 * @param boolean $enable Enable XHTML
 	 * @return void
 	 */
 	public function setRenderXhtml($enable) {
@@ -220,7 +539,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Sets xml prolog and docType
 	 *
-	 * @param string $xmlPrologAndDocType	complete tags for xml prolog and docType
+	 * @param string $xmlPrologAndDocType Complete tags for xml prolog and docType
 	 * @return void
 	 */
 	public function setXmlPrologAndDocType($xmlPrologAndDocType) {
@@ -230,7 +549,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Sets meta charset
 	 *
-	 * @param string $charSet	used charset
+	 * @param string $charSet Used charset
 	 * @return void
 	 */
 	public function setCharSet($charSet) {
@@ -240,7 +559,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Sets language
 	 *
-	 * @param string $lang	used language
+	 * @param string $lang Used language
 	 * @return void
 	 */
 	public function setLanguage($lang) {
@@ -260,7 +579,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Sets html tag
 	 *
-	 * @param string $htmlTag	html tag
+	 * @param string $htmlTag Html tag
 	 * @return void
 	 */
 	public function setHtmlTag($htmlTag) {
@@ -396,8 +715,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Enables MoveJsFromHeaderToFooter
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function enableMoveJsFromHeaderToFooter() {
@@ -406,8 +723,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Disables MoveJsFromHeaderToFooter
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function disableMoveJsFromHeaderToFooter() {
@@ -416,8 +731,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Enables compression of javascript
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function enableCompressJavascript() {
@@ -426,8 +739,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Disables compression of javascript
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function disableCompressJavascript() {
@@ -436,8 +747,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Enables compression of css
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function enableCompressCss() {
@@ -446,8 +755,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Disables compression of css
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function disableCompressCss() {
@@ -456,8 +763,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Enables concatenation of js and css files
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function enableConcatenateFiles() {
@@ -466,8 +771,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Disables concatenation of js and css files
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function disableConcatenateFiles() {
@@ -475,9 +778,39 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	}
 
 	/**
+	 * Enables concatenation of js files
+	 * @return void
+	 */
+	public function enableConcatenateJavascript() {
+		$this->concatenateJavascript = TRUE;
+	}
+
+	/**
+	 * Disables concatenation of js files
+	 * @return void
+	 */
+	public function disableConcatenateJavascript() {
+		$this->concatenateJavascript = FALSE;
+	}
+
+	/**
+	 * Enables concatenation of css files
+	 * @return void
+	 */
+	public function enableConcatenateCss() {
+		$this->concatenateCss = TRUE;
+	}
+
+	/**
+	 * Disables concatenation of css files
+	 * @return void
+	 */
+	public function disableConcatenateCss() {
+		$this->concatenateCss = FALSE;
+	}
+
+	/**
 	 * Sets removal of all line breaks in template
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function enableRemoveLineBreaksFromTemplate() {
@@ -486,8 +819,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/**
 	 * Unsets removal of all line breaks in template
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function disableRemoveLineBreaksFromTemplate() {
@@ -497,8 +828,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Enables Debug Mode
 	 * This is a shortcut to switch off all compress/concatenate features to enable easier debug
-	 *
-	 * @param void
 	 * @return void
 	 */
 	public function enableDebugMode() {
@@ -508,6 +837,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		$this->removeLineBreaksFromTemplate = FALSE;
 		$this->enableExtCoreDebug = TRUE;
 		$this->enableExtJsDebug = TRUE;
+		$this->enableJqueryDebug = TRUE;
 		$this->enableSvgDebug = TRUE;
 	}
 
@@ -521,7 +851,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Gets the title
 	 *
-	 * @return string $title		title of webpage
+	 * @return string $title Title of webpage
 	 */
 	public function getTitle() {
 		return $this->title;
@@ -548,7 +878,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Returns rendering mode XHTML or HTML
 	 *
-	 * @return boolean		TRUE if XHTML, FALSE if HTML
+	 * @return boolean TRUE if XHTML, FALSE if HTML
 	 */
 	public function getRenderXhtml() {
 		return $this->renderXhtml;
@@ -557,7 +887,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Gets html tag
 	 *
-	 * @return string $htmlTag	html tag
+	 * @return string $htmlTag Html tag
 	 */
 	public function getHtmlTag() {
 		return $this->htmlTag;
@@ -575,7 +905,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Gets head tag
 	 *
-	 * @return string $tag	head tag
+	 * @return string $tag Head tag
 	 */
 	public function getHeadTag() {
 		return $this->headTag;
@@ -651,6 +981,24 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 */
 	public function getConcatenateFiles() {
 		return $this->concatenateFiles;
+	}
+
+	/**
+	 * Gets concatenate of js files
+	 *
+	 * @return boolean
+	 */
+	public function getConcatenateJavascript() {
+		return $this->concatenateJavascript;
+	}
+
+	/**
+	 * Gets concatenate of css files
+	 *
+	 * @return boolean
+	 */
+	public function getConcatenateCss() {
+		return $this->concatenateCss;
 	}
 
 	/**
@@ -736,7 +1084,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 
 	/*****************************************************/
 	/*                                                   */
-	/*  Public Function to add Data                      */
+	/*  Public Functions to add Data                     */
 	/*                                                   */
 	/*                                                   */
 	/*****************************************************/
@@ -744,7 +1092,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Adds meta data
 	 *
-	 * @param string $meta	meta data (complete metatag)
+	 * @param string $meta Meta data (complete metatag)
 	 * @return void
 	 */
 	public function addMetaTag($meta) {
@@ -768,7 +1116,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Adds header data
 	 *
-	 * @param string $data	 free header data for HTML header
+	 * @param string $data Free header data for HTML header
 	 * @return void
 	 */
 	public function addHeaderData($data) {
@@ -780,7 +1128,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Adds footer data
 	 *
-	 * @param string $data	 free header data for HTML header
+	 * @param string $data Free header data for HTML header
 	 * @return void
 	 */
 	public function addFooterData($data) {
@@ -789,20 +1137,19 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		}
 	}
 
-	/* Javascript Files */
-
 	/**
 	 * Adds JS Library. JS Library block is rendered on top of the JS files.
 	 *
 	 * @param string $name Arbitrary identifier
 	 * @param string $file File name
 	 * @param string $type Content Type
-	 * @param boolean $compress		flag if library should be compressed
-	 * @param boolean $forceOnTop	flag if added library should be inserted at begin of this block
+	 * @param boolean $compress Flag if library should be compressed
+	 * @param boolean $forceOnTop Flag if added library should be inserted at begin of this block
 	 * @param string $allWrap
+	 * @param boolean $excludeFromConcatenation
 	 * @return void
 	 */
-	public function addJsLibrary($name, $file, $type = 'text/javascript', $compress = FALSE, $forceOnTop = FALSE, $allWrap = '') {
+	public function addJsLibrary($name, $file, $type = 'text/javascript', $compress = FALSE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE) {
 		if (!$type) {
 			$type = 'text/javascript';
 		}
@@ -813,10 +1160,10 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 				'section' => self::PART_HEADER,
 				'compress' => $compress,
 				'forceOnTop' => $forceOnTop,
-				'allWrap' => $allWrap
+				'allWrap' => $allWrap,
+				'excludeFromConcatenation' => $excludeFromConcatenation,
 			);
 		}
-
 	}
 
 	/**
@@ -825,12 +1172,13 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * @param string $name Arbitrary identifier
 	 * @param string $file File name
 	 * @param string $type Content Type
-	 * @param boolean $compress	flag if library should be compressed
-	 * @param boolean $forceOnTop	flag if added library should be inserted at begin of this block
+	 * @param boolean $compress Flag if library should be compressed
+	 * @param boolean $forceOnTop Flag if added library should be inserted at begin of this block
 	 * @param string $allWrap
+	 * @param boolean $excludeFromConcatenation
 	 * @return void
 	 */
-	public function addJsFooterLibrary($name, $file, $type = 'text/javascript', $compress = FALSE, $forceOnTop = FALSE, $allWrap = '') {
+	public function addJsFooterLibrary($name, $file, $type = 'text/javascript', $compress = FALSE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE) {
 		if (!$type) {
 			$type = 'text/javascript';
 		}
@@ -841,10 +1189,10 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 				'section' => self::PART_FOOTER,
 				'compress' => $compress,
 				'forceOnTop' => $forceOnTop,
-				'allWrap' => $allWrap
+				'allWrap' => $allWrap,
+				'excludeFromConcatenation' => $excludeFromConcatenation,
 			);
 		}
-
 	}
 
 	/**
@@ -855,9 +1203,10 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * @param boolean $compress
 	 * @param boolean $forceOnTop
 	 * @param string $allWrap
+	 * @param boolean $excludeFromConcatenation
 	 * @return void
 	 */
-	public function addJsFile($file, $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '') {
+	public function addJsFile($file, $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE) {
 		if (!$type) {
 			$type = 'text/javascript';
 		}
@@ -866,11 +1215,13 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 				$compress = FALSE;
 			}
 			$this->jsFiles[$file] = array(
+				'file' => $file,
 				'type' => $type,
 				'section' => self::PART_HEADER,
 				'compress' => $compress,
 				'forceOnTop' => $forceOnTop,
-				'allWrap' => $allWrap
+				'allWrap' => $allWrap,
+				'excludeFromConcatenation' => $excludeFromConcatenation,
 			);
 		}
 	}
@@ -882,9 +1233,11 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * @param string $type Content Type
 	 * @param boolean $compress
 	 * @param boolean $forceOnTop
+	 * @param string $allWrap
+	 * @param boolean $excludeFromConcatenation
 	 * @return void
 	 */
-	public function addJsFooterFile($file, $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '') {
+	public function addJsFooterFile($file, $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE) {
 		if (!$type) {
 			$type = 'text/javascript';
 		}
@@ -893,16 +1246,16 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 				$compress = FALSE;
 			}
 			$this->jsFiles[$file] = array(
+				'file' => $file,
 				'type' => $type,
 				'section' => self::PART_FOOTER,
 				'compress' => $compress,
 				'forceOnTop' => $forceOnTop,
-				'allWrap' => $allWrap
+				'allWrap' => $allWrap,
+				'excludeFromConcatenation' => $excludeFromConcatenation,
 			);
 		}
 	}
-
-	/*Javascript Inline Blocks */
 
 	/**
 	 * Adds JS inline code
@@ -947,8 +1300,8 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Adds Ext.onready code, which will be wrapped in Ext.onReady(function() {...});
 	 *
-	 * @param string $block javascript code
-	 * @param boolean $forceOnTop position of the javascript code (TRUE for putting it on top, default is FALSE = bottom)
+	 * @param string $block Javascript code
+	 * @param boolean $forceOnTop Position of the javascript code (TRUE for putting it on top, default is FALSE = bottom)
 	 * @return void
 	 */
 	public function addExtOnReadyCode($block, $forceOnTop = FALSE) {
@@ -964,7 +1317,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Adds the ExtDirect code
 	 *
-	 * @param array $filterNamespaces  limit the output to defined namespaces. If empty, all namespaces are generated
+	 * @param array $filterNamespaces Limit the output to defined namespaces. If empty, all namespaces are generated
 	 * @return void
 	 */
 	public function addExtDirectCode(array $filterNamespaces = array()) {
@@ -977,10 +1330,10 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 			$filterNamespaces = array('TYPO3');
 		}
 
-			// for ExtDirect we need flash message support
+			// For ExtDirect we need flash message support
 		$this->addJsFile(t3lib_div::resolveBackPath($this->backPath . '../t3lib/js/extjs/ux/flashmessages.js'));
 
-			// add language labels for ExtDirect
+			// Add language labels for ExtDirect
 		if (TYPO3_MODE === 'FE') {
 			$this->addInlineLanguageLabelArray(array(
 				'extDirect_timeoutHeader' => $GLOBALS['TSFE']->sL('LLL:EXT:lang/locallang_misc.xml:extDirect_timeoutHeader'),
@@ -1050,8 +1403,8 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 				if (event.code === Ext.Direct.exceptions.TRANSPORT && !event.where) {
 					TYPO3.Flashmessage.display(
 						TYPO3.Severity.error,
-						TYPO3.lang.extDirect_timeoutHeader,
-						TYPO3.lang.extDirect_timeoutMessage,
+						TYPO3.l10n.localize("extDirect_timeoutHeader"),
+						TYPO3.l10n.localize("extDirect_timeoutMessage"),
 						30
 					);
 				} else {
@@ -1095,8 +1448,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		);
 	}
 
-	/* CSS Files */
-
 	/**
 	 * Adds CSS file
 	 *
@@ -1106,22 +1457,24 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * @param string $title
 	 * @param boolean $compress
 	 * @param boolean $forceOnTop
+	 * @param string $allWrap
+	 * @param boolean $excludeFromConcatenation
 	 * @return void
 	 */
-	public function addCssFile($file, $rel = 'stylesheet', $media = 'all', $title = '', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '') {
+	public function addCssFile($file, $rel = 'stylesheet', $media = 'all', $title = '', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE) {
 		if (!isset($this->cssFiles[$file])) {
 			$this->cssFiles[$file] = array(
+				'file' => $file,
 				'rel' => $rel,
 				'media' => $media,
 				'title' => $title,
 				'compress' => $compress,
 				'forceOnTop' => $forceOnTop,
-				'allWrap' => $allWrap
+				'allWrap' => $allWrap,
+				'excludeFromConcatenation' => $excludeFromConcatenation,
 			);
 		}
 	}
-
-	/*CSS Inline Blocks */
 
 	/**
 	 * Adds CSS inline code
@@ -1142,10 +1495,42 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		}
 	}
 
-	/* JS Libraries */
+	/**
+	 * Call this function if you need to include the jQuery library
+	 *
+	 * @param null|string $version The jQuery version that should be included, either "latest" or any available version
+	 * @param null|string $source The location of the jQuery source, can be "local", "google", "msn", "jquery" or just an URL to your jQuery lib
+	 * @param string $namespace The namespace in which the jQuery object of the specific version should be stored.
+	 * @return void
+	 * @throws UnexpectedValueException
+	 */
+	public function loadJquery($version = NULL, $source = NULL, $namespace = self::JQUERY_NAMESPACE_DEFAULT) {
+			// Set it to the version that is shipped with the TYPO3 core
+		if ($version === NULL || $version === 'latest') {
+			$version = self::JQUERY_VERSION_LATEST;
+		}
+
+			// Check if the source is set, otherwise set it to "default"
+		if ($source === NULL) {
+			$source = 'local';
+		}
+
+		if ($source === 'local' && !in_array($version, $this->availableLocalJqueryVersions)) {
+			throw new UnexpectedValueException('The requested jQuery version is not available in the local filesystem.', 1341505305);
+		}
+
+		if (!ctype_alnum($namespace)) {
+			throw new UnexpectedValueException('The requested namespace contains non alphanumeric characters.', 1341571604);
+		}
+
+		$this->jQueryVersions[$namespace] = array(
+			'version' => $version,
+			'source' => $source,
+		);
+	}
 
 	/**
-	 *  call function if you need the prototype library
+	 *  Call function if you need the prototype library
 	 *
 	 * @return void
 	 */
@@ -1154,9 +1539,9 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	}
 
 	/**
-	 * call function if you need the Scriptaculous library
+	 * Call function if you need the Scriptaculous library
 	 *
-	 * @param string $modules   add modules you need. use "all" if you need complete modules
+	 * @param string $modules Add modules you need. use "all" if you need complete modules
 	 * @return void
 	 */
 	public function loadScriptaculous($modules = 'all') {
@@ -1182,14 +1567,14 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * call this function if you need the extJS library
 	 *
-	 * @param boolean $css flag, if set the ext-css will be loaded
-	 * @param boolean $theme flag, if set the ext-theme "grey" will be loaded
-	 * @param string $adapter choose alternative adapter, possible values: yui, prototype, jquery
+	 * @param boolean $css Flag, if set the ext-css will be loaded
+	 * @param boolean $theme Flag, if set the ext-theme "grey" will be loaded
+	 * @param string $adapter Choose alternative adapter, possible values: yui, prototype, jquery
 	 * @return void
 	 */
 	public function loadExtJS($css = TRUE, $theme = TRUE, $adapter = '') {
 		if ($adapter) {
-				// empty $adapter will always load the ext adapter
+				// Empty $adapter will always load the ext adapter
 			switch (t3lib_div::strtolower(trim($adapter))) {
 				case self::EXTJS_ADAPTER_YUI :
 					$this->extJSadapter = 'yui/ext-yui-adapter.js';
@@ -1205,7 +1590,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		$this->addExtJS = TRUE;
 		$this->extJStheme = $theme;
 		$this->extJScss = $css;
-
 	}
 
 	/**
@@ -1213,15 +1597,13 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * Need extJs loaded
 	 *
 	 * @return void
-	 *
 	 */
 	public function enableExtJSQuickTips() {
 		$this->enableExtJSQuickTips = TRUE;
 	}
 
-
 	/**
-	 * call function if you need the ExtCore library
+	 * Call function if you need the ExtCore library
 	 *
 	 * @return void
 	 */
@@ -1230,7 +1612,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	}
 
 	/**
-	 * call function if you need the SVG library
+	 * Call function if you need the SVG library
 	 *
 	 * @return void
 	 */
@@ -1239,32 +1621,31 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	}
 
 	/**
-	 * call this function to load debug version of ExtJS. Use this for development only
-	 *
+	 * Call this function to load debug version of ExtJS. Use this for development only
+	 * @return void
 	 */
 	public function enableSvgDebug() {
 		$this->enableSvgDebug = TRUE;
 	}
 
 	/**
-	 * call this function to force flash usage with SVG library
-	 *
+	 * Call this function to force flash usage with SVG library
+	 * @return void
 	 */
 	public function svgForceFlash() {
 		$this->addMetaTag('<meta name="svg.render.forceflash" content="true" />');
 	}
 
 	/**
-	 * call this function to load debug version of ExtJS. Use this for development only
-	 *
+	 * Call this function to load debug version of ExtJS. Use this for development only
+	 * @return void
 	 */
 	public function enableExtJsDebug() {
 		$this->enableExtJsDebug = TRUE;
 	}
 
 	/**
-	 * call this function to load debug version of ExtCore. Use this for development only
-	 *
+	 * Call this function to load debug version of ExtCore. Use this for development only
 	 * @return void
 	 */
 	public function enableExtCoreDebug() {
@@ -1301,8 +1682,8 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * Gets labels to be used in JavaScript fetched from a locallang file.
 	 *
 	 * @param string $fileRef Input is a file-reference (see t3lib_div::getFileAbsFileName). That file is expected to be a 'locallang.xml' file containing a valid XML TYPO3 language structure.
-	 * @param string $selectionPrefix: Prefix to select the correct labels (default: '')
-	 * @param string $stripFromSelectionName: Sub-prefix to be removed from label names in the result (default: '')
+	 * @param string $selectionPrefix Prefix to select the correct labels (default: '')
+	 * @param string $stripFromSelectionName Sub-prefix to be removed from label names in the result (default: '')
 	 * @param integer $errorMode Error mode (when file could not be found): 0 - syslog entry, 1 - do nothing, 2 - throw an exception
 	 * @return void
 	 */
@@ -1387,186 +1768,83 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/*                                                   */
 	/*  Render Functions                                 */
 	/*                                                   */
-	/*                                                   */
 	/*****************************************************/
 
 	/**
-	 * render the section (Header or Footer)
+	 * Render the section (Header or Footer)
 	 *
-	 * @param int $part	section which should be rendered: self::PART_COMPLETE, self::PART_HEADER or self::PART_FOOTER
-	 * @return string	content of rendered section
+	 * @param integer $part Section which should be rendered: self::PART_COMPLETE, self::PART_HEADER or self::PART_FOOTER
+	 * @return string Content of rendered section
 	 */
 	public function render($part = self::PART_COMPLETE) {
+		$this->prepareRendering();
 
-		$jsFiles = '';
-		$cssFiles = '';
-		$cssInline = '';
-		$jsInline = '';
-		$jsFooterInline = '';
-		$jsFooterLibs = '';
-		$jsFooterFiles = '';
-
-			// preRenderHook for possible manuipulation
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'])) {
-			$params = array(
-				'jsLibs' => &$this->jsLibs,
-				'jsFooterLibs'   => &$this->jsFooterLibs,
-				'jsFiles' => &$this->jsFiles,
-				'jsFooterFiles' => &$this->jsFooterFiles,
-				'cssFiles' => &$this->cssFiles,
-				'headerData' => &$this->headerData,
-				'footerData' => &$this->footerData,
-				'jsInline' => &$this->jsInline,
-				'jsFooterInline' => &$this->jsFooterInline,
-				'cssInline' => &$this->cssInline,
-			);
-			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'] as $hook) {
-				t3lib_div::callUserFunction($hook, $params, $this);
-			}
-		}
-
-		$jsLibs = $this->renderJsLibraries();
-
-		if ($this->concatenateFiles) {
-				// do the file concatenation
-			$this->doConcatenate();
-		}
-		if ($this->compressCss || $this->compressJavascript) {
-				// do the file compression
-			$this->doCompress();
-		}
+		list(
+				$jsLibs,
+				$jsFiles,
+				$jsFooterFiles,
+				$cssFiles,
+				$jsInline,
+				$cssInline,
+				$jsFooterInline,
+				$jsFooterLibs
+			) = $this->renderJavaScriptAndCss();
 
 		$metaTags = implode(LF, $this->metaTags);
+		$markerArray = $this->getPreparedMarkerArray($jsLibs, $jsFiles, $jsFooterFiles, $cssFiles, $jsInline, $cssInline, $jsFooterInline, $jsFooterLibs, $metaTags);
+		$template = $this->getTemplateForPart($part);
+		$this->reset();
 
-			// remove ending slashes from static header block
-			// if the page is beeing rendered as html (not xhtml)
-			// and define variable $endingSlash for further use
+		return trim(t3lib_parsehtml::substituteMarkerArray($template, $markerArray, '###|###'));
+	}
+
+	/**
+	 * Remove ending slashes from static header block
+	 * if the page is beeing rendered as html (not xhtml)
+	 * and define property $this->endingSlash for further use
+	 *
+	 * @return void
+	 */
+	protected function prepareRendering() {
 		if ($this->getRenderXhtml()) {
-			$endingSlash = ' /';
+			$this->endingSlash = ' /';
 		} else {
 			$this->metaCharsetTag = str_replace(' />', '>', $this->metaCharsetTag);
 			$this->baseUrlTag = str_replace(' />', '>', $this->baseUrlTag);
 			$this->shortcutTag = str_replace(' />', '>', $this->shortcutTag);
-			$endingSlash = '';
+
+			$this->endingSlash = '';
+		}
+	}
+
+	/**
+	 * Renders all JavaScript and CSS
+	 *
+	 * @return array<string>
+	 */
+	protected function renderJavaScriptAndCss() {
+		$this->executePreRenderHook();
+
+		$mainJsLibs = $this->renderMainJavaScriptLibraries();
+
+		if ($this->concatenateFiles || $this->concatenateJavascript || $this->concatenateCss) {
+				// Do the file concatenation
+			$this->doConcatenate();
+		}
+		if ($this->compressCss || $this->compressJavascript) {
+				// Do the file compression
+			$this->doCompress();
 		}
 
-		if (count($this->cssFiles)) {
-			foreach ($this->cssFiles as $file => $properties) {
-				$file = t3lib_div::resolveBackPath($file);
-				$file = t3lib_div::createVersionNumberedFilename($file);
-				$tag = '<link rel="' . htmlspecialchars($properties['rel']) . '" type="text/css" href="' .
-					   htmlspecialchars($file) . '" media="' . htmlspecialchars($properties['media']) . '"' .
-					   ($properties['title'] ? ' title="' . htmlspecialchars($properties['title']) . '"' : '') .
-					   $endingSlash . '>';
-				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
-					$tag = str_replace('|', $tag, $properties['allWrap']);
-				}
-				if ($properties['forceOnTop']) {
-					$cssFiles = $tag . LF . $cssFiles;
-				} else {
-					$cssFiles .= LF . $tag;
-				}
-			}
-		}
+		$this->executeRenderPostTransformHook();
 
-		if (count($this->cssInline)) {
-			foreach ($this->cssInline as $name => $properties) {
-				if ($properties['forceOnTop']) {
-					$cssInline = '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF . $cssInline;
-				} else {
-					$cssInline .= '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF;
-				}
-			}
-			$cssInline = $this->inlineCssWrap[0] . $cssInline . $this->inlineCssWrap[1];
-		}
+		$cssFiles = $this->renderCssFiles();
+		$cssInline = $this->renderCssInline();
+		list($jsLibs, $jsFooterLibs) = $this->renderAdditionalJavaScriptLibraries();
+		list($jsFiles, $jsFooterFiles) = $this->renderJavaScriptFiles();
+		list($jsInline, $jsFooterInline) = $this->renderInlineJavaScript();
 
-		if (count($this->jsLibs)) {
-			foreach ($this->jsLibs as $name => $properties) {
-				$properties['file'] = t3lib_div::resolveBackPath($properties['file']);
-				$properties['file'] = t3lib_div::createVersionNumberedFilename($properties['file']);
-				$tag = '<script src="' . htmlspecialchars($properties['file']) . '" type="' . htmlspecialchars($properties['type']) . '"></script>';
-				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
-					$tag = str_replace('|', $tag, $properties['allWrap']);
-				}
-				if ($properties['forceOnTop']) {
-					if ($properties['section'] === self::PART_HEADER) {
-						$jsLibs = $tag . LF . $jsLibs;
-					} else {
-						$jsFooterLibs = $tag . LF . $jsFooterLibs;
-					}
-				} else {
-					if ($properties['section'] === self::PART_HEADER) {
-						$jsLibs .= LF . $tag;
-					} else {
-						$jsFooterLibs .= LF . $tag;
-					}
-				}
-			}
-		}
-
-		if (count($this->jsFiles)) {
-			foreach ($this->jsFiles as $file => $properties) {
-				$file = t3lib_div::resolveBackPath($file);
-				$file = t3lib_div::createVersionNumberedFilename($file);
-				$tag = '<script src="' . htmlspecialchars($file) . '" type="' . htmlspecialchars($properties['type']) . '"></script>';
-				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
-					$tag = str_replace('|', $tag, $properties['allWrap']);
-				}
-				if ($properties['forceOnTop']) {
-					if ($properties['section'] === self::PART_HEADER) {
-						$jsFiles = $tag . LF . $jsFiles;
-					} else {
-						$jsFooterFiles = $tag . LF . $jsFooterFiles;
-					}
-				} else {
-					if ($properties['section'] === self::PART_HEADER) {
-						$jsFiles .= LF . $tag;
-					} else {
-						$jsFooterFiles .= LF . $tag;
-					}
-				}
-			}
-		}
-
-		if (count($this->jsInline)) {
-			foreach ($this->jsInline as $name => $properties) {
-				if ($properties['forceOnTop']) {
-					if ($properties['section'] === self::PART_HEADER) {
-						$jsInline = '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF . $jsInline;
-					} else {
-						$jsFooterInline = '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF . $jsFooterInline;
-					}
-				} else {
-					if ($properties['section'] === self::PART_HEADER) {
-						$jsInline .= '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF;
-					} else {
-						$jsFooterInline .= '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF;
-					}
-				}
-			}
-		}
-
-
-		if ($jsInline) {
-			$jsInline = $this->inlineJavascriptWrap[0] . $jsInline . $this->inlineJavascriptWrap[1];
-		}
-
-		if ($jsFooterInline) {
-			$jsFooterInline = $this->inlineJavascriptWrap[0] . $jsFooterInline . $this->inlineJavascriptWrap[1];
-		}
-
-
-			// get template
-		$templateFile = t3lib_div::getFileAbsFileName($this->templateFile, TRUE);
-		$template = t3lib_div::getURL($templateFile);
-
-		if ($this->removeLineBreaksFromTemplate) {
-			$template = strtr($template, array(LF => '', CR => ''));
-		}
-		if ($part != self::PART_COMPLETE) {
-			$templatePart = explode('###BODY###', $template);
-			$template = $templatePart[$part - 1];
-		}
+		$jsLibs = $mainJsLibs . $jsLibs;
 
 		if ($this->moveJsFromHeaderToFooter) {
 			$jsFooterLibs = $jsLibs . LF . $jsFooterLibs;
@@ -1577,81 +1855,98 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 			$jsInline = '';
 		}
 
-			// postRenderHook for possible manipulation
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess'])) {
-			$params = array (
-				'jsLibs'               => &$jsLibs,
-				'jsFiles'              => &$jsFiles,
-				'jsFooterFiles'        => &$jsFooterFiles,
-				'cssFiles'             => &$cssFiles,
-				'headerData'           => &$this->headerData,
-				'footerData'           => &$this->footerData,
-				'jsInline'             => &$jsInline,
-				'cssInline'            => &$cssInline,
-				'xmlPrologAndDocType'  => &$this->xmlPrologAndDocType,
-				'htmlTag'              => &$this->htmlTag,
-				'headTag'              => &$this->headTag,
-				'charSet'              => &$this->charSet,
-				'metaCharsetTag'       => &$this->metaCharsetTag,
-				'shortcutTag'          => &$this->shortcutTag,
-				'inlineComments'       => &$this->inlineComments,
-				'baseUrl'              => &$this->baseUrl,
-				'baseUrlTag'           => &$this->baseUrlTag,
-				'favIcon'              => &$this->favIcon,
-				'iconMimeType'         => &$this->iconMimeType,
-				'titleTag'             => &$this->titleTag,
-				'title'                => &$this->title,
-				'metaTags'             => &$metaTags,
-				'jsFooterInline'       => &$jsFooterInline,
-				'jsFooterLibs'         => &$jsFooterLibs,
-				'bodyContent'          => &$this->bodyContent,
-			);
-			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess'] as $hook) {
-				t3lib_div::callUserFunction($hook, $params, $this);
-			}
-		}
+		$this->executePostRenderHook($jsLibs, $jsFiles, $jsFooterFiles, $cssFiles, $jsInline, $cssInline, $jsFooterInline, $jsFooterLibs);
 
-		$markerArray = array(
-			'XMLPROLOG_DOCTYPE' => $this->xmlPrologAndDocType,
-			'HTMLTAG'           => $this->htmlTag,
-			'HEADTAG'           => $this->headTag,
-			'METACHARSET'       => $this->charSet ? str_replace('|', htmlspecialchars($this->charSet), $this->metaCharsetTag) : '',
-			'INLINECOMMENT'     => $this->inlineComments ? LF . LF . '<!-- ' . LF . implode(LF, $this->inlineComments) . '-->' . LF . LF : '',
-			'BASEURL'           => $this->baseUrl ? str_replace('|', $this->baseUrl, $this->baseUrlTag) : '',
-			'SHORTCUT'          => $this->favIcon ? sprintf($this->shortcutTag, htmlspecialchars($this->favIcon), $this->iconMimeType) : '',
-			'CSS_INCLUDE'       => $cssFiles,
-			'CSS_INLINE'        => $cssInline,
-			'JS_INLINE'         => $jsInline,
-			'JS_INCLUDE'        => $jsFiles,
-			'JS_LIBS'      	    => $jsLibs,
-			'TITLE'             => $this->title ? str_replace('|', htmlspecialchars($this->title), $this->titleTag) : '',
-			'META'              => $metaTags,
-			'HEADERDATA'        => $this->headerData ? implode(LF, $this->headerData) : '',
-			'FOOTERDATA'        => $this->footerData ? implode(LF, $this->footerData) : '',
-			'JS_LIBS_FOOTER'    => $jsFooterLibs,
-			'JS_INCLUDE_FOOTER' => $jsFooterFiles,
-			'JS_INLINE_FOOTER'  => $jsFooterInline,
-			'BODY'              => $this->bodyContent,
-		);
-
-		$markerArray = array_map('trim', $markerArray);
-
-		$this->reset();
-		return trim(t3lib_parsehtml::substituteMarkerArray($template, $markerArray, '###|###'));
+		return array($jsLibs, $jsFiles, $jsFooterFiles, $cssFiles, $jsInline, $cssInline, $jsFooterInline, $jsFooterLibs);
 	}
 
 	/**
-	 * helper function for render the javascript libraries
+	 * Fills the marker array with the given strings and trims each value
 	 *
-	 * @return string	content with javascript libraries
+	 * @param $jsLibs string
+	 * @param $jsFiles string
+	 * @param $jsFooterFiles string
+	 * @param $cssFiles string
+	 * @param $jsInline string
+	 * @param $cssInline string
+	 * @param $jsFooterInline string
+	 * @param $jsFooterLibs string
+	 * @param $metaTags string
+	 * @return array Marker array
 	 */
-	protected function renderJsLibraries() {
+	protected function getPreparedMarkerArray($jsLibs, $jsFiles, $jsFooterFiles, $cssFiles, $jsInline, $cssInline, $jsFooterInline, $jsFooterLibs, $metaTags) {
+		$markerArray = array(
+			'XMLPROLOG_DOCTYPE' => $this->xmlPrologAndDocType,
+			'HTMLTAG' => $this->htmlTag,
+			'HEADTAG' => $this->headTag,
+			'METACHARSET' => $this->charSet ? str_replace('|', htmlspecialchars($this->charSet), $this->metaCharsetTag) : '',
+			'INLINECOMMENT' => $this->inlineComments ? LF . LF . '<!-- ' . LF . implode(LF, $this->inlineComments) . '-->' . LF . LF : '',
+			'BASEURL' => $this->baseUrl ? str_replace('|', $this->baseUrl, $this->baseUrlTag) : '',
+			'SHORTCUT' => $this->favIcon ? sprintf($this->shortcutTag, htmlspecialchars($this->favIcon), $this->iconMimeType) : '',
+			'CSS_INCLUDE' => $cssFiles,
+			'CSS_INLINE' => $cssInline,
+			'JS_INLINE' => $jsInline,
+			'JS_INCLUDE' => $jsFiles,
+			'JS_LIBS' => $jsLibs,
+			'TITLE' => $this->title ? str_replace('|', htmlspecialchars($this->title), $this->titleTag) : '',
+			'META' => $metaTags,
+			'HEADERDATA' => $this->headerData ? implode(LF, $this->headerData) : '',
+			'FOOTERDATA' => $this->footerData ? implode(LF, $this->footerData) : '',
+			'JS_LIBS_FOOTER' => $jsFooterLibs,
+			'JS_INCLUDE_FOOTER' => $jsFooterFiles,
+			'JS_INLINE_FOOTER' => $jsFooterInline,
+			'BODY' => $this->bodyContent,
+		);
+		$markerArray = array_map('trim', $markerArray);
+
+		return $markerArray;
+	}
+
+	/**
+	 * Reads the template file and returns the requested part as string
+	 *
+	 * @param integer $part
+	 * @return string
+	 */
+	protected function getTemplateForPart($part) {
+		$templateFile = t3lib_div::getFileAbsFileName($this->templateFile, TRUE);
+		$template = t3lib_div::getUrl($templateFile);
+
+		if ($this->removeLineBreaksFromTemplate) {
+			$template = strtr($template, array(LF => '', CR => ''));
+		}
+		if ($part != self::PART_COMPLETE) {
+			$templatePart = explode('###BODY###', $template);
+			$template = $templatePart[$part - 1];
+		}
+
+		return $template;
+	}
+
+	/**
+	 * Helper function for render the main JavaScript libraries,
+	 * currently: jQuery, prototype, SVG, ExtJs
+	 *
+	 * @return string Content with JavaScript libraries
+	 */
+	protected function renderMainJavaScriptLibraries() {
 		$out = '';
 
 		if ($this->addSvg) {
 			$out .= '<script src="' . $this->processJsFile($this->backPath . $this->svgPath . 'svg.js') .
 					'" data-path="' . $this->backPath . $this->svgPath .
 					'"' . ($this->enableSvgDebug ? ' data-debug="true"' : '') . '></script>';
+		}
+
+			// Include jQuery Core for each namespace, depending on the version and source
+		if (!empty($this->jQueryVersions)) {
+			foreach ($this->jQueryVersions as $namespace => $jQueryVersion) {
+				$out .= $this->renderJqueryScriptTag(
+					$jQueryVersion['version'],
+					$jQueryVersion['source'],
+					$namespace
+				);
+			}
 		}
 
 		if ($this->addPrototype) {
@@ -1667,7 +1962,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 					$mods[] = $key;
 				}
 			}
-				// resolve dependencies
+				// Resolve dependencies
 			if (in_array('dragdrop', $mods) || in_array('controls', $mods)) {
 				$mods = array_merge(array('effects'), $mods);
 			}
@@ -1675,53 +1970,55 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 			if (count($mods)) {
 				foreach ($mods as $module) {
 					$out .= '<script src="' . $this->processJsFile($this->backPath .
-																   $this->scriptaculousPath . $module . '.js') . '" type="text/javascript"></script>' . LF;
+																$this->scriptaculousPath . $module . '.js') . '" type="text/javascript"></script>' . LF;
 					unset($this->jsFiles[$this->backPath . $this->scriptaculousPath . $module . '.js']);
 				}
 			}
 			$out .= '<script src="' . $this->processJsFile($this->backPath . $this->scriptaculousPath .
-														   'scriptaculous.js') . '" type="text/javascript"></script>' . LF;
+														'scriptaculous.js') . '" type="text/javascript"></script>' . LF;
 			unset($this->jsFiles[$this->backPath . $this->scriptaculousPath . 'scriptaculous.js']);
 		}
 
-			// include extCore, but only if ExtJS is not included
+			// Include extCore, but only if ExtJS is not included
 		if ($this->addExtCore && !$this->addExtJS) {
 			$out .= '<script src="' . $this->processJsFile($this->backPath .
-														   $this->extCorePath . 'ext-core' . ($this->enableExtCoreDebug ? '-debug' : '') . '.js') .
+														$this->extCorePath . 'ext-core' . ($this->enableExtCoreDebug ? '-debug' : '') . '.js') .
 					'" type="text/javascript"></script>' . LF;
 			unset($this->jsFiles[$this->backPath . $this->extCorePath . 'ext-core' . ($this->enableExtCoreDebug ? '-debug' : '') . '.js']);
 		}
 
-			// include extJS
+			// Include extJS
 		if ($this->addExtJS) {
-				// use the base adapter all the time
+				// Use the base adapter all the time
 			$out .= '<script src="' . $this->processJsFile($this->backPath . $this->extJsPath .
-														   'adapter/' . ($this->enableExtJsDebug ?
+														'adapter/' . ($this->enableExtJsDebug ?
 					str_replace('.js', '-debug.js', $this->extJSadapter) : $this->extJSadapter)) .
 					'" type="text/javascript"></script>' . LF;
 			$out .= '<script src="' . $this->processJsFile($this->backPath . $this->extJsPath .
-														   'ext-all' . ($this->enableExtJsDebug ? '-debug' : '') . '.js') .
+														'ext-all' . ($this->enableExtJsDebug ? '-debug' : '') . '.js') .
 					'" type="text/javascript"></script>' . LF;
 
-				// add extJS localization
-			$localeMap = $this->csConvObj->isoArray; // load standard ISO mapping and modify for use with ExtJS
+				// Add extJS localization
+				// Load standard ISO mapping and modify for use with ExtJS
+			$localeMap = $this->locales->getIsoMapping();
 			$localeMap[''] = 'en';
 			$localeMap['default'] = 'en';
-			$localeMap['gr'] = 'el_GR'; // Greek
-			$localeMap['no'] = 'no_BO'; // Norwegian Bokmaal
-			$localeMap['se'] = 'se_SV'; // Swedish
-
+				// Greek
+			$localeMap['gr'] = 'el_GR';
+				// Norwegian Bokmaal
+			$localeMap['no'] = 'no_BO';
+				// Swedish
+			$localeMap['se'] = 'se_SV';
 
 			$extJsLang = isset($localeMap[$this->lang]) ? $localeMap[$this->lang] : $this->lang;
 				// TODO autoconvert file from UTF8 to current BE charset if necessary!!!!
 			$extJsLocaleFile = $this->extJsPath . 'locale/ext-lang-' . $extJsLang . '.js';
 			if (file_exists(PATH_typo3 . $extJsLocaleFile)) {
 				$out .= '<script src="' . $this->processJsFile($this->backPath .
-															   $extJsLocaleFile) . '" type="text/javascript" charset="utf-8"></script>' . LF;
+															$extJsLocaleFile) . '" type="text/javascript" charset="utf-8"></script>' . LF;
 			}
 
-
-				// remove extjs from JScodeLibArray
+				// Remove extjs from JScodeLibArray
 			unset(
 			$this->jsFiles[$this->backPath . $this->extJsPath . 'ext-all.js'],
 			$this->jsFiles[$this->backPath . $this->extJsPath . 'ext-all-debug.js']
@@ -1754,7 +2051,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		$inlineSettings .= $this->inlineSettings ? 'TYPO3.settings = ' . json_encode($this->inlineSettings) . ';' : '';
 
 		if ($this->addExtCore || $this->addExtJS) {
-				// set clear.gif, move it on top, add handler code
+				// Set clear.gif, move it on top, add handler code
 			$code = '';
 			if (count($this->extOnReadyCode)) {
 				foreach ($this->extOnReadyCode as $block) {
@@ -1770,6 +2067,11 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 					($this->enableExtJSQuickTips ? 'Ext.QuickTips.init();' . LF : '') . $code .
 					' });' . $this->inlineJavascriptWrap[1];
 			unset ($this->extOnReadyCode);
+
+				// Include TYPO3.l10n object
+			if (TYPO3_MODE === 'BE') {
+				$out .= '<script src="' . $this->processJsFile($this->backPath . 'sysext/lang/res/js/be/typo3lang.js') . '" type="text/javascript" charset="utf-8"></script>' . LF;
+			}
 
 			if ($this->extJStheme) {
 				if (isset($GLOBALS['TBE_STYLES']['extJS']['theme'])) {
@@ -1794,6 +2096,243 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		return $out;
 	}
 
+	/**
+	 * Renders the HTML script tag for the given jQuery version.
+	 *
+	 * @param string $version The jQuery version that should be included, either "latest" or any available version
+	 * @param string $source The location of the jQuery source, can be "local", "google", "msn" or "jquery"
+	 * @param string $namespace The namespace in which the jQuery object of the specific version should be stored
+	 * @return string
+	 */
+	protected function renderJqueryScriptTag($version, $source, $namespace) {
+
+		switch (TRUE) {
+			case isset($this->jQueryCdnUrls[$source]):
+				if ($this->enableJqueryDebug) {
+					$minifyPart = '';
+				} else {
+					$minifyPart = '.min';
+				}
+				$jQueryFileName = sprintf($this->jQueryCdnUrls[$source], $version, $minifyPart);
+				break;
+
+				// Local source - include the latest
+			case $source === 'local':
+				$jQueryFileName = $this->backPath . $this->jQueryPath . 'jquery-' . rawurlencode($version);
+
+				if ($this->enableJqueryDebug) {
+					$jQueryFileName .= '.js';
+				} else {
+					$jQueryFileName .= '.min.js';
+				}
+				break;
+				// No special key found, assume the source is a valid URL to a jQuery library
+			default:
+				$jQueryFileName = $source;
+		}
+
+			// Include the jQuery Core
+		$scriptTag = '<script src="' . htmlspecialchars($jQueryFileName) . '" type="text/javascript"></script>' . LF;
+
+			// Set the noConflict mode to be available via "TYPO3.jQuery" in all installations
+
+		switch ($namespace) {
+			case self::JQUERY_NAMESPACE_DEFAULT_NOCONFLICT:
+				$scriptTag .= t3lib_div::wrapJS(
+					'jQuery.noConflict();'
+				);
+				break;
+			case self::JQUERY_NAMESPACE_NONE:
+				break;
+			case self::JQUERY_NAMESPACE_DEFAULT:
+			default:
+				$scriptTag .= t3lib_div::wrapJS(
+					'var TYPO3 = TYPO3 || {}; TYPO3.' . $namespace . ' = jQuery.noConflict(true);'
+				);
+				break;
+		}
+
+		return $scriptTag;
+	}
+
+	/**
+	 * Render CSS files
+	 *
+	 * @return string
+	 */
+	protected function renderCssFiles() {
+		$cssFiles = '';
+		if (count($this->cssFiles)) {
+			foreach ($this->cssFiles as $file => $properties) {
+				$file = t3lib_div::resolveBackPath($file);
+				$file = t3lib_div::createVersionNumberedFilename($file);
+				$tag  = '<link rel="' . htmlspecialchars($properties['rel']) .
+					'" type="text/css" href="' . htmlspecialchars($file) .
+					'" media="' . htmlspecialchars($properties['media']) .
+					'"' . ($properties['title'] ? ' title="' . htmlspecialchars($properties['title']) . '"' : '') . $this->endingSlash . '>';
+				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
+					$tag = str_replace('|', $tag, $properties['allWrap']);
+				}
+				if ($properties['forceOnTop']) {
+					$cssFiles = $tag . LF . $cssFiles;
+				} else {
+					$cssFiles .= LF . $tag;
+				}
+			}
+		}
+
+		return $cssFiles;
+	}
+
+	/**
+	 * Render inline CSS
+	 *
+	 * @return string
+	 */
+	protected function renderCssInline() {
+		$cssInline = '';
+		if (count($this->cssInline)) {
+			foreach ($this->cssInline as $name => $properties) {
+				if ($properties['forceOnTop']) {
+					$cssInline = '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF . $cssInline;
+				} else {
+					$cssInline .= '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF;
+				}
+			}
+			$cssInline = $this->inlineCssWrap[0] . $cssInline . $this->inlineCssWrap[1];
+		}
+
+		return $cssInline;
+	}
+
+	/**
+	 * Render JavaScipt libraries
+	 *
+	 * @return array<string> jsLibs and jsFooterLibs strings
+	 */
+	protected function renderAdditionalJavaScriptLibraries() {
+		$jsLibs = '';
+		$jsFooterLibs = '';
+		if (count($this->jsLibs)) {
+			foreach ($this->jsLibs as $properties) {
+				$properties['file'] = t3lib_div::resolveBackPath($properties['file']);
+				$properties['file'] = t3lib_div::createVersionNumberedFilename($properties['file']);
+				$tag                = '<script src="' . htmlspecialchars($properties['file']) . '" type="' . htmlspecialchars($properties['type']) . '"></script>';
+				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
+					$tag = str_replace('|', $tag, $properties['allWrap']);
+				}
+				if ($properties['forceOnTop']) {
+					if ($properties['section'] === self::PART_HEADER) {
+						$jsLibs = $tag . LF . $jsLibs;
+					} else {
+						$jsFooterLibs = $tag . LF . $jsFooterLibs;
+					}
+				} else {
+					if ($properties['section'] === self::PART_HEADER) {
+						$jsLibs .= LF . $tag;
+					} else {
+						$jsFooterLibs .= LF . $tag;
+					}
+				}
+			}
+		}
+		if ($this->moveJsFromHeaderToFooter) {
+			$jsFooterLibs = $jsLibs . LF . $jsFooterLibs;
+			$jsLibs       = '';
+		}
+
+		return array($jsLibs, $jsFooterLibs);
+	}
+
+	/**
+	 * Render JavaScript files
+	 *
+	 * @return array<string> jsFiles and jsFooterFiles strings
+	 */
+	protected function renderJavaScriptFiles() {
+		$jsFiles = '';
+		$jsFooterFiles = '';
+		if (count($this->jsFiles)) {
+			foreach ($this->jsFiles as $file => $properties) {
+				$file = t3lib_div::resolveBackPath($file);
+				$file = t3lib_div::createVersionNumberedFilename($file);
+				$tag  = '<script src="' . htmlspecialchars($file) . '" type="' . htmlspecialchars($properties['type']) . '"></script>';
+				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
+					$tag = str_replace('|', $tag, $properties['allWrap']);
+				}
+				if ($properties['forceOnTop']) {
+					if ($properties['section'] === self::PART_HEADER) {
+						$jsFiles = $tag . LF . $jsFiles;
+					} else {
+						$jsFooterFiles = $tag . LF . $jsFooterFiles;
+					}
+				} else {
+					if ($properties['section'] === self::PART_HEADER) {
+						$jsFiles .= LF . $tag;
+					} else {
+						$jsFooterFiles .= LF . $tag;
+					}
+				}
+			}
+		}
+		if ($this->moveJsFromHeaderToFooter) {
+			$jsFooterFiles = $jsFiles . LF . $jsFooterFiles;
+			$jsFiles       = '';
+		}
+
+		return array($jsFiles, $jsFooterFiles);
+	}
+
+	/**
+	 * Render inline JavaScript
+	 *
+	 * @return array<string> jsInline and jsFooterInline string
+	 */
+	protected function renderInlineJavaScript() {
+		$jsInline = '';
+		$jsFooterInline = '';
+		if (count($this->jsInline)) {
+			foreach ($this->jsInline as $name => $properties) {
+				if ($properties['forceOnTop']) {
+					if ($properties['section'] === self::PART_HEADER) {
+						$jsInline = '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF . $jsInline;
+					} else {
+						$jsFooterInline = '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF . $jsFooterInline;
+					}
+				} else {
+					if ($properties['section'] === self::PART_HEADER) {
+						$jsInline .= '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF;
+					} else {
+						$jsFooterInline .= '/*' . htmlspecialchars($name) . '*/' . LF . $properties['code'] . LF;
+					}
+				}
+			}
+		}
+		if ($jsInline) {
+			$jsInline = $this->inlineJavascriptWrap[0] . $jsInline . $this->inlineJavascriptWrap[1];
+		}
+
+		if ($jsFooterInline) {
+			$jsFooterInline = $this->inlineJavascriptWrap[0] . $jsFooterInline . $this->inlineJavascriptWrap[1];
+		}
+		if ($this->moveJsFromHeaderToFooter) {
+			$jsFooterInline = $jsInline . LF . $jsFooterInline;
+			$jsInline       = '';
+		}
+
+		return array($jsInline, $jsFooterInline);
+	}
+
+	/**
+	 * Include language file for inline usage
+	 *
+	 * @param string $fileRef
+	 * @param string $selectionPrefix
+	 * @param string $stripFromSelectionName
+	 * @param integer $errorMode
+	 * @return void
+	 * @throws RuntimeException
+	 */
 	protected function includeLanguageFileForInline($fileRef, $selectionPrefix = '', $stripFromSelectionName = '', $errorMode = 0) {
 		if (!isset($this->lang) || !isset($this->charSet)) {
 			throw new RuntimeException('Language and character encoding are not set.', 1284906026);
@@ -1831,7 +2370,6 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/*                                                   */
 	/*  Tools                                            */
 	/*                                                   */
-	/*                                                   */
 	/*****************************************************/
 
 	/**
@@ -1841,24 +2379,55 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function doConcatenate() {
-			// traverse the arrays, concatenate in one file
-			// then remove concatenated files from array and add the concatenated file
+		$this->doConcatenateCss();
+		$this->doConcatenateJavaScript();
+	}
 
-		if ($this->concatenateFiles) {
-			$params = array(
-				'jsLibs' => &$this->jsLibs,
-				'jsFiles' => &$this->jsFiles,
-				'jsFooterFiles' => &$this->jsFooterFiles,
-				'cssFiles' => &$this->cssFiles,
-				'headerData' => &$this->headerData,
-				'footerData' => &$this->footerData,
-			);
+	/**
+	 * Concatenate JavaScript files according to the configuration.
+	 *
+	 * @return void
+	 */
+	protected function doConcatenateJavaScript() {
+		if ($this->concatenateFiles || $this->concatenateJavascript) {
+			if (!empty($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsConcatenateHandler'])) {
+					// use external concatenation routine
+				$params = array(
+					'jsLibs' => &$this->jsLibs,
+					'jsFiles' => &$this->jsFiles,
+					'jsFooterFiles' => &$this->jsFooterFiles,
+					'headerData' => &$this->headerData,
+					'footerData' => &$this->footerData,
+				);
+				t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsConcatenateHandler'], $params, $this);
+			} else {
+				$this->jsLibs = $this->getCompressor()->concatenateJsFiles($this->jsLibs);
+				$this->jsFiles = $this->getCompressor()->concatenateJsFiles($this->jsFiles);
+				$this->jsFooterFiles = $this->getCompressor()->concatenateJsFiles($this->jsFooterFiles);
+			}
+		}
+	}
 
-			if ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['concatenateHandler']) {
-					// use extern concatenate routine
-				t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['concatenateHandler'], $params, $this);
-			} elseif (TYPO3_MODE === 'BE') {
-				$cssOptions = array('baseDirectories' => $GLOBALS['TBE_TEMPLATE']->getSkinStylesheetDirectories());
+	/**
+	 * Concatenate CSS files according to configuration.
+	 *
+	 * @return void
+	 */
+	protected function doConcatenateCss() {
+		if ($this->concatenateFiles || $this->concatenateCss) {
+			if (!empty($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssConcatenateHandler'])) {
+					// use external concatenation routine
+				$params = array(
+					'cssFiles' => &$this->cssFiles,
+					'headerData' => &$this->headerData,
+					'footerData' => &$this->footerData,
+				);
+				t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssConcatenateHandler'], $params, $this);
+			} else {
+				$cssOptions = array();
+				if (TYPO3_MODE === 'BE') {
+					$cssOptions = array('baseDirectories' => $GLOBALS['TBE_TEMPLATE']->getSkinStylesheetDirectories());
+				}
 				$this->cssFiles = $this->getCompressor()->concatenateCssFiles($this->cssFiles, $cssOptions);
 			}
 		}
@@ -1870,23 +2439,55 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function doCompress() {
+		$this->doCompressJavaScript();
+		$this->doCompressCss();
+	}
 
-		if ($this->compressJavascript && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler']) {
-				// use extern compress routine
+	/**
+	 * Compresses CSS according to configuration.
+	 *
+	 * @return void
+	 */
+	protected function doCompressCss() {
+		if ($this->compressCss) {
+				// Use external compression routine
 			$params = array(
-				'jsInline' => &$this->jsInline,
-				'jsFooterInline' => &$this->jsFooterInline,
-				'jsLibs' => &$this->jsLibs,
-				'jsFiles' => &$this->jsFiles,
-				'jsFooterFiles' => &$this->jsFooterFiles,
+				'cssInline' => &$this->cssInline,
+				'cssFiles' => &$this->cssFiles,
 				'headerData' => &$this->headerData,
 				'footerData' => &$this->footerData,
 			);
-			t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'], $params, $this);
-		} else {
-				// traverse the arrays, compress files
 
-			if ($this->compressJavascript) {
+			if (!empty($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler'])) {
+					// use external concatenation routine
+				t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler'], $params, $this);
+			} else {
+				$this->cssFiles = $this->getCompressor()->compressCssFiles($this->cssFiles);
+			}
+		}
+	}
+
+	/**
+	 * Compresses JavaScript according to configuration.
+	 *
+	 * @return void
+	 */
+	protected function doCompressJavaScript() {
+		if ($this->compressJavascript) {
+			if (!empty($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'])) {
+					// Use external compression routine
+				$params = array(
+					'jsInline' => &$this->jsInline,
+					'jsFooterInline' => &$this->jsFooterInline,
+					'jsLibs' => &$this->jsLibs,
+					'jsFiles' => &$this->jsFiles,
+					'jsFooterFiles' => &$this->jsFooterFiles,
+					'headerData' => &$this->headerData,
+					'footerData' => &$this->footerData,
+				);
+				t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'], $params, $this);
+			} else {
+					// Traverse the arrays, compress files
 				if (count($this->jsInline)) {
 					foreach ($this->jsInline as $name => $properties) {
 						if ($properties['compress']) {
@@ -1898,26 +2499,9 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 						}
 					}
 				}
-				if (TYPO3_MODE === 'BE') {
-					$this->jsFiles = $this->getCompressor()->compressJsFiles($this->jsFiles);
-					$this->jsFooterFiles = $this->getCompressor()->compressJsFiles($this->jsFooterFiles);
-				}
-			}
-		}
-		if ($this->compressCss) {
-				// use extern compress routine
-			$params = array(
-				'cssInline' => &$this->cssInline,
-				'cssFiles' => &$this->cssFiles,
-				'headerData' => &$this->headerData,
-				'footerData' => &$this->footerData,
-			);
-
-			if ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler']) {
-					// use extern concatenate routine
-				t3lib_div::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler'], $params, $this);
-			} elseif (TYPO3_MODE === 'BE') {
-				$this->cssFiles = $this->getCompressor()->compressCssFiles($this->cssFiles);
+				$this->jsLibs = $this->getCompressor()->compressJsFiles($this->jsLibs);
+				$this->jsFiles = $this->getCompressor()->compressJsFiles($this->jsFiles);
+				$this->jsFooterFiles = $this->getCompressor()->compressJsFiles($this->jsFooterFiles);
 			}
 		}
 	}
@@ -1925,7 +2509,7 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	/**
 	 * Returns instance of t3lib_Compressor
 	 *
-	 * @return	t3lib_Compressor		Instance of t3lib_Compressor
+	 * @return t3lib_Compressor Instance of t3lib_Compressor
 	 */
 	protected function getCompressor() {
 		if ($this->compressor === NULL) {
@@ -1945,7 +2529,11 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 	protected function processJsFile($filename) {
 		switch (TYPO3_MODE) {
 			case 'FE':
-				$filename = t3lib_div::createVersionNumberedFilename($filename);
+				if ($this->compressJavascript) {
+					$filename = $this->getCompressor()->compressJsFile($filename);
+				} else {
+					$filename = t3lib_div::createVersionNumberedFilename($filename);
+				}
 			break;
 			case 'BE':
 				if ($this->compressJavascript) {
@@ -1956,10 +2544,109 @@ class t3lib_PageRenderer implements t3lib_Singleton {
 		return $filename;
 	}
 
-}
+	/*****************************************************/
+	/*                                                   */
+	/*  Hooks                                            */
+	/*                                                   */
+	/*****************************************************/
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_pagerenderer.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_pagerenderer.php']);
+	/**
+	 * Execute PreRenderHook for possible manuipulation
+	 *
+	 * @return void
+	 */
+	protected function executePreRenderHook() {
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'])) {
+			$params = array(
+				'jsLibs' => &$this->jsLibs,
+				'jsFooterLibs' => &$this->jsFooterLibs,
+				'jsFiles' => &$this->jsFiles,
+				'jsFooterFiles' => &$this->jsFooterFiles,
+				'cssFiles' => &$this->cssFiles,
+				'headerData' => &$this->headerData,
+				'footerData' => &$this->footerData,
+				'jsInline' => &$this->jsInline,
+				'jsFooterInline' => &$this->jsFooterInline,
+				'cssInline' => &$this->cssInline,
+			);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'] as $hook) {
+				t3lib_div::callUserFunction($hook, $params, $this);
+			}
+		}
+	}
+
+	/**
+	 * PostTransform for possible manuipulation of concatenated and compressed files
+	 *
+	 * @return void
+	 */
+	protected function executeRenderPostTransformHook() {
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postTransform'])) {
+			$params = array('jsLibs' => &$this->jsLibs,
+				'jsFooterLibs' => &$this->jsFooterLibs,
+				'jsFiles' => &$this->jsFiles,
+				'jsFooterFiles' => &$this->jsFooterFiles,
+				'cssFiles' => &$this->cssFiles,
+				'headerData' => &$this->headerData,
+				'footerData' => &$this->footerData,
+				'jsInline' => &$this->jsInline,
+				'jsFooterInline' => &$this->jsFooterInline,
+				'cssInline' => &$this->cssInline,
+			);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postTransform'] as $hook) {
+				t3lib_div::callUserFunction($hook, $params, $this);
+			}
+		}
+	}
+
+	/**
+	 * Execute postRenderHook for possible manipulation
+	 *
+	 * @param $jsLibs string
+	 * @param $jsFiles string
+	 * @param $jsFooterFiles string
+	 * @param $cssFiles string
+	 * @param $jsInline string
+	 * @param $cssInline string
+	 * @param $jsFooterInline string
+	 * @param $jsFooterLibs string
+	 *
+	 * @return void
+	 */
+	protected function executePostRenderHook(&$jsLibs, &$jsFiles, &$jsFooterFiles, &$cssFiles, &$jsInline, &$cssInline, &$jsFooterInline, &$jsFooterLibs) {
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess'])) {
+			$params = array(
+				'jsLibs' => &$jsLibs,
+				'jsFiles' => &$jsFiles,
+				'jsFooterFiles' => &$jsFooterFiles,
+				'cssFiles' => &$cssFiles,
+				'headerData' => &$this->headerData,
+				'footerData' => &$this->footerData,
+				'jsInline' => &$jsInline,
+				'cssInline' => &$cssInline,
+				'xmlPrologAndDocType' => &$this->xmlPrologAndDocType,
+				'htmlTag' => &$this->htmlTag,
+				'headTag' => &$this->headTag,
+				'charSet' => &$this->charSet,
+				'metaCharsetTag' => &$this->metaCharsetTag,
+				'shortcutTag' => &$this->shortcutTag,
+				'inlineComments' => &$this->inlineComments,
+				'baseUrl' => &$this->baseUrl,
+				'baseUrlTag' => &$this->baseUrlTag,
+				'favIcon' => &$this->favIcon,
+				'iconMimeType' => &$this->iconMimeType,
+				'titleTag' => &$this->titleTag,
+				'title' => &$this->title,
+				'metaTags' => &$this->metaTags,
+				'jsFooterInline' => &$jsFooterInline,
+				'jsFooterLibs' => &$jsFooterLibs,
+				'bodyContent' => &$this->bodyContent
+			);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess'] as $hook) {
+				t3lib_div::callUserFunction($hook, $params, $this);
+			}
+		}
+	}
 }
 
 ?>

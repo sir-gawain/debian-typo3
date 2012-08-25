@@ -22,23 +22,15 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
 /**
  * Invalid token exception
- *
  *
  * @package TYPO3
  * @subpackage t3lib_formprotection
  * @api
- * @version $Id$
  */
 class t3lib_formprotection_InvalidTokenException extends UnexpectedValueException {
 
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/formprotection/class.t3lib_formprotection_invalidtokenexception.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/formprotection/class.t3lib_formprotection_invalidtokenexception.php']);
 }
 
 ?>

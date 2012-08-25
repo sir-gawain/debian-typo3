@@ -25,9 +25,9 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 /**
- * Class for the list rendering of Web>Taks Center module
+ * Class for the list rendering of Web>Task Center module
  *
- * @author	Thomas Maroschik <tmaroschik@dfau.de>
+ * @author Thomas Maroschik <tmaroschik@dfau.de>
  * @package TYPO3
  * @subpackage core
  */
@@ -35,13 +35,13 @@ class tx_sysaction_list extends localRecordList {
 
 	/**
 	 * Creates the URL to this script, including all relevant GPvars
-	 * Fixed GPvars are id, table, imagemode, returlUrl, search_field, search_levels and showLimit
+	 * Fixed GPvars are id, table, imagemode, returnUrl, search_field, search_levels and showLimit
 	 * The GPvars "sortField" and "sortRev" are also included UNLESS they are found in the $exclList variable.
 	 *
-	 * @param	string		Alternative id value. Enter blank string for the current id ($this->id)
-	 * @param	string		Tablename to display. Enter "-1" for the current table.
-	 * @param	string		Commalist of fields NOT to include ("sortField" or "sortRev")
-	 * @return	string		URL
+	 * @param string $altId Alternative id value. Enter blank string for the current id ($this->id)
+	 * @param string $table Table name to display. Enter "-1" for the current table.
+	 * @param string $exclList Comma separated list of fields NOT to include ("sortField" or "sortRev")
+	 * @return string
 	 */
 	function listURL($altId = '', $table = -1, $exclList = '') {
 		$urlParameters = array();
@@ -83,15 +83,10 @@ class tx_sysaction_list extends localRecordList {
 			$urlParameters['SET'] = t3lib_div::_GP('SET');
 		}
 		if (t3lib_div::_GP('show')) {
-			$urlParameters['show'] = t3lib_div::_GP('show');
+			$urlParameters['show'] = intval(t3lib_div::_GP('show'));
 		}
 
 		return t3lib_BEfunc::getModuleUrl('user_task', $urlParameters);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sys_action/task/class.tx_sysaction_list.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sys_action/task/class.tx_sysaction_list.php']);
-}
-
 ?>

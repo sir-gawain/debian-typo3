@@ -117,59 +117,15 @@ class Tx_Extbase_Tests_Unit_MVC_Controller_AbstractControllerTest extends Tx_Ext
 		$mockUriBuilder = $this->getMock('Tx_Extbase_MVC_Web_Routing_UriBuilder');
 		$mockUriBuilder->expects($this->once())->method('reset')->will($this->returnValue($mockUriBuilder));
 		$mockUriBuilder->expects($this->once())->method('setTargetPageUid')->with(123)->will($this->returnValue($mockUriBuilder));
+		$mockUriBuilder->expects($this->once())->method('setCreateAbsoluteUri')->with(TRUE)->will($this->returnValue($mockUriBuilder));
 		$mockUriBuilder->expects($this->once())->method('uriFor')->with('theActionName', $arguments, 'TheControllerName', 'TheExtensionName')->will($this->returnValue('the uri'));
 
-		$controller = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Controller_AbstractController'), array('redirectToURI'), array(), '', FALSE);
-		$controller->expects($this->once())->method('redirectToURI')->with('the uri');
+		$controller = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Controller_AbstractController'), array('redirectToUri'), array(), '', FALSE);
+		$controller->expects($this->once())->method('redirectToUri')->with('the uri');
 		$controller->_set('request', $mockRequest);
 		$controller->_set('response', $mockResponse);
 		$controller->_set('uriBuilder', $mockUriBuilder);
 		$controller->_call('redirect', 'theActionName', 'TheControllerName', 'TheExtensionName', $arguments, 123);
-	}
-
-	/**
-	 * @test
-	 */
-	public function theBaseUriIsAddedIfNotAlreadyExists() {
-		$mockRequest = $this->getMock('Tx_Extbase_MVC_Web_Request');
-		$mockRequest->expects($this->any())->method('getBaseURI')->will($this->returnValue('http://www.example.com/foo/'));
-
-		$controller = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Controller_AbstractController'), array('dummy'), array(), '', FALSE);
-		$controller->_set('request', $mockRequest);
-		$actualResult = $controller->_call('addBaseUriIfNecessary', 'bar/baz/boom.html');
-		$expectedResult = 'http://www.example.com/foo/bar/baz/boom.html';
-
-		$this->assertEquals($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function theBaseUriIsNotAddedIfExternalURI() {
-		$mockRequest = $this->getMock('Tx_Extbase_MVC_Web_Request');
-		$mockRequest->expects($this->any())->method('getBaseURI')->will($this->returnValue('http://www.example.com/foo/'));
-
-		$controller = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Controller_AbstractController'), array('dummy'), array(), '', FALSE);
-		$controller->_set('request', $mockRequest);
-		$actualResult = $controller->_call('addBaseUriIfNecessary', 'http://www.anotherexample.com/foo/bar/baz/boom.html');
-		$expectedResult = 'http://www.anotherexample.com/foo/bar/baz/boom.html';
-
-		$this->assertEquals($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function theBaseUriIsNotAddedIfAlreadyExists() {
-		$mockRequest = $this->getMock('Tx_Extbase_MVC_Web_Request');
-		$mockRequest->expects($this->any())->method('getBaseURI')->will($this->returnValue('http://www.example.com/foo/'));
-
-		$controller = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Controller_AbstractController'), array('dummy'), array(), '', FALSE);
-		$controller->_set('request', $mockRequest);
-		$actualResult = $controller->_call('addBaseUriIfNecessary', 'http://www.example.com/foo/bar/baz/boom.html');
-		$expectedResult = 'http://www.example.com/foo/bar/baz/boom.html';
-
-		$this->assertEquals($expectedResult, $actualResult);
 	}
 
 	/**
@@ -219,7 +175,9 @@ class Tx_Extbase_Tests_Unit_MVC_Controller_AbstractControllerTest extends Tx_Ext
 	}
 
 	/**
+	 * This test checks @deprecated behavior.
 	 * @test
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function mapRequestArgumentsToControllerArgumentsPreparesInformationAndValidatorsAndMapsAndValidates() {
 		$mockValidator = $this->getMock('Tx_Extbase_MVC_Controller_ArgumentsValidator');
@@ -242,20 +200,24 @@ class Tx_Extbase_Tests_Unit_MVC_Controller_AbstractControllerTest extends Tx_Ext
 
 		$mockMappingResults = $this->getMock('Tx_Extbase_Property_MappingResults');
 
-		$mockPropertyMapper = $this->getMock('Tx_Extbase_Property_Mapper', array(), array(), '', FALSE);
-		$mockPropertyMapper->expects($this->once())->method('mapAndValidate')
+		$mockDeprecatedPropertyMapper = $this->getMock('Tx_Extbase_Property_Mapper', array(), array(), '', FALSE);
+		$mockDeprecatedPropertyMapper->expects($this->once())->method('mapAndValidate')
 			->with(array('foo', 'bar'), array('requestFoo', 'requestBar'), $mockArguments, array(), $mockValidator)
 			->will($this->returnValue(TRUE));
-		$mockPropertyMapper->expects($this->once())->method('getMappingResults')->will($this->returnValue($mockMappingResults));
+		$mockDeprecatedPropertyMapper->expects($this->once())->method('getMappingResults')->will($this->returnValue($mockMappingResults));
 
 		$controller = $this->getAccessibleMock(
 			'Tx_Extbase_MVC_Controller_AbstractController',
 			array('dummy'), array(), '', FALSE
 		);
 
+		$mockConfigurationManager = $this->getMock('Tx_Extbase_Configuration_ConfigurationManagerInterface');
+		$mockConfigurationManager->expects($this->any())->method('isFeatureEnabled')->with('rewrittenPropertyMapper')->will($this->returnValue(FALSE));
+		$controller->_set('configurationManager', $mockConfigurationManager);
+
 		$controller->_set('arguments', $mockArguments);
 		$controller->_set('request', $mockRequest);
-		$controller->_set('propertyMapper', $mockPropertyMapper);
+		$controller->_set('deprecatedPropertyMapper', $mockDeprecatedPropertyMapper);
 		$controller->_set('objectManager', $mockObjectManager);
 
 		$controller->_call('mapRequestArgumentsToControllerArguments');

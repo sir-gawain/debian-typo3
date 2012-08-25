@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,22 +26,17 @@
 ***************************************************************/
 /*
  * Remove Format Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.RemoveFormat = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.RemoveFormat = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function(editor) {
+	configurePlugin: function (editor) {
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.1',
+			version		: '2.4',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -107,8 +102,6 @@ HTMLArea.RemoveFormat = HTMLArea.Plugin.extend({
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
-				// As of ExtJS 3.1, JS error with IE when the window is resizable
-			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				close: {
@@ -208,14 +201,13 @@ HTMLArea.RemoveFormat = HTMLArea.Plugin.extend({
 	 *
 	 * @return	void
 	 */
-	applyRequest: function(params) {
+	applyRequest: function (params) {
 		var editor = this.editor;
-		editor.focus();
 		this.restoreSelection();
 		if (params['allContent']) {
 			var html = editor.getInnerHTML();
 		} else {
-			var html = editor.getSelectedHTML();
+			var html = editor.getSelection().getHtml();
 		}
 		if (html) {
 			if (params['allHtml']) {
@@ -233,7 +225,7 @@ HTMLArea.RemoveFormat = HTMLArea.Plugin.extend({
 			}
 			if (params['images']) {
 					// remove any IMG tag
-				html = html.replace(/<\/?img[^>]*>/gi, "");
+				html = html.replace(/<\/?(img|imagedata)(>|[^>a-zA-Z][^>]*>)/gi, "");
 			}
 			if (params['msWordFormatting']) {
 					// Make one line
@@ -242,19 +234,20 @@ HTMLArea.RemoveFormat = HTMLArea.Plugin.extend({
 				html = html.replace(/<(b|strong|i|em|p|li|ul) [^>]*>/gi, "<$1>");
 					// Keep tags, strip attributes
 				html = html.replace(/ (style|class|align)=\"[^>\"]*\"/gi, "");
-					// kill unwanted tags: span, div, ?xml:, st1:, [a-z]:, meta, link
-				html = html.replace(/<\/?span[^>]*>/gi, "").
-					replace(/<\/?div[^>]*>/gi, "").
-					replace(/<\?xml:[^>]*>/gi, "").
-					replace(/<\/?st1:[^>]*>/gi, "").
-					replace(/<\/?[a-z]:[^>]*>/g, "").
-					replace(/<\/?meta[^>]*>/g, "").
-					replace(/<\/?link[^>]*>/g, "");
-					// remove unwanted tags and their contents: style, title
+					// Remove unwanted tags: div, link, meta, span, ?xml:, [a-z]+:
+				html = html.replace(/<\/?(div|link|meta|span)(>|[^>a-zA-Z][^>]*>)/gi, "");
+				html = html.replace(/<\?xml:[^>]*>/gi, "").replace(/<\/?[a-z]+:[^>]*>/g, "");
+					// Remove images
+				html = html.replace(/<\/?(img|imagedata)(>|[^>a-zA-Z][^>]*>)/gi, "");
+					// Remove MS-specific tags
+				html = html.replace(/<\/?(f|formulas|lock|path|shape|shapetype|stroke)(>|[^>a-zA-Z][^>]*>)/gi, "");
+					// Remove unwanted tags and their contents: style, title
 				html = html.replace(/<style[^>]*>.*<\/style[^>]*>/gi, "").
 					replace(/<title[^>]*>.*<\/title[^>]*>/gi, "");
-					// remove comments
+					// Remove comments
 				html = html.replace(/<!--[^>]*>/gi, "");
+					// Remove xml tags
+				html = html.replace(/<xml.[^>]*>/gi, "");
 					// Remove inline elements resets
 				html = html.replace(/<\/(b[^a-zA-Z]|big|i[^a-zA-Z]|s[^a-zA-Z]|small|strike|tt|u[^a-zA-Z])><\1>/gi, "");
 					// Remove double tags
@@ -298,7 +291,7 @@ HTMLArea.RemoveFormat = HTMLArea.Plugin.extend({
 			if (params['allContent']) {
 				editor.setHTML(html);
 			} else {
-				editor.insertHTML(html);
+				editor.getSelection().insertHtml(html);
 			}
 		}
 	}

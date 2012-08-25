@@ -67,16 +67,20 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 	 * @param string $pluginName in BE mode this is actually the module signature. But we're using it just like the plugin name in FE
 	 * @return array
 	 */
-	protected function getPluginConfiguration($extensionName, $pluginName) {
+	protected function getPluginConfiguration($extensionName, $pluginName = NULL) {
 		$setup = $this->getTypoScriptSetup();
 		$pluginConfiguration = array();
 		if (is_array($setup['module.']['tx_' . strtolower($extensionName) . '.'])) {
-			$pluginConfiguration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . strtolower($extensionName) . '.']);
+			$pluginConfiguration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . strtolower($extensionName) . '.']);
 		}
-		$pluginSignature = strtolower($extensionName . '_' . $pluginName);
-		if (is_array($setup['module.']['tx_' . $pluginSignature . '.'])) {
-			$pluginConfiguration = t3lib_div::array_merge_recursive_overrule($pluginConfiguration, Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . $pluginSignature . '.']));
+
+		if ($pluginName !== NULL) {
+			$pluginSignature = strtolower($extensionName . '_' . $pluginName);
+			if (is_array($setup['module.']['tx_' . $pluginSignature . '.'])) {
+				$pluginConfiguration = t3lib_div::array_merge_recursive_overrule($pluginConfiguration, $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . $pluginSignature . '.']));
+			}
 		}
+
 		return $pluginConfiguration;
 	}
 
@@ -128,10 +132,20 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 	}
 
 	/**
+	 * Returns the default backend storage pid
+	 *
+	 * @return string
+	 */
+	public function getDefaultBackendStoragePid() {
+		return $this->getCurrentPageId();
+	}
+
+	/**
 	 * We need to set some default request handler if the framework configuration
 	 * could not be loaded; to make sure Extbase also works in Backend modules
 	 * in all contexts.
 	 *
+	 * @param array $frameworkConfiguration
 	 * @return array
 	 */
 	protected function getContextSpecificFrameworkConfiguration(array $frameworkConfiguration) {

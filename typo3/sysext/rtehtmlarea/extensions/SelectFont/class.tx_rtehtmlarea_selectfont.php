@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -25,8 +25,6 @@
  * SelectFont extension for htmlArea RTE
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
- *
- * TYPO3 SVN ID: $Id$
  *
  */
 class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
@@ -94,7 +92,7 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 	 */
 	public function buildJavascriptConfiguration($RTEcounter) {
 		$registerRTEinJavascriptString = '';
-		$pluginButtonsArray = t3lib_div::trimExplode(",", $this->pluginButtons);
+		$pluginButtonsArray = t3lib_div::trimExplode(',', $this->pluginButtons);
 
 			// Process Page TSConfig configuration for each button
 		foreach ($pluginButtonsArray as $buttonId) {
@@ -112,13 +110,12 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 	 * @param	string		$buttonId: button id
 	 *
 	 * @return	string		Javascript configuration of font faces
- 	 */
+	 */
 	protected function buildJSFontItemsConfig($RTEcounter, $buttonId) {
 		$configureRTEInJavascriptString = '';
-
+		$hideItems = '';
+		$addItems = array();
 			// Getting removal and addition configuration
-		$hideItems = $this->htmlAreaRTE->cleanList($this->thisConfig['hideFont' .  (($buttonId == 'fontstyle') ? 'Faces' : 'Sizes')]);
-		$addItems = t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList($this->thisConfig[($buttonId == 'fontstyle') ? 'fontFace' : 'fontSize']), 1);
 		if (is_array($this->thisConfig['buttons.']) && is_array($this->thisConfig['buttons.'][$buttonId . '.'])) {
 			if ($this->thisConfig['buttons.'][$buttonId . '.']['removeItems']) {
 				$hideItems = $this->thisConfig['buttons.'][$buttonId . '.']['removeItems'];
@@ -140,7 +137,7 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 			foreach ($this->defaultFont[$buttonId] as $name => $value) {
 				if (!t3lib_div::inList($hideItems, strval($index+1))) {
 					if ($this->htmlAreaRTE->is_FE()) {
-						$label = $GLOBALS['TSFE']->getLLL($name,$this->LOCAL_LANG);
+						$label = $GLOBALS['TSFE']->getLLL($name, $this->LOCAL_LANG);
 					} else {
 						$label = $GLOBALS['LANG']->getLL($name);
 						if (!$label) {
@@ -155,9 +152,9 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 			// Adding configured items
 		if (is_array($this->RTEProperties[($buttonId == 'fontstyle') ? 'fonts.' : 'fontSizes.'])) {
 			foreach ($this->RTEProperties[($buttonId == 'fontstyle') ? 'fonts.' : 'fontSizes.'] as $name => $conf) {
-				$name = substr($name,0,-1);
+				$name = substr($name, 0, -1);
 				if (in_array($name, $addItems)) {
-					$label = $this->htmlAreaRTE->getPageConfigLabel($conf['name'],0);
+					$label = $this->htmlAreaRTE->getPageConfigLabel($conf['name'], 0);
 					$items[$name] = array($label, $this->htmlAreaRTE->cleanList($conf['value']));
 				}
 			}
@@ -174,8 +171,6 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 		}
 		if ($this->htmlAreaRTE->is_FE()) {
 			$GLOBALS['TSFE']->csConvObj->convArray($itemsJSArray, $this->htmlAreaRTE->OutputCharset, 'utf-8');
-		} else {
-			$GLOBALS['LANG']->csConvObj->convArray($itemsJSArray, $GLOBALS['LANG']->charSet, 'utf-8');
 		}
 		$itemsJSArray = json_encode(array('options' => $itemsJSArray));
 			// Adding to button JS configuration
@@ -184,11 +179,8 @@ class tx_rtehtmlarea_selectfont extends tx_rtehtmlarea_api {
 			RTEarea['.$RTEcounter.'].buttons.'. $buttonId .' = new Object();';
 		}
 		$configureRTEInJavascriptString .= '
-			RTEarea['.$RTEcounter.'].buttons.'. $buttonId . '.dataUrl = \'' . $this->htmlAreaRTE->writeTemporaryFile('', $buttonId . '_'. $this->htmlAreaRTE->contentLanguageUid, 'js', $itemsJSArray) . '\';';
+			RTEarea['.$RTEcounter.'].buttons.'. $buttonId . '.dataUrl = "' . (($this->htmlAreaRTE->is_FE() && $GLOBALS['TSFE']->absRefPrefix) ? $GLOBALS['TSFE']->absRefPrefix : '') . $this->htmlAreaRTE->writeTemporaryFile('', $buttonId . '_'. $this->htmlAreaRTE->contentLanguageUid, 'js', $itemsJSArray) . '";';
 		return $configureRTEInJavascriptString;
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SelectFont/class.tx_rtehtmlarea_selectfont.php']);
 }
 ?>

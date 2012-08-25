@@ -28,48 +28,15 @@
  * Class used in module tools/dbint (advanced search) and which may hold code specific for that module
  * However the class has a general principle in it which may be used in the web/export module.
  *
- * $Id$
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @coauthor	Jo Hasenau <info@cybercraft.de>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @coauthor Jo Hasenau <info@cybercraft.de>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   88: class t3lib_fullsearch
- *  103:	 function form()
- *  117:	 function makeStoreControl()
- *  156:	 function initStoreArray()
- *  176:	 function cleanStoreQueryConfigs($storeQueryConfigs,$storeArray)
- *  193:	 function addToStoreQueryConfigs($storeQueryConfigs,$index)
- *  209:	 function saveQueryInAction($uid)
- *  256:	 function loadStoreQueryConfigs($storeQueryConfigs,$storeIndex,$writeArray)
- *  272:	 function procesStoreControl()
- *  344:	 function queryMaker()
- *  414:	 function getQueryResultCode($mQ,$res,$table)
- *  534:	 function csvValues($row, $delim=',', $quote='"', $conf=array(), $table='')
- *  550:	 function tableWrap($str)
- *  559:	 function search()
- *  614:	 function resultRowDisplay($row,$conf,$table)
- *  662:	 function getProcessedValueExtra($table, $fN, $fV, $conf, $splitString)
- *  781:	 function getTreeList($id, $depth, $begin = 0, $perms_clause)
- *  818:	 function makeValueList($fN, $fV, $conf, $table, $splitString)
- * 1028:	 function resultRowTitles($row,$conf,$table)
- * 1058:	 function csvRowTitles($row, $conf, $table)
- *
- * TOTAL FUNCTIONS: 19
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 /**
  * Class used in module tools/dbint (advanced search) and which may hold code specific for that module
  * However the class has a general principle in it which may be used in the web/export module.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -88,11 +55,10 @@ class t3lib_fullsearch {
 		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_t3lib_fullsearch.xml');
 	}
 
-
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return string
 	 */
 	function form() {
 		$out = '
@@ -106,7 +72,7 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return string
 	 */
 	function makeStoreControl() {
 			// Load/Save
@@ -144,7 +110,7 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return array
 	 */
 	function initStoreArray() {
 		$storeArray = array(
@@ -162,9 +128,9 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$storeQueryConfigs: ...
-	 * @param	[type]		$storeArray: ...
-	 * @return	[type]		...
+	 * @param array $storeQueryConfigs
+	 * @param array $storeArray
+	 * @return array
 	 */
 	function cleanStoreQueryConfigs($storeQueryConfigs, $storeArray) {
 		if (is_array($storeQueryConfigs)) {
@@ -180,9 +146,9 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$storeQueryConfigs: ...
-	 * @param	[type]		$index: ...
-	 * @return	[type]		...
+	 * @param array $storeQueryConfigs
+	 * @param integer $index
+	 * @return array
 	 */
 	function addToStoreQueryConfigs($storeQueryConfigs, $index) {
 		$keyArr = explode(',', $this->storeList);
@@ -196,8 +162,8 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$uid: ...
-	 * @return	[type]		...
+	 * @param integer $uid
+	 * @return integer
 	 */
 	function saveQueryInAction($uid) {
 		if (t3lib_extMgm::isLoaded('sys_action')) {
@@ -210,7 +176,7 @@ class t3lib_fullsearch {
 			$qOK = 0;
 				// Show query
 			if ($saveArr['queryTable']) {
-				/* @var t3lib_queryGenerator */
+				/** @var t3lib_queryGenerator */
 				$qGen = t3lib_div::makeInstance('t3lib_queryGenerator');
 				$qGen->init('queryConfig', $saveArr['queryTable']);
 				$qGen->makeSelectorTable($saveArr);
@@ -242,10 +208,10 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$storeQueryConfigs: ...
-	 * @param	[type]		$storeIndex: ...
-	 * @param	[type]		$writeArray: ...
-	 * @return	[type]		...
+	 * @param array $storeQueryConfigs
+	 * @param integer $storeIndex
+	 * @param array $writeArray
+	 * @return array
 	 */
 	function loadStoreQueryConfigs($storeQueryConfigs, $storeIndex, $writeArray) {
 		if ($storeQueryConfigs[$storeIndex]) {
@@ -260,7 +226,7 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return string
 	 */
 	function procesStoreControl() {
 		$storeArray = $this->initStoreArray();
@@ -336,7 +302,8 @@ class t3lib_fullsearch {
 						't3lib_FlashMessage',
 						sprintf($GLOBALS['LANG']->getLL('query_removed'), htmlspecialchars($storeArray[$storeControl['STORE']]))
 					);
-					unset($storeArray[$storeControl['STORE']]); // Removing
+						// Removing
+					unset($storeArray[$storeControl['STORE']]);
 					$saveStoreArray = 1;
 				}
 			}
@@ -345,7 +312,8 @@ class t3lib_fullsearch {
 			}
 		}
 		if ($saveStoreArray) {
-			unset($storeArray[0]); // making sure, index 0 is not set!
+				// Making sure, index 0 is not set!
+			unset($storeArray[0]);
 			$writeArray['storeArray'] = serialize($storeArray);
 			$writeArray['storeQueryConfigs'] = serialize($this->cleanStoreQueryConfigs($storeQueryConfigs, $storeArray));
 			$GLOBALS['SOBE']->MOD_SETTINGS = t3lib_BEfunc::getModuleData($GLOBALS['SOBE']->MOD_MENU, $writeArray, $GLOBALS['SOBE']->MCONF['name'], 'ses');
@@ -356,11 +324,9 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return string
 	 */
 	function queryMaker() {
-		global $TCA;
-
 		$output = '';
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['t3lib_fullsearch'])) {
 			$this->hookArray = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['t3lib_fullsearch'];
@@ -375,7 +341,6 @@ class t3lib_fullsearch {
 			$output .= $GLOBALS['SOBE']->doc->spacer(20);
 		}
 
-
 			// Query Maker:
 		$qGen = t3lib_div::makeInstance('t3lib_queryGenerator');
 		$qGen->init('queryConfig', $GLOBALS['SOBE']->MOD_SETTINGS['queryTable']);
@@ -388,12 +353,11 @@ class t3lib_fullsearch {
 		$mQ = $GLOBALS['SOBE']->MOD_SETTINGS['search_query_makeQuery'];
 
 			// Make form elements:
-		if ($qGen->table && is_array($TCA[$qGen->table])) {
+		if ($qGen->table && is_array($GLOBALS['TCA'][$qGen->table])) {
 			if ($mQ) {
 					// Show query
 				$qGen->enablePrefix = 1;
 				$qString = $qGen->getQuery($qGen->queryConfig);
-				//				debug($qGen->queryConfig);
 
 				switch ($mQ) {
 					case 'count':
@@ -428,13 +392,12 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$mQ: ...
-	 * @param	[type]		$res: ...
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param string $mQ
+	 * @param pointer $res
+	 * @param string $table
+	 * @return string
 	 */
 	function getQueryResultCode($mQ, $res, $table) {
-		global $TCA;
 		$out = '';
 		$cPR = array();
 		switch ($mQ) {
@@ -446,7 +409,7 @@ class t3lib_fullsearch {
 			case 'all':
 				$rowArr = array();
 				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-					$rowArr[] = $this->resultRowDisplay($row, $TCA[$table], $table);
+					$rowArr[] = $this->resultRowDisplay($row, $GLOBALS['TCA'][$table], $table);
 					$lrow = $row;
 				}
 				if (is_array($this->hookArray['beforeResultTable'])) {
@@ -455,7 +418,8 @@ class t3lib_fullsearch {
 					}
 				}
 				if (count($rowArr)) {
-					$out .= '<table border="0" cellpadding="2" cellspacing="1" width="100%">' . $this->resultRowTitles($lrow, $TCA[$table], $table) . implode(LF, $rowArr) . '</table>';
+					$out .= '<table border="0" cellpadding="2" cellspacing="1" width="100%">' .
+							$this->resultRowTitles($lrow, $GLOBALS['TCA'][$table], $table) . implode(LF, $rowArr) . '</table>';
 				}
 				if (!$out) {
 					$out = '<em>No rows selected!</em>';
@@ -471,7 +435,7 @@ class t3lib_fullsearch {
 						$rowArr[] = $this->csvValues(array_keys($row), ',', '');
 						$first = 0;
 					}
-					$rowArr[] = $this->csvValues($row, ',', '"', $TCA[$table], $table);
+					$rowArr[] = $this->csvValues($row, ',', '"', $GLOBALS['TCA'][$table], $table);
 				}
 				if (count($rowArr)) {
 					$out .= '<textarea name="whatever" rows="20" wrap="off"' . $GLOBALS['SOBE']->doc->formWidthText($this->formW, '', 'off') . ' class="fixed-font">' . t3lib_div::formatForTextarea(implode(LF, $rowArr)) . '</textarea>';
@@ -550,12 +514,12 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$row: ...
-	 * @param	[type]		$delim: ...
-	 * @param	[type]		$quote: ...
-	 * @param	[type]		$conf: ...
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param array $row
+	 * @param string $delim
+	 * @param string $quote
+	 * @param array $conf
+	 * @param string $table
+	 * @return string A single line of CSV
 	 */
 	function csvValues($row, $delim = ',', $quote = '"', $conf = array(), $table = '') {
 		$valueArray = $row;
@@ -570,8 +534,8 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$str: ...
-	 * @return	[type]		...
+	 * @param string $str
+	 * @return string
 	 */
 	function tableWrap($str) {
 		return '<table border="0" cellpadding="10" cellspacing="0" class="bgColor4"><tr><td nowrap><pre>' . $str . '</pre></td></tr></table>';
@@ -580,10 +544,9 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return string
 	 */
 	function search() {
-		global $TCA;
 		$SET = $GLOBALS['SOBE']->MOD_SETTINGS;
 		$swords = $SET['sword'];
 
@@ -591,12 +554,12 @@ class t3lib_fullsearch {
 		$limit = 200;
 		$showAlways = 0;
 		if ($swords) {
-			foreach ($TCA as $table => $value) {
+			foreach ($GLOBALS['TCA'] as $table => $value) {
 					// Get fields list
 				t3lib_div::loadTCA($table);
-				$conf = $TCA[$table];
+				$conf = $GLOBALS['TCA'][$table];
 
-					// avoid querying tables with no columns
+					// Avoid querying tables with no columns
 				if (empty($conf['columns'])) {
 					continue;
 				}
@@ -633,10 +596,10 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$row: ...
-	 * @param	[type]		$conf: ...
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param array $row
+	 * @param array $conf
+	 * @param string $table
+	 * @return string
 	 */
 	function resultRowDisplay($row, $conf, $table) {
 		static $even = FALSE;
@@ -693,19 +656,18 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$table: ...
-	 * @param	[type]		$fN: ...
-	 * @param	[type]		$fV: ...
-	 * @param	[type]		$conf: ...
-	 * @param	[type]		$splitString: ...
-	 * @return	[type]		...
+	 * @param string $table
+	 * @param string $fN
+	 * @param string $fV
+	 * @param array $conf Not used
+	 * @param string $splitString
+	 * @return string
 	 */
 	function getProcessedValueExtra($table, $fN, $fV, $conf, $splitString) {
-		global $TCA;
 			// Analysing the fields in the table.
-		if (is_array($TCA[$table])) {
+		if (is_array($GLOBALS['TCA'][$table])) {
 			t3lib_div::loadTCA($table);
-			$fC = $TCA[$table]['columns'][$fN];
+			$fC = $GLOBALS['TCA'][$table]['columns'][$fN];
 			$fields = $fC['config'];
 			$fields['exclude'] = $fC['exclude'];
 			if (is_array($fC) && $fC['label']) {
@@ -810,15 +772,15 @@ class t3lib_fullsearch {
 		return $out;
 	}
 
-	/*
-	* [Describe function...]
-	*
-	* @param	[type]		$qString: ...
-	* @param	[type]		$depth: ...
-	* @param	[type]		$begin: ...
-	* @param	[type]		$perms_clause: ...
-	* @return	[type]		...
-	*/
+	/**
+	 * [Describe function...]
+	 *
+	 * @param integer $id
+	 * @param integer $depth
+	 * @param integer $begin
+	 * @param string $perms_clause
+	 * @return string
+	 */
 	function getTreeList($id, $depth, $begin = 0, $perms_clause) {
 		$depth = intval($depth);
 		$begin = intval($begin);
@@ -850,12 +812,12 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$fN: ...
-	 * @param	[type]		$fV: ...
-	 * @param	[type]		$conf: ...
-	 * @param	[type]		$table: ...
-	 * @param	[type]		$splitString: ...
-	 * @return	[type]		...
+	 * @param string $fN
+	 * @param string $fV
+	 * @param array $conf
+	 * @param string $table
+	 * @param string $splitString
+	 * @return string
 	 */
 	function makeValueList($fN, $fV, $conf, $table, $splitString) {
 		$fieldSetup = $conf;
@@ -927,7 +889,6 @@ class t3lib_fullsearch {
 					}
 				}
 			}
-			global $TCA;
 			if (stristr($fieldSetup['allowed'], ',')) {
 				$from_table_Arr = explode(',', $fieldSetup['allowed']);
 				$useTablePrefix = 1;
@@ -967,13 +928,12 @@ class t3lib_fullsearch {
 					$tablePrefix = $from_table . '_';
 				}
 				$counter = 1;
-				if (is_array($TCA[$from_table])) {
+				if (is_array($GLOBALS['TCA'][$from_table])) {
 					t3lib_div::loadTCA($from_table);
-					$labelField = $TCA[$from_table]['ctrl']['label'];
-					$altLabelField = $TCA[$from_table]['ctrl']['label_alt'];
-					if ($TCA[$from_table]['columns'][$labelField]['config']['items']) {
-						reset($TCA[$from_table]['columns'][$labelField]['config']['items']);
-						while (list(, $labelArray) = each($TCA[$from_table]['columns'][$labelField]['config']['items'])) {
+					$labelField = $GLOBALS['TCA'][$from_table]['ctrl']['label'];
+					$altLabelField = $GLOBALS['TCA'][$from_table]['ctrl']['label_alt'];
+					if ($GLOBALS['TCA'][$from_table]['columns'][$labelField]['config']['items']) {
+						foreach ($GLOBALS['TCA'][$from_table]['columns'][$labelField]['config']['items'] as $labelArray) {
 							if (substr($labelArray[0], 0, 4) == 'LLL:') {
 								$labelFieldSelect[$labelArray[1]] = $GLOBALS['LANG']->sL($labelArray[0]);
 							} else {
@@ -982,9 +942,8 @@ class t3lib_fullsearch {
 						}
 						$useSelectLabels = 1;
 					}
-					if ($TCA[$from_table]['columns'][$altLabelField]['config']['items']) {
-						reset($TCA[$from_table]['columns'][$altLabelField]['config']['items']);
-						foreach ($TCA[$from_table]['columns'][$altLabelField]['config']['items'] as $altLabelArray) {
+					if ($GLOBALS['TCA'][$from_table]['columns'][$altLabelField]['config']['items']) {
+						foreach ($GLOBALS['TCA'][$from_table]['columns'][$altLabelField]['config']['items'] as $altLabelArray) {
 							if (substr($altLabelArray[0], 0, 4) == 'LLL:') {
 								$altLabelFieldSelect[$altLabelArray[1]] = $GLOBALS['LANG']->sL($altLabelArray[0]);
 							} else {
@@ -1024,7 +983,6 @@ class t3lib_fullsearch {
 						}
 						$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					}
-					reset($this->tableArray[$from_table]);
 					foreach ($this->tableArray[$from_table] as $key => $val) {
 						$GLOBALS['SOBE']->MOD_SETTINGS['labels_noprefix'] = $GLOBALS['SOBE']->MOD_SETTINGS['labels_noprefix'] == 1 ? 'on' :
 								$GLOBALS['SOBE']->MOD_SETTINGS['labels_noprefix'];
@@ -1066,10 +1024,10 @@ class t3lib_fullsearch {
 	/**
 	 * Render table header
 	 *
-	 * @param	array		row: Table columns
-	 * @param	array		conf: Table TCA
-	 * @param	string		table: Table name
-	 * @return	string		HTML of table header
+	 * @param array $row Table columns
+	 * @param array $conf Table TCA
+	 * @param string $table Table name
+	 * @return string HTML of table header
 	 */
 	function resultRowTitles($row, $conf, $table) {
 		$SET = $GLOBALS['SOBE']->MOD_SETTINGS;
@@ -1105,10 +1063,10 @@ class t3lib_fullsearch {
 	/**
 	 * [Describe function...]
 	 *
-	 * @param	[type]		$row: ...
-	 * @param	[type]		$conf: ...
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param array $row
+	 * @param array $conf
+	 * @param mixed $table Not used
+	 * @return string
 	 */
 	function csvRowTitles($row, $conf, $table) {
 		$out = '';
@@ -1136,15 +1094,12 @@ class t3lib_fullsearch {
 	/**
 	 * Sets the current name of the input form.
 	 *
-	 * @param	string		$formName: The name of the form.
-	 * @return	void
+	 * @param string $formName The name of the form.
+	 * @return void
 	 */
 	public function setFormName($formName) {
 		$this->formName = trim($formName);
 	}
 }
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_fullsearch.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_fullsearch.php']);
-}
 ?>

@@ -30,27 +30,13 @@
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   70: class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase
- *   78:     function modMenu()
- *   95:     function main()
- *  179:     function helpBubble()
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
 /**
  * Creates the "Create pages" wizard
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_wizardcrpages
  */
@@ -64,27 +50,27 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 	protected $loremIpsumObject = NULL;
 
 	/**
- 	* Complete tsConfig
- 	*
- 	* @var array
- 	*/
+	* Complete tsConfig
+	*
+	* @var array
+	*/
 	protected $tsConfig = array();
 
 	/**
- 	* Part of tsConfig with TCEFORM.pages. settings
- 	*
- 	* @var array
- 	*/
+	* Part of tsConfig with TCEFORM.pages. settings
+	*
+	* @var array
+	*/
 	protected $pagesTsConfig = array();
 
 
 	/**
 	 * Adds menu items... but I think this is not used at all. Looks very much like some testing code. If anyone cares to check it we can remove it some day...
 	 *
-	 * @return	array
+	 * @return array
 	 * @ignore
 	 */
-	function modMenu()	{
+	function modMenu() {
 		global $LANG;
 
 		$modMenuAdd = array(
@@ -99,38 +85,39 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 	/**
 	 * Main function creating the content for the module.
 	 *
-	 * @return	string		HTML content for the module, actually a "section" made through the parent object in $this->pObj
+	 * @return string HTML content for the module, actually a "section" made through the parent object in $this->pObj
 	 */
-	function main()	{
-		global $SOBE,$LANG;
+	function main() {
+		global $SOBE, $LANG;
 
-		$theCode='';
+		$theCode = '';
 
 		$this->tsConfig = t3lib_BEfunc::getPagesTSconfig($this->pObj->id);
 		$this->pagesTsConfig = isset($this->tsConfig['TCEFORM.']['pages.']) ? $this->tsConfig['TCEFORM.']['pages.'] : array();
-
 
 			// Create loremIpsum code:
 		if (t3lib_extMgm::isLoaded('lorem_ipsum')) {
 			$this->loremIpsumObject = t3lib_div::getUserObj('EXT:lorem_ipsum/class.tx_loremipsum_wiz.php:tx_loremipsum_wiz');
 		}
-
-		$m_perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(8);	// create new pages here?
-		$pRec = t3lib_BEfunc::getRecord('pages',$this->pObj->id,'uid',' AND '.$m_perms_clause);
+			// Create new pages here?
+		$m_perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(8);
+		$pRec = t3lib_BEfunc::getRecord('pages', $this->pObj->id, 'uid', ' AND ' . $m_perms_clause);
 		$sys_pages = t3lib_div::makeInstance('t3lib_pageSelect');
-		$menuItems = $sys_pages->getMenu($this->pObj->id,'*','sorting','',0);
+		$menuItems = $sys_pages->getMenu($this->pObj->id, '*', 'sorting', '', 0);
 		if (is_array($pRec)) {
 			$data = t3lib_div::_GP('data');
 			if (is_array($data['pages'])) {
 				if (t3lib_div::_GP('createInListEnd')) {
 					$endI = end($menuItems);
 					$thePid = -intval($endI['uid']);
-					if (!$thePid)	$thePid = $this->pObj->id;
+					if (!$thePid) {
+						$thePid = $this->pObj->id;
+					}
 				} else {
 					$thePid = $this->pObj->id;
 				}
 
-				$firstRecord = true;
+				$firstRecord = TRUE;
 				$previousIdentifier = '';
 
 				foreach ($data['pages'] as $identifier => $dat) {
@@ -139,7 +126,7 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 					} else {
 						$data['pages'][$identifier]['hidden'] = t3lib_div::_GP('hidePages') ? 1 : 0;
 						if ($firstRecord) {
-							$firstRecord = false;
+							$firstRecord = FALSE;
 							$data['pages'][$identifier]['pid'] = $thePid;
 						} else {
 							$data['pages'][$identifier]['pid'] = '-' . $previousIdentifier;
@@ -148,18 +135,18 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 					}
 				}
 
-				if (count($data['pages']))	{
+				if (count($data['pages'])) {
 					reset($data);
 					$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 					$tce->stripslashes_values=0;
 
 						// set default TCA values specific for the user
 					$TCAdefaultOverride = $GLOBALS['BE_USER']->getTSConfigProp('TCAdefaults');
-					if (is_array($TCAdefaultOverride))	{
+					if (is_array($TCAdefaultOverride)) {
 						$tce->setDefaultsFromUserTS($TCAdefaultOverride);
 					}
 
-					$tce->start($data,array());
+					$tce->start($data, array());
 					$tce->process_datamap();
 					t3lib_BEfunc::setUpdateSignal('updatePageTree');
 
@@ -180,13 +167,13 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 				$theCode.= $flashMessage->render();
 
 					// Display result:
-				$menuItems = $sys_pages->getMenu($this->pObj->id,'*','sorting','',0);
+				$menuItems = $sys_pages->getMenu($this->pObj->id, '*', 'sorting', '', 0);
 				$lines=array();
 				foreach ($menuItems as $rec) {
-					t3lib_BEfunc::workspaceOL('pages',$rec);
-					if (is_array($rec))	{
-						$lines[] = '<nobr>' . t3lib_iconWorks::getSpriteIconForRecord('pages', $rec, array('title' => t3lib_BEfunc::titleAttribForPages($rec , '', FALSE))) .
-							htmlspecialchars(t3lib_div::fixed_lgd_cs($rec['title'],$GLOBALS['BE_USER']->uc['titleLen'])).'</nobr>';
+					t3lib_BEfunc::workspaceOL('pages', $rec);
+					if (is_array($rec)) {
+						$lines[] = '<nobr>' . t3lib_iconWorks::getSpriteIconForRecord('pages', $rec, array('title' => t3lib_BEfunc::titleAttribForPages($rec, '', FALSE))) .
+							htmlspecialchars(t3lib_div::fixed_lgd_cs($rec['title'], $GLOBALS['BE_USER']->uc['titleLen'])) . '</nobr>';
 					}
 				}
 				$theCode.= '<h4>' . $LANG->getLL('wiz_newPages_currentMenu') . '</h4>' . implode('<br />', $lines);
@@ -206,7 +193,7 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 				'<br /><br />
 				<input type="checkbox" name="createInListEnd" id="createInListEnd" value="1" /> <label for="createInListEnd">'.$LANG->getLL('wiz_newPages_listEnd').'</label><br />
 				<input type="checkbox" name="hidePages" id="hidePages" value="1" /> <label for="hidePages">'.$LANG->getLL('wiz_newPages_hidePages').'</label><br /><br />
-				<input type="submit" name="create" value="' . $LANG->getLL('wiz_newPages_lCreate') . '" onclick="return confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('wiz_newPages_lCreate_msg1')) . ')" />&nbsp;<input type="reset" value="' . $LANG->getLL('wiz_newPages_lReset') . '" /><br />';
+				<input type="submit" name="create" value="' . $LANG->getLL('wiz_newPages_lCreate') . '" />&nbsp;<input type="reset" value="' . $LANG->getLL('wiz_newPages_lReset') . '" /><br />';
 
 				// Add ExtJS inline code
 				$extCode = '
@@ -248,24 +235,25 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 			// CSH
 		$theCode.= t3lib_BEfunc::cshItem('_MOD_web_func', 'tx_wizardcrpages', $GLOBALS['BACK_PATH'], '<br />|');
 
-		$out=$this->pObj->doc->section($LANG->getLL('wiz_crMany'),$theCode,0,1);
+		$out = $this->pObj->doc->header($LANG->getLL('wiz_crMany'));
+		$out .= $this->pObj->doc->section('', $theCode, 0, 1);
 		return $out;
 	}
 
 	/**
 	 * Return the helpbubble image tag.
 	 *
-	 * @return	string		HTML code for a help-bubble image.
+	 * @return string HTML code for a help-bubble image.
 	 */
-	function helpBubble()	{
-		return '<img src="'.$GLOBALS['BACK_PATH'].'gfx/helpbubble.gif" width="14" height="14" hspace="2" align="top" alt="" />';
+	function helpBubble() {
+		return '<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/helpbubble.gif" width="14" height="14" hspace="2" align="top" alt="" />';
 	}
 
 	/**
 	 * Return one line in the form
 	 *
-	 * @param	mixed	$index An integer: the line counter for which to create the line. Use "#" to create an template for javascript (used by ExtJS)
-	 * @return	string	HTML code for one input line for one new page
+	 * @param mixed $index An integer: the line counter for which to create the line. Use "#" to create an template for javascript (used by ExtJS)
+	 * @return string HTML code for one input line for one new page
 	 */
 	protected function getFormLine($index) {
 		$backPath = $GLOBALS['BACK_PATH'];
@@ -283,10 +271,10 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 		$content = '<label for="page_new_' . $index . '"> ' . $GLOBALS['LANG']->getLL('wiz_newPages_page') .' '. $label;
 		$content .= ':&nbsp;</label>';
 
-			// title
+			// Title
 		$content .= '<input type="text" id="page_new_' . $index . '" name="data[pages][NEW' . $index . '][title]"' . $this->pObj->doc->formWidth(35) . ' />&nbsp';
 
-			// lorem ipsum link, if available
+			// Lorem ipsum link, if available
 		$content .= (is_object($this->loremIpsumObject) ?
 			'<a href="#" onclick="' . htmlspecialchars($this->loremIpsumObject->getHeaderTitleJS('document.forms[0][\'data[pages][NEW' .
 			$index . '][title]\'].value', 'title')) . '">' . $this->loremIpsumObject->getIcon('', $this->pObj->doc->backPath) . '</a>'
@@ -344,9 +332,5 @@ class tx_wizardcrpages_webfunc_2 extends t3lib_extobjbase {
 
 		return '<div id="form-line-' . $index . '" class="' . $backgroundClass . '">' . $content . '</div>';
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/wizard_crpages/class.tx_wizardcrpages_webfunc_2.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/wizard_crpages/class.tx_wizardcrpages_webfunc_2.php']);
 }
 ?>

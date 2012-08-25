@@ -2,7 +2,7 @@
 *  Copyright notice
 *
 *  (c) 2004 Cau guanabara <caugb@ibest.com.br>
-*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,22 +29,17 @@
 ***************************************************************/
 /*
  * Find and Replace Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.FindReplace = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.FindReplace = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function(editor) {
+	configurePlugin: function (editor) {
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '2.2',
 			developer	: 'Cau Guanabara & Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca',
 			copyrightOwner	: 'Cau Guanabara & Stanislas Rolland',
@@ -127,8 +122,6 @@ HTMLArea.FindReplace = HTMLArea.Plugin.extend({
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
-				// As of ExtJS 3.1, JS error with IE when the window is resizable
-			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				close: {
@@ -255,7 +248,7 @@ HTMLArea.FindReplace = HTMLArea.Plugin.extend({
 	 * @return	void
 	 */
 	initPattern: function (fieldset) {
-		var selection = this.editor.getSelectedHTML();
+		var selection = this.editor.getSelection().getHtml();
 		if (/\S/.test(selection)) {
 			selection = selection.replace(/<[^>]*>/g, '');
 			selection = selection.replace(/&nbsp;/g, '');
@@ -495,7 +488,7 @@ HTMLArea.FindReplace = HTMLArea.Plugin.extend({
 		if (plugin) {
 			plugin.start();
 		}
-		this.base();
+		HTMLArea.FindReplace.superclass.onCancel.call(this);
 	},
 	/*
 	 * Clear the document before leaving on window close handle
@@ -506,6 +499,6 @@ HTMLArea.FindReplace = HTMLArea.Plugin.extend({
 		if (plugin) {
 			plugin.start();
 		}
-		this.base();
+		HTMLArea.FindReplace.superclass.onClose.call(this);
 	}
 });

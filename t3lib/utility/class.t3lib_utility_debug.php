@@ -28,10 +28,7 @@
 /**
  * Class to handle debug
  *
- * $Id: $
- *
- *
- * @author	 Steffen Kamper <steffen@typo3.org>
+ * @author Steffen Kamper <steffen@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -56,6 +53,14 @@ final class t3lib_utility_Debug {
 	';
 
 
+	/**
+	 * Debug
+	 *
+	 * @param string $var
+	 * @param string $header
+	 * @param string $group
+	 * @return void
+	 */
 	public static function debug($var = '', $header = '', $group = 'Debug') {
 			// buffer the output of debug if no buffering started before
 		if (ob_get_level() == 0) {
@@ -132,7 +137,7 @@ final class t3lib_utility_Debug {
 		} else {
 			$string = str_replace(array(
 				'"', '/', '<', "\n", "\r"
-		  ), array(
+				), array(
 				'\"', '\/', '\<', '', ''
 			), $string);
 		}
@@ -218,7 +223,7 @@ final class t3lib_utility_Debug {
 	/**
 	 * Displays the "path" of the function call stack in a string, using debug_backtrace
 	 *
-	 * @return	string
+	 * @return string
 	 */
 	public static function debugTrail() {
 		$trail = debug_backtrace();
@@ -241,23 +246,22 @@ final class t3lib_utility_Debug {
 	/**
 	 * Displays an array as rows in a table. Useful to debug output like an array of database records.
 	 *
-	 * @param	mixed		Array of arrays with similar keys
-	 * @param	string		Table header
-	 * @param	boolean		If TRUE, will return content instead of echo'ing out.
-	 * @return	void		Outputs to browser.
+	 * @param mixed $rows Array of arrays with similar keys
+	 * @param string $header Table header
+	 * @param boolean $returnHTML If TRUE, will return content instead of echo'ing out.
+	 * @return void Outputs to browser.
 	 */
 	public static function debugRows($rows, $header = '', $returnHTML = FALSE) {
 		if (is_array($rows)) {
-			reset($rows);
-			$firstEl = current($rows);
+			$firstEl = reset($rows);
 			if (is_array($firstEl)) {
 				$headerColumns = array_keys($firstEl);
 				$tRows = array();
 
 					// Header:
 				$tRows[] = '<tr><td colspan="' . count($headerColumns) .
-						   '" style="background-color:#bbbbbb; font-family: verdana,arial; font-weight: bold; font-size: 10px;"><strong>' .
-						   htmlspecialchars($header) . '</strong></td></tr>';
+						'" style="background-color:#bbbbbb; font-family: verdana,arial; font-weight: bold; font-size: 10px;"><strong>' .
+						htmlspecialchars($header) . '</strong></td></tr>';
 				$tCells = array();
 				foreach ($headerColumns as $key) {
 					$tCells[] = '
@@ -286,13 +290,10 @@ final class t3lib_utility_Debug {
 					</table>';
 				if ($returnHTML) {
 					return $table;
-				}
-				else
-				{
+				} else {
 					echo $table;
 				}
-			} else
-			{
+			} else {
 				debug('Empty array of rows', $header);
 			}
 		} else {
@@ -303,9 +304,9 @@ final class t3lib_utility_Debug {
 	/**
 	 * Returns a string with a list of ascii-values for the first $characters characters in $string
 	 *
-	 * @param	string		String to show ASCII value for
-	 * @param	integer		Number of characters to show
-	 * @return	string		The string with ASCII values in separated by a space char.
+	 * @param string $string String to show ASCII value for
+	 * @param integer $characters Number of characters to show
+	 * @return string The string with ASCII values in separated by a space char.
 	 */
 	public static function ordinalValue($string, $characters = 100) {
 		if (strlen($string) < $characters) {
@@ -320,10 +321,10 @@ final class t3lib_utility_Debug {
 	/**
 	 * Returns HTML-code, which is a visual representation of a multidimensional array
 	 * use t3lib_div::print_array() in order to print an array
-	 * Returns false if $array_in is not an array
+	 * Returns FALSE if $array_in is not an array
 	 *
-	 * @param	mixed		Array to view
-	 * @return	string		HTML output
+	 * @param mixed $array_in Array to view
+	 * @return string HTML output
 	 */
 	public static function viewArray($array_in) {
 		if (is_array($array_in)) {
@@ -346,8 +347,8 @@ final class t3lib_utility_Debug {
 							$string .= print_r($val, TRUE);
 						}
 						$result .= '<font face="Verdana,Arial" size="1" color="red">' .
-								   nl2br(htmlspecialchars($string)) .
-								   '<br /></font>';
+								nl2br(htmlspecialchars($string)) .
+								'<br /></font>';
 					} else {
 						if (gettype($val) == 'object') {
 							$string = 'Unknown object';
@@ -355,8 +356,8 @@ final class t3lib_utility_Debug {
 							$string = (string) $val;
 						}
 						$result .= '<font face="Verdana,Arial" size="1" color="red">' .
-								   nl2br(htmlspecialchars($string)) .
-								   '<br /></font>';
+								nl2br(htmlspecialchars($string)) .
+								'<br /></font>';
 					}
 					$result .= '</td>
 					</tr>';
@@ -367,20 +368,21 @@ final class t3lib_utility_Debug {
 			$result = '<table border="1" cellpadding="1" cellspacing="0" bgcolor="white">
 				<tr>
 					<td><font face="Verdana,Arial" size="1" color="red">' .
-					  nl2br(htmlspecialchars((string) $array_in)) .
-					  '<br /></font></td>
+					nl2br(htmlspecialchars((string) $array_in)) .
+					'<br /></font></td>
 				</tr>
-			</table>'; // Output it as a string.
+			</table>';
 		}
+			// Output it as a string.
 		return $result;
 	}
 
 	/**
 	 * Prints an array
 	 *
-	 * @param	mixed		Array to print visually (in a table).
-	 * @return	void
-	 * @see view_array()
+	 * @param mixed $array_in Array to print visually (in a table).
+	 * @return void
+	 * @see viewArray()
 	 */
 	public static function printArray($array_in) {
 		echo self::viewArray($array_in);

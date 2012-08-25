@@ -27,13 +27,10 @@
 
 require_once(PATH_typo3 . 'contrib/swiftmailer/swift_required.php');
 
-
 /**
  * Adapter for Swift_Mailer to be used by TYPO3 extensions
  *
- * $Id$
- *
- * @author	Ernesto Baschny <ernst@cron-it.de>
+ * @author Ernesto Baschny <ernst@cron-it.de>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -50,7 +47,7 @@ class t3lib_mail_Message extends Swift_Message {
 	protected $mailerHeader = 'TYPO3';
 
 	/**
-	 * True if the message has been sent.
+	 * TRUE if the message has been sent.
 	 * @var boolean
 	 */
 	protected $sent = FALSE;
@@ -101,11 +98,6 @@ class t3lib_mail_Message extends Swift_Message {
 	public function getFailedRecipients() {
 		return $this->failedRecipients;
 	}
-
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_mail_message.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_mail_message.php']);
 }
 
 ?>

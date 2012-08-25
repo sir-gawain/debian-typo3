@@ -28,41 +28,24 @@
  * Module: Web>Info
  * Presents various page related information from extensions
  *
- * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   70: class SC_mod_web_info_index extends t3lib_SCbase
- *   82:     function main()
- *  178:     function printContent()
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
 unset($MCONF);
 require('conf.php');
 require($BACK_PATH.'init.php');
-require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_web_info.xml');
 
-$BE_USER->modAccess($MCONF,1);
-
-
+$BE_USER->modAccess($MCONF, 1);
 
 /**
  * Script Class for the Web > Info module
  * This class creates the framework to which other extensions can connect their sub-modules
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -83,40 +66,38 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 	/**
 	 * Initialize module header etc and call extObjContent function
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function main()	{
-		global $BE_USER,$LANG,$BACK_PATH;
-
-		// Access check...
-		// The page will show only if there is a valid page and if this page may be viewed by the user
-		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$this->perms_clause);
+	function main() {
+			// Access check...
+			// The page will show only if there is a valid page and if this page may be viewed by the user
+		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id, $this->perms_clause);
 		$access = is_array($this->pageinfo) ? 1 : 0;
 
-		if (($this->id && $access) || ($BE_USER->user['admin'] && !$this->id))	{
-			$this->CALC_PERMS = $BE_USER->calcPerms($this->pageinfo);
-			if ($BE_USER->user['admin'] && !$this->id)	{
-				$this->pageinfo=array('title' => '[root-level]','uid'=>0,'pid'=>0);
+		if (($this->id && $access) || ($GLOBALS['BE_USER']->user['admin'] && !$this->id)) {
+			$this->CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($this->pageinfo);
+			if ($GLOBALS['BE_USER']->user['admin'] && !$this->id) {
+				$this->pageinfo=array('title' => '[root-level]', 'uid'=>0, 'pid'=>0);
 			}
 
 			$this->doc = t3lib_div::makeInstance('template');
-			$this->doc->backPath = $BACK_PATH;
+			$this->doc->backPath = $GLOBALS['BACK_PATH'];
 			$this->doc->setModuleTemplate('templates/info.html');
-			$this->doc->tableLayout = Array (
-				'0' => Array (
-					'0' => Array('<td valign="top"><strong>','</strong></td>'),
-					"defCol" => Array('<td><img src="'.$this->doc->backPath.'clear.gif" width="10" height="1" alt="" /></td><td valign="top"><strong>','</strong></td>')
+			$this->doc->tableLayout = array (
+				'0' => array (
+					'0' => array('<td valign="top"><strong>', '</strong></td>'),
+					'defCol' => array('<td><img src="'.$this->doc->backPath.'clear.gif" width="10" height="1" alt="" /></td><td valign="top"><strong>', '</strong></td>')
 				),
-				"defRow" => Array (
-					"0" => Array('<td valign="top">','</td>'),
-					"defCol" => Array('<td><img src="'.$this->doc->backPath.'clear.gif" width="10" height="1" alt="" /></td><td valign="top">','</td>')
+				'defRow' => array (
+					'0' => array('<td valign="top">', '</td>'),
+					'defCol' => array('<td><img src="'.$this->doc->backPath.'clear.gif" width="10" height="1" alt="" /></td><td valign="top">', '</td>')
 				)
 			);
 
 				// JavaScript
 			$this->doc->JScode = $this->doc->wrapScriptTags('
 				script_ended = 0;
-				function jumpToUrl(URL)	{	//
+				function jumpToUrl(URL) {	//
 					window.location.href = URL;
 				}
 			');
@@ -129,9 +110,9 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 			$this->doc->getContextMenuCode();
 			$this->doc->form = '<form action="index.php" method="post" name="webinfoForm">';
 
-			$vContent = $this->doc->getVersionSelector($this->id,1);
-			if ($vContent)	{
-				$this->content.=$this->doc->section('',$vContent);
+			$vContent = $this->doc->getVersionSelector($this->id, 1);
+			if ($vContent) {
+				$this->content.=$this->doc->section('', $vContent);
 			}
 
 			$this->extObjContent();
@@ -149,15 +130,15 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 		} else {
 				// If no access or if ID == zero
 			$this->doc = t3lib_div::makeInstance('mediumDoc');
-			$this->doc->backPath = $BACK_PATH;
+			$this->doc->backPath = $GLOBALS['BACK_PATH'];
 
-			$this->content = $this->doc->header($LANG->getLL('title'));
+			$this->content = $this->doc->header($GLOBALS['LANG']->getLL('title'));
 			$this->content .= $this->doc->spacer(5);
 			$this->content .= $this->doc->spacer(10);
 		}
-		// Renders the module page
+			// Renders the module page
 		$this->content = $this->doc->render(
-			$LANG->getLL('title'),
+			$GLOBALS['LANG']->getLL('title'),
 			$this->content
 		);
 	}
@@ -165,9 +146,9 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 	/**
 	 * Print module content (from $this->content)
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function printContent()	{
+	function printContent() {
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
 	}
@@ -175,11 +156,9 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return	array	all available buttons as an assoc. array
+	 * @return array All available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
-		global $TCA, $LANG, $BACK_PATH, $BE_USER;
-
+	protected function getButtons() {
 		$buttons = array(
 			'csh' => '',
 			'view' => '',
@@ -190,12 +169,17 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 		$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_web_info', '', $GLOBALS['BACK_PATH'], '', TRUE);
 
 			// View page
-		$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick($this->pageinfo['uid'], $BACK_PATH, t3lib_BEfunc::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '">' .
-					t3lib_iconWorks::getSpriteIcon('actions-document-view') .
-				'</a>';
+		$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(
+			t3lib_BEfunc::viewOnClick(
+				$this->pageinfo['uid'],
+				$GLOBALS['BACK_PATH'],
+				t3lib_BEfunc::BEgetRootLine($this->pageinfo['uid'])
+			)) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '">' .
+			t3lib_iconWorks::getSpriteIcon('actions-document-view') .
+			'</a>';
 
 			// Shortcut
-		if ($BE_USER->mayMakeShortcut())	{
+		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
 			$buttons['shortcut'] = $this->doc->makeShortcutIcon('id, edit_record, pointer, new_unique_uid, search_field, search_levels, showLimit', implode(',', array_keys($this->MOD_MENU)), $this->MCONF['name']);
 		}
 
@@ -210,26 +194,25 @@ class SC_mod_web_info_index extends t3lib_SCbase {
 
 		return $buttons;
 	}
-
 }
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/info/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/info/index.php']);
-}
-
-
-
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_web_info_index');
 $SOBE->init();
 
-// Include files?
-foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
-$SOBE->checkExtObj();	// Checking for first level external objects
+	// Include files?
+foreach($SOBE->include_once as $INC_FILE) {
+	include_once($INC_FILE);
+}
+	// Checking for first level external objects
+$SOBE->checkExtObj();
 
-// Repeat Include files! - if any files has been added by second-level extensions
-foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
-$SOBE->checkSubExtObj();	// Checking second level external objects
+	// Repeat Include files! - if any files has been added by second-level extensions
+foreach($SOBE->include_once as $INC_FILE) {
+	include_once($INC_FILE);
+}
+	// Checking second level external objects
+$SOBE->checkSubExtObj();
 
 $SOBE->main();
 $SOBE->printContent();

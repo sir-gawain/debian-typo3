@@ -27,72 +27,66 @@
 /**
  * Contains the TypoScript parser class
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   80: class t3lib_TSparser
- *  133:	 function parse($string,$matchObj='')
- *  169:	 function nextDivider()
- *  185:	 function parseSub(&$setup)
- *  389:	 function rollParseSub($string,&$setup)
- *  413:	 function getVal($string,$setup)
- *  439:	 function setVal($string,&$setup,$value,$wipeOut=0)
- *  485:	 function error($err,$num=2)
- *  497:	 function checkIncludeLines($string, $cycle_counter=1, $returnFiles=false)
- *  541:	 function checkIncludeLines_array($array)
- *
- *			  SECTION: Syntax highlighting
- *  584:	 function doSyntaxHighlight($string,$lineNum='',$highlightBlockMode=0)
- *  605:	 function regHighLight($code,$pointer,$strlen=-1)
- *  623:	 function syntaxHighlight_print($lineNumDat,$highlightBlockMode)
- *
- * TOTAL FUNCTIONS: 12
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 /**
  * The TypoScript parser
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
- * @see t3lib_tstemplate, t3lib_matchcondition, t3lib_BEfunc::getPagesTSconfig(), t3lib_userAuthGroup::fetchGroupData(), t3lib_TStemplate::generateConfig()
+ * @see t3lib_tstemplate, t3lib_BEfunc::getPagesTSconfig(), t3lib_userAuthGroup::fetchGroupData(), t3lib_TStemplate::generateConfig()
  */
 class t3lib_TSparser {
-	var $strict = 1; // If set, then key names cannot contain characters other than [:alnum:]_\.-
+		// If set, then key names cannot contain characters other than [:alnum:]_\.-
+	var $strict = 1;
 
 		// Internal
-	var $setup = array(); // TypoScript hierarchy being build during parsing.
-	var $raw; // raw data, the input string exploded by LF
-	var $rawP; // pointer to entry in raw data array
-	var $lastComment = ''; // Holding the value of the last comment
-	var $commentSet = 0; // Internally set, used as internal flag to create a multi-line comment (one of those like /*... */)
-	var $multiLineEnabled = 0; // Internally set, when multiline value is accumulated
-	var $multiLineObject = ''; // Internally set, when multiline value is accumulated
-	var $multiLineValue = array(); // Internally set, when multiline value is accumulated
-	var $inBrace = 0; // Internally set, when in brace. Counter.
-	var $lastConditionTrue = 1; // For each condition this flag is set, if the condition is true, else it's cleared. Then it's used by the [ELSE] condition to determine if the next part should be parsed.
-	var $sections = array(); // Tracking all conditions found
-	var $sectionsMatch = array(); // Tracking all matching conditions found
-	var $syntaxHighLight = 0; // If set, then syntax highlight mode is on; Call the function syntaxHighlight() to use this function
-	var $highLightData = array(); // Syntax highlight data is accumulated in this array. Used by syntaxHighlight_print() to construct the output.
-	var $highLightData_bracelevel = array(); // Syntax highlight data keeping track of the curly brace level for each line
+		// TypoScript hierarchy being build during parsing.
+	var $setup = array();
+		// Raw data, the input string exploded by LF
+	var $raw;
+		// Pointer to entry in raw data array
+	var $rawP;
+		// Holding the value of the last comment
+	var $lastComment = '';
+		// Internally set, used as internal flag to create a multi-line comment (one of those like /*... */)
+	var $commentSet = 0;
+		// Internally set, when multiline value is accumulated
+	var $multiLineEnabled = 0;
+		// Internally set, when multiline value is accumulated
+	var $multiLineObject = '';
+		// Internally set, when multiline value is accumulated
+	var $multiLineValue = array();
+		// Internally set, when in brace. Counter.
+	var $inBrace = 0;
+		// For each condition this flag is set, if the condition is TRUE, else it's cleared. Then it's used by the [ELSE] condition to determine if the next part should be parsed.
+	var $lastConditionTrue = 1;
+		// Tracking all conditions found
+	var $sections = array();
+		// Tracking all matching conditions found
+	var $sectionsMatch = array();
+		// If set, then syntax highlight mode is on; Call the function syntaxHighlight() to use this function
+	var $syntaxHighLight = 0;
+		// Syntax highlight data is accumulated in this array. Used by syntaxHighlight_print() to construct the output.
+	var $highLightData = array();
+		// Syntax highlight data keeping track of the curly brace level for each line
+	var $highLightData_bracelevel = array();
 
 		// Debugging, analysis:
-	var $regComments = 0; // DO NOT register the comments. This is default for the ordinary sitetemplate!
-	var $regLinenumbers = 0; // DO NOT register the linenumbers. This is default for the ordinary sitetemplate!
-	var $errors = array(); // Error accumulation array.
-	var $lineNumberOffset = 0; // Used for the error messages line number reporting. Set externally.
-	var $breakPointLN = 0; // Line for break point.
+		// DO NOT register the comments. This is default for the ordinary sitetemplate!
+	var $regComments = 0;
+		// DO NOT register the linenumbers. This is default for the ordinary sitetemplate!
+	var $regLinenumbers = 0;
+		// Error accumulation array.
+	var $errors = array();
+		// Used for the error messages line number reporting. Set externally.
+	var $lineNumberOffset = 0;
+		// Line for break point.
+	var $breakPointLN = 0;
 	var $highLightStyles = array(
 		'prespace' => array('<span class="ts-prespace">', '</span>'), // Space before any content on a line
 		'objstr_postspace' => array('<span class="ts-objstr_postspace">', '</span>'), // Space after the object string on a line
@@ -109,17 +103,20 @@ class t3lib_TSparser {
 		'error' => array('<span class="ts-error">', '</span>'), // Error messages
 		'linenum' => array('<span class="ts-linenum">', '</span>'), // Line numbers
 	);
-	var $highLightBlockStyles = ''; // Additional attributes for the <span> tags for a blockmode line
-	var $highLightBlockStyles_basecolor = '#cccccc'; // The hex-HTML color for the blockmode
+		// Additional attributes for the <span> tags for a blockmode line
+	var $highLightBlockStyles = '';
+		// The hex-HTML color for the blockmode
+	var $highLightBlockStyles_basecolor = '#cccccc';
 
-	public $parentObject; //Instance of parentObject, used by t3lib_tsparser_ext
+		//Instance of parentObject, used by t3lib_tsparser_ext
+	public $parentObject;
 
 	/**
 	 * Start parsing the input TypoScript text piece. The result is stored in $this->setup
 	 *
-	 * @param	string		The TypoScript text
-	 * @param	object		If is object (instance of t3lib_matchcondition), then this is used to match conditions found in the TypoScript code. If matchObj not specified, then no conditions will work! (Except [GLOBAL])
-	 * @return	void
+	 * @param string $string The TypoScript text
+	 * @param object $matchObj If is object, then this is used to match conditions found in the TypoScript code. If matchObj not specified, then no conditions will work! (Except [GLOBAL])
+	 * @return void
 	 */
 	function parse($string, $matchObj = '') {
 		$this->raw = explode(LF, $string);
@@ -135,9 +132,11 @@ class t3lib_TSparser {
 				$pre = trim($this->parseSub($this->setup));
 				$this->lastConditionTrue = 1;
 			} else {
+					// We're in a specific section. Therefore we log this section
 				if (strtoupper($pre) != '[ELSE]') {
 					$this->sections[md5($pre)] = $pre;
-				} // we're in a specific section. Therefore we log this section
+				}
+
 				if ((is_object($matchObj) && $matchObj->match($pre)) || $this->syntaxHighLight) {
 					if (strtoupper($pre) != '[ELSE]') {
 						$this->sectionsMatch[md5($pre)] = $pre;
@@ -162,7 +161,7 @@ class t3lib_TSparser {
 	/**
 	 * Will search for the next condition. When found it will return the line content (the condition value) and have advanced the internal $this->rawP pointer to point to the next line after the condition.
 	 *
-	 * @return	string		The condition value
+	 * @return string The condition value
 	 * @see parse()
 	 */
 	function nextDivider() {
@@ -178,22 +177,21 @@ class t3lib_TSparser {
 	/**
 	 * Parsing the $this->raw TypoScript lines from pointer, $this->rawP
 	 *
-	 * @param	array		Reference to the setup array in which to accumulate the values.
-	 * @return	string		Returns the string of the condition found, the exit signal or possible nothing (if it completed parsing with no interruptions)
+	 * @param array $setup Reference to the setup array in which to accumulate the values.
+	 * @return string Returns the string of the condition found, the exit signal or possible nothing (if it completed parsing with no interruptions)
 	 */
 	function parseSub(&$setup) {
-		global $TYPO3_CONF_VARS;
-
 		while (isset($this->raw[$this->rawP])) {
 			$line = ltrim($this->raw[$this->rawP]);
 			$lineP = $this->rawP;
 			$this->rawP++;
 			if ($this->syntaxHighLight) {
-				$this->regHighLight("prespace", $lineP, strlen($line));
+				$this->regHighLight('prespace', $lineP, strlen($line));
 			}
 
 				// Breakpoint?
-			if ($this->breakPointLN && ($this->lineNumberOffset + $this->rawP - 1) == ($this->breakPointLN + 1)) { // by adding 1 we get that line processed
+				// By adding 1 we get that line processed
+			if ($this->breakPointLN && ($this->lineNumberOffset + $this->rawP - 1) == ($this->breakPointLN + 1)) {
 				return '[_BREAK]';
 			}
 
@@ -202,18 +200,24 @@ class t3lib_TSparser {
 				$this->commentSet = 1;
 			}
 
-			if (!$this->commentSet && ($line || $this->multiLineEnabled)) { // If $this->multiLineEnabled we will go and get the line values here because we know, the first if() will be true.
-				if ($this->multiLineEnabled) { // If multiline is enabled. Escape by ')'
-					if (substr($line, 0, 1) == ')') { // Multiline ends...
+				// If $this->multiLineEnabled we will go and get the line values here because we know, the first if() will be TRUE.
+			if (!$this->commentSet && ($line || $this->multiLineEnabled)) {
+					// If multiline is enabled. Escape by ')'
+				if ($this->multiLineEnabled) {
+						// Multiline ends...
+					if (substr($line, 0, 1) == ')') {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("operator", $lineP, strlen($line) - 1);
+							$this->regHighLight('operator', $lineP, strlen($line) - 1);
 						}
-						$this->multiLineEnabled = 0; // Disable multiline
+							// Disable multiline
+						$this->multiLineEnabled = 0;
 						$theValue = implode($this->multiLineValue, LF);
 						if (strstr($this->multiLineObject, '.')) {
-							$this->setVal($this->multiLineObject, $setup, array($theValue)); // Set the value deeper.
+								// Set the value deeper.
+							$this->setVal($this->multiLineObject, $setup, array($theValue));
 						} else {
-							$setup[$this->multiLineObject] = $theValue; // Set value regularly
+								// Set value regularly
+							$setup[$this->multiLineObject] = $theValue;
 							if ($this->lastComment && $this->regComments) {
 								$setup[$this->multiLineObject . '..'] .= $this->lastComment;
 							}
@@ -223,28 +227,30 @@ class t3lib_TSparser {
 						}
 					} else {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("value", $lineP);
+							$this->regHighLight('value', $lineP);
 						}
 						$this->multiLineValue[] = $this->raw[($this->rawP - 1)];
 					}
 				} elseif ($this->inBrace == 0 && substr($line, 0, 1) == '[') { // Beginning of condition (only on level zero compared to brace-levels
 					if ($this->syntaxHighLight) {
-						$this->regHighLight("condition", $lineP);
+						$this->regHighLight('condition', $lineP);
 					}
 					return $line;
 				} else {
-					if (substr($line, 0, 1) == '[' && strtoupper(trim($line)) == '[GLOBAL]') { // Return if GLOBAL condition is set - no matter what.
+						// Return if GLOBAL condition is set - no matter what.
+					if (substr($line, 0, 1) == '[' && strtoupper(trim($line)) == '[GLOBAL]') {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("condition", $lineP);
+							$this->regHighLight('condition', $lineP);
 						}
 						$this->error('Line ' . ($this->lineNumberOffset + $this->rawP - 1) . ': On return to [GLOBAL] scope, the script was short of ' . $this->inBrace . ' end brace(s)', 1);
 						$this->inBrace = 0;
 						return $line;
 					} elseif (strcspn($line, '}#/') != 0) { // If not brace-end or comment
-						$varL = strcspn($line, ' {=<>:('); // Find object name string until we meet an operator
+							// Find object name string until we meet an operator
+						$varL = strcspn($line, ' {=<>:(');
 						$objStrName = trim(substr($line, 0, $varL));
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("objstr", $lineP, strlen(substr($line, $varL)));
+							$this->regHighLight('objstr', $lineP, strlen(substr($line, $varL)));
 						}
 						if (strlen($objStrName)) {
 							$r = array();
@@ -253,10 +259,10 @@ class t3lib_TSparser {
 							} else {
 								$line = ltrim(substr($line, $varL));
 								if ($this->syntaxHighLight) {
-									$this->regHighLight("objstr_postspace", $lineP, strlen($line));
+									$this->regHighLight('objstr_postspace', $lineP, strlen($line));
 									if (strlen($line) > 0) {
-										$this->regHighLight("operator", $lineP, strlen($line) - 1);
-										$this->regHighLight("operator_postspace", $lineP, strlen(ltrim(substr($line, 1))));
+										$this->regHighLight('operator', $lineP, strlen($line) - 1);
+										$this->regHighLight('operator_postspace', $lineP, strlen(ltrim(substr($line, 1))));
 									}
 								}
 
@@ -298,13 +304,17 @@ class t3lib_TSparser {
 											}
 										break;
 										default:
-											if (isset($TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc])) {
-												$hookMethod = $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc];
+											if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc])) {
+												$hookMethod = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc];
 												$params = array('currentValue' => $currentValue, 'functionArgument' => $tsFuncArg);
 												$fakeThis = FALSE;
 												$newValue = t3lib_div::callUserFunction($hookMethod, $params, $fakeThis);
 											} else {
-												t3lib_div::sysLog('Missing function definition for ' . $tsFunc . ' on TypoScript line ' . $lineP, 'Core', 2);
+												t3lib_div::sysLog(
+													'Missing function definition for ' . $tsFunc . ' on TypoScript line ' . $lineP,
+													'Core',
+													t3lib_div::SYSLOG_SEVERITY_WARNING
+												);
 											}
 									}
 
@@ -357,7 +367,7 @@ class t3lib_TSparser {
 									break;
 									case '<':
 										if ($this->syntaxHighLight) {
-											$this->regHighLight("value_copy", $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
+											$this->regHighLight('value_copy', $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
 										}
 										$theVal = trim(substr($line, 1));
 										if (substr($theVal, 0, 1) == '.') {
@@ -369,7 +379,7 @@ class t3lib_TSparser {
 									break;
 									case '>':
 										if ($this->syntaxHighLight) {
-											$this->regHighLight("value_unset", $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
+											$this->regHighLight('value_unset', $lineP, strlen(ltrim(substr($line, 1))) - strlen(trim(substr($line, 1))));
 										}
 										$this->setVal($objStrName, $setup, 'UNSET');
 									break;
@@ -384,7 +394,7 @@ class t3lib_TSparser {
 						$this->inBrace--;
 						$this->lastComment = '';
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("operator", $lineP, strlen($line) - 1);
+							$this->regHighLight('operator', $lineP, strlen($line) - 1);
 						}
 						if ($this->inBrace < 0) {
 							$this->error('Line ' . ($this->lineNumberOffset + $this->rawP - 1) . ': An end brace is in excess.', 1);
@@ -394,7 +404,7 @@ class t3lib_TSparser {
 						}
 					} else {
 						if ($this->syntaxHighLight) {
-							$this->regHighLight("comment", $lineP);
+							$this->regHighLight('comment', $lineP);
 						}
 
 							// Comment. The comments are concatenated in this temporary string:
@@ -408,7 +418,7 @@ class t3lib_TSparser {
 				// Unset comment
 			if ($this->commentSet) {
 				if ($this->syntaxHighLight) {
-					$this->regHighLight("comment", $lineP);
+					$this->regHighLight('comment', $lineP);
 				}
 				if (substr($line, 0, 2) == '*/') {
 					$this->commentSet = 0;
@@ -420,9 +430,9 @@ class t3lib_TSparser {
 	/**
 	 * Parsing of TypoScript keys inside a curly brace where the key is composite of at least two keys, thus having to recursively call itself to get the value
 	 *
-	 * @param	string		The object sub-path, eg "thisprop.another_prot"
-	 * @param	array		The local setup array from the function calling this function
-	 * @return	string		Returns the exitSignal
+	 * @param string $string The object sub-path, eg "thisprop.another_prot"
+	 * @param array $setup The local setup array from the function calling this function
+	 * @return string Returns the exitSignal
 	 * @see parseSub()
 	 */
 	function rollParseSub($string, &$setup) {
@@ -453,15 +463,16 @@ class t3lib_TSparser {
 	/**
 	 * Get a value/property pair for an object path in TypoScript, eg. "myobject.myvalue.mysubproperty". Here: Used by the "copy" operator, <
 	 *
-	 * @param	string		Object path for which to get the value
-	 * @param	array		Global setup code if $string points to a global object path. But if string is prefixed with "." then its the local setup array.
-	 * @return	array		An array with keys 0/1 being value/property respectively
+	 * @param string $string Object path for which to get the value
+	 * @param array $setup Global setup code if $string points to a global object path. But if string is prefixed with "." then its the local setup array.
+	 * @return array An array with keys 0/1 being value/property respectively
 	 */
 	function getVal($string, $setup) {
 		if ((string) $string != '') {
 			$keyLen = strcspn($string, '.');
 			if ($keyLen == strlen($string)) {
-				$retArr = array(); // Added 6/6/03. Shouldn't hurt
+					// Added 6/6/03. Shouldn't hurt
+				$retArr = array();
 				if (isset($setup[$string])) {
 					$retArr[0] = $setup[$string];
 				}
@@ -481,11 +492,11 @@ class t3lib_TSparser {
 	/**
 	 * Setting a value/property of an object string in the setup array.
 	 *
-	 * @param	string		The object sub-path, eg "thisprop.another_prot"
-	 * @param	array		The local setup array from the function calling this function.
-	 * @param	array		The value/property pair array to set. If only one of them is set, then the other is not touched (unless $wipeOut is set, which it is when copies are made which must include both value and property)
-	 * @param	boolean		If set, then both value and property is wiped out when a copy is made of another value.
-	 * @return	void
+	 * @param string $string The object sub-path, eg "thisprop.another_prot"
+	 * @param array $setup The local setup array from the function calling this function.
+	 * @param array $value The value/property pair array to set. If only one of them is set, then the other is not touched (unless $wipeOut is set, which it is when copies are made which must include both value and property)
+	 * @param boolean $wipeOut If set, then both value and property is wiped out when a copy is made of another value.
+	 * @return void
 	 */
 	function setVal($string, &$setup, $value, $wipeOut = 0) {
 		if ((string) $string != '') {
@@ -500,9 +511,6 @@ class t3lib_TSparser {
 				} else {
 					$lnRegisDone = 0;
 					if ($wipeOut && $this->strict) {
-						if ((isset($setup[$string]) && !isset($value[0])) || (isset($setup[$string . '.']) && !isset($value[1]))) {
-							$this->error('Line ' . ($this->lineNumberOffset + $this->rawP - 1) . ': Object copied in this line "' . trim($this->raw[($this->rawP - 1)]) . '" would leave either the value or properties untouched in TypoScript Version 1. Please check that this is not a problem for you.', 1);
-						}
 						unset($setup[$string]);
 						unset($setup[$string . '.']);
 						if ($this->regLinenumbers) {
@@ -537,9 +545,9 @@ class t3lib_TSparser {
 	 * Stacks errors/messages from the TypoScript parser into an internal array, $this->error
 	 * If "TT" is a global object (as it is in the frontend when backend users are logged in) the message will be registered here as well.
 	 *
-	 * @param	string		The error message string
-	 * @param	integer		The error severity (in the scale of $GLOBALS['TT']->setTSlogMessage: Approx: 2=warning, 1=info, 0=nothing, 3=fatal.)
-	 * @return	void
+	 * @param string $err The error message string
+	 * @param integer $num The error severity (in the scale of $GLOBALS['TT']->setTSlogMessage: Approx: 2=warning, 1=info, 0=nothing, 3=fatal.)
+	 * @return void
 	 */
 	function error($err, $num = 2) {
 		if (is_object($GLOBALS['TT'])) {
@@ -552,16 +560,20 @@ class t3lib_TSparser {
 	 * Checks the input string (un-parsed TypoScript) for include-commands ("<INCLUDE_TYPOSCRIPT: ....")
 	 * Use: t3lib_TSparser::checkIncludeLines()
 	 *
-	 * @param	string		Unparsed TypoScript
-	 * @param	integer		Counter for detecting endless loops
-	 * @param	boolean		When set an array containing the resulting typoscript and all included files will get returned
-	 * @return	string		Complete TypoScript with includes added.
+	 * @param string $string Unparsed TypoScript
+	 * @param integer $cycle_counter Counter for detecting endless loops
+	 * @param boolean $returnFiles When set an array containing the resulting typoscript and all included files will get returned
+	 * @return string Complete TypoScript with includes added.
 	 * @static
 	 */
-	function checkIncludeLines($string, $cycle_counter = 1, $returnFiles = FALSE) {
+	public static function checkIncludeLines($string, $cycle_counter = 1, $returnFiles = FALSE) {
 		$includedFiles = array();
 		if ($cycle_counter > 100) {
-			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags', 'Core', 2);
+			t3lib_div::sysLog(
+				'It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags',
+				'Core',
+				t3lib_div::SYSLOG_SEVERITY_WARNING
+			);
 			if ($returnFiles) {
 				return array(
 					'typoscript' => '',
@@ -573,13 +585,16 @@ class t3lib_TSparser {
 		$splitStr = '<INCLUDE_TYPOSCRIPT:';
 		if (strstr($string, $splitStr)) {
 			$newString = '';
-			$allParts = explode($splitStr, LF . $string . LF); // adds line break char before/after
+				// Adds line break char before/after
+			$allParts = explode($splitStr, LF . $string . LF);
 			foreach ($allParts as $c => $v) {
-				if (!$c) { // first goes through
+					// First goes through
+				if (!$c) {
 					$newString .= $v;
-				} elseif (preg_match('/\r?\n\s*$/', $allParts[$c - 1])) { // There must be a line-break char before.
+				} elseif (preg_match('/\r?\n\s*$/', $allParts[$c - 1])) {
 					$subparts = explode('>', $v, 2);
-					if (preg_match('/^\s*\r?\n/', $subparts[1])) { // There must be a line-break char after
+						// There must be a line-break char after
+					if (preg_match('/^\s*\r?\n/', $subparts[1])) {
 							// SO, the include was positively recognized:
 						$newString .= '### ' . $splitStr . $subparts[0] . '> BEGIN:' . LF;
 						$params = t3lib_div::get_tag_attributes($subparts[0]);
@@ -588,10 +603,12 @@ class t3lib_TSparser {
 							switch (strtolower(trim($sourceParts[0]))) {
 								case 'file':
 									$filename = t3lib_div::getFileAbsFileName(trim($sourceParts[1]));
-									if (strcmp($filename, '')) { // Must exist and must not contain '..' and must be relative
-										if (t3lib_div::verifyFilenameAgainstDenyPattern($filename)) { // Check for allowed files
-											if (@is_file($filename) && filesize($filename) < 100000) { // Max. 100 KB include files!
-													// check for includes in included text
+										// Must exist and must not contain '..' and must be relative
+									if (strcmp($filename, '')) {
+											// Check for allowed files
+										if (t3lib_div::verifyFilenameAgainstDenyPattern($filename)) {
+											if (@is_file($filename)) {
+													// Check for includes in included text
 												$includedFiles[] = $filename;
 												$included_text = self::checkIncludeLines(t3lib_div::getUrl($filename), $cycle_counter + 1, $returnFiles);
 													// If the method also has to return all included files, merge currently included
@@ -601,9 +618,21 @@ class t3lib_TSparser {
 													$included_text = $included_text['typoscript'];
 												}
 												$newString .= $included_text . LF;
+											} else {
+												$newString .= "\n###\n### ERROR: File \"" . $filename . "\" was not was not found.\n###\n\n";
+												t3lib_div::sysLog(
+													'File "' . $filename . '" was not found.',
+													'Core',
+													t3lib_div::SYSLOG_SEVERITY_WARNING
+												);
 											}
 										} else {
-											t3lib_div::sysLog('File "' . $filename . '" was not included since it is not allowed due to fileDenyPattern', 'Core', 2);
+											$newString .= "\n###\n### ERROR: File \"" . $filename . "\" was not included since it is not allowed due to fileDenyPattern\n###\n\n";
+											t3lib_div::sysLog(
+												'File "' . $filename . '" was not included since it is not allowed due to fileDenyPattern',
+												'Core',
+												t3lib_div::SYSLOG_SEVERITY_WARNING
+											);
 										}
 									}
 								break;
@@ -618,7 +647,8 @@ class t3lib_TSparser {
 					$newString .= $splitStr . $v;
 				}
 			}
-			$string = substr($newString, 1, -1); // not the first/last linebreak char.
+				// Not the first/last linebreak char.
+			$string = substr($newString, 1, -1);
 		}
 			// When all included files should get returned, simply return an compound array containing
 			// the TypoScript with all "includes" processed and the files which got included
@@ -634,12 +664,12 @@ class t3lib_TSparser {
 	/**
 	 * Parses the string in each value of the input array for include-commands
 	 *
-	 * @param	array		Array with TypoScript in each value
-	 * @return	array		Same array but where the values has been parsed for include-commands
+	 * @param array $array Array with TypoScript in each value
+	 * @return array Same array but where the values has been parsed for include-commands
 	 */
-	function checkIncludeLines_array($array) {
+	public static function checkIncludeLines_array($array) {
 		foreach ($array as $k => $v) {
-			$array[$k] = t3lib_TSparser::checkIncludeLines($array[$k]);
+			$array[$k] = self::checkIncludeLines($array[$k]);
 		}
 		return $array;
 	}
@@ -648,15 +678,19 @@ class t3lib_TSparser {
 	 * Search for commented INCLUDE_TYPOSCRIPT statements
 	 * and save the content between the BEGIN and the END line to the specified file
 	 *
-	 * @param	 string	template content
-	 * @param	 int		Counter for detecting endless loops
-	 * @return	 string	 template content with uncommented include statements
-	 * @author	 Fabrizio Branca <typo3@fabrizio-branca.de>
+	 * @param string $string Template content
+	 * @param integer $cycle_counter Counter for detecting endless loops
+	 * @param array $extractedFileNames
+	 * @return string Template content with uncommented include statements
 	 */
-	function extractIncludes($string, $cycle_counter = 1, $extractedFileNames = array()) {
+	public static function extractIncludes($string, $cycle_counter = 1, $extractedFileNames = array()) {
 
 		if ($cycle_counter > 10) {
-			t3lib_div::sysLog('It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags', 'Core', 2);
+			t3lib_div::sysLog(
+				'It appears like TypoScript code is looping over itself. Check your templates for "&lt;INCLUDE_TYPOSCRIPT: ..." tags',
+				'Core',
+				t3lib_div::SYSLOG_SEVERITY_WARNING
+			);
 			return "\n###\n### ERROR: Recursion!\n###\n";
 		}
 
@@ -677,65 +711,66 @@ class t3lib_TSparser {
 				$skipNextLineIfEmpty = FALSE;
 			}
 
-			if (!$inIncludePart) { // outside commented include statements
+				// Outside commented include statements
+			if (!$inIncludePart) {
 
-					// search for beginning commented include statements
+					// Search for beginning commented include statements
 				$matches = array();
 				if (preg_match('/###\s*<INCLUDE_TYPOSCRIPT:\s*source\s*=\s*"\s*FILE\s*:\s*(.*)\s*">\s*BEGIN/i', $line, $matches)) {
 
-						// save this line in case there is no ending tag
+						// Save this line in case there is no ending tag
 					$openingCommentedIncludeStatement = trim($line);
 					$openingCommentedIncludeStatement = trim(preg_replace('/### Warning: .*###/', '', $openingCommentedIncludeStatement));
 
-						// found a commented include statement
+						// Found a commented include statement
 					$fileName = trim($matches[1]);
 					$inIncludePart = TRUE;
 
 					$expectedEndTag = '### <INCLUDE_TYPOSCRIPT: source="FILE:' . $fileName . '"> END';
-						// strip all whitespace characters to make comparision safer
+						// Strip all whitespace characters to make comparision safer
 					$expectedEndTag = strtolower(preg_replace('/\s/', '', $expectedEndTag));
 				} else {
-						// if this is not a beginning commented include statement this line goes into the rest content
+						// If this is not a beginning commented include statement this line goes into the rest content
 					$restContent[] = $line;
 				}
 
-			} else { // inside commented include statements
+			} else { // Inside commented include statements
 
-					// search for the matching ending commented include statement
+					// Search for the matching ending commented include statement
 				$strippedLine = strtolower(preg_replace('/\s/', '', $line));
 				if (strpos($strippedLine, $expectedEndTag) !== FALSE) {
 
-						// found the matching ending include statement
+						// Found the matching ending include statement
 					$fileContentString = implode("\n", $fileContent);
 
-						// write the content to the file
+						// Write the content to the file
 					$realFileName = t3lib_div::getFileAbsFileName($fileName);
 
-						// some file checks
+						// Some file checks
 					if (empty($realFileName)) {
-						throw new Exception(sprintf('"%s" is not a valid file location.', $fileName));
+						throw new UnexpectedValueException(sprintf('"%s" is not a valid file location.', $fileName), 1294586441);
 					}
 
 					if (!is_writable($realFileName)) {
-						throw new Exception(sprintf('"%s" is not writable.', $fileName));
+						throw new RuntimeException(sprintf('"%s" is not writable.', $fileName), 1294586442);
 					}
 
 					if (in_array($realFileName, $extractedFileNames)) {
-						throw new Exception(sprintf('Recursive/multiple inclusion of file "%s"', $realFileName));
+						throw new RuntimeException(sprintf('Recursive/multiple inclusion of file "%s"', $realFileName), 1294586443);
 					}
 					$extractedFileNames[] = $realFileName;
 
-						// recursive call to detected nested commented include statements
+						// Recursive call to detected nested commented include statements
 					$fileContentString = self::extractIncludes($fileContentString, $cycle_counter + 1, $extractedFileNames);
 
 					if (!t3lib_div::writeFile($realFileName, $fileContentString)) {
-						throw new Exception(sprintf('Could not write file "%s"', $realFileName));
+						throw new RuntimeException(sprintf('Could not write file "%s"', $realFileName), 1294586444);
 					}
 
-						// insert reference to the file in the rest content
-					$restContent[] = "<INCLUDE_TYPOSCRIPT: source=\"FILE:$fileName\">";
+						// Insert reference to the file in the rest content
+					$restContent[] = '<INCLUDE_TYPOSCRIPT: source="FILE: ' . $fileName . '">';
 
-						// reset variables (preparing for the next commented include statement)
+						// Reset variables (preparing for the next commented include statement)
 					$fileContent = array();
 					$fileName = NULL;
 					$inIncludePart = FALSE;
@@ -743,7 +778,7 @@ class t3lib_TSparser {
 						// t3lib_TSparser::checkIncludeLines inserts an additional empty line, remove this again
 					$skipNextLineIfEmpty = TRUE;
 				} else {
-						// if this is not a ending commented include statement this line goes into the file content
+						// If this is not a ending commented include statement this line goes into the file content
 					$fileContent[] = $line;
 				}
 
@@ -751,7 +786,7 @@ class t3lib_TSparser {
 
 		}
 
-			// if we're still inside commented include statements copy the lines back to the rest content
+			// If we're still inside commented include statements copy the lines back to the rest content
 		if ($inIncludePart) {
 			$restContent[] = $openingCommentedIncludeStatement . ' ### Warning: Corresponding end line missing! ###';
 			$restContent = array_merge($restContent, $fileContent);
@@ -764,17 +799,15 @@ class t3lib_TSparser {
 	/**
 	 * Processes the string in each value of the input array with extractIncludes
 	 *
-	 * @param	array		Array with TypoScript in each value
-	 * @return	array		Same array but where the values has been processed with extractIncludes
-	 * @author	 Fabrizio Branca <typo3@fabrizio-branca.de>
+	 * @param array $array Array with TypoScript in each value
+	 * @return array Same array but where the values has been processed with extractIncludes
 	 */
-	function extractIncludes_array($array) {
+	public static function extractIncludes_array($array) {
 		foreach ($array as $k => $v) {
-			$array[$k] = t3lib_TSparser::extractIncludes($array[$k]);
+			$array[$k] = self::extractIncludes($array[$k]);
 		}
 		return $array;
 	}
-
 
 	/**********************************
 	 *
@@ -786,16 +819,17 @@ class t3lib_TSparser {
 	 * Syntax highlight a TypoScript text
 	 * Will parse the content. Remember, the internal setup array may contain invalid parsed content since conditions are ignored!
 	 *
-	 * @param	string		The TypoScript text
-	 * @param	mixed		If blank, linenumbers are NOT printed. If array then the first key is the linenumber offset to add to the internal counter.
-	 * @param	boolean		If set, then the highlighted output will be formatted in blocks based on the brace levels. prespace will be ignored and empty lines represented with a single no-break-space.
-	 * @return	string		HTML code for the syntax highlighted string
+	 * @param string $string The TypoScript text
+	 * @param mixed $lineNum If blank, linenumbers are NOT printed. If array then the first key is the linenumber offset to add to the internal counter.
+	 * @param boolean $highlightBlockMode If set, then the highlighted output will be formatted in blocks based on the brace levels. prespace will be ignored and empty lines represented with a single no-break-space.
+	 * @return string HTML code for the syntax highlighted string
 	 */
 	function doSyntaxHighlight($string, $lineNum = '', $highlightBlockMode = 0) {
 		$this->syntaxHighLight = 1;
 		$this->highLightData = array();
 		$this->error = array();
-		$string = str_replace(CR, '', $string); // This is done in order to prevent empty <span>..</span> sections around CR content. Should not do anything but help lessen the amount of HTML code.
+			// This is done in order to prevent empty <span>..</span> sections around CR content. Should not do anything but help lessen the amount of HTML code.
+		$string = str_replace(CR, '', $string);
 
 		$this->parse($string);
 
@@ -805,10 +839,10 @@ class t3lib_TSparser {
 	/**
 	 * Registers a part of a TypoScript line for syntax highlighting.
 	 *
-	 * @param	string		Key from the internal array $this->highLightStyles
-	 * @param	integer		Pointer to the line in $this->raw which this is about
-	 * @param	integer		The number of chars LEFT on this line before the end is reached.
-	 * @return	void
+	 * @param string $code Key from the internal array $this->highLightStyles
+	 * @param integer $pointer Pointer to the line in $this->raw which this is about
+	 * @param integer $strlen The number of chars LEFT on this line before the end is reached.
+	 * @return void
 	 * @access private
 	 * @see	parse()
 	 */
@@ -824,9 +858,9 @@ class t3lib_TSparser {
 	/**
 	 * Formatting the TypoScript code in $this->raw based on the data collected by $this->regHighLight in $this->highLightData
 	 *
-	 * @param	mixed		If blank, linenumbers are NOT printed. If array then the first key is the linenumber offset to add to the internal counter.
-	 * @param	boolean		If set, then the highlighted output will be formatted in blocks based on the brace levels. prespace will be ignored and empty lines represented with a single no-break-space.
-	 * @return	string		HTML content
+	 * @param mixed $lineNumDat If blank, linenumbers are NOT printed. If array then the first key is the linenumber offset to add to the internal counter.
+	 * @param boolean $highlightBlockMode If set, then the highlighted output will be formatted in blocks based on the brace levels. prespace will be ignored and empty lines represented with a single no-break-space.
+	 * @return string HTML content
 	 * @access private
 	 * @see doSyntaxHighlight()
 	 */
@@ -881,17 +915,11 @@ class t3lib_TSparser {
 				$lineC = $this->highLightStyles['linenum'][0] . str_pad($lineNum, 4, ' ', STR_PAD_LEFT) . ':' . $this->highLightStyles['linenum'][1] . ' ' . $lineC;
 			}
 
-
 			$lines[] = $lineC;
 		}
 
 		return '<pre class="ts-hl">' . implode(LF, $lines) . '</pre>';
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser.php']);
 }
 
 ?>

@@ -246,6 +246,7 @@ class t3lib_search_livesearch {
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($result)) {
 			$collect[] = array(
 				'id' => $tableName . ':' . $row['uid'],
+				'pageId' => ($tableName === 'pages' ? $row['uid'] : $row['pid']),
 				'recordTitle' => ($isFirst) ? $this->getRecordTitlePrep($this->getTitleOfCurrentRecordType($tableName), self::GROUP_TITLE_MAX_LENGTH) : '',
 				'iconHTML' => t3lib_iconWorks::getSpriteIconForRecord($tableName, $row),
 				'title' => $this->getRecordTitlePrep($this->getTitleFromCurrentRow($tableName, $row), self::RECORD_TITLE_MAX_LENGTH),
@@ -254,6 +255,8 @@ class t3lib_search_livesearch {
 			$isFirst = FALSE;
 		}
 
+		$GLOBALS['TYPO3_DB']->sql_free_result($result);
+
 		return $collect;
 	}
 
@@ -261,7 +264,7 @@ class t3lib_search_livesearch {
 	 * Build a backend edit link based on given record.
 	 *
 	 * @param string $tableName Record table name
-	 * @param array	 $row  Current record row from database.
+	 * @param array $row Current record row from database.
 	 * @return string Link to open an edit window for record.
 	 *
 	 * @see t3lib_BEfunc::readPageAccess()
@@ -298,21 +301,21 @@ class t3lib_search_livesearch {
 	}
 
 	/**
-	 * Crops a title string to a limited lenght and if it really was cropped, wrap it in a <span title="...">|</span>,
+	 * Crops a title string to a limited lenght and if it really was cropped,
+	 * wrap it in a <span title="...">|</span>,
 	 * which offers a tooltip with the original title when moving mouse over it.
 	 *
-	 * @param	string		$title: The title string to be cropped
-	 * @param	integer		$titleLength: Crop title after this length - if not set, BE_USER->uc['titleLen'] is used
-	 * @return	string		The processed title string, wrapped in <span title="...">|</span> if cropped
+	 * @param string $title The title string to be cropped
+	 * @param integer $titleLength Crop title after this length - if not set, BE_USER->uc['titleLen'] is used
+	 * @return string The processed title string, wrapped in <span title="...">|</span> if cropped
 	 */
 	public function getRecordTitlePrep($title, $titleLength = 0) {
 			// If $titleLength is not a valid positive integer, use BE_USER->uc['titleLen']:
-		if (!$titleLength || !t3lib_div::testInt($titleLength) || $titleLength < 0) {
+		if (!$titleLength || !t3lib_utility_Math::canBeInterpretedAsInteger($titleLength) || $titleLength < 0) {
 			$titleLength = $GLOBALS['BE_USER']->uc['titleLen'];
 		}
 
 		return htmlspecialchars(t3lib_div::fixed_lgd_cs($title, $titleLength));
-		;
 	}
 
 	/**
@@ -337,39 +340,70 @@ class t3lib_search_livesearch {
 	 * @return string
 	 */
 	protected function makeQuerySearchByTable($tableName, array $fieldsToSearchWithin) {
-			// free text search
-		$queryLikeStatement = ' LIKE \'%' . $this->getQueryString($tableName) . '%\'';
-		$integerFieldsToSearchWithin = array();
-		$queryEqualStatement = '';
+		$queryPart = '';
+		$whereParts = array();
+			// Load the full TCA for the table, as we need to access column configuration
+		t3lib_div::loadTCA($tableName);
 
-		if (is_numeric($this->getQueryString($tableName))) {
-			$queryEqualStatement = ' = \'' . $this->getQueryString($tableName) . '\'';
-		}
-		$uidPos = array_search('uid', $fieldsToSearchWithin);
-		if ($uidPos) {
-			$integerFieldsToSearchWithin[] = 'uid';
-			unset($fieldsToSearchWithin[$uidPos]);
-		}
-		$pidPos = array_search('pid', $fieldsToSearchWithin);
-		if ($pidPos) {
-			$integerFieldsToSearchWithin[] = 'pid';
-			unset($fieldsToSearchWithin[$pidPos]);
+			// If the search string is a simple integer, assemble an equality comparison
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($this->queryString)) {
+			foreach ($fieldsToSearchWithin as $fieldName) {
+				if (($fieldName == 'uid' || $fieldName == 'pid') || isset($GLOBALS['TCA'][$tableName]['columns'][$fieldName])) {
+					$fieldConfig = &$GLOBALS['TCA'][$tableName]['columns'][$fieldName]['config'];
+						// Assemble the search condition only if the field is an integer, or is uid or pid
+					if (($fieldName == 'uid' || $fieldName == 'pid') ||
+						($fieldConfig['type'] == 'input' && $fieldConfig['eval'] && t3lib_div::inList($fieldConfig['eval'], 'int'))) {
+						$whereParts[] = $fieldName . '=' . $this->queryString;
+					}
+				}
+			}
+
+			// If the search string is not an integer, assemble a LIKE query
+		} else {
+			$like = '\'%' .
+				$GLOBALS['TYPO3_DB']->escapeStrForLike($GLOBALS['TYPO3_DB']->quoteStr($this->queryString, $tableName), $tableName) .
+				'%\'';
+			foreach ($fieldsToSearchWithin as $fieldName) {
+				if (isset($GLOBALS['TCA'][$tableName]['columns'][$fieldName])) {
+					$fieldConfig = &$GLOBALS['TCA'][$tableName]['columns'][$fieldName]['config'];
+						// Check whether search should be case-sensitive or not
+					$format = 'LCASE(%s) LIKE LCASE(%s)';
+					if (is_array($fieldConfig['search'])) {
+						if (in_array('case', $fieldConfig['search'])) {
+							$format = '%s LIKE %s';
+						}
+							// Apply additional condition, if any
+						if ($fieldConfig['search']['andWhere']) {
+							$format = '((' . $fieldConfig['search']['andWhere'] . ') AND (' . $format . '))';
+						}
+					}
+						// Assemble the search condition only if the field makes sense to be searched
+					if ($fieldConfig['type'] == 'text' ||
+							$fieldConfig['type'] == 'flex' ||
+							($fieldConfig['type'] == 'input' && (!$fieldConfig['eval'] || !preg_match('/date|time|int/', $fieldConfig['eval'])))) {
+						$whereParts[] = sprintf($format, $fieldName, $like);
+					}
+				}
+			}
 		}
 
-		$queryPart = ' AND (';
-		if (count($integerFieldsToSearchWithin) && $queryEqualStatement !== '') {
-			$queryPart .= implode($queryEqualStatement . ' OR ', $integerFieldsToSearchWithin) . $queryEqualStatement . ' OR ';
+			// If at least one condition was defined, create the search query
+		if (count($whereParts) > 0) {
+			$queryPart = ' AND (' . implode(' OR ', $whereParts) . ')';
+				// And the relevant conditions for deleted and versioned records
+			$queryPart .= t3lib_BEfunc::deleteClause($tableName);
+			$queryPart .= t3lib_BEfunc::versioningPlaceholderClause($tableName);
+
+			// If there were no conditions, make sure that the query will fail for the given table
+		} else {
+			$queryPart = ' AND 0 = 1';
 		}
-		$queryPart .= implode($queryLikeStatement . ' OR ', $fieldsToSearchWithin) . $queryLikeStatement . ')';
-		$queryPart .= t3lib_BEfunc::deleteClause($tableName);
-		$queryPart .= t3lib_BEfunc::versioningPlaceholderClause($tableName);
 
 		return $queryPart;
 	}
 
 	/**
 	 * Build the MySql ORDER BY statement.
-	 *
 	 *
 	 * @param string $tableName Record table name
 	 * @return string
@@ -390,34 +424,19 @@ class t3lib_search_livesearch {
 	/**
 	 * Get all fields from given table where we can search for.
 	 *
-	 * @param string $tableName
+	 * @param string $tableName Name of the table for which to get the searchable fields
 	 * @return array
 	 */
 	protected function extractSearchableFieldsFromTable($tableName) {
-		$fieldListArray = array();
-		t3lib_div::loadTCA($tableName);
 
-			// Traverse configured columns and add them to field array, if available for user.
-		foreach ((array) $GLOBALS['TCA'][$tableName]['columns'] as $fieldName => $fieldValue) {
-				// @todo Reformat
-			if (
-				(!$fieldValue['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $tableName . ':' . $fieldName)) // does current user have access to the field
-				&&
-				($fieldValue['config']['type'] != 'passthrough') // field type is not searchable
-				&&
-				(!preg_match('/date|time|int/', $fieldValue['config']['eval'])) // field can't be of type date, time, int
-				&&
-				(
-						($fieldValue['config']['type'] == 'text')
-						||
-						($fieldValue['config']['type'] == 'input')
-				)
-			) {
-				$fieldListArray[] = $fieldName;
-			}
+			// Get the list of fields to search in from the TCA, if any
+		if (isset($GLOBALS['TCA'][$tableName]['ctrl']['searchFields'])) {
+			$fieldListArray = t3lib_div::trimExplode(',', $GLOBALS['TCA'][$tableName]['ctrl']['searchFields'], TRUE);
+		} else {
+			$fieldListArray = array();
 		}
 
-			// Add special fields:
+			// Add special fields
 		if ($GLOBALS['BE_USER']->isAdmin()) {
 			$fieldListArray[] = 'uid';
 			$fieldListArray[] = 'pid';
@@ -444,7 +463,7 @@ class t3lib_search_livesearch {
 	 * @return void
 	 */
 	public function setLimitCount($limitCount) {
-		$limit = t3lib_div::intval_positive($limitCount);
+		$limit = t3lib_utility_Math::convertToPositiveInteger($limitCount);
 		if ($limit > 0) {
 			$this->limitCount = $limit;
 		}
@@ -457,7 +476,7 @@ class t3lib_search_livesearch {
 	 * @return void
 	 */
 	public function setStartCount($startCount) {
-		$this->startCount = t3lib_div::intval_positive($startCount);
+		$this->startCount = t3lib_utility_Math::convertToPositiveInteger($startCount);
 	}
 
 	/**
@@ -475,10 +494,9 @@ class t3lib_search_livesearch {
 	 * Creates an instance of t3lib_pageTree which will select a page tree to
 	 * $depth and return the object. In that object we will find the ids of the tree.
 	 *
-	 * @param	integer		Page id.
-	 * @param	integer		Depth to go down.
-	 *
-	 * @return	string		coma separated list of uids
+	 * @param integer $id Page id.
+	 * @param integer $depth Depth to go down.
+	 * @return string Comma separated list of uids
 	 */
 	protected function getAvailablePageIds($id, $depth) {
 		$idList = '';

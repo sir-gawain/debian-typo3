@@ -28,28 +28,13 @@
  * Cleaner module: Missing relations
  * User function called from tx_lowlevel_cleaner_core configured in ext_localconf.php
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   56: class tx_lowlevel_missing_relations extends tx_lowlevel_cleaner_core
- *   65:     function tx_lowlevel_missing_relations()
- *  101:     function main()
- *  173:     function main_autoFix($resultArray)
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 /**
  * Looking for missing relations.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -59,11 +44,9 @@ class tx_lowlevel_missing_relations extends tx_lowlevel_cleaner_core {
 
 	/**
 	 * Constructor
-	 *
-	 * @return	void
 	 */
-	function tx_lowlevel_missing_relations()	{
-		parent::tx_lowlevel_cleaner_core();
+	function __construct() {
+		parent::__construct();
 
 			// Setting up help:
 		$this->cli_help['name'] = 'missing_relations -- Find all record references pointing to a non-existing record.';
@@ -91,12 +74,11 @@ NOTICE: Uses the Reference Index Table (sys_refindex) for analysis. Update it be
 Reports missing relations';
 	}
 
-
 	/**
 	 * Find relations pointing to non-existing records
 	 * Fix methods: API in t3lib_refindex that allows to change the value of a reference (or remove it) [Only for managed relations!]
 	 *
-	 * @return	array
+	 * @return array
 	 */
 	function main() {
 		global $TYPO3_DB;
@@ -106,12 +88,12 @@ Reports missing relations';
 		$resultArray = array(
 			'message' => $this->cli_help['name'].LF.LF.$this->cli_help['description'],
 			'headers' => array(
-				'offlineVersionRecords_m' => array('Offline version records (managed)','These records are offline versions having a pid=-1 and references should never occur directly to their uids.'.$listExplain,3),
-				'deletedRecords_m' => array('Deleted-flagged records (managed)','These records are deleted with a flag but references are still pointing at them. Keeping the references is useful if you undelete the referenced records later, otherwise the references are lost completely when the deleted records are flushed at some point. Notice that if those records listed are themselves deleted (marked with "DELETED") it is not a problem.'.$listExplain,2),
-				'nonExistingRecords_m' => array('Non-existing records to which there are references (managed)','These references can safely be removed since there is no record found in the database at all.'.$listExplain,3),	// 3 = error
-				'offlineVersionRecords_s' => array('Offline version records (softref)','See above.'.$listExplain,2),
-				'deletedRecords_s' => array('Deleted-flagged records (softref)','See above.'.$listExplain,2),
-				'nonExistingRecords_s' => array('Non-existing records to which there are references (softref)','See above.'.$listExplain,2),
+				'offlineVersionRecords_m' => array('Offline version records (managed)', 'These records are offline versions having a pid=-1 and references should never occur directly to their uids.'.$listExplain, 3),
+				'deletedRecords_m' => array('Deleted-flagged records (managed)', 'These records are deleted with a flag but references are still pointing at them. Keeping the references is useful if you undelete the referenced records later, otherwise the references are lost completely when the deleted records are flushed at some point. Notice that if those records listed are themselves deleted (marked with "DELETED") it is not a problem.'.$listExplain, 2),
+				'nonExistingRecords_m' => array('Non-existing records to which there are references (managed)', 'These references can safely be removed since there is no record found in the database at all.'.$listExplain, 3),	// 3 = error
+				'offlineVersionRecords_s' => array('Offline version records (softref)', 'See above.'.$listExplain, 2),
+				'deletedRecords_s' => array('Deleted-flagged records (softref)', 'See above.'.$listExplain, 2),
+				'nonExistingRecords_s' => array('Non-existing records to which there are references (softref)', 'See above.'.$listExplain, 2),
 			),
 			'offlineVersionRecords_m' => array(),
 			'deletedRecords_m' => array(),
@@ -135,24 +117,24 @@ Reports missing relations';
 			// Traverse the records
 		$tempExists = array();
 		if (is_array($recs)) {
-			foreach($recs as $rec)	{
+			foreach ($recs as $rec) {
 				$suffix = $rec['softref_key']!='' ? '_s' : '_m';
 				$idx = $rec['ref_table'].':'.$rec['ref_uid'];
 
 					// Get referenced record:
-				if (!isset($tempExists[$idx]))	{
-					$tempExists[$idx] = t3lib_BEfunc::getRecordRaw($rec['ref_table'],'uid='.intval($rec['ref_uid']),'uid,pid'.($GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete'] ? ','.$GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete'] : ''));
+				if (!isset($tempExists[$idx])) {
+					$tempExists[$idx] = t3lib_BEfunc::getRecordRaw($rec['ref_table'], 'uid='.intval($rec['ref_uid']), 'uid,pid'.($GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete'] ? ','.$GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete'] : ''));
 				}
 
 					// Compile info string for location of reference:
 				$infoString = $this->infoStr($rec);
 
 					// Handle missing file:
-				if ($tempExists[$idx]['uid'])	{
-					if ($tempExists[$idx]['pid']==-1)	{
+				if ($tempExists[$idx]['uid']) {
+					if ($tempExists[$idx]['pid'] == -1) {
 						$resultArray['offlineVersionRecords'.$suffix][$idx][$rec['hash']] = $infoString;
 						ksort($resultArray['offlineVersionRecords'.$suffix][$idx]);
-					} elseif ($GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete'] && $tempExists[$idx][$GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete']])	{
+					} elseif ($GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete'] && $tempExists[$idx][$GLOBALS['TCA'][$rec['ref_table']]['ctrl']['delete']]) {
 						$resultArray['deletedRecords'.$suffix][$idx][$rec['hash']] = $infoString;
 						ksort($resultArray['deletedRecords'.$suffix][$idx]);
 					}
@@ -177,25 +159,27 @@ Reports missing relations';
 	 * Mandatory autofix function
 	 * Will run auto-fix on the result array. Echos status during processing.
 	 *
-	 * @param	array		Result array from main() function
-	 * @return	void
+	 * @param array $resultArray Result array from main() function
+	 * @return void
 	 */
-	function main_autoFix($resultArray)	{
+	function main_autoFix($resultArray) {
 
 		$trav = array('offlineVersionRecords_m', 'nonExistingRecords_m');
-		foreach($trav as $tk)	{
+		foreach ($trav as $tk) {
 			echo 'Processing managed "'.$tk.'"...'.LF;
-			foreach($resultArray[$tk] as $key => $value)	{
-				foreach($value as $hash => $recReference)	{
+			foreach ($resultArray[$tk] as $key => $value) {
+				foreach ($value as $hash => $recReference) {
 					echo '	Removing reference to '.$key.' in record "'.$recReference.'": ';
-					if ($bypass = $this->cli_noExecutionCheck($recReference))	{
+					if ($bypass = $this->cli_noExecutionCheck($recReference)) {
 						echo $bypass;
 					} else {
 						$sysRefObj = t3lib_div::makeInstance('t3lib_refindex');
-						$error = $sysRefObj->setReferenceValue($hash,NULL);
-						if ($error)	{
+						$error = $sysRefObj->setReferenceValue($hash, NULL);
+						if ($error) {
 							echo '		t3lib_refindex::setReferenceValue(): '.$error.LF;
-						} else echo 'DONE';
+						} else {
+							echo 'DONE';
+						}
 					}
 					echo LF;
 				}

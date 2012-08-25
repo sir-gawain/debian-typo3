@@ -35,7 +35,6 @@ require_once(t3lib_extMgm::extPath('recycler', 'classes/helper/class.tx_recycler
  * @author  	Erik Frister <erik_frister@otq-solutions.com>
  * @package		TYPO3
  * @subpackage	tx_recycler
- * @version 	$Id$
  */
 class tx_recycler_controller_ajax {
 		/**
@@ -83,7 +82,7 @@ class tx_recycler_controller_ajax {
 					// check params
 				if (!is_string($this->command)) {
 						// @TODO make devlog output
-					return false;
+					return FALSE;
 				}
 
 					// Create content
@@ -124,20 +123,20 @@ class tx_recycler_controller_ajax {
 
 						// Delete records
 					case 'doDelete':
-						$str = false;
+						$str = FALSE;
 						$model = t3lib_div::makeInstance('tx_recycler_model_deletedRecords');
 						if ($model->deleteData($this->data)) {
-							$str = true;
+							$str = TRUE;
 						}
 						break;
 
 						// Undelete records
 					case 'doUndelete':
-						$str = false;
+						$str = FALSE;
 						$recursive = t3lib_div::_GP('recursive');
 						$model = t3lib_div::makeInstance('tx_recycler_model_deletedRecords');
 						if ($model->undeleteData($this->data, $recursive)) {
-							$str = true;
+							$str = TRUE;
 						}
 						break;
 
@@ -181,10 +180,4 @@ class tx_recycler_controller_ajax {
 			$GLOBALS['BE_USER']->writeUC();
 		}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/controller/class.tx_recycler_controller_ajax.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/controller/class.tx_recycler_controller_ajax.php']);
-}
-
 ?>

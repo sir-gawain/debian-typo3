@@ -33,7 +33,6 @@
  * @author		Benjamin Mack <www.xnos.org>
  * @package		TYPO3
  * @subpackage	core
- * @version 	$Id$
  */
 
 // TYPO3 code extracted from index.php
@@ -62,7 +61,7 @@ function jumpToUrl(URL)	{ window.location.href = URL; }
 // Methods for AJAX permission manipulation
 var WebPermissions = {
 
-    thisScript: '../../../ajax.php',
+    thisScript: 'ajax.php',
 	ajaxID: 'SC_mod_web_perm_ajax::dispatch',
 
 		// set the permission bits through an ajax call

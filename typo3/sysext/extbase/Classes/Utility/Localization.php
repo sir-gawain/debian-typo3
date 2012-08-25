@@ -71,7 +71,7 @@ class Tx_Extbase_Utility_Localization {
 	 * @param string $key The key from the LOCAL_LANG array for which to return the value.
 	 * @param string $extensionName The name of the extension
 	 * @param array $arguments the arguments of the extension, being passed over to vsprintf
-	 * @return string The value from LOCAL_LANG or NULL if no translation was found.
+	 * @return string|NULL The value from LOCAL_LANG or NULL if no translation was found.
 	 * @author Christopher Hlubek <hlubek@networkteam.com>
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 * @author Sebastian Kurfuerst <sebastian@typo3.org>
@@ -79,23 +79,44 @@ class Tx_Extbase_Utility_Localization {
 	 * @todo: If vsprintf gets a malformed string, it returns FALSE! Should we throw an exception there?
 	 */
 	static public function translate($key, $extensionName, $arguments = NULL) {
+		$value = NULL;
+
 		if (t3lib_div::isFirstPartOfStr($key, 'LLL:')) {
 			$value = self::translateFileReference($key);
 		} else {
 			self::initializeLocalization($extensionName);
 			// The "from" charset of csConv() is only set for strings from TypoScript via _LOCAL_LANG
 			if (isset(self::$LOCAL_LANG[$extensionName][self::$languageKey][$key])) {
-				$value = self::$LOCAL_LANG[$extensionName][self::$languageKey][$key];
+				if (is_array(self::$LOCAL_LANG[$extensionName][self::$languageKey][$key])) {
+						// TYPO3 >= 4.6
+					$value = self::$LOCAL_LANG[$extensionName][self::$languageKey][$key][0]['target'];
+				} else {
+						// TYPO3 < 4.6
+					$value = self::$LOCAL_LANG[$extensionName][self::$languageKey][$key];
+				}
 				if (isset(self::$LOCAL_LANG_charset[$extensionName][self::$languageKey][$key])) {
 					$value = self::convertCharset($value, self::$LOCAL_LANG_charset[$extensionName][self::$languageKey][$key]);
 				}
 			} elseif (self::$alternativeLanguageKey !== '' && isset(self::$LOCAL_LANG[$extensionName][self::$alternativeLanguageKey][$key])) {
-				$value = self::$LOCAL_LANG[$extensionName][self::$alternativeLanguageKey][$key];
+				if (is_array(self::$LOCAL_LANG[$extensionName][self::$alternativeLanguageKey][$key])) {
+						// TYPO3 >= 4.6
+					$value = self::$LOCAL_LANG[$extensionName][self::$alternativeLanguageKey][$key][0]['target'];
+				} else {
+						// TYPO3 < 4.6
+					$value = self::$LOCAL_LANG[$extensionName][self::$alternativeLanguageKey][$key];
+				}
 				if (isset(self::$LOCAL_LANG_charset[$extensionName][self::$alternativeLanguageKey][$key])) {
 					$value = self::convertCharset($value, self::$LOCAL_LANG_charset[$extensionName][self::$alternativeLanguageKey][$key]);
 				}
 			} elseif (isset(self::$LOCAL_LANG[$extensionName]['default'][$key])) {
-				$value = self::$LOCAL_LANG[$extensionName]['default'][$key]; // No charset conversion because default is english and thereby ASCII
+					// No charset conversion because default is English and thereby ASCII
+				if (is_array(self::$LOCAL_LANG[$extensionName]['default'][$key])) {
+						// TYPO3 >= 4.6
+					$value = self::$LOCAL_LANG[$extensionName]['default'][$key][0]['target'];
+				} else {
+						// TYPO3 < 4.6
+					$value = self::$LOCAL_LANG[$extensionName]['default'][$key];
+				}
 			}
 		}
 		if (is_array($arguments) && $value !== NULL) {
@@ -116,7 +137,8 @@ class Tx_Extbase_Utility_Localization {
 	 */
 	protected function translateFileReference($key) {
 		if (TYPO3_MODE === 'FE') {
-			return $GLOBALS['TSFE']->sL($key);
+			$value = $GLOBALS['TSFE']->sL($key);
+			return $value !== FALSE ? $value : NULL;
 		} elseif (is_object($GLOBALS['LANG'])) {
 			$value = $GLOBALS['LANG']->sL($key);
 			return $value !== '' ? $value : NULL;
@@ -129,6 +151,7 @@ class Tx_Extbase_Utility_Localization {
 	 * Loads local-language values by looking for a "locallang.php" (or "locallang.xml") file in the plugin resources directory and if found includes it.
 	 * Also locallang values set in the TypoScript property "_LOCAL_LANG" are merged onto the values found in the "locallang.php" file.
 	 *
+	 * @param string $extensionName
 	 * @return void
 	 * @author Christopher Hlubek <hlubek@networkteam.com>
 	 * @author Bastian Waidelich <bastian@typo3.org>
@@ -178,6 +201,7 @@ class Tx_Extbase_Utility_Localization {
 	 * TS locallang labels have to be configured like:
 	 * plugin.tx_myextension._LOCAL_LANG.languageKey.key = value
 	 *
+	 * @param string $extensionName
 	 * @return void
 	 * @author Christopher Hlubek <hlubek@networkteam.com>
 	 * @author Bastian Waidelich <bastian@typo3.org>

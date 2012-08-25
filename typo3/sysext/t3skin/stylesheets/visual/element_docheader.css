@@ -1,7 +1,6 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Docheader
 
-$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 span.typo3-docheader-pagePath {
@@ -27,10 +26,8 @@ div#typo3-docheader-row2 {
 
 div#typo3-docheader div.buttonsleft {
 	line-height: 16px;
-}
-
-div#typo3-docheader div.buttonsright {
-	line-height: 16px;
+	/* Reduce visual indent because of square sprite box icons */
+	margin-left: -2px;
 }
 
 div#typo3-docheader img,
@@ -70,7 +67,7 @@ div#typo3-docheader-row2 div {
 .no-boxshadow #typo3-pagetree #typo3-docheader-row1,
 .no-boxshadow #typo3-alt-file-navframe-php #typo3-docheader-row1 {
 	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAABCAMAAAAsPuSGAAAACVBMVEVGRkZAQEBRUVH4z1uMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAxJREFUCNdjYGJgBAAACwAEhbbR0wAAAABJRU5ErkJggg==");
-	/* star-hack targets IE6+7 */
+	/* star-hack targets IE7 */
 	*background-image: url("../../images/backgrounds/module-menu-right-top.png");
 	background-position: right;
 	background-repeat: repeat-y;
@@ -80,7 +77,7 @@ div#typo3-docheader-row2 div {
 .no-boxshadow #typo3-pagetree #typo3-docheader-row2,
 .no-boxshadow #typo3-alt-file-navframe-php #typo3-docheader-row2 {
 	background-image: url("data:image/png;base64,R0lGODlhAgABAIAAAMjIyLOzsyH5BAAAAAAALAAAAAACAAEAAAICRAoAOw==");
-	/* star-hack targets IE6+7 */
+	/* star-hack targets IE7 */
 	*background-image: url("../../images/backgrounds/module-menu-right.png");
 	background-position: right;
 	background-repeat: repeat-y;

@@ -35,19 +35,10 @@ abstract class Tx_Extbase_DomainObject_AbstractValueObject extends Tx_Extbase_Do
 	/**
 	 * Returns the value of the Value Object. Must be overwritten by a concrete value object.
 	 *
-	 * @return void
+	 * @return string
 	 */
 	public function getValue() {
 		return $this->__toString();
-	}
-	
-	/**
-	 * Clone method. Sets the _isClone property.
-	 *
-	 * @return void
-	 */
-	public function __clone() {
-		$this->uid = NULL;
 	}
 
 }

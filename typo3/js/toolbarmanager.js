@@ -35,25 +35,26 @@ var ToolbarManager = Class.create({
 
 			// check whether it is a toolbar item with menu
 		if (sibling.hasClassName('toolbar-item-menu')) {
-				// hide all
-			$$('#typo3-toolbar a.toolbar-item + .toolbar-item-menu').invoke('hide');
-			$$('#typo3-toolbar a.toolbar-item').each(function(element) {
-				element.removeClassName('toolbar-item-active');
-			});
-
+			this.hideAll();
 				// show toolbarItem
 			toolbarItem.addClassName('toolbar-item-active');
 		}
 	},
 
 	/**
+	 * Hide all expanded toolbar menus
+	 */
+	hideAll: function() {
+		$$('#typo3-toolbar a.toolbar-item + .toolbar-item-menu').invoke('hide');
+		$$('#typo3-toolbar a.toolbar-item').each(function(element) {
+			element.removeClassName('toolbar-item-active');
+		});
+	},
+
+	/**
 	 * refreshs positioning of all submenus
 	 */
 	refreshAll: function() {
-		$$('.toolbar-item-menu').each(function(element) {
-			menuParent = Ext.get(element);
-			TYPO3BackendToolbarManager.positionMenu(menuParent.findParentNode('[id$="-menu"]').id);
-		});
 	},
 
 	/**
@@ -61,31 +62,6 @@ var ToolbarManager = Class.create({
 	 * @param elementId The parent element ofthe menu to be positioned
 	 */
 	positionMenu: function(elementId) {
-		var calculatedOffset = 0;
-		var parentWidth = $(elementId).getWidth();
-		var currentToolbarItemLayer = $$('#' + elementId + ' .toolbar-item-menu')[0];
-		var ownWidth = currentToolbarItemLayer.getWidth();
-		var parentSiblings = $(elementId).previousSiblings();
-
-		parentSiblings.each(function(toolbarItem) {
-			calculatedOffset += toolbarItem.getWidth() - 1;
-			// -1 to compensate for the margin-right -1px of the list items,
-			// which itself is necessary for overlaying the separator with the active state background
-
-			if (toolbarItem.down().hasClassName('no-separator')) {
-				calculatedOffset -= 1;
-			}
-		});
-		calculatedOffset = calculatedOffset - ownWidth + parentWidth;
-
-		// border correction
-		if (currentToolbarItemLayer.getStyle('display') !== 'none') {
-			calculatedOffset += 2;
-		}
-
-		$$('#' + elementId + ' .toolbar-item-menu')[0].setStyle({
-			left: calculatedOffset + 'px'
-		});
 	}
 
 });

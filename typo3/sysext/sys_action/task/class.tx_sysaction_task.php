@@ -23,15 +23,13 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-
 /**
  * This class provides a task for the taskcenter
  *
- * @author		Kasper Skårhøj <kasperYYYY@typo3.com>
- * @author		Georg Ringer <typo3@ringerge.org>
- * @package		TYPO3
- * @subpackage	tx_sysaction
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Georg Ringer <typo3@ringerge.org>
+ * @package TYPO3
+ * @subpackage tx_sysaction
  */
 class tx_sysaction_task implements tx_taskcenter_Task {
 
@@ -39,24 +37,42 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	var $t3lib_TCEforms;
 
 	/**
+	 * All hook objects get registered here for later use
+	 *
+	 * @var array
+	 */
+	protected $hookObjects = array();
+
+	/**
 	 * Constructor
 	 */
 	public function __construct(SC_mod_user_task_index $taskObject) {
 		$this->taskObject = $taskObject;
 		$GLOBALS['LANG']->includeLLFile('EXT:sys_action/locallang.xml');
-	}
 
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['sys_action']['tx_sysaction_task'])) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['sys_action']['tx_sysaction_task'] as $classRef) {
+				$this->hookObjects[] = t3lib_div::getUserObj($classRef);
+			}
+		}
+	}
 
 	/**
 	 * This method renders the task
 	 *
-	 * @return	string	The task as HTML
+	 * @return string The task as HTML
 	 */
 	public function getTask() {
 		$content = '';
 		$show = intval(t3lib_div::_GP('show'));
 
-			// if no task selected, render the menu
+		foreach ($this->hookObjects as $hookObject) {
+			if (method_exists($hookObject, 'getTask')) {
+				$show = $hookObject->getTask($show, $this);
+			}
+		}
+
+			// If no task selected, render the menu
 		if ($show == 0) {
 			$content .= $this->taskObject->description(
 				$GLOBALS['LANG']->getLL('sys_action'),
@@ -67,7 +83,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 		} else {
 			$record = t3lib_BEfunc::getRecord('sys_action', $show);
 
-				// if the action is not found
+				// If the action is not found
 			if (count($record) == 0) {
 				$flashMessage = t3lib_div::makeInstance(
 					't3lib_FlashMessage',
@@ -77,10 +93,10 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				);
 				$content .= $flashMessage->render();
 			} else {
-					// render the task
+					// Render the task
 				$content .= $this->taskObject->description($record['title'], $record['description']);
 
-					// output depends on the type
+					// Output depends on the type
 				switch ($record['type']) {
 					case 1:
 						$content .= $this->viewNewBackendUser($record);
@@ -115,17 +131,17 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Gemeral overview over the task in the taskcenter menu
 	 *
-	 * @return	string Overview as HTML
+	 * @return string Overview as HTML
 	 */
 	public function getOverview() {
 		$content = '<p>' . $GLOBALS['LANG']->getLL('description') . '</p>';
 
-			// get the actions
+			// Get the actions
 		$actionList = $this->getActions();
 		if (count($actionList) > 0) {
 			$items = '';
 
-				// render a single action menu item
+				// Render a single action menu item
 			foreach ($actionList as $action) {
 				$active = (t3lib_div::_GP('show') === $action['uid']) ? ' class="active" ' : '';
 				$items .= '<li' . $active . '>
@@ -144,8 +160,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	 * Get all actions of an user. Admins can see any action, all others only those
 	 * whic are allowed in sys_action record itself.
 	 *
-	 * @param	boolean		$toOverview: If TRUE, the link redirects to the taskcenter
-	 * @return	array Array holding every needed information of a sys_action
+	 * @return array Array holding every needed information of a sys_action
 	 */
 	protected function getActions() {
 		$actionList = array();
@@ -160,7 +175,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				'sys_action.sorting'
 			);
 		} else {
-				// editors can only see the actions which are assigned to a usergroup they belong to
+				// Editors can only see the actions which are assigned to a usergroup they belong to
 			$additionalWhere = 'be_groups.uid IN (' . ($GLOBALS['BE_USER']->groupList ? $GLOBALS['BE_USER']->groupList : 0) . ')';
 
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECT_mm_query(
@@ -174,10 +189,10 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			);
 		}
 
-		while($actionRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+		while ($actionRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$editActionLink = '';
 
-				// admins are allowed to edit sys_action records
+				// Admins are allowed to edit sys_action records
 			if ($GLOBALS['BE_USER']->isAdmin()) {
 				$returnUrl = rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI'));
 				$link = t3lib_div::getIndpEnv('TYPO3_REQUEST_DIR') . $GLOBALS['BACK_PATH'] . 'alt_doc.php?returnUrl=' . $returnUrl . '&edit[sys_action][' . $actionRow['uid'] . ']=edit';
@@ -185,7 +200,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				$editActionLink = '<a class="edit" href="' . $link . '">' .
 						'<img class="icon"' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif') . ' title="' . $GLOBALS['LANG']->getLL('edit-sys_action') . '" alt="" />' .
 							$GLOBALS['LANG']->getLL('edit-sys_action') .
-				 		'</a>';
+						'</a>';
 			}
 
 			$actionList[] = array(
@@ -205,15 +220,15 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Render the menu of sys_actions
 	 *
-	 * @return	string list of sys_actions as HTML
+	 * @return string List of sys_actions as HTML
 	 */
 	protected function renderActionList() {
 		$content = '';
 
-			// get the sys_action records
+			// Get the sys_action records
 		$actionList = $this->getActions();
 
-			// if any actions are found for the current users
+			// If any actions are found for the current users
 		if (count($actionList) > 0) {
 			$content .= $this->taskObject->renderListMenu($actionList);
 		} else {
@@ -232,10 +247,10 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			$link = t3lib_div::getIndpEnv('TYPO3_REQUEST_DIR') . $GLOBALS['BACK_PATH'] . 'alt_doc.php?returnUrl=' . $returnUrl. '&edit[sys_action][0]=new';
 
 			$content .= '<br />
-						 <a href="' . $link . '" title="' . $GLOBALS['LANG']->getLL('new-sys_action') . '">' .
+						<a href="' . $link . '" title="' . $GLOBALS['LANG']->getLL('new-sys_action') . '">' .
 							'<img class="icon"' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/new_record.gif') . ' title="' . $GLOBALS['LANG']->getLL('new-sys_action') . '" alt="" /> ' .
 							$GLOBALS['LANG']->getLL('new-sys_action') .
-						 '</a>';
+						'</a>';
 		}
 
 		return $content;
@@ -244,14 +259,14 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Action to create a new BE user
 	 *
-	 * @param	array		$record: sys_action record
-	 * @return	string form to create a new user
+	 * @param array $record sys_action record
+	 * @return string form to create a new user
 	 */
 	protected function viewNewBackendUser($record) {
 		$content = '';
 
 		$beRec = t3lib_BEfunc::getRecord('be_users', intval($record['t1_copy_of_user']));
-			// a record is neeed which is used as copy for the new user
+			// A record is neeed which is used as copy for the new user
 		if (!is_array($beRec)) {
 			$flashMessage = t3lib_div::makeInstance(
 				't3lib_FlashMessage',
@@ -270,7 +285,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 		if ($vars['sent'] == 1) {
 			$errors = array();
 
-				// basic error checks
+				// Basic error checks
 			if (!empty($vars['email']) && !t3lib_div::validEmail($vars['email'])) {
 				$errors[] = $GLOBALS['LANG']->getLL('error-wrong-email');
 			}
@@ -284,7 +299,13 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				$errors[] = $GLOBALS['LANG']->getLL('error-wrong-user');
 			}
 
-				// show errors if there are any
+			foreach ($this->hookObjects as $hookObject) {
+				if (method_exists($hookObject, 'viewNewBackendUser_Error')) {
+					$errors = $hookObject->viewNewBackendUser_Error($vars, $errors, $this);
+				}
+			}
+
+				// Show errors if there are any
 			if (count($errors) > 0) {
 				$flashMessage = t3lib_div::makeInstance (
 					't3lib_FlashMessage',
@@ -294,29 +315,29 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				);
 				$content .= $flashMessage->render() . '<br />';
 			} else {
-					// save user
+					// Save user
 				$key = $this->saveNewBackendUser($record, $vars);
 
-					// success messsage
+					// Success messsage
 				$flashMessage = t3lib_div::makeInstance (
 					't3lib_FlashMessage',
 					($vars['key'] === 'NEW' ? $GLOBALS['LANG']->getLL('success-user-created') : $GLOBALS['LANG']->getLL('success-user-updated')),
 					$GLOBALS['LANG']->getLL('success'),
 					t3lib_FlashMessage::OK
 				);
-				$content .= $flashMessage->render() . '<br />' ;
+				$content .= $flashMessage->render() . '<br />';
 			}
 
 		}
 
-			// load BE user to edit
+			// Load BE user to edit
 		if (intval(t3lib_div::_GP('be_users_uid')) > 0) {
 			$tmpUserId = intval(t3lib_div::_GP('be_users_uid'));
 
-				// check if the selected user is created by the current user
+				// Check if the selected user is created by the current user
 			$rawRecord = $this->isCreatedByUser($tmpUserId, $record);
 			if ($rawRecord) {
-					// delete user
+					// Delete user
 				if (t3lib_div::_GP('delete') == 1) {
 					$this->deleteUser($tmpUserId, $record['uid']);
 				}
@@ -383,9 +404,9 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Delete a BE user and redirect to the action by its id
 	 *
-	 * @param	int		$userId: Id of the BE user
-	 * @param	int		$actionId: Id of the action
-	 * @return	void
+	 * @param integer $userId Id of the BE user
+	 * @param integer $actionId Id of the action
+	 * @return void
 	 */
 	protected function deleteUser($userId, $actionId) {
 		$GLOBALS['TYPO3_DB']->exec_UPDATEquery(
@@ -405,9 +426,9 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Check if a BE user is created by the current user
 	 *
-	 * @param	int		$id: Id of the BE user
-	 * @param	array		$action: sys_action record.
-	 * @return	mixed the record of the BE user if found, otherwise FALSE
+	 * @param integer $id Id of the BE user
+	 * @param array $action sys_action record.
+	 * @return mixed The record of the BE user if found, otherwise FALSE
 	 */
 	protected function isCreatedByUser($id, $action) {
 		$record = t3lib_BEfunc::getRecord(
@@ -424,13 +445,12 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 		}
 	}
 
-
 	/**
 	 * Render all users who are created by the current BE user including a link to edit the record
 	 *
-	 * @param	array		$action: sys_action record.
-	 * @param	int		$selectedUser: Id of a selected user
-	 * @return	html list of users
+	 * @param array $action sys_action record.
+	 * @param integer $selectedUser Id of a selected user
+	 * @return string html list of users
 	 */
 	protected function getCreatedUsers($action, $selectedUser) {
 		$content = '';
@@ -445,12 +465,12 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			'username'
 		);
 
-			// render the user records
+			// Render the user records
 		while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$icon = t3lib_iconworks::getSpriteIconForRecord('be_users', $row, array('title' => 'uid=' . $row['uid']));
 			$line = $icon . $this->action_linkUserName($row['username'], $row['realName'], $action['uid'], $row['uid']);
 
-				// selected user
+				// Selected user
 			if  ($row['uid'] == $selectedUser) {
 				$line = '<strong>' . $line . '</strong>';
 			}
@@ -459,7 +479,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 		}
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 
-			// if any records found
+			// If any records found
 		if (count($userList)) {
 			$content .= '<br />' . $this->taskObject->doc->section($GLOBALS['LANG']->getLL('action_t1_listOfUsers'), implode('<br />', $userList));
 		}
@@ -467,27 +487,26 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 		return $content;
 	}
 
-
 	/**
 	 * Create a link to edit a user
 	 *
-	 * @param	string		$username: Username
-	 * @param	string		$realName: Real name of the user
-	 * @param	int		$sysActionUid: Id of the sys_action record
-	 * @param	int		$userId: Id of the user
-	 * @return	html link
+	 * @param string $username Username
+	 * @param string $realName Real name of the user
+	 * @param integer $sysActionUid Id of the sys_action record
+	 * @param integer $userId Id of the user
+	 * @return string html link
 	 */
 	protected function action_linkUserName($username, $realName, $sysActionUid, $userId) {
 		if (!empty($realName)) {
 			$username .= ' (' . $realName . ')';
 		}
 
-			// link to update the user record
+			// Link to update the user record
 		$href = 'mod.php?M=user_task&SET[function]=sys_action.tx_sysaction_task&show=' . intval($sysActionUid) . '&be_users_uid=' . intval($userId);
 		$link = '<a href="' . htmlspecialchars($href) . '">' . htmlspecialchars($username) . '</a>';
 
-			// link to delete the user record
-		$onClick = ' onClick="return confirm('.$GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL("lDelete_warning")).');"';
+			// Link to delete the user record
+		$onClick = ' onClick="return confirm('.$GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('lDelete_warning')).');"';
 		$link .= '
 				<a href="' . htmlspecialchars($href . '&delete=1') . '" ' . $onClick . '>
 					<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/delete_record.gif') . ' alt="" />
@@ -498,16 +517,16 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Save/Update a BE user
 	 *
-	 * @param	array		$record: Current action record
-	 * @param	array		$vars: POST vars
-	 * @return	int Id of the new/updated user
+	 * @param array $record Current action record
+	 * @param array $vars POST vars
+	 * @return integer Id of the new/updated user
 	 */
 	protected function saveNewBackendUser($record, $vars) {
-			// check if the db mount is a page the current user is allowed to.);
+			// Check if the db mount is a page the current user is allowed to.);
 		$vars['db_mountpoints'] = $this->fixDbMount($vars['db_mountpoints']);
-			// check if the usergroup is allowed
+			// Check if the usergroup is allowed
 		$vars['usergroup'] = $this->fixUserGroup($vars['usergroup'], $record);
-			// check if md5 is used as password encryption
+			// Check if md5 is used as password encryption
 		if (strpos($GLOBALS['TCA']['be_users']['columns']['password']['config']['eval'], 'md5') !== FALSE) {
 			$vars['password'] = md5($vars['password']);
 		}
@@ -532,10 +551,10 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				$data['be_users'][$key]['createdByAction']	= $record['uid'];
 			}
 		} else {
-				// check ownership
+				// Check ownership
 			$beRec = t3lib_BEfunc::getRecord('be_users', intval($key));
 			if (is_array($beRec) && $beRec['cruser_id'] == $GLOBALS['BE_USER']->user['uid']) {
-				$data=array();
+				$data = array();
 				$data['be_users'][$key]['username'] = $this->fixUsername($vars['username'], $record['t1_userprefix']);
 				if (trim($vars['password'])) {
 					$data['be_users'][$key]['password'] = (trim($vars['password']));
@@ -551,9 +570,9 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			}
 		}
 
-			// save/update user by using TCEmain
+			// Save/update user by using TCEmain
 		if (is_array($data)) {
-			$tce = t3lib_div::makeInstance("t3lib_TCEmain");
+			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 			$tce->stripslashes_values = 0;
 			$tce->start($data, array(), $GLOBALS['BE_USER']);
 			$tce->admin = 1;
@@ -564,7 +583,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 					// Create
 				$this->action_createDir($newUserId);
 			} else {
-					// update
+					// Update
 				$newUserId = intval($key);
 			}
 			unset($tce);
@@ -575,9 +594,9 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Create the username based on the given username and the prefix
 	 *
-	 * @param	string		$username: username
-	 * @param	string		$prefix: prefix
-	 * @return string	Combined username
+	 * @param string $username Username
+	 * @param string $prefix Prefix
+	 * @return string Combined username
 	 */
 	protected function fixUsername($username, $prefix) {
 		return trim($prefix) . trim($username);
@@ -586,17 +605,17 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Clean the to be applied usergroups from not allowed ones
 	 *
-	 * @param	array		$appliedUsergroups: array of to be applied user groups
-	 * @return array	Cleaned array
+	 * @param array $appliedUsergroups Array of to be applied user groups
+	 * @return array Cleaned array
 	 */
 	protected function fixUserGroup($appliedUsergroups, $actionRecord) {
 		if (is_array($appliedUsergroups)) {
 			$cleanGroupList = array();
 
-				// create an array from the allowed usergroups using the uid as key
+				// Create an array from the allowed usergroups using the uid as key
 			$allowedUsergroups = array_flip(explode(',', $actionRecord['t1_allowed_groups']));
 
-				// walk through the array and check every uid if it is undder the allowed ines
+				// Walk through the array and check every uid if it is undder the allowed ines
 			foreach ($appliedUsergroups as $group) {
 				if (isset($allowedUsergroups[$group])) {
 					$cleanGroupList[] = $group;
@@ -611,8 +630,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Clean the to be applied DB-Mounts from not allowed ones
 	 *
-	 * @param	string		$appliedDbMounts: List of pages like pages_123,pages456
-	 * @return string	Cleaned list
+	 * @param string $appliedDbMounts List of pages like pages_123,pages456
+	 * @return string Cleaned list
 	 */
 	protected function fixDbMount($appliedDbMounts) {
 			// Admins can see any page, no need to check there
@@ -620,17 +639,17 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			$cleanDbMountList = array();
 			$dbMounts = t3lib_div::trimExplode(',', $appliedDbMounts, 1);
 
-				// walk through every wanted DB-Mount and check if it allowed for the current user
+				// Walk through every wanted DB-Mount and check if it allowed for the current user
 			foreach ($dbMounts as $dbMount) {
-				$uid = intval(substr($dbMount,  (strrpos($dbMount, '_') + 1)));
+				$uid = intval(substr($dbMount, (strrpos($dbMount, '_') + 1)));
 				$page = t3lib_BEfunc::getRecord('pages', $uid);
 
-					// check rootline and access rights
+					// Check rootline and access rights
 				if ($this->checkRootline($uid) && $GLOBALS['BE_USER']->calcPerms($page)) {
 					$cleanDbMountList[] = 'pages_' . $uid;
 				}
 			}
-				// build the clean list
+				// Build the clean list
 			$appliedDbMounts = implode(',', $cleanDbMountList);
 		}
 
@@ -640,8 +659,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Check if a page is inside the rootline the current user can see
 	 *
-	 * @param	int		$pageId: Id of the the page to be checked
-	 * @return boolean	Access to the page
+	 * @param integer $pageId Id of the the page to be checked
+	 * @return boolean Access to the page
 	 */
 	protected function checkRootline($pageId) {
 		$access = FALSE;
@@ -659,11 +678,10 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Add additional JavaScript to use the tceform select box
 	 *
-	 * @param	int		$uid: Id of the user record
 	 * @return void
 	 */
 	protected function JScode() {
-		$this->t3lib_TCEforms = t3lib_div::makeInstance("t3lib_TCEforms");
+		$this->t3lib_TCEforms = t3lib_div::makeInstance('t3lib_TCEforms');
 		$this->t3lib_TCEforms->backPath = $GLOBALS['BACK_PATH'];
 		$js = $this->t3lib_TCEforms->dbFileCon();
 		$this->taskObject->doc->JScodeArray[] = $js;
@@ -674,7 +692,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Create a user directory if defined
 	 *
-	 * @param	int		$uid: Id of the user record
+	 * @param integer $uid Id of the user record
 	 * @return void
 	 */
 	protected function action_createDir($uid) {
@@ -688,16 +706,16 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Get the path to the user home directory which is set in the localconf.php
 	 *
-	 * @return string path
+	 * @return string Path
 	 */
 	protected function action_getUserMainDir() {
 		$path = $GLOBALS['TYPO3_CONF_VARS']['BE']['userHomePath'];
 
-			// if path is set and a valid directory
+			// If path is set and a valid directory
 		if ($path && @is_dir($path) &&
 				$GLOBALS['TYPO3_CONF_VARS']['BE']['lockRootPath'] &&
 				t3lib_div::isFirstPartOfStr($path, $GLOBALS['TYPO3_CONF_VARS']['BE']['lockRootPath']) &&
-				substr($path,-1) == '/'
+				substr($path, -1) == '/'
 			) {
 			return $path;
 		}
@@ -708,18 +726,18 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	 *
 	 * @param array $record sys_action record
 	 * @param array $vars Selected be_user record
-	 * @return string rendered user groups
+	 * @return string Rendered user groups
 	 */
 	protected function getUsergroups($record, $vars) {
 		$content = '';
-			// do nothing if no groups are allowed
+			// Do nothing if no groups are allowed
 		if (empty($record['t1_allowed_groups'])) {
 			return $content;
 		}
 
 		$content .= '<option value=""></option>';
-		$grList = t3lib_div::trimExplode(',',  $record['t1_allowed_groups'], 1);
-		foreach($grList as $group) {
+		$grList = t3lib_div::trimExplode(',', $record['t1_allowed_groups'], 1);
+		foreach ($grList as $group) {
 			$checkGroup = t3lib_BEfunc::getRecord('be_groups', $group);
 			if (is_array($checkGroup)) {
 				$selected = t3lib_div::inList($vars['usergroup'], $checkGroup['uid']) ? ' selected="selected" ' : '';
@@ -734,8 +752,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Action to create a new record
 	 *
-	 * @param	array		$record: sys_action record
-	 * @return	redirect to form to create a record
+	 * @param array $record sys_action record
+	 * @return void Redirect to form to create a record
 	 */
 	protected function viewNewRecord($record) {
 		$returnUrl = rawurlencode('mod.php?M=user_task');
@@ -746,8 +764,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Action to edit records
 	 *
-	 * @param	array		$record: sys_action record
-	 * @return	string list of records
+	 * @param array $record sys_action record
+	 * @return string list of records
 	 */
 	protected function viewEditRecord($record) {
 		$content = '';
@@ -764,7 +782,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			$record = t3lib_BEfunc::getRecord($el['table'], $dbAnalysis->results[$el['table']][$el['id']]);
 			$title = t3lib_BEfunc::getRecordTitle($el['table'], $dbAnalysis->results[$el['table']][$el['id']]);
 			$description = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$el['table']]['ctrl']['title'], 1);
-			if (isset($record['crdate'])) { // @todo: which information could be  needfull
+				// @todo: which information could be needfull
+			if (isset($record['crdate'])) {
 				$description .= ' - ' . t3lib_BEfunc::dateTimeAge($record['crdate']);
 			}
 
@@ -772,12 +791,12 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				'title'				=> $title,
 				'description'		=> t3lib_BEfunc::getRecordTitle($el['table'], $dbAnalysis->results[$el['table']][$el['id']]),
 				'descriptionHtml'	=> $description,
-				'link'				=> $GLOBALS['BACK_PATH'] . 'alt_doc.php?returnUrl=' . rawurlencode(t3lib_div::getIndpEnv("REQUEST_URI")) . '&edit[' . $el['table'] . '][' . $el['id'] . ']=edit',
+				'link'				=> $GLOBALS['BACK_PATH'] . 'alt_doc.php?returnUrl=' . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')) . '&edit[' . $el['table'] . '][' . $el['id'] . ']=edit',
 				'icon'				=> t3lib_iconworks::getSpriteIconForRecord($el['table'], $dbAnalysis->results[$el['table']][$el['id']], array('title' => htmlspecialchars($path)))
 			);
 		}
 
-			// render the record list
+			// Render the record list
 		$content .= $this->taskObject->renderListMenu($actionList);
 
 		return $content;
@@ -786,8 +805,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Action to view the result of a SQL query
 	 *
-	 * @param	array		$record: sys_action record
-	 * @return	string result of the query
+	 * @param array $record sys_action record
+	 * @return string Result of the query
 	 */
 	protected function viewSqlQuery($record) {
 		$content = '';
@@ -816,12 +835,12 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 
 					if (!$GLOBALS['TYPO3_DB']->sql_error()) {
 						$fullsearch->formW = 48;
-							// additional configuration
+							// Additional configuration
 						$GLOBALS['SOBE']->MOD_SETTINGS['search_result_labels'] = 1;
 						$cP = $fullsearch->getQueryResultCode($type, $res, $sql_query['qC']['queryTable']);
 						$actionContent = $cP['content'];
 
-							// if the result is rendered as csv or xml, show a download link
+							// If the result is rendered as csv or xml, show a download link
 						if ($type === 'csv' || $type === 'xml') {
 							$actionContent .= '<br /><br /><a href="' . t3lib_div::getIndpEnv('REQUEST_URI') . '&download_file=1"><strong>' . $GLOBALS['LANG']->getLL('action_download_file') . '</strong></a>';
 						}
@@ -829,7 +848,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 						$actionContent .= $GLOBALS['TYPO3_DB']->sql_error();
 					}
 				} else {
-						// query is empty (not built)
+						// Query is empty (not built)
 					$queryIsEmpty = TRUE;
 					$flashMessage = t3lib_div::makeInstance (
 						't3lib_FlashMessage',
@@ -856,7 +875,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 
 				$content .= $this->taskObject->doc->section($GLOBALS['LANG']->getLL('action_t2_result'), $actionContent, 0, 1);
 			} else {
-					// query is not configured
+					// Query is not configured
 				$flashMessage = t3lib_div::makeInstance (
 					't3lib_FlashMessage',
 					$GLOBALS['LANG']->getLL('action_notReady', TRUE),
@@ -866,7 +885,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				$content .= '<br />' . $flashMessage->render();
 			}
 		} else {
-				// required sysext lowlevel is not installed
+				// Required sysext lowlevel is not installed
 			$flashMessage = t3lib_div::makeInstance (
 				't3lib_FlashMessage',
 				$GLOBALS['LANG']->getLL('action_lowlevelMissing', TRUE),
@@ -881,8 +900,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 	/**
 	 * Action to create a list of records of a specific table and pid
 	 *
-	 * @param	array		$record: sys_action record
-	 * @return	string list of records
+	 * @param array $record sys_action record
+	 * @return string list of records
 	 */
 	protected function viewRecordList($record) {
 		$content = '';
@@ -902,11 +921,8 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			return $content;
 		}
 
-		require_once($GLOBALS['BACK_PATH'] . 'class.db_list.inc');
-		require_once($GLOBALS['BACK_PATH'] . 'class.db_list_extra.inc');
-
 			// Loading current page record and checking access:
-		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$this->taskObject->perms_clause);
+		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id, $this->taskObject->perms_clause);
 		$access = is_array($this->pageinfo) ? 1 : 0;
 
 			// If there is access to the page, then render the list contents and set up the document template object:
@@ -926,12 +942,11 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 			$dblist->counter++;
 			$dblist->MOD_MENU = array('bigControlPanel' => '', 'clipBoard' => '', 'localization' => '');
 			$dblist->modTSconfig = $this->taskObject->modTSconfig;
-			$dblist->dontShowClipControlPanels = $CLIENT['FORMSTYLE'] && !$this->taskObject->MOD_SETTINGS['bigControlPanel'] && $dblist->clipObj->current=='normal' && !$GLOBALS['BE_USER']->uc['disableCMlayers'] && !$this->modTSconfig['properties']['showClipControlPanelsDespiteOfCMlayers'];
+			$dblist->dontShowClipControlPanels = $CLIENT['FORMSTYLE'] && !$this->taskObject->MOD_SETTINGS['bigControlPanel'] && $dblist->clipObj->current=='normal' && !$this->modTSconfig['properties']['showClipControlPanelsDespiteOfCMlayers'];
 
 				// Initialize the listing object, dblist, for rendering the list:
-			$this->pointer = t3lib_div::intInRange(t3lib_div::_GP('pointer'), 0, 100000);
-
-			$dblist->start($this->id,$this->table,$this->pointer,$this->taskObject->search_field,$this->taskObject->search_levels,$this->taskObject->showLimit);
+			$this->pointer = t3lib_utility_Math::forceIntegerInRange(t3lib_div::_GP('pointer'), 0, 100000);
+			$dblist->start($this->id, $this->table, $this->pointer, $this->taskObject->search_field, $this->taskObject->search_levels, $this->taskObject->showLimit);
 			$dblist->setDispFields();
 
 				// Render the list of tables:
@@ -1012,7 +1027,7 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 				}
 			}
 		} else {
-				// not enough rights to access the list view or the page
+				// Not enough rights to access the list view or the page
 			$flashMessage = t3lib_div::makeInstance(
 				't3lib_FlashMessage',
 				$GLOBALS['LANG']->getLL('action_error-access', TRUE),
@@ -1024,12 +1039,5 @@ class tx_sysaction_task implements tx_taskcenter_Task {
 
 		return $content;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sys_action/task/class.tx_sysaction_task.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sys_action/task/class.tx_sysaction_task.php']);
-}
-
 ?>

@@ -24,111 +24,87 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Wizard to add new records to a group/select TCEform formfield
  *
- * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   75: class SC_wizard_add
- *  104:     function init()
- *  157:     function main()
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 $BACK_PATH = '';
-require ('init.php');
-require ('template.php');
+require('init.php');
 $LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Script Class for adding new items to a group/select field. Performs proper redirection as needed.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_wizard_add {
 
 		// Internal, dynamic:
-	var $content;				// Content accumulation for the module.
-	var $include_once=array();	// List of files to include.
-
-	var $processDataFlag=0;		// If set, the TCEmain class is loaded and used to add the returning ID to the parent record.
+		// Content accumulation for the module.
+	var $content;
+		// List of files to include.
+	var $include_once = array();
+		// If set, the TCEmain class is loaded and used to add the returning ID to the parent record.
+	var $processDataFlag = 0;
 
 		// Internal, static:
-	var $pid;					// Create new record -pid (pos/neg). If blank, return immediately
-	var $table;					// The parent table we are working on.
-	var $id;					// Loaded with the created id of a record when TCEforms (alt_doc.php) returns ...
+		// Create new record -pid (pos/neg). If blank, return immediately
+	var $pid;
+		// The parent table we are working on.
+	var $table;
+		// Loaded with the created id of a record when TCEforms (alt_doc.php) returns ...
+	var $id;
 
 		// Internal, static: GPvars
-	var $P;						// Wizard parameters, coming from TCEforms linking to the wizard.
-	var $returnEditConf;		// Information coming back from alt_doc.php script, telling what the table/id was of the newly created record.
-
-
-
-
-
-
-
+		// Wizard parameters, coming from TCEforms linking to the wizard.
+	var $P;
+		// Information coming back from alt_doc.php script, telling what the table/id was of the newly created record.
+	var $returnEditConf;
 
 	/**
 	 * Initialization of the class.
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function init()	{
+	function init() {
 
 			// Init GPvars:
 		$this->P = t3lib_div::_GP('P');
 		$this->returnEditConf = t3lib_div::_GP('returnEditConf');
 
 			// Get this record
-		$origRow = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
+		$origRow = t3lib_BEfunc::getRecord($this->P['table'], $this->P['uid']);
 
 			// Set table:
 		$this->table = $this->P['params']['table'];
 
 			// Get TSconfig for it.
-		$TSconfig = t3lib_BEfunc::getTCEFORM_TSconfig($this->P['table'],is_array($origRow)?$origRow:array('pid'=>$this->P['pid']));
+		$TSconfig = t3lib_BEfunc::getTCEFORM_TSconfig($this->P['table'], is_array($origRow)?$origRow:array('pid'=>$this->P['pid']));
 
 			// Set [params][pid]
-		if (substr($this->P['params']['pid'],0,3)=='###' && substr($this->P['params']['pid'],-3)=='###')	{
-			$this->pid = intval($TSconfig['_'.substr($this->P['params']['pid'],3,-3)]);
-		} else $this->pid = intval($this->P['params']['pid']);
+		if (substr($this->P['params']['pid'], 0, 3) == '###' && substr($this->P['params']['pid'], -3)=='###') {
+			$this->pid = intval($TSconfig['_'.substr($this->P['params']['pid'], 3, -3)]);
+		} else {
+			$this->pid = intval($this->P['params']['pid']);
+		}
 
 			// Return if new record as parent (not possibly/allowed)
-		if (!strcmp($this->pid,''))	{
+		if (!strcmp($this->pid, '')) {
 			t3lib_utility_Http::redirect(t3lib_div::sanitizeLocalUrl($this->P['returnUrl']));
 		}
 
 			// Else proceed:
-		if ($this->returnEditConf)	{	// If a new id has returned from a newly created record...
+			// If a new id has returned from a newly created record...
+		if ($this->returnEditConf) {
 			$eC = unserialize($this->returnEditConf);
-			if (is_array($eC[$this->table]) && t3lib_div::testInt($this->P['uid']))	{
+			if (is_array($eC[$this->table]) && t3lib_utility_Math::canBeInterpretedAsInteger($this->P['uid'])) {
 
 					// Getting id and cmd from returning editConf array.
 				reset($eC[$this->table]);
@@ -136,15 +112,12 @@ class SC_wizard_add {
 				$cmd = current($eC[$this->table]);
 
 					// ... and if everything seems OK we will register some classes for inclusion and instruct the object to perform processing later.
-				if ($this->P['params']['setValue'] && $cmd=='edit' && $this->id && $this->P['table'] && $this->P['field'] && $this->P['uid'])	{
+				if ($this->P['params']['setValue'] && $cmd=='edit' && $this->id && $this->P['table'] && $this->P['field'] && $this->P['uid']) {
 
-					if ($LiveRec=t3lib_BEfunc::getLiveVersionOfRecord($this->table, $this->id, 'uid'))	{ $this->id=$LiveRec['uid'];}
-
-
-					$this->include_once[]=PATH_t3lib.'class.t3lib_loaddbgroup.php';
-					$this->include_once[]=PATH_t3lib.'class.t3lib_transferdata.php';
-					$this->include_once[]=PATH_t3lib.'class.t3lib_tcemain.php';
-					$this->processDataFlag=1;
+					if ($LiveRec = t3lib_BEfunc::getLiveVersionOfRecord($this->table, $this->id, 'uid')) {
+						$this->id=$LiveRec['uid'];
+					}
+					$this->processDataFlag = 1;
 				}
 			}
 		}
@@ -154,35 +127,36 @@ class SC_wizard_add {
 	 * Main function
 	 * Will issue a location-header, redirecting either BACK or to a new alt_doc.php instance...
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function main()	{
+	function main() {
 
-		if ($this->returnEditConf)	{
-			if ($this->processDataFlag)	{
+		if ($this->returnEditConf) {
+			if ($this->processDataFlag) {
 
 					// Preparing the data of the parent record...:
 				$trData = t3lib_div::makeInstance('t3lib_transferData');
-				$trData->fetchRecord($this->P['table'],$this->P['uid'],'');	// 'new'
-				reset($trData->regTableItems_data);
-				$current = current($trData->regTableItems_data);
+					// 'new'
+				$trData->fetchRecord($this->P['table'], $this->P['uid'], '');
+				$current = reset($trData->regTableItems_data);
 
 					// If that record was found (should absolutely be...), then init TCEmain and set, prepend or append the record
-				if (is_array($current))	{
+				if (is_array($current)) {
 					$tce = t3lib_div::makeInstance('t3lib_TCEmain');
-					$tce->stripslashes_values=0;
+					$tce->stripslashes_values = 0;
 					$data = array();
 					$addEl = $this->table.'_'.$this->id;
 
 						// Setting the new field data:
-					if ($this->P['flexFormPath'])	{	// If the field is a flexform field, work with the XML structure instead:
-
-						$currentFlexFormData = t3lib_div::xml2array($current[$this->P['field']]); // Current value of flexform path:
+						// If the field is a flexform field, work with the XML structure instead:
+					if ($this->P['flexFormPath']) {
+							// Current value of flexform path:
+						$currentFlexFormData = t3lib_div::xml2array($current[$this->P['field']]);
 						$flexToolObj = t3lib_div::makeInstance('t3lib_flexformtools');
 						$curValueOfFlexform = $flexToolObj->getArrayValueByPath($this->P['flexFormPath'], $currentFlexFormData);
 						$insertValue = '';
 
-						switch((string)$this->P['params']['setValue'])	{
+						switch((string)$this->P['params']['setValue']) {
 							case 'set':
 								$insertValue = $addEl;
 							break;
@@ -193,12 +167,12 @@ class SC_wizard_add {
 								$insertValue = $addEl.','.$curValueOfFlexform;
 							break;
 						}
-						$insertValue = implode(',',t3lib_div::trimExplode(',',$insertValue,1));
+						$insertValue = implode(',', t3lib_div::trimExplode(',', $insertValue, 1));
 
 						$data[$this->P['table']][$this->P['uid']][$this->P['field']] = array();
-						$flexToolObj->setArrayValueByPath($this->P['flexFormPath'],$data[$this->P['table']][$this->P['uid']][$this->P['field']],$insertValue);
+						$flexToolObj->setArrayValueByPath($this->P['flexFormPath'], $data[$this->P['table']][$this->P['uid']][$this->P['field']], $insertValue);
 					} else {
-						switch((string)$this->P['params']['setValue'])	{
+						switch((string)$this->P['params']['setValue']) {
 							case 'set':
 								$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $addEl;
 							break;
@@ -209,11 +183,11 @@ class SC_wizard_add {
 								$data[$this->P['table']][$this->P['uid']][$this->P['field']] = $addEl.','.$current[$this->P['field']];
 							break;
 						}
-						$data[$this->P['table']][$this->P['uid']][$this->P['field']] = implode(',',t3lib_div::trimExplode(',',$data[$this->P['table']][$this->P['uid']][$this->P['field']],1));
+						$data[$this->P['table']][$this->P['uid']][$this->P['field']] = implode(',', t3lib_div::trimExplode(',', $data[$this->P['table']][$this->P['uid']][$this->P['field']], 1));
 					}
 
 						// Submit the data:
-					$tce->start($data,array());
+					$tce->start($data, array());
 					$tce->process_datamap();
 				}
 			}
@@ -228,19 +202,14 @@ class SC_wizard_add {
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_add.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/wizard_add.php']);
-}
-
-
-
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_wizard_add');
 $SOBE->init();
 
-// Include files?
-foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+	// Include files?
+foreach ($SOBE->include_once as $INC_FILE) {
+	include_once($INC_FILE);
+}
 
 $SOBE->main();
 

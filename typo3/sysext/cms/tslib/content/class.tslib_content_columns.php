@@ -29,7 +29,6 @@
 /**
  * Contains COLUMNS class object.
  *
- * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -38,8 +37,8 @@ class tslib_content_Columns extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, COLUMNS
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 		$content = '';
@@ -50,7 +49,7 @@ class tslib_content_Columns extends tslib_content_Abstract {
 			$TDParams = isset($conf['TDParams.']) ? $this->cObj->stdWrap($conf['TDParams'], $conf['TDParams.']) : $conf['TDParams'];
 			$TDparams = $TDparams ? ' ' . $TDparams : ' valign="top"';
 			$rows = isset($conf['rows.']) ? $this->cObj->stdWrap($conf['rows'], $conf['rows.']) : $conf['rows'];
-			$rows = t3lib_div::intInRange($rows, 2, 20);
+			$rows = t3lib_utility_Math::forceIntegerInRange($rows, 2, 20);
 			$totalWidth = isset($conf['totalWidth.']) ? intval($this->cObj->stdWrap($conf['totalWidth'], $conf['totalWidth.'])) : intval($conf['totalWidth']);
 			$columnWidth = 0;
 
@@ -87,17 +86,17 @@ class tslib_content_Columns extends tslib_content_Abstract {
 						$tdPar = $gapConf['gapBgCol'] ? ' bgcolor="' . $gapConf['gapBgCol'] . '"' : '';
 						$gapLine = intval($gapConf['gapLineThickness']);
 						if ($gapLine) {
-							$gapSurround = t3lib_div::intInRange(($gapWidth - $gapLine) / 2, 1, 1000);
-							// right gap
+							$gapSurround = t3lib_utility_Math::forceIntegerInRange(($gapWidth - $gapLine) / 2, 1, 1000);
+								// right gap
 							$content .= '<td' . $tdPar . '><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$gapSurround . '" height="1" alt="" title="" /></td>';
 							$tdRowCount++;
-							// line:
+								// line:
 							$GtdPar = $gapConf['gapLineCol'] ? ' bgcolor="' . $gapConf['gapLineCol'] . '"' : ' bgcolor="black"';
 							$content .= '<td' . $GtdPar . '><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$gapLine . '" height="1" alt="" title="" /></td>';
 							$tdRowCount++;
-							// left gap
+								// left gap
 							$content .= '<td' . $tdPar . '><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$gapSurround . '" height="1" alt="" title="" /></td>';
 							$tdRowCount++;
@@ -111,7 +110,7 @@ class tslib_content_Columns extends tslib_content_Abstract {
 			}
 			$content = '<tr>' . $content . '</tr>';
 			$content = '<table' . $tableParams . '>' . $content . '</table>';
-			if($conf['after'] || isset($conf['after.'])) {
+			if ($conf['after'] || isset($conf['after.'])) {
 				$content .= $this->cObj->cObjGetSingle($conf['after'], $conf['after.'], 'after');
 			}
 			if (isset($conf['stdWrap.'])) {
@@ -120,12 +119,5 @@ class tslib_content_Columns extends tslib_content_Abstract {
 		}
 		return $content;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_columns.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_columns.php']);
-}
-
 ?>

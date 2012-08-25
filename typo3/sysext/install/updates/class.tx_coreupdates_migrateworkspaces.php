@@ -30,7 +30,6 @@
  * Migrates workspaces from TYPO3 versions below 4.5.
  *
  * @author Tolleiv Nietsch <info@tolleiv.de>
- * @version $Id$
  */
 class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 	protected $title = 'Versioning and Workspaces';
@@ -41,7 +40,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 	 * Checks if an update is needed
 	 *
 	 * @param	string		&$description: The description for the update, which will be updated with a description of the script's purpose
-	 * @return	boolean		whether an update is needed (true) or not (false)
+	 * @return	boolean		whether an update is needed (TRUE) or not (FALSE)
 	 */
 	public function checkForUpdate(&$description) {
 		$result = FALSE;
@@ -65,7 +64,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 					install "fluid" and "extbase" too, as they are used by the "workspaces" extension).';
 			} else {
 
-				$this->includeTCA();
+				Typo3_Bootstrap::getInstance()->loadExtensionTables(FALSE);
 
 				if (!t3lib_extMgm::isLoaded('version') || !t3lib_extMgm::isLoaded('workspaces')) {
 					$result = TRUE;
@@ -140,7 +139,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 	 *
 	 * @param	array		&$databaseQueries: queries done in this update
 	 * @param	mixed		&$customMessages: custom messages
-	 * @return	boolean		whether it worked (true) or not (false)
+	 * @return	boolean		whether it worked (TRUE) or not (FALSE)
 	 */
 	public function performUpdate(array &$databaseQueries, &$customMessages) {
 		$result = TRUE;
@@ -154,8 +153,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 			return TRUE;
 		}
 
-			// There's no TCA available yet
-		$this->includeTCA();
+		Typo3_Bootstrap::getInstance()->loadExtensionTables(FALSE);
 
 			// install version and workspace extension (especially when updating from very old TYPO3 versions
 		$this->installExtensions(array('extbase', 'fluid', 'version', 'workspaces'));
@@ -203,7 +201,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 
 		$tables = array_keys($GLOBALS['TCA']);
 		foreach ($tables as $table) {
-			$versioningVer = t3lib_div::intInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
+			$versioningVer = t3lib_utility_Math::forceIntegerInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
 			if ($versioningVer > 0) {
 				if ($this->hasElementsOnWorkspace($table, -1)) {
 					$foundDraftRecords = TRUE;
@@ -235,7 +233,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 		if (!$workspacesWithReviewers && !empty($workspaceUids)) {
 			$tables = array_keys($GLOBALS['TCA']);
 			foreach ($tables as $table) {
-				$versioningVer = t3lib_div::intInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
+				$versioningVer = t3lib_utility_Math::forceIntegerInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
 				if ($versioningVer > 0) {
 					$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
 						'uid',
@@ -288,7 +286,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 			't3ver_stage' => intval($newStageId)
 		);
 		foreach($tables as $table) {
-			$versioningVer = t3lib_div::intInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
+			$versioningVer = t3lib_utility_Math::forceIntegerInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
 			if ($versioningVer > 0) {
 				$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, $where, $values);
 				$this->sqlQueries[] =  $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery;
@@ -337,7 +335,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 			't3ver_wsid' => intval($wsId)
 		);
 		foreach($tables as $table) {
-			$versioningVer = t3lib_div::intInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
+			$versioningVer = t3lib_utility_Math::forceIntegerInRange($GLOBALS['TCA'][$table]['ctrl']['versioningWS'], 0, 2, 0);
 			if ($versioningVer > 0 && $this->hasElementsOnWorkspace($table, -1)) {
 				$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, $where, $values);
 				$this->sqlQueries[] =  $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery;
@@ -366,26 +364,6 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 				$updateArray
 			);
 			$this->sqlQueries[] =  $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery;
-		}
-	}
-
-	/**
-	 * Includes the TCA definition of installed extensions.
-	 *
-	 * This method is used because usually the TCA is included within the init.php script, this doesn't happen
-	 * if the install-tool is used, therefore this has to be done by hand.
-	 *
-	 * @return void
-	 */
-	protected function includeTCA() {
-		global $TCA; // this is relevant because it's used within the included ext_tables.php files - do NOT remove it
-
-		include_once(TYPO3_tables_script ? PATH_typo3conf . TYPO3_tables_script : PATH_t3lib . 'stddb/tables.php');
-			// Extension additions
-		if ($GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE']) {
-			include_once(PATH_typo3conf . $GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'] . '_ext_tables.php');
-		} else {
-			include_once(PATH_t3lib . 'stddb/load_ext_tables.php');
 		}
 	}
 

@@ -1,12 +1,12 @@
 <?php
-# TYPO3 SVN ID: $Id$
-if (!defined ('TYPO3_MODE'))	die ('Access denied.');
-
+if (!defined('TYPO3_MODE')) {
+	die ('Access denied.');
+}
 
 if (TYPO3_MODE == 'BE') {
-	t3lib_extMgm::addModule('web','layout','top',t3lib_extMgm::extPath($_EXTKEY).'layout/');
-	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_layout','EXT:cms/locallang_csh_weblayout.xml');
-	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_info','EXT:cms/locallang_csh_webinfo.xml');
+	t3lib_extMgm::addModule('web', 'layout', 'top', t3lib_extMgm::extPath($_EXTKEY).'layout/');
+	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_layout', 'EXT:cms/locallang_csh_weblayout.xml');
+	t3lib_extMgm::addLLrefForTCAdescr('_MOD_web_info', 'EXT:cms/locallang_csh_webinfo.xml');
 
 	t3lib_extMgm::insertModuleFunction(
 		'web_info',
@@ -22,14 +22,10 @@ if (TYPO3_MODE == 'BE') {
 	);
 }
 
-
 	// Add allowed records to pages:
 t3lib_extMgm::allowTableOnStandardPages('pages_language_overlay,tt_content,sys_template,sys_domain,backend_layout');
 
-
-// ******************************************************************
-// This is the standard TypoScript content table, tt_content
-// ******************************************************************
+	// This is the standard TypoScript content table, tt_content
 $TCA['tt_content'] = array (
 	'ctrl' => array (
 		'label' => 'header',
@@ -41,10 +37,10 @@ $TCA['tt_content'] = array (
 		'title' => 'LLL:EXT:cms/locallang_tca.xml:tt_content',
 		'delete' => 'deleted',
 		'versioningWS' => 2,
-		'versioning_followPages' => true,
+		'versioning_followPages' => TRUE,
 		'origUid' => 't3_origuid',
 		'type' => 'CType',
-		'hideAtCopy' => true,
+		'hideAtCopy' => TRUE,
 		'prependAtCopy' => 'LLL:EXT:lang/locallang_general.xml:LGL.prependAtCopy',
 		'copyAfterDuplFields' => 'colPos,sys_language_uid',
 		'useColumnsForDefaultValues' => 'colPos,sys_language_uid',
@@ -104,13 +100,12 @@ $TCA['tt_content'] = array (
 		'thumbnail' => 'image',
 		'requestUpdate' => 'list_type,rte_enabled,menu_type',
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_tt_content.php',
-		'dividers2tabs' => 1
+		'dividers2tabs' => 1,
+		'searchFields' => 'header,header_link,subheader,bodytext,pi_flexform',
 	)
 );
 
-// ******************************************************************
-// fe_users
-// ******************************************************************
+	// fe_users
 $TCA['fe_users'] = array (
 	'ctrl' => array (
 		'label' => 'username',
@@ -131,16 +126,15 @@ $TCA['fe_users'] = array (
 		),
 		'useColumnsForDefaultValues' => 'usergroup,lockToDomain,disable,starttime,endtime',
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php',
-		'dividers2tabs' => 1
+		'dividers2tabs' => 1,
+		'searchFields' => 'username,name,first_name,last_name,middle_name,address,telephone,fax,email,title,zip,city,country,company',
 	),
 	'feInterface' => array (
 		'fe_admin_fieldList' => 'username,password,usergroup,name,address,telephone,fax,email,title,zip,city,country,www,company',
 	)
 );
 
-// ******************************************************************
-// fe_groups
-// ******************************************************************
+	// fe_groups
 $TCA['fe_groups'] = array (
 	'ctrl' => array (
 		'label' => 'title',
@@ -158,13 +152,12 @@ $TCA['fe_groups'] = array (
 		),
 		'useColumnsForDefaultValues' => 'lockToDomain',
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php',
-		'dividers2tabs' => 1
+		'dividers2tabs' => 1,
+		'searchFields' => 'title,description',
 	)
 );
 
-// ******************************************************************
-// sys_domain
-// ******************************************************************
+	// sys_domain
 $TCA['sys_domain'] = array (
 	'ctrl' => array (
 		'label' => 'domainName',
@@ -180,20 +173,19 @@ $TCA['sys_domain'] = array (
 		'typeicon_classes' => array(
 			'default' => 'mimetypes-x-content-domain',
 		),
-		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php'
+		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php',
+		'searchFields' => 'domainName,redirectTo',
 	)
 );
 
-// ******************************************************************
-// pages_language_overlay
-// ******************************************************************
+	// pages_language_overlay
 $TCA['pages_language_overlay'] = array (
 	'ctrl' => array (
 		'label'                           => 'title',
 		'tstamp'                          => 'tstamp',
 		'title'                           => 'LLL:EXT:cms/locallang_tca.xml:pages_language_overlay',
-		'versioningWS'                    => true,
-		'versioning_followPages'          => true,
+		'versioningWS'                    => TRUE,
+		'versioning_followPages'          => TRUE,
 		'origUid'                         => 't3_origuid',
 		'crdate'                          => 'crdate',
 		'cruser_id'                       => 'cruser_id',
@@ -214,15 +206,12 @@ $TCA['pages_language_overlay'] = array (
 		'typeicon_classes' => array(
 			'default' => 'mimetypes-x-content-page-language-overlay',
 		),
-
-		'dividers2tabs'                   => true
+		'dividers2tabs'                   => TRUE,
+		'searchFields' => 'title,subtitle,nav_title,keywords,description,abstract,author,author_email,url',
 	)
 );
 
-
-// ******************************************************************
-// sys_template
-// ******************************************************************
+	// sys_template
 $TCA['sys_template'] = array (
 	'ctrl' => array (
 		'label' => 'title',
@@ -230,7 +219,7 @@ $TCA['sys_template'] = array (
 		'sortby' => 'sorting',
 		'prependAtCopy' => 'LLL:EXT:lang/locallang_general.xml:LGL.prependAtCopy',
 		'title' => 'LLL:EXT:cms/locallang_tca.xml:sys_template',
-		'versioningWS' => true,
+		'versioningWS' => TRUE,
 		'origUid' => 't3_origuid',
 		'crdate' => 'crdate',
 		'cruser_id' => 'cruser_id',
@@ -252,14 +241,12 @@ $TCA['sys_template'] = array (
 			'0' => 'template_add.gif'
 		),
 		'dividers2tabs' => 1,
-		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php'
+		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tbl_cms.php',
+		'searchFields' => 'title,constants,config',
 	)
 );
 
-
-// ******************************************************************
-// layouts
-// ******************************************************************
+	// layouts
 $TCA['backend_layout'] = array (
 	'ctrl' => array (
 		'title'     => 'LLL:EXT:cms/locallang_tca.xml:backend_layout',

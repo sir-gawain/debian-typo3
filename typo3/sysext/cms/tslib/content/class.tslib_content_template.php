@@ -29,7 +29,6 @@
 /**
  * Contains TEMPLATE class object.
  *
- * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -38,8 +37,8 @@ class tslib_content_Template extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, TEMPLATE
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 * @see substituteMarkerArrayCached()
 	 */
 	public function render($conf = array()) {
@@ -50,7 +49,7 @@ class tslib_content_Template extends tslib_content_Abstract {
 		$markerWrap = isset($conf['markerWrap.'])
 			? $this->cObj->stdWrap($conf['markerWrap'], $conf['markerWrap.'])
 			: $conf['markerWrap'];
-		if(!$markerWrap) {
+		if (!$markerWrap) {
 			$markerWrap = '### | ###';
 		}
 
@@ -77,7 +76,8 @@ class tslib_content_Template extends tslib_content_Abstract {
 			$nonCachedSubst = isset($conf['nonCachedSubst.'])
 				? $this->cObj->stdWrap($conf['nonCachedSubst'], $conf['nonCachedSubst.'])
 				: $conf['nonCachedSubst'];
-			if ($nonCachedSubst) { // NON-CACHED:
+				// NON-CACHED:
+			if ($nonCachedSubst) {
 					// Getting marks
 				if (is_array($conf['marks.'])) {
 					foreach ($conf['marks.'] as $theKey => $theValue) {
@@ -147,7 +147,7 @@ class tslib_content_Template extends tslib_content_Abstract {
 						}
 					}
 				}
-				// Getting marks
+					// Getting marks
 				if (is_array($conf['marks.'])) {
 					foreach ($conf['marks.'] as $theKey => $theValue) {
 						if (!strstr($theKey, '.')) {
@@ -168,17 +168,17 @@ class tslib_content_Template extends tslib_content_Abstract {
 					// Getting subparts
 				$subpartArray = array();
 				foreach ($subparts as $theKey => $theValue) {
-					// Set current with the content of the subpart...
+						// Set current with the content of the subpart...
 					$this->cObj->data[$this->cObj->currentValKey] = $GLOBALS['TSFE']->register['SUBPART_' . $theKey];
-					// Get subpart cObject and substitute it!
+						// Get subpart cObject and substitute it!
 					$subpartArray[$PRE . $theKey . $POST] = $this->cObj->cObjGetSingle(
 						$theValue['name'],
 						$theValue['conf'],
 						'subparts.' . $theKey
 					);
 				}
-				$this->cObj->data[$this->cObj->currentValKey] = ''; // Reset current to empty
-
+					// Reset current to empty
+				$this->cObj->data[$this->cObj->currentValKey] = '';
 
 					// Getting marks
 				$markerArray = array();
@@ -221,12 +221,5 @@ class tslib_content_Template extends tslib_content_Abstract {
 
 		return $content;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_template.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_template.php']);
-}
-
 ?>

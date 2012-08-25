@@ -39,7 +39,7 @@ Ext.override(Ext.grid.GridView, {
 			if (colModel.config[i].hideable !== false) {
 				text = colModel.getColumnHeader(i);
 				if (colModel.getColumnId(i) === 'wsSwapColumn') {
-					text = TYPO3.lang["column.wsSwapColumn"];
+					text = TYPO3.l10n.localize('column.wsSwapColumn');
 				}
 				colMenu.add(new Ext.menu.CheckItem({
 					text: text,
@@ -71,7 +71,7 @@ TYPO3.Workspaces.SelectionModel = new Ext.grid.CheckboxSelectionModel({
 	hidden: true,
 	listeners: {
 		beforerowselect : function (selection, rowIndex, keep, rec) {
-			if (rec.json.allowedAction_nextStage || rec.json.allowedAction_prevStage) {
+			if (rec.json.allowedAction_nextStage || rec.json.allowedAction_prevStage || rec.json.allowedAction_swap) {
 				return true;
 			} else {
 				return false;
@@ -96,9 +96,9 @@ TYPO3.Workspaces.WorkspaceGrid = new Ext.grid.GridPanel({
 			this.colModel = new Ext.grid.ColumnModel({
 				columns: [
 					TYPO3.Workspaces.RowExpander,
-					{id: 'uid', dataIndex : 'uid', width: 40, sortable: true, header : TYPO3.lang["column.uid"], hidden: true, filterable : true },
-					{id: 't3ver_oid', dataIndex : 't3ver_oid', width: 40, sortable: true, header : TYPO3.lang["column.oid"], hidden: true, filterable : true },
-					{id: 'workspace_Title', dataIndex : 'workspace_Title', width: 120, sortable: true, header : TYPO3.lang["column.workspaceName"], hidden: true, filter : {type : 'string'}},
+					{id: 'uid', dataIndex : 'uid', width: 40, sortable: true, header : TYPO3.l10n.localize('column.uid'), hidden: true, filterable : true },
+					{id: 't3ver_oid', dataIndex : 't3ver_oid', width: 40, sortable: true, header : TYPO3.l10n.localize('column.oid'), hidden: true, filterable : true },
+					{id: 'workspace_Title', dataIndex : 'workspace_Title', width: 120, sortable: true, header : TYPO3.l10n.localize('column.workspaceName'), hidden: true, filter : {type : 'string'}},
 					TYPO3.Workspaces.Configuration.WsPath,
 					TYPO3.Workspaces.Configuration.LivePath,
 					TYPO3.Workspaces.Configuration.WsTitleWithIcon,
@@ -120,9 +120,9 @@ TYPO3.Workspaces.WorkspaceGrid = new Ext.grid.GridPanel({
 				columns: [
 					TYPO3.Workspaces.SelectionModel,
 					TYPO3.Workspaces.RowExpander,
-					{id: 'uid', dataIndex : 'uid', width: 40, sortable: true, header : TYPO3.lang["column.uid"], hidden: true, filterable : true },
-					{id: 't3ver_oid', dataIndex : 't3ver_oid', width: 40, sortable: true, header : TYPO3.lang["column.oid"], hidden: true, filterable : true },
-					{id: 'workspace_Title', dataIndex : 'workspace_Title', width: 120, sortable: true, header : TYPO3.lang["column.workspaceName"], hidden: true, filter : {type : 'string'}},
+					{id: 'uid', dataIndex : 'uid', width: 40, sortable: true, header : TYPO3.l10n.localize('column.uid'), hidden: true, filterable : true },
+					{id: 't3ver_oid', dataIndex : 't3ver_oid', width: 40, sortable: true, header : TYPO3.l10n.localize('column.oid'), hidden: true, filterable : true },
+					{id: 'workspace_Title', dataIndex : 'workspace_Title', width: 120, sortable: true, header : TYPO3.l10n.localize('column.workspaceName'), hidden: true, filter : {type : 'string'}},
 					TYPO3.Workspaces.Configuration.WsPath,
 					TYPO3.Workspaces.Configuration.LivePath,
 					TYPO3.Workspaces.Configuration.WsTitleWithIcon,
@@ -149,7 +149,6 @@ TYPO3.Workspaces.WorkspaceGrid = new Ext.grid.GridPanel({
 	border : true,
 	store : TYPO3.Workspaces.MainStore,
 	colModel : null,
-
 	sm: TYPO3.Workspaces.SelectionModel,
 	loadMask : true,
 	height: 630,
@@ -163,7 +162,7 @@ TYPO3.Workspaces.WorkspaceGrid = new Ext.grid.GridPanel({
 	],
 	view : new Ext.grid.GroupingView({
 		forceFit: true,
-		groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "' + TYPO3.lang["items"] + '" : "' + TYPO3.lang["item"] + '"]})',
+		groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "' + TYPO3.l10n.localize('items') + '" : "' + TYPO3.l10n.localize('item') + '"]})',
 		enableGroupingMenu: false,
   		enableNoGroups: false,
 		hideGroupedColumn: true

@@ -53,6 +53,11 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	protected $objectManager;
 
 	/**
+	 * @var Tx_Extbase_Service_TypoScriptService
+	 */
+	protected $typoScriptService;
+
+	/**
 	 * name of the extension this Configuration Manager instance belongs to
 	 * @var string
 	 */
@@ -72,11 +77,19 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	protected $configurationCache = array();
 
 	/**
-	 * @param Tx_Extbase_Object_ManagerInterface $objectManager
+	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
 	 * @return void
 	 */
 	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
+	}
+
+	/**
+	 * @param Tx_Extbase_Service_TypoScriptService $typoScriptService
+	 * @return void
+	 */
+	public function injectTypoScriptService(Tx_Extbase_Service_TypoScriptService $typoScriptService) {
+		$this->typoScriptService = $typoScriptService;
 	}
 
 	/**
@@ -88,10 +101,14 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	}
 
 	/**
-	 * @return tslib_cObj
+	 * @return tslib_cObj|NULL
 	 */
 	public function getContentObject() {
-		return $this->contentObject;
+		if ($this->contentObject !== NULL) {
+			return $this->contentObject;
+		}
+
+		return NULL;
 	}
 
 	/**
@@ -105,9 +122,9 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 		// reset 1st level cache
 		$this->configurationCache = array();
 
-		$this->extensionName = $configuration['extensionName'];
-		$this->pluginName = $configuration['pluginName'];
-		$this->configuration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($configuration);
+		$this->extensionName = isset($configuration['extensionName']) ? $configuration['extensionName'] : NULL;
+		$this->pluginName = isset($configuration['pluginName']) ? $configuration['pluginName'] : NULL;
+		$this->configuration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($configuration);
 	}
 
 	/**
@@ -122,21 +139,14 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	 */
 	public function getConfiguration($extensionName = NULL, $pluginName = NULL) {
 		// 1st level cache
-		if ($extensionName !== NULL) {
-			if ($pluginName === NULL) {
-				throw new Tx_Extbase_Configuration_Exception('You\'ll have to specify either both, extensionName and pluginName, or neither.', 1289852422);
-			}
-			$configurationCacheKey = strtolower($extensionName . '_' . $pluginName);
-		} else {
-			$configurationCacheKey = strtolower($this->extensionName . '_' . $this->pluginName);
-		}
+		$configurationCacheKey = strtolower(($extensionName ?: $this->extensionName) . '_' . ($pluginName ?: $this->pluginName));
 		if (isset($this->configurationCache[$configurationCacheKey])) {
 			return $this->configurationCache[$configurationCacheKey];
 		}
 
 		$frameworkConfiguration = $this->getExtbaseConfiguration();
 		if (!isset($frameworkConfiguration['persistence']['storagePid'])) {
-			$frameworkConfiguration['persistence']['storagePid'] = self::DEFAULT_BACKEND_STORAGE_PID;
+			$frameworkConfiguration['persistence']['storagePid'] = $this->getDefaultBackendStoragePid();
 		}
 
 		// only merge $this->configuration and override switchableControllerActions when retrieving configuration of the current plugin
@@ -165,10 +175,14 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 				 * stdWrap. Than we convert the configuration to normal TypoScript
 				 * and apply the stdWrap to the storagePid
 				 */
-			Tx_Extbase_Utility_FrontendSimulator::simulateFrontendEnvironment($this->getContentObject());
-			$conf = Tx_Extbase_Utility_TypoScript::convertPlainArrayToTypoScriptArray($frameworkConfiguration['persistence']);
-			$frameworkConfiguration['persistence']['storagePid'] = $GLOBALS['TSFE']->cObj->stdWrap($conf['storagePid'], $conf['storagePid.']);
-			Tx_Extbase_Utility_FrontendSimulator::resetFrontendEnvironment();
+			if (TYPO3_MODE !== 'FE') {
+				Tx_Extbase_Utility_FrontendSimulator::simulateFrontendEnvironment($this->getContentObject());
+			}
+			$configuration = $this->typoScriptService->convertPlainArrayToTypoScriptArray($frameworkConfiguration['persistence']);
+			$frameworkConfiguration['persistence']['storagePid'] = $GLOBALS['TSFE']->cObj->stdWrap($configuration['storagePid'], $configuration['storagePid.']);
+			if (TYPO3_MODE !== 'FE') {
+				Tx_Extbase_Utility_FrontendSimulator::resetFrontendEnvironment();
+			}
 		}
 
 		// 1st level cache
@@ -185,14 +199,24 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 		$setup = $this->getTypoScriptSetup();
 		$extbaseConfiguration = array();
 		if (isset($setup['config.']['tx_extbase.'])) {
-			$extbaseConfiguration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['config.']['tx_extbase.']);
+			$extbaseConfiguration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['config.']['tx_extbase.']);
 		}
 		return $extbaseConfiguration;
 	}
 
 	/**
-	 * @param array $frameworkConfiguration
-	 * @param array $overriddenSwitchableControllerActions in the format array('Controller1' => array('action1', 'action2'), 'Controller2' => ...)
+	 * Returns the default backend storage pid
+	 *
+	 * @return string
+	 */
+	public function getDefaultBackendStoragePid() {
+		return self::DEFAULT_BACKEND_STORAGE_PID;
+	}
+
+	/**
+	 * @param array &$frameworkConfiguration
+	 * @param array $switchableControllerActions
+	 *        in the format array('Controller1' => array('action1', 'action2'), 'Controller2' => ...)
 	 * @return void
 	 */
 	protected function overrideSwitchableControllerActions(array &$frameworkConfiguration, array $switchableControllerActions) {
@@ -236,7 +260,7 @@ abstract class Tx_Extbase_Configuration_AbstractConfigurationManager implements 
 	 *
 	 * @return array the TypoScript setup
 	 */
-	abstract protected function getTypoScriptSetup();
+	abstract public function getTypoScriptSetup();
 
 	/**
 	 * Returns the TypoScript configuration found in plugin.tx_yourextension_yourplugin / module.tx_yourextension_yourmodule

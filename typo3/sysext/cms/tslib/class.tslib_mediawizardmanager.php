@@ -28,20 +28,21 @@
 /**
  * Manager to register and call registered media wizard providers
  *
- * $Id: $
-
- * @author	Ernesto Baschny <ernst@cron-it.de>
+ * @author Ernesto Baschny <ernst@cron-it.de>
  * @static
  */
 class tslib_mediaWizardManager {
 
+	/**
+	 * @var array
+	 */
 	protected static $providers = array();
 
 	/**
 	 * Allows extensions to register themselves as media wizard providers
 	 *
-	 * @param	string	$className A class implementing tslib_mediaWizardProvider
-	 * @return	void
+	 * @param string $className A class implementing tslib_mediaWizardProvider
+	 * @return void
 	 */
 	public static function registerMediaWizardProvider($className) {
 		if (!isset(self::$providers[$className])) {
@@ -59,7 +60,7 @@ class tslib_mediaWizardManager {
 	/**
 	 *
 	 * @param string $url
-	 * @return a valid mediaWizardProvider that can handle this URL
+	 * @return A valid mediaWizardProvider that can handle this URL
 	 */
 	public static function getValidMediaWizardProvider($url) {
 			// Go through registered providers in reverse order (last one registered wins)
@@ -70,14 +71,9 @@ class tslib_mediaWizardManager {
 				return $provider;
 			}
 		}
-			// no provider found
+			// No provider found
 		return NULL;
 	}
 
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_mediawizardmanager.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_mediawizardmanager.php']);
-}
-
 ?>

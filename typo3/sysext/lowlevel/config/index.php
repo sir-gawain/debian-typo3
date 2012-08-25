@@ -29,43 +29,17 @@
  *
  * This module lets you view the config variables around TYPO3.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   72: class SC_mod_tools_config_index
- *   89:     function init()
- *  103:     function jumpToUrl(URL)
- *  117:     function menuConfig()
- *  144:     function main()
- *  268:     function printContent()
- *
- * TOTAL FUNCTIONS: 5
- * (This index is automatically created/updated by the extension "extdeveval")
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-unset($MCONF);
-require ('conf.php');
-require ($BACK_PATH.'init.php');
-require ($BACK_PATH.'template.php');
 $GLOBALS['LANG']->includeLLFile('EXT:lowlevel/config/locallang.xml');
 
-$BE_USER->modAccess($MCONF,1);
-
-
-
-
-
-
+$BE_USER->modAccess($MCONF, 1);
 
 /**
  * Script class for the Config module
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -76,7 +50,7 @@ class SC_mod_tools_config_index {
 	var $MOD_SETTINGS = array();
 
 	/**
-	 * document template object
+	 * Document template object
 	 *
 	 * @var noDoc
 	 */
@@ -85,14 +59,12 @@ class SC_mod_tools_config_index {
 	var $include_once = array();
 	var $content;
 
-
-
 	/**
 	 * Initialization
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function init()	{
+	function init() {
 		global $BACK_PATH;
 
 		$this->MCONF = $GLOBALS['MCONF'];
@@ -107,7 +79,7 @@ class SC_mod_tools_config_index {
 		$this->doc->JScode = '
 		<script language="javascript" type="text/javascript">
 			script_ended = 0;
-			function jumpToUrl(URL)	{
+			function jumpToUrl(URL) {
 				window.location.href = URL;
 			}
 		</script>
@@ -119,9 +91,9 @@ class SC_mod_tools_config_index {
 	/**
 	 * Menu Configuration
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function menuConfig()	{
+	function menuConfig() {
 		global $TYPO3_CONF_VARS;
 
 			// MENU-ITEMS:
@@ -130,16 +102,16 @@ class SC_mod_tools_config_index {
 			// Values NOT in this array will not be saved in the settings-array for the module.
 		$this->MOD_MENU = array(
 			'function' => array(
-				0 => $GLOBALS['LANG']->getLL('typo3ConfVars', true),
-				1 => $GLOBALS['LANG']->getLL('tca', true),
-				2 => $GLOBALS['LANG']->getLL('tcaDescr', true),
-				3 => $GLOBALS['LANG']->getLL('loadedExt', true),
-				4 => $GLOBALS['LANG']->getLL('t3services', true),
-				5 => $GLOBALS['LANG']->getLL('tbemodules', true),
-				6 => $GLOBALS['LANG']->getLL('tbemodulesext', true),
-				7 => $GLOBALS['LANG']->getLL('tbeStyles', true),
-				8 => $GLOBALS['LANG']->getLL('beUser', true),
-				9 => $GLOBALS['LANG']->getLL('usersettings', true),
+				0 => $GLOBALS['LANG']->getLL('typo3ConfVars', TRUE),
+				1 => $GLOBALS['LANG']->getLL('tca', TRUE),
+				2 => $GLOBALS['LANG']->getLL('tcaDescr', TRUE),
+				3 => $GLOBALS['LANG']->getLL('loadedExt', TRUE),
+				4 => $GLOBALS['LANG']->getLL('t3services', TRUE),
+				5 => $GLOBALS['LANG']->getLL('tbemodules', TRUE),
+				6 => $GLOBALS['LANG']->getLL('tbemodulesext', TRUE),
+				7 => $GLOBALS['LANG']->getLL('tbeStyles', TRUE),
+				8 => $GLOBALS['LANG']->getLL('beUser', TRUE),
+				9 => $GLOBALS['LANG']->getLL('usersettings', TRUE),
 			),
 			'regexsearch' => '',
 			'fixedLgd' => ''
@@ -152,29 +124,28 @@ class SC_mod_tools_config_index {
 	/**
 	 * [Describe function...]
 	 *
-	 * @return	[type]		...
+	 * @return void
 	 */
-	function main()	{
+	function main() {
 
 		$arrayBrowser = t3lib_div::makeInstance('t3lib_arrayBrowser');
 
-		$this->content= $this->doc->header($GLOBALS['LANG']->getLL('configuration', true));
-		$this->content.= $this->doc->spacer(5);
+		$this->content= $this->doc->header($GLOBALS['LANG']->getLL('configuration', TRUE));
 
 		$this->content .= '<div id="lowlevel-config">
-						<label for="search_field">' . $GLOBALS['LANG']->getLL('enterSearchPhrase', true) . '</label>
+						<label for="search_field">' . $GLOBALS['LANG']->getLL('enterSearchPhrase', TRUE) . '</label>
 						<input type="text" id="search_field" name="search_field" value="' . htmlspecialchars($search_field) . '"' . $GLOBALS['TBE_TEMPLATE']->formWidth(20) . ' />
-						<input type="submit" name="search" id="search" value="' . $GLOBALS['LANG']->getLL('search', true) . '" />';
-		$this->content .= t3lib_BEfunc::getFuncCheck(0,'SET[regexsearch]',$this->MOD_SETTINGS['regexsearch'],'','','id="checkRegexsearch"') .
-						'<label for="checkRegexsearch">' . $GLOBALS['LANG']->getLL('useRegExp', true) . '</label>';
+						<input type="submit" name="search" id="search" value="' . $GLOBALS['LANG']->getLL('search', TRUE) . '" />';
+		$this->content .= t3lib_BEfunc::getFuncCheck(0, 'SET[regexsearch]', $this->MOD_SETTINGS['regexsearch'], '', '', 'id="checkRegexsearch"') .
+						'<label for="checkRegexsearch">' . $GLOBALS['LANG']->getLL('useRegExp', TRUE) . '</label>';
 
-		$this->content.= t3lib_BEfunc::getFuncCheck(0, 'SET[fixedLgd]', $this->MOD_SETTINGS['fixedLgd'], '', '', 'id="checkFixedLgd"') .
-						'<label for="checkFixedLgd">' . $GLOBALS['LANG']->getLL('cropLines', true) . '</label>
+		$this->content .= t3lib_BEfunc::getFuncCheck(0, 'SET[fixedLgd]', $this->MOD_SETTINGS['fixedLgd'], '', '', 'id="checkFixedLgd"') .
+						'<label for="checkFixedLgd">' . $GLOBALS['LANG']->getLL('cropLines', TRUE) . '</label>
 						</div>';
 
-		$this->content.= $this->doc->spacer(5);
+		$this->content .= $this->doc->spacer(5);
 
-		switch($this->MOD_SETTINGS['function'])	{
+		switch ($this->MOD_SETTINGS['function']) {
 			case 0:
 				$theVar = $GLOBALS['TYPO3_CONF_VARS'];
 				t3lib_div::naturalKeySortRecursive($theVar);
@@ -233,16 +204,16 @@ class SC_mod_tools_config_index {
 			break;
 		}
 
-
 			// Update node:
 		$update = 0;
 		$node = t3lib_div::_GET('node');
-		if (is_array($node))	{		// If any plus-signs were clicked, it's registred.
+			// If any plus-signs were clicked, it's registred.
+		if (is_array($node)) {
 			$this->MOD_SETTINGS['node_'.$this->MOD_SETTINGS['function']] = $arrayBrowser->depthKeys($node, $this->MOD_SETTINGS['node_'.$this->MOD_SETTINGS['function']]);
 			$update = 1;
 		}
 		if ($update) {
-			$GLOBALS['BE_USER']->pushModuleData($this->MCONF['name'],$this->MOD_SETTINGS);
+			$GLOBALS['BE_USER']->pushModuleData($this->MCONF['name'], $this->MOD_SETTINGS);
 		}
 
 		$arrayBrowser->depthKeys = $this->MOD_SETTINGS['node_'.$this->MOD_SETTINGS['function']];
@@ -250,16 +221,10 @@ class SC_mod_tools_config_index {
 		$arrayBrowser->fixedLgd = $this->MOD_SETTINGS['fixedLgd'];
 		$arrayBrowser->searchKeysToo = TRUE;
 
-
 		$search_field = t3lib_div::_GP('search_field');
-		if (t3lib_div::_POST('search') && trim($search_field))	{		// If any POST-vars are send, update the condition array
+			// If any POST-vars are send, update the condition array
+		if (t3lib_div::_POST('search') && trim($search_field)) {
 			$arrayBrowser->depthKeys=$arrayBrowser->getSearchKeys($theVar, '',	$search_field, array());
-		}
-
-			// mask the encryption key to not show it as plaintext in the configuration module
-		if ($theVar == $GLOBALS['TYPO3_CONF_VARS']) {
-			$theVar['SYS']['encryptionKey'] = '***** (length: ' .
-				strlen($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']) . ' characters)';
 		}
 
 		$tree = $arrayBrowser->tree($theVar, '', '');
@@ -268,15 +233,16 @@ class SC_mod_tools_config_index {
 		$this->content.= $this->doc->sectionEnd();
 
 			// Variable name:
-		if (t3lib_div::_GP('varname'))	{
+		if (t3lib_div::_GP('varname')) {
 			$line = t3lib_div::_GP('_') ? t3lib_div::_GP('_') : t3lib_div::_GP('varname');
-			if (t3lib_div::_GP('writetoexttables')) { // Write the line to extTables.php
+				// Write the line to extTables.php
+			if (t3lib_div::_GP('writetoexttables')) {
 					// change value to $GLOBALS
 				$length = strpos($line, '[');
 				$var = substr($line, 0, $length);
 				$changedLine = '$GLOBALS[\'' . substr($line, 1, $length - 1) . '\']' . substr($line, $length);
 					// load current extTables.php
-				$extTables = t3lib_div::getURL(PATH_typo3conf . TYPO3_extTableDef_script);
+				$extTables = t3lib_div::getUrl(PATH_typo3conf . TYPO3_extTableDef_script);
 				if ($var === '$TCA') {
 						// check if we are editing the TCA
 					preg_match_all('/\[\'([^\']+)\'\]/', $line, $parts);
@@ -299,7 +265,7 @@ class SC_mod_tools_config_index {
 					$flashMessage = t3lib_div::makeInstance(
 						't3lib_FlashMessage',
 						'',
-						sprintf($GLOBALS['LANG']->getLL('writeMessage', TRUE), TYPO3_extTableDef_script,  '<br />', '<strong>' . nl2br($changedLine) . '</strong>'),
+						sprintf($GLOBALS['LANG']->getLL('writeMessage', TRUE), TYPO3_extTableDef_script, '<br />', '<strong>' . nl2br($changedLine) . '</strong>'),
 						t3lib_FlashMessage::OK
 					);
 				} else {
@@ -324,11 +290,10 @@ class SC_mod_tools_config_index {
 			} else {
 				$this->content .= $GLOBALS['LANG']->getLL('copyPaste', TRUE) . LF . '</div>';
 			}
-
 		}
 
-		$this->content.= '<br /><table border="0" cellpadding="0" cellspacing="0" class="t3-tree t3-tree-config">';
-		$this->content.= '<tr>
+		$this->content .= '<br /><table border="0" cellpadding="0" cellspacing="0" class="t3-tree t3-tree-config">';
+		$this->content .= '<tr>
 					<th class="t3-row-header t3-tree-config-header">' . $label . '</th>
 				</tr>
 				<tr>
@@ -336,7 +301,6 @@ class SC_mod_tools_config_index {
 				</tr>
 			</table>
 		';
-
 
 			// Setting up the buttons and markers for docheader
 		$docHeaderButtons = $this->getButtons();
@@ -358,29 +322,27 @@ class SC_mod_tools_config_index {
 	/**
 	 * Print output to browser
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return	array	all available buttons as an assoc. array
+	 * @return array All available buttons as an assoc. array
 	 */
-	protected function getButtons()	{
+	protected function getButtons() {
 
 		$buttons = array(
 			'csh' => '',
 			'shortcut' => ''
 		);
-			// CSH
-		//$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_web_func', '', $GLOBALS['BACK_PATH']);
 
 			// Shortcut
-		if ($GLOBALS['BE_USER']->mayMakeShortcut())	{
-			$buttons['shortcut'] = $this->doc->makeShortcutIcon('','function',$this->MCONF['name']);
+		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
+			$buttons['shortcut'] = $this->doc->makeShortcutIcon('', 'function', $this->MCONF['name']);
 		}
 		return $buttons;
 	}
@@ -388,7 +350,7 @@ class SC_mod_tools_config_index {
 	/**
 	 * Create the function menu
 	 *
-	 * @return	string	HTML of the function menu
+	 * @return string HTML of the function menu
 	 */
 	protected function getFuncMenu() {
 		$funcMenu = t3lib_BEfunc::getFuncMenu(0, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']);
@@ -396,15 +358,7 @@ class SC_mod_tools_config_index {
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/config/index.php']);
-}
-
-
-
-
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_tools_config_index');
 $SOBE->init();
 $SOBE->main();

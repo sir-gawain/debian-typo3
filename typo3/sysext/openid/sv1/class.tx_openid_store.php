@@ -21,19 +21,17 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/**
- * $Id$
- */
+
 
 require_once(t3lib_extMgm::extPath('openid', 'lib/php-openid/Auth/OpenID/Interface.php'));
 
 /**
-  * This class is a TYPO3-specific OpenID store.
-  *
-  * @author Dmitry Dulepov <dmitry.dulepov@gmail.com>
-  * @package TYPO3
-  * @subpackage tx_openid
-  */
+ * This class is a TYPO3-specific OpenID store.
+ *
+ * @author Dmitry Dulepov <dmitry.dulepov@gmail.com>
+ * @package TYPO3
+ * @subpackage tx_openid
+ */
 class tx_openid_store extends Auth_OpenID_OpenIDStore {
 
 	const ASSOCIATION_TABLE_NAME = 'tx_openid_assoc_store';
@@ -83,13 +81,13 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 	 * @param string $handle Association handle (optional)
 	 * @return Auth_OpenID_Association
 	 */
-	public function getAssociation($serverUrl, $handle = null) {
+	public function getAssociation($serverUrl, $handle = NULL) {
 		$this->cleanupAssociations();
 
 		$where = sprintf('server_url=%s AND expires>%d',
 			$GLOBALS['TYPO3_DB']->fullQuoteStr($serverUrl, self::ASSOCIATION_TABLE_NAME),
 			time());
-		if ($handle != null) {
+		if ($handle != NULL) {
 			$where .= sprintf(' AND assoc_handle=%s',
 				$GLOBALS['TYPO3_DB']->fullQuoteStr($handle, self::ASSOCIATION_TABLE_NAME));
 			$sort = '';
@@ -105,11 +103,11 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 			$sort
 		);
 
-		$result = null;
+		$result = NULL;
 		if (is_array($row)) {
 			$result = @unserialize(base64_decode($row['content']));
-			if ($result === false) {
-				$result = null;
+			if ($result === FALSE) {
+				$result = NULL;
 			}
 			else {
 				$this->updateAssociationTimeStamp($row['tstamp']);
@@ -123,7 +121,7 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 	 *
 	 * @param string $serverUrl Server URL
 	 * @param string $handle Association handle (optional)
-	 * @return boolean true if the association existed
+	 * @return boolean TRUE if the association existed
 	 */
 	function removeAssociation($serverUrl, $handle) {
 		$where = sprintf('server_url=%s AND assoc_handle=%s',
@@ -149,10 +147,10 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 	 * @param $serverUrl Server URL
 	 * @param $timestamp Time stamp
 	 * @param $salt Nonce value
-	 * @return boolean true if nonce was not used before anc can be used now
+	 * @return boolean TRUE if nonce was not used before anc can be used now
 	 */
 	public function useNonce($serverUrl, $timestamp, $salt) {
-		$result = false;
+		$result = FALSE;
 
 		if (abs($timestamp - time()) < $GLOBALS['Auth_OpenID_SKEW']) {
 			$values = array(
@@ -253,9 +251,4 @@ class tx_openid_store extends Auth_OpenID_OpenIDStore {
 		$GLOBALS['TYPO3_DB']->exec_UPDATEquery(self::ASSOCIATION_TABLE_NAME, $where, $values);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_store.php']);
-}
-
 ?>

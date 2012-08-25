@@ -24,15 +24,14 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Module: Extension manager, developer module
  *
- * $Id: class.em_extensionmanager.php 2106 2010-03-24 00:56:22Z steffenk $
- *
- * @author	Steffen Kamper <info@sk-typo3.de>
+ * @author Steffen Kamper <info@sk-typo3.de>
+ * @package TYPO3
+ * @subpackage em
  */
-
-
 class tx_em_ExtensionManager {
 
 	/**
@@ -70,8 +69,6 @@ class tx_em_ExtensionManager {
 	 */
 	protected $gzSupport = FALSE;
 
-
-
 	/**
 	 * Constructor
 	 *
@@ -103,7 +100,6 @@ class tx_em_ExtensionManager {
 		$this->pageRenderer->addCssFile($this->resPath . 'js/ux/css/RangeMenu.css');
 		$this->pageRenderer->addCssFile($this->resPath . 'css/t3_em.css');
 
-
 		$iconsGfxPath = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['relDir'] . 'gfx/';
 		$this->pageRenderer->addCssInlineBlock('em-t3skin-icons', '
 			.x-tree-node-leaf img.tree-edit { background-image:url(' . $iconsGfxPath . 'edit_file.gif);}
@@ -126,7 +122,6 @@ class tx_em_ExtensionManager {
 
 		$this->pageRenderer->addExtDirectCode();
 
-
 			// Localization
 		$labels = array();
 		$this->pageRenderer->addInlineLanguageLabelFile(t3lib_extMgm::extPath('em', 'language/locallang.xml'));
@@ -141,6 +136,8 @@ class tx_em_ExtensionManager {
 				'selectedLanguages' => '',
 				'inlineToWindow' => 1,
 			);
+		} elseif (!isset($globalSettings['inlineToWindow'])) {
+			$globalSettings['inlineToWindow'] = 1;
 		}
 		$settings = $this->parentObject->MOD_SETTINGS;
 		$mirrors = unserialize($settings['extMirrors']);
@@ -164,7 +161,6 @@ class tx_em_ExtensionManager {
 		$fileAllowCreate = intval($GLOBALS['BE_USER']->getTSConfigVal('mod.tools_em.fileAllowCreate'));
 		$fileAllowDownload = intval($GLOBALS['BE_USER']->getTSConfigVal('mod.tools_em.fileAllowDownload'));
 
-
 			// add the settings
 		$additionalSettings = array(
 			'siteUrl' => t3lib_div::getIndpEnv('TYPO3_SITE_URL'),
@@ -182,11 +178,11 @@ class tx_em_ExtensionManager {
 			'debug' => $GLOBALS['TYPO3_CONF_VARS']['BE']['debug'] > 0,
 			//TODO: some are disabled until feater-proofed
 			'fileAllowSave' => $GLOBALS['TYPO3_CONF_VARS']['EXT']['noEdit'] == 0,
-			'fileAllowMove' => 0, //$fileAllowMove,
-			'fileAllowDelete' => 0, //$fileAllowDelete,
-			'fileAllowRename' => 0, //$fileAllowRename,
-			'fileAllowUpload' => 0, //$fileAllowUpload,
-			'fileAllowCreate' => 0, //$fileAllowCreate,
+			'fileAllowMove' => 0,
+			'fileAllowDelete' => 0,
+			'fileAllowRename' => 0,
+			'fileAllowUpload' => 0,
+			'fileAllowCreate' => 0,
 			'fileAllowDownload' => $fileAllowDownload,
 
 		);
@@ -281,9 +277,4 @@ class tx_em_ExtensionManager {
 		}
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/class.tx_em_extensionsmanager.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/class.tx_em_extensionsmanager.php']);
-}
-
 ?>

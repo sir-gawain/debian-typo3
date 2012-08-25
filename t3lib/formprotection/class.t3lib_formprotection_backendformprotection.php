@@ -77,8 +77,10 @@
  * }
  * </pre>
  *
- *
- * $Id$
+ */
+
+/**
+ * Backend form protection
  *
  * @package TYPO3
  * @subpackage t3lib
@@ -164,16 +166,6 @@ class t3lib_formprotection_BackendFormProtection extends t3lib_formprotection_Ab
 	}
 
 	/**
-	 * This method was once used for persisting all tokens.
-	 *
-	 * @deprecated since TYPO3 4.5.3, will be removed in TYPO3 4.7
-	 * @return void
-	 */
-	public function persistTokens() {
-		t3lib_div::logDeprecatedFunction();
-	}
-
-	/**
 	 * Sets the session token for the user from the registry
 	 * and returns it additionally.
 	 *
@@ -245,7 +237,4 @@ class t3lib_formprotection_BackendFormProtection extends t3lib_formprotection_Ab
 	}
 }
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/formprotection/class.t3lib_formprotection_backendformprotection.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/formprotection/class.t3lib_formprotection_backendformprotection.php']);
-}
 ?>

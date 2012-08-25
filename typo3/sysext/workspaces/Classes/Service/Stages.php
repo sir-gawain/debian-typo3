@@ -26,11 +26,12 @@
  ***************************************************************/
 
 /**
+ * Stages service
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage Service
  */
-
 class Tx_Workspaces_Service_Stages {
 	const TABLE_STAGE = 'sys_workspace_stage';
 		// if a record is in the "ready to publish" stage STAGE_PUBLISH_ID the nextStage is STAGE_PUBLISH_EXECUTE_ID, this id wont be saved at any time in db
@@ -38,6 +39,9 @@ class Tx_Workspaces_Service_Stages {
 		// ready to publish stage
 	const STAGE_PUBLISH_ID = -10;
 	const STAGE_EDIT_ID = 0;
+	const MODE_NOTIFY_SOMEONE = 0;
+	const MODE_NOTIFY_ALL = 1;
+	const MODE_NOTIFY_ALL_STRICT = 2;
 
 	/**
 	 * Current workspace ID
@@ -103,6 +107,110 @@ class Tx_Workspaces_Service_Stages {
 	}
 
 	/**
+	 * Find the highest possible "previous" stage for all $byTableName
+	 *
+	 * @param array $workspaceItems
+	 * @param array $byTableName
+	 * @return array Current and next highest possible stage
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function getPreviousStageForElementCollection($workspaceItems, array $byTableName = array('tt_content', 'pages', 'pages_language_overlay')) {
+		$currentStage = array();
+		$previousStage = array();
+		$usedStages = array();
+		$found = FALSE;
+		$availableStagesForWS = array_reverse($this->getStagesForWS());
+		$availableStagesForWSUser = $this->getStagesForWSUser();
+		$byTableName = array_flip($byTableName);
+
+		foreach ($workspaceItems as $tableName => $items) {
+			if (!array_key_exists($tableName, $byTableName)) {
+				continue;
+			}
+			foreach ($items as $item) {
+				$usedStages[$item['t3ver_stage']] = TRUE;
+			}
+		}
+
+		foreach ($availableStagesForWS as $stage) {
+			if (isset($usedStages[$stage['uid']])) {
+				$currentStage = $stage;
+				$previousStage = $this->getPrevStage($stage['uid']);
+				break;
+			}
+		}
+
+		foreach ($availableStagesForWSUser as $userWS) {
+			if ($previousStage['uid'] == $userWS['uid']) {
+				$found = TRUE;
+				break;
+			}
+		}
+
+		if ($found === FALSE) {
+			$previousStage = array();
+		}
+
+		return array (
+			$currentStage,
+			$previousStage
+		);
+	}
+
+	/**
+	 * Retrieve the next stage based on the lowest stage given in the $workspaceItems record array.
+	 *
+	 * @param array $workspaceItems
+	 * @param array $byTableName
+	 * @return array Current and next possible stage.
+	 *
+	 * @author Michael Klapper <development@morphodo.com>
+	 */
+	public function getNextStageForElementCollection($workspaceItems, array $byTableName = array('tt_content', 'pages', 'pages_language_overlay')) {
+		$currentStage = array();
+		$usedStages = array();
+		$nextStage = array();
+		$availableStagesForWS = $this->getStagesForWS();
+		$availableStagesForWSUser = $this->getStagesForWSUser();
+		$byTableName = array_flip($byTableName);
+		$found = FALSE;
+
+		foreach ($workspaceItems as $tableName => $items) {
+			if (! array_key_exists($tableName, $byTableName)) {
+				continue;
+			}
+			foreach ($items as $item) {
+				$usedStages[$item['t3ver_stage']] = TRUE;
+			}
+		}
+
+		foreach ($availableStagesForWS as $stage) {
+			if (isset($usedStages[$stage['uid']])) {
+				$currentStage = $stage;
+				$nextStage = $this->getNextStage($stage['uid']);
+				break;
+			}
+		}
+
+		foreach ($availableStagesForWSUser as $userWS) {
+			if ($nextStage['uid'] == $userWS['uid']) {
+				$found = TRUE;
+				break;
+			}
+		}
+
+		if ($found === FALSE) {
+			$nextStage = array();
+		}
+
+		return array (
+			$currentStage,
+			$nextStage
+		);
+	}
+
+	/**
 	 * Building an array with all stage ids and titles related to the given workspace
 	 *
 	 * @return array id and title of the stages
@@ -130,7 +238,7 @@ class Tx_Workspaces_Service_Stages {
 					'',
 					'uid'
 				);
-				foreach($workspaceStageRecs as $stage) {
+				foreach ($workspaceStageRecs as $stage) {
 					$stage['title'] =  $GLOBALS['LANG']->sL($this->pathToLocallang . ':actionSendToStage') . ' "' . $stage['title'] . '"';
 					$stages[] = $stage;
 				}
@@ -169,7 +277,7 @@ class Tx_Workspaces_Service_Stages {
 				foreach ($workspaceStageRecs as $workspaceStageRec) {
 					if ($this->isStageAllowedForUser($workspaceStageRec['uid'])) {
 						$stagesForWSUserData[$workspaceStageRec['uid']] = $workspaceStageRec;
-					} else if ($workspaceStageRec['uid'] == self::STAGE_PUBLISH_EXECUTE_ID && $GLOBALS['BE_USER']->workspacePublishAccess($this->getWorkspaceId())) {
+					} elseif ($workspaceStageRec['uid'] == self::STAGE_PUBLISH_EXECUTE_ID && $GLOBALS['BE_USER']->workspacePublishAccess($this->getWorkspaceId())) {
 						$allowedStages[] = $workspaceStageRec;
 						$stagesForWSUserData[$workspaceStageRec['uid']] = $workspaceStageRec;
 					}
@@ -195,7 +303,7 @@ class Tx_Workspaces_Service_Stages {
 	/**
 	 * Check if given workspace has custom staging activated
 	 *
-	 * @return bool true or false
+	 * @return bool TRUE or FALSE
 	 */
 	public function checkCustomStagingForWS() {
 		$workspaceRec = t3lib_BEfunc::getRecord('sys_workspace', $this->getWorkspaceId());
@@ -225,7 +333,7 @@ class Tx_Workspaces_Service_Stages {
 			default:
 				$stageTitle = $this->getPropertyOfCurrentWorkspaceStage($ver_stage, 'title');
 
-				if ($stageTitle == null) {
+				if ($stageTitle == NULL) {
 					$stageTitle = $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:error.getStageTitle.stageNotFound');
 				}
 				break;
@@ -251,7 +359,7 @@ class Tx_Workspaces_Service_Stages {
 	 * @return integer The next stage Id
 	 */
 	public function getNextStage($stageId) {
-		if (!t3lib_div::testInt($stageId)) {
+		if (!t3lib_utility_Math::canBeInterpretedAsInteger($stageId)) {
 			throw new InvalidArgumentException(
 				$GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:error.stageId.integer'),
 				1291109987
@@ -326,7 +434,7 @@ class Tx_Workspaces_Service_Stages {
 	 */
 	public function getPrevStage($stageid) {
 
-		if (!t3lib_div::testInt($stageid)) {
+		if (!t3lib_utility_Math::canBeInterpretedAsInteger($stageid)) {
 			throw new InvalidArgumentException($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:error.stageId.integer'));
 		}
 
@@ -380,23 +488,39 @@ class Tx_Workspaces_Service_Stages {
 	 * Get array of all responsilbe be_users for a stage
 	 *
 	 * @param	int	stage id
+	 * @param	boolean if field notification_defaults should be selected instead of responsible users
 	 * @return	array be_users with e-mail and name
 	 */
-	public function getResponsibleBeUser($stageId) {
+	public function getResponsibleBeUser($stageId, $selectDefaultUserField = FALSE) {
 		$workspaceRec = t3lib_BEfunc::getRecord('sys_workspace', $this->getWorkspaceId());
 		$recipientArray = array();
 
 		switch ($stageId) {
 			case self::STAGE_PUBLISH_EXECUTE_ID:
 			case self::STAGE_PUBLISH_ID:
-				$userList = $this->getResponsibleUser($workspaceRec['adminusers']);
+				if ($selectDefaultUserField == FALSE) {
+					$userList = $this->getResponsibleUser($workspaceRec['adminusers']);
+				} else {
+					$notification_default_user = $workspaceRec['publish_notification_defaults'];
+					$userList = $this->getResponsibleUser($notification_default_user);
+				}
 				break;
 			case self::STAGE_EDIT_ID:
-				$userList = $this->getResponsibleUser($workspaceRec['members']);
+				if ($selectDefaultUserField == FALSE) {
+					$userList = $this->getResponsibleUser($workspaceRec['members']);
+				} else {
+					$notification_default_user = $workspaceRec['edit_notification_defaults'];
+					$userList = $this->getResponsibleUser($notification_default_user);
+				}
 				break;
 			default:
-				$responsible_persons = $this->getPropertyOfCurrentWorkspaceStage($stageId, 'responsible_persons');
-				$userList = $this->getResponsibleUser($responsible_persons);
+				if ($selectDefaultUserField == FALSE) {
+					$responsible_persons = $this->getPropertyOfCurrentWorkspaceStage($stageId, 'responsible_persons');
+					$userList = $this->getResponsibleUser($responsible_persons);
+				} else {
+					$notification_default_user = $this->getPropertyOfCurrentWorkspaceStage($stageId, 'notification_defaults');
+					$userList = $this->getResponsibleUser($notification_default_user);
+				}
 				break;
 		}
 
@@ -545,7 +669,7 @@ class Tx_Workspaces_Service_Stages {
 	public function getPropertyOfCurrentWorkspaceStage($stageId, $property) {
 		$result = NULL;
 
-		if (!t3lib_div::testInt($stageId)) {
+		if (!t3lib_utility_Math::canBeInterpretedAsInteger($stageId)) {
 			throw new InvalidArgumentException($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:error.stageId.integer'));
 		}
 
@@ -641,12 +765,12 @@ class Tx_Workspaces_Service_Stages {
 	protected function isStageAllowedForUser($stageId) {
 		$cacheKey = $this->getWorkspaceId() . '_' . $stageId;
 		$isAllowed = FALSE;
- 		if (isset($this->workspaceStageAllowedCache[$cacheKey])) {
+		if (isset($this->workspaceStageAllowedCache[$cacheKey])) {
 			$isAllowed = $this->workspaceStageAllowedCache[$cacheKey];
-		 } else {
+		} else {
 			$isAllowed = $GLOBALS['BE_USER']->workspaceCheckStageForCurrent($stageId);
 			$this->workspaceStageAllowedCache[$cacheKey] = $isAllowed;
-		 }
+		}
 		return $isAllowed;
 	}
 
@@ -669,10 +793,41 @@ class Tx_Workspaces_Service_Stages {
 
 		return $isValid;
 	}
-}
 
+	/**
+	 * Returns the notification mode from stage configuration
+	 *
+	 * Return values:
+	 * 0 = notify someone / old way / default setting
+	 * 1 = notify all responsible users (some users checked per default and you're not allowed to uncheck them)
+	 * 2 = notify all responsible users (all users are checked and nothing can be changed during stage change)
+	 *
+	 * @param integer stage id to return the notification mode for
+	 * @return integer
+	 */
+	public function getNotificationMode($stageId) {
+		if (!t3lib_utility_Math::canBeInterpretedAsInteger($stageId)) {
+			throw new InvalidArgumentException($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:error.stageId.integer'));
+		}
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/Stages.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/Stages.php']);
+		switch ($stageId) {
+			case self::STAGE_PUBLISH_EXECUTE_ID:
+			case self::STAGE_PUBLISH_ID:
+					$workspaceRecord = t3lib_BEfunc::getRecord('sys_workspace', $this->getWorkspaceId());
+					return $workspaceRecord['publish_notification_mode'];
+				break;
+			case self::STAGE_EDIT_ID:
+					$workspaceRecord = t3lib_BEfunc::getRecord('sys_workspace', $this->getWorkspaceId());
+					return $workspaceRecord['edit_notification_mode'];
+				break;
+			default:
+				$workspaceStage = t3lib_BEfunc::getRecord(self::TABLE_STAGE, $stageId);
+
+				if (is_array($workspaceStage) && isset($workspaceStage['notification_mode'])) {
+					return $workspaceStage['notification_mode'];
+				}
+				break;
+		}
+	}
 }
 ?>

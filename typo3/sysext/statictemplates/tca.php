@@ -1,8 +1,6 @@
 <?php
 
-// ******************************************************************
-// static_template
-// ******************************************************************
+	// static_template
 $TCA['static_template'] = array(
 	'ctrl' => $TCA['static_template']['ctrl'],
 	'interface' => array(
@@ -49,16 +47,6 @@ $TCA['static_template'] = array(
 			),
 			'defaultExtras' => 'fixed-font: enable-tab',
 		),
-		'editorcfg' => array(
-			'label' => 'LLL:EXT:statictemplates/locallang_tca.xml:static_template.editorcfg',
-			'config' => array(
-				'type' => 'text',
-				'rows' => 4,
-				'cols' => 48,
-				'wrap' => 'OFF'
-			),
-			'defaultExtras' => 'fixed-font: enable-tab',
-		),
 		'description' => array(
 			'label' => 'LLL:EXT:statictemplates/locallang_tca.xml:static_template.description',
 			'config' => array(
@@ -69,9 +57,8 @@ $TCA['static_template'] = array(
 		)
 	),
 	'types' => array(
-		'1' => array('showitem' => 'title;;;;2-2-2, constants;;;;3-3-3, config, include_static;;;;5-5-5, description;;;;5-5-5, editorcfg')
+		'1' => array('showitem' => 'title;;;;2-2-2, constants;;;;3-3-3, config, include_static;;;;5-5-5, description;;;;5-5-5')
 	)
 );
-
 
 ?>

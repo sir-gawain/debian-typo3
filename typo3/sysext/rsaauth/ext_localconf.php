@@ -1,15 +1,15 @@
 <?php
-if (!defined ('TYPO3_MODE')) {
-	die ('Access denied.');
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
 }
 
-// Add the service
-t3lib_extMgm::addService($_EXTKEY,  'auth' /* sv type */,  'tx_rsaauth_sv1' /* sv key */,
+	// Add the service
+t3lib_extMgm::addService($_EXTKEY, 'auth' /* sv type */, 'tx_rsaauth_sv1' /* sv key */,
 	array(
 		'title' => 'RSA authentication',
 		'description' => 'Authenticates users by using encrypted passwords',
 
-		'subtype' => 'getUserBE,authUserBE,getUserFE,authUserFE',
+		'subtype' => 'processLoginDataBE,processLoginDataFE',
 
 		'available' => TRUE,
 		'priority' => 60,	// tx_svauth_sv1 has 50, t3sec_saltedpw has 55. This service must have higher priority!
@@ -23,16 +23,20 @@ t3lib_extMgm::addService($_EXTKEY,  'auth' /* sv type */,  'tx_rsaauth_sv1' /* s
 	)
 );
 
-// Add a hook to the BE login form
+	// Add a hook to the BE login form
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/index.php']['loginFormHook'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_loginformhook.php:tx_rsaauth_loginformhook->getLoginFormTag';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/index.php']['loginScriptHook'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_loginformhook.php:tx_rsaauth_loginformhook->getLoginScripts';
 
-// Add a hook to the FE login form (felogin system extension)
+	// Add hook for user setup module
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['setupScriptHook'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_usersetuphook.php:tx_rsaauth_usersetuphook->getLoginScripts';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['modifyUserDataBeforeSave'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_usersetuphook.php:tx_rsaauth_usersetuphook->decryptPassword';
+
+	// Add a hook to the FE login form (felogin system extension)
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['loginFormOnSubmitFuncs'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_feloginhook.php:tx_rsaauth_feloginhook->loginFormHook';
 
-// Add a hook to show Backend warnings
+	// Add a hook to show Backend warnings
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_befunc.php']['displayWarningMessages'][$_EXTKEY] = 'EXT:' . $_EXTKEY . '/hooks/class.tx_rsaauth_backendwarnings.php:tx_rsaauth_backendwarnings';
 
-// Use popup window to refresh login instead of the AJAX relogin:
+	// Use popup window to refresh login instead of the AJAX relogin:
 $TYPO3_CONF_VARS['BE']['showRefreshLoginPopup'] = 1;
 ?>

@@ -25,20 +25,27 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+/**
+ * Backend layout for CMS
+ *
+ * @author GridView Team
+ * @package TYPO3
+ * @subpackage core
+ */
 class tx_cms_BackendLayout {
 
 	/**
 	 * ItemProcFunc for colpos items
 	 *
-	 * @param  array $params
+	 * @param array $params
 	 * @return void
 	 */
 	public function colPosListItemProcFunc(&$params) {
 		if ($params['row']['pid'] > 0) {
 			$params['items'] = $this->addColPosListLayoutItems($params['row']['pid'], $params['items']);
 		} else {
-			// negative uid_pid values indicate that the element has been inserted after an existing element
-			// so there is no pid to get the backendLayout for and we have to get that first
+				// Negative uid_pid values indicate that the element has been inserted after an existing element
+				// so there is no pid to get the backendLayout for and we have to get that first
 			$existingElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('pid', 'tt_content', 'uid=' . -(intval($params['row']['pid'])));
 			if ($existingElement['pid'] > 0) {
 				$params['items'] = $this->addColPosListLayoutItems($existingElement['pid'], $params['items']);
@@ -49,8 +56,8 @@ class tx_cms_BackendLayout {
 	/**
 	 * Adds items to a colpos list
 	 *
-	 * @param  int  $pageId
-	 * @param  array  $items
+	 * @param integer $pageId
+	 * @param array $items
 	 * @return array
 	 */
 	protected function addColPosListLayoutItems($pageId, $items) {
@@ -66,13 +73,14 @@ class tx_cms_BackendLayout {
 	/**
 	 * Gets the list of available columns for a given page id
 	 *
-	 * @param  int  $id
-	 * @return  array  $tcaItems
+	 * @param integer $id
+	 * @return array $tcaItems
 	 */
 	public function getColPosListItemsParsed($id) {
 		$tsConfig  = t3lib_BEfunc::getModTSconfig($id, 'TCEFORM.tt_content.colPos');
 		$tcaConfig = $GLOBALS['TCA']['tt_content']['columns']['colPos']['config'];
 
+		/** @var $tceForms t3lib_TCEForms */
 		$tceForms = t3lib_div::makeInstance('t3lib_TCEForms');
 
 		$tcaItems = $tcaConfig['items'];
@@ -96,8 +104,8 @@ class tx_cms_BackendLayout {
 	/**
 	 * Gets the selected backend layout
 	 *
-	 * @param  int  $id
-	 * @return array|null  $backendLayout
+	 * @param integer $id
+	 * @return array|NULL $backendLayout
 	 */
 	public function getSelectedBackendLayout($id) {
 		$rootline = t3lib_BEfunc::BEgetRootLine($id);
@@ -105,8 +113,8 @@ class tx_cms_BackendLayout {
 
 		for ($i = count($rootline); $i > 0; $i--) {
 			$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-					// pid and t3ver_swapmode needed here for workspaceOL()
-				'uid, pid, t3ver_swapmode, backend_layout, backend_layout_next_level',
+					// pid is needed here for workspaceOL()
+				'uid, pid, backend_layout, backend_layout_next_level',
 				'pages',
 				'uid=' . intval($rootline[$i]['uid'])
 			);
@@ -120,10 +128,10 @@ class tx_cms_BackendLayout {
 					$backendLayoutUid = $selectedBackendLayout;
 				}
 				break;
-			} else if ($selectedBackendLayoutNextLevel == -1 && $page['uid'] != $id) {
+			} elseif ($selectedBackendLayoutNextLevel == -1 && $page['uid'] != $id) {
 					// Some previous page in our rootline sets layout_next to "None"
 				break;
-			} else if ($selectedBackendLayoutNextLevel > 0 && $page['uid'] != $id) {
+			} elseif ($selectedBackendLayoutNextLevel > 0 && $page['uid'] != $id) {
 					// Some previous page in our rootline sets some backend_layout, use it
 				$backendLayoutUid = $selectedBackendLayoutNextLevel;
 				break;
@@ -139,6 +147,7 @@ class tx_cms_BackendLayout {
 			);
 
 			if ($backendLayout) {
+				/** @var $parser t3lib_TSparser */
 				$parser = t3lib_div::makeInstance('t3lib_TSparser');
 				$parser->parse($backendLayout['config']);
 
@@ -166,11 +175,5 @@ class tx_cms_BackendLayout {
 
 		return $backendLayout;
 	}
-
 }
-
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/classes/class.tx_cms_backendlayout.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/cms/classes/class.tx_cms_backendlayout.php']);
-}
-
 ?>

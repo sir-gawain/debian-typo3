@@ -23,23 +23,15 @@
 ***************************************************************/
 
 /**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- * $Id$
- */
-
-require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/storage/class.tx_rsaauth_abstract_storage.php'));
-
-/**
  * This class contains a session-based storage for private keys. This storage
  * is not secure enough because its implementation stores keys completely in the
  * PHP sessions. PHP sessions usually store data in the file system and it is
  * easy to extract. This storage is useful only as an example. It is better to
  * use "split" storage for keys.
  *
- * @author	Dmitry Dulepov <dmitry@typo3.org>
- * @package	TYPO3
- * @subpackage	tx_rsaauth
+ * @author Dmitry Dulepov <dmitry@typo3.org>
+ * @package TYPO3
+ * @subpackage tx_rsaauth
  */
 class tx_rsaauth_session_storage extends tx_rsaauth_abstract_storage {
 
@@ -47,7 +39,7 @@ class tx_rsaauth_session_storage extends tx_rsaauth_abstract_storage {
 	 * Creates an instance of this class. It checks and initializes PHP
 	 * sessions if necessary.
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	public function __construct() {
 		if (!isset($_SESSION) || !is_array($_SESSION)) {
@@ -58,26 +50,21 @@ class tx_rsaauth_session_storage extends tx_rsaauth_abstract_storage {
 	/**
 	 * Obtains key from the session
 	 *
-	 * @return string	The key or null
+	 * @return string The key or NULL
 	 * @see tx_rsaauth_abstract_storage::get()
 	 */
 	public function get() {
-		return (isset($_SESSION['tx_rsaauth_key']) ? $_SESSION['tx_rsaauth_key'] : null);
+		return (isset($_SESSION['tx_rsaauth_key']) ? $_SESSION['tx_rsaauth_key'] : NULL);
 	}
 
 	/**
 	 * Puts key to the session
 	 *
-	 * @param string	$key	The key
+	 * @param string $key The key
 	 * @see tx_rsaauth_abstract_storage::put()
 	 */
 	public function put($key) {
 		$_SESSION['tx_rsaauth_key'] = $key;
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/storage/class.tx_rsaauth_session_storage.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/storage/class.tx_rsaauth_session_storage.php']);
-}
-
 ?>

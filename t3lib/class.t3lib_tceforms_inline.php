@@ -24,71 +24,12 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * The Inline-Relational-Record-Editing (IRRE) functions as part of the TCEforms.
  *
- * $Id$
- *
- * @author	Oliver Hader <oliver@typo3.org>
+ * @author Oliver Hader <oliver@typo3.org>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   88: class t3lib_TCEforms_inline
- *  109:	 function init(&$tceForms)
- *  127:	 function getSingleField_typeInline($table,$field,$row,&$PA)
- *
- *			  SECTION: Regular rendering of forms, fields, etc.
- *  263:	 function renderForeignRecord($parentUid, $rec, $config = array())
- *  319:	 function renderForeignRecordHeader($parentUid, $foreign_table,$rec,$config = array())
- *  375:	 function renderForeignRecordHeaderControl($table,$row,$config = array())
- *  506:	 function renderCombinationTable(&$rec, $appendFormFieldNames, $config = array())
- *  560:	 function renderPossibleRecordsSelector($selItems, $conf, $uniqueIds=array())
- *  627:	 function addJavaScript()
- *  643:	 function addJavaScriptSortable($objectId)
- *
- *			  SECTION: Handling of AJAX calls
- *  665:	 function createNewRecord($domObjectId, $foreignUid = 0)
- *  755:	 function getJSON($jsonArray)
- *  770:	 function getNewRecordLink($objectPrefix, $conf = array())
- *
- *			  SECTION: Get data from database and handle relations
- *  807:	 function getRelatedRecords($table,$field,$row,&$PA,$config)
- *  839:	 function getPossibleRecords($table,$field,$row,$conf,$checkForConfField='foreign_selector')
- *  885:	 function getUniqueIds($records, $conf=array())
- *  905:	 function getRecord($pid, $table, $uid, $cmd='')
- *  929:	 function getNewRecord($pid, $table)
- *
- *			  SECTION: Structure stack for handling inline objects/levels
- *  951:	 function pushStructure($table, $uid, $field = '', $config = array())
- *  967:	 function popStructure()
- *  984:	 function updateStructureNames()
- * 1000:	 function getStructureItemName($levelData)
- * 1015:	 function getStructureLevel($level)
- * 1032:	 function getStructurePath($structureDepth = -1)
- * 1057:	 function parseStructureString($string, $loadConfig = false)
- *
- *			  SECTION: Helper functions
- * 1098:	 function checkConfiguration(&$config)
- * 1123:	 function checkAccess($cmd, $table, $theUid)
- * 1185:	 function compareStructureConfiguration($compare)
- * 1199:	 function normalizeUid($string)
- * 1213:	 function wrapFormsSection($section, $styleAttrs = array(), $tableAttrs = array())
- * 1242:	 function isInlineChildAndLabelField($table, $field)
- * 1258:	 function getStructureDepth()
- * 1295:	 function arrayCompareComplex($subjectArray, $searchArray, $type = '')
- * 1349:	 function isAssociativeArray($object)
- * 1364:	 function getPossibleRecordsFlat($possibleRecords)
- * 1383:	 function skipField($table, $field, $row, $config)
- *
- * TOTAL FUNCTIONS: 35
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
-
 class t3lib_TCEforms_inline {
 	const Structure_Separator = '-';
 	const Disposal_AttributeName = 'Disposal_AttributeName';
@@ -100,29 +41,39 @@ class t3lib_TCEforms_inline {
 	 * @var t3lib_TCEforms
 	 */
 	var $fObj;
-	var $backPath; // Reference to $fObj->backPath
-
-	var $isAjaxCall = FALSE; // Indicates if a field is rendered upon an AJAX call
-	var $inlineStructure = array(); // the structure/hierarchy where working in, e.g. cascading inline tables
-	var $inlineFirstPid; // the first call of an inline type appeared on this page (pid of record)
-	var $inlineNames = array(); // keys: form, object -> hold the name/id for each of them
-	var $inlineData = array(); // inline data array used for JSON output
-	var $inlineView = array(); // expanded/collapsed states for the current BE user
-	var $inlineCount = 0; // count the number of inline types used
+		// Reference to $fObj->backPath
+	var $backPath;
+		// Indicates if a field is rendered upon an AJAX call
+	var $isAjaxCall = FALSE;
+		// The structure/hierarchy where working in, e.g. cascading inline tables
+	var $inlineStructure = array();
+		// The first call of an inline type appeared on this page (pid of record)
+	var $inlineFirstPid;
+		// Keys: form, object -> hold the name/id for each of them
+	var $inlineNames = array();
+  		// Inline data array used for JSON output
+	var $inlineData = array();
+		// Expanded/collapsed states for the current BE user
+	var $inlineView = array();
+		// Count the number of inline types used
+	var $inlineCount = 0;
 	var $inlineStyles = array();
 
-	var $prependNaming = 'data'; // how the $this->fObj->prependFormFieldNames should be set ('data' is default)
-	var $prependFormFieldNames; // reference to $this->fObj->prependFormFieldNames
-	var $prependCmdFieldNames; // reference to $this->fObj->prependCmdFieldNames
+		// How the $this->fObj->prependFormFieldNames should be set ('data' is default)
+	var $prependNaming = 'data';
+		// Reference to $this->fObj->prependFormFieldNames
+	var $prependFormFieldNames;
+		// Reference to $this->fObj->prependCmdFieldNames
+	var $prependCmdFieldNames;
 
-	protected $hookObjects = array(); // array containing instances of hook classes called once for IRRE objects
-
+		// Array containing instances of hook classes called once for IRRE objects
+	protected $hookObjects = array();
 
 	/**
 	 * Intialize an instance of t3lib_TCEforms_inline
 	 *
-	 * @param	t3lib_TCEforms		$tceForms: Reference to an TCEforms instance
-	 * @return	void
+	 * @param t3lib_TCEforms $tceForms Reference to an TCEforms instance
+	 * @return void
 	 */
 	function init(&$tceForms) {
 		$this->fObj = $tceForms;
@@ -133,12 +84,11 @@ class t3lib_TCEforms_inline {
 		$this->initHookObjects();
 	}
 
-
 	/**
 	 * Initialized the hook objects for this class.
 	 * Each hook object has to implement the interface t3lib_tceformsInlineHook.
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	protected function initHookObjects() {
 		$this->hookObjects = array();
@@ -159,26 +109,25 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
 	/**
 	 * Generation of TCEform elements of the type "inline"
 	 * This will render inline-relational-record sets. Relations.
 	 *
-	 * @param	string		$table: The table name of the record
-	 * @param	string		$field: The field name which this element is supposed to edit
-	 * @param	array		$row: The record data array where the value(s) for the field can be found
-	 * @param	array		$PA: An array with additional configuration options.
-	 * @return	string		The HTML code for the TCEform field
+	 * @param string $table The table name of the record
+	 * @param string $field The field name which this element is supposed to edit
+	 * @param array $row The record data array where the value(s) for the field can be found
+	 * @param array $PA An array with additional configuration options.
+	 * @return string The HTML code for the TCEform field
 	 */
 	function getSingleField_typeInline($table, $field, $row, &$PA) {
-			// check the TCA configuration - if false is returned, something was wrong
+			// Check the TCA configuration - if FALSE is returned, something was wrong
 		if ($this->checkConfiguration($PA['fieldConf']['config']) === FALSE) {
 			return FALSE;
 		}
 
 		$item = '';
 
-			// count the number of processed inline elements
+			// Count the number of processed inline elements
 		$this->inlineCount++;
 
 			// Init:
@@ -189,8 +138,8 @@ class t3lib_TCEforms_inline {
 		if (t3lib_BEfunc::isTableLocalizable($table)) {
 			$language = intval($row[$GLOBALS['TCA'][$table]['ctrl']['languageField']]);
 		}
-		$minitems = t3lib_div::intInRange($config['minitems'], 0);
-		$maxitems = t3lib_div::intInRange($config['maxitems'], 0);
+		$minitems = t3lib_utility_Math::forceIntegerInRange($config['minitems'], 0);
+		$maxitems = t3lib_utility_Math::forceIntegerInRange($config['maxitems'], 0);
 		if (!$maxitems) {
 			$maxitems = 100000;
 		}
@@ -198,12 +147,12 @@ class t3lib_TCEforms_inline {
 			// Register the required number of elements:
 		$this->fObj->requiredElements[$PA['itemFormElName']] = array($minitems, $maxitems, 'imgName' => $table . '_' . $row['uid'] . '_' . $field);
 
-			// remember the page id (pid of record) where inline editing started first
-			// we need that pid for ajax calls, so that they would know where the action takes place on the page structure
+			// Remember the page id (pid of record) where inline editing started first
+			// We need that pid for ajax calls, so that they would know where the action takes place on the page structure
 		if (!isset($this->inlineFirstPid)) {
-				// if this record is not new, try to fetch the inlineView states
+				// If this record is not new, try to fetch the inlineView states
 				// @TODO: Add checking/cleaning for unused tables, records, etc. to save space in uc-field
-			if (t3lib_div::testInt($row['uid'])) {
+			if (t3lib_utility_Math::canBeInterpretedAsInteger($row['uid'])) {
 				$inlineView = unserialize($GLOBALS['BE_USER']->uc['inlineView']);
 				$this->inlineView = $inlineView[$table][$row['uid']];
 			}
@@ -220,15 +169,15 @@ class t3lib_TCEforms_inline {
 				$this->inlineFirstPid = $row['pid'];
 			}
 		}
-			// add the current inline job to the structure stack
+			// Add the current inline job to the structure stack
 		$this->pushStructure($table, $row['uid'], $field, $config);
 			// e.g. data[<table>][<uid>][<field>]
 		$nameForm = $this->inlineNames['form'];
 			// e.g. data-<pid>-<table1>-<uid1>-<field1>-<table2>-<uid2>-<field2>
 		$nameObject = $this->inlineNames['object'];
-			// get the records related to this inline record
+			// Get the records related to this inline record
 		$relatedRecords = $this->getRelatedRecords($table, $field, $row, $PA, $config);
-			// set the first and last record to the config array
+			// Set the first and last record to the config array
 		$relatedRecordsUids = array_keys($relatedRecords['records']);
 		$config['inline']['first'] = reset($relatedRecordsUids);
 		$config['inline']['last'] = end($relatedRecordsUids);
@@ -251,7 +200,7 @@ class t3lib_TCEforms_inline {
 			// Set a hint for nested IRRE and tab elements:
 		$this->inlineData['nested'][$nameObject] = $this->fObj->getDynNestedStack(FALSE, $this->isAjaxCall);
 
-			// if relations are required to be unique, get the uids that have already been used on the foreign side of the relation
+			// If relations are required to be unique, get the uids that have already been used on the foreign side of the relation
 		if ($config['foreign_unique']) {
 				// If uniqueness *and* selector are set, they should point to the same field - so, get the configuration of one:
 			$selConfig = $this->getPossibleRecordsSelectorConfig($config, $config['foreign_unique']);
@@ -271,9 +220,9 @@ class t3lib_TCEforms_inline {
 			);
 		}
 
-			// if it's required to select from possible child records (reusable children), add a selector box
-		if ($config['foreign_selector']) {
-				// if not already set by the foreign_unique, set the possibleRecords here and the uniqueIds to an empty array
+			// If it's required to select from possible child records (reusable children), add a selector box
+		if ($config['foreign_selector'] && $config['appearance']['showPossibleRecordsSelector'] !== FALSE) {
+				// If not already set by the foreign_unique, set the possibleRecords here and the uniqueIds to an empty array
 			if (!$config['foreign_unique']) {
 				$possibleRecords = $this->getPossibleRecords($table, $field, $row, $config);
 				$uniqueIds = array();
@@ -282,10 +231,10 @@ class t3lib_TCEforms_inline {
 			$item .= $selectorBox;
 		}
 
-			// wrap all inline fields of a record with a <div> (like a container)
+			// Wrap all inline fields of a record with a <div> (like a container)
 		$item .= '<div id="' . $nameObject . '">';
 
-			// define how to show the "Create new record" link - if there are more than maxitems, hide it
+			// Define how to show the "Create new record" link - if there are more than maxitems, hide it
 		if ($relatedRecords['count'] >= $maxitems || ($uniqueMax > 0 && $relatedRecords['count'] >= $uniqueMax)) {
 			$config['inline']['inlineNewButtonStyle'] = 'display: none;';
 		}
@@ -327,19 +276,35 @@ class t3lib_TCEforms_inline {
 			$item .= $levelLinks;
 		}
 
-			// add Drag&Drop functions for sorting to TCEforms::$additionalJS_post
+		if (is_array($config['customControls'])) {
+			$item .= '<div id="' . $nameObject . '_customControls">';
+			foreach ($config['customControls'] as $customControlConfig) {
+				$parameters = array(
+					'table' => $table,
+					'field' => $field,
+					'row' => $row,
+					'nameObject' => $nameObject,
+					'nameForm' => $nameForm,
+					'config' => $config
+				);
+				$item .= t3lib_div::callUserFunction($customControlConfig, $parameters, $this);
+			}
+			$item .= '</div>';
+		}
+
+			// Add Drag&Drop functions for sorting to TCEforms::$additionalJS_post
 		if (count($relationList) > 1 && $config['appearance']['useSortable']) {
 			$this->addJavaScriptSortable($nameObject . '_records');
 		}
-			// publish the uids of the child records in the given order to the browser
+			// Publish the uids of the child records in the given order to the browser
 		$item .= '<input type="hidden" name="' . $nameForm . '" value="' . implode(',', $relationList) . '" class="inlineRecord" />';
-			// close the wrap for all inline fields (container)
+			// Close the wrap for all inline fields (container)
 		$item .= '</div>';
 
-			// on finishing this section, remove the last item from the structure stack
+			// On finishing this section, remove the last item from the structure stack
 		$this->popStructure();
 
-			// if this was the first call to the inline type, restore the values
+			// If this was the first call to the inline type, restore the values
 		if (!$this->getStructureDepth()) {
 			unset($this->inlineFirstPid);
 		}
@@ -347,21 +312,19 @@ class t3lib_TCEforms_inline {
 		return $item;
 	}
 
-
 	/*******************************************************
 	 *
 	 * Regular rendering of forms, fields, etc.
 	 *
 	 *******************************************************/
 
-
 	/**
 	 * Render the form-fields of a related (foreign) record.
 	 *
-	 * @param	string		$parentUid: The uid of the parent (embedding) record (uid or NEW...)
-	 * @param	array		$rec: The table record of the child/embedded table (normaly post-processed by t3lib_transferData)
-	 * @param	array		$config: content of $PA['fieldConf']['config']
-	 * @return	string		The HTML code for this "foreign record"
+	 * @param string $parentUid The uid of the parent (embedding) record (uid or NEW...)
+	 * @param array $rec The table record of the child/embedded table (normaly post-processed by t3lib_transferData)
+	 * @param array $config Content of $PA['fieldConf']['config']
+	 * @return string The HTML code for this "foreign record"
 	 */
 	function renderForeignRecord($parentUid, $rec, $config = array()) {
 		$foreign_table = $config['foreign_table'];
@@ -378,7 +341,7 @@ class t3lib_TCEforms_inline {
 		$this->inlineData['map'][$this->inlineNames['form']] = $this->inlineNames['object'];
 
 			// Set this variable if we handle a brand new unsaved record:
-		$isNewRecord = t3lib_div::testInt($rec['uid']) ? FALSE : TRUE;
+		$isNewRecord = t3lib_utility_Math::canBeInterpretedAsInteger($rec['uid']) ? FALSE : TRUE;
 			// Set this variable if the record is virtual and only show with header and not editable fields:
 		$isVirtualRecord = (isset($rec['__virtual']) && $rec['__virtual']);
 			// If there is a selector field, normalize it:
@@ -397,6 +360,7 @@ class t3lib_TCEforms_inline {
 			// Put the current level also to the dynNestedStack of TCEforms:
 		$this->fObj->pushToDynNestedStack('inline', $objectId);
 
+		$class = '';
 		if (!$isVirtualRecord) {
 				// Get configuration:
 			$collapseAll = (isset($config['appearance']['collapseAll']) && $config['appearance']['collapseAll']);
@@ -404,7 +368,7 @@ class t3lib_TCEforms_inline {
 			$ajaxLoad = (isset($config['appearance']['ajaxLoad']) && !$config['appearance']['ajaxLoad']) ? FALSE : TRUE;
 
 			if ($isNewRecord) {
-					// show this record expanded or collapsed
+					// Show this record expanded or collapsed
 				$isExpanded = ($expandAll || (!$collapseAll ? 1 : 0));
 			} else {
 				$isExpanded = ($config['renderFieldsOnly'] || (!$collapseAll && $this->getExpandedCollapsedState($foreign_table, $rec['uid'])) || $expandAll);
@@ -412,8 +376,11 @@ class t3lib_TCEforms_inline {
 				// Render full content ONLY IF this is a AJAX-request, a new record, the record is not collapsed or AJAX-loading is explicitly turned off
 			if ($isNewRecord || $isExpanded || !$ajaxLoad) {
 				$combination = $this->renderCombinationTable($rec, $appendFormFieldNames, $config);
-				$fields = $this->renderMainFields($foreign_table, $rec);
+
+				$overruleTypesArray = isset($config['foreign_types']) ? $config['foreign_types'] : array();
+				$fields = $this->renderMainFields($foreign_table, $rec, $overruleTypesArray);
 				$fields = $this->wrapFormsSection($fields);
+
 					// Replace returnUrl in Wizard-Code, if this is an AJAX call
 				$ajaxArguments = t3lib_div::_GP('ajax');
 				if (isset($ajaxArguments[2]) && trim($ajaxArguments[2]) != '') {
@@ -425,14 +392,14 @@ class t3lib_TCEforms_inline {
 				$fields = '<!--notloaded-->';
 			}
 			if ($isNewRecord) {
-					// get the top parent table
+					// Get the top parent table
 				$top = $this->getStructureLevel(0);
 				$ucFieldName = 'uc[inlineView][' . $top['table'] . '][' . $top['uid'] . ']' . $appendFormFieldNames;
-					// set additional fields for processing for saving
+					// Set additional fields for processing for saving
 				$fields .= '<input type="hidden" name="' . $this->prependFormFieldNames . $appendFormFieldNames . '[pid]" value="' . $rec['pid'] . '"/>';
 				$fields .= '<input type="hidden" name="' . $ucFieldName . '" value="' . $isExpanded . '" />';
 			} else {
-					// set additional field for processing for saving
+					// Set additional field for processing for saving
 				$fields .= '<input type="hidden" name="' . $this->prependCmdFieldNames . $appendFormFieldNames . '[delete]" value="1" disabled="disabled" />';
 				if (!$isExpanded && !empty($GLOBALS['TCA'][$foreign_table]['ctrl']['enablecolumns']['disabled'])) {
 					$checked = (!empty($rec['hidden']) ? ' checked="checked"' : '');
@@ -440,23 +407,25 @@ class t3lib_TCEforms_inline {
 					$fields .= '<input type="input" name="' . $this->prependFormFieldNames . $appendFormFieldNames . '[hidden]" value="' . $rec['hidden'] . '" />';
 				}
 			}
-				// if this record should be shown collapsed
+				// If this record should be shown collapsed
 			if (!$isExpanded) {
-				$appearanceStyleFields = ' style="display: none;"';
+				$class = 't3-form-field-container-inline-collapsed';
 			}
 		}
 
 		if ($config['renderFieldsOnly']) {
 			$out = $fields . $combination;
 		} else {
-				// set the record container with data for output
-			$out = '<div class="t3-form-field-record-inline" id="' . $objectId . '_fields"' . $appearanceStyleFields . '>' . $fields . $combination . '</div>';
-			$header = $this->renderForeignRecordHeader($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
+				// Set the record container with data for output
+			$out = '<div class="t3-form-field-record-inline" id="' . $objectId . '_fields" data-expandSingle="' . ($config['appearance']['expandSingle'] ? 1 : 0) . '" data-returnURL="' . htmlspecialchars(t3lib_div::getIndpEnv('REQUEST_URI')) . '">' . $fields . $combination . '</div>';
+
+			$header  = t3lib_iconWorks::getSpriteIcon('apps-irre-' . ($class != '' ? 'collapsed' : 'expanded'));
+			$header .= $this->renderForeignRecordHeader($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
 			$out = '<div class="t3-form-field-header-inline" id="' . $objectId . '_header">' . $header . '</div>' . $out;
-				// wrap the header, fields and combination part of a child record with a div container
+				// Wrap the header, fields and combination part of a child record with a div container
 			$classMSIE = ($this->fObj->clientInfo['BROWSER'] == 'msie' && $this->fObj->clientInfo['VERSION'] < 8 ? 'MSIE' : '');
-			$class = 'inlineDiv' . $classMSIE . ($isNewRecord ? ' inlineIsNewRecord' : '');
-			$out = '<div id="' . $objectId . '_div" class="t3-form-field-container-inline ' . $class . '">' . $out . '</div>';
+			$class .= ' inlineDiv' . $classMSIE . ($isNewRecord ? ' inlineIsNewRecord' : '');
+			$out = '<div id="' . $objectId . '_div" class="t3-form-field-container-inline ' . trim($class) . '">' . $out . '</div>';
 		}
 			// Remove the current level also from the dynNestedStack of TCEforms:
 		$this->fObj->popFromDynNestedStack();
@@ -464,15 +433,15 @@ class t3lib_TCEforms_inline {
 		return $out;
 	}
 
-
 	/**
 	 * Wrapper for TCEforms::getMainFields().
 	 *
-	 * @param	string		$table: The table name
-	 * @param	array		$row: The record to be rendered
-	 * @return	string		The rendered form
+	 * @param string $table The table name
+	 * @param array $row The record to be rendered
+	 * @param array $overruleTypesArray Overrule TCA [types] array, e.g to overrride [showitem] configuration of a particular type
+	 * @return string The rendered form
 	 */
-	protected function renderMainFields($table, $row) {
+	protected function renderMainFields($table, array $row, array $overruleTypesArray = array()) {
 			// The current render depth of t3lib_TCEforms:
 		$depth = $this->fObj->renderDepth;
 			// If there is some information about already rendered palettes of our parent, store this info:
@@ -480,7 +449,7 @@ class t3lib_TCEforms_inline {
 			$palettesRendered = $this->fObj->palettesRendered[$depth][$table];
 		}
 			// Render the form:
-		$content = $this->fObj->getMainFields($table, $row, $depth);
+		$content = $this->fObj->getMainFields($table, $row, $depth, $overruleTypesArray);
 			// If there was some info about rendered palettes stored, write it back for our parent:
 		if (isset($palettesRendered)) {
 			$this->fObj->palettesRendered[$depth][$table] = $palettesRendered;
@@ -488,24 +457,21 @@ class t3lib_TCEforms_inline {
 		return $content;
 	}
 
-
 	/**
 	 * Renders the HTML header for a foreign record, such as the title, toggle-function, drag'n'drop, etc.
 	 * Later on the command-icons are inserted here.
 	 *
-	 * @param	string		$parentUid: The uid of the parent (embedding) record (uid or NEW...)
-	 * @param	string		$foreign_table: The foreign_table we create a header for
-	 * @param	array		$rec: The current record of that foreign_table
-	 * @param	array		$config: content of $PA['fieldConf']['config']
-	 * @param	boolean		$isVirtualRecord:
-	 * @return	string		The HTML code of the header
+	 * @param string $parentUid The uid of the parent (embedding) record (uid or NEW...)
+	 * @param string $foreign_table The foreign_table we create a header for
+	 * @param array $rec The current record of that foreign_table
+	 * @param array $config content of $PA['fieldConf']['config']
+	 * @param boolean $isVirtualRecord
+	 * @return string The HTML code of the header
 	 */
 	function renderForeignRecordHeader($parentUid, $foreign_table, $rec, $config, $isVirtualRecord = FALSE) {
 			// Init:
 		$objectId = $this->inlineNames['object'] . self::Structure_Separator . $foreign_table . self::Structure_Separator . $rec['uid'];
-		$expandSingle = $config['appearance']['expandSingle'] ? 1 : 0;
-			// we need the returnUrl of the main script when loading the fields via AJAX-call (to correct wizard code, so include it as 3rd parameter)
-		$onClick = "return inline.expandCollapseRecord('" . htmlspecialchars($objectId) . "', $expandSingle, '" . rawurlencode(t3lib_div::getIndpEnv('REQUEST_URI')) . "')";
+			// We need the returnUrl of the main script when loading the fields via AJAX-call (to correct wizard code, so include it as 3rd parameter)
 
 			// Pre-Processing:
 		$isOnSymmetricSide = t3lib_loadDBGroup::isOnSymmetricSide($parentUid, $config, $rec);
@@ -524,10 +490,11 @@ class t3lib_TCEforms_inline {
 					'config' => $config,
 				),
 			);
-			$null = NULL; // callUserFunction requires a third parameter, but we don't want to give $this as reference!
+				// callUserFunction requires a third parameter, but we don't want to give $this as reference!
+			$null = NULL;
 			t3lib_div::callUserFunction($GLOBALS['TCA'][$foreign_table]['ctrl']['label_userFunc'], $params, $null);
 			$recTitle = $params['title'];
-				// render the special alternative title
+				// Render the special alternative title
 		} elseif ($hasForeignLabel || $hasSymmetricLabel) {
 			$titleCol = $hasForeignLabel ? $config['foreign_label'] : $config['symmetric_label'];
 			$foreignConfig = $this->getPossibleRecordsSelectorConfig($config, $titleCol);
@@ -546,41 +513,64 @@ class t3lib_TCEforms_inline {
 			if (!strcmp(trim($recTitle), '')) {
 				$recTitle = t3lib_BEfunc::getNoRecordTitle(TRUE);
 			}
-				// render the standard
+				// Render the standard
 		} else {
 			$recTitle = t3lib_BEfunc::getRecordTitle($foreign_table, $rec, TRUE);
+		}
+
+			// Renders a thumbnail for the header
+		if (!empty($config['appearance']['headerThumbnail'])) {
+			$originalRecord = t3lib_BEfunc::getRecord($foreign_table, $rec['uid']);
+
+			if (is_array($originalRecord)) {
+				$fileUid = $originalRecord[$config['appearance']['headerThumbnail']];
+				list($fileUid) = t3lib_div::intExplode(',', $fileUid);
+
+				if ($fileUid) {
+					$fileObject = t3lib_file_Factory::getInstance()->getFileObject($fileUid);
+					if ($fileObject) {
+						$imageUrl = $fileObject->process(
+							t3lib_file_ProcessedFile::CONTEXT_IMAGEPREVIEW,
+							array('width' => 64, 'height' => 64)
+						)->getPublicUrl(TRUE);
+
+						$thumbnail = '<img src="' . $imageUrl . '" alt="' . htmlspecialchars($recTitle) . '">';
+					} else {
+						$thumbnail = FALSE;
+					}
+				}
+			}
 		}
 
 		$altText = t3lib_BEfunc::getRecordIconAltText($rec, $foreign_table);
 		$iconImg = t3lib_iconWorks::getSpriteIconForRecord($foreign_table, $rec, array('title' => htmlspecialchars($altText), 'id' => $objectId . '_icon'));
 		$label = '<span id="' . $objectId . '_label">' . $recTitle . '</span>';
-		if (!$isVirtualRecord) {
-			$iconImg = $this->wrapWithAnchor($iconImg, '#', array('onclick' => $onClick));
-			$label = $this->wrapWithAnchor($label, '#', array('onclick' => $onClick, 'style' => 'display: block;'));
-		}
 
 		$ctrl = $this->renderForeignRecordHeaderControl($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
 
-			// @TODO: Check the table wrapping and the CSS definitions
 		$header =
-				'<table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-right: ' . $this->inlineStyles['margin-right'] . 'px;"' .
-				($this->fObj->borderStyle[2] ? ' background="' . htmlspecialchars($this->backPath . $this->fObj->borderStyle[2]) . '"' : '') .
-				($this->fObj->borderStyle[3] ? ' class="' . htmlspecialchars($this->fObj->borderStyle[3]) . '"' : '') . '>' .
-				'<tr class="class-main12"><td width="18" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td><td align="left"><strong>' . $label . '</strong></td><td align="right">' . $ctrl . '</td></tr></table>';
+				'<table>' .
+				'<tr>' .
+					(!empty($config['appearance']['headerThumbnail']) && $thumbnail
+						?	'<td class="t3-form-field-header-inline-thumbnail" id="' . $objectId . '_thumbnailcontainer">' . $thumbnail . '</td>'
+						:	'<td class="t3-form-field-header-inline-icon" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td>') .
+					'<td class="t3-form-field-header-inline-summary">' . $label . '</td>' .
+					'<td clasS="t3-form-field-header-inline-ctrl">' . $ctrl . '</td>' .
+				'</tr>' .
+				'</table>';
 
 		return $header;
 	}
-
 
 	/**
 	 * Render the control-icons for a record header (create new, sorting, delete, disable/enable).
 	 * Most of the parts are copy&paste from class.db_list_extra.inc and modified for the JavaScript calls here
 	 *
-	 * @param	string		$parentUid: The uid of the parent (embedding) record (uid or NEW...)
-	 * @param	string		$foreign_table: The table (foreign_table) we create control-icons for
-	 * @param	array		$rec: The current record of that foreign_table
-	 * @param	array		$config: (modified) TCA configuration of the field
-	 * @return	string		The HTML code with the control-icons
+	 * @param string $parentUid The uid of the parent (embedding) record (uid or NEW...)
+	 * @param string $foreign_table The table (foreign_table) we create control-icons for
+	 * @param array $rec The current record of that foreign_table
+	 * @param array $config (modified) TCA configuration of the field
+	 * @return string The HTML code with the control-icons
 	 */
 	function renderForeignRecordHeaderControl($parentUid, $foreign_table, $rec, $config = array(), $isVirtualRecord = FALSE) {
 			// Initialize:
@@ -629,8 +619,8 @@ class t3lib_TCEforms_inline {
 			// "Info": (All records)
 		if ($enabledControls['info'] && !$isNewItem) {
 			$cells['info'] = '<a href="#" onclick="' . htmlspecialchars('top.launchView(\'' . $foreign_table . '\', \'' . $rec['uid'] . '\'); return false;') . '">' .
-							 t3lib_iconWorks::getSpriteIcon('status-dialog-information', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:showInfo', TRUE))) .
-							 '</a>';
+							t3lib_iconWorks::getSpriteIcon('status-dialog-information', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:showInfo', TRUE))) .
+							'</a>';
 		}
 			// If the table is NOT a read-only table, then show these links:
 		if (!$tcaTableCtrl['readOnly'] && !$isVirtualRecord) {
@@ -648,18 +638,14 @@ class t3lib_TCEforms_inline {
 					}
 					$cells['new'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '"' . $class . $style . '>' .
 									t3lib_iconWorks::getSpriteIcon('actions-' . ($isPagesTable ? 'page' : 'document') . '-new',
-																   array(
+																array(
 																		'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:new' . ($isPagesTable ? 'Page' : 'Record'), 1)
-																   )
+																)
 									) .
 									'</a>';
 				}
 			}
 
-				// Drag&Drop Sorting: Sortable handler for script.aculo.us
-			if ($enabledControls['dragdrop'] && $permsEdit && $enableManualSorting && $config['appearance']['useSortable']) {
-				$cells['dragdrop'] = t3lib_iconWorks::getSpriteIcon('actions-move-move', array('class' => 'sortableHandle', 'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.move', TRUE)));
-			}
 
 				// "Up/Down" links
 			if ($enabledControls['sort'] && $permsEdit && $enableManualSorting) {
@@ -672,8 +658,8 @@ class t3lib_TCEforms_inline {
 				$onClick = "return inline.changeSorting('" . $nameObjectFtId . "', '-1')"; // Down
 				$style = $config['inline']['last'] == $rec['uid'] ? 'style="visibility: hidden;"' : '';
 				$cells['sort.down'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '" class="sortingDown" ' . $style . '>' .
-									  t3lib_iconWorks::getSpriteIcon('actions-move-down', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:moveDown', TRUE))) .
-									  '</a>';
+									t3lib_iconWorks::getSpriteIcon('actions-move-down', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:moveDown', TRUE))) .
+									'</a>';
 			}
 
 				// "Hide/Unhide" links:
@@ -685,21 +671,21 @@ class t3lib_TCEforms_inline {
 											t3lib_iconWorks::getSpriteIcon(
 												'actions-edit-unhide',
 												array(
-													 'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:unHide' . ($isPagesTable ? 'Page' : ''), 1),
-													 'id' => $nameObjectFtId . '_disabled'
+													'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:unHide' . ($isPagesTable ? 'Page' : ''), 1),
+													'id' => $nameObjectFtId . '_disabled'
 												)
 											) .
 											'</a>';
 				} else {
 					$cells['hide.hide'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
-										  t3lib_iconWorks::getSpriteIcon(
-											  'actions-edit-hide',
-											  array(
-												   'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:hide' . ($isPagesTable ? 'Page' : ''), 1),
-												   'id' => $nameObjectFtId . '_disabled'
-											  )
-										  ) .
-										  '</a>';
+										t3lib_iconWorks::getSpriteIcon(
+											'actions-edit-hide',
+											array(
+												'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:hide' . ($isPagesTable ? 'Page' : ''), 1),
+												'id' => $nameObjectFtId . '_disabled'
+											)
+										) .
+										'</a>';
 				}
 			}
 
@@ -707,34 +693,37 @@ class t3lib_TCEforms_inline {
 			if ($enabledControls['delete'] && ($isPagesTable && $localCalcPerms & 4 || !$isPagesTable && $calcPerms & 16)) {
 				$onClick = "inline.deleteRecord('" . $nameObjectFtId . "');";
 				$cells['delete'] = '<a href="#" onclick="' . htmlspecialchars('if (confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning')) . ')) {	' . $onClick . ' } return false;') . '">' .
-								   t3lib_iconWorks::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:delete', TRUE))) .
-								   '</a>';
+								t3lib_iconWorks::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:delete', TRUE))) .
+								'</a>';
+			}
+
+				// Drag&Drop Sorting: Sortable handler for script.aculo.us
+			if ($enabledControls['dragdrop'] && $permsEdit && $enableManualSorting && $config['appearance']['useSortable']) {
+				$cells['dragdrop'] = t3lib_iconWorks::getSpriteIcon('actions-move-move', array('class' => 'sortableHandle', 'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.move', TRUE)));
 			}
 				// If this is a virtual record offer a minimized set of icons for user interaction:
 		} elseif ($isVirtualRecord) {
 			if ($enabledControls['localize'] && isset($rec['__create'])) {
-				$onClick = "inline.synchronizeLocalizeRecords('" . $nameObjectFt . "', " . $rec['uid'] . ");";
+				$onClick = "inline.synchronizeLocalizeRecords('" . $nameObjectFt . "', " . $rec['uid'] . ');';
 				$cells['localize'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
-									 t3lib_iconWorks::getSpriteIcon('actions-document-localize', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:localize', TRUE))) .
-									 '</a>';
+									t3lib_iconWorks::getSpriteIcon('actions-document-localize', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:localize', TRUE))) .
+									'</a>';
 			}
 		}
 
 			// If the record is edit-locked	by another user, we will show a little warning sign:
 		if ($lockInfo = t3lib_BEfunc::isRecordLocked($foreign_table, $rec['uid'])) {
 			$cells['locked'] = '<a href="#" onclick="' . htmlspecialchars('alert(' . $GLOBALS['LANG']->JScharCode($lockInfo['msg']) . ');return false;') . '">' .
-							   t3lib_iconWorks::getSpriteIcon('status-warning-in-use', array('title' => htmlspecialchars($lockInfo['msg']))) .
-							   '</a>';
+							t3lib_iconWorks::getSpriteIcon('status-warning-in-use', array('title' => htmlspecialchars($lockInfo['msg']))) .
+							'</a>';
 		}
 
 			// Hook: Post-processing of single controls for specific child records:
 		foreach ($this->hookObjects as $hookObj) {
 			$hookObj->renderForeignRecordHeaderControl_postProcess($parentUid, $foreign_table, $rec, $config, $isVirtualRecord, $cells);
 		}
-			// Compile items into a DIV-element:
-		return '
-											<!-- CONTROL PANEL: ' . $foreign_table . ':' . $rec['uid'] . ' -->
-											<div class="typo3-DBctrl">' . implode('', $cells) . '</div>';
+
+		return '<!-- CONTROL PANEL: ' . $foreign_table . ':' . $rec['uid'] . ' -->'  . implode('', $cells);
 	}
 
 
@@ -743,10 +732,10 @@ class t3lib_TCEforms_inline {
 	 * so two tables are combined (the intermediate table with attributes and the sub-embedded table).
 	 * -> This is a direct embedding over two levels!
 	 *
-	 * @param	array		$rec: The table record of the child/embedded table (normaly post-processed by t3lib_transferData)
-	 * @param	string		$appendFormFieldNames: The [<table>][<uid>] of the parent record (the intermediate table)
-	 * @param	array		$config: content of $PA['fieldConf']['config']
-	 * @return	string		A HTML string with <table> tag around.
+	 * @param array $rec The table record of the child/embedded table (normaly post-processed by t3lib_transferData)
+	 * @param string $appendFormFieldNames The [<table>][<uid>] of the parent record (the intermediate table)
+	 * @param array $config content of $PA['fieldConf']['config']
+	 * @return string A HTML string with <table> tag around.
 	 */
 	function renderCombinationTable(&$rec, $appendFormFieldNames, $config = array()) {
 		$foreign_table = $config['foreign_table'];
@@ -757,7 +746,7 @@ class t3lib_TCEforms_inline {
 			$comboRecord = array();
 
 				// If record does already exist, load it:
-			if ($rec[$foreign_selector] && t3lib_div::testInt($rec[$foreign_selector])) {
+			if ($rec[$foreign_selector] && t3lib_utility_Math::canBeInterpretedAsInteger($rec[$foreign_selector])) {
 				$comboRecord = $this->getRecord(
 					$this->inlineFirstPid,
 					$comboConfig['foreign_table'],
@@ -773,17 +762,17 @@ class t3lib_TCEforms_inline {
 				$isNewRecord = TRUE;
 			}
 
-				// get the TCEforms interpretation of the TCA of the child table
+				// Get the TCEforms interpretation of the TCA of the child table
 			$out = $this->renderMainFields($comboConfig['foreign_table'], $comboRecord);
 			$out = $this->wrapFormsSection($out, array(), array('class' => 'wrapperAttention'));
 
-				// if this is a new record, add a pid value to store this record and the pointer value for the intermediate table
+				// If this is a new record, add a pid value to store this record and the pointer value for the intermediate table
 			if ($isNewRecord) {
 				$comboFormFieldName = $this->prependFormFieldNames . '[' . $comboConfig['foreign_table'] . '][' . $comboRecord['uid'] . '][pid]';
 				$out .= '<input type="hidden" name="' . $comboFormFieldName . '" value="' . $comboRecord['pid'] . '" />';
 			}
 
-				// if the foreign_selector field is also responsible for uniqueness, tell the browser the uid of the "other" side of the relation
+				// If the foreign_selector field is also responsible for uniqueness, tell the browser the uid of the "other" side of the relation
 			if ($isNewRecord || $config['foreign_unique'] == $foreign_selector) {
 				$parentFormFieldName = $this->prependFormFieldNames . $appendFormFieldNames . '[' . $foreign_selector . ']';
 				$out .= '<input type="hidden" name="' . $parentFormFieldName . '" value="' . $comboRecord['uid'] . '" />';
@@ -793,15 +782,14 @@ class t3lib_TCEforms_inline {
 		return $out;
 	}
 
-
 	/**
 	 * Get a selector as used for the select type, to select from all available
 	 * records and to create a relation to the embedding record (e.g. like MM).
 	 *
-	 * @param	array		$selItems: Array of all possible records
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @param	array		$uniqueIds: The uids that have already been used and should be unique
-	 * @return	string		A HTML <select> box with all possible records
+	 * @param array $selItems Array of all possible records
+	 * @param array $conf TCA configuration of the parent(!) field
+	 * @param array $uniqueIds The uids that have already been used and should be unique
+	 * @return string A HTML <select> box with all possible records
 	 */
 	function renderPossibleRecordsSelector($selItems, $conf, $uniqueIds = array()) {
 		$foreign_table = $conf['foreign_table'];
@@ -819,16 +807,15 @@ class t3lib_TCEforms_inline {
 		return $item;
 	}
 
-
 	/**
 	 * Get a selector as used for the select type, to select from all available
 	 * records and to create a relation to the embedding record (e.g. like MM).
 	 *
-	 * @param	array		$selItems: Array of all possible records
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @param	array		$PA: An array with additional configuration options
-	 * @param	array		$uniqueIds: The uids that have already been used and should be unique
-	 * @return	string		A HTML <select> box with all possible records
+	 * @param array $selItems Array of all possible records
+	 * @param array $conf TCA configuration of the parent(!) field
+	 * @param array $PA An array with additional configuration options
+	 * @param array $uniqueIds The uids that have already been used and should be unique
+	 * @return string A HTML <select> box with all possible records
 	 */
 	function renderPossibleRecordsSelectorTypeSelect($selItems, $conf, &$PA, $uniqueIds = array()) {
 		$foreign_table = $conf['foreign_table'];
@@ -852,16 +839,16 @@ class t3lib_TCEforms_inline {
 				}
 				if (!in_array($p[1], $uniqueIds)) {
 					$opt[] = '<option value="' . htmlspecialchars($p[1]) . '"' .
-							 ' style="' . (in_array($p[1], $uniqueIds) ? '' : '') .
-							 ($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) : '') . '">' .
-							 htmlspecialchars($p[0]) . '</option>';
+							' style="' . (in_array($p[1], $uniqueIds) ? '' : '') .
+							($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) : '') . '">' .
+							htmlspecialchars($p[0]) . '</option>';
 				}
 			}
 
 				// Put together the selector box:
 			$selector_itemListStyle = isset($config['itemListStyle']) ? ' style="' . htmlspecialchars($config['itemListStyle']) . '"' : ' style="' . $this->fObj->defaultMultipleSelectorStyle . '"';
 			$size = intval($conf['size']);
-			$size = $conf['autoSizeMax'] ? t3lib_div::intInRange(count($selItems) + 1, t3lib_div::intInRange($size, 1), $conf['autoSizeMax']) : $size;
+			$size = $conf['autoSizeMax'] ? t3lib_utility_Math::forceIntegerInRange(count($selItems) + 1, t3lib_utility_Math::forceIntegerInRange($size, 1), $conf['autoSizeMax']) : $size;
 			$onChange = "return inline.importNewRecord('" . $this->inlineNames['object'] . self::Structure_Separator . $conf['foreign_table'] . "')";
 			$item = '
 				<select id="' . $this->inlineNames['object'] . self::Structure_Separator . $conf['foreign_table'] . '_selector"' .
@@ -875,57 +862,75 @@ class t3lib_TCEforms_inline {
 					', $opt) . '
 				</select>';
 
-				// add a "Create new relation" link for adding new relations
-				// this is neccessary, if the size of the selector is "1" or if
+				// Add a "Create new relation" link for adding new relations
+				// This is neccessary, if the size of the selector is "1" or if
 				// there is only one record item in the select-box, that is selected by default
-				// the selector-box creates a new relation on using a onChange event (see some line above)
-			$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
+				// The selector-box creates a new relation on using a onChange event (see some line above)
+			if (!empty($conf['appearance']['createNewRelationLinkTitle'])) {
+				$createNewRelationText = $GLOBALS['LANG']->sL($conf['appearance']['createNewRelationLinkTitle'], TRUE);
+			} else {
+				$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
+			}
+
 			$item .=
 					'<a href="#" onclick="' . htmlspecialchars($onChange) . '" align="abstop">' .
 					t3lib_iconWorks::getSpriteIcon('actions-document-new', array('title' => $createNewRelationText)) . $createNewRelationText .
 					'</a>';
-				// wrap the selector and add a spacer to the bottom
+				// Wrap the selector and add a spacer to the bottom
 			$item = '<div style="margin-bottom: 20px;">' . $item . '</div>';
 		}
 
 		return $item;
 	}
 
-
 	/**
 	 * Generate a link that opens an element browser in a new window.
 	 * For group/db there is no way o use a "selector" like a <select>|</select>-box.
 	 *
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @param	array		$PA: An array with additional configuration options
-	 * @return	string		A HTML link that opens an element browser in a new window
+	 * @param array $conf TCA configuration of the parent(!) field
+	 * @param array $PA An array with additional configuration options
+	 * @return string A HTML link that opens an element browser in a new window
 	 */
 	function renderPossibleRecordsSelectorTypeGroupDB($conf, &$PA) {
 		$foreign_table = $conf['foreign_table'];
-
 		$config = $PA['fieldConf']['config'];
 		$allowed = $config['allowed'];
 		$objectPrefix = $this->inlineNames['object'] . self::Structure_Separator . $foreign_table;
+		$mode = 'db';
 
-		$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
-		$onClick = "setFormValueOpenBrowser('db','" . ('|||' . $allowed . '|' . $objectPrefix . '|inline.checkUniqueElement||inline.importElement') . "'); return false;";
-		$item =
-				'<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
-				t3lib_iconWorks::getSpriteIcon('actions-insert-record', array('title' => $createNewRelationText)) . $createNewRelationText .
-				'</a>';
+		if (!empty($conf['appearance']['createNewRelationLinkTitle'])) {
+			$createNewRelationText  = $GLOBALS['LANG']->sL($conf['appearance']['createNewRelationLinkTitle'], TRUE);
+		} else {
+			$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.createNewRelation', 1);
+		}
+
+		if (is_array($config['appearance'])) {
+			if (isset($config['appearance']['elementBrowserType'])) {
+				$mode = $config['appearance']['elementBrowserType'];
+			}
+			if (isset($config['appearance']['elementBrowserAllowed'])) {
+				$allowed = $config['appearance']['elementBrowserAllowed'];
+			}
+		}
+
+		$browserParams = ('|||' . $allowed . '|' . $objectPrefix . '|inline.checkUniqueElement||inline.importElement');
+
+		$onClick = "setFormValueOpenBrowser('".$mode."', '" . $browserParams . "'); return false;";
+		$item = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' .
+			t3lib_iconWorks::getSpriteIcon('actions-insert-record', array('title' => $createNewRelationText)) . $createNewRelationText .
+			'</a>';
 
 		return $item;
 	}
-
 
 	/**
 	 * Creates the HTML code of a general link to be used on a level of inline children.
 	 * The possible keys for the parameter $type are 'newRecord', 'localize' and 'synchronize'.
 	 *
-	 * @param	string		$type: The link type, values are 'newRecord', 'localize' and 'synchronize'.
-	 * @param	string		$objectPrefix: The "path" to the child record to create (e.g. 'data-parentPageId-partenTable-parentUid-parentField-childTable]')
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @return	string		The HTML code of the new link, wrapped in a div
+	 * @param string $type The link type, values are 'newRecord', 'localize' and 'synchronize'.
+	 * @param string $objectPrefix The "path" to the child record to create (e.g. 'data-parentPageId-partenTable-parentUid-parentField-childTable]')
+	 * @param array $conf TCA configuration of the parent(!) field
+	 * @return string The HTML code of the new link, wrapped in a div
 	 */
 	protected function getLevelInteractionLink($type, $objectPrefix, $conf = array()) {
 		$nameObject = $this->inlineNames['object'];
@@ -936,7 +941,7 @@ class t3lib_TCEforms_inline {
 				$icon = 'actions-document-new';
 				$className = 'typo3-newRecordLink';
 				$attributes['class'] = 'inlineNewButton ' . $this->inlineData['config'][$nameObject]['md5'];
-				$attributes['onclick'] = "return inline.createNewRecord('$objectPrefix')";
+				$attributes['onclick'] = "return inline.createNewRecord('" . $objectPrefix . "')";
 				if (isset($conf['inline']['inlineNewButtonStyle']) && $conf['inline']['inlineNewButtonStyle']) {
 					$attributes['style'] = $conf['inline']['inlineNewButtonStyle'];
 				}
@@ -948,14 +953,14 @@ class t3lib_TCEforms_inline {
 				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:localizeAllRecords', 1);
 				$icon = 'actions-document-localize';
 				$className = 'typo3-localizationLink';
-				$attributes['onclick'] = "return inline.synchronizeLocalizeRecords('$objectPrefix', 'localize')";
+				$attributes['onclick'] = "return inline.synchronizeLocalizeRecords('" . $objectPrefix . "', 'localize')";
 			break;
 			case 'synchronize':
 				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:synchronizeWithOriginalLanguage', 1);
 				$icon = 'actions-document-synchronize';
 				$className = 'typo3-synchronizationLink';
 				$attributes['class'] = 'inlineNewButton ' . $this->inlineData['config'][$nameObject]['md5'];
-				$attributes['onclick'] = "return inline.synchronizeLocalizeRecords('$objectPrefix', 'synchronize')";
+				$attributes['onclick'] = "return inline.synchronizeLocalizeRecords('" . $objectPrefix . "', 'synchronize')";
 			break;
 		}
 			// Create the link:
@@ -966,25 +971,10 @@ class t3lib_TCEforms_inline {
 
 
 	/**
-	 * Creates a link/button to create new records
-	 *
-	 * @param	string		$objectPrefix: The "path" to the child record to create (e.g. 'data-parentPageId-partenTable-parentUid-parentField-childTable')
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @return	string		The HTML code for the new record link
-	 * @deprecated	since TYPO3 4.2.0-beta1, this function will be removed in TYPO3 4.6.
-	 */
-	function getNewRecordLink($objectPrefix, $conf = array()) {
-		t3lib_div::logDeprecatedFunction();
-
-		return $this->getLevelInteractionLink('newRecord', $objectPrefix, $conf);
-	}
-
-
-	/**
 	 * Add Sortable functionality using script.acolo.us "Sortable".
 	 *
-	 * @param	string		$objectId: The container id of the object - elements inside will be sortable
-	 * @return	void
+	 * @param string $objectId The container id of the object - elements inside will be sortable
+	 * @return void
 	 */
 	function addJavaScriptSortable($objectId) {
 		$this->fObj->additionalJS_post[] = '
@@ -992,21 +982,19 @@ class t3lib_TCEforms_inline {
 		';
 	}
 
-
 	/*******************************************************
 	 *
 	 * Handling of AJAX calls
 	 *
 	 *******************************************************/
 
-
 	/**
 	 * General processor for AJAX requests concerning IRRE.
 	 * (called by typo3/ajax.php)
 	 *
-	 * @param	array		$params: additional parameters (not used here)
-	 * @param	TYPO3AJAX	$ajaxObj: the TYPO3AJAX object of this request
-	 * @return	void
+	 * @param array $params Additional parameters (not used here)
+	 * @param TYPO3AJAX $ajaxObj The TYPO3AJAX object of this request
+	 * @return void
 	 */
 	public function processAjaxRequest($params, $ajaxObj) {
 
@@ -1038,7 +1026,6 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
 	/**
 	 * Construct runtime environment for Inline Relational Record Editing.
 	 * - creates an anoymous SC_alt_doc in $GLOBALS['SOBE']
@@ -1046,59 +1033,56 @@ class t3lib_TCEforms_inline {
 	 * - sets ourself as reference to $GLOBALS['SOBE']->tceforms->inline
 	 * - sets $GLOBALS['SOBE']->tceforms->RTEcounter to the current situation on client-side
 	 *
-	 * @param	array		&$ajaxArguments: The arguments to be processed by the AJAX request
-	 * @return	void
+	 * @param array &$ajaxArguments The arguments to be processed by the AJAX request
+	 * @return void
 	 */
 	protected function processAjaxRequestConstruct(&$ajaxArguments) {
-		global $SOBE, $BE_USER, $TYPO3_CONF_VARS;
-
-		require_once(PATH_typo3 . 'template.php');
-
 		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_alt_doc.xml');
 
 			// Create a new anonymous object:
-		$SOBE = new stdClass();
-		$SOBE->MOD_MENU = array(
+		$GLOBALS['SOBE'] = new stdClass();
+		$GLOBALS['SOBE']->MOD_MENU = array(
 			'showPalettes' => '',
 			'showDescriptions' => '',
 			'disableRTE' => ''
 		);
 			// Setting virtual document name
-		$SOBE->MCONF['name'] = 'xMOD_alt_doc.php';
+		$GLOBALS['SOBE']->MCONF['name'] = 'xMOD_alt_doc.php';
 			// CLEANSE SETTINGS
-		$SOBE->MOD_SETTINGS = t3lib_BEfunc::getModuleData(
-			$SOBE->MOD_MENU,
+		$GLOBALS['SOBE']->MOD_SETTINGS = t3lib_BEfunc::getModuleData(
+			$GLOBALS['SOBE']->MOD_MENU,
 			t3lib_div::_GP('SET'),
-			$SOBE->MCONF['name']
+			$GLOBALS['SOBE']->MCONF['name']
 		);
 			// Create an instance of the document template object
-		$SOBE->doc = t3lib_div::makeInstance('template');
-		$SOBE->doc->backPath = $GLOBALS['BACK_PATH'];
+		$GLOBALS['SOBE']->doc = t3lib_div::makeInstance('template');
+		$GLOBALS['SOBE']->doc->backPath = $GLOBALS['BACK_PATH'];
 			// Initialize TCEforms (rendering the forms)
-		$SOBE->tceforms = t3lib_div::makeInstance('t3lib_TCEforms');
-		$SOBE->tceforms->inline = $this;
-		$SOBE->tceforms->RTEcounter = intval(array_shift($ajaxArguments));
-		$SOBE->tceforms->initDefaultBEMode();
-		$SOBE->tceforms->palettesCollapsed = !$SOBE->MOD_SETTINGS['showPalettes'];
-		$SOBE->tceforms->disableRTE = $SOBE->MOD_SETTINGS['disableRTE'];
-		$SOBE->tceforms->enableClickMenu = TRUE;
-		$SOBE->tceforms->enableTabMenu = TRUE;
+		$GLOBALS['SOBE']->tceforms = t3lib_div::makeInstance('t3lib_TCEforms');
+		$GLOBALS['SOBE']->tceforms->inline = $this;
+		$GLOBALS['SOBE']->tceforms->RTEcounter = intval(array_shift($ajaxArguments));
+		$GLOBALS['SOBE']->tceforms->initDefaultBEMode();
+		$GLOBALS['SOBE']->tceforms->palettesCollapsed = !$GLOBALS['SOBE']->MOD_SETTINGS['showPalettes'];
+		$GLOBALS['SOBE']->tceforms->disableRTE = $GLOBALS['SOBE']->MOD_SETTINGS['disableRTE'];
+		$GLOBALS['SOBE']->tceforms->enableClickMenu = TRUE;
+		$GLOBALS['SOBE']->tceforms->enableTabMenu = TRUE;
 			// Clipboard is initialized:
-		$SOBE->tceforms->clipObj = t3lib_div::makeInstance('t3lib_clipboard'); // Start clipboard
-		$SOBE->tceforms->clipObj->initializeClipboard(); // Initialize - reads the clipboard content from the user session
+			// Start clipboard
+		$GLOBALS['SOBE']->tceforms->clipObj = t3lib_div::makeInstance('t3lib_clipboard');
+			// Initialize - reads the clipboard content from the user session
+		$GLOBALS['SOBE']->tceforms->clipObj->initializeClipboard();
 			// Setting external variables:
-		if ($BE_USER->uc['edit_showFieldHelp'] != 'text' && $SOBE->MOD_SETTINGS['showDescriptions']) {
-			$SOBE->tceforms->edit_showFieldHelp = 'text';
+		if ($GLOBALS['BE_USER']->uc['edit_showFieldHelp'] != 'text' && $GLOBALS['SOBE']->MOD_SETTINGS['showDescriptions']) {
+			$GLOBALS['SOBE']->tceforms->edit_showFieldHelp = 'text';
 		}
 	}
-
 
 	/**
 	 * Determines and sets several script calls to a JSON array, that would have been executed if processed in non-AJAX mode.
 	 *
-	 * @param	array		&$jsonArray: Reference of the array to be used for JSON
-	 * @param	array		$config: The configuration of the IRRE field of the parent record
-	 * @return	void
+	 * @param array &$jsonArray Reference of the array to be used for JSON
+	 * @param array $config The configuration of the IRRE field of the parent record
+	 * @return void
 	 */
 	protected function getCommonScriptCalls(&$jsonArray, $config) {
 			// Add data that would have been added at the top of a regular TCEforms call:
@@ -1117,30 +1101,11 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
-	/**
-	 * Initialize environment for AJAX calls
-	 *
-	 * @param	string		$method: Name of the method to be called
-	 * @param	array		$arguments: Arguments to be delivered to the method
-	 * @return	void
-	 * @deprecated	since TYPO3 4.2.0-alpha3, this function will be removed in TYPO3 4.6.
-	 */
-	function initForAJAX($method, &$arguments) {
-		t3lib_div::logDeprecatedFunction();
-
-			// Set t3lib_TCEforms::$RTEcounter to the given value:
-		if ($method == 'createNewRecord') {
-			$this->fObj->RTEcounter = intval(array_shift($arguments));
-		}
-	}
-
-
 	/**
 	 * Generates an error message that transferred as JSON for AJAX calls
 	 *
-	 * @param	string		$message: The error message to be shown
-	 * @return	array		The error message in a JSON array
+	 * @param string $message The error message to be shown
+	 * @return array The error message in a JSON array
 	 */
 	protected function getErrorMessageForAJAX($message) {
 		$jsonArray = array(
@@ -1152,21 +1117,20 @@ class t3lib_TCEforms_inline {
 		return $jsonArray;
 	}
 
-
 	/**
 	 * Handle AJAX calls to show a new inline-record of the given table.
 	 * Normally this method is never called from inside TYPO3. Always from outside by AJAX.
 	 *
-	 * @param	string		$domObjectId: The calling object in hierarchy, that requested a new record.
-	 * @param	string		$foreignUid: If set, the new record should be inserted after that one.
-	 * @return	array		An array to be used for JSON
+	 * @param string $domObjectId The calling object in hierarchy, that requested a new record.
+	 * @param string $foreignUid If set, the new record should be inserted after that one.
+	 * @return array An array to be used for JSON
 	 */
 	function createNewRecord($domObjectId, $foreignUid = 0) {
-			// the current table - for this table we should add/import records
+			// The current table - for this table we should add/import records
 		$current = $this->inlineStructure['unstable'];
-			// the parent table - this table embeds the current table
+			// The parent table - this table embeds the current table
 		$parent = $this->getStructureLevel(-1);
-			// get TCA 'config' of the parent table
+			// Get TCA 'config' of the parent table
 		if (!$this->checkConfiguration($parent['config'])) {
 			return $this->getErrorMessageForAJAX('Wrong configuration in table ' . $parent['table']);
 		}
@@ -1178,8 +1142,8 @@ class t3lib_TCEforms_inline {
 			// Put the current level also to the dynNestedStack of TCEforms:
 		$this->fObj->pushToDynNestedStack('inline', $this->inlineNames['object']);
 
-			// dynamically create a new record using t3lib_transferData
-		if (!$foreignUid || !t3lib_div::testInt($foreignUid) || $config['foreign_selector']) {
+			// Dynamically create a new record using t3lib_transferData
+		if (!$foreignUid || !t3lib_utility_Math::canBeInterpretedAsInteger($foreignUid) || $config['foreign_selector']) {
 			$record = $this->getNewRecord($this->inlineFirstPid, $current['table']);
 				// Set language of new child record to the language of the parent record:
 			if ($config['localizationMode'] == 'select') {
@@ -1191,12 +1155,12 @@ class t3lib_TCEforms_inline {
 				}
 			}
 
-				// dynamically import an existing record (this could be a call from a select box)
+				// Dynamically import an existing record (this could be a call from a select box)
 		} else {
 			$record = $this->getRecord($this->inlineFirstPid, $current['table'], $foreignUid);
 		}
 
-			// now there is a foreign_selector, so there is a new record on the intermediate table, but
+			// Now there is a foreign_selector, so there is a new record on the intermediate table, but
 			// this intermediate table holds a field, which is responsible for the foreign_selector, so
 			// we have to set this field to the uid we get - or if none, to a new uid
 		if ($config['foreign_selector'] && $foreignUid) {
@@ -1206,11 +1170,11 @@ class t3lib_TCEforms_inline {
 			$record[$config['foreign_selector']] .= $foreignUid;
 		}
 
-			// the HTML-object-id's prefix of the dynamically created record
+			// The HTML-object-id's prefix of the dynamically created record
 		$objectPrefix = $this->inlineNames['object'] . self::Structure_Separator . $current['table'];
 		$objectId = $objectPrefix . self::Structure_Separator . $record['uid'];
 
-			// render the foreign record that should passed back to browser
+			// Render the foreign record that should passed back to browser
 		$item = $this->renderForeignRecord($parent['uid'], $record, $config);
 		if ($item === FALSE) {
 			return $this->getErrorMessageForAJAX('Access denied');
@@ -1220,29 +1184,29 @@ class t3lib_TCEforms_inline {
 			$jsonArray = array(
 				'data' => $item,
 				'scriptCall' => array(
-					"inline.domAddNewRecord('bottom','" . $this->inlineNames['object'] . "_records','$objectPrefix',json.data);",
-					"inline.memorizeAddRecord('$objectPrefix','" . $record['uid'] . "',null,'$foreignUid');"
+					"inline.domAddNewRecord('bottom','" . $this->inlineNames['object'] . "_records','" . $objectPrefix . "',json.data);",
+					"inline.memorizeAddRecord('" . $objectPrefix . "','" . $record['uid'] . "',null,'" . $foreignUid . "');"
 				)
 			);
 
-			// append the HTML data after an existing record in the container
+			// Append the HTML data after an existing record in the container
 		} else {
 			$jsonArray = array(
 				'data' => $item,
 				'scriptCall' => array(
-					"inline.domAddNewRecord('after','" . $domObjectId . '_div' . "','$objectPrefix',json.data);",
-					"inline.memorizeAddRecord('$objectPrefix','" . $record['uid'] . "','" . $current['uid'] . "','$foreignUid');"
+					"inline.domAddNewRecord('after','" . $domObjectId . '_div' . "','" . $objectPrefix. "',json.data);",
+					"inline.memorizeAddRecord('" . $objectPrefix . "','" . $record['uid'] . "','" . $current['uid'] . "','" . $foreignUid . "');"
 				)
 			);
 		}
 		$this->getCommonScriptCalls($jsonArray, $config);
 			// Collapse all other records if requested:
 		if (!$collapseAll && $expandSingle) {
-			$jsonArray['scriptCall'][] = "inline.collapseAllRecords('$objectId', '$objectPrefix', '" . $record['uid'] . "');";
+			$jsonArray['scriptCall'][] = "inline.collapseAllRecords('" . $objectId . "', '" . $objectPrefix . "', '" . $record['uid'] . "');";
 		}
-			// tell the browser to scroll to the newly created record
+			// Tell the browser to scroll to the newly created record
 		$jsonArray['scriptCall'][] = "Element.scrollTo('" . $objectId . "_div');";
-			// fade out and fade in the new record in the browser view to catch the user's eye
+			// Fade out and fade in the new record in the browser view to catch the user's eye
 		$jsonArray['scriptCall'][] = "inline.fadeOutFadeIn('" . $objectId . "_div');";
 
 			// Remove the current level also from the dynNestedStack of TCEforms:
@@ -1252,17 +1216,16 @@ class t3lib_TCEforms_inline {
 		return $jsonArray;
 	}
 
-
 	/**
 	 * Handle AJAX calls to localize all records of a parent, localize a single record or to synchronize with the original language parent.
 	 *
-	 * @param	string		$domObjectId: The calling object in hierarchy, that requested a new record.
-	 * @param	mixed		$type: Defines the type 'localize' or 'synchronize' (string) or a single uid to be localized (integer)
-	 * @return	array		An array to be used for JSON
+	 * @param string $domObjectId The calling object in hierarchy, that requested a new record.
+	 * @param mixed $type Defines the type 'localize' or 'synchronize' (string) or a single uid to be localized (integer)
+	 * @return array An array to be used for JSON
 	 */
 	protected function synchronizeLocalizeRecords($domObjectId, $type) {
 		$jsonArray = FALSE;
-		if (t3lib_div::inList('localize,synchronize', $type) || t3lib_div::testInt($type)) {
+		if (t3lib_div::inList('localize,synchronize', $type) || t3lib_utility_Math::canBeInterpretedAsInteger($type)) {
 				// The current level:
 			$current = $this->inlineStructure['unstable'];
 				// The parent level:
@@ -1272,7 +1235,7 @@ class t3lib_TCEforms_inline {
 			$cmd = array();
 			$cmd[$parent['table']][$parent['uid']]['inlineLocalizeSynchronize'] = $parent['field'] . ',' . $type;
 
-			/* @var t3lib_TCEmain */
+			/** @var t3lib_TCEmain */
 			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 			$tce->stripslashes_values = FALSE;
 			$tce->start(array(), $cmd);
@@ -1291,20 +1254,20 @@ class t3lib_TCEforms_inline {
 	 * (basically a copy of "createNewRecord")
 	 * Normally this method is never called from inside TYPO3. Always from outside by AJAX.
 	 *
-	 * @param	string		$domObjectId: The calling object in hierarchy, that requested a new record.
-	 * @return	array		An array to be used for JSON
+	 * @param string $domObjectId The calling object in hierarchy, that requested a new record.
+	 * @return array An array to be used for JSON
 	 */
 	function getRecordDetails($domObjectId) {
-			// the current table - for this table we should add/import records
+			// The current table - for this table we should add/import records
 		$current = $this->inlineStructure['unstable'];
-			// the parent table - this table embeds the current table
+			// The parent table - this table embeds the current table
 		$parent = $this->getStructureLevel(-1);
-			// get TCA 'config' of the parent table
+			// Get TCA 'config' of the parent table
 		if (!$this->checkConfiguration($parent['config'])) {
 			return $this->getErrorMessageForAJAX('Wrong configuration in table ' . $parent['table']);
 		}
 		$config = $parent['config'];
-			// set flag in config so that only the fields are rendered
+			// Set flag in config so that only the fields are rendered
 		$config['renderFieldsOnly'] = TRUE;
 
 		$collapseAll = (isset($config['appearance']['collapseAll']) && $config['appearance']['collapseAll']);
@@ -1315,7 +1278,7 @@ class t3lib_TCEforms_inline {
 
 		$record = $this->getRecord($this->inlineFirstPid, $current['table'], $current['uid']);
 
-			// the HTML-object-id's prefix of the dynamically created record
+			// The HTML-object-id's prefix of the dynamically created record
 		$objectPrefix = $this->inlineNames['object'] . self::Structure_Separator . $current['table'];
 		$objectId = $objectPrefix . self::Structure_Separator . $record['uid'];
 
@@ -1346,13 +1309,12 @@ class t3lib_TCEforms_inline {
 		return $jsonArray;
 	}
 
-
 	/**
 	 * Generates a JSON array which executes the changes and thus updates the forms view.
 	 *
-	 * @param	string		$oldItemList: List of related child reocrds before changes were made (old)
-	 * @param	string		$newItemList: List of related child records after changes where made (new)
-	 * @return	array		An array to be used for JSON
+	 * @param string $oldItemList List of related child reocrds before changes were made (old)
+	 * @param string $newItemList List of related child records after changes where made (new)
+	 * @return array An array to be used for JSON
 	 */
 	protected function getExecuteChangesJsonArray($oldItemList, $newItemList) {
 		$data = '';
@@ -1383,59 +1345,57 @@ class t3lib_TCEforms_inline {
 			$row = $this->getRecord($this->inlineFirstPid, $current['table'], $item);
 			$selectedValue = ($foreignSelector ? "'" . $row[$foreignSelector] . "'" : 'null');
 			$data .= $this->renderForeignRecord($parent['uid'], $row, $parent['config']);
-			$jsonArrayScriptCall[] = "inline.memorizeAddRecord('$nameObjectForeignTable', '" . $item . "', null, $selectedValue);";
+			$jsonArrayScriptCall[] = "inline.memorizeAddRecord('" . $nameObjectForeignTable . "', '" . $item . "', null, " . $selectedValue . ');';
 				// Remove possible virtual records in the form which showed that a child records could be localized:
 			if (isset($row[$transOrigPointerField]) && $row[$transOrigPointerField]) {
 				$jsonArrayScriptCall[] = "inline.fadeAndRemove('" . $nameObjectForeignTable . self::Structure_Separator . $row[$transOrigPointerField] . '_div' . "');";
 			}
 		}
 		if ($data) {
-			$data = $GLOBALS['LANG']->csConvObj->utf8_encode($data, $GLOBALS['LANG']->charSet);
 			$jsonArray['data'] = $data;
 			array_unshift(
 				$jsonArrayScriptCall,
-				"inline.domAddNewRecord('bottom', '" . $nameObject . "_records', '$nameObjectForeignTable', json.data);"
+				"inline.domAddNewRecord('bottom', '" . $nameObject . "_records', '" . $nameObjectForeignTable . "', json.data);"
 			);
 		}
 
 		return $jsonArray;
 	}
 
-
 	/**
 	 * Save the expanded/collapsed state of a child record in the BE_USER->uc.
 	 *
-	 * @param	string		$domObjectId: The calling object in hierarchy, that requested a new record.
-	 * @param	string		$expand: Whether this record is expanded.
-	 * @param	string		$collapse: Whether this record is collapsed.
-	 * @return	void
+	 * @param string $domObjectId The calling object in hierarchy, that requested a new record.
+	 * @param string $expand Whether this record is expanded.
+	 * @param string $collapse Whether this record is collapsed.
+	 * @return void
 	 */
 	function setExpandedCollapsedState($domObjectId, $expand, $collapse) {
-			// parse the DOM identifier (string), add the levels to the structure stack (array), but don't load TCA config
+			// Parse the DOM identifier (string), add the levels to the structure stack (array), but don't load TCA config
 		$this->parseStructureString($domObjectId, FALSE);
-			// the current table - for this table we should add/import records
+			// The current table - for this table we should add/import records
 		$current = $this->inlineStructure['unstable'];
-			// the top parent table - this table embeds the current table
+			// The top parent table - this table embeds the current table
 		$top = $this->getStructureLevel(0);
 
-			// only do some action if the top record and the current record were saved before
-		if (t3lib_div::testInt($top['uid'])) {
+			// Only do some action if the top record and the current record were saved before
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($top['uid'])) {
 			$inlineView = (array) unserialize($GLOBALS['BE_USER']->uc['inlineView']);
 			$inlineViewCurrent =& $inlineView[$top['table']][$top['uid']];
 
 			$expandUids = t3lib_div::trimExplode(',', $expand);
 			$collapseUids = t3lib_div::trimExplode(',', $collapse);
 
-				// set records to be expanded
+				// Set records to be expanded
 			foreach ($expandUids as $uid) {
 				$inlineViewCurrent[$current['table']][] = $uid;
 			}
-				// set records to be collapsed
+				// Set records to be collapsed
 			foreach ($collapseUids as $uid) {
 				$inlineViewCurrent[$current['table']] = $this->removeFromArray($uid, $inlineViewCurrent[$current['table']]);
 			}
 
-				// save states back to database
+				// Save states back to database
 			if (is_array($inlineViewCurrent[$current['table']])) {
 				$inlineViewCurrent[$current['table']] = array_unique($inlineViewCurrent[$current['table']]);
 				$GLOBALS['BE_USER']->uc['inlineView'] = serialize($inlineView);
@@ -1444,24 +1404,22 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
 	/*******************************************************
 	 *
 	 * Get data from database and handle relations
 	 *
 	 *******************************************************/
 
-
 	/**
 	 * Get the related records of the embedding item, this could be 1:n, m:n.
 	 * Returns an associative array with the keys records and count. 'count' contains only real existing records on the current parent record.
 	 *
-	 * @param	string		$table: The table name of the record
-	 * @param	string		$field: The field name which this element is supposed to edit
-	 * @param	array		$row: The record data array where the value(s) for the field can be found
-	 * @param	array		$PA: An array with additional configuration options.
-	 * @param	array		$config: (Redundant) content of $PA['fieldConf']['config'] (for convenience)
-	 * @return	array		The records related to the parent item as associative array.
+	 * @param string $table The table name of the record
+	 * @param string $field The field name which this element is supposed to edit
+	 * @param array $row The record data array where the value(s) for the field can be found
+	 * @param array $PA An array with additional configuration options.
+	 * @param array $config (Redundant) content of $PA['fieldConf']['config'] (for convenience)
+	 * @return array The records related to the parent item as associative array.
 	 */
 	function getRelatedRecords($table, $field, $row, &$PA, $config) {
 		$records = array();
@@ -1506,14 +1464,13 @@ class t3lib_TCEforms_inline {
 		return $relatedRecords;
 	}
 
-
 	/**
 	 * Gets the related records of the embedding item, this could be 1:n, m:n.
 	 *
-	 * @param	integer		$pid: The pid of the parent record
-	 * @param	string		$table: The table name of the record
-	 * @param	string		$itemList: The list of related child records
-	 * @return	array		The records related to the parent item
+	 * @param integer $pid The pid of the parent record
+	 * @param string $table The table name of the record
+	 * @param string $itemList The list of related child records
+	 * @return array The records related to the parent item
 	 */
 	protected function getRelatedRecordsArray($pid, $table, $itemList) {
 		$records = array();
@@ -1528,14 +1485,13 @@ class t3lib_TCEforms_inline {
 		return $records;
 	}
 
-
 	/**
 	 * Gets an array with the uids of related records out of a list of items.
 	 * This list could contain more information than required. This methods just
 	 * extracts the uids.
 	 *
-	 * @param	string		$itemList: The list of related child records
-	 * @return	array		An array with uids
+	 * @param string $itemList The list of related child records
+	 * @return array An array with uids
 	 */
 	protected function getRelatedRecordsUidArray($itemList) {
 		$itemArray = t3lib_div::trimExplode(',', $itemList, 1);
@@ -1544,20 +1500,20 @@ class t3lib_TCEforms_inline {
 			$parts = explode('|', $value, 2);
 			$value = $parts[0];
 		}
+		unset($value);
 		return $itemArray;
 	}
-
 
 	/**
 	 * Gets the difference between current localized structure and the original language structure.
 	 * If there are records which once were localized but don't exist in the original version anymore, the record row is marked with '__remove'.
 	 * If there are records which can be localized and exist only in the original version, the record row is marked with '__create' and '__virtual'.
 	 *
-	 * @param	string		$table: The table name of the parent records
-	 * @param	array		$options: Options defining what kind of records to display
-	 * @param	array		$recordsOriginal: The uids of the child records of the original language
-	 * @param	array		$recordsLocalization: The uids of the child records of the current localization
-	 * @return	array		Merged array of uids of the child records of both versions
+	 * @param string $table The table name of the parent records
+	 * @param array $options Options defining what kind of records to display
+	 * @param array $recordsOriginal The uids of the child records of the original language
+	 * @param array $recordsLocalization The uids of the child records of the current localization
+	 * @return array Merged array of uids of the child records of both versions
 	 */
 	protected function getLocalizationDifferences($table, array $options, array $recordsOriginal, array $recordsLocalization) {
 		$records = array();
@@ -1586,17 +1542,16 @@ class t3lib_TCEforms_inline {
 		return $records;
 	}
 
-
 	/**
 	 * Get possible records.
 	 * Copied from TCEform and modified.
 	 *
-	 * @param	string		The table name of the record
-	 * @param	string		The field name which this element is supposed to edit
-	 * @param	array		The record data array where the value(s) for the field can be found
-	 * @param	array		An array with additional configuration options.
-	 * @param	string		$checkForConfField: For which field in the foreign_table the possible records should be fetched
-	 * @return	mixed		Array of possible record items; false if type is "group/db", then everything could be "possible"
+	 * @param string $table The table name of the record
+	 * @param string $field The field name which this element is supposed to edit
+	 * @param array $row The record data array where the value(s) for the field can be found
+	 * @param array $conf An array with additional configuration options.
+	 * @param string $checkForConfField For which field in the foreign_table the possible records should be fetched
+	 * @return mixed Array of possible record items; FALSE if type is "group/db", then everything could be "possible"
 	 */
 	function getPossibleRecords($table, $field, $row, $conf, $checkForConfField = 'foreign_selector') {
 			// ctrl configuration from TCA:
@@ -1636,7 +1591,7 @@ class t3lib_TCEforms_inline {
 				if (in_array($p[1], $removeItems) || $languageDeny || $authModeDeny) {
 					unset($selItems[$tk]);
 				} elseif (isset($PA['fieldTSConfig']['altLabels.'][$p[1]])) {
-					$selItems[$tk][0] = htmlspecialchars($this->fObj->sL($PA['fieldTSConfig']['altLabels.'][$p[1]]));
+					$selItems[$tk][0] = $this->fObj->sL($PA['fieldTSConfig']['altLabels.'][$p[1]]);
 				}
 
 					// Removing doktypes with no access:
@@ -1656,10 +1611,10 @@ class t3lib_TCEforms_inline {
 	/**
 	 * Gets the uids of a select/selector that should be unique an have already been used.
 	 *
-	 * @param	array		$records: All inline records on this level
-	 * @param	array		$conf: The TCA field configuration of the inline field to be rendered
-	 * @param	boolean		$splitValue: for usage with group/db, values come like "tx_table_123|Title%20abc", but we need "tx_table" and "123"
-	 * @return	array		The uids, that have been used already and should be used unique
+	 * @param array $records All inline records on this level
+	 * @param array $conf The TCA field configuration of the inline field to be rendered
+	 * @param boolean $splitValue For usage with group/db, values come like "tx_table_123|Title%20abc", but we need "tx_table" and "123"
+	 * @return array The uids, that have been used already and should be used unique
 	 */
 	function getUniqueIds($records, $conf = array(), $splitValue = FALSE) {
 		$uniqueIds = array();
@@ -1686,36 +1641,34 @@ class t3lib_TCEforms_inline {
 		return $uniqueIds;
 	}
 
-
 	/**
 	 * Determines the corrected pid to be used for a new record.
 	 * The pid to be used can be defined by a Page TSconfig.
 	 *
-	 * @param	string		$table: The table name
-	 * @param	integer		$parentPid: The pid of the parent record
-	 * @return	integer		The corrected pid to be used for a new record
+	 * @param string $table The table name
+	 * @param integer $parentPid The pid of the parent record
+	 * @return integer The corrected pid to be used for a new record
 	 */
 	protected function getNewRecordPid($table, $parentPid = NULL) {
 		$newRecordPid = $this->inlineFirstPid;
 		$pageTS = t3lib_beFunc::getPagesTSconfig($parentPid, TRUE);
-		if (isset($pageTS['TCAdefaults.'][$table . '.']['pid']) && t3lib_div::testInt($pageTS['TCAdefaults.'][$table . '.']['pid'])) {
+		if (isset($pageTS['TCAdefaults.'][$table . '.']['pid']) && t3lib_utility_Math::canBeInterpretedAsInteger($pageTS['TCAdefaults.'][$table . '.']['pid'])) {
 			$newRecordPid = $pageTS['TCAdefaults.'][$table . '.']['pid'];
-		} elseif (isset($parentPid) && t3lib_div::testInt($parentPid)) {
+		} elseif (isset($parentPid) && t3lib_utility_Math::canBeInterpretedAsInteger($parentPid)) {
 			$newRecordPid = $parentPid;
 		}
 		return $newRecordPid;
 	}
 
-
 	/**
 	 * Get a single record row for a TCA table from the database.
 	 * t3lib_transferData is used for "upgrading" the values, especially the relations.
 	 *
-	 * @param	integer		$pid: The pid of the page the record should be stored (only relevant for NEW records)
-	 * @param	string		$table: The table to fetch data from (= foreign_table)
-	 * @param	string		$uid: The uid of the record to fetch, or the pid if a new record should be created
-	 * @param	string		$cmd: The command to perform, empty or 'new'
-	 * @return	array		A record row from the database post-processed by t3lib_transferData
+	 * @param integer $pid The pid of the page the record should be stored (only relevant for NEW records)
+	 * @param string $table The table to fetch data from (= foreign_table)
+	 * @param string $uid The uid of the record to fetch, or the pid if a new record should be created
+	 * @param string $cmd The command to perform, empty or 'new'
+	 * @return array A record row from the database post-processed by t3lib_transferData
 	 */
 	function getRecord($pid, $table, $uid, $cmd = '') {
 			// Fetch workspace version of a record (if any):
@@ -1730,21 +1683,19 @@ class t3lib_TCEforms_inline {
 		$trData->addRawData = TRUE;
 		$trData->lockRecords = 1;
 		$trData->disableRTE = $GLOBALS['SOBE']->MOD_SETTINGS['disableRTE'];
-			// if a new record should be created
+			// If a new record should be created
 		$trData->fetchRecord($table, $uid, ($cmd === 'new' ? 'new' : ''));
-		reset($trData->regTableItems_data);
-		$rec = current($trData->regTableItems_data);
+		$rec = reset($trData->regTableItems_data);
 
 		return $rec;
 	}
 
-
 	/**
 	 * Wrapper. Calls getRecord in case of a new record should be created.
 	 *
-	 * @param	integer		$pid: The pid of the page the record should be stored (only relevant for NEW records)
-	 * @param	string		$table: The table to fetch data from (= foreign_table)
-	 * @return	array		A record row from the database post-processed by t3lib_transferData
+	 * @param integer $pid The pid of the page the record should be stored (only relevant for NEW records)
+	 * @param string $table The table to fetch data from (= foreign_table)
+	 * @return array A record row from the database post-processed by t3lib_transferData
 	 */
 	function getNewRecord($pid, $table) {
 		$rec = $this->getRecord($pid, $table, $pid, 'new');
@@ -1753,23 +1704,21 @@ class t3lib_TCEforms_inline {
 		return $rec;
 	}
 
-
 	/*******************************************************
 	 *
 	 * Structure stack for handling inline objects/levels
 	 *
 	 *******************************************************/
 
-
 	/**
 	 * Add a new level on top of the structure stack. Other functions can access the
 	 * stack and determine, if there's possibly a endless loop.
 	 *
-	 * @param	string		$table: The table name of the record
-	 * @param	string		$uid: The uid of the record that embeds the inline data
-	 * @param	string		$field: The field name which this element is supposed to edit
-	 * @param	array		$config: The TCA-configuration of the inline field
-	 * @return	void
+	 * @param string $table The table name of the record
+	 * @param string $uid The uid of the record that embeds the inline data
+	 * @param string $field The field name which this element is supposed to edit
+	 * @param array $config The TCA-configuration of the inline field
+	 * @return void
 	 */
 	function pushStructure($table, $uid, $field = '', $config = array()) {
 		$this->inlineStructure['stable'][] = array(
@@ -1782,11 +1731,10 @@ class t3lib_TCEforms_inline {
 		$this->updateStructureNames();
 	}
 
-
 	/**
 	 * Remove the item on top of the structure stack and return it.
 	 *
-	 * @return	array		The top item of the structure stack - array(<table>,<uid>,<field>,<config>)
+	 * @return array The top item of the structure stack - array(<table>,<uid>,<field>,<config>)
 	 */
 	function popStructure() {
 		if (count($this->inlineStructure['stable'])) {
@@ -1796,36 +1744,34 @@ class t3lib_TCEforms_inline {
 		return $popItem;
 	}
 
-
 	/**
 	 * For common use of DOM object-ids and form field names of a several inline-level,
 	 * these names/identifiers are preprocessed and set to $this->inlineNames.
 	 * This function is automatically called if a level is pushed to or removed from the
 	 * inline structure stack.
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function updateStructureNames() {
 		$current = $this->getStructureLevel(-1);
-			// if there are still more inline levels available
+			// If there are still more inline levels available
 		if ($current !== FALSE) {
 			$this->inlineNames = array(
 				'form' => $this->prependFormFieldNames . $this->getStructureItemName($current, self::Disposal_AttributeName),
 				'object' => $this->prependNaming . self::Structure_Separator . $this->inlineFirstPid . self::Structure_Separator . $this->getStructurePath(),
 			);
-				// if there are no more inline levels available
+				// If there are no more inline levels available
 		} else {
 			$this->inlineNames = array();
 		}
 	}
 
-
 	/**
 	 * Create a name/id for usage in HTML output of a level of the structure stack to be used in form names.
 	 *
-	 * @param	array		$levelData: Array of a level of the structure stack (containing the keys table, uid and field)
-	 * @param	string		$disposal: How the structure name is used (e.g. as <div id="..."> or <input name="..." />)
-	 * @return	string		The name/id of that level, to be used for HTML output
+	 * @param array $levelData Array of a level of the structure stack (containing the keys table, uid and field)
+	 * @param string $disposal How the structure name is used (e.g. as <div id="..."> or <input name="..." />)
+	 * @return string The name/id of that level, to be used for HTML output
 	 */
 	function getStructureItemName($levelData, $disposal = self::Disposal_AttributeId) {
 		if (is_array($levelData)) {
@@ -1845,14 +1791,13 @@ class t3lib_TCEforms_inline {
 		return $name;
 	}
 
-
 	/**
 	 * Get a level from the stack and return the data.
 	 * If the $level value is negative, this function works top-down,
 	 * if the $level value is positive, this function works bottom-up.
 	 *
-	 * @param	integer		$level: Which level to return
-	 * @return	array		The item of the stack at the requested level
+	 * @param integer $level Which level to return
+	 * @return array The item of the stack at the requested level
 	 */
 	function getStructureLevel($level) {
 		$inlineStructureCount = count($this->inlineStructure['stable']);
@@ -1868,12 +1813,11 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
 	/**
 	 * Get the identifiers of a given depth of level, from the top of the stack to the bottom.
 	 * An identifier looks like "<table>-<uid>-<field>".
 	 *
-	 * @param	integer		$structureDepth: How much levels to output, beginning from the top of the stack
+	 * @param integer $structureDepth How much levels to output, beginning from the top of the stack
 	 * @return	string		The path of identifiers
 	 */
 	function getStructurePath($structureDepth = -1) {
@@ -1897,7 +1841,6 @@ class t3lib_TCEforms_inline {
 		return implode(self::Structure_Separator, $structureLevels);
 	}
 
-
 	/**
 	 * Convert the DOM object-id of an inline container to an array.
 	 * The object-id could look like 'data-parentPageId-tx_mmftest_company-1-employees'.
@@ -1906,9 +1849,9 @@ class t3lib_TCEforms_inline {
 	 *  - 'stable': Containing full qualified identifiers (table, uid and field)
 	 *  - 'unstable': Containting partly filled data (e.g. only table and possibly field)
 	 *
-	 * @param	string		$domObjectId: The DOM object-id
-	 * @param	boolean		$loadConfig: Load the TCA configuration for that level (default: true)
-	 * @return	void
+	 * @param string $domObjectId The DOM object-id
+	 * @param boolean $loadConfig Load the TCA configuration for that level (default: TRUE)
+	 * @return void
 	 */
 	function parseStructureString($string, $loadConfig = TRUE) {
 		$unstable = array();
@@ -1920,7 +1863,7 @@ class t3lib_TCEforms_inline {
 			$partsCnt = count($parts);
 			for ($i = 0; $i < $partsCnt; $i++) {
 				if ($i > 0 && $i % 3 == 0) {
-						// load the TCA configuration of the table field and store it in the stack
+						// Load the TCA configuration of the table field and store it in the stack
 					if ($loadConfig) {
 						t3lib_div::loadTCA($unstable['table']);
 						$unstable['config'] = $GLOBALS['TCA'][$unstable['table']]['columns'][$unstable['field']]['config'];
@@ -1948,22 +1891,20 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
 	/*******************************************************
 	 *
 	 * Helper functions
 	 *
 	 *******************************************************/
 
-
 	/**
 	 * Does some checks on the TCA configuration of the inline field to render.
 	 *
-	 * @param	array		$config: Reference to the TCA field configuration
-	 * @param	string		$table: The table name of the record
-	 * @param	string		$field: The field name which this element is supposed to edit
-	 * @param	array		$row: The record data array of the parent
-	 * @return	boolean		If critical configuration errors were found, false is returned
+	 * @param array $config Reference to the TCA field configuration
+	 * @param string $table The table name of the record
+	 * @param string $field The field name which this element is supposed to edit
+	 * @param array $row The record data array of the parent
+	 * @return boolean If critical configuration errors were found, FALSE is returned
 	 */
 	function checkConfiguration(&$config) {
 		$foreign_table = $config['foreign_table'];
@@ -1975,11 +1916,6 @@ class t3lib_TCEforms_inline {
 			// Init appearance if not set:
 		if (!isset($config['appearance']) || !is_array($config['appearance'])) {
 			$config['appearance'] = array();
-		}
-			// 'newRecordLinkPosition' is deprecated since TYPO3 4.2.0-beta1, this is for backward compatibility:
-		if (!isset($config['appearance']['levelLinksPosition']) && isset($config['appearance']['newRecordLinkPosition']) && $config['appearance']['newRecordLinkPosition']) {
-			t3lib_div::deprecationLog('TCA contains a deprecated definition using "newRecordLinkPosition"');
-			$config['appearance']['levelLinksPosition'] = $config['appearance']['newRecordLinkPosition'];
 		}
 			// Set the position/appearance of the "Create new record" link:
 		if (isset($config['foreign_selector']) && $config['foreign_selector'] && (!isset($config['appearance']['useCombination']) || !$config['appearance']['useCombination'])) {
@@ -2006,15 +1942,14 @@ class t3lib_TCEforms_inline {
 		return TRUE;
 	}
 
-
 	/**
 	 * Checks the page access rights (Code for access check mostly taken from alt_doc.php)
 	 * as well as the table access rights of the user.
 	 *
-	 * @param	string		$cmd: The command that sould be performed ('new' or 'edit')
-	 * @param	string		$table: The table to check access for
-	 * @param	string		$theUid: The record uid of the table
-	 * @return	boolean		Returns true is the user has access, or false if not
+	 * @param string $cmd The command that sould be performed ('new' or 'edit')
+	 * @param string $table The table to check access for
+	 * @param string $theUid The record uid of the table
+	 * @return boolean Returns TRUE is the user has access, or FALSE if not
 	 */
 	function checkAccess($cmd, $table, $theUid) {
 			// Checking if the user has permissions? (Only working as a precaution, because the final permission check is always down in TCE. But it's good to notify the user on beforehand...)
@@ -2029,16 +1964,20 @@ class t3lib_TCEforms_inline {
 			// If the command is to create a NEW record...:
 		if ($cmd == 'new') {
 				// If the pid is numerical, check if it's possible to write to this page:
-			if (t3lib_div::testInt($this->inlineFirstPid)) {
+			if (t3lib_utility_Math::canBeInterpretedAsInteger($this->inlineFirstPid)) {
 				$calcPRec = t3lib_BEfunc::getRecord('pages', $this->inlineFirstPid);
 				if (!is_array($calcPRec)) {
 					return FALSE;
 				}
-				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec); // Permissions for the parent page
-				if ($table == 'pages') { // If pages:
-					$hasAccess = $CALC_PERMS & 8 ? 1 : 0; // Are we allowed to create new subpages?
+					// Permissions for the parent page
+				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
+					// If pages:
+				if ($table == 'pages') {
+						// Are we allowed to create new subpages?
+					$hasAccess = $CALC_PERMS & 8 ? 1 : 0;
 				} else {
-					$hasAccess = $CALC_PERMS & 16 ? 1 : 0; // Are we allowed to edit content on this page?
+						// Are we allowed to edit content on this page?
+					$hasAccess = $CALC_PERMS & 16 ? 1 : 0;
 				}
 					// If the pid is a NEW... value, the access will be checked on creating the page:
 					// (if the page with the same NEW... value could be created in TCEmain, this child record can neither)
@@ -2049,11 +1988,13 @@ class t3lib_TCEforms_inline {
 			$calcPRec = t3lib_BEfunc::getRecord($table, $theUid);
 			t3lib_BEfunc::fixVersioningPid($table, $calcPRec);
 			if (is_array($calcPRec)) {
-				if ($table == 'pages') { // If pages:
+					// If pages:
+				if ($table == 'pages') {
 					$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
 					$hasAccess = $CALC_PERMS & 2 ? 1 : 0;
 				} else {
-					$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages', $calcPRec['pid'])); // Fetching pid-record first.
+						// Fetching pid-record first.
+					$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages', $calcPRec['pid']));
 					$hasAccess = $CALC_PERMS & 16 ? 1 : 0;
 				}
 
@@ -2078,14 +2019,13 @@ class t3lib_TCEforms_inline {
 		return $hasAccess ? TRUE : FALSE;
 	}
 
-
 	/**
 	 * Check the keys and values in the $compare array against the ['config'] part of the top level of the stack.
 	 * A boolean value is return depending on how the comparison was successful.
 	 *
-	 * @param	array		$compare: keys and values to compare to the ['config'] part of the top level of the stack
-	 * @return	boolean		Whether the comparison was successful
-	 * @see	 arrayCompareComplex
+	 * @param array $compare Keys and values to compare to the ['config'] part of the top level of the stack
+	 * @return boolean Whether the comparison was successful
+	 * @see arrayCompareComplex
 	 */
 	function compareStructureConfiguration($compare) {
 		$level = $this->getStructureLevel(-1);
@@ -2094,33 +2034,28 @@ class t3lib_TCEforms_inline {
 		return $result;
 	}
 
-
 	/**
 	 * Normalize a relation "uid" published by transferData, like "1|Company%201"
 	 *
-	 * @param	string		$string: A transferData reference string, containing the uid
-	 * @return	string		The normalized uid
+	 * @param string $string A transferData reference string, containing the uid
+	 * @return string The normalized uid
 	 */
 	function normalizeUid($string) {
 		$parts = explode('|', $string);
 		return $parts[0];
 	}
 
-
 	/**
 	 * Wrap the HTML code of a section with a table tag.
 	 *
-	 * @param	string		$section: The HTML code to be wrapped
-	 * @param	array		$styleAttrs: Attributes for the style argument in the table tag
-	 * @param	array		$tableAttrs: Attributes for the table tag (like width, border, etc.)
-	 * @return	string		The wrapped HTML code
+	 * @param string $section The HTML code to be wrapped
+	 * @param array $styleAttrs Attributes for the style argument in the table tag
+	 * @param array $tableAttrs Attributes for the table tag (like width, border, etc.)
+	 * @return string The wrapped HTML code
 	 */
 	function wrapFormsSection($section, $styleAttrs = array(), $tableAttrs = array()) {
 		$style = '';
 		$table = '';
-		if (!$styleAttrs['margin-right']) {
-			$styleAttrs['margin-right'] = $this->inlineStyles['margin-right'] . 'px';
-		}
 
 		foreach ($styleAttrs as $key => $value) {
 			$style .= ($style ? ' ' : '') . $key . ': ' . htmlspecialchars($value) . '; ';
@@ -2132,18 +2067,7 @@ class t3lib_TCEforms_inline {
 		if (!$tableAttrs['background'] && $this->fObj->borderStyle[2]) {
 			$tableAttrs['background'] = $this->backPath . $this->borderStyle[2];
 		}
-		if (!$tableAttrs['cellspacing']) {
-			$tableAttrs['cellspacing'] = '0';
-		}
-		if (!$tableAttrs['cellpadding']) {
-			$tableAttrs['cellpadding'] = '0';
-		}
-		if (!$tableAttrs['border']) {
-			$tableAttrs['border'] = '0';
-		}
-		if (!$tableAttrs['width']) {
-			$tableAttrs['width'] = '100%';
-		}
+
 		if (!$tableAttrs['class'] && $this->borderStyle[3]) {
 			$tableAttrs['class'] = $this->borderStyle[3];
 		}
@@ -2156,15 +2080,14 @@ class t3lib_TCEforms_inline {
 		return $out;
 	}
 
-
 	/**
 	 * Checks if the $table is the child of a inline type AND the $field is the label field of this table.
 	 * This function is used to dynamically update the label while editing. This has no effect on labels,
 	 * that were processed by a TCEmain-hook on saving.
 	 *
-	 * @param	string		$table: The table to check
-	 * @param	string		$field: The field on this table to check
-	 * @return	boolean		is inline child and field is responsible for the label
+	 * @param string $table The table to check
+	 * @param string $field The field on this table to check
+	 * @return boolean Is inline child and field is responsible for the label
 	 */
 	function isInlineChildAndLabelField($table, $field) {
 		$level = $this->getStructureLevel(-1);
@@ -2178,17 +2101,15 @@ class t3lib_TCEforms_inline {
 		return $level['config']['foreign_table'] === $table && $label == $field ? TRUE : FALSE;
 	}
 
-
 	/**
 	 * Get the depth of the stable structure stack.
 	 * (count($this->inlineStructure['stable'])
 	 *
-	 * @return	integer		The depth of the structure stack
+	 * @return integer The depth of the structure stack
 	 */
 	function getStructureDepth() {
 		return count($this->inlineStructure['stable']);
 	}
-
 
 	/**
 	 * Handles complex comparison requests on an array.
@@ -2217,43 +2138,43 @@ class t3lib_TCEforms_inline {
 	 * It is also possible to compare parts of a sub-array (e.g. "subarray"), so this
 	 * function recurses down one level in that sub-array.
 	 *
-	 * @param	array		$subjectArray: The array to search in
-	 * @param	array		$searchArray: The array with keys and values to search for
-	 * @param	string		$type: Use '%AND' or '%OR' for comparision
-	 * @return	boolean		The result of the comparison
+	 * @param array $subjectArray The array to search in
+	 * @param array $searchArray The array with keys and values to search for
+	 * @param string $type Use '%AND' or '%OR' for comparision
+	 * @return boolean The result of the comparison
 	 */
 	function arrayCompareComplex($subjectArray, $searchArray, $type = '') {
 		$localMatches = 0;
 		$localEntries = 0;
 
 		if (is_array($searchArray) && count($searchArray)) {
-				// if no type was passed, try to determine
+				// If no type was passed, try to determine
 			if (!$type) {
 				reset($searchArray);
 				$type = key($searchArray);
 				$searchArray = current($searchArray);
 			}
 
-				// we use '%AND' and '%OR' in uppercase
+				// We use '%AND' and '%OR' in uppercase
 			$type = strtoupper($type);
 
-				// split regular elements from sub elements
+				// Split regular elements from sub elements
 			foreach ($searchArray as $key => $value) {
 				$localEntries++;
 
-					// process a sub-group of OR-conditions
+					// Process a sub-group of OR-conditions
 				if ($key == '%OR') {
 					$localMatches += $this->arrayCompareComplex($subjectArray, $value, '%OR') ? 1 : 0;
-					// process a sub-group of AND-conditions
+					// Process a sub-group of AND-conditions
 				} elseif ($key == '%AND') {
 					$localMatches += $this->arrayCompareComplex($subjectArray, $value, '%AND') ? 1 : 0;
-					// a part of an associative array should be compared, so step down in the array hierarchy
+					// A part of an associative array should be compared, so step down in the array hierarchy
 				} elseif (is_array($value) && $this->isAssociativeArray($searchArray)) {
 					$localMatches += $this->arrayCompareComplex($subjectArray[$key], $value, $type) ? 1 : 0;
-					// it is a normal array that is only used for grouping and indexing
+					// It is a normal array that is only used for grouping and indexing
 				} elseif (is_array($value)) {
 					$localMatches += $this->arrayCompareComplex($subjectArray, $value, $type) ? 1 : 0;
-					// directly compare a value
+					// Directly compare a value
 				} else {
 					if (isset($subjectArray[$key]) && isset($value)) {
 							// Boolean match:
@@ -2269,27 +2190,26 @@ class t3lib_TCEforms_inline {
 					}
 				}
 
-					// if one or more matches are required ('OR'), return true after the first successful match
+					// If one or more matches are required ('OR'), return TRUE after the first successful match
 				if ($type == '%OR' && $localMatches > 0) {
 					return TRUE;
 				}
-					// if all matches are required ('AND') and we have no result after the first run, return false
+					// If all matches are required ('AND') and we have no result after the first run, return FALSE
 				if ($type == '%AND' && $localMatches == 0) {
 					return FALSE;
 				}
 			}
 		}
 
-			// return the result for '%AND' (if nothing was checked, true is returned)
+			// Return the result for '%AND' (if nothing was checked, TRUE is returned)
 		return $localEntries == $localMatches ? TRUE : FALSE;
 	}
-
 
 	/**
 	 * Checks whether an object is an associative array.
 	 *
-	 * @param	mixed		$object: The object to be checked
-	 * @return	boolean		Returns true, if the object is an associative array
+	 * @param mixed $object The object to be checked
+	 * @return boolean Returns TRUE, if the object is an associative array
 	 */
 	function isAssociativeArray($object) {
 		return is_array($object) && count($object) && (array_keys($object) !== range(0, sizeof($object) - 1))
@@ -2297,14 +2217,13 @@ class t3lib_TCEforms_inline {
 				: FALSE;
 	}
 
-
 	/**
 	 * Remove an element from an array.
 	 *
-	 * @param	mixed		$needle: The element to be removed.
-	 * @param	array		$haystack: The array the element should be removed from.
-	 * @param	mixed		$strict: Search elements strictly.
-	 * @return	array		The array $haystack without the $needle
+	 * @param mixed $needle The element to be removed.
+	 * @param array $haystack The array the element should be removed from.
+	 * @param mixed $strict Search elements strictly.
+	 * @return array The array $haystack without the $needle
 	 */
 	function removeFromArray($needle, $haystack, $strict = NULL) {
 		$pos = array_search($needle, $haystack, $strict);
@@ -2314,30 +2233,30 @@ class t3lib_TCEforms_inline {
 		return $haystack;
 	}
 
-
 	/**
 	 * Makes a flat array from the $possibleRecords array.
 	 * The key of the flat array is the value of the record,
 	 * the value of the flat array is the label of the record.
 	 *
-	 * @param	array		$possibleRecords: The possibleRecords array (for select fields)
-	 * @return	mixed		A flat array with key=uid, value=label; if $possibleRecords isn't an array, false is returned.
+	 * @param array $possibleRecords The possibleRecords array (for select fields)
+	 * @return mixed A flat array with key=uid, value=label; if $possibleRecords isn't an array, FALSE is returned.
 	 */
 	function getPossibleRecordsFlat($possibleRecords) {
 		$flat = FALSE;
 		if (is_array($possibleRecords)) {
 			$flat = array();
-			foreach ($possibleRecords as $record) $flat[$record[1]] = $record[0];
+			foreach ($possibleRecords as $record) {
+				$flat[$record[1]] = $record[0];
+			}
 		}
 		return $flat;
 	}
 
-
 	/**
 	 * Determine the configuration and the type of a record selector.
 	 *
-	 * @param	array		$conf: TCA configuration of the parent(!) field
-	 * @return	array		Associative array with the keys 'PA' and 'type', both are false if the selector was not valid.
+	 * @param array $conf TCA configuration of the parent(!) field
+	 * @return array Associative array with the keys 'PA' and 'type', both are FALSE if the selector was not valid.
 	 */
 	function getPossibleRecordsSelectorConfig($conf, $field = '') {
 		$foreign_table = $conf['foreign_table'];
@@ -2351,6 +2270,11 @@ class t3lib_TCEforms_inline {
 		if ($field) {
 			$PA = array();
 			$PA['fieldConf'] = $GLOBALS['TCA'][$foreign_table]['columns'][$field];
+
+			if ($PA['fieldConf'] && $conf['foreign_selector_fieldTcaOverride']) {
+				$PA['fieldConf'] = t3lib_div::array_merge_recursive_overrule($PA['fieldConf'], $conf['foreign_selector_fieldTcaOverride']);
+			}
+
 			$PA['fieldConf']['config']['form_type'] = $PA['fieldConf']['config']['form_type'] ? $PA['fieldConf']['config']['form_type'] : $PA['fieldConf']['config']['type']; // Using "form_type" locally in this script
 			$PA['fieldTSConfig'] = $this->fObj->setTSconfig($foreign_table, array(), $field);
 			$config = $PA['fieldConf']['config'];
@@ -2376,8 +2300,8 @@ class t3lib_TCEforms_inline {
 	/**
 	 * Determine the type of a record selector, e.g. select or group/db.
 	 *
-	 * @param	array		$config: TCE configuration of the selector
-	 * @return	mixed		The type of the selector, 'select' or 'groupdb' - false not valid
+	 * @param array $config TCE configuration of the selector
+	 * @return mixed The type of the selector, 'select' or 'groupdb' - FALSE not valid
 	 */
 	function getPossibleRecordsSelectorType($config) {
 		$type = FALSE;
@@ -2389,16 +2313,15 @@ class t3lib_TCEforms_inline {
 		return $type;
 	}
 
-
 	/**
 	 * Check, if a field should be skipped, that was defined to be handled as foreign_field or foreign_sortby of
 	 * the parent record of the "inline"-type - if so, we have to skip this field - the rendering is done via "inline" as hidden field
 	 *
-	 * @param	string		$table: The table name
-	 * @param	string		$field: The field name
-	 * @param	array		$row: The record row from the database
-	 * @param	array		$config: TCA configuration of the field
-	 * @return	boolean		Determines whether the field should be skipped.
+	 * @param string $table The table name
+	 * @param string $field The field name
+	 * @param array $row The record row from the database
+	 * @param array $config TCA configuration of the field
+	 * @return boolean Determines whether the field should be skipped.
 	 */
 	function skipField($table, $field, $row, $config) {
 		$skipThisField = FALSE;
@@ -2429,7 +2352,7 @@ class t3lib_TCEforms_inline {
 				),
 			);
 
-				// get the parent record from structure stack
+				// Get the parent record from structure stack
 			$level = $this->getStructureLevel(-1);
 
 				// If we have symmetric fields, check on which side we are and hide fields, that are set automatically:
@@ -2448,28 +2371,12 @@ class t3lib_TCEforms_inline {
 		return $skipThisField;
 	}
 
-
-	/**
-	 * Creates recursively a JSON literal from a mulidimensional associative array.
-	 * Uses Services_JSON (http://mike.teczno.com/JSON/doc/)
-	 *
-	 * @param	array		$jsonArray: The array (or part of) to be transformed to JSON
-	 * @return	string		If $level>0: part of JSON literal; if $level==0: whole JSON literal wrapped with <script> tags
-	 * @deprecated			Since TYPO3 4.2: Moved to t3lib_div::array2json, will be removed in TYPO3 4.6
-	 */
-	function getJSON($jsonArray) {
-		t3lib_div::logDeprecatedFunction();
-
-		return json_encode($jsonArray);
-	}
-
-
 	/**
 	 * Checks if a uid of a child table is in the inline view settings.
 	 *
-	 * @param	string		$table: Name of the child table
-	 * @param	integer		$uid: uid of the the child record
-	 * @return	boolean		true=expand, false=collapse
+	 * @param string $table Name of the child table
+	 * @param integer $uid uid of the the child record
+	 * @return boolean TRUE=expand, FALSE=collapse
 	 */
 	function getExpandedCollapsedState($table, $uid) {
 		if (isset($this->inlineView[$table]) && is_array($this->inlineView[$table])) {
@@ -2480,13 +2387,12 @@ class t3lib_TCEforms_inline {
 		return FALSE;
 	}
 
-
 	/**
 	 * Update expanded/collapsed states on new inline records if any.
 	 *
-	 * @param	array		$uc: The uc array to be processed and saved (by reference)
-	 * @param	t3lib_TCEmain	$tce: Instance of TCEmain that saved data before
-	 * @return	void
+	 * @param array $uc The uc array to be processed and saved (by reference)
+	 * @param t3lib_TCEmain $tce Instance of TCEmain that saved data before
+	 * @return void
 	 */
 	function updateInlineView(&$uc, $tce) {
 		if (isset($uc['inlineView']) && is_array($uc['inlineView'])) {
@@ -2523,11 +2429,10 @@ class t3lib_TCEforms_inline {
 		}
 	}
 
-
 	/**
 	 * Returns the the margin in pixels, that is used for each new inline level.
 	 *
-	 * @return	integer		A pixel value for the margin of each new inline level.
+	 * @return integer A pixel value for the margin of each new inline level.
 	 */
 	function getLevelMargin() {
 		$margin = ($this->inlineStyles['margin-right'] + 1) * 2;
@@ -2537,7 +2442,7 @@ class t3lib_TCEforms_inline {
 	/**
 	 * Parses the HTML tags that would have been inserted to the <head> of a HTML document and returns the found tags as multidimensional array.
 	 *
-	 * @return	array		The parsed tags with their attributes and innerHTML parts
+	 * @return array The parsed tags with their attributes and innerHTML parts
 	 */
 	protected function getHeadTags() {
 		$headTags = array();
@@ -2587,14 +2492,13 @@ class t3lib_TCEforms_inline {
 		return $javaScriptAndStyleSheets;
 	}
 
-
 	/**
 	 * Wraps a text with an anchor and returns the HTML representation.
 	 *
-	 * @param	string		$text: The text to be wrapped by an anchor
-	 * @param	string		$link: The link to be used in the anchor
-	 * @param	array		$attributes: Array of attributes to be used in the anchor
-	 * @return	string		The wrapped texted as HTML representation
+	 * @param string $text The text to be wrapped by an anchor
+	 * @param string $link  The link to be used in the anchor
+	 * @param array $attributes Array of attributes to be used in the anchor
+	 * @return string The wrapped texted as HTML representation
 	 */
 	protected function wrapWithAnchor($text, $link, $attributes = array()) {
 		$link = trim($link);
@@ -2605,11 +2509,6 @@ class t3lib_TCEforms_inline {
 		$result .= '>' . $text . '</a>';
 		return $result;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tceforms_inline.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tceforms_inline.php']);
 }
 
 ?>

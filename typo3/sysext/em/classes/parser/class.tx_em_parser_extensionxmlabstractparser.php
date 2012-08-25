@@ -27,8 +27,6 @@
  *
  * Module: Extension manager - Extension.xml abstract parser
  *
- * $Id: class.tx_em_parser_extensionxmlabstractparser.php 1913 2010-02-21 15:47:37Z mkrause $
- *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -394,7 +392,7 @@ abstract class tx_em_Parser_ExtensionXmlAbstractParser extends tx_em_Parser_XmlA
 	 * Method resets version class properties.
 	 *
 	 * @access  protected
-	 * @param   boolean	$all  if true, additionally extension properties are reset
+	 * @param   boolean	$all  if TRUE, additionally extension properties are reset
 	 * @return  void
 	 * @see	 $extensionKey, $version, $extensionDLCounter, $versionDLCounter,
 	 *		  $title, $description, $state, $reviewstate, $category,
@@ -423,7 +421,7 @@ abstract class tx_em_Parser_ExtensionXmlAbstractParser extends tx_em_Parser_XmlA
 	 * @param   integer	$code  the exception code
 	 * @return  void
 	 */
-	protected function throwException($message = "", $code = 0) {
+	protected function throwException($message = '', $code = 0) {
 		throw new tx_em_ExtensionXmlException(get_class($this) . ': ' . $message, $code);
 	}
 
@@ -444,9 +442,4 @@ abstract class tx_em_Parser_ExtensionXmlAbstractParser extends tx_em_Parser_XmlA
 		return serialize($newDependencies);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_extensionxmlabstractparser.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_extensionxmlabstractparser.php']);
-}
-
 ?>

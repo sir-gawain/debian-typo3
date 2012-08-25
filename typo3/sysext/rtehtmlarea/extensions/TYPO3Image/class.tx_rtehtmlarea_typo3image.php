@@ -26,8 +26,6 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id$
- *
  */
 class tx_rtehtmlarea_typo3image extends tx_rtehtmlarea_api {
 
@@ -46,12 +44,12 @@ class tx_rtehtmlarea_typo3image extends tx_rtehtmlarea_api {
 		);
 
 	public function main($parentObject) {
+		$enabled = parent::main($parentObject);
 			// Check if this should be enabled based on extension configuration and Page TSConfig
 			// The 'Minimal' and 'Typical' default configurations include Page TSConfig that removes images on the way to the database
-		return parent::main($parentObject)
-			&& !($this->thisConfig['proc.']['entryHTMLparser_db.']['tags.']['img.']['allowedAttribs'] == '0' && $this->thisConfig['proc.']['entryHTMLparser_db.']['tags.']['img.']['rmTagIfNoAttrib'] == '1')
-			&& !$this->thisConfig['disableTYPO3Browsers']
+		$enabled = $enabled && !($this->thisConfig['proc.']['entryHTMLparser_db.']['tags.']['img.']['allowedAttribs'] == '0' && $this->thisConfig['proc.']['entryHTMLparser_db.']['tags.']['img.']['rmTagIfNoAttrib'] == '1')
 			&& !$this->thisConfig['buttons.']['image.']['TYPO3Browser.']['disabled'];
+		return $enabled;
 	}
 
 	/**
@@ -79,8 +77,5 @@ class tx_rtehtmlarea_typo3image extends tx_rtehtmlarea_api {
 		}
 		return $registerRTEinJavascriptString;
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TYPO3Image/class.tx_rtehtmlarea_typo3image.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TYPO3Image/class.tx_rtehtmlarea_typo3image.php']);
 }
 ?>

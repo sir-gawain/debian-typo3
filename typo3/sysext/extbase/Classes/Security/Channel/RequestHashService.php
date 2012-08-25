@@ -52,7 +52,7 @@ class Tx_Extbase_Security_Channel_RequestHashService implements t3lib_singleton 
 	protected $hashService;
 
 	/**
-	 * @param Tx_Extbase_Security_Cryptography_HashService $hashService 
+	 * @param Tx_Extbase_Security_Cryptography_HashService $hashService
 	 * @return void
 	 */
 	public function injectHashService(Tx_Extbase_Security_Cryptography_HashService $hashService) {
@@ -63,6 +63,7 @@ class Tx_Extbase_Security_Channel_RequestHashService implements t3lib_singleton 
 	 * Generate a request hash for a list of form fields
 	 *
 	 * @param array $formFieldNames Array of form fields
+	 * @param string $fieldNamePrefix
 	 * @return string request hash
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @todo might need to become public API lateron, as we need to call it from Fluid
@@ -124,16 +125,16 @@ class Tx_Extbase_Security_Channel_RequestHashService implements t3lib_singleton 
 	 * Verify the request. Checks if there is an __hmac argument, and if yes, tries to validate and verify it.
 	 *
 	 * In the end, $request->setHmacVerified is set depending on the value.
-	 * @param \F3\FLOW3\MVC\Web\Request $request The request to verify
+	 * @param Tx_Extbase_MVC_Web_Request $request The request to verify
 	 * @return void
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function verifyRequest(Tx_Extbase_MVC_Web_Request $request) {
-		if (!$request->hasArgument('__hmac')) {
+		if (!$request->getInternalArgument('__hmac')) {
 			$request->setHmacVerified(FALSE);
 			return;
 		}
-		$hmac = $request->getArgument('__hmac');
+		$hmac = $request->getInternalArgument('__hmac');
 		if (strlen($hmac) < 40) {
 			throw new Tx_Extbase_Security_Exception_SyntacticallyWrongRequestHash('Request hash too short. This is a probably manipulation attempt!', 1255089361);
 		}
@@ -159,7 +160,7 @@ class Tx_Extbase_Security_Channel_RequestHashService implements t3lib_singleton 
 	 * Check if every element in $requestArguments is in $allowedFields as well.
 	 *
 	 * @param array $requestArguments
-	 * @param array $allowedFiels
+	 * @param array $allowedFields
 	 * @return boolean TRUE if ALL fields inside requestArguments are in $allowedFields, FALSE otherwise.
 	 */
 	protected function checkFieldNameInclusion(array $requestArguments, array $allowedFields) {

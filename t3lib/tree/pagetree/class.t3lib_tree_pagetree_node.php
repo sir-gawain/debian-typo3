@@ -43,14 +43,14 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Workspace Overlay Id
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $workspaceId = 0;
 
 	/**
 	 * Mount Point Id
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $mountPoint = 0;
 
@@ -64,14 +64,40 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Indicator if the node is a mount point
 	 *
-	 * @var bool
+	 * @var boolean
 	 */
 	protected $isMountPoint = FALSE;
 
 	/**
+	 * Background color for the node
+	 *
+	 * @var string
+	 */
+	protected $backgroundColor = '';
+
+	/**
+	 * Sets the background color
+	 *
+	 * @param string $backgroundColor
+	 * @return void
+	 */
+	public function setBackgroundColor($backgroundColor) {
+		$this->backgroundColor = $backgroundColor;
+	}
+
+	/**
+	 * Returns the background color
+	 *
+	 * @return string
+	 */
+	public function getBackgroundColor() {
+		return $this->backgroundColor;
+	}
+
+	/**
 	 * Set's the original id of the element
 	 *
-	 * @param int $workspaceId
+	 * @param integer $workspaceId
 	 * @return void
 	 */
 	public function setWorkspaceId($workspaceId) {
@@ -81,7 +107,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Returns the original id of the element
 	 *
-	 * @return int
+	 * @return integer
 	 */
 	public function getWorkspaceId() {
 		return $this->workspaceId;
@@ -90,7 +116,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Sets the mount point id
 	 *
-	 * @param int $mountPoint
+	 * @param integer $mountPoint
 	 * @return void
 	 */
 	public function setMountPoint($mountPoint) {
@@ -100,7 +126,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Returns the mount point id
 	 *
-	 * @return int
+	 * @return integer
 	 */
 	public function getMountPoint() {
 		return $this->mountPoint;
@@ -117,9 +143,9 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	}
 
 	/**
-	 * Returns true if the node is a mount point
+	 * Returns TRUE if the node is a mount point
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function isMountPoint() {
 		return $this->isMountPoint;
@@ -147,7 +173,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the user may create pages below the given page
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	protected function canCreate() {
 		if (!isset($this->cachedAccessRights['create'])) {
@@ -161,7 +187,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the user has editing rights
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	protected function canEdit() {
 		if (!isset($this->cachedAccessRights['edit'])) {
@@ -175,9 +201,9 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the user has the right to delete the page
 	 *
-	 * @return void
+	 * @return boolean
 	 */
-	protected function canRemove()	{
+	protected function canRemove() {
 		if (!isset($this->cachedAccessRights['remove'])) {
 			$this->cachedAccessRights['remove'] =
 				$GLOBALS['BE_USER']->doesUserHaveAccess($this->record, 4);
@@ -193,7 +219,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page can be disabled
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeDisabledAndEnabled() {
 		return $this->canEdit($this->record);
@@ -202,7 +228,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to can be cut
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeCut() {
 		return $this->canEdit($this->record) && intval($this->record['t3ver_state']) !== 2;
@@ -211,7 +237,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to be edited
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeEdited() {
 		return $this->canEdit($this->record);
@@ -220,7 +246,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to be copied
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeCopied() {
 		return $this->canCreate($this->record) && intval($this->record['t3ver_state']) !== 2;
@@ -229,7 +255,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if there can be new pages created
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canCreateNewPages() {
 		return $this->canCreate($this->record);
@@ -238,7 +264,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to be removed
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeRemoved() {
 		return $this->canRemove($this->record) && intval($this->record['t3ver_state']) !== 2;
@@ -247,7 +273,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if something can be pasted into the node
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function canBePastedInto() {
 		return $this->canCreate($this->record) && intval($this->record['t3ver_state']) !== 2;
@@ -256,7 +282,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if something can be pasted after the node
 	 *
-	 * @return bool
+	 * @return boolean
 	 */
 	public function canBePastedAfter() {
 		return $this->canCreate($this->record) && intval($this->record['t3ver_state']) !== 2;
@@ -265,7 +291,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to show history
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canShowHistory() {
 		return TRUE;
@@ -274,7 +300,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to be viewed
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeViewed() {
 		return TRUE;
@@ -283,7 +309,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to show info
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canShowInfo() {
 		return TRUE;
@@ -292,21 +318,32 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 	/**
 	 * Checks if the page is allowed to be a temporary mount point
 	 *
-	 * @return void
+	 * @return boolean
 	 */
 	public function canBeTemporaryMountPoint() {
 		return TRUE;
 	}
 
 	/**
+	 * Returns the calculated id representation of this node
+	 *
+	 * @param string $prefix Defaults to 'p'
+	 * @return string
+	 */
+	public function calculateNodeId($prefix = 'p') {
+		return $prefix . dechex($this->getId()) . ($this->getMountPoint() ? '-' . dechex($this->getMountPoint()) : '');
+	}
+
+	/**
 	 * Returns the node in an array representation that can be used for serialization
 	 *
+	 * @param boolean $addChildNodes
 	 * @return array
 	 */
-	public function toArray() {
+	public function toArray($addChildNodes = TRUE) {
 		$arrayRepresentation = parent::toArray();
 
-		$arrayRepresentation['id'] = 'p' . dechex($this->getId()) . ($this->getMountPoint() ? '-' . dechex($this->getMountPoint()) : '');
+		$arrayRepresentation['id'] = $this->calculateNodeId();
 		$arrayRepresentation['realId'] = $this->getId();
 		$arrayRepresentation['nodeData']['id'] = $this->getId();
 
@@ -316,6 +353,7 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 		$arrayRepresentation['nodeData']['mountPoint'] = $this->getMountPoint();
 		$arrayRepresentation['nodeData']['workspaceId'] = $this->getWorkspaceId();
 		$arrayRepresentation['nodeData']['isMountPoint'] = $this->isMountPoint();
+		$arrayRepresentation['nodeData']['backgroundColor'] = htmlspecialchars($this->getBackgroundColor());
 		$arrayRepresentation['nodeData']['serializeClassName'] = get_class($this);
 
 		return $arrayRepresentation;
@@ -333,11 +371,8 @@ class t3lib_tree_pagetree_Node extends t3lib_tree_extdirect_Node {
 		$this->setMountPoint($data['mountPoint']);
 		$this->setReadableRootline($data['readableRootline']);
 		$this->setIsMountPoint($data['isMountPoint']);
+		$this->setBackgroundColor($data['backgroundColor']);
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/tree/pagetree/class.t3lib_tree_pagetree_node.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/tree/pagetree/class.t3lib_tree_pagetree_node.php']);
 }
 
 ?>

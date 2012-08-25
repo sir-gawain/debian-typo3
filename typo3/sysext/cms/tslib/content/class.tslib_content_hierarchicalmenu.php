@@ -29,7 +29,6 @@
 /**
  * Contains HMENU class object.
  *
- * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -38,8 +37,8 @@ class tslib_content_HierarchicalMenu extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, HMENU
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 
@@ -71,7 +70,6 @@ class tslib_content_HierarchicalMenu extends tslib_content_Abstract {
 				$menu->makeMenu();
 
 				$theValue .= $menu->writeMenu();
-
 			}
 
 			$wrap =  isset($conf['wrap.'])
@@ -88,14 +86,6 @@ class tslib_content_HierarchicalMenu extends tslib_content_Abstract {
 		}
 
 		return $theValue;
-
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_hierarchicalmenu.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_hierarchicalmenu.php']);
-}
-
 ?>

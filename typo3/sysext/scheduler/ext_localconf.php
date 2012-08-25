@@ -1,12 +1,11 @@
 <?php
-/* $Id$ */
 
 if (!defined ('TYPO3_MODE')) {
 	die ('Access denied.');
 }
 
 	// Register the Scheduler as a possible key for CLI calls
-$TYPO3_CONF_VARS['SC_OPTIONS']['GLOBAL']['cliKeys'][$_EXTKEY] = array(
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['cliKeys'][$_EXTKEY] = array(
 	'EXT:' . $_EXTKEY . '/cli/scheduler_cli_dispatch.php', '_CLI_scheduler'
 );
 
@@ -32,10 +31,57 @@ if (!empty($extConf['showSampleTasks'])) {
 
 	// Add caching framework garbage collection task
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_CachingFrameworkGarbageCollection'] = array(
+	'extension'        => $_EXTKEY,
+	'title'            => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:cachingFrameworkGarbageCollection.name',
+	'description'      => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:cachingFrameworkGarbageCollection.description',
+	'additionalFields' => 'tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider',
+);
+
+	// Add file indexing task
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_FileIndexing'] = array(
+	'extension'        => $_EXTKEY,
+	'title'            => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:fileIndexing.name',
+	'description'      => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:fileIndexing.description',
+);
+
+	// Add recycler directory cleanup task. Windows is not supported
+	// because "filectime" does not change after moving a file
+if (TYPO3_OS != 'WIN') {
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_RecyclerGarbageCollection'] = array(
 		'extension'        => $_EXTKEY,
-		'title'            => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:cachingFrameworkGarbageCollection.name',
-		'description'      => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:cachingFrameworkGarbageCollection.description',
-		'additionalFields' => 'tx_scheduler_CachingFrameworkGarbageCollection_AdditionalFieldProvider',
+		'title'            => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:recyclerGarbageCollection.name',
+		'description'      => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:recyclerGarbageCollection.description',
+		'additionalFields' => 'tx_scheduler_RecyclerGarbageCollection_AdditionalFieldProvider',
 	);
+}
+
+	// Add table garbage collection task
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection'] = array(
+	'extension'        => $_EXTKEY,
+	'title'            => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:tableGarbageCollection.name',
+	'description'      => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:tableGarbageCollection.description',
+	'additionalFields' => 'tx_scheduler_TableGarbageCollection_AdditionalFieldProvider',
+);
+	// Initialize option array of table garbage collection task if not already done by some other extension or localconf.php
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options'] = array();
+}
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables'] = array();
+}
+	// Register sys_log and sys_history table in table garbage collection task
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables']['sys_log'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables']['sys_log'] = array(
+		'dateField' => 'tstamp',
+		'expirePeriod' => 180,
+	);
+}
+
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables']['sys_history'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables']['sys_history'] = array(
+		'dateField' => 'tstamp',
+		'expirePeriod' => 30,
+	);
+}
 
 ?>

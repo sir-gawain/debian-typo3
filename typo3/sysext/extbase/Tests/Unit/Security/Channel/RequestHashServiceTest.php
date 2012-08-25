@@ -33,6 +33,9 @@
  */
 class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
+	/**
+	 * @return array
+	 */
 	public function dataProviderForGenerateRequestHash() {
 		return array(
 			// Simple cases
@@ -90,7 +93,11 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 		);
 	}
 
-	// Data provider for error cases which should throw an exception
+	/**
+	 * Data provider for error cases which should throw an exception
+	 *
+	 * @return array
+	 */
 	public function dataProviderForGenerateRequestHashWithUnallowedValues() {
 		return array(
 			// Overriding form fields (string overridden by array)
@@ -119,6 +126,8 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 * @test
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @dataProvider dataProviderForGenerateRequestHash
+	 * @param mixed $input
+	 * @param mixed $expected
 	 */
 	public function generateRequestHashGeneratesTheCorrectHashesInNormalOperation($input, $expected) {
 		$requestHashService = $this->getMock('Tx_Extbase_Security_Channel_RequestHashService', array('serializeAndHashFormFieldArray'));
@@ -131,6 +140,7 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @dataProvider dataProviderForGenerateRequestHashWithUnallowedValues
 	 * @expectedException Tx_Extbase_Security_Exception_InvalidArgumentForRequestHashGeneration
+	 * @param mixed $input
 	 */
 	public function generateRequestHashThrowsExceptionInWrongCases($input) {
 		$requestHashService = $this->getMock('Tx_Extbase_Security_Channel_RequestHashService', array('serializeAndHashFormFieldArray'));
@@ -166,8 +176,8 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 * @author Sebastian Kurfürst
 	 */
 	public function verifyRequestHashSetsHmacVerifiedToFalseIfRequestDoesNotHaveAnHmacArgument() {
-		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('hasArgument', 'setHmacVerified'));
-		$request->expects($this->once())->method('hasArgument')->with('__hmac')->will($this->returnValue(FALSE));
+		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('getInternalArgument', 'setHmacVerified'));
+		$request->expects($this->any())->method('getInternalArgument')->with('__hmac')->will($this->returnValue(FALSE));
 		$request->expects($this->once())->method('setHmacVerified')->with(FALSE);
 		$requestHashService = new Tx_Extbase_Security_Channel_RequestHashService;
 		$requestHashService->verifyRequest($request);
@@ -179,9 +189,8 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 * @author Sebastian Kurfürst
 	 */
 	public function verifyRequestHashThrowsExceptionIfHmacIsShortherThan40Characters() {
-		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('hasArgument', 'getArgument', 'setHmacVerified'));
-		$request->expects($this->once())->method('hasArgument')->with('__hmac')->will($this->returnValue(TRUE));
-		$request->expects($this->once())->method('getArgument')->with('__hmac')->will($this->returnValue('abc'));
+		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('getInternalArgument', 'setHmacVerified'));
+		$request->expects($this->any())->method('getInternalArgument')->with('__hmac')->will($this->returnValue('abc'));
 		$requestHashService = new Tx_Extbase_Security_Channel_RequestHashService;
 		$requestHashService->verifyRequest($request);
 	}
@@ -191,9 +200,8 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 * @author Sebastian Kurfürst
 	 */
 	public function verifyRequestHashValidatesTheHashAndSetsHmacVerifiedToFalseIfHashCouldNotBeVerified() {
-		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('hasArgument', 'getArgument', 'setHmacVerified'));
-		$request->expects($this->once())->method('hasArgument')->with('__hmac')->will($this->returnValue(TRUE));
-		$request->expects($this->once())->method('getArgument')->with('__hmac')->will($this->returnValue('11111' . '0000000000000000000000000000000000000000'));
+		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('getInternalArgument', 'setHmacVerified'));
+		$request->expects($this->any())->method('getInternalArgument')->with('__hmac')->will($this->returnValue('11111' . '0000000000000000000000000000000000000000'));
 		$request->expects($this->once())->method('setHmacVerified')->with(FALSE);
 
 		$hashService = $this->getMock('Tx_Extbase_Security_Cryptography_HashService', array('validateHash'));
@@ -210,9 +218,8 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 */
 	public function verifyRequestHashValidatesTheHashAndSetsHmacVerifiedToTrueIfArgumentsAreIncludedInTheAllowedArgumentList() {
 		$data = serialize(array('a' => 1));
-		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('hasArgument', 'getArgument', 'getArguments', 'setHmacVerified'));
-		$request->expects($this->once())->method('hasArgument')->with('__hmac')->will($this->returnValue(TRUE));
-		$request->expects($this->once())->method('getArgument')->with('__hmac')->will($this->returnValue($data . '0000000000000000000000000000000000000000'));
+		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('getInternalArgument', 'getArguments', 'setHmacVerified'));
+		$request->expects($this->any())->method('getInternalArgument')->with('__hmac')->will($this->returnValue($data . '0000000000000000000000000000000000000000'));
 		$request->expects($this->once())->method('getArguments')->will($this->returnValue(array(
 			'__hmac' => 'ABC',
 			'__referrer' => '...',
@@ -235,9 +242,8 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 */
 	public function verifyRequestHashValidatesTheHashAndSetsHmacVerifiedToFalseIfNotAllArgumentsAreIncludedInTheAllowedArgumentList() {
 		$data = serialize(array('a' => 1));
-		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('hasArgument', 'getArgument', 'getArguments', 'setHmacVerified'));
-		$request->expects($this->once())->method('hasArgument')->with('__hmac')->will($this->returnValue(TRUE));
-		$request->expects($this->once())->method('getArgument')->with('__hmac')->will($this->returnValue($data . '0000000000000000000000000000000000000000'));
+		$request = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_MVC_Web_Request'), array('getInternalArgument', 'getArguments', 'setHmacVerified'));
+		$request->expects($this->any())->method('getInternalArgument')->with('__hmac')->will($this->returnValue($data . '0000000000000000000000000000000000000000'));
 		$request->expects($this->once())->method('getArguments')->will($this->returnValue(array(
 			'__hmac' => 'ABC',
 			'__referrer' => '...',
@@ -257,6 +263,7 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 
 	/**
 	 * Data Provider for checkFieldNameInclusionWorks
+	 * @return array
 	 */
 	public function dataProviderForCheckFieldNameInclusion() {
 		return array(
@@ -418,6 +425,9 @@ class Tx_Extbase_Tests_Unit_Security_Channel_RequestHashServiceTest extends Tx_E
 	 * @test
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @dataProvider dataProviderForCheckFieldNameInclusion
+	 * @param mixed $requestArguments
+	 * @param mixed $allowedFields
+	 * @param mixed $expectedResult
 	 */
 	public function checkFieldNameInclusionWorks($requestArguments, $allowedFields, $expectedResult) {
 		$requestHashService = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Security_Channel_RequestHashService'), array('dummy'));

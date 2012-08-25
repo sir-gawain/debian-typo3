@@ -26,13 +26,15 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/* $Id: class.tx_em_extensions_details.php 2058 2010-03-17 09:39:15Z steffenk $ */
 
 /**
- * This class handles extension details
+ * Class for extension details
  *
+ * @author Karsten Dambekalns <karsten@typo3.org>
+ * @author Steffen Kamper <steffen@typo3.org>
+ * @package TYPO3
+ * @subpackage em
  */
-
 class tx_em_Extensions_Details {
 
 	protected $maxUploadSize = 31457280;
@@ -52,7 +54,7 @@ class tx_em_Extensions_Details {
 	/**
 	 * Class for install extensions
 	 *
-	 * @var em_install
+	 * @var tx_em_Install
 	 */
 	public $install;
 
@@ -250,7 +252,7 @@ class tx_em_Extensions_Details {
 		if ($emConfFileContent) {
 
 			if (@is_file($emConfFileName)) {
-				if (t3lib_div::writeFile($emConfFileName, $emConfFileContent) === true) {
+				if (t3lib_div::writeFile($emConfFileName, $emConfFileContent) === TRUE) {
 					return sprintf($GLOBALS['LANG']->getLL('updateLocalEM_CONF_ok'),
 						substr($emConfFileName, strlen($absPath)));
 				} else {
@@ -315,15 +317,15 @@ class tx_em_Extensions_Details {
 
 		$code = '<?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "' . $extKey . '".
-#
-# Auto generated ' . date('d-m-Y H:i') . '
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+* Extension Manager/Repository config file for ext "' . $extKey . '".
+*
+* Auto generated ' . date('d-m-Y H:i') . '
+*
+* Manual updates:
+* Only the data in the array - everything else is removed by next
+* writing. "version" and "dependencies" must not be touched!
+***************************************************************/
 
 $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 
@@ -529,7 +531,6 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 				$emConf[$key]
 			);
 
-
 			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_clear_cache');
 			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_clearCacheOnLoad', $headerCol);
 			if ($emConf['clearCacheOnLoad']) {
@@ -558,19 +559,6 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 				($emConf[$key] ? $emConf[$key] : '')
 			);
 
-			$key = 'doNotLoadInFE';
-			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_load_in_frontend');
-			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_doNotLoadInFE', $headerCol);
-			if (!$emConf['doNotLoadInFE']) {
-				$dataCol = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
-			} else {
-				$dataCol = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
-			}
-			$lines[] = array(
-				$headerCol,
-				$dataCol
-			);
-
 			$key = 'modify_tables';
 			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_modifies_tables');
 			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_modify_tables', $headerCol);
@@ -579,24 +567,20 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 				$emConf[$key]
 			);
 
-
-			// Installation status:
-			$techInfo = $this->install->makeDetailedExtensionAnalysis($extKey, $extInfo, 1);
+				// Installation status
+			$techInfo = $this->install->makeDetailedExtensionAnalysis($extKey, $extInfo, TRUE, FALSE);
 			$lines[] = array('<tr><td colspan="2">&nbsp;</td></tr>');
 			$lines[] = array('<tr class="t3-row-header"><td colspan="2"><strong>' . $GLOBALS['LANG']->getLL('extInfoArray_inst_status') . '</strong></td></tr>');
-
 
 			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_inst_type');
 			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_type', $headerCol);
 			$dataCol = $this->api->typeLabels[$extInfo['type']] . ' - <em>' . $this->api->typeDescr[$extInfo['type']] . '</em>';
 			$lines[] = array($headerCol, $dataCol);
 
-
 			$headerCol = $GLOBALS['LANG']->getLL('extInfoArray_inst_twice');
 			$headerCol = t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_doubleInstall', $headerCol);
 			$dataCol = $this->extInformationArray_dbInst($extInfo['doubleInstall'], $extInfo['type']);
 			$lines[] = array($headerCol, $dataCol);
-
 
 			if (is_array($extInfo['files'])) {
 				sort($extInfo['files']);
@@ -702,7 +686,6 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 			}
 		}
 
-
 		return '<table border="0" cellpadding="1" cellspacing="2">
 					' . $output . '
 				</table>';
@@ -754,29 +737,6 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 		}
 	}
 
-
-	/**
-	 * Returns help text if applicable.
-	 *
-	 * @param	string		Help text key
-	 * @return	string		HTML table cell
-	 * @deprecated since TYPO3 4.5, will be removed in TYPO3 4.7
-	 */
-	function helpCol($key) {
-		global $BE_USER;
-		if ($BE_USER->uc['edit_showFieldHelp']) {
-			if (empty($key)) {
-				return '<td>&nbsp;</td>';
-			}
-			else {
-				return t3lib_BEfunc::cshItem($this->descrTable, 'emconf_' . $key, $GLOBALS['BACK_PATH'], '<td>|</td>');
-			}
-		}
-		else {
-			return '';
-		}
-	}
-
 	/**
 	 * Returns the header column (for the extension details item), and applies help text if available
 	 *
@@ -788,9 +748,4 @@ $EM_CONF[$_EXTKEY] = ' . tx_em_Tools::arrayToCode($EM_CONF, 0) . ';
 		return t3lib_BEfunc::wrapInHelp($this->descrTable, 'emconf_' . $key, $headerCol);
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/extensions/class.tx_em_extensions_details.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/extensions/class.tx_em_extensions_details.php']);
-}
-
 ?>

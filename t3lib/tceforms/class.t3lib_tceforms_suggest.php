@@ -24,26 +24,24 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * TCEforms wizard for rendering an AJAX selector for records
- *
- * $Id$
  *
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  * @author Benjamin Mack <benni@typo3.org>
  */
-
 class t3lib_TCEforms_Suggest {
-		// count the number of ajax selectors used
+		// Count the number of ajax selectors used
 	public $suggestCount = 0;
 	public $cssClass = 'typo3-TCEforms-suggest';
-	public $TCEformsObj; // reference to t3lib_tceforms
-
+		// Reference to t3lib_tceforms
+	public $TCEformsObj;
 
 	/**
 	 * Initialize an instance of t3lib_TCEforms_suggest
 	 *
-	 * @param  t3lib_TCEforms  $tceForms  Reference to an TCEforms instance
+	 * @param t3lib_TCEforms $tceForms Reference to an TCEforms instance
 	 * @return void
 	 */
 	public function init(&$tceForms) {
@@ -84,21 +82,21 @@ class t3lib_TCEforms_Suggest {
 
 		</div>';
 
-			// get minimumCharacters from TCA
+			// Get minimumCharacters from TCA
 		if (isset($config['fieldConf']['config']['wizards']['suggest']['default']['minimumCharacters'])) {
 			$minChars = intval($config['fieldConf']['config']['wizards']['suggest']['default']['minimumCharacters']);
 		}
-			// overwrite it with minimumCharacters from TSConfig (TCEFORM) if given
+			// Overwrite it with minimumCharacters from TSConfig (TCEFORM) if given
 		if (isset($config['fieldTSConfig']['suggest.']['default.']['minimumCharacters'])) {
 			$minChars = intval($config['fieldTSConfig']['suggest.']['default.']['minimumCharacters']);
 		}
 		$minChars = ($minChars > 0 ? $minChars : 2);
 
-			// replace "-" with ucwords for the JS object name
+			// Replace "-" with ucwords for the JS object name
 		$jsObj = str_replace(' ', '', ucwords(str_replace('-', ' ', t3lib_div::strtolower($suggestId))));
 		$this->TCEformsObj->additionalJS_post[] = '
 			var ' . $jsObj . ' = new TCEForms.Suggest("' . $fieldname . '", "' . $table . '", "' . $field .
-												  '", "' . $row['uid'] . '", ' . $row['pid'] . ', ' . $minChars . ');
+												'", "' . $row['uid'] . '", ' . $row['pid'] . ', ' . $minChars . ');
 			' . $jsObj . '.defaultValue = "' . t3lib_div::slashJS($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.findRecord')) . '";
 		';
 
@@ -114,7 +112,7 @@ class t3lib_TCEforms_Suggest {
 	 */
 	public function processAjaxRequest($params, &$ajaxObj) {
 
-			// get parameters from $_GET/$_POST
+			// Get parameters from $_GET/$_POST
 		$search = t3lib_div::_GP('value');
 		$table = t3lib_div::_GP('table');
 		$field = t3lib_div::_GP('field');
@@ -192,7 +190,6 @@ class t3lib_TCEforms_Suggest {
 				$config = t3lib_div::array_merge_recursive_overrule($config, $wizardConfig[$queryTable]);
 			}
 
-
 				// merge the configurations of different "levels" to get the working configuration for this table and
 				// field (i.e., go from the most general to the most special configuration)
 			if (is_array($TSconfig['TCEFORM.']['suggest.']['default.'])) {
@@ -220,7 +217,7 @@ class t3lib_TCEforms_Suggest {
 				$config['addWhere'] = strtr(' ' . $config['addWhere'], array(
 																			'###THIS_UID###' => intval($uid),
 																			'###CURRENT_PID###' => intval($pageId),
-																	   ));
+																		));
 			}
 				// instantiate the class that should fetch the records for this $queryTable
 			$receiverClassName = $config['receiverClass'];
@@ -258,7 +255,7 @@ class t3lib_TCEforms_Suggest {
 				$row = $resultRows[$rowsSort[$i]];
 				$rowId = $row['table'] . '-' . $row['uid'] . '-' . $table . '-' . $uid . '-' . $field;
 				$listItems[] = '<li' . ($row['class'] != '' ? ' class="' . $row['class'] . '"' : '') .
-							   ' id="' . $rowId . '" style="' . $row['style'] . '">' . $row['text'] . '</li>';
+							' id="' . $rowId . '" style="' . $row['style'] . '">' . $row['text'] . '</li>';
 			}
 		}
 
@@ -271,11 +268,6 @@ class t3lib_TCEforms_Suggest {
 		$list = '<ul class="' . $this->cssClass . '-resultlist">' . $list . '</ul>';
 		$ajaxObj->addContent(0, $list);
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_suggest.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_suggest.php']);
 }
 
 ?>

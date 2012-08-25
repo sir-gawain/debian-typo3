@@ -40,7 +40,7 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 	 */
 	const PATTERN_MATCH_VALIDATORS = '/
 			(?:^|,\s*)
-			(?P<validatorName>[a-z0-9_]+)
+			(?P<validatorName>[a-z0-9_:]+)
 			\s*
 			(?:\(
 				(?P<validatorOptions>(?:\s*[a-z0-9]+\s*=\s*(?:
@@ -113,12 +113,14 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 	public function createValidator($validatorName, array $validatorOptions = array()) {
 		$validatorClassName = $this->resolveValidatorObjectName($validatorName);
 		if ($validatorClassName === FALSE) return NULL;
-		$validator = $this->objectManager->get($validatorClassName);
+		$validator = $this->objectManager->get($validatorClassName, $validatorOptions);
 		if (!($validator instanceof Tx_Extbase_Validation_Validator_ValidatorInterface)) {
 			return NULL;
 		}
-
-		$validator->setOptions($validatorOptions);
+		if (method_exists($validator, 'setOptions')) {
+				// @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+			$validator->setOptions($validatorOptions);
+		}
 		return $validator;
 	}
 
@@ -140,9 +142,10 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 
 	/**
 	 * Detects and registers any validators for arguments:
-	 * - by the data type specified in the @param annotations
-	 * - additional validators specified in the @validate annotations of a method
+	 * - by the data type specified in the
 	 *
+	 * @param string $className
+	 * @param string $methodName
 	 * @return array An Array of ValidatorConjunctions for each method parameters.
 	 */
 	public function buildMethodArgumentsValidatorConjunctions($className, $methodName) {
@@ -199,7 +202,7 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 		$validatorConjunction = $this->objectManager->get('Tx_Extbase_Validation_Validator_ConjunctionValidator');
 
 		// Model based validator
-		if (strstr($dataType, '_') !== FALSE && class_exists($dataType)) {
+		if (strpos($dataType, '_') !== FALSE && class_exists($dataType)) {
 			$validatorCount = 0;
 			$objectValidator = $this->createValidator('GenericObject');
 
@@ -235,6 +238,7 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 	/**
 	 * Parses the validator options given in @validate annotations.
 	 *
+	 * @param string $validateValue
 	 * @return array
 	 */
 	protected function parseValidatorAnnotation($validateValue) {
@@ -280,7 +284,7 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 	/**
 	 * Removes escapings from a given argument string and trims the outermost
 	 * quotes.
-	 * 
+	 *
 	 * This method is meant as a helper for regular expression results.
 	 *
 	 * @param string &$quotedValue Value to unquote
@@ -307,11 +311,16 @@ class Tx_Extbase_Validation_ValidatorResolver implements t3lib_Singleton {
 	 * @return string Name of the validator object or FALSE
 	 */
 	protected function resolveValidatorObjectName($validatorName) {
-		if (strstr($validatorName, '_') !== FALSE && class_exists($validatorName)) return $validatorName;
-
-		$possibleClassName = 'Tx_Extbase_Validation_Validator_' . $this->unifyDataType($validatorName) . 'Validator';
-		if (class_exists($possibleClassName)) return $possibleClassName;
-
+		if (strpos($validatorName, '_') !== FALSE && class_exists($validatorName)) return $validatorName;
+		list($extensionName, $extensionValidatorName) = explode(':', $validatorName);
+		if (!$extensionValidatorName) {
+			$possibleClassName = 'Tx_Extbase_Validation_Validator_' . $this->unifyDataType($validatorName) . 'Validator';
+		} else {
+			$possibleClassName = 'Tx_' . $extensionName . '_Validation_Validator_' . $extensionValidatorName . 'Validator';
+		}
+		if (class_exists($possibleClassName)) {
+			return $possibleClassName;
+		}
 		return FALSE;
 	}
 

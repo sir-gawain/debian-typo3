@@ -24,49 +24,24 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Shows information about a database or file item
  *
- * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML Compliant
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   76: class SC_show_rechis
- *   87:     function init()
- *  105:     function main()
- *  131:     function printContent()
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
 
-
-$BACK_PATH='';
-require ($BACK_PATH.'init.php');
-require ($BACK_PATH.'template.php');
+$BACK_PATH = '';
+require($BACK_PATH.'init.php');
 $LANG->includeLLFile('EXT:lang/locallang_show_rechis.xml');
-require_once ('class.show_rechis.inc');
-
-
-
-
-
-
-
-
 
 /**
  * Script Class for showing the history module of TYPO3s backend
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  * @see class.show_rechis.inc
@@ -86,10 +61,9 @@ class SC_show_rechis {
 	/**
 	 * Initialize the module output
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function init()	{
-		global $LANG;
+	function init() {
 
 			// Create internal template object:
 		$this->doc = t3lib_div::makeInstance('template');
@@ -97,17 +71,15 @@ class SC_show_rechis {
 		$this->doc->setModuleTemplate('templates/show_rechis.html');
 
 			// Start the page header:
-		$this->content.=$this->doc->header($LANG->getLL('title'));
-		$this->content.=$this->doc->spacer(5);
+		$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('title'));
 	}
 
 	/**
 	 * Generate module output
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function main()	{
-		global $LANG;
+	function main() {
 
 			// Start history object
 		$historyObj = t3lib_div::makeInstance('recordHistory');
@@ -121,18 +93,17 @@ class SC_show_rechis {
 		$markers['CSH'] = $docHeaderButtons['csh'];
 
 			// Build the <body> for the module
-		$this->content = $this->doc->startPage($LANG->getLL('title'));
-		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('title'));
+		$this->content .= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
 	}
 
 	/**
 	 * Outputting the accumulated content to screen
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function printContent()	{
-		$this->content.=$this->doc->spacer(8);
-		$this->content.= $this->doc->endPage();
+	function printContent() {
+		$this->content .= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
 	}
@@ -140,7 +111,7 @@ class SC_show_rechis {
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return	array	all available buttons as an assoc. array
+	 * @return array All available buttons as an assoc. array
 	 */
 	protected function getButtons() {
 		$buttons = array(
@@ -154,22 +125,15 @@ class SC_show_rechis {
 			// Start history object
 		$historyObj = t3lib_div::makeInstance('recordHistory');
 
-		if ($historyObj->returnUrl)	{
-			$buttons['back']= '<a href="' . htmlspecialchars($historyObj->returnUrl) . '" class="typo3-goBack">' . t3lib_iconWorks::getSpriteIcon('actions-view-go-back') . '</a>';
+		if ($historyObj->returnUrl) {
+			$buttons['back'] = '<a href="' . htmlspecialchars($historyObj->returnUrl) . '" class="typo3-goBack">' . t3lib_iconWorks::getSpriteIcon('actions-view-go-back') . '</a>';
 		}
 
 		return $buttons;
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_rechis.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/show_rechis.php']);
-}
-
-
-
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_show_rechis');
 $SOBE->init();
 $SOBE->main();

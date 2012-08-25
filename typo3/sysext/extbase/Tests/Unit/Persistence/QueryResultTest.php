@@ -45,6 +45,11 @@ class Tx_Extbase_Tests_Unit_Persistence_QueryResultTest extends Tx_Extbase_Tests
 	protected $mockDataMapper;
 
 	/**
+	 * @var array
+	 */
+	protected $sampleResult = array();
+
+	/**
 	 * Sets up this test case
 	 *
 	 * @return void
@@ -66,7 +71,7 @@ class Tx_Extbase_Tests_Unit_Persistence_QueryResultTest extends Tx_Extbase_Tests
 	 * @test
 	 */
 	public function getQueryReturnsQueryObject() {
-		$this->assertType('Tx_Extbase_Persistence_QueryInterface', $this->queryResult->getQuery());
+		$this->assertInstanceOf('Tx_Extbase_Persistence_QueryInterface', $this->queryResult->getQuery());
 	}
 
 	/**

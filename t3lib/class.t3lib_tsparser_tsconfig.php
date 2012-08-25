@@ -25,17 +25,14 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * A TS-Config parsing class which performs condition evaluation
  *
- * $Id$
- *
- * @author	Kraft Bernhard <kraftb@kraftb.at>
+ * @author Kraft Bernhard <kraftb@kraftb.at>
+ * @package TYPO3
+ * @subpackage t3lib
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- */
-
 class t3lib_TSparser_TSconfig extends t3lib_TSparser {
 	/**
 	 * @var	array
@@ -45,11 +42,11 @@ class t3lib_TSparser_TSconfig extends t3lib_TSparser {
 	/**
 	 * Parses the passed TS-Config using conditions and caching
 	 *
-	 * @param	string		$TStext: The TSConfig being parsed
-	 * @param	string		$type: The type of TSConfig (either "userTS" or "PAGES")
-	 * @param	integer		$id: The uid of the page being handled
-	 * @param	array		$rootLine: The rootline of the page being handled
-	 * @return	array		Array containing the parsed TSConfig and a flag wheter the content was retrieved from cache
+	 * @param string $TStext The TSConfig being parsed
+	 * @param string $type The type of TSConfig (either "userTS" or "PAGES")
+	 * @param integer $id The uid of the page being handled
+	 * @param array $rootLine The rootline of the page being handled
+	 * @return array Array containing the parsed TSConfig and a flag wheter the content was retrieved from cache
 	 * @see t3lib_TSparser
 	 */
 	public function parseTSconfig($TStext, $type, $id = 0, array $rootLine = array()) {
@@ -107,11 +104,11 @@ class t3lib_TSparser_TSconfig extends t3lib_TSparser {
 	/**
 	 * Does the actual parsing using the parent objects "parse" method. Creates the match-Object
 	 *
-	 * @param	string		$TSconfig: The TSConfig being parsed
-	 * @return	array		Array containing the parsed TSConfig, the encountered sectiosn, the matched sections
+	 * @param string $TSconfig The TSConfig being parsed
+	 * @return array Array containing the parsed TSConfig, the encountered sectiosn, the matched sections
 	 */
 	protected function parseWithConditions($TSconfig) {
-		/* @var $matchObj t3lib_matchCondition_backend */
+		/** @var $matchObj t3lib_matchCondition_backend */
 		$matchObj = t3lib_div::makeInstance('t3lib_matchCondition_backend');
 		$matchObj->setRootline($this->rootLine);
 		$matchObj->setPageId($this->id);
@@ -131,12 +128,12 @@ class t3lib_TSparser_TSconfig extends t3lib_TSparser {
 	/**
 	 * Is just going through an array of conditions to determine which are matching (for getting correct cache entry)
 	 *
-	 * @param	array		$cc: An array containing the sections to match
-	 * @return	array		The input array with matching sections filled into the "match" key
+	 * @param array $cc An array containing the sections to match
+	 * @return array The input array with matching sections filled into the "match" key
 	 */
 	protected function matching(array $cc) {
 		if (is_array($cc['sections'])) {
-			/* @var $matchObj t3lib_matchCondition_backend */
+			/** @var $matchObj t3lib_matchCondition_backend */
 			$matchObj = t3lib_div::makeInstance('t3lib_matchCondition_backend');
 			$matchObj->setRootline($this->rootLine);
 			$matchObj->setPageId($this->id);
@@ -150,11 +147,5 @@ class t3lib_TSparser_TSconfig extends t3lib_TSparser {
 
 		return $cc;
 	}
-
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser_tsconfig.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsparser_tsconfig.php']);
 }
 ?>

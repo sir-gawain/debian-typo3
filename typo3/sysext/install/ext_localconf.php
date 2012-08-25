@@ -1,5 +1,10 @@
 <?php
-if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
+}
+
+	// TYPO3 6.0 - Update localconf.php to LocalConfiguration.php
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['localConfiguration'] = 'tx_coreupdates_localconfiguration';
 
 	// TYPO3 4.5 - Check the database to be utf-8 compliant
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['charsetDefaults'] = 'tx_coreupdates_charsetdefaults';
@@ -50,4 +55,14 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['addFlexformsToAcl'] = '
 
 	// Version 4.5: Split tt_content image_link to newline by comma
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['imagelink'] = 'tx_coreupdates_imagelink';
+
+	// Version 6.0: Migrate files content elements to use File Abstraction Layer
+	// Migrations of tt_content.image DB fields and captions, alt texts, etc. into sys_file_reference records.
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_init'] = 'Tx_Install_Updates_File_InitUpdateWizard';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_images'] = 'Tx_Install_Updates_File_TceformsUpdateWizard';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_uploads'] = 'Tx_Install_Updates_File_TtContentUploadsUpdateWizard';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_filemounts'] = 'Tx_Install_Updates_File_FilemountUpdateWizard';
+
+	// Version 4.7: Migrate the flexforms of MediaElement
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['mediaElementFlexform'] = 'tx_coreupdates_mediaFlexform';
 ?>

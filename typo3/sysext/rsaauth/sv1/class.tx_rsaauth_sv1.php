@@ -21,17 +21,10 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- * $Id$
- */
 
 require_once(t3lib_extMgm::extPath('sv') . 'class.tx_sv_auth.php');
-require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/backends/class.tx_rsaauth_backendfactory.php');
-require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/storage/class.tx_rsaauth_storagefactory.php');
 
-// Include backends
+	// Include backends
 
 /**
  * Service "RSA authentication" for the "rsaauth" extension. This service will
@@ -40,168 +33,101 @@ require_once(t3lib_extMgm::extPath('rsaauth') . 'sv1/storage/class.tx_rsaauth_st
  * the password and then pass it to the parent service ('sv'). This ensures that it
  * always works, even if other TYPO3 internals change.
  *
- * @author	Dmitry Dulepov <dmitry@typo3.org>
- * @package	TYPO3
- * @subpackage	tx_rsaauth
+ * @author Dmitry Dulepov <dmitry@typo3.org>
+ * @package TYPO3
+ * @subpackage tx_rsaauth
  */
 class tx_rsaauth_sv1 extends tx_sv_auth  {
 
 	/**
 	 * An RSA backend.
 	 *
-	 * @var	tx_rsaauth_abstract_backend
+	 * @var tx_rsaauth_abstract_backend
 	 */
-	protected	$backend = null;
+	protected $backend = NULL;
 
 	/**
 	 * Standard extension key for the service
+	 * The extension key.
 	 *
-	 * @var	string
+	 * @var string
 	 */
-	public	$extKey = 'rsaauth';	// The extension key.
+	public $extKey = 'rsaauth';
 
 	/**
 	 * Standard prefix id for the service
+	 * Same as class name
 	 *
-	 * @var	string
+	 * @var string
 	 */
-	public	$prefixId = 'tx_rsaauth_sv1';		// Same as class name
+	public $prefixId = 'tx_rsaauth_sv1';
 
 	/**
 	 * Standard relative path for the service
+	 * Path to this script relative to the extension dir.
 	 *
-	 * @var	string
+	 * @var string
 	 */
-	public	$scriptRelPath = 'sv1/class.tx_rsaauth_sv1.php';	// Path to this script relative to the extension dir.
+	public $scriptRelPath = 'sv1/class.tx_rsaauth_sv1.php';
 
 	/**
-	 * Authenticates a user. The function decrypts the password, runs evaluations
-	 * on it and passes to the parent authentication service.
+	 * Process the submitted credentials.
+	 * In this case decrypt the password if it is RSA encrypted.
 	 *
-	 * @param	array	$userRecord	User record
-	 * @return	int		Code that shows if user is really authenticated.
-	 * @see	t3lib_userAuth::checkAuthentication()
+	 * @param array $loginData Credentials that are submitted and potentially modified by other services
+	 * @param string $passwordTransmissionStrategy Keyword of how the password has been hashed or encrypted before submission
+	 * @return boolean
 	 */
-	public function authUser(array $userRecord) {
-		$result = 100;
+	public function processLoginData(array &$loginData, $passwordTransmissionStrategy) {
 
-		if ($this->pObj->security_level == 'rsa') {
+		$isProcessed = FALSE;
 
+		if ($passwordTransmissionStrategy === 'rsa') {
 			$storage = tx_rsaauth_storagefactory::getStorage();
-			/* @var $storage tx_rsaauth_abstract_storage */
+			/** @var $storage tx_rsaauth_abstract_storage */
 
-			// Set failure status by default
-			$result = -1;
-
-			// Preprocess the password
-			$password = $this->login['uident'];
+				// Decrypt the password
+			$password = $loginData['uident'];
 			$key = $storage->get();
-			if ($key != null && substr($password, 0, 4) == 'rsa:') {
-				// Decode password and pass to parent
+			if ($key != NULL && substr($password, 0, 4) === 'rsa:') {
+					// Decode password and store it in loginData
 				$decryptedPassword = $this->backend->decrypt($key, substr($password, 4));
-				if ($decryptedPassword != null) {
-					// Run the password through the eval function
-					$decryptedPassword = $this->runPasswordEvaluations($decryptedPassword);
-					if ($decryptedPassword != null) {
-						$this->login['uident'] = $decryptedPassword;
-						if (parent::authUser($userRecord)) {
-							$result = 200;
-						}
+				if ($decryptedPassword != NULL) {
+					$loginData['uident_text'] = $decryptedPassword;
+					$isProcessed = TRUE;
+				} else {
+					if ($this->pObj->writeDevLog) {
+						t3lib_div::devLog('Process login data: Failed to RSA decrypt password', 'tx_rsaauth_sv1');
 					}
 				}
-				// Reset the password to its original value
-				$this->login['uident'] = $password;
-				// Remove the key
-				$storage->put(null);
+					// Remove the key
+				$storage->put(NULL);
+			} else {
+				if ($this->pObj->writeDevLog) {
+					t3lib_div::devLog('Process login data: passwordTransmissionStrategy has been set to "rsa" but no rsa encrypted password has been found.', 'tx_rsaauth_sv1');
+				}
 			}
 		}
-		return $result;
+
+		return $isProcessed;
 	}
 
 	/**
 	 * Initializes the service.
 	 *
-	 * @return	boolean
+	 * @return boolean
 	 */
-	public function init()	{
+	public function init() {
 		$available = parent::init();
 		if ($available) {
-			// Get the backend
+				// Get the backend
 			$this->backend = tx_rsaauth_backendfactory::getBackend();
 			if (is_null($this->backend)) {
-				$available = false;
+				$available = FALSE;
 			}
 		}
 
 		return $available;
 	}
-
-	/**
-	 * Runs password evaluations. This is necessary because other extensions can
-	 * modify the way the password is stored in the database. We check for all
-	 * evaluations for the password column and run those.
-	 *
-	 * Notes:
-	 * - we call t3lib_TCEmain::checkValue_input_Eval() but it is risky: if a hook
-	 *   relies on BE_USER, it will fail. No hook should do this, so we risk it.
-	 * - we cannot use t3lib_TCEmain::checkValue_input_Eval() for running all
-	 *   evaluations because it does not create md5 hashes.
-	 *
-	 * @param	string	$password	Evaluated password
-	 * @return	void
-	 * @see	t3lib_TCEmain::checkValue_input_Eval()
-	 */
-	protected function runPasswordEvaluations($password) {
-		$table = $this->pObj->user_table;
-		t3lib_div::loadTCA($table);
-		$conf = &$GLOBALS['TCA'][$table]['columns'][$this->pObj->userident_column]['config'];
-		$evaluations = $conf['eval'];
-		if ($evaluations) {
-			$tce = null;
-			foreach (t3lib_div::trimExplode(',', $evaluations, true) as $evaluation) {
-				switch ($evaluation) {
-					case 'md5':
-						$password = md5($password);
-						break;
-					case 'upper':
-						// We do not pass this to TCEmain because TCEmain will use objects unavailable in FE
-						$csConvObj = (TYPO3_MODE == 'BE' ? $GLOBALS['LANG']->csConvObj : $GLOBALS['TSFE']->csConvObj);
-						$charset = (TYPO3_MODE == 'BE' ? $GLOBALS['LANG']->charSet : $GLOBALS['TSFE']->metaCharset);
-						$password = $csConvObj->conv_case($charset, $password, 'toUpper');
-						break;
-					case 'lower':
-						// We do not pass this to TCEmain because TCEmain will use objects unavailable in FE
-						$csConvObj = (TYPO3_MODE == 'BE' ? $GLOBALS['LANG']->csConvObj : $GLOBALS['TSFE']->csConvObj);
-						$charset = (TYPO3_MODE == 'BE' ? $GLOBALS['LANG']->charSet : $GLOBALS['TSFE']->metaCharset);
-						$password = $csConvObj->conv_case($charset, $password, 'toLower');
-						break;
-					case 'password':
-					case 'required':
-						// Do nothing!
-						break;
-					default:
-						// We must run these evaluations through TCEmain to avoid
-						// code duplication and ensure that any custom evaluations
-						// are called in a proper context
-						if ($tce == null) {
-							/* @var $tce t3lib_TCEmain */
-							$tce = t3lib_div::makeInstance('t3lib_TCEmain');
-						}
-						$result = $tce->checkValue_input_Eval($password, array($evaluation), $conf['is_in']);
-						if (!isset($result['value'])) {
-							// Failure!!!
-							return null;
-						}
-						$password = $result['value'];
-				}
-			}
-		}
-		return $password;
-	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/class.tx_rsaauth_sv1.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/class.tx_rsaauth_sv1.php']);
-}
-
 ?>

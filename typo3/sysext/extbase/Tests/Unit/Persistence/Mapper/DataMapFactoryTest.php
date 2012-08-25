@@ -173,7 +173,7 @@ class Tx_Extbase_Tests_Unit_Persistence_Mapper_DataMapFactoryTest extends Tx_Ext
 		$mockColumnMap->expects($this->once())->method('setRelationTableName')->with($this->equalTo('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('setChildTableName')->with($this->equalTo('tx_myextension_righttable'));
 		$mockColumnMap->expects($this->once())->method('setChildTableWhereStatement')->with($this->equalTo('WHERE 1=1'));
-		$mockColumnMap->expects($this->once())->method('setChildSortbyFieldName')->with($this->equalTo('sorting'));
+		$mockColumnMap->expects($this->once())->method('setChildSortByFieldName')->with($this->equalTo('sorting'));
 		$mockColumnMap->expects($this->once())->method('setParentKeyFieldName')->with($this->equalTo('uid_local'));
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
@@ -201,7 +201,7 @@ class Tx_Extbase_Tests_Unit_Persistence_Mapper_DataMapFactoryTest extends Tx_Ext
 		$mockColumnMap->expects($this->once())->method('setRelationTableName')->with($this->equalTo('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('setChildTableName')->with($this->equalTo('tx_myextension_lefttable'));
 		$mockColumnMap->expects($this->once())->method('setChildTableWhereStatement')->with(NULL);
-		$mockColumnMap->expects($this->once())->method('setChildSortbyFieldName')->with($this->equalTo('sorting_foreign'));
+		$mockColumnMap->expects($this->once())->method('setChildSortByFieldName')->with($this->equalTo('sorting_foreign'));
 		$mockColumnMap->expects($this->once())->method('setParentKeyFieldName')->with($this->equalTo('uid_foreign'));
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
@@ -228,7 +228,7 @@ class Tx_Extbase_Tests_Unit_Persistence_Mapper_DataMapFactoryTest extends Tx_Ext
 		$mockColumnMap->expects($this->once())->method('setRelationTableName')->with($this->equalTo('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('setChildTableName')->with($this->equalTo('tx_myextension_righttable'));
 		$mockColumnMap->expects($this->once())->method('setChildTableWhereStatement');
-		$mockColumnMap->expects($this->once())->method('setChildSortbyFieldName')->with($this->equalTo('sorting'));
+		$mockColumnMap->expects($this->once())->method('setChildSortByFieldName')->with($this->equalTo('sorting'));
 		$mockColumnMap->expects($this->once())->method('setParentKeyFieldName')->with($this->equalTo('uid_local'));
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
@@ -274,7 +274,7 @@ class Tx_Extbase_Tests_Unit_Persistence_Mapper_DataMapFactoryTest extends Tx_Ext
 		$mockColumnMap->expects($this->once())->method('setRelationTableName')->with($this->equalTo('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('setChildTableName')->with($this->equalTo('tx_myextension_righttable'));
 		$mockColumnMap->expects($this->never())->method('setChildTableWhereStatement');
-		$mockColumnMap->expects($this->once())->method('setChildSortbyFieldName')->with($this->equalTo('sorting'));
+		$mockColumnMap->expects($this->once())->method('setChildSortByFieldName')->with($this->equalTo('sorting'));
 		$mockColumnMap->expects($this->once())->method('setParentKeyFieldName')->with($this->equalTo('uid_local'));
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
@@ -335,8 +335,65 @@ class Tx_Extbase_Tests_Unit_Persistence_Mapper_DataMapFactoryTest extends Tx_Ext
 	 */
 	public function buildDataMapThrowsExceptionIfClassNameIsNotKnown() {
 		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Persistence_Mapper_DataMapFactory'), array('getControlSection'), array(), '', FALSE);
+		$cacheMock = $this->getMock('t3lib_cache_frontend_VariableFrontend', array('get'), array(), '', FALSE);
+		$cacheMock->expects($this->any())->method('get')->will($this->returnValue(FALSE));
+
+		$mockDataMapFactory->_set('dataMapCache', $cacheMock);
 		$mockDataMapFactory->buildDataMap('UnknownObject');
 	}
 
+	/**
+	 * @test
+	 */
+	public function buildDataMapFetchesSubclassesRecursively() {
+		$configuration = array(
+			'persistence' => array(
+				'classes' => array(
+					'Tx_Extbase_Domain_Model_FrontendUser' => array(
+						'subclasses' => array(
+							'Tx_SampleExt_Domain_Model_LevelOne1' => 'Tx_SampleExt_Domain_Model_LevelOne1',
+							'Tx_SampleExt_Domain_Model_LevelOne2' => 'Tx_SampleExt_Domain_Model_LevelOne2',
+						)
+					),
+					'Tx_SampleExt_Domain_Model_LevelOne1' => array(
+						'subclasses' => array(
+							'Tx_SampleExt_Domain_Model_LevelTwo1' => 'Tx_SampleExt_Domain_Model_LevelTwo1',
+							'Tx_SampleExt_Domain_Model_LevelTwo2' => 'Tx_SampleExt_Domain_Model_LevelTwo2',
+						)
+					),
+					'Tx_SampleExt_Domain_Model_LevelOne2' => array(
+						'subclasses' => array(),
+					),
+				),
+			),
+		);
+		$expectedSubclasses = array(
+			'Tx_SampleExt_Domain_Model_LevelOne1',
+			'Tx_SampleExt_Domain_Model_LevelTwo1',
+			'Tx_SampleExt_Domain_Model_LevelTwo2',
+			'Tx_SampleExt_Domain_Model_LevelOne2',
+		);
+
+		/** @var $configurationManager Tx_Extbase_Configuration_ConfigurationManager|PHPUnit_Framework_MockObject_MockObject  */
+		$configurationManager = $this->getMock('Tx_Extbase_Configuration_ConfigurationManager');
+		$configurationManager->expects($this->once())->method('getConfiguration')->with('Framework')
+			->will($this->returnValue($configuration));
+
+		$dataMapFactory = $this->getAccessibleMock('Tx_Extbase_Persistence_Mapper_DataMapFactory', array('test'));
+		$dataMapFactory->injectReflectionService(new Tx_Extbase_Reflection_Service());
+		$dataMapFactory->injectObjectManager(new Tx_Extbase_Object_ObjectManager());
+		$dataMapFactory->injectConfigurationManager($configurationManager);
+
+		$cacheMock = $this->getMock('t3lib_cache_frontend_VariableFrontend', array(), array(),'',false);
+		$cacheMock->expects($this->any())->method('get')->will($this->returnValue(FALSE));
+		$dataMapFactory->_set('dataMapCache',$cacheMock);
+
+		$dataMap = $dataMapFactory->buildDataMap('Tx_Extbase_Domain_Model_FrontendUser');
+
+		$this->assertSame(
+			$dataMap->getSubclasses(),
+			$expectedSubclasses
+		);
+	}
 }
 ?>

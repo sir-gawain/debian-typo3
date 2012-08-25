@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,24 +26,19 @@
 ***************************************************************/
 /*
  * TYPO3Image plugin for htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.TYPO3Image = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.TYPO3Image = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function(editor) {
+	configurePlugin: function (editor) {
 		this.pageTSConfiguration = this.editorConfiguration.buttons.image;
 		this.imageModulePath = this.pageTSConfiguration.pathImageModule;
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.1',
+			version		: '2.3',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -75,12 +70,12 @@ HTMLArea.TYPO3Image = HTMLArea.Plugin.extend({
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress: function(editor, id) {
+	onButtonPress: function (editor, id) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
 		var additionalParameter;
-		this.image = this.editor.getParentElement();
+		this.image = this.editor.getSelection().getParentElement();
 		if (this.image && !/^img$/i.test(this.image.nodeName)) {
 			this.image = null;
 		}
@@ -92,7 +87,7 @@ HTMLArea.TYPO3Image = HTMLArea.Plugin.extend({
 			this.getButton(buttonId).tooltip.title,
 			this.getWindowDimensions(
 				{
-					width:	610,
+					width:	650,
 					height:	500
 				},
 				buttonId
@@ -107,9 +102,8 @@ HTMLArea.TYPO3Image = HTMLArea.Plugin.extend({
 	 * This function is called from the TYPO3 image script
 	 */
  	insertImage: function(image) {
-		this.editor.focus();
 		this.restoreSelection();
-		this.editor.insertHTML(image);
+		this.editor.getSelection().insertHtml(image);
 		this.close();
 	},
 	/*
@@ -126,7 +120,7 @@ HTMLArea.TYPO3Image = HTMLArea.Plugin.extend({
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
 		if (mode === 'wysiwyg' && this.editor.isEditable() && button.itemId === 'InsertImage' && !button.disabled) {
-			var image = this.editor.getParentElement();
+			var image = this.editor.getSelection().getParentElement();
 			if (image && !/^img$/i.test(image.nodeName)) {
 				image = null;
 			}

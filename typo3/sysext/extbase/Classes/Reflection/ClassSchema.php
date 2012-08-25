@@ -38,7 +38,7 @@ class Tx_Extbase_Reflection_ClassSchema {
 	 */
 	const MODELTYPE_ENTITY = 1;
 	const MODELTYPE_VALUEOBJECT = 2;
-	
+
 	/**
 	 * Name of the class this schema is referring to
 	 *
@@ -81,6 +81,11 @@ class Tx_Extbase_Reflection_ClassSchema {
 	protected $identityProperties = array();
 
 	/**
+	 * @var Tx_Extbase_Service_TypeHandlingService
+	 */
+	protected $typeHandlingService;
+
+	/**
 	 * Constructs this class schema
 	 *
 	 * @param string $className Name of the class this schema is referring to
@@ -88,6 +93,14 @@ class Tx_Extbase_Reflection_ClassSchema {
 	 */
 	public function __construct($className) {
 		$this->className = $className;
+	}
+
+	/**
+	 * @param Tx_Extbase_Service_TypeHandlingService $typeHandlingService
+	 * @return void
+	 */
+	public function injectTypeHandlingService(Tx_Extbase_Service_TypeHandlingService $typeHandlingService) {
+		$this->typeHandlingService = $typeHandlingService;
 	}
 
 	/**
@@ -110,7 +123,7 @@ class Tx_Extbase_Reflection_ClassSchema {
 	 * @return void
 	 */
 	public function addProperty($name, $type, $lazy = FALSE, $cascade = '') {
-		$type = Tx_Extbase_Utility_TypeHandling::parseType($type);
+		$type = $this->typeHandlingService->parseType($type);
 		$this->properties[$name] = array(
 			'type' => $type['type'],
 			'elementType' => $type['elementType'],
@@ -123,6 +136,7 @@ class Tx_Extbase_Reflection_ClassSchema {
 	 * Returns the given property defined in this schema. Check with
 	 * hasProperty($propertyName) before!
 	 *
+	 * @param string $propertyName
 	 * @return array
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
@@ -203,7 +217,7 @@ class Tx_Extbase_Reflection_ClassSchema {
 	 * @return void
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
-	public function setUUIDPropertyName($propertyName) {
+	public function setUuidPropertyName($propertyName) {
 		if (!array_key_exists($propertyName, $this->properties)) {
 			throw new InvalidArgumentException('Property "' . $propertyName . '" must be added to the class schema before it can be marked as UUID property.', 1233863842);
 		}
@@ -217,7 +231,7 @@ class Tx_Extbase_Reflection_ClassSchema {
 	 * @return string
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
-	public function getUUIDPropertyName() {
+	public function getUuidPropertyName() {
 		return $this->uuidPropertyName;
 	}
 

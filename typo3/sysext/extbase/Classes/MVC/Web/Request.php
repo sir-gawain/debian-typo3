@@ -38,6 +38,11 @@
 class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 
 	/**
+	 * @var Tx_Extbase_Security_Cryptography_HashService
+	 */
+	protected $hashService;
+
+	/**
 	 * @var string The requested representation format
 	 */
 	protected $format = 'html';
@@ -50,15 +55,16 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	/**
 	 * @var string
 	 */
-	protected $requestURI;
+	protected $requestUri;
 
 	/**
 	 * @var string The base URI for this request - ie. the host and path leading to the index.php
 	 */
-	protected $baseURI;
+	protected $baseUri;
 
 	/**
 	 * @var boolean TRUE if the HMAC of this request could be verified, FALSE otherwise
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	protected $hmacVerified = FALSE;
 
@@ -71,6 +77,13 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
+
+	/**
+	 * @param Tx_Extbase_Security_Cryptography_HashService $hashService
+	 */
+	public function injectHashService(Tx_Extbase_Security_Cryptography_HashService $hashService) {
+		$this->hashService = $hashService;
+	}
 
 	/**
 	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
@@ -105,11 +118,11 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	/**
 	 * Sets the request URI
 	 *
-	 * @param string $requestURI URI of this web request
+	 * @param string $requestUri URI of this web request
 	 * @return void
 	 */
-	public function setRequestURI($requestURI) {
-		$this->requestURI = $requestURI;
+	public function setRequestUri($requestUri) {
+		$this->requestUri = $requestUri;
 	}
 
 	/**
@@ -118,18 +131,18 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	 * @return string URI of this web request
 	 * @api
 	 */
-	public function getRequestURI() {
-		return $this->requestURI;
+	public function getRequestUri() {
+		return $this->requestUri;
 	}
 
 	/**
 	 * Sets the base URI for this request.
 	 *
-	 * @param string $baseURI New base URI
+	 * @param string $baseUri New base URI
 	 * @return void
 	 */
-	public function setBaseURI($baseURI) {
-		$this->baseURI = $baseURI;
+	public function setBaseUri($baseUri) {
+		$this->baseUri = $baseUri;
 	}
 
 	/**
@@ -138,11 +151,11 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	 * @return string Base URI of this web request
 	 * @api
 	 */
-	public function getBaseURI() {
+	public function getBaseUri() {
 		if (TYPO3_MODE === 'BE') {
-			return $this->baseURI . TYPO3_mainDir;
+			return $this->baseUri . TYPO3_mainDir;
 		} else {
-			return $this->baseURI;
+			return $this->baseUri;
 		}
 	}
 
@@ -152,6 +165,7 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	 * @param boolean $hmacVerified TRUE if request could be verified, FALSE otherwise
 	 * @return void
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function setHmacVerified($hmacVerified) {
 		$this->hmacVerified = (boolean)$hmacVerified;
@@ -162,22 +176,10 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	 *
 	 * @return boolean TRUE if request could be verified, FALSE otherwise
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function isHmacVerified() {
 		return $this->hmacVerified;
-	}
-
-	/**
-	 * Returns the data array of the current content object
-	 *
-	 * @return array data of the current cObj
-	 * @deprecated since Extbase 1.3.0; will be removed in Extbase 1.5.0. Use the ConfigurationManager to retrieve the current ContentObject
-	 * @author Bastian Waidelich <bastian@typo3.org>
-	 */
-	public function getContentObjectData() {
-		t3lib_div::logDeprecatedFunction();
-		$contentObject = $this->configurationManager->getContentObject();
-		return $contentObject->data;
 	}
 
 	/**
@@ -196,6 +198,31 @@ class Tx_Extbase_MVC_Web_Request extends Tx_Extbase_MVC_Request {
 	 */
 	public function isCached() {
 		return $this->isCached;
+	}
+
+	/**
+	 * Get a freshly built request object pointing to the Referrer.
+	 *
+	 * @return Request the referring request, or NULL if no referrer found
+	 */
+	public function getReferringRequest() {
+		if (isset($this->internalArguments['__referrer']) && is_array($this->internalArguments['__referrer'])) {
+			$referrerArray = $this->internalArguments['__referrer'];
+
+			$referringRequest = new Tx_Extbase_MVC_Web_Request;
+
+			$arguments = array();
+			if (isset($referrerArray['arguments'])) {
+				$serializedArgumentsWithHmac = $referrerArray['arguments'];
+				$serializedArguments = $this->hashService->validateAndStripHmac($serializedArgumentsWithHmac);
+				$arguments = unserialize(base64_decode($serializedArguments));
+				unset($referrerArray['arguments']);
+			}
+
+			$referringRequest->setArguments(Tx_Extbase_Utility_Arrays::arrayMergeRecursiveOverrule($arguments, $referrerArray));
+			return $referringRequest;
+		}
+		return NULL;
 	}
 }
 ?>

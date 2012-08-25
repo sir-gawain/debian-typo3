@@ -31,7 +31,6 @@
  * Used by the update wizard in the install tool.
  *
  * @author	Benjamin Mack <benni@typo3.org>
- * @version $Id$
  */
 abstract class Tx_Install_Updates_Base {
 
@@ -53,61 +52,9 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * current TYPO3 version number, set from outside
-	 * version number coming from t3lib_div::int_from_ver()
+	 * version number coming from t3lib_utility_VersionNumber::convertVersionNumberToInteger()
 	 */
 	public $versionNumber;
-
-
-
-	/**
-	 *
-	 * API functions
-	 *
-	 **/
-
-	/**
-	 * The first function in the update wizard steps
-	 *
-	 * it works like this:
-	 * @param	$explanation	string	HTML that is outputted on the first
-	 * @param	$showUpdate		int	that informs you whether to show this update wizard or not. Possible values that checkForUpdate() should set:
-	 * 			0 = don't show this update wizard at all (because it's not needed)
-	 * 			1 = show the update wizard (explanation + next step button)
-	 * 			2 = show the update wizard (explanation but not the "next step" button), useful for showing a status of a wizard
-	 * @return	deprecated since TYPO3 4.5, in previous versions it was used to determine whether the update wizards should be shown, now, the $showUpdate parameter is used for that
-	 */
-	// public abstract function checkForUpdate(&$explanation, &$showUpdate);
-
-
-	/**
-	 * second step: get user input if needed
-	 *
-	 * @param	string	input prefix, all names of form fields have to start with this. Append custom name in [ ... ]
-	 * @return	string	HTML output
-	 */
-	// public abstract function getUserInput($inputPrefix);
-
-
-	/**
-	 * third step: do the updates
-	 *
-	 * @param	array		&$dbQueries: queries done in this update
-	 * @param	mixed		&$customMessages: custom messages
-	 * @return	boolean		whether it worked (true) or not (false)
-	 */
-	// public abstract function performUpdate(&$dbQueries, &$customMessages);
-
-	/**
-	 * Checks if user input is valid
-	 *
-	 * @param	string		pointer to output custom messages
-	 * @return	boolean		true if user input is correct, then the update is performed. When false, return to getUserInput
-	 */
-	// public abstract function checkUserInput(&$customMessages);
-
-
-
-
 
 	/**
 	 *
@@ -117,7 +64,7 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * returns the title attribute
-	 * 
+	 *
 	 * @return	the title of this update wizard
 	 **/
 	public function getTitle() {
@@ -130,7 +77,7 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * sets the title attribute
-	 * 
+	 *
 	 * @param	$title	the title of this update wizard
 	 * @return	void
 	 **/
@@ -141,7 +88,7 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * returns the identifier of this class
-	 * 
+	 *
 	 * @return	the identifier of this update wizard
 	 **/
 	public function getIdentifier() {
@@ -150,7 +97,7 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * sets the identifier attribute
-	 * 
+	 *
 	 * @param	$identifier	the identifier of this update wizard
 	 * @return	void
 	 **/
@@ -191,7 +138,7 @@ abstract class Tx_Install_Updates_Base {
 	/**
 	 * This method creates an instance of a connection to the Extension Manager
 	 * and returns it. This is used when installing an extension.
-	 * 
+	 *
 	 * @return tx_em_Connection_ExtDirectServer EM connection instance
 	 */
 	public function getExtensionManagerConnection() {
@@ -208,7 +155,7 @@ abstract class Tx_Install_Updates_Base {
 
 	/**
 	 * This method can be called to install extensions following all proper processes
-	 * (e.g. installing in both extList and extList_FE, respecting priority, etc.)
+	 * (e.g. installing in extList, respecting priority, etc.)
 	 *
 	 * @param array $extensionKeys List of keys of extensions to install
 	 * @return void
@@ -223,20 +170,16 @@ abstract class Tx_Install_Updates_Base {
 	/**
 	 * Marks some wizard as being "seen" so that it not shown again.
 	 *
-	 * Writes the info in localconf.php
+	 * Writes the info in LocalConfiguration.php
 	 *
+	 * @param mixed $confValue The configuration is set to this value
 	 * @return void
 	 */
-	protected function markWizardAsDone() {
-		/** @var t3lib_install $install */
-		$install = t3lib_div::makeInstance('t3lib_install');
-		$install->allowUpdateLocalConf = 1;
-		$install->updateIdentity = 'TYPO3 Upgrade Wizard';
-		// Get lines from localconf file
-		$lines = $install->writeToLocalconf_control();
-		$wizardClassName = get_class($this);
-		$install->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'INSTALL\'][\'wizardDone\'][\'' . $wizardClassName . '\']', 1);
-		$install->writeToLocalconf_control($lines);
+	protected function markWizardAsDone($confValue = 1) {
+		t3lib_Configuration::setLocalConfigurationValueByPath(
+			'INSTALL/wizardDone/' . get_class($this),
+			$confValue
+		);
 	}
 
 	/**

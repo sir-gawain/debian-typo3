@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,13 +25,8 @@
 ***************************************************************/
 /**
  * Default Clean Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.DefaultClean = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.DefaultClean = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -41,7 +36,7 @@ HTMLArea.DefaultClean = HTMLArea.Plugin.extend({
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '2.2',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -94,12 +89,12 @@ HTMLArea.DefaultClean = HTMLArea.Plugin.extend({
 	clean: function () {
 		function clearClass(node) {
 			var newc = node.className.replace(/(^|\s)mso.*?(\s|$)/ig,' ');
-			if(newc != node.className) {
+			if (newc != node.className) {
 				node.className = newc;
-				if(!/\S/.test(node.className)) {
-					if (!HTMLArea.is_opera) {
+				if (!/\S/.test(node.className)) {
+					if (!Ext.isOpera) {
 						node.removeAttribute('class');
-						if (HTMLArea.is_ie) {
+						if (HTMLArea.isIEBeforeIE9) {
 							node.removeAttribute('className');
 						}
 					} else {
@@ -109,49 +104,54 @@ HTMLArea.DefaultClean = HTMLArea.Plugin.extend({
 			}
 		}
 		function clearStyle(node) {
-			if (HTMLArea.is_ie) var style = node.style.cssText;
-				else var style = node.getAttribute('style');
+			var style = HTMLArea.isIEBeforeIE9 ? node.style.cssText : node.getAttribute('style');
 			if (style) {
 				var declarations = style.split(/\s*;\s*/);
 				for (var i = declarations.length; --i >= 0;) {
-					if(/^mso|^tab-stops/i.test(declarations[i]) || /^margin\s*:\s*0..\s+0..\s+0../i.test(declarations[i])) declarations.splice(i,1);
+					if (/^mso|^tab-stops/i.test(declarations[i]) || /^margin\s*:\s*0..\s+0..\s+0../i.test(declarations[i])) {
+						declarations.splice(i, 1);
+					}
 				}
 				node.setAttribute('style', declarations.join('; '));
 			}
 		}
 		function stripTag(el) {
-			if(HTMLArea.is_ie) {
-				el.outerHTML = HTMLArea.htmlEncode(el.innerText);
+			if (HTMLArea.isIEBeforeIE9) {
+				el.outerHTML = HTMLArea.util.htmlEncode(el.innerText);
 			} else {
-				var txt = document.createTextNode(HTMLArea.getInnerText(el));
+				var txt = document.createTextNode(HTMLArea.DOM.getInnerText(el));
 				el.parentNode.insertBefore(txt,el);
 				el.parentNode.removeChild(el);
 			}
 		}
 		function checkEmpty(el) {
-			if(/^(span|b|strong|i|em|font)$/i.test(el.nodeName) && !el.firstChild) el.parentNode.removeChild(el);
+			if (/^(span|b|strong|i|em|font)$/i.test(el.nodeName) && !el.firstChild) {
+				el.parentNode.removeChild(el);
+			}
 		}
 		function parseTree(root) {
 			var tag = root.nodeName.toLowerCase(), next;
 			switch (root.nodeType) {
-				case 1:
+				case HTMLArea.DOM.ELEMENT_NODE:
 					if (/^(meta|style|title|link)$/.test(tag)) {
 						root.parentNode.removeChild(root);
 						return false;
 						break;
 					}
-				case 3:
-				case 9:
-				case 11:
-					if ((HTMLArea.is_ie && root.scopeName != 'HTML') || (!HTMLArea.is_ie && /:/.test(tag)) || /o:p/.test(tag)) {
+				case HTMLArea.DOM.TEXT_NODE:
+				case HTMLArea.DOM.DOCUMENT_NODE:
+				case HTMLArea.DOM.DOCUMENT_FRAGMENT_NODE:
+					if ((HTMLArea.isIEBeforeIE9 && root.scopeName != 'HTML') || (!HTMLArea.isIEBeforeIE9 && /:/.test(tag)) || /o:p/.test(tag)) {
 						stripTag(root);
 						return false;
 					} else {
 						clearClass(root);
 						clearStyle(root);
-						for (var i=root.firstChild;i;i=next) {
+						for (var i = root.firstChild; i; i = next) {
 							next = i.nextSibling;
-							if (i.nodeType != 3 && parseTree(i)) { checkEmpty(i); }
+							if (i.nodeType !== HTMLArea.DOM.TEXT_NODE && parseTree(i)) {
+								checkEmpty(i);
+							}
 						}
 					}
 					return true;
@@ -162,9 +162,9 @@ HTMLArea.DefaultClean = HTMLArea.Plugin.extend({
 					break;
 			}
 		}
-		parseTree(this.editor._doc.body);
-		if (HTMLArea.is_safari) {
-			this.editor.cleanAppleStyleSpans(this.editor._doc.body);
+		parseTree(this.editor.document.body);
+		if (Ext.isWebKit) {
+			this.editor.getDomNode().cleanAppleStyleSpans(this.editor.document.body);
 		}
 	},
 	/*

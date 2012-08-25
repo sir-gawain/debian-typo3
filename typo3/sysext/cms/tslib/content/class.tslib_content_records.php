@@ -29,7 +29,6 @@
 /**
  * Contains RECORDS class object.
  *
- * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -38,14 +37,16 @@ class tslib_content_Records extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, RECORDS
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 		$theValue = '';
 
 		$originalRec = $GLOBALS['TSFE']->currentRecord;
-		if ($originalRec) { // If the currentRecord is set, we register, that this record has invoked this function. It's should not be allowed to do this again then!!
+			// If the currentRecord is set, we register, that this record has invoked this function.
+			// It's should not be allowed to do this again then!!
+		if ($originalRec) {
 			$GLOBALS['TSFE']->recordRegister[$originalRec]++;
 		}
 
@@ -59,8 +60,9 @@ class tslib_content_Records extends tslib_content_Abstract {
 			$allowedTables = $tables;
 			if (is_array($conf['conf.'])) {
 				foreach ($conf['conf.'] as $k => $v) {
-					if (substr($k, -1) != '.')
+					if (substr($k, -1) != '.') {
 						$allowedTables .= ',' . $k;
+					}
 				}
 			}
 
@@ -96,7 +98,8 @@ class tslib_content_Records extends tslib_content_Abstract {
 					);
 				}
 
-				if (is_array($row)) { // Might be unset in the content overlay things...
+					// Might be unset in the content overlay things...
+				if (is_array($row)) {
 					$dontCheckPid = isset($conf['dontCheckPid.'])
 						? $this->cObj->stdWrap($conf['dontCheckPid'], $conf['dontCheckPid.'])
 						: $conf['dontCheckPid'];
@@ -135,17 +138,10 @@ class tslib_content_Records extends tslib_content_Abstract {
 		if (isset($conf['stdWrap.'])) {
 			$theValue = $this->cObj->stdWrap($theValue, $conf['stdWrap.']);
 		}
-
-		$GLOBALS['TSFE']->currentRecord = $originalRec; // Restore
+			// Restore
+		$GLOBALS['TSFE']->currentRecord = $originalRec;
 
 		return $theValue;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_records.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_records.php']);
-}
-
 ?>

@@ -29,12 +29,12 @@
 /**
  * Class implementing salted evaluation methods.
  *
- * @author	Marcus Krause <marcus#exp2009@t3sec.info>
- * @author	Steffen Ritter <info@rs-websystems.de>
+ * @author Marcus Krause <marcus#exp2009@t3sec.info>
+ * @author Steffen Ritter <info@rs-websystems.de>
  *
- * @since	2009-06-14
- * @package	TYPO3
- * @subpackage	tx_saltedpasswords
+ * @since 2009-06-14
+ * @package TYPO3
+ * @subpackage tx_saltedpasswords
  */
 class tx_saltedpasswords_eval {
 	/**
@@ -50,7 +50,7 @@ class tx_saltedpasswords_eval {
 	 * This function just return the field value as it is. No transforming,
 	 * hashing will be done on server-side.
 	 *
-	 * @return	JavaScript code for evaluating the
+	 * @return string JavaScript code for evaluating the
 	 */
 	function returnFieldJS() {
 		return 'return value;';
@@ -59,10 +59,10 @@ class tx_saltedpasswords_eval {
 	/**
 	 * Function uses Portable PHP Hashing Framework to create a proper password string if needed
 	 *
-	 * @param	mixed		$value: The value that has to be checked.
-	 * @param	string		$is_in: Is-In String
-	 * @param	integer		$set: Determines if the field can be set (value correct) or not, e.g. if input is required but the value is empty, then $set should be set to FALSE. (PASSED BY REFERENCE!)
-	 * @return	The new value of the field
+	 * @param mixed $value The value that has to be checked.
+	 * @param string $is_in Is-In String
+	 * @param integer $set Determines if the field can be set (value correct) or not, e.g. if input is required but the value is empty, then $set should be set to FALSE. (PASSED BY REFERENCE!)
+	 * @return The new value of the field
 	 */
 	function evaluateFieldValue($value, $is_in, &$set) {
 		$isEnabled = $this->mode ? tx_saltedpasswords_div::isUsageEnabled($this->mode) : tx_saltedpasswords_div::isUsageEnabled();
@@ -77,7 +77,7 @@ class tx_saltedpasswords_eval {
 			if ($isMD5) {
 				$set = TRUE;
 				$value = 'M' . $this->objInstanceSaltedPW->getHashedPassword($value);
-			} else if (!$isSaltedHash) {
+			} elseif (!$isSaltedHash) {
 				$set = TRUE;
 				$value = $this->objInstanceSaltedPW->getHashedPassword($value);
 			}
@@ -85,9 +85,5 @@ class tx_saltedpasswords_eval {
 
 		return $value;
 	}
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/eval/class.tx_saltedpasswords_eval.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/eval/class.tx_saltedpasswords_eval.php']);
 }
 ?>

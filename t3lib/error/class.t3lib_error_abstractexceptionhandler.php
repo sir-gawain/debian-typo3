@@ -22,15 +22,14 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
 /**
  * An abstract exception handler
  *
  * This file is a backport from FLOW3
  *
+ * @author Ingo Renner <ingo@typo3.org>
  * @package TYPO3
- * @subpackage t3lib_error
- * @version $Id$
+ * @subpackage error
  */
 abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_ExceptionHandlerInterface, t3lib_Singleton {
 	const CONTEXT_WEB = 'WEB';
@@ -52,12 +51,11 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 		}
 	}
 
-
 	/**
 	 * Writes exception to different logs
 	 *
 	 * @param Exception $exception The exception
-	 * @param string	 the context where the exception was thrown, WEB or CLI
+	 * @param string $context The context where the exception was thrown, WEB or CLI
 	 * @return void
 	 * @see t3lib_div::sysLog(), t3lib_div::devLog()
 	 */
@@ -66,11 +64,15 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 		$exceptionCodeNumber = ($exception->getCode() > 0) ? '#' . $exception->getCode() . ': ' : '';
 		$logTitle = 'Core: Exception handler (' . $context . ')';
 		$logMessage = 'Uncaught TYPO3 Exception: ' . $exceptionCodeNumber . $exception->getMessage() . ' | ' .
-					  get_class($exception) . ' thrown in file ' . $filePathAndName . ' in line ' . $exception->getLine();
+					get_class($exception) . ' thrown in file ' . $filePathAndName . ' in line ' . $exception->getLine();
+		if ($context === 'WEB') {
+			$logMessage .= '. Requested URL: ' . t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
+		}
+
 		$backtrace = $exception->getTrace();
 
-			// write error message to the configured syslogs
-		t3lib_div::sysLog($logMessage, $logTitle, 4);
+			// Write error message to the configured syslogs
+		t3lib_div::sysLog($logMessage, $logTitle, t3lib_div::SYSLOG_SEVERITY_FATAL);
 
 			// When database credentials are wrong, the exception is probably
 			// caused by this. Therefor we cannot do any database operation,
@@ -82,7 +84,7 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 				$GLOBALS['TYPO3_DB']->connectDB();
 			}
 
-				// write error message to devlog
+				// Write error message to devlog
 				// see: $TYPO3_CONF_VARS['SYS']['enable_exceptionDLOG']
 			if (TYPO3_EXCEPTION_DLOG) {
 				t3lib_div::devLog(
@@ -96,7 +98,7 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 				);
 			}
 
-				// write error message to sys_log table
+				// Write error message to sys_log table
 			$this->writeLog($logTitle . ': ' . $logMessage);
 		} catch (Exception $exception) {
 			// Nothing happens here. It seems the database credentials are wrong
@@ -106,8 +108,8 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 	/**
 	 * Writes an exception in the sys_log table
 	 *
-	 * @param	string		Default text that follows the message.
-	 * @return	void
+	 * @param string $logMessage Default text that follows the message.
+	 * @return void
 	 */
 	protected function writeLog($logMessage) {
 		if (is_object($GLOBALS['TYPO3_DB']) && !empty($GLOBALS['TYPO3_DB']->link)) {
@@ -138,11 +140,25 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
 		}
 	}
 
-
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/error/class.t3lib_error_abstractexceptionhandler.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/error/class.t3lib_error_abstractexceptionhandler.php']);
+	/**
+	 * Sends the HTTP Status 500 code, if $exception is *not* a t3lib_error_http_StatusException
+	 * and headers are not sent, yet.
+	 *
+	 * @param Exception $exception
+	 * @return void
+	 */
+	protected function sendStatusHeaders(Exception $exception) {
+		if (method_exists($exception, 'getStatusHeaders')) {
+			$headers = $exception->getStatusHeaders();
+		} else {
+			$headers = array(t3lib_utility_Http::HTTP_STATUS_500);
+		}
+		if (!headers_sent()) {
+			foreach($headers as $header) {
+				header($header);
+			}
+		}
+	}
 }
 
 ?>

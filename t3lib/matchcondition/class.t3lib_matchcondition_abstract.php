@@ -27,12 +27,10 @@
 /**
  * Matching TypoScript conditions
  *
- * $Id$
- *
  * Used with the TypoScript parser.
  * Matches browserinfo, IPnumbers for use with templates
  *
- * @author	Oliver Hader <oliver@typo3.org>
+ * @author Oliver Hader <oliver@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -64,8 +62,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Sets the id of the page to evaluate conditions for.
 	 *
-	 * @param	integer		$pageId: Id of the page (must be positive)
-	 * @return	void
+	 * @param integer $pageId Id of the page (must be positive)
+	 * @return void
 	 */
 	public function setPageId($pageId) {
 		if (is_integer($pageId) && $pageId > 0) {
@@ -76,7 +74,7 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Gets the id of the page to evaluate conditions for.
 	 *
-	 * @return	integer		Id of the page
+	 * @return integer Id of the page
 	 */
 	public function getPageId() {
 		return $this->pageId;
@@ -85,8 +83,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Sets the rootline.
 	 *
-	 * @param	array		$rootline: The rootline to be used for matching (must have elements)
-	 * @return	void
+	 * @param array $rootline The rootline to be used for matching (must have elements)
+	 * @return void
 	 */
 	public function setRootline(array $rootline) {
 		if (count($rootline)) {
@@ -97,7 +95,7 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Gets the rootline.
 	 *
-	 * @return	array		The rootline to be used for matching
+	 * @return array The rootline to be used for matching
 	 */
 	public function getRootline() {
 		return $this->rootline;
@@ -106,8 +104,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Sets whether to simulate the behaviour and match all conditions.
 	 *
-	 * @param	boolean		$simulateMatchResult: Whether to simulate positive matches
-	 * @return	void
+	 * @param boolean $simulateMatchResult Whether to simulate positive matches
+	 * @return void
 	 */
 	public function setSimulateMatchResult($simulateMatchResult) {
 		if (is_bool($simulateMatchResult)) {
@@ -118,8 +116,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Sets whether to simulate the behaviour and match specific conditions.
 	 *
-	 * @param	array		$simulateMatchConditions: Conditions to simulate a match for
-	 * @return	void
+	 * @param array $simulateMatchConditions Conditions to simulate a match for
+	 * @return void
 	 */
 	public function setSimulateMatchConditions(array $simulateMatchConditions) {
 		$this->simulateMatchConditions = $simulateMatchConditions;
@@ -130,18 +128,18 @@ abstract class t3lib_matchCondition_abstract {
 	 *  + OR normalization: "...]OR[...", "...]||[...", "...][..." --> "...]||[..."
 	 *  + AND normalization: "...]AND[...", "...]&&[..."		   --> "...]&&[..."
 	 *
-	 * @param	string		$expression: The expression to be normalized (e.g. "[A] && [B] OR [C]")
-	 * @return	string		The normalized expression (e.g. "[A]&&[B]||[C]")
+	 * @param string $expression The expression to be normalized (e.g. "[A] && [B] OR [C]")
+	 * @return string The normalized expression (e.g. "[A]&&[B]||[C]")
 	 */
 	protected function normalizeExpression($expression) {
 		$normalizedExpression = preg_replace(
 			array(
-				 '/\]\s*(OR|\|\|)?\s*\[/i',
-				 '/\]\s*(AND|&&)\s*\[/i',
+				'/\]\s*(OR|\|\|)?\s*\[/i',
+				'/\]\s*(AND|&&)\s*\[/i',
 			),
 			array(
-				 ']||[',
-				 ']&&[',
+				']||[',
+				']&&[',
 			),
 			trim($expression)
 		);
@@ -152,8 +150,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Matches a TypoScript condition expression.
 	 *
-	 * @param	string		$expression: The expression to match
-	 * @return	boolean		Whether the expression matched
+	 * @param string $expression The expression to match
+	 * @return boolean Whether the expression matched
 	 */
 	public function match($expression) {
 			// Return directly if result should be simulated:
@@ -185,12 +183,12 @@ abstract class t3lib_matchCondition_abstract {
 				$andParts = explode(']&&[', $orPart);
 				foreach ($andParts as $andPart) {
 					$result = $this->evaluateCondition($andPart);
-						// If condition in AND context fails, the whole block is false:
+						// If condition in AND context fails, the whole block is FALSE:
 					if ($result === FALSE) {
 						break;
 					}
 				}
-					// If condition in OR context succeeds, the whole expression is true:
+					// If condition in OR context succeeds, the whole expression is TRUE:
 				if ($result === TRUE) {
 					break;
 				}
@@ -203,8 +201,9 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Evaluates a TypoScript condition given as input, eg. "[browser=net][...(other conditions)...]"
 	 *
-	 * @param	string		The condition to match against its criterias.
-	 * @return	mixed		Returns true or false based on the evaluation
+	 * @param string $key The condition to match against its criterias.
+	 * @param string $value
+	 * @return mixed Returns TRUE or FALSE based on the evaluation
 	 */
 	protected function evaluateConditionCommon($key, $value) {
 		if (t3lib_div::inList('browser,version,system,useragent', strtolower($key))) {
@@ -314,7 +313,8 @@ abstract class t3lib_matchCondition_abstract {
 			case 'dayofweek':
 			case 'dayofmonth':
 			case 'dayofyear':
-				$theEvalTime = $GLOBALS['SIM_EXEC_TIME']; // In order to simulate time properly in templates.
+					// In order to simulate time properly in templates.
+				$theEvalTime = $GLOBALS['SIM_EXEC_TIME'];
 				switch ($key) {
 					case 'hour':
 						$theTestValue = date('H', $theEvalTime);
@@ -342,7 +342,7 @@ abstract class t3lib_matchCondition_abstract {
 					// comp
 				$values = t3lib_div::trimExplode(',', $value, TRUE);
 				foreach ($values as $test) {
-					if (t3lib_div::testInt($test)) {
+					if (t3lib_utility_Math::canBeInterpretedAsInteger($test)) {
 						$test = '=' . $test;
 					}
 					if ($this->compareNumber($test, $theTestValue)) {
@@ -406,13 +406,6 @@ abstract class t3lib_matchCondition_abstract {
 				$values = preg_split('/\(|\)/', $value);
 				$funcName = trim($values[0]);
 				$funcValue = t3lib_div::trimExplode(',', $values[1]);
-				$prefix = $this->getUserFuncClassPrefix();
-				if ($prefix &&
-					!t3lib_div::hasValidClassPrefix($funcName, array($prefix))
-				) {
-					$this->log('Match condition: Function "' . $funcName . '" was not prepended with "' . $prefix . '"');
-					return FALSE;
-				}
 				if (function_exists($funcName) && call_user_func($funcName, $funcValue[0])) {
 					return TRUE;
 				}
@@ -422,6 +415,12 @@ abstract class t3lib_matchCondition_abstract {
 		return NULL;
 	}
 
+	/**
+	 * Get variable common
+	 *
+	 * @param array $vars
+	 * @return mixed Whatever value. If none, then NULL.
+	 */
 	protected function getVariableCommon(array $vars) {
 		$value = NULL;
 
@@ -466,9 +465,9 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Evaluates a $leftValue based on an operator: "<", ">", "<=", ">=", "!=" or "="
 	 *
-	 * @param	string		$test: The value to compare with on the form [operator][number]. Eg. "< 123"
-	 * @param	integer		$leftValue: The value on the left side
-	 * @return	boolean		If $value is "50" and $test is "< 123" then it will return true.
+	 * @param string $test The value to compare with on the form [operator][number]. Eg. "< 123"
+	 * @param integer $leftValue The value on the left side
+	 * @return boolean If $value is "50" and $test is "< 123" then it will return TRUE.
 	 */
 	protected function compareNumber($test, $leftValue) {
 		if (preg_match('/^(!?=+|<=?|>=?)\s*([^\s]*)\s*$/', $test, $matches)) {
@@ -504,9 +503,9 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Matching two strings against each other, supporting a "*" wildcard or (if wrapped in "/") PCRE regular expressions
 	 *
-	 * @param	string		The string in which to find $needle.
-	 * @param	string		The string to find in $haystack
-	 * @return	boolean		Returns true if $needle matches or is found in (according to wildcards) in $haystack. Eg. if $haystack is "Netscape 6.5" and $needle is "Net*" or "Net*ape" then it returns true.
+	 * @param string $haystack The string in which to find $needle.
+	 * @param string $needle The string to find in $haystack
+	 * @return boolean Returns TRUE if $needle matches or is found in (according to wildcards) in $haystack. Eg. if $haystack is "Netscape 6.5" and $needle is "Net*" or "Net*ape" then it returns TRUE.
 	 */
 	protected function searchStringWildcard($haystack, $needle) {
 		$result = FALSE;
@@ -531,8 +530,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Generates an array with abstracted browser information
 	 *
-	 * @param	string		$userAgent: The useragent string, t3lib_div::getIndpEnv('HTTP_USER_AGENT')
-	 * @return	array		Contains keys "browser", "version", "system"
+	 * @param string $userAgent The useragent string, t3lib_div::getIndpEnv('HTTP_USER_AGENT')
+	 * @return array Contains keys "browser", "version", "system"
 	 */
 	protected function getBrowserInfo($userAgent) {
 		return t3lib_utility_Client::getBrowserInfo($userAgent);
@@ -541,8 +540,8 @@ abstract class t3lib_matchCondition_abstract {
 	/**
 	 * Gets a code for a browsing device based on the input useragent string.
 	 *
-	 * @param	string		$userAgent: The useragent string, t3lib_div::getIndpEnv('HTTP_USER_AGENT')
-	 * @return	string		Code for the specific device type
+	 * @param string $userAgent The useragent string, t3lib_div::getIndpEnv('HTTP_USER_AGENT')
+	 * @return string Code for the specific device type
 	 */
 	protected function getDeviceType($userAgent) {
 		return t3lib_utility_Client::getDeviceType($userAgent);
@@ -552,9 +551,9 @@ abstract class t3lib_matchCondition_abstract {
 	 * Return global variable where the input string $var defines array keys separated by "|"
 	 * Example: $var = "HTTP_SERVER_VARS | something" will return the value $GLOBALS['HTTP_SERVER_VARS']['something'] value
 	 *
-	 * @param	string		Global var key, eg. "HTTP_GET_VAR" or "HTTP_GET_VARS|id" to get the GET parameter "id" back.
-	 * @param	array		Alternative array than $GLOBAL to get variables from.
-	 * @return	mixed		Whatever value. If none, then blank string.
+	 * @param string $var Global var key, eg. "HTTP_GET_VAR" or "HTTP_GET_VARS|id" to get the GET parameter "id" back.
+	 * @param array $source Alternative array than $GLOBAL to get variables from.
+	 * @return mixed Whatever value. If none, then blank string.
 	 */
 	protected function getGlobal($var, $source = NULL) {
 		$vars = explode('|', $var);
@@ -584,12 +583,11 @@ abstract class t3lib_matchCondition_abstract {
 		}
 	}
 
-
 	/**
 	 * Evaluates a TypoScript condition given as input, eg. "[browser=net][...(other conditions)...]"
 	 *
-	 * @param	string		$string: The condition to match against its criterias.
-	 * @return	boolean		Whether the condition matched
+	 * @param string $string The condition to match against its criterias.
+	 * @return boolean Whether the condition matched
 	 * @see t3lib_tsparser::parse()
 	 */
 	abstract protected function evaluateCondition($string);
@@ -603,65 +601,58 @@ abstract class t3lib_matchCondition_abstract {
 	 * + _GET|firstLevel|secondLevel
 	 * + LIT:someLiteralValue
 	 *
-	 * @param	string		$name: The name of the variable to fetch the value from
-	 * @return	mixed		The value of the given variable (string) or NULL if variable did not exist
+	 * @param string $name The name of the variable to fetch the value from
+	 * @return mixed The value of the given variable (string) or NULL if variable did not exist
 	 */
 	abstract protected function getVariable($name);
 
 	/**
 	 * Gets the usergroup list of the current user.
 	 *
-	 * @return	string		The usergroup list of the current user
+	 * @return string The usergroup list of the current user
 	 */
 	abstract protected function getGroupList();
 
 	/**
 	 * Determines the current page Id.
 	 *
-	 * @return	integer		The current page Id
+	 * @return integer The current page Id
 	 */
 	abstract protected function determinePageId();
 
 	/**
 	 * Gets the properties for the current page.
 	 *
-	 * @return	array		The properties for the current page.
+	 * @return array The properties for the current page.
 	 */
 	abstract protected function getPage();
 
 	/**
 	 * Determines the rootline for the current page.
 	 *
-	 * @return	array		The rootline for the current page.
+	 * @return array The rootline for the current page.
 	 */
 	abstract protected function determineRootline();
 
 	/**
-	 * Gets prefix for user functions (normally 'user_').
-	 *
-	 * @return	string		The prefix for user functions (normally 'user_').
-	 */
-	abstract protected function getUserFuncClassPrefix();
-
-	/**
 	 * Gets the id of the current user.
 	 *
-	 * @return	integer		The id of the current user
+	 * @return integer The id of the current user
 	 */
 	abstract protected function getUserId();
 
 	/**
 	 * Determines if a user is logged in.
 	 *
-	 * @return	boolean		Determines if a user is logged in
+	 * @return boolean Determines if a user is logged in
 	 */
 	abstract protected function isUserLoggedIn();
 
 	/**
 	 * Sets a log message.
 	 *
-	 * @param	string		$message: The log message to set/write
-	 * @return	void
+	 * @param string $message The log message to set/write
+	 * @return void
 	 */
 	abstract protected function log($message);
 }

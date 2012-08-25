@@ -1,30 +1,21 @@
 <?php
 
 /*                                                                        *
- * This script belongs to the FLOW3 package "Fluid".                      *
+ * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License as published by the *
- * Free Software Foundation, either version 3 of the License, or (at your *
- * option) any later version.                                             *
- *                                                                        *
- * This script is distributed in the hope that it will be useful, but     *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
- * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
- * General Public License for more details.                               *
- *                                                                        *
- * You should have received a copy of the GNU Lesser General Public       *
- * License along with the script.                                         *
- * If not, see http://www.gnu.org/licenses/lgpl.html                      *
+ * the terms of the GNU Lesser General Public License, either version 3   *
+ *  of the License, or (at your option) any later version.                *
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
 
+
 /**
  * This view helper implements an if/else condition.
- * @see Tx_Fluid_Core_Parser_SyntaxTree_ViewHelperNode::convertArgumentValue() to find see how boolean arguments are evaluated
+ * Check Tx_Fluid_Core_Parser_SyntaxTree_ViewHelperNode::convertArgumentValue() to see how boolean arguments are evaluated
  *
- * = Conditions =
+ * **Conditions:**
  *
  * As a condition is a boolean value, you can just use a boolean argument.
  * Alternatively, you can write a boolean expression there.
@@ -38,19 +29,23 @@
  * - Object Accessor
  * - Array
  * - a ViewHelper
- * Note: Strings at XX/YY are NOT allowed.
+ * Note: Strings at XX/YY are NOT allowed, however, for the time being,
+ * a string comparison can be achieved with comparing arrays (see example
+ * below).
+ * ::
  *
- * <code title="condition example">
- * <f:if condition="{rank} > 100">
- *   Will be shown if rank is > 100
- * </f:if>
- * <f:if condition="{rank} % 2">
- *   Will be shown if rank % 2 != 0.
- * </f:if>
- * <f:if condition="{rank} == {k:bar()}">
- *   Checks if rank is equal to the result of the ViewHelper "k:bar"
- * </f:if>
- * </code>
+ *   <f:if condition="{rank} > 100">
+ *     Will be shown if rank is > 100
+ *   </f:if>
+ *   <f:if condition="{rank} % 2">
+ *     Will be shown if rank % 2 != 0.
+ *   </f:if>
+ *   <f:if condition="{rank} == {k:bar()}">
+ *     Checks if rank is equal to the result of the ViewHelper "k:bar"
+ *   </f:if>
+ *   <f:if condition="{0: foo.bar} == {0: 'stringToCompare'}">
+ *     Will result true if {foo.bar}'s represented value equals 'stringToCompare'.
+ *   </f:if>
  *
  * = Examples =
  *
@@ -59,8 +54,9 @@
  *   This is being shown in case the condition matches
  * </f:if>
  * </code>
- *
+ * <output>
  * Everything inside the <f:if> tag is being displayed if the condition evaluates to TRUE.
+ * </output>
  *
  * <code title="If / then / else">
  * <f:if condition="somecondition">
@@ -85,8 +81,7 @@
  * Otherwise, everything the value of the "else"-attribute is displayed.
  * </output>
  *
- *
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
+ * @see Tx_Fluid_Core_Parser_SyntaxTree_ViewHelperNode::convertArgumentValue()
  * @api
  */
 class Tx_Fluid_ViewHelpers_IfViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractConditionViewHelper {
@@ -96,8 +91,6 @@ class Tx_Fluid_ViewHelpers_IfViewHelper extends Tx_Fluid_Core_ViewHelper_Abstrac
 	 *
 	 * @param boolean $condition View helper condition
 	 * @return string the rendered string
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @author Bastian Waidelich <bastian@typo3.org>
 	 * @api
 	 */
 	public function render($condition) {

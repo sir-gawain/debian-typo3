@@ -26,8 +26,6 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id$
- *
  */
 class tx_rtehtmlarea_contextmenu extends tx_rtehtmlarea_api {
 
@@ -44,7 +42,8 @@ class tx_rtehtmlarea_contextmenu extends tx_rtehtmlarea_api {
 	protected $convertToolbarForHtmlAreaArray = array ();
 
 	public function main($parentObject) {
-		return parent::main($parentObject) && !($this->htmlAreaRTE->client['browser'] == 'opera' || $this->thisConfig['disableContextMenu'] || $this->thisConfig['disableRightClick']);
+		$enabled = parent::main($parentObject) && !($this->htmlAreaRTE->client['browser'] == 'opera' || $this->thisConfig['contextMenu.']['disabled']);
+		return $enabled;
 	}
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
@@ -73,8 +72,5 @@ class tx_rtehtmlarea_contextmenu extends tx_rtehtmlarea_api {
 		}
 		return $registerRTEinJavascriptString;
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/ContextMenu/class.tx_rtehtmlarea_contextmenu.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/ContextMenu/class.tx_rtehtmlarea_contextmenu.php']);
 }
 ?>

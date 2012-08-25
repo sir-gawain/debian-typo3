@@ -29,7 +29,6 @@
 /**
  * Contains RESTORE_REGISTER class object.
  *
- * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -38,27 +37,27 @@ class tslib_content_ScalableVectorGraphics extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, SVG
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Empty string (the cObject only sets internal data!)
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Empty string (the cObject only sets internal data!)
 	 */
 	public function render($conf = array()) {
 		$width = isset($conf['width.'])
-			 ? $this->cObj->stdWrap($conf['width'], $conf['width.'])
-			 : $conf['width'];
-		if(!$width) {
+			? $this->cObj->stdWrap($conf['width'], $conf['width.'])
+			: $conf['width'];
+		if (!$width) {
 			$width = 600;
 		}
 		$height = isset($conf['height.'])
 			? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 			: $conf['height'];
-		if(!$height) {
+		if (!$height) {
 			$height = 400;
 		}
 
 		$src = isset($conf['src.'])
 			? $this->cObj->stdWrap($conf['src'], $conf['src.'])
 			: $conf['src'];
-		if(!$src) {
+		if (!$src) {
 			$src = NULL;
 		}
 		$value = isset($conf['value.'])
@@ -105,12 +104,5 @@ class tslib_content_ScalableVectorGraphics extends tslib_content_Abstract {
 
 		return $content;
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_scalablevectorgraphics.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_scalablevectorgraphics.php']);
-}
-
 ?>

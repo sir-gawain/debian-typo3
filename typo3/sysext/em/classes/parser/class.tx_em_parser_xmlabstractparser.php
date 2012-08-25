@@ -27,8 +27,6 @@
  *
  * Module: Extension manager - Extension.xml abstract parser
  *
- * $Id: class.tx_em_parser_xmlabstractparser.php 1910 2010-02-21 14:31:07Z mkrause $
- *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -68,7 +66,7 @@ abstract class tx_em_Parser_XmlAbstractParser {
 	 * Method tries to load the extension if necessary and possible.
 	 *
 	 * @access  public
-	 * @return  boolean  true, if PHP extension is available, otherwise false
+	 * @return  boolean  TRUE, if PHP extension is available, otherwise FALSE
 	 */
 	public function isAvailable() {
 		$isAvailable = TRUE;
@@ -100,10 +98,6 @@ abstract class tx_em_Parser_XmlAbstractParser {
 	 * @param   integer	$code  the exception code
 	 * @return  void
 	 */
-	abstract protected function throwException($message = "", $code = 0);
-}
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_xmlabstractparser.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_xmlabstractparser.php']);
+	abstract protected function throwException($message = '', $code = 0);
 }
 ?>

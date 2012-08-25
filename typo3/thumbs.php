@@ -24,38 +24,19 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Generates a thumbnail and returns an image stream, either GIF/PNG or JPG
  *
- * $Id$
- *
- * @author		René Fritz <r.fritz@colorcube.de>
+ * @author René Fritz <r.fritz@colorcube.de>
  */
 
-// *******************************
-// Set error reporting
-// *******************************
+	// Set error reporting
+error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
 
-if (defined('E_DEPRECATED')) {
-	error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
-} else {
-	error_reporting(E_ALL ^ E_NOTICE);
-}
+require('init.php');
 
-define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
-	(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
-	($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
-	($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
-	($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
-
-define('PATH_site', substr(dirname(PATH_thisScript).'/',0,-strlen('typo3/')));	// Abs. path to directory with the frontend (one above the admin-dir)
-define('PATH_t3lib', PATH_site.'t3lib/');
-
-
-// ******************
-// include thumbs script
-// ******************
-
-require (PATH_t3lib.'thumbs.php');
+	// include thumbs script
+require(PATH_t3lib . 'thumbs.php');
 
 ?>

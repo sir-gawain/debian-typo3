@@ -24,45 +24,18 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * TCE gateway (TYPO3 Core Engine) for database handling
  * This script is a gateway for POST forms to class.t3lib_TCEmain that manipulates all information in the database!!
  * For syntax and API information, see the document 'TYPO3 Core APIs'
  *
- * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   78: class SC_tce_db
- *  106:     function init()
- *  162:     function initClipboard()
- *  182:     function main()
- *  218:     function finish()
- *
- * TOTAL FUNCTIONS: 4
- * (This index is automatically created/updated by the extension "extdeveval")
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-
-require ('init.php');
-require ('template.php');
-
-
-
-
-
-
-
-
-
-
+require('init.php');
 
 /**
  * Script Class, creating object of t3lib_TCEmain and sending the posted data to the object.
@@ -70,28 +43,39 @@ require ('template.php');
  * Is not used by alt_doc.php though (main form rendering script) - that uses the same class (TCEmain) but makes its own initialization (to save the redirect request).
  * For all other cases than alt_doc.php it is recommended to use this script for submitting your editing forms - but the best solution in any case would probably be to link your application to alt_doc.php, that will give you easy form-rendering as well.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_tce_db {
 
 		// Internal, static: GPvar
-	var $flags;			// Array. Accepts options to be set in TCE object. Currently it supports "reverseOrder" (boolean).
-	var $data;			// Data array on the form [tablename][uid][fieldname] = value
-	var $cmd;			// Command array on the form [tablename][uid][command] = value. This array may get additional data set internally based on clipboard commands send in CB var!
-	var $mirror;		// Array passed to ->setMirror.
-	var $cacheCmd;		// Cache command sent to ->clear_cacheCmd
-	var $redirect;		// Redirect URL. Script will redirect to this location after performing operations (unless errors has occured)
-	var $prErr;			// Boolean. If set, errors will be printed on screen instead of redirection. Should always be used, otherwise you will see no errors if they happen.
-#	var $_disableRTE;
-	var $CB;			// Clipboard command array. May trigger changes in "cmd"
-	var $vC;			// Verification code
-	var $uPT;			// Boolean. Update Page Tree Trigger. If set and the manipulated records are pages then the update page tree signal will be set.
-	var $generalComment;	// String, general comment (for raising stages of workspace versions)
+		// Array. Accepts options to be set in TCE object. Currently it supports "reverseOrder" (boolean).
+	var $flags;
+		// Data array on the form [tablename][uid][fieldname] = value
+	var $data;
+		// Command array on the form [tablename][uid][command] = value. This array may get additional data set internally based on clipboard commands send in CB var!
+	var $cmd;
+		// Array passed to ->setMirror.
+	var $mirror;
+		// Cache command sent to ->clear_cacheCmd
+	var $cacheCmd;
+		// Redirect URL. Script will redirect to this location after performing operations (unless errors has occured)
+	var $redirect;
+		// Boolean. If set, errors will be printed on screen instead of redirection. Should always be used, otherwise you will see no errors if they happen.
+	var $prErr;
+		// Clipboard command array. May trigger changes in "cmd"
+	var $CB;
+		// Verification code
+	var $vC;
+		// Boolean. Update Page Tree Trigger. If set and the manipulated records are pages then the update page tree signal will be set.
+	var $uPT;
+		// String, general comment (for raising stages of workspace versions)
+	var $generalComment;
 
 		// Internal, dynamic:
-	var $include_once=array();		// Files to include after init() function is called:
+		// Files to include after init() function is called:
+	var $include_once = array();
 
 	/**
 	 * TYPO3 Core Engine
@@ -100,16 +84,12 @@ class SC_tce_db {
 	 */
 	var $tce;
 
-
-
-
 	/**
 	 * Initialization of the class
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function init()	{
-		global $BE_USER;
+	function init() {
 
 			// GPvars:
 		$this->flags = t3lib_div::_GP('flags');
@@ -127,52 +107,47 @@ class SC_tce_db {
 
 			// Creating TCEmain object
 		$this->tce = t3lib_div::makeInstance('t3lib_TCEmain');
-		$this->tce->stripslashes_values=0;
+		$this->tce->stripslashes_values = 0;
 		$this->tce->generalComment = $this->generalComment;
 
 			// Configuring based on user prefs.
-		if ($BE_USER->uc['recursiveDelete'])	{
-			$this->tce->deleteTree = 1;	// True if the delete Recursive flag is set.
+		if ($GLOBALS['BE_USER']->uc['recursiveDelete']) {
+				// TRUE if the delete Recursive flag is set.
+			$this->tce->deleteTree = 1;
 		}
-		if ($BE_USER->uc['copyLevels'])	{
-			$this->tce->copyTree = t3lib_div::intInRange($BE_USER->uc['copyLevels'],0,100);	// Set to number of page-levels to copy.
+		if ($GLOBALS['BE_USER']->uc['copyLevels']) {
+				// Set to number of page-levels to copy.
+			$this->tce->copyTree = t3lib_utility_Math::forceIntegerInRange($GLOBALS['BE_USER']->uc['copyLevels'], 0, 100);
 		}
-		if ($BE_USER->uc['neverHideAtCopy'])	{
+		if ($GLOBALS['BE_USER']->uc['neverHideAtCopy']) {
 			$this->tce->neverHideAtCopy = 1;
 		}
 
-		$TCAdefaultOverride = $BE_USER->getTSConfigProp('TCAdefaults');
-		if (is_array($TCAdefaultOverride))	{
+		$TCAdefaultOverride = $GLOBALS['BE_USER']->getTSConfigProp('TCAdefaults');
+		if (is_array($TCAdefaultOverride)) {
 			$this->tce->setDefaultsFromUserTS($TCAdefaultOverride);
 		}
 
 			// Reverse order.
-		if ($this->flags['reverseOrder'])	{
+		if ($this->flags['reverseOrder']) {
 			$this->tce->reverseOrder=1;
-		}
-
-#		$this->tce->disableRTE = $this->_disableRTE;
-
-			// Clipboard?
-		if (is_array($this->CB))	{
-			$this->include_once[]=PATH_t3lib.'class.t3lib_clipboard.php';
 		}
 	}
 
 	/**
 	 * Clipboard pasting and deleting.
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function initClipboard()	{
-		if (is_array($this->CB))	{
+	function initClipboard() {
+		if (is_array($this->CB)) {
 			$clipObj = t3lib_div::makeInstance('t3lib_clipboard');
 			$clipObj->initializeClipboard();
-			if ($this->CB['paste'])	{
+			if ($this->CB['paste']) {
 				$clipObj->setCurrentPad($this->CB['pad']);
-				$this->cmd = $clipObj->makePasteCmdArray($this->CB['paste'],$this->cmd);
+				$this->cmd = $clipObj->makePasteCmdArray($this->CB['paste'], $this->cmd);
 			}
-			if ($this->CB['delete'])	{
+			if ($this->CB['delete']) {
 				$clipObj->setCurrentPad($this->CB['pad']);
 				$this->cmd = $clipObj->makeDeleteCmdArray($this->cmd);
 			}
@@ -182,20 +157,21 @@ class SC_tce_db {
 	/**
 	 * Executing the posted actions ...
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function main()	{
-		global $BE_USER,$TYPO3_CONF_VARS;
+	function main() {
 
 			// LOAD TCEmain with data and cmd arrays:
-		$this->tce->start($this->data,$this->cmd);
-		if (is_array($this->mirror))	{$this->tce->setMirror($this->mirror);}
+		$this->tce->start($this->data, $this->cmd);
+		if (is_array($this->mirror)) {
+			$this->tce->setMirror($this->mirror);
+		}
 
 			// Checking referer / executing
-		$refInfo=parse_url(t3lib_div::getIndpEnv('HTTP_REFERER'));
+		$refInfo = parse_url(t3lib_div::getIndpEnv('HTTP_REFERER'));
 		$httpHost = t3lib_div::getIndpEnv('TYPO3_HOST_ONLY');
-		if ($httpHost!=$refInfo['host'] && $this->vC!=$BE_USER->veriCode() && !$TYPO3_CONF_VARS['SYS']['doNotCheckReferer'])	{
-			$this->tce->log('',0,0,0,1,'Referer host "%s" and server host "%s" did not match and veriCode was not valid either!',1,array($refInfo['host'],$httpHost));
+		if ($httpHost != $refInfo['host'] && $this->vC != $GLOBALS['BE_USER']->veriCode() && !$GLOBALS['TYPO3_CONF_VARS']['SYS']['doNotCheckReferer']) {
+			$this->tce->log('', 0, 0, 0, 1, 'Referer host "%s" and server host "%s" did not match and veriCode was not valid either!', 1, array($refInfo['host'], $httpHost));
 		} else {
 				// Register uploaded files
 			$this->tce->process_uploads($_FILES);
@@ -208,7 +184,7 @@ class SC_tce_db {
 			$this->tce->clear_cacheCmd($this->cacheCmd);
 
 				// Update page tree?
-			if ($this->uPT && (isset($this->data['pages'])||isset($this->cmd['pages'])))	{
+			if ($this->uPT && (isset($this->data['pages']) || isset($this->cmd['pages']))) {
 				t3lib_BEfunc::setUpdateSignal('updatePageTree');
 			}
 		}
@@ -218,11 +194,11 @@ class SC_tce_db {
 	 * Redirecting the user after the processing has been done.
 	 * Might also display error messages directly, if any.
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function finish()	{
+	function finish() {
 			// Prints errors, if...
-		if ($this->prErr)	{
+		if ($this->prErr) {
 			$this->tce->printLogErrorMessages($this->redirect);
 		}
 
@@ -232,19 +208,14 @@ class SC_tce_db {
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/tce_db.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/tce_db.php']);
-}
-
-
-
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_tce_db');
 $SOBE->init();
 
-// Include files?
-foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+	// Include files?
+foreach ($SOBE->include_once as $INC_FILE) {
+	include_once($INC_FILE);
+}
 
 $formprotection = t3lib_formprotection_Factory::get();
 

@@ -24,71 +24,37 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Provides a simplified layer for making Constant Editor style configuration forms
- *
- * $Id$
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   79: class t3lib_tsStyleConfig extends t3lib_tsparser_ext
- *   98:	 function ext_initTSstyleConfig($configTemplate,$pathRel,$pathAbs,$backPath)
- *  118:	 function ext_setValueArray($theConstants,$valueArray)
- *  145:	 function ext_getCategoriesForModMenu()
- *  155:	 function ext_makeHelpInformationForCategory($cat)
- *  168:	 function ext_getForm($cat,$theConstants,$script="",$addFields="")
- *  175:	 function uFormUrl(aname)
- *  197:	 function ext_displayExample()
- *  213:	 function ext_mergeIncomingWithExisting($arr)
- *  221:	 function ext_getKeyImage($key)
- *  231:	 function ext_getTSCE_config_image($imgConf)
- *  244:	 function ext_fNandV($params)
- *  262:	 function ext_loadResources($absPath)
- *  278:	 function ext_putValueInConf($key, $var)
- *  288:	 function ext_removeValueInConf($key)
- *
- * TOTAL FUNCTIONS: 14
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 /**
  * Provides a simplified layer for making Constant Editor style configuration forms
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  */
 class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
-		// internal
+		// Internal
 	var $categories = array();
 	var $ext_dontCheckIssetValues = 1;
-	var $ext_CEformName = "tsStyleConfigForm";
-	var $ext_noCEUploadAndCopying = 1;
+	var $ext_CEformName = 'tsStyleConfigForm';
 	var $ext_printAll = 1;
-	var $ext_defaultOnlineResourceFlag = 1;
 
 	var $ext_incomingValues = array();
 
-
 	/**
-	 * @param	string		pathRel is the path relative to the typo3/ directory
-	 * @param	string		pathAbs is the absolute path from root
-	 * @param	string		backPath is the backReference from current position to typo3/ dir
-	 * @param	[type]		$backPath: ...
+	 * @param string $configTemplate
+	 * @param string $pathRel PathRel is the path relative to the typo3/ directory
+	 * @param string $pathAbs PathAbs is the absolute path from root
+	 * @param string $backPath BackPath is the backReference from current position to typo3/ dir
 	 * @return	[type]		...
 	 */
 	function ext_initTSstyleConfig($configTemplate, $pathRel, $pathAbs, $backPath) {
-		$this->tt_track = 0; // Do not log time-performance information
-		$this->constants = array($configTemplate, "");
+			// Do not log time-performance information
+		$this->tt_track = 0;
+		$this->constants = array($configTemplate, '');
 
-		$theConstants = $this->generateConfig_constants(); // The editable constants are returned in an array.
+			// The editable constants are returned in an array.
+		$theConstants = $this->generateConfig_constants();
 
 		$this->ext_localGfxPrefix = $pathAbs;
 		$this->ext_localWebGfxPrefix = $backPath . $pathRel;
@@ -108,19 +74,20 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 
 		$temp = $this->flatSetup;
 		$this->flatSetup = array();
-		$this->flattenSetup($valueArray, "", "");
+		$this->flattenSetup($valueArray, '', '');
 		$this->objReg = $this->ext_realValues = $this->flatSetup;
 		$this->flatSetup = $temp;
 
-
 		foreach ($theConstants as $k => $p) {
 			if (isset($this->objReg[$k])) {
-				$theConstants[$k]["value"] = $this->ext_realValues[$k];
+				$theConstants[$k]['value'] = $this->ext_realValues[$k];
 			}
 		}
 
-		$this->categories = array(); // Reset the default pool of categories.
-		$this->ext_categorizeEditableConstants($theConstants); // The returned constants are sorted in categories, that goes into the $this->categories array
+			// Reset the default pool of categories.
+		$this->categories = array();
+			// The returned constants are sorted in categories, that goes into the $this->categories array
+		$this->ext_categorizeEditableConstants($theConstants);
 
 		return $theConstants;
 	}
@@ -147,15 +114,15 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 	/**
 	 * Get the form for extension configuration
 	 *
-	 * @param  string  $cat
-	 * @param  array $theConstants
-	 * @param  string  $script
-	 * @param  string $addFields
-	 * @param  string $extKey
-	 * @param  bool  Adds opening <form> tag to the ouput, if TRUE
-	 * @return  string the form
+	 * @param string $cat
+	 * @param array $theConstants
+	 * @param string $script
+	 * @param string $addFields
+	 * @param string $extKey
+	 * @param boolean Adds opening <form> tag to the ouput, if TRUE
+	 * @return string The form
 	 */
-	function ext_getForm($cat, $theConstants, $script = "", $addFields = "", $extKey = "", $addFormTag = TRUE) {
+	function ext_getForm($cat, $theConstants, $script = '', $addFields = '', $extKey = '', $addFormTag = TRUE) {
 		$this->ext_makeHelpInformationForCategory($cat);
 		$printFields = trim($this->ext_printFields($theConstants, $cat));
 
@@ -175,7 +142,7 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tsfe.xml:update', TRUE) . '" id="configuration-submit-' . htmlspecialchars($extKey) . '" />';
 
 		$example = $this->ext_displayExample();
-		$content .= $example ? '<hr/>' . $example : "";
+		$content .= $example ? '<hr/>' . $example : '';
 
 		return $content;
 	}
@@ -186,11 +153,10 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 	 * @return	[type]		...
 	 */
 	function ext_displayExample() {
-		global $SOBE, $tmpl;
-		if ($this->helpConfig["imagetag"] || $this->helpConfig["description"] || $this->helpConfig["header"]) {
-			$out = '<div align="center">' . $this->helpConfig["imagetag"] . '</div><BR>' .
-				   ($this->helpConfig["description"] ? implode(explode("//", $this->helpConfig["description"]), "<BR>") . "<BR>" : "") .
-				   ($this->helpConfig["bulletlist"] ? "<ul><li>" . implode(explode("//", $this->helpConfig["bulletlist"]), "<li>") . "</ul>" : "<BR>");
+		if ($this->helpConfig['imagetag'] || $this->helpConfig['description'] || $this->helpConfig['header']) {
+			$out = '<div align="center">' . $this->helpConfig['imagetag'] . '</div><BR>' .
+				($this->helpConfig['description'] ? implode(explode('//', $this->helpConfig['description']), '<BR>') . '<BR>' : '') .
+				($this->helpConfig['bulletlist'] ? '<ul><li>' . implode(explode('//', $this->helpConfig['bulletlist']), '<li>') . '</ul>' : '<BR>');
 		}
 		return $out;
 	}
@@ -202,13 +168,13 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 	 * @return	[type]		...
 	 */
 	function ext_mergeIncomingWithExisting($arr) {
-		$parseObj = t3lib_div::makeInstance("t3lib_TSparser");
+		$parseObj = t3lib_div::makeInstance('t3lib_TSparser');
 		$parseObj->parse(implode(LF, $this->ext_incomingValues));
 		$arr2 = $parseObj->setup;
 		return t3lib_div::array_merge_recursive_overrule($arr, $arr2);
 	}
 
-		// extends:
+		// Extends:
 	function ext_getKeyImage($key) {
 		return '<img' . t3lib_iconWorks::skinImg($this->ext_backPath, 'gfx/rednumbers/' . $key . '.gif', '') . ' hspace="2" align="top" alt="" />';
 	}
@@ -233,30 +199,16 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 	 * @return	[type]		...
 	 */
 	function ext_fNandV($params) {
-		$fN = 'data[' . $params["name"] . ']';
-		$fV = $params["value"] = isset($this->ext_realValues[$params["name"]]) ? $this->ext_realValues[$params["name"]] : $params["default_value"];
+		$fN = 'data[' . $params['name'] . ']';
+		$fV = $params['value'] = isset($this->ext_realValues[$params['name']]) ? $this->ext_realValues[$params['name']] : $params['default_value'];
 		$reg = array();
-		if (preg_match('/^\{[\$][a-zA-Z0-9\.]*\}$/', trim($fV), $reg)) { // Values entered from the constantsedit cannot be constants!
-			$fV = "";
+			// Values entered from the constantsedit cannot be constants!
+		if (preg_match('/^\{[\$][a-zA-Z0-9\.]*\}$/', trim($fV), $reg)) {
+			$fV = '';
 		}
 		$fV = htmlspecialchars($fV);
 
 		return array($fN, $fV, $params);
-	}
-
-	/**
-	 * [Describe function...]
-	 *
-	 * @param	[type]		$absPath: ...
-	 * @return	[type]		...
-	 */
-	function ext_loadResources($absPath) {
-		$this->ext_readDirResources($GLOBALS["TYPO3_CONF_VARS"]["MODS"]["web_ts"]["onlineResourceDir"]);
-		if (is_dir($absPath)) {
-			$absPath = rtrim($absPath, '/');
-			$this->readDirectory($absPath);
-		}
-		$this->ext_resourceDims();
 	}
 
 	/**
@@ -267,7 +219,7 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 	 * @return	[type]		...
 	 */
 	function ext_putValueInConf($key, $var) {
-		$this->ext_incomingValues[$key] = $key . "=" . $var;
+		$this->ext_incomingValues[$key] = $key . '=' . $var;
 	}
 
 	/**
@@ -281,8 +233,4 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsstyleconfig.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tsstyleconfig.php']);
-}
 ?>

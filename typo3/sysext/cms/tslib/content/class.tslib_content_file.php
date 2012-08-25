@@ -29,7 +29,6 @@
 /**
  * Contains FILE class object.
  *
- * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -38,8 +37,8 @@ class tslib_content_File extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, FILE
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 
@@ -47,7 +46,7 @@ class tslib_content_File extends tslib_content_Abstract {
 			? $this->cObj->stdWrap($conf['file'], $conf['file.'])
 			: $conf['file'];
 
-		$theValue = $this->cObj->fileResource($file, trim($this->cObj->getAltParam($conf, false)));
+		$theValue = $this->cObj->fileResource($file, trim($this->cObj->getAltParam($conf, FALSE)));
 
 		$linkWrap =  isset($conf['linkWrap.'])
 			? $this->cObj->stdWrap($conf['linkWrap'], $conf['linkWrap.'])
@@ -68,14 +67,6 @@ class tslib_content_File extends tslib_content_Abstract {
 		}
 
 		return $theValue;
-
 	}
-
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_file.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_file.php']);
-}
-
 ?>

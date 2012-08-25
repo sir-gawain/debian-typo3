@@ -26,8 +26,6 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_textindicator.php 5489 2009-05-23 15:26:20Z ohader $
- *
  */
 class tx_rtehtmlarea_textindicator extends tx_rtehtmlarea_api {
 	protected $extensionKey = 'rtehtmlarea';	// The key of the extension that is extending htmlArea RTE
@@ -57,8 +55,5 @@ class tx_rtehtmlarea_textindicator extends tx_rtehtmlarea_api {
 		$registerRTEinJavascriptString = '';
 		return $registerRTEinJavascriptString;
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TextIndicator/class.tx_rtehtmlarea_textindicator.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TextIndicator/class.tx_rtehtmlarea_textindicator.php']);
 }
 ?>

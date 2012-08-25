@@ -28,9 +28,7 @@
 /**
  * Hook subscriber for using Swift Mailer with the t3lib_utility_mail function
  *
- * $Id$
- *
- * @author	Jigal van Hemert <jigal@xs4all.nl>
+ * @author Jigal van Hemert <jigal@xs4all.nl>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -107,8 +105,8 @@ class t3lib_mail_SwiftMailerAdapter implements t3lib_mail_MailerAdapter {
 	/**
 	 * Tries to undo the action by escapeshellarg()
 	 *
-	 * @param  $escapedString String escaped by escapeshellarg()
-	 * @return string	String with escapeshellarg() action undone as best as possible
+	 * @param string $escapedString String escaped by escapeshellarg()
+	 * @return string String with escapeshellarg() action undone as best as possible
 	 */
 	protected function unescapeShellArguments($escapedString) {
 		if (TYPO3_OS === 'WIN') {
@@ -129,8 +127,8 @@ class t3lib_mail_SwiftMailerAdapter implements t3lib_mail_MailerAdapter {
 	/**
 	 * Handles setting and replacing of mail headers
 	 *
-	 * @param  $headerName Name of header
-	 * @param  $headerValue Value of header
+	 * @param string $headerName Name of header
+	 * @param string $headerValue Value of header
 	 * @return void
 	 */
 	protected function setHeader($headerName, $headerValue) {
@@ -242,9 +240,9 @@ class t3lib_mail_SwiftMailerAdapter implements t3lib_mail_MailerAdapter {
 						if ($matches[2]) {
 							$charset = trim($matches[3]);
 						}
-					} else if (preg_match('/^content-transfer-encoding:(.*)$/i', $line, $matches)) {
+					} elseif (preg_match('/^content-transfer-encoding:(.*)$/i', $line, $matches)) {
 						$encoding = trim($matches[1]);
-					} else if (strlen(trim($line)) == 0) {
+					} elseif (strlen(trim($line)) == 0) {
 							// empty line before actual content of this part
 						break;
 					}
@@ -303,10 +301,10 @@ class t3lib_mail_SwiftMailerAdapter implements t3lib_mail_MailerAdapter {
 		$addressList = array();
 		foreach ($addresses as $address) {
 			if ($address->personal) {
-				// item with name found ( name <email@example.org> )
+					// item with name found ( name <email@example.org> )
 				$addressList[$address->mailbox . '@' . $address->host] = $address->personal;
 			} else {
-				// item without name found ( email@example.org )
+					// item without name found ( email@example.org )
 				$addressList[] = $address->mailbox . '@' . $address->host;
 			}
 		}

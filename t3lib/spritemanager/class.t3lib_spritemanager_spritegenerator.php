@@ -25,18 +25,16 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
 /**
- * sprite generator
+ * Sprite generator
  *
- * @author	Steffen Ritter <info@steffen-ritter.net>
+ * @author Steffen Ritter <info@steffen-ritter.net>
  * @package TYPO3
  * @subpackage t3lib
  */
-
 class t3lib_spritemanager_SpriteGenerator {
 	/**
-	 * template creating CSS for the spritefile
+	 * Template creating CSS for the spritefile
 	 *
 	 * @var string
 	 */
@@ -50,7 +48,7 @@ class t3lib_spritemanager_SpriteGenerator {
 
 	/**
 	 *
-	 * template creating CSS for position and size of a single icon
+	 * Template creating CSS for position and size of a single icon
 	 *
 	 * @var string
 	 */
@@ -61,75 +59,69 @@ class t3lib_spritemanager_SpriteGenerator {
 ';
 
 	/**
-	 * most common icon-width in the sprite
+	 * Most common icon-width in the sprite
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $defaultWidth = 0;
 
 	/**
-	 * most common icon-height in the sprite
+	 * Most common icon-height in the sprite
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $defaultHeight = 0;
 
 	/**
-	 * calculated width of the sprite
+	 * Calculated width of the sprite
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $spriteWidth = 0;
 
 	/**
-	 * calculated height of the sprite
-	 * @var int
+	 * Calculated height of the sprite
+	 * @var integer
 	 */
 	protected $spriteHeight = 0;
 
 	/**
-	 * sprite name, will be the filename, too
+	 * Sprite name, will be the filename, too
 	 *
 	 * @var string
 	 */
 	protected $spriteName = '';
 
 	/**
-	 * the folder the sprite-images will be saved (relative to PATH_site)
+	 * The folder the sprite-images will be saved (relative to PATH_site)
 	 *
 	 * @var string
 	 */
 	protected $spriteFolder = 'typo3temp/sprites/';
 
 	/**
-	 * the folder the sprite-cs will be saved (relative to PATH_site)
+	 * The folder the sprite-cs will be saved (relative to PATH_site)
 	 *
 	 * @var string
 	 */
 	protected $cssFolder = 'typo3temp/sprites/';
 
 	/**
-	 * the spriteName will not be included in icon names
+	 * The spriteName will not be included in icon names
 	 *
 	 * @var boolean
 	 */
 	protected $ommitSpriteNameInIconName = FALSE;
 
 	/**
-	 * @var boolean
-	 * @deprecated IE6 support will be dropped within 4.6 - then gifcopies are superflous
-	 */
-	protected $generateGIFCopy = TRUE;
-
-	/**
-	 * namespace of css classes
+	 * Namespace of css classes
 	 *
 	 * @var string
 	 */
 	protected $nameSpace = 't3-icon';
 
 	/**
-	 * setting this to true, the timestamp of the creation will be included to the background import
+	 * Setting this to TRUE, the timestamp of the creation will be included to the background import
 	 * helps to easily rebuild sprites without cache problems
 	 *
 	 * @var boolean
@@ -137,7 +129,7 @@ class t3lib_spritemanager_SpriteGenerator {
 	protected $includeTimestampInCSS = TRUE;
 
 	/**
-	 * all bases/root-names included in the sprite which has to be in css
+	 * All bases/root-names included in the sprite which has to be in css
 	 * as sprite to include the background-image
 	 *
 	 * @var array
@@ -145,21 +137,21 @@ class t3lib_spritemanager_SpriteGenerator {
 	protected $spriteBases = array();
 
 	/**
-	 * collects data about all icons to process
+	 * Collects data about all icons to process
 	 *
 	 * @var array
 	 */
 	protected $iconsData = array();
 
 	/**
-	 * collects all sizes of icons within this sprite and there count
+	 * Collects all sizes of icons within this sprite and there count
 	 *
 	 * @var array
 	 */
 	protected $iconSizes = array();
 
 	/**
-	 * maps icon-sizes to iconnames
+	 * Maps icon-sizes to iconnames
 	 *
 	 * @var array
 	 */
@@ -168,14 +160,14 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * space in px between to icons in the sprite (gap)
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $space = 2;
 
 	/**
 	 * Initializes the configuration of the spritegenerator
 	 *
-	 * @param string $spriteName	the name of the sprite to be generated
+	 * @param string $spriteName The name of the sprite to be generated
 	 * @return void
 	 */
 	public function __construct($spriteName) {
@@ -185,8 +177,8 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * Sets namespace of css code
 	 *
-	 * @param string $string
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @param string $nameSpace
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setNamespace($nameSpace) {
 		$this->nameSpace = $nameSpace;
@@ -196,8 +188,8 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * Sets the spritename
 	 *
-	 * @param string $spriteName	the name of the sprite to be generated
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @param string $spriteName The name of the sprite to be generated
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setSpriteName($spriteName) {
 		$this->spriteName = $spriteName;
@@ -207,8 +199,8 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * Sets the sprite-graphics target-folder
 	 *
-	 * @param string $folder the target folder where the generated sprite is stored
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @param string $folder The target folder where the generated sprite is stored
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setSpriteFolder($folder) {
 		$this->spriteFolder = $folder;
@@ -219,7 +211,7 @@ class t3lib_spritemanager_SpriteGenerator {
 	 * Sets the sprite-css target-folder
 	 *
 	 * @param string $folder the target folder where the generated CSS files are stored
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setCSSFolder($folder) {
 		$this->cssFolder = $folder;
@@ -230,7 +222,7 @@ class t3lib_spritemanager_SpriteGenerator {
 	 * Setter do enable the exclusion of the sprites-name from iconnames
 	 *
 	 * @param boolean $value
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setOmmitSpriteNameInIconName($value) {
 		$this->ommitSpriteNameInIconName = is_bool($value) ? $value : FALSE;
@@ -240,8 +232,8 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * Setter to adjust how much space is between to icons in the sprite
 	 *
-	 * @param int $value
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @param integer $value
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setIconSpace($value) {
 		$this->space = intval($value);
@@ -249,22 +241,10 @@ class t3lib_spritemanager_SpriteGenerator {
 	}
 
 	/**
-	 * Setter to enable/disable generating a GIF-Copy of the sprite
-	 *
-	 * @param boolean $value
-	 * @deprecated IE6 support will be dropped within 4.6 - then gifcopies are superflous
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
-	 */
-	public function setGenerateGifCopy($value) {
-		$this->generateGIFCopy = is_bool($value) ? $value : TRUE;
-		return $this;
-	}
-
-	/**
 	 * Setter for timestamp inclusion: imageFiles will be included with ?timestamp
 	 *
 	 * @param boolean $value
-	 * @return t3lib_spritemanager_SpriteGenerator	an instance of $this, to enable chaining.
+	 * @return t3lib_spritemanager_SpriteGenerator An instance of $this, to enable chaining.
 	 */
 	public function setIncludeTimestampInCSS($value) {
 		$this->includeTimestampInCSS = is_bool($value) ? $value : TRUE;
@@ -272,17 +252,17 @@ class t3lib_spritemanager_SpriteGenerator {
 	}
 
 	/**
-	 * Teads all png,gif,jpg files from the passed folder name (including 1 subfolder level)
+	 * Reads all png,gif,jpg files from the passed folder name (including 1 subfolder level)
 	 * extracts size information and stores data in internal array,
 	 * afterwards triggers sprite generation.
 	 *
-	 * @param array $inputFolder folder from which files are read
-	 * @return	array
+	 * @param array $inputFolder Folder from which files are read
+	 * @return array
 	 */
 	public function generateSpriteFromFolder(array $inputFolder) {
 		$iconArray = array();
 		foreach ($inputFolder as $folder) {
-				// detect all files to be included in sprites
+				// Detect all files to be included in sprites
 			$iconArray = array_merge(
 				$iconArray,
 				$this->getFolder($folder)
@@ -305,7 +285,7 @@ class t3lib_spritemanager_SpriteGenerator {
 		}
 
 		$this->buildFileInformationCache($files);
-			// calculate Icon Position in sprite
+			// Calculate Icon Position in sprite
 		$this->calculateSpritePositions();
 
 		$this->generateGraphic();
@@ -317,9 +297,7 @@ class t3lib_spritemanager_SpriteGenerator {
 
 		return array(
 			'spriteImage' => PATH_site . $this->spriteFolder . $this->spriteName . '.png',
-			'spriteGifImage' => PATH_site . $this->spriteFolder . $this->spriteName . '.gif',
 			'cssFile' => PATH_site . $this->cssFolder . $this->spriteName . '.css',
-			'cssGif' => PATH_site . $this->cssFolder . $this->spriteName . '-ie6.css',
 			'iconNames' => $iconNames
 		);
 	}
@@ -331,7 +309,6 @@ class t3lib_spritemanager_SpriteGenerator {
 	 */
 	protected function generateCSS() {
 		$cssData = '';
-		$cssIe6 = '';
 
 		if ($this->includeTimestampInCSS) {
 			$timestamp = '?' . time();
@@ -353,14 +330,6 @@ class t3lib_spritemanager_SpriteGenerator {
 		foreach ($this->spriteBases as $base) {
 			$markerArray['###SPRITENAME###'] = $base;
 			$cssData .= t3lib_parsehtml::substituteMarkerArray($this->templateSprite, $markerArray);
-		}
-
-		if ($this->generateGIFCopy) {
-			$markerArray['###SPRITEURL###'] = str_replace('.png', '.gif', $markerArray['###SPRITEURL###']);
-			foreach ($this->spriteBases as $base) {
-				$markerArray['###SPRITENAME###'] = $base;
-				$cssIe6 .= t3lib_parsehtml::substituteMarkerArray($this->templateSprite, $markerArray);
-			}
 		}
 
 		foreach ($this->iconsData as $key => $data) {
@@ -385,9 +354,6 @@ class t3lib_spritemanager_SpriteGenerator {
 		}
 
 		t3lib_div::writeFile(PATH_site . $this->cssFolder . $this->spriteName . '.css', $cssData);
-		if ($this->generateGIFCopy) {
-			t3lib_div::writeFile(PATH_site . $this->cssFolder . $this->spriteName . '-ie6.css', $cssIe6);
-		}
 	}
 
 	/**
@@ -405,7 +371,7 @@ class t3lib_spritemanager_SpriteGenerator {
 
 		$i = 0;
 		while (isset($cssPathSegments[$i]) && isset($graphicPathSegments[$i]) &&
-			   $cssPathSegments[$i] == $graphicPathSegments[$i]) {
+			$cssPathSegments[$i] == $graphicPathSegments[$i]) {
 			unset($cssPathSegments[$i]);
 			unset($graphicPathSegments[$i]);
 			++$i;
@@ -424,17 +390,15 @@ class t3lib_spritemanager_SpriteGenerator {
 	 * @return void
 	 */
 	protected function generateGraphic() {
-		$iconParameters = array();
 		$tempSprite = t3lib_div::tempnam($this->spriteName);
 
 		$filePath = array(
 			'mainFile' => PATH_site . $this->spriteFolder . $this->spriteName . '.png',
-			'gifFile' => NULL
 		);
-			// create black true color image with given size
+			// Create black true color image with given size
 		$newSprite = imagecreatetruecolor($this->spriteWidth, $this->spriteHeight);
 		imagesavealpha($newSprite, TRUE);
-			// make it transparent
+			// Make it transparent
 		imagefill($newSprite, 0, 0, imagecolorallocatealpha($newSprite, 0, 255, 255, 127));
 		foreach ($this->iconsData as $icon) {
 			$function = 'imagecreatefrom' . strtolower($icon['fileExtension']);
@@ -445,28 +409,8 @@ class t3lib_spritemanager_SpriteGenerator {
 		}
 		imagepng($newSprite, $tempSprite . '.png');
 
-		if ($this->generateGIFCopy) {
-			$filePath['gifFile'] = PATH_site . $this->spriteFolder . $this->spriteName . '.gif';
-			$gifSprite = imagecreatetruecolor($this->spriteWidth, $this->spriteHeight);
-				// make it transparent
-			imagefill($gifSprite, 0, 0, imagecolorallocate($gifSprite, 127, 127, 127));
-			foreach ($this->iconsData as $icon) {
-				$function = 'imagecreatefrom' . strtolower($icon['fileExtension']);
-				if (function_exists($function)) {
-					$currentIcon = $function($icon['fileName']);
-					imagecopy($gifSprite, $currentIcon, $icon['left'], $icon['top'], 0, 0, $icon['width'], $icon['height']);
-				}
-			}
-			imagecolortransparent($gifSprite, imagecolorallocate($gifSprite, 127, 127, 127));
-			imagegif($gifSprite, $tempSprite . '.gif');
-		}
-
 		t3lib_div::upload_copy_move($tempSprite . '.png', $filePath['mainFile']);
 		t3lib_div::unlink_tempfile($tempSprite . '.png');
-		if ($this->generateGIFCopy) {
-			t3lib_div::upload_copy_move($tempSprite . '.gif', $filePath['gifFile']);
-			t3lib_div::unlink_tempfile($tempSprite . '.gif');
-		}
 	}
 
 	/**
@@ -476,7 +420,7 @@ class t3lib_spritemanager_SpriteGenerator {
 	protected function calculateSpritePositions() {
 		$currentLeft = 0;
 		$currentTop = 0;
-			// calculate width of every icon-size-group
+			// Calculate width of every icon-size-group
 		$sizes = array();
 		foreach ($this->iconSizes as $sizeTag => $count) {
 			$size = $this->explodeSizeTag($sizeTag);
@@ -486,9 +430,9 @@ class t3lib_spritemanager_SpriteGenerator {
 			}
 			$sizes[$rowWidth] = $sizeTag;
 		}
-			// reverse sorting: widest group to top
+			// Reverse sorting: widest group to top
 		krsort($sizes);
-			// integerate all icons grouped by icons size into the sprite
+			// Integerate all icons grouped by icons size into the sprite
 		foreach ($sizes as $sizeTag) {
 			$size = $this->explodeSizeTag($sizeTag);
 			$currentLeft = 0;
@@ -530,8 +474,8 @@ class t3lib_spritemanager_SpriteGenerator {
 	 * Function getFolder traverses the target directory,
 	 * locates all iconFiles and collects them into an array
 	 *
-	 * @param string path to an folder which contains images
-	 * @return array returns an array with all files key: iconname, value: fileName
+	 * @param string $directoryPath Path to an folder which contains images
+	 * @return array Returns an array with all files key: iconname, value: fileName
 	 */
 	protected function getFolder($directoryPath) {
 		$subFolders = t3lib_div::get_dirs(PATH_site . $directoryPath);
@@ -564,7 +508,7 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * Generates file information cache from file array
 	 *
-	 * @param array	list of all files with their icon name
+	 * @param array $files List of all files with their icon name
 	 * @return void
 	 */
 	protected function buildFileInformationCache(array $files) {
@@ -598,7 +542,7 @@ class t3lib_spritemanager_SpriteGenerator {
 			}
 			$this->iconNamesPerSize[$sizeTag][] = $iconName;
 		}
-			// find most common image size, save it as default
+			// Find most common image size, save it as default
 		asort($this->iconSizes);
 		$defaultSize = $this->explodeSizeTag(array_pop(array_keys($this->iconSizes)));
 		$this->defaultWidth = $defaultSize['width'];
@@ -608,20 +552,16 @@ class t3lib_spritemanager_SpriteGenerator {
 	/**
 	 * Transforms size tag into size array
 	 *
-	 * @param string  a size tag at the cache arrays
+	 * @param string $tag A size tag at the cache arrays
 	 * @return array
 	 */
 	protected function explodeSizeTag($tag = '') {
-		$size = t3lib_div::trimExplode("x", $tag);
+		$size = t3lib_div::trimExplode('x', $tag);
 		return array(
 			'width' => $size[0],
 			'height' => $size[1]
 		);
 	}
-
 }
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/spritemanager/class.t3lib_spritemanager_spritegenerator.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/spritemanager/class.t3lib_spritemanager_spritegenerator.php']);
-}
 ?>

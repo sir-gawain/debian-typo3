@@ -27,22 +27,7 @@
 /**
  * Index search frontend example hook
  *
- * $Id$
- *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   59: class tx_indexedsearch_pihook
- *   72:     function initialize_postProc()
- *   95:     function prepareResultRowTemplateData_postProc($tmplContent, $row, $headerOnly)
- *
- * TOTAL FUNCTIONS: 2
- * (This index is automatically created/updated by the extension "extdeveval")
- *
  */
 
 
@@ -69,7 +54,7 @@ class tx_indexedsearch_pihook {
 	 *
 	 * @return	void
 	 */
-	function initialize_postProc()	{
+	function initialize_postProc() {
 		$this->pObj->optValues['order'] = array_reverse($this->pObj->optValues['order']);
 	}
 
@@ -79,9 +64,8 @@ class tx_indexedsearch_pihook {
 	 * @param	array		Array of search words
 	 * @return	array		Array of first row, result rows, count
 	 */
-#	function getResultRows($sWArr)	{
-
-#	}
+	function getResultRows($sWArr) {
+	}
 
 	/**
 	 * Example of how the content displayed in the result rows can be post processed before rendered into HTML.
@@ -92,17 +76,11 @@ class tx_indexedsearch_pihook {
 	 * @param	boolean		If set, the result row is a sub-row.
 	 * @return	array		Template Content returned.
 	 */
-	function prepareResultRowTemplateData_postProc($tmplContent, $row, $headerOnly)	{
+	function prepareResultRowTemplateData_postProc($tmplContent, $row, $headerOnly) {
 		$tmplContent['description'] = '<em>'.$tmplContent['description'].'</em>';
 		$tmplContent['path'] = '';
 
 		return $tmplContent;
 	}
 }
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.pihook.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/example/class.pihook.php']);
-}
-
 ?>

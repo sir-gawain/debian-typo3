@@ -54,6 +54,7 @@ class Tx_Extbase_Object_Container_ClassInfoCache {
 	/**
 	 * checks if cacheentry exists for id
 	 * @param string $id
+	 * @return boolean
 	 */
 	public function has($id) {
 		return isset($this->level1Cache[$id]) || $this->level2Cache->has($id);
@@ -86,16 +87,6 @@ class Tx_Extbase_Object_Container_ClassInfoCache {
 	 * Initialize the TYPO3 second level cache
 	 */
 	private function initializeLevel2Cache() {
-		t3lib_cache::initializeCachingFramework();
-		try {
-			$this->level2Cache = $GLOBALS['typo3CacheManager']->getCache('cache_extbase_object');
-		} catch (t3lib_cache_exception_NoSuchCache $exception) {
-			$this->level2Cache = $GLOBALS['typo3CacheFactory']->create(
-				'cache_extbase_object',
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_object']['frontend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_object']['backend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_object']['options']
-			);
-		}
+		$this->level2Cache = $GLOBALS['typo3CacheManager']->getCache('extbase_object');
 	}
 }

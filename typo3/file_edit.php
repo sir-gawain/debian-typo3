@@ -24,54 +24,31 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Web>File: Editing documents
  *
- * $Id$
  * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML compliant (except textarea field)
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   74: class SC_file_edit
- *   93:     function init()
- *  143:     function main()
- *  205:     function printContent()
- *
- * TOTAL FUNCTIONS: 3
- * (This index is automatically created/updated by the extension "extdeveval")
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-$BACK_PATH = '';
+$GLOBALS['BACK_PATH'] = '';
 require('init.php');
-require('template.php');
-
 
 /**
  * Script Class for rendering the file editing screen
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_file_edit {
-	var $content;		// Module content accumulated.
+		// Module content accumulated.
+	var $content;
 
-	/**
-	 * File processing object
-	 *
-	 * @var t3lib_basicFileFunctions
-	 */
-	var $basicff;
-	var $shortPath;
 	var $title;
-	var $icon;
 
 	/**
 	 * Document template object
@@ -81,63 +58,54 @@ class SC_file_edit {
 	var $doc;
 
 		// Internal, static: GPvar
-	var $origTarget;		// Original input target
-	var $target;			// The original target, but validated.
-	var $returnUrl;		// Return URL of list module.
+		// Original input target
+	var $origTarget;
+		// The original target, but validated.
+	var $target;
+		// Return URL of list module.
+	var $returnUrl;
 
+	/**
+	 * the file that is being edited on
+	 *
+	 * @var t3lib_file_AbstractFile
+	 */
+	protected $fileObject;
 
 	/**
 	 * Initialize script class
 	 *
 	 * @return	void
 	 */
-	function init()	{
-		//TODO remove global
-		global $BACK_PATH,$TYPO3_CONF_VARS;
-
+	function init() {
 			// Setting target, which must be a file reference to a file within the mounts.
-		$this->target = $this->origTarget = t3lib_div::_GP('target');
+		$this->target = $this->origTarget = $fileIdentifier = t3lib_div::_GP('target');
 		$this->returnUrl = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
 
-			// Creating file management object:
-		$this->basicff = t3lib_div::makeInstance('t3lib_basicFileFunctions');
-		$this->basicff->init($GLOBALS['FILEMOUNTS'],$TYPO3_CONF_VARS['BE']['fileExtensions']);
-
-
-		if (file_exists($this->target))	{
-			$this->target=$this->basicff->cleanDirectoryName($this->target);		// Cleaning and checking target (file or dir)
-		} else {
-			$this->target='';
+			// create the file object
+		if ($fileIdentifier) {
+			$this->fileObject = t3lib_file_Factory::getInstance()->retrieveFileOrFolderObject($fileIdentifier);
 		}
-		$key=$this->basicff->checkPathAgainstMounts($this->target.'/');
-		if (!$this->target || !$key) {
+
+			// Cleaning and checking target directory
+		if (!$this->fileObject) {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', TRUE);
 			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', TRUE);
-			throw new RuntimeException($title . ': ' . $message);
-		}
-			// Finding the icon
-		switch($GLOBALS['FILEMOUNTS'][$key]['type'])	{
-			case 'user':	$this->icon = 'gfx/i/_icon_ftp_user.gif';	break;
-			case 'group':	$this->icon = 'gfx/i/_icon_ftp_group.gif';	break;
-			default:		$this->icon = 'gfx/i/_icon_ftp.gif';	break;
+			throw new RuntimeException($title . ': ' . $message, 1294586841);
 		}
 
-		$this->icon = '<img'.t3lib_iconWorks::skinImg($this->backPath,$this->icon,'width="18" height="16"').' title="" alt="" />';
-
-			// Relative path to filemount, $key:
-		$this->shortPath = substr($this->target,strlen($GLOBALS['FILEMOUNTS'][$key]['path']));
-
-			// Setting title:
-		$this->title = $this->icon.$GLOBALS['FILEMOUNTS'][$key]['name'].': '.$this->shortPath;
+			// Setting the title and the icon
+		$icon = t3lib_iconWorks::getSpriteIcon('apps-filetree-root');
+		$this->title = $icon . htmlspecialchars($this->fileObject->getStorage()->getName()) . ': ' . htmlspecialchars($this->fileObject->getIdentifier());
 
 		// ***************************
 		// Setting template object
 		// ***************************
 		$this->doc = t3lib_div::makeInstance('template');
 		$this->doc->setModuleTemplate('templates/file_edit.html');
-		$this->doc->backPath = $BACK_PATH;
-		$this->doc->JScode=$this->doc->wrapScriptTags('
-			function backToList()	{	//
+		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->JScode = $this->doc->wrapScriptTags('
+			function backToList() {	//
 				top.goToModule("file_list");
 			}
 		');
@@ -147,16 +115,15 @@ class SC_file_edit {
 	/**
 	 * Main function, redering the actual content of the editing page
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function main()	{
-		//TODO remove global, change $LANG into $GLOBALS['LANG'], change locallang*.php to locallang*.xml
-		global $BE_USER, $LANG, $TYPO3_CONF_VARS;
+	function main() {
+			//TODO: change locallang*.php to locallang*.xml
 		$docHeaderButtons = $this->getButtons();
 
-		$this->content = $this->doc->startPage($LANG->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.pagetitle'));
+		$this->content = $this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.pagetitle'));
 
-			// hook	before compiling the output
+			// Hook	before compiling the output
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['preOutputProcessingHook'])) {
 			$preOutputProcessingHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['preOutputProcessingHook'];
 			if (is_array($preOutputProcessingHook)) {
@@ -164,52 +131,52 @@ class SC_file_edit {
 					'content' => &$this->content,
 					'target' => &$this->target,
 				);
-				foreach ($preOutputProcessingHook as $hookFunction)	{
+				foreach ($preOutputProcessingHook as $hookFunction) {
 					t3lib_div::callUserFunction($hookFunction, $hookParameters, $this);
 				}
 			}
 		}
 
-		$pageContent = $this->doc->header($LANG->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.pagetitle'));
+		$pageContent = $this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.pagetitle') . ' ' . htmlspecialchars($this->fileObject->getName()));
 		$pageContent .= $this->doc->spacer(2);
 
-		$fI = pathinfo($this->target);
-		$extList=$TYPO3_CONF_VARS['SYS']['textfile_ext'];
+		$code = '';
 
-		if ($extList && t3lib_div::inList($extList,strtolower($fI['extension'])))		{
+		$extList = $GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'];
+		if ($extList && t3lib_div::inList($extList, $this->fileObject->getExtension())) {
 				// Read file content to edit:
-			$fileContent = t3lib_div::getUrl($this->target);
+			$fileContent = $this->fileObject->getContents();
 
-				// making the formfields
+				// Making the formfields
 			$hValue = 'file_edit.php?target='.rawurlencode($this->origTarget).'&returnUrl='.rawurlencode($this->returnUrl);
 
 				// Edit textarea:
-			$code.='
+			$code .= '
 				<div id="c-edit">
-					<textarea rows="30" name="file[editfile][0][data]" wrap="off"'.$this->doc->formWidthText(48,'width:98%;height:80%','off').' class="fixed-font enable-tab">'.
+					<textarea rows="30" name="file[editfile][0][data]" wrap="off"'.$this->doc->formWidthText(48, 'width:98%;height:80%', 'off').' class="fixed-font enable-tab">'.
 					t3lib_div::formatForTextarea($fileContent).
 					'</textarea>
-					<input type="hidden" name="file[editfile][0][target]" value="'.$this->target.'" />
+					<input type="hidden" name="file[editfile][0][target]" value="' . $this->fileObject->getUid() . '" />
 					<input type="hidden" name="redirect" value="'.htmlspecialchars($hValue).'" />
 				</div>
 				<br />';
 
 				// Make shortcut:
-			if ($BE_USER->mayMakeShortcut())	{
-				$this->MCONF['name']='xMOD_file_edit.php';
-				$docHeaderButtons['shortcut'] = $this->doc->makeShortcutIcon('target','',$this->MCONF['name'],1);
+			if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
+				$this->MCONF['name'] = 'xMOD_file_edit.php';
+				$docHeaderButtons['shortcut'] = $this->doc->makeShortcutIcon('target', '', $this->MCONF['name'], 1);
 			} else {
 				$docHeaderButtons['shortcut'] = '';
 			}
 		} else {
-			$code.=sprintf($LANG->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.coundNot'), $extList);
+			$code .= sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_edit.php.coundNot'), $extList);
 		}
 
 			// Ending of section and outputting editing form:
-		$pageContent.= $this->doc->sectionEnd();
-		$pageContent.=$code;
+		$pageContent .= $this->doc->sectionEnd();
+		$pageContent .= $code;
 
-				// hook	after compiling the output
+			// Hook	after compiling the output
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['postOutputProcessingHook'])) {
 			$postOutputProcessingHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/file_edit.php']['postOutputProcessingHook'];
 			if (is_array($postOutputProcessingHook)) {
@@ -217,7 +184,7 @@ class SC_file_edit {
 					'pageContent' => &$pageContent,
 					'target' => &$this->target,
 				);
-				foreach ($postOutputProcessingHook as $hookFunction)	{
+				foreach ($postOutputProcessingHook as $hookFunction) {
 					t3lib_div::callUserFunction($hookFunction, $hookParameters, $this);
 				}
 			}
@@ -232,19 +199,17 @@ class SC_file_edit {
 			'CONTENT' => $pageContent,
 		);
 
-		$this->content.= $this->doc->moduleBody(array(), $docHeaderButtons, $markerArray);
-		$this->content.= $this->doc->endPage();
+		$this->content .= $this->doc->moduleBody(array(), $docHeaderButtons, $markerArray);
+		$this->content .= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
-
-
 	}
 
 	/**
 	 * Outputting the accumulated content to screen
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function printContent()	{
+	function printContent() {
 		echo $this->content;
 	}
 
@@ -276,14 +241,7 @@ class SC_file_edit {
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/file_edit.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/file_edit.php']);
-}
-
-
-
-// Make instance:
+	// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_file_edit');
 $SOBE->init();
 $SOBE->main();

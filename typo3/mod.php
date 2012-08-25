@@ -24,23 +24,17 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Module Dispatch script
  *
- * $Id$
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
 unset($MCONF);
 require('init.php');
-require('template.php');
 
-// Find module path:
+	// Find module path:
 $temp_M = (string)t3lib_div::_GET('M');
 $isDispatched = FALSE;
 
@@ -53,7 +47,8 @@ if ($temp_path = $TBE_MODULES['_PATHS'][$temp_M]) {
 } else {
 	if (is_array($TBE_MODULES['_dispatcher'])) {
 		foreach ($TBE_MODULES['_dispatcher'] as $dispatcherClassName) {
-			$dispatcher = t3lib_div::makeInstance($dispatcherClassName);
+			$dispatcher = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')
+				->get($dispatcherClassName);
 			if ($dispatcher->callModule($temp_M) === TRUE) {
 				$isDispatched = TRUE;
 				break;
@@ -63,7 +58,9 @@ if ($temp_path = $TBE_MODULES['_PATHS'][$temp_M]) {
 }
 
 if ($isDispatched === FALSE) {
-	die('Value "' . htmlspecialchars($temp_M) . '" for "M" was not found as a module');
+	throw new UnexpectedValueException('No module "' . htmlspecialchars($temp_M) . '" could be found.', 1294585070);
 }
+
+Typo3_Bootstrap::getInstance()->shutdown();
 
 ?>

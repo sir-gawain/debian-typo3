@@ -16,12 +16,11 @@
 require_once(dirname(__FILE__) . '/../ViewHelperBaseTestcase.php');
 
 /**
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License, version 2
  */
 class Tx_Fluid_Tests_Unit_ViewHelpers_Link_EmailViewHelperTest extends Tx_Fluid_ViewHelpers_ViewHelperBaseTestcase {
 
 	/**
-	 * var Tx_Fluid_ViewHelpers_Link_EmailViewHelper
+	 * @var Tx_Fluid_ViewHelpers_Link_EmailViewHelper
 	 */
 	protected $viewHelper;
 
@@ -47,7 +46,6 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_Link_EmailViewHelperTest extends Tx_Fluid_
 
 	/**
 	 * @test
-	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function renderCorrectlySetsTagNameAndAttributesAndContent() {
 		//$GLOBALS['TSFE']->cObj->expects($this->once())->method('getMailTo')->with('some@email.tld', 'some@email.tld')->will($this->returnValue(array('mailto:some@email.tld', 'some@email.tld')));
@@ -66,7 +64,6 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_Link_EmailViewHelperTest extends Tx_Fluid_
 
 	/**
 	 * @test
-	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function renderSetsTagContentToEmailIfRenderChildrenReturnNull() {
 		//$GLOBALS['TSFE']->cObj->expects($this->once())->method('getMailTo')->with('some@email.tld', 'some@email.tld')->will($this->returnValue(array('mailto:some@email.tld', 'some@email.tld')));

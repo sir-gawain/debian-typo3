@@ -1,16 +1,16 @@
 <?php
 
-if (!defined ("TYPO3_MODE")) 	die ("Access denied.");
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
+}
 
-// ******************************************************************
-// static_template
-// ******************************************************************
+	// static_template
 $TCA['static_template'] = array(
 	'ctrl' => array(
 		'label' => 'title',
 		'tstamp' => 'tstamp',
 		'title' => 'LLL:EXT:statictemplates/locallang_tca.xml:static_template',
-		'readOnly' => 1,	// This should always be true, as it prevents the static templates from being altered
+		'readOnly' => 1,	// This should always be TRUE, as it prevents the static templates from being altered
 		'adminOnly' => 1,	// Only admin, if any
 		'rootLevel' => 1,
 		'is_static' => 1,

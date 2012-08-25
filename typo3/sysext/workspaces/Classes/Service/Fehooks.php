@@ -26,25 +26,22 @@
  ***************************************************************/
 
 /**
+ * Frontend hooks
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage Service
  */
-class tx_Workspaces_Service_Fehooks {
+class Tx_Workspaces_Service_Fehooks {
 
 	/**
+	 * @param array $params
 	 * @param tslib_fe $pObj
-	 * @return void
+	 * @return mixed
 	 */
 	public function hook_eofe($params, $pObj) {
-		if ($pObj->fePreview != 2 || $pObj->whichWorkspace() === 0) {
+		if ($pObj->fePreview != 2) {
 			return;
-		}
-
-		if(!$GLOBALS['BE_USER']->getSessionData('workspaces.backend_domain')) {
-			$backendDomain = t3lib_div::getIndpEnv('TYPO3_HOST_ONLY');
-		} else {
-			$backendDomain = $GLOBALS['BE_USER']->getSessionData('workspaces.backend_domain');
 		}
 
 		$previewParts = $GLOBALS['TSFE']->cObj->cObjGetSingle(
@@ -53,11 +50,11 @@ class tx_Workspaces_Service_Fehooks {
 				'file' => 'EXT:workspaces/Resources/Private/Templates/Preview/Preview.html',
 				'variables.' => array(
 					'backendDomain' => 'TEXT',
-					'backendDomain.' => array('value' => $backendDomain)
+					'backendDomain.' => array('value' => $GLOBALS['BE_USER']->getSessionData('workspaces.backend_domain'))
 				)
 			)
 		);
-		$GLOBALS['TSFE']->content = str_ireplace('</body>',  $previewParts . '</body>', $GLOBALS['TSFE']->content);
+		$GLOBALS['TSFE']->content = str_ireplace('</body>', $previewParts . '</body>', $GLOBALS['TSFE']->content);
 
 	}
 }

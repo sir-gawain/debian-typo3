@@ -2,37 +2,11 @@
 if (!defined ('TYPO3_MODE')) die ('Access denied.');
 
 if (TYPO3_MODE == 'BE') {
-
-	// register the cache in BE so it will be cleared with "clear all caches"
-	try {
-		t3lib_cache::initializeCachingFramework();
-			// Reflection cache
-		if (!$GLOBALS['typo3CacheManager']->hasCache('tx_extbase_cache_reflection')) {
-			$GLOBALS['typo3CacheFactory']->create(
-				'tx_extbase_cache_reflection',
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_reflection']['frontend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_reflection']['backend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_reflection']['options']
-			);
-		}
-			// Object container cache
-		if (!$GLOBALS['typo3CacheManager']->hasCache('tx_extbase_cache_object')) {
-			$GLOBALS['typo3CacheFactory']->create(
-				'tx_extbase_cache_object',
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_object']['frontend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_object']['backend'],
-				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_object']['options']
-			);
-		}
-	} catch(t3lib_cache_exception_NoSuchCache $exception) {
-
-	}
-
-	$TBE_MODULES['_dispatcher'][] = 'Tx_Extbase_Core_Bootstrap';
-
+	// register Extbase dispatcher for modules
+	$TBE_MODULES['_dispatcher'][] = 'Tx_Extbase_Core_BootstrapInterface';
 }
 
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['reports']['tx_reports']['status']['providers']['extbase'][] = 'tx_extbase_utility_extbaserequirementscheck';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['reports']['tx_reports']['status']['providers']['extbase'][] = 'Tx_Extbase_Utility_ExtbaseRequirementsCheck';
 
 t3lib_div::loadTCA('fe_users');
 if (!isset($TCA['fe_users']['ctrl']['type'])) {
@@ -81,5 +55,12 @@ if (!isset($TCA['fe_groups']['ctrl']['type'])) {
 	$TCA['fe_groups']['ctrl']['type'] = 'tx_extbase_type';
 }
 $TCA['fe_groups']['types']['Tx_Extbase_Domain_Model_FrontendUserGroup'] = $TCA['fe_groups']['types']['0'];
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['Tx_Extbase_Scheduler_Task'] = array(
+	'extension'        => $_EXTKEY,
+	'title'            => 'LLL:EXT:extbase/Resources/Private/Language/locallang_db.xml:task.name',
+	'description'      => 'LLL:EXT:extbase/Resources/Private/Language/locallang_db.xml:task.description',
+	'additionalFields' => 'Tx_Extbase_Scheduler_FieldProvider'
+);
 
 ?>

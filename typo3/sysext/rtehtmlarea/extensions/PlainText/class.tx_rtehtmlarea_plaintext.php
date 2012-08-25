@@ -26,8 +26,6 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
- * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_plaintext.php 7838 2010-06-08 16:10:41Z stan $
- *
  */
 class tx_rtehtmlarea_plaintext extends tx_rtehtmlarea_api {
 	protected $extensionKey = 'rtehtmlarea';		// The key of the extension that is extending htmlArea RTE
@@ -91,8 +89,5 @@ class tx_rtehtmlarea_plaintext extends tx_rtehtmlarea_api {
 		}
 		return array_diff($show, $removeButtons);
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/PlainText/class.tx_rtehtmlarea_plaintext.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/PlainText/class.tx_rtehtmlarea_plaintext.php']);
 }
 ?>

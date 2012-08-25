@@ -28,12 +28,9 @@
 /**
  * TCEforms wizard for rendering an AJAX selector for records
  *
- * $Id: class.t3lib_tceforms_suggest.php 7905 2010-06-13 14:42:33Z ohader $
- *
  * @author Steffen Ritter <info@steffen-ritter.net>
  * @author Steffen Kamper <steffen@typo3.org>
  */
-
 class t3lib_TCEforms_Tree {
 	/**
 	 * Stores a reference to the original tceForms object
@@ -55,13 +52,13 @@ class t3lib_TCEforms_Tree {
 	/**
 	 * renders the tree as replacement for the selector
 	 *
-	 * @param string The table name of the record
-	 * @param string The field name which this element is supposed to edit
-	 * @param array The record data array where the value(s) for the field can be found
-	 * @param array An array with additional configuration options.
-	 * @param array (Redundant) content of $PA['fieldConf']['config'] (for convenience)
-	 * @param array Items available for selection
-	 * @param string Label for no-matching-value
+	 * @param string $table The table name of the record
+	 * @param string $field The field name which this element is supposed to edit
+	 * @param array $row The record data array where the value(s) for the field can be found
+	 * @param array $PA An array with additional configuration options.
+	 * @param array $config (Redundant) content of $PA['fieldConf']['config'] (for convenience)
+	 * @param array $possibleSelectboxItems Items available for selection
+	 * @param string $noMatchLabel Label for no-matching-value
 	 * @return string The HTML code for the TCEform field
 	 */
 	public function renderField($table, $field, $row, &$PA, $config, $possibleSelectboxItems, $noMatchLabel) {
@@ -69,7 +66,7 @@ class t3lib_TCEforms_Tree {
 		$valueArray = array();
 		$selectedNodes = array();
 
-		if(!empty($PA['itemFormElValue'])) {
+		if (!empty($PA['itemFormElValue'])) {
 			$valueArray = explode(',', $PA['itemFormElValue']);
 		}
 
@@ -136,7 +133,6 @@ class t3lib_TCEforms_Tree {
 			$autoSizeMax = intval($PA['fieldConf']['config']['autoSizeMax']) * 20;
 		}
 
-
 		$header = FALSE;
 		$expanded = FALSE;
 		$appearance = $PA['fieldConf']['config']['treeConfig']['appearance'];
@@ -198,9 +194,10 @@ class t3lib_TCEforms_Tree {
 					}
 				},
 				tcaMaxItems: ' . ($PA['fieldConf']['config']['maxitems'] ? intval($PA['fieldConf']['config']['maxitems']) : 99999) . ',
-				tcaExclusiveKeys: "' . (
-		$PA['fieldConf']['config']['exclusiveKeys']
-				? $PA['fieldConf']['config']['exclusiveKeys'] : '') . '",
+				tcaSelectRecursiveAllowed: ' . ($appearance['allowRecursiveMode'] ? 'true' : 'false')  . ',
+				tcaSelectRecursive: false,
+				tcaExclusiveKeys: "' .
+				($PA['fieldConf']['config']['exclusiveKeys'] ? $PA['fieldConf']['config']['exclusiveKeys'] : '') . '",
 				ucId: "' . md5($table . '|' . $field) . '",
 				selModel: TYPO3.Components.Tree.EmptySelectionModel,
 				disabled: ' . ($PA['fieldConf']['config']['readOnly'] ? 'true' : 'false') . '
@@ -215,7 +212,7 @@ class t3lib_TCEforms_Tree {
 
 		$formField = '
 			<div class="typo3-tceforms-tree">
-				<input type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" id="treeinput' . $id . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />
+				<input class="treeRecord" type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" id="treeinput' . $id . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />
 			</div>
 			<div id="tree_' . $id . '">
 
@@ -223,11 +220,6 @@ class t3lib_TCEforms_Tree {
 
 		return $formField;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_tree.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['classes/t3lib/tceforms/class.t3lib_tceforms_tree.php']);
 }
 
 ?>

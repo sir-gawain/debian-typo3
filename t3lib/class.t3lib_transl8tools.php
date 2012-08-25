@@ -27,32 +27,13 @@
 /**
  * Contains translation tools
  *
- * $Id$
- *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-/**
- * [CLASS/FUNCTION INDEX of SCRIPT]
- *
- *
- *
- *   67: class t3lib_transl8tools
- *   74:	 function getSystemLanguages($page_id=0,$backPath='')
- *  132:	 function translationInfo($table,$uid,$sys_language_uid=0)
- *  187:	 function getTranslationTable($table)
- *  197:	 function isTranslationInOwnTable($table)
- *  209:	 function foreignTranslationTable($table)
- *
- * TOTAL FUNCTIONS: 5
- * (This index is automatically created/updated by the extension "extdeveval")
- *
- */
-
 
 /**
  * Contains translation tools
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -66,13 +47,11 @@ class t3lib_transl8tools {
 	 * t3lib_iconWorks::getSpriteIcon(<flags-xx>) to get an HTML which will represent
 	 * the flag of this language.
 	 *
-	 * @param	integer		page id (only used to get TSconfig configuration setting flag and label for default language)
-	 * @param	string		Backpath for flags
-	 * @return	array		Array with languages (title, uid, flagIcon)
+	 * @param integer $page_id Page id (only used to get TSconfig configuration setting flag and label for default language)
+	 * @param string $backPath Backpath for flags
+	 * @return array Array with languages (title, uid, flagIcon)
 	 */
 	function getSystemLanguages($page_id = 0, $backPath = '') {
-		global $TCA, $LANG;
-
 		$modSharedTSconfig = t3lib_BEfunc::getModTSconfig($page_id, 'mod.SHARED');
 		$languageIconTitles = array();
 
@@ -91,7 +70,7 @@ class t3lib_transl8tools {
 			// Set "All" language:
 		$languageIconTitles[-1] = array(
 			'uid' => -1,
-			'title' => $LANG->getLL('multipleLanguages'),
+			'title' => $GLOBALS['LANG']->getLL('multipleLanguages'),
 			'ISOcode' => 'DEF',
 			'flagIcon' => 'flags-multiple',
 		);
@@ -123,17 +102,15 @@ class t3lib_transl8tools {
 	 * Information about translation for an element
 	 * Will overlay workspace version of record too!
 	 *
-	 * @param	string		Table name
-	 * @param	integer		Record uid
-	 * @param	integer		Language uid. If zero, then all languages are selected.
-	 * @param	array		The record to be translated
-	 * @param	array		select fields for the query which fetches the translations of the current record
-	 * @return	array		Array with information. Errors will return string with message.
+	 * @param string $table Table name
+	 * @param integer $uid Record uid
+	 * @param integer $sys_language_uid Language uid. If zero, then all languages are selected.
+	 * @param array $row The record to be translated
+	 * @param array $selFieldList Select fields for the query which fetches the translations of the current record
+	 * @return array Array with information. Errors will return string with message.
 	 */
 	function translationInfo($table, $uid, $sys_language_uid = 0, $row = NULL, $selFieldList = '') {
-		global $TCA;
-
-		if ($TCA[$table] && $uid) {
+		if ($GLOBALS['TCA'][$table] && $uid) {
 			t3lib_div::loadTCA($table);
 
 			if ($row === NULL) {
@@ -143,16 +120,16 @@ class t3lib_transl8tools {
 			if (is_array($row)) {
 				$trTable = $this->getTranslationTable($table);
 				if ($trTable) {
-					if ($trTable !== $table || $row[$TCA[$table]['ctrl']['languageField']] <= 0) {
-						if ($trTable !== $table || $row[$TCA[$table]['ctrl']['transOrigPointerField']] == 0) {
+					if ($trTable !== $table || $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] <= 0) {
+						if ($trTable !== $table || $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] == 0) {
 
 								// Look for translations of this record, index by language field value:
 							$translationsTemp = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-								($selFieldList ? $selFieldList : 'uid,' . $TCA[$trTable]['ctrl']['languageField']),
+								($selFieldList ? $selFieldList : 'uid,' . $GLOBALS['TCA'][$trTable]['ctrl']['languageField']),
 								$trTable,
-								$TCA[$trTable]['ctrl']['transOrigPointerField'] . '=' . intval($uid) .
+								$GLOBALS['TCA'][$trTable]['ctrl']['transOrigPointerField'] . '=' . intval($uid) .
 								' AND pid=' . intval($table === 'pages' ? $row['uid'] : $row['pid']) . // Making exception for pages of course where the translations will always be ON the page, not on the level above...
-								' AND ' . $TCA[$trTable]['ctrl']['languageField'] . (!$sys_language_uid ? '>0' : '=' . intval($sys_language_uid)) .
+								' AND ' . $GLOBALS['TCA'][$trTable]['ctrl']['languageField'] . (!$sys_language_uid ? '>0' : '=' . intval($sys_language_uid)) .
 								t3lib_BEfunc::deleteClause($trTable) .
 								t3lib_BEfunc::versioningPlaceholderClause($trTable)
 							);
@@ -160,10 +137,10 @@ class t3lib_transl8tools {
 							$translations = array();
 							$translations_errors = array();
 							foreach ($translationsTemp as $r) {
-								if (!isset($translations[$r[$TCA[$trTable]['ctrl']['languageField']]])) {
-									$translations[$r[$TCA[$trTable]['ctrl']['languageField']]] = $r;
+								if (!isset($translations[$r[$GLOBALS['TCA'][$trTable]['ctrl']['languageField']]])) {
+									$translations[$r[$GLOBALS['TCA'][$trTable]['ctrl']['languageField']]] = $r;
 								} else {
-									$translations_errors[$r[$TCA[$trTable]['ctrl']['languageField']]][] = $r;
+									$translations_errors[$r[$GLOBALS['TCA'][$trTable]['ctrl']['languageField']]][] = $r;
 								}
 							}
 
@@ -171,16 +148,16 @@ class t3lib_transl8tools {
 								'table' => $table,
 								'uid' => $uid,
 								'CType' => $row['CType'],
-								'sys_language_uid' => $row[$TCA[$table]['ctrl']['languageField']],
+								'sys_language_uid' => $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']],
 								'translation_table' => $trTable,
 								'translations' => $translations,
 								'excessive_translations' => $translations_errors
 							);
 						} else {
-							return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a relation to record "' . $row[$TCA[$table]['ctrl']['transOrigPointerField']] . '")';
+							return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a relation to record "' . $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] . '")';
 						}
 					} else {
-						return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a language value "' . $row[$TCA[$table]['ctrl']['languageField']] . '", relation to record "' . $row[$TCA[$table]['ctrl']['transOrigPointerField']] . '")';
+						return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a language value "' . $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] . '", relation to record "' . $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] . '")';
 					}
 				} else {
 					return 'Translation is not supported for this table!';
@@ -196,44 +173,40 @@ class t3lib_transl8tools {
 	/**
 	 * Returns the table in which translations for input table is found.
 	 *
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param string $table The table name
+	 * @return boolean
 	 */
 	function getTranslationTable($table) {
 		return $this->isTranslationInOwnTable($table) ? $table : $this->foreignTranslationTable($table);
 	}
 
 	/**
-	 * Returns true, if the input table has localization enabled and done so with records from the same table
+	 * Returns TRUE, if the input table has localization enabled and done so with records from the same table
 	 *
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param string $table The table name
+	 * @return boolean
 	 */
 	function isTranslationInOwnTable($table) {
-		global $TCA;
-
-		return $TCA[$table]['ctrl']['languageField'] && $TCA[$table]['ctrl']['transOrigPointerField'] && !$TCA[$table]['ctrl']['transOrigPointerTable'];
+		return $GLOBALS['TCA'][$table]['ctrl']['languageField']
+			&& $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']
+			&& !$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerTable'];
 	}
 
 	/**
 	 * Returns foreign translation table, if any
 	 *
-	 * @param	[type]		$table: ...
-	 * @return	[type]		...
+	 * @param string $table The table name
+	 * @return string Translation foreign table
 	 */
 	function foreignTranslationTable($table) {
-		global $TCA;
+		$trTable = $GLOBALS['TCA'][$table]['ctrl']['transForeignTable'];
 
-		$trTable = $TCA[$table]['ctrl']['transForeignTable'];
-
-		if ($trTable && $TCA[$trTable] && $TCA[$trTable]['ctrl']['languageField'] && $TCA[$trTable]['ctrl']['transOrigPointerField'] && $TCA[$trTable]['ctrl']['transOrigPointerTable'] === $table) {
+		if ($trTable && $GLOBALS['TCA'][$trTable] && $GLOBALS['TCA'][$trTable]['ctrl']['languageField']
+			&& $GLOBALS['TCA'][$trTable]['ctrl']['transOrigPointerField']
+			&& $GLOBALS['TCA'][$trTable]['ctrl']['transOrigPointerTable'] === $table) {
 			return $trTable;
 		}
 	}
 }
 
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_transl8tools.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_transl8tools.php']);
-}
 ?>

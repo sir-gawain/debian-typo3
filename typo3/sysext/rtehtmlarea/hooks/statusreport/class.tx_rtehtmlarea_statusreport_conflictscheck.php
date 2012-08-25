@@ -24,8 +24,6 @@
 
 /**
  * Hook into the backend module "Reports" checking whether there are extensions installed that conflicting with htmlArea RTE
- *
- * @version $Id: class.tx_rtehtmlarea_statusreport_conflictscheck.php $
  */
 class tx_rtehtmlarea_statusReport_conflictsCheck implements tx_reports_StatusProvider {
 	/**
@@ -70,8 +68,5 @@ class tx_rtehtmlarea_statusReport_conflictsCheck implements tx_reports_StatusPro
 			$status
 		);
 	}
-}
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/hooks/statusreport/class.tx_rtehtmlarea_statusreport_conflictscheck.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/hooks/statusreport/class.tx_rtehtmlarea_statusreport_conflictscheck.php']);
 }
 ?>

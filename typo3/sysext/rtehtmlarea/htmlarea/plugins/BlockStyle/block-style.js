@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-* (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+* (c) 2007-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,13 +28,8 @@
 ***************************************************************/
 /*
  * Block Style Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
-	constructor : function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.BlockStyle = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -43,32 +38,6 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 		this.classesUrl = this.editorConfiguration.classesUrl;
 		this.pageTSconfiguration = this.editorConfiguration.buttons.blockstyle;
 		this.tags = (this.pageTSconfiguration && this.pageTSconfiguration.tags) ? this.pageTSconfiguration.tags : {};
-		if (typeof(this.editorConfiguration.classesTag) !== "undefined") {
-			if (this.editorConfiguration.classesTag.div) {
-				if (!this.tags.div) {
-					this.tags.div = new Object();
-				}
-				if (!this.tags.div.allowedClasses) {
-					this.tags.div.allowedClasses = this.editorConfiguration.classesTag.div;
-				}
-			}
-			if (this.editorConfiguration.classesTag.td) {
-				if (!this.tags.td) {
-					this.tags.td = new Object();
-				}
-				if (!this.tags.td.allowedClasses) {
-					this.tags.td.allowedClasses = this.editorConfiguration.classesTag.td;
-				}
-			}
-			if (this.editorConfiguration.classesTag.table) {
-				if (!this.tags.table) {
-					this.tags.table = new Object();
-				}
-				if (!this.tags.table.allowedClasses) {
-					this.tags.table.allowedClasses = this.editorConfiguration.classesTag.table;
-				}
-			}
-		}
 		var allowedClasses;
 		for (var tagName in this.tags) {
 			if (this.tags.hasOwnProperty(tagName)) {
@@ -83,14 +52,14 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 				}
 			}
 		}
-		this.showTagFreeClasses = (this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false) || this.editorConfiguration.showTagFreeClasses;
+		this.showTagFreeClasses = this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false;
 		this.prefixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.prefixLabelWithClassName : false;
 		this.postfixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.postfixLabelWithClassName : false;
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '3.0',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -136,10 +105,10 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 	onChange: function (editor, combo, record, index) {
 		var className = combo.getValue();
 		this.editor.focus();
-		var blocks = this.getSelectedBlocks();
+		var blocks = this.editor.getSelection().getElements();
 		for (var k = 0; k < blocks.length; ++k) {
 			var parent = blocks[k];
-			while (parent && !HTMLArea.isBlockElement(parent) && parent.nodeName.toLowerCase() != "img") {
+			while (parent && !HTMLArea.DOM.isBlockElement(parent) && !/^(img)$/i.test(parent.nodeName)) {
 				parent = parent.parentNode;
 			}
 			if (!k) {
@@ -185,27 +154,6 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 		}
 	},
 	/*
-	 * This function gets the list of selected blocks
-	 */
-	getSelectedBlocks: function () {
-		var block, range, i = 0, blocks = [];
-		var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
-		if (Ext.isGecko) {
-			var selection = this.editor._getSelection();
-			try {
-				while ((range = selection.getRangeAt(i++))) {
-					block = this.editor.getParentElement(selection, range);
-					blocks.push(statusBarSelection ? statusBarSelection : block);
-				}
-			} catch(e) {
-				/* finished walking through selection */
-			}
-		} else {
-			blocks.push(statusBarSelection ? statusBarSelection : this.editor.getParentElement());
-		}
-		return blocks;
-	},
-	/*
 	 * This handler gets called when the editor is generated
 	 */
 	onGenerate: function () {
@@ -219,6 +167,11 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 			tags: this.tags,
 			editor: this.editor
 		});
+			// Disable the combo while initialization completes
+		var dropDown = this.getButton('BlockStyle');
+		if (dropDown) {
+			dropDown.setDisabled(true);
+		}
 			// Monitor css parsing being completed
 		this.editor.iframe.mon(this.blockStyles, 'HTMLAreaEventCssParsingComplete', this.onCssParsingComplete, this);
 		this.blockStyles.initiateParsing();
@@ -229,16 +182,16 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 	onCssParsingComplete: function () {
 		if (this.blockStyles.isReady) {
 			this.cssArray = this.blockStyles.getClasses();
-		}
-		if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
-			this.updateValue('BlockStyle');
+			if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
+				this.updateValue('BlockStyle');
+			}
 		}
 	},
 	/*
 	 * This handler gets called when the toolbar is being updated
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
-		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+		if (mode === 'wysiwyg' && this.editor.isEditable() && this.blockStyles.isReady) {
 			this.updateValue(button.itemId);
 		}
 	},
@@ -259,8 +212,8 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 			var classNames = new Array();
 			var tagName = null;
 			var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
-			var parent = statusBarSelection ? statusBarSelection : this.editor.getParentElement();
-			while (parent && !HTMLArea.isBlockElement(parent) && parent.nodeName.toLowerCase() != "img") {
+			var parent = statusBarSelection ? statusBarSelection : this.editor.getSelection().getParentElement();
+			while (parent && !HTMLArea.DOM.isBlockElement(parent) && !/^(img)$/i.test(parent.nodeName)) {
 				parent = parent.parentNode;
 			}
 			if (parent) {
@@ -303,7 +256,7 @@ HTMLArea.BlockStyle = HTMLArea.Plugin.extend({
 			}
 			Ext.iterate(allowedClasses, function (cssClass, value) {
 				var style = null;
-				if (!this.editor.config.disablePCexamples) {
+				if (!this.pageTSconfiguration.disableStyleOnOptionLabel) {
 					if (HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) {
 						style = HTMLArea.classesValues[cssClass];
 					} else if (/-[0-9]+$/.test(cssClass) && HTMLArea.classesValues[RegExp.leftContext + '-'])  {

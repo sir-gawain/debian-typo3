@@ -2,7 +2,7 @@
 *  Copyright notice
 *
 *  (c) 2003 dynarch.com. Authored by Mihai Bazon, sponsored by www.americanbible.org.
-*  (c) 2004-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2004-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,13 +29,8 @@
 ***************************************************************/
 /*
  * Spell Checker Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
-HTMLArea.SpellChecker = HTMLArea.Plugin.extend({
-	constructor: function(editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.SpellChecker = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -47,13 +42,12 @@ HTMLArea.SpellChecker = HTMLArea.Plugin.extend({
 		this.enablePersonalDicts = this.pageTSconfiguration.enablePersonalDicts;
 		this.userUid = this.editorConfiguration.userUid;
 		this.defaultDictionary = (this.pageTSconfiguration.dictionaries && this.pageTSconfiguration.dictionaries[this.contentISOLanguage] && this.pageTSconfiguration.dictionaries[this.contentISOLanguage].defaultValue) ? this.pageTSconfiguration.dictionaries[this.contentISOLanguage].defaultValue : '';
-		this.showDictionaries = (this.pageTSconfiguration.dictionaries && this.pageTSconfiguration.dictionaries.items) ? this.pageTSconfiguration.dictionaries.items : '';
 		this.restrictToDictionaries = (this.pageTSconfiguration.dictionaries && this.pageTSconfiguration.dictionaries.restrictToItems) ? this.pageTSconfiguration.dictionaries.restrictToItems : '';
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '3.0',
+			version		: '3.2',
 			developer	: 'Mihai Bazon & Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Mihai Bazon & Stanislas Rolland',
@@ -135,8 +129,6 @@ HTMLArea.SpellChecker = HTMLArea.Plugin.extend({
 			border: false,
 			width: dimensions.width,
 			height: Ext.isIE ? dimensions.height - 50 : 'auto',
-				// As of ExtJS 3.1, JS error with IE when the window is resizable
-			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				afterrender: {
@@ -189,10 +181,6 @@ HTMLArea.SpellChecker = HTMLArea.Plugin.extend({
 							xtype: 'hidden',
 							name:'enablePersonalDicts',
 							value: this.enablePersonalDicts
-						},{
-							xtype: 'hidden',
-							name:'showDictionaries',
-							value: this.showDictionaries
 						},{
 							xtype: 'hidden',
 							name:'restrictToDictionaries',
@@ -448,7 +436,7 @@ HTMLArea.SpellChecker = HTMLArea.Plugin.extend({
 			TYPO3.Dialog.QuestionDialog({
 				title: this.getButton('SpellCheck').tooltip.title,
 				msg: this.localize('QUIT_CONFIRMATION'),
-				fn: function (button) { 
+				fn: function (button) {
 					if (button == 'yes') {
 						this.close();
 					}
@@ -457,7 +445,7 @@ HTMLArea.SpellChecker = HTMLArea.Plugin.extend({
 			});
 			return false;
 		} else {
-			return this.base();
+			return HTMLArea.SpellChecker.superclass.onCancel.call(this);
 		}
 	},
 	/*

@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,19 +26,11 @@
 ***************************************************************/
 /*
  * Text Style Plugin for TYPO3 htmlArea RTE
- *
- * TYPO3 SVN ID: $Id$
  */
 /*
  * Creation of the class of TextStyle plugins
  */
-HTMLArea.TextStyle = HTMLArea.Plugin.extend({
-	/*
-	 * Let the base class do some initialization work
-	 */
-	constructor: function (editor, pluginName) {
-		this.base(editor, pluginName);
-	},
+HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -47,16 +39,6 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 		this.classesUrl = this.editorConfiguration.classesUrl;
 		this.pageTSconfiguration = this.editorConfiguration.buttons.textstyle;
 		this.tags = (this.pageTSconfiguration && this.pageTSconfiguration.tags) ? this.pageTSconfiguration.tags : {};
-		if (typeof(this.editorConfiguration.classesTag) !== "undefined") {
-			if (this.editorConfiguration.classesTag.span) {
-				if (!this.tags.span) {
-					this.tags.span = new Object();
-				}
-				if (!this.tags.span.allowedClasses) {
-					this.tags.span.allowedClasses = this.editorConfiguration.classesTag.span;
-				}
-			}
-		}
 		var allowedClasses;
 		for (var tagName in this.tags) {
 			if (this.tags.hasOwnProperty(tagName)) {
@@ -71,24 +53,24 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				}
 			}
 		}
-		this.showTagFreeClasses = (this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false) || this.editorConfiguration.showTagFreeClasses;
+		this.showTagFreeClasses = this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false;
 		this.prefixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.prefixLabelWithClassName : false;
 		this.postfixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.postfixLabelWithClassName : false;
 		/*
 		 * Regular expression to check if an element is an inline elment
 		 */
 		this.REInlineTags = /^(a|abbr|acronym|b|bdo|big|cite|code|del|dfn|em|i|img|ins|kbd|q|samp|small|span|strike|strong|sub|sup|tt|u|var)$/;
-		
+
 			// Allowed attributes on inline elements
-		this.allowedAttributes = new Array("id", "title", "lang", "xml:lang", "dir", "class");
-		if (Ext.isIE) {
-			this.addAllowedAttribute("className");
+		this.allowedAttributes = new Array('id', 'title', 'lang', 'xml:lang', 'dir', 'class', 'itemscope', 'itemtype', 'itemprop');
+		if (HTMLArea.isIEBeforeIE9) {
+			this.addAllowedAttribute('className');
 		}
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.1',
+			version		: '2.3',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -97,7 +79,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		/* 
+		/*
 		 * Registering the dropdown list
 		 */
 		var buttonId = 'TextStyle';
@@ -128,9 +110,8 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 		this.registerDropDown(dropDownConfiguration);
 		return true;
 	},
-	
 	isInlineElement: function (el) {
-		return el && (el.nodeType === 1) && this.REInlineTags.test(el.nodeName.toLowerCase());
+		return el && (el.nodeType === HTMLArea.DOM.ELEMENT_NODE) && this.REInlineTags.test(el.nodeName.toLowerCase());
 	},
 	/*
 	 * This function adds an attribute to the array of allowed attributes on inline elements
@@ -149,23 +130,17 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 		var className = combo.getValue();
 		var classNames = null;
 		var fullNodeSelected = false;
-		
-		this.editor.focus();
-		var selection = this.editor._getSelection();
 		var statusBarSelection = this.editor.statusBar ? this.editor.statusBar.getSelection() : null;
-		var range = this.editor._createRange(selection);
-		var parent = this.editor.getParentElement();
-		var selectionEmpty = this.editor._selectionEmpty(selection);
-		var ancestors = this.editor.getAllAncestors();
-		if (Ext.isIE) {
-			var bookmark = range.getBookmark();
-		}
-		
+		var range = this.editor.getSelection().createRange();
+		var parent = this.editor.getSelection().getParentElement();
+		var selectionEmpty = this.editor.getSelection().isEmpty();
+		var ancestors = this.editor.getSelection().getAllAncestors();
+
 		if (!selectionEmpty) {
 				// The selection is not empty
 			for (var i = 0; i < ancestors.length; ++i) {
-				fullNodeSelected = (Ext.isIE && ((statusBarSelection === ancestors[i] && ancestors[i].innerText === range.text) || (!statusBarSelection && ancestors[i].innerText === range.text)))
-							|| (!Ext.isIE && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())));
+				fullNodeSelected = (HTMLArea.isIEBeforeIE9 && ((statusBarSelection === ancestors[i] && ancestors[i].innerText === range.text) || (!statusBarSelection && ancestors[i].innerText === range.text)))
+							|| (!HTMLArea.isIEBeforeIE9 && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())));
 				if (fullNodeSelected) {
 					if (this.isInlineElement(ancestors[i])) {
 						parent = ancestors[i];
@@ -179,14 +154,14 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				parent = statusBarSelection;
 			}
 		}
-		if (!selectionEmpty && !fullNodeSelected || (!selectionEmpty && fullNodeSelected && parent && HTMLArea.isBlockElement(parent))) {
+		if (!selectionEmpty && !fullNodeSelected || (!selectionEmpty && fullNodeSelected && parent && HTMLArea.DOM.isBlockElement(parent))) {
 				// The selection is not empty, nor full element, or the selection is full block element
 			if (className !== "none") {
 					// Add span element with class attribute
-				var newElement = editor._doc.createElement("span");
+				var newElement = editor.document.createElement('span');
 				HTMLArea.DOM.addClass(newElement, className);
-				editor.wrapWithInlineElement(newElement, selection, range);
-				if (!Ext.isIE) {
+				editor.getDomNode().wrapWithInlineElement(newElement, range);
+				if (!HTMLArea.isIEBeforeIE9) {
 					range.detach();
 				}
 			}
@@ -205,7 +180,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 	 */
 	applyClassChange: function (node, className, noRemove) {
 			// Add or remove class
-		if (node && !HTMLArea.isBlockElement(node)) {
+		if (node && !HTMLArea.DOM.isBlockElement(node)) {
 			if (className === 'none' && node.className && /\S/.test(node.className)) {
 				classNames = node.className.trim().split(' ');
 				HTMLArea.DOM.removeClass(node, classNames[classNames.length-1]);
@@ -214,8 +189,8 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				HTMLArea.DOM.addClass(node, className);
 			}
 				// Remove the span tag if it has no more attribute
-			if (/^span$/i.test(node.nodeName) && !HTMLArea.hasAllowedAttributes(node, this.allowedAttributes) && !noRemove) {
-				this.editor.removeMarkup(node);
+			if (/^span$/i.test(node.nodeName) && !HTMLArea.DOM.hasAllowedAttributes(node, this.allowedAttributes) && !noRemove) {
+				this.editor.getDomNode().removeMarkup(node);
 			}
 		}
 	},
@@ -234,6 +209,11 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 			tags: this.tags,
 			editor: this.editor
 		});
+			// Disable the combo while initialization completes
+		var dropDown = this.getButton('TextStyle');
+		if (dropDown) {
+			dropDown.setDisabled(true);
+		}
 			// Monitor css parsing being completed
 		this.editor.iframe.mon(this.textStyles, 'HTMLAreaEventCssParsingComplete', this.onCssParsingComplete, this);
 		this.textStyles.initiateParsing();
@@ -244,16 +224,16 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 	onCssParsingComplete: function () {
 		if (this.textStyles.isReady) {
 			this.cssArray = this.textStyles.getClasses();
-		}
-		if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
-			this.updateToolbar('TextStyle');
+			if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
+				this.updateToolbar('TextStyle');
+			}
 		}
 	},
 	/*
 	 * This handler gets called when the toolbar is being updated
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
-		if (mode === 'wysiwyg' && this.editor.isEditable()) {
+		if (mode === 'wysiwyg' && this.editor.isEditable() && this.textStyles.isReady) {
 			this.updateToolbar(button.itemId);
 		}
 	},
@@ -268,28 +248,27 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 	/*
 	* This function gets called when the drop-down list needs to be refreshed
 	*/
-	updateToolbar: function(dropDownId) {
+	updateToolbar: function (dropDownId) {
 		var editor = this.editor;
 		if (this.getEditorMode() === "wysiwyg" && this.editor.isEditable()) {
 			var tagName = false, classNames = Array(), fullNodeSelected = false;
-			var selection = editor._getSelection();
 			var statusBarSelection = editor.statusBar ? editor.statusBar.getSelection() : null;
-			var range = editor._createRange(selection);
-			var parent = editor.getParentElement(selection);
-			var ancestors = editor.getAllAncestors();
-			if (parent && !HTMLArea.isBlockElement(parent)) {
+			var range = editor.getSelection().createRange();
+			var parent = editor.getSelection().getParentElement();
+			var ancestors = editor.getSelection().getAllAncestors();
+			if (parent && !HTMLArea.DOM.isBlockElement(parent)) {
 				tagName = parent.nodeName.toLowerCase();
 				if (parent.className && /\S/.test(parent.className)) {
 					classNames = parent.className.trim().split(" ");
 				}
 			}
-			var selectionEmpty = editor._selectionEmpty(selection);
+			var selectionEmpty = editor.getSelection().isEmpty();
 			if (!selectionEmpty) {
 				for (var i = 0; i < ancestors.length; ++i) {
 					fullNodeSelected = (statusBarSelection === ancestors[i])
-						&& ((!Ext.isIE && ancestors[i].textContent === range.toString()) || (Ext.isIE && ancestors[i].innerText === range.text));
+						&& ((!HTMLArea.isIEBeforeIE9 && ancestors[i].textContent === range.toString()) || (HTMLArea.isIEBeforeIE9 && ancestors[i].innerText === range.text));
 					if (fullNodeSelected) {
-						if (!HTMLArea.isBlockElement(ancestors[i])) {
+						if (!HTMLArea.DOM.isBlockElement(ancestors[i])) {
 							tagName = ancestors[i].nodeName.toLowerCase();
 							if (ancestors[i].className && /\S/.test(ancestors[i].className)) {
 								classNames = ancestors[i].className.trim().split(" ");
@@ -308,7 +287,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				}
 			}
 			var selectionInInlineElement = tagName && this.REInlineTags.test(tagName);
-			var disabled = !editor.endPointsInSameBlock() || (fullNodeSelected && !tagName) || (selectionEmpty && !selectionInInlineElement);
+			var disabled = !editor.getSelection().endPointsInSameBlock() || (fullNodeSelected && !tagName) || (selectionEmpty && !selectionInInlineElement);
 			if (!disabled && !tagName) {
 				tagName = "span";
 			}
@@ -351,7 +330,7 @@ HTMLArea.TextStyle = HTMLArea.Plugin.extend({
 				store.add(new store.recordType({
 					text: value,
 					value: cssClass,
-					style: (!this.editor.config.disablePCexamples && HTMLArea.classesValues && HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) ? HTMLArea.classesValues[cssClass] : null
+					style: (!(this.pageTSconfiguration && this.pageTSconfiguration.disableStyleOnOptionLabel) && HTMLArea.classesValues && HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) ? HTMLArea.classesValues[cssClass] : null
 				}));
 			}, this);
 		}
