@@ -216,7 +216,7 @@ HTMLArea.CopyPaste = Ext.extend(HTMLArea.Plugin, {
 		if (/^(a)$/i.test(parent.nodeName)) {
 			parent.normalize();
 			if (!parent.innerHTML || (parent.childNodes.length == 1 && /^(br)$/i.test(parent.firstChild.nodeName))) {
-				if (!Ext.isIE) {
+				if (!HTMLArea.isIEBeforeIE9) {
 					var container = parent.parentNode;
 					this.editor.getDomNode().removeMarkup(parent);
 						// Opera does not render empty list items
@@ -396,7 +396,7 @@ HTMLArea.CopyPaste = Ext.extend(HTMLArea.Plugin, {
 				row = firstRow;
 				while (row) {
 					cells = [];
-					for (var i = 0, n = row.cells.length; i < n ; ++i) {
+					for (var i = 0, n = row.cells.length; i < n; ++i) {
 						cells.push(row.cells[i].innerHTML);
 						if (operation === 'Cut') {
 							row.cells[i].innerHTML = '';

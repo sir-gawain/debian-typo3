@@ -30,22 +30,21 @@
  * Revised for TYPO3 3.7 June/2004 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 /**
  * Page TSconfig viewer
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_infopagetsconfig
  */
 class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 
-
 	/**
 	 * Function menu initialization
 	 *
-	 * @return	array		Menu array
+	 * @return array Menu array
 	 */
 	function modMenu() {
 		global $LANG;
@@ -71,43 +70,45 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 			'tsconf_alphaSort' => '1',
 		);
 
-		if (!$GLOBALS['BE_USER']->isAdmin())	unset($modMenuAdd['tsconf_parts'][99]);
+		if (!$GLOBALS['BE_USER']->isAdmin()) {
+			unset($modMenuAdd['tsconf_parts'][99]);
+		}
 		return $modMenuAdd;
 	}
 
 	/**
 	 * Main function of class
 	 *
-	 * @return	string		HTML output
+	 * @return string HTML output
 	 */
 	function main() {
 		global $LANG;
 
-		$menu = t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[tsconf_parts]',$this->pObj->MOD_SETTINGS['tsconf_parts'],$this->pObj->MOD_MENU['tsconf_parts']);
+		$menu = t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[tsconf_parts]', $this->pObj->MOD_SETTINGS['tsconf_parts'], $this->pObj->MOD_MENU['tsconf_parts']);
 		$menu .= '<br /><label for="checkTsconf_alphaSort">' . $GLOBALS['LANG']->getLL('sort_alphabetic', TRUE) . '</label> ' . t3lib_BEfunc::getFuncCheck($this->pObj->id, 'SET[tsconf_alphaSort]', $this->pObj->MOD_SETTINGS['tsconf_alphaSort'], '', '', 'id="checkTsconf_alphaSort"');
 		$menu .= '<br /><br />';
 
 		$theOutput = $this->pObj->doc->header($LANG->getLL('tsconf_title'));
 
 		if ($this->pObj->MOD_SETTINGS['tsconf_parts']==99) {
-			$TSparts = t3lib_BEfunc::getPagesTSconfig($this->pObj->id,'',1);
+			$TSparts = t3lib_BEfunc::getPagesTSconfig($this->pObj->id, '', 1);
 			$lines = array();
 			$pUids = array();
 
-			foreach($TSparts as $k => $v) {
-				if ($k!='uid_0') {
+			foreach ($TSparts as $k => $v) {
+				if ($k != 'uid_0') {
 					if ($k=='defaultPageTSconfig') {
-						$pTitle = '<strong>'.$GLOBALS['LANG']->getLL('editTSconfig_default',1).'</strong>';
+						$pTitle = '<strong>'.$GLOBALS['LANG']->getLL('editTSconfig_default', 1).'</strong>';
 						$editIcon = '';
 					} else {
-						$pUids[] = substr($k,4);
-						$row = t3lib_BEfunc::getRecordWSOL('pages',substr($k,4));
-						$pTitle = $this->pObj->doc->getHeader('pages',$row,'',0);
+						$pUids[] = substr($k, 4);
+						$row = t3lib_BEfunc::getRecordWSOL('pages', substr($k, 4));
+						$pTitle = $this->pObj->doc->getHeader('pages', $row, '', 0);
 
-						$editIdList = substr($k,4);
+						$editIdList = substr($k, 4);
 						$params = '&edit[pages]['.$editIdList.']=edit&columnsOnly=TSconfig';
-						$onclickUrl = t3lib_BEfunc::editOnClick($params,$GLOBALS['BACK_PATH'],'');
-						$editIcon = '<a href="#" onclick="'.htmlspecialchars($onclickUrl).'" title="'.$GLOBALS['LANG']->getLL('editTSconfig',1).'">'.
+						$onclickUrl = t3lib_BEfunc::editOnClick($params, $GLOBALS['BACK_PATH'], '');
+						$editIcon = '<a href="#" onclick="'.htmlspecialchars($onclickUrl).'" title="'.$GLOBALS['LANG']->getLL('editTSconfig', 1).'">'.
 									t3lib_iconWorks::getSpriteIcon('actions-document-open') .
 								'</a>';
 					}
@@ -127,13 +128,15 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 			}
 
 			if (count($pUids)) {
-				$params = '&edit[pages]['.implode(',',$pUids).']=edit&columnsOnly=TSconfig';
-				$onclickUrl = t3lib_BEfunc::editOnClick($params,$GLOBALS['BACK_PATH'],'');
-				$editIcon = '<a href="#" onclick="'.htmlspecialchars($onclickUrl).'" title="'.$GLOBALS['LANG']->getLL('editTSconfig_all',1).'">'.
+				$params = '&edit[pages]['.implode(',', $pUids).']=edit&columnsOnly=TSconfig';
+				$onclickUrl = t3lib_BEfunc::editOnClick($params, $GLOBALS['BACK_PATH'], '');
+				$editIcon = '<a href="#" onclick="'.htmlspecialchars($onclickUrl).'" title="'.$GLOBALS['LANG']->getLL('editTSconfig_all', 1).'">'.
 							t3lib_iconWorks::getSpriteIcon('actions-document-open') .
-							'<strong>'.$GLOBALS['LANG']->getLL('editTSconfig_all',1).'</strong>'.
+							'<strong>'.$GLOBALS['LANG']->getLL('editTSconfig_all', 1).'</strong>'.
 						'</a>';
-			} else $editIcon = '';
+			} else {
+				$editIcon = '';
+			}
 
 			$theOutput .= $this->pObj->doc->section('',
 				t3lib_BEfunc::cshItem('_MOD_' . $GLOBALS['MCONF']['name'], 'tsconfig_edit', $GLOBALS['BACK_PATH'], '|<br />') .
@@ -147,8 +150,10 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 				1
 			);
 		} else {
-			$tmpl = t3lib_div::makeInstance('t3lib_tsparser_ext');	// Defined global here!
-			$tmpl->tt_track = 0;	// Do not log time-performance information
+				// Defined global here!
+			$tmpl = t3lib_div::makeInstance('t3lib_tsparser_ext');
+				// Do not log time-performance information
+			$tmpl->tt_track = 0;
 
 			$tmpl->fixedLgd = 0;
 			$tmpl->linkObjects = 0;
@@ -158,43 +163,43 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 
 			switch($this->pObj->MOD_SETTINGS['tsconf_parts']) {
 				case '1':
-					$modTSconfig = t3lib_BEfunc::getModTSconfig($this->pObj->id,'mod');
+					$modTSconfig = t3lib_BEfunc::getModTSconfig($this->pObj->id, 'mod');
 				break;
 				case '1a':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_layout',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_layout', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '1b':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_view',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_view', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '1c':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_modules',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_modules', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '1d':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_list',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_list', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '1e':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_info',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_info', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '1f':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_func',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_func', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '1g':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_ts',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('mod.web_ts', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '2':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('RTE',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('RTE', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '5':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('TCEFORM',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('TCEFORM', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '6':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('TCEMAIN',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('TCEMAIN', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '3':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('TSFE',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('TSFE', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				case '4':
-					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('user',t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
+					$modTSconfig = $GLOBALS['BE_USER']->getTSConfig('user', t3lib_BEfunc::getPagesTSconfig($this->pObj->id));
 				break;
 				default:
 					$modTSconfig['properties'] = t3lib_BEfunc::getPagesTSconfig($this->pObj->id);
@@ -202,7 +207,9 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 			}
 			$modTSconfig = $modTSconfig['properties'];
 
-			if (!is_array($modTSconfig))	$modTSconfig = array();
+			if (!is_array($modTSconfig)) {
+				$modTSconfig = array();
+			}
 
 			$theOutput .= $this->pObj->doc->section('',
 					t3lib_BEfunc::cshItem('_MOD_' . $GLOBALS['MCONF']['name'], 'tsconfig_hierarchy', $GLOBALS['BACK_PATH'], '|<br />') .
@@ -212,7 +219,7 @@ class tx_infopagetsconfig_webinfo extends t3lib_extobjbase {
 					<!-- Page TSconfig Tree: -->
 					<table border="0" cellpadding="0" cellspacing="0">
 						<tr>
-							<td nowrap="nowrap">'.$tmpl->ext_getObjTree($modTSconfig,'','','','',$this->pObj->MOD_SETTINGS['tsconf_alphaSort']).'</td>
+							<td nowrap="nowrap">'.$tmpl->ext_getObjTree($modTSconfig, '', '', '', '', $this->pObj->MOD_SETTINGS['tsconf_alphaSort']).'</td>
 						</tr>
 					</table>',
 				0,

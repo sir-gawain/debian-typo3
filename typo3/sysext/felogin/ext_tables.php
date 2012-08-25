@@ -1,10 +1,12 @@
 <?php
-if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
+}
 $_EXTCONF = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['felogin']);
 
 t3lib_div::loadTCA('tt_content');
 
-if(t3lib_utility_VersionNumber::convertVersionNumberToInteger(TYPO3_version) >= 4002000) {
+if (t3lib_utility_VersionNumber::convertVersionNumberToInteger(TYPO3_version) >= 4002000) {
 	t3lib_extMgm::addPiFlexFormValue('*', 'FILE:EXT:' . $_EXTKEY . '/flexform.xml', 'login');
 } else {
 	t3lib_extMgm::addPiFlexFormValue('default', 'FILE:EXT:' . $_EXTKEY . '/flexform.xml');
@@ -88,7 +90,7 @@ $tempColumns = array(
 );
 
 t3lib_div::loadTCA('fe_users');
-t3lib_extMgm::addTCAcolumns('fe_users', $tempColumns,1);
+t3lib_extMgm::addTCAcolumns('fe_users', $tempColumns, 1);
 t3lib_extMgm::addToAllTCAtypes('fe_users', 'felogin_redirectPid;;;;1-1-1', '', 'after:TSconfig');
 
 ?>

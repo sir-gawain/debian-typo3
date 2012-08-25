@@ -22,6 +22,47 @@ symlink, make sure that this file is also a symlink to the cores index.php,
 otherwise the frontend will be broken. If index.php is a copy of the source
 file, make sure to install a fresh version from 6.0 sources.
 
+* New handling of typo3conf/localconf.php
+
+The localconf.php file is deprecated and not used in the core any longer. As
+substitution the new file typo3conf/LocalConfiguration.php is introduced that
+basically only returns the local configuration as array. The install tool and
+other installation changing core code like the extension manager now writes
+the whole file if configuration is changed. As a result, no more local
+code is allowed in this file.
+To overload the local configuration with special instance specific code that
+might still be needed, it is possible to add the php code to the optional
+additional file typo3conf/AdditionalConfiguration.php that is executed during
+bootstrap of TYPO3 after LocalConfiguration.php.
+An ugrade wizard takes care of moving the old localconf.php file to the new scheme.
+
+* List of loaded extensions stored as array
+
+The list of loaded extensions in typo3conf/LocalConfiguration (key EXT/extList)
+was transferred to an array for better readability and maintenance. It is
+available with the new key EXT/extListArray. The old, comma separated value is
+still kept, but not used in the core anymore. It will be removed with a later
+version from the core.
+
+* Moved default TYPO3_CONF_VARS
+
+The default TYPO3_CONF_VARS definitions where moved from t3lib/config_default.php
+to an own file in t3lib/stddb/DefaultSettings.php.
+
+* Removed TYPO3_tables_script constant
+
+It was possible to define a different base TCA definition file by defining the
+variable typo_db_tables_script in localconf.php. This functionality is removed
+without substitution.
+
+* Restricted access of global variables in ext_tables.php and ext_localconf.php
+
+With the bootstrap refactoring the visibility of ext_tables.php and
+ext_localconf.php was reduced. The files do not run in global context anymore,
+so variables like $TCA should be accessed through $GLOBALS['TCA']. There is a
+compatibility layer, but the core can not guarantee that extensions with
+strange setup does not break.
+
 * Deprecated methods
 
 Deprecated methods that were initially targeted to be removed in TYPO3 4.8/6.0
@@ -38,13 +79,12 @@ removed instead of deprecating it.
 * New XCLASS handling
 
 The old way of registering XCLASSes in $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS'] is
-deprecated. XCLASSES can now be registered by adding a 'ux_' prefixed entry of
-the base class to the ext_autoload.php file providing the XCLASS path. The
-deprecation layer for old class registration can potentially calculate a wrong
-path so the XCLASS registration can fail now. This can be fixed by addiononally
-using the new registration scheme through ext_autoload.
-Extension authors are advised to remove the three line XCLASS statement at the
-bottom of class files now for any extension with a compatibility for 6.0 and above.
+removed. XCLASSES must now be registered by adding a 'ux_' prefixed entry of
+the base class to the ext_autoload.php file providing the XCLASS path. To keep
+compatibility for 6.0 and 4.x, extension authors should add the ext_autoload
+entry and additionally keep the TYPO3_CONF_VARS registration.
+Extension authors should remove the three line XCLASS statement at the bottom
+of class files now for any extension with a compatibility for 6.0 and above.
 More information can be found at http://wiki.typo3.org/Autoload
 
 Removed Functionality
@@ -70,6 +110,23 @@ The ancient noBlur TypoScript setting for old Browsers (Internet Explorer <= 5.5
 was removed without alternative. The setting has no effect anymore and can be
 removed from custom TypoScript objects, especially MENU.
 
+* Removed internal history cleanup feature
+
+TYPO3 will not clean the history (table "sys_history") on its own anymore.
+This can lead to a large amount of data in this table. Please consider using
+the garbage collection scheduler task to remove old entries.
+
+* Removed TypoScript resources
+
+The ancient feature to add images and other resources directly to TypoScript
+records is dropped and the handling removed. This old feature - accessible
+from the 'Info/modify' tab in the Template module - was hardly ever used
+and was partly broken.
+If this feature was still in use, it is recommended to not drop the
+resource field from table sys_template during upgrading, fix the using
+TypoScript to refer to resources located in fileadmin or similar directly,
+and afterwards to finally delete the resource field in the install tool.
+
 ===============================================================================
 Changes and Improvements
 ===============================================================================
@@ -90,7 +147,15 @@ extensions and always loaded.
 Other General Improvements
 -------------------------------------------------------------------------------
 
-...
+* Autoloader namespace aware
+
+The autoloader can now handle fully qualified namespaced class names.
+If you use the fully qualified namespaced class name like
+'\Tx\ExtName\Foo\Bar', the autoloader will find the containing class following
+the extbase naming scheme. The mentioned class will be found if it is located
+in file 'exttensionkey'/Classes/Foo/Bar.php.
+It is also possible to use class names not following the extbase naming scheme
+by providing the "name spaced class name -> file" mapping in ext_autoloader.php.
 
 -------------------------------------------------------------------------------
 Security

@@ -1,8 +1,6 @@
 <?php
 
-// ******************************************************************
-// sys_action
-// ******************************************************************
+	// sys_action
 $TCA['sys_action'] = array(
 	'ctrl' => $TCA['sys_action']['ctrl'],
 	'interface' => array(
@@ -125,7 +123,7 @@ $TCA['sys_action'] = array(
 				'type' => 'select',
 				'special' => 'tables',
 				'items' => array(
-					array('','')
+					array('', '')
 				)
 			)
 		),

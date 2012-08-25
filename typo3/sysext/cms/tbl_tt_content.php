@@ -28,10 +28,8 @@
  * Dynamic configuation of the tt_content table
  * This gets it's own file because it's so huge and central to typical TYPO3 use.
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-
-
 
 if (!function_exists('user_sortPluginList')) {
 	function user_sortPluginList(array &$parameters) {
@@ -200,7 +198,7 @@ $TCA['tt_content'] = array(
 				'eval' => 'datetime',
 				'default' => '0',
 				'range' => array(
-					'upper' => mktime(0,0,0,12,31,2020),
+					'upper' => mktime(0, 0, 0, 12, 31, 2020),
 				),
 			),
 			'l10n_mode' => 'exclude',
@@ -719,7 +717,7 @@ $TCA['tt_content'] = array(
 							--palette--;;filePalette',
 					),
 				),
-			)),
+			), $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']),
 		),
 		'imagewidth' => array(
 			'exclude' => 1,
@@ -1792,7 +1790,7 @@ $TCA['tt_content'] = array(
 					bodytext;Text;;richtext:rte_transform[flag=rte_enabled|mode=ts_css],
 					rte_enabled;LLL:EXT:cms/locallang_ttc.xml:rte_enabled_formlabel,' // Only the following tab is relevant to be changed for FAL:
 				.'--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.images,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.imagefiles;imagefiles,
+					image,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.imagelinks;imagelinks,' // This palette will only have the clickEnlarge option in the future, as the real link field is moved to the sys_file_reference inline table. Maybe the clickEnlarge link should be moved to the appearance tab of the content element instead?
 				.'--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
@@ -1808,7 +1806,7 @@ $TCA['tt_content'] = array(
 			'showitem' => '--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.header;header,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.images,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.imagefiles;imagefiles,
+					image,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.imagelinks;imagelinks,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
@@ -1926,6 +1924,10 @@ $TCA['tt_content'] = array(
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.visibility;visibility,
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended',
+			'subtype_value_field' => 'menu_type',
+			'subtypes_excludelist' => array(
+				'2' => 'pages',
+			),
 		),
 		'mailform' => 	array(
 			'showitem' =>
@@ -1984,9 +1986,7 @@ $TCA['tt_content'] = array(
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended',
 			'subtype_value_field' => 'list_type',
 			'subtypes_excludelist' => array(
-//				'' => 'layout,select_key,pages',	// When no plugin is selected.
 				'3' => 'layout',
-//				'4' => 'layout',	// List type forum
 				'2' => 'layout',
 				'5' => 'layout',
 				'9' => 'layout',
@@ -2080,10 +2080,6 @@ $TCA['tt_content'] = array(
 			'showitem' => 'header;LLL:EXT:cms/locallang_ttc.xml:header_formlabel, --linebreak--, header_layout;LLL:EXT:cms/locallang_ttc.xml:header_layout_formlabel, header_position;LLL:EXT:cms/locallang_ttc.xml:header_position_formlabel, date;LLL:EXT:cms/locallang_ttc.xml:date_formlabel, --linebreak--, header_link;LLL:EXT:cms/locallang_ttc.xml:header_link_formlabel, --linebreak--, subheader;LLL:EXT:cms/locallang_ttc.xml:subheader_formlabel',
 			'canNotCollapse' => 1,
 		),
-		'imagefiles' => array(
-			'showitem' => 'image;LLL:EXT:cms/locallang_ttc.xml:image_formlabel',
-			'canNotCollapse' => 1,
-		),
 		'multimediafiles' => array(
 			'showitem' => 'multimedia;LLL:EXT:cms/locallang_ttc.xml:multimedia_formlabel, bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.multimedia_formlabel;;nowrap',
 			'canNotCollapse' => 1,
@@ -2160,7 +2156,7 @@ $TCA['tt_content'] = array(
 	// existing installation - and files are merged, nothing to do
 if ((!isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard']) || !t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard'], 'tt_content:image')) && !t3lib_div::compat_version('6.0')) {
 	t3lib_div::deprecationLog('This installation hasn\'t been migrated to FAL for the field $TCA[tt_content][columns][image] yet. Please do so before TYPO3 v7.');
-	// existing installation and no upgrade wizard was executed - and files haven't been merged: use the old code
+		// Existing installation and no upgrade wizard was executed - and files haven't been merged: use the old code
 	$TCA['tt_content']['columns']['image']['config'] = array(
 		'type' => 'group',
 		'internal_type' => 'file',
@@ -2177,7 +2173,7 @@ if ((!isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Upd
 
 if ((!isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard']) || !t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard'], 'tt_content:media')) && !t3lib_div::compat_version('6.0')) {
 	t3lib_div::deprecationLog('This installation hasn\'t been migrated to FAL for the field $TCA[tt_content][columns][media] yet. Please do so before TYPO3 v7.');
-	// existing installation and no upgrade wizard was executed - and files haven't been merged: use the old code
+		// Existing installation and no upgrade wizard was executed - and files haven't been merged: use the old code
 	$TCA['tt_content']['columns']['media']['config'] = array(
 		'type' => 'group',
 		'internal_type' => 'file',
@@ -2191,6 +2187,5 @@ if ((!isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Upd
 		'minitems' => '0',
 	);
 }
-
 
 ?>

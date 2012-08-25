@@ -32,11 +32,10 @@
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
  */
 
-error_reporting (E_ALL ^ E_NOTICE);
+error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
 unset($MCONF);
 require('conf.php');
 require($BACK_PATH.'init.php');
-require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:rtehtmlarea/mod5/locallang.xml');
 $LANG->includeLLFile('EXT:rtehtmlarea/htmlarea/locallang_dialogs.xml');
 

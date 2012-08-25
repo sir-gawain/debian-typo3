@@ -383,7 +383,6 @@ class t3lib_extFileFunctions extends t3lib_basicFileFunctions {
 		$fileObject = $this->getFileObject($cmds['data']);
 
 			// @todo implement the recycler feature which has been removed from the original implementation
-			// $this->writelog(4, 0, 4, 'Item "%s" moved to recycler at "%s"', array($theFile, $recyclerPath));
 
 			// Copies the file
 		if ($fileObject instanceof t3lib_file_File) {
@@ -403,7 +402,7 @@ class t3lib_extFileFunctions extends t3lib_basicFileFunctions {
 						$icon = t3lib_iconWorks::getSpriteIconForRecord($row['tablename'], $shortcutRecord);
 
 						$onClick = 'showClickmenu("' . $row['tablename'] . '", "' . $row['recuid'] . '", "1", "+info,history,edit,delete", "|", "");return false;';
-						$shortcutContent[] = '<a href="#" oncontectmenu="' . htmlspecialchars($onClick) . '" onclick="' . htmlspecialchars($onClick) . '">' . $icon . '</a>' .
+						$shortcutContent[] = '<a href="#" oncontextmenu="' . htmlspecialchars($onClick) . '" onclick="' . htmlspecialchars($onClick) . '">' . $icon . '</a>' .
 							htmlspecialchars(t3lib_BEfunc::getRecordTitle($row['tablename'], $shortcutRecord) . '  [' . t3lib_BEfunc::getRecordPath($shortcutRecord['pid'], '', 80) . ']');
 					}
 				}
@@ -843,7 +842,7 @@ class t3lib_extFileFunctions extends t3lib_basicFileFunctions {
 	 *	)
 	 * in HTML you'd need sth like this: <input type="file" name="upload_1[]" multiple="true" />
 	 *
-	 * @param array $cmds $cmds['data'] is the ID-number (points to the global var that holds the filename-ref  ($_FILES['upload_'.$id]['name']). $cmds['target'] is the target directory, $cmds['charset'] is the the character set of the file name (utf-8 is needed for JS-interaction)
+	 * @param array $cmds $cmds['data'] is the ID-number (points to the global var that holds the filename-ref  ($_FILES['upload_' . $id]['name']) . $cmds['target'] is the target directory, $cmds['charset'] is the the character set of the file name (utf-8 is needed for JS-interaction)
 	 * @return string Returns the new filename upon success
 	 */
 	function func_upload($cmds) {

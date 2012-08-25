@@ -25,30 +25,36 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-
 /**
  * class to render the menu for the cache clearing actions
  *
- * @author	Ingo Renner <ingo@typo3.org>
+ * @author Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage core
  */
 class ClearCacheMenu implements backend_toolbarItem {
 
+	/**
+	 * @var array
+	 */
 	protected $cacheActions;
+
+	/**
+	 * @var array
+	 */
 	protected $optionValues;
 
 	/**
-	 * reference back to the backend object
+	 * Reference back to the backend object
 	 *
 	 * @var	TYPO3backend
 	 */
 	protected $backendReference;
 
 	/**
-	 * constructor
+	 * Constructor
 	 *
-	 * @param	TYPO3backend	TYPO3 backend object reference
+	 * @param TYPO3backend $backendReference TYPO3 backend object reference
 	 */
 	public function __construct(TYPO3backend &$backendReference = NULL) {
 		$this->backendReference = $backendReference;
@@ -56,7 +62,7 @@ class ClearCacheMenu implements backend_toolbarItem {
 		$this->optionValues     = array('all', 'pages');
 
 			// Clear cache for ALL tables!
-		if($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->getTSConfigVal('options.clearCache.all')) {
+		if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->getTSConfigVal('options.clearCache.all')) {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:rm.clearCacheMenu_all', TRUE);
 			$this->cacheActions[] = array(
 				'id'    => 'all',
@@ -71,7 +77,7 @@ class ClearCacheMenu implements backend_toolbarItem {
 		}
 
 			// Clear cache for either ALL pages
-		if($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->getTSConfigVal('options.clearCache.pages')) {
+		if ($GLOBALS['BE_USER']->isAdmin() || $GLOBALS['BE_USER']->getTSConfigVal('options.clearCache.pages')) {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:rm.clearCacheMenu_pages', TRUE);
 			$this->cacheActions[] = array(
 				'id'    => 'pages',
@@ -86,7 +92,7 @@ class ClearCacheMenu implements backend_toolbarItem {
 		}
 
 			// Clearing of cache-files in typo3conf/ + menu
-		if($GLOBALS['BE_USER']->isAdmin() && $GLOBALS['TYPO3_CONF_VARS']['EXT']['extCache']) {
+		if ($GLOBALS['BE_USER']->isAdmin()) {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:rm.clearCacheMenu_allTypo3Conf', TRUE);
 			$this->cacheActions[] = array(
 				'id'    => 'temp_CACHED',
@@ -100,12 +106,12 @@ class ClearCacheMenu implements backend_toolbarItem {
 			);
 		}
 
-			// hook for manipulate cacheActions
-		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['additionalBackendItems']['cacheActions'])) {
+			// Hook for manipulate cacheActions
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['additionalBackendItems']['cacheActions'])) {
 			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['additionalBackendItems']['cacheActions'] as $cacheAction) {
 				$hookObject = t3lib_div::getUserObj($cacheAction);
 
-				if(!($hookObject instanceof backend_cacheActionsHook)) {
+				if (!($hookObject instanceof backend_cacheActionsHook)) {
 					throw new UnexpectedValueException('$hookObject must implement interface backend_cacheActionsHook', 1228262000);
 				}
 
@@ -115,9 +121,9 @@ class ClearCacheMenu implements backend_toolbarItem {
 	}
 
 	/**
-	 * checks whether the user has access to this toolbar item
+	 * Checks whether the user has access to this toolbar item
 	 *
-	 * @return  boolean  TRUE if user has access, FALSE if not
+	 * @return boolean TRUE if user has access, FALSE if not
 	 */
 	public function checkAccess() {
 
@@ -139,7 +145,7 @@ class ClearCacheMenu implements backend_toolbarItem {
 	/**
 	 * Creates the selector for workspaces
 	 *
-	 * @return	string		workspace selector as HTML select
+	 * @return string Workspace selector as HTML select
 	 */
 	public function render() {
 		$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:rm.clearCache_clearCache', TRUE);
@@ -153,7 +159,7 @@ class ClearCacheMenu implements backend_toolbarItem {
 		$cacheMenu[] = '<ul class="toolbar-item-menu" style="display: none;">';
 
 		foreach($this->cacheActions as $actionKey => $cacheAction) {
-			$cacheMenu[] = '<li><a href="'.htmlspecialchars($cacheAction['href']).'">'.$cacheAction['icon'].' '.$cacheAction['title'].'</a></li>';
+			$cacheMenu[] = '<li><a href="' . htmlspecialchars($cacheAction['href']) . '">' . $cacheAction['icon'] . ' ' . $cacheAction['title'] . '</a></li>';
 		}
 
 		$cacheMenu[] = '</ul>';
@@ -162,18 +168,18 @@ class ClearCacheMenu implements backend_toolbarItem {
 	}
 
 	/**
-	 * adds the necessary JavaScript to the backend
+	 * Adds the necessary JavaScript to the backend
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	protected function addJavascriptToBackend() {
 		$this->backendReference->addJavascriptFile('js/clearcachemenu.js');
 	}
 
 	/**
-	 * returns additional attributes for the list item in the toolbar
+	 * Returns additional attributes for the list item in the toolbar
 	 *
-	 * @return	string		list item HTML attibutes
+	 * @return string List item HTML attibutes
 	 */
 	public function getAdditionalAttributes() {
 		return ' id="clear-cache-actions-menu"';

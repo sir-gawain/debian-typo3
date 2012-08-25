@@ -221,7 +221,7 @@ class t3lib_positionMap {
 			var img_newrecord_marker_d=new Image();
 			img_newrecord_marker_d.src = "' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/newrecord' . $prefix . '_marker_d.gif', '', 1) . '";
 
-			function changeImg(name,d)	{	//
+			function changeImg(name,d) {	//
 				if (document[name]) {
 					if (d) {
 						document[name].src = img_newrecord_marker_d.src;
@@ -331,11 +331,11 @@ class t3lib_positionMap {
 	 * @return string HTML content.
 	 */
 	function insertQuadLines($codes, $allBlank = FALSE) {
-		$codeA = t3lib_div::trimExplode(',', $codes . ",line", 1);
+		$codeA = t3lib_div::trimExplode(',', $codes . ',line', 1);
 
 		$lines = array();
 		foreach ($codeA as $code) {
-			if ($code == "blank" || $allBlank) {
+			if ($code == 'blank' || $allBlank) {
 				$lines[] = '<img src="clear.gif" width="18" height="8" align="top" alt="" />';
 			} else {
 				$lines[] = '<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/ol/halfline.gif', 'width="18" height="8"') . ' align="top" alt="" />';

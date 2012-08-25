@@ -84,7 +84,7 @@ class Tx_Extbase_Object_Container_Container implements t3lib_Singleton {
 	 * @return Tx_Extbase_Object_Container_ClassInfoFactory
 	 */
 	protected function getClassInfoFactory() {
-		if($this->classInfoFactory == NULL) {
+		if ($this->classInfoFactory == NULL) {
 			$this->classInfoFactory = t3lib_div::makeInstance('Tx_Extbase_Object_Container_ClassInfoFactory');
 		}
 
@@ -97,7 +97,7 @@ class Tx_Extbase_Object_Container_Container implements t3lib_Singleton {
 	 * @return Tx_Extbase_Object_Container_ClassInfoCache
 	 */
 	protected function getClassInfoCache() {
-		if($this->cache == NULL) {
+		if ($this->cache == NULL) {
 			$this->cache = t3lib_div::makeInstance('Tx_Extbase_Object_Container_ClassInfoCache');
 		}
 
@@ -145,6 +145,10 @@ class Tx_Extbase_Object_Container_Container implements t3lib_Singleton {
 
 		if ($className === 'Tx_Extbase_Object_Container_Container') {
 			return $this;
+		}
+
+		if ($className === 't3lib_cache_Manager') {
+			return $GLOBALS['typo3CacheManager'];
 		}
 
 		if (isset($this->singletonInstances[$className])) {
@@ -335,14 +339,14 @@ class Tx_Extbase_Object_Container_Container implements t3lib_Singleton {
 	 */
 	private function getClassInfo($className) {
 		$classNameHash = sha1($className);
+		$classInfo = $this->getClassInfoCache()->get($classNameHash);
 
-			// we also need to make sure that the cache is returning a vaild object
-			// in case something went wrong with unserialization etc..
-		if (!$this->getClassInfoCache()->has($classNameHash) || !is_object($this->getClassInfoCache()->get($classNameHash))) {
-			$this->getClassInfoCache()->set($classNameHash, $this->getClassInfoFactory()->buildClassInfoFromClassName($className));
+		if (!$classInfo instanceof Tx_Extbase_Object_Container_ClassInfo) {
+			$classInfo = $this->getClassInfoFactory()->buildClassInfoFromClassName($className);
+			$this->getClassInfoCache()->set($classNameHash, $classInfo);
 		}
 
-		return $this->getClassInfoCache()->get($classNameHash);
+		return $classInfo;
 	}
 }
 

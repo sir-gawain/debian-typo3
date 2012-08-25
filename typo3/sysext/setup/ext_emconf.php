@@ -1,17 +1,17 @@
 <?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "setup".
-#
-# Auto generated 25-10-2011 13:11
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+* Extension Manager/Repository config file for ext "setup".
+*
+* Auto generated 25-10-2011 13:11
+*
+* Manual updates:
+* Only the data in the array - everything else is removed by next
+* writing. "version" and "dependencies" must not be touched!
+***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
-	'title' => 'User>Setup',
+	'title' => 'User>User Settings',
 	'description' => 'Allows users to edit a limited set of options for their user profile, eg. preferred language and their name and email address.',
 	'category' => 'module',
 	'shy' => 1,

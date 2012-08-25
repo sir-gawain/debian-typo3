@@ -34,12 +34,10 @@
  * @subpackage tslib
  */
 
-require('typo3/Bootstrap.php');
-Typo3_Bootstrap::checkEnvironmentOrDie();
-Typo3_Bootstrap::defineBaseConstants();
-Typo3_Bootstrap::defineAndCheckPaths('');
-Typo3_Bootstrap::requireBaseClasses();
-Typo3_Bootstrap::setUpEnvironment();
+	// We use require instead of require_once here so we get a fatal error if classes/Bootstrap.php is accidentally included twice
+	// (which would indicate a clear bug).
+require('typo3/classes/Bootstrap.php');
+Typo3_Bootstrap::getInstance()->baseSetup('');
 
 require(PATH_tslib . 'index_ts.php');
 ?>

@@ -29,17 +29,16 @@
  *
  * Revised for TYPO3 3.6 5/2003 by Kasper Skårhøj
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-require_once(PATH_typo3.'class.db_list.inc');
 require_once(t3lib_extMgm::extPath('cms').'layout/class.tx_cms_layout.php');
 
 
 /**
  * Class for displaying page information (records, page record properties)
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_cms
  */
@@ -76,7 +75,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 	/**
 	 * MAIN function for page information display (including hit statistics)
 	 *
-	 * @return	string		Output HTML for the module.
+	 * @return string Output HTML for the module.
 	 */
 	function main() {
 		global $BACK_PATH,$LANG,$SOBE;
@@ -87,36 +86,37 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 		$dblist->thumbs = 0;
 		$dblist->script = 'index.php';
 		$dblist->showIcon = 0;
-		$dblist->setLMargin=0;
+		$dblist->setLMargin = 0;
 		$dblist->agePrefixes=$LANG->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears');
 
-		$dblist->pI_showUser=1;
-		$dblist->pI_showStat=0;
-
+		$dblist->pI_showUser = 1;
+		$dblist->pI_showStat = 0;
 
 			// PAGES:
 		$this->pObj->MOD_SETTINGS['pages_levels']=$this->pObj->MOD_SETTINGS['depth'];		// ONLY for the sake of dblist module which uses this value.
 
-		$h_func = t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[depth]',$this->pObj->MOD_SETTINGS['depth'],$this->pObj->MOD_MENU['depth'],'index.php');
+		$h_func = t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[depth]', $this->pObj->MOD_SETTINGS['depth'], $this->pObj->MOD_MENU['depth'], 'index.php');
 		if ($this->pObj->MOD_SETTINGS['function']=='tx_cms_webinfo_hits') {
-			$h_func.= t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[stat_type]',$this->pObj->MOD_SETTINGS['stat_type'],$this->pObj->MOD_MENU['stat_type'],'index.php');
+			$h_func.= t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[stat_type]', $this->pObj->MOD_SETTINGS['stat_type'], $this->pObj->MOD_MENU['stat_type'], 'index.php');
 
-			if ($this->pObj->MOD_SETTINGS['stat_type']==1)	$dblist->stat_select_field='rl0';
-			if ($this->pObj->MOD_SETTINGS['stat_type']==2)	$dblist->stat_select_field='rl1';
+			if ($this->pObj->MOD_SETTINGS['stat_type'] == 1) {
+				$dblist->stat_select_field = 'rl0';
+			}
+			if ($this->pObj->MOD_SETTINGS['stat_type'] == 2) {
+				$dblist->stat_select_field = 'rl1';
+			}
 
 				// Timespan
-			for ($a=0;$a<30;$a++) {
+			for ($a = 0;$a < 30; $a++) {
 				$dblist->stat_codes[]='HITS_days:'.(-$a);
 			}
-			$timespan_b = mktime (0,0,0);
-			$timespan_e = mktime (0,0,0)-(30-1)*3600*24+1;
-			$header='<br />'.sprintf($LANG->getLL('stat_period'),t3lib_BEfunc::date($timespan_b),t3lib_BEfunc::date($timespan_e)).'<br />';
+			$timespan_b = mktime (0, 0, 0);
+			$timespan_e = mktime (0, 0, 0)-(30-1)*3600*24+1;
+			$header = '<br />'.sprintf($LANG->getLL('stat_period'), t3lib_BEfunc::date($timespan_b), t3lib_BEfunc::date($timespan_e)).'<br />';
 
-				//
-			$dblist->start($this->pObj->id,'pages',0);
-			$dblist->pages_noEditColumns=1;
+			$dblist->start($this->pObj->id, 'pages', 0);
+			$dblist->pages_noEditColumns = 1;
 			$dblist->generateList();
-
 
 			$theOutput .= $this->pObj->doc->header($LANG->getLL('hits_title'));
 			$theOutput .= $this->pObj->doc->section('',
@@ -128,13 +128,13 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 				1
 			);
 		} else {
-			$h_func.= t3lib_BEfunc::getFuncMenu($this->pObj->id,'SET[pages]',$this->pObj->MOD_SETTINGS['pages'],$this->pObj->MOD_MENU['pages'],'index.php');
-			$dblist->start($this->pObj->id,'pages',0);
+			$h_func .= t3lib_BEfunc::getFuncMenu($this->pObj->id, 'SET[pages]', $this->pObj->MOD_SETTINGS['pages'], $this->pObj->MOD_MENU['pages'], 'index.php');
+			$dblist->start($this->pObj->id, 'pages', 0);
 			$dblist->generateList();
 
 				// CSH
 			$theOutput .= $this->pObj->doc->header($LANG->getLL('page_title'));
-			$theOutput .=$this->pObj->doc->section('',
+			$theOutput .= $this->pObj->doc->section('',
 				t3lib_BEfunc::cshItem($dblist->descrTable, 'pagetree_overview', $GLOBALS['BACK_PATH'], '|<br />') . // CSH
 					$h_func.
 					$dblist->HTMLcode,
@@ -144,7 +144,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 
 				// SYS_NOTES:
 			if (t3lib_extMgm::isLoaded('sys_note')) {
-				$dblist->start($this->pObj->id,'sys_note',0);
+				$dblist->start($this->pObj->id, 'sys_note', 0);
 				$dblist->generateList();
 				if ($dblist->HTMLcode) {
 					$theOutput.=$this->pObj->doc->spacer(10);
@@ -159,7 +159,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
 				// PAGE INFORMATION
 			if ($this->pObj->pageinfo['uid']) {
 				$theOutput.=$this->pObj->doc->spacer(10);
-				$theOutput.=$this->pObj->doc->section($LANG->getLL('pageInformation'),$dblist->getPageInfoBox($this->pObj->pageinfo,$this->pObj->CALC_PERMS&2),0,1);
+				$theOutput.=$this->pObj->doc->section($LANG->getLL('pageInformation'), $dblist->getPageInfoBox($this->pObj->pageinfo, $this->pObj->CALC_PERMS&2), 0, 1);
 			}
 		}
 
@@ -174,7 +174,7 @@ class tx_cms_webinfo_page extends t3lib_extobjbase {
  * IMPORTANT: This class is used by the extension "sys_stat" and will be added to the Info module only when "sys_stat" is installed.
  * The display of statistics goes on in "tx_cms_webinfo_page" though
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_cms
  */

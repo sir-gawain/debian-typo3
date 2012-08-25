@@ -31,7 +31,7 @@
  * @license     http://www.gnu.org/copyleft/gpl.html
  */
 class Tx_Install_Updates_File_TtContentUploadsUpdateWizard extends Tx_Install_Updates_Base {
-	const FOLDER_ContentUploads = 'content_uploads';
+	const FOLDER_ContentUploads = '_migrated/content_uploads';
 
 	/**
 	 * @var string
@@ -84,10 +84,10 @@ class Tx_Install_Updates_File_TtContentUploadsUpdateWizard extends Tx_Install_Up
 		}
 
 		if (!isset($this->storage)) {
-			throw new RuntimeException('Local default storage could not be initialized - migth be due to missing sys_file* tables.');
+			throw new RuntimeException('Local default storage could not be initialized - might be due to missing sys_file* tables.');
 		}
 
-		$this->fileFactory = t3lib_div::makeInstance("t3lib_file_Factory");
+		$this->fileFactory = t3lib_div::makeInstance('t3lib_file_Factory');
 		$this->fileRepository= t3lib_div::makeInstance('t3lib_file_Repository_FileRepository');
 		$this->targetDirectory = PATH_site . $fileadminDirectory . self::FOLDER_ContentUploads . '/';
 	}
@@ -110,8 +110,8 @@ class Tx_Install_Updates_File_TtContentUploadsUpdateWizard extends Tx_Install_Up
 			"media <> '' AND CAST(CAST(media AS DECIMAL) AS CHAR) <> media OR (CType = 'uploads' AND select_key != '')"	// include also deleted, as they might be undeleted
 		);
 		if ($notMigratedRowsCount > 0) {
-			$description = 'There are Content Elements of type "upload" which are referencing files,' .
-				' not using FAL. The Wizard will move the files to fileadmin/content_uploads/ and index them.';
+			$description = 'There are Content Elements of type "upload" which are referencing files that are not using ' .
+				' the File Abstraction Layer. This wizard will move the files to fileadmin/' . self::FOLDER_ContentUploads . ' and index them.';
 			$updateNeeded = TRUE;
 		}
 
@@ -166,7 +166,7 @@ class Tx_Install_Updates_File_TtContentUploadsUpdateWizard extends Tx_Install_Up
 					'pid' => $record['pid'],
 					'title' => $record['select_key'],
 					'storage' => $this->storage->getUid(),
-					'folder' => ltrim("fileadmin/", $record['select_key'])
+					'folder' => ltrim('fileadmin/', $record['select_key'])
 				)
 			);
 			$collections[] = $GLOBALS['TYPO3_DB']->sql_insert_id();
@@ -184,7 +184,7 @@ class Tx_Install_Updates_File_TtContentUploadsUpdateWizard extends Tx_Install_Up
 					$this->targetDirectory . $file
 				);
 
-				$fileObject = $this->storage->getFile('content_uploads/' . $file);
+				$fileObject = $this->storage->getFile(self::FOLDER_ContentUploads . '/' . $file);
 				$this->fileRepository->addToIndex($fileObject);
 				
 				$dataArray = array(

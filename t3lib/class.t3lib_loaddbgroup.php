@@ -302,7 +302,6 @@ class t3lib_loadDBGroup {
 			$sorting_field = 'sorting';
 		}
 
-
 		if ($this->MM_table_where) {
 			$additionalWhere .= LF . str_replace('###THIS_UID###', intval($uid), $this->MM_table_where);
 		}
@@ -398,6 +397,8 @@ class t3lib_loadDBGroup {
 				}
 				$oldMMs_inclUid[] = array($row['tablenames'], $row[$uidForeign_field], $row['uid']);
 			}
+
+			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 
 				// For each item, insert it:
 			foreach ($this->itemArray as $val) {
@@ -663,7 +664,7 @@ class t3lib_loadDBGroup {
 					$row = t3lib_BEfunc::getRecord($table, $uid, $fields, '', FALSE);
 				}
 				if ($symmetric_field) {
-					$isOnSymmetricSide = t3lib_loadDBGroup::isOnSymmetricSide($parentUid, $conf, $row);
+					$isOnSymmetricSide = self::isOnSymmetricSide($parentUid, $conf, $row);
 				}
 
 				$updateValues = $foreign_match_fields;
@@ -813,6 +814,8 @@ class t3lib_loadDBGroup {
 					while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 						$this->results[$key][$row['uid']] = $row;
 					}
+
+					$GLOBALS['TYPO3_DB']->sql_free_result($res);
 				}
 			}
 		}

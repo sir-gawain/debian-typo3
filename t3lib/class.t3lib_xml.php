@@ -190,6 +190,7 @@ class t3lib_xml {
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$this->addRecord($table, $row);
 		}
+		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 	}
 
 	/**
@@ -200,7 +201,7 @@ class t3lib_xml {
 	 * @return void
 	 */
 	function addRecord($table, $row) {
-		$this->lines[] = $this->Icode . '<' . $table . ' uid="' . $row["uid"] . '">';
+		$this->lines[] = $this->Icode . '<' . $table . ' uid="' . $row['uid'] . '">';
 		$this->indent(1);
 		$this->getRowInXML($table, $row);
 		$this->indent(0);

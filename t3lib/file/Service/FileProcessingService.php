@@ -88,7 +88,6 @@ class t3lib_file_Service_FileProcessingService {
 			}
 		}
 
-
 		return $processedFile;
 	}
 
@@ -145,7 +144,7 @@ class t3lib_file_Service_FileProcessingService {
 					t3lib_utility_Command::exec($cmd);
 					if (!file_exists($temporaryFileName)) {
 							// Create a error gif
-						$this->getTemporaryImageWithText($temporaryFileName, 'No thumb','generated!', $file->getName());
+						$this->getTemporaryImageWithText($temporaryFileName, 'No thumb', 'generated!', $file->getName());
 					}
 				}
 			}
@@ -291,7 +290,6 @@ class t3lib_file_Service_FileProcessingService {
 		$targetFileName = 'previewcrm_' . $processedFile->calculateChecksum() . '.' . $targetFileExtension;
 
 			// @todo: implement meaningful TempFileIndex
-		// $processConfiguration['useTargetFileNameAsPrefix'] == 1;
 
 		if ($configuration['useSample']) {
 			$gifBuilder->scalecmd = '-sample';

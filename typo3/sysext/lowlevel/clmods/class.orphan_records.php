@@ -28,14 +28,13 @@
  * Cleaner module: Orphan records
  * User function called from tx_lowlevel_cleaner_core configured in ext_localconf.php
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-
 
 /**
  * Looking for Orphan Records
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -43,8 +42,6 @@ class tx_lowlevel_orphan_records extends tx_lowlevel_cleaner_core {
 
 	/**
 	 * Constructor
-	 *
-	 * @return	[type]		...
 	 */
 	function __construct() {
 		parent::__construct();
@@ -77,7 +74,7 @@ Will report orphan uids from TCA tables.';
 	 * Find orphan records
 	 * VERY CPU and memory intensive since it will look up the whole page tree!
 	 *
-	 * @return	array
+	 * @return array
 	 */
 	function main() {
 		global $TYPO3_DB;
@@ -86,10 +83,10 @@ Will report orphan uids from TCA tables.';
 		$resultArray = array(
 			'message' => $this->cli_help['name'].LF.LF.$this->cli_help['description'],
 			'headers' => array(
-				'orphans' => array('Index of orphaned records','',3),
-				'misplaced_at_rootlevel' => array('Records that should not be at root level but are.','Fix manually by moving record into page tree',2),
-				'misplaced_inside_tree' => array('Records that should be at root level but are not.','Fix manually by moving record to tree root',2),
-				'illegal_record_under_versioned_page' => array('Records that cannot be attached to a versioned page','(Listed under orphaned records so is fixed along with orphans.)',2),
+				'orphans' => array('Index of orphaned records', '', 3),
+				'misplaced_at_rootlevel' => array('Records that should not be at root level but are.', 'Fix manually by moving record into page tree', 2),
+				'misplaced_inside_tree' => array('Records that should be at root level but are not.', 'Fix manually by moving record to tree root', 2),
+				'illegal_record_under_versioned_page' => array('Records that cannot be attached to a versioned page', '(Listed under orphaned records so is fixed along with orphans.)', 2),
 			),
 			'orphans' => array(),
 			'misplaced_at_rootlevel' => array(),				// Subset of "all": Those that should not be at root level but are. [Warning: Fix by moving record into page tree]
@@ -97,31 +94,35 @@ Will report orphan uids from TCA tables.';
 			'illegal_record_under_versioned_page' => array(),
 		);
 
-		$startingPoint = 0;	// zero = tree root, must use tree root if you wish to reverse selection to find orphans!
+			// zero = tree root, must use tree root if you wish to reverse selection to find orphans!
+		$startingPoint = 0;
 		$pt = t3lib_div::milliseconds();
 
-		$this->genTree($startingPoint,1000,(int)$this->cli_argValue('--echotree'));
+		$this->genTree($startingPoint, 1000, (int)$this->cli_argValue('--echotree'));
 
 		$resultArray['misplaced_at_rootlevel'] = $this->recStats['misplaced_at_rootlevel'];
 		$resultArray['misplaced_inside_tree'] = $this->recStats['misplaced_inside_tree'];
 		$resultArray['illegal_record_under_versioned_page'] = $this->recStats['illegal_record_under_versioned_page'];
 
 			// Find orphans:
-		foreach($GLOBALS['TCA'] as $tableName => $cfg) {
+		foreach ($GLOBALS['TCA'] as $tableName => $cfg) {
 
-			$idList = is_array($this->recStats['all'][$tableName]) && count($this->recStats['all'][$tableName]) ? implode(',',$this->recStats['all'][$tableName]) : 0;
+			$idList = is_array($this->recStats['all'][$tableName]) && count($this->recStats['all'][$tableName]) ? implode(',', $this->recStats['all'][$tableName]) : 0;
 
 				// Select all records belonging to page:
-			$orphanRecords = 	$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-									'uid',
-									$tableName,
-									'uid NOT IN ('.$idList.')',
-									'','uid','','uid'
-								);
+			$orphanRecords = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+				'uid',
+				$tableName,
+				'uid NOT IN (' . $idList . ')',
+				'',
+				'uid',
+				'',
+				'uid'
+			);
 
 			if (count($orphanRecords)) {
 				$resultArray['orphans'][$tableName] = array();
-				foreach($orphanRecords as $oR) {
+				foreach ($orphanRecords as $oR) {
 					$resultArray['orphans'][$tableName][$oR['uid']] = $oR['uid'];
 				}
 			}
@@ -134,8 +135,8 @@ Will report orphan uids from TCA tables.';
 	 * Mandatory autofix function
 	 * Will run auto-fix on the result array. Echos status during processing.
 	 *
-	 * @param	array		Result array from main() function
-	 * @return	void
+	 * @param array $resultArray Result array from main() function
+	 * @return void
 	 */
 	function main_autoFix($resultArray) {
 
@@ -147,9 +148,9 @@ Will report orphan uids from TCA tables.';
 		}
 
 			// Traversing records:
-		foreach($resultArray['orphans'] as $table => $list) {
+		foreach ($resultArray['orphans'] as $table => $list) {
 			echo 'Removing orphans from table "'.$table.'":'.LF;
-			foreach($list as $uid) {
+			foreach ($list as $uid) {
 				echo '	Flushing orphan record "'.$table.':'.$uid.'": ';
 				if ($bypass = $this->cli_noExecutionCheck($table.':'.$uid)) {
 					echo $bypass;
@@ -158,13 +159,17 @@ Will report orphan uids from TCA tables.';
 						// Execute CMD array:
 					$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 					$tce->stripslashes_values = FALSE;
-					$tce->start(array(),array());
-					$tce->deleteRecord($table,$uid, TRUE, TRUE);	// Notice, we are deleting pages with no regard to subpages/subrecords - we do this since they should also be included in the set of orphans of course!
+					$tce->start(array(), array());
+						// Notice, we are deleting pages with no regard to subpages/subrecords - we do this
+						// since they should also be included in the set of orphans of course!
+					$tce->deleteRecord($table, $uid, TRUE, TRUE);
 
 						// Return errors if any:
 					if (count($tce->errorLog)) {
-						echo '	ERROR from "TCEmain":'.LF.'TCEmain:'.implode(LF.'TCEmain:',$tce->errorLog);
-					} else echo 'DONE';
+						echo '	ERROR from "TCEmain":'.LF.'TCEmain:'.implode(LF.'TCEmain:', $tce->errorLog);
+					} else {
+						echo 'DONE';
+					}
 				}
 				echo LF;
 			}

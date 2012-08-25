@@ -24,26 +24,24 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * Page navigation tree for the Web module
  *
  * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-
 
 $BACK_PATH = '';
 require_once('init.php');
-require('template.php');
-require_once('class.webpagetree.php');
 
 
 /**
  * Main script class for the page tree navigation frame
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -59,16 +57,20 @@ class SC_alt_db_navframe {
 	 * @var template
 	 */
 	var $doc;
-	var $active_tempMountPoint = 0;		// Temporary mount point (record), if any
+		// Temporary mount point (record), if any
+	var $active_tempMountPoint = 0;
 	var $backPath;
 
 		// Internal, static: GPvar:
 	var $currentSubScript;
 	var $cMR;
-	var $setTempDBmount;			// If not '' (blank) then it will clear (0) or set (>0) Temporary DB mount.
+		// If not '' (blank) then it will clear (0) or set (>0) Temporary DB mount.
+	var $setTempDBmount;
 
-	var $template;					// a static HTML template, usually in templates/alt_db_navframe.html
-	var $hasFilterBox;				//depends on userTS-setting
+		// A static HTML template, usually in templates/alt_db_navframe.html
+	var $template;
+		// Depends on userTS-setting
+	var $hasFilterBox;
 
 	/**
 	 * Initialiation of the class
@@ -109,12 +111,11 @@ class SC_alt_db_navframe {
 		$this->initializeTemporaryDBmount();
 	}
 
-
 	/**
-	 * initialization for the visual parts of the class
+	 * Initialization for the visual parts of the class
 	 * Use template rendering only if this is a non-AJAX call
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	public function initPage() {
 
@@ -132,8 +133,7 @@ class SC_alt_db_navframe {
 		$this->doc->setModuleTemplate('templates/alt_db_navframe.html');
 		$this->doc->showFlashMessages = FALSE;
 
-			// get HTML-Template
-
+			// Get HTML-Template
 
 			// Adding javascript code for AJAX (prototype), drag&drop and the pagetree as well as the click menu code
 		$this->doc->getDragDropCode('pages');
@@ -151,7 +151,7 @@ class SC_alt_db_navframe {
 		'.($this->doHighlight ? 'Tree.highlightClass = "'.$hlClass.'";' : '').'
 
 		// Function, loading the list frame from navigation tree:
-		function jumpTo(id, linkObj, highlightID, bank)	{ //
+		function jumpTo(id, linkObj, highlightID, bank) { //
 			var theUrl = top.TS.PATH_typo3 + top.currentSubScript ;
 			if (theUrl.indexOf("?") != -1) {
 				theUrl += "&id=" + id
@@ -174,7 +174,6 @@ class SC_alt_db_navframe {
 		$this->doc->bodyTagId = 'typo3-pagetree';
 	}
 
-
 	/**
 	 * Main function, rendering the browsable page tree
 	 *
@@ -185,7 +184,6 @@ class SC_alt_db_navframe {
 			// Produce browse-tree:
 		$tree = $this->pagetree->getBrowsableTree();
 
-
 			// Outputting Temporary DB mount notice:
 		if ($this->active_tempMountPoint) {
 			$flashText = '
@@ -194,7 +192,7 @@ class SC_alt_db_navframe {
 				'</a>		<br />' .
 				$GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xml:labels.path', 1) . ': <span title="' .
 				htmlspecialchars($this->active_tempMountPoint['_thePathFull']) . '">' .
-				htmlspecialchars(t3lib_div::fixed_lgd_cs($this->active_tempMountPoint['_thePath'],-50)).
+				htmlspecialchars(t3lib_div::fixed_lgd_cs($this->active_tempMountPoint['_thePath'], -50)).
 				'</span>
 			';
 
@@ -204,7 +202,6 @@ class SC_alt_db_navframe {
 				'',
 				t3lib_FlashMessage::INFO
 			);
-
 
 			$this->content.= $flashMessage->render();
 		}
@@ -245,7 +242,7 @@ class SC_alt_db_navframe {
 	/**
 	 * Outputting the accumulated content to screen
 	 *
-	 * @return	void
+	 * @return void
 	 */
 	function printContent() {
 		echo $this->content;
@@ -254,7 +251,7 @@ class SC_alt_db_navframe {
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return	array	all available buttons as an assoc. array
+	 * @return array All available buttons as an assoc. array
 	 */
 	protected function getButtons() {
 		$buttons = array(
@@ -276,7 +273,7 @@ class SC_alt_db_navframe {
 			'</a>';
 
 			// CSH
-		$buttons['csh'] = str_replace('typo3-csh-inline','typo3-csh-inline show-right',t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'pagetree', $GLOBALS['BACK_PATH'], '', TRUE));
+		$buttons['csh'] = str_replace('typo3-csh-inline', 'typo3-csh-inline show-right', t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'pagetree', $GLOBALS['BACK_PATH'], '', TRUE));
 
 			// Filter
 		if ($this->hasFilterBox) {
@@ -289,7 +286,7 @@ class SC_alt_db_navframe {
 	/**
 	 * Create the workspace information
 	 *
-	 * @return	string	HTML containing workspace info
+	 * @return string HTML containing workspace info
 	 */
 	protected function getWorkspaceInfo() {
 
@@ -314,7 +311,6 @@ class SC_alt_db_navframe {
 		return $workspaceInfo;
 	}
 
-
 	/**********************************
 	 *
 	 * Temporary DB mounts
@@ -324,17 +320,18 @@ class SC_alt_db_navframe {
 	/**
 	 * Getting temporary DB mount
 	 *
-	 * @return	void
+	 * @return void
 	 */
-	function initializeTemporaryDBmount(){
+	function initializeTemporaryDBmount() {
 
 			// Set/Cancel Temporary DB Mount:
 		if (strlen($this->setTempDBmount)) {
-			$set = t3lib_utility_Math::forceIntegerInRange($this->setTempDBmount,0);
-			if ($set > 0 && $GLOBALS['BE_USER']->isInWebMount($set)){
+			$set = t3lib_utility_Math::forceIntegerInRange($this->setTempDBmount, 0);
+			if ($set > 0 && $GLOBALS['BE_USER']->isInWebMount($set)) {
 					// Setting...:
 				$this->settingTemporaryMountPoint($set);
-			} else {	// Clear:
+			} else {
+					// Clear:
 				$this->settingTemporaryMountPoint(0);
 			}
 		}
@@ -346,25 +343,22 @@ class SC_alt_db_navframe {
 		if ($temporaryMountPoint > 0 && $GLOBALS['BE_USER']->isInWebMount($temporaryMountPoint)) {
 			if ($this->active_tempMountPoint = t3lib_BEfunc::readPageAccess($temporaryMountPoint, $GLOBALS['BE_USER']->getPagePermsClause(1))) {
 				$this->pagetree->MOUNTS = array($temporaryMountPoint);
-			}
-			else {
+			} else {
 				// Clear temporary mount point as we have no access to it any longer
 				$this->settingTemporaryMountPoint(0);
 			}
 		}
 	}
 
-
 	/**
 	 * Setting temporary page id as DB mount
 	 *
-	 * @param	integer		The page id to set as DB mount
-	 * @return	void
+	 * @param integer $pageId The page id to set as DB mount
+	 * @return void
 	 */
 	function settingTemporaryMountPoint($pageId) {
-		$GLOBALS['BE_USER']->setAndSaveSessionData('pageTree_temporaryMountPoint',intval($pageId));
+		$GLOBALS['BE_USER']->setAndSaveSessionData('pageTree_temporaryMountPoint', intval($pageId));
 	}
-
 
 	/**********************************
 	 *
@@ -376,22 +370,22 @@ class SC_alt_db_navframe {
 	 * Makes the AJAX call to expand or collapse the pagetree.
 	 * Called by typo3/ajax.php
 	 *
-	 * @param	array		$params: additional parameters (not used here)
-	 * @param	TYPO3AJAX	$ajaxObj: The TYPO3AJAX object of this request
-	 * @return	void
+	 * @param array $params Additional parameters (not used here)
+	 * @param TYPO3AJAX $ajaxObj The TYPO3AJAX object of this request
+	 * @return void
 	 */
 	public function ajaxExpandCollapse($params, $ajaxObj) {
 		$this->init();
 		$tree = $this->pagetree->getBrowsableTree();
 		if (!$this->pagetree->ajaxStatus) {
 			$ajaxObj->setError($tree);
-		} else	{
+		} else {
 			$ajaxObj->addContent('tree', $tree);
 		}
 	}
 }
 
-// Make instance if it is not an AJAX call
+	// Make instance if it is not an AJAX call
 if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {
 	$SOBE = t3lib_div::makeInstance('SC_alt_db_navframe');
 	$SOBE->init();

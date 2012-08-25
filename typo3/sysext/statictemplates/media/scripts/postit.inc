@@ -24,6 +24,7 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+
 /**
  * postit.inc
  *
@@ -32,17 +33,12 @@
  * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-
-
-if (!is_object($this)) die ('Error: No parent object present.');
-
-
-
-
-
+if (!is_object($this)) {
+	die('Error: No parent object present.');
+}
 
 /***************************************************************
 TypoScript config:
@@ -107,31 +103,26 @@ tt_content.splash.20 {
 
 ****************************************************************/
 
-
-
-
-
-$data = $this->stdWrap($conf['data'],$conf['data.']);
+$data = $this->stdWrap($conf['data'], $conf['data.']);
 $cols = intval($conf['cols']) ? intval($conf['cols']) : 3;
 
-
-$lines = explode(chr(10),$data);
+$lines = explode(chr(10), $data);
 $imageArr = array();
 foreach ($lines as $key => $content) {
 	$content = trim($content);
 	if ($content) {
-		$parts = explode('|',$content);
+		$parts = explode('|', $content);
 		$text = trim($parts[0]);
-		$type = t3lib_utility_Math::forceIntegerInRange($parts[1],1,3);
+		$type = t3lib_utility_Math::forceIntegerInRange($parts[1], 1, 3);
 		$link = trim($parts[2]);
 		if ($text) {
-			$imgConf = $conf['images.'][$type.'.'];
-			$imgConf['file.'] = $this->gifBuilderTextBox ($imgConf['file.'], $conf['textBox.'], $text);
+			$imgConf = $conf['images.'][$type . '.'];
+			$imgConf['file.'] = $this->gifBuilderTextBox($imgConf['file.'], $conf['textBox.'], $text);
 
 			$image = $this->IMAGE($imgConf);
 			if ($image) {
 				$this->setCurrentVal($link);
-				$imageArr[] = $this->typolink($image,$conf['typolink.']);
+				$imageArr[] = $this->typolink($image, $conf['typolink.']);
 			}
 		}
 	}
@@ -142,19 +133,19 @@ if (is_array($imageArr)) {
 	reset($imageArr);
 	if ($cols) {
 		$res = '';
-		$rows = ceil(count($imageArr)/$cols);
+		$rows = ceil(count($imageArr) / $cols);
 
-		for ($a=0;$a<$rows;$a++) {
-			$res.='<tr>';
-			for ($b=0;$b<$cols;$b++) {
-				$res.='<td>'.$imageArr[(($a*$cols)+$b)].'</td>';
+		for ($a = 0; $a < $rows; $a++) {
+			$res .= '<tr>';
+			for ($b = 0; $b < $cols; $b++) {
+				$res .= '<td>' . $imageArr[(($a * $cols) + $b)] . '</td>';
 			}
-			$res.='</tr>';
+			$res .= '</tr>';
 		}
 
-		$content='<table border="0" cellspacing="0" cellpadding="0">'.$res.'</table>';
+		$content = '<table border="0" cellspacing="0" cellpadding="0">' . $res . '</table>';
 	} else {
-		$content.=implode($imageArr,'');
+		$content .= implode($imageArr, '');
 	}
 }
 

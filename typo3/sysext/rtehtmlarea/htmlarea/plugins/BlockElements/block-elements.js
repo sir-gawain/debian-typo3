@@ -62,7 +62,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 			}
 		}
 		this.allowedAttributes = new Array('id', 'title', 'lang', 'xml:lang', 'dir', 'class', 'itemscope', 'itemtype', 'itemprop');
-		if (Ext.isIE) {
+		if (HTMLArea.isIEBeforeIE9) {
 			this.addAllowedAttribute('className');
 		}
 		this.indentedList = null;
@@ -106,7 +106,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		
+
 		/*
 		 * Registering the dropdown list
 		 */
@@ -314,7 +314,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 				}
 			}
 		}
-		var fullNodeTextSelected = (!Ext.isIE && parentElement.textContent === range.toString()) || (Ext.isIE && parentElement.innerText === range.text);
+		var fullNodeTextSelected = (!HTMLArea.isIEBeforeIE9 && parentElement.textContent === range.toString()) || (HTMLArea.isIEBeforeIE9 && parentElement.innerText === range.text);
 		switch (buttonId) {
 			case "Indent" :
 				if (/^(ol|ul)$/i.test(parentElement.nodeName) && !(fullNodeTextSelected && !/^(li)$/i.test(parentElement.parentNode.nodeName))) {
@@ -331,7 +331,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 						this.indentSelectedListElements(parentElement, range);
 					}
 				} else if (tableCell) {
-	
+
 					var tablePart = tableCell.parentNode.parentNode;
 						// Get next cell in same table part
 					var nextCell = tableCell.nextSibling ? tableCell.nextSibling : (tableCell.parentNode.nextSibling ? tableCell.parentNode.nextSibling.cells[0] : null);
@@ -575,7 +575,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 		while (i < startAncestors.length && i < endAncestors.length && startAncestors[i] === endAncestors[i]) {
 			++i;
 		}
-		
+
 		if ((endBlocks.start === endBlocks.end && /^(body)$/i.test(endBlocks.start.nodeName)) || !startAncestors[i] || !endAncestors[i]) {
 			--i;
 		}
@@ -724,7 +724,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 			// which breaks the range
 		var range = this.editor.getBookMark().moveTo(bookmark);
 		bookmark = this.editor.getBookMark().get(range);
-		
+
 			// Check if the last element has children. If so, outdent those that do not intersect the selection
 		var last = indentedList.lastChild.lastChild;
 		if (last && /^(ol|ul)$/i.test(last.nodeName)) {
@@ -771,7 +771,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 			// which breaks the range
 		var range = this.editor.getBookMark().moveTo(bookmark);
 		bookmark = this.editor.getBookMark().get(range);
-		
+
 		if (!wrappedList.previousSibling) {
 				// Outdenting the first element(s) of an indented list
 			var next = list.parentNode.nextSibling;
@@ -820,7 +820,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 			// Remove the list if all its elements have been moved up
 		if (!list.hasChildNodes()) {
 			list.parentNode.removeChild(list);
-		} 
+		}
 		this.editor.getSelection().selectRange(this.editor.getBookMark().moveTo(bookmark));
 	},
 	/*
@@ -866,11 +866,11 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 		}
 		if (endElement) {
 			var parent = endElement.parentNode;
-			var paragraph = this.editor.document.createElement("p");
-			if (Ext.isIE) {
-				paragraph.innerHTML = "&nbsp";
+			var paragraph = this.editor.document.createElement('p');
+			if (HTMLArea.isIEBeforeIE9) {
+				paragraph.innerHTML = '&nbsp';
 			} else {
-				paragraph.appendChild(this.editor.document.createElement("br"));
+				paragraph.appendChild(this.editor.document.createElement('br'));
 			}
 			if (after && !endElement.nextSibling) {
 				parent.appendChild(paragraph);
@@ -1170,7 +1170,7 @@ HTMLArea.BlockElements = Ext.extend(HTMLArea.Plugin, {
 	},
 	/*
 	* This function handles the hotkey events registered on elements of the dropdown list
-	*/	
+	*/
 	onHotKey: function(editor, key) {
 		var blockElement;
 		var hotKeyConfiguration = this.getHotKeyConfiguration(key);

@@ -1,5 +1,7 @@
 <?php
-if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
+}
 
 t3lib_extMgm::addPlugin(Array('LLL:EXT:indexed_search/locallang.php:mod_indexed_search', $_EXTKEY));
 
@@ -18,7 +20,7 @@ if (t3lib_extMgm::isLoaded('extbase')) {
 }
 
 if (TYPO3_MODE=='BE')    {
-	t3lib_extMgm::addModule('tools','isearch','after:log',t3lib_extMgm::extPath($_EXTKEY).'mod/');
+	t3lib_extMgm::addModule('tools', 'isearch', 'after:log', t3lib_extMgm::extPath($_EXTKEY) . 'mod/');
 
 	t3lib_extMgm::insertModuleFunction(
 		'web_info',
@@ -27,15 +29,15 @@ if (TYPO3_MODE=='BE')    {
 		'LLL:EXT:indexed_search/locallang.php:mod_indexed_search'
 	);
 	t3lib_extMgm::insertModuleFunction(
-		"web_info",
-		"tx_indexedsearch_modfunc2",
-		t3lib_extMgm::extPath($_EXTKEY)."modfunc2/class.tx_indexedsearch_modfunc2.php",
-		"LLL:EXT:indexed_search/locallang.php:mod2_indexed_search"
+		'web_info',
+		'tx_indexedsearch_modfunc2',
+		t3lib_extMgm::extPath($_EXTKEY).'modfunc2/class.tx_indexedsearch_modfunc2.php',
+		'LLL:EXT:indexed_search/locallang.php:mod2_indexed_search'
 	);
 }
 
 t3lib_extMgm::allowTableOnStandardPages('index_config');
-t3lib_extMgm::addLLrefForTCAdescr('index_config','EXT:indexed_search/locallang_csh_indexcfg.xml');
+t3lib_extMgm::addLLrefForTCAdescr('index_config', 'EXT:indexed_search/locallang_csh_indexcfg.xml');
 
 $TCA['index_config'] = array(
 	'ctrl' => array(

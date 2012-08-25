@@ -120,7 +120,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 			$searchData = array_merge($this->settings['defaultOptions'], $searchData);
 		}
 
-
 			// Indexer configuration from Extension Manager interface:
 		$this->indexerConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['indexed_search']);
 		$this->enableMetaphoneSearch = $this->indexerConfig['enableMetaphoneSearch'] ? TRUE : FALSE;
@@ -139,7 +138,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 
 		$searchData['results'] = t3lib_utility_Math::forceIntegerInRange($searchData['results'], 1, 100000, $this->defaultResultNumber);
 
-
 			// This gets the search-words into the $searchWordArray
 		$this->sword = $searchData['sword'];
 
@@ -149,7 +147,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 		}
 
 		$this->searchWords = $this->getSearchWords($searchData['defaultOperand']);
-
 
 			// This is the id of the site root.
 			// This value may be a commalist of integer (prepared for this)
@@ -414,7 +411,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 		$title = $resultData['item_title'] . $resultData['titleaddition'];
 		$title = htmlspecialchars($title);
 
-
 			// If external media, link to the media-file instead.
 		if ($row['item_type']) {
 			if ($row['show_resume']) {
@@ -621,10 +617,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 					$file = substr(PATH_tslib, strlen(PATH_site)) . 'media/flags/flag_' . $flag;
 					$imgInfo = @getimagesize(PATH_site . $file);
 
-					// original
-					# $file = TYPO3_mainDir.'gfx/flags/'.$flag;
-					# $imgInfo = @getimagesize(PATH_site.$file);
-
 					if (is_array($imgInfo)) {
 						$output = '<img src="' . $file . '" ' . $imgInfo[3] . ' title="' . htmlspecialchars($languageRow['title']) . '" alt="' . htmlspecialchars($languageRow['title']) . '" />';
 					}
@@ -735,19 +727,18 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 	protected function markupSWpartsOfString($str) {
 
 			// Init:
-		$str = str_replace('&nbsp;',' ',t3lib_parsehtml::bidir_htmlspecialchars($str,-1));
-		$str = preg_replace('/\s\s+/',' ',$str);
+		$str = str_replace('&nbsp;', ' ', t3lib_parsehtml::bidir_htmlspecialchars($str, -1));
+		$str = preg_replace('/\s\s+/', ' ', $str);
 		$swForReg = array();
 
 			// Prepare search words for regex:
 		foreach ($this->sWArr as $d) {
-			$swForReg[] = preg_quote($d['sword'],'/');
+			$swForReg[] = preg_quote($d['sword'], '/');
 		}
-		$regExString = '('.implode('|',$swForReg).')';
+		$regExString = '(' . implode('|', $swForReg) . ')';
 
 			// Split and combine:
 		$parts = preg_split('/'.$regExString.'/i', ' '.$str.' ', 20000, PREG_SPLIT_DELIM_CAPTURE);
-// debug($parts,$regExString);
 			// Constants:
 		$summaryMax = 300;
 		$postPreLgd = 60;
@@ -778,13 +769,14 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 					}
 				} elseif ($summaryLgd > $summaryMax || !isset($parts[$k+1])) {	// In case summary length is exceed OR if there are no more entries at all:
 					if ($strLen > $postPreLgd) {
-						$output[$k] = preg_replace('/[[:space:]][^[:space:]]+$/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8', $parts[$k], $postPreLgd - $postPreLgd_offset)) . $divider;
+						$output[$k] = preg_replace('/[[:space:]][^[:space:]]+$/', '', $GLOBALS['TSFE']->csConvObj->crop('utf-8', $parts[$k], $postPreLgd - $postPreLgd_offset)) . $divider;
 					}
-				} else {	// In-between search words:
+					// In-between search words:
+				} else {
 					if ($strLen > $postPreLgd * 2) {
-						$output[$k] = preg_replace('/[[:space:]][^[:space:]]+$/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8', $parts[$k], $postPreLgd - $postPreLgd_offset)).
-										$divider.
-										preg_replace('/^[^[:space:]]+[[:space:]]/','',$GLOBALS['TSFE']->csConvObj->crop('utf-8', $parts[$k], -($postPreLgd - $postPreLgd_offset)));
+						$output[$k] = preg_replace('/[[:space:]][^[:space:]]+$/', '', $GLOBALS['TSFE']->csConvObj->crop('utf-8', $parts[$k], $postPreLgd - $postPreLgd_offset)) .
+							$divider .
+							preg_replace('/^[^[:space:]]+[[:space:]]/', '', $GLOBALS['TSFE']->csConvObj->crop('utf-8', $parts[$k], -($postPreLgd - $postPreLgd_offset)));
 					}
 				}
 				$summaryLgd+= $GLOBALS['TSFE']->csConvObj->strlen('utf-8', $output[$k]);
@@ -829,7 +821,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 				// Number of hits on the search
 			'hits'   => intval($count),
 				// Time stamp
-			'tstamp' => $GLOBALS['EXEC_TIME']					
+			'tstamp' => $GLOBALS['EXEC_TIME']
 		);
 
 		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_stat_search', $insertFields);
@@ -838,7 +830,7 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 		if ($newId) {
 			foreach ($searchWords as $val) {
 				$insertFields = array(
-					'word' => $val['sword'],	// $GLOBALS['TSFE']->csConvObj->conv_case('utf-8', $val['sword'], 'toLower'),
+					'word' => $val['sword'],
 					'index_stat_search_id' => $newId,
 						// Time stamp
 					'tstamp' => $GLOBALS['EXEC_TIME'],
@@ -894,18 +886,14 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 				// case-sensitive. Defines the words, which will be
 				// operators between words
 				$operatorTranslateTable = array(
-					array('+' , 'AND'),
-					array('|' , 'OR'),
-					array('-' , 'AND NOT'),
-						// english
-					// array('AND' , 'AND'),
-					// array('OR' , 'OR'),
-					// array('NOT' , 'AND NOT'),
+					array('+', 'AND'),
+					array('|', 'OR'),
+					array('-', 'AND NOT'),
 						// Add operators for various languages
 						// Converts the operators to UTF-8 and lowercase
-					array($GLOBALS['TSFE']->csConvObj->conv_case('utf-8',$GLOBALS['TSFE']->csConvObj->utf8_encode(Tx_Extbase_Utility_Localization::translate('localizedOperandAnd', 'indexed_search'), $GLOBALS['TSFE']->renderCharset), 'toLower'), 'AND'),
-					array($GLOBALS['TSFE']->csConvObj->conv_case('utf-8',$GLOBALS['TSFE']->csConvObj->utf8_encode(Tx_Extbase_Utility_Localization::translate('localizedOperandOr', 'indexed_search'),  $GLOBALS['TSFE']->renderCharset), 'toLower'), 'OR'),
-					array($GLOBALS['TSFE']->csConvObj->conv_case('utf-8',$GLOBALS['TSFE']->csConvObj->utf8_encode(Tx_Extbase_Utility_Localization::translate('localizedOperandNot', 'indexed_search'), $GLOBALS['TSFE']->renderCharset), 'toLower'), 'AND NOT'),
+					array($GLOBALS['TSFE']->csConvObj->conv_case('utf-8', $GLOBALS['TSFE']->csConvObj->utf8_encode(Tx_Extbase_Utility_Localization::translate('localizedOperandAnd', 'indexed_search'), $GLOBALS['TSFE']->renderCharset), 'toLower'), 'AND'),
+					array($GLOBALS['TSFE']->csConvObj->conv_case('utf-8', $GLOBALS['TSFE']->csConvObj->utf8_encode(Tx_Extbase_Utility_Localization::translate('localizedOperandOr', 'indexed_search'), $GLOBALS['TSFE']->renderCharset), 'toLower'), 'OR'),
+					array($GLOBALS['TSFE']->csConvObj->conv_case('utf-8', $GLOBALS['TSFE']->csConvObj->utf8_encode(Tx_Extbase_Utility_Localization::translate('localizedOperandNot', 'indexed_search'), $GLOBALS['TSFE']->renderCharset), 'toLower'), 'AND NOT'),
 				);
 
 				$search = t3lib_div::makeInstance('tslib_search');
@@ -994,7 +982,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 			$showTypeSearch = (count($allSearchTypes) || count($allDefaultOperands));
 			$this->view->assign('showTypeSearch', $showTypeSearch);
 
-
 				// "Search in"
 			$allMediaTypes = $this->getAllAvailableMediaTypesOptions();
 			$this->view->assign('allMediaTypes', $allMediaTypes);
@@ -1004,7 +991,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 
 			$showMediaAndLanguageSearch = (count($allMediaTypes) || count($allLanguageUids));
 			$this->view->assign('showMediaAndLanguageSearch', $showMediaAndLanguageSearch);
-
 
 				// Sections
 			$allSections = $this->getAllAvailableSectionsOptions();
@@ -1386,8 +1372,12 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 		$urlParameters = (array) unserialize($row['cHashParams']);
 
 			// Add &type and &MP variable:
-		if ($row['data_page_mp']) $urlParameters['MP'] = $row['data_page_mp'];
-		if ($row['sys_language_uid']) $urlParameters['L'] = $row['sys_language_uid'];
+		if ($row['data_page_mp']) {
+			$urlParameters['MP'] = $row['data_page_mp'];
+		}
+		if ($row['sys_language_uid']) {
+			$urlParameters['L'] = $row['sys_language_uid'];
+		}
 
 			// markup-GET vars:
 		$urlParameters = array_merge($urlParameters, $markUpSwParams);
@@ -1397,7 +1387,6 @@ class Tx_IndexedSearch_Controller_SearchController extends Tx_Extbase_MVC_Contro
 		if (!is_array($this->domainRecords[$pageUid])) {
 			$this->getPathFromPageId($pageUid);
 		}
-
 
 			// If external domain, then link to that:
 		if (count($this->domainRecords[$pageUid])) {

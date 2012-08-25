@@ -37,8 +37,8 @@ class tslib_content_Multimedia extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, MULTIMEDIA
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Output
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Output
 	 */
 	public function render($conf = array()) {
 		$content = '';
@@ -51,21 +51,21 @@ class tslib_content_Multimedia extends tslib_content_Abstract {
 			if (t3lib_div::inList('txt,html,htm', $fileinfo['fileext'])) {
 				$content = $GLOBALS['TSFE']->tmpl->fileContent($incFile);
 			} else {
-					// default params...
+					// Default params...
 				$parArray = array();
-					// src is added
+					// Src is added
 
 				$width = isset($conf['width.'])
 					? $this->cObj->stdWrap($conf['width'], $conf['width.'])
 					: $conf['width'];
-				if(!$width) {
+				if (!$width) {
 					$width = 200;
 				}
 
 				$height = isset($conf['height.'])
 					? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 					: $conf['height'];
-				if(!$height) {
+				if (!$height) {
 					$height = 200;
 				}
 

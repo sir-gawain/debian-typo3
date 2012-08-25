@@ -39,17 +39,6 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 		this.classesUrl = this.editorConfiguration.classesUrl;
 		this.pageTSconfiguration = this.editorConfiguration.buttons.textstyle;
 		this.tags = (this.pageTSconfiguration && this.pageTSconfiguration.tags) ? this.pageTSconfiguration.tags : {};
-			// classesTag is DEPRECATED as of TYPO3 4.6 and will be removed#in TYPO3 4.8
-		if (typeof(this.editorConfiguration.classesTag) !== "undefined") {
-			if (this.editorConfiguration.classesTag.span) {
-				if (!this.tags.span) {
-					this.tags.span = new Object();
-				}
-				if (!this.tags.span.allowedClasses) {
-					this.tags.span.allowedClasses = this.editorConfiguration.classesTag.span;
-				}
-			}
-		}
 		var allowedClasses;
 		for (var tagName in this.tags) {
 			if (this.tags.hasOwnProperty(tagName)) {
@@ -64,18 +53,17 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 				}
 			}
 		}
-			// Property this.editorConfiguration.showTagFreeClasses is deprecated as of TYPO3 4.6 and will be removed in TYPO3 4.8
-		this.showTagFreeClasses = (this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false) || this.editorConfiguration.showTagFreeClasses;
+		this.showTagFreeClasses = this.pageTSconfiguration ? this.pageTSconfiguration.showTagFreeClasses : false;
 		this.prefixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.prefixLabelWithClassName : false;
 		this.postfixLabelWithClassName = this.pageTSconfiguration ? this.pageTSconfiguration.postfixLabelWithClassName : false;
 		/*
 		 * Regular expression to check if an element is an inline elment
 		 */
 		this.REInlineTags = /^(a|abbr|acronym|b|bdo|big|cite|code|del|dfn|em|i|img|ins|kbd|q|samp|small|span|strike|strong|sub|sup|tt|u|var)$/;
-		
+
 			// Allowed attributes on inline elements
 		this.allowedAttributes = new Array('id', 'title', 'lang', 'xml:lang', 'dir', 'class', 'itemscope', 'itemtype', 'itemprop');
-		if (Ext.isIE) {
+		if (HTMLArea.isIEBeforeIE9) {
 			this.addAllowedAttribute('className');
 		}
 		/*
@@ -91,7 +79,7 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 			license		: 'GPL'
 		};
 		this.registerPluginInformation(pluginInformation);
-		/* 
+		/*
 		 * Registering the dropdown list
 		 */
 		var buttonId = 'TextStyle';
@@ -147,12 +135,12 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 		var parent = this.editor.getSelection().getParentElement();
 		var selectionEmpty = this.editor.getSelection().isEmpty();
 		var ancestors = this.editor.getSelection().getAllAncestors();
-		
+
 		if (!selectionEmpty) {
 				// The selection is not empty
 			for (var i = 0; i < ancestors.length; ++i) {
-				fullNodeSelected = (Ext.isIE && ((statusBarSelection === ancestors[i] && ancestors[i].innerText === range.text) || (!statusBarSelection && ancestors[i].innerText === range.text)))
-							|| (!Ext.isIE && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())));
+				fullNodeSelected = (HTMLArea.isIEBeforeIE9 && ((statusBarSelection === ancestors[i] && ancestors[i].innerText === range.text) || (!statusBarSelection && ancestors[i].innerText === range.text)))
+							|| (!HTMLArea.isIEBeforeIE9 && ((statusBarSelection === ancestors[i] && ancestors[i].textContent === range.toString()) || (!statusBarSelection && ancestors[i].textContent === range.toString())));
 				if (fullNodeSelected) {
 					if (this.isInlineElement(ancestors[i])) {
 						parent = ancestors[i];
@@ -173,7 +161,7 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 				var newElement = editor.document.createElement('span');
 				HTMLArea.DOM.addClass(newElement, className);
 				editor.getDomNode().wrapWithInlineElement(newElement, range);
-				if (!Ext.isIE) {
+				if (!HTMLArea.isIEBeforeIE9) {
 					range.detach();
 				}
 			}
@@ -278,7 +266,7 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 			if (!selectionEmpty) {
 				for (var i = 0; i < ancestors.length; ++i) {
 					fullNodeSelected = (statusBarSelection === ancestors[i])
-						&& ((!Ext.isIE && ancestors[i].textContent === range.toString()) || (Ext.isIE && ancestors[i].innerText === range.text));
+						&& ((!HTMLArea.isIEBeforeIE9 && ancestors[i].textContent === range.toString()) || (HTMLArea.isIEBeforeIE9 && ancestors[i].innerText === range.text));
 					if (fullNodeSelected) {
 						if (!HTMLArea.DOM.isBlockElement(ancestors[i])) {
 							tagName = ancestors[i].nodeName.toLowerCase();
@@ -342,8 +330,7 @@ HTMLArea.TextStyle = Ext.extend(HTMLArea.Plugin, {
 				store.add(new store.recordType({
 					text: value,
 					value: cssClass,
-						// this.editor.config.disablePCexamples is deprecated as of TYPO3 4.6 and will be removed in TYPO 4.8
-					style: (!(this.pageTSconfiguration && this.pageTSconfiguration.disableStyleOnOptionLabel) && !this.editor.config.disablePCexamples && HTMLArea.classesValues && HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) ? HTMLArea.classesValues[cssClass] : null
+					style: (!(this.pageTSconfiguration && this.pageTSconfiguration.disableStyleOnOptionLabel) && HTMLArea.classesValues && HTMLArea.classesValues[cssClass] && !HTMLArea.classesNoShow[cssClass]) ? HTMLArea.classesValues[cssClass] : null
 				}));
 			}, this);
 		}

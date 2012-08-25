@@ -26,6 +26,8 @@
 ***************************************************************/
 
 /**
+ * ExtDirect action handler
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage ExtDirect
@@ -121,7 +123,7 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 	}
 
 	public function loadColumnModel() {
-		if(is_array($GLOBALS['BE_USER']->uc['moduleData']['Workspaces'][$GLOBALS['BE_USER']->workspace]['columns'])) {
+		if (is_array($GLOBALS['BE_USER']->uc['moduleData']['Workspaces'][$GLOBALS['BE_USER']->workspace]['columns'])) {
 			return $GLOBALS['BE_USER']->uc['moduleData']['Workspaces'][$GLOBALS['BE_USER']->workspace]['columns'];
 		} else {
 			return array();
@@ -139,7 +141,7 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 	public function sendToNextStageWindow($uid, $table, $t3ver_oid) {
 		$elementRecord = t3lib_BEfunc::getRecord($table, $uid);
 
-		if(is_array($elementRecord)) {
+		if (is_array($elementRecord)) {
 			$stageId = $elementRecord['t3ver_stage'];
 
 			if ($this->getStageService()->isValid($stageId)) {
@@ -171,7 +173,7 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 	public function sendToPrevStageWindow($uid, $table) {
 		$elementRecord = t3lib_BEfunc::getRecord($table, $uid);
 
-		if(is_array($elementRecord)) {
+		if (is_array($elementRecord)) {
 			$stageId = $elementRecord['t3ver_stage'];
 
 			if ($this->getStageService()->isValid($stageId)) {
@@ -230,9 +232,13 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 		}
 		$recipients = array();
 		foreach ($uidOfRecipients as $userUid) {
-			$beUserRecord = t3lib_befunc::getRecord('be_users',intval($userUid));
-			if(is_array($beUserRecord) && $beUserRecord['email'] != '') {
-				$recipients[] = $beUserRecord['email'];
+			$beUserRecord = t3lib_befunc::getRecord('be_users', intval($userUid));
+			if (is_array($beUserRecord) && $beUserRecord['email'] !== '') {
+				$uc = $beUserRecord['uc'] ? unserialize($beUserRecord['uc']) : array();
+				$recipients[$beUserRecord['email']] = array(
+					'email' => $beUserRecord['email'],
+					'lang'  => (isset($uc['lang']) ? $uc['lang'] : $beUserRecord['lang']),
+				);
 			}
 		}
 
@@ -243,25 +249,35 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 				// the default recipients needs to be added in some cases of the notification_mode
 			$default_recipients = $this->getStageService()->getResponsibleBeUser($stageId, TRUE);
 			foreach ($default_recipients as $default_recipient_uid => $default_recipient_record) {
-				if (!in_array($default_recipient_record['email'],$recipients)) {
-					$recipients[] = $default_recipient_record['email'];
+				if (!isset($recipients[$default_recipient_record['email']])) {
+					$uc = $default_recipient_record['uc'] ? unserialize($default_recipient_record['uc']) : array();
+					$recipients[$default_recipient_record['email']] = array(
+						'email' => $default_recipient_record['email'],
+						'lang'  => (isset($uc['lang']) ? $uc['lang'] : $default_recipient_record['lang']),
+					);
 				}
 			}
 		}
 
-		if ($additionalRecipients != '') {
-			$additionalRecipients = t3lib_div::trimExplode("\n", $additionalRecipients, TRUE);
+		if ($additionalRecipients !== '') {
+			$emails = t3lib_div::trimExplode(LF, $additionalRecipients, TRUE);
+			$additionalRecipients = array();
+			foreach ($emails as $email) {
+				$additionalRecipients[$email] = array('email' => $email);
+			};
 		} else {
 			$additionalRecipients = array();
 		}
 
-		$allRecipients = array_unique(
-			array_merge($recipients, $additionalRecipients)
-		);
+			// We merge $recipients on top of $additionalRecipients because $recipients
+			// possibly is more complete with a user language. Furthermore, the list of
+			// recipients is automatically unique since we indexed $additionalRecipients
+			// and $recipients with the email address
+		$allRecipients = array_merge($additionalRecipients, $recipients);
 
-		foreach ($allRecipients as $recipient) {
-			if (t3lib_div::validEmail($recipient)) {
-				$finalRecipients[] = $recipient;
+		foreach ($allRecipients as $email => $recipientInformation) {
+			if (t3lib_div::validEmail($email)) {
+				$finalRecipients[] = $recipientInformation;
 			}
 		}
 
@@ -383,7 +399,6 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 	 */
 	public function sendToNextStageExecute(stdClass $parameters) {
 		$cmdArray = array();
-		$recipients = array();
 
 		$setStageId = $parameters->affects->nextStage;
 		$comments = $parameters->comments;
@@ -480,7 +495,7 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 		$elements = $parameters->affects->elements;
 		$recipients = $this->getRecipientList($parameters->receipients, $parameters->additional, $setStageId);
 
-		foreach($elements as $key=>$element) {
+		foreach ($elements as $key=>$element) {
 			if ($setStageId == Tx_Workspaces_Service_Stages::STAGE_PUBLISH_EXECUTE_ID) {
 				$cmdArray[$element->table][$element->t3ver_oid]['version']['action'] = 'swap';
 				$cmdArray[$element->table][$element->t3ver_oid]['version']['swapWith'] = $element->uid;
@@ -731,10 +746,5 @@ class Tx_Workspaces_ExtDirect_ActionHandler extends Tx_Workspaces_ExtDirect_Abst
 
 		return $toolbarButtons;
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/ActionHandler.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/ActionHandler.php']);
 }
 ?>

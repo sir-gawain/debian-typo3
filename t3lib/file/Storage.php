@@ -58,9 +58,13 @@
  * Check 3: "Capabilities" of Storage (then: of Driver) [is the storage/driver writable?]
  * Check 4: "File permissions" of the Driver [is the folder writable?]
  *
+ */
+
+/**
+ * File storage
  *
- * @author  Andreas Wolf <andreas.wolf@ikt-werk.de>
- * @author  Ingmar Schlecht <ingmar@typo3.org>
+ * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
+ * @author Ingmar Schlecht <ingmar@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -88,6 +92,7 @@ class t3lib_file_Storage {
 	const SIGNAL_PostFolderRename = 'postFolderRename';
 	const SIGNAL_PreFileProcess = 'preFileProcess';
 	const SIGNAL_PostFileProcess = 'postFileProcess';
+	const SIGNAL_PreGeneratePublicUrl = 'preGeneratePublicUrl';
 
 	/**
 	 * The storage driver instance belonging to this storage.
@@ -493,7 +498,7 @@ class t3lib_file_Storage {
 		if ($this->driver->folderExists($folderIdentifier) === FALSE) {
 				// if there is an error, this is important and should be handled
 				// as otherwise the user would see the whole storage without any restrictions for the filemounts
-			throw new t3lib_file_exception_FolderDoesNotExistException("Folder for file mount $folderIdentifier does not exist.", 1334427099);
+			throw new t3lib_file_exception_FolderDoesNotExistException('Folder for file mount ' . $folderIdentifier . ' does not exist.', 1334427099);
 		}
 
 		$folderObject = $this->driver->getFolder($folderIdentifier);
@@ -610,7 +615,6 @@ class t3lib_file_Storage {
 		if (is_array($this->fileMounts) && count($this->fileMounts) && !$this->isWithinFileMountBoundaries($file)) {
 			return FALSE;
 		}
-
 
 		$isReadCheck = FALSE;
 		if (in_array($action, array('read'))) {
@@ -796,7 +800,17 @@ class t3lib_file_Storage {
 	 * @return string
 	 */
 	public function getPublicUrl(t3lib_file_ResourceInterface $resourceObject, $relativeToCurrentScript = FALSE) {
-		return $this->driver->getPublicUrl($resourceObject, $relativeToCurrentScript);
+		$publicUrl = NULL;
+
+			// Pre-process the public URL by an accordant slot
+		$this->emitPreGeneratePublicUrl($resourceObject, $relativeToCurrentScript, array('publicUrl' => &$publicUrl));
+
+			// If slot did not handle the signal, use the default way to determine public URL
+		if ($publicUrl === NULL) {
+			$publicUrl = $this->driver->getPublicUrl($resourceObject, $relativeToCurrentScript);
+		}
+
+		return $publicUrl;
 	}
 
 	/**
@@ -1134,13 +1148,13 @@ class t3lib_file_Storage {
 
 			// Makes sure this is an uploaded file
 		if (!is_uploaded_file($localFilePath)) {
-			throw new t3lib_file_exception_UploadException("The upload has failed, no uploaded file found!", 1322110455);
+			throw new t3lib_file_exception_UploadException('The upload has failed, no uploaded file found!', 1322110455);
 		}
 
 			// Max upload size (kb) for files.
 		$maxUploadFileSize = t3lib_div::getMaxUploadFileSize() * 1024;
 		if ($uploadedFileSize >= $maxUploadFileSize) {
-			throw new t3lib_file_exception_UploadSizeException("The uploaded file exceeds the size-limit of $maxUploadFileSize bytes", 1322110041);
+			throw new t3lib_file_exception_UploadSizeException('The uploaded file exceeds the size-limit of ' . $maxUploadFileSize . ' bytes', 1322110041);
 		}
 
 			// Check if targetFolder is writable
@@ -1150,7 +1164,7 @@ class t3lib_file_Storage {
 
 			// Check for a valid file extension
 		if (!$this->checkFileExtensionPermission($targetFileName)) {
-			throw new t3lib_file_exception_IllegalFileExtensionException("Extension of file name is not allowed in \"$targetFileName\"!", 1322120271);
+			throw new t3lib_file_exception_IllegalFileExtensionException('Extension of file name is not allowed in "' . $targetFileName . '"!', 1322120271);
 		}
 	}
 
@@ -1585,7 +1599,7 @@ class t3lib_file_Storage {
 		// TODO access checks
 		$returnObject = NULL;
 		if ($this->driver->folderExistsInFolder($newName, $folderObject)) {
-			throw new InvalidArgumentException("The folder $newName already exists in folder " . $folderObject->getIdentifier(), 1325418870);
+			throw new InvalidArgumentException('The folder ' . $newName . ' already exists in folder ' . $folderObject->getIdentifier(), 1325418870);
 		}
 
 		$this->emitPreFolderRenameSignal($folderObject, $newName);
@@ -1745,7 +1759,7 @@ class t3lib_file_Storage {
 	 */
 	public function getFolder($identifier) {
 		if (!$this->driver->folderExists($identifier)) {
-			throw new t3lib_file_exception_FolderDoesNotExistException("Folder $identifier does not exist.", 1320575630);
+			throw new t3lib_file_exception_FolderDoesNotExistException('Folder ' . $identifier . ' does not exist.', 1320575630);
 		}
 
 		$folderObject = $this->driver->getFolder($identifier);
@@ -2100,7 +2114,20 @@ class t3lib_file_Storage {
 		);
 	}
 
-
+	/**
+	 * Emits file pre-processing signal when generating a public url for a file or folder.
+	 *
+	 * @param t3lib_file_ResourceInterface $resourceObject
+	 * @param boolean $relativeToCurrentScript
+	 * @param array $urlData
+	 */
+	protected function emitPreGeneratePublicUrl(t3lib_file_ResourceInterface $resourceObject, $relativeToCurrentScript, array $urlData) {
+		$this->getSignalSlotDispatcher()->dispatch(
+			't3lib_file_Storage',
+			self::SIGNAL_PreGeneratePublicUrl,
+			array($this, $this->driver, $resourceObject, $relativeToCurrentScript, $urlData)
+		);
+	}
 
 	/**
 	 * Returns the destination path/fileName of a unique fileName/foldername in that path.

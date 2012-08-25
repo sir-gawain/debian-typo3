@@ -80,7 +80,7 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
 
 		$content = $GLOBALS['LANG']->getLL('title2') . '
 			<table cellpading="5" cellspacing="5" valign="top"><tr><td valign="top">' .
-			$this->listSeveralStats($GLOBALS['LANG']->getLL('all'), $addwhere1,$conf) . '</td><td valign="top">' .
+			$this->listSeveralStats($GLOBALS['LANG']->getLL('all'), $addwhere1, $conf) . '</td><td valign="top">' .
 			$this->listSeveralStats($GLOBALS['LANG']->getLL('last30days'), $addwhere2, $conf) . '</td><td valign="top">' .
 			$this->listSeveralStats($GLOBALS['LANG']->getLL('last24hours'), $addwhere3, $conf) . '</td></tr></table>' .
 			$this->note;
@@ -101,7 +101,7 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
 	 * @param	array		configuration: words = max words for results, bid = pageid
 	 * @return	string		html table with results
 	 */
-	function listSeveralStats($title,$addwhere,$conf) {
+	function listSeveralStats($title, $addwhere, $conf) {
 		global $LANG;
 
 		$queryParts['SELECT'] = 'word, COUNT(*) AS c';
@@ -157,7 +157,7 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
 		}
 
 		if ($i==0) {
-			$table1='<tr class="bgColor4"><td callspan="3">'.$LANG->getLL("noresults").'</td></tr>';
+			$table1='<tr class="bgColor4"><td callspan="3">'.$LANG->getLL('noresults').'</td></tr>';
 		}
 
 		$table1='<table class="bgColor5" cellpadding="2" cellspacing="1"><tr class="tableheader"><td colspan="3">'.$title.'</td></tr>'.$table1.'</table>';
@@ -179,9 +179,9 @@ class tx_indexedsearch_modfunc2 extends t3lib_extobjbase {
 	 * @param	string		Perms clause
 	 * @return	string		Returns the list with a comma in the end (if any pages selected!)
 	 */
-	function extGetTreeList($id,$depth,$begin = 0,$perms_clause) {
-		// TODO: Fix this as this calls a non-static method
-		return t3lib_tsfeBeUserAuth::extGetTreeList($id,$depth,$begin,$perms_clause);
+	function extGetTreeList($id, $depth, $begin = 0, $perms_clause) {
+			// TODO: Fix this as this calls a non-static method
+		return t3lib_tsfeBeUserAuth::extGetTreeList($id, $depth, $begin, $perms_clause);
 	}
 
 	/**

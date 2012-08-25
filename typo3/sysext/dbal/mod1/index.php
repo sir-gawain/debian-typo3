@@ -430,7 +430,6 @@ updateQryForm(\'' . $input['QUERY'] . '\');
 				// Printing direct joins:
 				$outStr .= '<h4>Direct joins:</h4>' . t3lib_utility_Debug::viewArray($tableIndex);
 
-
 				// Printing total dependencies:
 				foreach ($tableIndex as $priTable => $a) {
 					foreach ($tableIndex as $tableN => $v) {
@@ -587,11 +586,6 @@ updateQryForm(\'' . $input['QUERY'] . '\');
 		return $menu . $outStr;
 	}
 }
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/mod1/index.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/mod1/index.php']);
-}
-
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('tx_dbal_module1');

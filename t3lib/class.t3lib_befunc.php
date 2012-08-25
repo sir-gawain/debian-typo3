@@ -127,7 +127,7 @@ final class t3lib_BEfunc {
 	 * This function does NOT check if a record has the deleted flag set.
 	 * $table does NOT need to be configured in $GLOBALS['TCA']
 	 * The query used is simply this:
-	 * $query = 'SELECT '.$fields.' FROM '.$table.' WHERE '.$where;
+	 * $query = 'SELECT ' . $fields . ' FROM ' . $table . ' WHERE ' . $where;
 	 *
 	 * @param string $table Table name (not necessarily in TCA)
 	 * @param string $where WHERE clause
@@ -785,7 +785,7 @@ final class t3lib_BEfunc {
 
 					// Get field value from database if field is not in the $row array
 				if (!isset($row[$pointerField])) {
-					$localRow = t3lib_BEfunc::getRecord($table, $row['uid'], $pointerField);
+					$localRow = self::getRecord($table, $row['uid'], $pointerField);
 					$foreignUid = $localRow[$pointerField];
 				} else {
 					$foreignUid = $row[$pointerField];
@@ -803,7 +803,7 @@ final class t3lib_BEfunc {
 						throw new RuntimeException('TCA foreign field pointer fields are only allowed to be used with group or select field types.', 1325862240);
 					}
 
-					$foreignRow = t3lib_BEfunc::getRecord($foreignTable, $foreignUid, $foreignTableTypeField);
+					$foreignRow = self::getRecord($foreignTable, $foreignUid, $foreignTableTypeField);
 
 					if ($foreignRow[$foreignTableTypeField]) {
 						$typeNum = $foreignRow[$foreignTableTypeField];
@@ -820,7 +820,7 @@ final class t3lib_BEfunc {
 
 			// If current typeNum doesn't exist, set it to 0 (or to 1 for historical reasons, if 0 doesn't exist)
 		if (!$GLOBALS['TCA'][$table]['types'][$typeNum]) {
-			$typeNum = $GLOBALS['TCA'][$table]['types']["0"] ? 0 : 1;
+			$typeNum = $GLOBALS['TCA'][$table]['types']['0'] ? 0 : 1;
 		}
 			// Force to string. Necessary for eg '-1' to be recognized as a type value.
 		$typeNum = (string)$typeNum;
@@ -962,7 +962,7 @@ final class t3lib_BEfunc {
 					$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 						'uid,' . $ds_pointerField . ',' . $ds_searchParentField . ($subFieldPointer ? ',' . $subFieldPointer : ''),
 						$table,
-							'uid=' . intval($newRecordPidValue ? $newRecordPidValue : $rr[$ds_searchParentField]) . self::deleteClause($table) ###NOTE_A###
+							'uid=' . intval($newRecordPidValue ? $newRecordPidValue : $rr[$ds_searchParentField]) . self::deleteClause($table)
 					);
 					$newRecordPidValue = 0;
 					$rr = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
@@ -1694,7 +1694,7 @@ final class t3lib_BEfunc {
 		$params .= '&md5sum=' . md5($check);
 
 		$url = $thumbScript . '?' . $params;
-		$th = '<img src="' . htmlspecialchars($url) . '" title="' . trim(basename($theFile)) . '"' . ($tparams ? " " . $tparams : "") . ' alt="" />';
+		$th = '<img src="' . htmlspecialchars($url) . '" title="' . trim(basename($theFile)) . '"' . ($tparams ? ' ' . $tparams : '') . ' alt="" />';
 		return $th;
 	}
 
@@ -2595,7 +2595,7 @@ final class t3lib_BEfunc {
 	 */
 	public static function editOnClick($params, $backPath = '', $requestUri = '') {
 		$retUrl = 'returnUrl=' . ($requestUri == -1 ? "'+T3_THIS_LOCATION+'" : rawurlencode($requestUri ? $requestUri : t3lib_div::getIndpEnv('REQUEST_URI')));
-		return "window.location.href='" . $backPath . "alt_doc.php?" . $retUrl . $params . "'; return false;";
+		return "window.location.href='" . $backPath . 'alt_doc.php?' . $retUrl . $params . "'; return false;";
 	}
 
 	/**
@@ -2830,7 +2830,7 @@ final class t3lib_BEfunc {
 	 * @return string HTML code for input text field.
 	 * @see getFuncMenu()
 	 */
-	public static function getFuncInput($mainParams, $elementName, $currentValue, $size = 10, $script = "", $addparams = "") {
+	public static function getFuncInput($mainParams, $elementName, $currentValue, $size = 10, $script = '', $addparams = '') {
 		if (!is_array($mainParams)) {
 			$mainParams = array('id' => $mainParams);
 		}
@@ -3095,7 +3095,7 @@ final class t3lib_BEfunc {
 
 	/**
 	 * Set preview keyword, eg:
-	 *	 $previewUrl = t3lib_div::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.t3lib_BEfunc::compilePreviewKeyword('id='.$pageId.'&L='.$language.'&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS='.$this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
+	 * $previewUrl = t3lib_div::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.t3lib_BEfunc::compilePreviewKeyword('id=' . $pageId . '&L=' . $language . '&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS=' . $this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
 	 *
 	 * todo for sys_preview:
 	 * - Add a comment which can be shown to previewer in frontend in some way (plus maybe ability to write back, take other action?)
@@ -3106,7 +3106,7 @@ final class t3lib_BEfunc {
 	 * @param	integer		Time-To-Live for keyword
 	 * @param	integer		Which workspace to preview. Workspace UID, -1 or >0. If set, the getVars is ignored in the frontend, so that string can be empty
 	 * @return	string		Returns keyword to use in URL for ADMCMD_prev=
-	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 4.8, functionality is now in Tx_Version_Preview
+	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 6.0, functionality is now in Tx_Version_Preview
 	 */
 	public static function compilePreviewKeyword($getVarsStr, $beUserUid, $ttl = 172800, $fullWorkspace = NULL) {
 		t3lib_div::logDeprecatedFunction();
@@ -4003,34 +4003,6 @@ final class t3lib_BEfunc {
 	}
 
 	/**
-	 * Will fetch the rootline for the pid, then check if anywhere in the rootline there is a branch point and if so everything is allowed of course.
-	 * Alternatively; if the page of the PID itself is a version and swapmode is zero (page+content) then tables from versioning_followPages are allowed as well.
-	 *
-	 * @param	integer		Page id inside of which you want to edit/create/delete something.
-	 * @param	string		Table name you are checking for. If you don't give the table name ONLY "branch" types are found and returned TRUE. Specifying table you might also get a positive response if the pid is a "page" versioning type AND the table has "versioning_followPages" set.
-	 * @param	boolean		If set, the keyword "branchpoint" or "first" is not returned by rather the "t3ver_stage" value of the branch-point.
-	 * @return	mixed		Returns either "branchpoint" (if branch) or "first" (if page) or FALSE if nothing. Alternatively, it returns the value of "t3ver_stage" for the branchpoint (if any)
-	 * @deprecated since TYPO3 4.4, will be removed in TYPO3 4.7, as branch versioning is not supported anymore
-	 */
-	public static function isPidInVersionizedBranch($pid, $table = '', $returnStage = FALSE) {
-		t3lib_div::logDeprecatedFunction();
-		$rl = self::BEgetRootLine($pid);
-		$c = 0;
-
-		foreach ($rl as $rec) {
-			if ($rec['_ORIG_pid'] == -1) {
-					// In any case: is it a branchpoint, then OK...
-				if ($rec['t3ver_swapmode'] > 0) {
-					return $returnStage ? (int) $rec['t3ver_stage'] : 'branchpoint'; // OK, we are in a versionized branch
-				} elseif ($c == 0 && $rec['t3ver_swapmode'] == 0 && $table && $GLOBALS['TCA'][$table]['ctrl']['versioning_followPages']) { // First level: So $table must be versioning_followPages
-					return $returnStage ? (int) $rec['t3ver_stage'] : 'first'; // OK, we are in a versionized branch
-				}
-			}
-			$c++;
-		}
-	}
-
-	/**
 	 * Will return where clause de-selecting new(/deleted)-versions from other workspaces.
 	 * If in live-workspace, don't show "MOVE-TO-PLACEHOLDERS" records if versioningWS is 2 (allows moving)
 	 *
@@ -4222,7 +4194,7 @@ final class t3lib_BEfunc {
 				// Check if the Install Tool Password is still default: joh316
 			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'] == md5('joh316')) {
 				$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=about');
-				$warnings["install_password"] = sprintf(
+				$warnings['install_password'] = sprintf(
 					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_password'),
 						'<a href="' . $url . '">',
 					'</a>');
@@ -4234,7 +4206,7 @@ final class t3lib_BEfunc {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid, username, password', 'be_users', $where_clause);
 			if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				$url = 'alt_doc.php?returnUrl=alt_intro.php&edit[be_users][' . $row['uid'] . ']=edit';
-				$warnings["backend_admin"] = sprintf(
+				$warnings['backend_admin'] = sprintf(
 					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.backend_admin'),
 						'<a href="' . htmlspecialchars($url) . '">',
 					'</a>');
@@ -4254,7 +4226,7 @@ final class t3lib_BEfunc {
 				// Check if the encryption key is empty
 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] == '') {
 				$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=config#set_encryptionKey');
-				$warnings["install_encryption"] = sprintf(
+				$warnings['install_encryption'] = sprintf(
 					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_encryption'),
 						'<a href="' . $url . '">',
 					'</a>');
@@ -4271,14 +4243,14 @@ final class t3lib_BEfunc {
 			}
 
 				// Check if fileDenyPattern allows to upload .htaccess files which is dangerous on Apache
-			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'] != FILE_DENY_PATTERN_DEFAULT && t3lib_div::verifyFilenameAgainstDenyPattern(".htaccess")) {
+			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'] != FILE_DENY_PATTERN_DEFAULT && t3lib_div::verifyFilenameAgainstDenyPattern('.htaccess')) {
 				$warnings['file_deny_htaccess'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_deny_htaccess');
 			}
 
 				// Check if there are still updates to perform
 			if (!t3lib_div::compat_version(TYPO3_branch)) {
 				$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=update');
-				$warnings["install_update"] = sprintf(
+				$warnings['install_update'] = sprintf(
 					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_update'),
 						'<a href="' . $url . '">',
 					'</a>');
@@ -4290,7 +4262,7 @@ final class t3lib_BEfunc {
 			$lastRefIndexUpdate = $registry->get('core', 'sys_refindex_lastUpdate');
 			if (!$count && $lastRefIndexUpdate) {
 				$url = 'sysext/lowlevel/dbint/index.php?&id=0&SET[function]=refindex';
-				$warnings["backend_reference"] = sprintf(
+				$warnings['backend_reference'] = sprintf(
 					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.backend_reference_index'),
 						'<a href="' . $url . '">',
 					'</a>',

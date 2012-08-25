@@ -65,13 +65,6 @@ final class t3lib_div {
 	 */
 	protected static $nonSingletonInstances = array();
 
-	/**
-	 * Register for makeInstance with given class name and final class names to reduce number of class_exists() calls
-	 *
-	 * @var array Given class name => final class name
-	 */
-	protected static $finalClassNameRegister = array();
-
 	/*************************
 	 *
 	 * GET/POST Variables
@@ -506,16 +499,7 @@ final class t3lib_div {
 	 * @see IPv6Bin2Hex()
 	 */
 	public static function IPv6Hex2Bin($hex) {
-			// Use PHP-function if PHP was compiled with IPv6-support
-		if (defined('AF_INET6')) {
-			$bin = inet_pton($hex);
-		} else {
-			$hex = self::normalizeIPv6($hex);
-				// Replace colon to nothing
-			$hex = str_replace(':', '', $hex);
-			$bin = pack("H*" , $hex);
-		}
-		return $bin;
+		return inet_pton($hex);
 	}
 
 	/**
@@ -526,20 +510,7 @@ final class t3lib_div {
 	 * @see IPv6Hex2Bin()
 	 */
 	public static function IPv6Bin2Hex($bin) {
-			// Use PHP-function if PHP was compiled with IPv6-support
-		if (defined('AF_INET6')) {
-			$hex = inet_ntop($bin);
-		} else {
-			$hex = unpack("H*" , $bin);
-			$hex = chunk_split($hex[1], 4, ':');
-				// Strip last colon (from chunk_split)
-			$hex = substr($hex, 0, -1);
-				// IPv6 is now in normalized form
-				// Compress it for easier handling and to match result from inet_ntop()
-			$hex = self::compressIPv6($hex);
-		}
-		return $hex;
-
+		return inet_ntop($bin);
 	}
 
 	/**
@@ -621,37 +592,7 @@ final class t3lib_div {
 	 * @see normalizeIPv6()
 	 */
 	public static function compressIPv6($address) {
-			// Use PHP-function if PHP was compiled with IPv6-support
-		if (defined('AF_INET6')) {
-			$bin = inet_pton($address);
-			$address = inet_ntop($bin);
-		} else {
-			$address = self::normalizeIPv6($address);
-
-				// Append one colon for easier handling
-				// will be removed later
-			$address .= ':';
-
-				// According to IPv6-notation the longest match
-				// of a package of '0000:' may be replaced with ':'
-				// (resulting in something like '1234::abcd')
-			for ($counter = 8; $counter > 1; $counter--) {
-				$search = str_repeat('0000:', $counter);
-				if (($pos = strpos($address, $search)) !== FALSE) {
-					$address = substr($address, 0, $pos) . ':' . substr($address, $pos + ($counter*5));
-					break;
-				}
-			}
-
-				// Up to 3 zeros in the first part may be removed
-			$address = preg_replace('/^0{1,3}/', '', $address);
-				// Up to 3 zeros at the beginning of other parts may be removed
-			$address = preg_replace('/:0{1,3}/', ':', $address);
-
-				// Strip last colon (from chunk_split)
-			$address = substr($address, 0, -1);
-		}
-		return $address;
+		return inet_ntop(inet_pton($address));
 	}
 
 	/**
@@ -835,7 +776,7 @@ final class t3lib_div {
 	 *
 	 * @param string $verNumberStr Version number on format x.x.x
 	 * @return integer Integer version of version number (where each part can count to 999)
-	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 4.9 - Use t3lib_utility_VersionNumber::convertVersionNumberToInteger() instead
+	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 6.1 - Use t3lib_utility_VersionNumber::convertVersionNumberToInteger() instead
 	 */
 	public static function int_from_ver($verNumberStr) {
 			// Deprecation log is activated only for TYPO3 4.7 and above
@@ -1134,9 +1075,9 @@ final class t3lib_div {
 	 */
 	public static function slashJS($string, $extended = FALSE, $char = "'") {
 		if ($extended) {
-			$string = str_replace("\\", "\\\\", $string);
+			$string = str_replace('\\', '\\\\', $string);
 		}
-		return str_replace($char, "\\" . $char, $string);
+		return str_replace($char, '\\' . $char, $string);
 	}
 
 	/**
@@ -2594,7 +2535,6 @@ final class t3lib_div {
 				}
 			}
 			$errno = 0;
-				// $errstr = '';
 			$fp = @fsockopen($scheme . $parsedURL['host'], $port, $errno, $errstr, 2.0);
 			if (!$fp || $errno > 0) {
 				if (isset($report)) {
@@ -3006,7 +2946,7 @@ final class t3lib_div {
 								$sortarray[$key] = filemtime($path . '/' . $entry);
 							}
 							elseif ($order) {
-								$sortarray[$key] = $entry;
+								$sortarray[$key] = strtolower($entry);
 							}
 						}
 					}
@@ -3436,7 +3376,6 @@ final class t3lib_div {
 					// $_SERVER['PATH_INFO']!=$_SERVER['SCRIPT_NAME'] is necessary because some servers (Windows/CGI) are seen to set PATH_INFO equal to script_name
 					// Further, there must be at least one '/' in the path - else the PATH_INFO value does not make sense.
 					// IF 'PATH_INFO' never works for our purpose in TYPO3 with CGI-servers, then 'PHP_SAPI=='cgi'' might be a better check. Right now strcmp($_SERVER['PATH_INFO'],t3lib_div::getIndpEnv('SCRIPT_NAME')) will always return FALSE for CGI-versions, but that is only as long as SCRIPT_NAME is set equal to PATH_INFO because of PHP_SAPI=='cgi' (see above)
-					//				if (strcmp($_SERVER['PATH_INFO'],self::getIndpEnv('SCRIPT_NAME')) && count(explode('/',$_SERVER['PATH_INFO']))>1) {
 				if (PHP_SAPI != 'cgi' && PHP_SAPI != 'cgi-fcgi' && PHP_SAPI != 'fpm-fcgi') {
 					$retVal = $_SERVER['PATH_INFO'];
 				}
@@ -3499,7 +3438,10 @@ final class t3lib_div {
 			case 'HTTP_ACCEPT_LANGUAGE':
 			case 'REMOTE_HOST':
 			case 'QUERY_STRING':
-				$retVal = $_SERVER[$getEnvName];
+				$retVal = '';
+				if (isset($_SERVER[$getEnvName])) {
+					$retVal = $_SERVER[$getEnvName];
+				}
 				break;
 			case 'TYPO3_DOCUMENT_ROOT':
 					// Get the web root (it is not the root of the TYPO3 installation)
@@ -3644,7 +3586,9 @@ final class t3lib_div {
 		} elseif (strpos($useragent, 'Flash') !== FALSE) {
 			$bInfo['BROWSER'] = 'flash';
 		}
-		if ($bInfo['BROWSER']) {
+
+		$bInfo['FORMSTYLE'] = FALSE;
+		if (isset($bInfo['BROWSER'])) {
 				// Browser version
 			switch ($bInfo['BROWSER']) {
 				case 'net':
@@ -3680,9 +3624,10 @@ final class t3lib_div {
 			} elseif (strpos($useragent, 'Linux') !== FALSE || strpos($useragent, 'X11') !== FALSE || strpos($useragent, 'SGI') !== FALSE || strpos($useragent, ' SunOS ') !== FALSE || strpos($useragent, ' HP-UX ') !== FALSE) {
 				$bInfo['SYSTEM'] = 'unix';
 			}
+
+				// Is TRUE if the browser supports css to format forms, especially the width
+			$bInfo['FORMSTYLE'] = ($bInfo['BROWSER'] == 'msie' || ($bInfo['BROWSER'] == 'net' && $bInfo['VERSION'] >= 5) || $bInfo['BROWSER'] == 'opera' || $bInfo['BROWSER'] == 'konqu');
 		}
-			// Is TRUE if the browser supports css to format forms, especially the width
-		$bInfo['FORMSTYLE'] = ($bInfo['BROWSER'] == 'msie' || ($bInfo['BROWSER'] == 'net' && $bInfo['VERSION'] >= 5) || $bInfo['BROWSER'] == 'opera' || $bInfo['BROWSER'] == 'konqu');
 
 		return $bInfo;
 	}
@@ -3778,7 +3723,7 @@ final class t3lib_div {
 	 * So it's compatible with the UNIX style path strings valid for TYPO3 internally.
 	 *
 	 * @param string $theFile File path to evaluate
-	 * @return boolean TRUE, $theFile is allowed path string
+	 * @return boolean TRUE, $theFile is allowed path string, FALSE otherwise
 	 * @see http://php.net/manual/en/security.filesystem.nullbytes.php
 	 * @todo Possible improvement: Should it rawurldecode the string first to check if any of these characters is encoded?
 	 */
@@ -3786,6 +3731,8 @@ final class t3lib_div {
 		if (strpos($theFile, '//') === FALSE && strpos($theFile, '\\') === FALSE && !preg_match('#(?:^\.\.|/\.\./|[[:cntrl:]])#u', $theFile)) {
 			return TRUE;
 		}
+
+		return FALSE;
 	}
 
 	/**
@@ -3995,14 +3942,14 @@ final class t3lib_div {
 	 * @param string $addQueryParams Query-parameters: "&xxx=yyy&zzz=uuu"
 	 * @return array Array with key/value pairs of query-parameters WITHOUT a certain list of variable names (like id, type, no_cache etc.) and WITH a variable, encryptionKey, specific for this server/installation
 	 * @see tslib_fe::makeCacheHash(), tslib_cObj::typoLink(), t3lib_div::calculateCHash()
-	 * @deprecated since TYPO3 4.7 - will be removed in TYPO3 4.9 - use t3lib_cacheHash instead
+	 * @deprecated since TYPO3 4.7 - will be removed in TYPO3 6.1 - use t3lib_cacheHash instead
 	 */
 	public static function cHashParams($addQueryParams) {
-		t3lib_div::logDeprecatedFunction();
+		self::logDeprecatedFunction();
 			// Splitting parameters up
 		$params = explode('&', substr($addQueryParams, 1));
 		/* @var $cacheHash t3lib_cacheHash */
-		$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+		$cacheHash = self::makeInstance('t3lib_cacheHash');
 		$pA = $cacheHash->getRelevantParameters($addQueryParams);
 
 			// Hook: Allows to manipulate the parameters which are taken to build the chash:
@@ -4030,12 +3977,12 @@ final class t3lib_div {
 	 * @param string $addQueryParams Query-parameters: "&xxx=yyy&zzz=uuu"
 	 * @return string Hash of all the values
 	 * @see t3lib_div::cHashParams(), t3lib_div::calculateCHash()
-	 * @deprecated since TYPO3 4.7 - will be removed in TYPO3 4.9 - use t3lib_cacheHash instead
+	 * @deprecated since TYPO3 4.7 - will be removed in TYPO3 6.1 - use t3lib_cacheHash instead
 	 */
 	public static function generateCHash($addQueryParams) {
-		t3lib_div::logDeprecatedFunction();
+		self::logDeprecatedFunction();
 		/* @var $cacheHash t3lib_cacheHash */
-		$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+		$cacheHash = self::makeInstance('t3lib_cacheHash');
 		return $cacheHash->generateForParameters($addQueryParams);
 	}
 
@@ -4044,12 +3991,12 @@ final class t3lib_div {
 	 *
 	 * @param array $params Array of key-value pairs
 	 * @return string Hash of all the values
-	 * @deprecated since TYPO3 4.7 - will be removed in TYPO3 4.9 - use t3lib_cacheHash instead
+	 * @deprecated since TYPO3 4.7 - will be removed in TYPO3 6.1 - use t3lib_cacheHash instead
 	 */
 	public static function calculateCHash($params) {
-		t3lib_div::logDeprecatedFunction();
+		self::logDeprecatedFunction();
 		/* @var $cacheHash t3lib_cacheHash */
-		$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+		$cacheHash = self::makeInstance('t3lib_cacheHash');
 		return $cacheHash->calculateCacheHash($params);
 	}
 
@@ -4090,7 +4037,7 @@ final class t3lib_div {
 	 */
 	public static function readLLfile($fileRef, $langKey, $charset = '', $errorMode = 0) {
 		/** @var $languageFactory t3lib_l10n_Factory */
-		$languageFactory = t3lib_div::makeInstance('t3lib_l10n_Factory');
+		$languageFactory = self::makeInstance('t3lib_l10n_Factory');
 		return $languageFactory->getParsedData($fileRef, $langKey, $charset, $errorMode);
 	}
 
@@ -4118,7 +4065,10 @@ final class t3lib_div {
 			$validatedPrefix = PATH_typo3 . 'ext/';
 		} elseif (self::isFirstPartOfStr($fileRef, PATH_typo3conf . 'ext/')) { // Is local:
 			$validatedPrefix = PATH_typo3conf . 'ext/';
-		} elseif (self::isFirstPartOfStr($fileRef, PATH_site . 'typo3_src/tests/')) { // Is test:
+		} elseif (self::isFirstPartOfStr($fileRef, PATH_site . 'tests/')) { // Is test:
+			$validatedPrefix = PATH_site . 'tests/';
+			$location = $validatedPrefix;
+		} elseif (self::isFirstPartOfStr($fileRef, PATH_site . 'typo3_src/tests/')) { // Is test (typo3_src deprecated as ov TYPO3 6.0):
 			$validatedPrefix = PATH_site . 'typo3_src/tests/';
 			$location = $validatedPrefix;
 		} else {
@@ -4248,17 +4198,17 @@ final class t3lib_div {
 
 	/**
 	 * Calls a user-defined function/method in class
-	 * Such a function/method should look like this: "function proc(&$params, &$ref)	{...}"
+	 * Such a function/method should look like this: "function proc(&$params, &$ref) {...}"
 	 *
 	 * @param string $funcName Function/Method reference, '[file-reference":"]["&"]class/function["->"method-name]'. You can prefix this reference with "[file-reference]:" and t3lib_div::getFileAbsFileName() will then be used to resolve the filename and subsequently include it by "require_once()" which means you don't have to worry about including the class file either! Example: "EXT:realurl/class.tx_realurl.php:&tx_realurl->encodeSpURL". Finally; you can prefix the class name with "&" if you want to reuse a former instance of the same object call ("singleton").
 	 * @param mixed $params Parameters to be pass along (typically an array) (REFERENCE!)
 	 * @param mixed $ref Reference to be passed along (typically "$this" - being a reference to the calling object) (REFERENCE!)
-	 * @param string $checkPrefix Alternative allowed prefix of class or function name
+	 * @param string $checkPrefix Not used anymore since 6.0
 	 * @param integer $errorMode Error mode (when class/function could not be found): 0 - call debug(), 1 - do nothing, 2 - raise an exception (allows to call a user function that may return FALSE)
 	 * @return mixed Content from method/function call or FALSE if the class/method/function was not found
 	 * @see getUserObj()
 	 */
-	public static function callUserFunction($funcName, &$params, &$ref, $checkPrefix = 'user_', $errorMode = 0) {
+	public static function callUserFunction($funcName, &$params, &$ref, $checkPrefix = '', $errorMode = 0) {
 		$content = FALSE;
 
 			// Check persistent object and if found, call directly and exit.
@@ -4287,17 +4237,6 @@ final class t3lib_div {
 			$storePersistentObject = TRUE;
 		} else {
 			$storePersistentObject = FALSE;
-		}
-
-			// Check prefix is valid:
-		if ($checkPrefix && !self::hasValidClassPrefix($funcRef, array($checkPrefix))) {
-			$errorMsg = "Function/class '$funcRef' was not prepended with '$checkPrefix'";
-			if ($errorMode == 2) {
-				throw new InvalidArgumentException($errorMsg, 1294585864);
-			} elseif (!$errorMode) {
-				debug($errorMsg, 't3lib_div::callUserFunction');
-			}
-			return FALSE;
 		}
 
 			// Call function or method:
@@ -4364,15 +4303,19 @@ final class t3lib_div {
 
 	/**
 	 * Creates and returns reference to a user defined object.
-	 * This function can return an object reference if you like. Just prefix the function call with "&": "$objRef = &t3lib_div::getUserObj('EXT:myext/class.tx_myext_myclass.php:&tx_myext_myclass');". This will work ONLY if you prefix the class name with "&" as well. See description of function arguments.
+	 * This function can return an object reference if you like.
+	 * Just prefix the function call with "&": "$objRef = &t3lib_div::getUserObj('EXT:myext/class.tx_myext_myclass.php:&tx_myext_myclass');".
+	 * This will work ONLY if you prefix the class name with "&" as well. See description of function arguments.
+	 *
+	 * @TODO: Deprecate the whole method in several steps: 1. Deprecated singleton pattern, 2. Deprecate file prefix/ require file, 3. Deprecate usage without valid class name. The last step should be to deprecate the method itslef.
 	 *
 	 * @param string $classRef Class reference, '[file-reference":"]["&"]class-name'. You can prefix the class name with "[file-reference]:" and t3lib_div::getFileAbsFileName() will then be used to resolve the filename and subsequently include it by "require_once()" which means you don't have to worry about including the class file either! Example: "EXT:realurl/class.tx_realurl.php:&tx_realurl". Finally; for the class name you can prefix it with "&" and you will reuse the previous instance of the object identified by the full reference string (meaning; if you ask for the same $classRef later in another place in the code you will get a reference to the first created one!).
-	 * @param string $checkPrefix Required prefix of class name. By default "tx_" and "Tx_" are allowed.
-	 * @param boolean $silent If set, no debug() error message is shown if class/function is not present.
+	 * @param string $checkPrefix Not used anymore since 6.0
+	 * @param boolean $silent Not used anymore since 6.0
 	 * @return object The instance of the class asked for. Instance is created with t3lib_div::makeInstance
 	 * @see callUserFunction()
 	 */
-	public static function getUserObj($classRef, $checkPrefix = 'user_', $silent = FALSE) {
+	public static function getUserObj($classRef, $checkPrefix = '', $silent = FALSE) {
 			// Check persistent object and if found, call directly and exit.
 		if (is_object($GLOBALS['T3_VAR']['getUserObj'][$classRef])) {
 			return $GLOBALS['T3_VAR']['getUserObj'][$classRef];
@@ -4397,14 +4340,6 @@ final class t3lib_div {
 				$storePersistentObject = FALSE;
 			}
 
-				// Check prefix is valid:
-			if ($checkPrefix && !self::hasValidClassPrefix($class, array($checkPrefix))) {
-				if (!$silent) {
-					debug("Class '" . $class . "' was not prepended with '" . $checkPrefix . "'", 't3lib_div::getUserObj');
-				}
-				return FALSE;
-			}
-
 				// Check if class exists:
 			if (class_exists($class)) {
 				$classObj = self::makeInstance($class);
@@ -4415,10 +4350,6 @@ final class t3lib_div {
 				}
 
 				return $classObj;
-			} else {
-				if (!$silent) {
-					debug("<strong>ERROR:</strong> No class named: " . $class, 't3lib_div::getUserObj');
-				}
 			}
 		}
 	}
@@ -4429,47 +4360,22 @@ final class t3lib_div {
 	 * @param string $classRef The class or function to check
 	 * @param array $additionalPrefixes Additional allowed prefixes, mostly this will be user_
 	 * @return bool TRUE if name is allowed
+	 * @deprecated since 6.0, will be removed two versions later
 	 */
 	public static function hasValidClassPrefix($classRef, array $additionalPrefixes = array()) {
-		if (empty($classRef)) {
-			return FALSE;
-		}
-		if (!is_string($classRef)) {
-			throw new InvalidArgumentException('$classRef has to be of type string', 1313917992);
-		}
-		$hasValidPrefix = FALSE;
-		$validPrefixes = self::getValidClassPrefixes();
-		$classRef = trim($classRef);
-
-		if (count($additionalPrefixes)) {
-			$validPrefixes = array_merge($validPrefixes, $additionalPrefixes);
-		}
-		foreach ($validPrefixes as $prefixToCheck) {
-			if (self::isFirstPartOfStr($classRef, $prefixToCheck) || $prefixToCheck === '') {
-				$hasValidPrefix = TRUE;
-				break;
-			}
-		}
-
-		return $hasValidPrefix;
+		self::logDeprecatedFunction();
+		return TRUE;
 	}
 
 	/**
 	 * Returns all valid class prefixes.
 	 *
 	 * @return array Array of valid prefixed of class names
+	 * @deprecated since 6.0, will be removed two versions later
 	 */
 	public static function getValidClassPrefixes() {
-		$validPrefixes = array('tx_', 'Tx_', 'user_', 'User_', 't3lib_');
-		if (
-			isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['additionalAllowedClassPrefixes'])
-			&& is_string($GLOBALS['TYPO3_CONF_VARS']['SYS']['additionalAllowedClassPrefixes'])
-		) {
-			$validPrefixes = array_merge(
-				$validPrefixes,
-				t3lib_div::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['SYS']['additionalAllowedClassPrefixes'])
-			);
-		}
+		self::logDeprecatedFunction();
+		$validPrefixes = array('tx_', 'Tx_', 'user_', 'User_', 't3lib_', '');
 		return $validPrefixes;
 	}
 
@@ -4490,12 +4396,7 @@ final class t3lib_div {
 			throw new InvalidArgumentException('$className must be a non empty string.', 1288965219);
 		}
 
-			// Determine final class name which must be instantiated, this takes XCLASS handling
-			// into account. Cache in a local array to save some cycles for consecutive calls.
-		if (!isset(self::$finalClassNameRegister[$className])) {
-			self::addClassNameToMakeInstanceCache($className, self::getClassName($className));
-		}
-		$finalClassName = self::$finalClassNameRegister[$className];
+		$finalClassName = self::getClassName($className);
 
 			// Return singleton instance if it is already registered
 		if (isset(self::$singletonInstances[$finalClassName])) {
@@ -4564,22 +4465,6 @@ final class t3lib_div {
 	public static function setSingletonInstance($className, t3lib_Singleton $instance) {
 		self::checkInstanceClassName($className, $instance);
 		self::$singletonInstances[$className] = $instance;
-	}
-
-	/**
-	 * Adds a $className / $finalClassName to the cache register.
-	 * This register is used to determine the final class name only once instead of multiple times.
-	 *
-	 * Warning: This is _not_ a public API method and must not be used in own extensions!
-	 *
-	 * @see makeInstance
-	 * @param string $className the name of the class to set, must not be empty
-	 * @param string $finalClassName the name of the final class which will be loaded in case of $className
-	 * @return void
-	 * @internal
-	 */
-	public static function addClassNameToMakeInstanceCache($className, $finalClassName) {
-		self::$finalClassNameRegister[$className] = $finalClassName;
 	}
 
 	/**
@@ -5086,7 +4971,7 @@ final class t3lib_div {
 	 *
 	 * @param string $msg Message (in English).
 	 * @param string $extKey Extension key (from which extension you are calling the log) or "Core"
-	 * @param integer $severity Severity: 0 is info, 1 is notice, 2 is warning, 3 is error, 4 is fatal error
+	 * @param integer $severity t3lib_div::SYSLOG_SEVERITY_* constant
 	 * @return void
 	 */
 	public static function sysLog($msg, $extKey, $severity = 0) {
@@ -5133,7 +5018,7 @@ final class t3lib_div {
 
 				// Write message to a file
 			if ($type == 'file') {
-				$lockObject = t3lib_div::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
+				$lockObject = self::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
 				/** @var t3lib_lock $lockObject */
 				$lockObject->setEnableLogging(FALSE);
 				$lockObject->acquire();
@@ -5148,11 +5033,11 @@ final class t3lib_div {
 				// Send message per mail
 			elseif ($type == 'mail') {
 				list($to, $from) = explode('/', $destination);
-				if (!t3lib_div::validEmail($from)) {
+				if (!self::validEmail($from)) {
 					$from = t3lib_utility_Mail::getSystemFrom();
 				}
 				/** @var $mail t3lib_mail_Message */
-				$mail = t3lib_div::makeInstance('t3lib_mail_Message');
+				$mail = self::makeInstance('t3lib_mail_Message');
 				$mail->setTo($to)
 						->setFrom($from)
 						->setSubject('Warning - error in TYPO3 installation')
@@ -5225,7 +5110,7 @@ final class t3lib_div {
 			}
 				// Write a longer message to the deprecation log
 			$destination = self::getDeprecationLogFileName();
-			$lockObject = t3lib_div::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
+			$lockObject = self::makeInstance('t3lib_lock', $destination, $GLOBALS['TYPO3_CONF_VARS']['SYS']['lockingMode']);
 			/** @var t3lib_lock $lockObject */
 			$lockObject->setEnableLogging(FALSE);
 			$lockObject->acquire();

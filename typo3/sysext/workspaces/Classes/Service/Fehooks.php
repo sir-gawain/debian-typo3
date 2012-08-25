@@ -26,6 +26,8 @@
  ***************************************************************/
 
 /**
+ * Frontend hooks
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage Service
@@ -52,7 +54,7 @@ class Tx_Workspaces_Service_Fehooks {
 				)
 			)
 		);
-		$GLOBALS['TSFE']->content = str_ireplace('</body>',  $previewParts . '</body>', $GLOBALS['TSFE']->content);
+		$GLOBALS['TSFE']->content = str_ireplace('</body>', $previewParts . '</body>', $GLOBALS['TSFE']->content);
 
 	}
 }

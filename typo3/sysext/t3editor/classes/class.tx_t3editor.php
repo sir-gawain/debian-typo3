@@ -25,15 +25,13 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+$GLOBALS['LANG']->includeLLFile('EXT:t3editor/locallang.xml');
 
 /**
  * Provides a javascript-driven code editor with syntax highlighting for TS, HTML, CSS and more
  *
- * @author	Tobias Liebig <mail_typo3@etobi.de>
+ * @author Tobias Liebig <mail_typo3@etobi.de>
  */
-
-$GLOBALS['LANG']->includeLLFile('EXT:t3editor/locallang.xml');
-
 class tx_t3editor implements t3lib_Singleton {
 
 	const MODE_TYPOSCRIPT = 'typoscript';
@@ -45,29 +43,35 @@ class tx_t3editor implements t3lib_Singleton {
 	const MODE_SPARQL = 'sparql';
 	const MODE_MIXED = 'mixed';
 
+	/**
+	 * @var string
+	 */
 	protected $mode = '';
 
+	/**
+	 * @var string
+	 */
 	protected $ajaxSaveType = '';
 
 	/**
-	 * counts the editors on the current page
+	 * Counts the editors on the current page
 	 *
-	 * @var		int
+	 * @var integer
 	 */
 	protected $editorCounter = 0;
 
 	/**
-	 * flag to enable the t3editor
+	 * Flag to enable the t3editor
 	 *
-	 * @var		bool
+	 * @var boolean
 	 */
 	protected $_isEnabled = TRUE;
 
 	/**
 	 * sets the type of code to edit (::MODE_TYPOSCRIPT, ::MODE_JAVASCRIPT)
 	 *
-	 * @param	$mode	string expects one of the predefined constants
-	 * @return	tx_t3editor
+	 * @param $mode	string Expects one of the predefined constants
+	 * @return tx_t3editor
 	 */
 	public function setMode($mode) {
 		$this->mode = $mode;
@@ -75,20 +79,33 @@ class tx_t3editor implements t3lib_Singleton {
 	}
 
 	/**
+	 *Set the AJAX save type
 	 *
-	 * @param	$ajaxSaveType
-	 * @return	tx_t3editor
+	 * @param string $ajaxSaveType
+	 * @return tx_t3editor
 	 */
 	public function setAjaxSaveType($ajaxSaveType) {
 		$this->ajaxSaveType = $ajaxSaveType;
 		return $this;
 	}
 
+	/**
+	 * Set mode by file
+	 *
+	 * @param string $file
+	 * @return string
+	 */
 	public function setModeByFile($file) {
 		$fileInfo = t3lib_div::split_fileref($file);
 		return $this->setModeByType($fileInfo['fileext']);
 	}
 
+	/**
+	 * Set mode by type
+	 *
+	 * @param string $type
+	 * @return void
+	 */
 	public function setModeByType($type) {
 		switch ($type) {
 			case 'html':
@@ -123,12 +140,17 @@ class tx_t3editor implements t3lib_Singleton {
 		$this->setMode($mode);
 	}
 
+	/**
+	 * Get mode
+	 *
+	 * @return string
+	 */
 	public function getMode() {
 		return $this->mode;
 	}
 
 	/**
-	 * @return	boolean		TRUE if the t3editor is enabled
+	 * @return boolean TRUE if the t3editor is enabled
 	 */
 	public function isEnabled() {
 		return $this->_isEnabled;
@@ -136,19 +158,17 @@ class tx_t3editor implements t3lib_Singleton {
 
 	/**
 	 * Creates a new instance of the class
-	 *
-	 * @return	void
 	 */
 	public function __construct() {
-			// disable pmktextarea to avoid conflicts (thanks Peter Klein for this suggestion)
-		$GLOBALS["BE_USER"]->uc['disablePMKTextarea'] = 1;
+			// Disable pmktextarea to avoid conflicts (thanks Peter Klein for this suggestion)
+		$GLOBALS['BE_USER']->uc['disablePMKTextarea'] = 1;
 	}
 
 	/**
 	 * Retrieves JavaScript code (header part) for editor
 	 *
-	 * @param 	template	$doc
-	 * @return	string		JavaScript code
+	 * @param template $doc
+	 * @return string JavaScript code
 	 */
 	public function getJavascriptCode($doc) {
 		$content = '';
@@ -158,20 +178,20 @@ class tx_t3editor implements t3lib_Singleton {
 			$path_t3e = t3lib_extmgm::extRelPath('t3editor');
 			$path_codemirror = 'contrib/codemirror/js/';
 
-				// include needed javascript-frameworks
+				// Include needed javascript-frameworks
 			$pageRenderer = $doc->getPageRenderer();
 			/** @var $pageRenderer t3lib_PageRenderer */
 			$pageRenderer->loadPrototype();
 			$pageRenderer->loadScriptaculous();
 
-				// include editor-css
+				// Include editor-css
 			$content .= '<link href="' .
 				t3lib_div::createVersionNumberedFilename($GLOBALS['BACK_PATH'] .
 				t3lib_extmgm::extRelPath('t3editor') .
 				'res/css/t3editor.css') .
 				'" type="text/css" rel="stylesheet" />';
 
-				// include editor-js-lib
+				// Include editor-js-lib
 			$doc->loadJavascriptLib($path_codemirror . 'codemirror.js');
 			$doc->loadJavascriptLib($path_t3e . 'res/jslib/t3editor.js');
 
@@ -190,6 +210,11 @@ class tx_t3editor implements t3lib_Singleton {
 		return $content;
 	}
 
+	/**
+	 * Get mode specific JavaScript code
+	 *
+	 * @return string
+	 */
 	public function getModeSpecificJavascriptCode() {
 		if (empty($this->mode)) {
 			return '';
@@ -213,9 +238,9 @@ class tx_t3editor implements t3lib_Singleton {
 	}
 
 	/**
-	 * get the template code, prepared for javascript (no line breaks, quoted in single quotes)
+	 * Get the template code, prepared for javascript (no line breaks, quoted in single quotes)
 	 *
-	 * @return	string	the template code, prepared to use in javascript
+	 * @return string The template code, prepared to use in javascript
 	 */
 	protected function getPreparedTemplate() {
 		$T3Editor_template = t3lib_div::getUrl(
@@ -234,40 +259,40 @@ class tx_t3editor implements t3lib_Singleton {
 	}
 
 	/**
-	 * determine the correct parser js file for given mode
+	 * Determine the correct parser js file for given mode
 	 *
-	 * @param	string	$mode
-	 * @return	string	parser file name
+	 * @param string $mode
+	 * @return string Parser file name
 	 */
 	protected function getParserfileByMode($mode) {
 		switch ($mode) {
-			case tx_t3editor::MODE_TYPOSCRIPT:
+			case self::MODE_TYPOSCRIPT:
 				$relPath = ($GLOBALS['BACK_PATH'] ? $GLOBALS['BACK_PATH'] : '../../../' ) . t3lib_extmgm::extRelPath('t3editor') . 'res/jslib/parse_typoscript/';
 				$parserfile = '["' . $relPath . 'tokenizetyposcript.js", "' . $relPath . 'parsetyposcript.js"]';
 				break;
 
-			case tx_t3editor::MODE_JAVASCRIPT:
+			case self::MODE_JAVASCRIPT:
 				$parserfile = '["tokenizejavascript.js", "parsejavascript.js"]';
 				break;
 
-			case tx_t3editor::MODE_CSS:
+			case self::MODE_CSS:
 				$parserfile = '"parsecss.js"';
 				break;
 
-			case tx_t3editor::MODE_XML:
+			case self::MODE_XML:
 				$parserfile = '"parsexml.js"';
 				break;
 
-			case tx_t3editor::MODE_SPARQL:
+			case self::MODE_SPARQL:
 				$parserfile = '"parsesparql.js"';
 				break;
 
-			case tx_t3editor::MODE_HTML:
+			case self::MODE_HTML:
 				$parserfile = '["tokenizejavascript.js", "parsejavascript.js", "parsecss.js", "parsexml.js", "parsehtmlmixed.js"]';
 				break;
 
-			case tx_t3editor::MODE_PHP:
-			case tx_t3editor::MODE_MIXED:
+			case self::MODE_PHP:
+			case self::MODE_MIXED:
 				$parserfile = '[' .
 					'"tokenizejavascript.js", ' .
 					'"parsejavascript.js", ' .
@@ -283,44 +308,44 @@ class tx_t3editor implements t3lib_Singleton {
 	}
 
 	/**
-	 * determine the correct css file for given mode
+	 * Determine the correct css file for given mode
 	 *
-	 * @param	string	$mode
-	 * @return	string	css file name
+	 * @param string $mode
+	 * @return string css file name
 	 */
 	protected function getStylesheetByMode($mode) {
 		switch ($mode) {
-			case tx_t3editor::MODE_TYPOSCRIPT:
+			case self::MODE_TYPOSCRIPT:
 				$stylesheet = 'T3editor.PATH_t3e + "res/css/typoscriptcolors.css"';
 				break;
 
-			case tx_t3editor::MODE_JAVASCRIPT:
+			case self::MODE_JAVASCRIPT:
 				$stylesheet = 'T3editor.PATH_codemirror + "../css/jscolors.css"';
 				break;
 
-			case tx_t3editor::MODE_CSS:
+			case self::MODE_CSS:
 				$stylesheet = 'T3editor.PATH_codemirror + "../css/csscolors.css"';
 				break;
 
-			case tx_t3editor::MODE_XML:
+			case self::MODE_XML:
 				$stylesheet = 'T3editor.PATH_codemirror + "../css/xmlcolors.css"';
 				break;
 
-			case tx_t3editor::MODE_HTML:
+			case self::MODE_HTML:
 				$stylesheet = 'T3editor.PATH_codemirror + "../css/xmlcolors.css", ' .
 					'T3editor.PATH_codemirror + "../css/jscolors.css", ' .
 					'T3editor.PATH_codemirror + "../css/csscolors.css"';
 				break;
 
-			case tx_t3editor::MODE_SPARQL:
+			case self::MODE_SPARQL:
 				$stylesheet = 'T3editor.PATH_codemirror + "../css/sparqlcolors.css"';
 				break;
 
-			case tx_t3editor::MODE_PHP:
+			case self::MODE_PHP:
 				$stylesheet = 'T3editor.PATH_codemirror + "../contrib/php/css/phpcolors.css"';
 				break;
 
-			case tx_t3editor::MODE_MIXED:
+			case self::MODE_MIXED:
 				$stylesheet = 'T3editor.PATH_codemirror + "../css/xmlcolors.css", ' .
 					'T3editor.PATH_codemirror + "../css/jscolors.css", ' .
 					'T3editor.PATH_codemirror + "../css/csscolors.css", ' .
@@ -337,7 +362,7 @@ class tx_t3editor implements t3lib_Singleton {
 	 * Gets the labels to be used in JavaScript in the Ext JS interface.
 	 * TODO this method is copied from EXT:Recycler, maybe this should be refactored into a helper class
 	 *
-	 * @return	array		The labels to be used in JavaScript
+	 * @return array The labels to be used in JavaScript
 	 */
 	protected function getJavaScriptLabels() {
 		$coreLabels = array();
@@ -349,10 +374,10 @@ class tx_t3editor implements t3lib_Singleton {
 	 * Gets labels to be used in JavaScript fetched from the current locallang file.
 	 * TODO this method is copied from EXT:Recycler, maybe this should be refactored into a helper class
 	 *
-	 * @param	string		$selectionPrefix: Prefix to select the correct labels (default: 'js.')
-	 * @param	string		$stripFromSelectionName: Sub-prefix to be removed from label names in the result (default: '')
-	 * @return	array		Lables to be used in JavaScript of the current locallang file
-	 * @todo	Check, whether this method can be moved in a generic way to $GLOBALS['LANG']
+	 * @param string $selectionPrefix Prefix to select the correct labels (default: 'js.')
+	 * @param string $stripFromSelectionName Sub-prefix to be removed from label names in the result (default: '')
+	 * @return array Lables to be used in JavaScript of the current locallang file
+	 * @todo Check, whether this method can be moved in a generic way to $GLOBALS['LANG']
 	 */
 	protected function getJavaScriptLabelsFromLocallang($selectionPrefix = 'js.', $stripFromSelectionName = '') {
 		$extraction = array();
@@ -375,14 +400,15 @@ class tx_t3editor implements t3lib_Singleton {
 	/**
 	 * Generates HTML with code editor
 	 *
-	 * @param	string		$name	Name attribute of HTML tag
-	 * @param	string		$class	Class attribute of HTML tag
-	 * @param	string		$content	Content of the editor
-	 * @param	string		$additionalParams	Any additional editor parameters
-	 * @param	string		$alt	Alt attribute
-	 * @return	string		Generated HTML code for editor
+	 * @param string $name Name attribute of HTML tag
+	 * @param string $class Class attribute of HTML tag
+	 * @param string $content Content of the editor
+	 * @param string $additionalParams Any additional editor parameters
+	 * @param string $alt Alt attribute
+	 * @param array $hiddenfields
+	 * @return string Generated HTML code for editor
 	 */
-	public function getCodeEditor($name, $class='', $content='', $additionalParams='', $alt='', array $hiddenfields = array()) {
+	public function getCodeEditor($name, $class = '', $content = '', $additionalParams = '', $alt='', array $hiddenfields = array()) {
 		$code = '';
 
 		if ($this->isEnabled()) {
@@ -428,7 +454,7 @@ class tx_t3editor implements t3lib_Singleton {
 			}
 
 		} else {
-			// fallback
+				// Fallback
 			if (!empty($class)) {
 				$class = 'class="' . $class . '" ';
 			}
@@ -441,8 +467,6 @@ class tx_t3editor implements t3lib_Singleton {
 		return $code;
 	}
 
-
-
 	/**
 	 * Save the content from t3editor retrieved via Ajax
 	 *
@@ -453,11 +477,11 @@ class tx_t3editor implements t3lib_Singleton {
 	 *	}
 	 * });
 	 *
-	 * @param array	params	Parameters (not used yet)
-	 * @param TYPO3AJAX ajaxObj	AjaxObject to handle response
+	 * @param array	params Parameters (not used yet)
+	 * @param TYPO3AJAX ajaxObj AjaxObject to handle response
 	 */
 	public function ajaxSaveCode($params, $ajaxObj) {
-		// cancel if its not an Ajax request
+			// cancel if its not an Ajax request
 		if((TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {
 			$ajaxObj->setContentFormat('json');
 			$codeType = t3lib_div::_GP('t3editor_savetype');
@@ -470,7 +494,7 @@ class tx_t3editor implements t3lib_Singleton {
 					'ajaxObj' => &$ajaxObj,
 				);
 				foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/t3editor/classes/class.tx_t3editor.php']['ajaxSaveCode'] as $key => $_funcRef) {
-					$savingsuccess = t3lib_div::callUserFunction($_funcRef,$_params,$this) || $savingsuccess;
+					$savingsuccess = t3lib_div::callUserFunction($_funcRef, $_params, $this) || $savingsuccess;
 				}
 			}
 
@@ -482,10 +506,10 @@ class tx_t3editor implements t3lib_Singleton {
 	 * Gets plugins that are defined at $TYPO3_CONF_VARS['EXTCONF']['t3editor']['plugins']
 	 * (called by typo3/ajax.php)
 	 *
-	 * @param	array		$params: additional parameters (not used here)
-	 * @param	TYPO3AJAX	&$ajaxObj: the TYPO3AJAX object of this request
-	 * @return	void
-	 * @author	Oliver Hader <oliver@typo3.org>
+	 * @param array $params additional parameters (not used here)
+	 * @param TYPO3AJAX	&$ajaxObj: the TYPO3AJAX object of this request
+	 * @return void
+	 * @author Oliver Hader <oliver@typo3.org>
 	 */
 	public function getPlugins($params, TYPO3AJAX &$ajaxObj) {
 		$result = array();

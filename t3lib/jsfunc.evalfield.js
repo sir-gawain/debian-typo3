@@ -98,8 +98,8 @@ function evalFunc_caseSwitch(type,inVal) {
 		case "alphanum_x":
 			for (var a=0;a<theVal.length;a++) {
 				var theChar = theVal.substr(a,1);
-				var special = (theChar=='_'||theChar=='-');
-				var alpha = (theChar>='a'&&theChar<='z') || (theChar>='A'&&theChar<='Z');
+				var special = (theChar == '_' || theChar == '-');
+				var alpha = (theChar >= 'a' && theChar <= 'z') || (theChar >= 'A' && theChar <= 'Z');
 				var num = (theChar>='0' && theChar<='9');
 				switch(type) {
 					case "alphanum":	special=0;		break;
@@ -137,8 +137,10 @@ function evalFunc_caseSwitch(type,inVal) {
 }
 function evalFunc_parseInt(value) {
 	var theVal = ''+value;
-	if (!value)	return 0;
-	for (var a=0;a<theVal.length;a++) {
+	if (!value) {
+		return 0;
+	}
+	for (var a = 0; a < theVal.length; a++) {
 		if (theVal.substr(a,1)!='0') {
 			return parseInt(theVal.substr(a,theVal.length)) || 0;
 		}
@@ -147,9 +149,11 @@ function evalFunc_parseInt(value) {
 }
 function evalFunc_getNumChars(value) {
 	var theVal = ''+value;
-	if (!value)	return 0;
+	if (!value) {
+		return 0;
+	}
 	var outVal="";
-	for (var a=0;a<theVal.length;a++) {
+	for (var a = 0; a < theVal.length; a++) {
 		if (theVal.substr(a,1)==parseInt(theVal.substr(a,1))) {
 			outVal+=theVal.substr(a,1);
 		}
@@ -188,8 +192,10 @@ function evalFunc_noSpace(value) {
 }
 function evalFunc_ltrim(value) {
 	var theVal = ''+value;
-	if (!value)	return '';
-	for (var a=0;a<theVal.length;a++) {
+	if (!value) {
+		return '';
+	}
+	for (var a = 0; a < theVal.length; a++) {
 		if (theVal.substr(a,1)!=' ') {
 			return theVal.substr(a,theVal.length);
 		}
@@ -198,8 +204,10 @@ function evalFunc_ltrim(value) {
 }
 function evalFunc_btrim(value) {
 	var theVal = ''+value;
-	if (!value)	return '';
-	for (var a=theVal.length;a>0;a--) {
+	if (!value) {
+		return '';
+	}
+	for (var a = theVal.length; a > 0; a--) {
 		if (theVal.substr(a-1,1)!=' ') {
 			return theVal.substr(0,a);
 		}
@@ -319,7 +327,7 @@ function evalFunc_input(type,inVal) {
 						add = this.pol(values.valPol[2],this.parseInt(values.values[2]));
 					}
 					var year = (values.values[1])?this.parseInt(values.values[1]):this.getYear(today);
-					if (  (year>=0&&year<38) || (year>=70&&year<100) || (year>=1902&&year<2038)	) {
+					if ((year >= 0 && year < 38) || (year >= 70 && year<100) || (year >= 1902 && year < 2038)) {
 						if (year<100) {
 							year = (year<38) ? year+=2000 : year+=1900;
 						}
@@ -361,7 +369,7 @@ function evalFunc_input(type,inVal) {
 					}
 
 					var year = (values.values[3])?this.parseInt(values.values[3]):this.getYear(today);
-					if ( (year>=0&&year<38) || (year>=70&&year<100) || (year>=1902&&year<2038) ) {
+					if ((year >= 0 && year < 38) || (year >= 70 && year < 100) || (year >= 1902 && year<2038)) {
 						if (year<100) {
 							year = (year<38) ? year+=2000 : year+=1900;
 						}

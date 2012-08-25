@@ -26,6 +26,8 @@
 ***************************************************************/
 
 /**
+ * ExtDirect toolbar menu
+ *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage ExtDirect
@@ -56,10 +58,5 @@ class Tx_Workspaces_ExtDirect_ToolbarMenu {
 			'id' => $workspaceId
 		);
 	}
-}
-
-
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/ToolbarMenu.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/ToolbarMenu.php']);
 }
 ?>

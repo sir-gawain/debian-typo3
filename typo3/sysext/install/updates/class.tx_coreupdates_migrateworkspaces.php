@@ -64,7 +64,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 					install "fluid" and "extbase" too, as they are used by the "workspaces" extension).';
 			} else {
 
-				$this->includeTCA();
+				Typo3_Bootstrap::getInstance()->loadExtensionTables(FALSE);
 
 				if (!t3lib_extMgm::isLoaded('version') || !t3lib_extMgm::isLoaded('workspaces')) {
 					$result = TRUE;
@@ -153,8 +153,7 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 			return TRUE;
 		}
 
-			// There's no TCA available yet
-		$this->includeTCA();
+		Typo3_Bootstrap::getInstance()->loadExtensionTables(FALSE);
 
 			// install version and workspace extension (especially when updating from very old TYPO3 versions
 		$this->installExtensions(array('extbase', 'fluid', 'version', 'workspaces'));
@@ -365,38 +364,6 @@ class tx_coreupdates_migrateworkspaces extends tx_coreupdates_installsysexts {
 				$updateArray
 			);
 			$this->sqlQueries[] =  $GLOBALS['TYPO3_DB']->debug_lastBuiltQuery;
-		}
-	}
-
-	/**
-	 * Includes the TCA definition of installed extensions.
-	 *
-	 * This method is used because usually the TCA is included within the init.php script, this doesn't happen
-	 * if the install-tool is used, therefore this has to be done by hand.
-	 *
-	 * @return void
-	 */
-	protected function includeTCA() {
-		global $TCA; // this is relevant because it's used within the included ext_tables.php files - do NOT remove it
-
-		include_once(TYPO3_tables_script ? PATH_typo3conf . TYPO3_tables_script : PATH_t3lib . 'stddb/tables.php');
-			// Extension additions
-		if ($GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE']) {
-			include_once(PATH_typo3conf . $GLOBALS['TYPO3_LOADED_EXT']['_CACHEFILE'] . '_ext_tables.php');
-		} else {
-			include_once(PATH_t3lib . 'stddb/load_ext_tables.php');
-		}
-
-
-			// Hook for postprocessing values set in extTables.php
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['extTablesInclusion-PostProcessing'])) {
-			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['extTablesInclusion-PostProcessing'] AS $_classRef) {
-				$hookObject = t3lib_div::getUserObj($_classRef);
-				if (!$hookObject instanceof t3lib_extTables_PostProcessingHook) {
-					throw new UnexpectedValueException('$hookObject must implement interface t3lib_extTables_PostProcessingHook', 1320585902);
-				}
-				$hookObject->processData();
-			}
 		}
 	}
 

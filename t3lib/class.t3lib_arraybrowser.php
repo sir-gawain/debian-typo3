@@ -76,13 +76,15 @@ class t3lib_arrayBrowser {
 			$a++;
 			$depth = $depth_in . $key;
 			$goto = 'a' . substr(md5($depth), 0, 6);
-
-			$deeper = (is_array($arr[$key]) && ($this->depthKeys[$depth] || $this->expAll)) ? 1 : 0;
+			if (is_object($arr[$key])) {
+				$arr[$key] = (array)$arr[$key];
+			}
+			$isArray = is_array($arr[$key]);
+			$deeper = ($isArray && ($this->depthKeys[$depth] || $this->expAll));
 			$PM = 'join';
 			$LN = ($a == $c) ? 'blank' : 'line';
 			$BTM = ($a == $c) ? 'bottom' : '';
-			$PM = is_array($arr[$key]) ? ($deeper ? 'minus' : 'plus') : 'join';
-
+			$PM = $isArray ? ($deeper ? 'minus' : 'plus') : 'join';
 
 			$HTML .= $depthData;
 			$theIcon = '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/ol/' . $PM . $BTM . '.gif', 'width="18" height="16"') .
@@ -91,16 +93,16 @@ class t3lib_arrayBrowser {
 				$HTML .= $theIcon;
 			} else {
 				$HTML .=
-						($this->expAll ? '' : '<a id="' . $goto . '" href="' . htmlspecialchars('index.php?node[' .
+						($this->expAll ? '' : '<a id="' . $goto . '" href="' . htmlspecialchars(t3lib_BEfunc::getModuleUrl(t3lib_div::_GP('M')) . '&node[' .
 								$depth . ']=' . ($deeper ? 0 : 1) . '#' . $goto) . '">') .
 								$theIcon .
 								($this->expAll ? '' : '</a>');
 			}
 
 			$label = $key;
-			$HTML .= $this->wrapArrayKey($label, $depth, !is_array($arr[$key]) ? $arr[$key] : '');
+			$HTML .= $this->wrapArrayKey($label, $depth, !$isArray ? $arr[$key] : '');
 
-			if (!is_array($arr[$key])) {
+			if (!$isArray) {
 				$theValue = $arr[$key];
 				if ($this->fixedLgd) {
 					$imgBlocks = ceil(1 + strlen($depthData) / 77);
@@ -156,7 +158,7 @@ class t3lib_arrayBrowser {
 		if ($this->varName && !$this->dontLinkVar) {
 			$variableName = $this->varName . '[\'' . str_replace('.', '\'][\'', $depth) . '\'] = ' .
 				(!t3lib_utility_Math::canBeInterpretedAsInteger($theValue) ? '\'' . addslashes($theValue) . '\'' : $theValue) . '; ';
-			$label = '<a href="index.php?varname=' . urlencode($variableName) . '#varname">' . $label . '</a>';
+			$label = '<a href="' . htmlspecialchars(t3lib_BEfunc::getModuleUrl(t3lib_div::_GP('M')) . '&varname=' . urlencode($variableName)) . '#varname">' . $label . '</a>';
 		}
 
 			// Return:
@@ -177,6 +179,7 @@ class t3lib_arrayBrowser {
 		if ($depth_in) {
 			$depth_in = $depth_in . '.';
 		}
+
 		foreach ($keyArr as $key => $value) {
 			$depth = $depth_in . $key;
 			$deeper = is_array($keyArr[$key]);

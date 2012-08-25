@@ -25,6 +25,13 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+/**
+ * Extension manager api
+ *
+ * @author Steffen Kamper <info@sk-typo3.de>
+ * @package TYPO3
+ * @subpackage em
+ */
 class tx_em_API {
 
 	/**
@@ -41,7 +48,6 @@ class tx_em_API {
 	 * @var array
 	 */
 	public $typeBackPaths = array();
-
 
 	/**
 	 * Constructor
@@ -66,9 +72,6 @@ class tx_em_API {
 			'G' => $GLOBALS['LANG']->getLL('descr_global'),
 			'L' => $GLOBALS['LANG']->getLL('descr_local'),
 		);
-
-
-
 	}
 }
 ?>

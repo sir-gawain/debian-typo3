@@ -115,7 +115,7 @@ abstract class t3lib_file_Driver_AbstractDriver {
 		if (strpos($fileName, '/') !== FALSE) {
 			return FALSE;
 		}
-		if (!preg_match('/^[[:alnum:][:blank:]\.-_]*$/iu', $fileName)) {
+		if (!preg_match('/^[\pL\d[:blank:]._-]*$/u', $fileName)) {
 			return FALSE;
 		}
 
@@ -172,7 +172,7 @@ abstract class t3lib_file_Driver_AbstractDriver {
 	 * @param array $itemRows
 	 * @return array
 	 */
-	protected function getDirectoryItemList($path, $start, $numberOfItems, $filterMethods, $itemHandlerMethod, $itemRows = array()) {
+	protected function getDirectoryItemList($path, $start, $numberOfItems, array $filterMethods, $itemHandlerMethod, $itemRows = array()) {
 		// This is not abstract because PHPUnit cannot mock abstract protected/private methods
 	}
 

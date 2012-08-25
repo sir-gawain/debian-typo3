@@ -37,27 +37,27 @@ class tslib_content_ScalableVectorGraphics extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, SVG
 	 *
-	 * @param	array		Array of TypoScript properties
-	 * @return	string		Empty string (the cObject only sets internal data!)
+	 * @param array $conf Array of TypoScript properties
+	 * @return string Empty string (the cObject only sets internal data!)
 	 */
 	public function render($conf = array()) {
 		$width = isset($conf['width.'])
 			? $this->cObj->stdWrap($conf['width'], $conf['width.'])
 			: $conf['width'];
-		if(!$width) {
+		if (!$width) {
 			$width = 600;
 		}
 		$height = isset($conf['height.'])
 			? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 			: $conf['height'];
-		if(!$height) {
+		if (!$height) {
 			$height = 400;
 		}
 
 		$src = isset($conf['src.'])
 			? $this->cObj->stdWrap($conf['src'], $conf['src.'])
 			: $conf['src'];
-		if(!$src) {
+		if (!$src) {
 			$src = NULL;
 		}
 		$value = isset($conf['value.'])

@@ -26,7 +26,7 @@
 /**
  * HTTP Utility class
  *
- * @author	Ingo Renner <ingo@typo3.org>
+ * @author Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -88,13 +88,33 @@ class t3lib_utility_Http {
 	 * Location redirect header. By default the HTTP status code sent is
 	 * a 'HTTP/1.1 303 See Other'.
 	 *
-	 * @param	string	The target URL to redirect to
-	 * @param	string	An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
+	 * @param string $url The target URL to redirect to
+	 * @param string $httpStatus An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
 	 */
 	public static function redirect($url, $httpStatus = self::HTTP_STATUS_303) {
-		header($httpStatus);
+		self::setResponseCode($httpStatus);
 		header('Location: ' . t3lib_div::locationHeaderUrl($url));
+		exit;
+	}
 
+	/**
+	 * Set a specifc response code like 404.
+	 *
+	 * @param string $httpStatus One of the HTTP_STATUS_* class class constants, default to self::HTTP_STATUS_303
+	 * @return void
+	 */
+	public static function setResponseCode($httpStatus = self::HTTP_STATUS_303) {
+		header($httpStatus);
+	}
+
+	/**
+	 * Set a specific response code and exit script execution.
+	 *
+	 * @param string $httpStatus One of the HTTP_STATUS_* class class constants, default to self::HTTP_STATUS_303
+	 * @return void
+	 */
+	public static function setResponseCodeAndExit($httpStatus = self::HTTP_STATUS_303) {
+		self::setResponseCode($httpStatus);
 		exit;
 	}
 
