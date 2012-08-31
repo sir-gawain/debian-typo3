@@ -20,7 +20,7 @@ if [ "$1" = "purge" ]; then
 	if which ucf >/dev/null 2>&1; then
 		ucf --purge /etc/typo3-dummy/debian-db.php
 	fi
-	rm -f /etc/typo3-dummy/localconf.php
+	rm -f /etc/typo3-dummy/LocalConfiguration.php
 
 	if [ -d $T3CONFDIR ] ; then
 		rm -f $T3CONFDIR/temp_CACHED*

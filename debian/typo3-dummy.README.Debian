@@ -22,8 +22,8 @@ If you encounter situations during work where TYPO3/PHP complains about a
 skript timeout or insufficient memory, you can tune the following parameters
 to fix the problems:
 
-* In /etc/typo3-dummy/localconf.php look for the line
-  $TYPO3_CONF_VARS['SYS']['setMemoryLimit'] = '48';
+* In /etc/typo3-dummy/LocalConfiguration.php look for the line
+  'setMemoryLimit' => '128',
   and adjust the memory limit to a higher value.
 * In /etc/typo3-dummy/apache-*.conf look for the line
   php_admin_value memory_limit 48M
@@ -49,10 +49,10 @@ Enable the usage of cache framework
 -----------------------------------
 
 To make use of the new cache framework change the following line in
-/etc/typo3-dummy/localconf.php:
-$TYPO3_CONF_VARS['SYS']['useCachingFramework'] = '0';
+/etc/typo3-dummy/LocalConfiguration.php:
+'useCachingFramework' => '0',
 to
-$TYPO3_CONF_VARS['SYS']['useCachingFramework'] = '1';
+'useCachingFramework' => '1',
 
 
 Better performance for memcached

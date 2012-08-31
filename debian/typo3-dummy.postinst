@@ -21,12 +21,12 @@ if [ "$1" = "configure" ] ; then
 	done
 fi
 
-if [ ! -e /etc/typo3-dummy/localconf.php ]; then
-    cp /etc/typo3-dummy/localconf.php_template /etc/typo3-dummy/localconf.php
+if [ ! -e /etc/typo3-dummy/LocalConfiguration.php ]; then
+    cp /etc/typo3-dummy/LocalConfiguration.php_template /etc/typo3-dummy/LocalConfiguration.php
 
-    # genarate a random encryption key and set in into localconf.php
+    # genarate a random encryption key and set in into LocalConfiguration.php
     KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
-    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/localconf.php
+    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/LocalConfiguration.php
 fi
 
 # do database handling
