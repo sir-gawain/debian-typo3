@@ -1,6 +1,6 @@
-typo3-src-6.0 (6.0.0+dfsg1~alpha3-1) UNRELEASED; urgency=low
+typo3-6.0 (6.0.0+dfsg1~beta1-1) UNRELEASED; urgency=low
 
-  * Renamed source and binary packages to typo3-src-6.0
+  * Renamed source and binary packages to typo3-6.0
   * Add database user for scheduler to database on installation.
   * Adopted im-fix patch to 6.0
   * Adopted defaults patch to 6.0.

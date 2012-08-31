@@ -1,2 +1,2 @@
-build/svg.htc usr/share/typo3/typo3_src-6.0/typo3/contrib/websvg/
-build/svg.js  usr/share/typo3/typo3_src-6.0/typo3/contrib/websvg/
+build/svg.htc usr/share/typo3/typo3-6.0/typo3/contrib/websvg/
+build/svg.js  usr/share/typo3/typo3-6.0/typo3/contrib/websvg/
