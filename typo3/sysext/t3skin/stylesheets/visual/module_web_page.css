@@ -26,6 +26,15 @@ Web > Page
 	width: 1px;
 }
 
+.t3-page-ce-wrapper {
+	border-left: 2px solid #c8c8c8;
+}
+
+.t3-page-ce-droptarget {
+	visibility: hidden;
+	background-color: orange;
+}
+
 .t3-page-ce-header {
 	background-color: #cacaca;
 }
@@ -89,10 +98,6 @@ table.typo3-page-columnsMode tr td a b {
 
 table.t3-page-columns tr td span.exampleContent a {
 	text-decoration: none;
-}
-
-table#typo3-page-stdlist tr td.c-headLine {
-	background-color: #d7dbe2;
 }
 
 table.typo3-page-buttons td {

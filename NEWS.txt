@@ -87,6 +87,11 @@ Extension authors should remove the three line XCLASS statement at the bottom
 of class files now for any extension with a compatibility for 6.0 and above.
 More information can be found at http://wiki.typo3.org/Autoload
 
+* PHP setting register_globals must be off
+
+The bootstrap now verifies the PHP setting register_globals is disabled for
+security reasons. The script dies otherwise.
+
 Removed Functionality
 -------------------------------------------------------------------------------
 
@@ -126,6 +131,21 @@ If this feature was still in use, it is recommended to not drop the
 resource field from table sys_template during upgrading, fix the using
 TypoScript to refer to resources located in fileadmin or similar directly,
 and afterwards to finally delete the resource field in the install tool.
+
+* Removed page hit logging functionality
+
+Writing log entries to some logfile during frontend page hit was removed.
+There are tons of solutions on the net and on server basis that can do a
+better job than the core implementation ever did. Therefor the complete
+code was dropped and all TypoScript config.stat* options are obsolete.
+
+* Removed compression of javascript files with jsmin
+
+The default compression of certain javascript files in frontend and backend
+with the jsmin library was removed from the core due to license issues. The
+code segment was substituted with a hook, so extensions can now deliver
+compression solutions if needed. In general, it is a good idea to configure
+a webserver to compress javascript and css files on the webserver with gzip.
 
 ===============================================================================
 Changes and Improvements
@@ -167,7 +187,13 @@ Security
 Backend
 -------------------------------------------------------------------------------
 
-...
+* New backend user administration module
+
+The backend user administration module was created from scratch again. The
+interface changed a lot, it is now possible to filter large groups of users
+with certain criteria and to compare specific user information. The code was
+made more flexible to easily cope with different use cases and to be more
+open for future enhancements.
 
 htmlArea RTE
 -------------------------------------------------------------------------------

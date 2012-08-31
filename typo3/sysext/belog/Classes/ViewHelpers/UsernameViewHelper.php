@@ -1,4 +1,6 @@
 <?php
+namespace TYPO3\CMS\Belog\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -23,7 +25,6 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-
 /**
  * Get username from backend user id
  *
@@ -31,21 +32,13 @@
  * @package TYPO3
  * @subpackage belog
  */
-class Tx_Belog_ViewHelpers_UsernameViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
-	/**
-	 * @var Tx_Belog_Domain_Repository_BackendUserRepository
-	 */
-	protected $backendUserRepository = NULL;
+class UsernameViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
-	 * Inject the backend user repository
-	 *
-	 * @param Tx_Belog_Domain_Repository_BackendUserRepository $backendUserRepository
-	 * @return void
+	 * @var \TYPO3\CMS\Extbase\Domain\Repository\BackendUserRepository
+	 * @inject
 	 */
-	public function injectBeUserRepository(Tx_Belog_Domain_Repository_BackendUserRepository $backendUserRepository) {
-		$this->backendUserRepository = $backendUserRepository;
-	}
+	protected $backendUserRepository;
 
 	/**
 	 * Resolve user name from backend user id.
@@ -54,13 +47,15 @@ class Tx_Belog_ViewHelpers_UsernameViewHelper extends Tx_Fluid_Core_ViewHelper_A
 	 * @return string Username or an empty string if there is no user with that UID
 	 */
 	public function render($uid) {
-		/** @var $user Tx_Belog_Domain_Model_BackendUser */
+		/** @var $user \TYPO3\CMS\Extbase\Domain\Model\BackendUser */
 		$user = $this->backendUserRepository->findByUid($uid);
 		if ($user === NULL) {
 			return '';
 		}
-
-		return $user->getUsername();
+		return $user->getUserName();
 	}
+
 }
+
+
 ?>

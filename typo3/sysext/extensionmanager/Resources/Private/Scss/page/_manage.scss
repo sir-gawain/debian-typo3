@@ -1,0 +1,150 @@
+
+// Upload extension
+.typo3-extensionmanager-headerRowRight {
+	float: right;
+}
+
+
+// Search
+.contentWrapper {
+	@include linear-gradient(#ececec, rgb(255,255,255) 0, rgb(236,236,236) 36%);
+	padding: 15px;
+	border: 1px solid #adadad;
+
+	.ui-toolbar {
+		margin-bottom: 5px;
+
+		.dataTables_filter {
+			float: left;
+		}
+	}
+}
+
+
+
+// Table
+.typo3-extension-list {
+
+	border-spacing: 0;
+
+	// Header
+	thead {
+		@include linear-gradient(#5b5b5b, #7f7f7f 10%, #5b5b5b 100%);
+
+		tr {
+			background: none !important;
+
+			&:hover {
+				background: none;
+			}
+		}
+	}
+
+	th {
+		background: none;
+		border: 0;
+		padding: 8px 10px;
+
+		min-width: 53px;
+
+		vertical-align: middle;
+
+		font-weight: bold;
+		color: #fff;
+
+		cursor: pointer;
+
+
+		&:hover {
+			background: rgba(200,200,200,.3);
+		}
+
+		.DataTables_sort_icon {
+			display: inline-block;
+			vertical-align: middle;
+			margin-left: 5px;
+
+			&.ui-icon-carat-2-n-s {
+				background: none;
+			}
+		}
+	}
+
+	// All lines
+	tr {
+
+		// Reset some values that get applied by jQuery UI styling
+		&.odd,
+		&.even {
+			td {
+				background: none;
+			}
+
+			&:hover {
+				td {
+					background: none;
+
+					&.stable {
+						@include stable;
+					}
+
+					&.beta {
+						@include beta;
+					}
+				}
+			}
+		}
+
+		// Add some stuff to match corporate design
+		td {
+			background: none;
+			padding: 8px 10px;
+			vertical-align: middle;
+			border-bottom: 1px solid #fff;
+
+			&.stable {
+				@include stable;
+			}
+
+			&.beta {
+				@include beta;
+			}
+
+			img {
+				vertical-align: middle;
+				margin-right: 5px;
+			}
+		}
+
+		// Zebra-look
+		&:nth-child(2n) {
+			background: #fff;
+		}
+
+		&:nth-child(2n + 1) {
+			background: #f7f7f7;
+		}
+
+		// Hovering lines
+		&:hover {
+			background: #ececec;
+		}
+
+	}
+}
+
+
+
+// Paginator
+.dataTables_info {
+	display: none;
+}
+
+.dataTables_paginate {
+	float: left;
+	margin: 10px 0 0;
+}
+
+
+
+

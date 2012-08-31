@@ -1,49 +1,48 @@
 <?php
-/***************************************************************
-*  Copyright notice
-*
-*  (c) 2011 Extbase Team
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+namespace TYPO3\CMS\Extbase\Tests\Unit\Service;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2011 Extbase Team
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * Testcase for class Tx_Extbase_Service_TypeHandling
  *
  * @package Extbase
  * @subpackage extbase
  */
-
-class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
+class TypeHandlingServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * @var Tx_Extbase_Service_TypeHandlingService
+	 * @var \TYPO3\CMS\Extbase\Service\TypeHandlingService
 	 */
 	protected $typeHandlingService;
 
 	public function setUp() {
-		$this->typeHandlingService = new Tx_Extbase_Service_TypeHandlingService();
+		$this->typeHandlingService = new \TYPO3\CMS\Extbase\Service\TypeHandlingService();
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
-	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function parseTypeThrowsExceptionOnInvalidType() {
 		$this->typeHandlingService->parseType('something not a type');
@@ -51,7 +50,7 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function parseTypeThrowsExceptionOnInvalidElementTypeHint() {
@@ -60,6 +59,7 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 
 	/**
 	 * data provider for parseTypeReturnsArrayWithInformation
+	 *
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @return array
 	 */
@@ -73,7 +73,8 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 			array('array<integer>', array('type' => 'array', 'elementType' => 'integer')),
 			array('ArrayObject<string>', array('type' => 'ArrayObject', 'elementType' => 'string')),
 			array('SplObjectStorage<Tx_Extbase_Bar>', array('type' => 'SplObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
-			array('SplObjectStorage<Tx_Extbase_Bar>', array('type' => 'SplObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
+			array('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage<Tx_Extbase_Bar>', array('type' => 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
+			array('Tx_Extbase_Persistence_ObjectStorage<Tx_Extbase_Bar>', array('type' => 'Tx_Extbase_Persistence_ObjectStorage', 'elementType' => 'Tx_Extbase_Bar'))
 		);
 	}
 
@@ -85,14 +86,12 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 	 * @param mixed $expectedResult
 	 */
 	public function parseTypeReturnsArrayWithInformation($type, $expectedResult) {
-		$this->assertEquals(
-			$this->typeHandlingService->parseType($type),
-			$expectedResult
-		);
+		$this->assertEquals($this->typeHandlingService->parseType($type), $expectedResult);
 	}
 
 	/**
 	 * data provider for normalizeTypesReturnsNormalizedType
+	 *
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @return array
 	 */
@@ -118,13 +117,14 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 
 	/**
 	 * data provider for isLiteralReturnsFalseForNonLiteralTypes
+	 *
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @return array
 	 */
 	public function nonLiteralTypes() {
 		return array(
 			array('DateTime'),
-			array('\Foo\Bar'),
+			array('\\Foo\\Bar'),
 			array('array'),
 			array('ArrayObject'),
 			array('stdClass')
@@ -143,6 +143,7 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 
 	/**
 	 * data provider for isLiteralReturnsTrueForLiteralType
+	 *
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @return array
 	 */
@@ -167,5 +168,8 @@ class Tx_Extbase_Tests_Unit_Service_TypeHandlingServiceTest extends Tx_Extbase_T
 	public function isLiteralReturnsTrueForLiteralType($type) {
 		$this->assertTrue($this->typeHandlingService->isLiteral($type));
 	}
+
 }
+
+
 ?>
