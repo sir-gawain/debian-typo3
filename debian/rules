@@ -6,7 +6,7 @@
 SOURCEVERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Source: typo3-(.+),\1,p')
 
 PACKAGENAME:=typo3-$(SOURCEVERSION)
-SOURCEPACKAGE:=typo3-$(SOURCEVERSION)
+SOURCEPACKAGE:=typo3-src-$(SOURCEVERSION)
 
 T3SRCDIR:=usr/share/typo3/$(PACKAGENAME)
 
