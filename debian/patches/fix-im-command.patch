@@ -2,27 +2,20 @@
 ##
 ## DP: fix the command used to quote the imagemagick command for shell invocation.
 
---- typo3.orig/t3lib/utility/class.t3lib_utility_command.php
-+++ typo3/t3lib/utility/class.t3lib_utility_command.php
-@@ -76,12 +76,12 @@
- 			// Compile the path & command
+--- typo3.orig/typo3/sysext/core/Classes/Utility/CommandUtility.php
++++ typo3/typo3/sysext/core/Classes/Utility/CommandUtility.php
+@@ -124,12 +124,12 @@
+ 		// Compile the path & command
  		if ($im_version === 'gm') {
  			$switchCompositeParameters = TRUE;
--			$path = escapeshellarg($path . 'gm' . $isExt) . ' ' . $command;
-+			$path = escapeshellcmd($path . 'gm' . $isExt) . ' ' . $command;
+-			$path = (escapeshellarg((($path . 'gm') . $isExt)) . ' ') . $command;
++			$path = (escapeshellcmd((($path . 'gm') . $isExt)) . ' ') . $command;
  		} else {
  			if ($im_version === 'im6') {
  				$switchCompositeParameters = TRUE;
  			}
--			$path = escapeshellarg($path . (($command == 'composite') ? $combineScript : $command) . $isExt);
-+			$path = escapeshellcmd($path . (($command == 'composite') ? $combineScript : $command) . $isExt);
+-			$path = escapeshellarg(($path . ($command == 'composite' ? $combineScript : $command)) . $isExt);
++			$path = escapeshellcmd(($path . ($command == 'composite' ? $combineScript : $command)) . $isExt);
  		}
- 
- 			// strip profile information for thumbnails and reduce their size
-@@ -115,4 +115,4 @@
- 
- }
- 
--?>
-\ No newline at end of file
-+?>
+ 		// strip profile information for thumbnails and reduce their size
+ 		if ((($parameters && $command != 'identify') && $gfxConf['im_useStripProfileByDefault']) && $gfxConf['im_stripProfileCommand'] != '') {

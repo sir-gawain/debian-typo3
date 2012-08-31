@@ -1,3 +1,11 @@
+typo3-src (6.0.0+ds1-1)
+
+  * Changed +dfsg to +ds because all non dfsg files have been removed by
+    upstream. Nevertheless we have to remove some embedded stuff, thats
+    why we use +ds now.
+
+ -- Christian Welzel <gawain@camlann.de>  Fre, 31 Aug 2012 22:30:00 +0200
+
 typo3-src (4.5.16+dfsg3-1)
 
   * typo3/sysext/em/res/js/ux/jslint.js contains code that is under a non free
