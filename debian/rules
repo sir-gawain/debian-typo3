@@ -52,36 +52,36 @@ install: build
 		  $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh \
 		  $(SOURCEINSTALLDIR)/typo3/cli_dispatch.phpsh
 #remove additional license files
-	rm -f $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/lua/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/ometa/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/php/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/plsql/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/python/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/idna/LICENCE
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.audio/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.captions/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.content/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/lib/corelib/license.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/t3editor/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/openid/lib/php-openid/COPYING
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/rsaauth/resources/jsbn/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/lua/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/ometa/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/php/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/plsql/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/python/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/idna/LICENCE
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.audio/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.captions/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.content/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/lib/corelib/license.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
-	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
-	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
+	rm $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
+	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 # fix other stuff
-	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
 
 binary-indep: build install
 	dh_testdir
@@ -121,13 +121,13 @@ get-orig-source:
 	mv _unpack/$(UPSTREAM_DIR) _unpack/$(DEBIAN_DIR)
 # remove dfsg non complient files
 # remove embedded libraries
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/swiftmailer
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/prototype
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/scriptaculous
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/flashmedia/swfobject
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/swfupload
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/charts.swf
-	rm -rf _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/swiftmailer
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/prototype
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/scriptaculous
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/flashmedia/swfobject
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/swfupload
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/charts.swf
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
 # repack
 	tar -cf - -C _unpack $(DEBIAN_DIR) | gzip -9 - > $(DEBIAN_TAR).gz
 	rm -rf _unpack
