@@ -1,4 +1,6 @@
 <?php
+namespace TYPO3\CMS\Workspaces\ExtDirect;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -25,7 +27,6 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-
 /**
  * Class encapsulates all actions which are triggered for all elements within the current workspace.
  *
@@ -34,11 +35,12 @@
  * @package Workspaces
  * @subpackage ExtDirect
  */
-class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_AbstractHandler {
-	const MAX_RECORDS_TO_PROCESS = 30;
+class MassActionHandler extends \TYPO3\CMS\Workspaces\ExtDirect\AbstractHandler {
 
+	const MAX_RECORDS_TO_PROCESS = 30;
 	/**
 	 * Path to the locallang file
+	 *
 	 * @var string
 	 */
 	private $pathToLocallang = 'LLL:EXT:workspaces/Resources/Private/Language/locallang.xml';
@@ -53,24 +55,19 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 		$actions = array();
 		$currentWorkspace = $this->getCurrentWorkspace();
 		$massActionsEnabled = $GLOBALS['BE_USER']->getTSConfigVal('options.workspaces.enableMassActions') !== '0';
-			// in case we're working within "All Workspaces" we can't provide Mass Actions
-		if (($currentWorkspace != Tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES) && $massActionsEnabled) {
+		// in case we're working within "All Workspaces" we can't provide Mass Actions
+		if ($currentWorkspace != \TYPO3\CMS\Workspaces\Service\WorkspaceService::SELECT_ALL_WORKSPACES && $massActionsEnabled) {
 			$publishAccess = $GLOBALS['BE_USER']->workspacePublishAccess($currentWorkspace);
 			if ($publishAccess && !($GLOBALS['BE_USER']->workspaceRec['publish_access'] & 1)) {
-				$actions[] = array('action' => 'publish', 'title' => $GLOBALS['LANG']->sL($this->pathToLocallang . ':label_doaction_publish')
-				);
+				$actions[] = array('action' => 'publish', 'title' => $GLOBALS['LANG']->sL($this->pathToLocallang . ':label_doaction_publish'));
 				if ($GLOBALS['BE_USER']->workspaceSwapAccess()) {
-					$actions[] = array('action' => 'swap', 'title' => $GLOBALS['LANG']->sL($this->pathToLocallang . ':label_doaction_swap')
-					);
+					$actions[] = array('action' => 'swap', 'title' => $GLOBALS['LANG']->sL($this->pathToLocallang . ':label_doaction_swap'));
 				}
 			}
-
-			if ($currentWorkspace !== Tx_Workspaces_Service_Workspaces::LIVE_WORKSPACE_ID) {
-				$actions[] = array('action' => 'discard', 'title' => $GLOBALS['LANG']->sL($this->pathToLocallang . ':label_doaction_discard')
-				);
+			if ($currentWorkspace !== \TYPO3\CMS\Workspaces\Service\WorkspaceService::LIVE_WORKSPACE_ID) {
+				$actions[] = array('action' => 'discard', 'title' => $GLOBALS['LANG']->sL($this->pathToLocallang . ':label_doaction_discard'));
 			}
 		}
-
 		$result = array(
 			'total' => count($actions),
 			'data' => $actions
@@ -84,23 +81,23 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 	 * @param stdclass $parameters
 	 * @return array
 	 */
-	public function publishWorkspace(stdclass $parameters) {
+	public function publishWorkspace(\stdclass $parameters) {
 		$result = array(
 			'init' => FALSE,
 			'total' => 0,
 			'processed' => 0,
 			'error' => FALSE
 		);
-
 		try {
 			if ($parameters->init) {
-				$cnt = $this->initPublishData($this->getCurrentWorkspace(), $parameters->swap);
+				$language = $this->validateLanguageParameter($parameters);
+				$cnt = $this->initPublishData($this->getCurrentWorkspace(), $parameters->swap, $language);
 				$result['total'] = $cnt;
 			} else {
 				$result['processed'] = $this->processData($this->getCurrentWorkspace());
 				$result['total'] = $GLOBALS['BE_USER']->getSessionData('workspaceMassAction_total');
 			}
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			$result['error'] = $e->getMessage();
 		}
 		return $result;
@@ -112,23 +109,23 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 	 * @param stdclass $parameters
 	 * @return array
 	 */
-	public function flushWorkspace(stdclass $parameters) {
+	public function flushWorkspace(\stdclass $parameters) {
 		$result = array(
 			'init' => FALSE,
 			'total' => 0,
 			'processed' => 0,
 			'error' => FALSE
 		);
-
 		try {
 			if ($parameters->init) {
-				$cnt = $this->initFlushData($this->getCurrentWorkspace());
+				$language = $this->validateLanguageParameter($parameters);
+				$cnt = $this->initFlushData($this->getCurrentWorkspace(), $language);
 				$result['total'] = $cnt;
 			} else {
 				$result['processed'] = $this->processData($this->getCurrentWorkspace());
 				$result['total'] = $GLOBALS['BE_USER']->getSessionData('workspaceMassAction_total');
 			}
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			$result['error'] = $e->getMessage();
 		}
 		return $result;
@@ -139,12 +136,12 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 	 *
 	 * @param integer $workspace
 	 * @param boolean $swap
+	 * @param integer $language
 	 * @return integer
 	 */
-	protected function initPublishData($workspace, $swap) {
-		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
-			// workspace might be -98 a.k.a "All Workspaces but that's save here
-		$publishData = $workspaceService->getCmdArrayForPublishWS($workspace, $swap);
+	protected function initPublishData($workspace, $swap, $language = NULL) {
+		// workspace might be -98 a.k.a "All Workspaces but that's save here
+		$publishData = $this->getWorkspaceService()->getCmdArrayForPublishWS($workspace, $swap, 0, $language);
 		$recordCount = 0;
 		foreach ($publishData as $table => $recs) {
 			$recordCount += count($recs);
@@ -161,12 +158,12 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 	 * Initializes the command map to be used for flushing.
 	 *
 	 * @param integer $workspace
+	 * @param integer $language
 	 * @return integer
 	 */
-	protected function initFlushData($workspace) {
-		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
-			// workspace might be -98 a.k.a "All Workspaces but that's save here
-		$flushData = $workspaceService->getCmdArrayForFlushWS($workspace);
+	protected function initFlushData($workspace, $language = NULL) {
+		// workspace might be -98 a.k.a "All Workspaces but that's save here
+		$flushData = $this->getWorkspaceService()->getCmdArrayForFlushWS($workspace, TRUE, 0, $language);
 		$recordCount = 0;
 		foreach ($flushData as $table => $recs) {
 			$recordCount += count($recs);
@@ -190,7 +187,6 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 		$recordsProcessed = $GLOBALS['BE_USER']->getSessionData('workspaceMassAction_processed');
 		$limitedCmd = array();
 		$numRecs = 0;
-
 		foreach ($processData as $table => $recs) {
 			foreach ($recs as $key => $value) {
 				$numRecs++;
@@ -203,23 +199,22 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 				break;
 			}
 		}
-
 		if ($numRecs == 0) {
-				// All done
+			// All done
 			$GLOBALS['BE_USER']->setAndSaveSessionData('workspaceMassAction', NULL);
 			$GLOBALS['BE_USER']->setAndSaveSessionData('workspaceMassAction_total', 0);
 		} else {
-				// Execute the commands:
-			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
+			/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
 			$tce->stripslashes_values = 0;
+			// Execute the commands:
 			$tce->start(array(), $limitedCmd);
 			$tce->process_cmdmap();
-
 			$errors = $tce->errorLog;
 			if (count($errors) > 0) {
-				throw new Exception(implode(', ', $errors));
+				throw new \Exception(implode(', ', $errors));
 			} else {
-					// Unset processed records
+				// Unset processed records
 				foreach ($limitedCmd as $table => $recs) {
 					foreach ($recs as $key => $value) {
 						$recordsProcessed++;
@@ -230,8 +225,10 @@ class Tx_Workspaces_ExtDirect_MassActionHandler extends Tx_Workspaces_ExtDirect_
 				$GLOBALS['BE_USER']->setAndSaveSessionData('workspaceMassAction_processed', $recordsProcessed);
 			}
 		}
-
 		return $recordsProcessed;
 	}
+
 }
+
+
 ?>

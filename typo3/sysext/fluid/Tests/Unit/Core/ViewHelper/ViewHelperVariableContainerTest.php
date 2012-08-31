@@ -1,4 +1,5 @@
 <?php
+namespace TYPO3\CMS\Fluid\Tests\Unit\Core\ViewHelper;
 
 /*                                                                        *
  * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
@@ -9,24 +10,22 @@
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
-
-require_once(dirname(__FILE__) . '/../Fixtures/TestViewHelper.php');
+require_once dirname(__FILE__) . '/../Fixtures/TestViewHelper.php';
 
 /**
  * Testcase for AbstractViewHelper
- *
  */
-class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
+class ViewHelperVariableContainerTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 *
-	 * @var Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer
+	 * @var \TYPO3\CMS\Fluid\Core\ViewHelper\ViewHelperVariableContainer
 	 */
 	protected $viewHelperVariableContainer;
 
 	protected function setUp() {
-		$this->viewHelperVariableContainer = new Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer();
+		$this->viewHelperVariableContainer = new \Tx_Fluid_Core_ViewHelper_ViewHelperVariableContainer();
 	}
+
 	/**
 	 * @test
 	 */
@@ -35,13 +34,12 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 		$this->assertFalse($this->viewHelperVariableContainer->exists('Tx_Fluid_ViewHelpers_TestViewHelper', 'test'));
 		$this->viewHelperVariableContainer->add('Tx_Fluid_ViewHelpers_TestViewHelper', 'test', $variable);
 		$this->assertTrue($this->viewHelperVariableContainer->exists('Tx_Fluid_ViewHelpers_TestViewHelper', 'test'));
-
 		$this->assertEquals($variable, $this->viewHelperVariableContainer->get('Tx_Fluid_ViewHelpers_TestViewHelper', 'test'));
 	}
 
 	/**
 	 * @test
-	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception_InvalidVariableException
+	 * @expectedException \TYPO3\CMS\Fluid\Core\ViewHelper\Exception\InvalidVariableException
 	 */
 	public function gettingNonNonExistentValueThrowsException() {
 		$this->viewHelperVariableContainer->get('Tx_Fluid_ViewHelper_NonExistent', 'nonExistentKey');
@@ -49,7 +47,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
-	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception_InvalidVariableException
+	 * @expectedException \TYPO3\CMS\Fluid\Core\ViewHelper\Exception\InvalidVariableException
 	 */
 	public function settingKeyWhichIsAlreadyStoredThrowsException() {
 		$this->viewHelperVariableContainer->add('Tx_Fluid_ViewHelper_NonExistent', 'nonExistentKey', 'value1');
@@ -76,7 +74,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
-	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception_InvalidVariableException
+	 * @expectedException \TYPO3\CMS\Fluid\Core\ViewHelper\Exception\InvalidVariableException
 	 */
 	public function removingNonExistentKeyThrowsException() {
 		$this->viewHelperVariableContainer->remove('Tx_Fluid_ViewHelper_NonExistent', 'nonExistentKey');
@@ -86,9 +84,12 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 	 * @test
 	 */
 	public function viewCanBeReadOutAgain() {
-		$view = $this->getMock('Tx_Fluid_View_AbstractTemplateView', array('getTemplateSource', 'getLayoutSource', 'getPartialSource', 'hasTemplate', 'canRender', 'getTemplateIdentifier', 'getLayoutIdentifier', 'getPartialIdentifier'));
+		$view = $this->getMock('TYPO3\\CMS\\Fluid\\View\\AbstractTemplateView', array('getTemplateSource', 'getLayoutSource', 'getPartialSource', 'hasTemplate', 'canRender', 'getTemplateIdentifier', 'getLayoutIdentifier', 'getPartialIdentifier'));
 		$this->viewHelperVariableContainer->setView($view);
 		$this->assertSame($view, $this->viewHelperVariableContainer->getView());
 	}
+
 }
+
+
 ?>

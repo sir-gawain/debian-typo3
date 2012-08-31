@@ -818,6 +818,10 @@ pageRendererTemplateFile = fileadmin/test_pagerender.html
 			<default><![CDATA[
 ]]></default>
 		</property>
+		<property name="pageTitleSeparator" type="string">
+			<description><![CDATA[The signs which should be printed in the title tag between the website name and the page title.]]></description>
+			<default><![CDATA[:]]></default>
+		</property>
 		<property name="prefixLocalAnchors" type="string">
 			<description><![CDATA[If set to one of the keywords, the content will have all local anchors in links prefixed with the path of the script. Basically this means that <a href="#"> will be transformed to <a href="path/path/script?params#">. This procedure is necessary if the <base> tag is set in the script (eg. if "realurl" extension is used to produce Speaking URLs).
 
@@ -973,93 +977,6 @@ The big advantage of this method is that it doesn't need any JavaScript!]]></des
 			<description><![CDATA[Substitute label for the last dot in the email address.
 Example: (dot)]]></description>
 			<default><![CDATA[Default: . ( <= just a simple dot)]]></default>
-		</property>
-		<property name="stat" type="boolean">
-			<description><![CDATA[Enable stat logging at all.]]></description>
-			<default><![CDATA[true]]></default>
-		</property>
-		<property name="stat_apache" type="boolean">
-			<description><![CDATA[Enable logging to the logfile "stat_apache_logfile"]]></description>
-			<default><![CDATA[false]]></default>
-		</property>
-		<property name="stat_apache_logfile" type="string">
-			<description><![CDATA[This defines the name of the logfile where TYPO3 writes an Apache-style logfile to. The location of the directory is defined by $TYPO3_CONF_VARS["FE"]["logfile_dir"]  which must exist and be writable. It can be relative (to PATH_site) or absolute, but in any case it must be within the regular allowed paths of TYPO3 (meaning for absolute paths that it must be within the "lockRootDir" set up in $TYPO3_CONF_VARS).
-
-It is also possible to use date markers in the filename as they are provided by the PHP function strftime(). This will enable a natural rotation of the logfiles.
-
-Example:
-config.stat_apache_logfile = typo3_%Y%m%d.log
-
-This will create daily log files (eg. typo3_20060321.log).]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_apache_niceTitle" type="string">
-			<description><![CDATA[boolean / string
-			If set, the URL will be transliterated from the renderCharset to ASCII (eg ä => ae, à => a, &#945; "alpha" => a), which yields nice and readable page titles in the log. All non-ASCII characters that cannot be converted will be changed to underscores.
-
-If set to "utf-8", the page title will be converted to UTF-8 which results
-in even more readable titles, if your log analyzing software supports it.]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_apache_noHost" type="boolean">
-			<description><![CDATA[If true the HTTP_HOST is - if available - NOT inserted instead of the IP-address]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_apache_noRoot" type="boolean">
-			<description><![CDATA[If set, the root part (level 0) of the path will be removed from the path. This makes a shorter name in case you have only a redundant part like "home" or "my site".]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_apache_notExtended" type="boolean">
-			<description><![CDATA[If true the logfile is NOT written in Apache extended format]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_apache_pagenames" type="string">
-			<description><![CDATA[The "pagename" simulated for apache.
-Default:    "[path][title]--[uid].html"
-Codes:
-[title] = inserts title, no special characters and shortend to 30 chars.
-[uid] = the id
-[alias] = any alias
-[type] = the type (typeNum)
-[path] = the path of the page.]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_excludeBEuserHits" type="boolean">
-			<description><![CDATA[If set a pagehit is not logged if a user is logged in into TYPO3.]]></description>
-			<default><![CDATA[false]]></default>
-		</property>
-		<property name="stat_excludeIPList" type="string">
-			<description><![CDATA[list of strings
-			If the REMOTE_ADDR is in the list of IP-addresses, it's also not logged.
-Can use wildcard, eg. "192.168.1.*"]]></description>
-			<default><![CDATA[
-]]></default>
-		</property>
-		<property name="stat_mysql" type="boolean">
-			<description><![CDATA[Enable logging to the MySQL table sys_stat.]]></description>
-			<default><![CDATA[false]]></default>
-		</property>
-		<property name="stat_pageLen" type="int">
-			<description><![CDATA[int 1-100
-			The length of the page name (at the end of the path) written to the logfile/database.]]></description>
-			<default><![CDATA[30]]></default>
-		</property>
-		<property name="stat_titleLen" type="int">
-			<description><![CDATA[int 1-100
-			The length of the page names in the path written to logfile/database]]></description>
-			<default><![CDATA[20]]></default>
-		</property>
-		<property name="stat_typeNumList" type="intList">
-			<description><![CDATA[List of pagetypes that should be registered in the statistics table, sys_stat.
-If no types are listed, all types are logged.
-Default is "0,1" which normally logs all hits on framesets and hits on content keeping pages. Of course this depends on the template design.]]></description>
-			<default><![CDATA[0,1]]></default>
 		</property>
 		<property name="sword_noMixedCase" type="boolean">
 			<description><![CDATA[Used by the parseFunc-substitution of search Words (sword):
@@ -1736,7 +1653,7 @@ You can also use the marker ###COMMENT### which is ALSO the label value inserted
 			If this value is true, then a hidden-field called "locationData" is added to the form. This field wil be loaded with a value like this:
 [page id]:[current record table]:[current record id]
 For example, if a formfield is inserted on page with uid = "100", as a page-content item from the table "tt_content" with id "120", then the value would be "100:tt_content:120".
-The value is use by eg. the cObject SEARCHRESULT. If the value $GLOBALS["HTTP_POST_VARS"]["locationData"] is detected here, the search is done as if it was performed on this page! This is very usefull if you want a search functionality implemented on a page with the "stype" field set to "L1" which means that the search is carried out from the first level in the rootline.
+The value is use by eg. the cObject SEARCHRESULT. If the value $GLOBALS["HTTP_POST_VARS"]["locationData"] is detected here, the search is done as if it was performed on this page! This is very useful if you want a search functionality implemented on a page with the "stype" field set to "L1" which means that the search is carried out from the first level in the rootline.
 Suppose you want the search to submit to a dedicated searchpage where ever. This page will then know - because of locationData - that the search was submittet from another place on the website.
 If "locationData" is not only true but also set to "HTTP_POST_VARS" then the value will insert the content of $GLOBALS["HTTP_POST_VARS"]["locationData"] instead of the true location data of the page. This should be done with search-fields as this will carry the initial searching start point with.
 NOTE: May be overridden by the property override feature of the formdata (see above)]]></description>
@@ -3034,7 +2951,7 @@ Takes precedence over HMENU.begin]]></description>
 ]]></default>
 		</property>
 		<property name="imgNameNotRandom" type="boolean">
-			<description><![CDATA[If set, the image names of menuitems is not randomly assigned. Usefull switch if you're manipulating these images with some external JavaScript
+			<description><![CDATA[If set, the image names of menuitems is not randomly assigned. Useful switch if you're manipulating these images with some external JavaScript
 
 NOTE: Don't set this if you're working with a menu with sectionIndex! In that case you need special unique names of items based on something else than the uid of the parent page of course!]]></description>
 			<default><![CDATA[
@@ -3748,14 +3665,14 @@ Warning: If you are cascading GMENU_LAYER objects make sure that all elements be
 ]]></default>
 		</property>
 		<property name="dontFollowMouse" type="boolean">
-			<description><![CDATA[If set and lockPosition is blank (so that the menu layer follows the mouse) then the menu will NOT follow the mouse but still it will appear where the mouse cursor hit the trigger-element. Usefull if you don't know the exact positions of elements.
+			<description><![CDATA[If set and lockPosition is blank (so that the menu layer follows the mouse) then the menu will NOT follow the mouse but still it will appear where the mouse cursor hit the trigger-element. Useful if you don't know the exact positions of elements.
 
 Warning: You should not set displayActiveOnLoad for menus with this feature enabled (because the absolute position of the layer is not known).]]></description>
 			<default><![CDATA[
 ]]></default>
 		</property>
 		<property name="dontHideOnMouseUp" type="boolean">
-			<description><![CDATA[If set, the menu will not hide it's layers when the mouse botton is clicked. Usefull if your menuitems loads the pages in another frame]]></description>
+			<description><![CDATA[If set, the menu will not hide it's layers when the mouse botton is clicked. Useful if your menuitems loads the pages in another frame]]></description>
 			<default><![CDATA[
 ]]></default>
 		</property>
@@ -7515,7 +7432,7 @@ Example where a timestamp is imported:
 ]]></default>
 		</property>
 		<property name="debug" type="boolean">
-			<description><![CDATA[Prints content with HTMLSpecialChars() and <PRE></PRE>: Usefull for debugging which value stdWrap actually ends up with, if you're constructing a website with TypoScript.
+			<description><![CDATA[Prints content with HTMLSpecialChars() and <PRE></PRE>: Useful for debugging which value stdWrap actually ends up with, if you're constructing a website with TypoScript.
 Should be used under construction only.]]></description>
 			<default><![CDATA[
 ]]></default>

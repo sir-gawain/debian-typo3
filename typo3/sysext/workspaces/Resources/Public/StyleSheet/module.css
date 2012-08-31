@@ -1,3 +1,4 @@
+
 ul.x-tab-strip.x-tab-strip-top {
 	width: 100%;
 }
@@ -57,10 +58,6 @@ div.typo3-dyntabmenu-divs {
 .x-grid3-row-selected {
 	color: #4D4D4D;
 }
-a#goPreviewLinkButton {
-	line-height: 18px;
-	color: #ffffff;
-}
 #typo3-mod-php div.typo3-noDoc {
 	margin: 0px 0px;
 }
@@ -76,7 +73,8 @@ div.x-grid3-row img.x-action-col-icon {
 	display:none;
 }
 
-div.x-grid3-row-over img.x-action-col-icon {
+div.x-grid3-row-over img.x-action-col-icon,
+div.x-grid3-row img.x-action-col-icon.t3-visible {
 	display:inline-block;
 }
 

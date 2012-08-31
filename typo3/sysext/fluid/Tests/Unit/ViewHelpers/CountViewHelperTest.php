@@ -1,4 +1,5 @@
 <?php
+namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers;
 
 /*                                                                        *
  * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
@@ -9,23 +10,21 @@
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
-
-require_once(dirname(__FILE__) . '/ViewHelperBaseTestcase.php');
+require_once dirname(__FILE__) . '/ViewHelperBaseTestcase.php';
 
 /**
  * Testcase for CountViewHelper
- *
  */
-class Tx_Fluid_Tests_Unit_ViewHelpers_CountViewHelperTest extends Tx_Fluid_ViewHelpers_ViewHelperBaseTestcase {
+class CountViewHelperTest extends \TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\ViewHelperBaseTestcase {
 
 	/**
-	 * @var Tx_Fluid_ViewHelpers_CountViewHelper
+	 * @var \TYPO3\CMS\Fluid\ViewHelpers\CountViewHelper
 	 */
 	protected $viewHelper;
 
 	public function setUp() {
 		parent::setUp();
-		$this->viewHelper = $this->getAccessibleMock('Tx_Fluid_ViewHelpers_CountViewHelper', array('renderChildren'));
+		$this->viewHelper = $this->getAccessibleMock('TYPO3\\CMS\\Fluid\\ViewHelpers\\CountViewHelper', array('renderChildren'));
 		$this->injectDependenciesIntoViewHelper($this->viewHelper);
 		$this->viewHelper->initializeArguments();
 	}
@@ -44,7 +43,7 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_CountViewHelperTest extends Tx_Fluid_ViewH
 	 */
 	public function renderReturnsNumberOfElementsInAnArrayObject() {
 		$expectedResult = 2;
-		$actualResult = $this->viewHelper->render(new ArrayObject(array('foo', 'bar')));
+		$actualResult = $this->viewHelper->render(new \ArrayObject(array('foo', 'bar')));
 		$this->assertSame($expectedResult, $actualResult);
 	}
 
@@ -67,7 +66,6 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_CountViewHelperTest extends Tx_Fluid_ViewH
 		$this->assertSame($expectedResult, $actualResult);
 	}
 
-
 	/**
 	 * @test
 	 */
@@ -80,13 +78,14 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_CountViewHelperTest extends Tx_Fluid_ViewH
 
 	/**
 	 * @test
-	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception
+	 * @expectedException \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
 	 */
 	public function renderThrowsExceptionIfGivenSubjectIsNotCountable() {
-		$object = new stdClass();
+		$object = new \stdClass();
 		$this->viewHelper->render($object);
 	}
 
 }
+
 
 ?>

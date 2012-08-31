@@ -1,0 +1,19 @@
+<f:layout name="DocHeader"/>
+
+<f:section name="Content">
+	<f:flashMessages renderMode="div" />
+
+	<!-- values needed to be replaced by javascript 415px, 401px, 390px 361px 337px -->
+
+	<div id="em-translations" class=" x-panel x-panel-noborder">
+		<div class="x-panel-bwrap" id="ext-gen40">
+			<div class="x-box-inner" id="ext-gen42" style="width: 1299px; height: 415px;">
+
+				<f:render partial="LanguageSelectionList" arguments="{_all}" />
+				<f:render partial="TranslationUpdateList" arguments="{_all}" />
+
+			</div>
+		</div>
+	</div>
+
+</f:section>

@@ -26,7 +26,7 @@ return array(
 	'sc_tslib_showpic' => PATH_tslib . 'showpic.php',
 	'tx_cms_mediaitems' => PATH_tslib . 'hooks/class.tx_cms_mediaitems.php',
 	'tx_cms_treelistcacheupdate' => PATH_tslib . 'hooks/class.tx_cms_treelistcacheupdate.php',
-	'tx_cms_backendlayout' => PATH_tslib . 'classes/class.tx_cms_backendlayout.php',
+	'tx_cms_backendlayout' => PATH_tslib . '../classes/class.tx_cms_backendlayout.php',
 	'tslib_content_cobjgetsinglehook' => PATH_tslib . 'interfaces/interface.tslib_content_cobjgetsinglehook.php',
 	'tslib_menu_filterMenuPagesHook' => PATH_tslib . 'interfaces/interface.tslib_menu_filterMenuPagesHook.php',
 	'tslib_content_getdatahook' => PATH_tslib . 'interfaces/interface.tslib_content_getdatahook.php',
@@ -43,7 +43,7 @@ return array(
 	'tslib_mediawizardprovider' => PATH_tslib . 'interfaces/interface.tslib_mediawizardprovider.php',
 	'tslib_mediawizardcoreprovider' => PATH_tslib . 'class.tslib_mediawizardcoreprovider.php',
 	'tslib_mediawizardmanager' => PATH_tslib . 'class.tslib_mediawizardmanager.php',
-		//content objects
+	//content objects
 	'tslib_content_abstract' => PATH_tslib . 'content/class.tslib_content_abstract.php',
 	'tslib_content_case' => PATH_tslib . 'content/class.tslib_content_case.php',
 	'tslib_content_cleargif' => PATH_tslib . 'content/class.tslib_content_cleargif.php',
@@ -76,6 +76,6 @@ return array(
 	'tslib_content_text' => PATH_tslib . 'content/class.tslib_content_text.php',
 	'tslib_content_userinternal' => PATH_tslib . 'content/class.tslib_content_userinternal.php',
 	'tslib_content_user' => PATH_tslib . 'content/class.tslib_content_user.php',
-	'tslib_content_editpanel' => PATH_tslib . 'content/class.tslib_content_editpanel.php',
+	'tslib_content_editpanel' => PATH_tslib . 'content/class.tslib_content_editpanel.php'
 );
 ?>
