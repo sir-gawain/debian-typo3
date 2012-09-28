@@ -6,3 +6,4 @@
 /usr/share/javascript/swfupload                      usr/share/typo3/typo3-6.0/typo3/contrib/swfupload
 /usr/share/javascript/swfobject                      usr/share/typo3/typo3-6.0/typo3/contrib/flashmedia/swfobject
 /usr/share/javascript/swfobject/expressInstall.swf   usr/share/typo3/typo3-6.0/typo3/contrib/extjs/resources/expressinstall.swf
+/usr/share/javascript/jquery-ui/jquery-ui.min.js     usr/share/typo3/typo3-6.0/typo3/sysext/extensionmanager/Resources/Public/JavaScript/jquery-ui-1.8.17.custom.min.js
