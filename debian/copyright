@@ -460,6 +460,10 @@ License:
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOURCE CODE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+Files: typo3/sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/*
+Copyright: 2008, Steven Wittens
+License: GPL-2
+
 License: ZLIB
  This software is provided 'as-is', without any express or implied
  warranty. In no event will the authors be held liable for any

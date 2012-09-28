@@ -77,6 +77,7 @@ install: build
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/lib/corelib/license.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
 	rm $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
