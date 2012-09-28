@@ -1,0 +1,34 @@
+{namespace lang=TYPO3\CMS\Lang\ViewHelpers}
+
+<lang:be.container
+	loadJQuery="1"
+	addCssFile="{f:uri.resource(path:'StyleSheet/LangModule.css')}"
+	addJsFile="{f:uri.resource(path:'JavaScript/LangModule.js')}"
+>
+	<div class="typo3-fullDoc">
+
+		<div id="typo3-docheader">
+			<div class="typo3-docheader-functions">
+				<div class="left">
+					<f:be.buttons.csh />
+				</div>
+				<div class="right">
+				</div>
+			</div>
+			<div class="typo3-docheader-buttons">
+				<div class="left">
+				</div>
+				<div class="right">
+					<f:be.buttons.shortcut />
+				</div>
+			</div>
+		</div>
+
+		<div id="typo3-docbody">
+			<div id="typo3-inner-docbody">
+				<f:render section="content" />
+			</div>
+		</div>
+
+	</div>
+</lang:be.container>

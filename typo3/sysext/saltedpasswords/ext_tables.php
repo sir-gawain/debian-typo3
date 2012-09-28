@@ -10,7 +10,7 @@ if (\TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility::isUsageEnabled('F
 	// Remove md5 and temporary password from the list of evaluated methods
 	unset($operations['md5'], $operations['password']);
 	// Append new methods to have "password" as last operation.
-	$operations['TYPO3\\CMS\\Saltedpasswords\\Evaluation\\Evaluator_fe'] = 1;
+	$operations['tx_saltedpasswords_eval_fe'] = 1;
 	$operations['password'] = 1;
 	$GLOBALS['TCA']['fe_users']['columns']['password']['config']['eval'] = implode(',', array_keys($operations));
 	unset($operations);
@@ -23,7 +23,7 @@ if (\TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility::isUsageEnabled('B
 	// Remove md5 and temporary password from the list of evaluated methods
 	unset($operations['md5'], $operations['password']);
 	// Append new methods to have "password" as last operation.
-	$operations['TYPO3\\CMS\\Saltedpasswords\\Evaluation\\BackendEvaluator'] = 1;
+	$operations['tx_saltedpasswords_eval_be'] = 1;
 	$operations['password'] = 1;
 	$GLOBALS['TCA']['be_users']['columns']['password']['config']['eval'] = implode(',', array_keys($operations));
 	unset($operations);
@@ -32,5 +32,5 @@ if (\TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility::isUsageEnabled('B
 	$GLOBALS['TYPO3_USER_SETTINGS']['columns']['password2']['eval'] = '';
 }
 // Add context sensitive help (csh) for scheduler task
-\TYPO3\CMS\Core\Extension\ExtensionManager::addLLrefForTCAdescr('_txsaltedpasswords', ('EXT:' . $_EXTKEY) . '/locallang_csh_saltedpasswords.xml');
+\TYPO3\CMS\Core\Extension\ExtensionManager::addLLrefForTCAdescr('_txsaltedpasswords', 'EXT:' . $_EXTKEY . '/locallang_csh_saltedpasswords.xml');
 ?>

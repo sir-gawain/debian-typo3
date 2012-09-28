@@ -84,7 +84,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 	 *
 	 * @param string $logFile path to the log file, relative to PATH_site
 	 * @return \TYPO3\CMS\Core\Log\Writer\Writer
-	 * @throws InvalidArgumentException
+	 * @throws \InvalidArgumentException
 	 */
 	public function setLogFile($logFile) {
 		if (is_resource(self::$logFileHandle)) {
@@ -94,7 +94,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 		// This is used by unit tests with vfs:// directories
 		if (FALSE === strpos($logFile, '://')) {
 			if (!\TYPO3\CMS\Core\Utility\GeneralUtility::isAllowedAbsPath((PATH_site . $logFile))) {
-				throw new \InvalidArgumentException(('Log file path "' . $logFile) . '" is not valid!', 1326411176);
+				throw new \InvalidArgumentException('Log file path "' . $logFile . '" is not valid!', 1326411176);
 			}
 			$logFile = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($logFile);
 		}
@@ -117,7 +117,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 	 *
 	 * @param \TYPO3\CMS\Core\Log\LogRecord $record Log record
 	 * @return \TYPO3\CMS\Core\Log\Writer\Writer $this
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	public function writeLog(\TYPO3\CMS\Core\Log\LogRecord $record) {
 		if (FALSE === fwrite(self::$logFileHandle, $record . LF)) {
@@ -136,7 +136,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 		$this->createLogFile();
 		self::$logFileHandle = fopen($this->logFile, 'a');
 		if (!is_resource(self::$logFileHandle)) {
-			throw new \RuntimeException(('Could not open log file "' . $this->logFile) . '"', 1321804422);
+			throw new \RuntimeException('Could not open log file "' . $this->logFile . '"', 1321804422);
 		}
 	}
 

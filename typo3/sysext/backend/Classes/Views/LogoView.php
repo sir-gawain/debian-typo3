@@ -56,12 +56,12 @@ class LogoView {
 			// Overwrite
 			$logoFile = $this->logo;
 		}
-		$imgInfo = getimagesize((PATH_site . TYPO3_mainDir) . $logoFile);
-		$logo = ((((('<a href="' . TYPO3_URL_GENERAL) . '" target="_blank">') . '<img') . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg('', $logoFile, $imgInfo[3])) . ' title="TYPO3 Content Management System" alt="" />') . '</a>';
+		$imgInfo = getimagesize(PATH_site . TYPO3_mainDir . $logoFile);
+		$logo = '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg('', $logoFile, $imgInfo[3]) . ' title="TYPO3 Content Management System" alt="" />' . '</a>';
 		// Overwrite with custom logo
 		if ($GLOBALS['TBE_STYLES']['logo']) {
 			$imgInfo = @getimagesize(\TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath((PATH_typo3 . $GLOBALS['TBE_STYLES']['logo']), 3));
-			$logo = ((((((('<a href="' . TYPO3_URL_GENERAL) . '" target="_blank">') . '<img src="') . $GLOBALS['TBE_STYLES']['logo']) . '" ') . $imgInfo[3]) . ' title="TYPO3 Content Management System" alt="" />') . '</a>';
+			$logo = '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . '<img src="' . $GLOBALS['TBE_STYLES']['logo'] . '" ' . $imgInfo[3] . ' title="TYPO3 Content Management System" alt="" />' . '</a>';
 		}
 		return $logo;
 	}
@@ -70,7 +70,7 @@ class LogoView {
 	 * Sets the logo
 	 *
 	 * @param string $logo Path to logo file as seen from typo3/
-	 * @throws InvalidArgumentException
+	 * @throws \InvalidArgumentException
 	 */
 	public function setLogo($logo) {
 		if (!is_string($logo)) {

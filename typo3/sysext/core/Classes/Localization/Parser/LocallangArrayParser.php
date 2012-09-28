@@ -77,7 +77,7 @@ class LocallangArrayParser implements \TYPO3\CMS\Core\Localization\Parser\Locali
 	 * @param string $languageKey Language key
 	 * @param string $charset Charset
 	 * @return array
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	public function getParsedData($sourcePath, $languageKey, $charset = '') {
 		$this->validateParameters($sourcePath, $languageKey);
@@ -133,7 +133,7 @@ class LocallangArrayParser implements \TYPO3\CMS\Core\Localization\Parser\Locali
 	 * @param string $sourcePath
 	 * @param string $languageKey
 	 * @return array
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	protected function generateCacheFile($sourcePath, $languageKey) {
 		$LOCAL_LANG = array();
@@ -141,7 +141,7 @@ class LocallangArrayParser implements \TYPO3\CMS\Core\Localization\Parser\Locali
 		include $sourcePath;
 		if (!is_array($LOCAL_LANG)) {
 			$fileName = substr($sourcePath, strlen(PATH_site));
-			throw new \RuntimeException(('TYPO3 Fatal Error: "' . $fileName) . '" is no TYPO3 language file!', 1308898491);
+			throw new \RuntimeException('TYPO3 Fatal Error: "' . $fileName . '" is no TYPO3 language file!', 1308898491);
 		}
 		// Converting the default language (English)
 		// This needs to be done for a few accented loan words and extension names
@@ -151,14 +151,18 @@ class LocallangArrayParser implements \TYPO3\CMS\Core\Localization\Parser\Locali
 			}
 			unset($labelValue);
 		}
-		if (($languageKey !== 'default' && is_array($LOCAL_LANG[$languageKey])) && $this->sourceCharset != $this->targetCharset) {
+		if ($languageKey !== 'default' && is_array($LOCAL_LANG[$languageKey]) && $this->sourceCharset != $this->targetCharset) {
 			foreach ($LOCAL_LANG[$languageKey] as &$labelValue) {
 				$labelValue = $this->csConvObj->conv($labelValue, $this->sourceCharset, $this->targetCharset);
 			}
 			unset($labelValue);
 		}
 		// Cache the content now:
-		$serContent = array('origFile' => $this->hashSource, 'LOCAL_LANG' => array('default' => $LOCAL_LANG['default'], $languageKey => $LOCAL_LANG[$languageKey]));
+		if (isset($LOCAL_LANG[$languageKey])) {
+			$serContent = array('origFile' => $this->hashSource, 'LOCAL_LANG' => array('default' => $LOCAL_LANG['default'], $languageKey => $LOCAL_LANG[$languageKey]));
+		} else {
+			$serContent = array('origFile' => $this->hashSource, 'LOCAL_LANG' => array('default' => $LOCAL_LANG['default']));
+		}
 		$res = \TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($this->cacheFileName, serialize($serContent));
 		if ($res) {
 			throw new \RuntimeException('TYPO3 Fatal Error: "' . $res, 1308898501);
@@ -174,8 +178,8 @@ class LocallangArrayParser implements \TYPO3\CMS\Core\Localization\Parser\Locali
 	 * @return void
 	 */
 	protected function generateCacheFileName($sourcePath, $languageKey) {
-		$this->hashSource = ((substr($sourcePath, strlen(PATH_site)) . '|') . date('d-m-Y H:i:s', filemtime($sourcePath))) . '|version=2.3';
-		$this->cacheFileName = ((((((((PATH_site . 'typo3temp/llxml/') . substr(basename($sourcePath), 10, 15)) . '_') . \TYPO3\CMS\Core\Utility\GeneralUtility::shortMD5($this->hashSource)) . '.') . $languageKey) . '.') . $this->targetCharset) . '.cache';
+		$this->hashSource = substr($sourcePath, strlen(PATH_site)) . '|' . date('d-m-Y H:i:s', filemtime($sourcePath)) . '|version=2.3';
+		$this->cacheFileName = PATH_site . 'typo3temp/llxml/' . substr(basename($sourcePath), 10, 15) . '_' . \TYPO3\CMS\Core\Utility\GeneralUtility::shortMD5($this->hashSource) . '.' . $languageKey . '.' . $this->targetCharset . '.cache';
 	}
 
 	/**
@@ -221,10 +225,10 @@ class LocallangArrayParser implements \TYPO3\CMS\Core\Localization\Parser\Locali
 	 * @param string $sourcePath
 	 * @param string $languageKey
 	 * @return void
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	protected function validateParameters($sourcePath, $languageKey) {
-		if ((!$this->isWithinWebRoot($sourcePath) || !@is_file($sourcePath)) || !$languageKey) {
+		if (!$this->isWithinWebRoot($sourcePath) || !@is_file($sourcePath) || !$languageKey) {
 			throw new \RuntimeException(sprintf('Invalid source path (%s) or languageKey (%s)', $sourcePath, $languageKey), 1309245002);
 		}
 	}

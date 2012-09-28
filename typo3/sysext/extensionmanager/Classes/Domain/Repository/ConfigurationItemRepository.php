@@ -54,7 +54,7 @@ class ConfigurationItemRepository {
 	 * @return null|SplObjectStorage
 	 */
 	public function findByExtension(array $extension) {
-		$configRaw = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl((PATH_site . $extension['siteRelPath']) . '/ext_conf_template.txt');
+		$configRaw = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(PATH_site . $extension['siteRelPath'] . '/ext_conf_template.txt');
 		$configurationObjectStorage = NULL;
 		if ($configRaw) {
 			$configurationObjectStorage = $this->convertRawConfigurationToObject($configRaw, $extension);
@@ -192,15 +192,21 @@ class ConfigurationItemRepository {
 	 * @return array
 	 */
 	protected function mergeWithExistingConfiguration(array $configuration, array $extension) {
-		$currentExtensionConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extension['key']]);
+		try {
+			$currentExtensionConfig = unserialize(
+				\TYPO3\CMS\Core\Configuration\ConfigurationManager::getConfigurationValueByPath(
+					'EXT/extConf/' . $extension['key']
+				)
+			);
+		} catch (\RuntimeException $e) {
+			$currentExtensionConfig = array();
+		}
 		$flatExtensionConfig = \TYPO3\CMS\Core\Utility\ArrayUtility::flatten($currentExtensionConfig);
 		$valuedCurrentExtensionConfig = array();
 		foreach ($flatExtensionConfig as $key => $value) {
 			$valuedCurrentExtensionConfig[$key]['value'] = $value;
 		}
-		if (is_array($currentExtensionConfig)) {
-			$configuration = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($configuration, $valuedCurrentExtensionConfig);
-		}
+		$configuration = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($configuration, $valuedCurrentExtensionConfig);
 		return $configuration;
 	}
 

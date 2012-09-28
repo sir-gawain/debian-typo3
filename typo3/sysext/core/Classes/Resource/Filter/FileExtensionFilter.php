@@ -65,19 +65,21 @@ class FileExtensionFilter {
 			$this->setDisallowedFileExtensions($parameters['disallowedFileExtensions']);
 		}
 		$cleanValues = array();
-		foreach ($values as $value) {
-			if (empty($value)) {
-				continue;
-			}
-			$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::revExplode('_', $value, 2);
-			$fileReferenceUid = $parts[count($parts) - 1];
-			$fileReference = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileReferenceObject($fileReferenceUid);
-			$file = $fileReference->getOriginalFile();
-			if ($this->isAllowed($file)) {
-				$cleanValues[] = $value;
-			} else {
-				// Remove the erroneously created reference record again
-				$tceMain->deleteAction('sys_file_reference', $fileReferenceUid);
+		if (is_array($values)) {
+			foreach ($values as $value) {
+				if (empty($value)) {
+					continue;
+				}
+				$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::revExplode('_', $value, 2);
+				$fileReferenceUid = $parts[count($parts) - 1];
+				$fileReference = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileReferenceObject($fileReferenceUid);
+				$file = $fileReference->getOriginalFile();
+				if ($this->isAllowed($file)) {
+					$cleanValues[] = $value;
+				} else {
+					// Remove the erroneously created reference record again
+					$tceMain->deleteAction('sys_file_reference', $fileReferenceUid);
+				}
 			}
 		}
 		return $cleanValues;
@@ -122,11 +124,11 @@ class FileExtensionFilter {
 		$result = TRUE;
 		$fileExt = $file->getExtension();
 		// Check allowed file extensions
-		if (($this->allowedFileExtensions !== NULL && count($this->allowedFileExtensions) > 0) && !in_array($fileExt, $this->allowedFileExtensions)) {
+		if ($this->allowedFileExtensions !== NULL && count($this->allowedFileExtensions) > 0 && !in_array($fileExt, $this->allowedFileExtensions)) {
 			$result = FALSE;
 		}
 		// Check disallowed file extensions
-		if (($this->disallowedFileExtensions !== NULL && count($this->disallowedFileExtensions) > 0) && in_array($fileExt, $this->disallowedFileExtensions)) {
+		if ($this->disallowedFileExtensions !== NULL && count($this->disallowedFileExtensions) > 0 && in_array($fileExt, $this->disallowedFileExtensions)) {
 			$result = FALSE;
 		}
 		return $result;
