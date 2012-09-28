@@ -77,7 +77,7 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement $parentElement Parent model object
 	 * @param array $arguments Configuration array
-	 * @throws InvalidArgumentException
+	 * @throws \InvalidArgumentException
 	 * @return void
 	 */
 	public function getChildElementsByIntegerKey(\TYPO3\CMS\Form\Domain\Model\Element\AbstractElement $parentElement, array $typoscript) {
@@ -95,7 +95,7 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		} else {
-			throw new \InvalidArgumentException(('Container element with id=' . $parentElement->getElementId()) . ' has no configuration which means no children.', 1333754854);
+			throw new \InvalidArgumentException('Container element with id=' . $parentElement->getElementId() . ' has no configuration which means no children.', 1333754854);
 		}
 	}
 
@@ -163,9 +163,9 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	public function createElement($class, array $arguments = array()) {
 		$class = strtolower((string) $class);
 		if ($class === 'form') {
-			$className = 'tx_form_Domain_Model_' . ucfirst($class);
+			$className = 'TYPO3\\CMS\\Form\\Domain\\Model\\' . ucfirst($class);
 		} else {
-			$className = 'tx_form_Domain_Model_Element_' . ucfirst($class);
+			$className = 'TYPO3\\CMS\\Form\\Domain\\Model\\Element\\' . ucfirst($class) . 'Element';
 		}
 		/** @var $object \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement */
 		$object = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className);
@@ -177,7 +177,7 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 			$object->setData($arguments['data']);
 			$this->reconstituteElement($object, $arguments);
 		} else {
-			throw new \InvalidArgumentException(('Element type "' . $object->getElementType()) . '" is not supported.', 1333754878);
+			throw new \InvalidArgumentException('Element type "' . $object->getElementType() . '" is not supported.', 1333754878);
 		}
 		return $object;
 	}
@@ -216,7 +216,7 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 			$attributes = $element->getAllowedAttributes();
 			$mandatoryAttributes = $element->getMandatoryAttributes();
 			foreach ($attributes as $attribute => $value) {
-				if (((isset($arguments[$attribute]) || isset($arguments[$attribute . '.'])) || in_array($attribute, $mandatoryAttributes)) || !empty($value)) {
+				if (isset($arguments[$attribute]) || isset($arguments[$attribute . '.']) || in_array($attribute, $mandatoryAttributes) || !empty($value)) {
 					if (!empty($arguments[$attribute])) {
 						$value = $arguments[$attribute];
 					} elseif (!empty($arguments[($attribute . '.')])) {
@@ -230,7 +230,7 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		} else {
-			throw new \InvalidArgumentException(('The element with id=' . $element->getElementId()) . ' has no default attributes set.', 1333754925);
+			throw new \InvalidArgumentException('The element with id=' . $element->getElementId() . ' has no default attributes set.', 1333754925);
 		}
 	}
 
@@ -269,7 +269,7 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 					}
 				}
 			} else {
-				throw new \InvalidArgumentException(('The element with id=' . $element->getElementId()) . ' has no additionals set.', 1333754962);
+				throw new \InvalidArgumentException('The element with id=' . $element->getElementId() . ' has no additionals set.', 1333754962);
 			}
 		}
 	}

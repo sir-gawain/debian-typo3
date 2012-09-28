@@ -131,7 +131,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param \TYPO3\CMS\Core\Log\Logger $logger Logger to configure
 	 * @return void
-	 * @throws RangeException
+	 * @throws \RangeException
 	 */
 	protected function setWritersForLogger(\TYPO3\CMS\Core\Log\Logger $logger) {
 		$configuration = $this->getConfigurationForLogger(self::CONFIGURATION_TYPE_WRITER, $logger->getName());
@@ -143,7 +143,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 					$logWriter = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($logWriterClassName, $logWriterOptions);
 					$logger->addWriter($severityLevel, $logWriter);
 				} catch (\RangeException $e) {
-					$logger->warning(((((('Instantiation of LogWriter "' . $logWriterClassName) . '" failed for logger ') . $logger->getName()) . ' (') . $e->getMessage()) . ')');
+					$logger->warning('Instantiation of LogWriter "' . $logWriterClassName . '" failed for logger ' . $logger->getName() . ' (' . $e->getMessage() . ')');
 				}
 			}
 		}
@@ -154,7 +154,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param \TYPO3\CMS\Core\Log\Logger $logger Logger to configure
 	 * @return void
-	 * @throws RangeException
+	 * @throws \RangeException
 	 */
 	protected function setProcessorsForLogger(\TYPO3\CMS\Core\Log\Logger $logger) {
 		$configuration = $this->getConfigurationForLogger(self::CONFIGURATION_TYPE_PROCESSOR, $logger->getName());
@@ -166,7 +166,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 					$logProcessor = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($logProcessorClassName, $logProcessorOptions);
 					$logger->addProcessor($severityLevel, $logProcessor);
 				} catch (\RangeException $e) {
-					$logger->warning(((((('Instantiation of LogProcessor "' . $logProcessorClassName) . '" failed for logger ') . $logger->getName()) . ' (') . $e->getMessage()) . ')');
+					$logger->warning('Instantiation of LogProcessor "' . $logProcessorClassName . '" failed for logger ' . $logger->getName() . ' (' . $e->getMessage() . ')');
 				}
 			}
 		}
@@ -178,7 +178,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param string $configurationType Type of config to return (writer, processor)
 	 * @param string $loggerName Logger name
-	 * @throws RangeException
+	 * @throws \RangeException
 	 * @return array
 	 */
 	protected function getConfigurationForLogger($configurationType, $loggerName) {
@@ -202,7 +202,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 			try {
 				\TYPO3\CMS\Core\Log\LogLevel::validateLevel($level);
 			} catch (\RangeException $e) {
-				throw new \RangeException(((((('The given severity level "' . htmlspecialchars($level)) . '" for ') . $configurationKey) . ' of logger "') . $loggerName) . '" is not valid.', 1326406447);
+				throw new \RangeException('The given severity level "' . htmlspecialchars($level) . '" for ' . $configurationKey . ' of logger "' . $loggerName . '" is not valid.', 1326406447);
 			}
 		}
 		return $result;
