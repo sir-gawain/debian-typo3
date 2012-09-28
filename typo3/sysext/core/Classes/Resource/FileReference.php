@@ -125,11 +125,11 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 *
 	 * @param string $key The property to be looked up
 	 * @return mixed
-	 * @throws InvalidArgumentException
+	 * @throws \InvalidArgumentException
 	 */
 	public function getProperty($key) {
 		if (!$this->hasProperty($key)) {
-			throw new \InvalidArgumentException(('Property "' . $key) . '" was not found.', 1314226805);
+			throw new \InvalidArgumentException('Property "' . $key . '" was not found.', 1314226805);
 		}
 		return $this->propertiesOfFileReference[$key];
 	}

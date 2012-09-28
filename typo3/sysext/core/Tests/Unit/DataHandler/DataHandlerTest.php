@@ -56,6 +56,11 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 	protected $databaseBackup = NULL;
 
 	/**
+	 * @var array A backup of registered singleton instances
+	 */
+	protected $singletonInstances = array();
+
+	/**
 	 * @var \TYPO3\CMS\Core\DataHandler\DataHandler
 	 */
 	private $fixture;
@@ -66,6 +71,7 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 	private $backEndUser;
 
 	public function setUp() {
+		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
 		$this->databaseBackup = $GLOBALS['TYPO3_DB'];
 		$this->backEndUser = $this->getMock('TYPO3\\CMS\\Core\\Authentication\\BackendUserAuthentication');
 		$this->fixture = new \TYPO3\CMS\Core\DataHandler\DataHandler();
@@ -73,7 +79,7 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 	}
 
 	public function tearDown() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::purgeInstances();
+		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances($this->singletonInstances);
 		$GLOBALS['TYPO3_DB'] = $this->databaseBackup;
 		unset($this->fixture->BE_USER, $this->fixture, $this->backEndUser, $this->databaseBackup);
 	}
@@ -171,7 +177,7 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 	 */
 	public function doesCheckModifyAccessListThrowExceptionOnWrongHookInterface() {
 		$hookClass = uniqid('tx_coretest');
-		eval(('class ' . $hookClass) . ' {}');
+		eval('class ' . $hookClass . ' {}');
 		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['checkModifyAccessList'][] = $hookClass;
 		$this->fixture->checkModifyAccessList('tt_content');
 	}
@@ -199,8 +205,8 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 	 */
 	public function doesCheckModifyAccessListHookModifyAccessAllowed() {
 		$hookClass = uniqid('tx_coretest');
-		eval(('
-			class ' . $hookClass) . ' implements \\TYPO3\\CMS\\Core\\DataHandling\\DataHandlerCheckModifyAccessListHookInterface {
+		eval('
+			class ' . $hookClass . ' implements \\TYPO3\\CMS\\Core\\DataHandling\\DataHandlerCheckModifyAccessListHookInterface {
 				public function checkModifyAccessList(&$accessAllowed, $table, \\TYPO3\\CMS\\Core\\DataHandler\\DataHandler $parent) { $accessAllowed = TRUE; }
 			}
 		');
@@ -226,7 +232,11 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function processDatamapWhenEditingRecordInWorkspaceCreatesNewRecordInWorkspace() {
+			// Unset possible hooks on method under test
+		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'] = array();
+
 		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection');
+		/** @var $fixture \TYPO3\CMS\Core\DataHandler\DataHandler|\tx_phpunit_testcase */
 		$fixture = $this->getMock('TYPO3\\CMS\\Core\\DataHandler\\DataHandler', array('newlog', 'checkModifyAccessList', 'tableReadOnly', 'checkRecordUpdateAccess'));
 		$fixture->bypassWorkspaceRestrictions = FALSE;
 		$fixture->datamap = array(
@@ -311,8 +321,8 @@ class DataHandlerTest extends \tx_phpunit_testcase {
 		$this->fixture->enableLogging = TRUE;
 		$this->fixture->errorLog = array();
 		$logDetails = uniqid('details');
-		$this->fixture->log('', 23, 0, 42, 1, ('%1s' . $logDetails) . '%2s', -1, array('foo', 'bar'));
-		$expected = ('foo' . $logDetails) . 'bar';
+		$this->fixture->log('', 23, 0, 42, 1, '%1s' . $logDetails . '%2s', -1, array('foo', 'bar'));
+		$expected = 'foo' . $logDetails . 'bar';
 		$this->assertStringEndsWith($expected, $this->fixture->errorLog[0]);
 	}
 

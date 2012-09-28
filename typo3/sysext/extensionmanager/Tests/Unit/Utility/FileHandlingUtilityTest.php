@@ -23,22 +23,26 @@ namespace TYPO3\CMS\Extensionmanager\Tests\Unit\Utility;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Testcase for the Tx_Extensionmanager_Utility_List class in the TYPO3 Core.
+ * Testcase
  *
  * @package Extension Manager
  * @subpackage Tests
  */
 class FileHandlingUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
-	public $fakedExtensions;
+	/**
+	 * @var array List of created fake extensions to be deleted in tearDown() again
+	 */
+	protected $fakedExtensions = array();
 
 	/**
 	 * @return void
 	 */
 	public function tearDown() {
 		foreach ($this->fakedExtensions as $extension => $dummy) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir((PATH_site . 'typo3conf/ext/') . $extension, TRUE);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir(PATH_site . 'typo3conf/ext/' . $extension, TRUE);
 		}
 	}
 
@@ -51,8 +55,8 @@ class FileHandlingUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 	 */
 	protected function createFakeExtension($extkeyOnly = FALSE) {
 		$extKey = strtolower(uniqid('testing'));
-		$absExtPath = ((PATH_site . 'typo3conf/ext/') . $extKey) . '/';
-		$relPath = ('typo3conf/ext/' . $extKey) . '/';
+		$absExtPath = PATH_site . 'typo3conf/ext/' . $extKey . '/';
+		$relPath = 'typo3conf/ext/' . $extKey . '/';
 		$this->fakedExtensions[$extKey] = array(
 			'siteRelPath' => $relPath,
 			'siteAbsPath' => $absExtPath
@@ -71,7 +75,7 @@ class FileHandlingUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 	public function makeAndClearExtensionDirRemovesExtensionDirIfAlreadyExists() {
 		$extKey = $this->createFakeExtension();
 		$fileHandlerMock = $this->getAccessibleMock('TYPO3\\CMS\\Extensionmanager\\Utility\\FileHandlingUtility', array('removeDirectory', 'addDirectory'));
-		$fileHandlerMock->expects($this->once())->method('removeDirectory')->with(((PATH_site . 'typo3conf/ext/') . $extKey) . '/');
+		$fileHandlerMock->expects($this->once())->method('removeDirectory')->with(PATH_site . 'typo3conf/ext/' . $extKey . '/');
 		$fileHandlerMock->_call('makeAndClearExtensionDir', $extKey);
 	}
 
@@ -82,7 +86,7 @@ class FileHandlingUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 	public function makeAndClearExtensionDirAddsDir() {
 		$extKey = $this->createFakeExtension();
 		$fileHandlerMock = $this->getAccessibleMock('TYPO3\\CMS\\Extensionmanager\\Utility\\FileHandlingUtility', array('removeDirectory', 'addDirectory'));
-		$fileHandlerMock->expects($this->once())->method('addDirectory')->with(((PATH_site . 'typo3conf/ext/') . $extKey) . '/');
+		$fileHandlerMock->expects($this->once())->method('addDirectory')->with(PATH_site . 'typo3conf/ext/' . $extKey . '/');
 		$fileHandlerMock->_call('makeAndClearExtensionDir', $extKey);
 	}
 
@@ -110,17 +114,6 @@ class FileHandlingUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 
 	/**
 	 * @test
-	 * @expectedException \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
-	 * @return void
-	 */
-	public function addDirectoryThrowsExceptionOnError() {
-		$extDirPath = '/etc/test123/';
-		$fileHandlerMock = $this->getAccessibleMock('TYPO3\\CMS\\Extensionmanager\\Utility\\FileHandlingUtility', array('dummy'));
-		$fileHandlerMock->_call('addDirectory', $extDirPath);
-	}
-
-	/**
-	 * @test
 	 * @return void
 	 */
 	public function removeDirectoryRemovesDirectory() {
@@ -129,17 +122,6 @@ class FileHandlingUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 		$this->assertTrue(is_dir($extDirPath));
 		$fileHandlerMock->_call('removeDirectory', $extDirPath);
 		$this->assertFalse(is_dir($extDirPath));
-	}
-
-	/**
-	 * @test
-	 * @expectedException \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
-	 * @return void
-	 */
-	public function removeDirectoryThrowsExceptionOnError() {
-		$extDirPath = '/etc/test123/';
-		$fileHandlerMock = $this->getAccessibleMock('TYPO3\\CMS\\Extensionmanager\\Utility\\FileHandlingUtility', array('dummy'));
-		$fileHandlerMock->_call('removeDirectory', $extDirPath);
 	}
 
 	/**

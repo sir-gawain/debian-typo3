@@ -33,6 +33,24 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility\File;
 class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 
 	/**
+	 * @var boolean Enable backup of global and system variables
+	 */
+	protected $backupGlobals = TRUE;
+
+	/**
+	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
+	 * because resource types cannot be handled during serializing
+	 *
+	 * @var array
+	 */
+	protected $backupGlobalsBlacklist = array('TYPO3_DB');
+
+	/**
+	 * @var array A backup of registered singleton instances
+	 */
+	protected $singletonInstances = array();
+
+	/**
 	 * @var \TYPO3\CMS\Core\Utility\File\ExtendedFileUtility
 	 */
 	protected $fileProcessor;
@@ -91,6 +109,8 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 		$this->fileProcessor->init($GLOBALS['FILEMOUNTS'], $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']);
 		$this->fileProcessor->init_actionPerms($GLOBALS['BE_USER']->getFileoperationPermissions());
 		$this->fileProcessor->dontCheckForUnique = 1;
+		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
+		\TYPO3\CMS\Core\Utility\GeneralUtility::purgeInstances();
 	}
 
 	/**
@@ -103,6 +123,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 			}
 		}
 		$this->objectsToTearDown = array();
+		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances($this->singletonInstances);
 	}
 
 	/**
@@ -127,7 +148,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 		$storage = $this->getDefaultStorage();
 		$folderIdentifier = '/';
 		// the root of the storage
-		$folderCombinedIdentifier = ($storage->getUid() . ':') . $folderIdentifier;
+		$folderCombinedIdentifier = $storage->getUid() . ':' . $folderIdentifier;
 		return $folderCombinedIdentifier;
 	}
 
@@ -189,7 +210,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function deleteFileInLocalStorage() {
 		// Computes a $fileIdentifier which looks like 8:/fileName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$fileIdentifier = ($storage->getUid() . ':/') . $this->newFileNameInput;
+		$fileIdentifier = $storage->getUid() . ':/' . $this->newFileNameInput;
 		// Defines values
 		$fileValues = array(
 			'newfile' => array(
@@ -215,7 +236,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function deleteFolderInLocalStorage() {
 		// Computes a $fileIdentifier which looks like 8:/fileName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$folderIdentifier = ($storage->getUid() . ':/') . $this->newFolderNameInput;
+		$folderIdentifier = $storage->getUid() . ':/' . $this->newFolderNameInput;
 		// Defines values
 		$fileValues = array(
 			'newfolder' => array(
@@ -244,7 +265,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function renameFileInLocalStorage() {
 		// Computes a $fileIdentifier which looks like 8:/fileName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$fileIdentifier = ($storage->getUid() . ':/') . $this->newFileNameInput;
+		$fileIdentifier = $storage->getUid() . ':/' . $this->newFileNameInput;
 		// Defines values
 		$fileValues = array(
 			'newfile' => array(
@@ -276,7 +297,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function renameFolderInLocalStorage() {
 		// Computes a $fileIdentifier which looks like 8:/fileName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$folderIdentifier = ($storage->getUid() . ':/') . $this->newFolderNameInput;
+		$folderIdentifier = $storage->getUid() . ':/' . $this->newFolderNameInput;
 		// Defines values
 		$fileValues = array(
 			'newfolder' => array(
@@ -311,7 +332,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function moveFileInLocalStorage() {
 		// Computes a $fileIdentifier which looks like 8:/fileName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$fileIdentifier = ($storage->getUid() . ':/') . $this->newFileNameInput;
+		$fileIdentifier = $storage->getUid() . ':/' . $this->newFileNameInput;
 		$targetFolder = $this->getRootFolderIdentifier() . $this->newFolderNameInput;
 		// Defines values
 		$fileValues = array(
@@ -353,7 +374,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function moveFolderInLocalStorage() {
 		// Computes a $folderIdentifier which looks like 8:/folderName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$folderIdentifier = ($storage->getUid() . ':/') . $this->moveFolderNameInput;
+		$folderIdentifier = $storage->getUid() . ':/' . $this->moveFolderNameInput;
 		$targetFolder = $this->getRootFolderIdentifier() . $this->newFolderNameInput;
 		// Defines values
 		$fileValues = array(
@@ -396,7 +417,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function copyFileInLocalStorage() {
 		// Computes a $fileIdentifier which looks like 8:/fileName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$fileIdentifier = ($storage->getUid() . ':/') . $this->newFileNameInput;
+		$fileIdentifier = $storage->getUid() . ':/' . $this->newFileNameInput;
 		$targetFolder = $this->getRootFolderIdentifier() . $this->newFolderNameInput;
 		// Defines values
 		$fileValues = array(
@@ -441,7 +462,7 @@ class ExtendedFileUtilityTest extends \tx_phpunit_testcase {
 	public function copyFolderInLocalStorage() {
 		// Computes a $folderIdentifier which looks like 8:/folderName.txt where 8 is the storage Uid
 		$storage = $this->getDefaultStorage();
-		$folderIdentifier = ($storage->getUid() . ':/') . $this->copyFolderNameInput;
+		$folderIdentifier = $storage->getUid() . ':/' . $this->copyFolderNameInput;
 		$targetFolder = $this->getRootFolderIdentifier() . $this->newFolderNameInput;
 		// Defines values
 		$fileValues = array(

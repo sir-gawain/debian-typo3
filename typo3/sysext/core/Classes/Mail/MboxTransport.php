@@ -79,7 +79,7 @@ class MboxTransport implements \Swift_Transport {
 	 * @param Swift_Mime_Message $message The message to send
 	 * @param string[] &$failedRecipients To collect failures by-reference, nothing will fail in our debugging case
 	 * @return int
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	public function send(\Swift_Mime_Message $message, &$failedRecipients = NULL) {
 		$message->generateId();
@@ -104,7 +104,7 @@ class MboxTransport implements \Swift_Transport {
 		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($this->debugFile);
 		$lockObject->release();
 		// Return every receipient as "delivered"
-		$count = (count((array) $message->getTo()) + count((array) $message->getCc())) + count((array) $message->getBcc());
+		$count = count((array) $message->getTo()) + count((array) $message->getCc()) + count((array) $message->getBcc());
 		return $count;
 	}
 

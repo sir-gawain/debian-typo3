@@ -41,7 +41,34 @@ define('TYPO3_MODE', 'FE');
 // Prevent any output until AJAX/compression is initialized to stop
 // AJAX/compression data corruption
 ob_start();
-\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->registerExtDirectComponents()->populateLocalConfiguration()->initializeCachingFramework()->registerAutoloader()->checkUtf8DatabaseSettingsOrDie()->transferDeprecatedCurlSettings()->setCacheHashOptions()->enforceCorrectProxyAuthScheme()->setDefaultTimezone()->initializeL10nLocales()->configureImageProcessingOptions()->convertPageNotFoundHandlingToBoolean()->registerGlobalDebugFunctions()->registerSwiftMailer()->configureExceptionHandling()->setMemoryLimit()->defineTypo3RequestTypes()->populateTypo3LoadedExtGlobal(TRUE)->loadAdditionalConfigurationFromExtensions(TRUE)->deprecationLogForOldExtCacheSetting()->initializeExceptionHandling()->requireAdditionalExtensionFiles()->setFinalCachingFrameworkCacheConfiguration()->defineLoggingAndExceptionConstants()->unsetReservedGlobalVariables();
+
+\TYPO3\CMS\Core\Core\Bootstrap::getInstance()
+	->registerExtDirectComponents()
+	->populateLocalConfiguration()
+	->initializeCachingFramework()
+	->registerAutoloader()
+	->checkUtf8DatabaseSettingsOrDie()
+	->transferDeprecatedCurlSettings()
+	->setCacheHashOptions()
+	->enforceCorrectProxyAuthScheme()
+	->setDefaultTimezone()
+	->initializeL10nLocales()
+	->configureImageProcessingOptions()
+	->convertPageNotFoundHandlingToBoolean()
+	->registerGlobalDebugFunctions()
+	->registerSwiftMailer()
+	->configureExceptionHandling()
+	->setMemoryLimit()
+	->defineTypo3RequestTypes()
+	->populateTypo3LoadedExtGlobal(TRUE)
+	->loadAdditionalConfigurationFromExtensions(TRUE)
+	->deprecationLogForOldExtCacheSetting()
+	->initializeExceptionHandling()
+	->requireAdditionalExtensionFiles()
+	->setFinalCachingFrameworkCacheConfiguration()
+	->defineLoggingAndExceptionConstants()
+	->unsetReservedGlobalVariables();
+
 if (!\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('cms')) {
 	die('<strong>Error:</strong> The main frontend extension "cms" was not loaded. Enable it in the extension manager in the backend.');
 }
@@ -208,7 +235,7 @@ $TSFE->storeSessionData();
 $TYPO3_MISC['microtime_end'] = microtime(TRUE);
 $TSFE->setParseTime();
 if ($TSFE->isOutputting() && (!empty($TSFE->TYPO3_CONF_VARS['FE']['debug']) || !empty($TSFE->config['config']['debug']))) {
-	$TSFE->content .= ((LF . '<!-- Parsetime: ') . $TSFE->scriptParseTime) . 'ms -->';
+	$TSFE->content .= LF . '<!-- Parsetime: ' . $TSFE->scriptParseTime . 'ms -->';
 }
 // Check JumpUrl
 $TSFE->jumpurl();
@@ -223,7 +250,7 @@ $TT->pull();
 // beLoginLinkIPList
 echo $TSFE->beLoginLinkIPList();
 // Admin panel
-if ((is_object($BE_USER) && $BE_USER->isAdminPanelVisible()) && $TSFE->isBackendUserLoggedIn()) {
+if (is_object($BE_USER) && $BE_USER->isAdminPanelVisible() && $TSFE->isBackendUserLoggedIn()) {
 	$TSFE->content = str_ireplace('</head>', $BE_USER->adminPanel->getAdminPanelHeaderData() . '</head>', $TSFE->content);
 	$TSFE->content = str_ireplace('</body>', $BE_USER->displayAdminPanel() . '</body>', $TSFE->content);
 }
@@ -231,7 +258,7 @@ if ($sendTSFEContent) {
 	echo $TSFE->content;
 }
 // Debugging Output
-if ((isset($error) && is_object($error)) && @is_callable(array($error, 'debugOutput'))) {
+if (isset($error) && is_object($error) && @is_callable(array($error, 'debugOutput'))) {
 	$error->debugOutput();
 }
 if (TYPO3_DLOG) {

@@ -129,7 +129,7 @@ class Locker {
 		case 'disable':
 			break;
 		default:
-			throw new \InvalidArgumentException(('No such method "' . $method) . '"', 1294586097);
+			throw new \InvalidArgumentException('No such method "' . $method . '"', 1294586097);
 		}
 	}
 
@@ -194,7 +194,7 @@ class Locker {
 				// Lock with blocking (waiting for similar locks to become released)
 				$noWait = FALSE;
 			} else {
-				throw new \RuntimeException(('Could not lock file "' . $this->resource) . '"', 1294586100);
+				throw new \RuntimeException('Could not lock file "' . $this->resource . '"', 1294586100);
 			}
 			break;
 		case 'semaphore':
@@ -231,10 +231,12 @@ class Locker {
 			}
 			break;
 		case 'flock':
-			if (flock($this->filepointer, LOCK_UN) == FALSE) {
-				$success = FALSE;
+			if (is_resource($this->filepointer)) {
+				if (flock($this->filepointer, LOCK_UN) == FALSE) {
+					$success = FALSE;
+				}
+				fclose($this->filepointer);
 			}
-			fclose($this->filepointer);
 			if (\TYPO3\CMS\Core\Utility\GeneralUtility::isAllowedAbsPath($this->resource) && \TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/locks/')) {
 				@unlink($this->resource);
 			}
@@ -319,7 +321,7 @@ class Locker {
 	 */
 	public function sysLog($message, $severity = 0) {
 		if ($this->isLoggingEnabled) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog((((('Locking [' . $this->method) . '::') . $this->id) . ']: ') . trim($message), $this->syslogFacility, $severity);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('Locking [' . $this->method . '::' . $this->id . ']: ' . trim($message), $this->syslogFacility, $severity);
 		}
 	}
 

@@ -76,7 +76,7 @@ class LockerTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function constructorThrowsExceptionForNotExistingLockingMethod() {
 		$instance = new \TYPO3\CMS\Core\Locking\Locker('999999999', 'foo');
@@ -152,7 +152,7 @@ class LockerTest extends \tx_phpunit_testcase {
 	 */
 	public function constructorSetsResourceToPathWithIdIfUsingSimpleLocking() {
 		$instance = new \TYPO3\CMS\Core\Locking\Locker('999999999', 'simple');
-		$this->assertSame((PATH_site . 'typo3temp/locks/') . md5('999999999'), $instance->getResource());
+		$this->assertSame(PATH_site . 'typo3temp/locks/' . md5('999999999'), $instance->getResource());
 	}
 
 	/**
@@ -218,7 +218,7 @@ class LockerTest extends \tx_phpunit_testcase {
 	 */
 	public function releaseRemovesLockfileInTypo3TempLocks($lockMethod) {
 		// Use a very high id to be unique
-		$instance = new \TYPO3\CMS\Core\Locking\Locker(999999999, 'simple');
+		$instance = new \TYPO3\CMS\Core\Locking\Locker(999999999, $lockMethod);
 		// Disable logging
 		$instance->setEnableLogging(FALSE);
 		// File pointer to current lock file
