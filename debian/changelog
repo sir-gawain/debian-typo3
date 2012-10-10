@@ -1,3 +1,11 @@
+typo3-src (4.5.19+dfsg1-2) unstable; urgency=low
+
+  * Added rsaauth and saltedpasswords to the list of installed extensions and
+    change owner and permissions of generated localconf.php in postinst.
+    (Closes: 689329)
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 10 Oct 2012 15:09:57 +0200
+
 typo3-src (4.5.19+dfsg1-1) unstable; urgency=high
 
   * New upstream release:
