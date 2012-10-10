@@ -27,6 +27,8 @@ if [ ! -e /etc/typo3-dummy/LocalConfiguration.php ]; then
     # genarate a random encryption key and set in into LocalConfiguration.php
     KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
     sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/LocalConfiguration.php
+    chown www-data:www-data /etc/typo3-dummy/LocalConfiguration.php
+    chmod 0600 /etc/typo3-dummy/LocalConfiguration.php
 fi
 
 # do database handling
