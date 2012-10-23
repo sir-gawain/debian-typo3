@@ -16,8 +16,8 @@ DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
 ETCDIR=debian/typo3-dummy/etc/typo3-dummy
 
 DEBIAN_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
-UPSTREAM_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+ds1),,p')
-UPSTREAM_DIR_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+ds1[~]*),,p')
+UPSTREAM_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+ds[0-9]),,p')
+UPSTREAM_DIR_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+ds[0-9][~]*),,p')
 
 UPSTREAM_DIR:=blankpackage-$(UPSTREAM_DIR_VERSION)
 DEBIAN_DIR:=$(SOURCEPACKAGE)_$(DEBIAN_VERSION)
