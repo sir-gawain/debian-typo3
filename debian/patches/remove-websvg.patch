@@ -1,0 +1,287 @@
+Description: Remove websvg from TYPO3 core
+ Websvg provides a swf file for emulating SVG on many browsers. This swf file
+ can not be build with tools in main, therefore it is removed during build.
+ This patch removes the embedding code for this swf from the TYPO3 core.
+Author: Christian Welzel <gawain@camlann.de>
+Last-Update: 2012-10-23
+
+diff --git a/typo3/sysext/core/Classes/Page/PageRenderer.php b/typo3/sysext/core/Classes/Page/PageRenderer.php
+index 144fbbe..fa8c9b0 100644
+--- a/typo3/sysext/core/Classes/Page/PageRenderer.php
++++ b/typo3/sysext/core/Classes/Page/PageRenderer.php
+@@ -285,11 +285,6 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 	protected $extJsPath = 'contrib/extjs/';
+ 
+ 	/**
+-	 * @var string
+-	 */
+-	protected $svgPath = 'contrib/websvg/';
+-
+-	/**
+ 	 * The local directory where one can find jQuery versions and plugins
+ 	 *
+ 	 * @var string
+@@ -436,18 +431,6 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 	protected $endingSlash = '';
+ 
+ 	/**
+-	 * SVG library
+-	 *
+-	 * @var boolean
+-	 */
+-	protected $addSvg = FALSE;
+-
+-	/**
+-	 * @var boolean
+-	 */
+-	protected $enableSvgDebug = FALSE;
+-
+-	/**
+ 	 * Used by BE modules
+ 	 *
+ 	 * @var null|string
+@@ -684,16 +667,6 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 		$this->extJsPath = $path;
+ 	}
+ 
+-	/**
+-	 * Sets Path for SVG library (websvg)
+-	 *
+-	 * @param string $path
+-	 * @return void
+-	 */
+-	public function setSvgPath($path) {
+-		$this->svgPath = $path;
+-	}
+-
+ 	/*****************************************************/
+ 	/*                                                   */
+ 	/*  Public Enablers / Disablers                      */
+@@ -840,7 +813,6 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 		$this->enableExtCoreDebug = TRUE;
+ 		$this->enableExtJsDebug = TRUE;
+ 		$this->enableJqueryDebug = TRUE;
+-		$this->enableSvgDebug = TRUE;
+ 	}
+ 
+ 	/*****************************************************/
+@@ -1057,15 +1029,6 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 	}
+ 
+ 	/**
+-	 * Gets Path for SVG library (relative to typo3 directory)
+-	 *
+-	 * @return string
+-	 */
+-	public function getSvgPath() {
+-		return $this->svgPath;
+-	}
+-
+-	/**
+ 	 * Gets the inline language labels.
+ 	 *
+ 	 * @return array The inline language labels
+@@ -1601,33 +1564,6 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 	}
+ 
+ 	/**
+-	 * Call function if you need the SVG library
+-	 *
+-	 * @return void
+-	 */
+-	public function loadSvg() {
+-		$this->addSvg = TRUE;
+-	}
+-
+-	/**
+-	 * Call this function to load debug version of ExtJS. Use this for development only
+-	 *
+-	 * @return void
+-	 */
+-	public function enableSvgDebug() {
+-		$this->enableSvgDebug = TRUE;
+-	}
+-
+-	/**
+-	 * Call this function to force flash usage with SVG library
+-	 *
+-	 * @return void
+-	 */
+-	public function svgForceFlash() {
+-		$this->addMetaTag('<meta name="svg.render.forceflash" content="true" />');
+-	}
+-
+-	/**
+ 	 * Call this function to load debug version of ExtJS. Use this for development only
+ 	 *
+ 	 * @return void
+@@ -1970,15 +1906,12 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
+ 
+ 	/**
+ 	 * Helper function for render the main JavaScript libraries,
+-	 * currently: jQuery, prototype, SVG, ExtJs
++	 * currently: jQuery, prototype, ExtJs
+ 	 *
+ 	 * @return string Content with JavaScript libraries
+ 	 */
+ 	protected function renderMainJavaScriptLibraries() {
+ 		$out = '';
+-		if ($this->addSvg) {
+-			$out .= '<script src="' . $this->processJsFile(($this->backPath . $this->svgPath . 'svg.js')) . '" data-path="' . $this->backPath . $this->svgPath . '"' . ($this->enableSvgDebug ? ' data-debug="true"' : '') . '></script>';
+-		}
+ 		// Include jQuery Core for each namespace, depending on the version and source
+ 		if (!empty($this->jQueryVersions)) {
+ 			foreach ($this->jQueryVersions as $namespace => $jQueryVersion) {
+diff --git a/typo3/sysext/frontend/Classes/ContentObject/ContentObjectRenderer.php b/typo3/sysext/frontend/Classes/ContentObject/ContentObjectRenderer.php
+index a8c0d3a..18f0085 100644
+--- a/typo3/sysext/frontend/Classes/ContentObject/ContentObjectRenderer.php
++++ b/typo3/sysext/frontend/Classes/ContentObject/ContentObjectRenderer.php
+@@ -800,7 +800,6 @@ class ContentObjectRenderer {
+ 			'SWFOBJECT' => 'ShockwaveFlashObject',
+ 			'FLOWPLAYER' => 'FlowPlayer',
+ 			'QTOBJECT' => 'QuicktimeObject',
+-			'SVG' => 'ScalableVectorGraphics',
+ 			'EDITPANEL' => 'EditPanel'
+ 		);
+ 		$name = $classMapping[$name];
+@@ -1196,16 +1195,6 @@ class ContentObjectRenderer {
+ 		return $this->getContentObject('QTOBJECT')->render($conf);
+ 	}
+ 
+-	/**
+-	 * Rendering the cObject, SVG
+-	 *
+-	 * @param array $conf Array of TypoScript properties
+-	 * @return string Output
+-	 */
+-	public function SVG($conf) {
+-		return $this->getContentObject('SVG')->render($conf);
+-	}
+-
+ 	/************************************
+ 	 *
+ 	 * Various helper functions for content objects:
+diff --git a/typo3/sysext/frontend/Classes/ContentObject/ScalableVectorGraphicsContentObject.php b/typo3/sysext/frontend/Classes/ContentObject/ScalableVectorGraphicsContentObject.php
+deleted file mode 100644
+index 7b35b61..0000000
+--- a/typo3/sysext/frontend/Classes/ContentObject/ScalableVectorGraphicsContentObject.php
++++ /dev/null
+@@ -1,97 +0,0 @@
+-<?php
+-namespace TYPO3\CMS\Frontend\ContentObject;
+-
+-/***************************************************************
+- *  Copyright notice
+- *
+- *  (c) 2010-2011 Xavier Perseguers <typo3@perseguers.ch>
+- *  (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+- *  All rights reserved
+- *
+- *  This script is part of the TYPO3 project. The TYPO3 project is
+- *  free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License as published by
+- *  the Free Software Foundation; either version 2 of the License, or
+- *  (at your option) any later version.
+- *
+- *  The GNU General Public License can be found at
+- *  http://www.gnu.org/copyleft/gpl.html.
+- *  A copy is found in the textfile GPL.txt and important notices to the license
+- *  from the author is found in LICENSE.txt distributed with these scripts.
+- *
+- *
+- *  This script is distributed in the hope that it will be useful,
+- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- *  GNU General Public License for more details.
+- *
+- *  This copyright notice MUST APPEAR in all copies of the script!
+- ***************************************************************/
+-/**
+- * Contains RESTORE_REGISTER class object.
+- *
+- * @author Xavier Perseguers <typo3@perseguers.ch>
+- * @author Steffen Kamper <steffen@typo3.org>
+- */
+-class ScalableVectorGraphicsContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractContentObject {
+-
+-	/**
+-	 * Rendering the cObject, SVG
+-	 *
+-	 * @param array $conf Array of TypoScript properties
+-	 * @return string Empty string (the cObject only sets internal data!)
+-	 */
+-	public function render($conf = array()) {
+-		$width = isset($conf['width.']) ? $this->cObj->stdWrap($conf['width'], $conf['width.']) : $conf['width'];
+-		if (!$width) {
+-			$width = 600;
+-		}
+-		$height = isset($conf['height.']) ? $this->cObj->stdWrap($conf['height'], $conf['height.']) : $conf['height'];
+-		if (!$height) {
+-			$height = 400;
+-		}
+-		$src = isset($conf['src.']) ? $this->cObj->stdWrap($conf['src'], $conf['src.']) : $conf['src'];
+-		if (!$src) {
+-			$src = NULL;
+-		}
+-		$value = isset($conf['value.']) ? $this->cObj->stdWrap($conf['value'], $conf['value.']) : $conf['value'];
+-		$noscript = isset($conf['noscript.']) ? $this->cObj->stdWrap($conf['noscript'], $conf['noscript.']) : $conf['noscript'];
+-		if ($src) {
+-			$content = '
+-
+-					<!--[if IE]>
+-					<object src="' . $src . '" classid="image/svg+xml" width="' . $width . '" height="' . $height . '">
+-					<![endif]-->
+-					<!--[if !IE]>-->
+-					<object data="' . $src . '" type="image/svg+xml" width="' . $width . '" height="' . $height . '">
+-					<!--<![endif]-->
+-					' . $noscript . '
+-					</object>
+-
+-			';
+-		} else {
+-			$content = '
+-				<script type="image/svg+xml">
+-					<svg xmlns="http://www.w3.org/2000/svg"
+-					xmlns:xlink="http://www.w3.org/1999/xlink"
+-					width="' . $width . '"
+-					height="' . $height . '">
+-			' . $value . '
+-				</svg>
+-				</script>
+-				<noscript>
+-			' . $noscript . '
+-				</noscript>
+-			';
+-		}
+-		$GLOBALS['TSFE']->getPageRenderer()->loadSvg();
+-		if (isset($conf['stdWrap.'])) {
+-			$content = $this->cObj->stdWrap($content, $conf['stdWrap.']);
+-		}
+-		return $content;
+-	}
+-
+-}
+-
+-
+-?>
+\ No newline at end of file
+diff --git a/typo3/sysext/frontend/Classes/Page/PageGenerator.php b/typo3/sysext/frontend/Classes/Page/PageGenerator.php
+index 9484c3c..7da6a3b 100644
+--- a/typo3/sysext/frontend/Classes/Page/PageGenerator.php
++++ b/typo3/sysext/frontend/Classes/Page/PageGenerator.php
+@@ -529,15 +529,6 @@ class PageGenerator {
+ 		}
+ 		// Javascript Libraries
+ 		if (is_array($GLOBALS['TSFE']->pSetup['javascriptLibs.'])) {
+-			if ($GLOBALS['TSFE']->pSetup['javascriptLibs.']['SVG']) {
+-				$pageRenderer->loadSvg();
+-				if ($GLOBALS['TSFE']->pSetup['javascriptLibs.']['SVG.']['debug']) {
+-					$pageRenderer->enableSvgDebug();
+-				}
+-				if ($GLOBALS['TSFE']->pSetup['javascriptLibs.']['SVG.']['forceFlash']) {
+-					$pageRenderer->svgForceFlash();
+-				}
+-			}
+ 			if ($GLOBALS['TSFE']->pSetup['javascriptLibs.']['Prototype']) {
+ 				$pageRenderer->loadPrototype();
+ 			}

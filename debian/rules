@@ -32,11 +32,9 @@ clean:
 	debconf-updatepo
 	rm -rf build
 
-build_pre:
+build:
 	dh_testdir
 	mkdir -p build
-
-build: build_pre build/svg.swf build/svg.js build/svg.htc
 
 install: build
 	dh_testdir
@@ -129,6 +127,7 @@ get-orig-source:
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/swfupload
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/charts.swf
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
+	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/websvg
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/sysext/extensionmanager/Resources/Public/JavaScript/jquery-ui-1.8.17.custom.min.js
 # repack
 	tar -cf - -C _unpack $(DEBIAN_DIR) | gzip -9 - > $(DEBIAN_TAR).gz
@@ -145,16 +144,3 @@ binary-arch: build install
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
-
-RELEASE_NAME=
-RELEASE_NUMBER=$(shell svnversion)
-COMPILER_CONSTANTS=--define BUILD::releaseName,\'$(RELEASE_NAME)\' --define BUILD::releaseNumber,\'$(RELEASE_NUMBER)\'
-
-build/svg.swf: debian/contrib/websvg/src/org/svgweb/SVGViewerWeb.as debian/contrib/websvg/src/org/svgweb/core/*.as debian/contrib/websvg/src/org/svgweb/nodes/*.as debian/contrib/websvg/src/org/svgweb/utils/*.as debian/contrib/websvg/src/org/svgweb/smil/*.as
-#	cd debian/contrib/websvg/src/org/svgweb && as3compile $(COMPILER_CONSTANTS) -o ../../../../../build/svg.swf -I ../../ SVGViewerWeb.as
-
-build/svg.js: debian/contrib/websvg/src/svg.js
-	yui-compressor --type js --preserve-semi -o build/svg.js debian/contrib/websvg/src/svg.js
-
-build/svg.htc: debian/contrib/websvg/src/svg.htc
-	cp debian/contrib/websvg/src/svg.htc build/svg.htc

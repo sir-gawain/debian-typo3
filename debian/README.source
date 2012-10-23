@@ -3,6 +3,8 @@ typo3-src (6.0.0+ds1-1)
   * Changed +dfsg to +ds because all non dfsg files have been removed by
     upstream. Nevertheless we have to remove some embedded stuff, thats
     why we use +ds now.
+  * remove all occurances of svgweb (websvg) from the package as the swf
+    is not buildable by tools in main as long as flex-sdk is not available.
 
  -- Christian Welzel <gawain@camlann.de>  Fre, 31 Aug 2012 22:30:00 +0200
 
