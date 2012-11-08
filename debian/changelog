@@ -1,3 +1,10 @@
+typo3-src (4.5.19+dfsg1-3) unstable; urgency=medium
+
+  * Added patch for TYPO3-SA-2012-5 (Closes: #692775)
+  * Set patch level version to -pl.4.5.21.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 08 Nov 2012 22:04:00 +0100
+
 typo3-src (4.5.19+dfsg1-2) unstable; urgency=low
 
   * Added rsaauth and saltedpasswords to the list of installed extensions and
