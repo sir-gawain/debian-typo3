@@ -1,4 +1,5 @@
 security-sa-2012-005-692775.patch
+set-wheezy-version.patch
 dummy-defaults.patch
 dummy-addindexpages.patch
 fix-im-command.patch
