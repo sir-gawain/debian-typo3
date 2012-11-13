@@ -109,7 +109,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $category = 0;
 
 	/**
-	 * @var DateTime
+	 * @var \DateTime
 	 */
 	protected $lastUpdated;
 
@@ -149,7 +149,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $serializedDependencies = '';
 
 	/**
-	 * @var SplObjectStorage<Tx_Extensionmanager_Utility_Dependency>
+	 * @var \SplObjectStorage<Tx_Extensionmanager_Utility_Dependency>
 	 */
 	protected $dependencies = NULL;
 
@@ -289,7 +289,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 	/**
-	 * @param DateTime $lastUpdated
+	 * @param \DateTime $lastUpdated
 	 * @return void
 	 */
 	public function setLastUpdated(\DateTime $lastUpdated) {
@@ -297,7 +297,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 	/**
-	 * @return DateTime
+	 * @return \DateTime
 	 */
 	public function getLastUpdated() {
 		return $this->lastUpdated;
@@ -339,21 +339,23 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * @return mixed
 	 */
 	public function getDefaultState($state = NULL) {
+		$defaultState = '';
 		if (is_null($state)) {
 			$defaultState = self::$defaultStates;
 		} else {
 			if (is_string($state)) {
-				// default state
-				$stateIndex = 999;
-				if (array_key_exists(strtolower($state), self::$defaultStates)) {
-					$stateIndex = self::$defaultStates[strtolower($state)];
+				$stateIndex = array_search(strtolower($state), self::$defaultStates);
+				if ($stateIndex === FALSE) {
+					// default state
+					$stateIndex = 999;
 				}
 				$defaultState = $stateIndex;
 			} else {
 				if (is_int($state) && $state >= 0) {
-					$stateTitle = array_search($state, self::$defaultStates);
-					// default state
-					if (!$stateTitle) {
+					if (array_key_exists($state, self::$defaultStates)) {
+						$stateTitle = self::$defaultStates[$state];
+					} else {
+						// default state
 						$stateTitle = 'n/a';
 					}
 					$defaultState = $stateTitle;
@@ -461,8 +463,14 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 */
 	static public function returnAllowedInstallPaths() {
 		$installPaths = self::returnInstallPaths();
-		if (!(isset($GLOBALS['TYPO3_CONF_VARS']['EXT']['allowSystemInstall']) && $GLOBALS['TYPO3_CONF_VARS']['EXT']['allowSystemInstall'])) {
+		if (empty($GLOBALS['TYPO3_CONF_VARS']['EXT']['allowSystemInstall'])) {
 			unset($installPaths['System']);
+		}
+		if (empty($GLOBALS['TYPO3_CONF_VARS']['EXT']['allowGlobalInstall'])) {
+			unset($installPaths['Global']);
+		}
+		if (empty($GLOBALS['TYPO3_CONF_VARS']['EXT']['allowLocalInstall'])) {
+			unset($installPaths['Local']);
 		}
 		return $installPaths;
 	}
@@ -494,7 +502,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 	/**
-	 * @param SplObjectStorage $dependencies
+	 * @param \SplObjectStorage $dependencies
 	 * @return void
 	 */
 	public function setDependencies($dependencies) {
@@ -502,7 +510,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 	/**
-	 * @return SplObjectStorage
+	 * @return \SplObjectStorage
 	 */
 	public function getDependencies() {
 		if (!is_object($this->dependencies)) {

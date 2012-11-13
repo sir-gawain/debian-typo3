@@ -33,6 +33,11 @@ namespace TYPO3\CMS\Extensionmanager\Domain\Repository;
 class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 
 	/**
+	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
+	 */
+	protected $databaseConnection;
+
+	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper
 	 */
 	protected $dataMapper;
@@ -45,6 +50,19 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 */
 	public function injectDataMapper(\TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper) {
 		$this->dataMapper = $dataMapper;
+	}
+
+	/**
+	 * Do not include pid in queries
+	 *
+	 * @return void
+	 */
+	public function initializeObject() {
+		/** @var $defaultQuerySettings \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface */
+		$defaultQuerySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+		$defaultQuerySettings->setRespectStoragePage(FALSE);
+		$this->setDefaultQuerySettings($defaultQuerySettings);
+		$this->databaseConnection = $GLOBALS['TYPO3_DB'];
 	}
 
 	/**
@@ -61,7 +79,7 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	/**
 	 * Finds all extensions
 	 *
-	 * @return array|Tx_Extbase_Persistence_QueryResultInterface
+	 * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
 	 */
 	public function findAll() {
 		$query = $this->createQuery();
@@ -87,11 +105,15 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 *
 	 * @param string $extensionKey
 	 * @param string $version (example: 4.3.10)
-	 * @return array|Tx_Extbase_Persistence_QueryResultInterface
+	 * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
 	 */
 	public function findOneByExtensionKeyAndVersion($extensionKey, $version) {
 		$query = $this->createQuery();
-		$query->matching($query->logicalAnd($query->equals('extensionKey', $extensionKey), $query->equals('version', $version)));
+		$query->matching($query->logicalAnd(
+			$query->equals('extensionKey', $extensionKey),
+			$query->equals('version', $version),
+			$query->greaterThanOrEqual('reviewState', 0)
+		));
 		return $query->setLimit(1)->execute()->getFirst();
 	}
 
@@ -105,7 +127,7 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 * @return mixed
 	 */
 	public function findByTitleOrAuthorNameOrExtensionKey($searchString) {
-		$quotedSearchString = $GLOBALS['TYPO3_DB']->escapeStrForLike($GLOBALS['TYPO3_DB']->quoteStr($searchString, 'tx_extensionmanager_domain_model_extension'), 'tx_extensionmanager_domain_model_extension');
+		$quotedSearchString = $this->databaseConnection->escapeStrForLike($this->databaseConnection->quoteStr($searchString, 'tx_extensionmanager_domain_model_extension'), 'tx_extensionmanager_domain_model_extension');
 		$quotedSearchStringForLike = '\'%' . $quotedSearchString . '%\'';
 		$quotedSearchString = '\'' . $quotedSearchString . '\'';
 		$select = 'tx_extensionmanager_domain_model_extension.*,
@@ -121,14 +143,16 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 					OR
 					extension_key LIKE ' . $quotedSearchStringForLike . '
 					OR
+					title LIKE ' . $quotedSearchStringForLike . '
+					OR
 					description LIKE ' . $quotedSearchStringForLike . '
 					OR
-					title LIKE ' . $quotedSearchStringForLike . '
+					author_name LIKE ' . $quotedSearchStringForLike . '
 				)
-				AND current_version=1
+				AND current_version=1 AND review_state >= 0
 				HAVING position > 0';
 		$order = 'position desc';
-		$result = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows($select, $from, $where, '', $order);
+		$result = $this->databaseConnection->exec_SELECTgetRows($select, $from, $where, '', $order);
 		return $this->dataMapper->map('TYPO3\\CMS\\Extensionmanager\\Domain\\Model\\Extension', $result);
 	}
 
@@ -197,14 +221,31 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 * @return integer
 	 */
 	public function insertLastVersion($repositoryUid = 1) {
-		$groupedRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('extension_key, version, max(integer_version) maxintversion', 'tx_extensionmanager_domain_model_extension', 'repository=' . intval($repositoryUid), 'extension_key');
+		$groupedRows = $this->databaseConnection->exec_SELECTgetRows(
+			'extension_key, max(integer_version) as maxintversion',
+			'tx_extensionmanager_domain_model_extension',
+			'repository=' . intval($repositoryUid),
+			'extension_key'
+		);
 		$extensions = count($groupedRows);
+
 		if ($extensions > 0) {
 			// set all to 0
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_extensionmanager_domain_model_extension', 'current_version=1 AND repository=' . intval($repositoryUid), array('current_version' => 0));
+			$this->databaseConnection->exec_UPDATEquery(
+				'tx_extensionmanager_domain_model_extension',
+				'current_version=1 AND repository=' . intval($repositoryUid),
+				array('current_version' => 0)
+			);
 			// Find latest version of extensions and set current_version to 1 for these
 			foreach ($groupedRows as $row) {
-				$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_extensionmanager_domain_model_extension', 'extension_key=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($row['extension_key'], 'tx_extensionmanager_domain_model_extension') . ' AND integer_version=' . intval($row['maxintversion']) . ' AND repository=' . intval($repositoryUid), array('current_version' => 1));
+				$this->databaseConnection->exec_UPDATEquery(
+					'tx_extensionmanager_domain_model_extension',
+					'extension_key=' .
+							$this->databaseConnection->fullQuoteStr($row['extension_key'], 'tx_extensionmanager_domain_model_extension') .
+							' AND integer_version=' . intval($row['maxintversion']) .
+							' AND repository=' . intval($repositoryUid),
+					array('current_version' => 1)
+				);
 			}
 		}
 		return $extensions;
@@ -219,9 +260,16 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 */
 	protected function addDefaultConstraints(\TYPO3\CMS\Extbase\Persistence\Generic\Query $query) {
 		if ($query->getConstraint()) {
-			$query->matching($query->logicalAnd($query->getConstraint(), $query->equals('current_version', TRUE)));
+			$query->matching($query->logicalAnd(
+				$query->getConstraint(),
+				$query->equals('current_version', TRUE),
+				$query->greaterThanOrEqual('reviewState', 0)
+			));
 		} else {
-			$query->matching($query->equals('current_version', TRUE));
+			$query->matching($query->logicalAnd(
+				$query->equals('current_version', TRUE),
+				$query->greaterThanOrEqual('reviewState', 0)
+			));
 		}
 		return $query;
 	}

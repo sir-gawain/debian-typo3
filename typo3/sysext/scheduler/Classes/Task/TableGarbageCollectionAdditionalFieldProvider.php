@@ -59,7 +59,7 @@ class TableGarbageCollectionAdditionalFieldProvider implements \TYPO3\CMS\Schedu
 	 * @return void
 	 */
 	protected function initDefaultNumberOfDays() {
-		$tableConfiguration = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables'];
+		$tableConfiguration = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['TYPO3\\CMS\\Scheduler\\Task\\TableGarbageCollectionTask']['options']['tables'];
 		foreach ($tableConfiguration as $tableName => $configuration) {
 			if (isset($configuration['expirePeriod'])) {
 				$this->defaultNumberOfDays[$tableName] = $configuration['expirePeriod'];
@@ -102,7 +102,7 @@ class TableGarbageCollectionAdditionalFieldProvider implements \TYPO3\CMS\Schedu
 	 * @return array Array containing all the information pertaining to the additional fields
 	 */
 	protected function getTableAdditionalField(array &$taskInfo, $task, \TYPO3\CMS\Scheduler\Controller\SchedulerModuleController $parentObject) {
-		$tableConfiguration = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_scheduler_TableGarbageCollection']['options']['tables'];
+		$tableConfiguration = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['TYPO3\\CMS\\Scheduler\\Task\\TableGarbageCollectionTask']['options']['tables'];
 		$options = array();
 		// Add an empty option on top if an existing task is configured
 		// with a table that can not be found in configuration anymore
@@ -217,7 +217,7 @@ class TableGarbageCollectionAdditionalFieldProvider implements \TYPO3\CMS\Schedu
 	 */
 	public function validateTableAdditionalField(array &$submittedData, \TYPO3\CMS\Scheduler\Controller\SchedulerModuleController $parentObject) {
 		$validData = FALSE;
-		$tableConfiguration = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['TYPO3\\CMS\\Scheduler\\Scheduler_TableGarbageCollection']['options']['tables'];
+		$tableConfiguration = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['TYPO3\\CMS\\Scheduler\\Task\\TableGarbageCollectionTask']['options']['tables'];
 		if (!isset($submittedData['scheduler_tableGarbageCollection_table'])) {
 			$validData = TRUE;
 		} elseif (array_key_exists($submittedData['scheduler_tableGarbageCollection_table'], $tableConfiguration)) {
@@ -250,10 +250,10 @@ class TableGarbageCollectionAdditionalFieldProvider implements \TYPO3\CMS\Schedu
 	 * Save additional field in task
 	 *
 	 * @param array $submittedData Contains data submitted by the user
-	 * @param \TYPO3\CMS\Scheduler\Task $task Reference to the current task object
+	 * @param \TYPO3\CMS\Scheduler\Task\AbstractTask $task Reference to the current task object
 	 * @return void
 	 */
-	public function saveAdditionalFields(array $submittedData, \TYPO3\CMS\Scheduler\Task $task) {
+	public function saveAdditionalFields(array $submittedData, \TYPO3\CMS\Scheduler\Task\AbstractTask $task) {
 		$task->allTables = $submittedData['scheduler_tableGarbageCollection_allTables'] === 'on' ? TRUE : FALSE;
 		$task->table = $submittedData['scheduler_tableGarbageCollection_table'];
 		$task->numberOfDays = intval($submittedData['scheduler_tableGarbageCollection_numberOfDays']);

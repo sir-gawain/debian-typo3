@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Configuration;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,10 +30,6 @@ namespace TYPO3\CMS\Extbase\Configuration;
  * A general purpose configuration manager used in frontend mode.
  *
  * Should NOT be singleton, as a new configuration manager is needed per plugin.
- *
- * @package Extbase
- * @subpackage Configuration
- * @version $ID:$
  */
 class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\AbstractConfigurationManager {
 
@@ -180,35 +179,6 @@ class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abst
 	}
 
 	/**
-	 * Parses the flexForm content and converts it to an array
-	 * The resulting array will be multi-dimensional, as a value "bla.blubb"
-	 * results in two levels, and a value "bla.blubb.bla" results in three levels.
-	 *
-	 * Note: multi-language flexForms are not supported yet
-	 *
-	 * @param string $flexFormContent flexForm xml string
-	 * @return array the processed array
-	 * @deprecated since Extbase 1.4; will be removed in Extbase 6.0
-	 */
-	protected function convertFlexformContentToArray($flexFormContent) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		return $this->flexFormService->convertFlexFormContentToArray($flexFormContent);
-	}
-
-	/**
-	 * Parses a flexForm node recursively and takes care of sections etc
-	 *
-	 * @param array $nodeArray The flexForm node to parse
-	 * @param string $valuePointer The valuePointer to use for value retrieval
-	 * @return array
-	 * @deprecated since Extbase 1.4; will be removed in Extbase 6.0
-	 */
-	protected function walkFlexformNode($nodeArray, $valuePointer = 'vDEF') {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		return $this->flexFormService->walkFlexFormNode($nodeArray, $valuePointer);
-	}
-
-	/**
 	 * Merge a configuration into the framework configuration.
 	 *
 	 * @param array $frameworkConfiguration the framework configuration to merge the data on
@@ -228,7 +198,7 @@ class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abst
 	 *
 	 * @param array $frameworkConfiguration The original framework configuration
 	 * @param array $flexFormConfiguration The full flexForm configuration
-	 * @throws Exception\ParseError
+	 * @throws Exception\ParseErrorException
 	 * @return array the modified framework configuration, if needed
 	 */
 	protected function overrideSwitchableControllerActionsFromFlexForm(array $frameworkConfiguration, array $flexFormConfiguration) {
@@ -242,7 +212,7 @@ class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abst
 		foreach ($switchableControllerActionPartsFromFlexForm as $switchableControllerActionPartFromFlexForm) {
 			list($controller, $action) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('->', $switchableControllerActionPartFromFlexForm);
 			if (empty($controller) || empty($action)) {
-				throw new \TYPO3\CMS\Extbase\Configuration\Exception\ParseError('Controller or action were empty when overriding switchableControllerActions from flexForm.', 1257146403);
+				throw new \TYPO3\CMS\Extbase\Configuration\Exception\ParseErrorException('Controller or action were empty when overriding switchableControllerActions from flexForm.', 1257146403);
 			}
 			$newSwitchableControllerActionsFromFlexForm[$controller][] = $action;
 		}

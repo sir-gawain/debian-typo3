@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Reports\Task;
  * @package TYPO3
  * @subpackage reports
  */
-class SystemStatusUpdateTask extends \TYPO3\CMS\Scheduler\Task {
+class SystemStatusUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 
 	/**
 	 * Email address to send email notification to in case we find problems with
@@ -48,8 +48,10 @@ class SystemStatusUpdateTask extends \TYPO3\CMS\Scheduler\Task {
 	 * @see typo3/sysext/scheduler/tx_scheduler_Task::execute()
 	 */
 	public function execute() {
+		/** @var $registry \TYPO3\CMS\Core\Registry */
 		$registry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Registry');
-		$statusReport = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status');
+		/** @var $statusReport \TYPO3\CMS\Reports\Report\Status\Status */
+		$statusReport = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Report\\Status\\Status');
 		$systemStatus = $statusReport->getSystemStatus();
 		$highestSeverity = $statusReport->getHighestSeverity($systemStatus);
 		$registry->set('tx_reports', 'status.highestSeverity', $highestSeverity);
@@ -72,6 +74,7 @@ class SystemStatusUpdateTask extends \TYPO3\CMS\Scheduler\Task {
 	 * Sets the notification email address.
 	 *
 	 * @param string $notificationEmail Notification email address.
+	 * @return void
 	 */
 	public function setNotificationEmail($notificationEmail) {
 		$this->notificationEmail = $notificationEmail;
@@ -81,12 +84,13 @@ class SystemStatusUpdateTask extends \TYPO3\CMS\Scheduler\Task {
 	 * Sends a notification email, reporting system issues.
 	 *
 	 * @param array $systemStatus Array of statuses
+	 * @return void
 	 */
 	protected function sendNotificationEmail(array $systemStatus) {
 		$systemIssues = array();
 		foreach ($systemStatus as $statusProvider) {
 			foreach ($statusProvider as $status) {
-				if ($status->getSeverity() > \TYPO3\CMS\Reports\Report\Status\Status::OK) {
+				if ($status->getSeverity() > \TYPO3\CMS\Reports\Status::OK) {
 					$systemIssues[] = (string) $status;
 				}
 			}

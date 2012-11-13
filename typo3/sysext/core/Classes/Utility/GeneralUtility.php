@@ -176,9 +176,9 @@ class GeneralUtility {
 			if (strpos($key, '|') !== FALSE) {
 				$pieces = explode('|', $key);
 				$newGet = array();
-				$pointer =& $newGet;
+				$pointer = &$newGet;
 				foreach ($pieces as $piece) {
-					$pointer =& $pointer[$piece];
+					$pointer = &$pointer[$piece];
 				}
 				$pointer = $inputGet;
 				$mergedGet = self::array_merge_recursive_overrule($_GET, $newGet);
@@ -3477,8 +3477,8 @@ Connection: close
 		if (substr($filename, 0, 4) == 'EXT:') {
 			list($extKey, $local) = explode('/', substr($filename, 4), 2);
 			$filename = '';
-			if (strcmp($extKey, '') && \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extKey) && strcmp($local, '')) {
-				$filename = \TYPO3\CMS\Core\Extension\ExtensionManager::extPath($extKey) . $local;
+			if (strcmp($extKey, '') && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extKey) && strcmp($local, '')) {
+				$filename = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extKey) . $local;
 			}
 		} elseif (!self::isAbsPath($filename)) {
 			// relative. Prepended with $relPathPrefix
@@ -3642,9 +3642,12 @@ Connection: close
 	 * @see upload_to_tempfile(), tempnam()
 	 */
 	static public function unlink_tempfile($uploadedTempFileName) {
-		if ($uploadedTempFileName && self::validPathStr($uploadedTempFileName) && self::isFirstPartOfStr($uploadedTempFileName, PATH_site . 'typo3temp/') && @is_file($uploadedTempFileName)) {
-			if (unlink($uploadedTempFileName)) {
-				return TRUE;
+		if ($uploadedTempFileName) {
+			$uploadedTempFileName = self::fixWindowsFilePath($uploadedTempFileName);
+			if (self::validPathStr($uploadedTempFileName) && self::isFirstPartOfStr($uploadedTempFileName, PATH_site . 'typo3temp/') && @is_file($uploadedTempFileName)) {
+				if (unlink($uploadedTempFileName)) {
+					return TRUE;
+				}
 			}
 		}
 	}
@@ -3708,7 +3711,7 @@ Connection: close
 		$pA = $cacheHash->getRelevantParameters($addQueryParams);
 		// Hook: Allows to manipulate the parameters which are taken to build the chash:
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_div.php']['cHashParamsHook'])) {
-			$cHashParamsHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_div.php']['cHashParamsHook'];
+			$cHashParamsHook = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_div.php']['cHashParamsHook'];
 			if (is_array($cHashParamsHook)) {
 				$hookParameters = array(
 					'addQueryParams' => &$addQueryParams,
@@ -3867,8 +3870,8 @@ Connection: close
 		// Needed for inclusion of the dynamic config files.
 		global $TCA;
 		if (isset($TCA[$table])) {
-			$tca =& $TCA[$table];
-			if (!$tca['columns']) {
+			$tca = &$TCA[$table];
+			if (is_array($tca['ctrl']) && !$tca['columns']) {
 				$dcf = $tca['ctrl']['dynamicConfigFile'];
 				if ($dcf) {
 					if (!strcmp(substr($dcf, 0, 6), 'T3LIB:')) {
@@ -4126,7 +4129,7 @@ Connection: close
 	 * You can also pass arguments for a constructor:
 	 * t3lib_div::makeInstance('myClass', $arg1, $arg2, ..., $argN)
 	 *
-	 * @throws InvalidArgumentException if classname is an empty string
+	 * @throws \InvalidArgumentException if classname is an empty string
 	 * @param string $className name of the class to instantiate, must not be empty
 	 * @return object the created instance
 	 */
@@ -4320,7 +4323,7 @@ Connection: close
 			'requestedServiceSubType' => $serviceSubType,
 			'requestedExcludeServiceKeys' => $excludeServiceKeys
 		);
-		while ($info = \TYPO3\CMS\Core\Extension\ExtensionManager::findService($serviceType, $serviceSubType, $excludeServiceKeys)) {
+		while ($info = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::findService($serviceType, $serviceSubType, $excludeServiceKeys)) {
 			// provide information about requested service to service object
 			$info = array_merge($info, $requestInfo);
 			// Check persistent object and if found, call directly and exit.
@@ -4355,7 +4358,7 @@ Connection: close
 				}
 			}
 			// deactivate the service
-			\TYPO3\CMS\Core\Extension\ExtensionManager::deactivateService($info['serviceType'], $info['serviceKey']);
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::deactivateService($info['serviceType'], $info['serviceKey']);
 		}
 		return $error;
 	}
@@ -4838,6 +4841,13 @@ Connection: close
 		if (!$GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog']) {
 			return;
 		}
+
+			// This require_once is needed for deprecation calls
+			// thrown early during bootstrap, if the autoloader is
+			// not instantiated yet. This can happen for example if
+			// ext_localconf triggers a deprecation.
+		require_once 'DebugUtility.php';
+
 		$trail = debug_backtrace();
 		if ($trail[1]['type']) {
 			$function = new \ReflectionMethod($trail[1]['class'], $trail[1]['function']);
@@ -4848,13 +4858,7 @@ Connection: close
 		if (preg_match('/@deprecated\\s+(.*)/', $function->getDocComment(), $match)) {
 			$msg = $match[1];
 		}
-		// Trigger PHP error with a short message: <function> is deprecated (called from <source>, defined in <source>)
-		$errorMsg = 'Function ' . $trail[1]['function'];
-		if ($trail[1]['class']) {
-			$errorMsg .= ' of class ' . $trail[1]['class'];
-		}
-		$errorMsg .= ' is deprecated (called from ' . $trail[1]['file'] . '#' . $trail[1]['line'] . ', defined in ' . $function->getFileName() . '#' . $function->getStartLine() . ')';
-		// Write a longer message to the deprecation log: <function> <annotion> - <trace> (<source>)
+			// Write a longer message to the deprecation log: <function> <annotion> - <trace> (<source>)
 		$logMsg = $trail[1]['class'] . $trail[1]['type'] . $trail[1]['function'];
 		$logMsg .= '() - ' . $msg . ' - ' . \TYPO3\CMS\Core\Utility\DebugUtility::debugTrail();
 		$logMsg .= ' (' . substr($function->getFileName(), strlen(PATH_site)) . '#' . $function->getStartLine() . ')';
@@ -4939,7 +4943,7 @@ Connection: close
 	 * @return string the encoded value already quoted (with single quotes),
 	 */
 	static public function quoteJSvalue($value) {
-		$escapedValue = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Encoder\\JavaScriptEncoder')->encode($value);
+		$escapedValue = static::makeInstance('TYPO3\\CMS\\Core\\Encoder\\JavaScriptEncoder')->encode($value);
 		return '\'' . $escapedValue . '\'';
 	}
 
@@ -4980,8 +4984,5 @@ Connection: close
 		}
 		echo $obContent;
 	}
-
 }
-
-
 ?>

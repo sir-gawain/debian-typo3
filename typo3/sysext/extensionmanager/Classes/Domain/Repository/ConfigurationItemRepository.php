@@ -38,6 +38,11 @@ class ConfigurationItemRepository {
 	protected $objectManager;
 
 	/**
+	 * @var \TYPO3\CMS\Core\Configuration\ConfigurationManager
+	 */
+	protected $configurationManager;
+
+	/**
 	 * Injects the object manager
 	 *
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
@@ -48,10 +53,20 @@ class ConfigurationItemRepository {
 	}
 
 	/**
+	 * Inject configuration manager
+	 *
+	 * @param \TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager
+	 * @return void
+	 */
+	public function injectConfigurationManager(\TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager) {
+		$this->configurationManager = $configurationManager;
+	}
+
+	/**
 	 * Find configuration options by extension
 	 *
 	 * @param array $extension array with extension information
-	 * @return null|SplObjectStorage
+	 * @return null|\SplObjectStorage
 	 */
 	public function findByExtension(array $extension) {
 		$configRaw = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(PATH_site . $extension['siteRelPath'] . '/ext_conf_template.txt');
@@ -67,7 +82,7 @@ class ConfigurationItemRepository {
 	 *
 	 * @param string $configRaw
 	 * @param array $extension array with extension information
-	 * @return SplObjectStorage
+	 * @return \SplObjectStorage
 	 */
 	protected function convertRawConfigurationToObject($configRaw, array $extension) {
 		$defaultConfiguration = $this->createArrayFromConstants($configRaw, $extension);
@@ -112,13 +127,17 @@ class ConfigurationItemRepository {
 	 * @return array
 	 */
 	protected function extractInformationForConfigFieldsOfTypeOptions(array $configurationOption) {
-		preg_match('/options\\[(.*)\\]/is', $configurationOption['type'], $typeMatches);
-		preg_match('/options\\[(.*)\\]/is', $configurationOption['label'], $labelMatches);
-		$optionValues = explode(',', $typeMatches[1]);
-		$optionLabels = explode(',', $labelMatches[1]);
-		$configurationOption['generic'] = $labelMatches ? array_combine($optionLabels, $optionValues) : array_combine($optionValues, $optionValues);
+		preg_match('/options\[(.*)\]/is', $configurationOption['type'], $typeMatches);
+		$optionItems = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $typeMatches[1]);
+		foreach ($optionItems as $optionItem) {
+			$optionPair = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('=', $optionItem);
+			if (count($optionPair) === 2) {
+				$configurationOption['generic'][$optionPair[0]] = $optionPair[1];
+			} else {
+				$configurationOption['generic'][$optionPair[0]] = $optionPair[0];
+			}
+		}
 		$configurationOption['type'] = 'options';
-		$configurationOption['label'] = str_replace($labelMatches[0], '', $configurationOption['label']);
 		return $configurationOption;
 	}
 
@@ -194,7 +213,7 @@ class ConfigurationItemRepository {
 	protected function mergeWithExistingConfiguration(array $configuration, array $extension) {
 		try {
 			$currentExtensionConfig = unserialize(
-				\TYPO3\CMS\Core\Configuration\ConfigurationManager::getConfigurationValueByPath(
+				$this->configurationManager->getConfigurationValueByPath(
 					'EXT/extConf/' . $extension['key']
 				)
 			);
@@ -215,7 +234,7 @@ class ConfigurationItemRepository {
 	 * hierarchic object storage structure
 	 *
 	 * @param array $configuration
-	 * @return SplObjectStorage
+	 * @return \SplObjectStorage
 	 */
 	protected function convertHierarchicArrayToObject(array $configuration) {
 		$configurationObjectStorage = new \SplObjectStorage();

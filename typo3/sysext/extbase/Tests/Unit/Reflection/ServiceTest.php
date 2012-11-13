@@ -30,7 +30,7 @@ class ServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
 	 * @param array $foo The foo parameter
-	 * @return nothing
+	 * @return void
 	 */
 	public function fixtureMethodForMethodTagsValues(array $foo) {
 
@@ -44,7 +44,7 @@ class ServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$tagsValues = $service->getMethodTagsValues('TYPO3\\CMS\\Extbase\\Tests\\Unit\\Reflection\\ServiceTest', 'fixtureMethodForMethodTagsValues');
 		$this->assertEquals(array(
 			'param' => array('array $foo The foo parameter'),
-			'return' => array('nothing')
+			'return' => array('void')
 		), $tagsValues);
 	}
 
@@ -65,6 +65,44 @@ class ServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 				'type' => 'array'
 			)
 		), $parameters);
+	}
+
+	/**
+	 * @test
+	 */
+	public function classSchemaForModelIsSetAggregateRootIfRepositoryClassIsFoundForNamespacedClasses() {
+		$className = uniqid('BazFixture');
+		eval ('
+			namespace Foo\\Bar\\Domain\\Model;
+			class ' . $className . ' extends \\TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity {}
+		');
+		eval ('
+			namespace Foo\\Bar\\Domain\\Repository;
+			class ' . $className . 'Repository {}
+		');
+
+		$service = new \TYPO3\CMS\Extbase\Reflection\Service();
+		$service->injectObjectManager($this->objectManager);
+		$classSchema = $service->getClassSchema('Foo\\Bar\\Domain\\Model\\' . $className);
+		$this->assertTrue($classSchema->isAggregateRoot());
+	}
+
+	/**
+	 * @test
+	 */
+	public function classSchemaForModelIsSetAggregateRootIfRepositoryClassIsFoundForNotNamespacedClasses() {
+		$className = uniqid('BazFixture');
+		eval ('
+			class Foo_Bar_Domain_Model_' . $className . ' extends \\TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity {}
+		');
+		eval ('
+			class Foo_Bar_Domain_Repository_' . $className . 'Repository {}
+		');
+
+		$service = new \TYPO3\CMS\Extbase\Reflection\Service();
+		$service->injectObjectManager($this->objectManager);
+		$classSchema = $service->getClassSchema('Foo_Bar_Domain_Model_' . $className);
+		$this->assertTrue($classSchema->isAggregateRoot());
 	}
 
 }

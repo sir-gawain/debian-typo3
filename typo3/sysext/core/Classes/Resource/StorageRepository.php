@@ -52,18 +52,43 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 	protected $typeField = 'type';
 
 	/**
+	 * @var \TYPO3\CMS\Core\Log\Logger
+	 */
+	protected $logger;
+
+	public function __construct() {
+		parent::__construct();
+
+		/** @var $logManager \TYPO3\CMS\Core\Log\LogManager */
+		$logManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager');
+		$this->logger = $logManager->getLogger(__CLASS__);
+	}
+
+	/**
 	 * Finds storages by type.
 	 *
 	 * @param string $storageType
 	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage[]
 	 */
 	public function findByStorageType($storageType) {
+		/** @var $driverRegistry \TYPO3\CMS\Core\Resource\Driver\DriverRegistry */
+		$driverRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Resource\Driver\DriverRegistry');
 		$storageObjects = array();
-		$whereClause = 'deleted=0 AND hidden=0';
-		$whereClause .= ' AND ' . $this->typeField . ' = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($storageType, $this->table);
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $this->table, $whereClause);
+		$whereClause = $this->typeField . ' = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($storageType, $this->table);
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+			'*',
+			$this->table,
+			$whereClause . $this->getWhereClauseForEnabledFields()
+		);
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-			$storageObjects[] = $this->createDomainObject($row);
+			if ($driverRegistry->driverExists($row['driver'])) {
+				$storageObjects[] = $this->createDomainObject($row);
+			} else {
+				$this->logger->warning(
+					sprintf('Could not instantiate storage "%s" because of missing driver.', array($row['name'])),
+					$row
+				);
+			}
 		}
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		return $storageObjects;
@@ -76,20 +101,43 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage[]
 	 */
 	public function findAll() {
-		$storageObjects = array();
-		$whereClause = 'deleted=0 AND hidden=0';
-		if ($this->type != '') {
-			$whereClause .= ' AND ' . $this->typeField . ' = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->type, $this->table);
+			// check if we have never created a storage before (no records, regardless of the enableFields),
+			// only fetch one record for that (is enough). If no record is found, create the fileadmin/ storage
+		$storageObjectsCount = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('uid', $this->table, '1=1');
+		if ($storageObjectsCount === 0) {
+			$this->createLocalStorage(
+				'fileadmin/ (auto-created)',
+				$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'],
+				'relative',
+				'This is the local fileadmin/ directory. This storage mount has been created automatically by TYPO3.'
+			);
 		}
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $this->table, $whereClause);
+
+		$storageObjects = array();
+		$whereClause = NULL;
+		if ($this->type != '') {
+			$whereClause = $this->typeField . ' = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->type, $this->table);
+		}
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+			'*',
+			$this->table,
+			($whereClause ? $whereClause : '1=1') . $this->getWhereClauseForEnabledFields()
+		);
+
+		/** @var $driverRegistry \TYPO3\CMS\Core\Resource\Driver\DriverRegistry */
+		$driverRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Resource\Driver\DriverRegistry');
+
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-			$storageObjects[] = $this->createDomainObject($row);
+			if ($driverRegistry->driverExists($row['driver'])) {
+				$storageObjects[] = $this->createDomainObject($row);
+			} else {
+				$this->logger->warning(
+					sprintf('Could not instantiate storage "%s" because of missing driver.', array($row['name'])),
+					$row
+				);
+			}
 		}
 		$GLOBALS['TYPO3_DB']->sql_free_result($res);
-		if (count($storageObjects) === 0) {
-			$this->createLocalStorage('fileadmin/ (auto-created)', $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], 'relative', 'This is the local fileadmin/ directory. This storage mount has been created automatically by TYPO3.');
-			$storageObjects = self::findAll();
-		}
 		return $storageObjects;
 	}
 
@@ -103,6 +151,24 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 	 * @return integer uid of the inserted record
 	 */
 	public function createLocalStorage($name, $basePath, $pathType, $description = '') {
+
+			// create the FlexForm for the driver configuration
+		$flexFormData = array(
+			'data' => array(
+				'sDEF' => array(
+					'lDEF' => array(
+						'basePath' => array('vDEF' => rtrim($basePath, '/') . '/'),
+						'pathType' => array('vDEF' => $pathType)
+					)
+				)
+			)
+		);
+
+		/** @var $flexObj \TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools */
+		$flexObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\FlexForm\\FlexFormTools');
+		$flexFormXml = $flexObj->flexArray2Xml($flexFormData, TRUE);
+
+			// create the record
 		$field_values = array(
 			'pid' => 0,
 			'tstamp' => $GLOBALS['EXEC_TIME'],
@@ -110,21 +176,7 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 			'name' => $name,
 			'description' => $description,
 			'driver' => 'Local',
-			'configuration' => '<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-				<T3FlexForms>
-					<data>
-						<sheet index="sDEF">
-							<language index="lDEF">
-								<field index="basePath">
-									<value index="vDEF">' . rtrim($basePath, '/') . '/</value>
-								</field>
-								<field index="pathType">
-									<value index="vDEF">' . $pathType . '</value>
-								</field>
-							</language>
-						</sheet>
-					</data>
-				</T3FlexForms>',
+			'configuration' => $flexFormXml,
 			'is_online' => 1,
 			'is_browsable' => 1,
 			'is_public' => 1,
@@ -144,6 +196,22 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 		return $this->factory->getStorageObject($databaseRow['uid'], $databaseRow);
 	}
 
+	/**
+	 * get the WHERE clause for the enabled fields of this TCA table
+	 * depending on the context
+	 *
+	 * @return string the additional where clause, something like " AND deleted=0 AND hidden=0"
+	 */
+	protected function getWhereClauseForEnabledFields() {
+		if (is_object($GLOBALS['TSFE'])) {
+			// frontend context
+			$whereClause = $GLOBALS['TSFE']->sys_page->enableFields($this->table);
+		} else {
+			// backend context
+			$whereClause = \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields($this->table);
+		}
+		return $whereClause;
+	}
 }
 
 

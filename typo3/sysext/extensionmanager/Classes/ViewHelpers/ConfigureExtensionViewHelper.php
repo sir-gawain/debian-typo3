@@ -43,7 +43,7 @@ class ConfigureExtensionViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\Act
 	/**
 	 * Renders a configure extension link if the extension has configuration options
 	 *
-	 * @param string $extension
+	 * @param array $extension
 	 * @return string the rendered a tag
 	 */
 	public function render($extension) {
@@ -57,8 +57,8 @@ class ConfigureExtensionViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\Act
 				)
 			), 'Configuration');
 			$this->tag->addAttribute('href', $uri);
-			$label = 'Configure';
-			$this->tag->setContent($label);
+			$this->tag->addAttribute('title', \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('extensionList.configure', 'extensionmanager'));
+			$this->tag->setContent(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-extension-configure'));
 			$tag = $this->tag->render();
 		}
 		return $tag;

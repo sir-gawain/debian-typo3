@@ -3,11 +3,9 @@ namespace TYPO3\CMS\Extbase\Mvc;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -17,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Mvc;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +29,6 @@ namespace TYPO3\CMS\Extbase\Mvc;
 /**
  * Represents a generic request.
  *
- * @package Extbase
- * @subpackage MVC
- * @version $ID:$
  * @scope prototype
  * @api
  */
@@ -125,7 +123,7 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 
 	/**
 	 * @var array Errors that occured during this request
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
 	 */
 	protected $errors = array();
 
@@ -356,10 +354,13 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 		$controllerObjectName = $this->getControllerObjectName();
 		if ($controllerObjectName !== '' && $this->controllerActionName === strtolower($this->controllerActionName)) {
 			$actionMethodName = $this->controllerActionName . 'Action';
-			foreach (get_class_methods($controllerObjectName) as $existingMethodName) {
-				if (strtolower($existingMethodName) === strtolower($actionMethodName)) {
-					$this->controllerActionName = substr($existingMethodName, 0, -6);
-					break;
+			$classMethods = get_class_methods($controllerObjectName);
+			if (is_array($classMethods)) {
+				foreach ($classMethods as $existingMethodName) {
+					if (strtolower($existingMethodName) === strtolower($actionMethodName)) {
+						$this->controllerActionName = substr($existingMethodName, 0, -6);
+						break;
+					}
 				}
 			}
 		}
@@ -506,10 +507,10 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	/**
 	 * Set errors that occured during the request (e.g. argument mapping errors)
 	 *
-	 * @param array $errors An array of Tx_Extbase_Error_Error objects
+	 * @param array $errors An array of \TYPO3\CMS\Extbase\Error\Error objects
 	 *
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
 	 */
 	public function setErrors(array $errors) {
 		$this->errors = $errors;
@@ -519,7 +520,7 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 * Get errors that occured during the request (e.g. argument mapping errors)
 	 *
 	 * @return array The errors that occured during the request
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
 	 */
 	public function getErrors() {
 		return $this->errors;

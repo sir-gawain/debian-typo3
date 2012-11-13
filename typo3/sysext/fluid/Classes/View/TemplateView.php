@@ -348,7 +348,7 @@ class TemplateView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		if ($this->templateRootPath !== NULL) {
 			return $this->templateRootPath;
 		} else {
-			return str_replace('@packageResourcesPath', \TYPO3\CMS\Core\Extension\ExtensionManager::extPath($this->controllerContext->getRequest()->getControllerExtensionKey()) . 'Resources/', $this->templateRootPathPattern);
+			return str_replace('@packageResourcesPath', \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($this->controllerContext->getRequest()->getControllerExtensionKey()) . 'Resources/', $this->templateRootPathPattern);
 		}
 	}
 
@@ -373,7 +373,7 @@ class TemplateView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		if ($this->partialRootPath !== NULL) {
 			return $this->partialRootPath;
 		} else {
-			return str_replace('@packageResourcesPath', \TYPO3\CMS\Core\Extension\ExtensionManager::extPath($this->controllerContext->getRequest()->getControllerExtensionKey()) . 'Resources/', $this->partialRootPathPattern);
+			return str_replace('@packageResourcesPath', \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($this->controllerContext->getRequest()->getControllerExtensionKey()) . 'Resources/', $this->partialRootPathPattern);
 		}
 	}
 
@@ -398,7 +398,7 @@ class TemplateView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		if ($this->layoutRootPath !== NULL) {
 			return $this->layoutRootPath;
 		} else {
-			return str_replace('@packageResourcesPath', \TYPO3\CMS\Core\Extension\ExtensionManager::extPath($this->controllerContext->getRequest()->getControllerExtensionKey()) . 'Resources/', $this->layoutRootPathPattern);
+			return str_replace('@packageResourcesPath', \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($this->controllerContext->getRequest()->getControllerExtensionKey()) . 'Resources/', $this->layoutRootPathPattern);
 		}
 	}
 
@@ -436,7 +436,16 @@ class TemplateView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		$pattern = str_replace('@layoutRoot', $this->getLayoutRootPath(), $pattern);
 		$subpackageKey = $this->controllerContext->getRequest()->getControllerSubpackageKey();
 		$controllerName = $this->controllerContext->getRequest()->getControllerName();
-		$subpackageParts = $subpackageKey !== NULL ? explode(\TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR, $subpackageKey) : array();
+		if ($subpackageKey !== NULL) {
+			if (strpos($subpackageKey, \TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR) !== FALSE) {
+				$namespaceSeparator = \TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR;
+			} else {
+				$namespaceSeparator = \TYPO3\CMS\Fluid\Fluid::LEGACY_NAMESPACE_SEPARATOR;
+			}
+			$subpackageParts = explode($namespaceSeparator, $subpackageKey);
+		} else {
+			$subpackageParts = array();
+		}
 		$results = array();
 		$i = $controllerName === NULL ? 0 : -1;
 		do {

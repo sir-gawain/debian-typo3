@@ -63,10 +63,10 @@ class DataHandlerHook {
 	/**
 	 * hook that is called before any cmd of the commandmap is executed
 	 *
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj reference to the main tcemain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj reference to the main tcemain object
 	 * @return void
 	 */
-	public function processCmdmap_beforeStart(\TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	public function processCmdmap_beforeStart(\TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		// Reset notification array
 		$this->notificationEmailInfo = array();
 		// Resolve dependencies of version/workspaces actions:
@@ -81,14 +81,15 @@ class DataHandlerHook {
 	 * @param integer $id the ID of the record
 	 * @param mixed $value the value containing the data
 	 * @param boolean $commandIsProcessed can be set so that other hooks or
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj reference to the main tcemain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj reference to the main tcemain object
 	 * @return 	void
 	 */
-	public function processCmdmap($command, $table, $id, $value, &$commandIsProcessed, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	public function processCmdmap($command, $table, $id, $value, &$commandIsProcessed, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		// custom command "version"
 		if ($command == 'version') {
 			$commandIsProcessed = TRUE;
 			$action = (string) $value['action'];
+			$comment = (isset($value['comment']) && $value['comment'] ? $value['comment'] : $this->generalComment);
 			switch ($action) {
 			case 'new':
 				// check if page / branch versioning is needed,
@@ -104,7 +105,12 @@ class DataHandlerHook {
 				}
 				break;
 			case 'swap':
-				$this->version_swap($table, $id, $value['swapWith'], $value['swapIntoWS'], $tcemainObj);
+					$this->version_swap($table, $id, $value['swapWith'], $value['swapIntoWS'],
+						$tcemainObj,
+						$comment,
+						TRUE,
+						$value['notificationAlternativeRecipients']
+					);
 				break;
 			case 'clearWSID':
 				$this->version_clearWSID($table, $id, FALSE, $tcemainObj);
@@ -115,7 +121,12 @@ class DataHandlerHook {
 			case 'setStage':
 				$elementIds = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $id, TRUE);
 				foreach ($elementIds as $elementId) {
-					$this->version_setStage($table, $elementId, $value['stageId'], isset($value['comment']) && $value['comment'] ? $value['comment'] : $this->generalComment, TRUE, $tcemainObj, $value['notificationAlternativeRecipients']);
+						$this->version_setStage($table, $elementId, $value['stageId'],
+							$comment,
+							TRUE,
+							$tcemainObj,
+							$value['notificationAlternativeRecipients']
+						);
 				}
 				break;
 			}
@@ -134,9 +145,9 @@ class DataHandlerHook {
 	 * @param string $table
 	 * @param int $id
 	 * @param mixed $value
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemain
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemain
 	 */
-	public function processCmdmap_postProcess($command, $table, $id, $value, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemain) {
+	public function processCmdmap_postProcess($command, $table, $id, $value, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemain) {
 		if ($command === 'move') {
 			if ($value < 0) {
 				$movePlaceHolder = \TYPO3\CMS\Backend\Utility\BackendUtility::getMovePlaceholder($table, abs($value), 'uid');
@@ -152,10 +163,10 @@ class DataHandlerHook {
 	 * hook that is called AFTER all commands of the commandmap was
 	 * executed
 	 *
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj reference to the main tcemain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj reference to the main tcemain object
 	 * @return 	void
 	 */
-	public function processCmdmap_afterFinish(\TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	public function processCmdmap_afterFinish(\TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		// Empty accumulation array:
 		foreach ($this->notificationEmailInfo as $notifItem) {
 			$this->notifyStageChange($notifItem['shared'][0], $notifItem['shared'][1], implode(', ', $notifItem['elements']), 0, $notifItem['shared'][2], $tcemainObj, $notifItem['alternativeRecipients']);
@@ -174,10 +185,10 @@ class DataHandlerHook {
 	 * @param integer $id the ID of the record
 	 * @param array $record The accordant database record
 	 * @param boolean $recordWasDeleted can be set so that other hooks or
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj reference to the main tcemain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj reference to the main tcemain object
 	 * @return 	void
 	 */
-	public function processCmdmap_deleteAction($table, $id, array $record, &$recordWasDeleted, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	public function processCmdmap_deleteAction($table, $id, array $record, &$recordWasDeleted, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		// only process the hook if it wasn't processed
 		// by someone else before
 		if (!$recordWasDeleted) {
@@ -264,7 +275,7 @@ class DataHandlerHook {
 	 * @param boolean $recordWasMoved can be set so that other hooks or
 	 * @param 	$table	the table
 	 */
-	public function moveRecord($table, $uid, $destPid, array $propArr, array $moveRec, $resolvedPid, &$recordWasMoved, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	public function moveRecord($table, $uid, $destPid, array $propArr, array $moveRec, $resolvedPid, &$recordWasMoved, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		// Only do something in Draft workspace
 		if ($tcemainObj->BE_USER->workspace !== 0) {
 			$recordWasMoved = TRUE;
@@ -326,17 +337,17 @@ class DataHandlerHook {
 	 * @param string $table Table name of element (or list of element names if $id is zero)
 	 * @param integer $id Record uid of element (if zero, then $table is used as reference to element(s) alone)
 	 * @param string $comment User comment sent along with action
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @param array $notificationAlternativeRecipients List of recipients to notify instead of be_users selected by sys_workspace, list is generated by workspace extension module
 	 * @return void
 	 */
-	protected function notifyStageChange(array $stat, $stageId, $table, $id, $comment, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj, array $notificationAlternativeRecipients = array()) {
+	protected function notifyStageChange(array $stat, $stageId, $table, $id, $comment, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj, array $notificationAlternativeRecipients = array()) {
 		$workspaceRec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('sys_workspace', $stat['uid']);
 		// So, if $id is not set, then $table is taken to be the complete element name!
 		$elementName = $id ? $table . ':' . $id : $table;
 		if (is_array($workspaceRec)) {
 			// Get the new stage title from workspaces library, if workspaces extension is installed
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('workspaces')) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces')) {
 				$stageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Workspaces\\Service\\StagesService');
 				$newStage = $stageService->getStageTitle((int) $stageId);
 			} else {
@@ -446,7 +457,7 @@ class DataHandlerHook {
 					'###USER_USERNAME###' => $tcemainObj->BE_USER->user['username']
 				);
 				// add marker for preview links if workspace extension is loaded
-				if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('workspaces')) {
+				if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces')) {
 					$this->workspaceService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_Workspaces_Service_Workspaces');
 					// only generate the link if the marker is in the template - prevents database from getting to much entries
 					if (\TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($emailConfig['message'], 'LLL:')) {
@@ -556,11 +567,11 @@ class DataHandlerHook {
 	 * @param integer $stageId Stage ID to set
 	 * @param string $comment Comment that goes into log
 	 * @param boolean $notificationEmailInfo Accumulate state changes in memory for compiled notification email?
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @param array $notificationAlternativeRecipients comma separated list of recipients to notify instead of normal be_users
 	 * @return void
 	 */
-	protected function version_setStage($table, $id, $stageId, $comment = '', $notificationEmailInfo = FALSE, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj, array $notificationAlternativeRecipients = array()) {
+	protected function version_setStage($table, $id, $stageId, $comment = '', $notificationEmailInfo = FALSE, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj, array $notificationAlternativeRecipients = array()) {
 		if ($errorCode = $tcemainObj->BE_USER->workspaceCannotEditOfflineVersion($table, $id)) {
 			$tcemainObj->newlog('Attempt to set stage for record failed: ' . $errorCode, 1);
 		} elseif ($tcemainObj->checkRecordUpdateAccess($table, $id)) {
@@ -602,11 +613,11 @@ class DataHandlerHook {
 	 * @param integer $uid Page uid to create new version of.
 	 * @param string $label Version label
 	 * @param integer $versionizeTree Indicating "treeLevel" - "page" (0) or "branch" (>=1) ["element" type must call versionizeRecord() directly]
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @return void
 	 * @see copyPages()
 	 */
-	protected function versionizePages($uid, $label, $versionizeTree, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	protected function versionizePages($uid, $label, $versionizeTree, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		$uid = intval($uid);
 		// returns the branch
 		$brExist = $tcemainObj->doesBranchExist('', $uid, $tcemainObj->pMap['show'], 1);
@@ -663,10 +674,13 @@ class DataHandlerHook {
 	 * @param integer $id UID of the online record to swap
 	 * @param integer $swapWith UID of the archived version to swap with!
 	 * @param boolean $swapIntoWS If set, swaps online into workspace instead of publishing out of workspace.
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
+	 * @param string $comment Notification comment
+	 * @param boolean $notificationEmailInfo Accumulate state changes in memory for compiled notification email?
+	 * @param array $notificationAlternativeRecipients comma separated list of recipients to notificate instead of normal be_users
 	 * @return void
 	 */
-	protected function version_swap($table, $id, $swapWith, $swapIntoWS = 0, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	protected function version_swap($table, $id, $swapWith, $swapIntoWS = 0, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj, $comment = '', $notificationEmailInfo = FALSE, $notificationAlternativeRecipients = array()) {
 		// First, check if we may actually edit the online record
 		if ($tcemainObj->checkRecordUpdateAccess($table, $id)) {
 			// Select the two versions:
@@ -836,6 +850,20 @@ class DataHandlerHook {
 											}
 											$theLogId = $tcemainObj->log($table, $swapWith, 2, $propArr['pid'], 0, $label, 10, array($propArr['header'], $table . ':' . $swapWith), $propArr['event_pid']);
 											$tcemainObj->setHistory($table, $swapWith, $theLogId);
+
+											$stageId = -20; // Tx_Workspaces_Service_Stages::STAGE_PUBLISH_EXECUTE_ID;
+											if ($notificationEmailInfo) {
+												$notificationEmailInfoKey = $wsAccess['uid'] . ':' . $stageId . ':' . $comment;
+												$this->notificationEmailInfo[$notificationEmailInfoKey]['shared'] = array($wsAccess, $stageId, $comment);
+												$this->notificationEmailInfo[$notificationEmailInfoKey]['elements'][] = $table . ':' . $id;
+												$this->notificationEmailInfo[$notificationEmailInfoKey]['alternativeRecipients'] = $notificationAlternativeRecipients;
+											} else {
+												$this->notifyStageChange($wsAccess, $stageId, $table, $id, $comment, $tcemainObj, $notificationAlternativeRecipients);
+											}
+												// Write to log with stageId -20
+											$tcemainObj->newlog2('Stage for record was changed to ' . $stageId . '. Comment was: "' . substr($comment, 0, 100) . '"', $table, $id);
+											$tcemainObj->log($table, $id, 6, 0, 0, 'Published', 30, array('comment' => $comment, 'stage' => $stageId));
+
 											// Clear cache:
 											$tcemainObj->clear_cache($table, $id);
 											// Checking for "new-placeholder" and if found, delete it (BUT FIRST after swapping!):
@@ -880,10 +908,10 @@ class DataHandlerHook {
 	 * @param array $conf: TCA configuration of current field
 	 * @param array $curVersion: Reference to the current (original) record
 	 * @param array $swapVersion: Reference to the record (workspace/versionized) to publish in or swap with
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @return void
 	 */
-	protected function version_swap_procBasedOnFieldType($table, $field, array $conf, array &$curVersion, array &$swapVersion, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	protected function version_swap_procBasedOnFieldType($table, $field, array $conf, array &$curVersion, array &$swapVersion, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		$inlineType = $tcemainObj->getInlineFieldType($conf);
 		// Process pointer fields on normalized database:
 		if ($inlineType == 'field') {
@@ -940,10 +968,10 @@ class DataHandlerHook {
 	 * @param string $table Table name
 	 * @param integer $id Record UID
 	 * @param boolean $flush If set, will completely delete element
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @return 	void
 	 */
-	protected function version_clearWSID($table, $id, $flush = FALSE, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	protected function version_clearWSID($table, $id, $flush = FALSE, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		if ($errorCode = $tcemainObj->BE_USER->workspaceCannotEditOfflineVersion($table, $id)) {
 			$tcemainObj->newlog('Attempt to reset workspace for record failed: ' . $errorCode, 1);
 		} elseif ($tcemainObj->checkRecordUpdateAccess($table, $id)) {
@@ -988,11 +1016,11 @@ class DataHandlerHook {
 	 * @param integer $oldPageId Current page id.
 	 * @param integer $newPageId New page id
 	 * @param array $copyTablesArray Array of tables from which to copy
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @return void
 	 * @see versionizePages()
 	 */
-	protected function rawCopyPageContent($oldPageId, $newPageId, array $copyTablesArray, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	protected function rawCopyPageContent($oldPageId, $newPageId, array $copyTablesArray, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		if ($newPageId) {
 			foreach ($copyTablesArray as $table) {
 				// all records under the page is copied.
@@ -1136,11 +1164,11 @@ class DataHandlerHook {
 	 * @param integer $uid Record uid to move (online record)
 	 * @param integer $destPid Position to move to: $destPid: >=0 then it points to a page-id on which to insert the record (as the first element). <0 then it points to a uid from its own table after which to insert it (works if
 	 * @param integer $wsUid UID of offline version of online record
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj TCEmain object
 	 * @return void
 	 * @see moveRecord()
 	 */
-	protected function moveRecord_wsPlaceholders($table, $uid, $destPid, $wsUid, \TYPO3\CMS\Core\DataHandler\DataHandler $tcemainObj) {
+	protected function moveRecord_wsPlaceholders($table, $uid, $destPid, $wsUid, \TYPO3\CMS\Core\DataHandling\DataHandler $tcemainObj) {
 		// If a record gets moved after a record that already has a placeholder record
 		// then the new placeholder record needs to be after the existing one
 		$originalRecordDestinationPid = $destPid;
@@ -1233,11 +1261,11 @@ class DataHandlerHook {
 	/**
 	 * Gets an instance of the command map helper.
 	 *
-	 * @param \TYPO3\CMS\Core\DataHandler\DataHandler $tceMain TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tceMain TCEmain object
 	 * @param array $commandMap The command map as submitted to t3lib_TCEmain
 	 * @return \TYPO3\CMS\Version\DataHandler\CommandMap
 	 */
-	public function getCommandMap(\TYPO3\CMS\Core\DataHandler\DataHandler $tceMain, array $commandMap) {
+	public function getCommandMap(\TYPO3\CMS\Core\DataHandling\DataHandler $tceMain, array $commandMap) {
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Version\\DataHandler\\CommandMap', $this, $tceMain, $commandMap);
 	}
 

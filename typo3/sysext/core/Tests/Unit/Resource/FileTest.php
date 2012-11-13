@@ -34,7 +34,7 @@ require_once 'vfsStream/vfsStream.php';
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  * @todo Many, many, many tests are skipped in this test case...
  */
-class FileTest extends \Tx_Phpunit_TestCase {
+class FileTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var array A backup of registered singleton instances
@@ -319,7 +319,7 @@ class FileTest extends \Tx_Phpunit_TestCase {
 	 */
 	public function readFailsIfFileIsClosed() {
 		$this->markTestSkipped();
-		$this->setExpectedException('RuntimeException', '', 1299863431);
+		$this->setExpectedException('\RuntimeException', '', 1299863431);
 		$fixture = $this->prepareFixture();
 		$mockFileHandle = $this->getMock('TYPO3\\CMS\\Core\\Resource\\FileHandle', array(), array(), '', FALSE);
 		$mockDriver = $this->getMockForAbstractClass('t3lib_file_driver_Abstract');
@@ -351,7 +351,7 @@ class FileTest extends \Tx_Phpunit_TestCase {
 	 */
 	public function writeFailsIfFileIsClosed() {
 		$this->markTestSkipped();
-		$this->setExpectedException('RuntimeException', '', 1299863432);
+		$this->setExpectedException('\RuntimeException', '', 1299863432);
 		$fixture = $this->prepareFixture();
 		$mockFileHandle = $this->getMock('TYPO3\\CMS\\Core\\Resource\\FileHandle', array(), array(), '', FALSE);
 		$mockDriver = $this->getMockForAbstractClass('t3lib_file_driver_Abstract');
@@ -359,6 +359,41 @@ class FileTest extends \Tx_Phpunit_TestCase {
 		$fixture->setStorageDriver($mockDriver);
 		$fixture->write('asdf');
 	}
+
+	public function filenameExtensionDataProvider() {
+		return array(
+			array('somefile.jpg', 'somefile', 'jpg'),
+			array('SomeFile.PNG', 'SomeFile', 'png'),
+			array('somefile', 'somefile', ''),
+			array('somefile.tar.gz', 'somefile.tar', 'gz'),
+			array('somefile.tar.bz2', 'somefile.tar', 'bz2'),
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider filenameExtensionDataProvider
+	 */
+	public function getNameWithoutExtensionReturnsCorrectName($originalFilename, $expectedBasename) {
+		$fixture = new \TYPO3\CMS\Core\Resource\File(array(
+			'name' => $originalFilename,
+			'identifier' => '/' . $originalFilename
+		));
+		$this->assertSame($expectedBasename, $fixture->getNameWithoutExtension());
+	}
+
+	/**
+	 * @test
+	 * @dataProvider filenameExtensionDataProvider
+	 */
+	public function getExtensionReturnsCorrectExtension($originalFilename, $expectedBasename, $expectedExtension) {
+		$fixture = new \TYPO3\CMS\Core\Resource\File(array(
+			'name' => $originalFilename,
+			'identifier' => '/' . $originalFilename
+		));
+		$this->assertSame($expectedExtension, $fixture->getExtension());
+	}
+
 
 }
 

@@ -7,8 +7,8 @@ namespace TYPO3\CMS\Extbase\Utility;
  *  (c) 2009 Sebastian Kurfürst <sebastian@typo3.org>
  *  All rights reserved
  *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -29,10 +29,6 @@ namespace TYPO3\CMS\Extbase\Utility;
 /**
  * A checker which hooks into the backend module "Reports" checking whether there
  * is a PHP accelerator in place which strips off Doc Comments.
- *
- * @package Extbase
- * @subpackage Utility
- * @version $Id$
  */
 class ExtbaseRequirementsCheckUtility implements \TYPO3\CMS\Reports\StatusProviderInterface {
 
@@ -75,7 +71,7 @@ class ExtbaseRequirementsCheckUtility implements \TYPO3\CMS\Reports\StatusProvid
 	 * @return \TYPO3\CMS\Reports\Status
 	 */
 	protected function checkIfDbalExtensionIsInstalled() {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('dbal')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('dbal')) {
 			$value = 'DBAL is loaded';
 			$message = 'The Database Abstraction Layer Extension (dbal) is loaded. Extbase does not fully support dbal at the moment. If you are aware of this fact or don\'t make use of the incompatible parts on this installation, you can ignore this notice.';
 			$status = \TYPO3\CMS\Reports\Status::INFO;

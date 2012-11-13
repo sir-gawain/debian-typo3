@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Scheduler\Tests\Unit\CronCommand;
  * @subpackage tx_scheduler
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
-class CronCommandTest extends \tx_phpunit_testcase {
+class CronCommandTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @const integer timestamp of 1.1.2010 0:00 (Friday), timezone UTC/GMT
@@ -67,7 +67,7 @@ class CronCommandTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function constructorThrowsExceptionForInvalidCronCommand() {
 		new \TYPO3\CMS\Scheduler\CronCommand\CronCommand('61 * * * *');
@@ -303,7 +303,7 @@ class CronCommandTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException RuntimeException
+	 * @expectedException \RuntimeException
 	 */
 	public function calculateNextValueThrowsExceptionWithImpossibleCronCommand() {
 		$instance = new \TYPO3\CMS\Scheduler\CronCommand\CronCommand('* * 31 apr *', self::TIMESTAMP);
@@ -327,6 +327,4 @@ class CronCommandTest extends \tx_phpunit_testcase {
 	}
 
 }
-
-
 ?>

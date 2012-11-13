@@ -57,14 +57,24 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 			$referencesUid = $this->stdWrapValue('references', $conf);
 			$referencesUidArray = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $referencesUid, TRUE);
 			foreach ($referencesUidArray as $referenceUid) {
-				$this->addToArray($fileRepository->findFileReferenceByUid($referenceUid), $fileObjects);
+				try {
+					$this->addToArray($fileRepository->findFileReferenceByUid($referenceUid), $fileObjects);
+				} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
+					/** @var \TYPO3\CMS\Core\Log\Logger $logger */
+					$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger();
+					$logger->warning('The file-reference with uid  "' . $referenceUid . '" could not be found and won\'t be included in frontend output');
+				}
 			}
 
 			// It's important that this always stays "fieldName" and not be renamed to "field" as it would otherwise collide with the stdWrap key of that name
 			$referencesFieldName = $this->stdWrapValue('fieldName', $conf['references.']);
 			if ($referencesFieldName) {
-				$referencesForeignTable = $this->stdWrapValue('table', $conf['references.'], $this->cObj->getCurrentTable());
-				$referencesForeignUid = $this->stdWrapValue('uid', $conf['references.'], $this->cObj->data['uid']);
+				$table = $this->cObj->getCurrentTable();
+				if ($table === 'pages' && isset($this->cObj->data['_LOCALIZED_UID']) && intval($this->cObj->data['sys_language_uid']) > 0) {
+					$table = 'pages_language_overlay';
+				}
+				$referencesForeignTable = $this->stdWrapValue('table', $conf['references.'], $table);
+				$referencesForeignUid = $this->stdWrapValue('uid', $conf['references.'], isset($this->cObj->data['_LOCALIZED_UID']) ? $this->cObj->data['_LOCALIZED_UID'] : $this->cObj->data['uid']);
 				$this->addToArray($fileRepository->findByRelation($referencesForeignTable, $referencesFieldName, $referencesForeignUid), $fileObjects);
 			}
 		}
@@ -77,7 +87,13 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 			 */
 			$fileUids = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->stdWrapValue('files', $conf), TRUE);
 			foreach ($fileUids as $fileUid) {
-				$this->addToArray($fileRepository->findByUid($fileUid), $fileObjects);
+				try {
+					$this->addToArray($fileRepository->findByUid($fileUid), $fileObjects);
+				} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
+					/** @var \TYPO3\CMS\Core\Log\Logger $logger */
+					$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger();
+					$logger->warning('The file with uid  "' . $fileUid . '" could not be found and won\'t be included in frontend output');
+				}
 			}
 		}
 		if ($conf['collections'] || $conf['collections.']) {
@@ -85,10 +101,16 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 			/** @var \TYPO3\CMS\Core\Resource\FileCollectionRepository $collectionRepository */
 			$collectionRepository = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\FileCollectionRepository');
 			foreach ($collectionUids as $collectionUid) {
-				$fileCollection = $collectionRepository->findByUid($collectionUid);
-				if ($fileCollection instanceof \TYPO3\CMS\Core\Resource\Collection\AbstractFileCollection) {
-					$fileCollection->loadContents();
-					$this->addToArray($fileCollection->getItems(), $fileObjects);
+				try {
+					$fileCollection = $collectionRepository->findByUid($collectionUid);
+					if ($fileCollection instanceof \TYPO3\CMS\Core\Resource\Collection\AbstractFileCollection) {
+						$fileCollection->loadContents();
+						$this->addToArray($fileCollection->getItems(), $fileObjects);
+					}
+				} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
+					/** @var \TYPO3\CMS\Core\Log\Logger $logger */
+					$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger();
+					$logger->warning('The file-collection with uid  "' . $collectionUid . '" could not be found or contents could not be loaded and won\'t be included in frontend output');
 				}
 			}
 		}
@@ -98,9 +120,15 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 			$fileFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
 			foreach ($folderIdentifiers as $folderIdentifier) {
 				if ($folderIdentifier) {
-					$folder = $fileFactory->getFolderObjectFromCombinedIdentifier($folderIdentifier);
-					if ($folder instanceof \TYPO3\CMS\Core\Resource\Folder) {
-						$this->addToArray($folder->getFiles(), $fileObjects);
+					try {
+						$folder = $fileFactory->getFolderObjectFromCombinedIdentifier($folderIdentifier);
+						if ($folder instanceof \TYPO3\CMS\Core\Resource\Folder) {
+							$this->addToArray($folder->getFiles(), $fileObjects);
+						}
+					} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
+						/** @var \TYPO3\CMS\Core\Log\Logger $logger */
+						$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger();
+						$logger->warning('The folder with identifier  "' . $folderIdentifier . '" could not be found and won\'t be included in frontend output');
 					}
 				}
 			}

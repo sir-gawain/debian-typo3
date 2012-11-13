@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Validation;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Validation;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,10 +29,6 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Validation;
  ***************************************************************/
 /**
  * Testcase for the validator resolver
- *
- * @package Extbase
- * @subpackage extbase
- * @version $Id: ValidatorResolver_testcase.php 2708 2010-11-10 18:56:01Z bwaidelich $
  */
 class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
@@ -40,9 +37,10 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 */
 	public function resolveValidatorObjectNameReturnsFalseIfValidatorCantBeResolved() {
 		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
-		$validatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('dummy'));
-		$validatorResolver->_set('objectManager', $objectManager);
-		$this->assertSame(FALSE, $validatorResolver->_call('resolveValidatorObjectName', 'Foo'));
+		/** @var \TYPO3\CMS\Extbase\Validation\ValidatorResolver|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface */
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
+		$validatorResolver->_set('objectManager', $mockObjectManager);
+		$this->assertFalse($validatorResolver->_call('resolveValidatorObjectName', 'Foo'));
 	}
 
 	/**
@@ -51,19 +49,53 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	public function resolveValidatorObjectNameReturnsTheGivenArgumentIfAnObjectOfThatNameIsRegistered() {
 		$validatorName = uniqid('FooValidator_') . 'Validator';
 		eval('class ' . $validatorName . ' {}');
-		$validatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('dummy'));
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
 		$this->assertSame($validatorName, $validatorResolver->_call('resolveValidatorObjectName', $validatorName));
 	}
 
 	/**
 	 * @test
 	 */
-	public function resolveValidatorObjectNameCanResolveShorthandValidatornames() {
+	public function resolveValidatorObjectNameReturnsTheGivenArgumentIfANamespacedObjectOfThatNameIsRegistered() {
+		$namespace = 'Acme\\Bar';
+		$className = uniqid('FooValidator') . 'Validator';
+		$validatorName = $namespace . '\\' . $className;
+		eval('namespace ' . $namespace . '; ' . LF . 'class ' . $className . ' {}');
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
+		$this->assertSame($validatorName, $validatorResolver->_call('resolveValidatorObjectName', $validatorName));
+	}
+
+	/**
+	 * @test
+	 */
+	public function resolveValidatorObjectNameCanResolveShorthandNotNamespacedValidatorNames() {
 		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
-		eval('class Tx_Mypkg_Validation_Validator_MyValidator {}');
+		eval('class Tx_Mypkg_Validation_Validator_MyFirstValidator {}');
 		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
 		$validatorResolver->_set('objectManager', $mockObjectManager);
-		$this->assertSame('Tx_Mypkg_Validation_Validator_MyValidator', $validatorResolver->_call('resolveValidatorObjectName', 'Mypkg:My'));
+		$this->assertSame('Tx_Mypkg_Validation_Validator_MyFirstValidator', $validatorResolver->_call('resolveValidatorObjectName', 'Mypkg:MyFirst'));
+	}
+
+	/**
+	 * @return array
+	 */
+	public function namespacedShorthandValidatornames() {
+		return array(
+			array('TYPO3\\CMS\\Mypkg\\Validation\\Validator', 'MySecondValidator', 'TYPO3.CMS.Mypkg:MySecond'),
+			array('Acme\\Mypkg\\Validation\\Validator', 'MyThirdValidator', 'Acme.Mypkg:MyThird')
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider namespacedShorthandValidatornames
+	 */
+	public function resolveValidatorObjectNameCanResolveNamespacedShorthandValidatornames($namespace, $className, $shorthandValidatorname) {
+		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
+		eval('namespace ' . $namespace . '; class ' . $className . ' {}');
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
+		$validatorResolver->_set('objectManager', $mockObjectManager);
+		$this->assertSame($namespace . '\\' . $className, $validatorResolver->_call('resolveValidatorObjectName', $shorthandValidatorname));
 	}
 
 	/**
@@ -71,10 +103,10 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 */
 	public function resolveValidatorObjectNameCanResolveShortNamesOfBuiltInValidators() {
 		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
-		eval('class Tx_Extbase_Validation_Validator_FooValidator {}');
-		$validatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('dummy'));
+		eval('namespace TYPO3\\CMS\\Extbase\\Validation\\Validator; class FooValidator {}');
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
 		$validatorResolver->_set('objectManager', $mockObjectManager);
-		$this->assertSame('Tx_Extbase_Validation_Validator_FooValidator', $validatorResolver->_call('resolveValidatorObjectName', 'Foo'));
+		$this->assertSame('TYPO3\\CMS\\Extbase\\Validation\\Validator\\FooValidator', $validatorResolver->_call('resolveValidatorObjectName', 'Foo'));
 	}
 
 	/**
@@ -86,7 +118,7 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockValidator->expects($this->once())->method('setOptions')->with(array('foo' => 'bar'));
 		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
 		$mockObjectManager->expects($this->any())->method('get')->with($className)->will($this->returnValue($mockValidator));
-		$validatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('resolveValidatorObjectName'));
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('resolveValidatorObjectName'));
 		$validatorResolver->_set('objectManager', $mockObjectManager);
 		$validatorResolver->expects($this->once())->method('resolveValidatorObjectName')->with($className)->will($this->returnValue($className));
 		$validator = $validatorResolver->createValidator($className, array('foo' => 'bar'));
@@ -121,7 +153,7 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @author Sebastian Kurfürst <sbastian@typo3.org>
 	 */
 	public function buildMethodArgumentsValidatorConjunctionsReturnsEmptyArrayIfMethodHasNoArguments() {
-		$mockController = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ActionController'), array('fooAction'), array(), '', FALSE);
+		$mockController = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ActionController', array('fooAction'), array(), '', FALSE);
 		$methodTagsValues = array();
 		$methodParameters = array();
 		$mockReflectionService = $this->getMock('TYPO3\\CMS\\Extbase\\Reflection\\Service', array(), array(), '', FALSE);
@@ -257,7 +289,7 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockConjunctionValidator->expects($this->once())->method('addValidator')->with($mockObjectValidator);
 		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface', array(), array(), '', FALSE);
 		$mockObjectManager->expects($this->at(0))->method('get')->with('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator')->will($this->returnValue($mockConjunctionValidator));
-		$validatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('resolveValidatorObjectName', 'createValidator'));
+		$validatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('resolveValidatorObjectName', 'createValidator'));
 		$validatorResolver->injectReflectionService($mockReflectionService);
 		$validatorResolver->injectObjectManager($mockObjectManager);
 		$validatorResolver->expects($this->at(0))->method('createValidator')->with('GenericObject')->will($this->returnValue($mockObjectValidator));
@@ -275,8 +307,8 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function resolveValidatorObjectNameCallsUnifyDataType() {
-		$mockValidatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('unifyDataType'));
-		$mockValidatorResolver->expects($this->once())->method('unifyDataType')->with('someDataType');
+		$mockValidatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('unifyDataType'));
+		$mockValidatorResolver->expects($this->any())->method('unifyDataType')->with('someDataType');
 		$mockValidatorResolver->_call('resolveValidatorObjectName', 'someDataType');
 	}
 
@@ -285,7 +317,7 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function unifyDataTypeCorrectlyRenamesPhpDataTypes() {
-		$mockValidatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('dummy'));
+		$mockValidatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
 		$this->assertEquals('Integer', $mockValidatorResolver->_call('unifyDataType', 'integer'));
 		$this->assertEquals('Integer', $mockValidatorResolver->_call('unifyDataType', 'int'));
 		$this->assertEquals('String', $mockValidatorResolver->_call('unifyDataType', 'string'));
@@ -304,7 +336,7 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function unifyDataTypeRenamesMixedToRaw() {
-		$mockValidator = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('dummy'));
+		$mockValidator = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
 		$this->assertEquals('Raw', $mockValidator->_call('unifyDataType', 'mixed'));
 	}
 
@@ -432,7 +464,7 @@ class ValidatorResolverTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @param mixed $expectedResult
 	 */
 	public function parseValidatorAnnotationCanParseAnnotations($annotation, $expectedResult) {
-		$mockValidatorResolver = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver'), array('dummy'));
+		$mockValidatorResolver = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver', array('dummy'));
 		$result = $mockValidatorResolver->_call('parseValidatorAnnotation', $annotation);
 		$this->assertEquals($result, $expectedResult);
 	}

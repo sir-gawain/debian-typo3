@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,9 +31,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  * Query settings. This class is NOT part of the FLOW3 API.
  * It reflects the settings unique to TYPO3 4.x.
  *
- * @package Extbase
- * @subpackage Persistence
- * @version $Id$
  * @api
  */
 class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface {
@@ -83,6 +81,13 @@ class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\Query
 	protected $respectSysLanguage = TRUE;
 
 	/**
+	 * The language uid for the language overlay.
+	 *
+	 * @var integer
+	 */
+	protected $sysLanguageUid = 0;
+
+	/**
 	 * Flag if the the query result should be returned as raw QueryResult.
 	 *
 	 * @var boolean
@@ -100,6 +105,14 @@ class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\Query
 		$configurationManager = $objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface');
 		if (TYPO3_MODE === 'BE' && $configurationManager->isFeatureEnabled('ignoreAllEnableFieldsInBe')) {
 			$this->setIgnoreEnableFields(TRUE);
+		}
+
+		// Set correct language uid for frontend handling
+		if (isset($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE'])) {
+			$this->setSysLanguageUid($GLOBALS['TSFE']->sys_language_content);
+		} elseif (intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('L'))) {
+			// Set language from 'L' parameter
+			$this->setSysLanguageUid(intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('L')));
 		}
 	}
 
@@ -163,6 +176,26 @@ class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\Query
 	 */
 	public function getRespectSysLanguage() {
 		return $this->respectSysLanguage;
+	}
+
+	/**
+	 * Sets the language uid for the language overlay.
+	 *
+	 * @param integer $sysLanguageUid language uid for the language overlay
+	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface instance of $this to allow method chaining
+	 * @api
+	 */
+	public function setSysLanguageUid($sysLanguageUid) {
+		$this->sysLanguageUid = $sysLanguageUid;
+	}
+
+	/**
+	 * Returns the language uid for the language overlay
+	 *
+	 * @return integer language uid for the language overlay
+	 */
+	public function getSysLanguageUid() {
+		return $this->sysLanguageUid;
 	}
 
 	/**
@@ -269,7 +302,7 @@ class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\Query
 	/**
 	 * Sets the state, if the QueryResult should be returned unmapped.
 	 *
-	 * @var boolean $returnRawQueryResult TRUE, if the QueryResult should be returned unmapped; otherwise FALSE.
+	 * @param boolean $returnRawQueryResult TRUE, if the QueryResult should be returned unmapped; otherwise FALSE.
 	 * @return void
 	 */
 	public function setReturnRawQueryResult($returnRawQueryResult) {

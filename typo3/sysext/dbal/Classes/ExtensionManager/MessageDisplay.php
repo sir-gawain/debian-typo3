@@ -38,19 +38,16 @@ class MessageDisplay {
 	/**
 	 * Renders a message for EM.
 	 *
-	 * @param array $params
-	 * @param \TYPO3\CMS\Core\TypoScript\ConfigurationForm $tsObj
 	 * @return string
-	 * @todo Define visibility
 	 */
-	public function displayMessage(array &$params, \TYPO3\CMS\Core\TypoScript\ConfigurationForm $tsObj) {
+	public function displayMessage() {
 		$out = '
 			<div>
 				<div class="typo3-message message-information">
 					<div class="message-header">PostgreSQL</div>
 					<div class="message-body">
 						If you use a PostgreSQL database, make sure to run SQL scripts located in<br />
-						<tt>' . \TYPO3\CMS\Core\Extension\ExtensionManager::extPath('dbal') . 'res/postgresql/</tt><br />
+						<tt>' . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('dbal') . 'res/postgresql/</tt><br />
 						to ensure best compatibility with TYPO3.
 					</div>
 				</div>

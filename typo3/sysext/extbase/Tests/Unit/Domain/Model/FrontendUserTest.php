@@ -26,10 +26,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Domain\Model;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for Tx_Extbase_Domain_Model_FrontendUser.
+ * Testcase for \TYPO3\CMS\Extbase\Domain\Model\FrontendUser.
  *
  * @author Markus Günther <mail@markus-guenther.de>
- * @package Extbase
  * @scope prototype
  * @entity
  * @api
@@ -85,7 +84,7 @@ class FrontendUserTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @test
 	 */
 	public function setUsergroupSetsUsergroup() {
-		$usergroup = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$usergroup = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 		$usergroup->attach(new \TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup('foo'));
 		$this->fixture->setUsergroup($usergroup);
 		$this->assertSame($usergroup, $this->fixture->getUsergroup());

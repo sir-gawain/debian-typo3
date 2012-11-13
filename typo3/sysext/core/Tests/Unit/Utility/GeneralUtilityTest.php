@@ -1,5 +1,6 @@
 <?php
 namespace TYPO3\CMS\Core\Tests\Unit\Utility;
+use TYPO3\CMS\Core\Utility;
 
 /***************************************************************
  *  Copyright notice
@@ -32,7 +33,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility;
  * @package TYPO3
  * @subpackage t3lib
  */
-class GeneralUtilityTest extends \tx_phpunit_testcase {
+class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * Enable backup of global and system variables
@@ -42,12 +43,12 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	protected $backupGlobals = TRUE;
 
 	/**
-	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
+	 * Absolute path to files that must be removed
+	 * after a test - handled in tearDown
 	 *
 	 * @var array
 	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
+	protected $testFilesToDelete = array();
 
 	/**
 	 * @var array A backup of registered singleton instances
@@ -55,11 +56,14 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	protected $singletonInstances = array();
 
 	public function setUp() {
-		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
+		$this->singletonInstances = Utility\GeneralUtility::getSingletonInstances();
 	}
 
 	public function tearDown() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances($this->singletonInstances);
+		Utility\GeneralUtility::resetSingletonInstances($this->singletonInstances);
+		foreach ($this->testFilesToDelete as $absoluteFileName) {
+			Utility\GeneralUtility::unlink_tempfile($absoluteFileName);
+		}
 	}
 
 	///////////////////////////
@@ -72,7 +76,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function canRetrieveValueWithGP($key, $get, $post, $expected) {
 		$_GET = $get;
 		$_POST = $post;
-		$this->assertSame($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::_GP($key));
+		$this->assertSame($expected, Utility\GeneralUtility::_GP($key));
 	}
 
 	/**
@@ -107,7 +111,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function gpMergedWillMergeArraysFromGetAndPost($get, $post, $expected) {
 		$_POST = $post;
 		$_GET = $get;
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::_GPmerged('cake'));
+		$this->assertEquals($expected, Utility\GeneralUtility::_GPmerged('cake'));
 	}
 
 	/**
@@ -153,7 +157,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function canRetrieveGlobalInputsThroughGet($key, $get, $expected) {
 		$_GET = $get;
-		$this->assertSame($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::_GET($key));
+		$this->assertSame($expected, Utility\GeneralUtility::_GET($key));
 	}
 
 	/**
@@ -162,7 +166,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function canRetrieveGlobalInputsThroughPost($key, $post, $expected) {
 		$_POST = $post;
-		$this->assertSame($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::_POST($key));
+		$this->assertSame($expected, Utility\GeneralUtility::_POST($key));
 	}
 
 	///////////////////////////////
@@ -174,7 +178,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function canSetNewGetInputValues($input, $key, $expected, $getPreset = array()) {
 		$_GET = $getPreset;
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset($input, $key);
+		Utility\GeneralUtility::_GETset($input, $key);
 		$this->assertSame($expected, $_GET);
 	}
 
@@ -215,11 +219,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testFilename = PATH_site . 'typo3temp/' . uniqid('test_') . '.gif';
 		@copy($fixtureGifFile, $testFilename);
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0777';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::gif_compress($testFilename, 'IM');
+		Utility\GeneralUtility::gif_compress($testFilename, 'IM');
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($testFilename)), 2);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::unlink_tempfile($testFilename);
+		Utility\GeneralUtility::unlink_tempfile($testFilename);
 		$this->assertEquals($resultFilePermissions, '0777');
 	}
 
@@ -238,11 +242,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testFilename = PATH_site . 'typo3temp/' . uniqid('test_') . '.gif';
 		@copy($fixtureGifFile, $testFilename);
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0777';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::gif_compress($testFilename, 'GD');
+		Utility\GeneralUtility::gif_compress($testFilename, 'GD');
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($testFilename)), 2);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::unlink_tempfile($testFilename);
+		Utility\GeneralUtility::unlink_tempfile($testFilename);
 		$this->assertEquals($resultFilePermissions, '0777');
 	}
 
@@ -265,11 +269,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testFilename = PATH_site . 'typo3temp/' . uniqid('test_') . '.png';
 		@copy($fixturePngFile, $testFilename);
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0777';
-		$newGifFile = \TYPO3\CMS\Core\Utility\GeneralUtility::png_to_gif_by_imagemagick($testFilename);
+		$newGifFile = Utility\GeneralUtility::png_to_gif_by_imagemagick($testFilename);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($newGifFile)), 2);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::unlink_tempfile($newGifFile);
+		Utility\GeneralUtility::unlink_tempfile($newGifFile);
 		$this->assertEquals($resultFilePermissions, '0777');
 	}
 
@@ -289,11 +293,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testGifFile = __DIR__ . '/Fixtures/clear.gif';
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0777';
-		$newPngFile = \TYPO3\CMS\Core\Utility\GeneralUtility::read_png_gif($testGifFile, TRUE);
+		$newPngFile = Utility\GeneralUtility::read_png_gif($testGifFile, TRUE);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($newPngFile)), 2);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::unlink_tempfile($newPngFile);
+		Utility\GeneralUtility::unlink_tempfile($newPngFile);
 		$this->assertEquals($resultFilePermissions, '0777');
 	}
 
@@ -324,7 +328,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider cmpIPv4DataProviderMatching
 	 */
 	public function cmpIPv4ReturnsTrueForMatchingAddress($ip, $list) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::cmpIPv4($ip, $list));
+		$this->assertTrue(Utility\GeneralUtility::cmpIPv4($ip, $list));
 	}
 
 	/**
@@ -348,7 +352,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider cmpIPv4DataProviderNotMatching
 	 */
 	public function cmpIPv4ReturnsFalseForNotMatchingAddress($ip, $list) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::cmpIPv4($ip, $list));
+		$this->assertFalse(Utility\GeneralUtility::cmpIPv4($ip, $list));
 	}
 
 	///////////////////////////
@@ -379,7 +383,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider cmpIPv6DataProviderMatching
 	 */
 	public function cmpIPv6ReturnsTrueForMatchingAddress($ip, $list) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::cmpIPv6($ip, $list));
+		$this->assertTrue(Utility\GeneralUtility::cmpIPv6($ip, $list));
 	}
 
 	/**
@@ -405,7 +409,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider cmpIPv6DataProviderNotMatching
 	 */
 	public function cmpIPv6ReturnsFalseForNotMatchingAddress($ip, $list) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::cmpIPv6($ip, $list));
+		$this->assertFalse(Utility\GeneralUtility::cmpIPv6($ip, $list));
 	}
 
 	///////////////////////////////
@@ -431,7 +435,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider IPv6Hex2BinDataProviderCorrect
 	 */
 	public function IPv6Hex2BinCorrectlyConvertsAddresses($hex, $binary) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::IPv6Hex2Bin($hex) === $binary);
+		$this->assertTrue(Utility\GeneralUtility::IPv6Hex2Bin($hex) === $binary);
 	}
 
 	///////////////////////////////
@@ -458,7 +462,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider IPv6Bin2HexDataProviderCorrect
 	 */
 	public function IPv6Bin2HexCorrectlyConvertsAddresses($binary, $hex) {
-		$this->assertEquals(\TYPO3\CMS\Core\Utility\GeneralUtility::IPv6Bin2Hex($binary), $hex);
+		$this->assertEquals(Utility\GeneralUtility::IPv6Bin2Hex($binary), $hex);
 	}
 
 	////////////////////////////////////////////////
@@ -485,7 +489,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider normalizeCompressIPv6DataProviderCorrect
 	 */
 	public function normalizeIPv6CorrectlyNormalizesAddresses($compressed, $normalized) {
-		$this->assertEquals($normalized, \TYPO3\CMS\Core\Utility\GeneralUtility::normalizeIPv6($compressed));
+		$this->assertEquals($normalized, Utility\GeneralUtility::normalizeIPv6($compressed));
 	}
 
 	/**
@@ -493,7 +497,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider normalizeCompressIPv6DataProviderCorrect
 	 */
 	public function compressIPv6CorrectlyCompressesAdresses($compressed, $normalized) {
-		$this->assertEquals($compressed, \TYPO3\CMS\Core\Utility\GeneralUtility::compressIPv6($normalized));
+		$this->assertEquals($compressed, Utility\GeneralUtility::compressIPv6($normalized));
 	}
 
 	/**
@@ -503,7 +507,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		if (strtolower(PHP_OS) === 'darwin') {
 			$this->markTestSkipped('This test does not work on OSX / Darwin OS.');
 		}
-		$this->assertEquals('::f0f', \TYPO3\CMS\Core\Utility\GeneralUtility::compressIPv6('0000:0000:0000:0000:0000:0000:0000:0f0f'));
+		$this->assertEquals('::f0f', Utility\GeneralUtility::compressIPv6('0000:0000:0000:0000:0000:0000:0000:0f0f'));
 	}
 
 	///////////////////////////////
@@ -528,7 +532,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider validIpDataProvider
 	 */
 	public function validIpReturnsTrueForValidIp($ip) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::validIP($ip));
+		$this->assertTrue(Utility\GeneralUtility::validIP($ip));
 	}
 
 	/**
@@ -553,7 +557,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider invalidIpDataProvider
 	 */
 	public function validIpReturnsFalseForInvalidIp($ip) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::validIP($ip));
+		$this->assertFalse(Utility\GeneralUtility::validIP($ip));
 	}
 
 	///////////////////////////////
@@ -584,7 +588,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider cmpFqdnValidDataProvider
 	 */
 	public function cmpFqdnReturnsTrue($baseHost, $list) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::cmpFQDN($baseHost, $list));
+		$this->assertTrue(Utility\GeneralUtility::cmpFQDN($baseHost, $list));
 	}
 
 	/**
@@ -604,7 +608,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider cmpFqdnInvalidDataProvider
 	 */
 	public function cmpFqdnReturnsFalse($baseHost, $list) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::cmpFQDN($baseHost, $list));
+		$this->assertFalse(Utility\GeneralUtility::cmpFQDN($baseHost, $list));
 	}
 
 	///////////////////////////////
@@ -616,7 +620,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider inListForItemContainedReturnsTrueDataProvider
 	 */
 	public function inListForItemContainedReturnsTrue($haystack) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::inList($haystack, 'findme'));
+		$this->assertTrue(Utility\GeneralUtility::inList($haystack, 'findme'));
 	}
 
 	/**
@@ -639,7 +643,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider inListForItemNotContainedReturnsFalseDataProvider
 	 */
 	public function inListForItemNotContainedReturnsFalse($haystack) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::inList($haystack, 'findme'));
+		$this->assertFalse(Utility\GeneralUtility::inList($haystack, 'findme'));
 	}
 
 	/**
@@ -665,7 +669,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider rmFromListRemovesElementsFromCommaSeparatedListDataProvider
 	 */
 	public function rmFromListRemovesElementsFromCommaSeparatedList($initialList, $listWithElementRemoved) {
-		$this->assertSame($listWithElementRemoved, \TYPO3\CMS\Core\Utility\GeneralUtility::rmFromList('removeme', $initialList));
+		$this->assertSame($listWithElementRemoved, Utility\GeneralUtility::rmFromList('removeme', $initialList));
 	}
 
 	/**
@@ -694,7 +698,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider expandListExpandsIntegerRangesDataProvider
 	 */
 	public function expandListExpandsIntegerRanges($list, $expectation) {
-		$this->assertSame($expectation, \TYPO3\CMS\Core\Utility\GeneralUtility::expandList($list));
+		$this->assertSame($expectation, Utility\GeneralUtility::expandList($list));
 	}
 
 	/**
@@ -720,7 +724,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function expandListExpandsForTwoThousandElementsExpandsOnlyToThousandElementsMaximum() {
-		$list = \TYPO3\CMS\Core\Utility\GeneralUtility::expandList('1-2000');
+		$list = Utility\GeneralUtility::expandList('1-2000');
 		$this->assertSame(1000, count(explode(',', $list)));
 	}
 
@@ -734,7 +738,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider uniqueListUnifiesCommaSeparatedListDataProvider
 	 */
 	public function uniqueListUnifiesCommaSeparatedList($initialList, $unifiedList) {
-		$this->assertSame($unifiedList, \TYPO3\CMS\Core\Utility\GeneralUtility::uniqueList($initialList));
+		$this->assertSame($unifiedList, Utility\GeneralUtility::uniqueList($initialList));
 	}
 
 	/**
@@ -775,7 +779,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider isFirstPartOfStrReturnsTrueForMatchingFirstPartDataProvider
 	 */
 	public function isFirstPartOfStrReturnsTrueForMatchingFirstPart($string, $part) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($string, $part));
+		$this->assertTrue(Utility\GeneralUtility::isFirstPartOfStr($string, $part));
 	}
 
 	/**
@@ -809,7 +813,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider isFirstPartOfStrReturnsFalseForNotMatchingFirstPartDataProvider
 	 */
 	public function isFirstPartOfStrReturnsFalseForNotMatchingFirstPart($string, $part) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($string, $part));
+		$this->assertFalse(Utility\GeneralUtility::isFirstPartOfStr($string, $part));
 	}
 
 	///////////////////////////////
@@ -820,7 +824,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider formatSizeDataProvider
 	 */
 	public function formatSizeTranslatesBytesToHigherOrderRepresentation($size, $label, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::formatSize($size, $label));
+		$this->assertEquals($expected, Utility\GeneralUtility::formatSize($size, $label));
 	}
 
 	/**
@@ -875,7 +879,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider splitCalcDataProvider
 	 */
 	public function splitCalcCorrectlySplitsExpression($expected, $expression) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::splitCalc($expression, '+-*/'));
+		$this->assertEquals($expected, Utility\GeneralUtility::splitCalc($expression, '+-*/'));
 	}
 
 	///////////////////////////////
@@ -887,7 +891,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function htmlspecialcharsDecodeReturnsDecodedString() {
 		$string = '<typo3 version="6.0">&nbsp;</typo3>';
 		$encoded = htmlspecialchars($string);
-		$decoded = \TYPO3\CMS\Core\Utility\GeneralUtility::htmlspecialchars_decode($encoded);
+		$decoded = Utility\GeneralUtility::htmlspecialchars_decode($encoded);
 		$this->assertEquals($string, $decoded);
 	}
 
@@ -899,7 +903,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider deHSCentitiesReturnsDecodedStringDataProvider
 	 */
 	public function deHSCentitiesReturnsDecodedString($input, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities($input));
+		$this->assertEquals($expected, Utility\GeneralUtility::deHSCentities($input));
 	}
 
 	/**
@@ -925,7 +929,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider slashJsDataProvider
 	 */
 	public function slashJsEscapesSingleQuotesAndSlashes($input, $extended, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::slashJS($input, $extended));
+		$this->assertEquals($expected, Utility\GeneralUtility::slashJS($input, $extended));
 	}
 
 	/**
@@ -952,7 +956,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function rawUrlEncodeJsPreservesWhitespaces() {
 		$input = 'Encode \'me\', but leave my spaces √';
 		$expected = 'Encode %27me%27%2C but leave my spaces %E2%88%9A';
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::rawUrlEncodeJS($input));
+		$this->assertEquals($expected, Utility\GeneralUtility::rawUrlEncodeJS($input));
 	}
 
 	//////////////////////////////////
@@ -964,7 +968,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function rawUrlEncodeFpPreservesSlashes() {
 		$input = 'Encode \'me\', but leave my / √';
 		$expected = 'Encode%20%27me%27%2C%20but%20leave%20my%20/%20%E2%88%9A';
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::rawUrlEncodeFP($input));
+		$this->assertEquals($expected, Utility\GeneralUtility::rawUrlEncodeFP($input));
 	}
 
 	//////////////////////////////////
@@ -988,7 +992,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider strtouppperDataProvider
 	 */
 	public function strtoupperConvertsOnlyLatinCharacters($input, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::strtoupper($input));
+		$this->assertEquals($expected, Utility\GeneralUtility::strtoupper($input));
 	}
 
 	/**
@@ -996,7 +1000,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider strtouppperDataProvider
 	 */
 	public function strtolowerConvertsOnlyLatinCharacters($expected, $input) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::strtolower($input));
+		$this->assertEquals($expected, Utility\GeneralUtility::strtolower($input));
 	}
 
 	//////////////////////////////////
@@ -1034,7 +1038,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider validEmailValidDataProvider
 	 */
 	public function validEmailReturnsTrueForValidMailAddress($address) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::validEmail($address));
+		$this->assertTrue(Utility\GeneralUtility::validEmail($address));
 	}
 
 	/**
@@ -1075,7 +1079,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider validEmailInvalidDataProvider
 	 */
 	public function validEmailReturnsFalseForInvalidMailAddress($address) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::validEmail($address));
+		$this->assertFalse(Utility\GeneralUtility::validEmail($address));
 	}
 
 	//////////////////////////////////
@@ -1086,7 +1090,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider inArrayDataProvider
 	 */
 	public function inArrayChecksStringExistenceWithinArray($array, $item, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::inArray($array, $item));
+		$this->assertEquals($expected, Utility\GeneralUtility::inArray($array, $item));
 	}
 
 	/**
@@ -1116,7 +1120,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function intExplodeConvertsStringsToInteger() {
 		$testString = '1,foo,2';
 		$expectedArray = array(1, 0, 2);
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $testString);
+		$actualArray = Utility\GeneralUtility::intExplode(',', $testString);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1128,7 +1132,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider keepItemsInArrayWorksWithOneArgumentDataProvider
 	 */
 	public function keepItemsInArrayWorksWithOneArgument($search, $array, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::keepItemsInArray($array, $search));
+		$this->assertEquals($expected, Utility\GeneralUtility::keepItemsInArray($array, $search));
 	}
 
 	/**
@@ -1167,7 +1171,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$expected = array('bb' => array('third', 'fourth'));
 		$keepItems = 'third';
 		$getValueFunc = create_function('$value', 'return $value[0];');
-		$match = \TYPO3\CMS\Core\Utility\GeneralUtility::keepItemsInArray($array, $keepItems, $getValueFunc);
+		$match = Utility\GeneralUtility::keepItemsInArray($array, $keepItems, $getValueFunc);
 		$this->assertEquals($expected, $match);
 	}
 
@@ -1195,7 +1199,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider implodeArrayForUrlDataProvider
 	 */
 	public function implodeArrayForUrlBuildsValidParameterString($name, $input, $expected) {
-		$this->assertSame($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl($name, $input));
+		$this->assertSame($expected, Utility\GeneralUtility::implodeArrayForUrl($name, $input));
 	}
 
 	/**
@@ -1204,7 +1208,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function implodeArrayForUrlCanSkipEmptyParameters() {
 		$input = array('one' => '√', '');
 		$expected = '&foo[one]=%E2%88%9A';
-		$this->assertSame($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('foo', $input, '', TRUE));
+		$this->assertSame($expected, Utility\GeneralUtility::implodeArrayForUrl('foo', $input, '', TRUE));
 	}
 
 	/**
@@ -1213,7 +1217,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function implodeArrayForUrlCanUrlEncodeKeyNames() {
 		$input = array('one' => '√', '');
 		$expected = '&foo%5Bone%5D=%E2%88%9A&foo%5B0%5D=';
-		$this->assertSame($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('foo', $input, '', FALSE, TRUE));
+		$this->assertSame($expected, Utility\GeneralUtility::implodeArrayForUrl('foo', $input, '', FALSE, TRUE));
 	}
 
 	/**
@@ -1222,7 +1226,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function explodeUrl2ArrayTransformsParameterStringToNestedArray($name, $array, $input) {
 		$expected = $array ? array($name => $array) : array();
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::explodeUrl2Array($input, TRUE));
+		$this->assertEquals($expected, Utility\GeneralUtility::explodeUrl2Array($input, TRUE));
 	}
 
 	/**
@@ -1230,7 +1234,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider explodeUrl2ArrayDataProvider
 	 */
 	public function explodeUrl2ArrayTransformsParameterStringToFlatArray($input, $expected) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::explodeUrl2Array($input, FALSE));
+		$this->assertEquals($expected, Utility\GeneralUtility::explodeUrl2Array($input, FALSE));
 	}
 
 	/**
@@ -1256,7 +1260,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$filter = 'foo,bar';
 		$getArray = array('foo' => 1, 'cake' => 'lie');
 		$expected = array('foo' => 1);
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::compileSelectedGetVarsFromArray($filter, $getArray, FALSE);
+		$result = Utility\GeneralUtility::compileSelectedGetVarsFromArray($filter, $getArray, FALSE);
 		$this->assertSame($expected, $result);
 	}
 
@@ -1268,7 +1272,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$filter = 'foo,bar';
 		$getArray = array('foo' => 1, 'cake' => 'lie');
 		$expected = array('foo' => 1, 'bar' => '2');
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::compileSelectedGetVarsFromArray($filter, $getArray, TRUE);
+		$result = Utility\GeneralUtility::compileSelectedGetVarsFromArray($filter, $getArray, TRUE);
 		$this->assertSame($expected, $result);
 	}
 
@@ -1293,7 +1297,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'2' => 'two',
 			'three' => 'three'
 		);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::remapArrayKeys($array, $keyMapping);
+		Utility\GeneralUtility::remapArrayKeys($array, $keyMapping);
 		$this->assertEquals($expected, $array);
 	}
 
@@ -1311,7 +1315,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$array1 = array(10 => 'FOO', '20' => 'BAR');
 		$array2 = array('5' => 'PLONK');
 		$expected = array('5' => 'PLONK', 10 => 'FOO', '20' => 'BAR');
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge($array1, $array2));
+		$this->assertEquals($expected, Utility\GeneralUtility::array_merge($array1, $array2));
 	}
 
 	//////////////////////////////////
@@ -1337,7 +1341,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider intFromVerConvertsVersionNumbersToIntegersDataProvider
 	 */
 	public function intFromVerConvertsVersionNumbersToIntegers($expected, $version) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::int_from_ver($version));
+		$this->assertEquals($expected, Utility\GeneralUtility::int_from_ver($version));
 	}
 
 	//////////////////////////////////
@@ -1349,7 +1353,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function revExplodeExplodesString() {
 		$testString = 'my:words:here';
 		$expectedArray = array('my:words', 'here');
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::revExplode(':', $testString, 2);
+		$actualArray = Utility\GeneralUtility::revExplode(':', $testString, 2);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1362,7 +1366,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function checkTrimExplodeTrimsSpacesAtElementStartAndEnd() {
 		$testString = ' a , b , c ,d ,,  e,f,';
 		$expectedArray = array('a', 'b', 'c', 'd', '', 'e', 'f', '');
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1372,7 +1376,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function checkTrimExplodeRemovesNewLines() {
 		$testString = ' a , b , ' . LF . ' ,d ,,  e,f,';
 		$expectedArray = array('a', 'b', 'd', 'e', 'f');
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, TRUE);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, TRUE);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1382,7 +1386,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function checkTrimExplodeRemovesEmptyElements() {
 		$testString = 'a , b , c , ,d ,, ,e,f,';
 		$expectedArray = array('a', 'b', 'c', 'd', 'e', 'f');
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, TRUE);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, TRUE);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1393,7 +1397,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testString = ' a , b , c , , d,, ,e ';
 		$expectedArray = array('a', 'b', 'c,,d,,,e');
 		// Limiting returns the rest of the string as the last element
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, FALSE, 3);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, FALSE, 3);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1404,7 +1408,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testString = ' a , b , c , , d,, ,e ';
 		$expectedArray = array('a', 'b', 'c,d,e');
 		// Limiting returns the rest of the string as the last element
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, TRUE, 3);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, TRUE, 3);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1415,7 +1419,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testString = ' a , b , c , d, ,e, f , , ';
 		$expectedArray = array('a', 'b', 'c', 'd', '', 'e');
 		// limiting returns the rest of the string as the last element
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, FALSE, -3);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, FALSE, -3);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1426,7 +1430,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testString = ' a , b , c , d, ,e, f , , ';
 		$expectedArray = array('a', 'b', 'c');
 		// Limiting returns the rest of the string as the last element
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, TRUE, -3);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, TRUE, -3);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1437,7 +1441,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$testString = ' a , b , , c , , , ';
 		$expectedArray = array('a', 'b', 'c');
 		// Limiting returns the rest of the string as the last element
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, TRUE, 4);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, TRUE, 4);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1447,7 +1451,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function checkTrimExplodeKeepsZeroAsString() {
 		$testString = 'a , b , c , ,d ,, ,e,f, 0 ,';
 		$expectedArray = array('a', 'b', 'c', 'd', 'e', 'f', '0');
-		$actualArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $testString, TRUE);
+		$actualArray = Utility\GeneralUtility::trimExplode(',', $testString, TRUE);
 		$this->assertEquals($expectedArray, $actualArray);
 	}
 
@@ -1469,7 +1473,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'0' => 'test1',
 			'2' => 'test3'
 		);
-		$actualResult = \TYPO3\CMS\Core\Utility\GeneralUtility::removeArrayEntryByValue($inputArray, $compareValue);
+		$actualResult = Utility\GeneralUtility::removeArrayEntryByValue($inputArray, $compareValue);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -1489,7 +1493,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'0' => 'foo',
 			'1' => array()
 		);
-		$actualResult = \TYPO3\CMS\Core\Utility\GeneralUtility::removeArrayEntryByValue($inputArray, $compareValue);
+		$actualResult = Utility\GeneralUtility::removeArrayEntryByValue($inputArray, $compareValue);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -1507,7 +1511,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'0' => 'foo',
 			'2' => 'bar'
 		);
-		$actualResult = \TYPO3\CMS\Core\Utility\GeneralUtility::removeArrayEntryByValue($inputArray, $compareValue);
+		$actualResult = Utility\GeneralUtility::removeArrayEntryByValue($inputArray, $compareValue);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -1532,7 +1536,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider getBytesFromSizeMeasurementDataProvider
 	 */
 	public function getBytesFromSizeMeasurementCalculatesCorrectByteValue($expected, $byteString) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::getBytesFromSizeMeasurement($byteString));
+		$this->assertEquals($expected, Utility\GeneralUtility::getBytesFromSizeMeasurement($byteString));
 	}
 
 	//////////////////////////////////
@@ -1542,14 +1546,14 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function getIndpEnvTypo3SitePathReturnNonEmptyString() {
-		$this->assertTrue(strlen(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH')) >= 1);
+		$this->assertTrue(strlen(Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH')) >= 1);
 	}
 
 	/**
 	 * @test
 	 */
 	public function getIndpEnvTypo3SitePathReturnsStringStartingWithSlash() {
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH');
+		$result = Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH');
 		$this->assertEquals('/', $result[0]);
 	}
 
@@ -1557,7 +1561,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function getIndpEnvTypo3SitePathReturnsStringEndingWithSlash() {
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH');
+		$result = Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH');
 		$this->assertEquals('/', $result[strlen($result) - 1]);
 	}
 
@@ -1583,7 +1587,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function getIndpEnvTypo3HostOnlyParsesHostnamesAndIpAdresses($httpHost, $expectedIp) {
 		$_SERVER['HTTP_HOST'] = $httpHost;
-		$this->assertEquals($expectedIp, \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_HOST_ONLY'));
+		$this->assertEquals($expectedIp, Utility\GeneralUtility::getIndpEnv('TYPO3_HOST_ONLY'));
 	}
 
 	/**
@@ -1592,7 +1596,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function getIndpEnvTypo3PortParsesHostnamesAndIpAdresses($httpHost, $dummy, $expectedPort) {
 		$_SERVER['HTTP_HOST'] = $httpHost;
-		$this->assertEquals($expectedPort, \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_PORT'));
+		$this->assertEquals($expectedPort, Utility\GeneralUtility::getIndpEnv('TYPO3_PORT'));
 	}
 
 	//////////////////////////////////
@@ -1615,7 +1619,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider underscoredToUpperCamelCaseDataProvider
 	 */
 	public function underscoredToUpperCamelCase($expected, $inputString) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToUpperCamelCase($inputString));
+		$this->assertEquals($expected, Utility\GeneralUtility::underscoredToUpperCamelCase($inputString));
 	}
 
 	//////////////////////////////////
@@ -1638,7 +1642,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider underscoredToLowerCamelCaseDataProvider
 	 */
 	public function underscoredToLowerCamelCase($expected, $inputString) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToLowerCamelCase($inputString));
+		$this->assertEquals($expected, Utility\GeneralUtility::underscoredToLowerCamelCase($inputString));
 	}
 
 	//////////////////////////////////
@@ -1663,7 +1667,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider camelCaseToLowerCaseUnderscoredDataProvider
 	 */
 	public function camelCaseToLowerCaseUnderscored($expected, $inputString) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::camelCaseToLowerCaseUnderscored($inputString));
+		$this->assertEquals($expected, Utility\GeneralUtility::camelCaseToLowerCaseUnderscored($inputString));
 	}
 
 	//////////////////////////////////
@@ -1687,7 +1691,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider lcfirstDataProvider
 	 */
 	public function lcFirst($expected, $inputString) {
-		$this->assertEquals($expected, \TYPO3\CMS\Core\Utility\GeneralUtility::lcfirst($inputString));
+		$this->assertEquals($expected, Utility\GeneralUtility::lcfirst($inputString));
 	}
 
 	//////////////////////////////////
@@ -1697,14 +1701,14 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function encodeHeaderEncodesWhitespacesInQuotedPrintableMailHeader() {
-		$this->assertEquals('=?utf-8?Q?We_test_whether_the_copyright_character_=C2=A9_is_encoded_correctly?=', \TYPO3\CMS\Core\Utility\GeneralUtility::encodeHeader('We test whether the copyright character © is encoded correctly', 'quoted-printable', 'utf-8'));
+		$this->assertEquals('=?utf-8?Q?We_test_whether_the_copyright_character_=C2=A9_is_encoded_correctly?=', Utility\GeneralUtility::encodeHeader('We test whether the copyright character © is encoded correctly', 'quoted-printable', 'utf-8'));
 	}
 
 	/**
 	 * @test
 	 */
 	public function encodeHeaderEncodesQuestionmarksInQuotedPrintableMailHeader() {
-		$this->assertEquals('=?utf-8?Q?Is_the_copyright_character_=C2=A9_really_encoded_correctly=3F_Really=3F?=', \TYPO3\CMS\Core\Utility\GeneralUtility::encodeHeader('Is the copyright character © really encoded correctly? Really?', 'quoted-printable', 'utf-8'));
+		$this->assertEquals('=?utf-8?Q?Is_the_copyright_character_=C2=A9_really_encoded_correctly=3F_Really=3F?=', Utility\GeneralUtility::encodeHeader('Is the copyright character © really encoded correctly? Really?', 'quoted-printable', 'utf-8'));
 	}
 
 	//////////////////////////////////
@@ -1745,7 +1749,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider validUrlValidRessourceDataProvider
 	 */
 	public function validURLReturnsTrueForValidRessource($url) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::isValidUrl($url));
+		$this->assertTrue(Utility\GeneralUtility::isValidUrl($url));
 	}
 
 	/**
@@ -1776,7 +1780,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider isValidUrlInvalidRessourceDataProvider
 	 */
 	public function validURLReturnsFalseForInvalidRessoure($url) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::isValidUrl($url));
+		$this->assertFalse(Utility\GeneralUtility::isValidUrl($url));
 	}
 
 	//////////////////////////////////
@@ -1786,8 +1790,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function isOnCurrentHostReturnsTrueWithCurrentHost() {
-		$testUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL');
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::isOnCurrentHost($testUrl));
+		$testUrl = Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL');
+		$this->assertTrue(Utility\GeneralUtility::isOnCurrentHost($testUrl));
 	}
 
 	/**
@@ -1802,7 +1806,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'localhost IP' => array('127.0.0.1'),
 			'relative path' => array('./relpath/file.txt'),
 			'absolute path' => array('/abspath/file.txt?arg=value'),
-			'differnt host' => array(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST') . '.example.org')
+			'differnt host' => array(Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST') . '.example.org')
 		);
 	}
 
@@ -1815,9 +1819,9 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @return array Valid url
 	 */
 	public function sanitizeLocalUrlValidUrlDataProvider() {
-		$subDirectory = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH');
-		$typo3SiteUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
-		$typo3RequestHost = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST');
+		$subDirectory = Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_PATH');
+		$typo3SiteUrl = Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
+		$typo3RequestHost = Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST');
 		return array(
 			'alt_intro.php' => array('alt_intro.php'),
 			'alt_intro.php?foo=1&bar=2' => array('alt_intro.php?foo=1&bar=2'),
@@ -1838,7 +1842,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider sanitizeLocalUrlValidUrlDataProvider
 	 */
 	public function sanitizeLocalUrlAcceptsNotEncodedValidUrls($url) {
-		$this->assertEquals($url, \TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl($url));
+		$this->assertEquals($url, Utility\GeneralUtility::sanitizeLocalUrl($url));
 	}
 
 	/**
@@ -1846,7 +1850,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider sanitizeLocalUrlValidUrlDataProvider
 	 */
 	public function sanitizeLocalUrlAcceptsEncodedValidUrls($url) {
-		$this->assertEquals(rawurlencode($url), \TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl(rawurlencode($url)));
+		$this->assertEquals(rawurlencode($url), Utility\GeneralUtility::sanitizeLocalUrl(rawurlencode($url)));
 	}
 
 	/**
@@ -1868,7 +1872,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider sanitizeLocalUrlInvalidDataProvider
 	 */
 	public function sanitizeLocalUrlDeniesPlainInvalidUrls($url) {
-		$this->assertEquals('', \TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl($url));
+		$this->assertEquals('', Utility\GeneralUtility::sanitizeLocalUrl($url));
 	}
 
 	/**
@@ -1876,7 +1880,78 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider sanitizeLocalUrlInvalidDataProvider
 	 */
 	public function sanitizeLocalUrlDeniesEncodedInvalidUrls($url) {
-		$this->assertEquals('', \TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl(rawurlencode($url)));
+		$this->assertEquals('', Utility\GeneralUtility::sanitizeLocalUrl(rawurlencode($url)));
+	}
+
+	////////////////////////////////////////
+	// Tests concerning unlink_tempfile
+	////////////////////////////////////////
+
+	/**
+	 * @test
+	 */
+	public function unlink_tempfileRemovesValidFileInTypo3temp() {
+		$fixtureFile = __DIR__ . '/Fixtures/clear.gif';
+		$testFilename = PATH_site . 'typo3temp/' . uniqid('test_') . '.gif';
+		@copy($fixtureFile, $testFilename);
+		Utility\GeneralUtility::unlink_tempfile($testFilename);
+		$fileExists = file_exists($testFilename);
+		@unlink($testFilename);
+		$this->assertFalse($fileExists);
+	}
+
+	/**
+	 * @test
+	 */
+	public function unlink_tempfileReturnsTrueIfFileWasRemoved() {
+		$fixtureFile = __DIR__ . '/Fixtures/clear.gif';
+		$testFilename = PATH_site . 'typo3temp/' . uniqid('test_') . '.gif';
+		@copy($fixtureFile, $testFilename);
+		$returnValue = Utility\GeneralUtility::unlink_tempfile($testFilename);
+		@unlink($testFilename);
+		$this->assertTrue($returnValue);
+	}
+
+	/**
+	 * @test
+	 */
+	public function unlink_tempfileReturnsNullIfFileDoesNotExist() {
+		$returnValue = Utility\GeneralUtility::unlink_tempfile(PATH_site . 'typo3temp/' . uniqid('i_do_not_exist'));
+		$this->assertNull($returnValue);
+	}
+
+	/**
+	 * @test
+	 */
+	public function unlink_tempfileReturnsNullIfFileIsNowWithinTypo3temp() {
+		$returnValue = Utility\GeneralUtility::unlink_tempfile('/tmp/typo3-unit-test-unlink_tempfile');
+		$this->assertNull($returnValue);
+	}
+
+	////////////////////////////////////////
+	// Tests concerning loadTCA
+	////////////////////////////////////////
+
+	/**
+	 * @test
+	 * @expectedException \RuntimeException
+	 */
+	public function loadTCAIncludesConfiguredDynamicConfigFile() {
+		$dynamicConfigurationAbsoluteFilePath = PATH_site . 'typo3temp/' . uniqid('testLoadTca_');
+		file_put_contents(
+			$dynamicConfigurationAbsoluteFilePath,
+			'<?php throw new \RuntimeException(\'foo\', 1310203814); ?>'
+		);
+		$this->testFilesToDelete[] = $dynamicConfigurationAbsoluteFilePath;
+
+		$testTableName = uniqid('testTable_');
+		$GLOBALS['TCA'][$testTableName] = array(
+			'ctrl' => array(
+				'dynamicConfigFile' => $dynamicConfigurationAbsoluteFilePath,
+			),
+		);
+
+		Utility\GeneralUtility::loadTCA($testTableName);
 	}
 
 	//////////////////////////////////////
@@ -1900,7 +1975,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			),
 			'key2' => 'val\\\\ue3'
 		);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addSlashesOnArray($inputArray);
+		Utility\GeneralUtility::addSlashesOnArray($inputArray);
 		$this->assertEquals($expectedResult, $inputArray);
 	}
 
@@ -1925,7 +2000,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			),
 			'key2' => 'val\\ue3'
 		);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::stripSlashesOnArray($inputArray);
+		Utility\GeneralUtility::stripSlashesOnArray($inputArray);
 		$this->assertEquals($expectedResult, $inputArray);
 	}
 
@@ -1948,7 +2023,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$expectedResult = array(
 			'key2' => 'value2'
 		);
-		$actualResult = \TYPO3\CMS\Core\Utility\GeneralUtility::arrayDiffAssocRecursive($array1, $array2);
+		$actualResult = Utility\GeneralUtility::arrayDiffAssocRecursive($array1, $array2);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -1984,7 +2059,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 				)
 			)
 		);
-		$actualResult = \TYPO3\CMS\Core\Utility\GeneralUtility::arrayDiffAssocRecursive($array1, $array2);
+		$actualResult = Utility\GeneralUtility::arrayDiffAssocRecursive($array1, $array2);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -2009,7 +2084,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$expectedResult = array(
 			'key3' => 'value3'
 		);
-		$actualResult = \TYPO3\CMS\Core\Utility\GeneralUtility::arrayDiffAssocRecursive($array1, $array2);
+		$actualResult = Utility\GeneralUtility::arrayDiffAssocRecursive($array1, $array2);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -2038,7 +2113,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			),
 			'propertyB' => 3
 		);
-		$this->assertEquals($expectedResult, \TYPO3\CMS\Core\Utility\GeneralUtility::removeDotsFromTS($typoScript));
+		$this->assertEquals($expectedResult, Utility\GeneralUtility::removeDotsFromTS($typoScript));
 	}
 
 	/**
@@ -2064,7 +2139,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			),
 			'propertyB' => 3
 		);
-		$this->assertEquals($expectedResult, \TYPO3\CMS\Core\Utility\GeneralUtility::removeDotsFromTS($typoScript));
+		$this->assertEquals($expectedResult, Utility\GeneralUtility::removeDotsFromTS($typoScript));
 	}
 
 	/**
@@ -2088,7 +2163,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			),
 			'propertyB' => 3
 		);
-		$this->assertEquals($expectedResult, \TYPO3\CMS\Core\Utility\GeneralUtility::removeDotsFromTS($typoScript));
+		$this->assertEquals($expectedResult, Utility\GeneralUtility::removeDotsFromTS($typoScript));
 	}
 
 	//////////////////////////////////////
@@ -2104,7 +2179,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			FALSE
 		);
 		foreach ($testValues as $testValue) {
-			$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::naturalKeySortRecursive($testValue));
+			$this->assertFalse(Utility\GeneralUtility::naturalKeySortRecursive($testValue));
 		}
 	}
 
@@ -2138,7 +2213,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'bb',
 			'zap'
 		);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::naturalKeySortRecursive($testArray);
+		Utility\GeneralUtility::naturalKeySortRecursive($testArray);
 		$this->assertEquals($expectedResult, array_values($testArray));
 	}
 
@@ -2196,7 +2271,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			'bb',
 			'zap'
 		);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::naturalKeySortRecursive($testArray);
+		Utility\GeneralUtility::naturalKeySortRecursive($testArray);
 		$this->assertEquals($expectedResult, array_values(array_keys($testArray['aaa']['bad'])));
 		$this->assertEquals($expectedResult, array_values(array_keys($testArray['aaa'])));
 		$this->assertEquals($expectedResult, array_values(array_keys($testArray)));
@@ -2210,7 +2285,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function getDirsReturnsArrayOfDirectoriesFromGivenDirectory() {
 		$path = PATH_t3lib;
-		$directories = \TYPO3\CMS\Core\Utility\GeneralUtility::get_dirs($path);
+		$directories = Utility\GeneralUtility::get_dirs($path);
 		$this->assertInternalType(\PHPUnit_Framework_Constraint_IsType::TYPE_ARRAY, $directories);
 	}
 
@@ -2219,7 +2294,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function getDirsReturnsStringErrorOnPathFailure() {
 		$path = 'foo';
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::get_dirs($path);
+		$result = Utility\GeneralUtility::get_dirs($path);
 		$expectedResult = 'error';
 		$this->assertEquals($expectedResult, $result);
 	}
@@ -2231,7 +2306,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function hmacReturnsHashOfProperLength() {
-		$hmac = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac('message');
+		$hmac = Utility\GeneralUtility::hmac('message');
 		$this->assertTrue(!empty($hmac) && is_string($hmac));
 		$this->assertTrue(strlen($hmac) == 40);
 	}
@@ -2242,7 +2317,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function hmacReturnsEqualHashesForEqualInput() {
 		$msg0 = 'message';
 		$msg1 = 'message';
-		$this->assertEquals(\TYPO3\CMS\Core\Utility\GeneralUtility::hmac($msg0), \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($msg1));
+		$this->assertEquals(Utility\GeneralUtility::hmac($msg0), Utility\GeneralUtility::hmac($msg1));
 	}
 
 	/**
@@ -2251,7 +2326,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function hmacReturnsNoEqualHashesForNonEqualInput() {
 		$msg0 = 'message0';
 		$msg1 = 'message1';
-		$this->assertNotEquals(\TYPO3\CMS\Core\Utility\GeneralUtility::hmac($msg0), \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($msg1));
+		$this->assertNotEquals(Utility\GeneralUtility::hmac($msg0), Utility\GeneralUtility::hmac($msg1));
 	}
 
 	//////////////////////////////////
@@ -2310,7 +2385,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @dataProvider quoteJsValueDataProvider
 	 */
 	public function quoteJsValueTest($input, $expected) {
-		$this->assertSame('\'' . $expected . '\'', \TYPO3\CMS\Core\Utility\GeneralUtility::quoteJSvalue($input));
+		$this->assertSame('\'' . $expected . '\'', Utility\GeneralUtility::quoteJSvalue($input));
 	}
 
 	//////////////////////////////////
@@ -2330,20 +2405,20 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 				</data>
 			</T3locallang>';
 		$file = PATH_site . 'typo3temp/' . $unique . '.xml';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($file, $xml);
+		Utility\GeneralUtility::writeFileToTypo3tempDir($file, $xml);
 		// Make sure there is no cached version of the label
 		$GLOBALS['typo3CacheManager']->getCache('t3lib_l10n')->flush();
 		// Get default value
-		$defaultLL = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile('EXT:lang/locallang_core.xml', 'default');
+		$defaultLL = Utility\GeneralUtility::readLLfile('EXT:lang/locallang_core.xml', 'default');
 		// Clear language cache again
 		$GLOBALS['typo3CacheManager']->getCache('t3lib_l10n')->flush();
 		// Set override file
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']['EXT:lang/locallang_core.xml'][$unique] = $file;
 		/** @var $store \TYPO3\CMS\Core\Localization\LanguageStore */
-		$store = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\LanguageStore');
+		$store = Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\LanguageStore');
 		$store->flushData('EXT:lang/locallang_core.xml');
 		// Get override value
-		$overrideLL = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile('EXT:lang/locallang_core.xml', 'default');
+		$overrideLL = Utility\GeneralUtility::readLLfile('EXT:lang/locallang_core.xml', 'default');
 		// Clean up again
 		unlink($file);
 		$this->assertNotEquals($overrideLL['default']['buttons.logout'][0]['target'], '');
@@ -2361,7 +2436,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
 		$getParameters = array('foo' => 'bar');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset($getParameters);
+		Utility\GeneralUtility::_GETset($getParameters);
 		$this->assertSame($getParameters, $_GET);
 	}
 
@@ -2372,7 +2447,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
 		$getParameters = array('foo' => 'bar');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset($getParameters);
+		Utility\GeneralUtility::_GETset($getParameters);
 		$this->assertSame($getParameters, $GLOBALS['HTTP_GET_VARS']);
 	}
 
@@ -2382,8 +2457,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSetForArrayDropsExistingValues() {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset(array('foo' => 'bar'));
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset(array('oneKey' => 'oneValue'));
+		Utility\GeneralUtility::_GETset(array('foo' => 'bar'));
+		Utility\GeneralUtility::_GETset(array('oneKey' => 'oneValue'));
 		$this->assertEquals(array('oneKey' => 'oneValue'), $GLOBALS['HTTP_GET_VARS']);
 	}
 
@@ -2393,7 +2468,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSetAssignsOneValueToOneKey() {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset('oneValue', 'oneKey');
+		Utility\GeneralUtility::_GETset('oneValue', 'oneKey');
 		$this->assertEquals('oneValue', $GLOBALS['HTTP_GET_VARS']['oneKey']);
 	}
 
@@ -2403,8 +2478,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSetForOneValueDoesNotDropUnrelatedValues() {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset(array('foo' => 'bar'));
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset('oneValue', 'oneKey');
+		Utility\GeneralUtility::_GETset(array('foo' => 'bar'));
+		Utility\GeneralUtility::_GETset('oneValue', 'oneKey');
 		$this->assertEquals(array('foo' => 'bar', 'oneKey' => 'oneValue'), $GLOBALS['HTTP_GET_VARS']);
 	}
 
@@ -2414,7 +2489,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSetCanAssignsAnArrayToASpecificArrayElement() {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset(array('childKey' => 'oneValue'), 'parentKey');
+		Utility\GeneralUtility::_GETset(array('childKey' => 'oneValue'), 'parentKey');
 		$this->assertEquals(array('parentKey' => array('childKey' => 'oneValue')), $GLOBALS['HTTP_GET_VARS']);
 	}
 
@@ -2424,7 +2499,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSetCanAssignAStringValueToASpecificArrayChildElement() {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset('oneValue', 'parentKey|childKey');
+		Utility\GeneralUtility::_GETset('oneValue', 'parentKey|childKey');
 		$this->assertEquals(array('parentKey' => array('childKey' => 'oneValue')), $GLOBALS['HTTP_GET_VARS']);
 	}
 
@@ -2434,7 +2509,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSetCanAssignAnArrayToASpecificArrayChildElement() {
 		$_GET = array();
 		$GLOBALS['HTTP_GET_VARS'] = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::_GETset(array('key1' => 'value1', 'key2' => 'value2'), 'parentKey|childKey');
+		Utility\GeneralUtility::_GETset(array('key1' => 'value1', 'key2' => 'value2'), 'parentKey|childKey');
 		$this->assertEquals(array(
 			'parentKey' => array(
 				'childKey' => array('key1' => 'value1', 'key2' => 'value2')
@@ -2451,7 +2526,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function minifyJavaScriptReturnsInputStringIfNoHookIsRegistered() {
 		unset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_div.php']['minifyJavaScript']);
 		$testString = uniqid('string');
-		$this->assertSame($testString, \TYPO3\CMS\Core\Utility\GeneralUtility::minifyJavaScript($testString));
+		$this->assertSame($testString, Utility\GeneralUtility::minifyJavaScript($testString));
 	}
 
 	/**
@@ -2469,7 +2544,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$GLOBALS['T3_VAR']['callUserFunction'][$functionName]['method'] = 'minify';
 		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_div.php']['minifyJavaScript'][] = $functionName;
 		$minifyHookMock->expects($this->once())->method('minify')->will($this->returnCallback(array($this, 'isMinifyJavaScriptHookCalledCallback')));
-		\TYPO3\CMS\Core\Utility\GeneralUtility::minifyJavaScript('foo');
+		Utility\GeneralUtility::minifyJavaScript('foo');
 	}
 
 	/**
@@ -2502,7 +2577,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_div.php']['minifyJavaScript'][] = $functionName;
 		$minifyHookMock->expects($this->any())->method('minify')->will($this->returnCallback(array($this, 'minifyJavaScriptErroneousCallback')));
 		$error = '';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::minifyJavaScript('string to compress', $error);
+		Utility\GeneralUtility::minifyJavaScript('string to compress', $error);
 		$this->assertSame('Error minifying java script: foo', $error);
 	}
 
@@ -2549,7 +2624,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getUrlWithAdditionalRequestHeadersProvidesHttpHeaderOnError() {
 		$url = 'http://typo3.org/i-do-not-exist-' . time();
 		$report = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($url, 0, array(), $report);
+		Utility\GeneralUtility::getUrl($url, 0, array(), $report);
 		$this->assertContains('404', $report['message']);
 	}
 
@@ -2559,7 +2634,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getUrlProvidesWithoutAdditionalRequestHeadersHttpHeaderOnError() {
 		$url = 'http://typo3.org/i-do-not-exist-' . time();
 		$report = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($url, 0, FALSE, $report);
+		Utility\GeneralUtility::getUrl($url, 0, FALSE, $report);
 		$this->assertContains('404', $report['message'], 'Did not provide the HTTP response header when requesting a failing URL.');
 	}
 
@@ -2581,11 +2656,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test file
 		$filename = PATH_site . 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($filename, '42');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($filename, '42');
 		$currentGroupId = posix_getegid();
 		// Set target group and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['createGroup'] = $currentGroupId;
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($filename);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($filename);
 		clearstatcache();
 		$resultFileGroup = filegroup($filename);
 		unlink($filename);
@@ -2601,11 +2676,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test file
 		$filename = PATH_site . 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($filename, '42');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($filename, '42');
 		chmod($filename, 482);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0660';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($filename);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($filename);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($filename)), 2);
@@ -2624,11 +2699,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test file
 		$filename = PATH_site . 'typo3temp/' . uniqid('.test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($filename, '42');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($filename, '42');
 		chmod($filename, 482);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0660';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($filename);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($filename);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($filename)), 2);
@@ -2647,15 +2722,15 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test directory
 		$directory = PATH_site . 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		Utility\GeneralUtility::mkdir($directory);
 		chmod($directory, 1551);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0770';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($directory);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($directory);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultDirectoryPermissions = substr(decoct(fileperms($directory)), 1);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($directory);
+		Utility\GeneralUtility::rmdir($directory);
 		// Test if everything was ok
 		$this->assertTrue($fixPermissionsResult);
 		$this->assertEquals($resultDirectoryPermissions, '0770');
@@ -2670,15 +2745,15 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test directory
 		$directory = PATH_site . 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		Utility\GeneralUtility::mkdir($directory);
 		chmod($directory, 1551);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0770';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($directory . '/');
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($directory . '/');
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultDirectoryPermissions = substr(decoct(fileperms($directory)), 1);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($directory);
+		Utility\GeneralUtility::rmdir($directory);
 		// Test if everything was ok
 		$this->assertTrue($fixPermissionsResult);
 		$this->assertEquals($resultDirectoryPermissions, '0770');
@@ -2693,15 +2768,15 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test directory
 		$directory = PATH_site . 'typo3temp/' . uniqid('.test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		Utility\GeneralUtility::mkdir($directory);
 		chmod($directory, 1551);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0770';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($directory);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($directory);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultDirectoryPermissions = substr(decoct(fileperms($directory)), 1);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($directory);
+		Utility\GeneralUtility::rmdir($directory);
 		// Test if everything was ok
 		$this->assertTrue($fixPermissionsResult);
 		$this->assertEquals($resultDirectoryPermissions, '0770');
@@ -2716,15 +2791,15 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Create and prepare test directory and file structure
 		$baseDirectory = PATH_site . 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($baseDirectory);
+		Utility\GeneralUtility::mkdir($baseDirectory);
 		chmod($baseDirectory, 1751);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($baseDirectory . '/file', '42');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($baseDirectory . '/file', '42');
 		chmod($baseDirectory . '/file', 482);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($baseDirectory . '/foo');
+		Utility\GeneralUtility::mkdir($baseDirectory . '/foo');
 		chmod($baseDirectory . '/foo', 1751);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir($baseDirectory . '/foo/file', '42');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($baseDirectory . '/foo/file', '42');
 		chmod($baseDirectory . '/foo/file', 482);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($baseDirectory . '/.bar');
+		Utility\GeneralUtility::mkdir($baseDirectory . '/.bar');
 		chmod($baseDirectory . '/.bar', 1751);
 		// Use this if writeFileToTypo3tempDir is fixed to create hidden files in subdirectories
 		// t3lib_div::writeFileToTypo3tempDir($baseDirectory . '/.bar/.file', '42');
@@ -2736,7 +2811,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0660';
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0770';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($baseDirectory, TRUE);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($baseDirectory, TRUE);
 		// Get actual permissions
 		clearstatcache();
 		$resultBaseDirectoryPermissions = substr(decoct(fileperms($baseDirectory)), 1);
@@ -2751,9 +2826,9 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		unlink($baseDirectory . '/foo/file');
 		unlink($baseDirectory . '/.bar/.file');
 		unlink($baseDirectory . '/.bar/..file2');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($baseDirectory . '/foo');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($baseDirectory . '/.bar');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($baseDirectory);
+		Utility\GeneralUtility::rmdir($baseDirectory . '/foo');
+		Utility\GeneralUtility::rmdir($baseDirectory . '/.bar');
+		Utility\GeneralUtility::rmdir($baseDirectory);
 		// Test if everything was ok
 		$this->assertTrue($fixPermissionsResult);
 		$this->assertEquals($resultBaseDirectoryPermissions, '0770');
@@ -2778,7 +2853,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		chmod($filename, 482);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0660';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($filename);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($filename);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($filename)), 2);
@@ -2795,11 +2870,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			$this->markTestSkipped('fixPermissions() tests not available on Windows');
 		}
 		$filename = 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir(PATH_site . $filename, '42');
+		Utility\GeneralUtility::writeFileToTypo3tempDir(PATH_site . $filename, '42');
 		chmod(PATH_site . $filename, 482);
 		// Set target permissions and run method
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0660';
-		$fixPermissionsResult = \TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($filename);
+		$fixPermissionsResult = Utility\GeneralUtility::fixPermissions($filename);
 		// Get actual permissions and clean up
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms(PATH_site . $filename)), 2);
@@ -2817,7 +2892,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function mkdirCreatesDirectory() {
 		$directory = PATH_site . 'typo3temp/' . uniqid('test_');
-		$mkdirResult = \TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		$mkdirResult = Utility\GeneralUtility::mkdir($directory);
 		clearstatcache();
 		$directoryCreated = is_dir($directory);
 		@rmdir($directory);
@@ -2830,7 +2905,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function mkdirCreatesHiddenDirectory() {
 		$directory = PATH_site . 'typo3temp/' . uniqid('.test_');
-		$mkdirResult = \TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		$mkdirResult = Utility\GeneralUtility::mkdir($directory);
 		clearstatcache();
 		$directoryCreated = is_dir($directory);
 		@rmdir($directory);
@@ -2843,7 +2918,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function mkdirCreatesDirectoryWithTrailingSlash() {
 		$directory = PATH_site . 'typo3temp/' . uniqid('test_') . '/';
-		$mkdirResult = \TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		$mkdirResult = Utility\GeneralUtility::mkdir($directory);
 		clearstatcache();
 		$directoryCreated = is_dir($directory);
 		@rmdir($directory);
@@ -2861,7 +2936,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$directory = PATH_site . 'typo3temp/' . uniqid('test_');
 		$oldUmask = umask(19);
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0772';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($directory);
+		Utility\GeneralUtility::mkdir($directory);
 		clearstatcache();
 		$resultDirectoryPermissions = substr(decoct(fileperms($directory)), 1);
 		umask($oldUmask);
@@ -2883,7 +2958,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		if ($swapGroup !== FALSE) {
 			$GLOBALS['TYPO3_CONF_VARS']['BE']['createGroup'] = $swapGroup;
 			$directory = uniqid('mkdirtest_');
-			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir(PATH_site . 'typo3temp/' . $directory);
+			Utility\GeneralUtility::mkdir(PATH_site . 'typo3temp/' . $directory);
 			clearstatcache();
 			$resultDirectoryGroupInfo = posix_getgrgid(filegroup(PATH_site . 'typo3temp/' . $directory));
 			$resultDirectoryGroup = $resultDirectoryGroupInfo['name'];
@@ -2927,7 +3002,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function mkdirDeepCreatesDirectory() {
 		$directory = 'typo3temp/' . uniqid('test_');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site, $directory);
+		Utility\GeneralUtility::mkdir_deep(PATH_site, $directory);
 		$isDirectoryCreated = is_dir(PATH_site . $directory);
 		rmdir(PATH_site . $directory);
 		$this->assertTrue($isDirectoryCreated);
@@ -2939,7 +3014,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function mkdirDeepCreatesSubdirectoriesRecursive() {
 		$directory = 'typo3temp/' . uniqid('test_');
 		$subDirectory = $directory . '/foo';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site, $subDirectory);
+		Utility\GeneralUtility::mkdir_deep(PATH_site, $subDirectory);
 		$isDirectoryCreated = is_dir(PATH_site . $subDirectory);
 		rmdir(PATH_site . $subDirectory);
 		rmdir(PATH_site . $directory);
@@ -2956,7 +3031,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$directory = uniqid('mkdirdeeptest_');
 		$oldUmask = umask(19);
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0777';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $directory);
+		Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $directory);
 		clearstatcache();
 		$resultDirectoryPermissions = substr(decoct(fileperms(PATH_site . 'typo3temp/' . $directory)), -3, 3);
 		@rmdir((PATH_site . 'typo3temp/' . $directory));
@@ -2975,7 +3050,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$subDirectory = $directory . '/bar';
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask'] = '0777';
 		$oldUmask = umask(19);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $subDirectory);
+		Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $subDirectory);
 		clearstatcache();
 		$resultDirectoryPermissions = substr(decoct(fileperms(PATH_site . 'typo3temp/' . $directory)), -3, 3);
 		@rmdir((PATH_site . 'typo3temp/' . $subDirectory));
@@ -2996,7 +3071,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$newSubDirectory = uniqid('test_new_');
 		@mkdir(($baseDirectory . $existingDirectory));
 		chmod($baseDirectory . $existingDirectory, 482);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep($baseDirectory, $existingDirectory . $newSubDirectory);
+		Utility\GeneralUtility::mkdir_deep($baseDirectory, $existingDirectory . $newSubDirectory);
 		$resultExistingDirectoryPermissions = substr(decoct(fileperms($baseDirectory . $existingDirectory)), 2);
 		@rmdir($baseDirectory, ($existingDirectory . $newSubDirectory));
 		@rmdir($baseDirectory, $existingDirectory);
@@ -3011,7 +3086,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		if ($swapGroup !== FALSE) {
 			$GLOBALS['TYPO3_CONF_VARS']['BE']['createGroup'] = $swapGroup;
 			$directory = uniqid('mkdirdeeptest_');
-			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $directory);
+			Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $directory);
 			clearstatcache();
 			$resultDirectoryGroupInfo = posix_getgrgid(filegroup(PATH_site . 'typo3temp/' . $directory));
 			$resultDirectoryGroup = $resultDirectoryGroupInfo['name'];
@@ -3029,7 +3104,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			$GLOBALS['TYPO3_CONF_VARS']['BE']['createGroup'] = $swapGroup;
 			$directory = uniqid('mkdirdeeptest_');
 			$subDirectory = $directory . '/bar';
-			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $subDirectory);
+			Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $subDirectory);
 			clearstatcache();
 			$resultDirectoryGroupInfo = posix_getgrgid(filegroup(PATH_site . 'typo3temp/' . $directory));
 			$resultDirectoryGroup = $resultDirectoryGroupInfo['name'];
@@ -3048,7 +3123,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			$GLOBALS['TYPO3_CONF_VARS']['BE']['createGroup'] = $swapGroup;
 			$directory = uniqid('mkdirdeeptest_');
 			$subDirectory = $directory . '/bar';
-			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $subDirectory);
+			Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/', $subDirectory);
 			clearstatcache();
 			$resultDirectoryGroupInfo = posix_getgrgid(filegroup(PATH_site . 'typo3temp/' . $subDirectory));
 			$resultDirectoryGroup = $resultDirectoryGroupInfo['name'];
@@ -3068,7 +3143,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		\vfsStreamWrapper::register();
 		$baseDirectory = uniqid('test_');
 		\vfsStreamWrapper::setRoot(new \vfsStreamDirectory($baseDirectory));
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep('vfs://' . $baseDirectory . '/', 'sub');
+		Utility\GeneralUtility::mkdir_deep('vfs://' . $baseDirectory . '/', 'sub');
 		$this->assertTrue(is_dir('vfs://' . $baseDirectory . '/sub'));
 	}
 
@@ -3077,7 +3152,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @expectedException \RuntimeException
 	 */
 	public function mkdirDeepThrowsExceptionIfDirectoryCreationFails() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep('http://localhost');
+		Utility\GeneralUtility::mkdir_deep('http://localhost');
 	}
 
 	/**
@@ -3085,7 +3160,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @expectedException \InvalidArgumentException
 	 */
 	public function mkdirDeepThrowsExceptionIfBaseDirectoryIsNotOfTypeString() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(array());
+		Utility\GeneralUtility::mkdir_deep(array());
 	}
 
 	/**
@@ -3093,7 +3168,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @expectedException \InvalidArgumentException
 	 */
 	public function mkdirDeepThrowsExceptionIfDeepDirectoryIsNotOfTypeString() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/foo', array());
+		Utility\GeneralUtility::mkdir_deep(PATH_site . 'typo3temp/foo', array());
 	}
 
 	///////////////////////////////
@@ -3263,8 +3338,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function explodeAndUnquoteImageMagickCommands($source, $expectedQuoted, $expectedUnquoted) {
-		$actualQuoted = \TYPO3\CMS\Core\Utility\GeneralUtility::unQuoteFilenames($source);
-		$acutalUnquoted = \TYPO3\CMS\Core\Utility\GeneralUtility::unQuoteFilenames($source, TRUE);
+		$actualQuoted = Utility\GeneralUtility::unQuoteFilenames($source);
+		$acutalUnquoted = Utility\GeneralUtility::unQuoteFilenames($source, TRUE);
 		$this->assertEquals($expectedQuoted, $actualQuoted, 'The exploded command does not match the expected');
 		$this->assertEquals($expectedUnquoted, $acutalUnquoted, 'The exploded and unquoted command does not match the expected');
 	}
@@ -3280,7 +3355,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$directoryPath = PATH_site . 'typo3temp/';
 		$directory = $directoryPath . $directoryName;
 		mkdir($directory, octdec($GLOBALS['TYPO3_CONF_VARS']['BE']['folderCreateMask']));
-		$fileInfo = \TYPO3\CMS\Core\Utility\GeneralUtility::split_fileref($directory);
+		$fileInfo = Utility\GeneralUtility::split_fileref($directory);
 		$directoryCreated = is_dir($directory);
 		rmdir($directory);
 		$this->assertTrue($directoryCreated);
@@ -3297,7 +3372,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function splitFileRefReturnsFileTypeForFilesWithoutPathSite() {
 		$testFile = 'fileadmin/media/someFile.png';
-		$fileInfo = \TYPO3\CMS\Core\Utility\GeneralUtility::split_fileref($testFile);
+		$fileInfo = Utility\GeneralUtility::split_fileref($testFile);
 		$this->assertInternalType(\PHPUnit_Framework_Constraint_IsType::TYPE_ARRAY, $fileInfo);
 		$this->assertEquals('fileadmin/media/', $fileInfo['path']);
 		$this->assertEquals('someFile.png', $fileInfo['file']);
@@ -3331,7 +3406,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @param string $expectedValue the expected return value expected from dirname
 	 */
 	public function dirnameWithDataProvider($input, $expectedValue) {
-		$this->assertEquals($expectedValue, \TYPO3\CMS\Core\Utility\GeneralUtility::dirname($input));
+		$this->assertEquals($expectedValue, Utility\GeneralUtility::dirname($input));
 	}
 
 	/////////////////////////////////////
@@ -3381,7 +3456,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @param $expectedValue Expected return value from resolveBackPath
 	 */
 	public function resolveBackPathWithDataProvider($input, $expectedValue) {
-		$this->assertEquals($expectedValue, \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($input));
+		$this->assertEquals($expectedValue, Utility\GeneralUtility::resolveBackPath($input));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -3389,42 +3464,42 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	/////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function makeInstanceWithEmptyClassNameThrowsException() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('');
+		Utility\GeneralUtility::makeInstance('');
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function makeInstanceWithNullClassNameThrowsException() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(NULL);
+		Utility\GeneralUtility::makeInstance(NULL);
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function makeInstanceWithZeroStringClassNameThrowsException() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(0);
+		Utility\GeneralUtility::makeInstance(0);
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function makeInstanceWithEmptyArrayThrowsException() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(array());
+		Utility\GeneralUtility::makeInstance(array());
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function makeInstanceWithNonEmptyArrayThrowsException() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(array('foo'));
+		Utility\GeneralUtility::makeInstance(array('foo'));
 	}
 
 	/**
@@ -3432,7 +3507,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function makeInstanceReturnsClassInstance() {
 		$className = get_class($this->getMock('foo'));
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className) instanceof $className);
+		$this->assertTrue(Utility\GeneralUtility::makeInstance($className) instanceof $className);
 	}
 
 	/**
@@ -3443,7 +3518,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		if (!class_exists($className, FALSE)) {
 			eval('class ' . $className . ' {' . '  public $constructorParameter1;' . '  public $constructorParameter2;' . '  public function __construct($parameter1, $parameter2) {' . '    $this->constructorParameter1 = $parameter1;' . '    $this->constructorParameter2 = $parameter2;' . '  }' . '}');
 		}
-		$instance = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className, 'one parameter', 'another parameter');
+		$instance = Utility\GeneralUtility::makeInstance($className, 'one parameter', 'another parameter');
 		$this->assertEquals('one parameter', $instance->constructorParameter1, 'The first constructor parameter has not been set.');
 		$this->assertEquals('another parameter', $instance->constructorParameter2, 'The second constructor parameter has not been set.');
 	}
@@ -3453,7 +3528,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function makeInstanceCalledTwoTimesForNonSingletonClassReturnsDifferentInstances() {
 		$className = get_class($this->getMock('foo'));
-		$this->assertNotSame(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className), \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className));
+		$this->assertNotSame(Utility\GeneralUtility::makeInstance($className), Utility\GeneralUtility::makeInstance($className));
 	}
 
 	/**
@@ -3461,7 +3536,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function makeInstanceCalledTwoTimesForSingletonClassReturnsSameInstance() {
 		$className = get_class($this->getMock('TYPO3\\CMS\\Core\\SingletonInterface'));
-		$this->assertSame(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className), \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className));
+		$this->assertSame(Utility\GeneralUtility::makeInstance($className), Utility\GeneralUtility::makeInstance($className));
 	}
 
 	/**
@@ -3469,28 +3544,28 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function makeInstanceCalledTwoTimesForSingletonClassWithPurgeInstancesInbetweenReturnsDifferentInstances() {
 		$className = get_class($this->getMock('TYPO3\\CMS\\Core\\SingletonInterface'));
-		$instance = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::purgeInstances();
-		$this->assertNotSame($instance, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className));
+		$instance = Utility\GeneralUtility::makeInstance($className);
+		Utility\GeneralUtility::purgeInstances();
+		$this->assertNotSame($instance, Utility\GeneralUtility::makeInstance($className));
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function setSingletonInstanceForEmptyClassNameThrowsException() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance('', $instance);
+		Utility\GeneralUtility::setSingletonInstance('', $instance);
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function setSingletonInstanceForClassThatIsNoSubclassOfProvidedClassThrowsException() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface', array('foo'));
 		$singletonClassName = get_class($this->getMock('TYPO3\\CMS\\Core\\SingletonInterface'));
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance);
+		Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance);
 	}
 
 	/**
@@ -3499,8 +3574,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function setSingletonInstanceMakesMakeInstanceReturnThatInstance() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
 		$singletonClassName = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance);
-		$this->assertSame($instance, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($singletonClassName));
+		Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance);
+		$this->assertSame($instance, Utility\GeneralUtility::makeInstance($singletonClassName));
 	}
 
 	/**
@@ -3510,9 +3585,9 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$instance1 = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
 		$singletonClassName = get_class($instance1);
 		$instance2 = new $singletonClassName();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance1);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance2);
-		$this->assertSame($instance2, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($singletonClassName));
+		Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance1);
+		Utility\GeneralUtility::setSingletonInstance($singletonClassName, $instance2);
+		$this->assertSame($instance2, Utility\GeneralUtility::makeInstance($singletonClassName));
 	}
 
 	/**
@@ -3521,8 +3596,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function getSingletonInstancesContainsPreviouslySetSingletonInstance() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
 		$instanceClassName = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance($instanceClassName, $instance);
-		$registeredSingletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
+		Utility\GeneralUtility::setSingletonInstance($instanceClassName, $instance);
+		$registeredSingletonInstances = Utility\GeneralUtility::getSingletonInstances();
 		$this->assertArrayHasKey($instanceClassName, $registeredSingletonInstances);
 		$this->assertSame($registeredSingletonInstances[$instanceClassName], $instance);
 	}
@@ -3533,9 +3608,9 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function resetSingletonInstancesResetsPreviouslySetInstance() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
 		$instanceClassName = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance($instanceClassName, $instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances(array());
-		$registeredSingletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
+		Utility\GeneralUtility::setSingletonInstance($instanceClassName, $instance);
+		Utility\GeneralUtility::resetSingletonInstances(array());
+		$registeredSingletonInstances = Utility\GeneralUtility::getSingletonInstances();
 		$this->assertArrayNotHasKey($instanceClassName, $registeredSingletonInstances);
 	}
 
@@ -3545,40 +3620,40 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function resetSingletonInstancesSetsGivenInstance() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
 		$instanceClassName = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances(
+		Utility\GeneralUtility::resetSingletonInstances(
 			array($instanceClassName => $instance)
 		);
-		$registeredSingletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
+		$registeredSingletonInstances = Utility\GeneralUtility::getSingletonInstances();
 		$this->assertArrayHasKey($instanceClassName, $registeredSingletonInstances);
 		$this->assertSame($registeredSingletonInstances[$instanceClassName], $instance);
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function addInstanceForEmptyClassNameThrowsException() {
 		$instance = $this->getMock('foo');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance('', $instance);
+		Utility\GeneralUtility::addInstance('', $instance);
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function addInstanceForClassThatIsNoSubclassOfProvidedClassThrowsException() {
 		$instance = $this->getMock('foo', array('bar'));
 		$singletonClassName = get_class($this->getMock('foo'));
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($singletonClassName, $instance);
+		Utility\GeneralUtility::addInstance($singletonClassName, $instance);
 	}
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function addInstanceWithSingletonInstanceThrowsException() {
 		$instance = $this->getMock('TYPO3\\CMS\\Core\\SingletonInterface');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance(get_class($instance), $instance);
+		Utility\GeneralUtility::addInstance(get_class($instance), $instance);
 	}
 
 	/**
@@ -3587,8 +3662,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function addInstanceMakesMakeInstanceReturnThatInstance() {
 		$instance = $this->getMock('foo');
 		$className = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($className, $instance);
-		$this->assertSame($instance, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className));
+		Utility\GeneralUtility::addInstance($className, $instance);
+		$this->assertSame($instance, Utility\GeneralUtility::makeInstance($className));
 	}
 
 	/**
@@ -3597,8 +3672,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function makeInstanceCalledTwoTimesAfterAddInstanceReturnTwoDifferentInstances() {
 		$instance = $this->getMock('foo');
 		$className = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($className, $instance);
-		$this->assertNotSame(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className), \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className));
+		Utility\GeneralUtility::addInstance($className, $instance);
+		$this->assertNotSame(Utility\GeneralUtility::makeInstance($className), Utility\GeneralUtility::makeInstance($className));
 	}
 
 	/**
@@ -3607,11 +3682,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function addInstanceCalledTwoTimesMakesMakeInstanceReturnBothInstancesInAddingOrder() {
 		$instance1 = $this->getMock('foo');
 		$className = get_class($instance1);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($className, $instance1);
+		Utility\GeneralUtility::addInstance($className, $instance1);
 		$instance2 = new $className();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($className, $instance2);
-		$this->assertSame($instance1, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className), 'The first returned instance does not match the first added instance.');
-		$this->assertSame($instance2, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className), 'The second returned instance does not match the second added instance.');
+		Utility\GeneralUtility::addInstance($className, $instance2);
+		$this->assertSame($instance1, Utility\GeneralUtility::makeInstance($className), 'The first returned instance does not match the first added instance.');
+		$this->assertSame($instance2, Utility\GeneralUtility::makeInstance($className), 'The second returned instance does not match the second added instance.');
 	}
 
 	/**
@@ -3620,9 +3695,9 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function purgeInstancesDropsAddedInstance() {
 		$instance = $this->getMock('foo');
 		$className = get_class($instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($className, $instance);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::purgeInstances();
-		$this->assertNotSame($instance, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className));
+		Utility\GeneralUtility::addInstance($className, $instance);
+		Utility\GeneralUtility::purgeInstances();
+		$this->assertNotSame($instance, Utility\GeneralUtility::makeInstance($className));
 	}
 
 	/**
@@ -3649,7 +3724,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function validPathStrDetectsInvalidCharacters($path) {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::validPathStr($path));
+		$this->assertFalse(Utility\GeneralUtility::validPathStr($path));
 	}
 
 	/**
@@ -3658,7 +3733,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function validPathStrWorksWithUnicodeFileNames() {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::validPathStr('fileadmin/templates/Ссылка (fce).xml'));
+		$this->assertTrue(Utility\GeneralUtility::validPathStr('fileadmin/templates/Ссылка (fce).xml'));
 	}
 
 	/**
@@ -3667,7 +3742,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @test
 	 */
 	public function verifyFilenameAgainstDenyPatternDetectsNullCharacter() {
-		$this->assertFalse(\TYPO3\CMS\Core\Utility\GeneralUtility::verifyFilenameAgainstDenyPattern('image .gif'));
+		$this->assertFalse(Utility\GeneralUtility::verifyFilenameAgainstDenyPattern('image .gif'));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -3688,10 +3763,10 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLog'] = 'file,' . $testLogFilename . ',0';
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0777';
 		// Call method, get actual permissions and clean up
-		\TYPO3\CMS\Core\Utility\GeneralUtility::syslog('testLog', 'test', \TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_NOTICE);
+		Utility\GeneralUtility::syslog('testLog', 'test', Utility\GeneralUtility::SYSLOG_SEVERITY_NOTICE);
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($testLogFilename)), 2);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::unlink_tempfile($testLogFilename);
+		Utility\GeneralUtility::unlink_tempfile($testLogFilename);
 		$this->assertEquals($resultFilePermissions, '0777');
 	}
 
@@ -3704,11 +3779,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		}
 		// Fake all required settings and get an unique logfilename
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = uniqid('test_');
-		$deprecationLogFilename = \TYPO3\CMS\Core\Utility\GeneralUtility::getDeprecationLogFileName();
+		$deprecationLogFilename = Utility\GeneralUtility::getDeprecationLogFileName();
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog'] = TRUE;
 		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = '0777';
 		// Call method, get actual permissions and clean up
-		\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('foo');
+		Utility\GeneralUtility::deprecationLog('foo');
 		clearstatcache();
 		$resultFilePermissions = substr(decoct(fileperms($deprecationLogFilename)), 2);
 		@unlink($deprecationLogFilename);
@@ -3726,7 +3801,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$inputData = array('foo' => 'bar');
 		// omit the debug() output
 		ob_start();
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($functionName, $inputData, $this, 'user_');
+		$result = Utility\GeneralUtility::callUserFunction($functionName, $inputData, $this, 'user_');
 		ob_end_clean();
 		$this->assertFalse($result);
 	}
@@ -3734,11 +3809,11 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 * @dataProvider callUserFunctionInvalidParameterDataprovider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function callUserFunctionWillThrowExceptionForInvalidParameters($functionName) {
 		$inputData = array('foo' => 'bar');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($functionName, $inputData, $this, 'user_', 2);
+		Utility\GeneralUtility::callUserFunction($functionName, $inputData, $this, 'user_', 2);
 	}
 
 	/**
@@ -3767,7 +3842,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	public function callUserFunctionCanCallFunction() {
 		$functionName = create_function('', 'return "Worked fine";');
 		$inputData = array('foo' => 'bar');
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($functionName, $inputData, $this, '');
+		$result = Utility\GeneralUtility::callUserFunction($functionName, $inputData, $this, '');
 		$this->assertEquals('Worked fine', $result);
 	}
 
@@ -3776,7 +3851,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function callUserFunctionCanCallMethod() {
 		$inputData = array('foo' => 'bar');
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction('TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunction', $inputData, $this);
+		$result = Utility\GeneralUtility::callUserFunction('TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunction', $inputData, $this);
 		$this->assertEquals('Worked fine', $result);
 	}
 
@@ -3792,7 +3867,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function callUserFunctionCanPrefixFuncNameWithFilePath() {
 		$inputData = array('foo' => 'bar');
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction('typo3/sysext/core/Tests/Unit/Utility/GeneralUtilityTest.php:TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunction', $inputData, $this);
+		$result = Utility\GeneralUtility::callUserFunction('typo3/sysext/core/Tests/Unit/Utility/GeneralUtilityTest.php:TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunction', $inputData, $this);
 		$this->assertEquals('Worked fine', $result);
 	}
 
@@ -3801,8 +3876,8 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 */
 	public function callUserFunctionCanPersistObjectsBetweenCalls() {
 		$inputData = array('called' => array());
-		\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction('&TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunctionCountCallers', $inputData, $this);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction('&TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunctionCountCallers', $inputData, $this);
+		Utility\GeneralUtility::callUserFunction('&TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunctionCountCallers', $inputData, $this);
+		Utility\GeneralUtility::callUserFunction('&TYPO3\CMS\Core\Tests\Unit\Utility\GeneralUtilityTest->user_calledUserFunctionCountCallers', $inputData, $this);
 		$this->assertEquals(1, sizeof($inputData['called']));
 	}
 
@@ -3826,7 +3901,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 			$reference->assertEquals($inputData, $parameters, 'Passed data doesn\'t match expected output');
 			return 'Worked fine';
 		};
-		$this->assertEquals('Worked fine', \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($closure, $inputData, $this));
+		$this->assertEquals('Worked fine', Utility\GeneralUtility::callUserFunction($closure, $inputData, $this));
 	}
 
 	///////////////////////////////////////////////////
@@ -3851,7 +3926,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @param string $className Class name to test
 	 */
 	public function hasValidClassPrefixAcceptsValidPrefixes($className) {
-		$this->assertTrue(\TYPO3\CMS\Core\Utility\GeneralUtility::hasValidClassPrefix($className));
+		$this->assertTrue(Utility\GeneralUtility::hasValidClassPrefix($className));
 	}
 
 	///////////////////////////////////////////////////
@@ -3863,7 +3938,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 	 * @param int $numberOfBytes Number of Bytes to generate
 	 */
 	public function generateRandomBytesReturnsExpectedAmountOfBytes($numberOfBytes) {
-		$this->assertEquals(strlen(\TYPO3\CMS\Core\Utility\GeneralUtility::generateRandomBytes($numberOfBytes)), $numberOfBytes);
+		$this->assertEquals(strlen(Utility\GeneralUtility::generateRandomBytes($numberOfBytes)), $numberOfBytes);
 	}
 
 	public function generateRandomBytesReturnsExpectedAmountOfBytesDataProvider() {
@@ -3896,7 +3971,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 		$numberOfTests = 5;
 		// generate a few random numbers
 		for ($i = 0; $i < $numberOfTests; $i++) {
-			$results[$i] = \TYPO3\CMS\Core\Utility\GeneralUtility::generateRandomBytes($numberOfBytes);
+			$results[$i] = Utility\GeneralUtility::generateRandomBytes($numberOfBytes);
 		}
 		// array_unique would filter out duplicates
 		$this->assertEquals($results, array_unique($results));
@@ -3933,7 +4008,7 @@ class GeneralUtilityTest extends \tx_phpunit_testcase {
 				'fourth' => 'overrile'
 			)
 		);
-		$result = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($array1, $array2);
+		$result = Utility\GeneralUtility::array_merge_recursive_overrule($array1, $array2);
 		$this->assertEquals($expected, $result);
 	}
 
@@ -3975,7 +4050,7 @@ text with a ' . $urlMatch . '$|s'),
 	 * @param string $expected Text with correctly detected URLs
 	 */
 	public function substUrlsInPlainText($input, $expectedPreg) {
-		$this->assertTrue(preg_match($expectedPreg, \TYPO3\CMS\Core\Utility\GeneralUtility::substUrlsInPlainText($input, 1, 'http://example.com/index.php')) == 1);
+		$this->assertTrue(preg_match($expectedPreg, Utility\GeneralUtility::substUrlsInPlainText($input, 1, 'http://example.com/index.php')) == 1);
 	}
 
 }

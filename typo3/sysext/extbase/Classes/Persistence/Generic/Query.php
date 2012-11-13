@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,13 +30,30 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /**
  * The Query class used to run queries against the database
  *
- * @package Extbase
- * @subpackage Persistence
- * @version $Id$
  * @scope prototype
  * @api
  */
 class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
+
+	/**
+	 * An inner join.
+	 */
+	const JCR_JOIN_TYPE_INNER = '{http://www.jcp.org/jcr/1.0}joinTypeInner';
+
+	/**
+	 * A left-outer join.
+	 */
+	const JCR_JOIN_TYPE_LEFT_OUTER = '{http://www.jcp.org/jcr/1.0}joinTypeLeftOuter';
+
+	/**
+	 * A right-outer join.
+	 */
+	const JCR_JOIN_TYPE_RIGHT_OUTER = '{http://www.jcp.org/jcr/1.0}joinTypeRightOuter';
+
+	/**
+	 * Charset of strings in QOM
+	 */
+	const CHARSET = 'utf-8';
 
 	/**
 	 * @var string
@@ -234,8 +252,8 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 	/**
 	 * Sets the property names to order the result by. Expected like this:
 	 * array(
-	 * 'foo' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING,
-	 * 'bar' => Tx_Extbase_Persistence_QueryInterface::ORDER_DESCENDING
+	 * 'foo' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_ASCENDING,
+	 * 'bar' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_DESCENDING
 	 * )
 	 * where 'foo' and 'bar' are property names.
 	 *
@@ -251,8 +269,8 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 	/**
 	 * Returns the property names to order the result by. Like this:
 	 * array(
-	 * 'foo' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING,
-	 * 'bar' => Tx_Extbase_Persistence_QueryInterface::ORDER_DESCENDING
+	 * 'foo' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_ASCENDING,
+	 * 'bar' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_DESCENDING
 	 * )
 	 *
 	 * @return array
@@ -448,7 +466,7 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 		if (is_object($operand) || $caseSensitive) {
 			$comparison = $this->qomFactory->comparison($this->qomFactory->propertyValue($propertyName, $this->getSelectorName()), \TYPO3\CMS\Extbase\Persistence\QueryInterface::OPERATOR_EQUAL_TO, $operand);
 		} else {
-			$comparison = $this->qomFactory->comparison($this->qomFactory->lowerCase($this->qomFactory->propertyValue($propertyName, $this->getSelectorName())), \TYPO3\CMS\Extbase\Persistence\QueryInterface::OPERATOR_EQUAL_TO, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter')->conv_case(\TYPO3\CMS\Extbase\Persistence\QueryInterface::CHARSET, $operand, 'toLower'));
+			$comparison = $this->qomFactory->comparison($this->qomFactory->lowerCase($this->qomFactory->propertyValue($propertyName, $this->getSelectorName())), \TYPO3\CMS\Extbase\Persistence\QueryInterface::OPERATOR_EQUAL_TO, \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter')->conv_case(\TYPO3\CMS\Extbase\Persistence\Generic\Query::CHARSET, $operand, 'toLower'));
 		}
 		return $comparison;
 	}
@@ -458,10 +476,11 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 	 *
 	 * @param string $propertyName The name of the property to compare against
 	 * @param mixed $operand The value to compare with
+	 * @param boolean $caseSensitive Whether the matching should be done case-sensitive
 	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\Qom\ComparisonInterface
 	 * @api
 	 */
-	public function like($propertyName, $operand) {
+	public function like($propertyName, $operand, $caseSensitive = TRUE) {
 		return $this->qomFactory->comparison($this->qomFactory->propertyValue($propertyName, $this->getSelectorName()), \TYPO3\CMS\Extbase\Persistence\QueryInterface::OPERATOR_LIKE, $operand);
 	}
 
@@ -560,6 +579,29 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 		return array('type', 'source', 'constraint', 'statement', 'orderings', 'limit', 'offset', 'querySettings');
 	}
 
+	/**
+	 * Returns the query result count.
+	 *
+	 * @return integer The query result count
+	 * @api
+	 */
+	public function count() {
+		return $this->execute()->count();
+	}
+
+	/**
+	 * Returns an "isEmpty" criterion used for matching objects against a query.
+	 * It matches if the multivalued property contains no values or is NULL.
+	 *
+	 * @param string $propertyName The name of the multivalued property to compare against
+	 * @return boolean
+	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Exception\NotImplementedException
+	 * @throws \TYPO3\CMS\Extbase\Persistence\Exception\InvalidQueryException if used on a single-valued property
+	 * @api
+	 */
+	public function isEmpty($propertyName) {
+		throw new \TYPO3\CMS\Extbase\Persistence\Generic\Exception\NotImplementedException(__METHOD__);
+	}
 }
 
 

@@ -48,6 +48,8 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 	 * @return void
 	 */
 	public function __construct($errorHandlerErrors) {
+			// reduces error types to those a custom error handler can process
+		$errorHandlerErrors = $errorHandlerErrors & ~(E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR);
 		set_error_handler(array($this, 'handleError'), $errorHandlerErrors);
 	}
 
@@ -87,10 +89,18 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 			E_USER_WARNING => 'User Warning',
 			E_USER_NOTICE => 'User Notice',
 			E_STRICT => 'Runtime Notice',
-			E_RECOVERABLE_ERROR => 'Catchable Fatal Error'
+			E_RECOVERABLE_ERROR => 'Catchable Fatal Error',
+			E_DEPRECATED => 'Runtime Deprecation Notice'
 		);
 		$message = 'PHP ' . $errorLevels[$errorLevel] . ': ' . $errorMessage . ' in ' . $errorFile . ' line ' . $errorLine;
 		if ($errorLevel & $this->exceptionalErrors) {
+				// handle error raised at early parse time
+				// autoloader not available & built-in classes not resolvable
+			if (!class_exists('stdClass', FALSE)) {
+				$message = 'PHP ' . $errorLevels[$errorLevel] . ': ' . $errorMessage . ' in ' . basename($errorFile) .
+					'line ' . $errorLine;
+				die($message);
+			}
 			// We need to manually require the exception classes in case the autoloader is not available at this point yet.
 			// @see http://forge.typo3.org/issues/23444
 			if (!class_exists('TYPO3\\CMS\\Core\\Error\\Exception', FALSE)) {

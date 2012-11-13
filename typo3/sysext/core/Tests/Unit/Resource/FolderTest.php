@@ -36,7 +36,7 @@ require_once 'vfsStream/vfsStream.php';
  * @subpackage t3lib
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
-class FolderTest extends \Tx_Phpunit_TestCase {
+class FolderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var array A backup of registered singleton instances
@@ -91,6 +91,27 @@ class FolderTest extends \Tx_Phpunit_TestCase {
 		$fixture = $this->createFolderFixture('/somePath/someName/', 'someName');
 		$fixture->updateProperties(array('identifier' => '/someOtherPath'));
 		$this->assertEquals('someName', $fixture->getName());
+	}
+
+	/**
+	 * @test
+	 */
+	public function getFilesReturnsArrayWithFilenamesAsKeys() {
+		$mockedStorage = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceStorage', array(), array(), '', FALSE);
+		$mockedStorage->expects($this->once())->method('getFileList')->will($this->returnValue(array(
+				'somefile.png' => array(
+					'name' => 'somefile.png'
+				),
+				'somefile.jpg' => array(
+					'name' => 'somefile.jpg'
+				)
+			)
+		));
+		$fixture = $this->createFolderFixture('/somePath', 'someName', $mockedStorage);
+
+		$fileList = $fixture->getFiles();
+
+		$this->assertEquals(array('somefile.png', 'somefile.jpg'), array_keys($fileList));
 	}
 
 	/**

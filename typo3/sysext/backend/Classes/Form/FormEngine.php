@@ -286,6 +286,13 @@ class FormEngine {
 	 */
 	public $prependFormFieldNames_file = 'data_files';
 
+	/**
+	 * The string to prepend form field names that are active (not NULL).
+	 *
+	 * @var string
+	 */
+	protected $prependFormFieldNamesActive = 'control[active]';
+
 	// The name attribute of the form.
 	/**
 	 * @todo Define visibility
@@ -311,7 +318,7 @@ class FormEngine {
 	 */
 	public $perms_clause_set = 0;
 
-	// Used to indicate the mode of CSH (Context Sensitive Help), whether it should be icons-only ('icon'), full description ('text') or not at all (blank).
+	// Used to indicate the mode of CSH (Context Sensitive Help), whether it should be icons-only ('icon') or not at all (blank).
 	/**
 	 * @todo Define visibility
 	 */
@@ -401,6 +408,13 @@ class FormEngine {
 	 * @todo Define visibility
 	 */
 	public $fieldTemplate = '<strong>###FIELD_NAME###</strong><br />###FIELD_ITEM###<hr />';
+
+	/**
+	 * Template subpart for palette fields.
+	 *
+	 * @var string
+	 */
+	protected $paletteFieldTemplate;
 
 	// Wrapping template code for a section
 	/**
@@ -698,7 +712,7 @@ class FormEngine {
 			// Load the full TCA for the table.
 			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// Get dividers2tabs setting from TCA of the current table:
-			$dividers2tabs =& $GLOBALS['TCA'][$table]['ctrl']['dividers2tabs'];
+			$dividers2tabs = &$GLOBALS['TCA'][$table]['ctrl']['dividers2tabs'];
 			// Load the description content for the table.
 			if ($this->edit_showFieldHelp || $this->doLoadTableDescr($table)) {
 				$GLOBALS['LANG']->loadSingleTableDescription($table);
@@ -1007,6 +1021,9 @@ class FormEngine {
 				$PA['itemFormElName'] = $this->prependFormFieldNames . '[' . $table . '][' . $row['uid'] . '][' . $field . ']';
 				// Form field name, in case of file uploads
 				$PA['itemFormElName_file'] = $this->prependFormFieldNames_file . '[' . $table . '][' . $row['uid'] . '][' . $field . ']';
+				// Form field name, to activate elements
+				// If the "eval" list contains "null", elements can be deactivated which results in storing NULL to database
+				$PA['itemFormElNameActive'] = $this->prependFormFieldNamesActive . '[' . $table . '][' . $row['uid'] . '][' . $field . ']';
 				// The value to show in the form field.
 				$PA['itemFormElValue'] = $row[$field];
 				$PA['itemFormElID'] = $this->prependFormFieldNames . '_' . $table . '_' . $row['uid'] . '_' . $field;
@@ -1096,7 +1113,8 @@ class FormEngine {
 							'ID' => $row['uid'],
 							'FIELD' => $field,
 							'TABLE' => $table,
-							'ITEM' => $item
+							'ITEM' => $item,
+							'ITEM_NULLVALUE' => $this->renderNullValueWidget($table, $field, $row, $PA),
 						);
 						$out = $this->addUserTemplateMarkers($out, $table, $field, $row, $PA);
 					} else {
@@ -1107,7 +1125,8 @@ class FormEngine {
 							'TABLE' => $table,
 							'ID' => $row['uid'],
 							'PAL_LINK_ICON' => $thePalIcon,
-							'FIELD' => $field
+							'FIELD' => $field,
+							'ITEM_NULLVALUE' => $this->renderNullValueWidget($table, $field, $row, $PA),
 						);
 						$out = $this->addUserTemplateMarkers($out, $table, $field, $row, $PA);
 						// String:
@@ -1347,6 +1366,58 @@ function ' . $evalData . '(value) {
 	}
 
 	/**
+	 * Renders a view widget to handle and activate NULL values.
+	 * The widget is enabled by using 'null' in the 'eval' TCA definition.
+	 *
+	 * @param string $table Name of the table
+	 * @param string $field Name of the field
+	 * @param array $row Accordant data of the record row
+	 * @param array $PA Parameters array with rendering instructions
+	 * @return string Widget (if any).
+	 */
+	protected function renderNullValueWidget($table, $field, array $row, array $PA) {
+		$widget = '';
+
+		$config = $PA['fieldConf']['config'];
+		if (!empty($config['eval']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['eval'], 'null')) {
+			$isNull = ($PA['itemFormElValue'] === NULL);
+
+			$checked = ($isNull ? '' : ' checked="checked"');
+			$onChange = htmlspecialchars(
+				'typo3form.fieldSetNull(\'' . $PA['itemFormElName'] . '\', !this.checked)'
+			);
+
+			$widget = '<span class="t3-tceforms-widget-null-wrapper">' .
+				'<input type="hidden" name="' . $PA['itemFormElNameActive'] . '" value="0" />' .
+				'<input type="checkbox" name="' . $PA['itemFormElNameActive'] . '" value="1" onchange="' . $onChange . '"' . $checked . ' />' .
+			'</span>';
+		}
+
+		return $widget;
+	}
+
+	/**
+	 * Determines whether the current field value is considered as NULL value.
+	 * Using NULL values is enabled by using 'null' in the 'eval' TCA definition.
+	 *
+	 * @param string $table Name of the table
+	 * @param string $field Name of the field
+	 * @param array $row Accordant data
+	 * @param array $PA Parameters array with rendering instructions
+	 * @return boolean
+	 */
+	protected function isNullValue($table, $field, array $row, array $PA) {
+		$result = FALSE;
+
+		$config = $PA['fieldConf']['config'];
+		if ($PA['itemFormElValue'] === NULL && !empty($config['eval']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['eval'], 'null')) {
+			$result = TRUE;
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Generation of TCEform elements of the type "text"
 	 * This will render a <textarea> OR RTE area form field, possibly with various control/validation features
 	 *
@@ -1516,9 +1587,10 @@ function ' . $evalData . '(value) {
 		}
 		$thisValue = intval($PA['itemFormElValue']);
 		$cols = intval($config['cols']);
+		$selItemsCount = count($selItems);
 		if ($cols > 1) {
 			$item .= '<table border="0" cellspacing="0" cellpadding="0" class="typo3-TCEforms-checkboxArray">';
-			for ($c = 0; $c < count($selItems); $c++) {
+			for ($c = 0; $c < $selItemsCount; $c++) {
 				$p = $selItems[$c];
 				if (!($c % $cols)) {
 					$item .= '<tr>';
@@ -1542,7 +1614,7 @@ function ' . $evalData . '(value) {
 			}
 			$item .= '</table>';
 		} else {
-			for ($c = 0; $c < count($selItems); $c++) {
+			for ($c = 0; $c < $selItemsCount; $c++) {
 				$p = $selItems[$c];
 				$cBP = $this->checkBoxParams($PA['itemFormElName'], $thisValue, $c, count($selItems), implode('', $PA['fieldChangeFunc']));
 				$cBName = $PA['itemFormElName'] . '_' . $c;
@@ -1580,7 +1652,8 @@ function ' . $evalData . '(value) {
 			$selItems = $this->procItems($selItems, $PA['fieldTSConfig']['itemsProcFunc.'], $config, $table, $row, $field);
 		}
 		// Traverse the items, making the form elements:
-		for ($c = 0; $c < count($selItems); $c++) {
+		$selItemsCount = count($selItems);
+		for ($c = 0; $c < $selItemsCount; $c++) {
 			$p = $selItems[$c];
 			$rID = $PA['itemFormElID'] . '_' . $c;
 			$rOnClick = implode('', $PA['fieldChangeFunc']);
@@ -2946,7 +3019,7 @@ function ' . $evalData . '(value) {
 		$PA['field'] = $field;
 		$PA['row'] = $row;
 		$PA['parameters'] = isset($PA['fieldConf']['config']['parameters']) ? $PA['fieldConf']['config']['parameters'] : array();
-		$PA['pObj'] =& $this;
+		$PA['pObj'] = &$this;
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($PA['fieldConf']['config']['userFunc'], $PA, $this);
 	}
 
@@ -3808,7 +3881,7 @@ function ' . $evalData . '(value) {
 		}
 		// Traverse wizards:
 		if (is_array($wizConf) && !$this->disableWizards) {
-			$parametersOfWizards =& $specConf['wizards']['parameters'];
+			$parametersOfWizards = &$specConf['wizards']['parameters'];
 			foreach ($wizConf as $wid => $wConf) {
 				if (substr($wid, 0, 1) != '_' && (!$wConf['enableByTypeConfig'] || is_array($parametersOfWizards) && in_array($wid, $parametersOfWizards)) && ($RTE || !$wConf['RTEonly'])) {
 					// Title / icon:
@@ -3883,7 +3956,7 @@ function ' . $evalData . '(value) {
 									break;
 								case 'userFunc':
 									// Reference set!
-									$params['item'] =& $item;
+									$params['item'] = &$item;
 									$params['icon'] = $icon;
 									$params['iTitle'] = $iTitle;
 									$params['wConf'] = $wConf;
@@ -3892,7 +3965,7 @@ function ' . $evalData . '(value) {
 									break;
 								case 'slider':
 									// Reference set!
-									$params['item'] =& $item;
+									$params['item'] = &$item;
 									$params['icon'] = $icon;
 									$params['iTitle'] = $iTitle;
 									$params['wConf'] = $wConf;
@@ -4427,7 +4500,7 @@ function ' . $evalData . '(value) {
 	 */
 	public function procItems($items, $iArray, $config, $table, $row, $field) {
 		$params = array();
-		$params['items'] =& $items;
+		$params['items'] = &$items;
 		$params['config'] = $config;
 		$params['TSconfig'] = $iArray;
 		$params['table'] = $table;
@@ -4750,6 +4823,7 @@ function ' . $evalData . '(value) {
 		$this->totalWrap = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###TOTALWRAP###');
 		// Wrapping a single field:
 		$this->fieldTemplate = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###FIELDTEMPLATE###');
+		$this->paletteFieldTemplate = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###PALETTEFIELDTEMPLATE###');
 		$this->palFieldTemplate = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###PALETTE_FIELDTEMPLATE###');
 		$this->palFieldTemplateHeader = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###PALETTE_FIELDTEMPLATE_HEADER###');
 		$this->sectionWrap = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###SECTION_WRAP###');
@@ -4987,8 +5061,23 @@ function ' . $evalData . '(value) {
 				}
 			} else {
 				$lastLineWasLinebreak = FALSE;
-				$fieldIdentifierForJs = $content['TABLE'] . '_' . $content['ID'] . '_' . $content['FIELD'];
-				$iRow[$row][] = '<span class="t3-form-palette-field-container">' . '<label' . $labelAttributes . '>' . $content['NAME'] . '</label>' . '<span' . $fieldAttributes . '>' . '<img name="cm_' . $fieldIdentifierForJs . '" src="clear.gif" class="t3-form-palette-icon-contentchanged" alt="" />' . '<img name="req_' . $fieldIdentifierForJs . '" src="clear.gif" class="t3-form-palette-icon-required" alt="" />' . $content['ITEM'] . '</span>' . '</span>';
+
+				$paletteMarkers = array(
+					'###CONTENT_TABLE###' => $content['TABLE'],
+					'###CONTENT_ID###' => $content['ID'],
+					'###CONTENT_FIELD###' => $content['FIELD'],
+					'###CONTENT_NAME###' => $content['NAME'],
+					'###CONTENT_ITEM###' => $content['ITEM'],
+					'###CONTENT_ITEM_NULLVALUE###' => $content['ITEM_NULLVALUE'],
+					'###ATTRIBUTES_LABEL###' => $labelAttributes,
+					'###ATTRIBUTES_FIELD###' => $fieldAttributes,
+				);
+				$iRow[$row][] = \TYPO3\CMS\Core\Html\HtmlParser::substituteMarkerArray(
+					$this->paletteFieldTemplate,
+					$paletteMarkers,
+					FALSE,
+					TRUE
+				);
 			}
 		}
 		// Final wrapping into the fieldset:
@@ -5894,9 +5983,9 @@ function ' . $evalData . '(value) {
 			switch ((string) $parts[2]) {
 			case 'LOADED':
 				if (strtolower($parts[3]) == 'true') {
-					$output = \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($parts[1]) ? TRUE : FALSE;
+					$output = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($parts[1]) ? TRUE : FALSE;
 				} elseif (strtolower($parts[3]) == 'false') {
-					$output = !\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($parts[1]) ? TRUE : FALSE;
+					$output = !\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($parts[1]) ? TRUE : FALSE;
 				}
 				break;
 			}
@@ -5991,7 +6080,7 @@ function ' . $evalData . '(value) {
 	 * @todo Define visibility
 	 */
 	public function getAvailableLanguages($onlyIsoCoded = 1, $setDefault = 1) {
-		$isL = \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('static_info_tables');
+		$isL = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables');
 		// Find all language records in the system:
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('static_lang_isocode,title,uid', 'sys_language', 'pid=0 AND hidden=0' . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('sys_language'), '', 'title');
 		// Traverse them:
@@ -6128,7 +6217,7 @@ function ' . $evalData . '(value) {
 				foreach ($uids as $uid) {
 					if ($sys_language_rec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('sys_language', $uid)) {
 						$this->cachedAdditionalPreviewLanguages[$uid] = array('uid' => $uid);
-						if ($sys_language_rec['static_lang_isocode'] && \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('static_info_tables')) {
+						if ($sys_language_rec['static_lang_isocode'] && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables')) {
 							$staticLangRow = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('static_languages', $sys_language_rec['static_lang_isocode'], 'lg_iso_2');
 							if ($staticLangRow['lg_iso_2']) {
 								$this->cachedAdditionalPreviewLanguages[$uid]['uid'] = $uid;

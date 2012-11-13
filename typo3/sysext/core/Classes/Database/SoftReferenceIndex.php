@@ -85,13 +85,21 @@ class SoftReferenceIndex {
 	/**
 	 * @todo Define visibility
 	 */
-	public $fileAdminDir = 'fileadmin';
+	public $fileAdminDir = '';
 
 	// Internal:
 	/**
 	 * @todo Define visibility
 	 */
 	public $tokenID_basePrefix = '';
+
+	/**
+	 * Class construct to set global variable
+	 *
+	 */
+	public function __construct() {
+		$this->fileAdminDir = !empty($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir']) ? rtrim($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') : 'fileadmin';
+	}
 
 	/**
 	 * Main function through which all processing happens
@@ -521,7 +529,7 @@ class SoftReferenceIndex {
 	 */
 	public function fileadminReferences($content, &$elements) {
 		// Fileadmin files are found
-		$parts = preg_split('/([^[:alnum:]]+)(' . $this->fileAdminDir . '\\/[^[:space:]"\'<>]*)/', ' ' . $content . ' ', 10000, PREG_SPLIT_DELIM_CAPTURE);
+		$parts = preg_split('/([^[:alnum:]]+)(' . preg_quote($this->fileAdminDir, '/') . '\\/[^[:space:]"\'<>]*)/', ' ' . $content . ' ', 10000, PREG_SPLIT_DELIM_CAPTURE);
 		// Traverse files:
 		foreach ($parts as $idx => $value) {
 			if ($idx % 3 == 2) {

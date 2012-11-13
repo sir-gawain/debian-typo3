@@ -246,12 +246,10 @@ class DocumentTemplate {
 	 */
 	public $parseTimeFlag = 0;
 
-	// INTERNAL
-	// Default charset. see function initCharset()
 	/**
-	 * @todo Define visibility
+	 * internal character set, nowadays utf-8 for everything
 	 */
-	public $charset = 'utf-8';
+	protected $charset = 'utf-8';
 
 	// Internal: Indicates if a <div>-output section is open
 	/**
@@ -718,7 +716,7 @@ class DocumentTemplate {
 	public function startPage($title, $includeCsh = TRUE) {
 		// hook pre start page
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['preStartPageHook'])) {
-			$preStartPageHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['preStartPageHook'];
+			$preStartPageHook = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['preStartPageHook'];
 			if (is_array($preStartPageHook)) {
 				$hookParameters = array(
 					'title' => &$title
@@ -737,7 +735,6 @@ class DocumentTemplate {
 			}
 		}
 		// Send HTTP header for selected charset. Added by Robert Lemke 23.10.2003
-		$this->initCharset();
 		header('Content-Type:text/html;charset=' . $this->charset);
 		// Standard HTML tag
 		$htmlTag = '<html xmlns="http://www.w3.org/1999/xhtml">';
@@ -807,7 +804,7 @@ class DocumentTemplate {
 		$this->pageRenderer->setCharSet($this->charset);
 		$this->pageRenderer->addMetaTag($this->generator());
 		$this->pageRenderer->addMetaTag('<meta name="robots" content="noindex,follow" />');
-		$this->pageRenderer->setFavIcon('gfx/favicon.ico');
+		$this->pageRenderer->setFavIcon($this->getBackendFavicon());
 		if ($this->useCompatibilityTag) {
 			$this->pageRenderer->addMetaTag($this->xUaCompatible($this->xUaCompatibilityVersion));
 		}
@@ -849,7 +846,7 @@ class DocumentTemplate {
 		}
 		// hook for additional headerData
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['preHeaderRenderHook'])) {
-			$preHeaderRenderHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['preHeaderRenderHook'];
+			$preHeaderRenderHook = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/template.php']['preHeaderRenderHook'];
 			if (is_array($preHeaderRenderHook)) {
 				$hookParameters = array(
 					'pageRenderer' => &$this->pageRenderer
@@ -1216,12 +1213,12 @@ class DocumentTemplate {
 					// for EXT:myskin/stylesheets/ syntax
 					if (substr($stylesheetDir, 0, 4) === 'EXT:') {
 						list($extKey, $path) = explode('/', substr($stylesheetDir, 4), 2);
-						if (strcmp($extKey, '') && \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extKey) && strcmp($path, '')) {
-							$stylesheetDirectories[] = \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath($extKey) . $path;
+						if (strcmp($extKey, '') && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extKey) && strcmp($path, '')) {
+							$stylesheetDirectories[] = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($extKey) . $path;
 						}
 					} else {
 						// For relative paths
-						$stylesheetDirectories[] = \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath($skinExtKey) . $stylesheetDir;
+						$stylesheetDirectories[] = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($skinExtKey) . $stylesheetDir;
 					}
 				}
 			}
@@ -1236,10 +1233,10 @@ class DocumentTemplate {
 	 *
 	 * @return string <meta> tag with charset from $this->charset or $GLOBALS['LANG']->charSet
 	 * @todo Define visibility
+	 * @deprecated since TYPO3 6.0, remove in 6.2. The charset is utf-8 all the time for the backend now
 	 */
 	public function initCharset() {
-		// Set charset to the charset provided by the current backend users language selection:
-		$this->charset = $GLOBALS['LANG']->charSet ? $GLOBALS['LANG']->charSet : $this->charset;
+		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
 		// Return meta tag:
 		return '<meta http-equiv="Content-Type" content="text/html; charset=' . $this->charset . '" />';
 	}
@@ -1775,7 +1772,7 @@ class DocumentTemplate {
 	 * @return string
 	 */
 	public function getVersionSelector($id, $noAction = FALSE) {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('version')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
 			$versionGuiObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Version\\View\\VersionView');
 			return $versionGuiObj->getVersionSelector($id, $noAction);
 		}
@@ -2050,6 +2047,14 @@ class DocumentTemplate {
 		';
 	}
 
+	/**
+	* Retrieves configured favicon for backend (with fallback)
+	*
+	* @return string
+	*/
+	protected function getBackendFavicon() {
+		return \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/favicon.ico', '', 1);
+	}
 }
 
 

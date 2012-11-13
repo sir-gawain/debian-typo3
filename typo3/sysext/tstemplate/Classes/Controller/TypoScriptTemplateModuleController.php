@@ -76,8 +76,8 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 	 */
 	public function clearCache() {
 		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('clear_all_cache')) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
-			/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
+			/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
 			$tce->stripslashes_values = 0;
 			$tce->start(array(), array());
 			$tce->clear_cacheCmd('all');
@@ -313,7 +313,7 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 		// New standard?
 		if ($newStandardTemplate) {
 			// check wether statictemplates are supported
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('statictemplates')) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('statictemplates')) {
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('title,uid', 'static_template', '', '', 'title');
 				$opt = '';
 				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
@@ -379,8 +379,8 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 	 */
 	public function createTemplate($id, $actTemplateId = 0) {
 		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('createExtension') || \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('createExtension_x')) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
-			/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
+			/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
 			$tce->stripslashes_values = 0;
 			$recData = array();
 			$recData['sys_template']['NEW'] = array(
@@ -391,8 +391,8 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 			$tce->process_datamap();
 			return $tce->substNEWwithIDs['NEW'];
 		} elseif (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('newWebsite')) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
-			/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
+			/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
 			$tce->stripslashes_values = 0;
 			$recData = array();
 			if (intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('createStandard'))) {

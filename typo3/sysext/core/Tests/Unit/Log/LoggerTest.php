@@ -36,7 +36,7 @@ require_once 'Fixtures/WriterFailing.php';
  * @package TYPO3
  * @subpackage t3lib
  */
-class LoggerTest extends \tx_phpunit_testcase {
+class LoggerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
@@ -97,7 +97,7 @@ class LoggerTest extends \tx_phpunit_testcase {
 		$level = \TYPO3\CMS\Core\Log\LogLevel::DEBUG;
 		$message = 'test';
 		$logger = new \TYPO3\CMS\Core\Log\Logger($component);
-		/** @var $processor \TYPO3\CMS\Core\Log\Processor\Processor */
+		/** @var $processor \TYPO3\CMS\Core\Log\Processor\ProcessorInterface */
 		$processor = $this->getMock('TYPO3\\CMS\\Core\\Log\\Processor\\NullProcessor', array('processLogRecord'));
 		$processor->expects($this->once())->method('processLogRecord')->will($this->returnValue(new \TYPO3\CMS\Core\Log\LogRecord($component, $level, $message)));
 		$logger->addProcessor($level, $processor);

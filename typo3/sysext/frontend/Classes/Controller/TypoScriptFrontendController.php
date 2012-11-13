@@ -1291,6 +1291,28 @@ class TypoScriptFrontendController {
 		// Still used in the old wapversion.lib files.
 		$this->idParts = explode(',', $this->id);
 		$this->id = $this->idParts[0];
+
+			// Hook for further id manipulation
+		if (is_array($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['modifyPageId'])) {
+			$_params = array('id' => $this->id);
+			$newId = FALSE;
+			foreach ($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['modifyPageId'] as $_funcRef) {
+				$deprecationMessage = 'Hook $TYPO3_CONF_VARS[SC_OPTIONS][tslib/class.tslib_fe.php][modifyPageId] is ' .
+					'deprecated since 6.0 and will be removed two versions later';
+				if (!is_object($_funcRef) || !is_a($_funcRef, 'Closure')) {
+					$deprecationMessage .= '- used by ' . $_funcRef;
+				}
+				\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog($deprecationMessage);
+				$newIdFromFunc = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($_funcRef, $_params, $this);
+				if ($newIdFromFunc !== FALSE) {
+					$newId = $newIdFromFunc;
+				}
+			}
+			if ($newId !== FALSE) {
+				$this->id = $newId;
+			}
+		}
+
 		// If $this->id is a string, it's an alias
 		$this->checkAndSetAlias();
 		// The id and type is set to the integer-value - just to be sure...
@@ -2572,7 +2594,7 @@ class TypoScriptFrontendController {
 			}
 		}
 		// Finding the ISO code:
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('static_info_tables') && $this->sys_language_content) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables') && $this->sys_language_content) {
 			// using sys_language_content because the ISO code only (currently) affect content selection from FlexForms - which should follow "sys_language_content"
 			$sys_language_row = $this->sys_page->getRawRecord('sys_language', $this->sys_language_content, 'static_lang_isocode');
 			if (is_array($sys_language_row) && $sys_language_row['static_lang_isocode']) {
@@ -3386,10 +3408,10 @@ class TypoScriptFrontendController {
 		} while ($reprocess);
 		$GLOBALS['TT']->push('Substitute header section');
 		$this->INTincScript_loadJSCode();
+		$this->content = $this->getPageRenderer()->renderJavaScriptAndCssForProcessingOfUncachedContentObjects($this->content, $this->config['INTincScript_ext']['divKey']);
 		$this->content = str_replace('<!--HD_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset(implode(LF, $this->additionalHeaderData), 'HD'), $this->content);
 		$this->content = str_replace('<!--FD_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset(implode(LF, $this->additionalFooterData), 'FD'), $this->content);
 		$this->content = str_replace('<!--TDS_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset($this->divSection, 'TDS'), $this->content);
-		$this->content = $this->getPageRenderer()->renderJavaScriptAndCssForProcessingOfUncachedContentObjects($this->content, $this->config['INTincScript_ext']['divKey']);
 		$this->setAbsRefPrefix();
 		$GLOBALS['TT']->pull();
 	}
@@ -3720,7 +3742,7 @@ if (version == "n3") {
 		}
 		// Hook for supplying custom search/replace data
 		if (isset($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['tslib_fe-contentStrReplace'])) {
-			$contentStrReplaceHooks =& $this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['tslib_fe-contentStrReplace'];
+			$contentStrReplaceHooks = &$this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['tslib_fe-contentStrReplace'];
 			if (is_array($contentStrReplaceHooks)) {
 				$_params = array(
 					'search' => &$search,
@@ -3939,7 +3961,8 @@ if (version == "n3") {
 	public function encryptEmail($string, $back = 0) {
 		$out = '';
 		if ($this->spamProtectEmailAddresses === 'ascii') {
-			for ($a = 0; $a < strlen($string); $a++) {
+			$stringLength = strlen($string);
+			for ($a = 0; $a < $stringLength; $a++) {
 				$out .= '&#' . ord(substr($string, $a, 1)) . ';';
 			}
 		} else {
@@ -4219,7 +4242,7 @@ if (version == "n3") {
 			return FALSE;
 		}
 		if ($returnTitle) {
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('workspaces')) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces')) {
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('title', 'sys_workspace', 'uid=' . intval($ws));
 				if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					return $row['title'];

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Configuration;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,10 +31,6 @@ namespace TYPO3\CMS\Extbase\Configuration;
  * implementation of the configuration manager and provides an unified acccess point.
  *
  * Use the shutdown() method to drop the concrete implementation.
- *
- * @package Extbase
- * @subpackage Configuration
- * @version $ID:$
  */
 class ConfigurationManager implements \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface {
 
@@ -95,12 +94,17 @@ class ConfigurationManager implements \TYPO3\CMS\Extbase\Configuration\Configura
 	 * Returns the specified configuration.
 	 * The actual configuration will be merged from different sources in a defined order.
 	 *
+	 * You can get the following types of configuration invoking:
+	 * CONFIGURATION_TYPE_EXTBASE: Extbase settings
+	 * CONFIGURATION_TYPE_FRAMEWORK: the current module/plugin settings
+	 * CONFIGURATION_TYPE_TYPOSCRIPT: a raw TS array
+	 *
 	 * Note that this is a low level method and only makes sense to be used by Extbase internally.
 	 *
 	 * @param string $configurationType The kind of configuration to fetch - must be one of the CONFIGURATION_TYPE_* constants
 	 * @param string $extensionName if specified, the configuration for the given extension will be returned.
 	 * @param string $pluginName if specified, the configuration for the given plugin will be returned.
-	 * @throws Exception\InvalidConfigurationType
+	 * @throws Exception\InvalidConfigurationTypeException
 	 * @return array The configuration
 	 */
 	public function getConfiguration($configurationType, $extensionName = NULL, $pluginName = NULL) {
@@ -113,7 +117,7 @@ class ConfigurationManager implements \TYPO3\CMS\Extbase\Configuration\Configura
 		case self::CONFIGURATION_TYPE_FULL_TYPOSCRIPT:
 			return $this->concreteConfigurationManager->getTypoScriptSetup();
 		default:
-			throw new \TYPO3\CMS\Extbase\Configuration\Exception\InvalidConfigurationType('Invalid configuration type "' . $configurationType . '"', 1206031879);
+			throw new \TYPO3\CMS\Extbase\Configuration\Exception\InvalidConfigurationTypeException('Invalid configuration type "' . $configurationType . '"', 1206031879);
 		}
 	}
 

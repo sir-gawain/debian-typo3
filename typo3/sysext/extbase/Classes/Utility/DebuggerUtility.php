@@ -21,8 +21,8 @@ namespace TYPO3\CMS\Extbase\Utility;
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
 /**
- * This class is a backport of the corresponding class of FLOW3.
- * All credits go to the v5 team.
+ * This class is a backport of the corresponding class of TYPO3 Flow.
+ * All credits go to the TYPO3 Flow team.
  */
 /**
  * A debugging utility class
@@ -35,7 +35,7 @@ class DebuggerUtility {
 	const PLAINTEXT_INDENT = '   ';
 	const HTML_INDENT = '&nbsp;&nbsp;&nbsp;';
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	static protected $renderedObjects;
 
@@ -82,7 +82,7 @@ class DebuggerUtility {
 	 * @return void
 	 */
 	static protected function clearState() {
-		self::$renderedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		self::$renderedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 	}
 
 	/**
@@ -186,9 +186,9 @@ class DebuggerUtility {
 	static protected function isBlacklisted($value) {
 		$result = FALSE;
 		if ($value instanceof \ReflectionProperty) {
-			$result = (bool) preg_match(('/' . implode('|', self::$blacklistedPropertyNames) . '/'), $value->getName());
+			$result = (strpos(implode('|', self::$blacklistedPropertyNames), $value->getName()) > 0);
 		} elseif (is_object($value)) {
-			$result = (bool) preg_match(('/' . implode('|', self::$blacklistedClassNames) . '/'), get_class($value));
+			$result = (strpos(implode('|', self::$blacklistedClassNames), get_class($value)) > 0);
 		}
 		return $result;
 	}
@@ -240,7 +240,7 @@ class DebuggerUtility {
 				$persistenceType = 'persistent';
 			}
 		}
-		if ($object instanceof \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage && $object->_isDirty()) {
+		if ($object instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage && $object->_isDirty()) {
 			$persistenceType = 'modified';
 		}
 		if ($object instanceof \TYPO3\CMS\Extbase\DomainObject\AbstractEntity) {
@@ -255,7 +255,7 @@ class DebuggerUtility {
 		} else {
 			$dump .= '<span class="debug-ptype">' . $persistenceType . ' ' . $domainObjectType . '</span>';
 		}
-		if (preg_match('/' . implode('|', self::$blacklistedClassNames) . '/', get_class($object)) !== 0) {
+		if (strpos(implode('|', self::$blacklistedClassNames), get_class($object)) > 0) {
 			if ($plainText) {
 				$dump .= ' ' . self::ansiEscapeWrap('filtered', '47;30', $ansiColors);
 			} else {
@@ -293,7 +293,7 @@ class DebuggerUtility {
 	 */
 	static protected function renderContent($object, $level, $plainText, $ansiColors) {
 		$dump = '';
-		if ($object instanceof \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage || $object instanceof \Iterator) {
+		if ($object instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage || $object instanceof \Iterator) {
 			$dump .= self::renderCollection($object, $level, $plainText, $ansiColors);
 		} else {
 			self::$renderedObjects->attach($object);

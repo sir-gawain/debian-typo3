@@ -31,20 +31,12 @@ namespace TYPO3\CMS\Core\Tests\Unit\Core;
  * @subpackage t3lib
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
-class ClassLoaderTest extends \Tx_Phpunit_TestCase {
+class ClassLoaderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var boolean Enable backup of global and system variables
 	 */
 	protected $backupGlobals = TRUE;
-
-	/**
-	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
-	 *
-	 * @var array
-	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
 
 	/**
 	 * @var array Backup of typo3CacheManager
@@ -102,7 +94,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		);
 		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extListArray'][] = $extKey;
 		$this->fakedExtensions[] = $extKey;
-		\TYPO3\CMS\Core\Extension\ExtensionManager::clearExtensionKeyMap();
+		\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::clearExtensionKeyMap();
 		return $extKey;
 	}
 
@@ -137,7 +129,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$extKey = $this->createFakeExtension();
 		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
 		$autoloaderFile = $extPath . 'ext_autoload.php';
-		$class = strtolower("tx_{$extKey}_" . uniqid(''));
+		$class = strtolower('tx_{' . $extKey . '}_' . uniqid(''));
 		$file = $extPath . uniqid('') . '.php';
 		file_put_contents($file, '<?php' . LF . 'throw new \\RuntimeException(\'\', 1310203812);' . LF . '?>');
 		file_put_contents($autoloaderFile, '<?php' . LF . 'return array(\'' . $class . '\' => \'' . $file . '\');' . LF . '?>');
@@ -161,7 +153,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
 		$autoloaderFile = $extPath . 'ext_autoload.php';
 			// A case sensitive key (FooBar) in ext_autoload file
-		$class = "tx_{$extKey}_" . uniqid('FooBar');
+		$class = 'tx_{' . $extKey . '}_' . uniqid('FooBar');
 		$file = $extPath . uniqid('') . '.php';
 		file_put_contents($autoloaderFile, '<?php' . LF . 'return array(\'' . $class . '\' => \'' . $file . '\');' . LF . '?>');
 			// Inject a dummy for the core_phpcode cache to force the autoloader
@@ -185,7 +177,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$extKey = $this->createFakeExtension();
 		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
 			// A case sensitive key (FooBar) in ext_autoload file
-		$class = "tx_{$extKey}_" . uniqid('FooBar');
+		$class = 'tx_{' . $extKey . '}_' . uniqid('FooBar');
 		$file = $extPath . uniqid('') . '.php';
 		file_put_contents($file, '<?php' . LF . 'throw new \\RuntimeException(\'\', 1336756850);' . LF . '?>');
 		$extAutoloadFile = $extPath . 'ext_autoload.php';
@@ -209,7 +201,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$extKey = $this->createFakeExtension();
 		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
 			// A case sensitive key (FooBar) in ext_autoload file
-		$class = "tx_{$extKey}_" . uniqid('FooBar');
+		$class = 'tx_{' . $extKey . '}_' . uniqid('FooBar');
 		$file = $extPath . uniqid('') . '.php';
 		file_put_contents($file, '<?php' . LF . 'throw new \RuntimeException(\'\', 1336756850);' . LF . '?>');
 			// Inject cache mock and let the cache entry return the lowercased class name as key
@@ -217,7 +209,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$GLOBALS['typo3CacheManager'] = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
 		$GLOBALS['typo3CacheManager']->expects($this->any())->method('getCache')->will($this->returnValue($mockCache));
 		$mockCache->expects($this->any())->method('has')->will($this->returnValue(TRUE));
-		$mockCache->expects($this->once())->method('requireOnce')->will($this->returnValue(array(strtolower($class) => $file)));
+		$mockCache->expects($this->once())->method('requireOnce')->will($this->returnValue(array(array(strtolower($class) => $file))));
 			// Re-initialize autoloader registry to force it to recognize the new extension
 		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
 		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
@@ -299,7 +291,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$extKey = $this->createFakeExtension();
 		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
 		$autoloaderFile = $extPath . 'ext_autoload.php';
-		$class = strtolower("ux_tx_{$extKey}_" . uniqid(''));
+		$class = strtolower('ux_tx_{' . $extKey . '}_' . uniqid(''));
 		$file = $extPath . uniqid('') . '.php';
 		file_put_contents($autoloaderFile, '<?php' . LF . 'return array(\'' . $class . '\' => \'' . $file . '\');' . LF . '?>');
 			// Inject a dummy for the core_phpcode cache to force the autoloader
@@ -341,7 +333,7 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
 		$autoloaderFile = $extPath . 'ext_autoload.php';
 			// Feed ext_autoload with a base file and the class file
-		$class = strtolower("tx_{$extKey}_" . uniqid(''));
+		$class = strtolower('tx_{' . $extKey . '}_' . uniqid(''));
 		$fileName = uniqid('') . '.php';
 		$file = $extPath . $fileName;
 		$xClassFile = 'typo3temp/' . $extKey . '/xclassFile';
@@ -424,20 +416,37 @@ class ClassLoaderTest extends \Tx_Phpunit_TestCase {
 		$autoloaderFile = $extPath . 'ext_autoload.php';
 			// A case sensitive key (FooBar) in ext_autoload file
 		$namespacedClass = '\\Tx\\' . $extKey . '\\' . $pathSegment . '\\' . $fileName;
-		file_put_contents($autoloaderFile, '<?php' . LF . 'return array(\'' . $namespacedClass . '\' =>   \'EXT:someExt/Classes/Foo/bar.php\');' . LF . '?>');
+		$classFile = 'EXT:someExt/Classes/Foo/bar.php';
+		file_put_contents($autoloaderFile, '<?php' . LF . 'return ' . var_export(array($namespacedClass => $classFile), TRUE) . ';' . LF . '?>');
 			// Inject a dummy for the core_phpcode cache to force the autoloader
 			// to re calculate the registry
 		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\AbstractFrontend', array('getIdentifier', 'set', 'get', 'getByTag', 'has', 'remove', 'flush', 'flushByTag', 'requireOnce'), array(), '', FALSE);
 		$GLOBALS['typo3CacheManager'] = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
 		$GLOBALS['typo3CacheManager']->expects($this->any())->method('getCache')->will($this->returnValue($mockCache));
 			// Expect that the lower case version of the class name is written to cache
-		$mockCache->expects($this->at(2))->method('set')->with($this->anything(), $this->stringContains(strtolower($namespacedClass), FALSE));
+		$mockCache->expects($this->at(2))->method('set')->with($this->anything(), $this->stringContains(strtolower(addslashes($namespacedClass)), FALSE));
 			// Re-initialize autoloader registry to force it to recognize the new extension
 		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
 		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
 		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
 	}
 
+	/**
+	 * @test
+	 */
+	public function compatibilityClassLoaderRewritesClassFilesCorrectly() {
+		$classLoader = $this->getAccessibleMock('TYPO3\\CMS\\Core\\Compatibility\\CompatbilityClassLoaderPhpBelow50307', array('dummy'), array(), '', FALSE);
+		$classPathOfFileToRewrite = realpath(__DIR__ . '/Fixtures/LegacyClassFixture.php');
+		$rewrittenContent = $classLoader->_call('rewriteMethodTypeHintsFromClassPath', $classPathOfFileToRewrite);
+		$originalContent = file_get_contents($classPathOfFileToRewrite);
+		$this->assertNotEquals($originalContent, $rewrittenContent);
+		$this->assertContains('public function foo(\TYPO3\CMS\Core\Utility\GeneralUtility $foo) {', $rewrittenContent, 'One line and one parameter');
+		$this->assertContains('public function baz(\TYPO3\CMS\Core\Utility\GeneralUtility $foo, $baz) {', $rewrittenContent, 'Multi line and more parameters');
+		$this->assertContains('protected function createConstraintsFromDemand(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query, Tx_News_Domain_Model_DemandInterface $demand);', $rewrittenContent, 'Multi line abstract and second parameter with own typehint not in aliasmap');
+		$this->assertContains('abstract public function bar(\TYPO3\CMS\Core\Utility\GeneralUtility $bar);', $rewrittenContent, 'One line abstract function');
+		$this->assertContains('public function nothing() {', $rewrittenContent, 'One line one parameter');
+		$this->assertContains('protected function stillNothing(Tx_Core_Tests_Unit_Core_Fixtures_LegacyClassFixture $nothing) {', $rewrittenContent, 'One line on parameter with typehint not in aliasmap');
+	}
 }
 
 ?>

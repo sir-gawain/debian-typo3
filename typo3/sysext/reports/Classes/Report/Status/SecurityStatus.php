@@ -66,7 +66,7 @@ class SecurityStatus implements \TYPO3\CMS\Reports\StatusProviderInterface {
 		if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$secure = TRUE;
 			// Check against salted password
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('saltedpasswords')) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('saltedpasswords')) {
 				if (\TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility::isUsageEnabled('BE')) {
 					/** @var $saltingObject \TYPO3\CMS\Saltedpasswords\Salt\SaltInterface */
 					$saltingObject = \TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getSaltingInstance($row['password']);
@@ -189,7 +189,7 @@ class SecurityStatus implements \TYPO3\CMS\Reports\StatusProviderInterface {
 		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'] == md5('joh316')) {
 			$value = $GLOBALS['LANG']->getLL('status_insecure');
 			$severity = \TYPO3\CMS\Reports\Status::ERROR;
-			$changeInstallToolPasswordUrl = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=about');
+			$changeInstallToolPasswordUrl = 'mod.php?M=tools_install';
 			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_password'), '<a href="' . $changeInstallToolPasswordUrl . '">', '</a>');
 		}
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status', $GLOBALS['LANG']->getLL('status_installToolPassword'), $value, $message, $severity);
@@ -204,7 +204,7 @@ class SecurityStatus implements \TYPO3\CMS\Reports\StatusProviderInterface {
 		$value = $GLOBALS['LANG']->getLL('status_ok');
 		$message = '';
 		$severity = \TYPO3\CMS\Reports\Status::OK;
-		if (!\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('saltedpasswords')) {
+		if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('saltedpasswords')) {
 			$value = $GLOBALS['LANG']->getLL('status_insecure');
 			$severity = \TYPO3\CMS\Reports\Status::ERROR;
 			$message .= $GLOBALS['LANG']->getLL('status_saltedPasswords_notInstalled');

@@ -90,10 +90,10 @@ abstract class RteHtmlAreaApi {
 	public function main($parentObject) {
 		global $TYPO3_CONF_VARS, $LANG, $TSFE;
 		$this->htmlAreaRTE = $parentObject;
-		$this->rteExtensionKey =& $this->htmlAreaRTE->ID;
-		$this->thisConfig =& $this->htmlAreaRTE->thisConfig;
-		$this->toolbar =& $this->htmlAreaRTE->toolbar;
-		$this->LOCAL_LANG =& $this->htmlAreaRTE->LOCAL_LANG;
+		$this->rteExtensionKey = &$this->htmlAreaRTE->ID;
+		$this->thisConfig = &$this->htmlAreaRTE->thisConfig;
+		$this->toolbar = &$this->htmlAreaRTE->toolbar;
+		$this->LOCAL_LANG = &$this->htmlAreaRTE->LOCAL_LANG;
 		// Set the value of this boolean based on the initial value of $this->pluginButtons
 		$this->pluginAddsButtons = !empty($this->pluginButtons);
 		// Check if the plugin should be disabled in frontend
@@ -172,7 +172,7 @@ abstract class RteHtmlAreaApi {
 	 * @return 	string		the full path to the plugin directory
 	 */
 	public function getPathToPluginDirectory() {
-		return $this->relativePathToPluginDirectory ? $this->htmlAreaRTE->httpTypo3Path . \TYPO3\CMS\Core\Extension\ExtensionManager::siteRelPath($this->extensionKey) . $this->relativePathToPluginDirectory : '';
+		return $this->relativePathToPluginDirectory ? $this->htmlAreaRTE->httpTypo3Path . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extensionKey) . $this->relativePathToPluginDirectory : '';
 	}
 
 	/**

@@ -57,10 +57,10 @@ class SystemEnvironmentBuilder {
 		self::definePaths($relativePathPart);
 		self::checkMainPathsExist();
 		self::requireBaseClasses();
+		self::setupClassAliasForLegacyBaseClasses();
 		self::handleMagicQuotesGpc();
 		self::addCorePearPathToIncludePath();
 		self::initializeGlobalVariables();
-		self::loadDefaultConfiguration();
 		self::initializeGlobalTimeTrackingVariables();
 		self::initializeBasicErrorReporting();
 	}
@@ -108,7 +108,7 @@ class SystemEnvironmentBuilder {
 	 */
 	static protected function defineBaseConstants() {
 		// This version, branch and copyright
-		define('TYPO3_version', '6.0.0beta2');
+		define('TYPO3_version', '6.0.0rc1');
 		define('TYPO3_branch', '6.0');
 		define('TYPO3_copyright_year', '1998-2012');
 		// TYPO3 external links
@@ -136,7 +136,7 @@ class SystemEnvironmentBuilder {
 		// Security related constant: List of file extensions that should be registered as php script file extensions
 		define('PHP_EXTENSIONS_DEFAULT', 'php,php3,php4,php5,php6,phpsh,inc,phtml');
 		// List of extensions required to run the core
-		define('REQUIRED_EXTENSIONS', 'core,backend,frontend,cli,integrity,cms,lang,sv,extensionmanager,recordlist,extbase,fluid,cshmanual');
+		define('REQUIRED_EXTENSIONS', 'core,backend,frontend,cms,lang,sv,extensionmanager,recordlist,extbase,fluid,cshmanual');
 		// Operating system identifier
 		// Either "WIN" or empty string
 		define('TYPO3_OS', self::getTypo3Os());
@@ -207,13 +207,13 @@ class SystemEnvironmentBuilder {
 	static protected function requireBaseClasses() {
 		require_once __DIR__ . '/../Utility/GeneralUtility.php';
 		require_once __DIR__ . '/../Utility/ArrayUtility.php';
+		require_once __DIR__ . '/../SingletonInterface.php';
 		require_once __DIR__ . '/../Configuration/ConfigurationManager.php';
-		require_once __DIR__ . '/../Extension/ExtensionManager.php';
+		require_once __DIR__ . '/../Utility/ExtensionManagementUtility.php';
 		require_once __DIR__ . '/../Cache/Cache.php';
 		require_once __DIR__ . '/../Cache/Exception.php';
 		require_once __DIR__ . '/../Cache/Exception/NoSuchCacheException.php';
 		require_once __DIR__ . '/../Cache/Exception/InvalidDataException.php';
-		require_once __DIR__ . '/../SingletonInterface.php';
 		require_once __DIR__ . '/../Cache/CacheFactory.php';
 		require_once __DIR__ . '/../Cache/CacheManager.php';
 		require_once __DIR__ . '/../Cache/Frontend/FrontendInterface.php';
@@ -232,6 +232,18 @@ class SystemEnvironmentBuilder {
 		if (PHP_VERSION_ID < 50307) {
 			require_once __DIR__ . '/../Compatibility/CompatbilityClassLoaderPhpBelow50307.php';
 		}
+	}
+
+	/**
+	 * Compatibility layer for early t3lib_div or t3lib_extMgm usage
+	 *
+	 * @return void
+	 * @deprecated since 6.0, will be removed in 7.0
+	 * @see t3lib/class.t3lib_div.php, t3lib/class.t3lib_extmgm.php
+	 */
+	static public function setupClassAliasForLegacyBaseClasses() {
+		class_alias('TYPO3\\CMS\\Core\\Utility\\GeneralUtility', 't3lib_div');
+		class_alias('TYPO3\\CMS\\Core\\Utility\\ExtensionManagementUtility', 't3lib_extMgm');
 	}
 
 	/**
@@ -279,15 +291,6 @@ class SystemEnvironmentBuilder {
 		$GLOBALS['TYPO3_MISC'] = array();
 		$GLOBALS['T3_VAR'] = array();
 		$GLOBALS['T3_SERVICES'] = array();
-	}
-
-	/**
-	 * Load default TYPO3_CONF_VARS to globals
-	 *
-	 * @return void
-	 */
-	static protected function loadDefaultConfiguration() {
-		$GLOBALS['TYPO3_CONF_VARS'] = \TYPO3\CMS\Core\Configuration\ConfigurationManager::getDefaultConfiguration();
 	}
 
 	/**

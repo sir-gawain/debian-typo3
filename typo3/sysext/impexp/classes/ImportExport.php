@@ -80,7 +80,7 @@ class ImportExport {
 	/**
 	 * @todo Define visibility
 	 */
-	public $fileadminFolderName = 'fileadmin';
+	public $fileadminFolderName = '';
 
 	// Whether "import" or "export" mode of object. Set through init() function
 	/**
@@ -310,6 +310,7 @@ class ImportExport {
 		$this->compress = function_exists('gzcompress');
 		$this->dontCompress = $dontCompress;
 		$this->mode = $mode;
+		$this->fileadminFolderName = !empty($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir']) ? rtrim($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') : 'fileadmin';
 	}
 
 	/**************************
@@ -1426,7 +1427,7 @@ class ImportExport {
 	 * @todo Define visibility
 	 */
 	public function getNewTCE() {
-		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 		$tce->stripslashes_values = 0;
 		$tce->dontProcessTransformations = 1;
 		$tce->enableLogging = $this->enableLogging;
@@ -1608,7 +1609,7 @@ class ImportExport {
 									$dataStructArray = \TYPO3\CMS\Backend\Utility\BackendUtility::getFlexFormDS($conf, $origRecordRow, $table);
 									$currentValueArray = \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array($updateData[$table][$thisNewUid][$field]);
 									// Do recursive processing of the XML data:
-									$iteratorObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+									$iteratorObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 									$iteratorObj->callBackObj = $this;
 									$currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData($currentValueArray['data'], array(), array(), $dataStructArray, array($table, $thisNewUid, $field, $config), 'remapListedDBRecords_flexFormCallBack');
 									// The return value is set as an array which means it will be processed by tcemain for file and DB references!
@@ -1717,8 +1718,8 @@ class ImportExport {
 										$dataStructArray = \TYPO3\CMS\Backend\Utility\BackendUtility::getFlexFormDS($conf, $origRecordRow, $table);
 										$currentValueArray = \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array($origRecordRow[$field]);
 										// Do recursive processing of the XML data:
-										/** @var $iteratorObj \TYPO3\CMS\Core\DataHandler\DataHandler */
-										$iteratorObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+										/** @var $iteratorObj \TYPO3\CMS\Core\DataHandling\DataHandler */
+										$iteratorObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 										$iteratorObj->callBackObj = $this;
 										$currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData($currentValueArray['data'], array(), array(), $dataStructArray, array($table, $uid, $field, $softRefCfgs), 'processSoftReferences_flexFormCallBack');
 										// The return value is set as an array which means it will be processed by tcemain for file and DB references!
@@ -1819,27 +1820,25 @@ class ImportExport {
 			default:
 				// Mapping IDs/creating files: Based on type, look up new value:
 				switch ((string) $cfg['subst']['type']) {
-				case 'db':
-
-				default:
-					// Trying to map database element if found in the mapID array:
-					list($tempTable, $tempUid) = explode(':', $cfg['subst']['recordRef']);
-					if (isset($this->import_mapId[$tempTable][$tempUid])) {
-						$insertValue = \TYPO3\CMS\Backend\Utility\BackendUtility::wsMapId($tempTable, $this->import_mapId[$tempTable][$tempUid]);
-						// Look if reference is to a page and the original token value was NOT an integer - then we assume is was an alias and try to look up the new one!
-						if ($tempTable === 'pages' && !\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($cfg['subst']['tokenValue'])) {
-							$recWithUniqueValue = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($tempTable, $insertValue, 'alias');
-							if ($recWithUniqueValue['alias']) {
-								$insertValue = $recWithUniqueValue['alias'];
+					case 'file':
+						// Create / Overwrite file:
+						$insertValue = $this->processSoftReferences_saveFile($cfg['subst']['relFileName'], $cfg, $table, $uid);
+						break;
+					case 'db':
+					default:
+						// Trying to map database element if found in the mapID array:
+						list($tempTable, $tempUid) = explode(':', $cfg['subst']['recordRef']);
+						if (isset($this->import_mapId[$tempTable][$tempUid])) {
+							$insertValue = \TYPO3\CMS\Backend\Utility\BackendUtility::wsMapId($tempTable, $this->import_mapId[$tempTable][$tempUid]);
+							// Look if reference is to a page and the original token value was NOT an integer - then we assume is was an alias and try to look up the new one!
+							if ($tempTable === 'pages' && !\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($cfg['subst']['tokenValue'])) {
+								$recWithUniqueValue = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($tempTable, $insertValue, 'alias');
+								if ($recWithUniqueValue['alias']) {
+									$insertValue = $recWithUniqueValue['alias'];
+								}
 							}
 						}
-					}
-					break;
-					break;
-				case 'file':
-					// Create / Overwrite file:
-					$insertValue = $this->processSoftReferences_saveFile($cfg['subst']['relFileName'], $cfg, $table, $uid);
-					break;
+						break;
 				}
 				break;
 			}
@@ -2307,7 +2306,7 @@ class ImportExport {
 		// Check extension dependencies:
 		if (is_array($this->dat['header']['extensionDependencies'])) {
 			foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
-				if (!\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extKey)) {
+				if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extKey)) {
 					$this->error('DEPENDENCY: The extension with key "' . $extKey . '" must be installed!');
 				}
 			}

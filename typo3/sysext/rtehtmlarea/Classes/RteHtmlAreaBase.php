@@ -201,11 +201,18 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 	public $confValues;
 
 	public $language;
-
+	/**
+	 * TYPO3 language code of the content language
+	 */
 	public $contentTypo3Language;
-
+	/**
+	 * ISO language code of the content language
+	 */
 	public $contentISOLanguage;
-
+	/**
+	 * Language service object for localization to the content language
+	 */
+	protected $contentLanguageService;
 	public $charset = 'utf-8';
 
 	public $contentCharset = 'utf-8';
@@ -243,7 +250,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 
 	// Array of registered plugins indexed by their plugin Id's
 	protected $fullScreen = FALSE;
-
+	// Page renderer object
 	protected $pageRenderer;
 
 	/**
@@ -355,7 +362,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 			// Set backPath
 			$this->backPath = $this->TCEform->backPath;
 			// Get the path to this extension:
-			$this->extHttpPath = $this->backPath . \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath($this->ID);
+			$this->extHttpPath = $this->backPath . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($this->ID);
 			// Get the site URL
 			$this->siteURL = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
 			// Get the host URL
@@ -396,7 +403,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 			$this->contentTypo3Language = $this->language == 'en' ? 'default' : $this->language;
 			$this->contentISOLanguage = 'en';
 			$this->contentLanguageUid = $row['sys_language_uid'] > 0 ? $row['sys_language_uid'] : 0;
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('static_info_tables')) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables')) {
 				if ($this->contentLanguageUid) {
 					$tableA = 'sys_language';
 					$tableB = 'static_languages';
@@ -422,6 +429,9 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 					}
 				}
 			}
+			// Create content laguage service
+			$this->contentLanguageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Lang\\LanguageService');
+			$this->contentLanguageService->init($this->contentTypo3Language);
 			/* =======================================
 			 * TOOLBAR CONFIGURATION
 			 * =======================================
@@ -556,7 +566,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 				$pathToSkin = $this->registeredPlugins[$pluginId]->getPathToSkin();
 				if ($pathToSkin) {
 					$key = $this->registeredPlugins[$pluginId]->getExtensionKey();
-					$this->addStyleSheet('rtehtmlarea-plugin-' . $pluginId . '-skin', ($this->is_FE() ? \TYPO3\CMS\Core\Extension\ExtensionManager::siteRelPath($key) : $this->backPath . \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath($key)) . $pathToSkin);
+					$this->addStyleSheet('rtehtmlarea-plugin-' . $pluginId . '-skin', ($this->is_FE() ? \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($key) : $this->backPath . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($key)) . $pathToSkin);
 				}
 			}
 		}
@@ -568,7 +578,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 	 * @param 	string		$key: some key identifying the style sheet
 	 * @param 	string		$href: uri to the style sheet file
 	 * @param 	string		$title: value for the title attribute of the link element
-	 * @return 	string		$relation: value for the rel attribute of the link element
+	 * @param 	string		$relation: value for the rel attribute of the link element
 	 * @return 	void
 	 */
 	protected function addStyleSheet($key, $href, $title = '', $relation = 'stylesheet') {
@@ -852,6 +862,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 	 * @param 	string		$table: The table that includes this RTE (optional, necessary for IRRE).
 	 * @param 	string		$uid: The uid of that table that includes this RTE (optional, necessary for IRRE).
 	 * @param 	string		$field: The field of that record that includes this RTE (optional).
+	 * @param	string		$textAreaId ID of the textarea, to have a unigue number for the editor
 	 * @return 	string		the Javascript code for configuring the RTE
 	 * @todo Define visibility
 	 */
@@ -1108,6 +1119,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 	 * @param 	string		$label: A label to insert at the beginning of the name of the file
 	 * @param 	string		$fileExtension: The file extension of the file, defaulting to 'js'
 	 * @param 	string		$contents: The contents to write into the file if no $sourceFileName is provided
+	 * @param	boolean		$concatenate Not used anymore
 	 * @return 	string		The name of the file writtten to typo3temp/rtehtmlarea
 	 */
 	public function writeTemporaryFile($sourceFileName = '', $label, $fileExtension = 'js', $contents = '', $concatenate = FALSE) {
@@ -1242,11 +1254,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 	 * @return 	string		Localized string.
 	 */
 	public function getLLContent($string) {
-		$BE_lang = $GLOBALS['LANG']->lang;
-		$GLOBALS['LANG']->lang = $this->contentTypo3Language;
-		$LLString = $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL($string));
-		$GLOBALS['LANG']->lang = $BE_lang;
-		return $LLString;
+		return $this->contentLanguageService->JScharCode($this->contentLanguageService->sL($string));
 	}
 
 	public function getPageConfigLabel($string, $JScharCode = 1) {
@@ -1290,8 +1298,8 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 			// extension
 			list($extKey, $local) = explode('/', substr($filename, 4), 2);
 			$newFilename = '';
-			if (strcmp($extKey, '') && \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extKey) && strcmp($local, '')) {
-				$newFilename = ($this->is_FE() || $this->isFrontendEditActive() ? \TYPO3\CMS\Core\Extension\ExtensionManager::siteRelPath($extKey) : $this->backPath . \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath($extKey)) . $local;
+			if (strcmp($extKey, '') && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extKey) && strcmp($local, '')) {
+				$newFilename = ($this->is_FE() || $this->isFrontendEditActive() ? \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($extKey) : $this->backPath . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($extKey)) . $local;
 			}
 		} elseif (substr($filename, 0, 1) != '/') {
 			$newFilename = ($this->is_FE() || $this->isFrontendEditActive() ? '' : $this->backPath . '../') . $filename;

@@ -455,7 +455,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 		}
 		// Save/update user by using TCEmain
 		if (is_array($data)) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 			$tce->stripslashes_values = 0;
 			$tce->start($data, array(), $GLOBALS['BE_USER']);
 			$tce->admin = 1;
@@ -488,6 +488,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 	 * Clean the to be applied usergroups from not allowed ones
 	 *
 	 * @param array $appliedUsergroups Array of to be applied user groups
+	 * @param array $actionRecord The action record
 	 * @return array Cleaned array
 	 */
 	protected function fixUserGroup($appliedUsergroups, $actionRecord) {
@@ -671,7 +672,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 	 */
 	protected function viewSqlQuery($record) {
 		$content = '';
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('lowlevel')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('lowlevel')) {
 			$sql_query = unserialize($record['t2_data']);
 			if (!is_array($sql_query) || is_array($sql_query) && strtoupper(substr(trim($sql_query['qSelect']), 0, 6)) === 'SELECT') {
 				$actionContent = '';
@@ -710,7 +711,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 					if (!$queryIsEmpty) {
 						$actionContent .= '<hr /> ' . $fullsearch->tableWrap($sql_query['qSelect']);
 					}
-					$actionContent .= '<br /><a title="' . $GLOBALS['LANG']->getLL('action_editQuery') . '" href="' . $GLOBALS['BACK_PATH'] . \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('lowlevel') . 'dbint/index.php?id=' . '&SET[function]=search' . '&SET[search]=query' . '&storeControl[STORE]=-' . $record['uid'] . '&storeControl[LOAD]=1' . '">
+					$actionContent .= '<br /><a title="' . $GLOBALS['LANG']->getLL('action_editQuery') . '" href="' . $GLOBALS['BACK_PATH'] . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('lowlevel') . 'dbint/index.php?id=' . '&SET[function]=search' . '&SET[search]=query' . '&storeControl[STORE]=-' . $record['uid'] . '&storeControl[LOAD]=1' . '">
 						<img class="icon"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif') . ' alt="" />' . $GLOBALS['LANG']->getLL(($queryIsEmpty ? 'action_createQuery' : 'action_editQuery')) . '</a><br /><br />';
 				}
 				$content .= $this->taskObject->doc->section($GLOBALS['LANG']->getLL('action_t2_result'), $actionContent, 0, 1);

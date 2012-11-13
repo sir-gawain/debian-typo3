@@ -20,14 +20,12 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Property\TypeConverter;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
-require_once __DIR__ . '/../../Fixtures/ClassWithSetters.php';
-require_once __DIR__ . '/../../Fixtures/ClassWithSettersAndConstructor.php';
 
 /**
  * Testcase for the String to String converter
  *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
- * @covers Tx_Extbase_Property_TypeConverter_PersistentObjectConverter<extended>
+ * @covers \TYPO3\CMS\Extbase\Property\TypeConverter\PersistentObjectConverter<extended>
  */
 class PersistentObjectConverterTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 

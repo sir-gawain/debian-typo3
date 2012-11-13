@@ -33,7 +33,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Frontend;
  * @package TYPO3
  * @subpackage tests
  */
-class StringFrontendTest extends \tx_phpunit_testcase {
+class StringFrontendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @expectedException \InvalidArgumentException
@@ -111,7 +111,7 @@ class StringFrontendTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function getByTagRejectsInvalidTags() {
 		$backend = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Backend\\BackendInterface', array(), array(), '', FALSE);

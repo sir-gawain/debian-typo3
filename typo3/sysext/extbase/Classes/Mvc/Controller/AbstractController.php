@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +30,6 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /**
  * An abstract base class for Controllers
  *
- * @package Extbase
- * @subpackage MVC\Controller
- * @version $ID:$
  * @api
  */
 abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\ControllerInterface {
@@ -77,7 +75,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Property\Mapper
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	protected $deprecatedPropertyMapper;
 
@@ -96,7 +94,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 *
 	 * @var \TYPO3\CMS\Extbase\Property\MappingResults
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	protected $argumentsMappingResults;
 
@@ -116,15 +114,9 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	protected $controllerContext;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
-	 * @deprecated since Extbase 1.1; will be removed in Extbase 6.0
-	 */
-	protected $flashMessages;
-
-	/**
 	 * The flash messages. Use $this->flashMessageContainer->add(...) to add a new Flash message.
 	 *
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
 	 * @api
 	 */
 	protected $flashMessageContainer;
@@ -138,7 +130,18 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 * Constructs the controller.
 	 */
 	public function __construct() {
-		list(, $this->extensionName) = explode('_', get_class($this));
+		$className = get_class($this);
+		if (strpos($className, '\\') !== FALSE) {
+			$classNameParts = explode('\\', $className, 4);
+			// Skip vendor and product name for core classes
+			if (strpos($className, 'TYPO3\\CMS\\') === 0) {
+				$this->extensionName = $classNameParts[2];
+			} else {
+				$this->extensionName = $classNameParts[1];
+			}
+		} else {
+			list(, $this->extensionName) = explode('_', $className);
+		}
 	}
 
 	/**
@@ -155,7 +158,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 *
 	 * @param \TYPO3\CMS\Extbase\Property\Mapper $deprecatedPropertyMapper The property mapper
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	public function injectDeprecatedPropertyMapper(\TYPO3\CMS\Extbase\Property\Mapper $deprecatedPropertyMapper) {
 		$this->deprecatedPropertyMapper = $deprecatedPropertyMapper;
@@ -185,13 +188,11 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	/**
 	 * Injects the flash messages container
 	 *
-	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages $flashMessageContainer
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer
 	 * @return void
 	 */
-	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages $flashMessageContainer) {
+	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
 		$this->flashMessageContainer = $flashMessageContainer;
-		// @deprecated since Extbase 1.1; will be removed in Extbase 6.0
-		$this->flashMessages = $flashMessageContainer;
 	}
 
 	/**
@@ -411,7 +412,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 				}
 			}
 		} else {
-			// @deprecated since Extbase 1.4, will be removed in Extbase 6.0
+			// @deprecated since Extbase 1.4, will be removed in Extbase 6.1
 			$optionalPropertyNames = array();
 			$allPropertyNames = $this->arguments->getArgumentNames();
 			foreach ($allPropertyNames as $propertyName) {

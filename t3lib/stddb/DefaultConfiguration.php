@@ -179,12 +179,13 @@ return array(
 				)
 			)
 		),
+		'defaultCategorizedTables' => 'pages,tt_content', // List of comma separated tables that are categorizable by default.
 		'displayErrors' => -1,		// <p>Integer (-1, 0, 1, 2). Configures whether PHP errors should be displayed.</p><dl><dt>0</dt><dd>Do not display any PHP error messages. Overrides the value of "exceptionalErrors" and sets it to 0 (= no errors are turned into exceptions), the configured "productionExceptionHandler" is used as exception handler</dd><dt>1</dt><dd>Display error messages with the registered errorhandler. The configured "debugExceptionHandler" is used as exception handler</dd><dt>2</dt><dd>Display errors only if client matches <a href="#SYS-devIPmask">[SYS][devIPmask]</a>. If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used</dd><dt>-1</dt><dd>Default setting. With this option, you can override the PHP setting "display_errors". If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used.</dd></dl>
 		'productionExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "t3lib_error_ProductionExceptionHandler". This exception handler displays a nice error message when something went wrong. The error message is logged to the configured logs. Note: The configured "productionExceptionHandler" is used if displayErrors is set to "0" or to "-1" and devIPmask doesn't match the users IP.
 		'debugExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "t3lib_error_DebugExceptionHandler". This exception handler displays the complete stack trace of any encountered exception. The error message and the stack trace  is logged to the configured logs. Note: The configured "debugExceptionHandler" is used if displayErrors is set to "1" and if displayErrors is "-1"  or "2" and the devIPmask matches the users IP.
 		'errorHandler' => 'TYPO3\\CMS\\Core\\Error\\ErrorHandler',		// String: Classname to handle PHP errors. E.g.: t3lib_error_ErrorHandler. This class displays and logs all errors that are registered as "errorHandlerErrors" (<a href="#SYS-errorHandlerErrors">[SYS][errorHandlerErrors]</a>). Leave empty to disable error handling. Errors can be logged to syslog (see: <a href="#SYS-systemLog">[SYS][systemLog]</a>) to the installed developer log and to the "syslog" table. If an error is registered in "exceptionalErrors" ([SYS][exceptionalErrors]) it will be turned into an exception to be handled by the configured exceptionHandler.
-		'errorHandlerErrors' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: The E_* constant that will be handled by the errorhandler. Default is "E_ALL ^ E_NOTICE".
-		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),		// Integer: The E_* constant that will be handled as an exception by t3lib_error_ErrorHandler. Default is <tt>E_ALL ^ E_NOTICE ^ E_DEPRECATED ^ E_WARNING ^ E_USER_ERROR ^ E_USER_NOTICE ^ E_USER_WARNING</tt> (20725) and "0" if <tt>displayErrors=0</tt> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
+		'errorHandlerErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR),		// Integer: The E_* constant that will be handled by the errorhandler. Not all PHP error types can be handled! Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR)</tt>.
+		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),		// Integer: The E_* constant that will be handled as an exception by t3lib_error_ErrorHandler. Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING)</tt> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
 		'enable_errorDLOG' => 0,	// Boolean: If set, errors are written to the developer log (requires an installed *devlog* extension).
 		'enable_exceptionDLOG' => 0,// Boolean: If set, exceptions are written to the developer log (requires an installed *devlog* extension).
 		'syslogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: Configures which PHP errors should be logged to the configured syslogs (see: [SYS][systemLog]). If set to "0" no PHP errors are logged to the syslog. Default is "E_ALL ^ E_NOTICE" (6135).
@@ -196,11 +197,11 @@ return array(
 				'Local' => array(
 					'class' => 'TYPO3\\CMS\\Core\\Resource\\Driver\\LocalDriver',
 					'shortName' => 'Local',
-					'flexFormDS' => 'FILE:t3lib/file/Driver/Configuration/LocalDriverFlexForm.xml',
+					'flexFormDS' => 'FILE:EXT:core/Configuration/Resource/Driver/LocalDriverFlexForm.xml',
 					'label' => 'Local filesystem'
 				)
 			),
-			'callbackFilterMethods' => array(
+			'defaultFilterCallbacks' => array(
 				array(
 					'TYPO3\\CMS\\Core\\Resource\\Filter\\FileNameFilter',
 					'filterHiddenFilesAndFolders'
@@ -209,7 +210,6 @@ return array(
 		)
 	),
 	'EXT' => array( // Options related to the Extension Management
-		'noEdit' => TRUE,		// Boolean: If set, the Extension Manager does NOT allow extension files to be edited! (Otherwise both local and global extensions can be edited.)
 		'allowGlobalInstall' => FALSE,		// Boolean: If set, global extensions in typo3/ext/ are allowed to be installed, updated and deleted etc.
 		'allowLocalInstall' => TRUE,		// Boolean: If set, local extensions in typo3conf/ext/ are allowed to be installed, updated and deleted etc.
 		'allowSystemInstall' => FALSE,		// Boolean: If set, you can install extensions in the sysext/ dir. Use this to upgrade the 'cms' and 'lang' extensions.
@@ -563,29 +563,29 @@ return array(
 		'spriteIconGenerator_handler' => 'TYPO3\\CMS\\Backend\\Sprite\\SimpleSpriteHandler',		// String: Used to register own/other spriteGenerating Handler, they have to implement the interface t3lib_spritemanager_SpriteIconGenerator. If set to "t3lib_spritemanager_SpriteBuildingHandler" icons from extensions will automatically merged into sprites.
 		'debug' => FALSE,									// Boolean: If set, the loginrefresh is disabled and pageRenderer is set to debug mode. Use this to debug the backend only!
 		'AJAX' => array(									// array of key-value pairs for a unified use of AJAX calls in the TYPO3 backend. Keys are the unique ajaxIDs where the value will be resolved to call a method in an object. See ajax.php and the classes/class.typo3ajax.php for more information.
-			'SC_alt_db_navframe::expandCollapse' => 'typo3/alt_db_navframe.php:SC_alt_db_navframe->ajaxExpandCollapse',
-			'SC_alt_file_navframe::expandCollapse' => 'typo3/alt_file_navframe.php:SC_alt_file_navframe->ajaxExpandCollapse',
-			'TYPO3_tcefile::process' => 'typo3/classes/class.typo3_tcefile.php:TYPO3_tcefile->processAjaxRequest',
-			't3lib_TCEforms_inline::createNewRecord' => 't3lib/class.t3lib_tceforms_inline.php:t3lib_TCEforms_inline->processAjaxRequest',
-			't3lib_TCEforms_inline::getRecordDetails' => 't3lib/class.t3lib_tceforms_inline.php:t3lib_TCEforms_inline->processAjaxRequest',
-			't3lib_TCEforms_inline::synchronizeLocalizeRecords' => 't3lib/class.t3lib_tceforms_inline.php:t3lib_TCEforms_inline->processAjaxRequest',
-			't3lib_TCEforms_inline::setExpandedCollapsedState' => 't3lib/class.t3lib_tceforms_inline.php:t3lib_TCEforms_inline->processAjaxRequest',
-			't3lib_TCEforms_suggest::searchRecord' => 't3lib/tceforms/class.t3lib_tceforms_suggest.php:t3lib_TCEforms_suggest->processAjaxRequest',
-			'ShortcutMenu::getGroups' => 'typo3/classes/class.shortcutmenu.php:ShortcutMenu->getAjaxShortcutGroups',
-			'ShortcutMenu::saveShortcut' => 'typo3/classes/class.shortcutmenu.php:ShortcutMenu->setAjaxShortcut',
-			'ShortcutMenu::render' => 'typo3/classes/class.shortcutmenu.php:ShortcutMenu->renderAjax',
-			'ShortcutMenu::delete' => 'typo3/classes/class.shortcutmenu.php:ShortcutMenu->deleteAjaxShortcut',
-			'ShortcutMenu::create' => 'typo3/classes/class.shortcutmenu.php:ShortcutMenu->createAjaxShortcut',
-			'ModuleMenu::saveMenuState' => 'typo3/classes/class.modulemenu.php:ModuleMenu->saveMenuState',
-			'ModuleMenu::getData' => 'typo3/classes/class.modulemenu.php:ModuleMenu->getModuleData',
-			'BackendLogin::login' => 'typo3/classes/class.ajaxlogin.php:AjaxLogin->login',
-			'BackendLogin::logout' => 'typo3/classes/class.ajaxlogin.php:AjaxLogin->logout',
-			'BackendLogin::refreshLogin' => 'typo3/classes/class.ajaxlogin.php:AjaxLogin->refreshLogin',
-			'BackendLogin::isTimedOut' => 'typo3/classes/class.ajaxlogin.php:AjaxLogin->isTimedOut',
-			'BackendLogin::getChallenge' => 'typo3/classes/class.ajaxlogin.php:AjaxLogin->getChallenge',
-			'BackendLogin::refreshTokens' => 'typo3/classes/class.ajaxlogin.php:AjaxLogin->refreshTokens',
-			'ExtDirect::getAPI' => 't3lib/extjs/class.t3lib_extjs_extdirectapi.php:t3lib_extjs_ExtDirectApi->getAPI',
-			'ExtDirect::route' => 't3lib/extjs/class.t3lib_extjs_extdirectrouter.php:t3lib_extjs_ExtDirectRouter->route'
+			'SC_alt_db_navframe::expandCollapse' => 'TYPO3\\CMS\\Backend\\Controller\\PageTreeNavigationController->ajaxExpandCollapse',
+			'SC_alt_file_navframe::expandCollapse' => 'TYPO3\\CMS\\Backend\\Controller\\FileSystemNavigationFrameController->ajaxExpandCollapse',
+			'TYPO3_tcefile::process' => 'TYPO3\\CMS\\Backend\\Controller\\File\\FileController->processAjaxRequest',
+			't3lib_TCEforms_inline::createNewRecord' => 'TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement->processAjaxRequest',
+			't3lib_TCEforms_inline::getRecordDetails' => 'TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement->processAjaxRequest',
+			't3lib_TCEforms_inline::synchronizeLocalizeRecords' => 'TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement->processAjaxRequest',
+			't3lib_TCEforms_inline::setExpandedCollapsedState' => 'TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement->processAjaxRequest',
+			't3lib_TCEforms_suggest::searchRecord' => 'TYPO3\\CMS\\Backend\\Form\\Element\\SuggestElement->processAjaxRequest',
+			'ShortcutMenu::getGroups' => 'TYPO3\\CMS\\Backend\\Toolbar\\ShortcutToolbarItem->getAjaxShortcutGroups',
+			'ShortcutMenu::saveShortcut' => 'TYPO3\\CMS\\Backend\\Toolbar\\ShortcutToolbarItem->setAjaxShortcut',
+			'ShortcutMenu::render' => 'TYPO3\\CMS\\Backend\\Toolbar\\ShortcutToolbarItem->renderAjax',
+			'ShortcutMenu::delete' => 'TYPO3\\CMS\\Backend\\Toolbar\\ShortcutToolbarItem->deleteAjaxShortcut',
+			'ShortcutMenu::create' => 'TYPO3\\CMS\\Backend\\Toolbar\\ShortcutToolbarItem->createAjaxShortcut',
+			'ModuleMenu::saveMenuState' => 'TYPO3\\CMS\\Backend\\View\\ModuleMenuView->saveMenuState',
+			'ModuleMenu::getData' => 'TYPO3\\CMS\\Backend\\View\\ModuleMenuView->getModuleData',
+			'BackendLogin::login' => 'TYPO3\\CMS\\Backend\\AjaxLoginHandler->login',
+			'BackendLogin::logout' => 'TYPO3\\CMS\\Backend\\AjaxLoginHandler->logout',
+			'BackendLogin::refreshLogin' => 'TYPO3\\CMS\\Backend\\AjaxLoginHandler->refreshLogin',
+			'BackendLogin::isTimedOut' => 'TYPO3\\CMS\\Backend\\AjaxLoginHandler->isTimedOut',
+			'BackendLogin::getChallenge' => 'TYPO3\\CMS\\Backend\\AjaxLoginHandler->getChallenge',
+			'BackendLogin::refreshTokens' => 'TYPO3\\CMS\\Backend\\AjaxLoginHandler->refreshTokens',
+			'ExtDirect::getAPI' => 'TYPO3\\CMS\\Core\\ExtDirect\\ExtDirectApi->getAPI',
+			'ExtDirect::route' => 'TYPO3\\CMS\\Core\\ExtDirect\\ExtDirectRouter->route'
 		),
 		'XCLASS' => array()
 	),
@@ -680,7 +680,9 @@ return array(
 	'LOG' => array(
 		'writerConfiguration' => array(
 			\TYPO3\CMS\Core\Log\LogLevel::DEBUG => array(
-				'TYPO3\\CMS\\Core\\Log\\Writer\\FileWriter' => array()
+				'TYPO3\\CMS\\Core\\Log\\Writer\\FileWriter' => array(
+					'logFile' => 'typo3temp/logs/typo3.log'
+				)
 			)
 		),
 		'deprecated' => array(

@@ -7,8 +7,8 @@ namespace TYPO3\CMS\Extbase\Security\Channel;
  *  (c) 2009 Sebastian Kurfürst <sebastian@typo3.org>
  *  All rights reserved
  *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -42,7 +42,6 @@ namespace TYPO3\CMS\Extbase\Security\Channel;
  *
  * Note: It is crucially important that a private key is computed into the hash value! This is done inside the HashService.
  *
- * @version $Id$
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class RequestHashService implements \TYPO3\CMS\Core\SingletonInterface {

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,9 +29,6 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
 /**
  * A Frontend User
  *
- * @package Extbase
- * @subpackage Domain\Model
- * @version $Id$
  * @scope prototype
  * @entity
  * @api
@@ -46,7 +46,7 @@ class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $password = '';
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage<\TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup>
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup>
 	 */
 	protected $usergroup;
 
@@ -150,7 +150,7 @@ class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	public function __construct($username = '', $password = '') {
 		$this->username = $username;
 		$this->password = $password;
-		$this->usergroup = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$this->usergroup = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 	}
 
 	/**
@@ -199,11 +199,11 @@ class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * Sets the usergroups. Keep in mind that the property is called "usergroup"
 	 * although it can hold several usergroups.
 	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $usergroup
+	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage $usergroup
 	 * @return void
 	 * @api
 	 */
-	public function setUsergroup(\TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $usergroup) {
+	public function setUsergroup(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $usergroup) {
 		$this->usergroup = $usergroup;
 	}
 
@@ -233,7 +233,7 @@ class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * Returns the usergroups. Keep in mind that the property is called "usergroup"
 	 * although it can hold several usergroups.
 	 *
-	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage An object storage containing the usergroup
+	 * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage An object storage containing the usergroup
 	 * @api
 	 */
 	public function getUsergroup() {

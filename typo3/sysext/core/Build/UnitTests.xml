@@ -1,6 +1,6 @@
 <phpunit backupGlobals="false"
 	backupStaticAttributes="false"
-	colors="false"
+	colors="true"
 	convertErrorsToExceptions="true"
 	convertWarningsToExceptions="true"
 	forceCoversAnnotation="false"
@@ -37,14 +37,29 @@
 		<testsuite name="EXT:extensionmanager tests">
 			<directory>../../../../typo3/sysext/extensionmanager/Tests/Unit/</directory>
 		</testsuite>
+		<testsuite name="EXT:felogin tests">
+			<directory>../../../../typo3/sysext/felogin/Tests/Unit/</directory>
+		</testsuite>
 		<testsuite name="EXT:fluid tests">
 			<directory>../../../../typo3/sysext/fluid/Tests/Unit/</directory>
 		</testsuite>
+		<testsuite name="EXT:form tests">
+			<directory>../../../../typo3/sysext/form/Tests/Unit/</directory>
+		</testsuite>
+		<testsuite name="EXT:indexed_search tests">
+			<directory>../../../../typo3/sysext/indexed_search/Tests/Unit/</directory>
+		</testsuite>
+		<testsuite name="EXT:lang tests">
+			<directory>../../../../typo3/sysext/lang/Tests/Unit/</directory>
+		</testsuite>
+		<testsuite name="EXT:lowlevel tests">
+			<directory>../../../../typo3/sysext/lowlevel/Tests/Unit/</directory>
+		</testsuite>
+		<testsuite name="EXT:saltedpasswords tests">
+			<directory>../../../../typo3/sysext/saltedpasswords/Tests/Unit/</directory>
+		</testsuite>
 		<testsuite name="EXT:scheduler tests">
 			<directory>../../../../typo3/sysext/scheduler/Tests/Unit/</directory>
-		</testsuite>
-		<testsuite name="Suite integrity tests">
-			<directory>../../../../typo3/sysext/core/Tests/Integrity/</directory>
 		</testsuite>
 	</testsuites>
 

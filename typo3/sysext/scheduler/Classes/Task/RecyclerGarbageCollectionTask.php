@@ -34,7 +34,7 @@ namespace TYPO3\CMS\Scheduler\Task;
  * @package TYPO3
  * @subpackage scheduler
  */
-class RecyclerGarbageCollectionTask extends \TYPO3\CMS\Scheduler\Task {
+class RecyclerGarbageCollectionTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 
 	/**
 	 * Elapsed period since last modification before a file will
@@ -76,7 +76,7 @@ class RecyclerGarbageCollectionTask extends \TYPO3\CMS\Scheduler\Task {
 	 * Gets a list of all files in a directory recursively and removes
 	 * old ones.
 	 *
-	 * @throws RuntimeException If folders are not found or files can not be deleted
+	 * @throws \RuntimeException If folders are not found or files can not be deleted
 	 * @param string $directory Path to the directory
 	 * @param integer $timestamp Timestamp of the last file modification
 	 * @return boolean TRUE if success

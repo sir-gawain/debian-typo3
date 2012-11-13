@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,10 +28,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
  ***************************************************************/
 /**
  * A mapper to map database tables configured in $TCA on domain objects.
- *
- * @package Extbase
- * @subpackage Persistence\Mapper
- * @version $ID:$
  */
 class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 
@@ -275,8 +274,8 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 					// $propertyValue = $this->mapArray($row[$columnName]); // Not supported, yet!
 					break;
 				case 'SplObjectStorage':
-
-				case 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage':
+				case 'Tx_Extbase_Persistence_ObjectStorage':
+				case 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage':
 					$propertyValue = $this->mapResultToPropertyValue($object, $propertyName, $this->fetchRelated($object, $propertyName, $row[$columnName]));
 					break;
 				default:
@@ -322,7 +321,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	public function fetchRelated(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $propertyName, $fieldValue = '', $enableLazyLoading = TRUE) {
 		$propertyMetaData = $this->reflectionService->getClassSchema(get_class($parentObject))->getProperty($propertyName);
 		if ($enableLazyLoading === TRUE && $propertyMetaData['lazy']) {
-			if ($propertyMetaData['type'] === 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage') {
+			if (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
 				$result = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
 			} else {
 				if (empty($fieldValue)) {
@@ -440,7 +439,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		$childClassName = $this->getType(get_class($parentObject), $propertyName);
 		$right = $this->qomFactory->selector($childClassName, $columnMap->getChildTableName());
 		$joinCondition = $this->qomFactory->equiJoinCondition($columnMap->getRelationTableName(), $columnMap->getChildKeyFieldName(), $columnMap->getChildTableName(), 'uid');
-		$source = $this->qomFactory->join($left, $right, \TYPO3\CMS\Extbase\Persistence\QueryInterface::JCR_JOIN_TYPE_INNER, $joinCondition);
+		$source = $this->qomFactory->join($left, $right, \TYPO3\CMS\Extbase\Persistence\Generic\Query::JCR_JOIN_TYPE_INNER, $joinCondition);
 		return $source;
 	}
 
@@ -449,7 +448,6 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject
 	 * @param $propertyName
-	 * @param $result
 	 * @param mixed $result The result
 	 * @return mixed
 	 */
@@ -458,15 +456,15 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			$propertyValue = $result;
 		} else {
 			$propertyMetaData = $this->reflectionService->getClassSchema(get_class($parentObject))->getProperty($propertyName);
-			if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'SplObjectStorage', 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage'))) {
+			if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'SplObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage', 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage'), TRUE)) {
 				$objects = array();
 				foreach ($result as $value) {
 					$objects[] = $value;
 				}
 				if ($propertyMetaData['type'] === 'ArrayObject') {
 					$propertyValue = new \ArrayObject($objects);
-				} elseif ($propertyMetaData['type'] === 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage') {
-					$propertyValue = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+				} elseif (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
+					$propertyValue = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 					foreach ($objects as $object) {
 						$propertyValue->attach($object);
 					}
@@ -474,7 +472,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				} else {
 					$propertyValue = $objects;
 				}
-			} elseif (strpos($propertyMetaData['type'], '_') !== FALSE) {
+			} elseif (strpbrk($propertyMetaData['type'], '_\\') !== FALSE) {
 				if (is_object($result) && $result instanceof \TYPO3\CMS\Extbase\Persistence\QueryResultInterface) {
 					$propertyValue = $result->getFirst();
 				} else {

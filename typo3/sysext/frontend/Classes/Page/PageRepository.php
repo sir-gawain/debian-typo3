@@ -788,6 +788,7 @@ class PageRepository {
 	 * like t3lib_pageSelect::getHash()
 	 *
 	 * @param string $hash The hash-string which was used to store the data value
+	 * @param integer The expiration time (not used anymore)
 	 * @return string The "content" field of the "cache_hash" cache entry.
 	 * @see tslib_TStemplate::start(), storeHash()
 	 */
@@ -1166,7 +1167,7 @@ class PageRepository {
 	 * @todo Define visibility
 	 */
 	public function checkWorkspaceAccess($wsid) {
-		if (!$GLOBALS['BE_USER'] || !\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('workspaces')) {
+		if (!$GLOBALS['BE_USER'] || !\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces')) {
 			return FALSE;
 		}
 		if (isset($this->workspaceCache[$wsid])) {

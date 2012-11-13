@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +30,6 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /**
  * The controller context contains information from the controller
  *
- * @package Extbase
- * @subpackage MVC\Controller
- * @version $Id$
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @scope prototype
  * @api
@@ -55,7 +53,7 @@ class ControllerContext {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Property\MappingResults
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	protected $argumentsMappingResults;
 
@@ -65,7 +63,7 @@ class ControllerContext {
 	protected $uriBuilder;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
 	 */
 	protected $flashMessageContainer;
 
@@ -134,7 +132,7 @@ class ControllerContext {
 	 *
 	 * @param \TYPO3\CMS\Extbase\Property\MappingResults $argumentsMappingResults
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	public function setArgumentsMappingResults(\TYPO3\CMS\Extbase\Property\MappingResults $argumentsMappingResults) {
 		$this->argumentsMappingResults = $argumentsMappingResults;
@@ -145,15 +143,13 @@ class ControllerContext {
 	 *
 	 * @return \TYPO3\CMS\Extbase\Property\MappingResults
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	public function getArgumentsMappingResults() {
 		return $this->argumentsMappingResults;
 	}
 
 	/**
-	 * Tx_Extbase_MVC_Web_Routing_UriBuilder $uriBuilder
-	 *
 	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder $uriBuilder
 	 * @return void
 	 */
@@ -172,28 +168,17 @@ class ControllerContext {
 	/**
 	 * Set the flash messages
 	 *
-	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages $flashMessageContainer
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer
 	 * @return void
 	 */
-	public function setFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages $flashMessageContainer) {
+	public function setFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
 		$this->flashMessageContainer = $flashMessageContainer;
 	}
 
 	/**
 	 * Get the flash messages
 	 *
-	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
-	 * @deprecated since Extbase 1.1; will be removed in Extbase 6.0
-	 */
-	public function getFlashMessages() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		return $this->flashMessageContainer;
-	}
-
-	/**
-	 * Get the flash messages
-	 *
-	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
+	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
 	 * @api
 	 */
 	public function getFlashMessageContainer() {

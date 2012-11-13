@@ -68,11 +68,11 @@ class XmlParserFactory {
 	 * Obtains a xml parser instance.
 	 *
 	 * This function will return an instance of a class that implements
-	 * Tx_Extensionmanager_ExtensionXmlAbstractParser.
+	 * \TYPO3\CMS\Extensionmanager\Utility\Parser\AbstractExtensionXmlParser
 	 *
 	 * @param string $parserType type of parser, one of extension and mirror
 	 * @param string $excludeClassNames (optional) comma-separated list of class names
-	 * @return Tx_Extensionmanager_ExtensionXmlAbstractParser an instance of an extension.xml parser
+	 * @return \TYPO3\CMS\Extensionmanager\Utility\Parser\AbstractExtensionXmlParser an instance of an extension.xml parser
 	 */
 	static public function getParserInstance($parserType, $excludeClassNames = '') {
 		if (!isset(self::$instance[$parserType]) || !is_object(self::$instance[$parserType]) || !empty($excludeClassNames)) {
@@ -82,7 +82,7 @@ class XmlParserFactory {
 				if (!\TYPO3\CMS\Core\Utility\GeneralUtility::inList($excludeClassNames, $className)) {
 					$objParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className);
 					if ($objParser->isAvailable()) {
-						self::$instance[$parserType] =& $objParser;
+						self::$instance[$parserType] = &$objParser;
 						break;
 					}
 					$objParser = NULL;

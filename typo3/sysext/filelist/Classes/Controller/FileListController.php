@@ -51,7 +51,7 @@ class FileListController {
 	/* @var \TYPO3\CMS\Core\Resource\Folder $folderObject */
 	protected $folderObject;
 
-	/* @var t3lib_FlashMessage $errorMessage */
+	/* @var \TYPO3\CMS\Core\Messaging\FlashMessage $errorMessage */
 	protected $errorMessage;
 
 	// Pointer to listing
@@ -99,15 +99,16 @@ class FileListController {
 		$this->overwriteExistingFiles = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('overwriteExistingFiles');
 		// Setting module name:
 		$this->MCONF = $GLOBALS['MCONF'];
-		// Create the folder object
 		try {
 			if ($combinedIdentifier) {
+				/** @var $fileFactory \TYPO3\CMS\Core\Resource\ResourceFactory */
 				$fileFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
 				$this->folderObject = $fileFactory->getFolderObjectFromCombinedIdentifier($combinedIdentifier);
 				// Disallow the rendering of the processing folder (e.g. could be called manually)
 				// and all folders without any defined storage
-				if ($this->folderObject && ($this->folderObject->getStorage()->getUid() == 0 || trim($this->folderObject->getStorage()->getProcessingFolder()->getIdentifier(), '/') == trim($this->folderObject->getIdentifier(), '/'))) {
-					$this->folderObject = NULL;
+				if ($this->folderObject && ($this->folderObject->getStorage()->getUid() == 0 || trim($this->folderObject->getStorage()->getProcessingFolder()->getIdentifier(), '/') === trim($this->folderObject->getIdentifier(), '/'))) {
+					$storage = $fileFactory->getStorageObjectFromCombinedIdentifier($combinedIdentifier);
+					$this->folderObject = $storage->getRootLevelFolder();
 				}
 			} else {
 				// Take the first object of the first storage
@@ -118,13 +119,19 @@ class FileListController {
 					// checking it against the mounts of the user. - now done in the controller
 					$this->folderObject = $fileStorage->getRootLevelFolder();
 				} else {
-					$this->folderObject = NULL;
+					throw new \RuntimeException('Could not find any folder to be displayed.', 1349276894);
 				}
 			}
 		} catch (\TYPO3\CMS\Core\Resource\Exception\FolderDoesNotExistException $fileException) {
 			// Set folder object to null and throw a message later on
 			$this->folderObject = NULL;
-			$this->errorMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', sprintf($GLOBALS['LANG']->getLL('folderNotFoundMessage', TRUE), htmlspecialchars($this->id)), $GLOBALS['LANG']->getLL('folderNotFoundTitle', TRUE), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+			$this->errorMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+				sprintf($GLOBALS['LANG']->getLL('folderNotFoundMessage', TRUE),
+						htmlspecialchars($this->id)
+				),
+				$GLOBALS['LANG']->getLL('folderNotFoundTitle', TRUE),
+				\TYPO3\CMS\Core\Messaging\FlashMessage::NOTICE
+			);
 		}
 		// Configure the "menu" - which is used internally to save the values of sorting, displayThumbs etc.
 		$this->menuConfig();
@@ -188,7 +195,7 @@ class FileListController {
 										"file[upload][1][target]": "' . ($this->folderObject ? $this->folderObject->getCombinedIdentifier() : '') . '",
 										"file[upload][1][data]": 1,
 										"file[upload][1][charset]": "utf-8",
-										"ajaxID": "TYPO3\\CMS\\Backend\\Controller\\File\\FileController::process"
+										"ajaxID": "TYPO3_tcefile::process"
 									}
 								};
 
@@ -354,7 +361,7 @@ class FileListController {
 			$markerArray = array(
 				'CSH' => $docHeaderButtons['csh'],
 				'FUNC_MENU' => \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']),
-				'CONTENT' => $pageContent
+				'CONTENT' => ($this->errorMessage ? $this->errorMessage->render() : '') . $pageContent
 			);
 			$this->content = $this->doc->moduleBody(array(), $docHeaderButtons, array_merge($markerArray, $otherMarkers));
 			// Renders the module page
@@ -362,6 +369,7 @@ class FileListController {
 		} else {
 			$content = '';
 			if ($this->errorMessage) {
+				$this->errorMessage->setSeverity(\TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
 				$content = $this->doc->moduleBody(array(), array_merge(array('LEVEL_UP' => '', 'REFRESH' => ''), $this->getButtons()), array('CSH' => '', 'TITLE' => '', 'FOLDER_INFO' => '', 'PAGE_ICON' => '', 'FUNC_MENU' => '', 'CONTENT' => $this->errorMessage->render()));
 			}
 			// Create output - no access (no warning though)

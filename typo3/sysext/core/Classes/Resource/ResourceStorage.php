@@ -243,7 +243,7 @@ class ResourceStorage {
 	/**
 	 * Processes the configuration of this storage.
 	 *
-	 * @throws InvalidArgumentException If a required configuration option is not set or has an invalid value.
+	 * @throws \InvalidArgumentException If a required configuration option is not set or has an invalid value.
 	 * @return void
 	 */
 	protected function processConfiguration() {
@@ -573,7 +573,7 @@ class ResourceStorage {
 			return FALSE;
 		}
 		$isReadCheck = FALSE;
-		if (in_array($action, array('read'))) {
+		if ($action === 'read') {
 			$isReadCheck = TRUE;
 		}
 		$isWriteCheck = FALSE;
@@ -619,7 +619,7 @@ class ResourceStorage {
 			return FALSE;
 		}
 		$isReadCheck = FALSE;
-		if (in_array($action, array('read'))) {
+		if ($action === 'read') {
 			$isReadCheck = TRUE;
 		}
 		$isWriteCheck = FALSE;
@@ -796,24 +796,23 @@ class ResourceStorage {
 	}
 
 	/**
-	 * Get file by identifier
+	 * Get information about a file
 	 *
-	 * @param \TYPO3\CMS\Core\Resource\FileInterface $identifier
+	 * @param \TYPO3\CMS\Core\Resource\FileInterface $fileObject
 	 * @return array
 	 */
-	public function getFileInfo($identifier) {
-		return $this->driver->getFileInfo($identifier);
+	public function getFileInfo(FileInterface $fileObject) {
+		return $this->driver->getFileInfo($fileObject);
 	}
 
 	/**
-	 * Get file by identifier
+	 * Get information about a file by its identifier
 	 *
-	 * @deprecated To be removed before final release of FAL. Use combination of getFileInfoByIdentifier() with a file object as argument instead.
 	 * @param string $identifier
-	 * @return \TYPO3\CMS\Core\Resource\FileInterface
+	 * @return array
 	 */
 	public function getFileInfoByIdentifier($identifier) {
-		return $this->driver->getFileInfoByIdentifier($identifier);
+		throw new \BadMethodCallException("The method ResourceStorage::getFileInfoByIdentifier() has been deprecated. Please fix your method call and use getFileInfo with the file object instead.", 1346577887);
 	}
 
 	/**
@@ -831,7 +830,7 @@ class ResourceStorage {
 	 * @return void
 	 */
 	public function resetFileAndFolderNameFiltersToDefault() {
-		$this->fileAndFolderNameFilters = $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['callbackFilterMethods'];
+		$this->fileAndFolderNameFilters = $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['defaultFilterCallbacks'];
 	}
 
 	/**
@@ -1946,7 +1945,7 @@ class ResourceStorage {
 			if (!empty($this->storageRecord['processingfolder'])) {
 				$processingFolder = $this->storageRecord['processingfolder'];
 			}
-			$processingFolder = trim($processingFolder, '/');
+			$processingFolder = '/' . trim($processingFolder, '/') . '/';
 			// this way, we also worry about deeplinked folders like typo3temp/_processed_
 			if ($this->driver->folderExists($processingFolder) === FALSE) {
 				$processingFolderParts = explode('/', $processingFolder);
@@ -1963,8 +1962,6 @@ class ResourceStorage {
 		}
 		return $this->processingFolder;
 	}
-
 }
-
 
 ?>

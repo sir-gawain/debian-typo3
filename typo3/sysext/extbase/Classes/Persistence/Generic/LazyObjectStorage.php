@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,12 +30,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /**
  * A proxy that can replace any object and replaces itself in it's parent on
  * first access (call, get, set, isset, unset).
- *
- * @package Extbase
- * @subpackage Persistence
- * @version $Id$
  */
-class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage implements \TYPO3\CMS\Extbase\Persistence\Generic\LoadingStrategyInterface {
+class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage implements \TYPO3\CMS\Extbase\Persistence\Generic\LoadingStrategyInterface {
 
 	/**
 	 * This field is only needed to make debugging easier:
@@ -129,7 +126,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 
 	// Delegation to the ObjectStorage methods below
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::addAll
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::addAll
 	 */
 	public function addAll($storage) {
 		$this->initialize();
@@ -137,7 +134,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::attach
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::attach
 	 */
 	public function attach($object, $data = NULL) {
 		$this->initialize();
@@ -145,7 +142,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::contains
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::contains
 	 */
 	public function contains($object) {
 		$this->initialize();
@@ -174,7 +171,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::current
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::current
 	 */
 	public function current() {
 		$this->initialize();
@@ -182,7 +179,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::detach
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::detach
 	 */
 	public function detach($object) {
 		$this->initialize();
@@ -190,7 +187,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::key
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::key
 	 */
 	public function key() {
 		$this->initialize();
@@ -198,7 +195,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::next
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::next
 	 */
 	public function next() {
 		$this->initialize();
@@ -206,7 +203,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::offsetExists
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::offsetExists
 	 */
 	public function offsetExists($object) {
 		$this->initialize();
@@ -214,7 +211,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::offsetGet
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::offsetGet
 	 */
 	public function offsetGet($object) {
 		$this->initialize();
@@ -222,7 +219,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::offsetSet
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::offsetSet
 	 */
 	public function offsetSet($object, $info) {
 		$this->initialize();
@@ -230,7 +227,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::offsetUnset
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::offsetUnset
 	 */
 	public function offsetUnset($object) {
 		$this->initialize();
@@ -238,7 +235,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::removeAll
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::removeAll
 	 */
 	public function removeAll($storage) {
 		$this->initialize();
@@ -246,7 +243,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::rewind
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::rewind
 	 */
 	public function rewind() {
 		$this->initialize();
@@ -254,7 +251,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::valid
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::valid
 	 */
 	public function valid() {
 		$this->initialize();
@@ -262,7 +259,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\Generic\ObjectSto
 	}
 
 	/**
-	 * @see \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage::toArray
+	 * @see \TYPO3\CMS\Extbase\Persistence\ObjectStorage::toArray
 	 */
 	public function toArray() {
 		$this->initialize();

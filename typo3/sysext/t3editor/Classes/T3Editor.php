@@ -365,12 +365,12 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * new Ajax.Request('/dev/t3e/dummy/typo3/ajax.php', {
 	 * parameters: {
-	 * ajaxID: 'T3Editor::saveCode::saveCode',
+	 * ajaxID: 'T3Editor::saveCode',
 	 * t3editor_savetype: 'tx_tstemplateinfo'
 	 * }
 	 * });
 	 *
-	 * @param array	params Parameters (not used yet)
+	 * @param array $params Parameters (not used yet)
 	 * @param \TYPO3\CMS\Core\Http\AjaxRequestHandler ajaxObj AjaxObject to handle response
 	 */
 	public function ajaxSaveCode($params, $ajaxObj) {
@@ -404,7 +404,7 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function getPlugins($params, \TYPO3\CMS\Core\Http\AjaxRequestHandler &$ajaxObj) {
 		$result = array();
-		$plugins =& $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['t3editor']['plugins'];
+		$plugins = &$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['t3editor']['plugins'];
 		if (is_array($plugins)) {
 			$result = array_values($plugins);
 		}

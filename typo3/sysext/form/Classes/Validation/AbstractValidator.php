@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Form\Validation;
  * @package TYPO3
  * @subpackage form
  */
-abstract class AbstractValidator implements \TYPO3\CMS\Form\Validation\InterfaceValidator {
+abstract class AbstractValidator implements \TYPO3\CMS\Form\Validation\ValidatorInterface {
 
 	/**
 	 * The name of the field for the rule
@@ -88,6 +88,16 @@ abstract class AbstractValidator implements \TYPO3\CMS\Form\Validation\Interface
 	protected $localCobj;
 
 	/**
+	 * Inject the Request Handler
+	 *
+	 * @param \TYPO3\CMS\Form\Request $requestHandler
+	 * @return void
+	 */
+	public function injectRequestHandler(\TYPO3\CMS\Form\Request $requestHandler) {
+		$this->requestHandler = $requestHandler;
+	}
+
+	/**
 	 * Constructor
 	 *
 	 * @param array $arguments Typoscript configuration for the validation rule
@@ -95,7 +105,7 @@ abstract class AbstractValidator implements \TYPO3\CMS\Form\Validation\Interface
 	 */
 	public function __construct($arguments) {
 		$this->localCobj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
-		$this->requestHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Form\\Request');
+		$this->injectRequestHandler(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Form\\Request'));
 		$this->localizationHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Form\\Localization');
 		$this->setFieldName($arguments['element']);
 		$this->setMessage($arguments['message.'], $arguments['message']);

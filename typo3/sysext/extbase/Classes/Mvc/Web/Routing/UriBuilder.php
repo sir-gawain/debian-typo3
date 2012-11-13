@@ -16,9 +16,6 @@ namespace TYPO3\CMS\Extbase\Mvc\Web\Routing;
 /**
  * An URI Builder
  *
- * @package Extbase
- * @subpackage MVC\Web\Routing
- * @version $Id$
  * @api
  */
 class UriBuilder {
@@ -563,7 +560,8 @@ class UriBuilder {
 		if ($this->addQueryString === TRUE) {
 			$arguments = \TYPO3\CMS\Core\Utility\GeneralUtility::_GET();
 			foreach ($this->argumentsToBeExcludedFromQueryString as $argumentToBeExcluded) {
-				unset($arguments[$argumentToBeExcluded]);
+				$argumentToBeExcluded = \TYPO3\CMS\Core\Utility\GeneralUtility::explodeUrl2Array($argumentToBeExcluded, TRUE);
+				$arguments = \TYPO3\CMS\Core\Utility\GeneralUtility::arrayDiffAssocRecursive($arguments, $argumentToBeExcluded);
 			}
 		} else {
 			$arguments = array(
@@ -642,7 +640,7 @@ class UriBuilder {
 	}
 
 	/**
-	 * Recursively iterates through the specified arguments and turns instances of type Tx_Extbase_DomainObject_AbstractEntity
+	 * Recursively iterates through the specified arguments and turns instances of type \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
 	 * into an arrays containing the uid of the domain object.
 	 *
 	 * @param array $arguments The arguments to be iterated

@@ -31,8 +31,7 @@
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 if (!function_exists('user_sortPluginList')) {
-	function user_sortPluginList(array &$parameters)
-	{
+	function user_sortPluginList(array &$parameters) {
 		usort($parameters['items'], create_function('$item1,$item2', 'return strcasecmp($GLOBALS[\'LANG\']->sL($item1[0]),$GLOBALS[\'LANG\']->sL($item2[0]));'));
 	}
 }
@@ -120,11 +119,6 @@ $TCA['tt_content'] = array(
 						'i/tt_content_mm.gif'
 					),
 					array(
-						'LLL:EXT:cms/locallang_ttc.xml:CType.I.11',
-						'splash',
-						'i/tt_content_news.gif'
-					),
-					array(
 						'LLL:EXT:cms/locallang_ttc.xml:CType.I.12',
 						'menu',
 						'i/tt_content_menu.gif'
@@ -138,11 +132,6 @@ $TCA['tt_content'] = array(
 						'LLL:EXT:cms/locallang_ttc.xml:CType.I.14',
 						'list',
 						'i/tt_content_list.gif'
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:CType.I.15',
-						'script',
-						'i/tt_content_script.gif'
 					),
 					array(
 						'LLL:EXT:cms/locallang_ttc.xml:CType.I.16',
@@ -676,9 +665,8 @@ $TCA['tt_content'] = array(
 			)
 		),
 		'image' => array(
-			'l10n_mode' => 'mergeIfNotBlank',
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.images',
-			'config' => \TYPO3\CMS\Core\Extension\ExtensionManager::getFileFieldTCAConfig('image', array(
+			'config' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getFileFieldTCAConfig('image', array(
 				'appearance' => array(
 					'createNewRelationLinkTitle' => 'LLL:EXT:cms/locallang_ttc.xlf:images.addFileReference'
 				),
@@ -1440,7 +1428,7 @@ $TCA['tt_content'] = array(
 		),
 		'media' => array(
 			'label' => 'LLL:EXT:cms/locallang_ttc.xml:media',
-			'config' => \TYPO3\CMS\Core\Extension\ExtensionManager::getFileFieldTCAConfig('media', array(
+			'config' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getFileFieldTCAConfig('media', array(
 				'appearance' => array(
 					'createNewRelationLinkTitle' => 'LLL:EXT:cms/locallang_ttc.xlf:media.addFileReference'
 				)
@@ -1451,10 +1439,12 @@ $TCA['tt_content'] = array(
 			'config' => array(
 				'type' => 'group',
 				'internal_type' => 'db',
+				'localizeReferencesAtParentLocalization' => TRUE,
 				'allowed' => 'sys_file_collection',
+				'foreign_table' => 'sys_file_collection',
 				'maxitems' => 999,
 				'minitems' => 0,
-				'size' => 5
+				'size' => 5,
 			)
 		),
 		'multimedia' => array(
@@ -1603,40 +1593,6 @@ $TCA['tt_content'] = array(
 				'default' => '0'
 			)
 		),
-		'splash_layout' => array(
-			'exclude' => 1,
-			'label' => 'LLL:EXT:cms/locallang_ttc.xml:splash_layout',
-			'config' => array(
-				'type' => 'select',
-				'items' => array(
-					array(
-						'LLL:EXT:lang/locallang_general.xml:LGL.default_value',
-						'0'
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:splash_layout.I.1',
-						'1'
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:splash_layout.I.2',
-						'2'
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:splash_layout.I.3',
-						'3'
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:splash_layout.I.4',
-						'--div--'
-					),
-					array(
-						'LLL:EXT:cms/locallang_ttc.xml:splash_layout.I.5',
-						'20'
-					)
-				),
-				'default' => '0'
-			)
-		),
 		'sectionIndex' => array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:cms/locallang_ttc.xml:sectionIndex',
@@ -1701,7 +1657,7 @@ $TCA['tt_content'] = array(
 						  </ROOT>
 						</T3DataStructure>
 					',
-					',media' => file_get_contents(\TYPO3\CMS\Core\Extension\ExtensionManager::extPath('cms') . 'flexform_media.xml')
+					',media' => file_get_contents(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('cms') . 'flexform_media.xml')
 				),
 				'search' => array(
 					'andWhere' => 'CType=\'list\''
@@ -1839,17 +1795,6 @@ $TCA['tt_content'] = array(
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended'
 		),
-		'splash' => array(
-			'showitem' => '--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.header;header,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.textbox;textbox,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.access,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.visibility;visibility,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended'
-		),
 		// file list
 		'uploads' => array(
 			'showitem' => '--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
@@ -1887,21 +1832,6 @@ $TCA['tt_content'] = array(
 					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.behaviour,
 					bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.media_formlabel;;richtext:rte_transform[flag=rte_enabled|mode=ts_css],
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended'
-		),
-		'script' => array(
-			'showitem' => '--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.general;general,
-					header;LLL:EXT:cms/locallang_ttc.xml:header.ALT.script_formlabel,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.script,
-					select_key;LLL:EXT:cms/locallang_ttc.xml:select_key.ALT.script_formlabel,
-					pages;LLL:EXT:cms/locallang_ttc.xml:pages.ALT.script_formlabel,
-					bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.script_formlabel;;nowrap,
-					imagecaption;LLL:EXT:cms/locallang_ttc.xml:imagecaption.ALT.script_formlabel,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.appearance,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.frames;frames,
-				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.access,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.visibility;visibility,
-					--palette--;LLL:EXT:cms/locallang_ttc.xml:palette.access;access,
 				--div--;LLL:EXT:cms/locallang_ttc.xml:tabs.extended'
 		),
 		'menu' => array(
@@ -2069,10 +1999,6 @@ $TCA['tt_content'] = array(
 		),
 		'multimediafiles' => array(
 			'showitem' => 'multimedia;LLL:EXT:cms/locallang_ttc.xml:multimedia_formlabel, bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.multimedia_formlabel;;nowrap',
-			'canNotCollapse' => 1
-		),
-		'textbox' => array(
-			'showitem' => 'splash_layout;LLL:EXT:cms/locallang_ttc.xml:splash_layout_formlabel, image;LLL:EXT:cms/locallang_ttc.xml:image.ALT.textbox_formlabel, --linebreak--, bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.textbox_formlabel',
 			'canNotCollapse' => 1
 		),
 		'imagelinks' => array(

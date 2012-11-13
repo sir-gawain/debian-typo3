@@ -33,7 +33,7 @@ require_once __DIR__ . '/Fixtures/RootlineUtilityTestAccessibleFixture.php';
  * @package TYPO3
  * @subpackage t3lib
  */
-class RootlineUtilityTest extends \tx_phpunit_testcase {
+class RootlineUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/***
 	 *
@@ -83,7 +83,7 @@ class RootlineUtilityTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException RuntimeException
+	 * @expectedException \RuntimeException
 	 */
 	public function processMountedPageWithNonMountedPageThrowsException() {
 		$fixture = new Fixtures\RootlineUtilityTestAccessibleFixture(1, '1-99');

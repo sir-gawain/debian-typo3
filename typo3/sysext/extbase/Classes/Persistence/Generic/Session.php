@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,18 +28,14 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  ***************************************************************/
 /**
  * The persistence session - acts as a Unit of Work for Extbase persistence framework.
- *
- * @package Extbase
- * @subpackage Persistence
- * @version $ID:$
  */
 class Session implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * Objects which were reconstituted. The relevant objects are registered by
-	 * the Tx_Extbase_Persistence_Mapper_DataMapper.
+	 * the \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper.
 	 *
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	protected $reconstitutedObjects;
 
@@ -44,7 +43,7 @@ class Session implements \TYPO3\CMS\Core\SingletonInterface {
 	 * Constructs a new Session
 	 */
 	public function __construct() {
-		$this->reconstitutedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$this->reconstitutedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 	}
 
 	/**

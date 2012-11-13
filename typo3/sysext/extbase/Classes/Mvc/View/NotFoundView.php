@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Mvc\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Mvc\View;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +30,6 @@ namespace TYPO3\CMS\Extbase\Mvc\View;
 /**
  * The not found view - a special case.
  *
- * @package Extbase
- * @subpackage MVC\View
- * @version $Id: EmptyView.php 2517 2010-08-04 17:56:45Z bwaidelich $
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class NotFoundView extends \TYPO3\CMS\Extbase\Mvc\View\AbstractView {
@@ -70,7 +68,7 @@ class NotFoundView extends \TYPO3\CMS\Extbase\Mvc\View\AbstractView {
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	protected function getTemplatePathAndFilename() {
-		return \TYPO3\CMS\Core\Extension\ExtensionManager::extPath('extbase') . 'Resources/Private/MVC/NotFoundView_Template.html';
+		return \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('extbase') . 'Resources/Private/MVC/NotFoundView_Template.html';
 	}
 
 	/**

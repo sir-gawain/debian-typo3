@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +30,6 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /**
  * A multi action controller. This is by far the most common base class for Controllers.
  *
- * @package Extbase
- * @subpackage MVC\Controller
- * @version $ID:$
  * @api
  */
 class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractController {
@@ -288,7 +286,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 				}
 			}
 		} else {
-			// @deprecated since Extbase 1.4.0, will be removed with Extbase 6.0
+			// @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
 			$preparedArguments = array();
 			foreach ($this->arguments as $argument) {
 				$preparedArguments[] = $argument->getValue();
@@ -452,7 +450,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 			}
 			return $message;
 		} else {
-			// @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+			// @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 			$this->request->setErrors($this->argumentsMappingResults->getErrors());
 			$errorFlashMessage = $this->getErrorFlashMessage();
 			if ($errorFlashMessage !== FALSE) {
@@ -493,7 +491,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	 * @return void
 	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidOrNoRequestHashException In case request hash checking failed
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	protected function checkRequestHash() {
 		if ($this->configurationManager->isFeatureEnabled('rewrittenPropertyMapper')) {

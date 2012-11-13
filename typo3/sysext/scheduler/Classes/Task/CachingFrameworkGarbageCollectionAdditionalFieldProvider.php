@@ -55,7 +55,7 @@ class CachingFrameworkGarbageCollectionAdditionalFieldProvider implements \TYPO3
 				$taskInfo['scheduler_cachingFrameworkGarbageCollection_selectedBackends'] = $task->selectedBackends;
 			}
 		}
-		$fieldName = 'TYPO3\\CMS\\Scheduler\\Scheduler[scheduler_cachingFrameworkGarbageCollection_selectedBackends][]';
+		$fieldName = 'tx_scheduler[scheduler_cachingFrameworkGarbageCollection_selectedBackends][]';
 		$fieldId = 'task_cachingFrameworkGarbageCollection_selectedBackends';
 		$fieldOptions = $this->getCacheBackendOptions($taskInfo['scheduler_cachingFrameworkGarbageCollection_selectedBackends']);
 		$fieldHtml = '<select name="' . $fieldName . '" id="' . $fieldId . '" class="wide" size="10" multiple="multiple">' . $fieldOptions . '</select>';
@@ -95,10 +95,10 @@ class CachingFrameworkGarbageCollectionAdditionalFieldProvider implements \TYPO3
 	 * Save selected backends in task object
 	 *
 	 * @param array $submittedData Contains data submitted by the user
-	 * @param \TYPO3\CMS\Scheduler\Task $task Reference to the current task object
+	 * @param \TYPO3\CMS\Scheduler\Task\AbstractTask $task Reference to the current task object
 	 * @return void
 	 */
-	public function saveAdditionalFields(array $submittedData, \TYPO3\CMS\Scheduler\Task $task) {
+	public function saveAdditionalFields(array $submittedData, \TYPO3\CMS\Scheduler\Task\AbstractTask $task) {
 		$task->selectedBackends = $submittedData['scheduler_cachingFrameworkGarbageCollection_selectedBackends'];
 	}
 

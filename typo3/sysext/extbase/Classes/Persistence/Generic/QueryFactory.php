@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,10 +28,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  ***************************************************************/
 /**
  * The QueryFactory used to create queries against the storage backend
- *
- * @package Extbase
- * @subpackage Persistence
- * @version $Id$
  */
 class QueryFactory implements \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactoryInterface, \TYPO3\CMS\Core\SingletonInterface {
 
@@ -41,6 +40,11 @@ class QueryFactory implements \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactor
 	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper
+	 */
+	protected $dataMapper;
 
 	/**
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
@@ -60,14 +64,28 @@ class QueryFactory implements \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactor
 	}
 
 	/**
+	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper
+	 */
+	public function injectDataMapper(\TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper) {
+		$this->dataMapper = $dataMapper;
+	}
+
+	/**
 	 * Creates a query object working on the given class name
 	 *
 	 * @param string $className The class name
 	 * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface
+	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Exception
 	 */
 	public function create($className) {
 		$query = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\QueryInterface', $className);
 		$querySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+
+		$dataMap = $this->dataMapper->getDataMap($className);
+		if ($dataMap->getIsStatic() || $dataMap->getRootLevel()) {
+			$querySettings->setRespectStoragePage(FALSE);
+		}
+
 		$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 		$querySettings->setStoragePageIds(\TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $frameworkConfiguration['persistence']['storagePid']));
 		$query->setQuerySettings($querySettings);

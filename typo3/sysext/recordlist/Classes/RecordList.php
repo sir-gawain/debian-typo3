@@ -189,7 +189,7 @@ class RecordList {
 	 */
 	public function clearCache() {
 		if ($this->clear_cache) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 			$tce->stripslashes_values = 0;
 			$tce->start(array(), array());
 			$tce->clear_cacheCmd($this->id);
@@ -294,7 +294,7 @@ class RecordList {
 						$iKParts = explode('|', $iK);
 						$cmd[$iKParts[0]][$iKParts[1]]['delete'] = 1;
 					}
-					$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+					$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 					$tce->stripslashes_values = 0;
 					$tce->start(array(), $cmd);
 					$tce->process_cmdmap();
@@ -309,7 +309,7 @@ class RecordList {
 			$dblist->start($this->id, $this->table, $this->pointer, $this->search_field, $this->search_levels, $this->showLimit);
 			$dblist->setDispFields();
 			// Render versioning selector:
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('version')) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
 				$dblist->HTMLcode .= $this->doc->getVersionSelector($this->id);
 			}
 			// Render the list of tables:
