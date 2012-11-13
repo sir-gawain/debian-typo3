@@ -1,3 +1,10 @@
+typo3-src (4.5.19+dfsg1-4) unstable; urgency=medium
+
+  * Added patch for regression introduced by TYPO3-SA-2012-5-patch.
+  * Set patch level version to -pl.4.5.22.
+
+ -- Christian Welzel <gawain@camlann.de>  Tue, 13 Nov 2012 12:04:00 +0100
+
 typo3-src (4.5.19+dfsg1-3) unstable; urgency=medium
 
   * Added patch for TYPO3-SA-2012-5 (Closes: #692775)
