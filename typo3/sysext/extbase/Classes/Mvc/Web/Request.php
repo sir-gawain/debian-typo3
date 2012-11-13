@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Web;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Mvc\Web;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +30,6 @@ namespace TYPO3\CMS\Extbase\Mvc\Web;
 /**
  * Represents a web request.
  *
- * @package Extbase
- * @subpackage MVC\Web
- * @version $ID:$
  * @scope prototype
  * @api
  */
@@ -64,7 +62,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 
 	/**
 	 * @var boolean TRUE if the HMAC of this request could be verified, FALSE otherwise
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	protected $hmacVerified = FALSE;
 
@@ -167,7 +165,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	 * @param boolean $hmacVerified TRUE if request could be verified, FALSE otherwise
 	 * @return void
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	public function setHmacVerified($hmacVerified) {
 		$this->hmacVerified = (bool) $hmacVerified;
@@ -178,7 +176,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	 *
 	 * @return boolean TRUE if request could be verified, FALSE otherwise
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 	 */
 	public function isHmacVerified() {
 		return $this->hmacVerified;

@@ -56,7 +56,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 	 * @static
 	 * @var resource
 	 */
-	static $logFileHandle = NULL;
+	static protected $logFileHandle = NULL;
 
 	/**
 	 * Constructor, opens the log file handle
@@ -83,7 +83,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 	 * Sets the path to the log file.
 	 *
 	 * @param string $logFile path to the log file, relative to PATH_site
-	 * @return \TYPO3\CMS\Core\Log\Writer\Writer
+	 * @return \TYPO3\CMS\Core\Log\Writer\WriterInterface
 	 * @throws \InvalidArgumentException
 	 */
 	public function setLogFile($logFile) {
@@ -116,7 +116,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 	 * Writes the log record
 	 *
 	 * @param \TYPO3\CMS\Core\Log\LogRecord $record Log record
-	 * @return \TYPO3\CMS\Core\Log\Writer\Writer $this
+	 * @return \TYPO3\CMS\Core\Log\Writer\WriterInterface $this
 	 * @throws \RuntimeException
 	 */
 	public function writeLog(\TYPO3\CMS\Core\Log\LogRecord $record) {
@@ -130,7 +130,7 @@ class FileWriter extends \TYPO3\CMS\Core\Log\Writer\AbstractWriter {
 	 * Opens the log file handle
 	 *
 	 * @return void
-	 * @throws RuntimeException if the log file can't be opened.
+	 * @throws \RuntimeException if the log file can't be opened.
 	 */
 	protected function openLogFile() {
 		$this->createLogFile();

@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Validation;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Validation;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,10 +29,6 @@ namespace TYPO3\CMS\Extbase\Validation;
  ***************************************************************/
 /**
  * Validator resolver to automatically find a appropriate validator for a given subject
- *
- * @package Extbase
- * @subpackage Validation
- * @version $Id$
  */
 class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 
@@ -104,7 +101,7 @@ class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * Get a validator for a given data type. Returns a validator implementing
-	 * the Tx_Extbase_Validation_Validator_ValidatorInterface or NULL if no validator
+	 * the \TYPO3\CMS\Extbase\Validation\Validator\ValidatorInterface or NULL if no validator
 	 * could be resolved.
 	 *
 	 * @param string $validatorName Either one of the built-in data types or fully qualified validator class name
@@ -121,7 +118,7 @@ class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 			return NULL;
 		}
 		if (method_exists($validator, 'setOptions')) {
-			// @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
+			// @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
 			$validator->setOptions($validatorOptions);
 		}
 		return $validator;
@@ -208,7 +205,7 @@ class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 	protected function buildBaseValidatorConjunction($dataType) {
 		$validatorConjunction = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator');
 		// Model based validator
-		if (strpos($dataType, '_') !== FALSE && class_exists($dataType)) {
+		if (class_exists($dataType)) {
 			$validatorCount = 0;
 			$objectValidator = $this->createValidator('GenericObject');
 			foreach ($this->reflectionService->getClassPropertyNames($dataType) as $classPropertyName) {
@@ -292,14 +289,15 @@ class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 	 * This method is meant as a helper for regular expression results.
 	 *
 	 * @param string &$quotedValue Value to unquote
+	 * @return void
 	 */
 	protected function unquoteString(&$quotedValue) {
 		switch ($quotedValue[0]) {
-		case '"':
-			$quotedValue = str_replace('\\"', '"', trim($quotedValue, '"'));
+			case '"':
+				$quotedValue = str_replace('\\"', '"', trim($quotedValue, '"'));
 			break;
-		case '\'':
-			$quotedValue = str_replace('\\\'', '\'', trim($quotedValue, '\''));
+			case '\'':
+				$quotedValue = str_replace('\\\'', '\'', trim($quotedValue, '\''));
 			break;
 		}
 		$quotedValue = str_replace('\\\\', '\\', $quotedValue);
@@ -310,17 +308,24 @@ class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 	 * FALSE is returned
 	 *
 	 * @param string $validatorName Either the fully qualified class name of the validator or the short name of a built-in validator
-	 * @return string Name of the validator object or FALSE
+	 * @return string|boolean Name of the validator object or FALSE
 	 */
 	protected function resolveValidatorObjectName($validatorName) {
-		if (strpos($validatorName, '_') !== FALSE && class_exists($validatorName)) {
+		if (strpbrk($validatorName, '_\\') !== FALSE && class_exists($validatorName)) {
 			return $validatorName;
 		}
 		list($extensionName, $extensionValidatorName) = explode(':', $validatorName);
-		if (!$extensionValidatorName) {
-			$possibleClassName = 'Tx_Extbase_Validation_Validator_' . $this->unifyDataType($validatorName) . 'Validator';
+		if (empty($extensionValidatorName)) {
+			$possibleClassName = 'TYPO3\\CMS\\Extbase\\Validation\\Validator\\' . $this->unifyDataType($validatorName) . 'Validator';
 		} else {
-			$possibleClassName = 'Tx_' . $extensionName . '_Validation_Validator_' . $extensionValidatorName . 'Validator';
+			if (strpos($extensionName, '.') !== FALSE) {
+				$extensionNameParts = explode('.', $extensionName);
+				$extensionName = array_pop($extensionNameParts);
+				$vendorName = implode('\\', $extensionNameParts);
+				$possibleClassName = $vendorName . '\\' . $extensionName . '\\Validation\\Validator\\' . $extensionValidatorName . 'Validator';
+			} else {
+				$possibleClassName = 'Tx_' . $extensionName . '_Validation_Validator_' . $extensionValidatorName . 'Validator';
+			}
 		}
 		if (class_exists($possibleClassName)) {
 			return $possibleClassName;
@@ -336,26 +341,24 @@ class ValidatorResolver implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function unifyDataType($type) {
 		switch ($type) {
-		case 'int':
-			$type = 'Integer';
-			break;
-		case 'bool':
-			$type = 'Boolean';
-			break;
-		case 'double':
-			$type = 'Float';
-			break;
-		case 'numeric':
-			$type = 'Number';
-			break;
-		case 'mixed':
-			$type = 'Raw';
-			break;
+			case 'int':
+				$type = 'Integer';
+				break;
+			case 'bool':
+				$type = 'Boolean';
+				break;
+			case 'double':
+				$type = 'Float';
+				break;
+			case 'numeric':
+				$type = 'Number';
+				break;
+			case 'mixed':
+				$type = 'Raw';
+				break;
 		}
 		return ucfirst($type);
 	}
 
 }
-
-
 ?>

@@ -281,7 +281,23 @@ class ResourceCompressor {
 		$unique = '';
 		foreach ($filesToInclude as $key => $filename) {
 			if (\TYPO3\CMS\Core\Utility\GeneralUtility::isValidUrl($filename)) {
-				$filesToInclude[$key] = $this->retrieveExternalFile($filename);
+				// check if it is possibly a local file with fully qualified URL
+				if (\TYPO3\CMS\Core\Utility\GeneralUtility::isOnCurrentHost($filename) &&
+					\TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr(
+						$filename,
+						\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL')
+					)
+				) {
+					// attempt to turn it into a local file path
+					$localFilename = substr($filename, strlen(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL')));
+					if (@is_file(\TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($this->rootPath . $localFilename))) {
+						$filesToInclude[$key] = $localFilename;
+					} else {
+						$filesToInclude[$key] = $this->retrieveExternalFile($filename);
+					}
+				} else {
+					$filesToInclude[$key] = $this->retrieveExternalFile($filename);
+				}
 				$filename = $filesToInclude[$key];
 			}
 			$filepath = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($this->rootPath . $filename);
@@ -352,8 +368,7 @@ class ResourceCompressor {
 		if (!file_exists((PATH_site . $targetFile)) || $this->createGzipped && !file_exists((PATH_site . $targetFile . '.gzip'))) {
 			$contents = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($filenameAbsolute);
 			// Perform some safe CSS optimizations.
-			$contents = str_replace('
-', '', $contents);
+			$contents = str_replace(CR, '', $contents);
 			// Strip any and all carriage returns.
 			// Match and process strings, comments and everything else, one chunk at a time.
 			// To understand this regex, read: "Mastering Regular Expressions 3rd Edition" chapter 6.
@@ -510,7 +525,7 @@ class ResourceCompressor {
 			}
 		}
 		// if the file is from a special TYPO3 internal directory, add the missing typo3/ prefix
-		if (is_file(PATH_site . TYPO3_mainDir . $filename)) {
+		if (is_file(realpath(PATH_site . TYPO3_mainDir . $filename))) {
 			$filename = TYPO3_mainDir . $filename;
 		}
 		// build the file path relatively to the PATH_site
@@ -666,7 +681,12 @@ class ResourceCompressor {
 	protected function retrieveExternalFile($url) {
 		$externalContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($url);
 		$filename = $this->targetDirectory . 'external-' . md5($url);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFile(PATH_site . $filename, $externalContent);
+		// write only if file does not exist and md5 of the content is not the same as fetched one
+		if (!file_exists(PATH_site . $filename) &&
+				(md5($externalContent) !== md5(\TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(PATH_site . $filename)))
+		) {
+			\TYPO3\CMS\Core\Utility\GeneralUtility::writeFile(PATH_site . $filename, $externalContent);
+		}
 		return $filename;
 	}
 

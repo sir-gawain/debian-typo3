@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Scheduler\Tests\Unit\Controller;
  * @subpackage tx_scheduler
  * @author Andy Grunwald <andreas.grunwald@wmdb.de>
  */
-class SchedulerModuleControllerTest extends \tx_phpunit_testcase {
+class SchedulerModuleControllerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * Object to Test: tx_scheduler_Module
@@ -185,7 +185,7 @@ class SchedulerModuleControllerTest extends \tx_phpunit_testcase {
 	 * This test must be raised an InvalidArgumentException
 	 *
 	 * @dataProvider checkDateWithInvalidDateValuesDataProvider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @test
 	 * @param string $dateValue Test value which will be passed to $this->testObject->checkDate.
 	 */

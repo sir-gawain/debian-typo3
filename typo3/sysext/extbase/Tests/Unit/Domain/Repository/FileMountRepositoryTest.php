@@ -24,9 +24,8 @@ namespace TYPO3\CMS\Extbase\Domain\Repository;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for the Tx_Extbase_Domain_Repository_FileMountRepository class.
+ * Testcase for the \TYPO3\CMS\Extbase\Domain\Repository\FileMountRepository class.
  *
- * @package Extbase
  * @author Markus Günther <mail@markus-guenther.de>
  */
 class FileMountRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {

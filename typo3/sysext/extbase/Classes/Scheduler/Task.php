@@ -25,11 +25,8 @@ namespace TYPO3\CMS\Extbase\Scheduler;
  ***************************************************************/
 /**
  * Scheduler task to execute CommandController commands
- *
- * @package Extbase
- * @subpackage Scheduler
  */
-class Task extends \TYPO3\CMS\Scheduler\Task {
+class Task extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 
 	/**
 	 * @var string

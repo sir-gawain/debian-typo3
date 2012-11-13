@@ -24,10 +24,7 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Service;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for class Tx_Extbase_Service_TypeHandling
- *
- * @package Extbase
- * @subpackage extbase
+ * Testcase for class \TYPO3\CMS\Extbase\Service\TypeHandling
  */
 class TypeHandlingServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
@@ -68,13 +65,17 @@ class TypeHandlingServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 			array('int', array('type' => 'integer', 'elementType' => NULL)),
 			array('string', array('type' => 'string', 'elementType' => NULL)),
 			array('DateTime', array('type' => 'DateTime', 'elementType' => NULL)),
+			array('\DateTime', array('type' => 'DateTime', 'elementType' => NULL)),
 			array('Tx_Extbase_Bar', array('type' => 'Tx_Extbase_Bar', 'elementType' => NULL)),
-			array('Tx_Extbase_Bar', array('type' => 'Tx_Extbase_Bar', 'elementType' => NULL)),
+			array('\\ExtbaseTeam\\BlogExample\\Foo\\Bar', array('type' => 'ExtbaseTeam\\BlogExample\\Foo\\Bar', 'elementType' => NULL)),
 			array('array<integer>', array('type' => 'array', 'elementType' => 'integer')),
 			array('ArrayObject<string>', array('type' => 'ArrayObject', 'elementType' => 'string')),
 			array('SplObjectStorage<Tx_Extbase_Bar>', array('type' => 'SplObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
-			array('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage<Tx_Extbase_Bar>', array('type' => 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
-			array('Tx_Extbase_Persistence_ObjectStorage<Tx_Extbase_Bar>', array('type' => 'Tx_Extbase_Persistence_ObjectStorage', 'elementType' => 'Tx_Extbase_Bar'))
+			array('SplObjectStorage<\\ExtbaseTeam\\BlogExample\\Foo\\Bar>', array('type' => 'SplObjectStorage', 'elementType' => 'ExtbaseTeam\\BlogExample\\Foo\\Bar')),
+			array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage<Tx_Extbase_Bar>', array('type' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
+			array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage<\\ExtbaseTeam\\BlogExample\\Foo\\Bar>', array('type' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'elementType' => 'ExtbaseTeam\\BlogExample\\Foo\\Bar')),
+			array('Tx_Extbase_Persistence_ObjectStorage<Tx_Extbase_Bar>', array('type' => 'Tx_Extbase_Persistence_ObjectStorage', 'elementType' => 'Tx_Extbase_Bar')),
+			array('Tx_Extbase_Persistence_ObjectStorage<\\ExtbaseTeam\\BlogExample\\Foo\\Bar>', array('type' => 'Tx_Extbase_Persistence_ObjectStorage', 'elementType' => 'ExtbaseTeam\\BlogExample\\Foo\\Bar')),
 		);
 	}
 
@@ -86,7 +87,7 @@ class TypeHandlingServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 	 * @param mixed $expectedResult
 	 */
 	public function parseTypeReturnsArrayWithInformation($type, $expectedResult) {
-		$this->assertEquals($this->typeHandlingService->parseType($type), $expectedResult);
+		$this->assertEquals($expectedResult, $this->typeHandlingService->parseType($type));
 	}
 
 	/**

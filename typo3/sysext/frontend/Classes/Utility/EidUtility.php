@@ -45,7 +45,7 @@ namespace TYPO3\CMS\Frontend\Utility;
  * @package TYPO3
  * @subpackage tslib
  */
-final class EidUtility {
+class EidUtility {
 
 	/**
 	 * Load and initialize Frontend User. Note, this process is slow because
@@ -121,7 +121,7 @@ final class EidUtility {
 	 * @return void
 	 */
 	static public function initExtensionTCA($extensionKey) {
-		$extTablesPath = \TYPO3\CMS\Core\Extension\ExtensionManager::extPath($extensionKey, 'ext_tables.php');
+		$extTablesPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionKey, 'ext_tables.php');
 		if (file_exists($extTablesPath)) {
 			$GLOBALS['_EXTKEY'] = $extensionKey;
 			require_once $extTablesPath;

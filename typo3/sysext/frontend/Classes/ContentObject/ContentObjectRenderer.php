@@ -1431,7 +1431,7 @@ class ContentObjectRenderer {
 					$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_gifbuilder');
 					$gifCreator->init();
 					$gifCreator->mayScaleUp = 0;
-					$dims = $gifCreator->getImageScale($gifCreator->getImageDimensions($imageFile), $conf['width'], $conf['height'], '');
+					$dims = $gifCreator->getImageScale($gifCreator->getImageDimensions($imageFile), $conf['width'], $conf['height'], array());
 					$JSwindowExpand = isset($conf['JSwindow.']['expand.']) ? $this->stdWrap($conf['JSwindow.']['expand'], $conf['JSwindow.']['expand.']) : $conf['JSwindow.']['expand'];
 					$offset = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $JSwindowExpand . ',');
 					$newWindow = isset($conf['JSwindow.']['newWindow.']) ? $this->stdWrap($conf['JSwindow.']['newWindow'], $conf['JSwindow.']['newWindow.']) : $conf['JSwindow.']['newWindow'];
@@ -4764,7 +4764,8 @@ class ContentObjectRenderer {
 		} while ($pointer < $totalLen);
 		// Parsing nonTypoTag content (all even keys):
 		reset($contentAccum);
-		for ($a = 0; $a < count($contentAccum); $a++) {
+		$contentAccumCount = count($contentAccum);
+		for ($a = 0; $a < $contentAccumCount; $a++) {
 			if ($a % 2 != 1) {
 				// stdWrap
 				if (is_array($conf['nonTypoTagStdWrap.'])) {
@@ -5023,22 +5024,29 @@ class ContentObjectRenderer {
 				$imageResource = $gifCreator->getImageDimensions($theImage);
 				break;
 			default:
-				if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($file)) {
-					$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($file);
-				} else {
-					if ($fileArray['import.']) {
-						$ifile = $this->stdWrap('', $fileArray['import.']);
-						if ($ifile) {
-							if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($ifile)) {
-								$file = $ifile;
-							} else {
-								$file = $fileArray['import'] . $ifile;
+				try {
+					if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($file)) {
+						$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($file);
+					} else {
+						if ($fileArray['import.']) {
+							$ifile = $this->stdWrap('', $fileArray['import.']);
+							if ($ifile) {
+								if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($ifile)) {
+									$file = $ifile;
+								} else {
+									$file = $fileArray['import'] . $ifile;
+								}
 							}
 						}
+						// clean ../ sections of the path and resolve to proper string. This is necessary for the Tx_File_BackwardsCompatibility_TslibContentAdapter to work.
+						$file = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($file);
+						$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($file);
 					}
-					// clean ../ sections of the path and resolve to proper string. This is necessary for the Tx_File_BackwardsCompatibility_TslibContentAdapter to work.
-					$file = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($file);
-					$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($file);
+				} catch(\TYPO3\CMS\Core\Resource\Exception $exception) {
+					/** @var \TYPO3\CMS\Core\Log\Logger $logger */
+					$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger();
+					$logger->warning('The image "' . $file . '" could not be found and won\'t be included in frontend output');
+					return NULL;
 				}
 				if ($fileObject instanceof \TYPO3\CMS\Core\Resource\FileInterface) {
 					$processingConfiguration = array();
@@ -5097,7 +5105,7 @@ class ContentObjectRenderer {
 			$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_gifbuilder');
 			/** @var $gifCreator tslib_gifbuilder */
 			$gifCreator->init();
-			$info = $gifCreator->imageMagickConvert($theImage, 'WEB', '', '', '', '', '');
+			$info = $gifCreator->imageMagickConvert($theImage, 'WEB');
 			$info['origFile'] = $theImage;
 			// This is needed by tslib_gifbuilder, ln 100ff in order for the setup-array to create a unique filename hash.
 			$info['origFile_mtime'] = @filemtime($theImage);
@@ -5117,7 +5125,7 @@ class ContentObjectRenderer {
 	 *
 	 * @param string $parameters The parameters to be modified (if required)
 	 * @param array $configuration The TypoScript configuration of [IMAGE].file
-	 * @param string The modified parameters
+	 * @return string The modified parameters
 	 */
 	protected function modifyImageMagickStripProfileParameters($parameters, array $configuration) {
 		// Strips profile information of image to save some space:
@@ -5306,15 +5314,23 @@ class ContentObjectRenderer {
 		$parts = explode(':', $key);
 		$fileUidOrCurrentKeyword = $parts[0];
 		$requestedFileInformationKey = $parts[1];
-		if ($fileUidOrCurrentKeyword === 'current') {
-			$fileObject = $this->getCurrentFile();
-		} elseif (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($fileUidOrCurrentKeyword)) {
-			/** @var \TYPO3\CMS\Core\Resource\ResourceFactory $fileFactory */
-			$fileFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
-			$fileObject = $fileFactory->getFileObject($fileUidOrCurrentKeyword);
-		} else {
+		try {
+			if ($fileUidOrCurrentKeyword === 'current') {
+				$fileObject = $this->getCurrentFile();
+			} elseif (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($fileUidOrCurrentKeyword)) {
+				/** @var \TYPO3\CMS\Core\Resource\ResourceFactory $fileFactory */
+				$fileFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
+				$fileObject = $fileFactory->getFileObject($fileUidOrCurrentKeyword);
+			} else {
+				$fileObject = NULL;
+			}
+		} catch (\TYPO3\CMS\Core\Resource\Exception $exception) {
+			/** @var \TYPO3\CMS\Core\Log\Logger $logger */
+			$logger = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Log\LogManager')->getLogger();
+			$logger->warning('The file "' . $fileUidOrCurrentKeyword . '" could not be found and won\'t be included in frontend output');
 			$fileObject = NULL;
 		}
+
 		if ($fileObject instanceof \TYPO3\CMS\Core\Resource\FileInterface) {
 			// All properties of the \TYPO3\CMS\Core\Resource\FileInterface are available here:
 			switch ($requestedFileInformationKey) {
@@ -6008,7 +6024,7 @@ class ContentObjectRenderer {
 					$isUrlModified = TRUE;
 				}
 				// Override scheme:
-				$forceAbsoluteUrl =& $configuration['forceAbsoluteUrl.']['scheme'];
+				$forceAbsoluteUrl = &$configuration['forceAbsoluteUrl.']['scheme'];
 				if (!empty($forceAbsoluteUrl) && $urlParts['scheme'] !== $forceAbsoluteUrl) {
 					$urlParts['scheme'] = $forceAbsoluteUrl;
 					$isUrlModified = TRUE;
@@ -6779,7 +6795,7 @@ class ContentObjectRenderer {
 		if (class_exists($className)) {
 			return TRUE;
 		} elseif ($config) {
-			$pluginConfiguration =& $GLOBALS['TSFE']->tmpl->setup['plugin.'][$className . '.'];
+			$pluginConfiguration = &$GLOBALS['TSFE']->tmpl->setup['plugin.'][$className . '.'];
 			if (isset($pluginConfiguration['includeLibs']) && $pluginConfiguration['includeLibs']) {
 				$config['includeLibs'] = $pluginConfiguration['includeLibs'];
 				return $this->includeLibs($config);

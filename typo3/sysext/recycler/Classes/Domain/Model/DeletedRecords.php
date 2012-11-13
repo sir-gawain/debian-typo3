@@ -269,7 +269,7 @@ class DeletedRecords {
 	 * There is a special handling for the characters '%' and '_'.
 	 *
 	 * @param 	string		$value: The value to be escaped for like conditions
-	 * @paran 	string		$tableName: The name of the table the query should be used for
+	 * @param 	string		$tableName: The name of the table the query should be used for
 	 * @return 	string		The escaped value to be used for like conditions
 	 */
 	protected function escapeValueForLike($value, $tableName) {
@@ -288,7 +288,7 @@ class DeletedRecords {
 	public function deleteData($recordsArray) {
 		$recordsArray = json_decode($recordsArray);
 		if (is_array($recordsArray)) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 			$tce->start('', '');
 			$tce->disableDeleteClause();
 			foreach ($recordsArray as $key => $record) {
@@ -333,7 +333,7 @@ class DeletedRecords {
 				}
 			}
 			if ($cmd) {
-				$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+				$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 				$tce->start(array(), $cmd);
 				$tce->process_cmdmap();
 				$result = TRUE;

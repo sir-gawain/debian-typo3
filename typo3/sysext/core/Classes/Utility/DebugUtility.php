@@ -33,7 +33,7 @@ namespace TYPO3\CMS\Core\Utility;
  * @package TYPO3
  * @subpackage t3lib
  */
-final class DebugUtility {
+class DebugUtility {
 
 	/**
 	 * Template for debug output
@@ -52,6 +52,12 @@ final class DebugUtility {
 		</tr>
 	</table>
 	';
+
+	/**
+	 * @var \TYPO3\CMS\Core\Encoder\JavaScriptEncoder
+	 */
+	static protected $javaScriptEncoder;
+
 	/**
 	 * Debug
 	 *
@@ -69,19 +75,13 @@ final class DebugUtility {
 		if ($header) {
 			$debug = sprintf(self::DEBUG_TABLE_TEMPLATE, htmlspecialchars((string) $header), $debug);
 		}
-		if (TYPO3_MODE === 'BE') {
-			$debugString = self::prepareVariableForJavascript($debug, is_object($var));
-			$group = htmlspecialchars($group);
-			if ($header !== '') {
-				$tabHeader = htmlspecialchars($header);
-			} else {
-				$tabHeader = 'Debug';
-			}
+		if (TYPO3_MODE === 'BE' && !(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_CLI)) {
+			$tabHeader = $header ?: 'Debug';
 			$script = '
 				(function debug() {
-					var debugMessage = "' . $debugString . '";
-					var header = "' . $tabHeader . '";
-					var group = "' . $group . '";
+					var debugMessage = "' . static::getJavaScriptEncoder()->encode($debug) . '";
+					var header = "' . static::getJavaScriptEncoder()->encode($tabHeader) . '";
+					var group = "' . static::getJavaScriptEncoder()->encode($group) . '";
 
 					if (typeof Ext !== "object" && (top && typeof top.Ext !== "object")) {
 						document.write(debugMessage);
@@ -121,42 +121,11 @@ final class DebugUtility {
 	 * @param string $string
 	 * @param boolean $asObject
 	 * @return string
+	 * @deprecated since 6.0 will be removed with 6.2
 	 */
 	static public function prepareVariableForJavascript($string, $asObject) {
-		if ($asObject) {
-			$string = str_replace(array(
-				'"',
-				'/',
-				'<',
-				'
-',
-				'
-'
-			), array(
-				'\\"',
-				'\\/',
-				'\\<',
-				'<br />',
-				''
-			), $string);
-		} else {
-			$string = str_replace(array(
-				'"',
-				'/',
-				'<',
-				'
-',
-				'
-'
-			), array(
-				'\\"',
-				'\\/',
-				'\\<',
-				'',
-				''
-			), $string);
-		}
-		return $string;
+		GeneralUtility::logDeprecatedFunction();
+		return self::getJavaScriptEncoder()->encode($string);
 	}
 
 	/**
@@ -189,12 +158,12 @@ final class DebugUtility {
 	 * @param string $group
 	 */
 	static public function debugInPopUpWindow($debugVariable, $header = 'Debug', $group = 'Debug') {
-		$debugString = self::prepareVariableForJavascript(self::convertVariableToString($debugVariable), is_object($debugVariable));
+		$debugString = self::convertVariableToString($debugVariable);
 		$script = '
 			(function debug() {
-				var debugMessage = "' . $debugString . '",
-					header = "' . htmlspecialchars($header) . '",
-					group = "' . htmlspecialchars($group) . '",
+				var debugMessage = "' . static::getJavaScriptEncoder()->encode($debugString) . '",
+					header = "' . static::getJavaScriptEncoder()->encode($header) . '",
+					group = "' . static::getJavaScriptEncoder()->encode($group) . '",
 
 					browserWindow = function(debug, header, group) {
 						var newWindow = window.open("", "TYPO3DebugWindow_" + group,
@@ -312,6 +281,7 @@ final class DebugUtility {
 		if (strlen($string) < $characters) {
 			$characters = strlen($string);
 		}
+		$valuestring = '';
 		for ($i = 0; $i < $characters; $i++) {
 			$valuestring .= ' ' . ord(substr($string, $i, 1));
 		}
@@ -382,6 +352,16 @@ final class DebugUtility {
 		echo self::viewArray($array_in);
 	}
 
+	/**
+	 * @return \TYPO3\CMS\Core\Encoder\JavaScriptEncoder
+	 */
+	static protected function getJavaScriptEncoder() {
+		if (empty(self::$javaScriptEncoder)) {
+			self::$javaScriptEncoder = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Encoder\\JavaScriptEncoder');
+		}
+
+		return self::$javaScriptEncoder;
+	}
 }
 
 

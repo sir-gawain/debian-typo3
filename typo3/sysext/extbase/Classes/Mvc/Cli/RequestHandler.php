@@ -5,8 +5,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Cli;
  *  Copyright notice
  *  All rights reserved
  *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -47,13 +47,7 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	protected $requestBuilder;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
-	 * @deprecated since Extbase 1.1; will be removed in Extbase 6.0
-	 */
-	protected $flashMessages;
-
-	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
 	 */
 	protected $flashMessageContainer;
 
@@ -66,13 +60,11 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages $flashMessageContainer
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer
 	 * @return void
 	 */
-	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessages $flashMessageContainer) {
+	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
 		$this->flashMessageContainer = $flashMessageContainer;
-		// @deprecated since Extbase 1.1; will be removed in Extbase 6.0
-		$this->flashMessages = $flashMessageContainer;
 	}
 
 	/**

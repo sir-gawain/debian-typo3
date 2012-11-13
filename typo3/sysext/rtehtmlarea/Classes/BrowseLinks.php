@@ -11,10 +11,16 @@ namespace TYPO3\CMS\Rtehtmlarea;
 class BrowseLinks extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 
 	public $editorNo;
-
+	/**
+	 * TYPO3 language code of the content language
+	 */
 	public $contentTypo3Language;
 
 	public $contentTypo3Charset = 'utf-8';
+	/**
+	 * Language service object for localization to the content language
+	 */
+	protected $contentLanguageService;
 
 	public $additionalAttributes = array();
 
@@ -47,6 +53,9 @@ class BrowseLinks extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 	 */
 	public function init() {
 		$this->initVariables();
+		// Create content laguage service
+		$this->contentLanguageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Lang\\LanguageService');
+		$this->contentLanguageService->init($this->contentTypo3Language);
 		$this->initConfiguration();
 		// init fileProcessor
 		$this->fileProcessor = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\File\\BasicFileUtility');
@@ -942,18 +951,15 @@ class BrowseLinks extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 	 * @return 	string		Localized string.
 	 */
 	public function getLLContent($string) {
-		$BE_lang = $GLOBALS['LANG']->lang;
-		$GLOBALS['LANG']->lang = $this->contentTypo3Language;
-		$LLString = $GLOBALS['LANG']->sL($string);
-		$GLOBALS['LANG']->lang = $BE_lang;
-		return $LLString;
+		return $this->contentLanguageService->sL($string);
 	}
 
 	/**
 	 * Localize a label obtained from Page TSConfig
 	 *
-	 * @param 	string		string: the label to be localized
-	 * @return 	string		Localized string.
+	 * @param string $string The label to be localized
+	 * @param boolean $JScharCode If needs to be converted to a array of char numbers
+	 * @return string Localized string.
 	 */
 	public function getPageConfigLabel($string, $JScharCode = 1) {
 		if (strcmp(substr($string, 0, 4), 'LLL:')) {

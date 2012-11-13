@@ -560,6 +560,7 @@ class AdminPanelView {
 	 *
 	 * @param string $sectionSuffix The code for the display_ label/key
 	 * @param string $sectionTitle Input string
+	 * @param string $className The classname for the <a> tag
 	 * @return string $className Linked input string
 	 * @see extGetHead()
 	 */
@@ -573,7 +574,8 @@ class AdminPanelView {
 	 *
 	 * @param string $title Key to label
 	 * @param string $content The HTML content for the forth table cell.
-	 * @return string $checkboxContent HTML table row.
+	 * @param string $checkboxContent The HTML for a checkbox or hidden fields
+	 * @return string HTML table row.
 	 * @see extGetHead()
 	 */
 	public function extGetItem($title, $content = '', $checkboxContent = '') {
@@ -590,7 +592,7 @@ class AdminPanelView {
 		//  If mod.web_list.newContentWiz.overrideWithExtension is set, use that extension's create new content wizard instead:
 		$tsConfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getModTSconfig($this->pageinfo['uid'], 'mod.web_list');
 		$tsConfig = $tsConfig['properties']['newContentWiz.']['overrideWithExtension'];
-		$newContentWizScriptPath = \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($tsConfig) ? \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath($tsConfig) . 'mod1/db_new_content_el.php' : TYPO3_mainDir . 'sysext/cms/layout/db_new_content_el.php';
+		$newContentWizScriptPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($tsConfig) ? \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($tsConfig) . 'mod1/db_new_content_el.php' : TYPO3_mainDir . 'sysext/cms/layout/db_new_content_el.php';
 		$perms = $GLOBALS['BE_USER']->calcPerms($GLOBALS['TSFE']->page);
 		$langAllowed = $GLOBALS['BE_USER']->checkLanguageAccess($GLOBALS['TSFE']->sys_language_uid);
 		$id = $GLOBALS['TSFE']->id;

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +15,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,10 +28,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
  ***************************************************************/
 /**
  * A factory for a data map to map a single table configured in $TCA on a domain object.
- *
- * @package Extbase
- * @subpackage Persistence\Mapper
- * @version $ID:$
  */
 class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 
@@ -131,20 +130,7 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 		}
 		$recordType = NULL;
 		$subclasses = array();
-		if (strpos($className, '\\') !== FALSE) {
-			$classNameParts = explode('\\', $className, 4);
-			if (isset($classNameParts[0]) && $classNameParts[0] === 'TYPO3' && isset($classNameParts[1]) && $classNameParts[1] === 'CMS') {
-				$extensionKey = $classNameParts[2];
-				$classNameWithoutVendorAndProduct = $classNameParts[3];
-			} else {
-				$extensionKey = $classNameParts[1];
-				$classNameWithoutVendorAndProduct = $classNameParts[2];
-			}
-			$classNameWithoutVendorAndProduct = str_replace('\\', '_', $classNameWithoutVendorAndProduct);
-			$tableName = strtolower('tx_' . $extensionKey . '_' . $classNameWithoutVendorAndProduct);
-		} else {
-			$tableName = strtolower($className);
-		}
+		$tableName = $this->resolveTableName($className);
 		$columnMapping = array();
 		$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 		$classSettings = $frameworkConfiguration['persistence']['classes'][$className];
@@ -192,6 +178,28 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 		}
 		// debug($dataMap);
 		return $dataMap;
+	}
+
+	/**
+	 * Resolve the table name for the given class name
+	 *
+	 * @param string $className
+	 * @return string The table name
+	 */
+	protected function resolveTableName($className) {
+		if (strpos($className, '\\') !== FALSE) {
+			$classNameParts = explode('\\', $className, 6);
+			// Skip vendor and product name for core classes
+			if (strpos($className, 'TYPO3\\CMS\\') === 0) {
+				$classPartsToSkip = 2;
+			} else {
+				$classPartsToSkip = 1;
+			}
+			$tableName = 'tx_' . strtolower(implode('_', array_slice($classNameParts, $classPartsToSkip)));
+		} else {
+			$tableName = strtolower($className);
+		}
+		return $tableName;
 	}
 
 	/**
@@ -278,6 +286,12 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 		if (isset($controlSection['type'])) {
 			$dataMap->setRecordTypeColumnName($controlSection['type']);
 		}
+		if (isset($controlSection['rootLevel'])) {
+			$dataMap->setRootLevel($controlSection['rootLevel']);
+		}
+		if (isset($controlSection['is_static'])) {
+			$dataMap->setIsStatic($controlSection['is_static']);
+		}
 		if (isset($controlSection['enablecolumns']['disabled'])) {
 			$dataMap->setDisabledFlagColumnName($controlSection['enablecolumns']['disabled']);
 		}
@@ -308,7 +322,7 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 				$columnMap = $this->setManyToManyRelation($columnMap, $columnConfiguration);
 			} elseif (isset($propertyMetaData['elementType'])) {
 				$columnMap = $this->setOneToManyRelation($columnMap, $columnConfiguration);
-			} elseif (isset($propertyMetaData['type']) && strpos($propertyMetaData['type'], '_') !== FALSE) {
+			} elseif (isset($propertyMetaData['type']) && strpbrk($propertyMetaData['type'], '_\\') !== FALSE) {
 				$columnMap = $this->setOneToOneRelation($columnMap, $columnConfiguration);
 			} else {
 				$columnMap->setTypeOfRelation(\TYPO3\CMS\Extbase\Persistence\Generic\Mapper\ColumnMap::RELATION_NONE);

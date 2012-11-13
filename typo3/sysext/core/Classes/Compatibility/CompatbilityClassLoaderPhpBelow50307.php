@@ -78,7 +78,7 @@ class CompatbilityClassLoaderPhpBelow50307 extends \TYPO3\CMS\Core\Core\ClassLoa
 		} else {
 			$cacheIdentifier = static::getClassPathCacheIdentifier($classPath);
 			/** @var $phpCodeCache \TYPO3\CMS\Core\Cache\Frontend\PhpFrontend */
-			$phpCodeCache = $GLOBALS['typo3CacheManager']->getCache('cache_phpcode');
+			$phpCodeCache = $GLOBALS['typo3CacheManager']->getCache('cache_core');
 			if (!$phpCodeCache->has($cacheIdentifier)) {
 				$classCode = static::rewriteMethodTypeHintsFromClassPath($classPath);
 				$phpCodeCache->set($cacheIdentifier, $classCode, array(), 0);
@@ -102,7 +102,7 @@ class CompatbilityClassLoaderPhpBelow50307 extends \TYPO3\CMS\Core\Core\ClassLoa
 			// The class content has to be part of the identifier too
 			// otherwise the old class files get loaded from cache
 		$fileSha1 = sha1_file($classPath);
-		$cacheIdentifier = $fileNameWithoutExtension . '_' . substr(sha1($fileSha1 . '|' . $relativeClassPath), 0, 20);
+		$cacheIdentifier = 'ClassLoader_' . $fileNameWithoutExtension . '_' . substr(sha1($fileSha1 . '|' . $relativeClassPath), 0, 20);
 			// Clean up identifier to be a valid cache entry identifier
 		$cacheIdentifier = preg_replace('/[^a-zA-Z0-9_%\-&]/i', '_', $cacheIdentifier);
 		return $cacheIdentifier;
@@ -125,13 +125,13 @@ class CompatbilityClassLoaderPhpBelow50307 extends \TYPO3\CMS\Core\Core\ClassLoa
 			ini_set('pcre.backtrack_limit', $fileLength);
 		}
 		$fileContent = preg_replace_callback(
-			'/function\s+([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*\((.*?\$.*?)\)\s*\{/im',
+			'/function\s+([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*\((.*?\$.*?)\)(\s*[{;])/ims',
 			function($matches) use($classAliasMap) {
 			if (isset($matches[1]) && isset($matches[2])) {
 				list($functionName, $argumentList) = array_slice($matches, 1, 2);
 				$arguments = explode(',', $argumentList);
 				$arguments = array_map('trim', $arguments);
-				$arguments = preg_replace_callback('/([\\a-z0-9_]+\s+)?((\s*[&]*\s*\$[a-z0-9_]+)(\s*=\s*.+)?)/im', function($argumentMatches) use($classAliasMap) {
+				$arguments = preg_replace_callback('/([\\a-z0-9_]+\s+)?((\s*[&]*\s*\$[a-z0-9_]+)(\s*=\s*.+)?)/ims', function($argumentMatches) use($classAliasMap) {
 					if (isset($argumentMatches[1]) && isset($argumentMatches[2])) {
 						$typeHint = strtolower(ltrim(trim($argumentMatches[1]), '\\'));
 						if (isset($classAliasMap[$typeHint])) {
@@ -140,7 +140,7 @@ class CompatbilityClassLoaderPhpBelow50307 extends \TYPO3\CMS\Core\Core\ClassLoa
 					}
 					return $argumentMatches[0];
 				}, $arguments);
-				return 'function ' . $functionName . ' (' . implode(', ', $arguments) . ') {';
+				return 'function ' . $functionName . '(' . implode(', ', $arguments) . ')' . $matches[3];
 			}
 			return $matches[0];
 		}, $fileContent);

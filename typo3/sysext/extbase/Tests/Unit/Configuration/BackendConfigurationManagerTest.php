@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Configuration;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,32 +30,17 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Configuration;
 class BackendConfigurationManagerTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
-	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
-	 *
-	 * @var array
-	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
-
-	/**
 	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
 	 */
 	protected $typo3DbBackup;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Configuration\BackendConfigurationManager
+	 * @var \TYPO3\CMS\Extbase\Configuration\BackendConfigurationManager|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
 	protected $backendConfigurationManager;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Service\TypoScriptService
+	 * @var \TYPO3\CMS\Extbase\Service\TypoScriptService|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
 	protected $mockTypoScriptService;
 

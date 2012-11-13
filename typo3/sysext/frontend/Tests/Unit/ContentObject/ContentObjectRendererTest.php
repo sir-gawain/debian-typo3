@@ -31,25 +31,10 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\ContentObject;
  * @author Oliver Hader <oliver@typo3.org>
  * @author Oliver Klee <typo3-coding@oliverklee.de>
  */
-class ContentObjectRendererTest extends \tx_phpunit_testcase {
+class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
-	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
-	 *
-	 * @var array
-	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject|\Tx_Phpunit_Interface_AccessibleObject|\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
+	 * @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface|\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
 	private $cObj;
 
@@ -73,6 +58,7 @@ class ContentObjectRendererTest extends \tx_phpunit_testcase {
 		$this->tsfe = $this->getMock('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', array(), array(), '', FALSE);
 		$this->tsfe->tmpl = $this->template;
 		$this->tsfe->config = array();
+		$this->tsfe->page = array();
 		$sysPageMock = $this->getMock('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
 		$this->tsfe->sys_page = $sysPageMock;
 		$GLOBALS['TSFE'] = $this->tsfe;

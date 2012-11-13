@@ -33,7 +33,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log;
  * @package TYPO3
  * @subpackage t3lib
  */
-class LogManagerTest extends \tx_phpunit_testcase {
+class LogManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * Enable backup of global and system variables
@@ -41,14 +41,6 @@ class LogManagerTest extends \tx_phpunit_testcase {
 	 * @var boolean
 	 */
 	protected $backupGlobals = TRUE;
-
-	/**
-	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
-	 *
-	 * @var array
-	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
 
 	/**
 	 * @var \TYPO3\CMS\Core\Log\LogManager
@@ -75,6 +67,13 @@ class LogManagerTest extends \tx_phpunit_testcase {
 	 */
 	public function logManagerTurnsUnderScoreStyleLoggerNamesIntoDotStyleLoggerNames() {
 		$this->assertSame('test.a.b', $this->logManagerInstance->getLogger('test_a_b')->getName());
+	}
+
+	/**
+	 * @test
+	 */
+	public function logManagerTurnsNamespaceStyleLoggerNamesIntoDotStyleLoggerNames() {
+		$this->assertSame('test.a.b', $this->logManagerInstance->getLogger('test\\a\\b')->getName());
 	}
 
 	/**

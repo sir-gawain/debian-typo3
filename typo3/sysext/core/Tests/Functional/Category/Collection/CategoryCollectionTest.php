@@ -31,7 +31,7 @@ namespace TYPO3\CMS\Core\Tests\Functional\Category\Collection;
  * @subpackage t3lib
  * @author Fabien Udriot <fabien.udriot@typo3.org>
  */
-class CategoryCollectionTest extends \tx_phpunit_testcase {
+class CategoryCollectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var \TYPO3\CMS\Core\Category\Collection\CategoryCollection
@@ -270,7 +270,13 @@ class CategoryCollectionTest extends \tx_phpunit_testcase {
 	 * @return void
 	 */
 	private function createDummyTable() {
-		$sql = "CREATE TABLE {$this->tableName} (\n\tuid int(11) auto_increment,\n\tpid int(11) unsigned DEFAULT '0' NOT NULL,\n    title tinytext,\n\tcategories int(11) unsigned DEFAULT '0' NOT NULL,\n\tsys_category_is_dummy_record int(11) unsigned DEFAULT '0' NOT NULL,\n\n    PRIMARY KEY (uid)\n);";
+		$sql = 'CREATE TABLE {' . $this->tableName . '} (' . LF . TAB .
+			'uid int(11) auto_increment,' . LF . TAB .
+			'pid int(11) unsigned DEFAULT \'0\' NOT NULL,' . LF . TAB .
+			'title tinytext,' . LF . TAB .
+			'tcategories int(11) unsigned DEFAULT \'0\' NOT NULL,' . LF . TAB .
+			'sys_category_is_dummy_record int(11) unsigned DEFAULT \'0\' NOT NULL,' . LF . LF . TAB .
+			'PRIMARY KEY (uid)' . LF . ');';
 		$this->database->sql_query($sql);
 	}
 

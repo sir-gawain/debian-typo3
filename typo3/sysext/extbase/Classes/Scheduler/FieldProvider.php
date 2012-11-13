@@ -25,9 +25,6 @@ namespace TYPO3\CMS\Extbase\Scheduler;
  ***************************************************************/
 /**
  * Field provider for Extbase CommandController Scheduler task
- *
- * @package Extbase
- * @subpackage Scheduler
  */
 class FieldProvider implements \TYPO3\CMS\Scheduler\AdditionalFieldProviderInterface {
 
@@ -68,7 +65,7 @@ class FieldProvider implements \TYPO3\CMS\Scheduler\AdditionalFieldProviderInter
 	 * Render additional information fields within the scheduler backend.
 	 *
 	 * @param array $taskInfo Array information of task to return
-	 * @param mixed $task \TYPO3\CMS\Scheduler\Task or tx_scheduler_Execution instance
+	 * @param mixed $task \TYPO3\CMS\Scheduler\Task\AbstractTask or tx_scheduler_Execution instance
 	 * @param \TYPO3\CMS\Scheduler\Controller\SchedulerModuleController $schedulerModule Reference to the calling object (BE module of the Scheduler)
 	 * @return array Additional fields
 	 * @see \TYPO3\CMS\Scheduler\AdditionalFieldProvider#getAdditionalFields($taskInfo, $task, $schedulerModule)
@@ -105,10 +102,10 @@ class FieldProvider implements \TYPO3\CMS\Scheduler\AdditionalFieldProviderInter
 	 * Saves additional field values
 	 *
 	 * @param array $submittedData
-	 * @param \TYPO3\CMS\Scheduler\Task $task
+	 * @param \TYPO3\CMS\Scheduler\Task\AbstractTask $task
 	 * @return boolean
 	 */
-	public function saveAdditionalFields(array $submittedData, \TYPO3\CMS\Scheduler\Task $task) {
+	public function saveAdditionalFields(array $submittedData, \TYPO3\CMS\Scheduler\Task\AbstractTask $task) {
 		$task->setCommandIdentifier($submittedData['task_extbase']['action']);
 		$task->setArguments($submittedData['task_extbase']['arguments']);
 		return TRUE;
@@ -137,7 +134,19 @@ class FieldProvider implements \TYPO3\CMS\Scheduler\AdditionalFieldProviderInter
 		$options = array();
 		foreach ($commands as $command) {
 			if ($command->isInternal() === FALSE) {
-				$classNameParts = explode('_', $command->getControllerClassName());
+				$className = $command->getControllerClassName();
+				if (strpos($command->getControllerClassName(), '\\')) {
+					$classNameParts = explode('\\', $className);
+					// Skip vendor and product name for core classes
+					if (strpos($className, 'TYPO3\\CMS\\') === 0) {
+						$classPartsToSkip = 2;
+					} else {
+						$classPartsToSkip = 1;
+					}
+					$classNameParts = array_slice($classNameParts, $classPartsToSkip);
+				} else {
+					$classNameParts = explode('_', $className);
+				}
 				$identifier = $command->getCommandIdentifier();
 				$options[$identifier] = $classNameParts[1] . ' ' . str_replace('CommandController', '', $classNameParts[3]) . ': ' . $command->getControllerCommandName();
 			}

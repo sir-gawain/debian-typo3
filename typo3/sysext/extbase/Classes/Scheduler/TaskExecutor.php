@@ -26,11 +26,8 @@ namespace TYPO3\CMS\Extbase\Scheduler;
 /**
  * Task Executor
  *
- * Takes a Tx_Extbase_Scheduler_Task and executes the CommandController command
+ * Takes a \TYPO3\CMS\Extbase\Scheduler\Task and executes the CommandController command
  * defined therein.
- *
- * @package Extbase
- * @subpackage Scheduler
  */
 class TaskExecutor implements \TYPO3\CMS\Core\SingletonInterface {
 

@@ -36,7 +36,7 @@ namespace TYPO3\CMS\IndexedSearch\Utility;
  * @package TYPO3
  * @subpackage tx_indexedsearch
  */
-final class IndexedSearchUtility {
+class IndexedSearchUtility {
 
 	/**
 	 * Check if the tables provided are configured for usage. This becomes
@@ -46,7 +46,7 @@ final class IndexedSearchUtility {
 	 * @param string $tableName Table name to check
 	 * @return boolean True if the given table is used
 	 */
-	static function isTableUsed($tableName) {
+	static public function isTableUsed($tableName) {
 		$tableList = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['use_tables'];
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::inList($tableList, $tableName);
 	}
@@ -58,11 +58,8 @@ final class IndexedSearchUtility {
 	 * @param string $stringToHash String to hash
 	 * @return int Integer intepretation of the md5 hash of input string.
 	 */
-	static function md5inthash($stringToHash) {
+	static public function md5inthash($stringToHash) {
 		return hexdec(substr(md5($stringToHash), 0, 7));
 	}
-
 }
-
-
 ?>

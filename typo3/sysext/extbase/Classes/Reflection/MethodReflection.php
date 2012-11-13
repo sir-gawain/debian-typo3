@@ -25,10 +25,6 @@ namespace TYPO3\CMS\Extbase\Reflection;
  ***************************************************************/
 /**
  * Extended version of the ReflectionMethod
- *
- * @package Extbase
- * @subpackage Reflection
- * @version $Id$
  */
 class MethodReflection extends \ReflectionMethod {
 
@@ -58,10 +54,10 @@ class MethodReflection extends \ReflectionMethod {
 
 	/**
 	 * Replacement for the original getParameters() method which makes sure
-	 * that Tx_Extbase_Reflection_ParameterReflection objects are returned instead of the
+	 * that \TYPO3\CMS\Extbase\Reflection\ParameterReflection objects are returned instead of the
 	 * orginal ReflectionParameter instances.
 	 *
-	 * @return array of Tx_Extbase_Reflection_ParameterReflection Parameter reflection objects of the parameters of this method
+	 * @return array of \TYPO3\CMS\Extbase\Reflection\ParameterReflection Parameter reflection objects of the parameters of this method
 	 */
 	public function getParameters() {
 		$extendedParameters = array();

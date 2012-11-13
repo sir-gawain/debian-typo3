@@ -6,8 +6,8 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Mvc\Controller;
  *
  *  All rights reserved
  *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Mvc\Controller;
 class CommandControllerTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\CommandController
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\CommandController|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
 	protected $commandController;
 

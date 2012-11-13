@@ -610,7 +610,12 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 		$rowIdx = 0;
 		for ($a = 0; $a < $imgCount; $a++) {
 			$imgKey = $a + $imgStart;
-			$totalImagePath = $imgPath . $imgs[$imgKey];
+			// if the image cannot be interpreted as integer (therefore filename and no FAL id), add the image path
+			if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($imgs[$imgKey])) {
+				$totalImagePath = intval($imgs[$imgKey]);
+			} else {
+				$totalImagePath = $imgPath . $imgs[$imgKey];
+			}
 			// register IMG_NUM is kept for backwards compatibility
 			$GLOBALS['TSFE']->register['IMAGE_NUM'] = $imgKey;
 			$GLOBALS['TSFE']->register['IMAGE_NUM_CURRENT'] = $imgKey;
@@ -905,7 +910,8 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 				$thisImages = '';
 				$allRows = '';
 				$maxImageSpace = 0;
-				for ($i = $c; $i < count($imgsTag); $i = $i + $imageWrapCols) {
+				$imgsTagCount = count($imgsTag);
+				for ($i = $c; $i < $imgsTagCount; $i = $i + $imageWrapCols) {
 					$imgKey = $i + $imgStart;
 					$colPos = $i % $colCount;
 					if ($separateRows && $colPos == 0) {
@@ -1054,8 +1060,8 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 				$declaration = 'margin-bottom: ' . $value . 'px;';
 			}
 			if (!empty($value)) {
-				if ($configuration['stdWrap.']) {
-					$className = $this->cObj->stdWrap($value, $configuration['stdWrap.']);
+				if ($configuration['classStdWrap.']) {
+					$className = $this->cObj->stdWrap($value, $configuration['classStdWrap.']);
 				} else {
 					$className = $value;
 				}
@@ -1198,6 +1204,4 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 	}
 
 }
-
-
 ?>

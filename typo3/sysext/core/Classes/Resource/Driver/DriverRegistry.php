@@ -102,10 +102,10 @@ class DriverRegistry implements \TYPO3\CMS\Core\SingletonInterface {
 		foreach ($this->driverConfigurations as $driver) {
 			$label = $driver['label'] ?: $driver['class'];
 			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA('sys_file_storage');
-			$driverFieldConfig =& $GLOBALS['TCA']['sys_file_storage']['columns']['driver']['config'];
+			$driverFieldConfig = &$GLOBALS['TCA']['sys_file_storage']['columns']['driver']['config'];
 			$driverFieldConfig['items'][] = array($label, $driver['shortName']);
 			if ($driver['flexFormDS']) {
-				$configurationFieldConfig =& $GLOBALS['TCA']['sys_file_storage']['columns']['configuration']['config'];
+				$configurationFieldConfig = &$GLOBALS['TCA']['sys_file_storage']['columns']['configuration']['config'];
 				$configurationFieldConfig['ds'][$driver['shortName']] = $driver['flexFormDS'];
 			}
 		}
@@ -127,6 +127,15 @@ class DriverRegistry implements \TYPO3\CMS\Core\SingletonInterface {
 		return $this->drivers[$shortName];
 	}
 
+	/**
+	 * Checks if the given driver exists
+	 *
+	 * @param string $shortName Name of the driver
+	 * @return boolean TRUE if the driver exists, FALSE otherwise
+	 */
+	public function driverExists($shortName) {
+		return array_key_exists($shortName, $this->drivers);
+	}
 }
 
 

@@ -173,8 +173,8 @@ class FlexFormTools {
 						$PA['table'] = $table;
 						$PA['field'] = $field;
 						$PA['uid'] = $row['uid'];
-						$this->traverseFlexFormXMLData_DS =& $dataStruct;
-						$this->traverseFlexFormXMLData_Data =& $editData;
+						$this->traverseFlexFormXMLData_DS = &$dataStruct;
+						$this->traverseFlexFormXMLData_Data = &$editData;
 						// Render flexform:
 						$this->traverseFlexFormXMLData_recurse($dataStruct['ROOT']['el'], $editData['data'][$sheet][$lang], $PA, 'data/' . $sheet . '/' . $lang);
 					} else {
@@ -253,7 +253,7 @@ class FlexFormTools {
 	 * @todo Define visibility
 	 */
 	public function getAvailableLanguages() {
-		$isL = \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('static_info_tables');
+		$isL = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables');
 		// Find all language records in the system
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('static_lang_isocode,title,uid', 'sys_language', 'pid=0' . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('sys_language'), '', 'title');
 		// Traverse them
@@ -408,7 +408,7 @@ class FlexFormTools {
 		$spaceInd = $GLOBALS['TYPO3_CONF_VARS']['BE']['compactFlexFormXML'] ? -1 : 4;
 		$output = \TYPO3\CMS\Core\Utility\GeneralUtility::array2xml($array, '', 0, 'T3FlexForms', $spaceInd, $options);
 		if ($addPrologue) {
-			$output = '<?xml version="1.0" encoding="' . $GLOBALS['LANG']->charSet . '" standalone="yes" ?>' . LF . $output;
+			$output = '<?xml version="1.0" encoding="utf-8" standalone="yes" ?>' . LF . $output;
 		}
 		return $output;
 	}

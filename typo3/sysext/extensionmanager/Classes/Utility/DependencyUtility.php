@@ -121,17 +121,24 @@ class DependencyUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension
-	 * @return void
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension|array $extension
+	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
 	 */
 	public function buildExtensionDependenciesTree($extension) {
-		$dependencies = $extension->getDependencies();
+		if (!is_array($extension) && !$extension instanceof \TYPO3\CMS\Extensionmanager\Domain\Model\Extension) {
+			throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('Extension must be array or object.', 1350891642);
+		}
+		if ($extension instanceof \TYPO3\CMS\Extensionmanager\Domain\Model\Extension) {
+			$dependencies = $extension->getDependencies();
+		} else {
+			$dependencies = $this->convertDependenciesToObjects(serialize($extension['constraints']));
+		}
 		$this->checkDependencies($dependencies);
 	}
 
 	/**
 	 * @param string $dependencies
-	 * @return SplObjectStorage
+	 * @return \SplObjectStorage
 	 */
 	public function convertDependenciesToObjects($dependencies) {
 		$unserializedDependencies = unserialize($dependencies);
@@ -139,7 +146,13 @@ class DependencyUtility implements \TYPO3\CMS\Core\SingletonInterface {
 		foreach ($unserializedDependencies as $dependencyType => $dependencyValues) {
 			foreach ($dependencyValues as $dependency => $versions) {
 				if ($dependencyType && $dependency) {
-					list($highest, $lowest) = \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionsStringToVersionNumbers($versions);
+					$versionNumbers = \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionsStringToVersionNumbers($versions);
+					$lowest = $versionNumbers[0];
+					if (count($versionNumbers) === 2) {
+						$highest = $versionNumbers[1];
+					} else {
+						$highest = '';
+					}
 					/** @var $dependencyObject \TYPO3\CMS\Extensionmanager\Domain\Model\Dependency */
 					$dependencyObject = $this->objectManager->create('TYPO3\\CMS\\Extensionmanager\\Domain\\Model\\Dependency');
 					$dependencyObject->setType($dependencyType);
@@ -157,7 +170,7 @@ class DependencyUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Checks dependencies for special cases (currently typo3 and php)
 	 *
-	 * @param SplObjectStorage $dependencies
+	 * @param \SplObjectStorage $dependencies
 	 * @return boolean
 	 */
 	protected function checkDependencies(\SplObjectStorage $dependencies) {
@@ -287,7 +300,7 @@ class DependencyUtility implements \TYPO3\CMS\Core\SingletonInterface {
 						$this->managementService->markExtensionForDownload($latestCompatibleExtensionByIntegerVersionDependency);
 					}
 				} else {
-					throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('Something went wrong.');
+					throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('Could not resolve dependency for "' . $dependency->getIdentifier() . '"');
 				}
 			} else {
 				throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('No compatible version found for extension ' . $extensionKey);
@@ -302,7 +315,7 @@ class DependencyUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return bool
 	 */
 	protected function isDependentExtensionLoaded($extensionKey) {
-		return \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extensionKey);
+		return \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extensionKey);
 	}
 
 	/**
@@ -310,7 +323,7 @@ class DependencyUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return boolean
 	 */
 	protected function isLoadedVersionCompatible(\TYPO3\CMS\Extensionmanager\Domain\Model\Dependency $dependency) {
-		$extensionVersion = \TYPO3\CMS\Core\Extension\ExtensionManager::getExtensionVersion($dependency->getIdentifier());
+		$extensionVersion = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getExtensionVersion($dependency->getIdentifier());
 		return $this->isVersionCompatible($extensionVersion, $dependency);
 	}
 

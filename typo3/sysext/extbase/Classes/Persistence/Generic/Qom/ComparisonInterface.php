@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Qom;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Qom;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -69,9 +70,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Qom;
  * the string "\x" matches the character "x", and
  * all other characters match themselves.
  *
- * @package Extbase
- * @subpackage Persistence\QOM
- * @version $Id$
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 interface ComparisonInterface extends \TYPO3\CMS\Extbase\Persistence\Generic\Qom\ConstraintInterface
@@ -86,7 +84,7 @@ interface ComparisonInterface extends \TYPO3\CMS\Extbase\Persistence\Generic\Qom
 	/**
 	 * Gets the operator.
 	 *
-	 * @return string one of Tx_Extbase_Persistence_QueryObjectModelConstantsInterface.OPERATOR_*
+	 * @return string one of \TYPO3\CMS\Extbase\Persistence\QueryObjectModelConstantsInterface.OPERATOR_*
 	 */
 	public function getOperator();
 

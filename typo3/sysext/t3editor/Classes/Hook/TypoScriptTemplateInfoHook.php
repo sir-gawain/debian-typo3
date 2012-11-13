@@ -121,14 +121,14 @@ class TypoScriptTemplateInfoHook {
 					}
 					if (count($recData)) {
 						// process template row before saving
-						require_once \TYPO3\CMS\Core\Extension\ExtensionManager::extPath('tstemplate_info') . 'class.tx_tstemplateinfo.php';
+						require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('tstemplate_info') . 'class.tx_tstemplateinfo.php';
 						$tstemplateinfo = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_tstemplateinfo');
 						/* @var $tstemplateinfo tx_tstemplateinfo */
 						// load the MOD_SETTINGS in order to check if the includeTypoScriptFileContent is set
 						$tstemplateinfo->pObj->MOD_SETTINGS = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleData(array('includeTypoScriptFileContent' => TRUE), array(), 'web_ts');
 						$recData['sys_template'][$saveId] = $tstemplateinfo->processTemplateRowBeforeSaving($recData['sys_template'][$saveId]);
 						// Create new tce-object
-						$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+						$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 						$tce->stripslashes_values = 0;
 						// Initialize
 						$tce->start($recData, array());

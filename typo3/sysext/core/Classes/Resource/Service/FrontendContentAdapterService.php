@@ -45,7 +45,6 @@ class FrontendContentAdapterService {
 				'captions' => 'imagecaption',
 				'links' => 'image_link',
 				'alternativeTexts' => 'altText',
-				'sysFileUids' => 'sysFileUids'
 			),
 			'media' => array(
 				'paths' => 'media',
@@ -66,25 +65,34 @@ class FrontendContentAdapterService {
 	 *
 	 * This method is called by the render() method of tslib_content_Content.
 	 *
-	 * @param $row typically an array, but can also be null (in extensions or e.g. FLUID viewhelpers)
-	 * @param $table the database table where the record is from
-	 * @return 	void
+	 * @param array $row typically an array, but can also be null (in extensions or e.g. FLUID viewhelpers)
+	 * @param string $table the database table where the record is from
+	 * @throws \RuntimeException
+	 * @return void
 	 */
 	static public function modifyDBRow(&$row, $table) {
+		if (isset($row['_MIGRATED']) && $row['_MIGRATED'] === TRUE) {
+			return;
+		}
 		if (array_key_exists($table, static::$migrateFields)) {
 			foreach (static::$migrateFields[$table] as $migrateFieldName => $oldFieldNames) {
 				if ($row !== NULL && isset($row[$migrateFieldName])) {
 					/** @var $fileRepository \TYPO3\CMS\Core\Resource\FileRepository */
 					$fileRepository = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\FileRepository');
-					$files = $fileRepository->findByRelation($table, $migrateFieldName, $row['uid']);
+					if ($table === 'pages' && isset($row['_LOCALIZED_UID']) && intval($row['sys_language_uid']) > 0) {
+						$table = 'pages_language_overlay';
+					}
+					$files = $fileRepository->findByRelation($table, $migrateFieldName, isset($row['_LOCALIZED_UID']) ? intval($row['_LOCALIZED_UID']) : intval($row['uid']));
 					$fileFieldContents = array(
 						'paths' => array(),
 						'titleTexts' => array(),
 						'captions' => array(),
 						'links' => array(),
 						'alternativeTexts' => array(),
-						'sysFileUids' => array()
+						$migrateFieldName . '_fileUids' => array()
 					);
+					$oldFieldNames[$migrateFieldName . '_fileUids'] = $migrateFieldName . '_fileUids';
+
 					foreach ($files as $file) {
 						/** @var $file \TYPO3\CMS\Core\Resource\FileReference */
 						$fileFieldContents['paths'][] = '../../' . $file->getPublicUrl();
@@ -92,11 +100,11 @@ class FrontendContentAdapterService {
 						$fileFieldContents['captions'][] = $file->getProperty('description');
 						$fileFieldContents['links'][] = $file->getProperty('link');
 						$fileFieldContents['alternativeTexts'][] = $file->getProperty('alternative');
-						$fileFieldContents['sysFileUids'][] = $file->getUid();
+						$fileFieldContents[$migrateFieldName .  '_fileUids'][] = $file->getOriginalFile()->getUid();
 					}
 					foreach ($oldFieldNames as $oldFieldType => $oldFieldName) {
 						// For paths, make comma separated list
-						if ($oldFieldType === 'paths') {
+						if ($oldFieldType === 'paths' || substr($oldFieldType, -9) == '_fileUids') {
 							$fieldContents = implode(',', $fileFieldContents[$oldFieldType]);
 						} else {
 							// For all other fields, separate by newline
@@ -106,14 +114,10 @@ class FrontendContentAdapterService {
 							$row[$oldFieldName] = $fieldContents;
 						}
 					}
-					if (count($files) > 0) {
-
-					} elseif ($row['image'] > 0) {
-						throw new \RuntimeException('inconsistent count field in "' . $table . '".' . $migrateFieldName, 1333754565);
-					}
 				}
 			}
 		}
+		$row['_MIGRATED'] = TRUE;
 	}
 
 }

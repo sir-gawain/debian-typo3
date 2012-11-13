@@ -24,17 +24,127 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Utility;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for class Tx_Extbase_Utility_Localization
- *
- * @package Extbase
- * @subpackage Utility
+ * Testcase for class \TYPO3\CMS\Extbase\Utility\LocalizationUtility
  */
 class LocalizationUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Utility\LocalizationUtility
+	 * @var \TYPO3\CMS\Extbase\Utility\LocalizationUtility|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
 	protected $localization;
+
+	/**
+	 * LOCAL_LANG array fixture
+	 *
+	 * @var array
+	 */
+	protected $LOCAL_LANG = array(
+		'extensionKey' => array(
+			'default' => array(
+				'key1' => array(
+					array(
+						'source' => 'English label for key1',
+						'target' => 'English label for key1',
+					)
+				),
+				'key2' => array(
+					array(
+						'source' => 'English label for key2',
+						'target' => 'English label for key2',
+					)
+				),
+				'key3' => array(
+					array(
+						'source' => 'English label for key3',
+						'target' => 'English label for key3',
+					)
+				),
+				'key4' => array(
+					array(
+						'source' => 'English label for key4',
+						'target' => 'English label for key4',
+					)
+				),
+				'keyWithPlaceholder' => array(
+					array(
+						'source' => 'English label with number %d',
+						'target' => 'English label with number %d',
+					)
+				),
+			),
+			'dk' => array(
+				'key1' => array(
+					array(
+						'source' => 'English label for key1',
+						'target' => 'Dansk label for key1',
+					)
+				),
+				'key2' => array( //not translated in dk => no target (llxml)
+					array(
+						'source' => 'English label for key2',
+					)
+				),
+				'key3' => array(
+					array(
+						'source' => 'English label for key3',
+					)
+				),
+				'key4' => array( //not translated in dk => empty target (xlif)
+					array(
+						'source' => 'English label for key4',
+						'target' => '',
+					)
+				),
+				'key5' => array( //not translated in dk => empty target (xlif)
+					array(
+						'source' => 'English label for key5',
+						'target' => '',
+					)
+				),
+				'keyWithPlaceholder' => array(
+					array(
+						'source' => 'English label with number %d',
+					)
+				),
+			),
+			'dk_alt' => array( //fallback language for labels which are not translated in dk
+				'key1' => array(
+					array(
+						'source' => 'English label for key1',
+					)
+				),
+				'key2' => array(
+					array(
+						'source' => 'English label for key2',
+						'target' => 'Dansk alternative label for key2',
+					)
+				),
+				'key3' => array(
+					array(
+						'source' => 'English label for key3',
+					)
+				),
+				'key4' => array( //not translated in dk_alt => empty target (xlif)
+					array(
+						'source' => 'English label for key4',
+						'target' => '',
+					)
+				),
+				'key5' => array(
+					array(
+						'source' => 'English label for key5',
+						'target' => 'Dansk alternative label for key5',
+					)
+				),
+				'keyWithPlaceholder' => array(
+					array(
+						'source' => 'English label with number %d',
+					)
+				),
+			),
+
+		),
+	);
 
 	public function setUp() {
 		$this->localization = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Utility\\LocalizationUtility', array('dummy'));
@@ -82,7 +192,58 @@ class LocalizationUtilityTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase
 		$this->assertNull(\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('', 'extbase', array('argument')));
 	}
 
-}
+	/**
+	 * @return array
+	 */
+	public function translateDataProvider() {
+		return array(
+			'get translated key' =>
+				array('key1', $this->LOCAL_LANG, 'dk', 'Dansk label for key1'),
 
+			'fallback to English when translation is missing for key' =>
+				array('key2', $this->LOCAL_LANG, 'dk', 'English label for key2'),
+
+			'fallback to English for non existing language' =>
+				array('key2', $this->LOCAL_LANG, 'xx', 'English label for key2'),
+
+			'replace placeholder with argument' =>
+				array('keyWithPlaceholder', $this->LOCAL_LANG, 'en', 'English label with number 100', array(), array(100)),
+
+			'get translated key from primary language' =>
+				array('key1', $this->LOCAL_LANG, 'dk', 'Dansk label for key1', array('dk_alt')),
+
+			'fallback to alternative language if translation is missing(llxml)' =>
+				array('key2', $this->LOCAL_LANG, 'dk', 'Dansk alternative label for key2', array('dk_alt')),
+
+			'fallback to alternative language if translation is missing(xlif)' =>
+				array('key5', $this->LOCAL_LANG, 'dk', 'Dansk alternative label for key5', array('dk_alt')),
+
+			'fallback to English for label not translated in dk and dk_alt(llxml)' =>
+				array('key3', $this->LOCAL_LANG, 'dk', 'English label for key3', array('dk_alt')),
+
+			'fallback to English for label not translated in dk and dk_alt(xlif)' =>
+				array('key4', $this->LOCAL_LANG, 'dk', 'English label for key4', array('dk_alt')),
+		);
+	}
+
+	/**
+	 * @param string $key
+	 * @param array $LOCAL_LANG
+	 * @param string $languageKey
+	 * @param string $expected
+	 * @param array $altLanguageKeys
+	 * @param array $arguments
+	 * @return void
+	 * @dataProvider translateDataProvider
+	 * @test
+	 */
+	public function translateTest($key, array $LOCAL_LANG, $languageKey, $expected, array $altLanguageKeys = array(), array $arguments = NULL) {
+		$this->localization->_setStatic('LOCAL_LANG', $LOCAL_LANG);
+		$this->localization->_setStatic('languageKey', $languageKey);
+		$this->localization->_setStatic('alternativeLanguageKeys', $altLanguageKeys);
+
+		$this->assertEquals($expected, $this->localization->translate($key, 'extensionKey', $arguments));
+	}
+}
 
 ?>

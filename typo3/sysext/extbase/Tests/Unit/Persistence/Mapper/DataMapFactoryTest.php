@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Persistence\Mapper;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Persistence\Mapper;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +30,20 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Persistence\Mapper;
 class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * @test
+	 * @return array
 	 */
-	public function setRelationsDetectsOneToOneRelation() {
+	public function oneToOneRelation() {
+		return array(
+			array('Tx_Myext_Domain_Model_Foo'),
+			array('TYPO3\\CMS\\Extbase\\Domain\\Model\\FrontendUser')
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider oneToOneRelation
+	 */
+	public function setRelationsDetectsOneToOneRelation($className) {
 		$mockColumnMap = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\ColumnMap', array(), array(), '', FALSE);
 		$columnConfiguration = array(
 			'type' => 'select',
@@ -39,10 +51,10 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'foreign_field' => 'parentid'
 		);
 		$propertyMetaData = array(
-			'type' => 'Tx_Myext_Domain_Model_Foo',
+			'type' => $className,
 			'elementType' => NULL
 		);
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->once())->method('setOneToOneRelation');
 		$mockDataMapFactory->expects($this->never())->method('setOneToManyRelation');
 		$mockDataMapFactory->expects($this->never())->method('setManyToManyRelation');
@@ -63,7 +75,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'type' => 'Tx_Myext_Domain_Model_Foo',
 			'elementType' => NULL
 		);
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->never())->method('setOneToOneRelation');
 		$mockDataMapFactory->expects($this->never())->method('setOneToManyRelation');
 		$mockDataMapFactory->expects($this->once())->method('setManyToManyRelation');
@@ -82,10 +94,10 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'foreign_table_field' => 'parenttable'
 		);
 		$propertyMetaData = array(
-			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage',
+			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
 			'elementType' => 'Tx_Myext_Domain_Model_Foo'
 		);
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->never())->method('setOneToOneRelation');
 		$mockDataMapFactory->expects($this->once())->method('setOneToManyRelation');
 		$mockDataMapFactory->expects($this->never())->method('setManyToManyRelation');
@@ -103,10 +115,10 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'MM' => 'tx_myextension_mm'
 		);
 		$propertyMetaData = array(
-			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage',
+			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
 			'elementType' => 'Tx_Myext_Domain_Model_Foo'
 		);
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->never())->method('setOneToOneRelation');
 		$mockDataMapFactory->expects($this->never())->method('setOneToManyRelation');
 		$mockDataMapFactory->expects($this->once())->method('setManyToManyRelation');
@@ -124,10 +136,10 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'MM' => 'tx_myextension_mm'
 		);
 		$propertyMetaData = array(
-			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage',
+			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
 			'elementType' => 'Tx_Myext_Domain_Model_Foo'
 		);
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->never())->method('setOneToOneRelation');
 		$mockDataMapFactory->expects($this->never())->method('setOneToManyRelation');
 		$mockDataMapFactory->expects($this->once())->method('setManyToManyRelation');
@@ -146,10 +158,10 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'foreign_selector' => 'uid_foreign'
 		);
 		$propertyMetaData = array(
-			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage',
+			'type' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
 			'elementType' => 'Tx_Myext_Domain_Model_Foo'
 		);
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('setOneToOneRelation', 'setOneToManyRelation', 'setManyToManyRelation'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->never())->method('setOneToOneRelation');
 		$mockDataMapFactory->expects($this->never())->method('setOneToManyRelation');
 		$mockDataMapFactory->expects($this->once())->method('setManyToManyRelation');
@@ -179,7 +191,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
 		$mockColumnMap->expects($this->never())->method('setRelationTableInsertFields');
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('dummy'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('dummy'), array(), '', FALSE);
 		$mockDataMapFactory->_callRef('setManyToManyRelation', $mockColumnMap, $leftColumnsDefinition['rights']);
 	}
 
@@ -206,7 +218,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
 		$mockColumnMap->expects($this->never())->method('setRelationTableInsertFields');
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('dummy'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('dummy'), array(), '', FALSE);
 		$mockDataMapFactory->_callRef('setManyToManyRelation', $mockColumnMap, $rightColumnsDefinition['lefts']);
 	}
 
@@ -232,7 +244,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
 		$mockColumnMap->expects($this->never())->method('setRelationTableInsertFields');
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('getColumnsDefinition'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('getColumnsDefinition'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->never())->method('getColumnsDefinition');
 		$mockDataMapFactory->_callRef('setManyToManyRelation', $mockColumnMap, $leftColumnsDefinition['rights']);
 	}
@@ -277,7 +289,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockColumnMap->expects($this->never())->method('setParentTableFieldName');
 		$mockColumnMap->expects($this->never())->method('setRelationTableMatchFields');
 		$mockColumnMap->expects($this->never())->method('setRelationTableInsertFields');
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('getColumnsDefinition'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('getColumnsDefinition'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->once())->method('getColumnsDefinition')->with($this->equalTo('tx_myextension_mm'))->will($this->returnValue($relationTableColumnsDefiniton));
 		$mockDataMapFactory->_callRef('setManyToManyRelation', $mockColumnMap, $leftColumnsDefinition['rights']);
 	}
@@ -298,7 +310,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockColumnMap->expects($this->once())->method('setRelationTableName')->with($this->equalTo('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('getRelationTableName')->will($this->returnValue('tx_myextension_mm'));
 		$mockColumnMap->expects($this->never())->method('setrelationTablePageIdColumnName');
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('getControlSection'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('getControlSection'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->once())->method('getControlSection')->with($this->equalTo('tx_myextension_mm'))->will($this->returnValue(NULL));
 		$mockDataMapFactory->_callRef('setManyToManyRelation', $mockColumnMap, $leftColumnsDefinition['rights']);
 	}
@@ -319,7 +331,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockColumnMap->expects($this->once())->method('setRelationTableName')->with($this->equalTo('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('getRelationTableName')->will($this->returnValue('tx_myextension_mm'));
 		$mockColumnMap->expects($this->once())->method('setrelationTablePageIdColumnName')->with($this->equalTo('pid'));
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('getControlSection'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('getControlSection'), array(), '', FALSE);
 		$mockDataMapFactory->expects($this->once())->method('getControlSection')->with($this->equalTo('tx_myextension_mm'))->will($this->returnValue(array('ctrl' => array('foo' => 'bar'))));
 		$mockDataMapFactory->_callRef('setManyToManyRelation', $mockColumnMap, $leftColumnsDefinition['rights']);
 	}
@@ -329,7 +341,7 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @expectedException \TYPO3\CMS\Extbase\Persistence\Generic\Exception\InvalidClassException
 	 */
 	public function buildDataMapThrowsExceptionIfClassNameIsNotKnown() {
-		$mockDataMapFactory = $this->getMock($this->buildAccessibleProxy('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory'), array('getControlSection'), array(), '', FALSE);
+		$mockDataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('getControlSection'), array(), '', FALSE);
 		$cacheMock = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend', array('get'), array(), '', FALSE);
 		$cacheMock->expects($this->any())->method('get')->will($this->returnValue(FALSE));
 		$mockDataMapFactory->_set('dataMapCache', $cacheMock);
@@ -381,6 +393,25 @@ class DataMapFactoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$this->assertSame($dataMap->getSubclasses(), $expectedSubclasses);
 	}
 
+	/**
+	 * @return array
+	 */
+	public function classNameTableNameMappings() {
+		return array(
+			'Core classes' => array('TYPO3\\CMS\\Belog\\Domain\\Model\\LogEntry', 'tx_belog_domain_model_logentry'),
+			'Extension classes' => array('ExtbaseTeam\\BlogExample\\Domain\\Model\\Blog', 'tx_blogexample_domain_model_blog'),
+			'Extension classes without namespace' => array('Tx_News_Domain_Model_News', 'tx_news_domain_model_news'),
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider classNameTableNameMappings
+	 */
+	public function resolveTableNameReturnsExpectedTablenames($className, $expected) {
+		$dataMapFactory = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory', array('dummy'));
+		$this->assertSame($expected, $dataMapFactory->_call('resolveTableName', $className));
+	}
 }
 
 

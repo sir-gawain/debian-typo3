@@ -31,11 +31,11 @@ namespace TYPO3\CMS\Core\Tests\Unit\Category\Collection;
  * @subpackage t3lib
  * @author Fabien Udriot <fabien.udriot@typo3.org>
  */
-class CategoryCollectionTest extends \tx_phpunit_testcase {
+class CategoryCollectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 * @expectedException RuntimeException
+	 * @expectedException \RuntimeException
 	 * @covers \TYPO3\CMS\Core\Category\Collection\CategoryCollection::__construct
 	 * @return void
 	 */

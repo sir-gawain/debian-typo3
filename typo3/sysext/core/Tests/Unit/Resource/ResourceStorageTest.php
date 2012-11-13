@@ -118,6 +118,11 @@ class ResourceStorageTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCa
 		if ($storageObject == NULL) {
 			$storageObject = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceStorage', array(), array(), '', FALSE);
 		}
+
+		if (!isset($driverConfiguration['basePath'])) {
+			$driverConfiguration['basePath'] = $this->getMountRootUrl();
+		}
+
 		if ($mockedDriverMethods === NULL) {
 			$driver = new \TYPO3\CMS\Core\Resource\Driver\LocalDriver($driverConfiguration);
 		} else {
@@ -205,7 +210,7 @@ class ResourceStorageTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCa
 	 */
 	public function fileAndFolderListFiltersAreInitializedWithDefaultFilters() {
 		$this->prepareFixture(array());
-		$this->assertEquals($GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['callbackFilterMethods'], $this->fixture->getFileAndFolderNameFilters());
+		$this->assertEquals($GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['defaultFilterCallbacks'], $this->fixture->getFileAndFolderNameFilters());
 	}
 
 	/**

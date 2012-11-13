@@ -390,6 +390,7 @@ class EditDocumentController {
 	 */
 	public function processData() {
 		// GPvars specifically for processing:
+		$control = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('control');
 		$this->data = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('data');
 		$this->cmd = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('cmd');
 		$this->mirror = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('mirror');
@@ -399,9 +400,13 @@ class EditDocumentController {
 		$this->vC = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('vC');
 		// See tce_db.php for relevate options here:
 		// Only options related to $this->data submission are included here.
-		/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
-		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+		/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
+		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 		$tce->stripslashes_values = 0;
+
+		if (!empty($control)) {
+			$tce->setControl($control);
+		}
 		if (isset($_POST['_translation_savedok_x'])) {
 			$tce->updateModeL10NdiffData = 'FORCE_FFUPD';
 		}
@@ -741,8 +746,7 @@ class EditDocumentController {
 								$calcPRec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, $theUid);
 								\TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid($table, $calcPRec);
 								if (is_array($calcPRec)) {
-									// If pages:
-									if ($table == 'pages') {
+									if ($table == 'pages') { // If pages:
 										$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
 										$hasAccess = $CALC_PERMS & 2 ? 1 : 0;
 										$deleteAccess = $CALC_PERMS & 4 ? 1 : 0;
@@ -759,7 +763,8 @@ class EditDocumentController {
 										}
 									}
 									// Check internals regarding access:
-									if ($hasAccess) {
+									$isRootLevelRestrictionIgnored = \TYPO3\CMS\Backend\Utility\BackendUtility::isRootLevelRestrictionIgnored($table);
+									if ($hasAccess || (string) $calcPRec['pid'] === '0' && $isRootLevelRestrictionIgnored) {
 										$hasAccess = $GLOBALS['BE_USER']->recordEditAccessInternals($table, $calcPRec);
 										$deniedAccessReason = $GLOBALS['BE_USER']->errorMsg;
 									}
@@ -881,7 +886,7 @@ class EditDocumentController {
 			// SAVE button:
 			$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="_savedok" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />'));
 			// SAVE / VIEW button:
-			if ($this->viewId && !$this->noView && \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('cms') && $this->getNewIconMode($this->firstEl['table'], 'saveDocView')) {
+			if ($this->viewId && !$this->noView && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms') && $this->getNewIconMode($this->firstEl['table'], 'saveDocView')) {
 				$buttons['save_view'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-view', array('html' => '<input type="image" class="c-inputButton" name="_savedokview" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDocShow', 1) . '" />'));
 			}
 			// SAVE / NEW button:
@@ -1289,7 +1294,7 @@ class EditDocumentController {
 	 * @todo Define visibility
 	 */
 	public function editRegularContentFromId() {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('cms')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms')) {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'tt_content', 'pid=' . intval($this->editRegularContentFromId) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('tt_content') . \TYPO3\CMS\Backend\Utility\BackendUtility::versioningPlaceholderClause('tt_content') . ' AND colPos=0 AND sys_language_uid=0', '', 'sorting');
 			if ($GLOBALS['TYPO3_DB']->sql_num_rows($res)) {
 				$ecUids = array();
@@ -1382,7 +1387,7 @@ class EditDocumentController {
 	 * @todo Define visibility
 	 */
 	public function setDocument($currentDocFromHandlerMD5 = '', $retUrl = 'alt_doc_nodoc.php') {
-		if (!\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('cms') && !strcmp($retUrl, 'alt_doc_nodoc.php')) {
+		if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms') && !strcmp($retUrl, 'alt_doc_nodoc.php')) {
 			return;
 		}
 		if (!$this->modTSconfig['properties']['disableDocSelector'] && is_array($this->docHandler) && count($this->docHandler)) {

@@ -31,7 +31,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Database;
  * @package TYPO3
  * @subpackage tests
  */
-class PreparedStatementTest extends \tx_phpunit_testcase {
+class PreparedStatementTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * Backup and restore of the $GLOBALS array.
@@ -207,7 +207,7 @@ class PreparedStatementTest extends \tx_phpunit_testcase {
 	 * provided vor bindValue().
 	 *
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @dataProvider invalidParameterTypesPassedToBindValueThrowsExceptionDataProvider
 	 * @param mixed   $parameter	Parameter to be replaced in the query
 	 * @param integer $type			Type of the parameter value
@@ -253,7 +253,7 @@ class PreparedStatementTest extends \tx_phpunit_testcase {
 	 * Checks if an exception is thrown, if parameter have invalid marker named.
 	 *
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @dataProvider passingInvalidMarkersThrowsExeptionDataProvider
 	 * @param string $query				Query with unreplaced markers
 	 * @param array  $parameters		Array of parameters to be replaced in the query

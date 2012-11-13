@@ -7,8 +7,8 @@ namespace TYPO3\CMS\Extbase\Security\Exception;
  *  (c) 2012 Extbase Team
  *  All rights reserved
  *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -28,9 +28,6 @@ namespace TYPO3\CMS\Extbase\Security\Exception;
  ***************************************************************/
 /**
  * A "InvalidHash" Exception, thrown when a HMAC validation failed.
- *
- * @package Extbase
- * @subpackage Security\Exception
  */
 class InvalidHashException extends \TYPO3\CMS\Extbase\Security\Exception {
 

@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Localization\Parser;
  * @author Xavier Perseguers <xavier@typo3.org>
  * @package TYPO3
  */
-class LocallangXmlParserTest extends \tx_phpunit_testcase {
+class LocallangXmlParserTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var \TYPO3\CMS\Core\Localization\Parser\LocallangXmlParser
@@ -120,12 +120,12 @@ class LocallangXmlParserTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 */
-	public function canParseLlxmlInFrenchAndReturnsDefaultLabelsIfNoTranslationIsFound() {
+	public function canParseLlxmlInFrenchAndReturnsNullLabelsIfNoTranslationIsFound() {
 		$LOCAL_LANG = $this->parser->getParsedData($this->llxmlFileNames['locallangOnlyDefaultLanguage'], 'fr');
 		$expectedLabels = array(
-			'label1' => 'This is label #1',
-			'label2' => 'This is label #2',
-			'label3' => 'This is label #3'
+			'label1' => NULL,
+			'label2' => NULL,
+			'label3' => NULL
 		);
 		foreach ($expectedLabels as $key => $expectedLabel) {
 			$this->assertEquals($expectedLabel, $LOCAL_LANG['fr'][$key][0]['target']);

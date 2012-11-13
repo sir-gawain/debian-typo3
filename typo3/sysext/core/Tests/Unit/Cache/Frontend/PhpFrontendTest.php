@@ -33,11 +33,11 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Frontend;
  * @package TYPO3
  * @subpackage tests
  */
-class PhpFrontendTest extends \tx_phpunit_testcase {
+class PhpFrontendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function setChecksIfTheIdentifierIsValid() {
 		$cache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\StringFrontend', array('isValidEntryIdentifier'), array(), '', FALSE);

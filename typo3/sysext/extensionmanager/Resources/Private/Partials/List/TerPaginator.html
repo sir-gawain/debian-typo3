@@ -1,5 +1,4 @@
-<div id="terTableWrapper">
-<f:widget.paginate objects="{extensions}" as="paginatedExtensions" configuration="{itemsPerPage: 10, maximumNumberOfLinks: 2}">
+<f:be.widget.paginate objects="{extensions}" as="paginatedExtensions" configuration="{itemsPerPage: 10, maximumNumberOfLinks: 2}">
 	<table id="terTable" class="typo3-extension-list">
 		<f:if condition="{showVersionList}">
 			<f:then>
@@ -10,5 +9,4 @@
 			</f:else>
 		</f:if>
 	</table>
-</f:widget.paginate>
-</div>
+</f:be.widget.paginate>

@@ -67,7 +67,7 @@ class StandaloneView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 	 * @param \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $contentObject The current cObject. If NULL a new instance will be created
 	 */
 	public function __construct(\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $contentObject = NULL) {
-		if (!\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('extbase')) {
+		if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('extbase')) {
 			return 'In the current version you still need to have Extbase installed in order to use the Fluid Standalone view!';
 		}
 		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
@@ -86,7 +86,7 @@ class StandaloneView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		$controllerContext = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ControllerContext');
 		$controllerContext->setRequest($request);
 		$controllerContext->setUriBuilder($uriBuilder);
-		$flashMessageContainer = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\FlashMessages');
+		$flashMessageContainer = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\FlashMessageContainer');
 		// singleton
 		$controllerContext->setFlashMessageContainer($flashMessageContainer);
 		$this->setControllerContext($controllerContext);

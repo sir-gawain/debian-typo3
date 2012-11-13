@@ -155,7 +155,17 @@ class BackendUtility {
 	 */
 	static public function getRecordsByField($theTable, $theField, $theValue, $whereClause = '', $groupBy = '', $orderBy = '', $limit = '', $useDeleteClause = TRUE) {
 		if (is_array($GLOBALS['TCA'][$theTable])) {
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $theTable, $theField . '=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($theValue, $theTable) . ($useDeleteClause ? self::deleteClause($theTable) . ' ' : '') . self::versioningPlaceholderClause($theTable) . ' ' . $whereClause, $groupBy, $orderBy, $limit);
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+				'*',
+				$theTable,
+				$theField . '=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($theValue, $theTable) .
+					($useDeleteClause ? self::deleteClause($theTable) . ' ' : '') .
+					self::versioningPlaceholderClause($theTable) . ' ' .
+					$whereClause,
+				$groupBy,
+				$orderBy,
+				$limit
+			);
 			$rows = array();
 			while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				$rows[] = $row;
@@ -573,6 +583,21 @@ class BackendUtility {
 			}
 		}
 		return $sysLanguages;
+	}
+
+	/**
+	 * Gets the original translation pointer table.
+	 * For e.g. pages_language_overlay this would be pages.
+	 *
+	 * @param string $table Name of the table
+	 * @return string Pointer table (if any)
+	 */
+	static public function getOriginalTranslationTable($table) {
+		if (!empty($GLOBALS['TCA'][$table]['ctrl']['transOrigPointerTable'])) {
+			$table = $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerTable'];
+		}
+
+		return $table;
 	}
 
 	/**
@@ -2310,8 +2335,11 @@ class BackendUtility {
 	 * @param string $table Table name
 	 * @param string $field Field name
 	 * @return string HTML content for help text
+	 * @depreacted since 6.0, will be removed two versions later
 	 */
 	static public function helpText($table, $field) {
+		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
+
 		$helpTextArray = self::helpTextArray($table, $field);
 		$output = '';
 		$arrow = '';
@@ -2387,35 +2415,21 @@ class BackendUtility {
 	 * @param boolean $onlyIconMode If set, the full text will never be shown (only icon). Useful for places where it will break the page if the table with full text is shown.
 	 * @param string $styleAttrib Additional style-attribute content for wrapping table (full text mode only)
 	 * @return string HTML content for help text
-	 * @see helpText(), helpTextIcon()
+	 * @see helpTextIcon()
 	 */
 	static public function cshItem($table, $field, $BACK_PATH, $wrap = '', $onlyIconMode = FALSE, $styleAttrib = '') {
-		if ($GLOBALS['BE_USER']->uc['edit_showFieldHelp']) {
-			$GLOBALS['LANG']->loadSingleTableDescription($table);
-			if (is_array($GLOBALS['TCA_DESCR'][$table])) {
-				// Creating CSH icon and short description:
-				$fullText = self::helpText($table, $field);
-				$icon = self::helpTextIcon($table, $field, $BACK_PATH);
-				if ($fullText && !$onlyIconMode && $GLOBALS['BE_USER']->uc['edit_showFieldHelp'] == 'text') {
-					// Additional styles?
-					$params = $styleAttrib ? ' style="' . $styleAttrib . '"' : '';
-					// Compile table with CSH information:
-					$fullText = '<table border="0" cellpadding="0" cellspacing="0" class="typo3-csh-inline"' . $params . '>
-					<tr>
-					<td valign="top" width="14"><div class="t3-row-header">' . $icon . '</div></td>
-					<td valign="top">' . $fullText . '</td>
-					</tr>
-					</table>';
-					$output = $fullText;
-				} else {
-					$output = $icon;
-					if ($output && $wrap) {
-						$wrParts = explode('|', $wrap);
-						$output = $wrParts[0] . $output . $wrParts[1];
-					}
-				}
-				return $output;
+		if (!$GLOBALS['BE_USER']->uc['edit_showFieldHelp']) {
+			return '';
+		}
+		$GLOBALS['LANG']->loadSingleTableDescription($table);
+		if (is_array($GLOBALS['TCA_DESCR'][$table])) {
+			// Creating CSH icon and short description:
+			$output = self::helpTextIcon($table, $field, $BACK_PATH);
+			if ($output && $wrap) {
+				$wrParts = explode('|', $wrap);
+				$output = $wrParts[0] . $output . $wrParts[1];
 			}
+			return $output;
 		}
 	}
 
@@ -2624,8 +2638,18 @@ class BackendUtility {
 			$script = basename(PATH_thisScript);
 			$mainParams .= \TYPO3\CMS\Core\Utility\GeneralUtility::_GET('M') ? '&M=' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::_GET('M')) : '';
 		}
-		$onClick = 'jumpToUrl(\'' . $script . '?' . $mainParams . $addparams . '&' . $elementName . '=\'+(this.checked?1:0),this);';
-		return '<input type="checkbox" class="checkbox" name="' . $elementName . '"' . ($currentValue ? ' checked="checked"' : '') . ' onclick="' . htmlspecialchars($onClick) . '"' . ($tagParams ? ' ' . $tagParams : '') . ' />';
+		$onClick = 'jumpToUrl(' . \TYPO3\CMS\Core\Utility\GeneralUtility::quoteJSvalue($script . '?' . $mainParams . $addparams . '&' . $elementName . '=') . '+(this.checked?1:0),this);';
+
+		return
+		'<input' .
+			' type="checkbox"' .
+			' class="checkbox"' .
+			' name="' . $elementName . '"' .
+			($currentValue ? ' checked="checked"' : '') .
+			' onclick="' . htmlspecialchars($onClick) . '"' .
+			($tagParams ? ' ' . $tagParams : '') .
+			' value="1"' .
+		' />';
 	}
 
 	/**
@@ -2861,7 +2885,7 @@ class BackendUtility {
 	 */
 	static public function getListViewLink($urlParameters = array(), $linkTitle = '', $linkText = '') {
 		$url = self::getModuleUrl('web_list', $urlParameters);
-		if (!\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('recordlist') || $url === FALSE) {
+		if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('recordlist') || $url === FALSE) {
 			return '';
 		} else {
 			return '<a href="' . htmlspecialchars($url) . '" title="' . htmlspecialchars($linkTitle) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-list-open') . htmlspecialchars($linkText) . '</a>';
@@ -3195,7 +3219,7 @@ class BackendUtility {
 	 * @return string Domain name, if found.
 	 */
 	static public function firstDomainRecord($rootLine) {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('cms')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms')) {
 			foreach ($rootLine as $row) {
 				$dRec = self::getRecordsByField('sys_domain', 'pid', $row['uid'], ' AND redirectTo=\'\' AND hidden=0', '', 'sorting');
 				if (is_array($dRec)) {
@@ -3214,7 +3238,7 @@ class BackendUtility {
 	 * @return array Domain record, if found
 	 */
 	static public function getDomainStartPage($domain, $path = '') {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('cms')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms')) {
 			$domain = explode(':', $domain);
 			$domain = strtolower(preg_replace('/\\.$/', '', $domain[0]));
 			// Path is calculated.
@@ -3474,7 +3498,7 @@ class BackendUtility {
 	 * @see t3lib_page::fixVersioningPid()
 	 */
 	static public function fixVersioningPid($table, &$rr, $ignoreWorkspaceMatch = FALSE) {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('version')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
 			// Check that the input record is an offline version from a table that supports versioning:
 			if (is_array($rr) && $rr['pid'] == -1 && $GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
 				// Check values for t3ver_oid and t3ver_wsid:
@@ -3520,7 +3544,7 @@ class BackendUtility {
 	 * @see fixVersioningPid()
 	 */
 	static public function workspaceOL($table, &$row, $wsid = -99, $unsetMovePointers = FALSE) {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('version')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
 			// If this is FALSE the placeholder is shown raw in the backend.
 			// I don't know if this move can be useful for users to toggle. Technically it can help debugging.
 			$previewMovePlaceholders = TRUE;
@@ -3623,7 +3647,7 @@ class BackendUtility {
 	 * @return array If found, return record, otherwise FALSE
 	 */
 	static public function getWorkspaceVersionOfRecord($workspace, $table, $uid, $fields = '*') {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('version')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
 			if ($workspace !== 0 && $GLOBALS['TCA'][$table] && $GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
 				// Select workspace version of record:
 				$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow($fields, $table, 'pid=-1 AND ' . 't3ver_oid=' . intval($uid) . ' AND ' . 't3ver_wsid=' . intval($workspace) . self::deleteClause($table));
@@ -3769,7 +3793,12 @@ class BackendUtility {
 	/**
 	 * Prints TYPO3 Copyright notice for About Modules etc. modules.
 	 *
-	 * @return void
+	 * Warning:
+	 * DO NOT prevent this notice from being shown in ANY WAY.
+	 * According to the GPL license an interactive application must show such a notice on start-up ('If the program is interactive, make it output a short notice... ' - see GPL.txt)
+	 * Therefore preventing this notice from being properly shown is a violation of the license, regardless of whether you remove it or use a stylesheet to obstruct the display.
+	 *
+	 * @return string Text/Image (HTML) for copyright notice.
 	 */
 	static public function TYPO3_copyRightNotice() {
 		// Copyright Notice
@@ -3780,7 +3809,17 @@ class BackendUtility {
 		} else {
 			$warrantyNote = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:no.warranty'), '<a href="' . TYPO3_URL_LICENSE . '" target="_blank">', '</a>');
 		}
-		$cNotice = '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/loginlogo_transp.gif', 'width="75" height="19" vspace="2" hspace="4"') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:typo3.logo') . '" align="left" />' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:typo3.cms') . ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:version.short') . ' ' . htmlspecialchars(TYPO3_version) . '</a>. ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:copyright') . ' &copy; ' . htmlspecialchars(TYPO3_copyright_year) . ' Kasper Sk&aring;rh&oslash;j. ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:extension.copyright') . ' ' . sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:details.link'), ('<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . TYPO3_URL_GENERAL . '</a>')) . ' ' . strip_tags($warrantyNote, '<a>') . ' ' . sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:free.software'), ('<a href="' . TYPO3_URL_LICENSE . '" target="_blank">'), '</a> ') . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:keep.notice');
+		$cNotice = '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' .
+				'<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/loginlogo_transp.gif', 'width="75" height="24" vspace="2" hspace="4"') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:typo3.logo') . '" align="left" />' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:typo3.cms') . ' ' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:version.short') . ' ' .
+				htmlspecialchars(TYPO3_version) . '</a>. ' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:copyright') . ' &copy; ' . htmlspecialchars(TYPO3_copyright_year) . ' Kasper Sk&aring;rh&oslash;j. ' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:extension.copyright') . ' ' .
+				sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:details.link'), ('<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . TYPO3_URL_GENERAL . '</a>')) . ' ' .
+				strip_tags($warrantyNote, '<a>') . ' ' .
+				sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:free.software'), ('<a href="' . TYPO3_URL_LICENSE . '" target="_blank">'), '</a> ') .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:keep.notice');
 		return $cNotice;
 	}
 
@@ -4024,6 +4063,30 @@ class BackendUtility {
 			$configuration = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
 		}
 		return $configuration;
+	}
+
+	/**
+	 * Whether to ignore restrictions on a web-mount of a table.
+	 * The regular behaviour is that records to be accessed need to be
+	 * in a valid user's web-mount.
+	 *
+	 * @param string $table Name of the table
+	 * @return boolean
+	 */
+	static public function isWebMountRestrictionIgnored($table) {
+		return !empty($GLOBALS['TCA'][$table]['ctrl']['security']['ignoreWebMountRestriction']);
+	}
+
+	/**
+	 * Whether to ignore restrictions on root-level records.
+	 * The regular behaviour is that records on the root-level (page-id 0)
+	 * only can be accessed by admin users.
+	 *
+	 * @param string $table Name of the table
+	 * @return boolean
+	 */
+	static public function isRootLevelRestrictionIgnored($table) {
+		return !empty($GLOBALS['TCA'][$table]['ctrl']['security']['ignoreRootLevelRestriction']);
 	}
 
 }

@@ -148,7 +148,7 @@ class TreeElement {
 		$pageRenderer = $GLOBALS['SOBE']->doc->getPageRenderer();
 		$pageRenderer->loadExtJs();
 		$pageRenderer->addJsFile('../t3lib/js/extjs/tree/tree.js');
-		$pageRenderer->addInlineLanguageLabelFile(\TYPO3\CMS\Core\Extension\ExtensionManager::extPath('lang') . 'locallang_csh_corebe.xml', 'tcatree');
+		$pageRenderer->addInlineLanguageLabelFile(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('lang') . 'locallang_csh_corebe.xml', 'tcatree');
 		$pageRenderer->addExtOnReadyCode('
 			TYPO3.Components.Tree.StandardTreeItemData["' . $id . '"] = ' . $treeData . ';
 			var tree' . $id . ' = new TYPO3.Components.Tree.StandardTree({
@@ -172,10 +172,14 @@ class TreeElement {
 					},
 					checkchange: TYPO3.Components.Tree.TcaCheckChangeHandler,
 					collapsenode: function(node) {
-						top.TYPO3.BackendUserSettings.ExtDirect.removeFromList("tcaTrees." + this.ucId, node.attributes.uid);
+						if (node.id !== "root") {
+							top.TYPO3.BackendUserSettings.ExtDirect.removeFromList("tcaTrees." + this.ucId, node.attributes.uid);
+						}
 					},
 					expandnode: function(node) {
-						top.TYPO3.BackendUserSettings.ExtDirect.addToList("tcaTrees." + this.ucId, node.attributes.uid);
+						if (node.id !== "root") {
+							top.TYPO3.BackendUserSettings.ExtDirect.addToList("tcaTrees." + this.ucId, node.attributes.uid);
+						}
 					}
 				},
 				tcaMaxItems: ' . ($PA['fieldConf']['config']['maxitems'] ? intval($PA['fieldConf']['config']['maxitems']) : 99999) . ',

@@ -53,7 +53,7 @@ class ResourceFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $storageInstances = array();
 
 	/**
-	 * @var t3lib_file_AbstractCollection[]
+	 * @var \TYPO3\CMS\Core\Resource\Collection\AbstractFileCollection[]
 	 */
 	protected $collectionInstances = array();
 
@@ -346,6 +346,21 @@ class ResourceFactory implements \TYPO3\CMS\Core\SingletonInterface {
 			$folderIdentifier = substr($parts[0], strlen(PATH_site));
 		}
 		return $this->getStorageObject($storageUid)->getFolder($folderIdentifier);
+	}
+
+	/**
+	 * Gets a storage object from a combined identifier
+	 *
+	 * @param string $identifier An identifier of the form [storage uid]:[object identifier]
+	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage
+	 */
+	public function getStorageObjectFromCombinedIdentifier($identifier) {
+		$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(':', $identifier);
+		if (count($parts) === 2) {
+			$storageUid = $parts[0];
+		}
+
+		return $this->getStorageObject($storageUid);
 	}
 
 	/**

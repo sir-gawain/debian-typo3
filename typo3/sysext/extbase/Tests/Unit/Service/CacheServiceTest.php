@@ -24,15 +24,12 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Service;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for class Tx_Extbase_Service_CacheService
- *
- * @package Extbase
- * @subpackage extbase
+ * Testcase for class \TYPO3\CMS\Extbase\Service\CacheService
  */
 class CacheServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Service\CacheService
+	 * @var \TYPO3\CMS\Extbase\Service\CacheService|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
 	protected $cacheService;
 

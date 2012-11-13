@@ -41,7 +41,7 @@ class UserSetupHook {
 	 */
 	public function decryptPassword(array $parameters) {
 		if ($this->isRsaAvailable()) {
-			$be_user_data =& $parameters['be_user_data'];
+			$be_user_data = &$parameters['be_user_data'];
 			if (substr($be_user_data['password'], 0, 4) === 'rsa:' && substr($be_user_data['password2'], 0, 4) === 'rsa:') {
 				$backend = \TYPO3\CMS\Rsaauth\Backend\BackendFactory::getBackend();
 				/** @var $storage \TYPO3\CMS\Rsaauth\Storage\AbstractStorage */
@@ -67,7 +67,7 @@ class UserSetupHook {
 		if ($this->isRsaAvailable()) {
 			// If we can get the backend, we can proceed
 			$backend = \TYPO3\CMS\Rsaauth\Backend\BackendFactory::getBackend();
-			$javascriptPath = \TYPO3\CMS\Core\Extension\ExtensionManager::siteRelPath('rsaauth') . 'resources/';
+			$javascriptPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('rsaauth') . 'resources/';
 			$files = array(
 				'jsbn/jsbn.js',
 				'jsbn/prng4.js',

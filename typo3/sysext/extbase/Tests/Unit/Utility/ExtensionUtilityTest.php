@@ -24,27 +24,9 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Utility;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for class Tx_Extbase_Utility_Extension
- *
- * @package Extbase
- * @subpackage extbase
+ * Testcase for class \TYPO3\CMS\Extbase\Utility\ExtensionUtility
  */
-class ExtensionUtilityTest extends \tx_phpunit_testcase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
-	 * Exclude TYPO3_DB from backup/ restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
-	 *
-	 * @var array
-	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
+class ExtensionUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * A backup of the global database
@@ -56,12 +38,10 @@ class ExtensionUtilityTest extends \tx_phpunit_testcase {
 	public function setUp() {
 		$this->databaseBackup = $GLOBALS['TYPO3_DB'];
 		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection', array('fullQuoteStr', 'exec_SELECTgetRows'));
-		if (!isset($GLOBALS['TSFE']->tmpl)) {
-			$GLOBALS['TSFE']->tmpl = new \stdClass();
-		}
-		if (!isset($GLOBALS['TSFE']->tmpl->setup)) {
-			$GLOBALS['TSFE']->tmpl->setup = array();
-		}
+
+		$GLOBALS['TSFE'] = new \stdClass();
+		$GLOBALS['TSFE']->tmpl = new \stdClass();
+		$GLOBALS['TSFE']->tmpl->setup = array();
 		$GLOBALS['TSFE']->tmpl->setup['tt_content.']['list.']['20.'] = array(
 			'9' => 'CASE',
 			'9.' => array(
@@ -97,7 +77,7 @@ class ExtensionUtilityTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginWorksForMinimalisticSetup() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();
@@ -113,7 +93,7 @@ class ExtensionUtilityTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginCreatesCorrectDefaultTypoScriptSetup() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();
@@ -142,7 +122,7 @@ plugin.tx_myextension {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginWorksForASingleControllerAction() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();
@@ -168,7 +148,7 @@ plugin.tx_myextension {
 	/**
 	 * @test
 	 * @expectedException \InvalidArgumentException
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginThrowsExceptionIfExtensionNameIsEmpty() {
 		\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin('', 'SomePlugin', array(
@@ -179,7 +159,7 @@ plugin.tx_myextension {
 	/**
 	 * @test
 	 * @expectedException \InvalidArgumentException
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginThrowsExceptionIfPluginNameIsEmpty() {
 		\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin('MyExtension', '', array(
@@ -189,7 +169,7 @@ plugin.tx_myextension {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginRespectsDefaultActionAsANonCacheableAction() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();
@@ -217,7 +197,7 @@ plugin.tx_myextension {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginRespectsNonDefaultActionAsANonCacheableAction() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();
@@ -245,7 +225,7 @@ plugin.tx_myextension {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginWorksForMultipleControllerActionsWithCacheableActionAsDefault() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();
@@ -278,7 +258,7 @@ plugin.tx_myextension {
 
 	/**
 	 * @test
-	 * @see Tx_Extbase_Utility_Extension::registerPlugin
+	 * @see \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerPlugin
 	 */
 	public function configurePluginWorksForMultipleControllerActionsWithNonCacheableActionAsDefault() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup.'] = array();

@@ -231,7 +231,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 				if (count($recData)) {
 					$recData['sys_template'][$saveId] = $this->processTemplateRowBeforeSaving($recData['sys_template'][$saveId]);
 					// Create new  tce-object
-					$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+					$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 					$tce->stripslashes_values = 0;
 					$tce->alternativeFileName = $alternativeFileName;
 					// Initialize
@@ -261,8 +261,8 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 								$theOutput .= $this->pObj->doc->section('<font color=red>' . $GLOBALS['LANG']->getLL('fileChanged') . '</font>', sprintf($GLOBALS['LANG']->getLL('resourceUpdated'), $edit['filename']), 0, 0, 0, 1);
 								// Clear cache - the file has probably affected the template setup
 								// @TODO: Check if the edited file really had something to do with cached data and prevent this clearing if possible!
-								/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
-								$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+								/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
+								$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 								$tce->stripslashes_values = 0;
 								$tce->start(array(), array());
 								$tce->clear_cacheCmd('all');
@@ -273,7 +273,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 			}
 			// Hook	post updating template/TCE processing
 			if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']['postTCEProcessingHook'])) {
-				$postTCEProcessingHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']['postTCEProcessingHook'];
+				$postTCEProcessingHook = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']['postTCEProcessingHook'];
 				if (is_array($postTCEProcessingHook)) {
 					$hookParameters = array(
 						'POST' => $POST,
@@ -350,7 +350,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 				// Display "Include TypoScript file content?" checkbox
 				$outCode .= \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncCheck($this->pObj->id, 'SET[includeTypoScriptFileContent]', $this->pObj->MOD_SETTINGS['includeTypoScriptFileContent'], '', '&e[config]=1', 'id="checkIncludeTypoScriptFileContent"');
 				$outCode .= '<label for="checkIncludeTypoScriptFileContent">' . $GLOBALS['LANG']->getLL('includeTypoScriptFileContent') . '</label><br />';
-				if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('tsconfig_help')) {
+				if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('tsconfig_help')) {
 					$url = $BACK_PATH . 'wizard_tsconfig.php?mode=tsref';
 					$params = array(
 						'formName' => 'editForm',
@@ -375,7 +375,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 			$theOutput .= $this->pObj->doc->section('', $outCode);
 			// hook	after compiling the output
 			if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']['postOutputProcessingHook'])) {
-				$postOutputProcessingHook =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']['postOutputProcessingHook'];
+				$postOutputProcessingHook = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/tstemplate_info/class.tx_tstemplateinfo.php']['postOutputProcessingHook'];
 				if (is_array($postOutputProcessingHook)) {
 					$hookParameters = array(
 						'theOutput' => &$theOutput,

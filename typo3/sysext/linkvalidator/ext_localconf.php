@@ -3,9 +3,9 @@ if (!defined('TYPO3_MODE')) {
 	die('Access denied.');
 }
 
-\TYPO3\CMS\Core\Extension\ExtensionManager::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:linkvalidator/res/pagetsconfig.txt">');
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:linkvalidator/res/pagetsconfig.txt">');
 
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['tx_linkvalidator_tasks_Validator'] = array(
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['TYPO3\\CMS\\Linkvalidator\\Task\\ValidatorTask'] = array(
 	'extension' => $_EXTKEY,
 	'title' => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:tasks.validate.name',
 	'description' => 'LLL:EXT:' . $_EXTKEY . '/locallang.xml:tasks.validate.description',

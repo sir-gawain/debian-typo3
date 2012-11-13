@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,10 +30,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /**
  * A persistence backend. This backend maps objects to the relational model of the storage backend.
  * It persists all added, removed and changed objects.
- *
- * @package Extbase
- * @subpackage Persistence
- * @version $Id$
  */
 class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface, \TYPO3\CMS\Core\SingletonInterface {
 
@@ -42,12 +39,12 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	protected $session;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	protected $aggregateRootObjects;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	protected $visitedDuringPersistence;
 
@@ -99,7 +96,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	protected $signalSlotDispatcher;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	protected $deletedObjects;
 
@@ -115,7 +112,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 		if ($frameworkConfiguration['persistence']['updateReferenceIndex'] === '1') {
 			$this->referenceIndex = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\ReferenceIndex');
 		}
-		$this->deletedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$this->deletedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 	}
 
 	/**
@@ -335,20 +332,20 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	/**
 	 * Sets the aggregate root objects
 	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $objects
+	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage $objects
 	 * @return void
 	 */
-	public function setAggregateRootObjects(\TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $objects) {
+	public function setAggregateRootObjects(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $objects) {
 		$this->aggregateRootObjects = $objects;
 	}
 
 	/**
 	 * Sets the deleted objects
 	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $objects
+	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage $objects
 	 * @return void
 	 */
-	public function setDeletedObjects(\TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $objects) {
+	public function setDeletedObjects(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $objects) {
 		$this->deletedObjects = $objects;
 	}
 
@@ -368,7 +365,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @return void
 	 */
 	protected function persistObjects() {
-		$this->visitedDuringPersistence = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$this->visitedDuringPersistence = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 		foreach ($this->aggregateRootObjects as $object) {
 			if (!$this->identityMap->hasObject($object)) {
 				$this->insertObject($object);
@@ -398,7 +395,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 				continue;
 			}
 			$columnMap = $dataMap->getColumnMap($propertyName);
-			if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage) {
+			if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage) {
 				if ($object->_isNew() || $propertyValue->_isDirty()) {
 					$this->persistObjectStorage($propertyValue, $object, $propertyName, $row);
 				}
@@ -452,13 +449,13 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * gets persisted immediately. Objects which were removed from the property were detached from the parent object. They will not be
 	 * deleted by default. You have to annotate the property with "@cascade remove" if you want them to be deleted as well.
 	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $objectStorage The object storage to be persisted.
+	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage $objectStorage The object storage to be persisted.
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject The parent object. One of the properties holds the object storage.
 	 * @param string $propertyName The name of the property holding the object storage.
 	 * @param array $row The row array of the parent object to be persisted. It's passed by reference and gets filled with either a comma separated list of uids (csv) or the number of contained objects.
 	 * @return void
 	 */
-	protected function persistObjectStorage(\TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage $objectStorage, \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $propertyName, array &$row) {
+	protected function persistObjectStorage(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $objectStorage, \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $propertyName, array &$row) {
 		$className = get_class($parentObject);
 		$columnMap = $this->dataMapper->getDataMap($className)->getColumnMap($propertyName);
 		$propertyMetaData = $this->reflectionService->getClassSchema($className)->getProperty($propertyName);
@@ -770,7 +767,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 			$this->removeObject($object);
 			$this->identityMap->unregisterObject($object);
 		}
-		$this->deletedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$this->deletedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 	}
 
 	/**

@@ -26,12 +26,10 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Domain\Model;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for Tx_Extbase_Domain_Model_BackendUser.
+ * Testcase for \TYPO3\CMS\Extbase\Domain\Model\BackendUser.
  *
  * @author Felix Kopp <felix-source@phorax.com>
  * @author Oliver Klee <typo3-coding@oliverklee.de>
- * @package Extbase
- * @subpackage Domain\Model
  * @scope prototype
  * @entity
  * @api

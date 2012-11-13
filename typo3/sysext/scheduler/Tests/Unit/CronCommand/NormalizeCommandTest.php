@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Scheduler\Tests\Unit\CronCommand;
  * @package TYPO3
  * @subpackage tx_scheduler
  */
-class NormalizeCommandTest extends \tx_phpunit_testcase {
+class NormalizeCommandTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * Create a subclass of tx_scheduler_CronCmd_Normalize with
@@ -239,7 +239,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 * @dataProvider normalizeMonthAndWeekdayFieldInvalidDataProvider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @param string $expression Cron command partial expression for month and weekday fields (invalid)
 	 * @param boolean $isMonthField Flag to designate month field or not
 	 */
@@ -303,7 +303,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 * @dataProvider normalizeIntegerFieldInvalidDataProvider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @param string $expression Cron command partial integer expression (invalid)
 	 * @param integer $lowerBound Lower limit
 	 * @param integer $upperBound Upper limit
@@ -344,7 +344,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @dataProvider invalidCronCommandFieldsDataProvider
 	 * @param string $cronCommand Invalid cron command
 	 */
@@ -400,7 +400,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 * @dataProvider invalidRangeDataProvider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @param string $range Cron command range expression (invalid)
 	 */
 	public function convertRangeToListOfValuesThrowsExceptionForInvalidRanges($range) {
@@ -452,7 +452,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 * @dataProvider invalidStepsDataProvider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @param string $stepExpression Cron command step expression (invalid)
 	 */
 	public function reduceListOfValuesByStepValueThrowsExceptionForInvalidStepExpressions($stepExpression) {
@@ -564,7 +564,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @dataProvider invalidMonthNamesDataProvider
 	 * @param string $invalidMonthName Month name (invalid)
 	 */
@@ -660,7 +660,7 @@ class NormalizeCommandTest extends \tx_phpunit_testcase {
 	/**
 	 * @test
 	 * @dataProvider invalidWeekdayDataProvider
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 * @param string $weekday Weekday expression (invalid)
 	 */
 	public function normalizeWeekdayThrowsExceptionForInvalidWeekdayRepresentation($weekday) {

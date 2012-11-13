@@ -143,7 +143,7 @@ class TemplateParser {
 								|[a-zA-Z0-9\\-_.]+               # variable identifiers
 								|{(?P>ViewHelperArguments)}     # Another sub-array
 							)                                   # END possible value options
-							\\s*,?                               # There might be a , to seperate different parts of the array
+							\\s*,?                               # There might be a , to separate different parts of the array
 						)*                                  # The above cycle is repeated for all array elements
 					)                                       # End ViewHelper Arguments submatch
 				\\)                                          # Closing parameter brackets of ViewHelper
@@ -175,7 +175,7 @@ class TemplateParser {
 						|[a-zA-Z0-9\\-_.]+               # variable identifiers
 						|{(?P>ViewHelperArguments)}     # Another sub-array
 					)                                   # END possible value options
-					\\s*,?                               # There might be a , to seperate different parts of the array
+					\\s*,?                               # There might be a , to separate different parts of the array
 				)*                                  # The above cycle is repeated for all array elements
 			)                                       # End ViewHelper Arguments submatch
 		\\)                                          # Closing parameter brackets of ViewHelper
@@ -201,7 +201,7 @@ class TemplateParser {
 							|[a-zA-Z0-9\\-_.]+           # variable identifiers
 							|(?P>Recursion)             # Another sub-array
 						)                               # END possible value options
-						\\s*,?                           # There might be a , to seperate different parts of the array
+						\\s*,?                           # There might be a , to separate different parts of the array
 					)*                                  # The above cycle is repeated for all array elements
 				)                                       # End array submatch
 			}                                           # Each array ends with }
@@ -358,7 +358,7 @@ class TemplateParser {
 	/**
 	 * Build object tree from the split template
 	 *
-	 * @param array $splitTemplate The split template, so that every tag with a namespace declaration is already a seperate array element.
+	 * @param array $splitTemplate The split template, so that every tag with a namespace declaration is already a separate array element.
 	 * @return \TYPO3\CMS\Fluid\Core\Parser\ParsingState
 	 */
 	protected function buildObjectTree($splitTemplate) {
@@ -500,14 +500,14 @@ class TemplateParser {
 	 */
 	protected function resolveViewHelperName($namespaceIdentifier, $methodIdentifier) {
 		$explodedViewHelperName = explode('.', $methodIdentifier);
-		$namespaceSeperator = strpos($this->namespaces[$namespaceIdentifier], \TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR) !== FALSE ? \TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR : \TYPO3\CMS\Fluid\Fluid::LEGACY_NAMESPACE_SEPARATOR;
+		$namespaceSeparator = strpos($this->namespaces[$namespaceIdentifier], \TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR) !== FALSE ? \TYPO3\CMS\Fluid\Fluid::NAMESPACE_SEPARATOR : \TYPO3\CMS\Fluid\Fluid::LEGACY_NAMESPACE_SEPARATOR;
 		if (count($explodedViewHelperName) > 1) {
-			$className = implode($namespaceSeperator, array_map('ucfirst', $explodedViewHelperName));
+			$className = implode($namespaceSeparator, array_map('ucfirst', $explodedViewHelperName));
 		} else {
 			$className = ucfirst($explodedViewHelperName[0]);
 		}
 		$className .= 'ViewHelper';
-		$name = $this->namespaces[$namespaceIdentifier] . $namespaceSeperator . $className;
+		$name = $this->namespaces[$namespaceIdentifier] . $namespaceSeparator . $className;
 		return $name;
 	}
 

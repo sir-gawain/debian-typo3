@@ -96,7 +96,7 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 		// circumvented until there is a better solution in extbase.
 		// For now we throw an exception if no settings are detected.
 		if (empty($this->settings)) {
-			throw new \RuntimeException('No settings detected. This module can not work then. ' . 'This usually happens if there is no frontend TypoScript template with root flag set. ' . 'Please create a frontend page with a TypoScript root template.', 1344375003);
+			throw new \RuntimeException('No settings detected. This module can not work then. This usually happens if there is no frontend TypoScript template with root flag set. ' . 'Please create a frontend page with a TypoScript root template.', 1344375003);
 		}
 	}
 
@@ -167,6 +167,7 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 	 */
 	public function addToCompareListAction($uid) {
 		$this->moduleData->attachUidCompareUser($uid);
+		$this->moduleDataStorageService->persistModuleData($this->moduleData);
 		$this->forward('index');
 	}
 
@@ -178,6 +179,7 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 	 */
 	public function removeFromCompareListAction($uid) {
 		$this->moduleData->detachUidCompareUser($uid);
+		$this->moduleDataStorageService->persistModuleData($this->moduleData);
 		$this->forward('index');
 	}
 
@@ -190,7 +192,7 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 	 * @return void
 	 */
 	protected function terminateBackendUserSessionAction(\TYPO3\CMS\Beuser\Domain\Model\BackendUser $backendUser, $sessionId) {
-		$GLOBALS['TYPO3_DB']->exec_DELETEquery('be_sessions', 'ses_userid = "' . $backendUser->getUid() . '"' . ' AND ses_id = "' . $sessionId . '"' . ' LIMIT 1');
+		$GLOBALS['TYPO3_DB']->exec_DELETEquery('be_sessions', 'ses_userid = "' . intval($backendUser->getUid()) . '" AND ses_id = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($sessionId, 'be_sessions') . ' LIMIT 1');
 		if ($GLOBALS['TYPO3_DB']->sql_affected_rows() == 1) {
 			$message = 'Session successfully terminated.';
 			$this->flashMessageContainer->add($message, '', \TYPO3\CMS\Core\Messaging\FlashMessage::OK);

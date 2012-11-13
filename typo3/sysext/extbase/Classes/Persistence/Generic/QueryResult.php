@@ -7,8 +7,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *  (c) 2010 Bastian Waidelich <bastian@typo3.org>
  *  All rights reserved
  *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -29,8 +29,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /**
  * A lazy result list that is returned by Query::execute()
  *
- * @package Extbase
- * @subpackage Persistence
  * @scope prototype
  * @api
  */
@@ -43,7 +41,7 @@ class QueryResult implements \TYPO3\CMS\Extbase\Persistence\QueryResultInterface
 	 * We use this unusual behavior of PHP to return the warning below in this case.
 	 *
 	 * @var string
-	 * @deprecated since Extbase 1.3.0; will be removed in Extbase 6.0
+	 * @deprecated since Extbase 1.3.0; will be removed in Extbase 6.1
 	 */
 	private $warning = 'You should never see this warning. If you do, you probably used PHP array functions like current() on the TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QueryResult. To retrieve the first result, you can use the getFirst() method.';
 

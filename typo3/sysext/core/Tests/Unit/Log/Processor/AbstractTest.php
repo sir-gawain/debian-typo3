@@ -31,11 +31,11 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . '../Fixtures/ProcessorFixture.php';
  *
  * @author Steffen Müller <typo3@t3node.com>
  */
-class AbstractTest extends \tx_phpunit_testcase {
+class AbstractTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function processorRefusesInvalidConfigurationOptions() {
 		$invalidConfiguration = array(

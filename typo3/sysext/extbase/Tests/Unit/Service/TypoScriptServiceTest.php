@@ -25,9 +25,7 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Service;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Testcase for class Tx_Extbase_Service_TypoScriptService
- *
- * @package Extbase
+ * Testcase for class \TYPO3\CMS\Extbase\Service\TypoScriptService
  */
 class TypoScriptServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 

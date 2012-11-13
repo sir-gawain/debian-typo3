@@ -29,7 +29,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log\Writer;
  *
  * @author Steffen Gebert <steffen.gebert@typo3.org>
  */
-class FileTest extends \tx_phpunit_testcase {
+class FileTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var string
@@ -95,7 +95,7 @@ class FileTest extends \tx_phpunit_testcase {
 
 	/**
 	 * @test
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \InvalidArgumentException
 	 */
 	public function setLogFileRefusesIllegalPath() {
 		$writer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Log\\Writer\\FileWriter');

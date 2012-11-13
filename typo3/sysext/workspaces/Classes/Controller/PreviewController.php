@@ -1,5 +1,6 @@
 <?php
 namespace TYPO3\CMS\Workspaces\Controller;
+use TYPO3\CMS\Core\Utility;
 
 /***************************************************************
  *  Copyright notice
@@ -55,7 +56,7 @@ class PreviewController extends \TYPO3\CMS\Workspaces\Controller\AbstractControl
 		$this->stageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Workspaces\\Service\\StagesService');
 		$this->workspaceService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Workspaces\\Service\\WorkspaceService');
 		$this->template->setExtDirectStateProvider();
-		$resourcePath = \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('workspaces') . 'Resources/Public/StyleSheet/preview.css';
+		$resourcePath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('workspaces') . 'Resources/Public/StyleSheet/preview.css';
 		$GLOBALS['TBE_STYLES']['extJS']['theme'] = $resourcePath;
 		$this->pageRenderer->loadExtJS();
 		$this->pageRenderer->enableExtJSQuickTips();
@@ -70,7 +71,7 @@ class PreviewController extends \TYPO3\CMS\Workspaces\Controller\AbstractControl
 		$this->pageRenderer->addJsFile($this->backPath . '../t3lib/js/extjs/ux/flashmessages.js');
 		$this->pageRenderer->addJsFile($this->backPath . 'js/extjs/iframepanel.js');
 		$this->pageRenderer->addJsFile($this->backPath . '../t3lib/js/extjs/notifications.js');
-		$resourcePathJavaScript = \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('workspaces') . 'Resources/Public/JavaScript/';
+		$resourcePathJavaScript = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('workspaces') . 'Resources/Public/JavaScript/';
 		$jsFiles = array(
 			'Ext.ux.plugins.TabStripContainer.js',
 			'Store/mainstore.js',
@@ -142,25 +143,25 @@ class PreviewController extends \TYPO3\CMS\Workspaces\Controller\AbstractControl
 		$this->pageRenderer->addInlineSetting('Workspaces', 'disableNextStageButton', $this->isInvalidStage($nextStage));
 		$this->pageRenderer->addInlineSetting('Workspaces', 'disablePreviousStageButton', $this->isInvalidStage($previousStage));
 		$this->pageRenderer->addInlineSetting('Workspaces', 'disableDiscardStageButton', $this->isInvalidStage($nextStage) && $this->isInvalidStage($previousStage));
-		$resourcePath = \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('lang') . 'res/js/be/';
+		$resourcePath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('lang') . 'res/js/be/';
 		$this->pageRenderer->addJsFile($resourcePath . 'typo3lang.js');
 		$this->pageRenderer->addJsInlineCode('workspaces.preview.lll', '
 		TYPO3.lang = {
-			visualPreview: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.visualPreview', TRUE) . '\',
-			listView: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.listView', TRUE) . '\',
-			livePreview: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreview', TRUE) . '\',
-			livePreviewDetail: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreviewDetail', TRUE) . '\',
-			workspacePreview: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreview', TRUE) . '\',
-			workspacePreviewDetail: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreviewDetail', TRUE) . '\',
-			modeSlider: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeSlider', TRUE) . '\',
-			modeVbox: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeVbox', TRUE) . '\',
-			modeHbox: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeHbox', TRUE) . '\',
-			discard: \'' . $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:label_doaction_discard', TRUE) . '\',
-			nextStage: \'' . $nextStage['title'] . '\',
-			previousStage: \'' . $previousStage['title'] . '\'
+			visualPreview: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.visualPreview', TRUE)) . ',
+			listView: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.listView', TRUE)) . ',
+			livePreview: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreview', TRUE)) . ',
+			livePreviewDetail: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.livePreviewDetail', TRUE)) . ',
+			workspacePreview: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreview', TRUE)) . ',
+			workspacePreviewDetail: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.workspacePreviewDetail', TRUE)) . ',
+			modeSlider: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeSlider', TRUE)) . ',
+			modeVbox: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeVbox', TRUE)) . ',
+			modeHbox: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:preview.modeHbox', TRUE)) . ',
+			discard: ' . Utility\GeneralUtility::quoteJSvalue($GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xml:label_doaction_discard', TRUE)) . ',
+			nextStage: ' . Utility\GeneralUtility::quoteJSvalue($nextStage['title']) . ',
+			previousStage: ' . Utility\GeneralUtility::quoteJSvalue($previousStage['title']) . '
 		};TYPO3.l10n.initialize();
 ');
-		$resourcePath = \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('workspaces') . 'Resources/Public/';
+		$resourcePath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('workspaces') . 'Resources/Public/';
 		$this->pageRenderer->addJsFile($resourcePath . 'JavaScript/preview.js');
 	}
 
@@ -225,7 +226,7 @@ class PreviewController extends \TYPO3\CMS\Workspaces\Controller\AbstractControl
 			'moduleMenuWidth' => $this->menuWidth - 1,
 			'topBarHeight' => isset($GLOBALS['TBE_STYLES']['dims']['topFrameH']) ? intval($GLOBALS['TBE_STYLES']['dims']['topFrameH']) : 30,
 			'showRefreshLoginPopup' => isset($GLOBALS['TYPO3_CONF_VARS']['BE']['showRefreshLoginPopup']) ? intval($GLOBALS['TYPO3_CONF_VARS']['BE']['showRefreshLoginPopup']) : FALSE,
-			'listModulePath' => \TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('recordlist') ? \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('recordlist') . 'mod1/' : '',
+			'listModulePath' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('recordlist') ? \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('recordlist') . 'mod1/' : '',
 			'debugInWindow' => $GLOBALS['BE_USER']->uc['debugInWindow'] ? 1 : 0,
 			'ContextHelpWindows' => array(
 				'width' => 600,

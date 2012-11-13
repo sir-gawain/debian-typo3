@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Property;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of FLOW3.
- *  All credits go to the v5 team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Property;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -46,9 +47,6 @@ namespace TYPO3\CMS\Extbase\Property;
  *
  * Now the target object equals the source object.
  *
- * @package Extbase
- * @subpackage Property
- * @version $Id$
  * @api
  * @deprecated since Extbase 1.4.0
  */
@@ -166,7 +164,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Add errors to the mapping result from an object validator (property errors).
 	 *
-	 * @param array Array of Tx_Extbase_Validation_PropertyError
+	 * @param array Array of \TYPO3\CMS\Extbase\Validation\PropertyError
 	 * @return void
 	 */
 	protected function addErrorsFromObjectValidator($errors) {
@@ -189,21 +187,21 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param mixed $source Source containing the properties to map to the target object. Must either be an array, ArrayObject or any other object.
 	 * @param object|array $target The target object
 	 * @param array $optionalPropertyNames Names of optional properties. If a property is specified here and it doesn't exist in the source, no error is issued.
-	 * @throws Exception\InvalidSource
-	 * @throws Exception\InvalidTarget
+	 * @throws Exception\InvalidSourceException
+	 * @throws Exception\InvalidTargetException
 	 * @return boolean TRUE if the properties could be mapped, otherwise FALSE
 	 * @see mapAndValidate()
 	 * @api
 	 */
 	public function map(array $propertyNames, $source, $target, $optionalPropertyNames = array()) {
 		if (!is_object($source) && !is_array($source)) {
-			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidSource('The source object must be a valid object or array, ' . gettype($target) . ' given.', 1187807099);
+			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException('The source object must be a valid object or array, ' . gettype($target) . ' given.', 1187807099);
 		}
 		if (is_string($target) && strpbrk($target, '_\\') !== FALSE) {
 			return $this->transformToObject($source, $target, '--none--');
 		}
 		if (!is_object($target) && !is_array($target)) {
-			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidTarget('The target object must be a valid object or array, ' . gettype($target) . ' given.', 1187807099);
+			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidTargetException('The target object must be a valid object or array, ' . gettype($target) . ' given.', 1187807099);
 		}
 		$this->mappingResults = new \TYPO3\CMS\Extbase\Property\MappingResults();
 		if (is_object($target)) {
@@ -225,7 +223,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 			} else {
 				if ($targetClassSchema !== NULL && $targetClassSchema->hasProperty($propertyName)) {
 					$propertyMetaData = $targetClassSchema->getProperty($propertyName);
-					if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage')) && (strpos($propertyMetaData['elementType'], '_') !== FALSE || $propertyValue === '')) {
+					if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE) && (strpbrk($propertyMetaData['elementType'], '_\\') !== FALSE || $propertyValue === '')) {
 						$objects = array();
 						if (is_array($propertyValue)) {
 							foreach ($propertyValue as $value) {
@@ -238,15 +236,15 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 						// make sure we hand out what is expected
 						if ($propertyMetaData['type'] === 'ArrayObject') {
 							$propertyValue = new \ArrayObject($objects);
-						} elseif ($propertyMetaData['type'] === 'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\ObjectStorage') {
-							$propertyValue = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+						} elseif (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
+							$propertyValue = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 							foreach ($objects as $object) {
 								$propertyValue->attach($object);
 							}
 						} else {
 							$propertyValue = $objects;
 						}
-					} elseif ($propertyMetaData['type'] === 'DateTime' || strpos($propertyMetaData['type'], '_') !== FALSE) {
+					} elseif ($propertyMetaData['type'] === 'DateTime' || strpbrk($propertyMetaData['type'], '_\\') !== FALSE) {
 						$propertyValue = $this->transformToObject($propertyValue, $propertyMetaData['type'], $propertyName);
 						if ($propertyValue === NULL) {
 							continue;
@@ -272,7 +270,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param mixed $propertyValue The value to transform, string or array
 	 * @param string $targetType The type to transform to
 	 * @param string $propertyName In case of an error we add this to the error message
-	 * @throws Exception\InvalidTarget
+	 * @throws Exception\InvalidTargetException
 	 * @throws \InvalidArgumentException
 	 * @return object The object, when no transformation was possible this may return NULL as well
 	 */
@@ -297,8 +295,8 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 			} elseif (is_array($propertyValue)) {
 				if (isset($propertyValue['__identity'])) {
 					$existingObject = $this->findObjectByUid($targetType, $propertyValue['__identity']);
-					if ($existingObject === NULL) {
-						throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidTarget('Querying the repository for the specified object was not successful.', 1237305720);
+					if ($existingObject === FALSE) {
+						throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidTargetException('Querying the repository for the specified object was not successful.', 1237305720);
 					}
 					unset($propertyValue['__identity']);
 					if (count($propertyValue) === 0) {

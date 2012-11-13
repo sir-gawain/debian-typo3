@@ -307,7 +307,7 @@ class PageLayoutController {
 	 */
 	public function clearCache() {
 		if ($this->clear_cache) {
-			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+			$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 			$tce->stripslashes_values = 0;
 			$tce->start(array(), array());
 			$tce->clear_cacheCmd($this->id);
@@ -491,7 +491,7 @@ class PageLayoutController {
 			$docHeaderButtons = $this->getButtons($this->MOD_SETTINGS['function'] == 0 ? 'quickEdit' : '');
 			$markers = array(
 				'CSH' => $docHeaderButtons['csh'],
-				'TOP_FUNCTION_MENU' => $this->editSelect . $this->topFuncMenu,
+				'TOP_FUNCTION_MENU' => $this->topFuncMenu . $this->editSelect,
 				'LANGSELECTOR' => $this->languageMenu,
 				'CONTENT' => $body
 			);
@@ -709,9 +709,6 @@ class PageLayoutController {
 				$tceforms->clipObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Clipboard\\Clipboard');
 				// Initialize - reads the clipboard content from the user session
 				$tceforms->clipObj->initializeClipboard();
-				if ($GLOBALS['BE_USER']->uc['edit_showFieldHelp'] !== 'text' && $this->MOD_SETTINGS['showDescriptions']) {
-					$tceforms->edit_showFieldHelp = 'text';
-				}
 				// Render form, wrap it:
 				$panel = '';
 				$panel .= $tceforms->getMainFields($this->eRParts[0], $rec);
@@ -725,7 +722,7 @@ class PageLayoutController {
 					<input type="hidden" name="_serialNumber" value="' . md5(microtime()) . '" />
 					<input type="hidden" name="_disableRTE" value="' . $tceforms->disableRTE . '" />
 					<input type="hidden" name="edit_record" value="' . $edit_record . '" />
-					<input type="hidden" name="redirect" value="' . htmlspecialchars(($uidVal == 'new' ? \TYPO3\CMS\Core\Extension\ExtensionManager::extRelPath('cms') . 'layout/db_layout.php?id=' . $this->id . '&new_unique_uid=' . $new_unique_uid . '&returnUrl=' . rawurlencode($this->returnUrl) : $this->R_URI)) . '" />
+					<input type="hidden" name="redirect" value="' . htmlspecialchars(($uidVal == 'new' ? \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('cms') . 'layout/db_layout.php?id=' . $this->id . '&new_unique_uid=' . $new_unique_uid . '&returnUrl=' . rawurlencode($this->returnUrl) : $this->R_URI)) . '" />
 					' . \TYPO3\CMS\Backend\Form\FormEngine::getHiddenTokenField('tceAction');
 				// Add JavaScript as needed around the form:
 				$theCode = $tceforms->printNeededJSFunctions_top() . $theCode . $tceforms->printNeededJSFunctions();
@@ -745,7 +742,7 @@ class PageLayoutController {
 		$q_count = $this->getNumberOfHiddenElements();
 		$h_func_b = \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncCheck($this->id, 'SET[tt_content_showHidden]', $this->MOD_SETTINGS['tt_content_showHidden'], 'db_layout.php', '', 'id="checkTt_content_showHidden"') . '<label for="checkTt_content_showHidden">' . (!$q_count ? $GLOBALS['TBE_TEMPLATE']->dfw($GLOBALS['LANG']->getLL('hiddenCE', 1)) : $GLOBALS['LANG']->getLL('hiddenCE', 1) . ' (' . $q_count . ')') . '</label>';
 		$h_func_b .= '<br />' . \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncCheck($this->id, 'SET[showPalettes]', $this->MOD_SETTINGS['showPalettes'], 'db_layout.php', '', 'id="checkShowPalettes"') . '<label for="checkShowPalettes">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPalettes', 1) . '</label>';
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded('context_help') && $GLOBALS['BE_USER']->uc['edit_showFieldHelp'] !== 'text') {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('context_help')) {
 			$h_func_b .= '<br />' . \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncCheck($this->id, 'SET[showDescriptions]', $this->MOD_SETTINGS['showDescriptions'], 'db_layout.php', '', 'id="checkShowDescriptions"') . '<label for="checkShowDescriptions">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showDescriptions', 1) . '</label>';
 		}
 		if ($GLOBALS['BE_USER']->isRTE()) {
@@ -954,6 +951,7 @@ class PageLayoutController {
 			'shortcut' => '',
 			'cache' => '',
 			'savedok' => '',
+			'save_close' => '',
 			'savedokshow' => '',
 			'closedok' => '',
 			'deletedok' => '',
@@ -988,7 +986,9 @@ class PageLayoutController {
 			}
 			if ($function == 'quickEdit') {
 				// Save record
-				$buttons['savedok'] = '<input class="c-inputButton" type="image" name="savedok"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/savedok.gif', '') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" alt="" />';
+				$buttons['savedok'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="_savedok" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" />'));
+				// Save and close
+				$buttons['save_close'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close', array('html' => '<input type="image" class="c-inputButton" name="_saveandclosedok" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', 1) . '" />'));
 				// Save record and show page
 				$buttons['savedokshow'] = '<a href="#" onclick="' . htmlspecialchars('document.editform.redirect.value+=\'&popView=1\'; TBE_EDITOR.checkAndDoSubmit(1); return false;') . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDocShow', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-view') . '</a>';
 				// Close record
@@ -1049,10 +1049,24 @@ class PageLayoutController {
 	 */
 	public function exec_languageQuery($id) {
 		if ($id) {
-			$exQ = \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('pages_language_overlay') . ($GLOBALS['BE_USER']->isAdmin() ? '' : ' AND sys_language.hidden=0');
-			return $GLOBALS['TYPO3_DB']->exec_SELECTquery('sys_language.*', 'pages_language_overlay,sys_language', 'pages_language_overlay.sys_language_uid=sys_language.uid AND pages_language_overlay.pid=' . intval($id) . $exQ, 'pages_language_overlay.sys_language_uid,sys_language.uid,sys_language.pid,sys_language.tstamp,sys_language.hidden,sys_language.title,sys_language.static_lang_isocode,sys_language.flag', 'sys_language.title');
+			$exQ = \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('pages_language_overlay') .
+				($GLOBALS['BE_USER']->isAdmin() ? '' : ' AND sys_language.hidden=0');
+			return $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+				'sys_language.*',
+				'pages_language_overlay,sys_language',
+				'pages_language_overlay.sys_language_uid=sys_language.uid AND pages_language_overlay.pid=' . intval($id) . $exQ .
+					\TYPO3\CMS\Backend\Utility\BackendUtility::versioningPlaceholderClause('pages_language_overlay'),
+				'pages_language_overlay.sys_language_uid,sys_language.uid,sys_language.pid,sys_language.tstamp,sys_language.hidden,sys_language.title,sys_language.static_lang_isocode,sys_language.flag',
+				'sys_language.title'
+			);
 		} else {
-			return $GLOBALS['TYPO3_DB']->exec_SELECTquery('sys_language.*', 'sys_language', 'sys_language.hidden=0', '', 'sys_language.title');
+			return $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+				'sys_language.*',
+				'sys_language',
+				'sys_language.hidden=0',
+				'',
+				'sys_language.title'
+			);
 		}
 	}
 

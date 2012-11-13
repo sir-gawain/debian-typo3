@@ -42,65 +42,65 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 	protected $installUtility;
 
 	/**
+	 * @var \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility
+	 */
+	protected $fileHandlingUtility;
+
+	/**
+	 * @var \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService
+	 */
+	protected $managementService;
+
+	/**
 	 * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
-	 * @return void
 	 */
 	public function injectInstallUtility(\TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility) {
 		$this->installUtility = $installUtility;
 	}
 
 	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility
-	 */
-	protected $fileHandlingUtility;
-
-	/**
 	 * @param \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility
-	 * @return void
 	 */
 	public function injectFileHandlingUtility(\TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility) {
 		$this->fileHandlingUtility = $fileHandlingUtility;
 	}
 
 	/**
-	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
-	 * @return void
+	 * @param \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $managementService
 	 */
-	public function initializeAction() {
-		if (!$this->request->hasArgument('extension')) {
-			throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('Required argument extension not set!', 1342874433);
-		}
+	public function injectManagementService(\TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $managementService) {
+		$this->managementService = $managementService;
 	}
 
 	/**
 	 * Toggle extension installation state action
 	 *
-	 * @return void
+	 * @param string $extension
 	 */
-	protected function toggleExtensionInstallationStateAction() {
-		$installedExtensions = \TYPO3\CMS\Core\Extension\ExtensionManager::getLoadedExtensionListArray();
-		$extension = $this->request->getArgument('extension');
+	protected function toggleExtensionInstallationStateAction($extension) {
+		$installedExtensions = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getLoadedExtensionListArray();
 		if (in_array($extension, $installedExtensions)) {
 			// uninstall
 			$this->installUtility->uninstall($extension);
 		} else {
 			// install
-			$this->installUtility->install($extension);
+			$this->managementService->resolveDependenciesAndInstall(
+				$this->installUtility->enrichExtensionWithDetails($extension)
+			);
 		}
-		$this->redirect('index', 'List');
+		$this->redirect('index', 'List', NULL, array(self::TRIGGER_RefreshModuleMenu => TRUE));
 	}
 
 	/**
 	 * Remove an extension (if it is still installed, uninstall it first)
 	 *
-	 * @return void
+	 * @param string $extension
 	 */
-	protected function removeExtensionAction() {
+	protected function removeExtensionAction($extension) {
 		$success = TRUE;
 		$message = '';
-		$extension = $this->request->getArgument('extension');
 		try {
-			if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extension)) {
+			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extension)) {
 				$this->installUtility->uninstall($extension);
 			}
 			$this->installUtility->removeExtension($extension);
@@ -114,10 +114,9 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 	/**
 	 * Download an extension as a zip file
 	 *
-	 * @return void
+	 * @param string $extension
 	 */
-	protected function downloadExtensionZipAction() {
-		$extension = $this->request->getArgument('extension');
+	protected function downloadExtensionZipAction($extension) {
 		$fileName = $this->fileHandlingUtility->createZipFileFromExtension($extension);
 		$this->fileHandlingUtility->sendZipFileToBrowserAndDelete($fileName);
 	}
@@ -125,12 +124,11 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 	/**
 	 * Download data of an extension as sql statements
 	 *
+	 * @param string $extension
 	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
-	 * @return void
 	 */
-	protected function downloadExtensionDataAction() {
+	protected function downloadExtensionDataAction($extension) {
 		$error = NULL;
-		$extension = $this->request->getArgument('extension');
 		$sqlData = $this->installUtility->getExtensionSqlDataDump($extension);
 		$dump = $sqlData['extTables'] . $sqlData['staticSql'];
 		$fileName = $extension . '_sqlDump.sql';
@@ -141,8 +139,5 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 		}
 		$this->fileHandlingUtility->sendSqlDumpFileToBrowserAndDelete($filePath, $fileName);
 	}
-
 }
-
-
 ?>

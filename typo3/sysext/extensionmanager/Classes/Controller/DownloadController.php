@@ -56,6 +56,11 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 	protected $installUtility;
 
 	/**
+	 * @var \TYPO3\CMS\Extensionmanager\Utility\DownloadUtility
+	 */
+	protected $downloadUtility;
+
+	/**
 	 * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
 	 * @return void
 	 */
@@ -90,11 +95,6 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 	}
 
 	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\DownloadUtility
-	 */
-	protected $downloadUtility;
-
-	/**
 	 * @param \TYPO3\CMS\Extensionmanager\Utility\DownloadUtility $downloadUtility
 	 * @return void
 	 */
@@ -105,51 +105,58 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 	/**
 	 * Check extension dependencies
 	 *
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension
 	 * @throws \Exception
-	 * @return void
 	 */
-	public function checkDependenciesAction() {
-		if (!$this->request->hasArgument('extension')) {
-			throw new \Exception('Required argument extension not set.', 1334433342);
-		}
-		$extensionUid = $this->request->getArgument('extension');
-		/** @var $extension \TYPO3\CMS\Extensionmanager\Domain\Model\Extension */
-		$extension = $this->extensionRepository->findByUid(intval($extensionUid));
-		$dependencyTypes = $this->managementService->getAndResolveDependencies($extension);
+	public function checkDependenciesAction(\TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension) {
 		$message = '';
-		if (count($dependencyTypes) > 0) {
-			// @todo translate and beautify
-			$message = 'The following dependencies have to be resolved before installation:<br /><br />';
-			foreach ($dependencyTypes as $dependencyType => $dependencies) {
-				$message .= '<h3>Extensions marked for ' . $dependencyType . ':</h3>';
-				foreach ($dependencies as $extensionKey => $dependency) {
-					$message .= $extensionKey . '<br />';
+		$title = '';
+		$hasDependiencies = FALSE;
+		$hasErrors = FALSE;
+		try {
+			$dependencyTypes = $this->managementService->getAndResolveDependencies($extension);
+			if (count($dependencyTypes) > 0) {
+				$hasDependiencies = TRUE;
+				$message = $this->translate('downloadExtension.dependencies.headline');
+				foreach ($dependencyTypes as $dependencyType => $dependencies) {
+					$extensions = '';
+					foreach ($dependencies as $extensionKey => $dependency) {
+						$extensions .= htmlspecialchars($extensionKey) . '<br />';
+					}
+					$message .= $this->translate('downloadExtension.dependencies.typeHeadline',
+						array(
+							$this->translate('downloadExtension.dependencyType.' . $dependencyType),
+							$extensions
+						)
+					);
 				}
-				$message .= 'Shall these dependencies be resolved automatically?';
+				$title = $this->translate('downloadExtension.dependencies.reloveAutomatically');
 			}
+			$this->view->assign('dependencies', $dependencyTypes);
+		} catch (\Exception $e) {
+			$hasErrors = TRUE;
+			$title = $this->translate('downloadExtension.dependencies.errorTitle');
+			$message = $e->getMessage();
 		}
-		$this->view->assign('dependencies', $dependencyTypes)->assign('extension', $extension)->assign('message', $message);
+		$this->view->assign('extension', $extension)
+				->assign('hasDependencies', $hasDependiencies)
+				->assign('hasErrors', $hasErrors)
+				->assign('message', $message)
+				->assign('title', $title);
 	}
 
 	/**
 	 * Install an extension from TER
 	 *
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension
+	 * @param string $downloadPath
 	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
-	 * @return void
 	 */
-	public function installFromTerAction() {
+	public function installFromTerAction(\TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension, $downloadPath) {
 		$result = FALSE;
 		$errorMessage = '';
 		try {
-			if (!$this->request->hasArgument('extension')) {
-				throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('Required argument extension not set.', 1334433342);
-			}
-			$extensionUid = $this->request->getArgument('extension');
-			if ($this->request->hasArgument('downloadPath')) {
-				$this->downloadUtility->setDownloadPath($this->request->getArgument('downloadPath'));
-			}
-			/** @var $extension \TYPO3\CMS\Extensionmanager\Domain\Model\Extension */
-			$extension = $this->extensionRepository->findByUid(intval($extensionUid));
+			$this->downloadUtility->setDownloadPath($downloadPath);
 			$this->prepareExtensionForImport($extension);
 			$result = $this->managementService->resolveDependenciesAndInstall($extension);
 		} catch (\TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException $e) {
@@ -167,8 +174,8 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 	 * @return void
 	 */
 	protected function prepareExtensionForImport(\TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension) {
-		if (\TYPO3\CMS\Core\Extension\ExtensionManager::isLoaded($extension->getExtensionKey())) {
-			\TYPO3\CMS\Core\Extension\ExtensionManager::unloadExtension($extension->getExtensionKey());
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extension->getExtensionKey())) {
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::unloadExtension($extension->getExtensionKey());
 			$this->installUtility->reloadCaches();
 		}
 	}
@@ -208,7 +215,6 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 		}
 		$this->view->assign('updateComments', $updateComments)->assign('extensionKey', $extensionKey);
 	}
-
 }
 
 

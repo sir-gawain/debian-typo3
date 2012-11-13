@@ -23,16 +23,14 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Object\Container;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-require_once \TYPO3\CMS\Core\Extension\ExtensionManager::extPath('extbase') . 'Tests/Unit/Object/Container/Fixtures/Testclasses.php';
-require_once \TYPO3\CMS\Core\Extension\ExtensionManager::extPath('extbase') . 'Tests/Unit/Object/Container/Fixtures/NamespaceTestclasses.php';
+require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('extbase') . 'Tests/Unit/Object/Container/Fixtures/Testclasses.php';
+require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('extbase') . 'Tests/Unit/Object/Container/Fixtures/NamespaceTestclasses.php';
 
 /**
  * Testcase for class t3lib_object_Container.
  *
  * @author Daniel Pötzinger
  * @author Bastian Waidelich <bastian@typo3.org>
- * @package TYPO3
- * @subpackage t3lib
  */
 class ContainerTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
@@ -180,9 +178,9 @@ class ContainerTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	/**
 	 * @test
 	 */
-	public function getInstanceUsesClassNameSha1AsCacheKey() {
+	public function getInstanceUsesClassNameMd5AsCacheKey() {
 		$className = 'TYPO3\\CMS\\Extbase\\Tests\\Unit\\Object\\Container\\Fixtures\\NamespacedClass';
-		$classNameHash = sha1($className);
+		$classNameHash = md5($className);
 		$mockedCache = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\Container\\ClassInfoCache', array('has', 'set', 'get'));
 		$container = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\Container\\Container', array('log', 'getClassInfoCache'));
 		$container->expects($this->any())->method('getClassInfoCache')->will($this->returnValue($mockedCache));

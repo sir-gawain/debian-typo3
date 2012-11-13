@@ -33,7 +33,7 @@ namespace TYPO3\CMS\Backend\Tree\Pagetree;
  * @package TYPO3
  * @subpackage t3lib
  */
-final class Commands {
+class Commands {
 
 	/**
 	 * @var boolean|null
@@ -159,7 +159,9 @@ final class Commands {
 	 */
 	static public function createNode(\TYPO3\CMS\Backend\Tree\Pagetree\PagetreeNode $parentNode, $targetId, $pageType) {
 		$placeholder = 'NEW12345';
-		$pid = $parentNode->getWorkspaceId();
+		$pid = intval($parentNode->getWorkspaceId());
+		$targetId = intval($targetId);
+
 		// Use page TsConfig as default page initialization
 		$pageTs = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig($pid);
 		if (array_key_exists('TCAdefaults.', $pageTs) && array_key_exists('pages.', $pageTs['TCAdefaults.'])) {
@@ -167,14 +169,16 @@ final class Commands {
 		} else {
 			$data['pages'][$placeholder] = array();
 		}
+
 		$data['pages'][$placeholder]['pid'] = $pid;
 		$data['pages'][$placeholder]['doktype'] = $pageType;
 		$data['pages'][$placeholder]['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:tree.defaultPageTitle', TRUE);
 		$newPageId = self::processTceCmdAndDataMap(array(), $data);
 		$node = self::getNode($newPageId[$placeholder]);
-		if ($parentNode->getWorkspaceId() !== $targetId) {
+		if ($pid !== $targetId) {
 			self::moveNode($node, $targetId);
 		}
+
 		return $newPageId[$placeholder];
 	}
 
@@ -192,11 +196,11 @@ final class Commands {
 	 * @param array $cmd
 	 * @param array $data
 	 * @return array
-	 * @throws RuntimeException if an error happened while the TCE processing
+	 * @throws \RuntimeException if an error happened while the TCE processing
 	 */
 	static protected function processTceCmdAndDataMap(array $cmd, array $data = array()) {
-		/** @var $tce \TYPO3\CMS\Core\DataHandler\DataHandler */
-		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandler\\DataHandler');
+		/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
+		$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 		$tce->stripslashes_values = 0;
 		$tce->start($data, $cmd);
 		$tce->copyTree = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($GLOBALS['BE_USER']->uc['copyLevels'], 0, 100);

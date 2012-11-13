@@ -66,6 +66,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 
 	static public function tearDownAfterClass() {
 		foreach (self::$testDirs as $dir) {
+			chmod($dir, 0777);
 			\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($dir, TRUE);
 		}
 	}
@@ -131,7 +132,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 	 */
 	public function rootLevelFolderIsCreatedWithCorrectArguments() {
 		$mockedMount = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceStorage', array(), array(), '', FALSE);
-		$fixture = $this->createDriverFixture(array(), $mockedMount);
+		$fixture = $this->createDriverFixture(array('basePath' => $this->getMountRootUrl()), $mockedMount);
 		$mockedFactory = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
 		$mockedFactory->expects($this->once())->method('createFolderObject')->with($this->equalTo($mockedMount), $this->equalTo('/'), $this->equalTo(''));
 		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory', $mockedFactory);
@@ -809,9 +810,9 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 	/**
 	 * @test
 	 */
-	public function getFolderListDoesNotReturnHiddenFoldersByDefault() {
+	public function getFolderListReturnsHiddenFoldersByDefault() {
 		$dirStructure = array(
-			'.someHiddenFile' => array(),
+			'.someHiddenDir' => array(),
 			'aDir' => array(),
 			'file1' => ''
 		);
@@ -820,7 +821,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 			'basePath' => $this->getMountRootUrl()
 		));
 		$fileList = $fixture->getFolderList('/');
-		$this->assertEquals(array('aDir'), array_keys($fileList));
+		$this->assertEquals(array('.someHiddenDir', 'aDir'), array_keys($fileList));
 	}
 
 	/**
@@ -1029,7 +1030,10 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		mkdir($basedir . '/someForbiddenFolder');
 		chmod($basedir . '/someForbiddenFolder', 0);
 		clearstatcache();
-		$this->assertEquals(array('r' => FALSE, 'w' => FALSE), $fixture->getFolderPermissions($this->getSimpleFolderMock('/someForbiddenFolder')));
+		$result = $fixture->getFolderPermissions($this->getSimpleFolderMock('/someForbiddenFolder'));
+		// Change permissions back to writable, so the sub-folder can be removed in tearDown
+		chmod($basedir . '/someForbiddenFolder', 0777);
+		$this->assertEquals(array('r' => FALSE, 'w' => FALSE), $result);
 	}
 
 	/**
@@ -1385,7 +1389,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 	 * @test
 	 */
 	public function renameFolderRevertsRenamingIfFilenameMapCannotBeCreated() {
-		$this->setExpectedException('RuntimeException', '', 1334160746);
+		$this->setExpectedException('\RuntimeException', '', 1334160746);
 		$this->addToMount(array(
 			'sourceFolder' => array(
 				'file' => 'asdfg'

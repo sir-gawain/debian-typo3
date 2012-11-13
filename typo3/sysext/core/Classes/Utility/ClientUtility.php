@@ -31,7 +31,7 @@ namespace TYPO3\CMS\Core\Utility;
  *
  * @author Oliver Hader <oliver@typo3.org>
  */
-final class ClientUtility {
+class ClientUtility {
 
 	/**
 	 * Generates an array with abstracted browser information
@@ -41,7 +41,7 @@ final class ClientUtility {
 	 */
 	static public function getBrowserInfo($userAgent) {
 		// Hook: $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getBrowserInfo']:
-		$getBrowserInfoHooks =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getBrowserInfo'];
+		$getBrowserInfoHooks = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getBrowserInfo'];
 		if (is_array($getBrowserInfoHooks)) {
 			foreach ($getBrowserInfoHooks as $hookFunction) {
 				$returnResult = TRUE;
@@ -184,7 +184,7 @@ final class ClientUtility {
 	 */
 	static public function getDeviceType($userAgent) {
 		// Hook: $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getDeviceType']:
-		$getDeviceTypeHooks =& $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getDeviceType'];
+		$getDeviceTypeHooks = &$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/div/class.t3lib_utility_client.php']['getDeviceType'];
 		if (is_array($getDeviceTypeHooks)) {
 			foreach ($getDeviceTypeHooks as $hookFunction) {
 				$returnResult = TRUE;

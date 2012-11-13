@@ -51,10 +51,13 @@ class ShowExtensionVersionsViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\
 		$action = 'showAllVersions';
 		$uri = $uriBuilder->reset()->uriFor($action, array(
 			'extensionKey' => $extension->getExtensionKey(),
-			'allVersions' => TRUE
 		), 'List');
 		$this->tag->addAttribute('href', $uri);
-		$label = 'Show all versions';
+
+		// Set class
+		$this->tag->addAttribute('class', 'versions-all ui-icon ui-icon-triangle-1-s');
+
+		$label = \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('extensionList.showAllVersions.label', 'extensionmanager');
 		$this->tag->setContent($label);
 		return $this->tag->render();
 	}

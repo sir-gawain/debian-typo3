@@ -1,23 +1,35 @@
 <?php
 namespace TYPO3\CMS\Extbase\Persistence;
 
-/*                                                                        *
- * This script belongs to the Extbase framework.                          *
- *                                                                        *
- * This class is a backport of the corresponding class of FLOW3.          *
- * All credits go to the v5 team.                                         *
- *                                                                        *
- * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- * of the License, or (at your option) any later version.                 *
- *                                                                        *
- * The TYPO3 project - inspiring people to share!                         *
- *                                                                        */
+/***************************************************************
+ *  Copyright notice
+ *
+ *  This class is a backport of the corresponding class of TYPO3 Flow.
+ *  All credits go to the TYPO3 Flow team.
+ *  All rights reserved.
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * The base repository - will usually be extended by a more concrete repository.
  *
- * @package Extbase
- * @subpackage Persistence
  * @api
  */
 class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, \TYPO3\CMS\Core\SingletonInterface {
@@ -30,14 +42,14 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	/**
 	 * Objects of this repository
 	 *
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	protected $addedObjects;
 
 	/**
 	 * Objects removed but not found in $this->addedObjects at removal time
 	 *
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
 	 */
 	protected $removedObjects;
 
@@ -45,6 +57,16 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactoryInterface
 	 */
 	protected $queryFactory;
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
+	 */
+	protected $backend;
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Session
+	 */
+	protected $session;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface
@@ -77,10 +99,10 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
 	 */
 	public function __construct(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager = NULL) {
-		$this->addedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
-		$this->removedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
-		$nsSeperator = strpos($this->getRepositoryClassName(), '\\') !== FALSE ? '\\\\' : '_';
-		$this->objectType = preg_replace(array('/' . $nsSeperator . 'Repository' . $nsSeperator . '(?!.*' . $nsSeperator . 'Repository' . $nsSeperator . ')/', '/Repository$/'), array($nsSeperator . 'Model' . $nsSeperator, ''), $this->getRepositoryClassName());
+		$this->addedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+		$this->removedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+		$nsSeparator = strpos($this->getRepositoryClassName(), '\\') !== FALSE ? '\\\\' : '_';
+		$this->objectType = preg_replace(array('/' . $nsSeparator . 'Repository' . $nsSeparator . '(?!.*' . $nsSeparator . 'Repository' . $nsSeparator . ')/', '/Repository$/'), array($nsSeparator . 'Model' . $nsSeparator, ''), $this->getRepositoryClassName());
 		if ($objectManager === NULL) {
 			// Legacy creation, in case the object manager is NOT injected
 			// If ObjectManager IS there, then all properties are automatically injected
@@ -99,6 +121,27 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 */
 	public function injectIdentityMap(\TYPO3\CMS\Extbase\Persistence\Generic\IdentityMap $identityMap) {
 		$this->identityMap = $identityMap;
+	}
+
+	/**
+	 * Injects the Persistence Backend
+	 *
+	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface $backend The persistence backend
+	 * @return void
+	 */
+	public function injectBackend(\TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface $backend) {
+		$this->backend = $backend;
+	}
+
+	/**
+	 *
+	 * Injects the Persistence Session
+	 *
+	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Session $session The persistence session
+	 * @return void
+	 */
+	public function injectSession(\TYPO3\CMS\Extbase\Persistence\Generic\Session $session) {
+			$this->session = $session;
 	}
 
 	/**
@@ -173,13 +216,11 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 		if (!$newObject instanceof $this->objectType) {
 			throw new \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException('The new object given to replace was not of the type (' . $this->objectType . ') this repository manages.', 1248363439);
 		}
-		$backend = $this->persistenceManager->getBackend();
-		$session = $this->persistenceManager->getSession();
-		$uuid = $backend->getIdentifierByObject($existingObject);
+		$uuid = $this->persistenceManager->getIdentifierByObject($existingObject);
 		if ($uuid !== NULL) {
-			$backend->replaceObject($existingObject, $newObject);
-			$session->unregisterReconstitutedObject($existingObject);
-			$session->registerReconstitutedObject($newObject);
+			$this->backend->replaceObject($existingObject, $newObject);
+			$this->session->unregisterReconstitutedObject($existingObject);
+			$this->session->registerReconstitutedObject($newObject);
 			if ($this->removedObjects->contains($existingObject)) {
 				$this->removedObjects->detach($existingObject);
 				$this->removedObjects->attach($newObject);
@@ -224,17 +265,17 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * added to the repository. Those are only objects *added*, not objects
 	 * fetched from the underlying storage.
 	 *
-	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage the objects
+	 * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage the objects
 	 */
 	public function getAddedObjects() {
 		return $this->addedObjects;
 	}
 
 	/**
-	 * Returns an \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage with objects remove()d from the repository
+	 * Returns an \TYPO3\CMS\Extbase\Persistence\ObjectStorage with objects remove()d from the repository
 	 * that had been persisted to the storage layer before.
 	 *
-	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage the objects
+	 * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage the objects
 	 */
 	public function getRemovedObjects() {
 		return $this->removedObjects;
@@ -269,7 +310,7 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * @api
 	 */
 	public function removeAll() {
-		$this->addedObjects = new \TYPO3\CMS\Extbase\Persistence\Generic\ObjectStorage();
+		$this->addedObjects = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
 		foreach ($this->findAll() as $object) {
 			$this->remove($object);
 		}
@@ -298,8 +339,8 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * Sets the property names to order the result by per default.
 	 * Expected like this:
 	 * array(
-	 * 'foo' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING,
-	 * 'bar' => Tx_Extbase_Persistence_QueryInterface::ORDER_DESCENDING
+	 * 'foo' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_ASCENDING,
+	 * 'bar' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_DESCENDING
 	 * )
 	 *
 	 * @param array $defaultOrderings The property names to order by
