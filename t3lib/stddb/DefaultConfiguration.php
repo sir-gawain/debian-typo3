@@ -26,8 +26,6 @@
  * later populated as $GLOBALS['TYPO3_CONF_VARS']
  *
  * @author Christian Kuhn <lolli@schwarzbu.ch>
- * @package TYPO3
- * @subpackage core
  */
 return array(
 	'GFX' => array(
@@ -188,10 +186,11 @@ return array(
 		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),		// Integer: The E_* constant that will be handled as an exception by t3lib_error_ErrorHandler. Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING)</tt> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
 		'enable_errorDLOG' => 0,	// Boolean: If set, errors are written to the developer log (requires an installed *devlog* extension).
 		'enable_exceptionDLOG' => 0,// Boolean: If set, exceptions are written to the developer log (requires an installed *devlog* extension).
-		'syslogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: Configures which PHP errors should be logged to the configured syslogs (see: [SYS][systemLog]). If set to "0" no PHP errors are logged to the syslog. Default is "E_ALL ^ E_NOTICE" (6135).
-		'belogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: Configures which PHP errors should be logged to the "syslog" table (extension: belog). If set to "0" no PHP errors are logged to the sys_log table. Default is "E_ALL ^ E_NOTICE" (6135).
+		'syslogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: Configures which PHP errors should be logged to the configured syslogs (see: [SYS][systemLog]). If set to "0" no PHP errors are logged to the syslog. Default is "E_ALL & ~(E_STRICT | E_NOTICE)" (22519).
+		'belogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: Configures which PHP errors should be logged to the "syslog" table (extension: belog). If set to "0" no PHP errors are logged to the sys_log table. Default is "E_ALL & ~(E_STRICT | E_NOTICE)" (22519).
 		'locallangXMLOverride' => array(),		// For extension/overriding of the arrays in 'locallang' files in frontend and backend. See 'Inside TYPO3' for more information.
 		'generateApacheHtaccess' => 1,		// Boolean: TYPO3 can create <em>.htaccess</em> files which are used by Apache Webserver. They are useful for access protection or performance improvements. Currently <em>.htaccess</em> files in the following directories are created, if they do not exist: <ul><li>typo3temp/compressor/</li></ul>You want to disable this feature, if you are not running Apache or want to use own rulesets.
+		'Objects' => array(),
 		'fal' => array(
 			'registeredDrivers' => array(
 				'Local' => array(
@@ -206,6 +205,10 @@ return array(
 					'TYPO3\\CMS\\Core\\Resource\\Filter\\FileNameFilter',
 					'filterHiddenFilesAndFolders'
 				)
+			),
+			'processingTaskTypes' => array(
+				'Image.Preview' => 'TYPO3\\CMS\\Core\\Resource\\Processing\\ImagePreviewTask',
+				'Image.CropScaleMask' => 'TYPO3\\CMS\\Core\\Resource\\Processing\\ImageCropScaleMaskTask'
 			)
 		)
 	),
@@ -218,7 +221,6 @@ return array(
 		'requiredExt' => array(),		// String. List of additional extensions which are REQUIRED and cannot be unloaded by the Extension Manager!
 		'excludeForPackaging' => '(CVS|\\..*|.*~|.*\\.bak)',		// String: List of directories and files which will not be packaged into extensions nor taken into account otherwise by the Extension Manager. Perl regular expression syntax!
 		'extCache' => -1,		// <p>Integer (0, 1)</p><dl><dt>0</dt><dd>ext-scripts (ext_localconf.php and ext_tables.php) are NOT cached, but included every time</dd><dt>1</dt><dd>scripts cached to typo3conf/temp_CACHED_[sitePathHash]* (saves some milliseconds even with PHP accelerators)</dd></dl>
-		'extList' => 'filelist,version,tsconfig_help,context_help,extra_page_cm_options,impexp,belog,about,cshmanual,aboutmodules,setup,opendocs,install,t3editor,felogin,feedit,recycler',
 		'extListArray' => array(
 			'filelist',
 			'version',

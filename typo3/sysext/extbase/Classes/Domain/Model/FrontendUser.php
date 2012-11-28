@@ -29,8 +29,6 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
 /**
  * A Frontend User
  *
- * @scope prototype
- * @entity
  * @api
  */
 class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
@@ -134,11 +132,6 @@ class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * @var \DateTime|NULL
 	 */
 	protected $lastlogin = NULL;
-
-	/**
-	 * @var \DateTime|NULL
-	 */
-	protected $isOnline = NULL;
 
 	/**
 	 * Constructs a new Front-End User
@@ -596,29 +589,6 @@ class FrontendUser extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	public function getLastlogin() {
 		return $this->lastlogin;
 	}
-
-	/**
-	 * Sets the isOnline value
-	 *
-	 * @param \DateTime $isOnline
-	 * @return void
-	 * @api
-	 */
-	public function setIsOnline($isOnline) {
-		$this->isOnline = $isOnline;
-	}
-
-	/**
-	 * Returns the isOnline value
-	 *
-	 * @return \DateTime
-	 * @api
-	 */
-	public function getIsOnline() {
-		return $this->isOnline;
-	}
-
 }
-
 
 ?>

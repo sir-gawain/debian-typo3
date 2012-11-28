@@ -1,9 +1,10 @@
 <?php
 namespace TYPO3\CMS\Fluid\ViewHelpers\Be;
+
 use \TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -37,7 +38,8 @@ abstract class AbstractBackendViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelpe
 		if ($this->viewHelperVariableContainer->exists(
 			'TYPO3\\CMS\\Fluid\\ViewHelpers\\Be\\AbstractBackendViewHelper',
 			'DocumentTemplate'
-		)) {
+		)
+		) {
 			$doc = $this->viewHelperVariableContainer->get(
 				'TYPO3\\CMS\\Fluid\\ViewHelpers\\Be\\AbstractBackendViewHelper',
 				'DocumentTemplate'
@@ -91,6 +93,5 @@ abstract class AbstractBackendViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelpe
 		return $doc;
 	}
 }
-
 
 ?>

@@ -21,6 +21,7 @@ h1 {
 /* MAIN page header: */
 h2 {
 	font-size: 14px;
+	line-height: 18px;
 }
 
 /* Normal section headers */
@@ -83,6 +84,27 @@ strong {
 	font-weight: bold;
 }
 
+.clearfix:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
+}
+
+.clearfix {
+	display: inline-block;
+}
+
+html[xmlns] .clearfix {
+	display: block;
+}
+
+* html .clearfix {
+	height: 1%;
+}
+
 /* - - - - - - - - - - - - - - - - - - - - -
 Background color classes
 - - - - - - - - - - - - - - - - - - - - - */
@@ -143,13 +165,6 @@ table.t3-table-info {
 	font-size: 10px;
 	line-height: 19px;
 	height: 20px;
-}
-
-.t3-page-ce-icons-move {
-	background-image: linear-gradient(center top , #878788 10%, #707070 100%);
-	background-image: -moz-linear-gradient(center top , #878788 10%, #707070 100%);
-	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.1, #878788), color-stop(1, #707070));
-	background-repeat: repeat-x;
 }
 
 .t3-row-header a {

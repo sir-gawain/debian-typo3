@@ -442,6 +442,12 @@ class InlineElement {
 			$out = $fields . $combination;
 		} else {
 			// Set the record container with data for output
+			if ($isVirtualRecord) {
+				$class .= ' t3-form-field-container-inline-placeHolder';
+			}
+			if (isset($rec['hidden']) && intval($rec['hidden'])) {
+				$class .= ' t3-form-field-container-inline-hidden';
+			}
 			$out = '<div class="t3-form-field-record-inline" id="' . $objectId . '_fields" data-expandSingle="' . ($config['appearance']['expandSingle'] ? 1 : 0) . '" data-returnURL="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')) . '">' . $fields . $combination . '</div>';
 			$header = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('apps-irre-' . ($class != '' ? 'collapsed' : 'expanded'));
 			$header .= $this->renderForeignRecordHeader($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
@@ -538,27 +544,31 @@ class InlineElement {
 			$recTitle = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($foreign_table, $rec, TRUE);
 		}
 		// Renders a thumbnail for the header
-		if (!empty($config['appearance']['headerThumbnail'])) {
-			$originalRecord = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($foreign_table, $rec['uid']);
-			if (is_array($originalRecord)) {
-				$fileUid = $originalRecord[$config['appearance']['headerThumbnail']];
-				list($fileUid) = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $fileUid);
-				if ($fileUid) {
-					$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileObject($fileUid);
-					if ($fileObject) {
-						$imageUrl = $fileObject->process(\TYPO3\CMS\Core\Resource\ProcessedFile::CONTEXT_IMAGEPREVIEW, array('width' => 64, 'height' => 64))->getPublicUrl(TRUE);
-						$thumbnail = '<img src="' . $imageUrl . '" alt="' . htmlspecialchars($recTitle) . '">';
-					} else {
-						$thumbnail = FALSE;
-					}
+		if (!empty($config['appearance']['headerThumbnail']['field'])) {
+			$fieldValue = $rec[$config['appearance']['headerThumbnail']['field']];
+			$firstElement = array_shift(\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $fieldValue));
+			$fileUid = array_pop(\TYPO3\CMS\Backend\Utility\BackendUtility::splitTable_Uid($firstElement));
+			if (!empty($fileUid)) {
+				$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileObject($fileUid);
+				if ($fileObject) {
+					$imageSetup = $config['appearance']['headerThumbnail'];
+					unset($imageSetup['field']);
+					$imageSetup = array_merge(array('width' => 64, 'height' => 64), $imageSetup);
+					$imageUrl = $fileObject->process(\TYPO3\CMS\Core\Resource\ProcessedFile::CONTEXT_IMAGEPREVIEW, $imageSetup)->getPublicUrl(TRUE);
+					$thumbnail = '<img src="' . $imageUrl . '" alt="' . htmlspecialchars($recTitle) . '">';
+				} else {
+					$thumbnail = FALSE;
 				}
 			}
+
 		}
 		$altText = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordIconAltText($rec, $foreign_table);
 		$iconImg = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($foreign_table, $rec, array('title' => htmlspecialchars($altText), 'id' => $objectId . '_icon'));
 		$label = '<span id="' . $objectId . '_label">' . $recTitle . '</span>';
 		$ctrl = $this->renderForeignRecordHeaderControl($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
-		$header = '<table>' . '<tr>' . (!empty($config['appearance']['headerThumbnail']) && $thumbnail ? '<td class="t3-form-field-header-inline-thumbnail" id="' . $objectId . '_thumbnailcontainer">' . $thumbnail . '</td>' : '<td class="t3-form-field-header-inline-icon" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td>') . '<td class="t3-form-field-header-inline-summary">' . $label . '</td>' . '<td clasS="t3-form-field-header-inline-ctrl">' . $ctrl . '</td>' . '</tr>' . '</table>';
+		$header = '<table>' . '<tr>' . (!empty($config['appearance']['headerThumbnail']['field']) && $thumbnail ?
+				'<td class="t3-form-field-header-inline-thumbnail" id="' . $objectId . '_thumbnailcontainer">' . $thumbnail . '</td>' :
+				'<td class="t3-form-field-header-inline-icon" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td>') . '<td class="t3-form-field-header-inline-summary">' . $label . '</td>' . '<td clasS="t3-form-field-header-inline-ctrl">' . $ctrl . '</td>' . '</tr>' . '</table>';
 		return $header;
 	}
 
@@ -635,26 +645,27 @@ class InlineElement {
 				$style = $config['inline']['last'] == $rec['uid'] ? 'style="visibility: hidden;"' : '';
 				$cells['sort.down'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '" class="sortingDown" ' . $style . '>' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-down', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:moveDown', TRUE))) . '</a>';
 			}
+			// "Delete" link:
+			if ($enabledControls['delete'] && ($isPagesTable && $localCalcPerms & 4 || !$isPagesTable && $calcPerms & 16)) {
+				$onClick = 'inline.deleteRecord(\'' . $nameObjectFtId . '\');';
+				$cells['delete'] = '<a href="#" onclick="' . htmlspecialchars(('if (confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning')) . ')) {	' . $onClick . ' } return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:delete', TRUE))) . '</a>';
+			}
+
 			// "Hide/Unhide" links:
 			$hiddenField = $tcaTableCtrl['enablecolumns']['disabled'];
 			if ($enabledControls['hide'] && $permsEdit && $hiddenField && $tcaTableCols[$hiddenField] && (!$tcaTableCols[$hiddenField]['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $foreign_table . ':' . $hiddenField))) {
 				$onClick = 'return inline.enableDisableRecord(\'' . $nameObjectFtId . '\')';
 				if ($rec[$hiddenField]) {
-					$cells['hide.unhide'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-unhide', array(
+					$cells['hide.unhide'] = '<a href="#" class="hiddenHandle" onclick="' . htmlspecialchars($onClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-unhide', array(
 						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xml:unHide' . ($isPagesTable ? 'Page' : '')), 1),
 						'id' => ($nameObjectFtId . '_disabled')
 					)) . '</a>';
 				} else {
-					$cells['hide.hide'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-hide', array(
+					$cells['hide.hide'] = '<a href="#" class="hiddenHandle" onclick="' . htmlspecialchars($onClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-hide', array(
 						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xml:hide' . ($isPagesTable ? 'Page' : '')), 1),
 						'id' => ($nameObjectFtId . '_disabled')
 					)) . '</a>';
 				}
-			}
-			// "Delete" link:
-			if ($enabledControls['delete'] && ($isPagesTable && $localCalcPerms & 4 || !$isPagesTable && $calcPerms & 16)) {
-				$onClick = 'inline.deleteRecord(\'' . $nameObjectFtId . '\');';
-				$cells['delete'] = '<a href="#" onclick="' . htmlspecialchars(('if (confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning')) . ')) {	' . $onClick . ' } return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_web_list.xml:delete', TRUE))) . '</a>';
 			}
 			// Drag&Drop Sorting: Sortable handler for script.aculo.us
 			if ($enabledControls['dragdrop'] && $permsEdit && $enableManualSorting && $config['appearance']['useSortable']) {

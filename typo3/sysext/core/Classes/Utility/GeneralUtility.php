@@ -39,8 +39,6 @@ namespace TYPO3\CMS\Core\Utility;
  * So use t3lib_div::[method-name] to refer to the functions, eg. 't3lib_div::milliseconds()'
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage t3lib
  */
 class GeneralUtility {
 
@@ -966,7 +964,7 @@ class GeneralUtility {
 	 * @param string $string Input string, eg "123 + 456 / 789 - 4
 	 * @param string $operators Operators to split by, typically "/+-*
 	 * @return array Array with operators and operands separated.
-	 * @see tslib_cObj::calc(), tslib_gifBuilder::calcOffset()
+	 * @see tslib_cObj::calc(), \TYPO3\CMS\Frontend\Imaging\GifBuilder::calcOffset()
 	 */
 	static public function splitCalc($string, $operators) {
 		$res = array();
@@ -1052,7 +1050,7 @@ class GeneralUtility {
 	static public function validEmail($email) {
 		// Enforce maximum length to prevent libpcre recursion crash bug #52929 in PHP
 		// fixed in PHP 5.3.4; length restriction per SMTP RFC 2821
-		if (strlen($email) > 320) {
+		if (!is_string($email) || strlen($email) > 320) {
 			return FALSE;
 		}
 		require_once PATH_typo3 . 'contrib/idna/idna_convert.class.php';
@@ -4158,7 +4156,7 @@ Connection: close
 		}
 		// Create alias if not present
 		$alias = \TYPO3\CMS\Core\Core\ClassLoader::getAliasForClassName($finalClassName);
-		if (substr($finalClassName, 0, 3) !== 'ux_' && $finalClassName !== $alias && !class_exists($alias, FALSE)) {
+		if ($finalClassName !== $alias && !class_exists($alias, FALSE)) {
 			class_alias($finalClassName, $alias);
 		}
 		// Register new singleton instance
@@ -4169,19 +4167,46 @@ Connection: close
 	}
 
 	/**
-	 * Returns the class name for a new instance, taking into account the
-	 * class-extension API.
+	 * Returns the class name for a new instance, taking into account
+	 * registered implemetations for this class
 	 *
 	 * @param string $className Base class name to evaluate
 	 * @return string Final class name to instantiate with "new [classname]
 	 */
 	static protected function getClassName($className) {
 		if (class_exists($className)) {
-			while (\TYPO3\CMS\Core\Core\ClassLoader::getClassPathByRegistryLookup('ux_' . $className) !== NULL) {
-				$className = 'ux_' . $className;
+			while (static::classHasImplementation($className)) {
+				$className = static::geImplementationForClass($className);
 			}
 		}
 		return \TYPO3\CMS\Core\Core\ClassLoader::getClassNameForAlias($className);
+	}
+
+	/**
+	 * Returns the confiured implementation of the class
+	 *
+	 * @param string $className
+	 * @return string
+	 */
+	static protected function geImplementationForClass($className) {
+		return $GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][$className]['className'];
+	}
+
+	/**
+	 * Checks if a class has a configured implementation
+	 *
+	 * @param string $className
+	 * @return boolean
+	 */
+	static protected function classHasImplementation($className) {
+		// If we are early in the bootstrap, the configuration might not yet be present
+		if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'])) {
+			return FALSE;
+		}
+
+		return array_key_exists($className, $GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'])
+				&& is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][$className])
+				&& !empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][$className]['className']);
 	}
 
 	/**

@@ -32,6 +32,7 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 class CommandController implements \TYPO3\CMS\Extbase\Mvc\Controller\CommandControllerInterface {
 
 	const MAXIMUM_LINE_LENGTH = 79;
+
 	/**
 	 * @var \TYPO3\CMS\Extbase\Mvc\Cli\Request
 	 */
@@ -55,7 +56,7 @@ class CommandController implements \TYPO3\CMS\Extbase\Mvc\Controller\CommandCont
 	protected $commandMethodName = '';
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Reflection\Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 */
 	protected $reflectionService;
 
@@ -65,10 +66,10 @@ class CommandController implements \TYPO3\CMS\Extbase\Mvc\Controller\CommandCont
 	protected $objectManager;
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Reflection\Service $reflectionService
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
-	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\Service $reflectionService) {
+	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
 		$this->reflectionService = $reflectionService;
 	}
 
@@ -275,8 +276,6 @@ class CommandController implements \TYPO3\CMS\Extbase\Mvc\Controller\CommandCont
 		$this->response->send();
 		die($exitCode);
 	}
-
 }
-
 
 ?>

@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Form;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -103,9 +103,10 @@ abstract class AbstractFormFieldViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\
 	 * Get the value of this form element.
 	 * Either returns arguments['value'], or the correct value for Object Access.
 	 *
+	 * @param boolean $convertObjects whether or not to convert objects to identifiers
 	 * @return mixed Value
 	 */
-	protected function getValue() {
+	protected function getValue($convertObjects = TRUE) {
 		$value = NULL;
 		if ($this->hasArgument('value')) {
 			$value = $this->arguments['value'];
@@ -115,7 +116,7 @@ abstract class AbstractFormFieldViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\
 			$this->addAdditionalIdentityPropertiesIfNeeded();
 			$value = $this->getPropertyValue();
 		}
-		if (is_object($value)) {
+		if ($convertObjects === TRUE && is_object($value)) {
 			$identifier = $this->persistenceManager->getIdentifierByObject($value);
 			if ($identifier !== NULL) {
 				$value = $identifier;
@@ -215,7 +216,7 @@ abstract class AbstractFormFieldViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\
 				$this->tag->addAttribute('class', $cssClass);
 			}
 		} else {
-			// @deprecated since Extbase 1.4.0, will be removed in Extbase 1.6.0.
+			// @deprecated since Fluid 1.4.0, will be removed in Fluid 6.1.
 			$errors = $this->getErrorsForProperty();
 			if (count($errors) > 0) {
 				if ($this->hasArgument('errorClass')) {
@@ -246,7 +247,7 @@ abstract class AbstractFormFieldViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\
 	 * Get errors for the property and form name of this view helper
 	 *
 	 * @return array An array of Tx_Fluid_Error_Error objects
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 1.6.0.
+	 * @deprecated since Fluid 1.4.0, will be removed in Fluid 6.1.
 	 */
 	protected function getErrorsForProperty() {
 		if (!$this->isObjectAccessorMode()) {
@@ -291,8 +292,6 @@ abstract class AbstractFormFieldViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\
 		}
 		return '';
 	}
-
 }
-
 
 ?>

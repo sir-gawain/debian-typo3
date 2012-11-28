@@ -30,8 +30,6 @@ namespace TYPO3\CMS\IndexedSearch\Hook;
  * Class that hooks into Indexed Search and replaces standard SQL queries with MySQL fulltext index queries.
  *
  * @author 	Michael Stucki <michael@typo3.org>
- * @package TYPO3
- * @subpackage tx_indexedsearch_mysql
  */
 class MysqlFulltextIndexHook {
 
@@ -103,7 +101,7 @@ class MysqlFulltextIndexHook {
 				$searchBoolean = TRUE;
 				break;
 			case self::SOUNDS_LIKE:
-				$indexerObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_indexedsearch_indexer');
+				$indexerObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\IndexedSearch\\Indexer');
 				// Initialize the indexer-class
 				/** @var \TYPO3\CMS\IndexedSearch\Indexer $indexerObj */
 				$searchWord = $indexerObj->metaphone($searchWord, $indexerObj->storeMetaphoneInfoAsWords);

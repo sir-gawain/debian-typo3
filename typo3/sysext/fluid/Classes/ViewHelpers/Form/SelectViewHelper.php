@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Form;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -173,7 +173,7 @@ class SelectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFie
 						}
 					}
 				} elseif (method_exists($value, '__toString')) {
-					$value = (string)$value;
+					$value = (string) $value;
 				// TODO: use $this->persistenceManager->isNewObject() once it is implemented
 				} elseif ($this->persistenceManager->getIdentifierByObject($value) !== NULL) {
 					$value = $this->persistenceManager->getIdentifierByObject($value);
@@ -264,8 +264,6 @@ class SelectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFie
 		$output .= '>' . htmlspecialchars($label) . '</option>';
 		return $output;
 	}
-
 }
-
 
 ?>

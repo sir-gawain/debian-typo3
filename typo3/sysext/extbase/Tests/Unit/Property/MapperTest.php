@@ -52,8 +52,8 @@ class MapperTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		/** @var \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory $queryFactory */
 		$queryFactory = new \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory();
 
-		/** @var \TYPO3\CMS\Extbase\Reflection\Service $reflectionService */
-		$reflectionService = new \TYPO3\CMS\Extbase\Reflection\Service();
+		/** @var \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService */
+		$reflectionService = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
 		$reflectionService->injectObjectManager($objectManager);
 
 		/** @var \TYPO3\CMS\Extbase\Validation\ValidatorResolver $validatorResolver */
@@ -102,8 +102,6 @@ class MapperTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 		$this->assertEquals($expectedObject, $this->fixture->map(array('property1', 'property2'), $source, 'Tx_Extbase_Tests_Fixture_TxClassWithGettersAndSetters'));
 	}
-
 }
-
 
 ?>

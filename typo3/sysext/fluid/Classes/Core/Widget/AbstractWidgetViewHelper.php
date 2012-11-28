@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Core\Widget;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -108,8 +108,7 @@ abstract class AbstractWidgetViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper
 	private function initializeWidgetContext() {
 		$this->widgetContext->setWidgetConfiguration($this->getWidgetConfiguration());
 		$this->initializeWidgetIdentifier();
-		$controllerObjectName = $this->controller instanceof \Tx_Fluid_AOP_ProxyInterface ? $this->controller->FLOW3_AOP_Proxy_getProxyTargetClassName() : get_class($this->controller);
-		$this->widgetContext->setControllerObjectName($controllerObjectName);
+		$this->widgetContext->setControllerObjectName(get_class($this->controller));
 		$extensionName = $this->controllerContext->getRequest()->getControllerExtensionName();
 		$pluginName = $this->controllerContext->getRequest()->getPluginName();
 		$this->widgetContext->setParentExtensionName($extensionName);
@@ -205,8 +204,6 @@ abstract class AbstractWidgetViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper
 		$this->viewHelperVariableContainer->addOrUpdate('TYPO3\\CMS\\Fluid\\Core\\Widget\\AbstractWidgetViewHelper', 'nextWidgetNumber', $widgetCounter + 1);
 		$this->widgetContext->setWidgetIdentifier($widgetIdentifier);
 	}
-
 }
-
 
 ?>

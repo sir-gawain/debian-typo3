@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Format;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -39,8 +39,6 @@ class PaddingViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHel
 		}
 		return str_pad($string, $padLength, $padString, $padTypes[$padType]);
 	}
-
 }
-
 
 ?>

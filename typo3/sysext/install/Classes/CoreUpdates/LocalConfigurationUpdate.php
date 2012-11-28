@@ -26,8 +26,6 @@ namespace TYPO3\CMS\Install\CoreUpdates;
 /**
  * Move localconf.php to LocalConfiguration.php
  *
- * @package TYPO3
- * @subpackage install
  * @author Helge Funk <helge.funk@e-net.info>
  */
 class LocalConfigurationUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate {
@@ -81,7 +79,6 @@ class LocalConfigurationUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate
 				if (preg_match('/^\\$TYPO3_CONF_VARS\\[\'EXT\'\\]\\[\'extList\'\\] *={1} *\'(.+)\';{1}/', $line, $matches) === 1) {
 					$extListAsArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $matches[1], TRUE);
 					$typo3ConfigurationVariables[] = '$TYPO3_CONF_VARS[\'EXT\'][\'extListArray\'] = ' . var_export($extListAsArray, TRUE) . ';';
-					$typo3ConfigurationVariables[] = '$TYPO3_CONF_VARS[\'EXT\'][\'extList\'] = \'' . $matches[1] . '\';';
 				} elseif (preg_match('/^\\$TYPO3_CONF_VARS.+;{1}/', $line, $matches) === 1) {
 					$typo3ConfigurationVariables[] = $matches[0];
 				} elseif (preg_match('/^\\$typo_db.+;{1}/', $line, $matches) === 1) {

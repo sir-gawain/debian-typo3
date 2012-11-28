@@ -133,8 +133,9 @@ $TCA['sys_file_reference'] = array(
 			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.title',
 			'config' => array(
 				'type' => 'input',
-				'size' => '22',
-				'placeholder' => '__row|uid_local|title'
+				'eval' => 'null',
+				'size' => '20',
+				'placeholder' => '__row|uid_local|title',
 			)
 		),
 		'link' => array(
@@ -163,8 +164,10 @@ $TCA['sys_file_reference'] = array(
 			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.description',
 			'config' => array(
 				'type' => 'text',
-				'cols' => '24',
-				'rows' => '5'
+				'eval' => 'null',
+				'cols' => '20',
+				'rows' => '5',
+				'placeholder' => '__row|uid_local|description',
 			)
 		),
 		'alternative' => array(
@@ -173,8 +176,9 @@ $TCA['sys_file_reference'] = array(
 			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.alternative',
 			'config' => array(
 				'type' => 'input',
-				'size' => '22',
-				'placeholder' => '__row|uid_local|alternative'
+				'eval' => 'null',
+				'size' => '20',
+				'placeholder' => '__row|uid_local|alternative',
 			),
 		),
 	),

@@ -29,8 +29,6 @@ namespace TYPO3\CMS\Beuser\Controller;
  * Backend module user administration controller
  *
  * @author Felix Kopp <felix-source@phorax.com>
- * @package TYPO3
- * @subpackage beuser
  */
 class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController {
 
@@ -77,7 +75,7 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 		try {
 			parent::processRequest($request, $response);
 			$this->moduleDataStorageService->persistModuleData($this->moduleData);
-		} catch (\CMS\Extbase\Mvc\Exception\StopActionException $e) {
+		} catch (\TYPO3\CMS\Extbase\Mvc\Exception\StopActionException $e) {
 			$this->moduleDataStorageService->persistModuleData($this->moduleData);
 			throw $e;
 		}
@@ -115,7 +113,10 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 		}
 		// Switch user permanently or only until logout
 		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('SwitchUser')) {
-			$this->switchUser(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('SwitchUser'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('switchBackUser'));
+			$this->switchUser(
+				\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('SwitchUser'),
+				\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('switchBackUser')
+			);
 		}
 		$compareUserList = $this->moduleData->getCompareUserList();
 		$this->view->assign('demand', $demand);
@@ -222,6 +223,5 @@ class BackendUserController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionCont
 	}
 
 }
-
 
 ?>

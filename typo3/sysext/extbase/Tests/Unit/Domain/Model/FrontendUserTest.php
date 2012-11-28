@@ -29,8 +29,6 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Domain\Model;
  * Testcase for \TYPO3\CMS\Extbase\Domain\Model\FrontendUser.
  *
  * @author Markus Günther <mail@markus-guenther.de>
- * @scope prototype
- * @entity
  * @api
  */
 class FrontendUserTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
@@ -382,24 +380,6 @@ class FrontendUserTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$this->fixture->setLastlogin($date);
 		$this->assertSame($date, $this->fixture->getLastlogin());
 	}
-
-	/**
-	 * @test
-	 */
-	public function getIsOnlineInitiallyReturnsNull() {
-		$this->assertNull($this->fixture->getIsOnline());
-	}
-
-	/**
-	 * @test
-	 */
-	public function setIsOnlineSetsIsOnline() {
-		$isOnline = new \DateTime();
-		$this->fixture->setIsOnline($isOnline);
-		$this->assertSame($isOnline, $this->fixture->getIsOnline());
-	}
-
 }
-
 
 ?>

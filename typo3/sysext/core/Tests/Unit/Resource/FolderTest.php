@@ -32,8 +32,6 @@ require_once 'vfsStream/vfsStream.php';
 /**
  * Testcase for the storage collection class of the TYPO3 FAL
  *
- * @package TYPO3
- * @subpackage t3lib
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
 class FolderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
@@ -112,6 +110,36 @@ class FolderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$fileList = $fixture->getFiles();
 
 		$this->assertEquals(array('somefile.png', 'somefile.jpg'), array_keys($fileList));
+	}
+
+	/**
+	 * @test
+	 */
+	public function getFilesHandsOverRecursiveFALSEifNotExplicitlySet() {
+		$mockedStorage = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceStorage', array(), array(), '', FALSE);
+		$mockedStorage
+			->expects($this->once())
+			->method('getFileList')
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->anything(), FALSE)
+			->will($this->returnValue(array()));
+
+		$fixture = $this->createFolderFixture('/somePath', 'someName', $mockedStorage);
+		$fixture->getFiles();
+	}
+
+	/**
+	 * @test
+	 */
+	public function getFilesHandsOverRecursiveTRUEifSet() {
+		$mockedStorage = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceStorage', array(), array(), '', FALSE);
+		$mockedStorage
+			->expects($this->once())
+			->method('getFileList')
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->anything(), TRUE)
+			->will($this->returnValue(array()));
+
+		$fixture = $this->createFolderFixture('/somePath', 'someName', $mockedStorage);
+		$fixture->getFiles(0, 0, \TYPO3\CMS\Core\Resource\Folder::FILTER_MODE_USE_OWN_AND_STORAGE_FILTERS, TRUE);
 	}
 
 	/**

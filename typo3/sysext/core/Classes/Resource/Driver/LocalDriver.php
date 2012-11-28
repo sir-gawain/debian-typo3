@@ -1,5 +1,6 @@
 <?php
 namespace TYPO3\CMS\Core\Resource\Driver;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /***************************************************************
  * Copyright notice
@@ -26,12 +27,11 @@ namespace TYPO3\CMS\Core\Resource\Driver;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Driver for the local file system
  *
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
- * @package 	TYPO3
- * @subpackage 	t3lib
  */
 class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 
@@ -288,10 +288,11 @@ class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 	 * @param array $filterMethods The filter methods used to filter the directory items
 	 * @param string $itemHandlerMethod The method (in this class) that handles the single iterator elements.
 	 * @param array $itemRows
+	 * @param boolean $recursive
 	 * @return array
 	 */
 	// TODO add unit tests
-	protected function getDirectoryItemList($path, $start, $numberOfItems, array $filterMethods, $itemHandlerMethod, $itemRows = array()) {
+	protected function getDirectoryItemList($path, $start, $numberOfItems, array $filterMethods, $itemHandlerMethod, $itemRows = array(), $recursive = FALSE) {
 		$realPath = rtrim(($this->absoluteBasePath . trim($path, '/')), '/') . '/';
 		if (!is_dir($realPath)) {
 			throw new \InvalidArgumentException('Cannot list items in directory ' . $path . ' - does not exist or is no directory', 1314349666);
@@ -302,7 +303,7 @@ class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 		// Fetch the files and folders and sort them by name; we have to do
 		// this here because the directory iterator does return them in
 		// an arbitrary order
-		$items = $this->getFileAndFoldernamesInPath($realPath);
+		$items = $this->getFileAndFoldernamesInPath($realPath, $recursive);
 		natcasesort($items);
 		$iterator = new \ArrayIterator($items);
 		if ($iterator->count() == 0) {
@@ -400,7 +401,7 @@ class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 		}
 		$directoryEntries = array();
 		while ($iterator->valid()) {
-			/** @var $entry SplFileInfo */
+			/** @var $entry \SplFileInfo */
 			$entry = $iterator->current();
 			// skip non-files/non-folders, and empty entries
 			if (!$entry->isFile() && !$entry->isDir() || $entry->getFilename() == '') {
@@ -412,7 +413,7 @@ class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 				$iterator->next();
 				continue;
 			}
-			$entryPath = substr($entry->getPathname(), strlen($path));
+			$entryPath = GeneralUtility::fixWindowsFilePath(substr($entry->getPathname(), strlen($path)));
 			if ($entry->isDir()) {
 				$entryPath .= '/';
 			}
@@ -863,7 +864,7 @@ class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 	public function renameFile(\TYPO3\CMS\Core\Resource\FileInterface $file, $newName) {
 		// Makes sure the Path given as parameter is valid
 		$newName = $this->sanitizeFileName($newName);
-		$newIdentifier = rtrim(dirname($file->getIdentifier()), '/') . '/' . $newName;
+		$newIdentifier = rtrim(GeneralUtility::fixWindowsFilePath(dirname($file->getIdentifier())), '/') . '/' . $newName;
 		// The target should not exist already
 		if ($this->fileExists($newIdentifier)) {
 			throw new \TYPO3\CMS\Core\Resource\Exception\ExistingTargetFileNameException('The target file already exists.', 1320291063);
@@ -903,7 +904,7 @@ class LocalDriver extends \TYPO3\CMS\Core\Resource\Driver\AbstractDriver {
 		$newName = $this->sanitizeFileName($newName);
 		$relativeSourcePath = $folder->getIdentifier();
 		$sourcePath = $this->getAbsolutePath($relativeSourcePath);
-		$relativeTargetPath = rtrim(dirname($relativeSourcePath), '/') . '/' . $newName . '/';
+		$relativeTargetPath = rtrim(GeneralUtility::fixWindowsFilePath(dirname($relativeSourcePath)), '/') . '/' . $newName . '/';
 		$targetPath = $this->getAbsolutePath($relativeTargetPath);
 		// get all files and folders we are going to move, to have a map for updating later.
 		$filesAndFolders = $this->getFileAndFoldernamesInPath($sourcePath, TRUE);

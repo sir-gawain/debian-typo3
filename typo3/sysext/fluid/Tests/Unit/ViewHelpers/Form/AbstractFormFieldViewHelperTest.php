@@ -164,6 +164,46 @@ class AbstractFormFieldViewHelperTest extends \TYPO3\CMS\Fluid\Tests\Unit\ViewHe
 	/**
 	 * @test
 	 */
+	public function getValueConvertsObjectsToIdentifiersByDefault() {
+		$mockObject = $this->getMock('stdClass');
+
+		$mockPersistenceManager = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\PersistenceManagerInterface');
+		$mockPersistenceManager->expects($this->atLeastOnce())->method('getIdentifierByObject')->with($mockObject)->will($this->returnValue('6f487e40-4483-11de-8a39-0800200c9a66'));
+
+		$formViewHelper = $this->getAccessibleMock('TYPO3\\CMS\\Fluid\\ViewHelpers\\Form\\AbstractFormFieldViewHelper', array('isObjectAccessorMode'), array(), '', FALSE);
+		$formViewHelper->expects($this->any())->method('isObjectAccessorMode')->will($this->returnValue(FALSE));
+		$this->injectDependenciesIntoViewHelper($formViewHelper);
+		$formViewHelper->injectPersistenceManager($mockPersistenceManager);
+
+		$mockArguments = array('value' => $mockObject);
+		$formViewHelper->_set('arguments', $mockArguments);
+
+		$this->assertSame('6f487e40-4483-11de-8a39-0800200c9a66', $formViewHelper->_call('getValue'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function getValueDoesNotConvertObjectsIfConvertObjectsIsFalse() {
+		$mockObject = $this->getMock('stdClass');
+
+		$mockPersistenceManager = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\PersistenceManagerInterface');
+		$mockPersistenceManager->expects($this->any())->method('getIdentifierByObject')->will($this->returnValue('6f487e40-4483-11de-8a39-0800200c9a66'));
+
+		$formViewHelper = $this->getAccessibleMock('TYPO3\\CMS\\Fluid\\ViewHelpers\\Form\\AbstractFormFieldViewHelper', array('isObjectAccessorMode'), array(), '', FALSE);
+		$formViewHelper->expects($this->any())->method('isObjectAccessorMode')->will($this->returnValue(FALSE));
+		$this->injectDependenciesIntoViewHelper($formViewHelper);
+		$formViewHelper->injectPersistenceManager($mockPersistenceManager);
+
+		$mockArguments = array('value' => $mockObject);
+		$formViewHelper->_set('arguments', $mockArguments);
+
+		$this->assertSame($mockObject, $formViewHelper->_call('getValue', FALSE));
+	}
+
+	/**
+	 * @test
+	 */
 	public function isObjectAccessorModeReturnsTrueIfPropertyIsSetAndFormObjectIsGiven() {
 		$formViewHelper = $this->getAccessibleMock('TYPO3\\CMS\\Fluid\\ViewHelpers\\Form\\AbstractFormFieldViewHelper', array('dummy'), array(), '', FALSE);
 		$this->injectDependenciesIntoViewHelper($formViewHelper);
@@ -441,8 +481,6 @@ class AbstractFormFieldViewHelperTest extends \TYPO3\CMS\Fluid\Tests\Unit\ViewHe
 		$actual = $formViewHelper->_call('renderHiddenFieldForEmptyValue');
 		$this->assertEquals($expected, $actual);
 	}
-
 }
-
 
 ?>

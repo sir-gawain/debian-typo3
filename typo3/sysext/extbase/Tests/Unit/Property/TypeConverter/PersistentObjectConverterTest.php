@@ -20,7 +20,6 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Property\TypeConverter;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
-
 /**
  * Testcase for the String to String converter
  *
@@ -42,7 +41,7 @@ class PersistentObjectConverterTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTe
 
 	public function setUp() {
 		$this->converter = new \TYPO3\CMS\Extbase\Property\TypeConverter\PersistentObjectConverter();
-		$this->mockReflectionService = $this->getMock('TYPO3\\CMS\\Extbase\\Reflection\\Service');
+		$this->mockReflectionService = $this->getMock('TYPO3\\CMS\\Extbase\\Reflection\\ReflectionService');
 		$this->converter->injectReflectionService($this->mockReflectionService);
 		$this->mockPersistenceManager = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\PersistenceManagerInterface');
 		$this->converter->injectPersistenceManager($this->mockPersistenceManager);
@@ -373,8 +372,6 @@ class PersistentObjectConverterTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTe
 		$result = $this->converter->convertFrom($source, 'TYPO3\\CMS\\Extbase\\Tests\\Fixture\\ClassWithSettersAndConstructor', $convertedChildProperties, $configuration);
 		$this->assertSame($object, $result);
 	}
-
 }
-
 
 ?>

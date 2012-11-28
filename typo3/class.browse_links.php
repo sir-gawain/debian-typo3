@@ -1,7 +1,7 @@
 <?php
 /*
  * @deprecated since 6.0, the classname TBE_browser_recordList and this file is obsolete
- * and will be removed by 7.0. The class was renamed and is now located at:
+ * and will be removed with 6.2. The class was renamed and is now located at:
  * typo3/sysext/backend/Classes/RecordList/ElementBrowserRecordList.php
  */
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/RecordList/ElementBrowserRecordList.php';
@@ -9,8 +9,6 @@ require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backen
  * Class which generates the page tree
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class localPageTree extends \TYPO3\CMS\Backend\Tree\View\BrowseTreeView {
 
@@ -147,8 +145,6 @@ class localPageTree extends \TYPO3\CMS\Backend\Tree\View\BrowseTreeView {
  * Page tree for the RTE - totally the same, no changes needed. (Just for the sake of beauty - or confusion... :-)
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class rtePageTree extends localPageTree {
 
@@ -159,8 +155,6 @@ class rtePageTree extends localPageTree {
  * For TBE record browser
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class TBE_PageTree extends localPageTree {
 
@@ -203,8 +197,6 @@ class TBE_PageTree extends localPageTree {
  * also used for the linkpicker on files
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class localFolderTree extends \TYPO3\CMS\Backend\Tree\View\FolderTreeView {
 
@@ -280,8 +272,6 @@ class localFolderTree extends \TYPO3\CMS\Backend\Tree\View\FolderTreeView {
  * Folder tree for the RTE - totally the same, no changes needed. (Just for the sake of beauty - or confusion... :-)
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class rteFolderTree extends localFolderTree {
 
@@ -292,8 +282,6 @@ class rteFolderTree extends localFolderTree {
  * For TBE File Browser
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class TBE_FolderTree extends localFolderTree {
 
@@ -339,7 +327,7 @@ class TBE_FolderTree extends localFolderTree {
 
 /*
  * @deprecated since 6.0, the classname browse_links and this file is obsolete
- * and will be removed by 7.0. The class was renamed and is now located at:
+ * and will be removed with 6.2. The class was renamed and is now located at:
  * typo3/sysext/recordlist/Classes/Browser/ElementBrowser.php
  */
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('recordlist') . 'Classes/Browser/ElementBrowser.php';

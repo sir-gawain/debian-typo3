@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Form;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -52,7 +52,7 @@ namespace TYPO3\CMS\Fluid\ViewHelpers\Form;
  * </output>
  *
  * @api
- * @deprecated since Extbase 1.4.0, will be removed with Extbase 1.6.0.
+ * @deprecated since Fluid 1.4.0, will be removed with Fluid 6.1.
  */
 class ErrorsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
@@ -98,8 +98,6 @@ class ErrorsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelp
 		}
 		return array();
 	}
-
 }
-
 
 ?>

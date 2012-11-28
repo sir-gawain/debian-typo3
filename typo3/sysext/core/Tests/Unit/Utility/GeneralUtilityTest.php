@@ -30,8 +30,6 @@ use TYPO3\CMS\Core\Utility;
  *
  * @author Ingo Renner <ingo@typo3.org>
  * @author Oliver Klee <typo3-coding@oliverklee.de>
- * @package TYPO3
- * @subpackage t3lib
  */
 class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
@@ -1048,7 +1046,14 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function validEmailInvalidDataProvider() {
 		return array(
+			'empty string' => array(''),
+			'empty array' => array(array()),
+			'integer' => array(42),
+			'float' => array(42.23),
+			'array' => array(array('foo')),
+			'object' => array(new \stdClass()),
 			'@ sign only' => array('@'),
+			'string longer than 320 characters' => array(str_repeat('0123456789', 33)),
 			'duplicate @' => array('test@@example.com'),
 			'duplicate @ combined with further special characters in local part' => array('test!.!@#$%^&*@example.com'),
 			'opening parenthesis in local part' => array('foo(bar@example.com'),
@@ -3521,6 +3526,28 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$instance = Utility\GeneralUtility::makeInstance($className, 'one parameter', 'another parameter');
 		$this->assertEquals('one parameter', $instance->constructorParameter1, 'The first constructor parameter has not been set.');
 		$this->assertEquals('another parameter', $instance->constructorParameter2, 'The second constructor parameter has not been set.');
+	}
+
+	/**
+	 * @test
+	 */
+	public function makeInstanceInstanciatesConfiguredImplementation() {
+		$classNameOriginal = get_class($this->getMock(uniqid('foo')));
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][$classNameOriginal] = array('className' => $classNameOriginal . 'Other');
+		eval('class ' . $classNameOriginal . 'Other extends ' . $classNameOriginal . ' {}');
+		$this->assertInstanceOf($classNameOriginal . 'Other', Utility\GeneralUtility::makeInstance($classNameOriginal));
+	}
+
+	/**
+	 * @test
+	 */
+	public function makeInstanceResolvesConfiguredImplementationsRecursively() {
+		$classNameOriginal = get_class($this->getMock(uniqid('foo')));
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][$classNameOriginal] = array('className' => $classNameOriginal . 'Other');
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][$classNameOriginal . 'Other'] = array('className' => $classNameOriginal . 'OtherOther');
+		eval('class ' . $classNameOriginal . 'Other extends ' . $classNameOriginal . ' {}');
+		eval('class ' . $classNameOriginal . 'OtherOther extends ' . $classNameOriginal . 'Other {}');
+		$this->assertInstanceOf($classNameOriginal . 'OtherOther', Utility\GeneralUtility::makeInstance($classNameOriginal));
 	}
 
 	/**

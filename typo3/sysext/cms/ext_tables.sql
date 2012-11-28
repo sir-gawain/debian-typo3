@@ -26,20 +26,6 @@ CREATE TABLE cache_md5params (
 
 
 #
-# Table structure for table 'cache_imagesizes'
-#
-CREATE TABLE cache_imagesizes (
-  md5hash varchar(32) DEFAULT '' NOT NULL,
-  md5filename varchar(32) DEFAULT '' NOT NULL,
-  tstamp int(11) DEFAULT '0' NOT NULL,
-  filename varchar(255) DEFAULT '' NOT NULL,
-  imagewidth mediumint(11) unsigned DEFAULT '0' NOT NULL,
-  imageheight mediumint(11) unsigned DEFAULT '0' NOT NULL,
-  PRIMARY KEY (md5filename)
-) ENGINE=InnoDB;
-
-
-#
 # Table structure for table 'cache_treelist'
 #
 CREATE TABLE cache_treelist (
@@ -278,7 +264,7 @@ CREATE TABLE tt_content (
   cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
   hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
   sorting int(11) unsigned DEFAULT '0' NOT NULL,
-  CType varchar(30) DEFAULT '' NOT NULL,
+  CType varchar(255) DEFAULT '' NOT NULL,
   header varchar(255) DEFAULT '' NOT NULL,
   header_position varchar(6) DEFAULT '' NOT NULL,
   bodytext mediumtext,

@@ -32,7 +32,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
 class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Reflection\Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 */
 	protected $reflectionService;
 
@@ -59,10 +59,10 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Injects the reflection service
 	 *
-	 * @param \TYPO3\CMS\Extbase\Reflection\Service $reflectionService
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
-	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\Service $reflectionService) {
+	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
 		$this->reflectionService = $reflectionService;
 	}
 
@@ -408,6 +408,9 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 			$columnMap->setParentKeyFieldName($columnConfiguration['foreign_field']);
 			$columnMap->setChildKeyFieldName($childKeyFieldName);
 			$columnMap->setChildSortByFieldName($columnConfiguration['foreign_sortby']);
+			if (!empty($columnConfiguration['foreign_table_field'])) {
+				$columnMap->setParentTableFieldName($columnConfiguration['foreign_table_field']);
+			}
 		} else {
 			throw new \TYPO3\CMS\Extbase\Persistence\Generic\Exception\UnsupportedRelationException('The given information to build a many-to-many-relation was not sufficient. Check your TCA definitions. mm-relations with IRRE must have at least a defined "MM" or "foreign_selector".', 1268817963);
 		}
@@ -416,8 +419,6 @@ class DataMapFactory implements \TYPO3\CMS\Core\SingletonInterface {
 		}
 		return $columnMap;
 	}
-
 }
-
 
 ?>

@@ -65,7 +65,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $validatorResolver;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Reflection\Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 */
 	protected $reflectionService;
 
@@ -109,10 +109,10 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Reflection\Service $reflectionService
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
-	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\Service $reflectionService) {
+	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
 		$this->reflectionService = $reflectionService;
 	}
 
@@ -276,7 +276,6 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function transformToObject($propertyValue, $targetType, $propertyName) {
 		if ($targetType === 'DateTime' || is_subclass_of($targetType, 'DateTime')) {
-			// TODO replace this with converter implementation of FLOW3
 			if ($propertyValue === '') {
 				$propertyValue = NULL;
 			} else {
@@ -287,7 +286,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		} else {
-			if (is_numeric($propertyValue)) {
+			if (ctype_digit((string)$propertyValue)) {
 				$propertyValue = $this->findObjectByUid($targetType, $propertyValue);
 				if ($propertyValue === FALSE) {
 					$this->mappingResults->addError(new \TYPO3\CMS\Extbase\Error\Error('Querying the repository for the specified object with UUID ' . $propertyValue . ' was not successful.', 1249379517), $propertyName);
@@ -336,20 +335,18 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * Finds an object from the repository by searching for its technical UID.
+	 * TODO This is duplicated code; see Argument class
 	 *
 	 * @param string $dataType the data type to fetch
-	 * @param int $uid The object's uid
+	 * @param integer $uid The object's uid
 	 * @return object Either the object matching the uid or, if none or more than one object was found, NULL
 	 */
-	// TODO This is duplicated code; see Argument class
 	protected function findObjectByUid($dataType, $uid) {
 		$query = $this->queryFactory->create($dataType);
 		$query->getQuerySettings()->setRespectSysLanguage(FALSE);
 		$query->getQuerySettings()->setRespectStoragePage(FALSE);
 		return $query->matching($query->equals('uid', intval($uid)))->execute()->getFirst();
 	}
-
 }
-
 
 ?>

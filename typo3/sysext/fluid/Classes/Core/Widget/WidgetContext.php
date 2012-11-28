@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Core\Widget;
 
 /*
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -71,10 +71,10 @@ class WidgetContext {
 	 */
 	protected $viewHelperChildNodes;
 
-	// TODO: rename to something more meaningful.
 	/**
 	 * The rendering context of the ViewHelperChildNodes.
 	 * Only available inside non-AJAX requests.
+	 * TODO: rename to something more meaningful.
 	 *
 	 * @var \TYPO3\CMS\Fluid\Core\Rendering\RenderingContextInterface
 	 * @transient
@@ -267,8 +267,6 @@ class WidgetContext {
 	public function __sleep() {
 		return array('widgetIdentifier', 'ajaxWidgetIdentifier', 'widgetConfiguration', 'controllerObjectName', 'parentPluginNamespace', 'parentExtensionName', 'parentPluginName', 'widgetViewHelperClassName');
 	}
-
 }
-
 
 ?>

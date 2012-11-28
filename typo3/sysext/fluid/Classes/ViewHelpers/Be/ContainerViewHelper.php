@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Be;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -87,7 +87,7 @@ class ContainerViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\AbstractBacken
 			$pageRenderer->loadScriptaculous($scriptaculousModule);
 		}
 		if ($loadExtJs) {
-			$pageRenderer->loadExtJS(true, $loadExtJsTheme, $extJsAdapter);
+			$pageRenderer->loadExtJS(TRUE, $loadExtJsTheme, $extJsAdapter);
 			if ($enableExtJsDebug) {
 				$pageRenderer->enableExtJsDebug();
 			}
@@ -103,8 +103,6 @@ class ContainerViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\AbstractBacken
 		$output .= $doc->endPage();
 		return $output;
 	}
-
 }
-
 
 ?>

@@ -5,8 +5,6 @@ namespace TYPO3\CMS\Backend\Controller;
  * Script Class for rendering the login form
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class LoginController {
 
@@ -270,9 +268,9 @@ class LoginController {
 	public function wrapLoginForm($content) {
 		$mainContent = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($GLOBALS['TBE_TEMPLATE']->moduleTemplate, '###PAGE###');
 		if ($GLOBALS['TBE_STYLES']['logo_login']) {
-			$logo = '<img src="' . htmlspecialchars(($GLOBALS['BACK_PATH'] . $GLOBALS['TBE_STYLES']['logo_login'])) . '" alt="" />';
+			$logo = '<img src="' . htmlspecialchars(($GLOBALS['BACK_PATH'] . $GLOBALS['TBE_STYLES']['logo_login'])) . '" alt="" class="t3-login-logo" />';
 		} else {
-			$logo = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/typo3logo.gif', 'width="123" height="34"') . ' alt="" />';
+			$logo = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/typo3logo.gif', 'width="123" height="34"') . ' alt="" class="t3-login-logo" />';
 		}
 		/** @var $browserWarning \TYPO3\CMS\Core\Messaging\FlashMessage */
 		$browserWarning = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $GLOBALS['LANG']->getLL('warning.incompatibleBrowser') . ' ' . $GLOBALS['LANG']->getLL('warning.incompatibleBrowserInternetExplorer'), $GLOBALS['LANG']->getLL('warning.incompatibleBrowserHeadline'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
@@ -289,7 +287,7 @@ class LoginController {
 			'LOGINBOX_IMAGE' => $this->makeLoginBoxImage(),
 			'FORM' => $content,
 			'NEWS' => $this->makeLoginNews(),
-			'COPYRIGHT' => \TYPO3\CMS\Backend\Utility\BackendUtility::TYPO3_copyRightNotice(),
+			'COPYRIGHT' => \TYPO3\CMS\Backend\Utility\BackendUtility::TYPO3_copyRightNotice($GLOBALS['TYPO3_CONF_VARS']['SYS']['loginCopyrightShowVersion']),
 			'CSS_CLASSES' => !empty($additionalCssClasses) ? 'class="' . implode(' ', $additionalCssClasses) . '"' : '',
 			'CSS_OPENIDCLASS' => 't3-login-openid-' . (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('openid') ? 'enabled' : 'disabled'),
 			// The labels will be replaced later on, thus the other parts above

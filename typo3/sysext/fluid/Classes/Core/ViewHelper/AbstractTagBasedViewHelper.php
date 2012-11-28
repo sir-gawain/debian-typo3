@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Core\ViewHelper;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -121,8 +121,6 @@ abstract class AbstractTagBasedViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelp
 		$this->registerTagAttribute('tabindex', 'integer', 'Specifies the tab order of this element');
 		$this->registerTagAttribute('onclick', 'string', 'JavaScript evaluated for the onclick event');
 	}
-
 }
-
 
 ?>
