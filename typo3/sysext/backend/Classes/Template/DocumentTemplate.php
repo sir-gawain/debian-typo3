@@ -17,8 +17,6 @@ namespace TYPO3\CMS\Backend\Template;
  * Please refer to Inside TYPO3 for a discussion of how to use this API.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class DocumentTemplate {
 
@@ -1521,7 +1519,7 @@ class DocumentTemplate {
 		$this->loadJavascriptLib('js/clickmenu.js');
 		$this->JScodeArray['clickmenu'] = '
 			Clickmenu.clickURL = "' . $this->backPath . 'alt_clickmenu.php";
-			Clickmenu.ajax     = ' . ($this->isCMLayers() ? 'true' : 'false') . ';';
+			Clickmenu.ajax     = true;';
 	}
 
 	/**
@@ -1772,7 +1770,10 @@ class DocumentTemplate {
 	 * @return string
 	 */
 	public function getVersionSelector($id, $noAction = FALSE) {
-		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
+		if (
+				\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version') &&
+				!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces')
+		) {
 			$versionGuiObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Version\\View\\VersionView');
 			return $versionGuiObj->getVersionSelector($id, $noAction);
 		}

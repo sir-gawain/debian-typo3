@@ -29,13 +29,9 @@ namespace TYPO3\CMS\Beuser\Domain\Repository;
  * Repository for \TYPO3\CMS\Beuser\Domain\Model\BackendUserGroup
  *
  * @author Felix Kopp <felix-source@phorax.com>
- * @package TYPO3
- * @subpackage beuser
  */
 class BackendUserGroupRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 
-
 }
-
 
 ?>

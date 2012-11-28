@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Core\Parser\SyntaxTree;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -13,8 +13,8 @@ namespace TYPO3\CMS\Fluid\Core\Parser\SyntaxTree;
 /**
  * Node in the syntax tree.
  */
-interface NodeInterface
-{
+interface NodeInterface {
+
 	/**
 	 * Evaluate all child nodes and return the evaluated results.
 	 *
@@ -45,7 +45,6 @@ interface NodeInterface
 	 * @return mixed Evaluated node
 	 */
 	public function evaluate(\TYPO3\CMS\Fluid\Core\Rendering\RenderingContextInterface $renderingContext);
-
 }
 
 ?>

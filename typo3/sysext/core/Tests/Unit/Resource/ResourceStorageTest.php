@@ -29,8 +29,6 @@ require_once 'vfsStream/vfsStream.php';
 /**
  * Testcase for the VFS mount class
  *
- * @package TYPO3
- * @subpackage t3lib
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
 class ResourceStorageTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
@@ -146,6 +144,9 @@ class ResourceStorageTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCa
 		$this->assertEquals($uri . '/', $this->fixture->getBaseUri());
 	}
 
+	/**
+	 * @return array
+	 */
 	public function capabilitiesDataProvider() {
 		return array(
 			'only public' => array(
@@ -612,6 +613,33 @@ class ResourceStorageTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCa
 		$this->prepareFixture(array(), TRUE);
 		$mockedFile = $this->getSimpleFileMock('/someFile');
 		$this->fixture->replaceFile($mockedFile, PATH_site . uniqid());
+	}
+
+	/**
+	 * @test
+	 */
+	public function getFileListHandsOverRecursiveFALSEifNotExplicitlySet() {
+		$this->prepareFixture(array());
+		$driver = $this->createDriverMock(array('basePath' => $this->getMountRootUrl()), $this->fixture, array('getFileList'));
+		$driver->expects($this->once())
+			->method('getFileList')
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->anything(), FALSE)
+			->will($this->returnValue(array()));
+		$this->fixture->getFileList('/');
+	}
+
+	/**
+	 * @test
+	 */
+	public function getFileListHandsOverRecursiveTRUEifSet() {
+
+		$this->prepareFixture(array());
+		$driver = $this->createDriverMock(array('basePath' => $this->getMountRootUrl()), $this->fixture, array('getFileList'));
+		$driver->expects($this->once())
+			->method('getFileList')
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->anything(), TRUE)
+			->will($this->returnValue(array()));
+		$this->fixture->getFileList('/', 0, 0, TRUE, TRUE, TRUE);
 	}
 
 }

@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Format;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -22,7 +22,7 @@ class NumberViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelp
 	 * Format the numeric value as a number with grouped thousands, decimal point and
 	 * precision.
 	 *
-	 * @param int $decimals The number of digits after the decimal point
+	 * @param integer $decimals The number of digits after the decimal point
 	 * @param string $decimalSeparator The decimal point character
 	 * @param string $thousandsSeparator The character for grouping the thousand digits
 	 * @return string The formatted number
@@ -32,8 +32,6 @@ class NumberViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelp
 		$stringToFormat = $this->renderChildren();
 		return number_format($stringToFormat, $decimals, $decimalSeparator, $thousandsSeparator);
 	}
-
 }
-
 
 ?>

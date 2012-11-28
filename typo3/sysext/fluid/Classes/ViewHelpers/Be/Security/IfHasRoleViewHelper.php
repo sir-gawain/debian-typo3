@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Be\Security;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -90,7 +90,7 @@ class IfHasRoleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractCondi
 		}
 		if (is_numeric($role)) {
 			foreach ($GLOBALS['BE_USER']->userGroups as $userGroup) {
-				if ((int) $userGroup['uid'] === (int) $role) {
+				if ((integer) $userGroup['uid'] === (integer) $role) {
 					return TRUE;
 				}
 			}
@@ -103,8 +103,6 @@ class IfHasRoleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractCondi
 		}
 		return FALSE;
 	}
-
 }
-
 
 ?>

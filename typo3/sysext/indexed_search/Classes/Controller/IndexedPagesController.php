@@ -5,8 +5,6 @@ namespace TYPO3\CMS\IndexedSearch\Controller;
  * Indexing class for TYPO3 frontend
  *
  * @author 	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage tx_indexedsearch
  */
 class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionModule {
 
@@ -115,7 +113,7 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 			}
 		}
 		// Initialize indexer if we need it (metaphone display does...)
-		$this->indexerObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_indexedsearch_indexer');
+		$this->indexerObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\IndexedSearch\\Indexer');
 		// Set CSS styles specific for this document:
 		$this->pObj->content = str_replace('/*###POSTCSSMARKER###*/', '
 			TABLE.c-list TR TD { white-space: nowrap; vertical-align: top; }

@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Format;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -77,6 +77,7 @@ class DateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 	 *
 	 * @param mixed $date either a DateTime object or a string that is accepted by DateTime constructor
 	 * @param string $format Format String which is taken to format the Date/Time
+	 * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
 	 * @return string Formatted date
 	 * @api
 	 */
@@ -96,8 +97,6 @@ class DateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 		}
 		return $date->format($format);
 	}
-
 }
-
 
 ?>

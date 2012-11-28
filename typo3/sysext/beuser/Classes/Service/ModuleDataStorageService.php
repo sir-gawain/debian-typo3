@@ -31,8 +31,6 @@ namespace TYPO3\CMS\Beuser\Service;
  *
  * @author Felix Kopp <felix-source@phorax.com>
  * @author Nikolas Hagelstein <nikolas.hagelstein@gmail.com>
- * @package TYPO3
- * @subpackage beuser
  */
 class ModuleDataStorageService implements \TYPO3\CMS\Core\SingletonInterface {
 
@@ -40,6 +38,7 @@ class ModuleDataStorageService implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @var string
 	 */
 	const KEY = 'tx_beuser';
+
 	/**
 	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
 	 * @inject
@@ -72,6 +71,5 @@ class ModuleDataStorageService implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 }
-
 
 ?>

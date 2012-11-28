@@ -27,8 +27,6 @@ namespace TYPO3\CMS\Form\Validation;
  * Abstract for validation
  *
  * @author Patrick Broens <patrick@patrickbroens.nl>
- * @package TYPO3
- * @subpackage form
  */
 abstract class AbstractValidator implements \TYPO3\CMS\Form\Validation\ValidatorInterface {
 
@@ -101,7 +99,6 @@ abstract class AbstractValidator implements \TYPO3\CMS\Form\Validation\Validator
 	 * Constructor
 	 *
 	 * @param array $arguments Typoscript configuration for the validation rule
-	 * @return void
 	 */
 	public function __construct($arguments) {
 		$this->localCobj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');

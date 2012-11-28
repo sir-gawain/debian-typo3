@@ -38,8 +38,6 @@ namespace TYPO3\CMS\Backend\View;
  * Child class for the Web > Page module
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage core
  */
 class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRecordList {
 
@@ -411,13 +409,13 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 				}
 				$languageColumn = array();
 			}
-			$langListArr = explode(',', $langList);
+			$langListArr = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $langList);
 			$defLanguageCount = array();
 			$defLangBinding = array();
 			// For each languages... :
 			// If not languageMode, then we'll only be through this once.
 			foreach ($langListArr as $lP) {
-				$showLanguage = ' AND sys_language_uid IN (' . $lP . ',-1)';
+				$showLanguage = ' AND sys_language_uid IN (' . intval($lP) . ',-1)';
 				$cList = explode(',', $this->tt_contentConfig['cols']);
 				$content = array();
 				$head = array();
@@ -443,6 +441,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 					$result = $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($queryParts);
 					// Traverse any selected elements and render their display code:
 					$rowArr = $this->getResult($result);
+					$editUidList = '';
 					foreach ($rowArr as $rKey => $row) {
 						if ($this->tt_contentConfig['languageMode']) {
 							$languageColumn[$key][$lP] = $head[$key] . $content[$key];
@@ -531,7 +530,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 					// Initialize TS parser to parse config to array
 					$parser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
 					$parser->parse($backendLayoutRecord['config']);
-					$grid .= '<div class="t3-gridContainer"><table border="0" cellspacing="6" cellpadding="7" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
+					$grid .= '<div class="t3-gridContainer"><table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
 					// Add colgroups
 					$colCount = intval($parser->setup['backend_layout.']['colCount']);
 					$rowCount = intval($parser->setup['backend_layout.']['rowCount']);
@@ -583,18 +582,16 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 				$languageSelector = $this->languageSelector($id);
 				// Reset out - we will make new content here:
 				$out = '';
-				// Separator between language columns (black thin line)
-				$midSep = '
-						<td><img src="clear.gif" width="4" height="1" alt="" /></td>
-						<td class="t3-page-border"><img src="clear.gif" width="1" height="1" alt="" /></td>
-						<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
 				// Traverse languages found on the page and build up the table displaying them side by side:
 				$cCont = array();
 				$sCont = array();
 				foreach ($langListArr as $lP) {
 					// Header:
 					$cCont[$lP] = '
-						<td valign="top" align="center" class="bgColor6"><strong>' . htmlspecialchars($this->tt_contentConfig['languageCols'][$lP]) . '</strong></td>';
+						<td valign="top" class="t3-page-lang-column">
+							<h3>' . htmlspecialchars($this->tt_contentConfig['languageCols'][$lP]) . '</h3>
+						</td>';
+
 					// "View page" icon is added:
 					$viewLink = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->id, $this->backPath, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->id), '', '', ('&L=' . $lP))) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
 					// Language overlay page header:
@@ -607,17 +604,17 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						$lPLabel = $viewLink;
 					}
 					$sCont[$lP] = '
-						<td nowrap="nowrap">' . $lPLabel . '</td>';
+						<td nowrap="nowrap" class="t3-page-lang-column t3-page-lang-label">' . $lPLabel . '</td>';
 				}
 				// Add headers:
-				$out .= '<tr>' . implode($midSep, $cCont) . '</tr>';
-				$out .= '<tr class="bgColor5">' . implode($midSep, $sCont) . '</tr>';
+				$out .= '<tr>' . implode($cCont) . '</tr>';
+				$out .= '<tr>' . implode($sCont) . '</tr>';
 				// Traverse previously built content for the columns:
 				foreach ($languageColumn as $cKey => $cCont) {
 					$out .= '
 					<tr>
-						<td valign="top" class="t3-gridCell">' . implode(('</td>' . $midSep . '
-						<td valign="top">'), $cCont) . '</td>
+						<td valign="top" class="t3-gridCell t3-page-lang-column"">' . implode(('</td>' . '
+						<td valign="top" class="t3-gridCell t3-page-lang-column">'), $cCont) . '</td>
 					</tr>';
 					if ($this->defLangBinding) {
 						// "defLangBinding" mode
@@ -628,8 +625,8 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 							}
 							$out .= '
 							<tr>
-								<td valign="top">' . implode(('</td>' . $midSep . '
-								<td valign="top">'), $cCont) . '</td>
+								<td valign="top" class="t3-page-lang-column">' . implode(('</td>' . '
+								<td valign="top" class="t3-page-lang-column">'), $cCont) . '</td>
 							</tr>';
 						}
 						// Create spacer:
@@ -639,16 +636,18 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						}
 						$out .= '
 						<tr>
-							<td valign="top">' . implode(('</td>' . $midSep . '
-							<td valign="top">'), $cCont) . '</td>
+							<td valign="top" class="t3-page-lang-column">' . implode(('</td>' . '
+							<td valign="top" class="t3-page-lang-column">'), $cCont) . '</td>
 						</tr>';
 					}
 				}
 				// Finally, wrap it all in a table and add the language selector on top of it:
 				$out = $languageSelector . '
-					<table cellpadding="0" cellspacing="0" class="t3-page-langMode">
-						' . $out . '
-					</table>';
+					<div class="t3-lang-gridContainer">
+						<table cellpadding="0" cellspacing="0" class="t3-page-langMode">
+							' . $out . '
+						</table>
+					</div>';
 				// CSH:
 				$out .= \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem($this->descrTable, 'language_list', $GLOBALS['BACK_PATH']);
 			}
@@ -1943,6 +1942,5 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	}
 
 }
-
 
 ?>

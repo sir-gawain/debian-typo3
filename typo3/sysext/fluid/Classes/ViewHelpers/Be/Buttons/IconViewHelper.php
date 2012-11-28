@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers\Be\Buttons;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -54,8 +54,6 @@ class IconViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\AbstractBackendView
 	public function render($uri, $icon = 'actions-document-close', $title = '') {
 		return '<a href="' . $uri . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon($icon, array('title' => $title)) . '</a>';
 	}
-
 }
-
 
 ?>

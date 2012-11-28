@@ -35,7 +35,7 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractController {
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Reflection\Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 */
 	protected $reflectionService;
 
@@ -98,10 +98,10 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	protected $errorMethodName = 'errorAction';
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Reflection\Service $reflectionService
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
-	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\Service $reflectionService) {
+	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
 		$this->reflectionService = $reflectionService;
 	}
 
@@ -399,7 +399,6 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	 * @api
 	 */
 	protected function initializeView(\TYPO3\CMS\Extbase\Mvc\View\ViewInterface $view) {
-
 	}
 
 	/**
@@ -412,7 +411,6 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	 * @api
 	 */
 	protected function initializeAction() {
-
 	}
 
 	/**
@@ -535,8 +533,6 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 			}
 		}
 	}
-
 }
-
 
 ?>

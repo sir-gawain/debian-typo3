@@ -30,8 +30,6 @@ namespace TYPO3\CMS\Beuser\Domain\Model;
  *
  * @author Felix Kopp <felix-source@phorax.com>
  * @author Nikolas Hagelstein <nikolas.hagelstein@gmail.com>
- * @package TYPO3
- * @subpackage beuser
  */
 class ModuleData {
 
@@ -92,6 +90,5 @@ class ModuleData {
 	}
 
 }
-
 
 ?>

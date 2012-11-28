@@ -37,7 +37,7 @@ class RequestBuilder {
 	protected $objectManager;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Reflection\Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 */
 	protected $reflectionService;
 
@@ -55,10 +55,10 @@ class RequestBuilder {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Reflection\Service $reflectionService
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
-	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\Service $reflectionService) {
+	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
 		$this->reflectionService = $reflectionService;
 	}
 
@@ -229,8 +229,6 @@ class RequestBuilder {
 		$value = isset($splitArgument[1]) ? $splitArgument[1] : '';
 		return $value;
 	}
-
 }
-
 
 ?>

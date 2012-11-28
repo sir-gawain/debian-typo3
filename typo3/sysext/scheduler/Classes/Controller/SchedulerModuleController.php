@@ -30,8 +30,6 @@ namespace TYPO3\CMS\Scheduler\Controller;
  * @author 		François Suter <francois@typo3.org>
  * @author 		Christian Jul Jensen <julle@typo3.org>
  * @author 		Ingo Renner <ingo@typo3.org>
- * @package 		TYPO3
- * @subpackage 	tx_scheduler
  */
 class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
@@ -311,7 +309,7 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 		// Display information about last automated run, as stored in the system registry
 		/** @var $registry \TYPO3\CMS\Core\Registry */
 		$registry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Registry');
-		$lastRun = $registry->get('TYPO3\\CMS\\Scheduler\\Scheduler', 'lastRun');
+		$lastRun = $registry->get('tx_scheduler', 'lastRun');
 		if (!is_array($lastRun)) {
 			$message = $GLOBALS['LANG']->getLL('msg.noLastRun');
 			$severity = \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING;

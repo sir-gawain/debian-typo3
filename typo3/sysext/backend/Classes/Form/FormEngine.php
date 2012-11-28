@@ -39,8 +39,6 @@ namespace TYPO3\CMS\Backend\Form;
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @coauthor René Fritz <r.fritz@colorcube.de>
- * @package TYPO3
- * @subpackage t3lib
  */
 class FormEngine {
 
@@ -236,6 +234,13 @@ class FormEngine {
 	 * @todo Define visibility
 	 */
 	public $form_rowsToStylewidth = 9.58;
+
+	/**
+	 * Value that gets added for style="width: ...px" for textareas compared to input fields.
+	 *
+	 * @var integer
+	 */
+	protected $form_additionalTextareaStyleWidth = 23;
 
 	// Form field width compensation: Compensation for large documents, doc-tab (editing)
 	/**
@@ -1114,6 +1119,7 @@ class FormEngine {
 							'FIELD' => $field,
 							'TABLE' => $table,
 							'ITEM' => $item,
+							'ITEM_DISABLED' => ($this->isNullValue($table, $field, $row, $PA) ? ' disabled' : ''),
 							'ITEM_NULLVALUE' => $this->renderNullValueWidget($table, $field, $row, $PA),
 						);
 						$out = $this->addUserTemplateMarkers($out, $table, $field, $row, $PA);
@@ -1126,6 +1132,7 @@ class FormEngine {
 							'ID' => $row['uid'],
 							'PAL_LINK_ICON' => $thePalIcon,
 							'FIELD' => $field,
+							'ITEM_DISABLED' => ($this->isNullValue($table, $field, $row, $PA) ? ' disabled' : ''),
 							'ITEM_NULLVALUE' => $this->renderNullValueWidget($table, $field, $row, $PA),
 						);
 						$out = $this->addUserTemplateMarkers($out, $table, $field, $row, $PA);
@@ -4331,6 +4338,11 @@ function ' . $evalData . '(value) {
 		} else {
 			// Setting width by style-attribute. 'cols' MUST be avoided with NN6+
 			$widthInPixels = ceil($size * $this->form_rowsToStylewidth);
+
+			if ($textarea) {
+				$widthInPixels += $this->form_additionalTextareaStyleWidth;
+			}
+
 			$fieldWidthAndStyle['style'] = 'width: ' . $widthInPixels . 'px; ' . $this->defStyle . $this->formElStyle(($textarea ? 'text' : 'input'));
 			$fieldWidthAndStyle['class'] = $this->formElClass($textarea ? 'text' : 'input');
 		}
@@ -5069,6 +5081,7 @@ function ' . $evalData . '(value) {
 					'###CONTENT_NAME###' => $content['NAME'],
 					'###CONTENT_ITEM###' => $content['ITEM'],
 					'###CONTENT_ITEM_NULLVALUE###' => $content['ITEM_NULLVALUE'],
+					'###CONTENT_ITEM_DISABLED###' => $content['ITEM_DISABLED'],
 					'###ATTRIBUTES_LABEL###' => $labelAttributes,
 					'###ATTRIBUTES_FIELD###' => $fieldAttributes,
 				);

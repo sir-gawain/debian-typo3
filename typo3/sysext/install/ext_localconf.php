@@ -3,11 +3,11 @@ if (!defined('TYPO3_MODE')) {
 	die('Access denied.');
 }
 // TYPO3 6.0 - Update localconf.php to LocalConfiguration.php
-$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['localConfiguration'] = 'tx_coreupdates_localconfiguration';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['localConfiguration'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\LocalConfigurationUpdate';
 // TYPO3 6.0 - Create page and TypoScript root template (automatically executed in 123-mode)
-$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['rootTemplate'] = 'TYPO3\CMS\Install\CoreUpdates\RootTemplateUpdate';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['rootTemplate'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\RootTemplateUpdate';
 // TYPO3 4.5 - Check the database to be utf-8 compliant
-$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['charsetDefaults'] = 'tx_coreupdates_charsetdefaults';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['charsetDefaults'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\CharsetDefaultsUpdate';
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['changeCompatibilityVersion'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\CompatVersionUpdate';
 // manage split includes of css_styled_contents since TYPO3 4.3
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['splitCscToMultipleTemplates'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\CscSplitUpdate';
@@ -17,6 +17,8 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['removeNotInMenuDoktypeC
 // remove pagetype "advanced" since TYPO3 4.2
 // this is merged with doctype "standard" with tab view to edit
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['mergeAdvancedDoktypeConversion'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\MergeAdvancedUpdate';
+// TYPO3 6.0 - Add new tables for ExtensionManager
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['extensionManagerTables'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\ExtensionManagerTables';
 // add new / outsourced system extensions since TYPO3 4.3
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['installSystemExtensions'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\InstallSysExtsUpdate';
 // change tt_content.imagecols=0 to 1 for proper display in TCEforms since TYPO3 4.3
@@ -25,7 +27,7 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['changeImagecolsValue'] 
 $TYPO3_CONF_VARS['FE']['eID_include']['tx_install_ajax'] = 'EXT:install/mod/class.tx_install_ajax.php';
 // add static_template if needed (since TYPO3 4.4 this table is not standard)
 // if needed, sysext statictables is loaded, which gives back functionality
-$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForStaticTypoScriptTemplates'] = 'tx_coreupdates_statictemplates';
+$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForStaticTypoScriptTemplates'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\StaticTemplatesUpdate';
 // warn for t3skin installed in Version 4.4
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['checkForT3SkinInstalled'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\T3skinUpdate';
 // Version 4.4: warn for set CompressionLevel and warn user to update his .htaccess
@@ -44,7 +46,6 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_init'] = 'T
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_images'] = 'TYPO3\\CMS\\Install\\Updates\\TceformsUpdateWizard';
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_uploads'] = 'TYPO3\\CMS\\Install\\Updates\\TtContentUploadsUpdateWizard';
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['sysext_file_filemounts'] = 'TYPO3\\CMS\\Install\\Updates\\FilemountUpdateWizard';
-$TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['extensionManagerRepositories'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\ExtensionManagerRepositories';
 // Version 4.7: Migrate the flexforms of MediaElement
 $TYPO3_CONF_VARS['SC_OPTIONS']['ext/install']['update']['mediaElementFlexform'] = 'TYPO3\\CMS\\Install\\CoreUpdates\\MediaFlexformUpdate';
 ?>

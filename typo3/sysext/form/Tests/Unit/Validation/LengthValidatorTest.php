@@ -28,8 +28,6 @@ namespace TYPO3\CMS\Form\Tests\Unit\Validation;
  * Test case for class \TYPO3\CMS\Form\Validation\LengthValidator.
  *
  * @author Andreas Lappe <a.lappe@kuehlhaus.com>
- * @package TYPO3
- * @subpackage form
  */
 class LengthValidatorTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	/**
@@ -53,8 +51,8 @@ class LengthValidatorTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	public function validLengthProvider() {
 		return array(
-			'4 ≤ length(myString) ≤ 8' => array(array(4, 8, 'myString')),
-			'8 ≤ length(myString) ≤ 8' => array(array(8, 8, 'myString')),
+			'4 ≤ length(myString) ≤ 8' => array(array(4, 8, 'mäString')),
+			'8 ≤ length(myString) ≤ 8' => array(array(8, 8, 'möString')),
 			'4 ≤ length(myString)'       => array(array(4, NULL, 'myString')),
 			'4 ≤ length(asdf) ≤ 4'     => array(array(4, 4, 'asdf')),
 		);

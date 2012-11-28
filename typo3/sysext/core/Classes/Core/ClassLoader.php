@@ -34,7 +34,6 @@ use \TYPO3\CMS\Core\Utility\GeneralUtility;
  * - The core of TYPO3
  * - All extensions with an ext_autoload.php file
  * - All extensions that stick to the 'extbase' like naming convention
- * - Resolves registered XCLASSes
  *
  * @author Dmitry Dulepov <dmitry@typo3.org>
  * @author Martin Kutschker <masi@typo3.org>
@@ -150,7 +149,11 @@ class ClassLoader {
 		$classPath = static::getClassPathByRegistryLookup($lookUpClassName);
 		if ($classPath && !class_exists($realClassName, FALSE)) {
 			// Include the required file that holds the class
-			static::requireClassFileOnce($classPath);
+			// Handing over the class name here is only done for the
+			// compatibility class loader so that it can skip class names
+			// which do not require rewriting. We can remove this bad
+			// code smell once we can get rid of the compatibility class loader.
+			static::requireClassFileOnce($classPath, $className);
 			try {
 				// Regular expression for a valid classname taken from
 				// http://www.php.net/manual/en/language.oop5.basic.php
@@ -174,8 +177,9 @@ class ClassLoader {
 	 *
 	 * @static
 	 * @param string $classPath
+	 * @param string $className
 	 */
-	static protected function requireClassFileOnce($classPath) {
+	static protected function requireClassFileOnce($classPath, $className) {
 		GeneralUtility::requireOnce($classPath);
 	}
 
@@ -288,17 +292,14 @@ class ClassLoader {
 		$classPath = NULL;
 		$classNameLower = GeneralUtility::strtolower($className);
 		// Try to resolve extbase naming scheme if class is not already in cache file
-		if (substr($classNameLower, 0, 3) !== 'ux_' && !array_key_exists($classNameLower, static::$classNameToFileMapping)) {
+		if (!array_key_exists($classNameLower, static::$classNameToFileMapping)) {
 			static::attemptToLoadRegistryWithNamingConventionForGivenClassName($className);
 		}
 		// Look up class name in cache file
 		if (array_key_exists($classNameLower, static::$classNameToFileMapping)) {
 			$classPath = static::$classNameToFileMapping[$classNameLower];
 		}
-		if ($classPath === NULL && substr($classNameLower, 0, 3) === 'ux_' && !array_key_exists($classNameLower, static::$classNameToFileMapping)) {
-			static::$cacheUpdateRequired = TRUE;
-			static::$classNameToFileMapping[$classNameLower] = NULL;
-		}
+
 		return $classPath;
 	}
 

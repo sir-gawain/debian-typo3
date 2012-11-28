@@ -36,8 +36,6 @@ namespace TYPO3\CMS\Frontend\ContentObject;
  * When you call your own PHP-code typically through a USER or USER_INT cObject then it is this class that instantiates the object and calls the main method. Before it does so it will set (if you are using classes) a reference to itself in the internal variable "cObj" of the object. Thus you can access all functions and data from this class by $this->cObj->... from within you classes written to be USER or USER_INT content objects.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage tslib
  */
 class ContentObjectRenderer {
 
@@ -84,6 +82,8 @@ class ContentObjectRenderer {
 		'override.' => 'array',
 		'preIfEmptyListNum' => 'listNum',
 		'preIfEmptyListNum.' => 'array',
+		'ifNull' => 'string',
+		'ifNull.' => 'array',
 		'ifEmpty' => 'string',
 		'ifEmpty.' => 'array',
 		'ifBlank' => 'string',
@@ -514,7 +514,9 @@ class ContentObjectRenderer {
 	 */
 	public function start($data, $table = '') {
 		global $TYPO3_CONF_VARS;
-		\TYPO3\CMS\Core\Resource\Service\FrontendContentAdapterService::modifyDBRow($data, $table);
+		if (is_array($data) && !empty($data) && !empty($table)) {
+			\TYPO3\CMS\Core\Resource\Service\FrontendContentAdapterService::modifyDBRow($data, $table);
+		}
 		$this->data = $data;
 		$this->table = $table;
 		$this->currentRecord = $table ? $table . ':' . $this->data['uid'] : '';
@@ -1428,7 +1430,7 @@ class ContentObjectRenderer {
 							$url = $altUrl . ($conf['JSwindow.']['altUrl_noDefaultParams'] ? '' : '?file=' . rawurlencode($imageFile) . $params);
 						}
 					}
-					$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_gifbuilder');
+					$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Imaging\\GifBuilder');
 					$gifCreator->init();
 					$gifCreator->mayScaleUp = 0;
 					$dims = $gifCreator->getImageScale($gifCreator->getImageDimensions($imageFile), $conf['width'], $conf['height'], array());
@@ -2230,6 +2232,21 @@ class ContentObjectRenderer {
 	 */
 	public function stdWrap_preIfEmptyListNum($content = '', $conf = array()) {
 		$content = $this->listNum($content, $conf['preIfEmptyListNum'], $conf['preIfEmptyListNum.']['splitChar']);
+		return $content;
+	}
+
+	/**
+	 * ifNull
+	 * Will set content to a replacement value in case the value of content is NULL
+	 *
+	 * @param string|NULL $content Input value undergoing processing in this function.
+	 * @param array $conf stdWrap properties for ifNull.
+	 * @return string|NULL The processed input value
+	 */
+	public function stdWrap_ifNull($content = '', $conf = array()) {
+		if ($content === NULL) {
+			$content = $conf['ifNull'];
+		}
 		return $content;
 	}
 
@@ -3419,6 +3436,12 @@ class ContentObjectRenderer {
 			return $conf['directReturn'] ? 1 : 0;
 		}
 		$flag = TRUE;
+		if (isset($conf['isNull.'])) {
+			$isNull = $this->stdWrap('', $conf['isNull.']);
+			if ($isNull !== NULL) {
+				$flag = 0;
+			}
+		}
 		if (isset($conf['isTrue']) || isset($conf['isTrue.'])) {
 			$isTrue = isset($conf['isTrue.']) ? trim($this->stdWrap($conf['isTrue'], $conf['isTrue.'])) : trim($conf['isTrue']);
 			if (!$isTrue) {
@@ -5007,14 +5030,16 @@ class ContentObjectRenderer {
 	 * @param string $file A "imgResource" TypoScript data type. Either a TypoScript file resource or the string GIFBUILDER. See description above.
 	 * @param array $fileArray TypoScript properties for the imgResource type
 	 * @return array Returns info-array. info[origFile] = original file. [0]/[1] is w/h, [2] is file extension and [3] is the filename.
-	 * @see IMG_RESOURCE(), cImage(), tslib_gifBuilder
+	 * @see IMG_RESOURCE(), cImage(), \TYPO3\CMS\Frontend\Imaging\GifBuilder
 	 * @todo Define visibility
 	 */
 	public function getImgResource($file, $fileArray) {
-		if (is_array($fileArray)) {
-			switch ($file) {
+		if (!is_array($fileArray)) {
+			$fileArray = (array) $fileArray;
+		}
+		switch ($file) {
 			case 'GIFBUILDER':
-				$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_gifbuilder');
+				$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Imaging\\GifBuilder');
 				$gifCreator->init();
 				$theImage = '';
 				if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib']) {
@@ -5025,18 +5050,24 @@ class ContentObjectRenderer {
 				break;
 			default:
 				try {
+					if ($fileArray['import.']) {
+						$importedFile = trim($this->stdWrap('', $fileArray['import.']));
+						if (!empty($importedFile)) {
+							$file = $importedFile;
+						}
+					}
+
 					if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($file)) {
+						if (!empty($fileArray['treatIdAsReference'])) {
+							$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileReferenceObject($file)->getOriginalFile();
+						} else {
+							$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileObject($file);
+						}
+					} elseif (preg_match('/^(0|[1-9][0-9]*):/', $file)) { // combined identifier
 						$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($file);
 					} else {
-						if ($fileArray['import.']) {
-							$ifile = $this->stdWrap('', $fileArray['import.']);
-							if ($ifile) {
-								if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($ifile)) {
-									$file = $ifile;
-								} else {
-									$file = $fileArray['import'] . $ifile;
-								}
-							}
+						if (isset($importedFile) && !empty($importedFile) && !empty($fileArray['import'])) {
+							$file = $fileArray['import'] . $file;
 						}
 						// clean ../ sections of the path and resolve to proper string. This is necessary for the Tx_File_BackwardsCompatibility_TslibContentAdapter to work.
 						$file = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($file);
@@ -5084,7 +5115,8 @@ class ContentObjectRenderer {
 								3 => $processedFileObject->getPublicUrl(),
 								'origFile' => $fileObject->getPublicUrl(),
 								'origFile_mtime' => $fileObject->getModificationTime(),
-								// This is needed by tslib_gifbuilder, ln 100ff in order for the setup-array to create a unique filename hash.
+								// This is needed by \TYPO3\CMS\Frontend\Imaging\GifBuilder,
+								// in order for the setup-array to create a unique filename hash.
 								'originalFile' => $fileObject,
 								'processedFile' => $processedFileObject,
 								'fileCacheHash' => $hash
@@ -5096,18 +5128,17 @@ class ContentObjectRenderer {
 					}
 				}
 				break;
-			}
 		}
 		$theImage = $GLOBALS['TSFE']->tmpl->getFileName($file);
 		// If image was processed by GIFBUILDER:
 		// ($imageResource indicates that it was processed the regular way)
 		if (!isset($imageResource) && $theImage) {
-			$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_gifbuilder');
-			/** @var $gifCreator tslib_gifbuilder */
+			$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Imaging\\GifBuilder');
+			/** @var $gifCreator \TYPO3\CMS\Frontend\Imaging\GifBuilder */
 			$gifCreator->init();
 			$info = $gifCreator->imageMagickConvert($theImage, 'WEB');
 			$info['origFile'] = $theImage;
-			// This is needed by tslib_gifbuilder, ln 100ff in order for the setup-array to create a unique filename hash.
+			// This is needed by \TYPO3\CMS\Frontend\Imaging\GifBuilder, ln 100ff in order for the setup-array to create a unique filename hash.
 			$info['origFile_mtime'] = @filemtime($theImage);
 			$imageResource = $info;
 		}
@@ -7749,6 +7780,5 @@ class ContentObjectRenderer {
 	}
 
 }
-
 
 ?>

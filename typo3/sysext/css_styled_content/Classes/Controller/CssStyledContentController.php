@@ -36,8 +36,6 @@ namespace TYPO3\CMS\CssStyledContent\Controller;
  * Rendering some content elements from tt_content table.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @package TYPO3
- * @subpackage tx_cssstyledcontent
  */
 class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlugin {
 
@@ -580,7 +578,7 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 		$equalHeight = intval($this->cObj->stdWrap($conf['equalH'], $conf['equalH.']));
 		if ($equalHeight) {
 			// Initiate gifbuilder object in order to get dimensions AND calculate the imageWidth's
-			$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_gifbuilder');
+			$gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Imaging\\GifBuilder');
 			$gifCreator->init();
 			$relations_cols = array();
 			// contains the individual width of all images after scaling to $equalHeight

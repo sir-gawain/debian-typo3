@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Core\ViewHelper;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -95,7 +95,7 @@ abstract class AbstractViewHelper {
 	/**
 	 * Reflection service
 	 *
-	 * @var \TYPO3\CMS\Extbase\Reflection\Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 */
 	private $reflectionService;
 
@@ -132,9 +132,9 @@ abstract class AbstractViewHelper {
 	/**
 	 * Inject a Reflection service
 	 *
-	 * @param \TYPO3\CMS\Extbase\Reflection\Service $reflectionService Reflection service
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService Reflection service
 	 */
-	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\Service $reflectionService) {
+	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
 		$this->reflectionService = $reflectionService;
 	}
 
@@ -254,7 +254,6 @@ abstract class AbstractViewHelper {
 	 * @api
 	 */
 	public function initialize() {
-
 	}
 
 	/**
@@ -283,7 +282,7 @@ abstract class AbstractViewHelper {
 	 */
 	protected function buildRenderChildrenClosure() {
 		$self = $this;
-		return function () use($self) {
+		return function () use ($self) {
 			return $self->renderChildren();
 		};
 	}
@@ -397,7 +396,6 @@ abstract class AbstractViewHelper {
 	 * @api
 	 */
 	public function initializeArguments() {
-
 	}
 
 	/**
@@ -410,15 +408,6 @@ abstract class AbstractViewHelper {
 	 * @api
 	 */
 	//abstract public function render();
-	/**
-	 * Get the rendering context interface.
-	 *
-	 * @return \TYPO3\CMS\Fluid\Core\Rendering\RenderingContextInterface
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 1.6.0. use $this->renderingContext instead
-	 */
-	public function getRenderingContext() {
-		return $this->renderingContext;
-	}
 
 	/**
 	 * Tests if the given $argumentName is set, and not NULL.
@@ -475,10 +464,7 @@ abstract class AbstractViewHelper {
 	 * @return void
 	 */
 	public function resetState() {
-
 	}
-
 }
-
 
 ?>

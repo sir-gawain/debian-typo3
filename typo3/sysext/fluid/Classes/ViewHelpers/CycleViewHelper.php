@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\ViewHelpers;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -88,6 +88,7 @@ class CycleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelpe
 	 * Sets this->values to the current values argument and resets $this->currentCycleIndex.
 	 *
 	 * @param array $values The array or \TYPO3\CMS\Extbase\Persistence\ObjectStorage to be stored in $this->values
+	 * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
 	 * @return void
 	 */
 	protected function initializeValues($values) {
@@ -101,8 +102,6 @@ class CycleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelpe
 		}
 		$this->currentCycleIndex = 0;
 	}
-
 }
-
 
 ?>

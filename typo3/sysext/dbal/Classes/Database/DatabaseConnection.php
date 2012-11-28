@@ -1,5 +1,5 @@
 <?php
-namespace ux_TYPO3\CMS\Core\Database;
+namespace TYPO3\CMS\Dbal\Database;
 
 /***************************************************************
  *  Copyright notice
@@ -40,8 +40,6 @@ namespace ux_TYPO3\CMS\Core\Database;
  *
  * @author 	Kasper Skårhøj <kasper@typo3.com>
  * @author 	Karsten Dambekalns <k.dambekalns@fishfarm.de>
- * @package TYPO3
- * @subpackage tx_dbal
  */
 class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 
@@ -886,7 +884,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 *
 	 * @param array $queryParts SQL parsed by method parseSQL() of t3lib_sqlparser
 	 * @return pointer Result pointer / DBAL object
-	 * @see ux_t3lib_db::sql_query()
+	 * @see self::sql_query()
 	 */
 	protected function exec_query(array $queryParts) {
 		switch ($queryParts['type']) {
@@ -1342,7 +1340,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 			}
 		}
 		$preparedStatement = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\PreparedStatement', '', $from_table, $precompiledParts);
-		/* @var $preparedStatement TYPO3\CMS\Core\Database\PreparedStatement */
+		/* @var $preparedStatement \TYPO3\CMS\Core\Database\PreparedStatement */
 		// Bind values to parameters
 		foreach ($input_parameters as $key => $value) {
 			$preparedStatement->bindValue($key, $value, \TYPO3\CMS\Core\Database\PreparedStatement::PARAM_AUTOTYPE);
@@ -2436,6 +2434,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 			$sqlResult->TYPO3_DBAL_handlerType = 'userdefined';
 			break;
 		}
+		$this->lastHandlerKey = '_DEFAULT';
 		if ($this->printErrors && $this->sql_error()) {
 			debug(array($this->lastQuery, $this->sql_error()));
 		}

@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Core\Core;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 require 'SystemEnvironmentBuilder.php';
 
 /**
@@ -15,8 +41,6 @@ require 'SystemEnvironmentBuilder.php';
  * exactly what you are doing!
  *
  * @author Christian Kuhn <lolli@schwarzbu.ch>
- * @package TYPO3
- * @subpackage core
  */
 class Bootstrap {
 
@@ -50,6 +74,7 @@ class Bootstrap {
 	 * Return 'this' as singleton
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	static public function getInstance() {
 		if (is_null(self::$instance)) {
@@ -62,6 +87,7 @@ class Bootstrap {
 	 * Gets the request's unique ID
 	 *
 	 * @return string Unique request ID
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function getRequestId() {
 		return $this->requestId;
@@ -72,6 +98,7 @@ class Bootstrap {
 	 * This does not interfere with "die()" or "echo"+"exit()" messages!
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function startOutputBuffering() {
 		ob_start();
@@ -86,9 +113,69 @@ class Bootstrap {
 	 *
 	 * @param string $relativePathPart Relative path of the entry script back to document root
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function baseSetup($relativePathPart = '') {
 		\TYPO3\CMS\Core\Core\SystemEnvironmentBuilder::run($relativePathPart);
+		return $this;
+	}
+
+	/**
+	 * Includes LocalConfiguration.php and sets several
+	 * global settings depending on configuration.
+	 *
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
+	 */
+	public function loadConfigurationAndInitialize() {
+		$this->getInstance()
+			->populateLocalConfiguration()
+			->registerExtDirectComponents()
+			->initializeCachingFramework()
+			->registerAutoloader()
+			->checkUtf8DatabaseSettingsOrDie()
+			->transferDeprecatedCurlSettings()
+			->setCacheHashOptions()
+			->enforceCorrectProxyAuthScheme()
+			->setDefaultTimezone()
+			->initializeL10nLocales()
+			->configureImageProcessingOptions()
+			->convertPageNotFoundHandlingToBoolean()
+			->registerGlobalDebugFunctions()
+			->registerSwiftMailer()
+			->configureExceptionHandling()
+			->setMemoryLimit()
+			->defineTypo3RequestTypes();
+		return $this;
+	}
+
+	/**
+	 * Load TYPO3_LOADED_EXT and ext_localconf
+	 *
+	 * @param boolean $allowCaching
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
+	 */
+	public function loadTypo3LoadedExtAndExtLocalconf($allowCaching = TRUE) {
+		$this->getInstance()
+			->populateTypo3LoadedExtGlobal($allowCaching)
+			->loadAdditionalConfigurationFromExtensions($allowCaching);
+		return $this;
+	}
+
+	/**
+	 * Sets up additional configuration applied in all scopes
+	 *
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
+	 */
+	public function applyAdditionalConfigurationSettings() {
+		$this->getInstance()
+			->deprecationLogForOldExtCacheSetting()
+			->initializeExceptionHandling()
+			->setFinalCachingFrameworkCacheConfiguration()
+			->defineLoggingAndExceptionConstants()
+			->unsetReservedGlobalVariables();
 		return $this;
 	}
 
@@ -97,31 +184,12 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 * @throws \RuntimeException
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function checkValidBrowserOrDie() {
 		// Checks for proper browser
 		if (empty($GLOBALS['CLIENT']['BROWSER'])) {
 			throw new \RuntimeException('Browser Error: Your browser version looks incompatible with this TYPO3 version!', 1294587023);
-		}
-		return $this;
-	}
-
-	/**
-	 * Register default ExtDirect components
-	 *
-	 * @return \TYPO3\CMS\Core\Core\Bootstrap
-	 */
-	public function registerExtDirectComponents() {
-		if (TYPO3_MODE === 'BE') {
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.DataProvider', 'TYPO3\\CMS\\Backend\\Tree\\Pagetree\\ExtdirectTreeDataProvider', 'web', 'user,group');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.Commands', 'TYPO3\\CMS\\Backend\\Tree\\Pagetree\\ExtdirectTreeCommands', 'web', 'user,group');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.ContextMenuDataProvider', 'TYPO3\\CMS\\Backend\\ContextMenu\\Pagetree\\Extdirect\\ContextMenuConfiguration', 'web', 'user,group');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.LiveSearchActions.ExtDirect', 'TYPO3\\CMS\\Backend\\Search\\LiveSearch\\ExtDirect\\LiveSearchDataProvider', 'web_list', 'user,group');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.BackendUserSettings.ExtDirect', 'TYPO3\\CMS\\Backend\\User\\ExtDirect\\BackendUserSettingsDataProvider');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.CSH.ExtDirect', 'TYPO3\\CMS\\ContextHelp\\ExtDirect\\ContextHelpDataProvider');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.ExtDirectStateProvider.ExtDirect', 'TYPO3\\CMS\\Backend\\InterfaceState\\ExtDirect\\DataProvider');
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.DragAndDrop.CommandController',
-					\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/View/PageLayout/Extdirect/ExtdirectPageCommands.php:TYPO3\\CMS\\Backend\\View\\PageLayout\\ExtDirect\\ExtdirectPageCommands', 'web', 'user,group');
 		}
 		return $this;
 	}
@@ -133,9 +201,14 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function populateLocalConfiguration() {
+	protected function populateLocalConfiguration() {
 		try {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')->exportConfiguration();
+			// We need an early instance of the configuration manager.
+			// Since makeInstance relies on the object configuration, we create it here with new instead
+			// and register it as singleton instance for later use.
+			$configuarationManager = new \TYPO3\CMS\Core\Configuration\ConfigurationManager();
+			\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager', $configuarationManager);
+			$configuarationManager->exportConfiguration();
 		} catch (\Exception $e) {
 			die($e->getMessage());
 		}
@@ -150,9 +223,30 @@ class Bootstrap {
 	}
 
 	/**
+	 * Register default ExtDirect components
+	 *
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 */
+	protected function registerExtDirectComponents() {
+		if (TYPO3_MODE === 'BE') {
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.DataProvider', 'TYPO3\\CMS\\Backend\\Tree\\Pagetree\\ExtdirectTreeDataProvider', 'web', 'user,group');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.Commands', 'TYPO3\\CMS\\Backend\\Tree\\Pagetree\\ExtdirectTreeCommands', 'web', 'user,group');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.ContextMenuDataProvider', 'TYPO3\\CMS\\Backend\\ContextMenu\\Pagetree\\Extdirect\\ContextMenuConfiguration', 'web', 'user,group');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.LiveSearchActions.ExtDirect', 'TYPO3\\CMS\\Backend\\Search\\LiveSearch\\ExtDirect\\LiveSearchDataProvider', 'web_list', 'user,group');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.BackendUserSettings.ExtDirect', 'TYPO3\\CMS\\Backend\\User\\ExtDirect\\BackendUserSettingsDataProvider');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.CSH.ExtDirect', 'TYPO3\\CMS\\ContextHelp\\ExtDirect\\ContextHelpDataProvider');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.ExtDirectStateProvider.ExtDirect', 'TYPO3\\CMS\\Backend\\InterfaceState\\ExtDirect\\DataProvider');
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.DragAndDrop.CommandController',
+				\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/View/PageLayout/Extdirect/ExtdirectPageCommands.php:TYPO3\\CMS\\Backend\\View\\PageLayout\\ExtDirect\\ExtdirectPageCommands', 'web', 'user,group');
+		}
+		return $this;
+	}
+
+	/**
 	 * Redirect to install tool if database host and database are not defined
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function redirectToInstallToolIfDatabaseCredentialsAreMissing() {
 		if (!TYPO3_db_host && !TYPO3_db) {
@@ -166,7 +260,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function initializeCachingFramework() {
+	protected function initializeCachingFramework() {
 		\TYPO3\CMS\Core\Cache\Cache::initializeCachingFramework();
 		return $this;
 	}
@@ -176,7 +270,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function registerAutoloader() {
+	protected function registerAutoloader() {
 		if (PHP_VERSION_ID < 50307) {
 			\TYPO3\CMS\Core\Compatibility\CompatbilityClassLoaderPhpBelow50307::registerAutoloader();
 		} else {
@@ -196,7 +290,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function checkUtf8DatabaseSettingsOrDie() {
+	protected function checkUtf8DatabaseSettingsOrDie() {
 		// Check if [BE][forceCharset] has been set in localconf.php
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'])) {
 			// die() unless we're already on UTF-8
@@ -221,7 +315,7 @@ class Bootstrap {
 	 * @TODO : This code segment must still be finished
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function transferDeprecatedCurlSettings() {
+	protected function transferDeprecatedCurlSettings() {
 		if (!empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer'])) {
 			$proxyParts = explode(':', $GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer'], 2);
 			$GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_host'] = $proxyParts[0];
@@ -240,7 +334,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function setCacheHashOptions() {
+	protected function setCacheHashOptions() {
 		$GLOBALS['TYPO3_CONF_VARS']['FE']['cacheHash'] = array(
 			'cachedParametersWhiteList' => \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['cHashOnlyForParameters'], TRUE),
 			'excludedParameters' => \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['cHashExcludedParameters'], TRUE),
@@ -260,7 +354,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function enforceCorrectProxyAuthScheme() {
+	protected function enforceCorrectProxyAuthScheme() {
 		$GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_auth_scheme'] === 'digest' ?: ($GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_auth_scheme'] = 'basic');
 		return $this;
 	}
@@ -270,7 +364,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function setDefaultTimezone() {
+	protected function setDefaultTimezone() {
 		$timeZone = $GLOBALS['TYPO3_CONF_VARS']['SYS']['phpTimeZone'];
 		if (empty($timeZone)) {
 			// Time zone from the server environment (TZ env or OS query)
@@ -291,7 +385,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function initializeL10nLocales() {
+	protected function initializeL10nLocales() {
 		\TYPO3\CMS\Core\Localization\Locales::initialize();
 		return $this;
 	}
@@ -302,7 +396,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function configureImageProcessingOptions() {
+	protected function configureImageProcessingOptions() {
 		if (!$GLOBALS['TYPO3_CONF_VARS']['GFX']['image_processing']) {
 			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im'] = 0;
 			$GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib'] = 0;
@@ -337,7 +431,7 @@ class Bootstrap {
 	 * @TODO : Remove, if the Install Tool handles such data types correctly
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function convertPageNotFoundHandlingToBoolean() {
+	protected function convertPageNotFoundHandlingToBoolean() {
 		if (!strcasecmp($GLOBALS['TYPO3_CONF_VARS']['FE']['pageNotFound_handling'], 'TRUE')) {
 			$GLOBALS['TYPO3_CONF_VARS']['FE']['pageNotFound_handling'] = TRUE;
 		}
@@ -352,7 +446,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function registerGlobalDebugFunctions() {
+	protected function registerGlobalDebugFunctions() {
 		require_once('GlobalDebugFunctions.php');
 		return $this;
 	}
@@ -362,7 +456,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function registerSwiftMailer() {
+	protected function registerSwiftMailer() {
 		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/utility/class.t3lib_utility_mail.php']['substituteMailDelivery'][] = 'TYPO3\\CMS\\Core\\Mail\\SwiftMailerAdapter';
 		return $this;
 	}
@@ -372,7 +466,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function configureExceptionHandling() {
+	protected function configureExceptionHandling() {
 		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['errors']['exceptionHandler'] = $GLOBALS['TYPO3_CONF_VARS']['SYS']['productionExceptionHandler'];
 		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['errors']['exceptionalErrors'] = $GLOBALS['TYPO3_CONF_VARS']['SYS']['exceptionalErrors'];
 		// Turn error logging on/off.
@@ -406,7 +500,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function setMemoryLimit() {
+	protected function setMemoryLimit() {
 		if (intval($GLOBALS['TYPO3_CONF_VARS']['SYS']['setMemoryLimit']) > 16) {
 			@ini_set('memory_limit', (intval($GLOBALS['TYPO3_CONF_VARS']['SYS']['setMemoryLimit']) . 'm'));
 		}
@@ -419,7 +513,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function defineTypo3RequestTypes() {
+	protected function defineTypo3RequestTypes() {
 		define('TYPO3_REQUESTTYPE_FE', 1);
 		define('TYPO3_REQUESTTYPE_BE', 2);
 		define('TYPO3_REQUESTTYPE_CLI', 4);
@@ -436,7 +530,7 @@ class Bootstrap {
 	 * @param boolean $allowCaching
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function populateTypo3LoadedExtGlobal($allowCaching = TRUE) {
+	protected function populateTypo3LoadedExtGlobal($allowCaching = TRUE) {
 		$GLOBALS['TYPO3_LOADED_EXT'] = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::loadTypo3LoadedExtensionInformation($allowCaching);
 		return $this;
 	}
@@ -450,7 +544,7 @@ class Bootstrap {
 	 * @param boolean $allowCaching
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function loadAdditionalConfigurationFromExtensions($allowCaching = TRUE) {
+	protected function loadAdditionalConfigurationFromExtensions($allowCaching = TRUE) {
 		\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::loadExtLocalconf($allowCaching);
 		return $this;
 	}
@@ -461,7 +555,7 @@ class Bootstrap {
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 * @deprecated since 6.0, the check will be removed two version later.
 	 */
-	public function deprecationLogForOldExtCacheSetting() {
+	protected function deprecationLogForOldExtCacheSetting() {
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['extCache']) && $GLOBALS['TYPO3_CONF_VARS']['SYS']['extCache'] !== -1) {
 			\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('Setting $GLOBALS[\'TYPO3_CONF_VARS\'][\'SYS\'][\'extCache\'] is unused and can be removed from localconf.php');
 		}
@@ -473,7 +567,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function initializeExceptionHandling() {
+	protected function initializeExceptionHandling() {
 		if ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['errors']['exceptionHandler'] !== '') {
 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['errorHandler'] !== '') {
 				// Register an error handler for the given errorHandlerErrors
@@ -489,22 +583,12 @@ class Bootstrap {
 	}
 
 	/**
-	 * Load some additional classes that are encapsulated in extensions
-	 *
-	 * @return \TYPO3\CMS\Core\Core\Bootstrap
-	 */
-	public function requireAdditionalExtensionFiles() {
-		require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('lang') . 'lang.php';
-		return $this;
-	}
-
-	/**
 	 * Extensions may register new caches, so we set the
 	 * global cache array to the manager again at this point
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function setFinalCachingFrameworkCacheConfiguration() {
+	protected function setFinalCachingFrameworkCacheConfiguration() {
 		$GLOBALS['typo3CacheManager']->setCacheConfigurations($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']);
 		return $this;
 	}
@@ -514,7 +598,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function defineLoggingAndExceptionConstants() {
+	protected function defineLoggingAndExceptionConstants() {
 		define('TYPO3_DLOG', $GLOBALS['TYPO3_CONF_VARS']['SYS']['enable_DLOG']);
 		define('TYPO3_ERROR_DLOG', $GLOBALS['TYPO3_CONF_VARS']['SYS']['enable_errorDLOG']);
 		define('TYPO3_EXCEPTION_DLOG', $GLOBALS['TYPO3_CONF_VARS']['SYS']['enable_exceptionDLOG']);
@@ -527,7 +611,7 @@ class Bootstrap {
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
-	public function unsetReservedGlobalVariables() {
+	protected function unsetReservedGlobalVariables() {
 		unset($GLOBALS['PAGES_TYPES']);
 		unset($GLOBALS['TCA']);
 		unset($GLOBALS['TBE_MODULES']);
@@ -548,11 +632,12 @@ class Bootstrap {
 	/**
 	 * Initialize t3lib_db in $GLOBALS and connect if requested
 	 *
-	 * @param boolean $connect Whether or not the db should be connected already
+	 * @param boolean $connect Whether db should be connected
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeTypo3DbGlobal($connect = TRUE) {
-		/** @var TYPO3_DB t3lib_db */
+		/** @var TYPO3_DB TYPO3\CMS\Core\Database\DatabaseConnection */
 		$GLOBALS['TYPO3_DB'] = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\DatabaseConnection');
 		$GLOBALS['TYPO3_DB']->debugOutput = $GLOBALS['TYPO3_CONF_VARS']['SYS']['sqlDebug'];
 		if ($connect) {
@@ -567,6 +652,7 @@ class Bootstrap {
 	 *
 	 * @throws \RuntimeException
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function checkLockedBackendAndRedirectOrDie() {
 		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['adminOnly'] < 0) {
@@ -593,6 +679,7 @@ class Bootstrap {
 	 * if the client is not allowed to access the backend
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function checkBackendIpOrDie() {
 		if (trim($GLOBALS['TYPO3_CONF_VARS']['BE']['IPmaskList'])) {
@@ -613,6 +700,7 @@ class Bootstrap {
 	 * to https version of the backend if needed
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function checkSslBackendAndRedirectIfNeeded() {
 		if (intval($GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL'])) {
@@ -651,6 +739,7 @@ class Bootstrap {
 	 * Establish connection to the database
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function establishDatabaseConnection() {
 		$GLOBALS['TYPO3_DB']->connectDB();
@@ -675,6 +764,7 @@ class Bootstrap {
 	 * @TODO : It should be defined, which global arrays are ok to be manipulated
 	 * @param boolean $allowCaching True, if reading compiled ext_tables file from cache is allowed
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function loadExtensionTables($allowCaching = TRUE) {
 		// It is discouraged to use those global variables directly, but we
@@ -719,6 +809,7 @@ class Bootstrap {
 	 * Initialize sprite manager
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeSpriteManager() {
 		\TYPO3\CMS\Backend\Sprite\SpriteManager::initialize();
@@ -729,6 +820,7 @@ class Bootstrap {
 	 * Initialize backend user object in globals
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeBackendUser() {
 		/** @var $backendUser \TYPO3\CMS\Core\Authentication\BackendUserAuthentication */
@@ -751,6 +843,7 @@ class Bootstrap {
 	 * Initialize backend user mount points
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeBackendUserMounts() {
 		// Includes deleted mount pages as well! @TODO: Figure out why ...
@@ -763,6 +856,7 @@ class Bootstrap {
 	 * Initialize language object
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeLanguageObject() {
 		/** @var $GLOBALS['LANG'] \TYPO3\CMS\Lang\LanguageService */
@@ -775,6 +869,7 @@ class Bootstrap {
 	 * Throw away all output that may have happened during bootstrapping by weird extensions
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function endOutputBufferingAndCleanPreviousOutput() {
 		ob_clean();
@@ -785,6 +880,7 @@ class Bootstrap {
 	 * Initialize output compression if configured
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeOutputCompression() {
 		if (extension_loaded('zlib') && $GLOBALS['TYPO3_CONF_VARS']['BE']['compressionLevel']) {
@@ -800,6 +896,7 @@ class Bootstrap {
 	 * Initialize module menu object
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeModuleMenuObject() {
 		/** @var $moduleMenuUtility Typo3_BackendModule_Utility */
@@ -814,6 +911,7 @@ class Bootstrap {
 	 * shut down of the system.
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function shutdown() {
 		if (PHP_VERSION_ID < 50307) {
@@ -829,6 +927,7 @@ class Bootstrap {
 	 * work with.
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function initializeBackendTemplate() {
 		$GLOBALS['TBE_TEMPLATE'] = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');

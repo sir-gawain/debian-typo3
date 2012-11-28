@@ -27,8 +27,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Core;
 /**
  * Testcase for TYPO3\CMS\Core\Core\ClassLoader
  *
- * @package TYPO3
- * @subpackage t3lib
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
 class ClassLoaderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
@@ -285,77 +283,6 @@ class ClassLoaderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 */
-	public function getClassPathByRegistryLookupFindsClassPrefixedWithUxRegisteredInExtAutoloadFile() {
-			// Create a dummy extension with a path to a 'ux_' prefixed php file
-		$extKey = $this->createFakeExtension();
-		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
-		$autoloaderFile = $extPath . 'ext_autoload.php';
-		$class = strtolower('ux_tx_{' . $extKey . '}_' . uniqid(''));
-		$file = $extPath . uniqid('') . '.php';
-		file_put_contents($autoloaderFile, '<?php' . LF . 'return array(\'' . $class . '\' => \'' . $file . '\');' . LF . '?>');
-			// Inject a dummy for the core_phpcode cache to force the autoloader
-			// to re calculate the registry
-		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\AbstractFrontend', array('getIdentifier', 'set', 'get', 'getByTag', 'has', 'remove', 'flush', 'flushByTag', 'requireOnce'), array(), '', FALSE);
-		$GLOBALS['typo3CacheManager'] = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
-		$GLOBALS['typo3CacheManager']->expects($this->any())->method('getCache')->will($this->returnValue($mockCache));
-			// Re-initialize autoloader registry to force it to recognize the new extension with the ux_ autoload definition
-		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
-		$this->assertSame($file, \TYPO3\CMS\Core\Core\ClassLoader::getClassPathByRegistryLookup($class));
-	}
-
-	/**
-	 * @test
-	 */
-	public function unregisterAutoloaderWritesNotExistingUxCLassLookupFromGetClassPathByRegistryLookupToCache() {
-		$uxClassName = 'ux_Tx_Foo' . uniqid();
-		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\AbstractFrontend', array('getIdentifier', 'set', 'get', 'getByTag', 'has', 'remove', 'flush', 'flushByTag', 'requireOnce'), array(), '', FALSE);
-		$GLOBALS['typo3CacheManager'] = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
-		$GLOBALS['typo3CacheManager']->expects($this->any())->method('getCache')->will($this->returnValue($mockCache));
-		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
-			// Class is not found by returning NULL
-		$this->assertSame(NULL, \TYPO3\CMS\Core\Core\ClassLoader::getClassPathByRegistryLookup($uxClassName));
-		// Expect NULL lookup is cached
-		$expectedCacheString = '\'' . strtolower($uxClassName) . '\' => NULL,';
-		$mockCache->expects($this->once())->method('set')->with($this->anything(), $this->stringContains($expectedCacheString));
-			// Trigger writing new cache file
-		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-	}
-
-	/**
-	 * @test
-	 */
-	public function unregisterAutoloaderWritesDeprecatedTypo3ConfVarsRegisteredXclassClassFoundByGetClassPathByRegistryLookupToCache() {
-			// Create a fake extension
-		$extKey = $this->createFakeExtension();
-		$extPath = PATH_site . 'typo3temp/' . $extKey . '/';
-		$autoloaderFile = $extPath . 'ext_autoload.php';
-			// Feed ext_autoload with a base file and the class file
-		$class = strtolower('tx_{' . $extKey . '}_' . uniqid(''));
-		$fileName = uniqid('') . '.php';
-		$file = $extPath . $fileName;
-		$xClassFile = 'typo3temp/' . $extKey . '/xclassFile';
-		file_put_contents($autoloaderFile, '<?php' . LF . 'return array(\'' . $class . '\' => \'' . $file . '\');' . LF . '?>');
-		file_put_contents(PATH_site . $xClassFile, '<?php' . LF . 'die();' . LF . '?>');
-			// Register a xclass for the base file
-		$GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3temp/' . $extKey . '/' . $fileName] = $xClassFile;
-			// Inject a dummy for the core_phpcode cache to force the autoloader
-			// to re calculate the registry
-		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\AbstractFrontend', array('getIdentifier', 'set', 'get', 'getByTag', 'has', 'remove', 'flush', 'flushByTag', 'requireOnce'), array(), '', FALSE);
-		$GLOBALS['typo3CacheManager'] = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
-		$GLOBALS['typo3CacheManager']->expects($this->any())->method('getCache')->will($this->returnValue($mockCache));
-			// Excpect the cache entry to be called once with the new class name
-		$mockCache->expects($this->at(2))->method('set')->with($this->anything(), $this->stringContains('ux_' . $class));
-		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
-		\TYPO3\CMS\Core\Core\ClassLoader::getClassPathByRegistryLookup('ux_' . $class);
-		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-	}
-
-	/**
-	 * @test
 	 * @expectedException \RuntimeException
 	 */
 	public function autoloadFindsClassFileThatRespectsExtbaseNamingSchemeWithNamespace() {
@@ -429,23 +356,6 @@ class ClassLoaderTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
 		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
 		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-	}
-
-	/**
-	 * @test
-	 */
-	public function compatibilityClassLoaderRewritesClassFilesCorrectly() {
-		$classLoader = $this->getAccessibleMock('TYPO3\\CMS\\Core\\Compatibility\\CompatbilityClassLoaderPhpBelow50307', array('dummy'), array(), '', FALSE);
-		$classPathOfFileToRewrite = realpath(__DIR__ . '/Fixtures/LegacyClassFixture.php');
-		$rewrittenContent = $classLoader->_call('rewriteMethodTypeHintsFromClassPath', $classPathOfFileToRewrite);
-		$originalContent = file_get_contents($classPathOfFileToRewrite);
-		$this->assertNotEquals($originalContent, $rewrittenContent);
-		$this->assertContains('public function foo(\TYPO3\CMS\Core\Utility\GeneralUtility $foo) {', $rewrittenContent, 'One line and one parameter');
-		$this->assertContains('public function baz(\TYPO3\CMS\Core\Utility\GeneralUtility $foo, $baz) {', $rewrittenContent, 'Multi line and more parameters');
-		$this->assertContains('protected function createConstraintsFromDemand(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query, Tx_News_Domain_Model_DemandInterface $demand);', $rewrittenContent, 'Multi line abstract and second parameter with own typehint not in aliasmap');
-		$this->assertContains('abstract public function bar(\TYPO3\CMS\Core\Utility\GeneralUtility $bar);', $rewrittenContent, 'One line abstract function');
-		$this->assertContains('public function nothing() {', $rewrittenContent, 'One line one parameter');
-		$this->assertContains('protected function stillNothing(Tx_Core_Tests_Unit_Core_Fixtures_LegacyClassFixture $nothing) {', $rewrittenContent, 'One line on parameter with typehint not in aliasmap');
 	}
 }
 

@@ -1,5 +1,5 @@
 <?php
-namespace ux_TYPO3\CMS\Core\Database;
+namespace TYPO3\CMS\Dbal\Database;
 
 /***************************************************************
  *  Copyright notice
@@ -34,8 +34,6 @@ namespace ux_TYPO3\CMS\Core\Database;
  * @author 	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author 	Karsten Dambekalns <karsten@typo3.org>
  * @author 	Xavier Perseguers <xavier@typo3.org>
- * @package TYPO3
- * @subpackage dbal
  */
 class SqlParser extends \TYPO3\CMS\Core\Database\SqlParser {
 

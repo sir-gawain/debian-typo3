@@ -31,8 +31,6 @@ $GLOBALS['LANG']->includeLLFile('EXT:linkvalidator/modfuncreport/locallang.xml')
  *
  * @author Michael Miousse <michael.miousse@infoglobe.ca>
  * @author Jochen Rieger <j.rieger@connecta.ag>
- * @package TYPO3
- * @subpackage linkvalidator
  */
 class LinkAnalyzer {
 
@@ -137,8 +135,13 @@ class LinkAnalyzer {
 		$results = array();
 		if (count($checkOptions) > 0) {
 			$checkKeys = array_keys($checkOptions);
-			$checkLinkTypeCondition = ' and link_type in (\'' . implode('\',\'', $checkKeys) . '\')';
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_linkvalidator_link', '(record_pid in (' . $this->pidList . ')' . ' or ( record_uid IN (' . $this->pidList . ') and table_name like \'pages\')) ' . $checkLinkTypeCondition);
+			$checkLinkTypeCondition = ' AND link_type IN (\'' . implode('\',\'', $checkKeys) . '\')';
+			$GLOBALS['TYPO3_DB']->exec_DELETEquery(
+				'tx_linkvalidator_link',
+				'(record_pid IN (' . $this->pidList . ')' .
+					' OR ( record_uid IN (' . $this->pidList . ') AND table_name like \'pages\'))' .
+					$checkLinkTypeCondition
+			);
 			// Traverse all configured tables
 			foreach ($this->searchFields as $table => $fields) {
 				if ($table === 'pages') {
@@ -188,9 +191,9 @@ class LinkAnalyzer {
 							$url = $entryValue['substr']['tokenValue'];
 						}
 						$this->linkCounts[$table]++;
-						$checkURL = $hookObj->checkLink($url, $entryValue, $this);
+						$checkUrl = $hookObj->checkLink($url, $entryValue, $this);
 						// Broken link found
-						if (!$checkURL) {
+						if (!$checkUrl) {
 							$response = array();
 							$response['valid'] = FALSE;
 							$response['errorParams'] = $hookObj->getErrorParams();
@@ -363,6 +366,7 @@ class LinkAnalyzer {
 		if (empty($this->pidList)) {
 			$this->pidList = $curPage;
 		}
+		$this->pidList = rtrim($this->pidList, ',');
 		if (($res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 			'count(uid) as nbBrokenLinks,link_type',
 			'tx_linkvalidator_link',

@@ -26,11 +26,11 @@ namespace TYPO3\CMS\Core\Core;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Class to encapsulate base setup of bootstrap.
  *
- * This class contains all code that must be executed by every
- * entry script without exceptions.
+ * This class contains all code that must be executed by every entry script.
  *
  * It sets up all basic paths, constants, global variables and checks
  * the basic environment TYPO3 runs in.
@@ -41,12 +41,18 @@ namespace TYPO3\CMS\Core\Core;
  *
  * The script aborts execution with an error message if
  * some part fails or conditions are not met.
+ *
+ * This script is internal code and subject to change.
+ * DO NOT use it in own code, or be prepared your code might
+ * break in future versions of the core.
  */
 class SystemEnvironmentBuilder {
 
 	/**
 	 * Run base setup.
+	 * This entry method is used in all scopes (FE, BE, eid, ajax, ...)
 	 *
+	 * @internal This method should not be used by 3rd party code. It will change without further notice.
 	 * @param string $relativePathPart Relative path of the entry script back to document root
 	 * @return void
 	 */
@@ -108,7 +114,7 @@ class SystemEnvironmentBuilder {
 	 */
 	static protected function defineBaseConstants() {
 		// This version, branch and copyright
-		define('TYPO3_version', '6.0.0rc1');
+		define('TYPO3_version', '6.0.0');
 		define('TYPO3_branch', '6.0');
 		define('TYPO3_copyright_year', '1998-2012');
 		// TYPO3 external links
@@ -238,7 +244,7 @@ class SystemEnvironmentBuilder {
 	 * Compatibility layer for early t3lib_div or t3lib_extMgm usage
 	 *
 	 * @return void
-	 * @deprecated since 6.0, will be removed in 7.0
+	 * @deprecated since 6.0, will be removed in 6.2
 	 * @see t3lib/class.t3lib_div.php, t3lib/class.t3lib_extmgm.php
 	 */
 	static public function setupClassAliasForLegacyBaseClasses() {
