@@ -14,7 +14,7 @@ diff a/t3lib/config_default.php b/t3lib/config_default.php
  
  	// TYPO3 version
 -$TYPO_VERSION = '4.5.19';	// deprecated: use the constants defined below
-+$TYPO_VERSION = '4.5.19-pl.4.5.22';	// deprecated: use the constants defined below
++$TYPO_VERSION = '4.5.19-pl.4.5.25';	// deprecated: use the constants defined below
  define('TYPO3_version', $TYPO_VERSION);
  define('TYPO3_branch', '4.5');
  define('TYPO3_copyright_year', '1998-2012');
