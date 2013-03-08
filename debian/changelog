@@ -1,3 +1,13 @@
+typo3-src (4.5.19+dfsg1-4.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix "copyright file missing after upgrade (policy 12.5)":
+    replace directory with symlink in typo3.postinst.
+    Thanks Andreas Beckmann for the bug report and the template for the fix.
+    (Closes: #698631)
+
+ -- gregor herrmann <gregoa@debian.org>  Mon, 28 Jan 2013 21:23:03 +0100
+
 typo3-src (4.5.19+dfsg1-4) unstable; urgency=medium
 
   * Added patch for regression introduced by TYPO3-SA-2012-5-patch.
