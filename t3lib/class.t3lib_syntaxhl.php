@@ -27,21 +27,46 @@
 /**
  * Contains a class for various syntax highlighting.
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * $Id$
+ *
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   84: class t3lib_syntaxhl
+ *
+ *			  SECTION: Markup of Data Structure, <T3DataStructure>
+ *  156:	 function highLight_DS($str)
+ *  183:	 function highLight_DS_markUpRecursively($struct,$parent='',$app='')
+ *
+ *			  SECTION: Markup of Data Structure, <T3FlexForms>
+ *  268:	 function highLight_FF($str)
+ *  295:	 function highLight_FF_markUpRecursively($struct,$parent='',$app='')
+ *
+ *			  SECTION: Various
+ *  376:	 function getAllTags($str)
+ *  407:	 function splitXMLbyTags($tagList,$str)
+ *
+ * TOTAL FUNCTIONS: 6
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 /**
  * Syntax Highlighting class.
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  */
 class t3lib_syntaxhl {
 
 		// Internal, dynamic:
-		// Parse object.
-	var $htmlParse;
+	var $htmlParse; // Parse object.
 
 		// External, static:
 	var $DS_wrapTags = array(
@@ -91,6 +116,7 @@ class t3lib_syntaxhl {
 		'currentLangId' => array('<span style="color: #000080;">', '</span>'),
 	);
 
+
 	/*************************************
 	 *
 	 * Markup of Data Structure, <T3DataStructure>
@@ -100,24 +126,20 @@ class t3lib_syntaxhl {
 	/**
 	 * Makes syntax highlighting of a Data Structure, <T3DataStructure>
 	 *
-	 * @param string $str Data Structure XML, must be valid since it's parsed.
-	 * @return string HTML code with highlighted content. Must be wrapped in <PRE> tags
+	 * @param	string		Data Structure XML, must be valid since it's parsed.
+	 * @return	string		HTML code with highlighted content. Must be wrapped in <PRE> tags
 	 */
 	function highLight_DS($str) {
 
 			// Parse DS to verify that it is valid:
 		$DS = t3lib_div::xml2array($str);
 		if (is_array($DS)) {
-				// Complete list of tags in DS
-			$completeTagList = array_unique($this->getAllTags($str));
+			$completeTagList = array_unique($this->getAllTags($str)); // Complete list of tags in DS
 
 				// Highlighting source:
-				// Init parser object
-			$this->htmlParse = t3lib_div::makeInstance('t3lib_parsehtml');
-				// Split the XML by the found tags, recursively into LARGE array.
-			$struct = $this->splitXMLbyTags(implode(',', $completeTagList), $str);
-				// Perform color-markup on the parsed content. Markup preserves the LINE formatting of the XML.
-			$markUp = $this->highLight_DS_markUpRecursively($struct);
+			$this->htmlParse = t3lib_div::makeInstance('t3lib_parsehtml'); // Init parser object
+			$struct = $this->splitXMLbyTags(implode(',', $completeTagList), $str); // Split the XML by the found tags, recursively into LARGE array.
+			$markUp = $this->highLight_DS_markUpRecursively($struct); // Perform color-markup on the parsed content. Markup preserves the LINE formatting of the XML.
 
 				// Return content:
 			return $markUp;
@@ -131,10 +153,10 @@ class t3lib_syntaxhl {
 	 * Making syntax highlighting of the parsed Data Structure XML.
 	 * Called recursively.
 	 *
-	 * @param array $struct The structure, see splitXMLbyTags()
-	 * @param string $parent Parent tag.
-	 * @param string $app "Application" - used to denote if we are 'inside' a section
-	 * @return string HTML
+	 * @param	array		The structure, see splitXMLbyTags()
+	 * @param	string		Parent tag.
+	 * @param	string		"Application" - used to denote if we are 'inside' a section
+	 * @return	string		HTML
 	 */
 	function highLight_DS_markUpRecursively($struct, $parent = '', $app = '') {
 		$output = '';
@@ -189,6 +211,7 @@ class t3lib_syntaxhl {
 		return $output;
 	}
 
+
 	/*************************************
 	 *
 	 * Markup of Data Structure, <T3FlexForms>
@@ -198,24 +221,20 @@ class t3lib_syntaxhl {
 	/**
 	 * Makes syntax highlighting of a FlexForm Data, <T3FlexForms>
 	 *
-	 * @param string $str Data Structure XML, must be valid since it's parsed.
-	 * @return string HTML code with highlighted content. Must be wrapped in <PRE> tags
+	 * @param	string		Data Structure XML, must be valid since it's parsed.
+	 * @return	string		HTML code with highlighted content. Must be wrapped in <PRE> tags
 	 */
 	function highLight_FF($str) {
 
 			// Parse DS to verify that it is valid:
 		$DS = t3lib_div::xml2array($str);
 		if (is_array($DS)) {
-				// Complete list of tags in DS
-			$completeTagList = array_unique($this->getAllTags($str));
+			$completeTagList = array_unique($this->getAllTags($str)); // Complete list of tags in DS
 
 				// Highlighting source:
-				// Init parser object
-			$this->htmlParse = t3lib_div::makeInstance('t3lib_parsehtml');
-				// Split the XML by the found tags, recursively into LARGE array.
-			$struct = $this->splitXMLbyTags(implode(',', $completeTagList), $str);
-				// Perform color-markup on the parsed content. Markup preserves the LINE formatting of the XML.
-			$markUp = $this->highLight_FF_markUpRecursively($struct);
+			$this->htmlParse = t3lib_div::makeInstance('t3lib_parsehtml'); // Init parser object
+			$struct = $this->splitXMLbyTags(implode(',', $completeTagList), $str); // Split the XML by the found tags, recursively into LARGE array.
+			$markUp = $this->highLight_FF_markUpRecursively($struct); // Perform color-markup on the parsed content. Markup preserves the LINE formatting of the XML.
 
 				// Return content:
 			return $markUp;
@@ -229,10 +248,10 @@ class t3lib_syntaxhl {
 	 * Making syntax highlighting of the parsed FlexForm XML.
 	 * Called recursively.
 	 *
-	 * @param array $struct The structure, see splitXMLbyTags()
-	 * @param string $parent Parent tag.
-	 * @param string $app "Application" - used to denote if we are 'inside' a section
-	 * @return string HTML
+	 * @param	array		The structure, see splitXMLbyTags()
+	 * @param	string		Parent tag.
+	 * @param	string		"Application" - used to denote if we are 'inside' a section
+	 * @return	string		HTML
 	 */
 	function highLight_FF_markUpRecursively($struct, $parent = '', $app = '') {
 		$output = '';
@@ -292,6 +311,7 @@ class t3lib_syntaxhl {
 		return $output;
 	}
 
+
 	/*************************************
 	 *
 	 * Various
@@ -301,8 +321,8 @@ class t3lib_syntaxhl {
 	/**
 	 * Returning all tag names found in XML/HTML input string
 	 *
-	 * @param string $str HTML/XML input
-	 * @return array Array with all found tags (starttags only)
+	 * @param	string		HTML/XML input
+	 * @return	array		Array with all found tags (starttags only)
 	 */
 	function getAllTags($str) {
 
@@ -331,9 +351,9 @@ class t3lib_syntaxhl {
 	 * Splitting the input source by the tags listing in $tagList.
 	 * Called recursively.
 	 *
-	 * @param string $tagList Commalist of tags to split source by (into blocks, ALL being block-tags!)
-	 * @param string $str Input string.
-	 * @return array Array with the content arranged hierarchically.
+	 * @param	string		Commalist of tags to split source by (into blocks, ALL being block-tags!)
+	 * @param	string		Input string.
+	 * @return	array		Array with the content arranged hierarchically.
 	 */
 	function splitXMLbyTags($tagList, $str) {
 		$struct = $this->htmlParse->splitIntoBlock($tagList, $str);
@@ -353,6 +373,11 @@ class t3lib_syntaxhl {
 
 		return $struct;
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_syntaxhl.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_syntaxhl.php']);
 }
 
 ?>

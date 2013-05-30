@@ -29,17 +29,54 @@
  *
  * This module lets you check if all pages and the records relate properly to each other
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @coauthor Jo Hasenau <info@cybercraft.de>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @coauthor	Jo Hasenau <info@cybercraft.de>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   89: class SC_mod_tools_dbint_index
+ *  105:     function init()
+ *  119:     function jumpToUrl(URL)
+ *  139:     function menuConfig()
+ *  226:     function main()
+ *  270:     function printContent()
+ *  281:     function func_default()
+ *
+ *              SECTION: Functionality implementation
+ *  314:     function func_refindex()
+ *  344:     function func_search()
+ *  386:     function func_tree()
+ *  409:     function func_records()
+ *  507:     function func_relations()
+ *  558:     function func_filesearch()
+ *  607:     function findFile($basedir,$pattern,&$matching_files,$depth)
+ *
+ * TOTAL FUNCTIONS: 13
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
+
+unset($MCONF);
+require('conf.php');
+require($BACK_PATH . 'init.php');
+require($BACK_PATH . 'template.php');
 
 $GLOBALS['LANG']->includeLLFile('EXT:lowlevel/dbint/locallang.xml');
 $BE_USER->modAccess($MCONF, 1);
 
+
+
+
+
+
 /**
  * Script class for the DB int module
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -50,7 +87,7 @@ class SC_mod_tools_dbint_index {
 	var $MOD_SETTINGS = array();
 
 	/**
-	 * Document template object
+	 * document template object
 	 *
 	 * @var mediumDoc
 	 */
@@ -65,9 +102,9 @@ class SC_mod_tools_dbint_index {
 	/**
 	 * Initialization
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function init() {
+	function init()	{
 		global $LANG,$BACK_PATH;
 		$this->MCONF = $GLOBALS['MCONF'];
 
@@ -82,7 +119,7 @@ class SC_mod_tools_dbint_index {
 		$this->doc->JScode = '
 		<script language="javascript" type="text/javascript">
 			script_ended = 0;
-			function jumpToUrl(URL) {
+			function jumpToUrl(URL)	{
 				window.location.href = URL;
 			}
 		</script>
@@ -95,8 +132,8 @@ class SC_mod_tools_dbint_index {
 				'defCol' => array('<td class="t3-row-header"><img src="' . $this->doc->backPath . 'clear.gif" width="10" height="1" alt="" /></td><td valign="top" class="t3-row-header"><strong>', '</strong></td>')
 			),
 			'defRow' => array (
-				'0' => array('<td valign="top">', '</td>'),
-				'1' => array('<td valign="top">', '</td>'),
+				'0' => array('<td valign="top">','</td>'),
+				'1' => array('<td valign="top">','</td>'),
 				'defCol' => array('<td><img src="' . $this->doc->backPath . 'clear.gif" width="15" height="1" alt="" /></td><td valign="top">', '</td>')
 			)
 		);
@@ -105,9 +142,9 @@ class SC_mod_tools_dbint_index {
 	/**
 	 * Configure menu
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function menuConfig() {
+	function menuConfig()	{
 		global $LANG;
 
 		// MENU-ITEMS:
@@ -116,16 +153,16 @@ class SC_mod_tools_dbint_index {
 			// Values NOT in this array will not be saved in the settings-array for the module.
 		$this->MOD_MENU = array(
 			'function' => array(
-				0 => $GLOBALS['LANG']->getLL('menu', TRUE),
-				'records' => $GLOBALS['LANG']->getLL('recordStatistics', TRUE),
-				'relations' => $GLOBALS['LANG']->getLL('databaseRelations', TRUE),
-				'search' => $GLOBALS['LANG']->getLL('fullSearch', TRUE),
-				'filesearch' => $GLOBALS['LANG']->getLL('findFilename', TRUE),
-				'refindex' => $GLOBALS['LANG']->getLL('manageRefIndex', TRUE),
+				0 => $GLOBALS['LANG']->getLL('menu', true),
+				'records' => $GLOBALS['LANG']->getLL('recordStatistics', true),
+				'relations' => $GLOBALS['LANG']->getLL('databaseRelations', true),
+				'search' => $GLOBALS['LANG']->getLL('fullSearch', true),
+				'filesearch' => $GLOBALS['LANG']->getLL('findFilename', true),
+				'refindex' => $GLOBALS['LANG']->getLL('manageRefIndex', true),
 			),
 			'search' => array(
-				'raw' => $GLOBALS['LANG']->getLL('rawSearch', TRUE),
-				'query' => $GLOBALS['LANG']->getLL('advancedQuery', TRUE)
+				'raw' => $GLOBALS['LANG']->getLL('rawSearch', true),
+				'query' => $GLOBALS['LANG']->getLL('advancedQuery', true)
 			),
 
 			'search_query_smallparts' => '',
@@ -148,38 +185,38 @@ class SC_mod_tools_dbint_index {
 			'storeQueryConfigs' => '',	// Used to store the available Query configs in memory
 
 			'search_query_makeQuery' => array(
-				'all' => $GLOBALS['LANG']->getLL('selectRecords', TRUE),
-				'count' => $GLOBALS['LANG']->getLL('countResults', TRUE),
-				'explain' => $GLOBALS['LANG']->getLL('explainQuery', TRUE),
-				'csv' => $GLOBALS['LANG']->getLL('csvExport', TRUE),
-				'xml' => $GLOBALS['LANG']->getLL('xmlExport', TRUE)
+				'all' => $GLOBALS['LANG']->getLL('selectRecords', true),
+				'count' => $GLOBALS['LANG']->getLL('countResults', true),
+				'explain' => $GLOBALS['LANG']->getLL('explainQuery', true),
+				'csv' => $GLOBALS['LANG']->getLL('csvExport', true),
+				'xml' => $GLOBALS['LANG']->getLL('xmlExport', true)
 			),
 
 			'sword' => ''
 		);
 			// CLEAN SETTINGS
-		$OLD_MOD_SETTINGS = t3lib_BEfunc::getModuleData($this->MOD_MENU, '', $this->MCONF['name'], 'ses');
+		$OLD_MOD_SETTINGS = t3lib_BEfunc::getModuleData($this->MOD_MENU,'', $this->MCONF['name'], 'ses');
 		$this->MOD_SETTINGS = t3lib_BEfunc::getModuleData($this->MOD_MENU, t3lib_div::_GP('SET'), $this->MCONF['name'], 'ses');
 
-		if (t3lib_div::_GP('queryConfig')) {
+		if (t3lib_div::_GP('queryConfig'))	{
 			$qA = t3lib_div::_GP('queryConfig');
 			$this->MOD_SETTINGS = t3lib_BEfunc::getModuleData($this->MOD_MENU, array('queryConfig'=>serialize($qA)), $this->MCONF['name'], 'ses');
 		}
 		$addConditionCheck = t3lib_div::_GP('qG_ins');
-		foreach ($OLD_MOD_SETTINGS as $key=>$val) {
-			if (substr($key, 0, 5)=='query' && $this->MOD_SETTINGS[$key]!=$val && $key!='queryLimit' && $key!='use_listview') {
+		foreach ($OLD_MOD_SETTINGS as $key=>$val)	{
+			if (substr($key, 0, 5)=='query' && $this->MOD_SETTINGS[$key]!=$val && $key!='queryLimit' && $key!='use_listview')	{
 				$setLimitToStart = 1;
 				if ($key == 'queryTable' && !$addConditionCheck) {
 					$this->MOD_SETTINGS['queryConfig'] = '';
 				}
 			}
-			if ($key == 'queryTable' && $this->MOD_SETTINGS[$key]!=$val) {
+			if ($key=='queryTable' && $this->MOD_SETTINGS[$key]!=$val)	{
 				$this->MOD_SETTINGS['queryFields'] = '';
 			}
 		}
-		if ($setLimitToStart) {
-			$currentLimit = explode(',', $this->MOD_SETTINGS['queryLimit']);
-			if ($currentLimit[1]) {
+		if ($setLimitToStart)	{
+			$currentLimit = explode(',',$this->MOD_SETTINGS['queryLimit']);
+			if ($currentLimit[1])	{
 				$this->MOD_SETTINGS['queryLimit']='0,'.$currentLimit[1];
 			} else {
 				$this->MOD_SETTINGS['queryLimit']='0';
@@ -191,16 +228,17 @@ class SC_mod_tools_dbint_index {
 	/**
 	 * Main
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function main() {
+	function main()	{
+		global $BE_USER,$LANG;
 
 			// Content creation
-		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu']) {
-			$this->menu = t3lib_BEfunc::getFuncMenu(0, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']);
+		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu'])	{
+			$this->menu = t3lib_BEfunc::getFuncMenu(0,'SET[function]',$this->MOD_SETTINGS['function'],$this->MOD_MENU['function']);
 		}
 
-		switch($this->MOD_SETTINGS['function']) {
+		switch($this->MOD_SETTINGS['function'])	{
 			case 'search':
 				$this->func_search();
 			break;
@@ -241,27 +279,29 @@ class SC_mod_tools_dbint_index {
 	/**
 	 * Print content
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function printContent() {
+	function printContent()	{
 		echo $this->content;
 	}
 
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return array All available buttons as an assoc. array
+	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons() {
+	protected function getButtons()	{
 
 		$buttons = array(
 			'csh' => '',
 			'shortcut' => ''
 		);
+			// CSH
+		//$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_web_func', '', $GLOBALS['BACK_PATH']);
 
 			// Shortcut
-		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
-			$buttons['shortcut'] = $this->doc->makeShortcutIcon('', 'function,search,search_query_makeQuery', $this->MCONF['name']);
+		if ($GLOBALS['BE_USER']->mayMakeShortcut())	{
+			$buttons['shortcut'] = $this->doc->makeShortcutIcon('','function,search,search_query_makeQuery',$this->MCONF['name']);
 		}
 		return $buttons;
 	}
@@ -269,7 +309,7 @@ class SC_mod_tools_dbint_index {
 	/**
 	 * Create the function menu
 	 *
-	 * @return string HTML of the function menu
+	 * @return	string	HTML of the function menu
 	 */
 	protected function getFuncMenu() {
 		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu']) {
@@ -280,34 +320,41 @@ class SC_mod_tools_dbint_index {
 
 	/**
 	 * Creates the overview menu.
-	 * @return void
+	 *
 	 */
 	protected function func_default() {
 		$availableModFuncs = array('records', 'relations', 'search', 'filesearch', 'refindex');
 
-		$content = '<dl class="t3-overview-list">';
+		$moduleTitle = $GLOBALS['LANG']->getLL('title');
+		$content     = '<dl class="t3-overview-list">';
 
 		foreach ($availableModFuncs as $modFunc) {
-			$functionUrl = t3lib_BEfunc::getModuleUrl('tools_dbint') . '&SET[function]=' . $modFunc;
-			$title = $GLOBALS['LANG']->getLL($modFunc);
+			$link        = 'index.php?SET[function]=' . $modFunc;
+			$title       = $GLOBALS['LANG']->getLL($modFunc);
 			$description = $GLOBALS['LANG']->getLL($modFunc . '_description');
 
 			$icon = '<img src="'
 				. t3lib_iconworks::skinImg($GLOBALS['BACK_PATH'], 'MOD:tools_dbint/db.gif', '', 1)
 				. '" width="16" height="16" title="' . $title . '" alt="' . $title
-				. '" />';
+			. '" />';
 
 			$content .= '
-				<dt><a href="' . htmlspecialchars($functionUrl) . '">' . $icon . $title . '</a></dt>
+				<dt><a href="' . $link . '">' . $icon . $title . '</a></dt>
 				<dd>' . $description . '</dd>
 			';
 		}
 
 		$content .= '</dl>';
 
-		$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('title'));
-		$this->content .= $this->doc->section('', $content, FALSE, TRUE);
+		$this->content .= $this->doc->section($moduleTitle, $content, false, true);
 	}
+
+
+
+
+
+
+
 
 	/****************************
 	 *
@@ -318,46 +365,43 @@ class SC_mod_tools_dbint_index {
 	/**
 	 * Check and update reference index!
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function func_refindex() {
-		$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('manageRefIndex', TRUE));
+	function func_refindex()	{
+		global $TYPO3_DB,$TCA;
 
-		if (t3lib_div::_GP('_update') || t3lib_div::_GP('_check')) {
+		if (t3lib_div::_GP('_update') || t3lib_div::_GP('_check'))	{
 			$testOnly = t3lib_div::_GP('_check')?TRUE:FALSE;
 
 				// Call the functionality
 			$refIndexObj = t3lib_div::makeInstance('t3lib_refindex');
-			list($headerContent, $bodyContent) = $refIndexObj->updateIndex($testOnly);
+			list($headerContent,$bodyContent) = $refIndexObj->updateIndex($testOnly);
 
 				// Output content:
-			$this->content .= $this->doc->section('', str_replace(LF, '<br/>', $bodyContent), FALSE, TRUE);
+			$this->content.=$this->doc->section($headerContent,str_replace(LF,'<br/>',$bodyContent),0,1);
 		}
 
 			// Output content:
 		$content = '<p>' . $GLOBALS['LANG']->getLL('referenceIndex_description') . '</p><br />';
 		$content .= '<input type="submit" name="_check" value="' . $GLOBALS['LANG']->getLL('referenceIndex_buttonCheck') . '" /> <input type="submit" name="_update" value="' . $GLOBALS['LANG']->getLL('referenceIndex_buttonUpdate') . '" /><br /><br />';
-		$this->content.= $this->doc->section('', $content, FALSE, TRUE);
-
-			// Command Line Interface
-		$content = '';
-		$content .= '<p>' . $GLOBALS['LANG']->getLL('checkScript') . '</p>';
-		$content .= '<h4>' . $GLOBALS['LANG']->getLL('checkScript_check_description') . '</h4>' .
+		$content .= '<h3>' . $GLOBALS['LANG']->getLL('checkScript_headline') . '</h3>';
+		$content.= '<p>' . $GLOBALS['LANG']->getLL('checkScript') . '</p>';
+		$content.= '<h4>' . $GLOBALS['LANG']->getLL('checkScript_check_description') . '</h4>' .
 					'<code>php ' . PATH_typo3 . 'cli_dispatch.phpsh lowlevel_refindex -c</code><br />';
-		$content .= '<h4>' . $GLOBALS['LANG']->getLL('checkScript_update_description') . '</h4>' .
+		$content.= '<h4>' . $GLOBALS['LANG']->getLL('checkScript_update_description') . '</h4>' .
 					'<code>php ' . PATH_typo3 . 'cli_dispatch.phpsh lowlevel_refindex -e</code><br /><br />';
-		$content .= '<div class="typo3-message message-information"><div class="message-body">' . $GLOBALS['LANG']->getLL('checkScript_information') . '</div></div>';
-		$content .= '<p>' . $GLOBALS['LANG']->getLL('checkScript_moreDetails') . '<br /><a href="' . $GLOBALS['BACK_PATH'] . 'sysext/lowlevel/HOWTO_clean_up_TYPO3_installations.txt" target="_new">' . PATH_typo3 . 'sysext/lowlevel/HOWTO_clean_up_TYPO3_installations.txt</a></p>';
+		$content.= '<div class="typo3-message message-information"><div class="message-body">' . $GLOBALS['LANG']->getLL('checkScript_information') . '</div></div>';
+		$content.= '<p>' . $GLOBALS['LANG']->getLL('checkScript_moreDetails') . '<br /><a href="' . $GLOBALS['BACK_PATH'] . 'sysext/lowlevel/HOWTO_clean_up_TYPO3_installations.txt" target="_new">' . PATH_typo3 . 'sysext/lowlevel/HOWTO_clean_up_TYPO3_installations.txt</a></p>';
 
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('checkScript_headline'), $content, FALSE, TRUE);
+		$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('updateRefIndex'), $content, false, true);
 	}
 
 	/**
 	 * Search (Full / Advanced)
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function func_search() {
+	function func_search()	{
 		global $LANG;
 
 		$fullsearch = t3lib_div::makeInstance('t3lib_fullsearch');
@@ -366,13 +410,13 @@ class SC_mod_tools_dbint_index {
 		$this->content.= $this->doc->spacer(5);
 
 		$menu2='';
-		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu']) {
+		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu'])	{
 			$menu2 = t3lib_BEfunc::getFuncMenu(0, 'SET[search]', $this->MOD_SETTINGS['search'], $this->MOD_MENU['search']);
 		}
-		if ($this->MOD_SETTINGS['search']=='query' && !$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu']) {
+		if ($this->MOD_SETTINGS['search']=='query' && !$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopMenu'])	{
 			$menu2 .= t3lib_BEfunc::getFuncMenu(0, 'SET[search_query_makeQuery]', $this->MOD_SETTINGS['search_query_makeQuery'], $this->MOD_MENU['search_query_makeQuery']) . '<br />';
 		}
-		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopCheckboxes'] && $this->MOD_SETTINGS['search']=='query') {
+		if (!$GLOBALS['BE_USER']->userTS['mod.']['dbint.']['disableTopCheckboxes'] && $this->MOD_SETTINGS['search']=='query')	{
 			$menu2 .= t3lib_BEfunc::getFuncCheck($GLOBALS['SOBE']->id, 'SET[search_query_smallparts]', $this->MOD_SETTINGS['search_query_smallparts'], '', '', 'id="checkSearch_query_smallparts"') . '&nbsp;<label for="checkSearch_query_smallparts">' . $GLOBALS['LANG']->getLL('showSQL') . '</label><br />';
 			$menu2 .= t3lib_BEfunc::getFuncCheck($GLOBALS['SOBE']->id, 'SET[search_result_labels]', $this->MOD_SETTINGS['search_result_labels'], '', '', 'id="checkSearch_result_labels"') . '&nbsp;<label for="checkSearch_result_labels">' . $GLOBALS['LANG']->getLL('useFormattedStrings') . '</label><br />';
 			$menu2 .= t3lib_BEfunc::getFuncCheck($GLOBALS['SOBE']->id, 'SET[labels_noprefix]', $this->MOD_SETTINGS['labels_noprefix'], '', '', 'id="checkLabels_noprefix"') . '&nbsp;<label for="checkLabels_noprefix">' . $GLOBALS['LANG']->getLL('dontUseOrigValues') . '</label><br />';
@@ -380,67 +424,70 @@ class SC_mod_tools_dbint_index {
 			$menu2 .= t3lib_BEfunc::getFuncCheck($GLOBALS['SOBE']->id, 'SET[show_deleted]', $this->MOD_SETTINGS['show_deleted'], '', '', 'id="checkShow_deleted"') . '&nbsp;<label for="checkShow_deleted">' . $GLOBALS['LANG']->getLL('showDeleted') . '</label>';
 		}
 
-		$this->content.= $this->doc->section('', $menu2).$this->doc->spacer(10);
+		$this->content.= $this->doc->section('',$menu2).$this->doc->spacer(10);
 
 		switch($this->MOD_SETTINGS['search'])		{
 			case 'query':
-				$this->content .= $fullsearch->queryMaker();
+				$this->content.=$fullsearch->queryMaker();
 			break;
 			case 'raw':
 			default:
-				$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('searchOptions'), $fullsearch->form(), FALSE, TRUE);
-				$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('result'), $fullsearch->search(), FALSE, TRUE);
+				$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('searchOptions'), $fullsearch->form(), false, true);
+				$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('result'), $fullsearch->search(), false, true);
 			break;
 		}
 	}
 
+
 	/**
 	 * Records overview
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function func_records() {
-		/** @var $admin t3lib_admin */
+	function func_records()	{
+		global $LANG,$TCA,$BACK_PATH,$PAGES_TYPES;
+
 		$admin = t3lib_div::makeInstance('t3lib_admin');
 		$admin->genTree_makeHTML = 0;
-		$admin->backPath = $GLOBALS['BACK_PATH'];
-		$admin->genTree(0, '');
+		$admin->backPath = $BACK_PATH;
+		$admin->genTree(0,'');
 
-		$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('records'));
+		$this->content.= $this->doc->header($GLOBALS['LANG']->getLL('records'));
+		$this->content.= $this->doc->spacer(5);
 
 			// Pages stat
-		$codeArr = array();
+		$codeArr=array();
 		$codeArr['tableheader'] = array('', $GLOBALS['LANG']->getLL('count'));
 		$i++;
 		$codeArr[$i][] = t3lib_iconWorks::getSpriteIconForRecord('pages', array());
-		$codeArr[$i][] = $GLOBALS['LANG']->getLL('total_pages');
-		$codeArr[$i][] = count($admin->page_idArray);
+		$codeArr[$i][]=$GLOBALS['LANG']->getLL('total_pages');
+		$codeArr[$i][]=count($admin->page_idArray);
 		$i++;
-		if (t3lib_extMgm::isLoaded('cms')) {
+		if (t3lib_extMgm::isLoaded('cms'))	{
 			$codeArr[$i][] = t3lib_iconWorks::getSpriteIconForRecord('pages', array('hidden' => 1));
-			$codeArr[$i][] = $GLOBALS['LANG']->getLL('hidden_pages');
+			$codeArr[$i][]=$GLOBALS['LANG']->getLL('hidden_pages');
 			$codeArr[$i][] = $admin->recStats['hidden'];
 			$i++;
 		}
 		$codeArr[$i][] = t3lib_iconWorks::getSpriteIconForRecord('pages', array('deleted' => 1));
-		$codeArr[$i][] = $GLOBALS['LANG']->getLL('deleted_pages');
+		$codeArr[$i][]=$GLOBALS['LANG']->getLL('deleted_pages');
 		$codeArr[$i][] = count($admin->recStats['deleted']['pages']);
 
-		$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('pages'), $this->doc->table($codeArr), FALSE, TRUE);
+		$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('pages'), $this->doc->table($codeArr), false, true);
 
 			// Doktype
-		$codeArr = array();
+		$codeArr=array();
 		$codeArr['tableheader'] = array($GLOBALS['LANG']->getLL('doktype_value'), $GLOBALS['LANG']->getLL('count'));
-		$doktype = $GLOBALS['TCA']['pages']['columns']['doktype']['config']['items'];
-		if (is_array($doktype)) {
+		$doktype= $TCA['pages']['columns']['doktype']['config']['items'];
+		if (is_array($doktype))	{
 			foreach ($doktype as $n => $setup) {
-				if ($setup[1]!='--div--') {
+				if ($setup[1]!='--div--')	{
 					$codeArr[$n][] = t3lib_iconWorks::getSpriteIconForRecord('pages', array('doktype' => $setup[1]));
 					$codeArr[$n][] = $GLOBALS['LANG']->sL($setup[0]) . ' (' . $setup[1] . ')';
 					$codeArr[$n][] = intval($admin->recStats['doktype'][$setup[1]]);
 				}
 			}
-			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('doktype'), $this->doc->table($codeArr), FALSE, TRUE);
+			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('doktype'), $this->doc->table($codeArr), false, true);
 		}
 
 			// Tables and lost records
@@ -451,7 +498,7 @@ class SC_mod_tools_dbint_index {
 		if ($admin->fixLostRecord(t3lib_div::_GET('fixLostRecords_table'), t3lib_div::_GET('fixLostRecords_uid'))) {
 			$admin = t3lib_div::makeInstance('t3lib_admin');
 			$admin->backPath = $BACK_PATH;
-			$admin->genTree(0, '');
+			$admin->genTree(0,'');
 			$id_list = '-1,0,' . implode(',', array_keys($admin->page_idArray));
 			$id_list = rtrim($id_list, ',');
 			$admin->lostRecords($id_list);
@@ -468,54 +515,55 @@ class SC_mod_tools_dbint_index {
 		);
 
 		$countArr = $admin->countRecords($id_list);
-		if (is_array($GLOBALS['TCA'])) {
+		if (is_array($TCA))	{
 
-			foreach ($GLOBALS['TCA'] as $t => $value) {
-				if ($GLOBALS['TCA'][$t]['ctrl']['hideTable']) {
+			foreach ($TCA as $t => $value) {
+				if ($TCA[$t]['ctrl']['hideTable']) {
 					continue;
 				}
 				$codeArr[$t][]=t3lib_iconWorks::getSpriteIconForRecord($t, array());
-				$codeArr[$t][] = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$t]['ctrl']['title']);
+				$codeArr[$t][]=$LANG->sL($TCA[$t]['ctrl']['title']);
 				$codeArr[$t][]=$t;
 
-				if ($t === 'pages' && $admin->lostPagesList !== '') {
+				if($t === 'pages' && $admin->lostPagesList !== '') {
 					$lostRecordCount = count(explode(',', $admin->lostPagesList));
 				} else {
 					$lostRecordCount = count($admin->lRecords[$t]);
 				}
 
-				if ($countArr['all'][$t]) {
+				if ($countArr['all'][$t])	{
 					$theNumberOfRe = intval($countArr['non_deleted'][$t]) . '/' . $lostRecordCount;
 				} else {
 					$theNumberOfRe ='';
 				}
-				$codeArr[$t][] = $theNumberOfRe;
+				$codeArr[$t][]=$theNumberOfRe;
 
-				$lr = '';
-				if (is_array($admin->lRecords[$t])) {
+				$lr='';
+				if (is_array($admin->lRecords[$t]))	{
 					foreach ($admin->lRecords[$t] as $data) {
-						if (!t3lib_div::inList($admin->lostPagesList, $data[pid])) {
-							$lr.= '<nobr><strong><a href="' . htmlspecialchars(t3lib_BEfunc::getModuleUrl('tools_dbint') . '&SET[function]=records&fixLostRecords_table=' . $t . '&fixLostRecords_uid=' . $data['uid']) . '"><img src="' . $BACK_PATH . 'gfx/required_h.gif" width="10" hspace="3" height="10" border="0" align="top" title="' . $GLOBALS['LANG']->getLL('fixLostRecord') . '"></a>uid:' . $data['uid'] . ', pid:' . $data['pid'] . ', ' . htmlspecialchars(t3lib_div::fixed_lgd_cs(strip_tags($data['title']), 20)) . '</strong></nobr><br>';
+						if (!t3lib_div::inList($admin->lostPagesList,$data[pid]))	{
+							$lr.= '<nobr><strong><a href="index.php?SET[function]=records&fixLostRecords_table=' . $t . '&fixLostRecords_uid=' . $data[uid] . '"><img src="' . $BACK_PATH . 'gfx/required_h.gif" width="10" hspace="3" height="10" border="0" align="top" title="' . $GLOBALS['LANG']->getLL('fixLostRecord') . '"></a>uid:' . $data[uid] . ', pid:' . $data[pid] . ', ' . t3lib_div::fixed_lgd_cs(strip_tags($data[title]), 20) . '</strong></nobr><br>';
 						} else {
-							$lr.= '<nobr><img src="' . $BACK_PATH . 'clear.gif" width="16" height="1" border="0"><font color="Gray">uid:' . $data['uid'] . ', pid:' . $data['pid'] . ', ' . htmlspecialchars(t3lib_div::fixed_lgd_cs(strip_tags($data['title']), 20)) . '</font></nobr><br>';
+							$lr.= '<nobr><img src="' . $BACK_PATH . 'clear.gif" width="16" height="1" border="0"><font color="Gray">uid:' . $data[uid] . ', pid:' . $data[pid] . ', ' . t3lib_div::fixed_lgd_cs(strip_tags($data[title]), 20) . '</font></nobr><br>';
 						}
 					}
 				}
 				$codeArr[$t][]=$lr;
 			}
-			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('tables'), $this->doc->table($codeArr), FALSE, TRUE);
+			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('tables'), $this->doc->table($codeArr), false, true);
 		}
 	}
 
 	/**
 	 * Show list references
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function func_relations() {
+	function func_relations()	{
 		global $LANG,$BACK_PATH;
 
 		$this->content.= $this->doc->header($GLOBALS['LANG']->getLL('relations'));
+		$this->content.= $this->doc->spacer(5);
 
 		$admin = t3lib_div::makeInstance('t3lib_admin');
 		$admin->genTree_makeHTML=0;
@@ -524,88 +572,80 @@ class SC_mod_tools_dbint_index {
 		$fkey_arrays = $admin->getGroupFields('');
 		$admin->selectNonEmptyRecordsWithFkeys($fkey_arrays);
 
+
 		$fileTest = $admin->testFileRefs();
 
-		$code = '';
-		if (is_array($fileTest['noReferences'])) {
+		$code='';
+		if (is_array($fileTest['noReferences']))	{
 			foreach ($fileTest['noReferences'] as $val) {
-				$code .= '<nobr>' . $val[0] . '/<strong>' . $val[1] . '</strong></nobr><br>';
+				$code.='<nobr>' . $val[0] . '/<strong>' . $val[1] . '</strong></nobr><br>';
 			}
-		} else {
-			$code = $GLOBALS['LANG']->getLL('no_files_found');
 		}
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('files_no_ref'), $code, FALSE, TRUE);
+		$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('files_no_ref'), $code, true, true);
 
-		$code = '';
-		if (is_array($fileTest['moreReferences'])) {
+		$code='';
+		if (is_array($fileTest['moreReferences']))	{
 			foreach ($fileTest['moreReferences'] as $val) {
 				$code.='<nobr>' . $val[0] . '/<strong>' . $val[1] . '</strong>: ' . $val[2] . ' ' . $GLOBALS['LANG']->getLL('references') . '</nobr><br>' . $val[3] . '<br><br>';
 			}
-		} else {
-			$code = $GLOBALS['LANG']->getLL('no_files_found');
 		}
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('files_many_ref'), $code, FALSE, TRUE);
+		$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('files_many_ref'),$code, true, true);
 
-		$code = '';
-		if (is_array($fileTest['noFile'])) {
+		$code='';
+		if (is_array($fileTest['noFile']))	{
 			ksort($fileTest['noFile']);
 			foreach ($fileTest['noFile'] as $val) {
 				$code.='<nobr>' . $val[0] . '/<strong>' . $val[1] . '</strong> ' . $GLOBALS['LANG']->getLL('isMissing') . ' </nobr><br>' . $GLOBALS['LANG']->getLL('referencedFrom') . $val[2] . '<br><br>';
 			}
-		} else {
-			$code = $GLOBALS['LANG']->getLL('no_files_found');
 		}
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('files_no_file'), $code, FALSE, TRUE);
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('select_db'), $admin->testDBRefs($admin->checkSelectDBRefs), FALSE, TRUE);
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('group_db'), $admin->testDBRefs($admin->checkGroupDBRefs), FALSE, TRUE);
+		$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('files_no_file'), $code, true, true);
+		$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('select_db'), $admin->testDBRefs($admin->checkSelectDBRefs), true, true);
+		$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('group_db'), $admin->testDBRefs($admin->checkGroupDBRefs), true, true);
 	}
 
 	/**
 	 * Searching for files with a specific pattern
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function func_filesearch() {
+	function func_filesearch()	{
 		$pattern = t3lib_div::_GP('pattern');
 		$pcontent = $GLOBALS['LANG']->getLL('enterRegexPattern') . ' <input type="text" name="pattern" value="' . htmlspecialchars($pattern ? $pattern : $GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern']) . '"> <input type="submit" name="' . $GLOBALS['LANG']->getLL('SearchButton') . '">';
-		$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('findFilename'));
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('pattern'), $pcontent, FALSE, TRUE);
+		$this->content.= $this->doc->section($GLOBALS['LANG']->getLL('pattern'), $pcontent, false, true);
 
-		if (strcmp($pattern, '')) {
+		if (strcmp($pattern,''))	{
 			$dirs = t3lib_div::get_dirs(PATH_site);
-			$lines = array();
-			$depth = 10;
+			$lines=array();
+			$depth=10;
 
 			foreach ($dirs as $key => $value) {
-				$matching_files = array();
-				$info = '';
-				if (!t3lib_div::inList('typo3,typo3conf,tslib,media,t3lib', $value)) {
-					$info = $this->findFile(PATH_site . $value . '/', $pattern, $matching_files, $depth);
+				$matching_files=array();
+				$info='';
+				if (!t3lib_div::inList('typo3,typo3conf,tslib,media,t3lib',$value))	{
+					$info = $this->findFile(PATH_site.$value.'/',$pattern,$matching_files,$depth);
 				}
-				if (is_array($info)) {
-					$lines[] = '<hr><strong>' . $value . '/</strong> ' . $GLOBALS['LANG']->getLL('beingChecked');
-					$lines[] = $GLOBALS['LANG']->getLL('directories') . ' ' . $info[0];
-					if ($info[2]) {
-						$lines[] = '<span class="typo3-red">' . $GLOBALS['LANG']->getLL('directoriesTooDeep') . ' ' . $depth . '</span>';
-					}
-					$lines[] = $GLOBALS['LANG']->getLL('files') . ' ' . $info[1];
-					$lines[] = $GLOBALS['LANG']->getLL('matchingFiles') . '<br><nobr><span class="typo3-red">' . implode('<br>', $matching_files) . '</span></nobr>';
+				if (is_array($info))	{
+					$lines[]='<hr><strong>' . $value . '/</strong> ' . $GLOBALS['LANG']->getLL('beingChecked');
+					$lines[]=$GLOBALS['LANG']->getLL('directories') . ' ' . $info[0];
+					if ($info[2])	$lines[]='<span class="typo3-red">' . $GLOBALS['LANG']->getLL('directoriesTooDeep') . ' ' . $depth . '</span>';
+					$lines[]=$GLOBALS['LANG']->getLL('files') . ' ' . $info[1];
+					$lines[]=$GLOBALS['LANG']->getLL('matchingFiles') . '<br><nobr><span class="typo3-red">' . implode('<br>', $matching_files) . '</span></nobr>';
 				} else {
-					$lines[] = $GLOBALS['TBE_TEMPLATE']->dfw('<hr><strong>' . $value . '/</strong> ' . $GLOBALS['LANG']->getLL('notChecked'));
+					$lines[]=$GLOBALS['TBE_TEMPLATE']->dfw('<hr><strong>' . $value . '/</strong> ' . $GLOBALS['LANG']->getLL('notChecked'));
 				}
 			}
 
-			$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('searchingForFilenames'), implode('<br>', $lines), FALSE, TRUE);
+			$this->content.=$this->doc->section($GLOBALS['LANG']->getLL('searchingForFilenames'), implode('<br>', $lines), false, true);
 		}
 	}
 
 	/**
 	 * Searching for filename pattern recursively in the specified dir.
 	 *
-	 * @param string $basedir Base directory
-	 * @param string $pattern Match pattern
-	 * @param array $matching_files Array of matching files, passed by reference
-	 * @param integer $depth Depth to recurse
+	 * @param string $basedir: Base directory
+	 * @param string $pattern: Match pattern
+	 * @param array $matching_files: Array of matching files, passed by reference
+	 * @param integer $depth: Depth to recurse
 	 * @return array Array with various information about the search result
 	 * @see func_filesearch()
 	 */
@@ -652,7 +692,14 @@ class SC_mod_tools_dbint_index {
 	}
 }
 
-	// Make instance:
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/dbint/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/lowlevel/dbint/index.php']);
+}
+
+
+
+// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_tools_dbint_index');
 $SOBE->init();
 $SOBE->main();

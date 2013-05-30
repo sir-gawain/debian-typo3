@@ -39,7 +39,7 @@ class tx_coreupdates_statictemplates extends Tx_Install_Updates_Base {
 	 * Checks if there are any references to static_templates and an update is needed.
 	 *
 	 * @param	string		&$description: The description for the update
-	 * @return	boolean		whether an update is needed (TRUE) or not (FALSE)
+	 * @return	boolean		whether an update is needed (true) or not (false)
 	 */
 	public function checkForUpdate(&$description) {
 		$description = '<strong>Check dependencies / references to old TypoScript templates in table static_template.</strong><br />
@@ -82,16 +82,17 @@ class tx_coreupdates_statictemplates extends Tx_Install_Updates_Base {
 	 */
 	public function performUpdate(array &$dbQueries, &$customMessages) {
 		if ($this->versionNumber >= 4004000 && !t3lib_extMgm::isLoaded('statictemplates')) {
-				// check wether the table can be truncated or if sysext with tca has to be installed
+			// check wether the table can be truncated or if sysext with tca has to be installed
 			if ($this->checkForUpdate($customMessages[])) {
-				try {
-					t3lib_extMgm::loadExtension('statictemplates');
-					$customMessages[] = 'System Extension "statictemplates" was successfully loaded, static templates are now supported.';
-					$result = TRUE;
-				} catch (RuntimeException $e) {
-					$result = FALSE;
+				$localconf = $this->pObj->writeToLocalconf_control();
+				$this->pObj->setValueInLocalconfFile($localconf, '$TYPO3_CONF_VARS[\'EXT\'][\'extList\']', $GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] . ',statictemplates');
+				$message = $this->pObj->writeToLocalconf_control($localconf);
+				if ($message == 'continue') {
+					$customMessages[] = 'System Extension "statictemplates" was succesfully loaded, static templates are now supported.';
+					return TRUE;
+				} else {
+					return FALSE;	// something went wrong
 				}
-				return $result;
 			}
 			return TRUE;
 		}

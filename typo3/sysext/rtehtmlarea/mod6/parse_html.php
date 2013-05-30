@@ -28,12 +28,20 @@
  * Content parsing for htmlArea RTE
  *
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
+ *
+ * $Id$  *
  */
 
-error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
+if (defined('E_DEPRECATED')) {
+	    error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
+} else {
+	    error_reporting(E_ALL ^ E_NOTICE);
+}
 unset($MCONF);
 require ('conf.php');
 require ($BACK_PATH.'init.php');
+require ($BACK_PATH.'template.php');
+
 
 // Make instance:
 $SOBE = t3lib_div::makeInstance('tx_rtehtmlarea_parse_html');

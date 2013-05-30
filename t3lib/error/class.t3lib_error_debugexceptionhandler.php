@@ -22,6 +22,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
  * A basic but solid exception handler which catches everything which
  * falls through the other exception handlers and provides useful debugging
@@ -29,9 +30,9 @@
  *
  * This file is a backport from FLOW3
  *
- * @author Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage t3lib_error
+ * @version $Id$
  */
 class t3lib_error_DebugExceptionHandler extends t3lib_error_AbstractExceptionHandler {
 
@@ -47,18 +48,25 @@ class t3lib_error_DebugExceptionHandler extends t3lib_error_AbstractExceptionHan
 	/**
 	 * Formats and echoes the exception as XHTML.
 	 *
-	 * @param Exception $exception The exception object
+	 * @param  Exception $exception The exception object
 	 * @return void
 	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function echoExceptionWeb(Exception $exception) {
-		$this->sendStatusHeaders($exception);
+		if (!headers_sent()) {
+			header("HTTP/1.1 500 Internal Server Error");
+		}
 
 		$filePathAndName = $exception->getFile();
 
 		$exceptionCodeNumber = ($exception->getCode() > 0) ? '#' . $exception->getCode() . ': ' : '';
 
-		$moreInformationLink = ($exceptionCodeNumber != '') ? '(<a href="' . TYPO3_URL_EXCEPTION . 'debug/' . $exception->getCode() . '" target="_blank">More information</a>)' : '';
+		/**
+		 * TODO: 25.09.2009
+		 * either remove this line or let the link point to site that offers error information for TYPO3
+		 */
+
+			//		$moreInformationLink = ($exceptionCodeNumber != '') ? '(<a href="' . TYPO3_URL_EXCEPTION . $exception->getCode() . '">More information</a>)' : '';
 		$backtraceCode = $this->getBacktraceCode($exception->getTrace());
 
 		$this->writeLogEntries($exception, self::CONTEXT_WEB);
@@ -113,9 +121,8 @@ class t3lib_error_DebugExceptionHandler extends t3lib_error_AbstractExceptionHan
 						">
 						<div style="width: 100%; background-color: #515151; color: white; padding: 2px; margin: 0 0 6px 0;">Uncaught TYPO3 Exception</div>
 						<div style="width: 100%; padding: 2px; margin: 0 0 6px 0;">
-							<strong style="color: #BE0027;">' . $exceptionCodeNumber . htmlspecialchars($exception->getMessage()) .
-							'</strong> ' . $moreInformationLink .
-			'<br />
+							<strong style="color: #BE0027;">' . $exceptionCodeNumber . htmlspecialchars($exception->getMessage()) . '</strong> ' . /* $moreInformationLink .*/
+			 '<br />
 							<br />
 							<span class="ExceptionProperty">' . get_class($exception) . '</span> thrown in file<br />
 							<span class="ExceptionProperty">' . htmlspecialchars($filePathAndName) . '</span> in line
@@ -142,8 +149,8 @@ class t3lib_error_DebugExceptionHandler extends t3lib_error_AbstractExceptionHan
 		$this->writeLogEntries($exception, self::CONTEXT_CLI);
 
 		echo "\nUncaught TYPO3 Exception " . $exceptionCodeNumber . $exception->getMessage() . LF;
-		echo 'thrown in file ' . $filePathAndName . LF;
-		echo 'in line ' . $exception->getLine() . "\n\n";
+		echo "thrown in file " . $filePathAndName . LF;
+		echo "in line " . $exception->getLine() . "\n\n";
 	}
 
 	/**
@@ -226,6 +233,11 @@ class t3lib_error_DebugExceptionHandler extends t3lib_error_AbstractExceptionHan
 		}
 		return $codeSnippet;
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/error/class.t3lib_error_debugexceptionhandler.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/error/class.t3lib_error_debugexceptionhandler.php']);
 }
 
 ?>

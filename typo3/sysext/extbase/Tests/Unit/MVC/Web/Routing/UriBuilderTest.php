@@ -27,9 +27,6 @@
 
 require_once (t3lib_extMgm::extPath('extbase') . 'Tests/Unit/Fixtures/Entity.php');
 
-/**
- * Uri Builder Test Class
- */
 class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
 	/**
@@ -43,11 +40,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	protected $getBackup;
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
-	 */
-	protected $mockConfigurationManager;
-
-	/**
 	 * @var tslib_cObj
 	 */
 	protected $mockContentObject;
@@ -56,11 +48,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @var Tx_Extbase_MVC_Web_Request
 	 */
 	protected $mockRequest;
-
-	/**
-	 * @var Tx_Extbase_Service_ExtensionService
-	 */
-	protected $mockExtensionService;
 
 	/**
 	 * @var Tx_Extbase_MVC_Web_Routing_UriBuilder
@@ -75,15 +62,10 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 
 		$this->mockContentObject = $this->getMock('tslib_cObj');
 		$this->mockRequest = $this->getMock('Tx_Extbase_MVC_Web_Request');
-		$this->mockExtensionService = $this->getMock('Tx_Extbase_Service_ExtensionService');
-		$this->mockConfigurationManager = $this->getMock('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 
 		$this->uriBuilder = $this->getAccessibleMock('Tx_Extbase_MVC_Web_Routing_UriBuilder', array('build'));
 		$this->uriBuilder->setRequest($this->mockRequest);
 		$this->uriBuilder->_set('contentObject', $this->mockContentObject);
-		$this->uriBuilder->injectConfigurationManager($this->mockConfigurationManager);
-
-		$this->uriBuilder->injectExtensionService($this->mockExtensionService);
 	}
 
 	public function tearDown() {
@@ -101,7 +83,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 			->setSection('testSection')
 			->setFormat('testFormat')
 			->setCreateAbsoluteUri(TRUE)
-			->setAbsoluteUriScheme('https')
 			->setAddQueryString(TRUE)
 			->setArgumentsToBeExcludedFromQueryString(array('test' => 'addQueryStringExcludeArguments'))
 			->setArgumentPrefix('testArgumentPrefix')
@@ -115,7 +96,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 		$this->assertEquals('testSection', $this->uriBuilder->getSection());
 		$this->assertEquals('testFormat', $this->uriBuilder->getFormat());
 		$this->assertEquals(TRUE, $this->uriBuilder->getCreateAbsoluteUri());
-		$this->assertEquals('https', $this->uriBuilder->getAbsoluteUriScheme());
 		$this->assertEquals(TRUE, $this->uriBuilder->getAddQueryString());
 		$this->assertEquals(array('test' => 'addQueryStringExcludeArguments'), $this->uriBuilder->getArgumentsToBeExcludedFromQueryString());
 		$this->assertEquals('testArgumentPrefix', $this->uriBuilder->getArgumentPrefix());
@@ -130,7 +110,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForPrefixesArgumentsWithExtensionAndPluginNameAndSetsControllerArgument() {
-		$this->mockExtensionService->expects($this->once())->method('getPluginNamespace')->will($this->returnValue('tx_someextension_someplugin'));
 		$expectedArguments = array('tx_someextension_someplugin' => array('foo' => 'bar', 'baz' => array('extbase' => 'fluid'), 'controller' => 'SomeController'));
 		$GLOBALS['TSFE'] = NULL;
 		$this->uriBuilder->uriFor(NULL, array('foo' => 'bar', 'baz' => array('extbase' => 'fluid')), 'SomeController', 'SomeExtension', 'SomePlugin');
@@ -141,7 +120,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForRecursivelyMergesAndOverrulesControllerArgumentsWithArguments() {
-		$this->mockExtensionService->expects($this->once())->method('getPluginNamespace')->will($this->returnValue('tx_someextension_someplugin'));
 		$arguments = array('tx_someextension_someplugin' => array('foo' => 'bar'), 'additionalParam' => 'additionalValue');
 		$controllerArguments = array('foo' => 'overruled', 'baz' => array('extbase' => 'fluid'));
 		$expectedArguments = array('tx_someextension_someplugin' => array('foo' => 'overruled', 'baz' => array('extbase' => 'fluid'), 'controller' => 'SomeController'), 'additionalParam' => 'additionalValue');
@@ -155,7 +133,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForOnlySetsActionArgumentIfSpecified() {
-		$this->mockExtensionService->expects($this->once())->method('getPluginNamespace')->will($this->returnValue('tx_someextension_someplugin'));
 		$expectedArguments = array('tx_someextension_someplugin' => array('controller' => 'SomeController'));
 
 		$this->uriBuilder->uriFor(NULL, array(), 'SomeController', 'SomeExtension', 'SomePlugin');
@@ -166,7 +143,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForSetsControllerFromRequestIfControllerIsNotSet() {
-		$this->mockExtensionService->expects($this->once())->method('getPluginNamespace')->will($this->returnValue('tx_someextension_someplugin'));
 		$this->mockRequest->expects($this->once())->method('getControllerName')->will($this->returnValue('SomeControllerFromRequest'));
 
 		$expectedArguments = array('tx_someextension_someplugin' => array('controller' => 'SomeControllerFromRequest'));
@@ -179,7 +155,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForSetsExtensionNameFromRequestIfExtensionNameIsNotSet() {
-		$this->mockExtensionService->expects($this->any())->method('getPluginNamespace')->will($this->returnValue('tx_someextensionnamefromrequest_someplugin'));
 		$this->mockRequest->expects($this->once())->method('getControllerExtensionName')->will($this->returnValue('SomeExtensionNameFromRequest'));
 
 		$expectedArguments = array('tx_someextensionnamefromrequest_someplugin' => array('controller' => 'SomeController'));
@@ -192,7 +167,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForSetsPluginNameFromRequestIfPluginNameIsNotSet() {
-		$this->mockExtensionService->expects($this->once())->method('getPluginNamespace')->will($this->returnValue('tx_someextension_somepluginnamefromrequest'));
 		$this->mockRequest->expects($this->once())->method('getPluginName')->will($this->returnValue('SomePluginNameFromRequest'));
 
 		$expectedArguments = array('tx_someextension_somepluginnamefromrequest' => array('controller' => 'SomeController'));
@@ -205,9 +179,23 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	 * @test
 	 */
 	public function uriForDoesNotDisableCacheHashForNonCacheableActions() {
-		$this->mockExtensionService->expects($this->any())->method('isActionCacheable')->will($this->returnValue(FALSE));
+		$mockConfiguration = array(
+			'controllerConfiguration' => array(
+				'SomeController' => array(
+					'nonCacheableActions' => array('someNonCacheableAction')
+				)
+			)
+		);
+		$mockConfigurationManager = $this->getMock('Tx_Extbase_Configuration_ConfigurationManagerInterface');
+		$mockConfigurationManager->expects($this->any())->method('getConfiguration')->will($this->returnValue($mockConfiguration));
+		$mockObjectManager = $this->getMock('Tx_Extbase_Object_ObjectManager');
+		$mockObjectManager->expects($this->any())->method('get')->with('Tx_Extbase_Configuration_ConfigurationManagerInterface')->will($this->returnValue($mockConfigurationManager));
+		t3lib_div::setSingletonInstance('Tx_Extbase_Object_ObjectManager', $mockObjectManager);
+
 		$this->uriBuilder->uriFor('someNonCacheableAction', array(), 'SomeController', 'SomeExtension');
 		$this->assertTrue($this->uriBuilder->getUseCacheHash());
+
+		t3lib_div::purgeInstances();
 	}
 
 	/**
@@ -302,7 +290,7 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 	public function buildBackendUriCreatesAbsoluteUrisIfSpecified() {
 		t3lib_div::_GETset(array('M' => 'moduleKey'));
 
-		$this->mockRequest->expects($this->any())->method('getBaseUri')->will($this->returnValue('http://baseuri/' . TYPO3_mainDir));
+		$this->mockRequest->expects($this->any())->method('getBaseURI')->will($this->returnValue('http://baseuri/' . TYPO3_mainDir));
 		$this->uriBuilder->setCreateAbsoluteUri(TRUE);
 
 		$expectedResult = 'http://baseuri/' . TYPO3_mainDir . 'mod.php?M=moduleKey';
@@ -357,40 +345,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 
 		$this->mockContentObject->expects($this->once())->method('typoLink_URL')->with(array('foo' => 'bar', 'forceAbsoluteUrl' => TRUE))->will($this->returnValue('http://baseuri/relative/uri'));
 		$uriBuilder->setCreateAbsoluteUri(TRUE);
-
-		$expectedResult = 'http://baseuri/relative/uri';
-		$actualResult = $uriBuilder->buildFrontendUri();
-		$this->assertSame($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function buildFrontendUriSetsAbsoluteUriSchemeIfSpecified() {
-		$uriBuilder = $this->getAccessibleMock('Tx_Extbase_MVC_Web_Routing_UriBuilder', array('buildTypolinkConfiguration'));
-		$uriBuilder->_set('contentObject', $this->mockContentObject);
-		$uriBuilder->expects($this->once())->method('buildTypolinkConfiguration')->will($this->returnValue(array('foo' => 'bar')));
-
-		$this->mockContentObject->expects($this->once())->method('typoLink_URL')->with(array('foo' => 'bar', 'forceAbsoluteUrl' => TRUE, 'forceAbsoluteUrl.' => array('scheme' => 'someScheme')))->will($this->returnValue('http://baseuri/relative/uri'));
-		$uriBuilder->setCreateAbsoluteUri(TRUE);
-		$uriBuilder->setAbsoluteUriScheme('someScheme');
-
-		$expectedResult = 'http://baseuri/relative/uri';
-		$actualResult = $uriBuilder->buildFrontendUri();
-		$this->assertSame($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function buildFrontendUriDoesNotSetAbsoluteUriSchemeIfCreateAbsoluteUriIsFalse() {
-		$uriBuilder = $this->getAccessibleMock('Tx_Extbase_MVC_Web_Routing_UriBuilder', array('buildTypolinkConfiguration'));
-		$uriBuilder->_set('contentObject', $this->mockContentObject);
-		$uriBuilder->expects($this->once())->method('buildTypolinkConfiguration')->will($this->returnValue(array('foo' => 'bar')));
-
-		$this->mockContentObject->expects($this->once())->method('typoLink_URL')->with(array('foo' => 'bar'))->will($this->returnValue('http://baseuri/relative/uri'));
-		$uriBuilder->setCreateAbsoluteUri(FALSE);
-		$uriBuilder->setAbsoluteUriScheme('someScheme');
 
 		$expectedResult = 'http://baseuri/relative/uri';
 		$actualResult = $uriBuilder->buildFrontendUri();
@@ -651,69 +605,6 @@ class Tx_Extbase_Tests_Unit_MVC_Web_Routing_UriBuilderTest extends Tx_Extbase_Te
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
-	/**
-	 * @test
-	 */
-	public function removeDefaultControllerAndActionDoesNotModifyArgumentsifSpecifiedControlerAndActionIsNotEqualToDefaults() {
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultControllerNameByPlugin')->with('ExtensionName', 'PluginName')->will($this->returnValue('DefaultController'));
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultActionNameByPluginAndController')->with('ExtensionName', 'PluginName', 'SomeController')->will($this->returnValue('defaultAction'));
-
-		$arguments = array('controller' => 'SomeController', 'action' => 'someAction', 'foo' => 'bar');
-		$extensionName = 'ExtensionName';
-		$pluginName = 'PluginName';
-		$expectedResult = array('controller' => 'SomeController', 'action' => 'someAction', 'foo' => 'bar');
-
-		$actualResult = $this->uriBuilder->_callRef('removeDefaultControllerAndAction', $arguments, $extensionName, $pluginName);
-		$this->assertEquals($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function removeDefaultControllerAndActionRemovesControllerIfItIsEqualToTheDefault() {
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultControllerNameByPlugin')->with('ExtensionName', 'PluginName')->will($this->returnValue('DefaultController'));
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultActionNameByPluginAndController')->with('ExtensionName', 'PluginName', 'DefaultController')->will($this->returnValue('defaultAction'));
-
-		$arguments = array('controller' => 'DefaultController', 'action' => 'someAction', 'foo' => 'bar');
-		$extensionName = 'ExtensionName';
-		$pluginName = 'PluginName';
-		$expectedResult = array('action' => 'someAction', 'foo' => 'bar');
-
-		$actualResult = $this->uriBuilder->_callRef('removeDefaultControllerAndAction', $arguments, $extensionName, $pluginName);
-		$this->assertEquals($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function removeDefaultControllerAndActionRemovesActionIfItIsEqualToTheDefault() {
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultControllerNameByPlugin')->with('ExtensionName', 'PluginName')->will($this->returnValue('DefaultController'));
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultActionNameByPluginAndController')->with('ExtensionName', 'PluginName', 'SomeController')->will($this->returnValue('defaultAction'));
-
-		$arguments = array('controller' => 'SomeController', 'action' => 'defaultAction', 'foo' => 'bar');
-		$extensionName = 'ExtensionName';
-		$pluginName = 'PluginName';
-		$expectedResult = array('controller' => 'SomeController', 'foo' => 'bar');
-
-		$actualResult = $this->uriBuilder->_callRef('removeDefaultControllerAndAction', $arguments, $extensionName, $pluginName);
-		$this->assertEquals($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function removeDefaultControllerAndActionRemovesControllerAndActionIfBothAreEqualToTheDefault() {
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultControllerNameByPlugin')->with('ExtensionName', 'PluginName')->will($this->returnValue('DefaultController'));
-		$this->mockExtensionService->expects($this->atLeastOnce())->method('getDefaultActionNameByPluginAndController')->with('ExtensionName', 'PluginName', 'DefaultController')->will($this->returnValue('defaultAction'));
-
-		$arguments = array('controller' => 'DefaultController', 'action' => 'defaultAction', 'foo' => 'bar');
-		$extensionName = 'ExtensionName';
-		$pluginName = 'PluginName';
-		$expectedResult = array('foo' => 'bar');
-
-		$actualResult = $this->uriBuilder->_callRef('removeDefaultControllerAndAction', $arguments, $extensionName, $pluginName);
-		$this->assertEquals($expectedResult, $actualResult);
-	}
 
 }
 ?>

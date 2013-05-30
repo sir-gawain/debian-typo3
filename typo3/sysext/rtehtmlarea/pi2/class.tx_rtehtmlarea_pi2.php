@@ -28,6 +28,8 @@
  * Front end RTE based on htmlArea
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
+ *
+ * $Id$  *
  */
 class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 
@@ -73,7 +75,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 
 		$this->TCEform = $parentObject;
 		$this->client = $this->clientInfo();
-		$this->typoVersion = t3lib_utility_VersionNumber::convertVersionNumberToInteger(TYPO3_version);
+		$this->typoVersion = t3lib_div::int_from_ver(TYPO3_version);
 
 		/* =======================================
 		 * INIT THE EDITOR-SETTINGS
@@ -103,7 +105,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 
 		if (is_array($thisConfig) && !empty($thisConfig)) {
 			$this->thisConfig = $thisConfig;
-		} elseif (is_array($this->RTEsetup['default.']) && is_array($this->RTEsetup['default.']['FE.'])) {
+		} else if (is_array($this->RTEsetup['default.']) && is_array($this->RTEsetup['default.']['FE.'])) {
 			$this->thisConfig = $this->RTEsetup['default.']['FE.'];
 		}
 
@@ -127,7 +129,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		$TSFE->initLLvars();
 		$this->language = $TSFE->lang;
 		$this->LOCAL_LANG = t3lib_div::readLLfile('EXT:' . $this->ID . '/locallang.xml', $this->language);
-		if ($this->language == 'default' || !$this->language) {
+		if ($this->language == 'default' || !$this->language)	{
 			$this->language = 'en';
 		}
 		$this->contentLanguageUid = ($row['sys_language_uid'] > 0) ? $row['sys_language_uid'] : 0;
@@ -169,7 +171,7 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 
 			// Set the charset of the content
 		$this->contentCharset = $TSFE->csConvObj->charSetArray[$this->contentTypo3Language];
-		$this->contentCharset = $this->contentCharset ? $this->contentCharset : 'utf-8';
+		$this->contentCharset = $this->contentCharset ? $this->contentCharset : 'iso-8859-1';
 		$this->contentCharset = trim($TSFE->config['config']['metaCharset']) ? trim($TSFE->config['config']['metaCharset']) : $this->contentCharset;
 
 		/* =======================================
@@ -207,48 +209,59 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 		 * LOAD JS, CSS and more
 		 * =======================================
 		 */
-		$this->pageRenderer = $this->getPageRenderer();
+		$pageRenderer = $this->getPageRenderer();
+			// Add metatag for IE9 to use IE8 standards mode
+			// ExtJS 3.3 does not support IE9 standards mode
+		$pageRenderer->addMetaTag('<meta http-equiv="X-UA-Compatible" content="IE=8" />');
 			// Preloading the pageStyle and including RTE skin stylesheets
 		$this->addPageStyle();
 		$this->addSkin();
-			// Register RTE in JS
-		$this->TCEform->additionalJS_post[] = $this->wrapCDATA($this->registerRTEinJS($this->TCEform->RTEcounter, '', '', '', $textAreaId));
+			// Re-initialize the scripts array so that only the cumulative set of plugins of the last RTE on the page is used
+		$this->cumulativeScripts[$this->TCEform->RTEcounter] = array();
+		$this->includeScriptFiles($this->TCEform->RTEcounter);
+		$this->buildJSMainLangFile($this->TCEform->RTEcounter);
+			// Register RTE in JS:
+		$this->TCEform->additionalJS_post[] = $this->wrapCDATA($this->registerRTEinJS($this->TCEform->RTEcounter, '', '', '',$textAreaId));
 			// Set the save option for the RTE:
 		$this->TCEform->additionalJS_submit[] = $this->setSaveRTE($this->TCEform->RTEcounter, $this->TCEform->formName, $textAreaId);
 			// Loading ExtJs JavaScript files and inline code, if not configured in TS setup
 		if (!$GLOBALS['TSFE']->isINTincScript() || !is_array($GLOBALS['TSFE']->pSetup['javascriptLibs.']['ExtJs.'])) {
-			$this->pageRenderer->loadExtJs();
-			$this->pageRenderer->enableExtJSQuickTips();
+			$pageRenderer->loadExtJs();
+			$pageRenderer->enableExtJSQuickTips();
+			if (!$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][$this->ID]['enableCompressedScripts']) {
+				$pageRenderer->enableExtJsDebug();
+			}
 		}
-		$this->pageRenderer->addCssFile($this->siteURL . 't3lib/js/extjs/ux/resize.css');
-		$this->pageRenderer->addJsFile($this->getFullFileName('t3lib/js/extjs/ux/ext.resizable.js'));
-		$this->pageRenderer->addJsFile($this->getFullFileName('t3lib/js/extjs/notifications.js'));
-			// Add RTE JavaScript
-		$this->addRteJsFiles($this->TCEform->RTEcounter);
-		$this->pageRenderer->addJsFile($this->buildJSMainLangFile($this->TCEform->RTEcounter));
-		$this->pageRenderer->addJsInlineCode('HTMLArea-init', $this->getRteInitJsCode(), TRUE);
+		$pageRenderer->addCssFile($this->siteURL . 't3lib/js/extjs/ux/resize.css');
+		$pageRenderer->addJsFile($this->siteURL . 't3lib/js/extjs/ux/ext.resizable.js');
+		$pageRenderer->addJsFile($this->siteURL . '/t3lib/js/extjs/notifications.js');
+		if ($this->TCEform->RTEcounter == 1) {
+			$this->TCEform->additionalJS_pre['rtehtmlarea-loadJScode'] = $this->wrapCDATA($this->loadJScode($this->TCEform->RTEcounter));
+		}
+		$this->TCEform->additionalJS_initial = $this->loadJSfiles($this->TCEform->RTEcounter);
 		if ($GLOBALS['TSFE']->isINTincScript()) {
-			$GLOBALS['TSFE']->additionalHeaderData['rtehtmlarea'] = $this->pageRenderer->render();
+			$GLOBALS['TSFE']->additionalHeaderData['rtehtmlarea'] = $pageRenderer->render();
 		}
 		/* =======================================
 		 * DRAW THE EDITOR
 		 * =======================================
 		 */
 			// Transform value:
-		$value = $this->transformContent('rte', $PA['itemFormElValue'], $table, $field, $row, $specConf, $thisConfig, $RTErelPath, $thePidValue);
+		$value = $this->transformContent('rte',$PA['itemFormElValue'],$table,$field,$row,$specConf,$thisConfig,$RTErelPath,$thePidValue);
 
 			// Further content transformation by registered plugins
 		foreach ($this->registeredPlugins as $pluginId => $plugin) {
-			if ($this->isPluginEnabled($pluginId) && method_exists($plugin, 'transformContent')) {
+			if ($this->isPluginEnabled($pluginId) && method_exists($plugin, "transformContent")) {
 				$value = $plugin->transformContent($value);
 			}
 		}
 			// draw the textarea
 		$item = $this->triggerField($PA['itemFormElName']).'
-			<div id="pleasewait' . $textAreaId . '" class="pleasewait" style="display: block;" >' . $TSFE->csConvObj->conv($TSFE->getLLL('Please wait', $this->LOCAL_LANG), $this->charset, $TSFE->renderCharset) . '</div>
+			<div id="pleasewait' . $textAreaId . '" class="pleasewait" style="display: block;" >' . $TSFE->csConvObj->conv($TSFE->getLLL('Please wait',$this->LOCAL_LANG), $this->charset, $TSFE->renderCharset) . '</div>
 			<div id="editorWrap' . $textAreaId . '" class="editorWrap" style="visibility: hidden; '. htmlspecialchars($this->RTEWrapStyle). '">
 			<textarea id="RTEarea' . $textAreaId . '" name="'.htmlspecialchars($PA['itemFormElName']).'" rows="0" cols="0" style="'.htmlspecialchars($this->RTEdivStyle).'">'.t3lib_div::formatForTextarea($value).'</textarea>
-			</div>' . LF;
+			</div>' . ($TYPO3_CONF_VARS['EXTCONF'][$this->ID]['enableDebugMode'] ? '<div id="HTMLAreaLog"></div>' : '') . '
+			';
 		return $item;
 	}
 	/**
@@ -320,5 +333,8 @@ class tx_rtehtmlarea_pi2 extends tx_rtehtmlarea_base {
 			)
 		);
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/pi2/class.tx_rtehtmlarea_pi2.php']);
 }
 ?>

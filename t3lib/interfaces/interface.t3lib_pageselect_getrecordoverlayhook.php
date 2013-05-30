@@ -25,13 +25,15 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
  * interface for classes which hook into t3lib_pageSelect
  *
- * @author Tolleiv Nietsch <nietsch@aoemedia.de>
+ * @author	Tolleiv Nietsch <nietsch@aoemedia.de>
  * @package TYPO3
  * @subpackage t3lib
  */
+
 interface t3lib_pageSelect_getRecordOverlayHook {
 
 	/**

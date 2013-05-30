@@ -1,14 +1,14 @@
 <?php
 if (!defined('TYPO3_MODE')) {
-	die('Access denied.');
+	die ('Access denied.');
 }
 
 if (TYPO3_MODE == 'BE') {
-		// First include the class file
+		// first include the class file
 	include_once(t3lib_extMgm::extPath('sys_action')
 		. 'toolbarmenu/class.tx_sysaction_toolbarmenu.php');
 
-		// Now register the class as toolbar item
+		// now register the class as toolbar item
 	$GLOBALS['TYPO3backend']->addToolbarItem(
 		'sys_action',
 		'tx_sysactionToolbarMenu'

@@ -38,7 +38,7 @@ class tx_coreupdates_addflexformstoacl extends Tx_Install_Updates_Base {
 	 * Checks if FlexForm fields are missing in group access lists.
 	 *
 	 * @param string &$description The description for the update
-	 * @return boolean Whether an update is required (TRUE) or not (FALSE)
+	 * @return boolean Whether an update is required (true) or not (false)
 	 */
 	public function checkForUpdate(&$description) {
 		$description = '
@@ -114,7 +114,7 @@ class tx_coreupdates_addflexformstoacl extends Tx_Install_Updates_Base {
 			// Get all excludeable FlexForm fields from content-table
 		$flexExcludeFields = array();
 		$flexFormArray = t3lib_BEfunc::getRegisteredFlexForms($contentTable);
-		if (!empty($flexFormArray) && is_array($flexFormArray)) {
+		if (!empty($flexFormArray)  && is_array($flexFormArray)) {
 			foreach ($flexFormArray as $tableField => $flexForms) {
 					// Get all sheets
 				foreach ($flexForms as $flexFormIdentifier => $flexFormConfig) {

@@ -82,8 +82,6 @@ class Tx_Extbase_MVC_View_NotFoundView extends Tx_Extbase_MVC_View_AbstractView 
 	 * directed to another type of view. This magic method should prevent PHP from issuing
 	 * a fatal error.
 	 *
-	 * @param string $methodName
-	 * @param array $arguments
 	 * @return void
 	 */
 	public function __call($methodName, array $arguments) {

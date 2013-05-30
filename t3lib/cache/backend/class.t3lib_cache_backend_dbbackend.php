@@ -22,31 +22,18 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
  * A caching backend which stores cache entries in database tables
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @author Christian Kuhn <lolli@schwarzbu.ch>
- * @author Ingo Renner <ingo@typo3.org>
  * @api
- * @scope prototype
+ * @version $Id$
  */
 class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend {
 
-	/**
-	 * @var integer Timestamp of 2038-01-01)
-	 */
-	const FAKED_UNLIMITED_EXPIRE = 2145909600;
-
-	/**
-	 * @var string Name of the cache data table
-	 */
 	protected $cacheTable;
-
-	/**
-	 * @var string Name of the cache tags table
-	 */
 	protected $tagsTable;
 
 	/**
@@ -59,53 +46,35 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 */
 	protected $compressionLevel = -1;
 
-	/**
-	 * @var string Name of the identifier field, 'table_name.identifier'
-	 */
 	protected $identifierField;
-
-	/**
-	 * @var string Name of the expire field, 'table_name.expires'
-	 */
-	protected $expiresField;
-
-	/**
-	 * @var integer Maximum lifetime to stay with expire field below FAKED_UNLIMITED_LIFETIME
-	 */
-	protected $maximumLifetime;
-
-	/**
-	 * @var string SQL where for a not expired entry
-	 */
+	protected $creationField;
+	protected $lifetimeField;
 	protected $notExpiredStatement;
-
-	/**
-	 * @var string Opposite of notExpiredStatement
-	 */
-	protected $expiredStatement;
-
-	/**
-	 * @var string Data and tags table name comma separated
-	 */
 	protected $tableList;
-
-	/**
-	 * @var string Join condition for data and tags table
-	 */
 	protected $tableJoin;
 
 	/**
-	 * Set cache frontend instance and calculate data and tags table name
+	 * Constructs this backend
 	 *
-	 * @param t3lib_cache_frontend_Frontend $cache The frontend for this backend
-	 * @return void
-	 * @api
+	 * @param array $options Configuration options - depends on the actual backend
 	 */
-	public function setCache(t3lib_cache_frontend_Frontend $cache) {
-		parent::setCache($cache);
+	public function __construct(array $options = array()) {
+		parent::__construct($options);
 
-		$this->cacheTable = 'cf_' .$this->cacheIdentifier;
-		$this->tagsTable = 'cf_' . $this->cacheIdentifier . '_tags';
+		if (!$this->cacheTable) {
+			throw new t3lib_cache_Exception(
+				'No table to write data to has been set using the setting "cacheTable".',
+				1253534136
+			);
+		}
+
+		if (!$this->tagsTable) {
+			throw new t3lib_cache_Exception(
+				'No table to write tags to has been set using the setting "tagsTable".',
+				1253534137
+			);
+		}
+
 		$this->initializeCommonReferences();
 	}
 
@@ -116,12 +85,12 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 */
 	protected function initializeCommonReferences() {
 		$this->identifierField = $this->cacheTable . '.identifier';
-		$this->expiresField = $this->cacheTable . '.expires';
-		$this->maximumLifetime = self::FAKED_UNLIMITED_EXPIRE - $GLOBALS['EXEC_TIME'];
+		$this->creationField = $this->cacheTable . '.crdate';
+		$this->lifetimeField = $this->cacheTable . '.lifetime';
 		$this->tableList = $this->cacheTable . ', ' . $this->tagsTable;
 		$this->tableJoin = $this->identifierField . ' = ' . $this->tagsTable . '.identifier';
-		$this->expiredStatement = $this->expiresField . ' < ' . $GLOBALS['EXEC_TIME'];
-		$this->notExpiredStatement = $this->expiresField . ' >= ' . $GLOBALS['EXEC_TIME'];
+		$this->notExpiredStatement = '(' . $this->creationField . ' + ' . $this->lifetimeField .
+									 ' >= ' . $GLOBALS['EXEC_TIME'] . ' OR ' . $this->lifetimeField . ' = 0)';
 	}
 
 	/**
@@ -134,9 +103,15 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 * @return void
 	 * @throws t3lib_cache_Exception if no cache frontend has been set.
 	 * @throws t3lib_cache_exception_InvalidData if the data to be stored is not a string.
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function set($entryIdentifier, $data, array $tags = array(), $lifetime = NULL) {
-		$this->throwExceptionIfFrontendDoesNotExist();
+		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
+			throw new t3lib_cache_Exception(
+				'No cache frontend has been set via setCache() yet.',
+				1236518288
+			);
+		}
 
 		if (!is_string($data)) {
 			throw new t3lib_cache_exception_InvalidData(
@@ -148,10 +123,6 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 		if (is_null($lifetime)) {
 			$lifetime = $this->defaultLifetime;
 		}
-		if ($lifetime === 0 || $lifetime > $this->maximumLifetime) {
-			$lifetime = $this->maximumLifetime;
-		}
-		$expires = $GLOBALS['EXEC_TIME'] + $lifetime;
 
 		$this->remove($entryIdentifier);
 
@@ -162,9 +133,10 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 		$GLOBALS['TYPO3_DB']->exec_INSERTquery(
 			$this->cacheTable,
 			array(
-				'identifier' => $entryIdentifier,
-				'expires' => $expires,
-				'content' => $data,
+				 'identifier' => $entryIdentifier,
+				 'crdate' => $GLOBALS['EXEC_TIME'],
+				 'content' => $data,
+				 'lifetime' => $lifetime
 			)
 		);
 
@@ -194,17 +166,16 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 *
 	 * @param string An identifier which describes the cache entry to load
 	 * @return mixed The cache entry's data as a string or FALSE if the cache entry could not be loaded
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function get($entryIdentifier) {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
-		$cacheEntry = FALSE;
+		$cacheEntry = false;
 
 		$cacheEntry = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 			'content',
 			$this->cacheTable,
-			'identifier = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($entryIdentifier, $this->cacheTable) .
-				' AND ' . $this->notExpiredStatement
+			'identifier = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($entryIdentifier, $this->cacheTable) . ' '
+			. 'AND (crdate + lifetime >= ' . $GLOBALS['EXEC_TIME'] . ' OR lifetime = 0)'
 		);
 
 		if (is_array($cacheEntry)) {
@@ -223,17 +194,16 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 *
 	 * @param string Specifies the identifier to check for existence
 	 * @return boolean TRUE if such an entry exists, FALSE if not
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function has($entryIdentifier) {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
 		$hasEntry = FALSE;
 
 		$cacheEntries = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
 			'*',
 			$this->cacheTable,
 			'identifier = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($entryIdentifier, $this->cacheTable) .
-				' AND ' . $this->notExpiredStatement
+			' AND (crdate + lifetime >= ' . $GLOBALS['EXEC_TIME'] . ' OR lifetime = 0)'
 		);
 		if ($cacheEntries >= 1) {
 			$hasEntry = TRUE;
@@ -248,11 +218,10 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 *
 	 * @param string Specifies the cache entry to remove
 	 * @return boolean TRUE if (at least) an entry could be removed or FALSE if no entry was found
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function remove($entryIdentifier) {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
-		$entryRemoved = FALSE;
+		$entryRemoved = false;
 
 		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery(
 			$this->cacheTable,
@@ -265,7 +234,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 		);
 
 		if ($GLOBALS['TYPO3_DB']->sql_affected_rows($res) == 1) {
-			$entryRemoved = TRUE;
+			$entryRemoved = true;
 		}
 
 		return $entryRemoved;
@@ -276,18 +245,50 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 *
 	 * @param string The tag to search for
 	 * @return array An array with identifiers of all matching entries. An empty array if no entries matched
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function findIdentifiersByTag($tag) {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
 		$cacheEntryIdentifiers = array();
 
 		$cacheEntryIdentifierRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			$this->identifierField,
 			$this->tableList,
-			$this->tagsTable . '.tag = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($tag, $this->tagsTable) .
-				' AND ' . $this->tableJoin .
-				' AND ' . $this->notExpiredStatement,
+			$this->getQueryForTag($tag) .
+			' AND ' . $this->tableJoin .
+			' AND ' . $this->notExpiredStatement,
+			$this->identifierField
+		);
+
+		foreach ($cacheEntryIdentifierRows as $cacheEntryIdentifierRow) {
+			$cacheEntryIdentifiers[$cacheEntryIdentifierRow['identifier']] = $cacheEntryIdentifierRow['identifier'];
+		}
+
+		return $cacheEntryIdentifiers;
+	}
+
+	/**
+	 * Finds and returns all cache entry identifiers which are tagged by the
+	 * specified tags.
+	 *
+	 * @param array Array of tags to search for
+	 * @return array An array with identifiers of all matching entries. An empty array if no entries matched
+	 * @author Ingo Renner <ingo@typo3.org>
+	 */
+	public function findIdentifiersByTags(array $tags) {
+		$cacheEntryIdentifiers = array();
+		$whereClause = array();
+
+		foreach ($tags as $tag) {
+			$whereClause[] = $this->getQueryForTag($tag);
+		}
+
+		$whereClause[] = $this->tableJoin;
+		$whereClause[] = $this->notExpiredStatement;
+
+		$cacheEntryIdentifierRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+			$this->identifierField,
+			$this->tableList,
+			implode(' AND ', $whereClause),
 			$this->identifierField
 		);
 
@@ -302,10 +303,9 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 * Removes all cache entries of this cache.
 	 *
 	 * @return void
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function flush() {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
 		$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery($this->cacheTable);
 		$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery($this->tagsTable);
 	}
@@ -317,9 +317,7 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 * @return void
 	 */
 	public function flushByTag($tag) {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
-		$tagsTableWhereClause = $this->tagsTable . '.tag = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($tag, $this->tagsTable);
+		$tagsTableWhereClause = $this->getQueryForTag($tag);
 
 		$this->deleteCacheTableRowsByTagsTableWhereClause($tagsTableWhereClause);
 
@@ -330,18 +328,41 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	}
 
 	/**
+	 * Removes all cache entries of this cache which are tagged by the specified tags.
+	 *
+	 * @param array	The tags the entries must have
+	 * @return void
+	 */
+	public function flushByTags(array $tags) {
+		if (count($tags)) {
+			$listQueryConditions = array();
+			foreach ($tags as $tag) {
+				$listQueryConditions[$tag] = $this->getQueryForTag($tag);
+			}
+
+			$tagsTableWhereClause = implode(' OR ', $listQueryConditions);
+
+			$this->deleteCacheTableRowsByTagsTableWhereClause($tagsTableWhereClause);
+
+			$GLOBALS['TYPO3_DB']->exec_DELETEquery(
+				$this->tagsTable,
+				$tagsTableWhereClause
+			);
+		}
+	}
+
+	/**
 	 * Does garbage collection
 	 *
 	 * @return void
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function collectGarbage() {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
 			// Get identifiers of expired cache entries
 		$tagsEntryIdentifierRowsResource = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 			'identifier',
 			$this->cacheTable,
-			$this->expiredStatement
+			'crdate + lifetime < ' . $GLOBALS['EXEC_TIME'] . ' AND lifetime > 0'
 		);
 
 		$tagsEntryIdentifiers = array();
@@ -364,19 +385,43 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 			// Delete expired cache rows
 		$GLOBALS['TYPO3_DB']->exec_DELETEquery(
 			$this->cacheTable,
-			$this->expiredStatement
+			'crdate + lifetime < ' . $GLOBALS['EXEC_TIME'] . ' AND lifetime > 0'
 		);
+	}
+
+	/**
+	 * Sets the table where the cache entries are stored. The specified table
+	 * must exist already.
+	 *
+	 * @param	string	The table.
+	 * @return	void
+	 * @throws t3lib_cache_Exception if the table does not exist.
+	 * @author Ingo Renner <ingo@typo3.org>
+	 */
+	public function setCacheTable($cacheTable) {
+		$this->cacheTable = $cacheTable;
+		$this->initializeCommonReferences();
 	}
 
 	/**
 	 * Returns the table where the cache entries are stored.
 	 *
 	 * @return	string	The cache table.
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function getCacheTable() {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
 		return $this->cacheTable;
+	}
+
+	/**
+	 * Sets the table where cache tags are stored.
+	 *
+	 * @param	string		$tagsTabls: Name of the table
+	 * @return	void
+	 */
+	public function setTagsTable($tagsTable) {
+		$this->tagsTable = $tagsTable;
+		$this->initializeCommonReferences();
 	}
 
 	/**
@@ -385,8 +430,6 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	 * @return	string		Name of the table storing tags
 	 */
 	public function getTagsTable() {
-		$this->throwExceptionIfFrontendDoesNotExist();
-
 		return $this->tagsTable;
 	}
 
@@ -413,33 +456,25 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 	}
 
 	/**
-	 * Check if required frontend instance exists
+	 * Gets the query to be used for selecting entries by a tag. The asterisk ("*")
+	 * is allowed as a wildcard at the beginning and the end of a tag.
 	 *
-	 * @throws t3lib_cache_Exception If there is no frontend instance in $this->cache
-	 * @return void
+	 * @param string The tag to search for, the "*" wildcard is supported
+	 * @return string the query to be used for selecting entries
+	 * @author Oliver Hader <oliver@typo3.org>
 	 */
-	protected function throwExceptionIfFrontendDoesNotExist() {
-		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
-			throw new t3lib_cache_Exception(
-				'No cache frontend has been set via setCache() yet.',
-				1236518288
+	protected function getQueryForTag($tag) {
+		if (strpos($tag, '*') === false) {
+			$query = $this->tagsTable . '.tag = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($tag, $this->tagsTable);
+		} else {
+			$patternForLike = $GLOBALS['TYPO3_DB']->escapeStrForLike(
+				$GLOBALS['TYPO3_DB']->quoteStr($tag, $this->tagsTable),
+				$this->tagsTable
 			);
+			$query = $this->tagsTable . '.tag LIKE \'' . $patternForLike . '\'';
 		}
-	}
 
-	/**
-	 * Calculate needed table definitions for this cache.
-	 * This helper method is used by install tool and extension manager
-	 * and is not part of the public API!
-	 *
-	 * @return string SQL of table definitions
-	 */
-	public function getTableDefinitions() {
-		$cacheTableSql = file_get_contents(PATH_t3lib . 'cache/backend/resources/dbbackend-layout-cache.sql');
-		$requiredTableStructures = str_replace('###CACHE_TABLE###', $this->cacheTable, $cacheTableSql) . LF . LF;
-		$tagsTableSql = file_get_contents(PATH_t3lib . 'cache/backend/resources/dbbackend-layout-tags.sql');
-		$requiredTableStructures .= str_replace('###TAGS_TABLE###', $this->tagsTable, $tagsTableSql) . LF;
-		return $requiredTableStructures;
+		return $query;
 	}
 
 	/**
@@ -472,4 +507,10 @@ class t3lib_cache_backend_DbBackend extends t3lib_cache_backend_AbstractBackend 
 		}
 	}
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_dbbackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_dbbackend.php']);
+}
+
 ?>

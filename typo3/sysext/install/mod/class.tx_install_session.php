@@ -32,6 +32,8 @@
  *
  * @package TYPO3
  * @subpackage tx_install
+ *
+ * @version $Id$
  */
 class tx_install_session {
 
@@ -91,7 +93,7 @@ class tx_install_session {
 		$sessionSavePath = $this->getSessionSavePath();
 		if (!is_dir($sessionSavePath)) {
 			if (!t3lib_div::mkdir($sessionSavePath)) {
-				throw new RuntimeException('Could not create session folder in typo3temp/. Make sure it is writeable!', 1294587484);
+				throw new Exception('<p><strong>Could not create session folder in typo3temp/.</strong></p><p>Make sure it is writeable!</p>');
 			}
 			t3lib_div::writeFile($sessionSavePath.'/.htaccess', 'Order deny, allow'."\n".'Deny from all'."\n");
 			$indexContent = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">';
@@ -118,15 +120,15 @@ class tx_install_session {
 		if (version_compare(phpversion(), '5.2', '<')) {
 			ini_set('session.cookie_httponly', TRUE);
 		}
-		if (t3lib_utility_PhpOptions::isSessionAutoStartEnabled()) {
-			$sessionCreationError = 'Error: session.auto-start is enabled.<br />';
-			$sessionCreationError .= 'The PHP option session.auto-start is enabled. Disable this option in php.ini or .htaccess:<br />';
+		if (ini_get('session.auto_start')) {
+			$sessionCreationError = '<p><strong>Error: session.auto-start is enabled</strong></p>';
+			$sessionCreationError .= '<p>The PHP option session.auto-start is enabled. Disable this option in php.ini or .htaccess:</p>';
 			$sessionCreationError .= '<pre>php_value session.auto_start Off</pre>';
-			throw new RuntimeException($sessionCreationError, 1294587485);
-		} elseif (defined('SID')) {
-			$sessionCreationError = 'Session already started by session_start().<br />';
-			$sessionCreationError .= 'Make sure no installed extension is starting a session in its ext_localconf.php or ext_tables.php.';
-			throw new RuntimeException($sessionCreationError, 1294587486);
+			throw new Exception($sessionCreationError);
+		} else if (defined('SID')) {
+			$sessionCreationError = '<p><strong>Error: Session already started by session_start().</strong></p>';
+			$sessionCreationError .= '<p>Make sure no installed extension is starting a session in its ext_localconf.php or ext_tables.php.</p>';
+			throw new Exception($sessionCreationError);
 		}
 		session_start();
 	}
@@ -183,7 +185,7 @@ class tx_install_session {
 	/**
 	 * Checks whether we already have an active session.
 	 *
-	 * @return boolean TRUE if there is an active session, FALSE otherwise
+	 * @return boolean true if there is an active session, false otherwise
 	 */
 	public function hasSession() {
 		return (isset($_SESSION['created']));
@@ -233,7 +235,7 @@ class tx_install_session {
 	/**
 	 * Check if we have an already authorized session
 	 *
-	 * @return boolean TRUE if this session has been authorized before (by a correct password)
+	 * @return boolean True if this session has been authorized before (by a correct password)
 	 */
 	public function isAuthorized() {
 		if (!$_SESSION['authorized']) {
@@ -248,10 +250,10 @@ class tx_install_session {
 
 	/**
 	 * Check if our session is expired.
-	 * Useful only right after a FALSE "isAuthorized" to see if this is the
+	 * Useful only right after a false "isAuthorized" to see if this is the
 	 * reason for not being authorized anymore.
 	 *
-	 * @return boolean TRUE if an authorized session exists, but is expired
+	 * @return boolean True if an authorized session exists, but is expired
 	 */
 	public function isExpired() {
 		if (!$_SESSION['authorized']) {
@@ -395,4 +397,9 @@ class tx_install_session {
 		session_write_close();
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_session.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_session.php']);
+}
+
 ?>

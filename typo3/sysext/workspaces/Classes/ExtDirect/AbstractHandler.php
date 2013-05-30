@@ -26,20 +26,23 @@
 ***************************************************************/
 
 /**
- * Abstract ExtDirect handler
- *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage ExtDirect
  */
-abstract class Tx_Workspaces_ExtDirect_AbstractHandler {
+abstract class tx_Workspaces_ExtDirect_AbstractHandler {
 	/**
 	 * Gets the current workspace ID.
 	 *
 	 * @return integer The current workspace ID
 	 */
 	protected function getCurrentWorkspace() {
-		return $this->getWorkspaceService()->getCurrentWorkspace();
+		$workspaceId = $GLOBALS['BE_USER']->workspace;
+		if ($GLOBALS['BE_USER']->isAdmin()) {
+			$activeId = $GLOBALS['BE_USER']->getSessionData('tx_workspace_activeWorkspace');
+			$workspaceId = $activeId !== NULL ? $activeId : $workspaceId;
+		}
+		return $workspaceId;
 	}
 
 	/**
@@ -63,14 +66,10 @@ abstract class Tx_Workspaces_ExtDirect_AbstractHandler {
 
 		return $response;
 	}
+}
 
-	/**
-	 * Gets an instance of the workspaces service.
-	 *
-	 * @return Tx_Workspaces_Service_Workspaces
-	 */
-	protected function getWorkspaceService() {
-		return t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
-	}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/AbstractHandler.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/ExtDirect/AbstractHandler.php']);
 }
 ?>

@@ -29,26 +29,8 @@
  * @subpackage Utility
  * @version $ID:$
  * @api
- * @deprecated since Extbase 1.4.0; will be removed in Extbase 6.0. Please use Tx_Extbase_Service_TypeHandlingService instead
  */
 class Tx_Extbase_Utility_TypeHandling {
-
-	/**
-	 * @var Tx_Extbase_Service_TypeHandlingService
-	 */
-	protected static $typeHandlingService = NULL;
-
-	/**
-	 * @return string
-	 */
-	static protected function getTypeHandlingService() {
-		if (self::$typeHandlingService === NULL) {
-			require_once t3lib_extMgm::extPath('extbase', 'Classes/Service/TypeHandlingService.php');
-			$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-			self::$typeHandlingService = $objectManager->get('Tx_Extbase_Service_TypeHandlingService');
-		}
-		return self::$typeHandlingService;
-	}
 
 	/**
 	 * A property type parse pattern.
@@ -60,12 +42,24 @@ class Tx_Extbase_Utility_TypeHandling {
 	 *
 	 * @param string $type Type of the property (see PARSE_TYPE_PATTERN)
 	 * @return array An array with information about the type
-	 * @deprecated since Extbase 1.4.0; will be removed in Extbase 6.0 - Use Tx_Extbase_Service_TypoScriptService instead
 	 */
 	static public function parseType($type) {
-		t3lib_div::logDeprecatedFunction();
-		$typeHandlingService = self::getTypeHandlingService();
-		return $typeHandlingService->parseType($type);
+		$matches = array();
+		if (preg_match(self::PARSE_TYPE_PATTERN, $type, $matches)) {
+			$type = self::normalizeType($matches['type']);
+			$elementType = isset($matches['elementType']) ? self::normalizeType($matches['elementType']) : NULL;
+
+			if ($elementType !== NULL && !in_array($type, array('array', 'ArrayObject', 'SplObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'))) {
+				throw new InvalidArgumentException('Type "' . $type . '" must not have an element type hint (' . $elementType . ').', 1264093642);
+			}
+
+			return array(
+				'type' => $type,
+				'elementType' => $elementType
+			);
+		} else {
+			throw new InvalidArgumentException('Invalid type encountered: ' . var_export($type, TRUE), 1264093630);
+		}
 	}
 
 	/**
@@ -76,12 +70,21 @@ class Tx_Extbase_Utility_TypeHandling {
 	 *
 	 * @param string $type Data type to unify
 	 * @return string unified data type
-	 * @deprecated since Extbase 1.4.0; will be removed in Extbase 6.0 - Use Tx_Extbase_Service_TypoScriptService instead
 	 */
 	static public function normalizeType($type) {
-		t3lib_div::logDeprecatedFunction();
-		$typeHandlingService = self::getTypeHandlingService();
-		return $typeHandlingService->normalizeType($type);
+		switch ($type) {
+			case 'int':
+				$type = 'integer';
+				break;
+			case 'bool':
+				$type = 'boolean';
+				break;
+			case 'double':
+				$type = 'float';
+				break;
+		}
+		return $type;
 	}
+	
 }
 ?>

@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_copypaste extends tx_rtehtmlarea_api {
 
@@ -47,7 +49,7 @@ class tx_rtehtmlarea_copypaste extends tx_rtehtmlarea_api {
 	protected $hideButtonsFromClient = array (
 		'webkit'	=>	array('paste'),
 		'opera'		=>	array('copy', 'cut', 'paste'),
-		);
+ 		);
 
 	public function main($parentObject) {
 		$enabled = parent::main($parentObject);
@@ -56,7 +58,7 @@ class tx_rtehtmlarea_copypaste extends tx_rtehtmlarea_api {
 			$this->pluginButtons = implode(',', array_diff(t3lib_div::trimExplode(',', $this->pluginButtons, 1), $this->hideButtonsFromClient[$this->htmlAreaRTE->client['browser']]));
 		}
 			// Force enabling the plugin even if no button remains in the tool bar, so that hot keys still are enabled
-		$this->pluginAddsButtons = FALSE;
+		$this->pluginAddsButtons = false;
 		return $enabled;
 	}
 
@@ -103,5 +105,9 @@ class tx_rtehtmlarea_copypaste extends tx_rtehtmlarea_api {
 			return $show;
 		}
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/CopyPaste/class.tx_rtehtmlarea_copypaste.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/CopyPaste/class.tx_rtehtmlarea_copypaste.php']);
 }
 ?>

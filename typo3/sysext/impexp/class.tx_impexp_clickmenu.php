@@ -30,13 +30,37 @@
  * Revised for TYPO3 3.6 December/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   67: class tx_impexp_clickmenu
+ *   79:     function main(&$backRef,$menuItems,$table,$uid)
+ *  121:     function includeLL()
+ *
+ * TOTAL FUNCTIONS: 2
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Adding Import/Export clickmenu item
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_impexp
  */
@@ -45,23 +69,24 @@ class tx_impexp_clickmenu {
 	/**
 	 * Processing of clickmenu items
 	 *
-	 * @param object $backRef Reference to parent
-	 * @param array $menuItems Menu items array to modify
-	 * @param string $table Table name
-	 * @param integer $uid Uid of the record
-	 * @return array Menu item array, returned after modification
-	 * @todo Skinning for icons...
+	 * @param	object		Reference to parent
+	 * @param	array		Menu items array to modify
+	 * @param	string		Table name
+	 * @param	integer		Uid of the record
+	 * @return	array		Menu item array, returned after modification
+	 * @todo	Skinning for icons...
 	 */
-	function main(&$backRef, $menuItems, $table, $uid) {
-		$localItems = array();
-			// Show import/export on second level menu OR root level.
-		if (($backRef->cmLevel && t3lib_div::_GP('subname') == 'moreoptions') || ($table === 'pages' && $uid == 0)) {
+	function main(&$backRef,$menuItems,$table,$uid)	{
+		global $BE_USER,$TCA;
+
+		$localItems=array();
+		if (($backRef->cmLevel && t3lib_div::_GP('subname')=='moreoptions') || ($table==='pages' && $uid==0))	{	// Show import/export on second level menu OR root level.
 
 			$LL = $this->includeLL();
 
 			$modUrl = $backRef->backPath.t3lib_extMgm::extRelPath('impexp').'app/index.php';
 			$url = $modUrl . '?tx_impexp[action]=export&id=' . ($table == 'pages' ? $uid : $backRef->rec['pid']);
-			if ($table=='pages') {
+			if ($table=='pages')	{
 				$url.='&tx_impexp[pagetree][id]='.$uid;
 				$url.='&tx_impexp[pagetree][levels]=0';
 				$url.='&tx_impexp[pagetree][tables][]=_ALL';
@@ -70,34 +95,38 @@ class tx_impexp_clickmenu {
 				$url.='&tx_impexp[external_ref][tables][]=_ALL';
 			}
 			$localItems[] = $backRef->linkItem(
-				$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('export', $LL)),
+				$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('export',$LL)),
 				$backRef->excludeIcon(t3lib_iconWorks::getSpriteIcon('actions-document-export-t3d')),
 				$backRef->urlRefForCM($url),
 				1	// Disables the item in the top-bar
 			);
 
-			if ($table=='pages') {
+			if ($table=='pages')	{
 				$url = $modUrl . '?id='. $uid . '&table=' . $table . '&tx_impexp[action]=import';
 				$localItems[] = $backRef->linkItem(
-					$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('import', $LL)),
+					$GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('import',$LL)),
 					$backRef->excludeIcon(t3lib_iconWorks::getSpriteIcon('actions-document-import-t3d')),
 					$backRef->urlRefForCM($url),
 					1	// Disables the item in the top-bar
 				);
 			}
 		}
-		return array_merge($menuItems, $localItems);
+		return array_merge($menuItems,$localItems);
 	}
 
 	/**
 	 * Include local lang file and return $LOCAL_LANG array loaded.
 	 *
-	 * @return array Local lang array
+	 * @return	array		Local lang array
 	 */
-	function includeLL() {
+	function includeLL()	{
 		global $LANG;
 
-		return $LANG->includeLLFile('EXT:impexp/app/locallang.php', FALSE);
+		return $LANG->includeLLFile('EXT:impexp/app/locallang.php',FALSE);
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/class.tx_impexp_clickmenu.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/class.tx_impexp_clickmenu.php']);
 }
 ?>

@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,8 +28,13 @@
 ***************************************************************/
 /*
  * About Plugin for TYPO3 htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id$
  */
-HTMLArea.AboutEditor = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.AboutEditor = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -38,7 +43,7 @@ HTMLArea.AboutEditor = Ext.extend(HTMLArea.Plugin, {
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.1',
+			version		: '2.0',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -110,6 +115,8 @@ HTMLArea.AboutEditor = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
+				// As of ExtJS 3.1, JS error with IE when the window is resizable
+			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				close: {
@@ -209,8 +216,8 @@ HTMLArea.AboutEditor = Ext.extend(HTMLArea.Plugin, {
 		Ext.iterate(this.editor.plugins, function (pluginId, plugin) {
 			pluginsInfo.push([
 				plugin.name + ' ' + plugin.version,
-				'<a href="' + plugin.developerUrl + '" target="_blank">' + plugin.developer + '</a>',
-				'<a href="' + plugin.sponsorUrl + '" target="_blank">' + plugin.sponsor + '</a>'
+				'<a href="' + plugin.developer_url + '" target="_blank">' + plugin.developer + '</a>',
+				'<a href="' + plugin.sponsor_url + '" target="_blank">' + plugin.sponsor + '</a>'
 			]);
 		}, this);
 		return pluginsInfo;

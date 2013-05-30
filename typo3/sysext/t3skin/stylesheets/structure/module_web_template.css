@@ -1,6 +1,7 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Web > Template
 
+$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 .typo3-tstemplate-ceditor-control {
@@ -24,6 +25,11 @@ div.typo3-tstemplate-ceditor-colorblock {
 	display: inline;
 }
 
+/* IE 6 Fix */
+* + html div.typo3-tstemplate-ceditor-colorblock {
+	display: inline;
+}
+
 /* IE 7 Fix */
 dl.typo3-tstemplate-ceditor-constant {
 	margin: 0px 0px 20px 10px;
@@ -41,9 +47,4 @@ dl.typo3-tstemplate-ceditor-constant dt {
 #ext-tstemplate-ts-index-php td.bgColor4 {
 	vertical-align: middle;
 	padding: 5px;
-}
-
-div.tst-analyzer-options label {
-	margin-right: 10px;
-	vertical-align: middle;
 }

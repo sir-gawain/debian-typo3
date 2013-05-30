@@ -37,6 +37,7 @@
  */
 class tx_em_Tools_XmlHandler {
 
+
 	/**
 	 * Holds the parsed XML from extensions.xml.gz
 	 * @see parseExtensionsXML()
@@ -396,11 +397,13 @@ class tx_em_Tools_XmlHandler {
 		}
 		$string = gzread($fp, 0xffff); // Read 64KB
 
+
 		$idx = 0;
 		$defaultCategories = tx_em_Tools::getDefaultCategory();
 		foreach ($defaultCategories as $catKey => $tmp) {
 			$this->revCatArr[$catKey] = $idx++;
 		}
+
 
 		$idx = 0;
 		$states = tx_em_Tools::getStates();
@@ -568,7 +571,7 @@ class tx_em_Tools_XmlHandler {
 
 		$preg_result = array();
 		preg_match('/^[[:space:]]*<\?xml[^>]*encoding[[:space:]]*=[[:space:]]*"([^"]*)"/', substr($string, 0, 200), $preg_result);
-		$theCharset = $preg_result[1] ? $preg_result[1] : 'utf-8';
+		$theCharset = $preg_result[1] ? $preg_result[1] : ($TYPO3_CONF_VARS['BE']['forceCharset'] ? $TYPO3_CONF_VARS['BE']['forceCharset'] : 'iso-8859-1');
 		xml_parser_set_option($parser, XML_OPTION_TARGET_ENCODING, $theCharset); // us-ascii / utf-8 / iso-8859-1
 
 		// Parse content:
@@ -691,4 +694,9 @@ class tx_em_Tools_XmlHandler {
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/tools/class.tx_em_tools_smlhandler.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/tools/class.tx_em_tools_xmlhandler.php']);
+}
+
 ?>

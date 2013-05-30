@@ -21,6 +21,28 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+/**
+ * Addition of the versioning item to the clickmenu
+ *
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   54: class tx_version_cm1
+ *   65:     function main(&$backRef,$menuItems,$table,$uid)
+ *  111:     function includeLL()
+ *
+ * TOTAL FUNCTIONS: 2
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
+
+
+
 
 /**
  * "Versioning" item added to click menu of elements.
@@ -40,12 +62,14 @@ class tx_version_cm1 {
 	 * @param	integer		Record UID of the element
 	 * @return	array		Modified menuItems array
 	 */
-	function main(&$backRef, $menuItems, $table, $uid) {
+	function main(&$backRef,$menuItems,$table,$uid)	{
+		global $BE_USER,$TCA,$LANG;
+
 		$localItems = Array();
-		if (!$backRef->cmLevel && $uid > 0 && $GLOBALS['BE_USER']->check('modules', 'web_txversionM1')) {
+		if (!$backRef->cmLevel && $uid>0 && $BE_USER->check('modules','web_txversionM1'))	{
 
 				// Returns directly, because the clicked item was not from the pages table
-			if (in_array('versioning', $backRef->disabledItems) || !$GLOBALS['TCA'][$table] || !$GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
+			if (in_array('versioning', $backRef->disabledItems) || !$TCA[$table] || !$TCA[$table]['ctrl']['versioningWS']) {
 				return $menuItems;
 			}
 
@@ -55,7 +79,7 @@ class tx_version_cm1 {
 				// "Versioning" element added:
 			$url = t3lib_extMgm::extRelPath('version').'cm1/index.php?table='.rawurlencode($table).'&uid='.$uid;
 			$localItems[] = $backRef->linkItem(
-				$GLOBALS['LANG']->getLLL('title', $LL),
+				$GLOBALS['LANG']->getLLL('title',$LL),
 				$backRef->excludeIcon('<img src="'.$backRef->backPath.t3lib_extMgm::extRelPath('version').'cm1/cm_icon.gif" width="15" height="12" border="0" align="top" alt="" />'),
 				$backRef->urlRefForCM($url),
 				1
@@ -65,7 +89,7 @@ class tx_version_cm1 {
 			/*
 			$url = t3lib_extMgm::extRelPath('version').'cm1/index.php?id='.($table=='pages'?$uid:$backRef->rec['pid']).'&table='.rawurlencode($table).'&uid='.$uid.'&sendToReview=1';
 			$localItems[] = $backRef->linkItem(
-				$GLOBALS['LANG']->getLLL('title_review', $LL),
+				$GLOBALS['LANG']->getLLL('title_review',$LL),
 				$backRef->excludeIcon('<img src="'.$backRef->backPath.t3lib_extMgm::extRelPath('version').'cm1/cm_icon.gif" width="15" height="12" border="0" align="top" alt="" />'),
 				$backRef->urlRefForCM($url),
 				1
@@ -76,9 +100,7 @@ class tx_version_cm1 {
 			$c=0;
 			foreach ($menuItems as $k => $value) {
 				$c++;
-				if (!strcmp($k, 'delete')) {
-					break;
-				}
+				if (!strcmp($k,'delete'))	break;
 			}
 				// .. subtract two (delete item + divider line)
 			$c-=2;
@@ -98,8 +120,16 @@ class tx_version_cm1 {
 	 *
 	 * @return	array		Local lang array
 	 */
-	function includeLL() {
-		return $GLOBALS['LANG']->includeLLFile('EXT:version/locallang.xml', FALSE);
+	function includeLL()	{
+		global $LANG;
+
+		return $LANG->includeLLFile('EXT:version/locallang.xml',FALSE);
 	}
+}
+
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_cm1.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_cm1.php']);
 }
 ?>

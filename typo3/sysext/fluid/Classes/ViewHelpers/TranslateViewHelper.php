@@ -59,6 +59,8 @@ class Tx_Fluid_ViewHelpers_TranslateViewHelper extends Tx_Fluid_Core_ViewHelper_
 	 * @param boolean $htmlEscape TRUE if the result should be htmlescaped. This won't have an effect for the default value
 	 * @param array $arguments Arguments to be replaced in the resulting string
 	 * @return string The translated key or tag body if key doesn't exist
+	 * @author Christopher Hlubek <hlubek@networkteam.com>
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function render($key, $default = NULL, $htmlEscape = TRUE, array $arguments = NULL) {
 		$request = $this->controllerContext->getRequest();
@@ -66,6 +68,9 @@ class Tx_Fluid_ViewHelpers_TranslateViewHelper extends Tx_Fluid_Core_ViewHelper_
 		$value = Tx_Extbase_Utility_Localization::translate($key, $extensionName, $arguments);
 		if ($value === NULL) {
 			$value = $default !== NULL ? $default : $this->renderChildren();
+			if (is_array($arguments)) {
+				$value = vsprintf($value, $arguments);
+			}
 		} elseif ($htmlEscape) {
 			$value = htmlspecialchars($value);
 		}

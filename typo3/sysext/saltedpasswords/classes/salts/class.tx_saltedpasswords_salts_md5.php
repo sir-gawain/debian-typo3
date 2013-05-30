@@ -27,7 +27,10 @@
 /**
  * Contains class "tx_saltedpasswords_salts_md5"
  * that provides MD5 salted hashing.
+ *
+ * $Id$
  */
+
 
 /**
  * Class that implements MD5 salted hashing based on PHP's
@@ -36,11 +39,11 @@
  * MD5 salted hashing with PHP's crypt() should be available
  * on most of the systems.
  *
- * @author Marcus Krause <marcus#exp2009@t3sec.info>
+ * @author      Marcus Krause <marcus#exp2009@t3sec.info>
  *
- * @since 2009-09-06
- * @package TYPO3
- * @subpackage tx_saltedpasswords
+ * @since   	2009-09-06
+ * @package     TYPO3
+ * @subpackage  tx_saltedpasswords
  */
 class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts implements tx_saltedpasswords_salts {
 	/**
@@ -52,36 +55,37 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Keeps length of a MD5 salt in bytes.
 	 *
-	 * @var integer
+	 * @var	integer
 	 */
 	static protected $saltLengthMD5 = 6;
 
 	/**
 	 * Keeps suffix to be appended to a salt.
 	 *
-	 * @var string
+	 * @var	string
 	 */
 	static protected $saltSuffixMD5 = '$';
 
 	/**
 	 * Setting string to indicate type of hashing method (md5).
 	 *
-	 * @var string
+	 * @var	string
 	 */
 	static protected $settingMD5 = '$1$';
+
 
 	/**
 	 * Method applies settings (prefix, suffix) to a salt.
 	 *
-	 * @param string $salt A salt to apply setting to
-	 * @return string Salt with setting
+	 * @param	string		$salt: a salt to apply setting to
+	 * @return	string		salt with setting
 	 */
 	protected function applySettingsToSalt($salt) {
 		$saltWithSettings = $salt;
 
 		$reqLenBase64 = $this->getLengthBase64FromBytes($this->getSaltLength());
 
-			// Salt without setting
+			// salt without setting
 		if (strlen($salt) == $reqLenBase64) {
 			$saltWithSettings = $this->getSetting() . $salt . $this->getSaltSuffix();
 
@@ -94,15 +98,15 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	 * Method checks if a given plaintext password is correct by comparing it with
 	 * a given salted hashed password.
 	 *
-	 * @param string $plainPW plain-text password to compare with salted hash
-	 * @param string $saltedHashPW salted hash to compare plain-text password with
-	 * @return boolean TRUE, if plain-text password matches the salted hash, otherwise FALSE
+	 * @param	string		$plainPW: plain-text password to compare with salted hash
+	 * @param	string		$saltedHashPW: salted hash to compare plain-text password with
+	 * @return	boolean		TRUE, if plain-text password matches the salted hash, otherwise FALSE
 	 */
 	public function checkPassword($plainPW, $saltedHashPW) {
 		$isCorrect = FALSE;
 
 		if ($this->isValidSalt($saltedHashPW)) {
-			$isCorrect = (crypt($plainPW, $saltedHashPW) == $saltedHashPW);
+			$isCorrect = (crypt($plainPW,$saltedHashPW) == $saltedHashPW);
 		}
 
 		return $isCorrect;
@@ -117,7 +121,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	 *  - The ability to determine whether two users have the same (or different)
 	 *    password without actually having to guess one of the passwords.
 	 *
-	 * @return string A character string containing settings and a random salt
+	 * @return	string		a character string containing settings and a random salt
 	 */
 	protected function getGeneratedSalt() {
 		$randomBytes = t3lib_div::generateRandomBytes($this->getSaltLength());
@@ -128,9 +132,9 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Method creates a salted hash for a given plaintext password
 	 *
-	 * @param string $password plaintext password to create a salted hash from
-	 * @param string $salt Optional custom salt with setting to use
-	 * @return string Salted hashed password
+	 * @param	string		$password: plaintext password to create a salted hash from
+	 * @param	string		$salt: optional custom salt with setting to use
+	 * @return	string		salted hashed password
 	 */
 	public function getHashedPassword($password, $salt = NULL) {
 		$saltedPW = NULL;
@@ -147,7 +151,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Returns a string for mapping an int to the corresponding base 64 character.
 	 *
-	 * @return string String for mapping an int to the corresponding base 64 character
+	 * @return	string		string for mapping an int to the corresponding base 64 character
 	 */
 	protected function getItoa64() {
 		return self::ITOA64;
@@ -156,7 +160,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Returns wether all prequesites for the hashing methods are matched
 	 *
-	 * @return boolean Method available
+	 * @return	boolean		method available
 	 */
 	public function isAvailable() {
 		return CRYPT_MD5;
@@ -165,7 +169,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Returns length of a MD5 salt in bytes.
 	 *
-	 * @return integer Length of a MD5 salt in bytes
+	 * @return	integer		length of a MD5 salt in bytes
 	 */
 	public function getSaltLength() {
 		return self::$saltLengthMD5;
@@ -174,7 +178,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Returns suffix to be appended to a salt.
 	 *
-	 * @return string Suffix of a salt
+	 * @return	string		suffix of a salt
 	 */
 	protected function getSaltSuffix() {
 		return self::$saltSuffixMD5;
@@ -183,7 +187,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Returns setting string of MD5 salted hashes.
 	 *
-	 * @return string Setting string of MD5 salted hashes
+	 * @return	string		setting string of MD5 salted hashes
 	 */
 	public function getSetting() {
 		return self::$settingMD5;
@@ -198,8 +202,8 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	 * HASH_COUNT or if the user's password hash was generated in an bulk update
 	 * with class ext_update.
 	 *
-	 * @param string $passString Salted hash to check if it needs an update
-	 * @return boolean TRUE if salted hash needs an update, otherwise FALSE
+	 * @param	string		$passString: salted hash to check if it needs an update
+	 * @return	boolean		TRUE if salted hash needs an update, otherwise FALSE
 	 */
 	public function isHashUpdateNeeded($passString) {
 		return FALSE;
@@ -208,8 +212,8 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Method determines if a given string is a valid salt
 	 *
-	 * @param string $salt String to check
-	 * @return boolean TRUE if it's valid salt, otherwise FALSE
+	 * @param	string		$salt:  string to check
+	 * @return	boolean		TRUE if it's valid salt, otherwise FALSE
 	 */
 	public function isValidSalt($salt) {
 		$isValid = $skip = FALSE;
@@ -217,7 +221,7 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 		$reqLenBase64 = $this->getLengthBase64FromBytes($this->getSaltLength());
 
 		if (strlen($salt) >= $reqLenBase64) {
-				// Salt with prefixed setting
+						// salt with prefixed setting
 			if (!strncmp('$', $salt, 1)) {
 				if (!strncmp($this->getSetting(), $salt, strlen($this->getSetting()))) {
 					$isValid = TRUE;
@@ -227,9 +231,9 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 				}
 			}
 
-				// Checking base64 characters
+				// checking base64 characters
 			if (!$skip && (strlen($salt) >= $reqLenBase64)) {
-				if (preg_match('/^[' . preg_quote($this->getItoa64(), '/') . ']{' . $reqLenBase64 . ',' . $reqLenBase64 . '}$/', substr($salt, 0, $reqLenBase64))) {
+				if (preg_match('/^[' . preg_quote($this->getItoa64(),'/') . ']{' . $reqLenBase64 . ',' . $reqLenBase64 . '}$/', substr($salt, 0, $reqLenBase64))) {
 					$isValid = TRUE;
 				}
 			}
@@ -241,8 +245,8 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 	/**
 	 * Method determines if a given string is a valid salted hashed password.
 	 *
-	 * @param string $saltedPW String to check
-	 * @return boolean TRUE if it's valid salted hashed password, otherwise FALSE
+	 * @param	string		$saltedPW: string to check
+	 * @return	boolean		TRUE if it's valid salted hashed password, otherwise FALSE
 	 */
 	public function isValidSaltedPW($saltedPW) {
 		$isValid = FALSE;
@@ -254,5 +258,10 @@ class tx_saltedpasswords_salts_md5 extends tx_saltedpasswords_abstract_salts imp
 
 		return $isValid;
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/salts/class.tx_saltedpasswords_salts_md5.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/saltedpasswords/classes/salts/class.tx_saltedpasswords_salts_md5.php']);
 }
 ?>

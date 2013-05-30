@@ -34,7 +34,7 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 	/**
 	 * @var array
 	 */
-	protected $typoScriptSetupCache = NULL;
+	protected $typoScriptSetupCache = array();
 
 	/**
 	 * Returns TypoScript Setup array from current Environment.
@@ -42,7 +42,9 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 	 * @return array the raw TypoScript setup
 	 */
 	public function getTypoScriptSetup() {
-		if ($this->typoScriptSetupCache === NULL) {
+		$pageId = $this->getCurrentPageId();
+
+		if (!array_key_exists($pageId, $this->typoScriptSetupCache)) {
 			$template = t3lib_div::makeInstance('t3lib_TStemplate');
 				// do not log time-performance information
 			$template->tt_track = 0;
@@ -50,13 +52,13 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 				// Get the root line
 			$sysPage = t3lib_div::makeInstance('t3lib_pageSelect');
 				// get the rootline for the current page
-			$rootline = $sysPage->getRootLine($this->getCurrentPageId());
+			$rootline = $sysPage->getRootLine($pageId);
 				// This generates the constants/config + hierarchy info for the template.
 			$template->runThroughTemplates($rootline, 0);
 			$template->generateConfig();
-			$this->typoScriptSetupCache = $template->setup;
+			$this->typoScriptSetupCache[$pageId] = $template->setup;
 		}
-		return $this->typoScriptSetupCache;
+		return $this->typoScriptSetupCache[$pageId];
 	}
 
 	/**
@@ -67,20 +69,16 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 	 * @param string $pluginName in BE mode this is actually the module signature. But we're using it just like the plugin name in FE
 	 * @return array
 	 */
-	protected function getPluginConfiguration($extensionName, $pluginName = NULL) {
+	protected function getPluginConfiguration($extensionName, $pluginName) {
 		$setup = $this->getTypoScriptSetup();
 		$pluginConfiguration = array();
 		if (is_array($setup['module.']['tx_' . strtolower($extensionName) . '.'])) {
-			$pluginConfiguration = $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . strtolower($extensionName) . '.']);
+			$pluginConfiguration = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . strtolower($extensionName) . '.']);
 		}
-
-		if ($pluginName !== NULL) {
-			$pluginSignature = strtolower($extensionName . '_' . $pluginName);
-			if (is_array($setup['module.']['tx_' . $pluginSignature . '.'])) {
-				$pluginConfiguration = t3lib_div::array_merge_recursive_overrule($pluginConfiguration, $this->typoScriptService->convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . $pluginSignature . '.']));
-			}
+		$pluginSignature = strtolower($extensionName . '_' . $pluginName);
+		if (is_array($setup['module.']['tx_' . $pluginSignature . '.'])) {
+			$pluginConfiguration = t3lib_div::array_merge_recursive_overrule($pluginConfiguration, Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($setup['module.']['tx_' . $pluginSignature . '.']));
 		}
-
 		return $pluginConfiguration;
 	}
 
@@ -132,20 +130,10 @@ class Tx_Extbase_Configuration_BackendConfigurationManager extends Tx_Extbase_Co
 	}
 
 	/**
-	 * Returns the default backend storage pid
-	 *
-	 * @return string
-	 */
-	public function getDefaultBackendStoragePid() {
-		return $this->getCurrentPageId();
-	}
-
-	/**
 	 * We need to set some default request handler if the framework configuration
 	 * could not be loaded; to make sure Extbase also works in Backend modules
 	 * in all contexts.
 	 *
-	 * @param array $frameworkConfiguration
 	 * @return array
 	 */
 	protected function getContextSpecificFrameworkConfiguration(array $frameworkConfiguration) {

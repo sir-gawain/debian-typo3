@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2010-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2010-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id: class.tx_rtehtmlarea_editelement.php $
+ *
  */
 class tx_rtehtmlarea_editelement extends tx_rtehtmlarea_api {
 
@@ -38,12 +40,13 @@ class tx_rtehtmlarea_editelement extends tx_rtehtmlarea_api {
 	protected $toolbar;					// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 					// Frontend language array
 		// The comma-separated list of names of prerequisite plugins
-	protected $requiredPlugins = 'BlockStyle,TextStyle,Language,MicrodataSchema';
+	protected $requiredPlugins = 'BlockStyle,TextStyle,Language';
 	protected $pluginButtons = 'editelement';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'editelement'	=> 'EditElement',
 		);
-
+	protected $acronymIndex = 0;
+	protected $abbreviationIndex = 0;
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
 	 *
@@ -59,5 +62,8 @@ class tx_rtehtmlarea_editelement extends tx_rtehtmlarea_api {
 		$registerRTEinJavascriptString = '';
 		return $registerRTEinJavascriptString;
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/EditElement/class.tx_rtehtmlarea_editelement.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/EditElement/class.tx_rtehtmlarea_editelement.php']);
 }
 ?>

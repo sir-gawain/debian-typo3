@@ -29,6 +29,7 @@
 /**
  * Contains USER class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,8 +38,8 @@ class tslib_content_User extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, USER
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		if (!is_array($conf) || empty($conf)) {
@@ -59,11 +60,15 @@ class tslib_content_User extends tslib_content_Abstract {
 		} else {
 			$content .= $tempContent;
 		}
-		if (isset($conf['stdWrap.'])) {
-			$content = $this->cObj->stdWrap($content, $conf['stdWrap.']);
-		}
 		$this->cObj->setUserObjectType(FALSE);
 		return $content;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_user.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_user.php']);
+}
+
 ?>

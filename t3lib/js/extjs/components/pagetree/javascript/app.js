@@ -64,13 +64,6 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 	activeTree: null,
 
 	/**
-	 * Main pagetree
-	 *
-	 * @type {TYPO3.Components.PageTree.Tree}
-	 */
-	mainTree: null,
-
-	/**
 	 * Initializes the application
 	 *
 	 * Set's the necessary language labels, configuration options and sprite icons by an
@@ -84,7 +77,7 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 			TYPO3.Components.PageTree.Configuration = response['Configuration'];
 			TYPO3.Components.PageTree.Sprites = response['Sprites'];
 
-			this.mainTree = this.activeTree = new TYPO3.Components.PageTree.Tree({
+			var tree = this.activeTree = new TYPO3.Components.PageTree.Tree({
 				id: this.id + '-tree',
 				deletionDropZoneId: this.id + '-deletionDropZone',
 				ddGroup: this.id,
@@ -127,7 +120,7 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 				dataProvider: TYPO3.Components.PageTree.DataProvider,
 				filteringTree: filteringTree,
 				ddGroup: this.id,
-				tree: this.mainTree,
+				tree: tree,
 				app: this
 			});
 
@@ -162,7 +155,7 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 						id: this.id + '-treeContainer',
 						region: 'center',
 						layout: 'fit',
-						items: [this.mainTree, filteringTree]
+						items: [tree, filteringTree]
 					},
 					deletionDropZone
 				]
@@ -271,7 +264,7 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 
 		var indicator = Ext.getCmp(this.id + '-indicatorBar').add(component);
 		this.doLayout();
-
+		
 		return indicator;
 	},
 
@@ -357,18 +350,26 @@ TYPO3.Components.PageTree.App = Ext.extend(Ext.Panel, {
 	 * store the new location into the state hash.
 	 *
 	 * @param {int} pageId
+	 * @param {Boolean} saveState
 	 * @return {Boolean}
 	 */
-	select: function(pageId) {
-		TYPO3.Components.PageTree.Commands.addRootlineOfNodeToStateHash(
-			TYPO3.Backend.NavigationContainer.PageTree.mainTree.stateId,
-			pageId, function(stateHash) {
-				TYPO3.Backend.NavigationContainer.PageTree.mainTree.stateHash = stateHash;
-				TYPO3.Backend.NavigationContainer.PageTree.mainTree.refreshTree();
-			}
-		);
+	select: function(pageId, saveState) {
+		if (saveState !== false) {
+			saveState = true;
+		}
 
-		return true;
+		var tree = this.getTree();
+		var succeeded = false;
+		var node = tree.getRootNode().findChild('realId', pageId, true);
+		if (node) {
+			succeeded = true;
+			tree.selectPath(node.getPath());
+			if (!!saveState && tree.stateHash) {
+				tree.stateHash.lastSelectedNode = node.id;
+			}
+		}
+
+		return succeeded;
 	},
 
 	/**

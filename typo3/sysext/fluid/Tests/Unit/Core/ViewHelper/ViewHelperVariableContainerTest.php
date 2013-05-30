@@ -1,11 +1,21 @@
 <?php
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
+ *                                                                        *
+ * This script is distributed in the hope that it will be useful, but     *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
+ * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
+ * General Public License for more details.                               *
+ *                                                                        *
+ * You should have received a copy of the GNU Lesser General Public       *
+ * License along with the script.                                         *
+ * If not, see http://www.gnu.org/licenses/lgpl.html                      *
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
@@ -15,6 +25,7 @@ require_once(dirname(__FILE__) . '/../Fixtures/TestViewHelper.php');
 /**
  * Testcase for AbstractViewHelper
  *
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
@@ -29,6 +40,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 	}
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function storedDataCanBeReadOutAgain() {
 		$variable = 'Hello world';
@@ -41,6 +53,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception_InvalidVariableException
 	 */
 	public function gettingNonNonExistentValueThrowsException() {
@@ -49,6 +62,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception_InvalidVariableException
 	 */
 	public function settingKeyWhichIsAlreadyStoredThrowsException() {
@@ -58,6 +72,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function addOrUpdateWorks() {
 		$this->viewHelperVariableContainer->add('Tx_Fluid_ViewHelper_NonExistent', 'nonExistentKey', 'value1');
@@ -67,6 +82,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function aSetValueCanBeRemovedAgain() {
 		$this->viewHelperVariableContainer->add('Tx_Fluid_ViewHelper_NonExistent', 'nonExistentKey', 'value1');
@@ -76,6 +92,7 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @expectedException Tx_Fluid_Core_ViewHelper_Exception_InvalidVariableException
 	 */
 	public function removingNonExistentKeyThrowsException() {
@@ -84,9 +101,10 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_ViewHelperVariableContainerTest extend
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function viewCanBeReadOutAgain() {
-		$view = $this->getMock('Tx_Fluid_View_AbstractTemplateView', array('getTemplateSource', 'getLayoutSource', 'getPartialSource', 'hasTemplate', 'canRender', 'getTemplateIdentifier', 'getLayoutIdentifier', 'getPartialIdentifier'));
+		$view = $this->getMock('Tx_Fluid_View_AbstractTemplateView', array('getTemplateSource', 'getLayoutSource', 'getPartialSource', 'hasTemplate', 'canRender'));
 		$this->viewHelperVariableContainer->setView($view);
 		$this->assertSame($view, $this->viewHelperVariableContainer->getView());
 	}

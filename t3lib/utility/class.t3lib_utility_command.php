@@ -28,21 +28,27 @@
 /**
  * Class to handle system commands.
  *
- * @author Steffen Kamper <steffen@typo3.org>
+ * $Id: class.t3lib_utility_command.php $
+ *
+ * @author	Steffen Kamper <steffen@typo3.org>
  */
 final class t3lib_utility_Command {
 
+
 	/**
 	 * Wrapper function for php exec function
-	 * Needs to be central to have better control and possible fix for issues
+	 * Needs to be central to have better control and possible fix for safe_mode/low php version restrictions as occurred with IM/GM issues
 	 *
 	 * @static
-	 * @param string $command
-	 * @param NULL|array $output
-	 * @param integer $returnValue
-	 * @return NULL|array
+	 * @param  string  $command
+	 * @param  null|array $output
+	 * @param  integer $returnValue
+	 * @return null|array
 	 */
 	public static function exec($command, &$output = NULL, &$returnValue = 0) {
+		if (TYPO3_OS == 'WIN' && version_compare(phpversion(), '5.3.0', '<')) {
+			$command = '"' . $command . '"';
+		}
 		$lastLine = exec($command, $output, $returnValue);
 		return $lastLine;
 	}
@@ -50,10 +56,10 @@ final class t3lib_utility_Command {
 	/**
 	 * Compile the command for running ImageMagick/GraphicsMagick.
 	 *
-	 * @param string $command Command to be run: identify, convert or combine/composite
-	 * @param string $parameters The parameters string
-	 * @param string $path Override the default path (e.g. used by the install tool)
-	 * @return string Compiled command that deals with IM6 & GraphicsMagick
+	 * @param	string		Command to be run: identify, convert or combine/composite
+	 * @param	string		The parameters string
+	 * @param	string		Override the default path (e.g. used by the install tool)
+	 * @return	string		Compiled command that deals with IM6 & GraphicsMagick
 	 */
 	public static function imageMagickCommand($command, $parameters, $path = '') {
 		$gfxConf = $GLOBALS['TYPO3_CONF_VARS']['GFX'];
@@ -68,20 +74,46 @@ final class t3lib_utility_Command {
 		$im_version = strtolower($gfxConf['im_version_5']);
 		$combineScript = $gfxConf['im_combine_filename'] ? trim($gfxConf['im_combine_filename']) : 'combine';
 
-			// This is only used internally, has no effect outside
-		if ($command === 'combine') {
+		if ($command === 'combine') { // This is only used internally, has no effect outside
 			$command = 'composite';
 		}
 
 			// Compile the path & command
 		if ($im_version === 'gm') {
 			$switchCompositeParameters = TRUE;
-			$path = escapeshellarg($path . 'gm' . $isExt) . ' ' . $command;
+			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+				$currentLocale = setlocale(LC_CTYPE, 0);
+				setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
+			}
+			$originalPath = $path . 'gm' . $isExt;
+			$path = escapeshellarg($originalPath);
+			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+				setlocale(LC_CTYPE, $currentLocale);
+			}
+				// if escapeshellarg didn't change anything and if there is no whitespace in the original string
+				// keep the original for (partial) safe_mode compatibility
+			if (trim($path, '"\'') === $originalPath && !preg_match('/[[:space:]]/', $originalPath)) {
+				$path = $originalPath;
+			}
+			$path .= ' ' . $command;
 		} else {
 			if ($im_version === 'im6') {
 				$switchCompositeParameters = TRUE;
 			}
-			$path = escapeshellarg($path . (($command == 'composite') ? $combineScript : $command) . $isExt);
+			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+				$currentLocale = setlocale(LC_CTYPE, 0);
+				setlocale(LC_CTYPE, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLocale']);
+			}
+			$originalPath = $path . (($command == 'composite') ? $combineScript : $command) . $isExt;
+			$path = escapeshellarg($originalPath);
+			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
+				setlocale(LC_CTYPE, $currentLocale);
+			}
+				// if escapeshellarg didn't change anything and if there is no whitespace in the original string
+				// keep the original for (partial) safe_mode compatibility
+			if (trim($path, '"\'') === $originalPath && !preg_match('/[[:space:]]/', $originalPath)) {
+				$path = $originalPath;
+			}
 		}
 
 			// strip profile information for thumbnails and reduce their size
@@ -98,13 +130,10 @@ final class t3lib_utility_Command {
 
 		$cmdLine = $path . ' ' . $parameters;
 
-			// Because of some weird incompatibilities between ImageMagick 4 and 6 (plus GraphicsMagick),
-			// it is needed to change the parameters order under some preconditions
-		if ($command == 'composite' && $switchCompositeParameters) {
+		if ($command == 'composite' && $switchCompositeParameters) { // Because of some weird incompatibilities between ImageMagick 4 and 6 (plus GraphicsMagick), it is needed to change the parameters order under some preconditions
 			$paramsArr = t3lib_div::unQuoteFilenames($parameters);
 
-				// The mask image has been specified => swap the parameters
-			if (count($paramsArr) > 5) {
+			if (count($paramsArr) > 5) { // The mask image has been specified => swap the parameters
 				$tmp = $paramsArr[count($paramsArr) - 3];
 				$paramsArr[count($paramsArr) - 3] = $paramsArr[count($paramsArr) - 4];
 				$paramsArr[count($paramsArr) - 4] = $tmp;
@@ -115,6 +144,7 @@ final class t3lib_utility_Command {
 
 		return $cmdLine;
 	}
+
 }
 
 ?>

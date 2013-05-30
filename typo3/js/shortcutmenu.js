@@ -27,6 +27,8 @@
 
 /**
  * class to handle the shortcut menu
+ *
+ * $Id$
  */
 var ShortcutMenu = Class.create({
 

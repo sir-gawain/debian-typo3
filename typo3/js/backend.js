@@ -33,13 +33,10 @@ Ext.ns('TYPO3.configuration');
 /**
  * jump the backend to a module
  */
-function jump(url, modName, mainModName, pageId) {
-	if (isNaN(pageId)) {
-		pageId = -2;
-	}
+function jump(url, modName, mainModName) {
 		// clear information about which entry in nav. tree that might have been highlighted.
 	top.fsMod.navFrameHighlightedID = [];
-	top.fsMod.recentIds['web'] = pageId;
+	top.fsMod.recentIds['web'] = -2;
 
 	if (top.TYPO3.Backend.NavigationContainer.PageTree) {
 		top.TYPO3.Backend.NavigationContainer.PageTree.refreshTree();
@@ -100,7 +97,7 @@ function str_replace(match,replace,string)	{	//
 	var output = "";
 	var pointer=0;
 	var pos = input.indexOf(matchStr);
-	while (pos !== -1) {
+	while (pos !== -1)	{
 		output+=""+input.substr(pointer, pos-pointer)+replace;
 		pointer=pos+matchStr.length;
 		pos = input.indexOf(match,pos+1);
@@ -117,8 +114,8 @@ function str_replace(match,replace,string)	{	//
 function launchView(table,uid,bP)	{	//
 	var backPath= bP ? bP : "";
 	var thePreviewWindow="";
-	thePreviewWindow = window.open(TS.PATH_typo3+"show_item.php?table="+encodeURIComponent(table)+"&uid="+encodeURIComponent(uid),"ShowItem"+TS.uniqueID,"width=550,height=600,status=0,menubar=0,resizable=0,location=0,directories=0,scrollbars=1,toolbar=0");
-	if (thePreviewWindow && thePreviewWindow.focus) {
+	thePreviewWindow = window.open(TS.PATH_typo3+"show_item.php?table="+encodeURIComponent(table)+"&uid="+encodeURIComponent(uid),"ShowItem"+TS.uniqueID,"height=400,width=550,status=0,menubar=0,resizable=0,location=0,directories=0,scrollbars=1,toolbar=0");
+	if (thePreviewWindow && thePreviewWindow.focus)	{
 		thePreviewWindow.focus();
 	}
 }
@@ -142,7 +139,7 @@ function loadEditId(id,addGetVars)	{	//
 	top.fsMod.recentIds.web = id;
 	top.fsMod.navFrameHighlightedID.web = "pages" + id + "_0";		// For highlighting
 
-	if (top.content && top.content.nav_frame && top.content.nav_frame.refresh_nav) {
+	if (top.content && top.content.nav_frame && top.content.nav_frame.refresh_nav)	{
 		top.content.nav_frame.refresh_nav();
 	}
 	if (TYPO3.configuration.pageModule) {
@@ -157,7 +154,7 @@ function loadEditId(id,addGetVars)	{	//
 var nextLoadModuleUrl="";
 function getModuleUrl(inUrl)	{	//
 	var nMU;
-	if (top.nextLoadModuleUrl) {
+	if (top.nextLoadModuleUrl)	{
 		nMU=top.nextLoadModuleUrl;
 		top.nextLoadModuleUrl="";
 		return nMU;
@@ -172,7 +169,7 @@ function getModuleUrl(inUrl)	{	//
 function debugObj(obj,name)	{	//
 	var acc;
 	for (var i in obj) {
-		if (obj[i]) {
+		if (obj[i])	{
 			acc+=i+":  "+obj[i]+"\n";
 		}
 	}

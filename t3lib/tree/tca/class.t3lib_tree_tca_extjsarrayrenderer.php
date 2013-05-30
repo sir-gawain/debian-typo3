@@ -28,10 +28,11 @@
 /**
  * Renders a tca tree array for ExtJS
  *
- * @author Steffen Ritter <info@steffen-ritter.net>
+ * @author	Steffen Ritter <info@steffen-ritter.net>
  * @package TYPO3
  * @subpackage t3lib_tree
  */
+
 class t3lib_tree_Tca_ExtJsArrayRenderer extends t3lib_tree_Renderer_ExtJsJson {
 
 	/**
@@ -46,9 +47,9 @@ class t3lib_tree_Tca_ExtJsArrayRenderer extends t3lib_tree_Renderer_ExtJsJson {
 		$nodeArray = array_merge(
 			$nodeArray,
 			array(
-				'expanded' => $node->getExpanded(),
-				'expandable' => $node->hasChildNodes(),
-				'checked' => $node->getSelected(),
+				 'expanded' => $node->getExpanded(),
+				 'expandable' => $node->hasChildNodes(),
+				 'checked' => $node->getSelected(),
 			)
 		);
 		if (!$node->getSelectable()) {
@@ -62,7 +63,7 @@ class t3lib_tree_Tca_ExtJsArrayRenderer extends t3lib_tree_Renderer_ExtJsJson {
 	 * Renders a node collection recursive or just a single instance
 	 *
 	 * @param t3lib_tree_NodeCollection $node
-	 * @param boolean $recursive
+	 * @param bool $recursive
 	 * @return array
 	 */
 	public function renderTree(t3lib_tree_AbstractTree $tree, $recursive = TRUE) {

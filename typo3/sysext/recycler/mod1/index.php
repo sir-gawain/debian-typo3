@@ -31,6 +31,7 @@ $BE_USER->modAccess($MCONF, 1);	// This checks permissions and exits if the user
  * @author	Julian Kleinhans <typo3@kj187.de>
  * @package	TYPO3
  * @subpackage	tx_recycler
+ * @version $Id$
  */
 class  tx_recycler_module1 extends t3lib_SCbase {
 	/**
@@ -40,9 +41,9 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 
 	protected $relativePath;
 	protected $pageRecord = array();
-	protected $isAccessibleForCurrentUser = FALSE;
+	protected $isAccessibleForCurrentUser = false;
 
-	protected $allowDelete = FALSE;
+	protected $allowDelete = false;
 	protected $recordsPageLimit = 50;
 
 	/**
@@ -72,13 +73,13 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 
 		//don't access in workspace
 		if ($GLOBALS['BE_USER']->workspace !== 0) {
-			$this->isAccessibleForCurrentUser = FALSE;
+			$this->isAccessibleForCurrentUser = false;
 		}
 
 		//read configuration
 		$modTS = $GLOBALS['BE_USER']->getTSConfig('mod.recycler');
 		if ($this->isCurrentUserAdmin()) {
-			$this->allowDelete = TRUE;
+			$this->allowDelete = true;
 		} else {
 			$this->allowDelete = ($modTS['properties']['allowDelete'] == '1');
 		}
@@ -88,13 +89,14 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 	}
 
 	/**
-	 * Renders the content of the module.
+	 * Renders the contente of the module.
 	 *
 	 * @return	void
 	 */
 	public function render() {
-		$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('title'));
-		$this->content .= $this->doc->section('', $GLOBALS['LANG']->getLL('description'));
+		global $BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
+
+		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('title'), $GLOBALS['LANG']->getLL('description'));
 		if ($this->isAccessibleForCurrentUser) {
 			$this->loadHeaderData();
 				// div container for renderTo
@@ -122,8 +124,8 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 			$content
 		);
 
-		$this->content = NULL;
-		$this->doc = NULL;
+		$this->content = null;
+		$this->doc = null;
 
 		echo $content;
 	}
@@ -159,7 +161,9 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 			$this->getJavaScriptLabels()
 		);
 
+
 			// Load Recycler JavaScript:
+
 			// Load Plugins
 		$uxPath = $this->doc->backpath . '../t3lib/js/extjs/ux/';
 		$this->pageRenderer->addJsFile($uxPath . 'Ext.grid.RowExpander.js');
@@ -213,6 +217,11 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 		$extensionLabels = $this->getJavaScriptLabelsFromLocallang('js.', 'label_');
 		$javaScriptLabels = array_merge($coreLabels, $extensionLabels);
 
+			// Convert labels back to UTF-8 since json_encode() only works with UTF-8:
+		if ($GLOBALS['LANG']->charSet !== 'utf-8') {
+			$GLOBALS['LANG']->csConvObj->convArray($javaScriptLabels, $GLOBALS['LANG']->charSet, 'utf-8');
+		}
+
 		return $javaScriptLabels;
 	}
 
@@ -232,7 +241,7 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 		);
 			// Regular expression to strip the selection prefix and possibly something from the label name:
 		$labelPattern = '#^' . preg_quote($selectionPrefix, '#') . '(' . preg_quote($stripFromSelectionName, '#') . ')?#';
-			// Iterate through all locallang lables:
+			// Iterate throuh all locallang lables:
 		foreach ($labels as $label => $value) {
 			if (strpos($label, $selectionPrefix) === 0) {
 				$key = preg_replace($labelPattern, '', $label);
@@ -263,7 +272,7 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 	/**
 	 * Gets the button to set a new shortcut in the backend (if current user is allowed to).
 	 *
-	 * @return	string		HTML representation of the shortcut button
+	 * @return	string		HTML representiation of the shortcut button
 	 */
 	protected function getShortcutButton() {
 		$result = '';
@@ -319,6 +328,14 @@ class  tx_recycler_module1 extends t3lib_SCbase {
 	}
 }
 
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/mod1/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/mod1/index.php']);
+}
+
+
+
 // Make instance:
 $SOBE = t3lib_div::makeInstance('tx_recycler_module1');
 $SOBE->initialize();
@@ -330,5 +347,4 @@ foreach($SOBE->include_once as $INC_FILE) {
 
 $SOBE->render();
 $SOBE->flush();
-
 ?>

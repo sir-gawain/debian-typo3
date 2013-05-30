@@ -51,7 +51,7 @@ TYPO3.Components.Tree.StandardTree = function(config) {
 			clearOnLoad: false
 		}),
 		root: new Ext.tree.AsyncTreeNode({
-			text: TYPO3.l10n.localize('tcatree'),
+			text: TYPO3.lang.tcatree,
 			id: 'root',
 			expanded: true,
 			children: TYPO3.Components.Tree.StandardTreeItemData[config.id]
@@ -117,7 +117,7 @@ TYPO3.Components.Tree.Toolbar = function(items, scope) {
 			menu: {
 				items: [
 					{
-						text: TYPO3.l10n.localize('tcatree.filter.startsWith'),
+						text: TYPO3.lang['tcatree.filter.startsWith'],
 						checked: true,
 						group: 'searchStartsWith',
 						handler: function(item) {
@@ -127,7 +127,7 @@ TYPO3.Components.Tree.Toolbar = function(items, scope) {
 						scope: scope
 					},
 					{
-						text: TYPO3.l10n.localize('tcatree.filter.contains'),
+						text: TYPO3.lang['tcatree.filter.contains'],
 						checked: false,
 						group: 'searchStartsWith',
 						handler: function(item) {
@@ -141,7 +141,7 @@ TYPO3.Components.Tree.Toolbar = function(items, scope) {
 		},
 		new Ext.form.TextField({
 			width: 150,
-			emptyText: TYPO3.l10n.localize('tcatree.findItem'),
+			emptyText: TYPO3.lang['tcatree.findItem'],
 			enableKeyEvents: true,
 			itemId: 'filterText',
 			listeners:{
@@ -161,25 +161,15 @@ TYPO3.Components.Tree.Toolbar = function(items, scope) {
 		}),
 		'->',
 		{
-			iconCls: 't3-icon t3-icon-apps t3-icon-apps-tcatree t3-icon-tcatree-select-recursive',
-			tooltip: TYPO3.lang['tcatree.enableRecursiveSelection'],
-			enableToggle: true,
-			disable: scope.tcaSelectRecursive,
-			toggleHandler: function(btn, state) {
-				this.tcaSelectRecursive = state;
-			},
-			scope: scope
-		},
-		{
 			iconCls: 'icon-expand-all',
-			tooltip: TYPO3.l10n.localize('tcatree.expandAll'),
+			tooltip: TYPO3.lang['tcatree.expandAll'],
 			handler: function() {
 					this.root.expand(true);
 			},
 			scope: scope
 		}, {
 			iconCls: 'icon-collapse-all',
-			tooltip: TYPO3.l10n.localize('tcatree.collapseAll'),
+			tooltip: TYPO3.lang['tcatree.collapseAll'],
 			handler: function() {
 				this.root.collapse(true);
 			},
@@ -231,13 +221,6 @@ TYPO3.Components.Tree.TcaCheckChangeHandler = function(checkedNode, checked) {
 		checkedNode.getUI().addClass('complete');
 	} else {
 		checkedNode.getUI().removeClass('complete');
-	}
-		// if recursive selection is asked, hand over selection
-	if(this.tcaSelectRecursive) {
-		checkedNode.cascade(function(node) {
-			node.attributes.checked = checkedNode.attributes.checked;
-			node.ui.toggleCheck(checkedNode.attributes.checked);
-		})
 	}
 	var selected = [];
 	this.root.cascade(function(node) {

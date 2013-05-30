@@ -1,6 +1,7 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Web > Page
 
+$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 td.t3-page-column {
@@ -25,36 +26,22 @@ td.t3-page-column {
 }
 
 .t3-page-ce {
-	margin-bottom: 5px;
-	min-width: 150px;
+	margin-bottom: 10px;
 }
 
 .t3-page-ce h4 {
 	margin: 0;
 }
 
-.t3-page-ce .t3-row-header .ce-icons{
+.t3-page-ce .t3-row-header {
 	visibility: hidden;
 }
 
-.t3-page-ce.active .t3-row-header .ce-icons {
+.t3-page-ce.active .t3-row-header {
 	visibility: visible;
 }
 
-.t3-row-header .ce-icons-left {
-	float: left;
-}
-
-.t3-row-header .ce-icons {
-	float: right;
-}
-
 .t3-page-ce-icons-move {
-	display: block;
-	padding-left: 3px;
-	padding-top: 3px;
-	padding-bottom: 3px;
-	margin-right: -4px;
 	float: right;
 }
 
@@ -67,12 +54,16 @@ td.t3-page-column {
 	float: left;
 }
 
-.t3-page-ce-body-inner {
+.t3-page-ce-body {
 	padding: 7px;
 }
 
-.t3-page-ce-footer .t3-page-ce-info {
-	padding:4px;
+.t3-page-ce-type {
+	margin-bottom: 5px;
+}
+
+.t3-page-ce-type a {
+	vertical-align: text-bottom;
 }
 
 table.typo3-page-columnsMode img.c-divider {

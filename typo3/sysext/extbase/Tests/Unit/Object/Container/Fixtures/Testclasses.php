@@ -16,10 +16,6 @@ class t3lib_object_tests_a {
 	public $b;
 	public $c;
 
-	/**
-	 * @param t3lib_object_tests_c $c
-	 * @param t3lib_object_tests_b $b
-	 */
 	public function __construct( t3lib_object_tests_c $c, t3lib_object_tests_b $b) {
 		$this->b = $b;
 		$this->c = $c;
@@ -33,12 +29,6 @@ class t3lib_object_tests_amixed_array {
 	public $b;
 	public $c;
 	public $myvalue;
-
-	/**
-	 * @param t3lib_object_tests_b $b
-	 * @param t3lib_object_tests_c $c
-	 * @param array $myvalue
-	 */
 	public function __construct(t3lib_object_tests_b $b, t3lib_object_tests_c $c, array $myvalue=array('some' => 'default')) {
 		$this->b = $b;
 		$this->c = $c;
@@ -54,12 +44,6 @@ class t3lib_object_tests_amixed_null {
 	public $b;
 	public $c;
 	public $myvalue;
-
-	/**
-	 * @param t3lib_object_tests_b $b
-	 * @param t3lib_object_tests_c $c
-	 * @param mixed $myvalue
-	 */
 	public function __construct(t3lib_object_tests_b $b, t3lib_object_tests_c $c, $myvalue = NULL) {
 		$this->b = $b;
 		$this->c = $c;
@@ -75,12 +59,6 @@ class t3lib_object_tests_amixed_array_singleton implements t3lib_Singleton {
 	public $b;
 	public $c;
 	public $myvalue;
-
-	/**
-	 * @param t3lib_object_tests_b $b
-	 * @param t3lib_object_tests_c $c
-	 * @param array $someDefaultParameter
-	 */
 	public function __construct(t3lib_object_tests_b $b, t3lib_object_tests_c $c, $someDefaultParameter = array('some' => 'default')) {
 		$this->b = $b;
 		$this->c = $c;
@@ -94,10 +72,6 @@ class t3lib_object_tests_amixed_array_singleton implements t3lib_Singleton {
  */
 class t3lib_object_tests_b implements t3lib_Singleton {
 	public $c;
-
-	/**
-	 * @param t3lib_object_tests_c $c
-	 */
 	public function __construct(t3lib_object_tests_c $c) {
 		$this->c = $c;
 	}
@@ -119,9 +93,6 @@ class t3lib_object_tests_c implements t3lib_Singleton {
 class t3lib_object_tests_b_child extends t3lib_object_tests_b {
 }
 
-/**
- *
- */
 interface t3lib_object_tests_someinterface extends t3lib_Singleton {
 
 }
@@ -145,10 +116,6 @@ class t3lib_object_tests_b_child_someimplementation extends t3lib_object_tests_b
  *
  */
 class t3lib_object_tests_needsinterface {
-
-	/**
-	 * @param t3lib_object_tests_someinterface $i
-	 */
 	public function __construct(t3lib_object_tests_someinterface $i) {
 		$this->dependency = $i;
 	}
@@ -159,49 +126,24 @@ class t3lib_object_tests_needsinterface {
  *
  */
 class t3lib_object_tests_cyclic1 {
-
-	/**
-	 * @param t3lib_object_tests_cyclic2 $c
-	 */
 	public function __construct(t3lib_object_tests_cyclic2 $c) {
 
 	}
 }
 
-/**
- *
- */
 class t3lib_object_tests_cyclic2 {
-
-	/**
-	 * @param t3lib_object_tests_cyclic1 $c
-	 */
 	public function __construct(t3lib_object_tests_cyclic1 $c) {
 
 	}
 }
 
-/**
- *
- */
 class t3lib_object_tests_cyclic1WithSetterDependency {
-
-	/**
-	 * @param t3lib_object_tests_cyclic2WithSetterDependency $c
-	 */
 	public function injectFoo(t3lib_object_tests_cyclic2WithSetterDependency $c) {
 
 	}
 }
 
-/**
- *
- */
 class t3lib_object_tests_cyclic2WithSetterDependency {
-
-	/**
-	 * @param t3lib_object_tests_cyclic1WithSetterDependency $c
-	 */
 	public function injectFoo(t3lib_object_tests_cyclic1WithSetterDependency $c) {
 
 	}
@@ -215,16 +157,13 @@ class t3lib_object_tests_injectmethods {
 	public $b;
 	public $bchild;
 
-	/**
-	 * @param t3lib_object_tests_b $o
-	 */
 	public function injectClassB(t3lib_object_tests_b $o) {
 		$this->b = $o;
 	}
 
 	/**
 	 * @inject
-	 * @param t3lib_object_tests_b_child $o
+	 * @param t3lib_object_tests_b $o
 	 */
 	public function setClassBChild(t3lib_object_tests_b_child $o) {
 		$this->bchild = $o;
@@ -237,10 +176,6 @@ class t3lib_object_tests_injectmethods {
  */
 class t3lib_object_tests_injectsettings {
 	public $settings;
-
-	/**
-	 * @param array $settings
-	 */
 	public function injectExtensionSettings(array $settings) {
 		$this->settings = $settings;
 	}
@@ -252,10 +187,6 @@ class t3lib_object_tests_injectsettings {
  */
 class t3lib_object_tests_resolveablecyclic1 implements t3lib_Singleton {
 	public $o2;
-
-	/**
-	 * @param t3lib_object_tests_resolveablecyclic2 $cyclic2
-	 */
 	public function __construct(t3lib_object_tests_resolveablecyclic2 $cyclic2) {
 		$this->o2 = $cyclic2;
 	}
@@ -268,17 +199,9 @@ class t3lib_object_tests_resolveablecyclic1 implements t3lib_Singleton {
 class t3lib_object_tests_resolveablecyclic2 implements t3lib_Singleton {
 	public $o1;
 	public $o3;
-
-	/**
-	 * @param t3lib_object_tests_resolveablecyclic1 $cyclic1
-	 */
 	public function injectCyclic1(t3lib_object_tests_resolveablecyclic1 $cyclic1) {
 		$this->o1 = $cyclic1;
 	}
-
-	/**
-	 * @param t3lib_object_tests_resolveablecyclic3 $cyclic3
-	 */
 	public function injectCyclic3(t3lib_object_tests_resolveablecyclic3 $cyclic3) {
 		$this->o3 = $cyclic3;
 	}
@@ -290,29 +213,15 @@ class t3lib_object_tests_resolveablecyclic2 implements t3lib_Singleton {
  */
 class t3lib_object_tests_resolveablecyclic3 implements t3lib_Singleton {
 	public $o1;
-
-	/**
-	 * @param t3lib_object_tests_resolveablecyclic1 $cyclic1
-	 */
 	public function injectCyclic1(t3lib_object_tests_resolveablecyclic1 $cyclic1) {
 		$this->o1 = $cyclic1;
 	}
 }
 
-/**
- *
- */
 class t3lib_object_tests_class_with_injectsettings {
-
-	/**
-	 * @param t3lib_object_tests_resolveablecyclic1 $c1
-	 */
 	public function injectFoo(t3lib_object_tests_resolveablecyclic1 $c1) {
 	}
 
-	/**
-	 * @param array $settings
-	 */
 	public function injectSettings(array $settings) {
 	}
 }
@@ -323,137 +232,51 @@ If a Singleton requires a Singleton for Injection -> allowed, autowiring active
 If a Prototype requires a Prototype for Injection -> allowed, autowiring active
 If a Prototype requires a Singleton for Injection -> allowed, autowiring active
  */
-/**
- *
- */
 class t3lib_object_singleton implements t3lib_Singleton {
 }
 
-/**
- *
- */
 class t3lib_object_prototype {
 }
 
-/**
- *
- */
 class t3lib_object_singletonNeedsPrototype implements t3lib_Singleton {
-
-	/**
-	 * @var t3lib_object_prototype
-	 */
-	public $dependency;
-
-	/**
-	 * @param t3lib_object_prototype $dependency
-	 */
 	public function injectDependency(t3lib_object_prototype $dependency) {
 		$this->dependency = $dependency;
 	}
 }
 
-/**
- *
- */
 class t3lib_object_singletonNeedsSingleton implements t3lib_Singleton {
-
-	/**
-	 * @var t3lib_object_singleton
-	 */
-	public $dependency;
-
-	/**
-	 * @param t3lib_object_singleton $dependency
-	 */
 	public function injectDependency(t3lib_object_singleton $dependency) {
 		$this->dependency = $dependency;
 	}
 }
-
-/**
- *
- */
 class t3lib_object_prototypeNeedsPrototype {
-
-	/**
-	 * @var t3lib_object_prototype
-	 */
-	public $dependency;
-
-	/**
-	 * @param t3lib_object_prototype $dependency
-	 */
 	public function injectDependency(t3lib_object_prototype $dependency) {
 		$this->dependency = $dependency;
 	}
 }
-
-/**
- *
- */
 class t3lib_object_prototypeNeedsSingleton {
-
-	/**
-	 * @var t3lib_object_singleton
-	 */
-	public $dependency;
-
-	/**
-	 * @param t3lib_object_singleton $dependency
-	 */
 	public function injectDependency(t3lib_object_singleton $dependency) {
 		$this->dependency = $dependency;
 	}
 }
 
-/**
- *
- */
 class t3lib_object_singletonNeedsPrototypeInConstructor implements t3lib_Singleton {
-
-	/**
-	 * @param t3lib_object_prototype $dependency
-	 */
 	public function __construct(t3lib_object_prototype $dependency) {
 		$this->dependency = $dependency;
 	}
 }
 
-/**
- *
- */
 class t3lib_object_singletonNeedsSingletonInConstructor implements t3lib_Singleton {
-
-	/**
-	 * @param t3lib_object_singleton $dependency
-	 */
 	public function __construct(t3lib_object_singleton $dependency) {
 		$this->dependency = $dependency;
 	}
 }
-
-/**
- *
- */
 class t3lib_object_prototypeNeedsPrototypeInConstructor {
-
-	/**
-	 * @param t3lib_object_prototype $dependency
-	 */
 	public function __construct(t3lib_object_prototype $dependency) {
 		$this->dependency = $dependency;
 	}
 }
-
-/**
- *
- */
 class t3lib_object_prototypeNeedsSingletonInConstructor {
-
-	/**
-	 * @param t3lib_object_singleton $dependency
-	 */
 	public function __construct(t3lib_object_singleton $dependency) {
 		$this->dependency = $dependency;
 	}

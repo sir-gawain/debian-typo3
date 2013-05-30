@@ -27,11 +27,20 @@
 /**
  * Dynamic configuation of the system-related tables, typ. sys_* series
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * $Id$
+ *
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
-	// fe_users
-	// FrontEnd users - login on the website
+
+
+
+
+// ******************************************************************
+// fe_users
+//
+// FrontEnd users - login on the website
+// ******************************************************************
 $TCA['fe_users'] = array(
 	'ctrl' => $TCA['fe_users']['ctrl'],
 	'interface' => array(
@@ -245,9 +254,9 @@ $TCA['fe_users'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.starttime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '13',
+				'size' => '8',
 				'max' => '20',
-				'eval' => 'datetime',
+				'eval' => 'date',
 				'default' => '0',
 			)
 		),
@@ -256,12 +265,12 @@ $TCA['fe_users'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.endtime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '13',
+				'size' => '8',
 				'max' => '20',
-				'eval' => 'datetime',
+				'eval' => 'date',
 				'default' => '0',
 				'range' => array(
-					'upper' => mktime(0, 0, 0, 12, 31, 2020),
+					'upper' => mktime(0,0,0,12,31,2020),
 				)
 			)
 		),
@@ -275,6 +284,7 @@ $TCA['fe_users'] = array(
 				'wizards' => array(
 					'_PADDING' => 4,
 					'0' => array(
+#						'type' => t3lib_extMgm::isLoaded('tsconfig_help')?'popup':'',
 						'title'  => 'TSconfig QuickReference',
 						'script' => 'wizard_tsconfig.php?mode=fe_users',
 						'icon'   => 'wizard_tsconfig.gif',
@@ -313,8 +323,15 @@ $TCA['fe_users'] = array(
 	)
 );
 
-	// fe_groups
-	// FrontEnd usergroups - Membership of these determines access to elements
+
+
+
+
+// ******************************************************************
+// fe_groups
+//
+// FrontEnd usergroups - Membership of these determines access to elements
+// ******************************************************************
 $TCA['fe_groups'] = array(
 	'ctrl' => $TCA['fe_groups']['ctrl'],
 	'interface' => array(
@@ -379,6 +396,7 @@ $TCA['fe_groups'] = array(
 				'wizards' => array(
 					'_PADDING' => 4,
 					'0' => array(
+#						'type' => t3lib_extMgm::isLoaded('tsconfig_help')?'popup':'',
 						'title' => 'TSconfig QuickReference',
 						'script' => 'wizard_tsconfig.php?mode=fe_users',
 						'icon' => 'wizard_tsconfig.gif',
@@ -399,7 +417,12 @@ $TCA['fe_groups'] = array(
 	)
 );
 
-	// sys_domain
+
+
+
+// ******************************************************************
+// sys_domain
+// ******************************************************************
 $TCA['sys_domain'] = array(
 	'ctrl' => $TCA['sys_domain']['ctrl'],
 	'interface' => array(
@@ -412,7 +435,7 @@ $TCA['sys_domain'] = array(
 				'type' => 'input',
 				'size' => '35',
 				'max' => '80',
-				'eval' => 'required,unique,lower,trim,domainname',
+				'eval' => 'required,unique,lower,trim',
 				'softref' => 'substitute'
 			),
 		),
@@ -421,7 +444,7 @@ $TCA['sys_domain'] = array(
 			'config' => array(
 				'type' => 'input',
 				'size' => '35',
-				'max' => '255',
+				'max' => '120',
 				'default' => '',
 				'eval' => 'trim',
 				'softref' => 'substitute'
@@ -475,7 +498,13 @@ $TCA['sys_domain'] = array(
 	)
 );
 
-	// pages_language_overlay
+
+
+
+
+// ******************************************************************
+// pages_language_overlay
+// ******************************************************************
 $TCA['pages_language_overlay'] = array(
 	'ctrl' => $TCA['pages_language_overlay']['ctrl'],
 	'interface' => array(
@@ -501,9 +530,9 @@ $TCA['pages_language_overlay'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.starttime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '13',
+				'size' => '8',
 				'max' => '20',
-				'eval' => 'datetime',
+				'eval' => 'date',
 				'default' => '0'
 			)
 		),
@@ -512,12 +541,12 @@ $TCA['pages_language_overlay'] = array(
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.endtime',
 			'config' => array(
 				'type' => 'input',
-				'size' => '13',
+				'size' => '8',
 				'max' => '20',
-				'eval' => 'datetime',
+				'eval' => 'date',
 				'default' => '0',
 				'range' => array(
-					'upper' => mktime(0, 0, 0, 12, 31, 2020),
+					'upper' => mktime(0,0,0,12,31,2020),
 				)
 			)
 		),
@@ -605,7 +634,17 @@ $TCA['pages_language_overlay'] = array(
 		'media' => array(
 			'exclude' => 1,
 			'label' => $TCA['pages']['columns']['media']['label'],
-			'config' => t3lib_extMgm::getFileFieldTCAConfig('media'),
+			'config' => array(
+				'type' => 'group',
+				'internal_type' => 'file',
+				'allowed' => $TCA['pages']['columns']['media']['config']['allowed'],
+				'max_size' => $GLOBALS['TYPO3_CONF_VARS']['BE']['maxFileSize'],
+				'uploadfolder' => 'uploads/media',
+				'show_thumbs' => '1',
+				'size' => '3',
+				'maxitems' => '5',
+				'minitems' => '0'
+			)
 		),
 		'url' => array(
 			'exclude' => 1,
@@ -660,7 +699,7 @@ $TCA['pages_language_overlay'] = array(
 				'foreign_table' => 'sys_language',
 				'foreign_table_where' => 'ORDER BY sys_language.title',
 				'items' => array(
-					array('LLL:EXT:lang/locallang_general.xml:LGL.default_value', 0)
+					array('LLL:EXT:lang/locallang_general.xml:LGL.default_value',0)
 				)
 			)
 		),
@@ -676,7 +715,7 @@ $TCA['pages_language_overlay'] = array(
 		),
 	),
 	'types' => array(
-			// normal
+		// normal
 		(string) t3lib_pageSelect::DOKTYPE_DEFAULT => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.standard;standard,
@@ -692,7 +731,7 @@ $TCA['pages_language_overlay'] = array(
 					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.media;media,
 				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 		'),
-			// external URL
+		// external URL
 		(string) t3lib_pageSelect::DOKTYPE_LINK => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.external;external,
@@ -707,7 +746,7 @@ $TCA['pages_language_overlay'] = array(
 					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.media;media,
 				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 		'),
-			// shortcut
+		// shortcut
 		(string) t3lib_pageSelect::DOKTYPE_SHORTCUT => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.shortcut;shortcut,
@@ -723,7 +762,23 @@ $TCA['pages_language_overlay'] = array(
 					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.media;media,
 				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 				'),
-			// mount page
+		// not in menu
+		(string) t3lib_pageSelect::DOKTYPE_HIDE_IN_MENU => array(
+			'showitem' =>
+			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.standard;standard,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.title;title,
+				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.access,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.visibility;hiddenonly,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.access;access,
+				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.metadata,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.abstract;abstract,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.metatags;metatags,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.editorial;editorial,
+				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.resources,
+					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.media;media,
+				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
+		'),
+		// mount page
 		(string) t3lib_pageSelect::DOKTYPE_MOUNTPOINT => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.standard;standard,
@@ -738,7 +793,7 @@ $TCA['pages_language_overlay'] = array(
 					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.media;media,
 				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 		'),
-			// spacer
+		// spacer
 		(string) t3lib_pageSelect::DOKTYPE_SPACER => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.standard;standard,
@@ -748,7 +803,7 @@ $TCA['pages_language_overlay'] = array(
 					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.access;access,
 				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 			'),
-			// sysfolder
+		// sysfolder
 		(string) t3lib_pageSelect::DOKTYPE_SYSFOLDER => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.standard;standard,
@@ -759,7 +814,7 @@ $TCA['pages_language_overlay'] = array(
 					--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.media;media,
 				--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.extended,
 		'),
-			// trash
+		// trash
 		(string) t3lib_pageSelect::DOKTYPE_RECYCLER => array(
 			'showitem' =>
 			'--palette--;LLL:EXT:cms/locallang_tca.xml:pages.palettes.standard;standard,
@@ -770,7 +825,7 @@ $TCA['pages_language_overlay'] = array(
 		'),
 	),
 	'palettes' => array(
-		'5' => array('showitem' => 'author,author_email', 'canNotCollapse' => TRUE),
+		'5' => array('showitem' => 'author,author_email', 'canNotCollapse' => true),
 		'standard' => array(
 			'showitem' => 'doktype;LLL:EXT:cms/locallang_tca.xml:pages.doktype_formlabel, sys_language_uid',
 			'canNotCollapse' => 1,
@@ -826,30 +881,15 @@ $TCA['pages_language_overlay'] = array(
 	)
 );
 
-	// Keep old code (pre-FAL) for installations that haven't upgraded yet.
-	// @deprecated since TYPO3 6.0, please remove in TYPO3 7.0
-	// existing installation - and files are merged, nothing to do
-if ((!isset($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard']) || !t3lib_div::inList($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone']['Tx_Install_Updates_File_TceformsUpdateWizard'], 'pages_language_overlay:media')) && !t3lib_div::compat_version('6.0')) {
-	t3lib_div::deprecationLog('This installation hasn\'t been migrated to FAL for the field $TCA[pages_language_overlay][columns][media] yet. Please do so before TYPO3 v7.');
-		// Existing installation and no upgrade wizard was executed - and files haven't been merged: use the old code
-	$TCA['pages_language_overlay']['columns']['media']['config'] = array(
-		'type' => 'group',
-		'internal_type' => 'file',
-		'allowed' => $TCA['pages']['columns']['media']['config']['allowed'],
-		'max_size' => $GLOBALS['TYPO3_CONF_VARS']['BE']['maxFileSize'],
-		'uploadfolder' => 'uploads/media',
-		'show_thumbs' => '1',
-		'size' => '3',
-		'maxitems' => '100',
-		'minitems' => '0'
-	);
-}
 
-	// sys_template
+
+// ******************************************************************
+// sys_template
+// ******************************************************************
 $TCA['sys_template'] = array(
 	'ctrl' => $TCA['sys_template']['ctrl'],
 	'interface' => array(
-		'showRecordFieldList' => 'title,clear,root,basedOn,nextLevel,sitetitle,description,hidden,starttime,endtime'
+		'showRecordFieldList' => 'title,clear,root,basedOn,nextLevel,resources,sitetitle,description,hidden,starttime,endtime'
 	),
 	'columns' => array(
 		'title' => array(
@@ -874,9 +914,9 @@ $TCA['sys_template'] = array(
 			'exclude' => 1,
 			'config' => array(
 				'type' => 'input',
-				'size' => '13',
+				'size' => '8',
 				'max' => '20',
-				'eval' => 'datetime',
+				'eval' => 'date',
 				'default' => '0'
 			)
 		),
@@ -885,12 +925,12 @@ $TCA['sys_template'] = array(
 			'exclude' => 1,
 			'config' => array(
 				'type' => 'input',
-				'size' => '13',
+				'size' => '8',
 				'max' => '20',
-				'eval' => 'datetime',
+				'eval' => 'date',
 				'default' => '0',
 				'range' => array(
-					'upper' => mktime(0, 0, 0, 12, 31, 2020),
+					'upper' => mktime(0,0,0,12,31,2020),
 				)
 			)
 		),
@@ -929,6 +969,20 @@ $TCA['sys_template'] = array(
 				'softref' => 'TStemplate,email[subst],url[subst]'
 			),
 			'defaultExtras' => 'fixed-font : enable-tab',
+		),
+		'resources' => array(
+			'label' => 'LLL:EXT:cms/locallang_tca.xml:sys_template.resources',
+			'config' => array(
+				'type' => 'group',
+				'internal_type' => 'file',
+				'allowed' => $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'].',html,htm,ttf,pfb,pfm,txt,css,tmpl,inc,ico,js,xml',
+				'max_size' => $GLOBALS['TYPO3_CONF_VARS']['BE']['maxFileSize'],
+				'uploadfolder' => 'uploads/tf',
+				'show_thumbs' => '1',
+				'size' => '7',
+				'maxitems' => '100',
+				'minitems' => '0'
+			)
 		),
 		'nextLevel' => array(
 			'label' => 'LLL:EXT:cms/locallang_tca.xml:sys_template.nextLevel',
@@ -1016,6 +1070,7 @@ $TCA['sys_template'] = array(
 				'wizards' => array(
 					'_PADDING' => 4,
 					'0' => array(
+#						'type' => t3lib_extMgm::isLoaded('tsconfig_help')?'popup':'',
 						'title' => 'TSref online',
 						'script' => 'wizard_tsconfig.php?mode=tsref',
 						'icon' => 'wizard_tsconfig.gif',
@@ -1024,6 +1079,16 @@ $TCA['sys_template'] = array(
 				),
 				'wrap' => 'OFF',
 				'softref' => 'TStemplate,email[subst],url[subst]'
+			),
+			'defaultExtras' => 'fixed-font : enable-tab',
+		),
+		'editorcfg' => array(
+			'label' => 'LLL:EXT:cms/locallang_tca.xml:sys_template.editorcfg',
+			'config' => array(
+				'type' => 'text',
+				'rows' => 8,
+				'cols' => 48,
+				'wrap' => 'OFF'
 			),
 			'defaultExtras' => 'fixed-font : enable-tab',
 		),
@@ -1043,7 +1108,6 @@ $TCA['sys_template'] = array(
 					array('LLL:EXT:cms/locallang_tca.xml:sys_template.static_file_mode.0', '0'),
 					array('LLL:EXT:cms/locallang_tca.xml:sys_template.static_file_mode.1', '1'),
 					array('LLL:EXT:cms/locallang_tca.xml:sys_template.static_file_mode.2', '2'),
-					array('LLL:EXT:cms/locallang_tca.xml:sys_template.static_file_mode.3', '3'),
 				),
 				'default' => '0'
 			)
@@ -1061,7 +1125,7 @@ $TCA['sys_template'] = array(
 	'types' => array(
 		'1' => array('showitem' => '
 			hidden,title;;1;;2-2-2, sitetitle, constants;;;;3-3-3, config, description;;;;4-4-4,
-			--div--;LLL:EXT:cms/locallang_tca.xml:sys_template.tabs.options, clear, root, nextLevel,
+			--div--;LLL:EXT:cms/locallang_tca.xml:sys_template.tabs.options, clear, root, nextLevel, editorcfg;;;;5-5-5,
 			--div--;LLL:EXT:cms/locallang_tca.xml:sys_template.tabs.include, includeStaticAfterBasedOn,6-6-6, include_static_file, basedOn, static_file_mode,
 			--div--;LLL:EXT:cms/locallang_tca.xml:sys_template.tabs.files, resources,
 			--div--;LLL:EXT:cms/locallang_tca.xml:sys_template.tabs.access, starttime, endtime'
@@ -1069,7 +1133,9 @@ $TCA['sys_template'] = array(
 	)
 );
 
-	// backend_layout
+// ******************************************************************
+// backend_layout
+// ******************************************************************
 $TCA['backend_layout'] = array(
 	'ctrl' => $TCA['backend_layout']['ctrl'],
 	'interface' => array(

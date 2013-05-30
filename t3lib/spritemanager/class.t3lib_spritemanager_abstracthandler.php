@@ -25,11 +25,12 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
  * An abstract class implementing t3lib_spritemanager_SpriteIconGenerator.
  * Provides base functionality for all handlers.
  *
- * @author Steffen Ritter <info@steffen-ritter.net>
+ * @author	Steffen Ritter <info@steffen-ritter.net>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -42,22 +43,22 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 
 	/**
 	 * contains the content of the CSS file to write
-	 * @var string
+	 * @var String
 	 */
 	protected $styleSheetData = '';
 
 	/**
 	 * path to CSS file for generated styles
-	 * @var string
+	 * @var String
 	 */
-	protected $cssTcaFile = '';
+	protected $cssTcaFile = "";
 
 	/**
 	 * constructor just init's the temp-file-name
 	 * @return void
 	 */
-	public function __construct() {
-			// The file name is prefixed with "z" since the concatenator orders files per name
+	function __construct() {
+			// the file name is prefixed with "z" since the concatenator orders files per name
 		$this->cssTcaFile = PATH_site . t3lib_SpriteManager::$tempPath . 'zextensions.css';
 		$this->styleSheetData = '/* Auto-Generated via ' . get_class($this) . ' */' . LF;
 	}
@@ -73,12 +74,12 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 	 * @return void
 	 */
 	protected function loadRegisteredSprites() {
-			// Saves which CSS Files are currently "allowed to be in place"
+			// saves which CSS Files are currently "allowed to be in place"
 		$allowedCssFilesinTempDir = array(basename($this->cssTcaFile));
-			// Process every registeres file
+			// process every registeres file
 		foreach ((array) $GLOBALS['TBE_STYLES']['spritemanager']['cssFiles'] as $file) {
 			$fileName = basename($file);
-				// File should be present
+				// file should be present
 			$allowedCssFilesinTempDir[] = $fileName;
 				// get-Cache Filename
 			$unique = md5($fileName . filemtime(PATH_site . $file) . filesize(PATH_site . $file));
@@ -87,7 +88,7 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 				copy(PATH_site . $file, $cacheFile);
 			}
 		}
-			// Get all .css files in dir
+			// get all .css files in dir
 		$cssFilesPresentInTempDir = t3lib_div::getFilesInDir(PATH_site . t3lib_SpriteManager::$tempPath, '.css', 0);
 			// and delete old ones which are not needed anymore
 		$filesToDelete = array_diff($cssFilesPresentInTempDir, $allowedCssFilesinTempDir);
@@ -103,10 +104,10 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 	 * @return void
 	 */
 	public function generate() {
-			// Include registered Sprites
+			// include registered Sprites
 		$this->loadRegisteredSprites();
 
-			// Cache results in the CSS file
+			// cache results in the CSS file
 		t3lib_div::writeFile($this->cssTcaFile, $this->styleSheetData);
 	}
 
@@ -123,14 +124,14 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 	 * this method creates sprite icon names for all tables in TCA (including their possible type-icons)
 	 * where there is no "typeicon_classes" of this TCA table ctrl section (moved form t3lib_iconWorks)
 	 *
-	 * @return array Array as $iconName => $fileName
+	 * @return array array as $iconName => $fileName
 	 */
 	protected function collectTcaSpriteIcons() {
 		$tcaTables = array_keys($GLOBALS['TCA']);
 
 		$resultArray = array();
 
-			// Path (relative from typo3 dir) for skin-Images
+			// path (relative from typo3 dir) for skin-Images
 		if (isset($GLOBALS['TBE_STYLES']['skinImgAutoCfg']['relDir'])) {
 			$skinPath = $GLOBALS['TBE_STYLES']['skinImgAutoCfg']['relDir'];
 		} else {
@@ -140,14 +141,14 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 			// check every table in the TCA, if an icon is needed
 		foreach ($tcaTables as $tableName) {
 
-				// This method is only needed for TCA tables where
+				// this method is only needed for TCA tables where
 				// typeicon_classes are not configured
-			if (!is_array($GLOBALS['TCA'][$tableName]['ctrl']['typeicon_classes'])) {
+			if (is_array($GLOBALS['TCA'][$tableName]) && !is_array($GLOBALS['TCA'][$tableName]['ctrl']['typeicon_classes'])) {
 				$tcaCtrl = $GLOBALS['TCA'][$tableName]['ctrl'];
 
-					// Adding the default Icon (without types)
+					// adding the default Icon (without types)
 				if (isset($tcaCtrl['iconfile'])) {
-						// In CSS we need a path relative to the css file
+						// in CSS wie need a path relative to the css file
 						// [TCA][ctrl][iconfile] defines icons without path info to reside in gfx/i/
 					if (strpos($tcaCtrl['iconfile'], '/') !== FALSE) {
 						$icon = $tcaCtrl['iconfile'];
@@ -160,11 +161,11 @@ abstract class t3lib_spritemanager_AbstractHandler implements t3lib_spritemanage
 
 				}
 
-					// If records types are available, register them
+					// if records types are available, register them
 				if (isset($tcaCtrl['typeicon_column']) && is_array($tcaCtrl['typeicons'])) {
 					foreach ($tcaCtrl['typeicons'] as $type => $icon) {
 
-							// In CSS we need a path relative to the css file
+							// in CSS wie need a path relative to the css file
 							// [TCA][ctrl][iconfile] defines icons without path info to reside in gfx/i/
 						if (strpos($icon, '/') === FALSE) {
 							$icon = $skinPath . 'gfx/i/' . $icon;

@@ -27,6 +27,8 @@
  *
  * Module: Extension manager - Mirror list importer
  *
+ * $Id: class.tx_em_import_mirrorlistimporter.php 1982 2010-03-09 06:29:55Z mkrause $
+ *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -79,18 +81,17 @@ class tx_em_Import_MirrorListImporter implements SplObserver {
 	}
 
 	/**
-	 * Method collects mirrors' details and returns instance of tx_em_Repository_Mirrors
+	 * Method collects mirrors' details and returns instance of em_repository_mirrors
 	 * with retrieved details.
 	 *
 	 * @access  public
-	 * @param   string  $localMirrorListFile  absolute path to (gzipped) local mirror list xml file
-	 * @return  tx_em_Repository_Mirrors
+	 * @param   string  $localMirrorListFile  bsolute path to (gzipped) local mirror list xml file
+	 * @return  em_repository_mirrors
 	 */
 	public function getMirrors($localMirrorListFile) {
 		$zlibStream = 'compress.zlib://';
 
 		$this->parser->parseXML($zlibStream . $localMirrorListFile);
-		/** @var $objRepositoryMirrors tx_em_Repository_Mirrors */
 		$objRepositoryMirrors = t3lib_div::makeInstance('tx_em_Repository_Mirrors');
 		$objRepositoryMirrors->setMirrors($this->arrTmpMirrors);
 		$this->arrTmpMirrors = array();
@@ -111,4 +112,9 @@ class tx_em_Import_MirrorListImporter implements SplObserver {
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/import/class.tx_em_import_mirrorlistimporter.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/import/class.tx_em_import_mirrorlistimporter.php']);
+}
+
 ?>

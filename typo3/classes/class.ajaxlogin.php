@@ -27,7 +27,7 @@
 /**
  * This is the ajax handler for backend login after timeout.
  *
- * @author Christoph Koehler <christoph@webempoweredchurch.org>
+ * @author	Christoph Koehler <christoph@webempoweredchurch.org>
  */
 class AjaxLogin {
 
@@ -38,9 +38,9 @@ class AjaxLogin {
 	 * a BE user and reset the timer and hide the login window.
 	 * If it was unsuccessful, we display that and show the login box again.
 	 *
-	 * @param array $parameters Parameters (not used)
-	 * @param TYPO3AJAX $ajaxObj The calling parent AJAX object
-	 * @return void
+	 * @param	array		$parameters: Parameters (not used)
+	 * @param	TYPO3AJAX	$ajaxObj: The calling parent AJAX object
+	 * @return	void
 	 */
 	public function login(array $parameters, TYPO3AJAX $ajaxObj) {
 		if ($this->isAuthorizedBackendSession()) {
@@ -78,19 +78,19 @@ class AjaxLogin {
 			&& isset($loginFormData['uname'])
 			&& isset($loginFormData['uident'])
 			&& isset($loginFormData['chalvalue'])
-			&& ((string)$_COOKIE[t3lib_beUserAuth::getCookieName()] !== (string)$GLOBALS['BE_USER']->id);
+			&& ((string)$_COOKIE['be_typo_user'] !== (string)$GLOBALS['BE_USER']->id);
 	}
 
 	/**
 	 * Logs out the current BE user
 	 *
-	 * @param array $parameters Parameters (not used)
-	 * @param TYPO3AJAX $ajaxObj The calling parent AJAX object
-	 * @return void
+	 * @param	array		$parameters: Parameters (not used)
+	 * @param	TYPO3AJAX	$ajaxObj: The calling parent AJAX object
+	 * @return	void
 	 */
 	public function logout(array $parameters, TYPO3AJAX $ajaxObj) {
 		$GLOBALS['BE_USER']->logoff();
-		if ($GLOBALS['BE_USER']->user['uid']) {
+		if($GLOBALS['BE_USER']->user['uid']) {
 			$ajaxObj->addContent('logout', array('success' => FALSE));
 		} else {
 			$ajaxObj->addContent('logout', array('success' => TRUE));
@@ -102,9 +102,9 @@ class AjaxLogin {
 	 * Refreshes the login without needing login information. We just refresh the session.
 	 *
 	 *
-	 * @param array $parameters Parameters (not used)
-	 * @param TYPO3AJAX $ajaxObj The calling parent AJAX object
-	 * @return void
+	 * @param	array		$parameters: Parameters (not used)
+	 * @param	TYPO3AJAX	$ajaxObj: The calling parent AJAX object
+	 * @return	void
 	 */
 	public function refreshLogin(array $parameters, TYPO3AJAX $ajaxObj) {
 		$GLOBALS['BE_USER']->checkAuthentication();
@@ -112,28 +112,29 @@ class AjaxLogin {
 		$ajaxObj->setContentFormat('json');
 	}
 
+
 	/**
 	 * Checks if the user session is expired yet
 	 *
-	 * @param array $parameters Parameters (not used)
-	 * @param TYPO3AJAX $ajaxObj The calling parent AJAX object
-	 * @return void
+	 * @param	array		$parameters: Parameters (not used)
+	 * @param	TYPO3AJAX	$ajaxObj: The calling parent AJAX object
+	 * @return	void
 	 */
 	function isTimedOut(array $parameters, TYPO3AJAX $ajaxObj) {
-		if (is_object($GLOBALS['BE_USER'])) {
+		if(is_object($GLOBALS['BE_USER'])) {
 			$ajaxObj->setContentFormat('json');
 			if (@is_file(PATH_typo3conf.'LOCK_BACKEND')) {
-				$ajaxObj->addContent('login', array('will_time_out' => FALSE, 'locked' => TRUE));
+			 	$ajaxObj->addContent('login', array('will_time_out' => FALSE, 'locked' => TRUE));
 				$ajaxObj->setContentFormat('json');
-			} elseif (!isset($GLOBALS['BE_USER']->user['uid'])) {
+			} else if (!isset($GLOBALS['BE_USER']->user['uid'])) {
 				$ajaxObj->addContent('login', array('timed_out' => TRUE));
 			} else {
 				$GLOBALS['BE_USER']->fetchUserSession(TRUE);
 				$ses_tstamp = $GLOBALS['BE_USER']->user['ses_tstamp'];
 				$timeout = $GLOBALS['BE_USER']->auth_timeout_field;
 
-					// If 120 seconds from now is later than the session timeout, we need to show the refresh dialog.
-					// 120 is somewhat arbitrary to allow for a little room during the countdown and load times, etc.
+				// if 120 seconds from now is later than the session timeout, we need to show the refresh dialog.
+				// 120 is somewhat arbitrary to allow for a little room during the countdown and load times, etc.
 				if ($GLOBALS['EXEC_TIME'] >= $ses_tstamp + $timeout - 120) {
 					$ajaxObj->addContent('login', array('will_time_out' => TRUE));
 				} else {
@@ -148,9 +149,9 @@ class AjaxLogin {
 	/**
 	 * Gets a MD5 challenge.
 	 *
-	 * @param array $parameters Parameters (not used)
-	 * @param TYPO3AJAX $parent The calling parent AJAX object
-	 * @return void
+	 * @param	array		$parameters: Parameters (not used)
+	 * @param	TYPO3AJAX	$parent: The calling parent AJAX object
+	 * @return	void
 	 */
 	public function getChallenge(array $parameters, TYPO3AJAX $parent) {
 		session_start();
@@ -163,4 +164,9 @@ class AjaxLogin {
 		$parent->setContentFormat('json');
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.ajaxlogin.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.ajaxlogin.php']);
+}
+
 ?>

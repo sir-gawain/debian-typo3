@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,12 +28,17 @@
 ***************************************************************/
 /*
  * Default Link Plugin for TYPO3 htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id$
  */
-HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.DefaultLink = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function (editor) {
+	configurePlugin: function(editor) {
 		this.baseURL = this.editorConfiguration.baseURL;
 		this.pageTSConfiguration = this.editorConfiguration.buttons.link;
 		this.stripBaseUrl = this.pageTSConfiguration && this.pageTSConfiguration.stripBaseUrl && this.pageTSConfiguration.stripBaseUrl;
@@ -42,7 +47,7 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.3',
+			version		: '2.1',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -113,18 +118,27 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 	 *
 	 * @return	boolean		false if action is completed
 	 */
-	onButtonPress: function (editor, id, target) {
+	onButtonPress: function(editor, id, target) {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		this.link = this.editor.getSelection().getFirstAncestorOfType('a');
+		this.editor.focus();
+		this.link = this.editor.getParentElement();
+		var el = HTMLArea.getElementObject(this.link, 'a');
+		if (el && /^a$/i.test(el.nodeName)) {
+			this.link = el;
+		}
+		if (!this.link || !/^a$/i.test(this.link.nodeName)) {
+			this.link = null;
+		}
 		switch (buttonId) {
 			case 'UnLink':
 				this.unLink();
 				break;
 			case 'CreateLink':
 				if (!this.link) {
-					if (this.editor.getSelection().isEmpty()) {
+					var selection = this.editor._getSelection();
+					if (this.editor._selectionEmpty(selection)) {
 						TYPO3.Dialog.InformationDialog({
 							title: this.getButton(buttonId).tooltip.title,
 							msg: this.localize('Select some text')
@@ -175,6 +189,8 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
+				// As of ExtJS 3.1, JS error with IE when the window is resizable
+			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				afterrender: {
@@ -317,20 +333,21 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 	createLink: function (href, title, target) {
 		var a = this.link;
 		if (!a) {
+			this.editor.focus();
 			this.restoreSelection();
-			this.editor.getSelection().execCommand('CreateLink', false, href);
-			a = this.editor.getSelection().getParentElement();
-			if (!HTMLArea.isIEBeforeIE9 && !/^a$/i.test(a.nodeName)) {
-				var range = this.editor.getSelection().createRange();
-				if (range.startContainer.nodeType !== HTMLArea.DOM.TEXT_NODE) {
+			this.editor.document.execCommand('CreateLink', false, href);
+			a = this.editor.getParentElement();
+			if (!Ext.isIE && !/^a$/i.test(a.nodeName)) {
+				var range = this.editor._createRange(this.editor._getSelection());
+				if (range.startContainer.nodeType != 3) {
 					a = range.startContainer.childNodes[range.startOffset];
 				} else {
 					a = range.startContainer.nextSibling;
 				}
-				this.editor.getSelection().selectNode(a);
+				this.editor.selectNode(a);
 			}
-			var el = this.editor.getSelection().getFirstAncestorOfType('a');
-			if (el != null) {
+			var el = HTMLArea.getElementObject(a, 'a');
+			if (el != null && /^a$/i.test(el.nodeName)) {
 				a = el;
 			}
 		} else {
@@ -340,9 +357,9 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 			a.title = title;
 			a.target = target;
 			if (Ext.isOpera) {
-				this.editor.getSelection().selectNodeContents(a, false);
+				this.editor.selectNodeContents(a, false);
 			} else {
-				this.editor.getSelection().selectNodeContents(a);
+				this.editor.selectNodeContents(a);
 			}
 		}
 	},
@@ -350,11 +367,12 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 	 * Unlink the selection
 	 */
 	unLink: function () {
+		this.editor.focus();
 		this.restoreSelection();
 		if (this.link) {
-			this.editor.getSelection().selectNode(this.link);
+			this.editor.selectNode(this.link);
 		}
-		this.editor.getSelection().execCommand('Unlink', false, '');
+		this.editor.document.execCommand('Unlink', false, '');
 	},
 	/*
 	 * IE makes relative links absolute. This function reverts this conversion.
@@ -383,9 +401,9 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 				case 'CreateLink':
 					button.setDisabled(selectionEmpty && !button.isInContext(mode, selectionEmpty, ancestors));
 					if (!button.disabled) {
-						var node = this.editor.getSelection().getParentElement();
-						var el = this.editor.getSelection().getFirstAncestorOfType('a');
-						if (el != null) {
+						var node = this.editor.getParentElement();
+						var el = HTMLArea.getElementObject(node, 'a');
+						if (el != null && /^a$/i.test(el.nodeName)) {
 							node = el;
 						}
 						if (node != null && /^a$/i.test(node.nodeName)) {
@@ -399,8 +417,8 @@ HTMLArea.DefaultLink = Ext.extend(HTMLArea.Plugin, {
 					var link = false;
 						// Let's see if a link was double-clicked in Firefox
 					if (Ext.isGecko && !selectionEmpty) {
-						var range = this.editor.getSelection().createRange();
-						if (range.startContainer.nodeType === HTMLArea.DOM.ELEMENT_NODE && range.startContainer == range.endContainer && (range.endOffset - range.startOffset == 1)) {
+						var range = this.editor._createRange(this.editor._getSelection());
+						if (range.startContainer.nodeType == 1 && range.startContainer == range.endContainer && (range.endOffset - range.startOffset == 1)) {
 							var node = range.startContainer.childNodes[range.startOffset];
 							if (node && /^a$/i.test(node.nodeName) && node.textContent == range.toString()) {
 								link = true;

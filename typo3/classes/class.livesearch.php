@@ -27,7 +27,7 @@
  ***************************************************************/
 
 /**
- * Adds backend live search to the toolbar
+ * Adds backend live search. to the toolbar
  *
  * @author Michael Klapper <michael.klapper@aoemedia.de>
  * @author Jeff Segars <jeff@webempoweredchurch.org>
@@ -37,25 +37,25 @@
 class LiveSearch implements backend_toolbarItem {
 
 	/**
-	 * Reference back to the backend object
+	 * reference back to the backend object
 	 *
 	 * @var	TYPO3backend
 	 */
 	protected $backendReference;
 
 	/**
-	 * Constructor
+	 * constructor
 	 *
-	 * @param TYPO3backend $backendReference TYPO3 backend object reference
+	 * @param	TYPO3backend	TYPO3 backend object reference
 	 */
-	public function __construct(TYPO3backend &$backendReference = NULL) {
+	public function __construct(TYPO3backend &$backendReference = null) {
 		$this->backendReference = $backendReference;
 	}
 
 	/**
-	 * Checks whether the user has access to this toolbar item
+	 * checks whether the user has access to this toolbar item
 	 *
-	 * @return boolean TRUE if user has access, FALSE if not
+	 * @return  boolean  true if user has access, false if not
 	 */
 	public function checkAccess() {
 		$access = FALSE;
@@ -76,7 +76,7 @@ class LiveSearch implements backend_toolbarItem {
 	/**
 	 * Creates the selector for workspaces
 	 *
-	 * @return string Workspace selector as HTML select
+	 * @return	string		workspace selector as HTML select
 	 */
 	public function render() {
 		$this->addJavascriptToBackend();
@@ -87,9 +87,9 @@ class LiveSearch implements backend_toolbarItem {
 	}
 
 	/**
-	 * Adds the necessary JavaScript to the backend
+	 * adds the necessary JavaScript to the backend
 	 *
-	 * @return void
+	 * @return	void
 	 */
 	protected function addJavascriptToBackend() {
 		$pageRenderer = $GLOBALS['TBE_TEMPLATE']->getPageRenderer();
@@ -100,11 +100,16 @@ class LiveSearch implements backend_toolbarItem {
 	/**
 	 * returns additional attributes for the list item in the toolbar
 	 *
-	 * @return string List item HTML attibutes
+	 * @return	string		list item HTML attibutes
 	 */
 	public function getAdditionalAttributes() {
 		return ' id="live-search-menu"';
 	}
 
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.livesearch.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/classes/class.livesearch.php']);
+}
+
 ?>

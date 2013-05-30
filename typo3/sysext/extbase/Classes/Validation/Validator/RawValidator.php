@@ -5,7 +5,7 @@
 *  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
 *  All rights reserved
 *
-*  This class is a backport of the corresponding class of FLOW3.
+*  This class is a backport of the corresponding class of FLOW3. 
 *  All credits go to the v5 team.
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -39,7 +39,6 @@ class Tx_Extbase_Validation_Validator_RawValidator implements Tx_Extbase_Validat
 	 *
 	 * @param mixed $value The value that should be validated
 	 * @return boolean TRUE
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function isValid($value) {
 		return TRUE;
@@ -50,7 +49,6 @@ class Tx_Extbase_Validation_Validator_RawValidator implements Tx_Extbase_Validat
 	 *
 	 * @param array $options Not used
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function setOptions(array $options) {
 	}
@@ -59,22 +57,9 @@ class Tx_Extbase_Validation_Validator_RawValidator implements Tx_Extbase_Validat
 	 * Returns an array of errors which occurred during the last isValid() call.
 	 *
 	 * @return array An array of error messages or an empty array if no errors occurred.
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function getErrors() {
 		return array();
-	}
-
-	/**
-	 * Always returns TRUE
-	 *
-	 * @param mixed $value The value that should be validated
-	 * @return Tx_Extbase_Error_Result
-	 * @author Robert Lemke <robert@typo3.org>
-	 * @api
-	 */
-	public function validate($value) {
-		return new Tx_Extbase_Error_Result();
 	}
 
 }

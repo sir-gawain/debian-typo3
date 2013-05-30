@@ -60,7 +60,8 @@ Editor.Parser = (function() {
 		this.prev = prev;
 
 	}
-
+	
+	
 	// My favourite TypoScript indentation rules.
 	function indentTS(lexical) {
 		return function(firstChars) {
@@ -74,7 +75,7 @@ Editor.Parser = (function() {
 			if (firstChar == "}" && lexical.prev) {
 				lexical = lexical.prev;
 			}
-
+			
 			if (lexical.align) {
 				return lexical.column - (closing ? 1: 0);
 			} else {
@@ -451,7 +452,7 @@ Editor.Parser = (function() {
 
 		return parser;
 	}
-
+	
 	return {make: parseTS, electricChars: "{}"};
 })();
 /* TypoScript parser
@@ -516,7 +517,8 @@ Editor.Parser = (function() {
 		this.prev = prev;
 
 	}
-
+	
+	
 	// My favourite TypoScript indentation rules.
 	function indentTS(lexical) {
 		return function(firstChars) {
@@ -530,7 +532,7 @@ Editor.Parser = (function() {
 			if (firstChar == "}" && lexical.prev) {
 				lexical = lexical.prev;
 			}
-
+			
 			if (lexical.align) {
 				return lexical.column - (closing ? 1: 0);
 			} else {
@@ -907,6 +909,6 @@ Editor.Parser = (function() {
 
 		return parser;
 	}
-
+	
 	return {make: parseTS, electricChars: "{}"};
 })();

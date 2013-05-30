@@ -29,6 +29,7 @@
 /**
  * Contains IMAGE class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,16 +38,15 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, IMAGE
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$content = '';
 
 		if (isset($conf['text.'])) {
 			$text = $this->cObj->cObjGet($conf['text.'], 'text.');
-				// this gets the surrounding content
-			$content .= $this->cObj->stdWrap($text, $conf['text.']);
+			$content .= $this->cObj->stdWrap($text, $conf['text.']); // this gets the surrounding content
 		}
 		$imgList = isset($conf['imgList.'])
 			? trim($this->cObj->stdWrap($conf['imgList'], $conf['imgList.'])) // gets images
@@ -63,8 +63,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 				? intval($this->cObj->stdWrap($conf['imgMax'], $conf['imgMax.']))
 				: intval($conf['imgMax']);
 			if ($imgMax) {
-					// Reduces the number of images.
-				$imgCount = t3lib_utility_Math::forceIntegerInRange($imgCount, 0, $imgMax);
+				$imgCount = t3lib_div::intInRange($imgCount, 0, $imgMax); // reduces the number of images.
 			}
 
 			$imgPath = isset($conf['imgPath.'])
@@ -76,8 +75,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 			$captionArray = array();
 			if (!$conf['captionSplit'] && !$conf['imageTextSplit'] && isset($conf['caption.'])) {
 				$caption = $this->cObj->cObjGet($conf['caption.'], 'caption.');
-					// Global caption, no splitting
-				$caption = $this->cObj->stdWrap($caption, $conf['caption.']);
+				$caption = $this->cObj->stdWrap($caption, $conf['caption.']); // global caption, no splitting
 			}
 			if ($conf['captionSplit'] && $conf['captionSplit.']['cObject']) {
 				$legacyCaptionSplit = 1;
@@ -138,18 +136,18 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 				? 1
 				: 0;
 
-			if ($border) {
+			if($border) {
 				$borderColor = isset($conf['borderCol.'])
 					? $this->cObj->stdWrap($conf['borderCol'], $conf['borderCol.'])
 					: $conf['borderCol'];
-				if (!$borderColor) {
+				if(!$borderColor) {
 					$borderColor = 'black';
 				}
 
 				$borderThickness = isset($conf['borderThick.'])
 					? intval($this->cObj->stdWrap($conf['borderThick'], $conf['borderThick.']))
 					: intval($conf['borderThick']);
-				if (!$borderThickness) {
+				if(!$borderThickness) {
 					$borderThickness = 'black';
 				}
 			}
@@ -160,7 +158,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 			if (!$caption_align) {
 				$caption_align = $align;
 			}
-				// Generate cols
+				// generate cols
 			$colCount = ($cols > 1)
 				? $cols
 				: 1;
@@ -170,7 +168,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 			$rowCount = ($colCount > 1)
 				? ceil($imgCount / $colCount)
 				: $imgCount;
-				// Generate rows
+				// generate rows
 			if ($rows > 1) {
 				$rowCount = $rows;
 				if ($rowCount > $imgCount) {
@@ -181,7 +179,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 					: $imgCount;
 			}
 
-				// Max Width
+				// max Width
 			$colRelations = isset($conf['colRelations.'])
 				? trim($this->cObj->stdWrap($conf['colRelations'], $conf['colRelations.']))
 				: trim($conf['colRelations']);
@@ -192,21 +190,18 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 			$maxWInText = isset($conf['maxWInText.'])
 				? intval($this->cObj->stdWrap($conf['maxWInText'], $conf['maxWInText.']))
 				: intval($conf['maxWInText']);
-				// If maxWInText is not set, it's calculated to the 50 % of the max...
-			if (!$maxWInText) {
+			if (!$maxWInText) { // If maxWInText is not set, it's calculated to the 50 % of the max...
 				$maxWInText = round($maxW / 2);
 			}
 
-				// inText
-			if ($maxWInText && $contentPosition >= 16) {
+			if ($maxWInText && $contentPosition >= 16) { // inText
 				$maxW = $maxWInText;
 			}
 
-				// If there is a max width and if colCount is greater than  column
-			if ($maxW && $colCount > 0) {
+			if ($maxW && $colCount > 0) { // If there is a max width and if colCount is greater than  column
 				$maxW = ceil(($maxW - $colspacing * ($colCount - 1) - $colCount * $border * $borderThickness * 2) / $colCount);
 			}
-				// Create the relation between rows
+				// create the relation between rows
 			$colMaxW = array();
 			if ($colRelations) {
 				$rel_parts = explode(':', $colRelations);
@@ -219,8 +214,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 					for ($a = 0; $a < $colCount; $a++) {
 						$colMaxW[$a] = round(($maxW * $colCount) / $rel_total * $rel_parts[$a]);
 					}
-						// The difference in size between the largest and smalles must be within a factor of ten.
-					if (min($colMaxW) <= 0 || max($rel_parts) / min($rel_parts) > 10) {
+					if (min($colMaxW) <= 0 || max($rel_parts) / min($rel_parts) > 10) { // The difference in size between the largest and smalles must be within a factor of ten.
 						$colMaxW = array();
 					}
 				}
@@ -235,7 +229,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 				? intval($this->cObj->stdWrap($conf['image_frames.']['key'], $conf['image_frames.']['key.']))
 				: intval($conf['image_frames.']['key']);
 
-				// Fetches pictures
+				// fetches pictures
 			$splitArr = array();
 			$splitArr['imgObjNum'] = $conf['imgObjNum'];
 			$splitArr = $GLOBALS['TSFE']->tmpl->splitConfArray($splitArr, $imgCount);
@@ -244,8 +238,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 			$equalHeight = isset($conf['equalH.'])
 				? intval($this->cObj->stdWrap($conf['equalH'], $conf['equalH.']))
 				: intval($conf['equalH']);
-				// Initiate gifbuilder object in order to get dimensions AND calculate the imageWidth's
-			if ($equalHeight) {
+			if ($equalHeight) { // Initiate gifbuilder object in order to get dimensions AND calculate the imageWidth's
 				$gifCreator = t3lib_div::makeInstance('tslib_gifbuilder');
 				$gifCreator->init();
 				$relations = array();
@@ -254,19 +247,14 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 				for ($a = 0; $a < $imgCount; $a++) {
 					$imgKey = $a + $imgStart;
 					$imgInfo = $gifCreator->getImageDimensions($imgPath . $imgs[$imgKey]);
-						// relationship between the original height and the wished height
-					$relations[$a] = $imgInfo[1] / $equalHeight;
-						// if relations is zero, then the addition of this value is omitted as
-						// the image is not expected to display because of some error.
-					if ($relations[$a]) {
-							// Counts the total width of the row with the new height taken into consideration.
-						$relations_cols[floor($a / $colCount)] += $imgInfo[0] / $relations[$a];
+					$relations[$a] = $imgInfo[1] / $equalHeight; // relationship between the original height and the wished height
+					if ($relations[$a]) { // if relations is zero, then the addition of this value is omitted as the image is not expected to display because of some error.
+						$relations_cols[floor($a / $colCount)] += $imgInfo[0] / $relations[$a]; // counts the total width of the row with the new height taken into consideration.
 					}
 				}
 			}
 
-				// Contains the width of every image row
-			$imageRowsFinalWidths = array();
+			$imageRowsFinalWidths = array(); // contains the width of every image row
 			$imageRowsMaxHeights = array();
 			$imgsTag = array();
 			$origImages = array();
@@ -288,7 +276,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 							$scale = $rowTotalMaxW / $totalMaxW;
 						}
 					}
-						// Transfer info to the imageObject. Please note, that
+						// transfer info to the imageObject. Please note, that
 					$imgConf['file.']['height'] = round($equalHeight / $scale);
 
 					unset(
@@ -303,8 +291,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 						$imgConf['file.']['minW.'],
 						$imgConf['file.']['minH.']
 					);
-						// Setting this to zero, so that it doesn't disturb
-					$maxW = 0;
+					$maxW = 0; // setting this to zero, so that it doesn't disturb
 				}
 
 				if ($maxW) {
@@ -371,11 +358,11 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 					$imageRowsMaxHeights[floor($a / $colCount)] = $GLOBALS['TSFE']->lastImageInfo[1];
 				}
 			}
-				// Calculating the tableWidth:
+				// calculating the tableWidth:
 				// TableWidth problems: It creates problems if the pictures are NOT as wide as the tableWidth.
 			$tableWidth = max($imageRowsFinalWidths) + $colspacing * ($colCount - 1) + $colCount * $border * $borderThickness * 2;
 
-				// Make table for pictures
+				// make table for pictures
 			$index = $imgIndex = $imgStart;
 
 			$noRows = isset($conf['noRows.'])
@@ -418,7 +405,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 				? $this->cObj->editIcons('', $conf['editIcons'], $conf['editIcons.'])
 				: '';
 
-				// Strech out table:
+				// strech out table:
 			$tablecode = '';
 			$flag = 0;
 			$noStretchAndMarginCells = isset($conf['noStretchAndMarginCells.'])
@@ -449,18 +436,13 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 			}
 
 				// draw table
-				// Looping through rows. If 'noRows' is set, this is '1 time', but $rowCount_temp will hold the actual number of rows!
-			for ($c = 0; $c < $rowCount; $c++) {
-					// If this is NOT the first time in the loop AND if space is required, a row-spacer is added. In case of "noRows" rowspacing is done further down.
-				if ($c && $rowspacing) {
+			for ($c = 0; $c < $rowCount; $c++) { // Looping through rows. If 'noRows' is set, this is '1 time', but $rowCount_temp will hold the actual number of rows!
+				if ($c && $rowspacing) { // If this is NOT the first time in the loop AND if space is required, a row-spacer is added. In case of "noRows" rowspacing is done further down.
 					$tablecode .= '<tr><td colspan="' . $colspan . '"><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="1" height="' . $rowspacing . '"' . $this->cObj->getBorderAttr(' border="0"') . ' alt="" title="" /></td></tr>';
 				}
-					// starting row
-				$tablecode .= '<tr>';
-					// Looping through the columns
-				for ($b = 0; $b < $colCount_temp; $b++) {
-						// If this is NOT the first iteration AND if column space is required. In case of "noCols", the space is done without a separate cell.
-					if ($b && $colspacing) {
+				$tablecode .= '<tr>'; // starting row
+				for ($b = 0; $b < $colCount_temp; $b++) { // Looping through the columns
+					if ($b && $colspacing) { // If this is NOT the first iteration AND if column space is required. In case of "noCols", the space is done without a separate cell.
 						if (!$noCols) {
 							$tablecode .= '<td><img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="' .
 								$colspacing . '" height="1"' . $this->cObj->getBorderAttr(' border="0"') . ' alt="" title="" /></td>';
@@ -475,43 +457,35 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 						}
 					}
 					if (!$noCols || ($noCols && !$b)) {
-							// starting the cell. If "noCols" this cell will hold all images in the row, otherwise only a single image.
-						$tablecode .= '<td valign="top">';
+						$tablecode .= '<td valign="top">'; // starting the cell. If "noCols" this cell will hold all images in the row, otherwise only a single image.
 						if ($noCols) {
 							$tablecode .= '<table width="' . $imageRowsFinalWidths[$c] . '" border="0" cellpadding="0" cellspacing="0"><tr>';
 						} // In case of "noCols" we must set the table-tag that surrounds the images in the row.
 					}
-						// Looping through the rows IF "noRows" is set. "noRows"  means that the rows of images is not rendered
-						// by physical table rows but images are all in one column and spaced apart with clear-gifs. This loop is
-						// only one time if "noRows" is not set.
-					for ($a = 0; $a < $rowCount_temp; $a++) {
-							// register previous imgIndex
-						$GLOBALS['TSFE']->register['IMAGE_NUM'] = $imgIndex;
+					for ($a = 0; $a < $rowCount_temp; $a++) { // Looping through the rows IF "noRows" is set. "noRows"  means that the rows of images is not rendered by physical table rows but images are all in one column and spaced apart with clear-gifs. This loop is only one time if "noRows" is not set.
+						$GLOBALS['TSFE']->register['IMAGE_NUM'] = $imgIndex; // register previous imgIndex
 						$imgIndex = $index + $a * $colCount_temp;
 						$GLOBALS['TSFE']->register['IMAGE_NUM_CURRENT'] = $imgIndex;
 						if ($imgsTag[$imgIndex]) {
-								// Puts distance between the images IF "noRows" is set and this is the first iteration of the loop
-							if ($rowspacing && $noRows && $a) {
+							if ($rowspacing && $noRows && $a) { // Puts distance between the images IF "noRows" is set and this is the first iteration of the loop
 								$tablecode .= '<img src="' . $GLOBALS['TSFE']->absRefPrefix . 'clear.gif" width="1" height="' .
 									$rowspacing . '" alt="" title="" /><br />';
 							}
 							if ($legacyCaptionSplit) {
 								$thisCaption = $captionArray[$imgIndex];
-							} elseif (($conf['captionSplit'] || $conf['imageTextSplit']) && isset($conf['caption.'])) {
+							} else if (($conf['captionSplit'] || $conf['imageTextSplit']) && isset($conf['caption.'])) {
 								$thisCaption = $this->cObj->cObjGet($conf['caption.'], 'caption.');
 								$thisCaption = $this->cObj->stdWrap($thisCaption, $conf['caption.']);
 							}
 							$imageHTML = $imgsTag[$imgIndex] . '<br />';
-								// this is necessary if the tablerows are supposed to space properly together! "noRows" is excluded because else the images "layer" together.
-							$Talign = (!trim($thisCaption) && !$noRows) ? ' align="left"' : '';
+							$Talign = (!trim($thisCaption) && !$noRows) ? ' align="left"' : ''; // this is necessary if the tablerows are supposed to space properly together! "noRows" is excluded because else the images "layer" together.
 							if ($border) {
 								$imageHTML = '<table border="0" cellpadding="' . $borderThickness . '" cellspacing="0" bgcolor="' .
 									$borderColor . '"' . $Talign . '><tr><td>' . $imageHTML . '</td></tr></table>';
 							}
 							$imageHTML .= $editIconsHTML;
 							$editIconsHTML = '';
-								// Adds caption.
-							$imageHTML .= $thisCaption;
+							$imageHTML .= $thisCaption; // Adds caption.
 							if ($noCols) {
 								$imageHTML = '<td valign="top">' . $imageHTML . '</td>';
 							} // If noCols, put in table cell.
@@ -526,8 +500,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 						$tablecode .= '</td>'; // Ending the cell. In case of "noCols" the cell holds all pictures!
 					}
 				}
-					// ending row
-				$tablecode .= '</tr>';
+				$tablecode .= '</tr>'; // ending row
 			}
 			if ($c) {
 				switch ($contentPosition) {
@@ -554,8 +527,7 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 
 					// Table-tag is inserted
 				$tablecode = '<table' . ($tableWidth ? ' width="' . $tableWidth . '"' : '') . ' border="0" cellspacing="0" cellpadding="0" ' . $table_align . ' class="imgtext-table">' . $tablecode;
-					// If this value is not long since reset.
-				if ($editIconsHTML) {
+				if ($editIconsHTML) { // IF this value is not long since reset.
 					$tablecode .= '<tr><td colspan="' . $colspan . '">' . $editIconsHTML . '</td></tr>';
 					$editIconsHTML = '';
 				}
@@ -605,5 +577,12 @@ class tslib_content_ImageText extends tslib_content_Abstract {
 
 		return $output;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_imagetext.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_imagetext.php']);
+}
+
 ?>

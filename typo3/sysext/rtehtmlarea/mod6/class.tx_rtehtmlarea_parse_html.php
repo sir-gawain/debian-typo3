@@ -28,7 +28,10 @@
  * Content parsing for htmlArea RTE
  *
  * @author	Stanislas Rolland <typo3(arobas)sjbr.ca>
+ *
+ * $Id$  *
  */
+
 class tx_rtehtmlarea_parse_html {
 	var $content;
 	var $modData;
@@ -45,16 +48,18 @@ class tx_rtehtmlarea_parse_html {
 	/**
 	 * @return	[type]		...
 	 */
-	function init() {
+	function init()	{
+		global $BE_USER,$BACK_PATH,$MCONF;
+
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->backPath = $BACK_PATH;
 		$this->doc->JScode='';
 
-		$this->modData = $GLOBALS['BE_USER']->getModuleData($GLOBALS['MCONF']['name'], 'ses');
-		if (t3lib_div::_GP('OC_key')) {
-			$parts = explode('|', t3lib_div::_GP('OC_key'));
+		$this->modData = $BE_USER->getModuleData($MCONF['name'],'ses');
+		if (t3lib_div::_GP('OC_key'))	{
+			$parts = explode('|',t3lib_div::_GP('OC_key'));
 			$this->modData['openKeys'][$parts[1]] = $parts[0]=='O' ? 1 : 0;
-			$GLOBALS['BE_USER']->pushModuleData($GLOBALS['MCONF']['name'], $this->modData);
+			$BE_USER->pushModuleData($MCONF['name'],$this->modData);
 		}
 	}
 
@@ -63,9 +68,33 @@ class tx_rtehtmlarea_parse_html {
 	 *
 	 * @return	[type]		...
 	 */
-	function main() {
+	function main()	{
+		global $LANG;
+
 		$this->content .= $this->main_parse_html($this->modData['openKeys']);
-		header('Content-Type: text/plain; charset=utf-8');
+
+			// if no HTTP input conversion is configured, the input was uft-8 (urlencoded).
+		$fromCharSet = 'utf-8';
+			// if conversion was done, the input is encoded in mbstring.internal_encoding
+		if (in_array('mbstring', get_loaded_extensions()) && ini_get('mbstring.encoding_translation')) {
+			$fromCharSet = strToLower(ini_get('mbstring.internal_encoding'));
+		}
+
+		$clientInfo = t3lib_div::clientInfo();
+			// the charset of the content element, possibly overidden by forceCharset
+		$toCharSet = t3lib_div::_GP('charset')?t3lib_div::_GP('charset'):'iso-8859-1';
+			// IE wants it back in utf-8
+		if ( $clientInfo['BROWSER']= 'msie') {
+			$toCharSet = 'utf-8';
+		} elseif ($clientInfo['SYSTEM'] = 'win') {
+				// if the client is windows the input may contain windows-1252 characters;
+			if (strToLower($toCharSet) == 'iso-8859-1') {
+				$toCharSet = 'Windows-1252';
+			}
+		}
+			// convert to requested charset
+		$this->content = $LANG->csConvObj->conv($this->content, $fromCharSet, $toCharSet);
+		header('Content-Type: text/plain; charset='.$toCharSet);
 	}
 
 	/**
@@ -73,7 +102,7 @@ class tx_rtehtmlarea_parse_html {
 	 *
 	 * @return	[type]		...
 	 */
-	function printContent() {
+	function printContent()	{
 		echo $this->content;
 	}
 
@@ -83,15 +112,15 @@ class tx_rtehtmlarea_parse_html {
 	 * @param	[type]		$openKeys: ...
 	 * @return	[type]		...
 	 */
-	function main_parse_html($openKeys) {
-		global $TYPO3_CONF_VARS;
+	function main_parse_html($openKeys)	{
+		global $BE_USER, $TYPO3_CONF_VARS;
 
 		$editorNo = t3lib_div::_GP('editorNo');
 		$html = t3lib_div::_GP('content');
 
-		$RTEtsConfigParts = explode(':', t3lib_div::_GP('RTEtsConfigParams'));
-		$RTEsetup = $GLOBALS['BE_USER']->getTSConfig('RTE', t3lib_BEfunc::getPagesTSconfig($RTEtsConfigParts[5]));
-		$thisConfig = t3lib_BEfunc::RTEsetup($RTEsetup['properties'], $RTEtsConfigParts[0], $RTEtsConfigParts[2], $RTEtsConfigParts[4]);
+		$RTEtsConfigParts = explode(':',t3lib_div::_GP('RTEtsConfigParams'));
+		$RTEsetup = $BE_USER->getTSConfig('RTE',t3lib_BEfunc::getPagesTSconfig($RTEtsConfigParts[5]));
+		$thisConfig = t3lib_BEfunc::RTEsetup($RTEsetup['properties'],$RTEtsConfigParts[0],$RTEtsConfigParts[2],$RTEtsConfigParts[4]);
 
 		$HTMLParser = t3lib_div::makeInstance('t3lib_parsehtml');
 		if (is_array($thisConfig['enableWordClean.'])) {
@@ -149,7 +178,7 @@ class tx_rtehtmlarea_parse_html {
 				if (isset($HTMLparserConfig['tags.']['span.']['allowedAttribs'])) {
 					if (!$HTMLparserConfig['tags.']['span.']['allowedAttribs']) {
 						$HTMLparserConfig['tags.']['span.']['allowedAttribs'] = 'id';
-					} elseif (!t3lib_div::inList($HTMLparserConfig['tags.']['span.']['allowedAttribs'], 'id')) {
+					} else if (!t3lib_div::inList($HTMLparserConfig['tags.']['span.']['allowedAttribs'], 'id')) {
 						$HTMLparserConfig['tags.']['span.']['allowedAttribs'] .= ',id';
 					}
 				}
@@ -159,5 +188,8 @@ class tx_rtehtmlarea_parse_html {
 			}
 		}
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod6/class.tx_rtehtmlarea_parse_html.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/mod6/class.tx_rtehtmlarea_parse_html.php']);
 }
 ?>

@@ -27,6 +27,8 @@
  *
  * Module: Extension manager - mirrors.xml push-parser
  *
+ * $Id$
+ *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -51,11 +53,17 @@
  */
 class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractParser implements SplSubject {
 
+	/**
+	 * Keeps XML parser.
+	 *
+	 * @var null|resource
+	 */
+	protected $objXML = NULL;
 
 	/**
 	 * Keeps list of attached observers.
 	 *
-	 * @var  SplObserver[]
+	 * @var  array
 	 */
 	protected $observers = array();
 
@@ -67,11 +75,17 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 	 */
 	function __construct() {
 		$this->requiredPHPExt = 'xml';
+	}
 
-		if ($this->isAvailable()) {
-			$this->objXML = xml_parser_create();
-			xml_set_object($this->objXML, $this);
-		}
+	/**
+	 * Method creates the required parser.
+	 *
+	 * @access  protected
+	 * @return  void
+	 */
+	protected function createParser() {
+		$this->objXML = xml_parser_create();
+		xml_set_object($this->objXML, $this);
 	}
 
 	/**
@@ -79,10 +93,10 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 	 *
 	 * @param   string  $file: GZIP stream resource
 	 * @return  void
-	 * @throws  tx_em_MirrorXmlException  in case of XML parser errors
+	 * @throws  em_mirrorxml_Exception  in case of XML parser errors
 	 */
 	public function parseXML($file) {
-
+		$this->createParser();
 		if (!is_resource($this->objXML)) {
 			$this->throwException('Unable to create XML parser.');
 		}
@@ -93,12 +107,12 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 		xml_set_element_handler($this->objXML, 'startElement', 'endElement');
 		xml_set_character_data_handler($this->objXML, 'characterData');
 
-		if (!($fp = fopen($file, 'r'))) {
-			$this->throwException(sprintf('Unable to open file resource %s.', htmlspecialchars($file)));
+		if (!($fp = fopen($file, "r"))) {
+			$this->throwException(sprintf('Unable to open file ressource %s.', htmlspecialchars($file)));
 		}
 		while ($data = fread($fp, 4096)) {
 			if (!xml_parse($this->objXML, $data, feof($fp))) {
-				$this->throwException(sprintf('XML error %s in line %u of file resource %s.',
+				$this->throwException(sprintf('XML error %s in line %u of file ressource %s.',
 					xml_error_string(xml_get_error_code($this->objXML)),
 					xml_get_current_line_number($this->objXML),
 					htmlspecialchars($file)));
@@ -110,7 +124,7 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 	/**
 	 * Method is invoked when parser accesses start tag of an element.
 	 *
-	 * @param   resource  $parser parser resource
+	 * @param   ressource  $parser parser resource
 	 * @param   string	 $elementName: element name at parser's current position
 	 * @param   array	  $attrs: array of an element's attributes if available
 	 * @return  void
@@ -125,7 +139,7 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 	/**
 	 * Method is invoked when parser accesses end tag of an element.
 	 *
-	 * @param   resource  $parser parser resource
+	 * @param   ressource  $parser parser resource
 	 * @param   string	 $elementName: element name at parser's current position
 	 * @return  void
 	 */
@@ -143,7 +157,7 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 	/**
 	 * Method is invoked when parser accesses any character other than elements.
 	 *
-	 * @param   resource  $parser: parser resource
+	 * @param   ressource  $parser: parser ressource
 	 * @param   string	 $data: an element's value
 	 * @return  void
 	 */
@@ -196,8 +210,8 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 	 * @see	 $observers, attach(), notify()
 	 */
 	public function detach(SplObserver $observer) {
-		$key = array_search($observer, $this->observers, TRUE);
-		if (!($key === FALSE)) {
+		$key = array_search($observer, $this->observers, true);
+		if (!($key === false)) {
 			unset($this->observers[$key]);
 		}
 	}
@@ -215,4 +229,9 @@ class tx_em_Parser_MirrorXmlPushParser extends tx_em_Parser_MirrorXmlAbstractPar
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_mirrorxmlpushparser.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_mirrorxmlpushparser.php']);
+}
+
 ?>

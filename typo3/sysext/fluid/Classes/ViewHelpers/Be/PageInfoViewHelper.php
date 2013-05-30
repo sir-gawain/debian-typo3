@@ -1,11 +1,11 @@
 <?php
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
- *                                                                        *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -32,6 +32,9 @@
  * Page info icon with context menu
  * </output>
  *
+ * @author Steffen Kamper <info@sk-typo3.de>
+ * @author Bastian Waidelich <bastian@typo3.org>
+ * @license http://www.gnu.org/copyleft/gpl.html
  */
 class Tx_Fluid_ViewHelpers_Be_PageInfoViewHelper extends Tx_Fluid_ViewHelpers_Be_AbstractBackendViewHelper {
 
@@ -52,12 +55,12 @@ class Tx_Fluid_ViewHelpers_Be_PageInfoViewHelper extends Tx_Fluid_ViewHelpers_Be
 			$alttext = t3lib_BEfunc::getRecordIconAltText($pageRecord, 'pages');
 			$iconImg = t3lib_iconWorks::getSpriteIconForRecord('pages', $pageRecord, array('title' => htmlspecialchars($alttext)));
 				// Make Icon:
-			$theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg, 'pages', $pageRecord['uid']);
+			$theIcon = $doc->wrapClickMenuOnIcon($iconImg, 'pages', $pageRecord['uid']);
 		} else {	// On root-level of page tree
 				// Make Icon
 			$iconImg = '<img' . t3lib_iconWorks::skinImg($this->backPath, 'gfx/i/_icon_website.gif') . ' alt="' . htmlspecialchars($GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']) . '" />';
 			if($BE_USER->user['admin']) {
-				$theIcon = $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg, 'pages', 0);
+				$theIcon = $doc->wrapClickMenuOnIcon($iconImg, 'pages', 0);
 			} else {
 				$theIcon = $iconImg;
 			}

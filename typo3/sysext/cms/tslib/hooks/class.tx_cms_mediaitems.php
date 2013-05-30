@@ -31,14 +31,14 @@
  * @package TYPO3
  * @subpackage cms
  */
+
 class tx_cms_mediaItems implements t3lib_Singleton {
 
 	/**
 	 * Load extra render types if they exist
 	 *
-	 * @param array $params Existing types by reference
-	 * @param array $conf Config array
-	 * @return void
+	 * @param	array		$params: Existing types by reference
+	 * @param 	array		$conf: config array
 	 */
 	public function customMediaRenderTypes(&$params, $conf) {
 		if (is_array ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/hooks/class.tx_cms_mediaitems.php']['customMediaRenderTypes'])) {
@@ -47,14 +47,15 @@ class tx_cms_mediaItems implements t3lib_Singleton {
 				$hookObj->customMediaRenderTypes($params, $conf);
 			}
 		}
+
+
 	}
 
 	/**
 	 * Load extra predefined media params if they exist
 	 *
-	 * @param array $params Existing types by reference
-	 * @param array $conf Config array
-	 * @return void
+	 * @param	array		$params: Existing types by reference
+	 * @param 	array		$conf: config array
 	 */
 	public function customMediaParams(&$params, $conf) {
 
@@ -64,6 +65,12 @@ class tx_cms_mediaItems implements t3lib_Singleton {
 				$hookObj->customMediaParams($params, $conf);
 			}
 		}
+
+
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/hooks/class.tx_cms_mediaitems.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/hooks/class.tx_cms_mediaitems.php']);
 }
 ?>

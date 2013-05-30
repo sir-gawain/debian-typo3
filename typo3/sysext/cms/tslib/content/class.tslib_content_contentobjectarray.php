@@ -29,6 +29,7 @@
 /**
  * Contains COA class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,8 +38,8 @@ class tslib_content_ContentObjectArray extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, COBJ_ARRAY / COA
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		if (is_array($conf)) {
@@ -59,5 +60,12 @@ class tslib_content_ContentObjectArray extends tslib_content_Abstract {
 			$GLOBALS['TT']->setTSlogMessage('No elements in this content object array (COBJ_ARRAY, COA).', 2);
 		}
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_contentobjectarray.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_contentobjectarray.php']);
+}
+
 ?>

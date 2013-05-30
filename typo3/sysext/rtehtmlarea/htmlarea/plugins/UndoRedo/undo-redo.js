@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,8 +28,13 @@
 ***************************************************************/
 /*
  * Undo Redo Plugin for TYPO3 htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id$
  */
-HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.UndoRedo = HTMLArea.Plugin.extend({
+	constructor: function (editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -46,7 +51,7 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.2',
+			version		: '2.0',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -129,10 +134,10 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 		}
 			// Get the html text
 		var text = this.editor.getInnerHTML();
-
+		
 		if (newSnapshot) {
 				// If previous slot contains the same text, a new one should not be used
-			if (this.undoPosition == 0 || this.undoQueue[this.undoPosition - 1].text != text) {
+			if (this.undoPosition == 0  || this.undoQueue[this.undoPosition - 1].text != text) {
 				this.undoQueue[this.undoPosition] = this.buildSnapshot();
 				this.undoQueue[this.undoPosition].time = currentTime;
 				this.undoQueue.length = this.undoPosition + 1;
@@ -161,11 +166,13 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 	buildSnapshot: function () {
 		var bookmark = null, bookmarkedText = null;
 			// Insert a bookmark
-		if (this.getEditorMode() === 'wysiwyg' && this.editor.isEditable()) {
-			if ((!HTMLArea.isIEBeforeIE9 && !(Ext.isOpera && navigator.userAgent.toLowerCase().indexOf('presto/2.1') != -1)) || (HTMLArea.isIEBeforeIE9 && this.editor.getSelection().getType() !== 'Control')) {
+		if (this.editor.getMode() == 'wysiwyg' && this.editor.isEditable()) {
+			var selection = this.editor._getSelection();
+			if ((!Ext.isIE && !(Ext.isOpera && navigator.userAgent.toLowerCase().indexOf('presto/2.1') != -1)) || (Ext.isIE && selection.type.toLowerCase() != 'control')) {
 					// Catch error in FF when the selection contains no usable range
 				try {
-					bookmark = this.editor.getBookMark().get(this.editor.getSelection().createRange());
+					var range = this.editor._createRange(selection);
+					bookmark = this.editor.getBookmark(range);
 				} catch (e) {
 					bookmark = null;
 				}
@@ -173,10 +180,15 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 				// Get the bookmarked html text and remove the bookmark
 			if (bookmark) {
 				bookmarkedText = this.editor.getInnerHTML();
-				var range = this.editor.getBookMark().moveTo(bookmark);
+					// Working aroung buggy Google Chrome 22 (selection broken by inserted bookmark node)
+				if (Ext.isChrome) {
+					this.editor.setHTML(bookmarkedText);
+				}
+				var range = this.editor.moveToBookmark(bookmark);
 					// Restore Firefox selection
-				if (Ext.isGecko) {
-					this.editor.getSelection().selectRange(range);
+				if (Ext.isGecko || Ext.isChrome) {
+					this.editor.emptySelection(selection);
+					this.editor.addRangeToSelection(selection, range);
 				}
 			}
 		}
@@ -218,7 +230,8 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 		var bookmark = this.undoQueue[undoPosition].bookmark;
 		if (bookmark) {
 			this.editor.setHTML(this.undoQueue[undoPosition].bookmarkedText);
-			this.editor.getSelection().selectRange(this.editor.getBookMark().moveTo(bookmark));
+			this.editor.focus();
+			this.editor.selectRange(this.editor.moveToBookmark(bookmark));
 			this.editor.scrollToCaret();
 		} else {
 			this.editor.setHTML(this.undoQueue[undoPosition].text);
@@ -240,7 +253,7 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 				}
 			} else {
 				try {
-					button.setDisabled(!this.editor.document.queryCommandEnabled(button.itemId));
+					button.setDisabled(!this.editor._doc.queryCommandEnabled(button.itemId));
 				} catch (e) {
 					button.setDisabled(true);
 				}
@@ -257,8 +270,8 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 			selectionEmpty = true,
 			ancestors = null;
 		if (mode === 'wysiwyg') {
-			selectionEmpty = this.editor.getSelection().isEmpty();
-			ancestors = this.editor.getSelection().getAllAncestors();
+			selectionEmpty = this.editor._selectionEmpty(this.editor._getSelection());
+			ancestors = this.editor.getAllAncestors();
 		}
 		var button = this.getButton('Undo');
 		if (button) {
@@ -285,7 +298,7 @@ HTMLArea.UndoRedo = Ext.extend(HTMLArea.Plugin, {
 			if (this.customUndo) {
 				this[buttonId.toLowerCase()]();
 			} else {
-				this.editor.getSelection().execCommand(buttonId, false, null);
+				this.editor._doc.execCommand(buttonId, false, null);
 			}
 		}
 		return false;

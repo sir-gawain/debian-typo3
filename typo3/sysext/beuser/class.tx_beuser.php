@@ -27,7 +27,13 @@
 /**
  * Class, adding SU link to context menu
  *
+ * $Id$
+ *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
  */
 
 
@@ -60,23 +66,24 @@ class tx_beuser {
 	 * @param	integer		UID of clicked item.
 	 * @return	array		Modified $menuItems array
 	 */
-	function main(&$backRef, $menuItems, $table, $uid) {
+	function main(&$backRef,$menuItems,$table,$uid)	{
+		global $BE_USER,$TCA,$LANG;
+
 		$localItems = array();	// Accumulation of local items.
 
 			// Detecting menu level
-		if ($GLOBALS['BE_USER']->isAdmin() && !$backRef->cmLevel && $table == 'be_users') {
-			// LEVEL: Primary menu.
+		if ($BE_USER->isAdmin() && !$backRef->cmLevel && $table == 'be_users')	{	// LEVEL: Primary menu.
 
 				// "SU" element added:
 			$url = 'mod.php?M=tools_beuser&SwitchUser='.rawurlencode($uid).'&switchBackUser=1';
 			$localItems[] = $backRef->linkItem(
 				'Switch To User',
 				$backRef->excludeIcon(t3lib_iconWorks::getSpriteIcon('actions-system-backend-user-emulate')),
-				$backRef->urlRefForCM($url, '', 1, 'top'),
+				$backRef->urlRefForCM($url,'',1,'top'),
 				1
 			);
 
-			$menuItems=array_merge($menuItems, $localItems);
+			$menuItems=array_merge($menuItems,$localItems);
 		}
 		return $menuItems;
 	}
@@ -86,11 +93,15 @@ class tx_beuser {
 	 *
 	 * @return	array		Local lang array.
 	 */
-	function includeLL() {
+	function includeLL()	{
 		global $LANG;
 
-		$LOCAL_LANG = $GLOBALS['LANG']->includeLLFile('EXT:extra_page_cm_options/locallang.php', FALSE);
+		$LOCAL_LANG = $LANG->includeLLFile('EXT:extra_page_cm_options/locallang.php',FALSE);
 		return $LOCAL_LANG;
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/extra_page_cm_options/class.tx_extrapagecmoptions.php']);
 }
 ?>

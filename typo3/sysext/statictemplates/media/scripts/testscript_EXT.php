@@ -1,17 +1,19 @@
 <?php
+# TYPO3 SVN ID: $Id: testscript_EXT.php 3437 2008-03-16 16:22:11Z flyguide $
 
-if (!is_object($TSFE)) {
-	die('Error: No parent object present.');
-}
+if (!is_object($TSFE)) die ('Error: No parent object present.');
+
+
+
 
 /**
  * Printing current time dynamically
  *
- * @param string $content Content (ignore)
- * @param array $conf TypoScript configuration passed
- * @return string Current time wrapped in <font> tags with red color
+ * @param	string		Content (ignore)
+ * @param	array		TypoScript configuration passed
+ * @return	string		Current time wrapped in <font> tags with red color
  */
-function user_printTimeExt($content, $conf) {
+function user_printTimeExt($content,$conf)	{
 	return '<font color="red">Dynamic time: '.date('H:i:s').'</font><br />';
 }
 
@@ -32,6 +34,9 @@ You can get the content of the record, that included this script in $REC:<br />
 The configuration for the script is in the array, $CONF:<br />
 <br />
 
+
+
+
 <?php
 debug($CONF);
 
@@ -45,8 +50,9 @@ These are global variables!
 <br />
 Good luck....
 
+
 BTW: The time:
-<?php if ($CONF['showTime'])	{echo user_printTimeExt('', '');} ?>
+<?php if ($CONF['showTime'])	{echo user_printTimeExt('','');} ?>
 <br />
 <br />
 

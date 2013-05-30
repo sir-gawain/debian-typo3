@@ -1,14 +1,14 @@
 <?php
 
 /***************************************************************
-* Extension Manager/Repository config file for ext "cshmanual".
-*
-* Auto generated 10-10-2011 14:47
-*
-* Manual updates:
-* Only the data in the array - everything else is removed by next
-* writing. "version" and "dependencies" must not be touched!
-***************************************************************/
+ * Extension Manager/Repository config file for ext "cshmanual".
+ *
+ * Auto generated 12-11-2012 20:32
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Help>TYPO3 Manual',
@@ -20,6 +20,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'priority' => '',
 	'loadOrder' => '',
 	'module' => 'mod',
+	'doNotLoadInFE' => 1,
 	'state' => 'stable',
 	'internal' => 0,
 	'uploadfolder' => 0,
@@ -32,12 +33,12 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '1.1.0',
-	'_md5_values_when_last_written' => 'a:4:{s:12:"ext_icon.gif";s:4:"1d55";s:14:"ext_tables.php";s:4:"9ce2";s:13:"mod/about.gif";s:4:"711d";s:12:"mod/conf.php";s:4:"c6cf";}',
+	'version' => '1.0.0',
+	'_md5_values_when_last_written' => 'a:4:{s:12:"ext_icon.gif";s:4:"1d55";s:14:"ext_tables.php";s:4:"9ce2";s:13:"mod/about.gif";s:4:"711d";s:12:"mod/conf.php";s:4:"09b8";}',
 	'constraints' => array(
 		'depends' => array(
-			'php' => '5.3.0-0.0.0',
-			'typo3' => '4.6.0-0.0.0',
+			'php' => '5.1.0-0.0.0',
+			'typo3' => '4.2.0-0.0.0',
 		),
 		'conflicts' => array(
 		),

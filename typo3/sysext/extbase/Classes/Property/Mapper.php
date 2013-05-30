@@ -49,7 +49,6 @@
  * @subpackage Property
  * @version $Id$
  * @api
- * @deprecated since Extbase 1.4.0
  */
 class Tx_Extbase_Property_Mapper implements t3lib_Singleton {
 
@@ -73,11 +72,6 @@ class Tx_Extbase_Property_Mapper implements t3lib_Singleton {
 	 * @var Tx_Extbase_Persistence_ManagerInterface
 	 */
 	protected $persistenceManager;
-
-	/**
-	 * @var Tx_Extbase_Object_ObjectManagerInterface
-	 */
-	protected $objectManager;
 
 	/**
 	 * @var Tx_Extbase_Persistence_QueryFactory
@@ -110,19 +104,13 @@ class Tx_Extbase_Property_Mapper implements t3lib_Singleton {
 	}
 
 	/**
-	 * @param Tx_Extbase_Reflection_Service $reflectionService
+	 * Injects the Reflection Service
+	 *
+	 * @param Tx_Extbase_Reflection_Service
 	 * @return void
 	 */
 	public function injectReflectionService(Tx_Extbase_Reflection_Service $reflectionService) {
 		$this->reflectionService = $reflectionService;
-	}
-
-	/**
-	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
-	 * @return void
-	 */
-	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
-		$this->objectManager = $objectManager;
 	}
 
 	/**
@@ -282,7 +270,7 @@ class Tx_Extbase_Property_Mapper implements t3lib_Singleton {
 				$propertyValue = NULL;
 			} else {
 				try {
-					$propertyValue = $this->objectManager->create($targetType, $propertyValue);
+					$propertyValue = new $targetType($propertyValue);
 				} catch (Exception $e) {
 					$propertyValue = NULL;
 				}
@@ -309,7 +297,7 @@ class Tx_Extbase_Property_Mapper implements t3lib_Singleton {
 						}
 					}
 				} else {
-					$newObject = $this->objectManager->create($targetType);
+					$newObject = new $targetType;
 					if ($this->map(array_keys($propertyValue), $propertyValue, $newObject)) {
 						$propertyValue = $newObject;
 					} else {

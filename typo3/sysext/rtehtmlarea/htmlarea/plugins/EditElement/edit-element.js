@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2010-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,12 +26,17 @@
 ***************************************************************/
 /*
  * EditElement plugin for htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id: acronym.js 8087 2010-07-04 20:18:10Z stan $
  */
-HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.EditElement = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function (editor) {
+	configurePlugin: function(editor) {
 		this.pageTSConfiguration = this.editorConfiguration.buttons.editelement;
 		this.removedFieldsets = (this.pageTSConfiguration && this.pageTSConfiguration.removeFieldsets) ? this.pageTSConfiguration.removeFieldsets : '';
 		this.properties = (this.pageTSConfiguration && this.pageTSConfiguration.properties) ? this.pageTSConfiguration.properties : '';
@@ -40,7 +45,7 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '2.0',
+			version		: '1.0',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -93,7 +98,7 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
 			// Get the parent element of the current selection
-		this.element = this.editor.getSelection().getParentElement();
+		this.element = this.editor.getParentElement();
 		if (this.element && !/^body$/i.test(this.element.nodeName)) {
 				// Open the dialogue window
 			this.openDialogue(
@@ -129,6 +134,8 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
+				// As of ExtJS 3.1, JS error with IE when the window is resizable
+			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				close: {
@@ -186,15 +193,6 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 				title: this.localize('Language'),
 				itemId: 'language',
 				items: languageTabItemConfig
-			});
-		}
-		if (this.removedFieldsets.indexOf('microdata') == -1 && this.getPluginInstance('MicrodataSchema')) {
-			var microdataTabItemConfig = [];
-			this.addConfigElement(this.getPluginInstance('MicrodataSchema').buildMicrodataFieldsetConfig(element, this.properties), microdataTabItemConfig);
-			tabItems.push({
-				title: this.getPluginInstance('MicrodataSchema').localize('microdata'),
-				itemId: 'microdata',
-				items: microdataTabItemConfig
 			});
 		}
 		if (this.removedFieldsets.indexOf('events') == -1) {
@@ -301,7 +299,7 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 	 */
 	setStyleOptions: function (comboBox, element) {
 		var nodeName = element.nodeName.toLowerCase();
-		this.stylePlugin = this.getPluginInstance(HTMLArea.DOM.isBlockElement(element) ? 'BlockStyle' : 'TextStyle');
+		this.stylePlugin = this.getPluginInstance(HTMLArea.isBlockElement(element) ? 'BlockStyle' : 'TextStyle');
 		if (comboBox && this.stylePlugin) {
 			var classNames = HTMLArea.DOM.getClassNames(element);
 			this.stylePlugin.buildDropDownOptions(comboBox, nodeName);
@@ -448,7 +446,7 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 			var value = field.getValue();
 			switch (itemId) {
 				case 'className':
-					if (HTMLArea.DOM.isBlockElement(this.element)) {
+					if (HTMLArea.isBlockElement(this.element)) {
 						this.stylePlugin.applyClassChange(this.element, value);
 					} else {
 							// Do not remove the span element if the language attribute is to be removed
@@ -456,14 +454,10 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 					}
 					break;
 				case 'dir':
-					this.element.setAttribute(itemId, (value === 'not set') ? '' : value);
+					this.element.setAttribute(itemId, (value == 'not set') ? '' : value);
 					break;
 			}
 		}, this);
-		var microdataTab = this.dialog.find('itemId', 'microdata')[0];
-		if (microdataTab) {
-			this.getPluginInstance('MicrodataSchema').setMicrodataAttributes(this.element);
-		}
 		if (languageCombo) {
 			this.getPluginInstance('Language').setLanguageAttributes(this.element, languageCombo.getValue());
 		}
@@ -477,7 +471,7 @@ HTMLArea.EditElement = Ext.extend(HTMLArea.Plugin, {
 		this.restoreSelection();
 		if (this.element) {
 				// Delete the element
-			HTMLArea.DOM.removeFromParent(this.element);
+			HTMLArea.removeFromParent(this.element);
 		}
 		this.close();
 		event.stopEvent();

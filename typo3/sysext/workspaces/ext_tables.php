@@ -28,29 +28,34 @@ if (TYPO3_MODE == 'BE' && !(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_INSTALL)) {
 		// register ExtDirect
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Workspaces.ExtDirect',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/Server.php:Tx_Workspaces_ExtDirect_Server',
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/Server.php:tx_Workspaces_ExtDirect_Server',
 		'web_WorkspacesWorkspaces',
 		'user,group'
 	);
 
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Workspaces.ExtDirectActions',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ActionHandler.php:Tx_Workspaces_ExtDirect_ActionHandler',
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ActionHandler.php:tx_Workspaces_ExtDirect_ActionHandler',
 		'web_WorkspacesWorkspaces',
 		'user,group'
 	);
 
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Workspaces.ExtDirectMassActions',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/MassActionHandler.php:Tx_Workspaces_ExtDirect_MassActionHandler',
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/MassActionHandler.php:tx_Workspaces_ExtDirect_MassActionHandler',
 		'web_WorkspacesWorkspaces',
 		'user,group'
 	);
 
 	t3lib_extMgm::registerExtDirectComponent(
 		'TYPO3.Ajax.ExtDirect.ToolbarMenu',
-		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ToolbarMenu.php:Tx_Workspaces_ExtDirect_ToolbarMenu'
+		t3lib_extMgm::extPath($_EXTKEY) . 'Classes/ExtDirect/ToolbarMenu.php:tx_Workspaces_ExtDirect_ToolbarMenu'
 	);
+
+		// register the reports statusprovider
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['reports']['tx_reports']['status']['providers']['configuration'][] = 'Tx_Workspaces_Reports_StatusProvider';
+
+
 }
 
 /**
@@ -69,8 +74,8 @@ $TCA['sys_workspace'] = array(
 			'default' => 'mimetypes-x-sys_workspace'
 		),
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY) . 'tca.php',
-		'versioningWS_alwaysAllowLiveEdit' => TRUE,
-		'dividers2tabs' => TRUE
+		'versioningWS_alwaysAllowLiveEdit' => true,
+		'dividers2tabs' => true
 	)
 );
 
@@ -94,8 +99,7 @@ $TCA['sys_workspace_stage'] = array(
 			'default' => 'mimetypes-x-sys_workspace'
 		),
 		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY) . 'tca.php',
-		'versioningWS_alwaysAllowLiveEdit' => TRUE,
-		'dividers2tabs' => TRUE
+		'versioningWS_alwaysAllowLiveEdit' => true,
 	)
 );
 	// todo move icons to Core sprite or keep them here and remove the todo note ;)
@@ -105,7 +109,7 @@ $icons = array(
 	'generatepreviewlink' => t3lib_extMgm::extRelPath($_EXTKEY) . 'Resources/Public/Images/generate-ws-preview-link.png',
 );
 t3lib_SpriteManager::addSingleIcons($icons, $_EXTKEY);
-t3lib_extMgm::addLLrefForTCAdescr('sys_workspace_stage', 'EXT:workspaces/Resources/Private/Language/locallang_csh_sysws_stage.xml');
+t3lib_extMgm::addLLrefForTCAdescr('sys_workspace_stage','EXT:workspaces/Resources/Private/Language/locallang_csh_sysws_stage.xml');
 
 
 ?>

@@ -28,9 +28,8 @@
 /**
  * Ext Direct Debug
  *
- * @author Stefan Galinski <stefan.galinski@gmail.com>
- * @package TYPO3
- * @subpackage t3lib
+ * @author	Stefan Galinski <stefan.galinski@gmail.com>
+ * @package	TYPO3
  */
 class t3lib_extjs_ExtDirectDebug {
 	/**
@@ -39,19 +38,6 @@ class t3lib_extjs_ExtDirectDebug {
 	 * @var array
 	 */
 	protected $debugMessages = array();
-
-	/**
-	 * destructor
-	 *
-	 * Currently empty, but automatically registered and called during
-	 * ExtDirect shutdown.
-	 *
-	 * @see http://bugs.typo3.org/view.php?id=17891
-	 * @see http://forge.typo3.org/issues/25278
-	 */
-	public function __destruct() {
-		// Currently empty
-	}
 
 	/**
 	 * Adds a new message of any data type to the internal debug message array.
@@ -76,6 +62,10 @@ class t3lib_extjs_ExtDirectDebug {
 
 		return $messagesAsString;
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/extjs/class.t3lib_extjs_extdirectdebug.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/extjs/class.t3lib_extjs_extdirectdebug.php']);
 }
 
 ?>

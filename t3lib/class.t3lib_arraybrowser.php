@@ -27,17 +27,36 @@
 /**
  * Class for displaying an array as a tree
  *
+ * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   77: class t3lib_arrayBrowser
+ *   96:	 function tree($arr, $depth_in, $depthData)
+ *  160:	 function wrapValue($theValue,$depth)
+ *  172:	 function wrapArrayKey($label,$depth,$theValue)
+ *  196:	 function getSearchKeys($keyArr, $depth_in, $searchString, $keyArray)
+ *  228:	 function fixed_lgd($string,$chars)
+ *  245:	 function depthKeys($arr,$settings)
+ *
+ * TOTAL FUNCTIONS: 6
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 /**
  * Class for displaying an array as a tree
  * See the extension 'lowlevel' /config (Backend module 'Tools > Configuration')
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  * @see SC_mod_tools_config_index::main()
@@ -54,13 +73,12 @@ class t3lib_arrayBrowser {
 
 	/**
 	 * Make browsable tree
-	 * Before calling this function you may want to set some of the internal vars like depthKeys, regexMode and fixedLgd.
-	 * For examples see SC_mod_tools_config_index::main()
+	 * Before calling this function you may want to set some of the internal vars like depthKeys, regexMode and fixedLgd. For examples see SC_mod_tools_config_index::main()
 	 *
-	 * @param array $arr The array to display
-	 * @param string $depth_in Key-position id. Build up during recursive calls - [key1].[key2].[key3] - an so on.
-	 * @param string $depthData Depth-data - basically a prefix for the icons. For calling this function from outside, let it stay blank.
-	 * @return string HTML for the tree
+	 * @param	array		The array to display
+	 * @param	string		Key-position id. Build up during recursive calls - [key1].[key2].[key3] - an so on.
+	 * @param	string		Depth-data - basically a prefix for the icons. For calling this function from outside, let it stay blank.
+	 * @return	string		HTML for the tree
 	 * @see SC_mod_tools_config_index::main()
 	 */
 	function tree($arr, $depth_in, $depthData) {
@@ -76,15 +94,13 @@ class t3lib_arrayBrowser {
 			$a++;
 			$depth = $depth_in . $key;
 			$goto = 'a' . substr(md5($depth), 0, 6);
-			if (is_object($arr[$key])) {
-				$arr[$key] = (array)$arr[$key];
-			}
-			$isArray = is_array($arr[$key]);
-			$deeper = ($isArray && ($this->depthKeys[$depth] || $this->expAll));
+
+			$deeper = (is_array($arr[$key]) && ($this->depthKeys[$depth] || $this->expAll)) ? 1 : 0;
 			$PM = 'join';
 			$LN = ($a == $c) ? 'blank' : 'line';
 			$BTM = ($a == $c) ? 'bottom' : '';
-			$PM = $isArray ? ($deeper ? 'minus' : 'plus') : 'join';
+			$PM = is_array($arr[$key]) ? ($deeper ? 'minus' : 'plus') : 'join';
+
 
 			$HTML .= $depthData;
 			$theIcon = '<img' . t3lib_iconWorks::skinImg($GLOBALS['BACK_PATH'], 'gfx/ol/' . $PM . $BTM . '.gif', 'width="18" height="16"') .
@@ -93,19 +109,20 @@ class t3lib_arrayBrowser {
 				$HTML .= $theIcon;
 			} else {
 				$HTML .=
-						($this->expAll ? '' : '<a id="' . $goto . '" href="' . htmlspecialchars(t3lib_BEfunc::getModuleUrl(t3lib_div::_GP('M')) . '&node[' .
+						($this->expAll ? '' : '<a id="' . $goto . '" href="' . htmlspecialchars('index.php?node[' .
 								$depth . ']=' . ($deeper ? 0 : 1) . '#' . $goto) . '">') .
 								$theIcon .
 								($this->expAll ? '' : '</a>');
 			}
 
 			$label = $key;
-			$HTML .= $this->wrapArrayKey($label, $depth, !$isArray ? $arr[$key] : '');
+			$HTML .= $this->wrapArrayKey($label, $depth, !is_array($arr[$key]) ? $arr[$key] : '');
 
-			if (!$isArray) {
+			if (!is_array($arr[$key])) {
 				$theValue = $arr[$key];
 				if ($this->fixedLgd) {
 					$imgBlocks = ceil(1 + strlen($depthData) / 77);
+						//					debug($imgBlocks);
 					$lgdChars = 68 - ceil(strlen('[' . $key . ']') * 0.8) - $imgBlocks * 3;
 					$theValue = $this->fixed_lgd($theValue, $lgdChars);
 				}
@@ -129,9 +146,9 @@ class t3lib_arrayBrowser {
 	/**
 	 * Wrapping the value in bold tags etc.
 	 *
-	 * @param string $theValue The title string
-	 * @param string $depth Depth path
-	 * @return string Title string, htmlspecialchars()'ed
+	 * @param	string		The title string
+	 * @param	string		Depth path
+	 * @return	string		Title string, htmlspecialchars()'ed
 	 */
 	function wrapValue($theValue, $depth) {
 		$wrappedValue = '';
@@ -144,10 +161,10 @@ class t3lib_arrayBrowser {
 	/**
 	 * Wrapping the value in bold tags etc.
 	 *
-	 * @param string $label The title string
-	 * @param string $depth Depth path
-	 * @param string $theValue The value for the array entry.
-	 * @return string Title string, htmlspecialchars()'ed
+	 * @param	string		The title string
+	 * @param	string		Depth path
+	 * @param	string		The value for the array entry.
+	 * @return	string		Title string, htmlspecialchars()'ed
 	 */
 	function wrapArrayKey($label, $depth, $theValue) {
 
@@ -157,8 +174,8 @@ class t3lib_arrayBrowser {
 			// If varname is set:
 		if ($this->varName && !$this->dontLinkVar) {
 			$variableName = $this->varName . '[\'' . str_replace('.', '\'][\'', $depth) . '\'] = ' .
-				(!t3lib_utility_Math::canBeInterpretedAsInteger($theValue) ? '\'' . addslashes($theValue) . '\'' : $theValue) . '; ';
-			$label = '<a href="' . htmlspecialchars(t3lib_BEfunc::getModuleUrl(t3lib_div::_GP('M')) . '&varname=' . urlencode($variableName)) . '#varname">' . $label . '</a>';
+				(!t3lib_div::testInt($theValue) ? '\'' . addslashes($theValue) . '\'' : $theValue) . '; ';
+			$label = '<a href="index.php?varname=' . urlencode($variableName) . '#varname">' . $label . '</a>';
 		}
 
 			// Return:
@@ -168,18 +185,17 @@ class t3lib_arrayBrowser {
 	/**
 	 * Creates an array with "depthKeys" which will expand the array to show the search results
 	 *
-	 * @param array $keyArr The array to search for the value
-	 * @param string $depth_in Depth string - blank for first call (will build up during recursive calling creating an id of the position: [key1].[key2].[key3]
-	 * @param string $searchString The string to search for
-	 * @param array $keyArray Key array, for first call pass empty array
-	 * @return array
+	 * @param	array		The array to search for the value
+	 * @param	string		Depth string - blank for first call (will build up during recursive calling creating an id of the position: [key1].[key2].[key3]
+	 * @param	string		The string to search for
+	 * @param	array		Key array, for first call pass empty array
+	 * @return	array
 	 */
 	function getSearchKeys($keyArr, $depth_in, $searchString, $keyArray) {
 		$c = count($keyArr);
 		if ($depth_in) {
 			$depth_in = $depth_in . '.';
 		}
-
 		foreach ($keyArr as $key => $value) {
 			$depth = $depth_in . $key;
 			$deeper = is_array($keyArr[$key]);
@@ -208,9 +224,9 @@ class t3lib_arrayBrowser {
 	/**
 	 * Fixed length function
 	 *
-	 * @param string $string String to process
-	 * @param integer $chars Max number of chars
-	 * @return string Processed string
+	 * @param	string		String to process
+	 * @param	integer		Max number of chars
+	 * @return	string		Processed string
 	 */
 	function fixed_lgd($string, $chars) {
 		if ($chars >= 4) {
@@ -224,9 +240,9 @@ class t3lib_arrayBrowser {
 	/**
 	 * Function modifying the depthKey array
 	 *
-	 * @param array $arr Array with instructions to open/close nodes.
-	 * @param array $settings Input depth_key array
-	 * @return array Output depth_key array with entries added/removed based on $arr
+	 * @param	array		Array with instructions to open/close nodes.
+	 * @param	array		Input depth_key array
+	 * @return	array		Output depth_key array with entries added/removed based on $arr
 	 * @see SC_mod_tools_config_index::main()
 	 */
 	function depthKeys($arr, $settings) {
@@ -254,4 +270,7 @@ class t3lib_arrayBrowser {
 	}
 }
 
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_arraybrowser.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_arraybrowser.php']);
+}
 ?>

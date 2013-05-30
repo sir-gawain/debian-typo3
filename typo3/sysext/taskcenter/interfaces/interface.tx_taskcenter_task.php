@@ -25,26 +25,28 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
 /**
  * Interface for classes which provide a task.
  *
- * @author Georg Ringer <typo3@ringerge.org
- * @package TYPO3
- * @subpackage tx_taskcenter
+ * @author		Georg Ringer <typo3@ringerge.org
+ * @package		TYPO3
+ * @subpackage	tx_taskcenter
+ *
  */
 interface tx_taskcenter_Task {
 
 	/**
-	 * Returns the content for a task
+	 * returns the content for a task
 	 *
-	 * @return string A task rendered HTML
+	 * @return	string	A task rendered HTML
 	 */
 	public function getTask();
 
 	/**
-	 * Returns the overview of a task
+	 * returns the overview of a task
 	 *
-	 * @return string A task rendered HTML
+	 * @return	string	A task rendered HTML
 	 */
 	public function getOverview();
 }

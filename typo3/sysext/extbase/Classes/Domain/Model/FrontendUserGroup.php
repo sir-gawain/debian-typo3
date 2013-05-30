@@ -57,7 +57,6 @@ class Tx_Extbase_Domain_Model_FrontendUserGroup extends Tx_Extbase_DomainObject_
 	/**
 	 * Constructs a new Frontend User Group
 	 *
-	 * @param string $title
 	 */
 	public function __construct($title) {
 		$this->setTitle($title);

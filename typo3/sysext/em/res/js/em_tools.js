@@ -28,6 +28,7 @@
  * @author Steffen Kamper <info@sk-typo3.de>
  * @package TYPO3
  * @subpackage extension manager
+ * @version $Id: $
  */
 Ext.ns('TYPO3.EM');
 
@@ -43,11 +44,7 @@ TYPO3.EM.Tools = function() {
 				var search = Ext.getCmp('localSearchField');
 				search.setValue(extKey);
 				search.refreshTrigger();
-				localStore.load({
-					params: {
-						repository: TYPO3.settings.EM.selectedRepository
-					}
-				});
+				localStore.load();
 			}
 		},
 
@@ -66,7 +63,7 @@ TYPO3.EM.Tools = function() {
 				value = '[no title]';
 			}
 			if (record.data.reviewstate < 0) {
-				description += '<br><br><strong>' + TYPO3.l10n.localize('insecureExtension') + '</strong>';
+				description += '<br><br><strong>' + TYPO3.lang.insecureExtension + '</strong>';
 			}
 			return record.data.icon + ' ' + value + ' (v' + record.data.version + ')';
 		},

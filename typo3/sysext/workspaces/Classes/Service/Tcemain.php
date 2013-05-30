@@ -27,13 +27,11 @@
  ***************************************************************/
 
 /**
- * Tcemain service
- *
  * @author Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  * @package Workspaces
  * @subpackage Service
  */
-class Tx_Workspaces_Service_Tcemain {
+class tx_Workspaces_Service_Tcemain {
 
 	/**
 	 * In case a sys_workspace_stage record is deleted we do a hard reset
@@ -51,21 +49,23 @@ class Tx_Workspaces_Service_Tcemain {
 		if ($command === 'delete') {
 			if ($table === Tx_Workspaces_Service_Stages::TABLE_STAGE) {
 				$this->resetStageOfElements($id);
-			} elseif ($table === Tx_Workspaces_Service_Workspaces::TABLE_WORKSPACE) {
+			} elseif ($table === tx_Workspaces_Service_Workspaces::TABLE_WORKSPACE) {
 				$this->flushWorkspaceElements($id);
 			}
 		}
 	}
 
 	/**
-	 * hook that is called AFTER all commands of the commandmap was
+	 * hook that is called AFTER all commands of the commandmap was 
 	 * executed
 	 *
 	 * @param t3lib_TCEmain $tcemainObj reference to the main tcemain object
 	 * @return	void
 	 */
 	public function processCmdmap_afterFinish(t3lib_TCEmain $tcemainObj) {
-		$this->flushWorkspaceCacheEntriesByWorkspaceId($tcemainObj->BE_USER->workspace);
+		if (TYPO3_UseCachingFramework) {
+			$this->flushWorkspaceCacheEntriesByWorkspaceId($tcemainObj->BE_USER->workspace);
+		}
 	}
 
 	/**
@@ -144,14 +144,33 @@ class Tx_Workspaces_Service_Tcemain {
 
 	/**
 	 * Flushes the workspace cache for current workspace and for the virtual "all workspaces" too.
-	 *
+	 * 
 	 * @param integer $workspaceId The workspace to be flushed in cache
 	 * @return void
 	 */
 	protected function flushWorkspaceCacheEntriesByWorkspaceId($workspaceId) {
-		$workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
-		$workspacesCache->flushByTag($workspaceId);
-		$workspacesCache->flushByTag(Tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES);
+		if (TYPO3_UseCachingFramework === TRUE) {
+			try {
+				$GLOBALS['typo3CacheFactory']->create(
+					'workspaces_cache',
+					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['frontend'],
+					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['backend'],
+					$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sys_workspace_cache']['options']
+				);
+			} catch (t3lib_cache_exception_DuplicateIdentifier $e) {
+				// do nothing, a workspace cache already exists
+			}
+	
+			$workspacesCache = $GLOBALS['typo3CacheManager']->getCache('workspaces_cache');
+	
+			$workspacesCache->flushByTag($workspaceId);
+			$workspacesCache->flushByTag(tx_Workspaces_Service_Workspaces::SELECT_ALL_WORKSPACES);
+		}
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/Tcemain.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/Tcemain.php']);
 }
 ?>

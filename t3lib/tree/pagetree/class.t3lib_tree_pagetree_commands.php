@@ -34,34 +34,9 @@
  */
 final class t3lib_tree_pagetree_Commands {
 	/**
-	 * @var boolean|null
-	 */
-	static protected $useNavTitle = NULL;
-
-	/**
-	 * @var boolean|null
-	 */
-	static protected $addIdAsPrefix = NULL;
-
-	/**
-	 * @var boolean|null
-	 */
-	static protected $addDomainName = NULL;
-
-	/**
-	 * @var array|null
-	 */
-	static protected $backgroundColors = NULL;
-
-	/**
-	 * @var integer|null
-	 */
-	static protected $titleLength = NULL;
-
-	/**
 	 * Visibly the page
 	 *
-	 * @param t3lib_tree_pagetree_Node $node
+	 * @param t3lib_tree_pagetree_Node $nodeData
 	 * @return void
 	 */
 	public static function visiblyNode(t3lib_tree_pagetree_Node $node) {
@@ -72,7 +47,7 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Hide the page
 	 *
-	 * @param t3lib_tree_pagetree_Node $node
+	 * @param t3lib_tree_pagetree_Node $nodeData
 	 * @return void
 	 */
 	public static function disableNode(t3lib_tree_pagetree_Node $node) {
@@ -83,7 +58,7 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Delete the page
 	 *
-	 * @param t3lib_tree_pagetree_Node $node
+	 * @param t3lib_tree_pagetree_Node $nodeData
 	 * @return void
 	 */
 	public static function deleteNode(t3lib_tree_pagetree_Node $node) {
@@ -94,8 +69,8 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Restore the page
 	 *
-	 * @param t3lib_tree_pagetree_Node $node
-	 * @param integer $targetId
+	 * @param t3lib_tree_pagetree_Node $nodeData
+	 * @param int $targetId
 	 * @return void
 	 */
 	public static function restoreNode(t3lib_tree_pagetree_Node $node, $targetId) {
@@ -110,7 +85,7 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Updates the node label
 	 *
-	 * @param t3lib_tree_pagetree_Node $node
+	 * @param t3lib_tree_pagetree_Node $nodeData
 	 * @param string $updatedLabel
 	 * @return void
 	 */
@@ -125,8 +100,8 @@ final class t3lib_tree_pagetree_Commands {
 	 * Node: Use a negative target id to specify a sibling target else the parent is used
 	 *
 	 * @param t3lib_tree_pagetree_Node $sourceNode
-	 * @param integer $targetId
-	 * @return integer
+	 * @param int $targetId
+	 * @return int
 	 */
 	public static function copyNode(t3lib_tree_pagetree_Node $sourceNode, $targetId) {
 		$cmd['pages'][$sourceNode->getId()]['copy'] = $targetId;
@@ -141,7 +116,7 @@ final class t3lib_tree_pagetree_Commands {
 	 * Node: Use a negative target id to specify a sibling target else the parent is used
 	 *
 	 * @param t3lib_tree_pagetree_Node $sourceNode
-	 * @param integer $targetId
+	 * @param int $targetId
 	 * @return void
 	 */
 	public static function moveNode(t3lib_tree_pagetree_Node $sourceNode, $targetId) {
@@ -153,9 +128,9 @@ final class t3lib_tree_pagetree_Commands {
 	 * Creates a page of the given doktype and returns the id of the created page
 	 *
 	 * @param t3lib_tree_pagetree_Node $parentNode
-	 * @param integer $targetId
-	 * @param integer $pageType
-	 * @return integer
+	 * @param int $targetId
+	 * @param int $pageType
+	 * @return int
 	 */
 	public static function createNode(t3lib_tree_pagetree_Node $parentNode, $targetId, $pageType) {
 		$placeholder = 'NEW12345';
@@ -173,10 +148,13 @@ final class t3lib_tree_pagetree_Commands {
 		$data['pages'][$placeholder]['doktype'] = $pageType;
 		$data['pages'][$placeholder]['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:tree.defaultPageTitle', TRUE);
 
+		$pid = intval($parentNode->getWorkspaceId());
+		$targetId = intval($targetId);
+
 		$newPageId = self::processTceCmdAndDataMap(array(), $data);
 		$node = self::getNode($newPageId[$placeholder]);
 
-		if ($parentNode->getWorkspaceId() !== $targetId) {
+		if ($pid !== $targetId) {
 			self::moveNode($node, $targetId);
 		}
 
@@ -196,15 +174,15 @@ final class t3lib_tree_pagetree_Commands {
 	 *
 	 * @param array $cmd
 	 * @param array $data
-	 * @return array
 	 * @throws RuntimeException if an error happened while the TCE processing
+	 * @return array
 	 */
 	protected static function processTceCmdAndDataMap(array $cmd, array $data = array()) {
 		/** @var $tce t3lib_TCEmain */
 		$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 		$tce->stripslashes_values = 0;
 		$tce->start($data, $cmd);
-		$tce->copyTree = t3lib_utility_Math::forceIntegerInRange($GLOBALS['BE_USER']->uc['copyLevels'], 0, 100);
+		$tce->copyTree = t3lib_div::intInRange($GLOBALS['BE_USER']->uc['copyLevels'], 0, 100);
 
 		if (count($cmd)) {
 			$tce->process_cmdmap();
@@ -225,7 +203,7 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Returns a node from the given node id
 	 *
-	 * @param integer $nodeId
+	 * @param int $nodeId
 	 * @param boolean $unsetMovePointers
 	 * @return t3lib_tree_pagetree_Node
 	 */
@@ -237,8 +215,9 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Returns the mount point path for a temporary mount or the given id
 	 *
-	 * @param integer $uid
-	 * @return string
+	 * @static
+	 * @param int $uid
+	 * @return void
 	 */
 	public static function getMountPointPath($uid = -1) {
 		if ($uid === -1) {
@@ -249,18 +228,16 @@ final class t3lib_tree_pagetree_Commands {
 			return '';
 		}
 
-		if (self::$useNavTitle === NULL) {
-			self::$useNavTitle = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showNavTitle');
-		}
+		$useNavTitle = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showNavTitle');
 		$rootline = array_reverse(t3lib_BEfunc::BEgetRootLine($uid));
 		array_shift($rootline);
 
 		$path = array();
 		foreach ($rootline as $rootlineElement) {
-			$record = self::getNodeRecord($rootlineElement['uid']);
+			$record = t3lib_tree_pagetree_Commands::getNodeRecord($rootlineElement['uid']);
 
 			$text = $record['title'];
-			if (self::$useNavTitle && trim($record['nav_title']) !== '') {
+			if ($useNavTitle && trim($record['nav_title']) !== '') {
 				$text = $record['nav_title'];
 			}
 
@@ -273,7 +250,7 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Returns a node record from a given id
 	 *
-	 * @param integer $nodeId
+	 * @param int $nodeId
 	 * @param boolean $unsetMovePointers
 	 * @return array
 	 */
@@ -285,6 +262,7 @@ final class t3lib_tree_pagetree_Commands {
 	/**
 	 * Returns the first configured domain name for a page
 	 *
+	 * @static
 	 * @param integer $uid
 	 * @return string
 	 */
@@ -310,17 +288,13 @@ final class t3lib_tree_pagetree_Commands {
 	 * Creates a node with the given record information's
 	 *
 	 * @param array $record
-	 * @param integer $mountPoint
 	 * @return t3lib_tree_pagetree_Node
 	 */
 	public static function getNewNode($record, $mountPoint = 0) {
-		if (self::$titleLength === NULL) {
-			self::$useNavTitle = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showNavTitle');
-			self::$addIdAsPrefix = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showPageIdWithTitle');
-			self::$addDomainName = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showDomainNameWithTitle');
-			self::$backgroundColors = $GLOBALS['BE_USER']->getTSConfigProp('options.pageTree.backgroundColor');
-			self::$titleLength = intval($GLOBALS['BE_USER']->uc['titleLen']);
-		}
+		$useNavTitle = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showNavTitle');
+		$addIdAsPrefix = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showPageIdWithTitle');
+		$addDomainName = $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.showDomainNameWithTitle');
+		$titleLength = intval($GLOBALS['BE_USER']->uc['titleLen']);
 
 		/** @var $subNode t3lib_tree_pagetree_Node */
 		$subNode = t3lib_div::makeInstance('t3lib_tree_pagetree_Node');
@@ -331,11 +305,10 @@ final class t3lib_tree_pagetree_Commands {
 		$subNode->setId($record['uid']);
 		$subNode->setMountPoint($mountPoint);
 		$subNode->setWorkspaceId(($record['_ORIG_uid'] ? $record['_ORIG_uid'] : $record['uid']));
-		$subNode->setBackgroundColor(self::$backgroundColors[$record['uid']]);
 
 		$field = 'title';
 		$text = $record['title'];
-		if (self::$useNavTitle && trim($record['nav_title']) !== '') {
+		if ($useNavTitle && trim($record['nav_title']) !== '') {
 			$field = 'nav_title';
 			$text = $record['nav_title'];
 		}
@@ -345,10 +318,10 @@ final class t3lib_tree_pagetree_Commands {
 		} else {
 			$visibleText = $text;
 		}
-		$visibleText = t3lib_div::fixed_lgd_cs($visibleText, self::$titleLength);
+		$visibleText = t3lib_div::fixed_lgd_cs($visibleText, $titleLength);
 
 		$suffix = '';
-		if (self::$addDomainName) {
+		if ($addDomainName) {
 			$domain = self::getDomainName($record['uid']);
 			$suffix = ($domain !== '' ? ' [' . $domain . ']' : '');
 		}
@@ -378,7 +351,7 @@ final class t3lib_tree_pagetree_Commands {
 			}
 		}
 
-		$prefix .= htmlspecialchars(self::$addIdAsPrefix ? '[' . $record['uid'] . '] ' : '');
+		$prefix .= htmlspecialchars($addIdAsPrefix ? '[' . $record['uid'] . '] ' : '');
 		$subNode->setEditableText($text);
 		$subNode->setText(
 			htmlspecialchars($visibleText),

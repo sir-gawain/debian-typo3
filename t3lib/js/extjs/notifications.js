@@ -222,6 +222,7 @@ TYPO3.Dialog = function() {
 		fn: Ext.emptyFn
 	};
 
+
 	return {
 		/** @public functions */
 		InformationDialog: function(configuration) {
@@ -303,6 +304,7 @@ TYPO3.ContextHelpWindow = function() {
 	*/
 	var height;
 
+
 	return {
 		/**
 		 * init class vars
@@ -325,7 +327,7 @@ TYPO3.ContextHelpWindow = function() {
 		open: function(helpIdentifier) {
 			if (this.openContext === 'window') {
 				var cshWindow = window.open(
-					this.typo3Path + 'mod.php?M=help_cshmanual&tfID=' + helpIdentifier,
+					this.typo3Path + 'view_help.php?tfID=' + helpIdentifier,
 					'ContextHelpWindow',
 					'height=' + this.height + ',width=' + this.width + ',status=0,menubar=0,scrollbars=1'
 				);

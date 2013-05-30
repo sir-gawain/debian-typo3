@@ -84,7 +84,7 @@ var TsRefType = function(typeId) {
  * @return A new TsRef instance
  */
 var TsRef = function() {
-	var typeTree = new Array();
+	var typeTree = new Array();	
 
 	var doc;
 
@@ -102,6 +102,8 @@ var TsRef = function() {
 			}
 		);
 	}
+
+
 
 	function buildTree() {
 
@@ -127,6 +129,7 @@ var TsRef = function() {
 		}
 	}
 
+
 	function addPropertiesToType(addToType,addFromTypeNames,maxRecDepth){
 		if(maxRecDepth<0){
 			throw "Maximum recursion depth exceeded while trying to resolve the extends in the TSREF!";
@@ -151,6 +154,7 @@ var TsRef = function() {
 				}
 			}
 		}
+
 	}
 
 	this.getPropertiesFromTypeId = function(tId) {
@@ -162,7 +166,7 @@ var TsRef = function() {
 					result[key] = new TsRefProperty(this[key].parentType,this[key].name,this[key].value);
 				}
 				return result;
-			}
+			}	
 			return typeTree[tId].properties;
 		} else {
 			return new Array();

@@ -29,6 +29,7 @@
 /**
  * Contains MULTIMEDIA class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,8 +38,8 @@ class tslib_content_Multimedia extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, MULTIMEDIA
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$content = '';
@@ -51,21 +52,21 @@ class tslib_content_Multimedia extends tslib_content_Abstract {
 			if (t3lib_div::inList('txt,html,htm', $fileinfo['fileext'])) {
 				$content = $GLOBALS['TSFE']->tmpl->fileContent($incFile);
 			} else {
-					// Default params...
+					// default params...
 				$parArray = array();
-					// Src is added
+					// src is added
 
 				$width = isset($conf['width.'])
 					? $this->cObj->stdWrap($conf['width'], $conf['width.'])
 					: $conf['width'];
-				if (!$width) {
+				if(!$width) {
 					$width = 200;
 				}
 
 				$height = isset($conf['height.'])
 					? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 					: $conf['height'];
-				if (!$height) {
+				if(!$height) {
 					$height = 200;
 				}
 
@@ -118,5 +119,12 @@ class tslib_content_Multimedia extends tslib_content_Abstract {
 
 		return $content;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_multimedia.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_multimedia.php']);
+}
+
 ?>

@@ -29,7 +29,7 @@
  * Class for pagetree indicator
  *
  * @author Susanne Moog <typo3@susanne-moog.de>
- * @package TYPO3
+ * @package	TYPO3
  * @subpackage t3lib
  */
 class t3lib_tree_pagetree_Indicator {
@@ -49,6 +49,7 @@ class t3lib_tree_pagetree_Indicator {
 
 	/**
 	 * Gets all registered indicator providers and instantiates them
+	 *
 	 */
 	protected function getIndicatorProviders() {
 		$providers = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['pagetree']['t3lib_tree_pagetree']['indicator']['providers'];
@@ -68,13 +69,13 @@ class t3lib_tree_pagetree_Indicator {
 	/**
 	 * Runs through all indicator providers and returns all indicators collected.
 	 *
-	 * @return array An array of
+	 * @return	array	An array of
 	 */
 	public function getAllIndicators() {
 		$indicators = array();
 		foreach ($this->indicatorProviders as $indicatorProvider) {
 			$indicator = $indicatorProvider->getIndicator();
-			if ($indicator) {
+			if($indicator) {
 				$indicators[] = $indicator;
 			}
 		}
@@ -82,5 +83,10 @@ class t3lib_tree_pagetree_Indicator {
 		return $indicators;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/tree/pagetree/class.t3lib_tree_pagetree_indicator.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/tree/pagetree/class.t3lib_tree_pagetree_indicator.php']);
+}
+
 
 ?>

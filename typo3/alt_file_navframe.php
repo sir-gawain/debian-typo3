@@ -27,32 +27,51 @@
 /**
  * Folder tree in the File main module.
  *
+ * $Id$
  * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   72: class localFolderTree extends t3lib_folderTree
+ *   81:     function localFolderTree()
+ *   92:     function wrapIcon($icon,&$row)
+ *  121:     function wrapTitle($title,$row,$bank=0)
+ *
+ *
+ *  146: class SC_alt_file_navframe
+ *  163:     function init()
+ *  253:     function main()
+ *  284:     function printContent()
+ *
+ * TOTAL FUNCTIONS: 6
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
  */
 
 $BACK_PATH = '';
 require_once('init.php');
+require('template.php');
+require_once('class.filelistfoldertree.php');
+
 
 /**
  * Main script class for rendering of the folder tree
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_alt_file_navframe {
 
 		// Internal, dynamic:
-		// Content accumulates in this variable.
-	var $content;
-
-	/**
-	 * @var filelistFolderTree $foldertree the folder tree object
-	 */
-	var $foldertree;
+	var $content;		// Content accumulates in this variable.
+	var $foldertree;	// Folder tree object.
 
 	/**
 	 * document template object
@@ -66,41 +85,44 @@ class SC_alt_file_navframe {
 	var $currentSubScript;
 	var $cMR;
 
+
 	/**
 	 * Initialiation of the script class
 	 *
 	 * @return	void
 	 */
-	function init() {
+	function init()	{
+		global $BE_USER, $BACK_PATH;
 
 			// Setting backPath
-		$this->backPath = $GLOBALS['BACK_PATH'];
+		$this->backPath = $BACK_PATH;
 
 			// Setting GPvars:
 		$this->currentSubScript = t3lib_div::_GP('currentSubScript');
 		$this->cMR = t3lib_div::_GP('cMR');
 
 			// Create folder tree object:
-		/** @var $foldertree filelistFolderTree */
 		$this->foldertree = t3lib_div::makeInstance('filelistFolderTree');
-		$this->foldertree->ext_IconMode = $GLOBALS['BE_USER']->getTSConfigVal('options.folderTree.disableIconLinkToContextmenu');
+		$this->foldertree->ext_IconMode = $BE_USER->getTSConfigVal('options.folderTree.disableIconLinkToContextmenu');
 		$this->foldertree->thisScript = 'alt_file_navframe.php';
 	}
+
 
 	/**
 	 * initialization for the visual parts of the class
 	 * Use template rendering only if this is a non-AJAX call
 	 *
-	 * @return void
+	 * @return	void
 	 */
 	public function initPage() {
+		global $BE_USER, $BACK_PATH, $CLIENT;
 
 			// Setting highlight mode:
-		$this->doHighlight = !$GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.disableTitleHighlight');
+		$this->doHighlight = !$BE_USER->getTSConfigVal('options.pageTree.disableTitleHighlight');
 
 			// Create template object:
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/alt_file_navframe.html');
 		$this->doc->showFlashMessages = FALSE;
 
@@ -165,7 +187,7 @@ class SC_alt_file_navframe {
 		Tree.ajaxID = "SC_alt_file_navframe::expandCollapse";
 
 		// Function, loading the list frame from navigation tree:
-		function jumpTo(id, linkObj, highlightID, bank) {
+		function jumpTo(id, linkObj, highlightID, bank)	{
 			var theUrl = top.TS.PATH_typo3 + top.currentSubScript ;
 			if (theUrl.indexOf("?") != -1) {
 				theUrl += "&id=" + id
@@ -176,7 +198,7 @@ class SC_alt_file_navframe {
 			top.TYPO3.Backend.ContentContainer.setUrl(theUrl);
 
 			'.($this->doHighlight ? 'Tree.highlightActiveItem("file", highlightID + "_" + bank);' : '').'
-			'.(!$GLOBALS['CLIENT']['FORMSTYLE'] ? '' : 'if (linkObj) linkObj.blur(); ').'
+			'.(!$CLIENT['FORMSTYLE'] ? '' : 'if (linkObj) linkObj.blur(); ').'
 			return false;
 		}
 		'.($this->cMR ? " jumpTo(top.fsMod.recentIds['file'],'');" : '')
@@ -187,9 +209,10 @@ class SC_alt_file_navframe {
 	/**
 	 * Main function, rendering the folder tree
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function main() {
+	function main()	{
+		global $LANG,$CLIENT;
 
 			// Produce browse-tree:
 		$tree = $this->foldertree->getBrowsableTree();
@@ -219,26 +242,26 @@ class SC_alt_file_navframe {
 
 			// Build the <body> for the module
 		$this->content = $this->doc->startPage('TYPO3 Folder Tree');
-		$this->content .= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers, $subparts);
-		$this->content .= $this->doc->endPage();
+		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers, $subparts);
+		$this->content.= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 	}
 
 	/**
 	 * Outputting the accumulated content to screen
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function printContent() {
+	function printContent()	{
 		echo $this->content;
 	}
 
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return array All available buttons as an assoc. array
+	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons() {
+	protected function getButtons()	{
 		$buttons = array(
 			'csh' => '',
 			'refresh' => '',
@@ -250,7 +273,7 @@ class SC_alt_file_navframe {
 		'</a>';
 
 			// CSH
-		$buttons['csh'] = str_replace('typo3-csh-inline', 'typo3-csh-inline show-right', t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'filetree', $GLOBALS['BACK_PATH']));
+		$buttons['csh'] = str_replace('typo3-csh-inline','typo3-csh-inline show-right',t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'filetree', $GLOBALS['BACK_PATH']));
 
 		return $buttons;
 	}
@@ -265,14 +288,16 @@ class SC_alt_file_navframe {
 	 * Makes the AJAX call to expand or collapse the foldertree.
 	 * Called by typo3/ajax.php
 	 *
-	 * @param array $params Additional parameters (not used here)
-	 * @param TYPO3AJAX $ajaxObj The TYPO3AJAX object of this request
-	 * @return void
+	 * @param	array		$params: additional parameters (not used here)
+	 * @param	TYPO3AJAX	$ajaxObj: The TYPO3AJAX object of this request
+	 * @return	void
 	 */
 	public function ajaxExpandCollapse($params, $ajaxObj) {
+		global $LANG;
+
 		$this->init();
 		$tree = $this->foldertree->getBrowsableTree();
-		if ($this->foldertree->getAjaxStatus() === FALSE) {
+		if (!$this->foldertree->ajaxStatus)	{
 			$ajaxObj->setError($tree);
 		} else	{
 			$ajaxObj->addContent('tree', $tree);
@@ -280,7 +305,13 @@ class SC_alt_file_navframe {
 	}
 }
 
-	// Make instance if it is not an AJAX call
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_file_navframe.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_file_navframe.php']);
+}
+
+
+// Make instance if it is not an AJAX call
 if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX)) {
 	$SOBE = t3lib_div::makeInstance('SC_alt_file_navframe');
 	$SOBE->init();

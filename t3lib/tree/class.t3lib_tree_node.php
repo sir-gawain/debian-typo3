@@ -102,7 +102,7 @@ class t3lib_tree_Node implements t3lib_tree_ComparableNode, Serializable {
 	}
 
 	/**
-	 * Returns TRUE if the node has child nodes attached
+	 * Returns true if the node has child nodes attached
 	 *
 	 * @return boolean
 	 */
@@ -171,7 +171,7 @@ class t3lib_tree_Node implements t3lib_tree_ComparableNode, Serializable {
 	 * 0 if its equal
 	 *
 	 * @param t3lib_tree_Node $other
-	 * @return integer See description above
+	 * @return int see description above
 	 */
 	public function compareTo($other) {
 		if ($this->equals($other)) {
@@ -184,7 +184,7 @@ class t3lib_tree_Node implements t3lib_tree_ComparableNode, Serializable {
 	/**
 	 * Returns the node in an array representation that can be used for serialization
 	 *
-	 * @param boolean $addChildNodes
+	 * @param bool $addChildNodes
 	 * @return array
 	 */
 	public function toArray($addChildNodes = TRUE) {
@@ -251,7 +251,7 @@ class t3lib_tree_Node implements t3lib_tree_ComparableNode, Serializable {
 	public function unserialize($serializedString) {
 		$arrayRepresentation = unserialize($serializedString);
 		if ($arrayRepresentation['serializeClassName'] !== get_class($this)) {
-			throw new t3lib_exception('Deserialized object type is not identical!', 1294586646);
+			throw new t3lib_exception('Deserialized object type is not identical!');
 		}
 		$this->dataFromArray($arrayRepresentation);
 	}

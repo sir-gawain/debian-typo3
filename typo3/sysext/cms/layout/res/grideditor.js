@@ -187,29 +187,30 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 					continue;
 				}
 
+
 				var cellHtml = '<div class="cell_container"><a class="link_editor" id="e_'
-						+ col + '_' + row + '" title="' + TYPO3.l10n.localize('editCell') + '" href="#"><!-- --></a>';
+						+ col + '_' + row + '" title="' + TYPO3.lang.editCell + '" href="#"><!-- --></a>';
 				if (this.cellCanSpanRight(col, row)) {
 					cellHtml += '<a href="#" id="r_'
-						+ col + '_' + row + '" title="' + TYPO3.l10n.localize('mergeCell') + '" class="link_expand_right"><!-- --></a>';
+						+ col + '_' + row + '" title="' + TYPO3.lang.mergeCell + '" class="link_expand_right"><!-- --></a>';
 				}
 				if (this.cellCanShrinkLeft(col, row)) {
 					cellHtml += '<a href="#" id="l_'
-						+ col + '_' + row + '" title="' + TYPO3.l10n.localize('splitCell') + '" class="link_shrink_left"><!-- --></a>';
+						+ col + '_' + row + '" title="' + TYPO3.lang.splitCell + '" class="link_shrink_left"><!-- --></a>';
 				}
 				if (this.cellCanSpanDown(col, row)) {
 					cellHtml += '<a href="#" id="d_'
-						+ col + '_' + row + '" title="' + TYPO3.l10n.localize('mergeCell') + '" class="link_expand_down"><!-- --></a>';
+						+ col + '_' + row + '" title="' + TYPO3.lang.mergeCell + '" class="link_expand_down"><!-- --></a>';
 				}
 				if (this.cellCanShrinkUp(col, row)) {
 					cellHtml += '<a href="#" id="u_'
-						+ col + '_' + row + '" title="' + TYPO3.l10n.localize('splitCell') + '" class="link_shrink_up"><!-- --></a>';
+						+ col + '_' + row + '" title="' + TYPO3.lang.splitCell + '" class="link_shrink_up"><!-- --></a>';
 				}
 				cellHtml += '</div>';
 
-				cellHtml += '<div class="cell_data">' + TYPO3.l10n.localize('name') + ': ' + (cell.name ? cell.name : TYPO3.l10n.localize('notSet'))
-						+ '<br />' + TYPO3.l10n.localize('column') + ': '
-						+ (cell.column === undefined ? TYPO3.l10n.localize('notSet') : parseInt(cell.column, 10)) + '</div>';
+				cellHtml += '<div class="cell_data">' + TYPO3.lang.name + ': ' + (cell.name ? cell.name : TYPO3.lang.notSet)
+						+ '<br />' + TYPO3.lang.column + ': '
+						+ (cell.column === undefined ? TYPO3.lang.notSet : parseInt(cell.column, 10)) + '</div>';
 
 				// create cells
 				var child = {
@@ -339,7 +340,7 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 
 		if (!win) {
 			var fieldName = new Ext.form.TextField({
-				fieldLabel: TYPO3.l10n.localize('name'),
+				fieldLabel: TYPO3.lang.name,
 				name: 'name',
 				width: 270,
 				value: cell.name,
@@ -348,14 +349,14 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 					render: function(c) {
 						Ext.QuickTips.register({
 							target: c,
-							text: TYPO3.l10n.localize('nameHelp')
+							text: TYPO3.lang.nameHelp
 						});
 					}
 				}
 			});
 
 			var fieldColumn = new Ext.form.NumberField({
-				fieldLabel: TYPO3.l10n.localize('column'),
+				fieldLabel: TYPO3.lang.column,
 				name: 'column',
 				width: 50,
 				value: cell.column,
@@ -364,15 +365,16 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 					render: function(c) {
 						Ext.QuickTips.register({
 							target: c,
-							text: TYPO3.l10n.localize('columnHelp')
+							text: TYPO3.lang.columnHelp
 						});
 					}
 				}
 			});
 
+
 			win = new Ext.Window({
 				layout: 'fit',
-				title: TYPO3.l10n.localize('title'),
+				title: TYPO3.lang.title,
 				width: 400,
 				modal: true,
 				closable: true,
@@ -393,7 +395,7 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 				buttons: [
 					{
 						iconCls:'save',
-						text: TYPO3.l10n.localize('save'),
+						text: TYPO3.lang.save,
 						handler: function(fieldName, fieldColumn, col, row) {
 							t3Grid.setName(fieldName.getValue(), col, row);
 							t3Grid.setColumn(fieldColumn.getValue(), col, row);

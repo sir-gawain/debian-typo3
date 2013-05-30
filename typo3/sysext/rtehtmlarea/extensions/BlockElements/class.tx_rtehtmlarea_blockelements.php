@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2007-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2007-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -25,6 +25,8 @@
  * BlockElements extension for htmlArea RTE
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
+ *
+ * TYPO3 SVN ID: $Id$
  *
  */
 class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
@@ -66,17 +68,11 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
 		'h6'		=> 'Heading 6',
 		'pre'		=> 'Preformatted',
 		'address'	=> 'Address',
-		'article'	=> 'Article',
-		'aside'		=> 'Aside',
 		'blockquote'	=> 'Long quotation',
-		'div'		=> 'Container',
-		'footer'	=> 'Footer',
-		'header'	=> 'Header',
-		'nav'		=> 'Navigation',
-		'section'	=> 'Section'
+		'div'		=> 'Section',
 	);
 
-	protected $defaultBlockElementsOrder = 'none, p, h1, h2, h3, h4, h5, h6, pre, address, article, aside, blockquote, div, footer, header, nav, section';
+	protected $defaultBlockElementsOrder = 'none, p, h1, h2, h3, h4, h5, h6, pre, address, blockquote, div';
 
 	/**
 	 * Return JS configuration of the htmlArea plugins registered by the extension
@@ -103,18 +99,14 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
 			$addItems = array();
 			$restrictTo = array('*');
 			$blockElementsOrder = $this->defaultBlockElementsOrder;
-			$prefixLabelWithTag = FALSE;
-			$postfixLabelWithTag = FALSE;
+			$prefixLabelWithTag = false;
+			$postfixLabelWithTag = false;
 
 				// Processing PageTSConfig
 			if (is_array($this->thisConfig['buttons.']) && is_array($this->thisConfig['buttons.']['formatblock.'])) {
 					// Removing elements
 				if ($this->thisConfig['buttons.']['formatblock.']['removeItems']) {
-					if ($this->htmlAreaRTE->cleanList($this->thisConfig['buttons.']['formatblock.']['removeItems']) == '*') {
-						$hideItems = array_diff(array_keys($defaultBlockElements), array('none'));
-					} else {
-						$hideItems =  t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList(t3lib_div::strtolower($this->thisConfig['buttons.']['formatblock.']['removeItems'])), 1);
-					}
+					$hideItems =  t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList(t3lib_div::strtolower($this->thisConfig['buttons.']['formatblock.']['removeItems'])), 1);
 				}
 					// Adding elements
 				if ($this->thisConfig['buttons.']['formatblock.']['addItems']) {
@@ -128,8 +120,12 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
 				if ($this->thisConfig['buttons.']['formatblock.']['orderItems']) {
 					$blockElementsOrder = 'none,'.t3lib_div::strtolower($this->thisConfig['buttons.']['formatblock.']['orderItems']);
 				}
-				$prefixLabelWithTag = ($this->thisConfig['buttons.']['formatblock.']['prefixLabelWithTag']) ? TRUE : $prefixLabelWithTag;
-				$postfixLabelWithTag = ($this->thisConfig['buttons.']['formatblock.']['postfixLabelWithTag']) ? TRUE : $postfixLabelWithTag;
+				$prefixLabelWithTag = ($this->thisConfig['buttons.']['formatblock.']['prefixLabelWithTag']) ? true : $prefixLabelWithTag;
+				$postfixLabelWithTag = ($this->thisConfig['buttons.']['formatblock.']['postfixLabelWithTag']) ? true : $postfixLabelWithTag;
+			}
+				// Processing old style configuration for hiding paragraphs
+			if ($this->thisConfig['hidePStyleItems']) {
+				$hideItems = array_merge($hideItems, t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList(t3lib_div::strtolower($this->thisConfig['hidePStyleItems'])), 1));
 			}
 				// Adding custom items
 			$blockElementsOrder = array_merge(t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList($blockElementsOrder), 1), $addItems);
@@ -149,23 +145,25 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
 			}
 				// Localizing the options
 			$blockElementsOptions = array();
-			$labels = array();
-			if (is_array($this->thisConfig['buttons.'])
-					&& is_array($this->thisConfig['buttons.']['formatblock.'])
-					&& is_array($this->thisConfig['buttons.']['formatblock.']['items.'])) {
-				$labels = $this->thisConfig['buttons.']['formatblock.']['items.'];
-			}
-			foreach ($blockElementsOrder as $item) {
-				if ($this->htmlAreaRTE->is_FE()) {
-					$blockElementsOptions[$item] = $TSFE->getLLL($this->defaultBlockElements[$item], $this->LOCAL_LANG);
-				} else {
-					$blockElementsOptions[$item] = $LANG->getLL($this->defaultBlockElements[$item]);
+			if ($this->htmlAreaRTE->cleanList($this->thisConfig['hidePStyleItems']) != '*') {
+				$labels = array();
+				if (is_array($this->thisConfig['buttons.'])
+						&& is_array($this->thisConfig['buttons.']['formatblock.'])
+						&& is_array($this->thisConfig['buttons.']['formatblock.']['items.'])) {
+					$labels = $this->thisConfig['buttons.']['formatblock.']['items.'];
 				}
+				foreach ($blockElementsOrder as $item) {
+					if ($this->htmlAreaRTE->is_FE()) {
+						$blockElementsOptions[$item] = $TSFE->getLLL($this->defaultBlockElements[$item],$this->LOCAL_LANG);
+					} else {
+						$blockElementsOptions[$item] = $LANG->getLL($this->defaultBlockElements[$item]);
+					}
 					// Getting custom labels
-				if (is_array($labels[$item.'.']) && $labels[$item.'.']['label']) {
-					$blockElementsOptions[$item] = $this->htmlAreaRTE->getPageConfigLabel($labels[$item.'.']['label'], 0);
+					if (is_array($labels[$item.'.']) && $labels[$item.'.']['label']) {
+						$blockElementsOptions[$item] = $this->htmlAreaRTE->getPageConfigLabel($labels[$item.'.']['label'], 0);
+					}
+					$blockElementsOptions[$item] = (($prefixLabelWithTag && $item != 'none')?($item . ' - '):'') . $blockElementsOptions[$item] . (($postfixLabelWithTag && $item != 'none')?(' - ' . $item):'');
 				}
-				$blockElementsOptions[$item] = (($prefixLabelWithTag && $item != 'none')?($item . ' - '):'') . $blockElementsOptions[$item] . (($postfixLabelWithTag && $item != 'none')?(' - ' . $item):'');
 			}
 
 			$first = array_shift($blockElementsOptions);
@@ -181,11 +179,16 @@ class tx_rtehtmlarea_blockelements extends tx_rtehtmlarea_api {
 			}
 			if ($this->htmlAreaRTE->is_FE()) {
 				$GLOBALS['TSFE']->csConvObj->convArray($JSBlockElements, $this->htmlAreaRTE->OutputCharset, 'utf-8');
+			} else {
+				$GLOBALS['LANG']->csConvObj->convArray($JSBlockElements, $GLOBALS['LANG']->charSet, 'utf-8');
 			}
 			$registerRTEinJavascriptString .= '
 			RTEarea['.$RTEcounter.'].buttons.formatblock.options = ' . json_encode($JSBlockElements) . ';';
 		}
 		return $registerRTEinJavascriptString;
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockElements/class.tx_rtehtmlarea_blockelements.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockElements/class.tx_rtehtmlarea_blockelements.php']);
 }
 ?>

@@ -24,7 +24,6 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-
 /**
  * Gateway for TCE (TYPO3 Core Engine) file-handling through POST forms.
  * This script serves as the fileadministration part of the TYPO3 Core Engine.
@@ -32,14 +31,31 @@
  *
  * For syntax and API information, see the document 'TYPO3 Core APIs'
  *
+ * $Id$
  * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   77: class SC_tce_file
+ *   97:     function init()
+ *  117:     function initClipboard()
+ *  138:     function main()
+ *  164:     function finish()
+ *
+ * TOTAL FUNCTIONS: 4
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
  */
 
 require_once('init.php');
+require_once('classes/class.typo3_tcefile.php');
 
-	// Make instance:
+// Make instance:
 $SOBE = t3lib_div::makeInstance('TYPO3_tcefile');
 $SOBE->init();
 $SOBE->main();

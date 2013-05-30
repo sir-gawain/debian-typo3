@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_typo3color extends tx_rtehtmlarea_api {
 
@@ -94,7 +96,7 @@ class tx_rtehtmlarea_typo3color extends tx_rtehtmlarea_api {
 		}
 			// Setting the list of colors if specified in the RTE config
 		if ($this->thisConfig['colors']) {
-			$HTMLAreaColors = t3lib_div::trimExplode(',', $this->htmlAreaRTE->cleanList($this->thisConfig['colors']));
+			$HTMLAreaColors = t3lib_div::trimExplode(',' , $this->htmlAreaRTE->cleanList($this->thisConfig['colors']));
 			$HTMLAreaJSColors = array();
 			foreach ($HTMLAreaColors as $colorName) {
 				if ($HTMLAreaColorname[$colorName]) {
@@ -103,11 +105,16 @@ class tx_rtehtmlarea_typo3color extends tx_rtehtmlarea_api {
 			}
 			if ($this->htmlAreaRTE->is_FE()) {
 				$GLOBALS['TSFE']->csConvObj->convArray($HTMLAreaJSColors, $this->htmlAreaRTE->OutputCharset, 'utf-8');
+			} else {
+				$GLOBALS['LANG']->csConvObj->convArray($HTMLAreaJSColors, $GLOBALS['LANG']->charSet, 'utf-8');
 			}
 			$configureRTEInJavascriptString .= '
 			RTEarea['.$RTEcounter.'].colors = ' . json_encode($HTMLAreaJSColors) . ';';
 		}
 		return $configureRTEInJavascriptString;
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TYPO3Color/class.tx_rtehtmlarea_typo3color.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TYPO3Color/class.tx_rtehtmlarea_typo3color.php']);
 }
 ?>

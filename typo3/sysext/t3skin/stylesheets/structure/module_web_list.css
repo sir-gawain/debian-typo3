@@ -1,11 +1,12 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Web > List
 
+$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 table.typo3-dblist {
-	margin-bottom: 10px;
-	width: 100%;
+	margin-top: 10px;
+	width: 98%;
 }
 
 table.typo3-dblist img {

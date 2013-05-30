@@ -28,7 +28,10 @@
 /**
  * Class to handle mail specific functionality
  *
- * @author Tolleiv Nietsch <nietsch@aoemedia.de>
+ * $Id: class.t3lib_utility_mail.php 6536 2009-11-25 14:07:18Z stucki $
+ *
+ *
+ * @author	 Tolleiv Nietsch <nietsch@aoemedia.de>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -39,14 +42,14 @@ final class t3lib_utility_Mail {
 	 * The hook can be used by adding function to the configuration array:
 	 * $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/utility/class.t3lib_utility_mail.php']['substituteMailDelivery']
 	 *
-	 * @param string $to Email address to send to.
-	 * @param string $subject Subject line, non-encoded. (see PHP function mail())
-	 * @param string $messageBody Message content, non-encoded. (see PHP function mail())
-	 * @param string $additionalHeaders Additional headers for the mail (see PHP function mail())
-	 * @param string $additionalParameters Additional flags for the sending mail tool (see PHP function mail())
-	 * @return boolean Indicates whether the mail has been sent or not
-	 * @see PHP function mail() []
-	 * @link http://www.php.net/manual/en/function.mail.php
+	 * @param	string		Email address to send to.
+	 * @param	string		Subject line, non-encoded. (see PHP function mail())
+	 * @param	string		Message content, non-encoded. (see PHP function mail())
+	 * @param	string		 Additional headers for the mail (see PHP function mail())
+	 * @param	string		Additional flags for the sending mail tool (see PHP function mail())
+	 * @return	boolean		Indicates whether the mail has been sent or not
+	 * @see		PHP function mail() []
+	 * @link	http://www.php.net/manual/en/function.mail.php
 	 */
 	public static function mail($to, $subject, $messageBody, $additionalHeaders = NULL, $additionalParameters = NULL) {
 		$success = TRUE;
@@ -77,10 +80,12 @@ final class t3lib_utility_Mail {
 				$hookSubscriberContainsArrow = strpos($hookSubscriber, '->');
 
 				if ($hookSubscriberContainsArrow !== FALSE) {
-					throw new RuntimeException(
-						$hookSubscriber . ' is an invalid hook implementation. Please consider using an implementation of t3lib_mail_MailerAdapter.',
-						1322287600
+						// deprecated, remove in TYPO3 4.7
+					t3lib_div::deprecationLog(
+						'The usage of user function notation for the substituteMailDelivery hook is deprecated,
+						use the t3lib_mail_MailerAdapter interface instead.'
 					);
+					$success = $success && t3lib_div::callUserFunction($hookSubscriber, $parameters, $fakeThis);
 				} else {
 					$mailerAdapter = t3lib_div::makeInstance($hookSubscriber);
 					if ($mailerAdapter instanceof t3lib_mail_MailerAdapter) {
@@ -95,6 +100,10 @@ final class t3lib_utility_Mail {
 				}
 			}
 		} else {
+			if (t3lib_utility_PhpOptions::isSafeModeEnabled() && !is_null($additionalParameters)) {
+				$additionalParameters = null;
+			}
+
 			if (is_null($additionalParameters)) {
 				$success = @mail($to, $subject, $messageBody, $additionalHeaders);
 			} else {
@@ -103,11 +112,7 @@ final class t3lib_utility_Mail {
 		}
 
 		if (!$success) {
-			t3lib_div::sysLog(
-				'Mail to "' . $to . '" could not be sent (Subject: "' . $subject . '").',
-				'Core',
-				t3lib_div::SYSLOG_SEVERITY_ERROR
-			);
+			t3lib_div::sysLog('Mail to "' . $to . '" could not be sent (Subject: "' . $subject . '").', 'Core', 3);
 		}
 		return $success;
 	}
@@ -157,7 +162,7 @@ final class t3lib_utility_Mail {
 	 *
 	 * Ready to be passed to $mail->setFrom() (t3lib_mail)
 	 *
-	 * @return string An email address
+	 * @return	string	An email address
 	 */
 	public static function getSystemFromAddress() {
 			// default, first check the localconf setting
@@ -180,7 +185,7 @@ final class t3lib_utility_Mail {
 				if (!t3lib_div::isFirstPartOfStr($tempUrl, 'http')) {
 						// shouldn't be the case anyways, but you never know
 						// ... there're crazy people out there
-					$tempUrl = 'http://' . $tempUrl;
+					$tempUrl = 'http://' .$tempUrl;
 				}
 				$host = parse_url($tempUrl, PHP_URL_HOST);
 			}
@@ -199,52 +204,6 @@ final class t3lib_utility_Mail {
 		}
 
 		return $address;
-	}
-
-	/**
-	 * Breaks up a single line of text for emails
-	 *
-	 * @param string $str The string to break up
-	 * @param string $newlineChar The string to implode the broken lines with (default/typically \n)
-	 * @param integer $lineWidth The line width
-	 * @return string Reformated text
-	 */
-	public static function breakLinesForEmail($str, $newlineChar = LF, $lineWidth = 76) {
-		$lines = array();
-		$substrStart = 0;
-		while (strlen($str) > $substrStart) {
-			$substr = substr($str, $substrStart, $lineWidth);
-
-				// has line exceeded (reached) the maximum width?
-			if (strlen($substr) == $lineWidth) {
-					// find last space-char
-				$spacePos = strrpos(rtrim($substr), ' ');
-					// space-char found?
-				if ($spacePos !== FALSE) {
-						// take everything up to last space-char
-					$theLine = substr($substr, 0, $spacePos);
-				} else {
-						// search for space-char in remaining text
-						// makes this line longer than $lineWidth!
-					$afterParts = explode(' ', substr($str, $lineWidth + $substrStart), 2);
-					$theLine = $substr . $afterParts[0];
-				}
-				if (!strlen($theLine)) {
-						// prevent endless loop because of empty line
-					break;
-				}
-			} else {
-				$theLine = $substr;
-			}
-
-			$lines[] = trim($theLine);
-			$substrStart += strlen($theLine);
-			if (trim(substr($str, $substrStart, $lineWidth)) === '') {
-					// no more text
-				break;
-			}
-		}
-		return implode($newlineChar, $lines);
 	}
 }
 

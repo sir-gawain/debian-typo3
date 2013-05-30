@@ -49,6 +49,7 @@ class Tx_Fluid_ViewHelpers_Link_EmailViewHelper extends Tx_Fluid_Core_ViewHelper
 	 * Arguments initialization
 	 *
 	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function initializeArguments() {
 		$this->registerUniversalTagAttributes();
@@ -61,6 +62,7 @@ class Tx_Fluid_ViewHelpers_Link_EmailViewHelper extends Tx_Fluid_Core_ViewHelper
 	/**
 	 * @param string $email The email address to be turned into a link.
 	 * @return string Rendered email link
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function render($email) {
 		if (TYPO3_MODE === 'FE') {
@@ -74,9 +76,9 @@ class Tx_Fluid_ViewHelpers_Link_EmailViewHelper extends Tx_Fluid_Core_ViewHelper
 			$linkText = $tagContent;
 		}
 		$this->tag->setContent($linkText);
-		$this->tag->addAttribute('href', $linkHref);
+		$escapeSpecialCharacters = !isset($GLOBALS['TSFE']->spamProtectEmailAddresses) || $GLOBALS['TSFE']->spamProtectEmailAddresses !== 'ascii';
+		$this->tag->addAttribute('href', $linkHref, $escapeSpecialCharacters);
 		$this->tag->forceClosingTag(TRUE);
-
 		return $this->tag->render();
 	}
 }

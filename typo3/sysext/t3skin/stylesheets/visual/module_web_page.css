@@ -1,15 +1,8 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Web > Page
 
+$Id$
 - - - - - - - - - - - - - - - - - - - - - */
-
-.t3-page-langMode {
-	width: 100%;
-}
-
-.t3-page-columns {
-	width: 100%;
-}
 
 .t3-page-colHeader {
 	font-weight: bold;
@@ -19,11 +12,6 @@ Web > Page
 
 .t3-page-colHeader-label {
 	text-align: center;
-}
-
-.t3-page-border {
-	background-color: #cfcfcf;
-	width: 1px;
 }
 
 .t3-page-ce-header {
@@ -73,10 +61,6 @@ Web > Page
 
 .t3-page-ce-hidden .t3-page-ce-header {
 	background-color: #e5e5e5;
-}
-
-.t3-page-ce-footer {
-	background: #eee
 }
 
 table.typo3-page-columnsMode tr td a {

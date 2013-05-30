@@ -27,6 +27,7 @@
  * @author	Julian Kleinhans <typo3@kj187.de>
  * @package	TYPO3
  * @subpackage	tx_recycler
+ * @version $Id$
  */
 class tx_recycler_helper {
 
@@ -43,21 +44,22 @@ class tx_recycler_helper {
 	 * @param	string		$cmd: The command that sould be performed ('new' or 'edit')
 	 * @param	string		$table: The table to check access for
 	 * @param	string		$theUid: The record uid of the table
-	 * @return	boolean		Returns TRUE is the user has access, or FALSE if not
+	 * @return	boolean		Returns true is the user has access, or false if not
 	 */
 	public static function checkAccess($table, $row) {
 		// Checking if the user has permissions? (Only working as a precaution, because the final permission check is always down in TCE. But it's good to notify the user on beforehand...)
 		// First, resetting flags.
 		$hasAccess = 0;
+		$deniedAccessReason = '';
 
 		$calcPRec = $row;
-		t3lib_BEfunc::fixVersioningPid($table, $calcPRec);
+		t3lib_BEfunc::fixVersioningPid($table,$calcPRec);
 		if (is_array($calcPRec)) {
 			if ($table=='pages') {	// If pages:
 				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
 				$hasAccess = $CALC_PERMS & 2 ? 1 : 0;
 			} else {
-				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages', $calcPRec['pid']));	// Fetching pid-record first.
+				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$calcPRec['pid']));	// Fetching pid-record first.
 				$hasAccess = $CALC_PERMS & 16 ? 1 : 0;
 			}
 					// Check internals regarding access:
@@ -66,11 +68,19 @@ class tx_recycler_helper {
 			}
 		}
 
+
 		if (!$GLOBALS['BE_USER']->check('tables_modify', $table)) {
 			$hasAccess = 0;
 		}
 
-		return $hasAccess ? TRUE : FALSE;
+		if (!$hasAccess) {
+			$deniedAccessReason = $GLOBALS['BE_USER']->errorMsg;
+			if ($deniedAccessReason) {
+				//fb($deniedAccessReason);
+			}
+		}
+
+		return $hasAccess ? true : false;
 	}
 
 	/**
@@ -91,7 +101,7 @@ class tx_recycler_helper {
 		while ($uid != 0 && $loopCheck > 0) {
 			$loopCheck--;
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
-				'uid,pid,title,deleted,t3ver_oid,t3ver_wsid',
+				'uid,pid,title,deleted,t3ver_oid,t3ver_wsid,t3ver_swapmode',
 				'pages',
 				'uid=' . intval($uid) . (strlen(trim($clause)) ? ' AND ' . $clause : '')
 			);
@@ -104,6 +114,9 @@ class tx_recycler_helper {
 				if (is_array($row)) {
 					t3lib_BEfunc::fixVersioningPid('pages', $row);
 
+					if ($row['_ORIG_pid'] && $row['t3ver_swapmode'] > 0) {	// Branch points
+						$output = ' [#VEP#]' . $output;		// Adding visual token - Versioning Entry Point - that tells that THIS position was where the versionized branch got connected to the main tree. I will have to find a better name or something...
+					}
 					$uid = $row['pid'];
 					$output = '/' . htmlspecialchars(t3lib_div::fixed_lgd_cs($row['title'], $titleLimit)) . $output;
 
@@ -147,10 +160,10 @@ class tx_recycler_helper {
 	 *
 	 * @param	string		$tableName: Name of the table to get TCA for
 	 * @return	mixed		TCA of the table used in the current context (array)
-	 *						or FALSE (boolean) if something went wrong
+	 *						or false (boolean) if something went wrong
 	 */
 	public static function getTableTCA($tableName) {
-		$TCA = FALSE;
+		$TCA = false;
 		if (isset($GLOBALS['TCA'][$tableName])) {
 			$TCA = $GLOBALS['TCA'][$tableName];
 		}
@@ -191,4 +204,10 @@ class tx_recycler_helper {
 		return $string;
 	}
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/helper/class.tx_recycler_helper.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/helper/class.tx_recycler_helper.php']);
+}
+
 ?>

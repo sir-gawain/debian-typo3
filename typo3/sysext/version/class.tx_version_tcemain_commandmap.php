@@ -218,7 +218,7 @@ class tx_version_tcemain_CommandMap {
 			foreach ($liveIdCollection as $liveId => $commandCollection) {
 				foreach ($commandCollection as $command => $properties) {
 					if ($command === 'version' && isset($properties['action']) && $properties['action'] === 'swap') {
-						if (isset($properties['swapWith']) && t3lib_utility_Math::canBeInterpretedAsInteger($properties['swapWith'])) {
+						if (isset($properties['swapWith']) && t3lib_div::testInt($properties['swapWith'])) {
 							call_user_func_array(
 								array($this, $callbackMethod),
 								array_merge($arguments, array($table, $liveId, $properties))
@@ -325,7 +325,7 @@ class tx_version_tcemain_CommandMap {
 			foreach ($liveIdCollection as $liveIdList => $commandCollection) {
 				foreach ($commandCollection as $command => $properties) {
 					if ($command === 'version' && isset($properties['action']) && $properties['action'] === 'setStage') {
-						if (isset($properties['stageId']) && t3lib_utility_Math::canBeInterpretedAsInteger($properties['stageId'])) {
+						if (isset($properties['stageId']) && t3lib_div::testInt($properties['stageId'])) {
 							call_user_func_array(
 								array($this, $callbackMethod),
 								array_merge($arguments, array($table, $liveIdList, $properties))
@@ -392,7 +392,7 @@ class tx_version_tcemain_CommandMap {
 		}
 
 		foreach ($elementList as $elementTable => $elementIds) {
-			foreach ($elementIds as $elementId) {
+			foreach($elementIds as $elementId) {
 				$extendedCommandMap[$elementTable][$elementId]['version'] = $properties;
 			}
 		}
@@ -687,6 +687,12 @@ class tx_version_tcemain_CommandMap {
 		}
 		if (isset($elementProperties['swapIntoWS'])) {
 			$commonSwapProperties['swapIntoWS'] = $elementProperties['swapIntoWS'];
+		}
+		if (isset($elementProperties['comment'])) {
+			$commonSwapProperties['comment'] = $elementProperties['comment'];
+		}
+		if (isset($elementProperties['notificationAlternativeRecipients'])) {
+			$commonSwapProperties['notificationAlternativeRecipients'] = $elementProperties['notificationAlternativeRecipients'];
 		}
 
 		return $commonSwapProperties;
@@ -1005,5 +1011,9 @@ class tx_version_tcemain_CommandMap {
 	protected function processCallback($method, array $callbackArguments) {
 		return call_user_func_array(array($this, $method), $callbackArguments);
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_tcemain_commandmap.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_tcemain_commandmap.php']);
 }
 ?>

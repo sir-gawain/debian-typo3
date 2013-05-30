@@ -23,12 +23,13 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
 /**
  * This class provides a textarea to save personal notes
  *
- * @author Kasper Skårhøj <kasper@typo3.com>
- * @author Georg Ringer <typo3@ringerge.org>
- * @package TYPO3
+ * @author		Kasper Skårhøj <kasper@typo3.com>
+ * @author		Georg Ringer <typo3@ringerge.org>
+ * @package		TYPO3
  * @subpackage	impexp
  *
  */
@@ -36,7 +37,7 @@ class tx_impexp_task implements tx_taskcenter_Task {
 	/**
 	 * Back-reference to the calling reports module
 	 *
-	 * @var tx_reports_Module $taskObject
+	 * @var	tx_reports_Module	$taskObject
 	 */
 	protected $taskObject;
 
@@ -51,7 +52,7 @@ class tx_impexp_task implements tx_taskcenter_Task {
 	/**
 	 * This method renders the report
 	 *
-	 * @return string The status report as HTML
+	 * @return	string	The status report as HTML
 	 */
 	public function getTask() {
 		return $this->main();
@@ -61,7 +62,7 @@ class tx_impexp_task implements tx_taskcenter_Task {
 	 * Render an optional additional information for the 1st view in taskcenter.
 	 * Empty for this task
 	 *
-	 * @return string Overview as HTML
+	 * @return	string		Overview as HTML
 	 */
 	public function getOverview() {
 		return '';
@@ -70,18 +71,18 @@ class tx_impexp_task implements tx_taskcenter_Task {
 	/**
 	 * Main Task center module
 	 *
-	 * @return string HTML content.
+	 * @return	string		HTML content.
 	 */
 	public function main() {
 		$content = '';
 		$id = intval(t3lib_div::_GP('display'));
 
-			// If a preset is found, it is rendered using an iframe
-		if ($id > 0) {
+			// if a preset is found, it is rendered using an iframe
+		if($id > 0) {
 			$url = $GLOBALS['BACK_PATH'] . t3lib_extMgm::extRelPath('impexp') . 'app/index.php?tx_impexp[action]=export&preset[load]=1&preset[select]=' . $id;
 			return $this->taskObject->urlInIframe($url, 1);
 		} else {
-				// Header
+				// header
 			$content .= $this->taskObject->description(
 				$GLOBALS['LANG']->getLL('.alttitle'),
 				$GLOBALS['LANG']->getLL('.description')
@@ -101,7 +102,7 @@ class tx_impexp_task implements tx_taskcenter_Task {
 				// Create preset links:
 			$presets = $this->getPresets();
 
-				// If any presets found
+				// if any presets found
 			if (is_array($presets)) {
 				foreach($presets as $key => $presetCfg) {
 					$configuration = unserialize($presetCfg['preset_data']);
@@ -111,15 +112,15 @@ class tx_impexp_task implements tx_taskcenter_Task {
 
 					$description = array();
 
-						// Is public?
+						// is public?
 					if ($presetCfg['public']) {
 						$description[] = $GLOBALS['LANG']->getLL('task.public') . ': ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
 					}
 
-						// Owner
+						// owner
 					$description[] = $GLOBALS['LANG']->getLL('task.owner') . ': ' . (($presetCfg['user_uid'] === $GLOBALS['BE_USER']->user['uid']) ? $GLOBALS['LANG']->getLL('task.own') : '[' . htmlspecialchars($usernames[$presetCfg['user_uid']]['username']) . ']');
 
-						// Page & path
+						// page & path
 					if ($configuration['pagetree']['id']) {
 						$description[] = $GLOBALS['LANG']->getLL('task.page') . ': ' . $configuration['pagetree']['id'];
 						$description[] = $GLOBALS['LANG']->getLL('task.path') . ': ' . htmlspecialchars(t3lib_BEfunc::getRecordPath($configuration['pagetree']['id'], $clause, 20));
@@ -145,7 +146,7 @@ class tx_impexp_task implements tx_taskcenter_Task {
 						$description[] = '<br />' . $metaInformation;
 					}
 
-						// Collect all preset information
+						// collect all preset information
 					$lines[$key] = array(
 						'icon'				=> $icon,
 						'title'				=> $title,
@@ -155,10 +156,10 @@ class tx_impexp_task implements tx_taskcenter_Task {
 
 				}
 
-					// Render preset list
+					// render preset list
 				$content .= $this->taskObject->renderListMenu($lines);
 			} else {
-					// No presets found
+					// no presets found
 				$flashMessage = t3lib_div::makeInstance(
 					't3lib_FlashMessage',
 					$GLOBALS['LANG']->getLL('no-presets'),
@@ -172,10 +173,11 @@ class tx_impexp_task implements tx_taskcenter_Task {
 		return $content;
 	}
 
+
 	/**
 	 * Select presets for this user
 	 *
-	 * @return array Array of preset records
+	 * @return	array		Array of preset records
 	 */
 	protected function getPresets() {
 		$presets = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
@@ -192,7 +194,7 @@ class tx_impexp_task implements tx_taskcenter_Task {
 	/**
 	 * Returns first temporary folder of the user account (from $FILEMOUNTS)
 	 *
-	 * @return string Absolute path to first "_temp_" folder of the current user, otherwise blank.
+	 * @return	string		Absolute path to first "_temp_" folder of the current user, otherwise blank.
 	 */
 	protected function userTempFolder() {
 		foreach($GLOBALS['FILEMOUNTS'] as $filePathInfo) {
@@ -204,5 +206,12 @@ class tx_impexp_task implements tx_taskcenter_Task {
 
 		return '';
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/task/class.tx_impexp_task.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/impexp/task/class.tx_impexp_task.php']);
+}
+
 ?>

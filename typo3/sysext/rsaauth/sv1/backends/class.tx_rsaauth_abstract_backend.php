@@ -23,6 +23,14 @@
 ***************************************************************/
 
 /**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ * $Id$
+ */
+
+require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/backends/class.tx_rsaauth_keypair.php'));
+
+/**
  * This class contains an abstract SSL backend for the TYPO3 RSA authentication
  * service.
  *
@@ -37,11 +45,11 @@
  *
  * To decode data, the decrypt() method should be called with the private key
  * created at the previous step and the data to decode. If the data is decoded
- * successfully, the result is a string. Otherwise it is NULL.
+ * successfully, the result is a string. Otherwise it is null.
  *
- * @author Dmitry Dulepov <dmitry@typo3.org>
- * @package TYPO3
- * @subpackage tx_rsaauth
+ * @author	Dmitry Dulepov <dmitry@typo3.org>
+ * @package	TYPO3
+ * @subpackage	tx_rsaauth
  */
 abstract class tx_rsaauth_abstract_backend {
 
@@ -49,40 +57,45 @@ abstract class tx_rsaauth_abstract_backend {
 	 * Error message for the last operation. Derieved classes should always set
 	 * or clear this variable inside the createNewKeyPair() or decypt().
 	 *
-	 * @var string
+	 * @var	string
 	 */
-	protected $error = '';
+	protected	$error = '';
 
 	/**
 	 * Creates a new key pair for the encryption.
 	 *
-	 * @return tx_rsaauth_keypair A new key pair or NULL in case of error
+	 * @return	tx_rsaauth_keypair	A new key pair or null in case of error
 	 */
 	abstract public function createNewKeyPair();
 
 	/**
 	 * Decripts the data using the private key.
 	 *
-	 * @param string $privateKey The private key (obtained from a call to createNewKeyPair())
-	 * @param string $data Data to decrypt (base64-encoded)
-	 * @return string Decrypted data or NULL in case of a error
+	 * @param	string	$privateKey	The private key (obtained from a call to createNewKeyPair())
+	 * @param	string	$data	Data to decrypt (base64-encoded)
+	 * @return	string	Decrypted data or null in case of a error
 	 */
 	abstract public function decrypt($privateKey, $data);
 
 	/**
 	 * Checks if this backend is available for calling.
 	 *
-	 * @return void
+	 * @return	void
 	 */
 	abstract public function isAvailable();
 
 	/**
 	 * Retrieves a error message.
 	 *
-	 * @return string A error message or empty string if there were no error
+	 * @return	string	A error message or empty string if there were no error
 	 */
 	public function getLastError() {
 		return $this->error;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backend/class.tx_rsaauth_abstract_backend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backend/class.tx_rsaauth_abstract_backend.php']);
+}
+
 ?>

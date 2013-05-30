@@ -29,6 +29,7 @@
 /**
  * Contains QTOBJECT class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,8 +38,8 @@ class tslib_content_QuicktimeObject extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, QTOBJECT
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$params = $prefix = '';
@@ -59,13 +60,13 @@ class tslib_content_QuicktimeObject extends tslib_content_Abstract {
 
 		$typeConf = $conf[$type . '.'];
 
-			// Add QTobject js-file
+			//add QTobject js-file
 		$GLOBALS['TSFE']->getPageRenderer()->addJsFile(TYPO3_mainDir . 'contrib/flashmedia/qtobject/qtobject.js');
 		$replaceElementIdString = uniqid('mmqt');
 		$GLOBALS['TSFE']->register['MMQTID'] = $replaceElementIdString;
 		$qtObject = 'QTObject' . $replaceElementIdString;
 
-			// Merge with default parameters
+		// merge with default parameters
 		$conf['params.'] = array_merge((array) $typeConf['default.']['params.'], (array) $conf['params.']);
 
 		if (is_array($conf['params.'])) {
@@ -89,14 +90,14 @@ class tslib_content_QuicktimeObject extends tslib_content_Abstract {
 		$width = isset($conf['width.'])
 			? $this->cObj->stdWrap($conf['width'], $conf['width.'])
 			: $conf['width'];
-		if (!$width) {
+		if(!$width) {
 			$width = $conf[$type . '.']['defaultWidth'];
 		}
 
 		$height = isset($conf['height.'])
 			? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 			: $conf['height'];
-		if (!$height) {
+		if(!$height) {
 			$height = $conf[$type . '.']['defaultHeight'];
 		}
 
@@ -120,5 +121,12 @@ class tslib_content_QuicktimeObject extends tslib_content_Abstract {
 
 		return $content;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_quicktimeobject.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_quicktimeobject.php']);
+}
+
 ?>

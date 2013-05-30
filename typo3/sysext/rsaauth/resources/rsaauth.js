@@ -18,6 +18,10 @@ function tx_rsaauth_encrypt() {
 }
 
 function tx_rsaauth_feencrypt(form) {
+	// check if the form was already sent (see #40085)
+	if (form.pass.value.match(/^rsa:/) || form.n.value == '' || form.e.value == '') {
+		return;
+	}
 	var rsa = new RSAKey();
 	rsa.setPublic(form.n.value, form.e.value);
 
@@ -34,22 +38,4 @@ function tx_rsaauth_feencrypt(form) {
 	if (res) {
 		form.pass.value = 'rsa:' + hex2b64(res);
 	}
-}
-
-function tx_rsaauth_encryptUserSetup() {
-
-	var rsa = new RSAKey();
-	rsa.setPublic(document.usersetup.n.value, document.usersetup.e.value);
-
-	var password = document.getElementById('field_password').value;
-	var password2 = document.getElementById('field_password2').value;
-
-	if (password || password2) {
-		var res = rsa.encrypt(password);
-		var res2 = rsa.encrypt(password2);
-		if (res && res2) {
-			document.getElementById('field_password').value = 'rsa:' + hex2b64(res);
-			document.getElementById('field_password2').value = 'rsa:' + hex2b64(res2);
-		}
-	}	return false;
 }

@@ -1,15 +1,24 @@
 <?php
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
+ *                                                                        *
+ * This script is distributed in the hope that it will be useful, but     *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
+ * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
+ * General Public License for more details.                               *
+ *                                                                        *
+ * You should have received a copy of the GNU Lesser General Public       *
+ * License along with the script.                                         *
+ * If not, see http://www.gnu.org/licenses/lgpl.html                      *
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
-
 
 /**
  * A view helper for creating links to external targets.
@@ -23,13 +32,7 @@
  * <a href="http://www.typo3.org" target="_blank">external link</a>
  * </output>
  *
- * <code title="custom default scheme">
- * <f:link.external uri="typo3.org" defaultScheme="ftp">external ftp link</f:link.external>
- * </code>
- * <output>
- * <a href="ftp://typo3.org">external ftp link</a>
- * </output>
- *
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
  */
 class Tx_Fluid_ViewHelpers_Link_ExternalViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractTagBasedViewHelper {
@@ -43,6 +46,7 @@ class Tx_Fluid_ViewHelpers_Link_ExternalViewHelper extends Tx_Fluid_Core_ViewHel
 	 * Initialize arguments
 	 *
 	 * @return void
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function initializeArguments() {
@@ -57,6 +61,7 @@ class Tx_Fluid_ViewHelpers_Link_ExternalViewHelper extends Tx_Fluid_Core_ViewHel
 	 * @param string $uri the URI that will be put in the href attribute of the rendered link tag
 	 * @param string $defaultScheme scheme the href attribute will be prefixed with if specified $uri does not contain a scheme already
 	 * @return string Rendered link
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 * @api
 	 */
 	public function render($uri, $defaultScheme = 'http') {
@@ -66,7 +71,6 @@ class Tx_Fluid_ViewHelpers_Link_ExternalViewHelper extends Tx_Fluid_Core_ViewHel
 		}
 		$this->tag->addAttribute('href', $uri);
 		$this->tag->setContent($this->renderChildren());
-		$this->tag->forceClosingTag(TRUE);
 
 		return $this->tag->render();
 	}

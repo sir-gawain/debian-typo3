@@ -50,28 +50,28 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Indicator if the node is expanded
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $expanded = FALSE;
 
 	/**
 	 * Indicator if the node can be expanded
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $expandable = FALSE;
 
 	/**
 	 * Indicator if the node is draggable
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $draggable = TRUE;
 
 	/**
 	 * Indicator if the node is allowed as a drop target
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $isDropTarget = TRUE;
 
@@ -134,14 +134,14 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Indicator if the copy mode is activated
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $t3InCopyMode = FALSE;
 
 	/**
 	 * Indicator if the cut mode is activated
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $t3InCutMode = FALSE;
 
@@ -162,14 +162,14 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Indicator if the label is editable
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $labelIsEditable = TRUE;
 
 	/**
 	 * Indicator if the node can have children's
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $allowChildren = TRUE;
 
@@ -195,7 +195,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Sets the leaf node indicator
 	 *
-	 * @param boolean $isLeaf
+	 * @param bool $isLeaf
 	 * @return void
 	 */
 	public function setLeaf($isLeaf) {
@@ -205,7 +205,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns if the node is a leaf node
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isLeafNode() {
 		return $this->leaf;
@@ -214,7 +214,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Sets the expandable indicator
 	 *
-	 * @param boolean $expandable
+	 * @param bool $expandable
 	 * @return void
 	 */
 	public function setExpandable($expandable) {
@@ -224,7 +224,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the expandable indicator
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isExpandable() {
 		return $this->expandable;
@@ -233,7 +233,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Sets the expanded indicator
 	 *
-	 * @param boolean $expanded
+	 * @param bool $expanded
 	 * @return void
 	 */
 	public function setExpanded($expanded) {
@@ -243,7 +243,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the expanded indicator
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isExpanded() {
 		if ($this->isLeafNode()) {
@@ -256,7 +256,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Sets the draggable indicator
 	 *
-	 * @param boolean $draggable
+	 * @param bool $draggable
 	 * @return void
 	 */
 	public function setDraggable($draggable) {
@@ -266,7 +266,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the draggable indicator
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isDraggable() {
 		return $this->draggable;
@@ -275,7 +275,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Sets the indicator if the node can be a drop target
 	 *
-	 * @param boolean $isDropTarget
+	 * @param bool $isDropTarget
 	 * @return void
 	 */
 	public function setIsDropTarget($isDropTarget) {
@@ -285,7 +285,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the indicator if the node is a drop target
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isDropTarget() {
 		return $this->isDropTarget;
@@ -357,7 +357,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the copy mode indicator
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isInCopyMode() {
 		return $this->t3InCopyMode;
@@ -376,7 +376,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the cut mode indicator
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isInCutMode() {
 		return $this->t3InCutMode;
@@ -460,7 +460,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Sets the indicator if the label is editable
 	 *
-	 * @param boolean $labelIsEditable
+	 * @param bool $labelIsEditable
 	 * @return void
 	 */
 	public function setLabelIsEditable($labelIsEditable) {
@@ -470,7 +470,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the editable label indicator
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isLabelEditable() {
 		return $this->labelIsEditable;
@@ -541,7 +541,7 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Checks if the node can have child nodes
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function canHaveChildren() {
 		return $this->allowChildren;
@@ -550,10 +550,9 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 	/**
 	 * Returns the node in an array representation that can be used for serialization
 	 *
-	 * @param boolean $addChildNodes
 	 * @return array
 	 */
-	public function toArray($addChildNodes = TRUE) {
+	public function toArray() {
 		$arrayRepresentation = array(
 			'serializeClassName' => get_class($this),
 			'id' => $this->getId(),
@@ -626,6 +625,10 @@ class t3lib_tree_extdirect_Node extends t3lib_tree_Node {
 			$this->setLeaf(FALSE);
 		}
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/tree/extdirect/class.t3lib_tree_extdirect_node.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/tree/extdirect/class.t3lib_tree_extdirect_node.php']);
 }
 
 ?>

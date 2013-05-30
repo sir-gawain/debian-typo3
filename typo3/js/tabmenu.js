@@ -21,8 +21,8 @@
  *
  ***************************************************************/
 
-var DTM_array = DTM_array || [],
-	DTM_origClass = DTM_origClass || '';
+var DTM_array = [];
+var DTM_origClass ='';
 
 	// if tabs are used in a popup window the array might not exists
 if (!top.DTM_currentTabs) {
@@ -32,7 +32,7 @@ if (!top.DTM_currentTabs) {
 function DTM_activate(idBase,index,doToogle) {
 		// Hiding all:
 	if (DTM_array[idBase]) {
-		for(var cnt = 0; cnt < DTM_array[idBase].length; cnt++) {
+		for(var cnt = 0; cnt < DTM_array[idBase].length ; cnt++) {
 			if (DTM_array[idBase][cnt] !== idBase + '-' + index) {
 				document.getElementById(DTM_array[idBase][cnt]+'-DIV').style.display = 'none';
 				// Only Overriding when Tab not disabled

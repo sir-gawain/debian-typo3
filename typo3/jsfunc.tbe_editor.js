@@ -26,6 +26,8 @@
 /**
  * Contains JavaScript for TYPO3 Core Form generator - AKA "TCEforms"
  *
+ * $Id$
+ *
  * @author	Kasper Skaarhoj <kasperYYYY@typo3.com>
  * @coauthor	Oliver Hader <oh@inpublica.de>
  */
@@ -72,8 +74,6 @@ var TBE_EDITOR = {
 		sel: new Image(),
 		clear: new Image()
 	},
-
-	clearBeforeSettingFormValueFromBrowseWin: [],
 
 	// Handling of data structures:
 	addElements: function(elements) {
@@ -341,6 +341,13 @@ var TBE_EDITOR = {
 			return true;
 		}
 	},
+	/**
+	 * This function is not used by core and will be removed in version 4.6
+	 * @deprecated
+	 */
+	setHiddenContent: function(RTEcontent,theField) {
+		document[TBE_EDITOR.formname][theField].value = RTEcontent;
+	},
 	fieldChanged_fName: function(fName,el) {
 		var idx=2+TBE_EDITOR.prependFormFieldNamesCnt;
 		var table = TBE_EDITOR.split(fName, "[", idx);
@@ -362,7 +369,7 @@ var TBE_EDITOR = {
 		TBE_EDITOR.setImage(imgObjName,TBE_EDITOR.images.cm);
 
 			// Set change image
-		if (document[TBE_EDITOR.formname][theField] && document[TBE_EDITOR.formname][theField].type=="select-one" && document[TBE_EDITOR.formname][theField+"_selIconVal"]) {
+		if (document[TBE_EDITOR.formname][theField] && document[TBE_EDITOR.formname][theField].type=="select-one" && document[TBE_EDITOR.formname][theField+"_selIconVal"])	{
 			var imgObjName = "selIcon_"+table+"_"+uid+"_"+field+"_";
 			TBE_EDITOR.setImage(imgObjName+document[TBE_EDITOR.formname][theField+"_selIconVal"].value,TBE_EDITOR.images.clear);
 			document[TBE_EDITOR.formname][theField+"_selIconVal"].value = document[TBE_EDITOR.formname][theField].selectedIndex;
@@ -371,7 +378,7 @@ var TBE_EDITOR = {
 
 			// Set required flag:
 		var imgReqObjName = "req_"+table+"_"+uid+"_"+field;
-		if (TBE_EDITOR.getElement(theRecord,field,'required') && document[TBE_EDITOR.formname][theField]) {
+		if (TBE_EDITOR.getElement(theRecord,field,'required') && document[TBE_EDITOR.formname][theField])	{
 			if (TBE_EDITOR.checkElements('required', false, theRecord, field)) {
 				TBE_EDITOR.setImage(imgReqObjName,TBE_EDITOR.images.clear);
 				TBE_EDITOR.notifyNested(theField, true);
@@ -381,7 +388,7 @@ var TBE_EDITOR = {
 			}
 		}
 		if (TBE_EDITOR.getElement(theRecord,field,'range') && document[TBE_EDITOR.formname][theField]) {
-			if (TBE_EDITOR.checkElements('range', false, theRecord, field)) {
+			if (TBE_EDITOR.checkElements('range', false, theRecord, field))	{
 				TBE_EDITOR.setImage(imgReqObjName,TBE_EDITOR.images.clear);
 				TBE_EDITOR.notifyNested(theField, true);
 			} else {
@@ -425,8 +432,8 @@ var TBE_EDITOR = {
 			}
 		}
 
-		if(!OK) {
-			if (!confirm(unescape("SYSTEM ERROR: One or more Rich Text Editors on the page could not be contacted. This IS an error, although it should not be regular.\nYou can save the form now by pressing OK, but you will loose the Rich Text Editor content if you do.\n\nPlease report the error to your administrator if it persists."))) {
+		if(!OK)	{
+			if (!confirm(unescape("SYSTEM ERROR: One or more Rich Text Editors on the page could not be contacted. This IS an error, although it should not be regular.\nYou can save the form now by pressing OK, but you will loose the Rich Text Editor content if you do.\n\nPlease report the error to your administrator if it persists.")))	{
 				return false;
 			} else {
 				OK = 1;
@@ -489,7 +496,7 @@ var TBE_EDITOR = {
 		var lengthOfDelim = delim.length;
 		sPos = -lengthOfDelim;
 		if (index<1) {index=1;}
-		for (var a=1; a<index; a++) {
+		for (var a=1; a<index; a++)	{
 			sPos = theStr.indexOf(delim, sPos+lengthOfDelim);
 			if (sPos==-1) { return null; }
 		}
@@ -497,14 +504,30 @@ var TBE_EDITOR = {
 		if(ePos == -1) { ePos = theStr.length; }
 		return (theStr.substring(sPos+lengthOfDelim,ePos));
 	},
-	curSelected: function(theField) {
+	palUrl: function(inData,fieldList,fieldNum,table,uid,isOnFocus) {
+		var url = TBE_EDITOR.backPath+'alt_palette.php?inData='+inData+'&formName='+TBE_EDITOR.formnameUENC+'&prependFormFieldNames='+TBE_EDITOR.prependFormFieldNamesUENC;
+		var field = "";
+		var theField="";
+		for (var a=0; a<fieldNum;a++)	{
+			field = TBE_EDITOR.split(fieldList, ",", a+1);
+			theField = TBE_EDITOR.prependFormFieldNames+'['+table+']['+uid+']['+field+']';
+			if (document[TBE_EDITOR.formname][theField]) url+="&rec["+field+"]="+TBE_EDITOR.rawurlencode(document[TBE_EDITOR.formname][theField].value);
+		}
+		if (top.topmenuFrame)	{
+			top.topmenuFrame.location.href = url+"&backRef="+(top.content.list_frame ? (top.content.list_frame.view_frame ? "top.content.list_frame.view_frame" : "top.content.list_frame") : "top.content");
+		} else if (!isOnFocus) {
+			var vHWin=window.open(url,"palette","height=300,width=200,status=0,menubar=0,scrollbars=1");
+			vHWin.focus();
+		}
+	},
+	curSelected: function(theField)	{
 		var fObjSel = document[TBE_EDITOR.formname][theField];
 		var retVal="";
-		if (fObjSel) {
-			if (fObjSel.type=='select-multiple' || fObjSel.type=='select-one') {
+		if (fObjSel)	{
+			if (fObjSel.type=='select-multiple' || fObjSel.type=='select-one')	{
 				var l=fObjSel.length;
-				for (a=0;a<l;a++) {
-					if (fObjSel.options[a].selected==1) {
+				for (a=0;a<l;a++)	{
+					if (fObjSel.options[a].selected==1)	{
 						retVal+=fObjSel.options[a].value+",";
 					}
 				}
@@ -525,7 +548,7 @@ var TBE_EDITOR = {
 		var output = '';
 		var pointer=0;
 		var pos = input.indexOf(matchStr);
-		while (pos!=-1) {
+		while (pos!=-1)	{
 			output+=''+input.substr(pointer, pos-pointer)+replace;
 			pointer=pos+matchStr.length;
 			pos = input.indexOf(match,pos+1);
@@ -588,6 +611,7 @@ var TBE_EDITOR_initRequired = TBE_EDITOR.initRequired;
 var TBE_EDITOR_setImage = TBE_EDITOR.setImage;
 var TBE_EDITOR_submitForm = TBE_EDITOR.submitForm;
 var TBE_EDITOR_split = TBE_EDITOR.split;
+var TBE_EDITOR_palUrl = TBE_EDITOR.palUrl;
 var TBE_EDITOR_curSelected = TBE_EDITOR.curSelected;
 var TBE_EDITOR_rawurlencode = TBE_EDITOR.rawurlencode;
 var TBE_EDITOR_str_replace = TBE_EDITOR.str_replace;
@@ -595,10 +619,10 @@ var TBE_EDITOR_str_replace = TBE_EDITOR.str_replace;
 
 var typo3form = {
 	fieldSet: function(theField, evallist, is_in, checkbox, checkboxValue) {
-		if (document[TBE_EDITOR.formname][theField]) {
+		if (document[TBE_EDITOR.formname][theField])	{
 			var theFObj = new evalFunc_dummy (evallist,is_in, checkbox, checkboxValue);
 			var theValue = document[TBE_EDITOR.formname][theField].value;
-			if (checkbox && theValue==checkboxValue) {
+			if (checkbox && theValue==checkboxValue)	{
 				document[TBE_EDITOR.formname][theField+"_hr"].value="";
 				if (document[TBE_EDITOR.formname][theField+"_cb"])	document[TBE_EDITOR.formname][theField+"_cb"].checked = "";
 			} else {
@@ -608,18 +632,18 @@ var typo3form = {
 		}
 	},
 	fieldGet: function(theField, evallist, is_in, checkbox, checkboxValue, checkbox_off, checkSetValue) {
-		if (document[TBE_EDITOR.formname][theField]) {
+		if (document[TBE_EDITOR.formname][theField])	{
 			var theFObj = new evalFunc_dummy (evallist,is_in, checkbox, checkboxValue);
-			if (checkbox_off) {
-				if (document[TBE_EDITOR.formname][theField+"_cb"].checked) {
+			if (checkbox_off)	{
+				if (document[TBE_EDITOR.formname][theField+"_cb"].checked)	{
 					var split = evallist.split(',');
 					for (var i = 0; split.length > i; i++) {
 						var el = split[i].replace(/ /g, '');
-						if (el == 'datetime' || el == 'date') {
+						if (el == 'datetime' || el == 'date')	{
 							var now = new Date();
 							checkSetValue = Date.parse(now)/1000 - now.getTimezoneOffset()*60;
 							break;
-						} else if (el == 'time' || el == 'timesec') {
+						} else if (el == 'time' || el == 'timesec')	{
 							checkSetValue = evalFunc_getTimeSecs(new Date());
 							break;
 						}

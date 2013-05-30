@@ -64,6 +64,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 	var parser = new TsParser(tsRef, extTsObjTree);
 	loadExtTemplatesAsync();
 
+
 	// TODO port plugin to t3editor.js
 
 	// plugin-array will be retrieved through AJAX from the conf array
@@ -78,6 +79,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 	plugin.classname = 'DescriptionPlugin';
 
 	plugins.push(plugin);
+
 
 	var codeCompleteBox = new Element("DIV", {
 		"class": "t3e_codeCompleteBox"
@@ -100,6 +102,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 	//	should we use a pluginmanager so no for loops are required on each hook?
 	//	e.g. pluginmanager.call('afterKeyUp',....);
 	loadPluginArray();
+
 
 	/**
 	 * loads the array of registered codecompletion plugins
@@ -131,7 +134,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 	 * instantiates all plugins and adds the instances to the plugin array
 	 */
 	function loadPlugins() {
-		for (var i = 0; i < plugins.length; i++) {
+		for (var i = 0; i < plugins.length ; i++) {
 			var script = document.createElement('script');
 			script.setAttribute('type', 'text/javascript');
 			script.setAttribute('src', plugins[i].extpath+plugins[i].classpath);
@@ -183,7 +186,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 			var childNode;
 			// if the childnode has a value and there is a parto of a reference operator ('<')
 			// and it does not look like a html tag ('>')
-			if (childNodes[key].v && childNodes[key].v[0] == '<'
+			if (childNodes[key].v && childNodes[key].v[0] == '<' 
 			 && childNodes[key].v.indexOf('>') == -1 ) {
 				var path = childNodes[key].v.replace(/</,"").strip();
 				// if there are still whitespaces its no path
@@ -207,7 +210,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 		var path = path.split('.');
 		var pathSeg;
 		var i;
-		for ( i=0; i < path.length; i++) {
+		for ( i=0 ; i < path.length; i++) {
 			pathSeg = path[i];
 			if(extTree.c == null || extTree.c[pathSeg] == null) {
 				return null;
@@ -268,6 +271,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 		}
 		return cursorNode;
 	}
+
 
 	function getCurrentLine(cursor) {
 		var line = "";
@@ -420,6 +424,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 			// init styles
 			codeCompleteBox.style.overflowY = 'scroll';
 			codeCompleteBox.style.height = (options.ccWords * ($("cc_word_0").offsetHeight)) + 'px';
+			
 
 			var leftpos = (Position.cumulativeOffset($$('.t3e_iframe_wrap')[index])[0] + Position.cumulativeOffset(cursorNode)[0] + cursorNode.offsetWidth) + 'px';
 			var toppos = (Position.cumulativeOffset(cursorNode)[1] + cursorNode.offsetHeight - Element.cumulativeScrollOffset(cursorNode)[1]) + 'px';
@@ -433,12 +438,15 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 			for (var i=0;i<plugins.length;i++) {
 				if (plugins[i].obj && plugins[i].obj.afterCCRefresh) {
 					plugins[i].obj.afterCCRefresh(proposals[currWord],compResult);
-				}
+			}
 			}
 		} else {
 			endAutoCompletion();
 		}
 	}
+
+
+
 
 	/**
 	 * hides codecomplete box and resets completionResult
@@ -457,9 +465,10 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 		for (var i=0;i<plugins.length;i++) {
 			if (plugins[i].obj && plugins[i].obj.endCodeCompletion) {
 				plugins[i].obj.endCodeCompletion();
-			}
 		}
 	}
+	}
+
 
 	/**
 	 * move cursor in autcomplete box up
@@ -514,7 +523,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 		mousePos.x = event.clientX;
 		mousePos.y = event.clientY;
 	}
-
+	
 	/**
 	 * highlights entry in codecomplete box by id
 	 * @param {int} id
@@ -528,7 +537,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 			}
 		}
 	}
-
+	
 	function highlightCurrWord(id,event) {
 		// if it is a mouseover event
 		if(event){
@@ -555,7 +564,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 	this.insertCurrWordAtCursor = function(){
 		insertCurrWordAtCursor();
 	}
-
+	
 	/**
 	 * insert selected word into text from codecompletebox
 	 */
@@ -565,7 +574,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 		mirror.editor.highlightAtCursor();
 		var select = mirror.win.select;
 		var cursorNode = getCursorNode();
-
+		
 		if (cursorNode.currentText
 			&& cursorNode.currentText != '.'
 			&& cursorNode.currentText.strip() != '' ) {
@@ -577,6 +586,7 @@ var TsCodeCompletion = function(codeMirror, outerdiv) {
 			mirror.replaceSelection(word);
 		}
 	}
+
 
 	/**
 	 * retrieves the get-variable with the specified name
@@ -621,6 +631,7 @@ document.observe('t3editor:init', function(event) {
 	that.tsCodeCompletion = new TsCodeCompletion(that.mirror, that.outerdiv);
 });
 
+
 document.observe('t3editor:keyup', function(event) {
 	that = event.memo.t3editor;
 	if (that.tsCodeCompletion) that.tsCodeCompletion.keyUp(event.memo.actualEvent);
@@ -635,3 +646,4 @@ document.observe('t3editor:click', function(event) {
 	that = event.memo.t3editor;
 	if (that.tsCodeCompletion) that.tsCodeCompletion.click(event.memo.actualEvent);
 });
+

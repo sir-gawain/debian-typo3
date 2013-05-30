@@ -1,16 +1,29 @@
 <?php
-/*                                                                        *
- * This script belongs to the Extbase framework.                          *
- *                                                                        *
- * This class is a backport of the corresponding class of FLOW3.          *
- * All credits go to the v5 team.                                         *
- *                                                                        *
- * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- * of the License, or (at your option) any later version.                 *
- *                                                                        *
- * The TYPO3 project - inspiring people to share!                         *
- *                                                                        */
+/***************************************************************
+*  Copyright notice
+*
+*  (c) 2009 Jochen Rau <jochen.rau@typoplanet.de>
+*  All rights reserved
+*
+*  This class is a backport of the corresponding class of FLOW3.
+*  All credits go to the v5 team.
+*
+*  This script is part of the TYPO3 project. The TYPO3 project is
+*  free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  The GNU General Public License can be found at
+*  http://www.gnu.org/copyleft/gpl.html.
+*
+*  This script is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  This copyright notice MUST APPEAR in all copies of the script!
+***************************************************************/
 
 /**
  * A persistence query interface
@@ -102,19 +115,21 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	const CHARSET = 'utf-8';
 
 	/**
-	 * Gets the node-tuple source for this query.
-	 *
-	 * @return Tx_Extbase_Persistence_QOM_SourceInterface the node-tuple source; non-NULL
-	 */
-	public function getSource();
-
-	/**
 	 * Executes the query against the backend and returns the result
 	 *
 	 * @return Tx_Extbase_Persistence_QueryResultInterface|array The query result object or an array if $this->getQuerySettings()->getReturnRawQueryResult() is TRUE
 	 * @api
 	 */
 	public function execute();
+
+	/**
+	 * Executes the query against the database and returns the number of matching objects
+	 *
+	 * @return integer The number of matching objects
+	 * @api
+	 * @deprecated since Extbase 1.3.0; was removed in FLOW3; will be removed in Extbase 1.5.0
+	 */
+	public function count();
 
 	/**
 	 * Sets the property names to order the result by. Expected like this:
@@ -185,6 +200,16 @@ interface Tx_Extbase_Persistence_QueryInterface {
 	 * @api
 	 */
 	public function logicalNot($constraint);
+
+	/**
+	 * Matches against the (internal) identifier.
+	 *
+	 * @param string $uid An identifier to match against
+	 * @return object
+	 * @api
+	 * @deprecated since Extbase 1.2.0; was removed in FLOW3; will be removed in Extbase 1.4.0; use equals() instead
+	 */
+	public function withUid($uid);
 
 	/**
 	 * Returns an equals criterion used for matching objects against a query

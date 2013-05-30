@@ -27,6 +27,8 @@
  *
  * Module: Extension manager - Repository mirrors
  *
+ * $Id: class.tx_em_repository_mirrors.php 1887 2010-02-19 22:22:54Z mkrause $
+ *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -66,6 +68,16 @@ class tx_em_Repository_Mirrors {
 	 * @var  boolean
 	 */
 	protected $isRandomSelection = TRUE;
+
+	/**
+	 * Class constructor.
+	 *
+	 * @access  public
+	 * @return  void
+	 */
+	function __construct() {
+		// empty constructor
+	}
 
 	/**
 	 * Method selects one specific mirror to be used.
@@ -130,4 +142,9 @@ class tx_em_Repository_Mirrors {
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/repository/class.tx_em_repository_mirrors.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/repository/class.tx_em_repository_mirrors.php']);
+}
+
 ?>

@@ -24,17 +24,36 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   60: class t3lib_TCEforms_FE extends t3lib_TCEforms
+ *   68:	 public function wrapLabels($str)
+ *   78:	 public function printPalette(array $paletteArray)
+ *  102:	 public function setFancyDesign()
+ *  131:	 public function loadJavascriptLib($lib)
+ *  146:	 public function addStyleSheet($key, $href, $title='', $relation='stylesheet')
+ *
+ * TOTAL FUNCTIONS: 5
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
 
 /**
  * Contains a frontend version of the TYPO3 Core Form generator - AKA "TCEforms"
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * $Id$
+ *
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 
 /**
  * Extension class for the rendering of TCEforms in the frontend
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 class t3lib_TCEforms_FE extends t3lib_TCEforms {
 
@@ -49,8 +68,8 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 	/**
 	 * Function for wrapping labels.
 	 *
-	 * @param string $str The string to wrap
-	 * @return string
+	 * @param	string		The string to wrap
+	 * @return	string
 	 */
 	public function wrapLabels($str) {
 		return '<font face="verdana" size="1" color="black">' . $str . '</font>';
@@ -59,8 +78,8 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 	/**
 	 * Prints the palette in the frontend editing (forms-on-page?)
 	 *
-	 * @param array $paletteArray The palette array to print
-	 * @return string HTML output
+	 * @param	array		The palette array to print
+	 * @return	string		HTML output
 	 */
 	public function printPalette(array $paletteArray) {
 		$out = '';
@@ -68,9 +87,9 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 		foreach ($paletteArray as $content) {
 			$hRow[] = '<td' . $bgColor . '><font face="verdana" size="1">&nbsp;</font></td><td nowrap="nowrap"' . $bgColor . '><font color="#666666" face="verdana" size="1">' . $content['NAME'] . '</font></td>';
 			$iRow[] = '<td valign="top">' .
-					'<img name="req_' . $content['TABLE'] . '_' . $content['ID'] . '_' . $content['FIELD'] . '" src="clear.gif" width="10" height="10" alt="" />' .
-					'<img name="cm_' . $content['TABLE'] . '_' . $content['ID'] . '_' . $content['FIELD'] . '" src="clear.gif" width="7" height="10" alt="" />' .
-					'</td><td nowrap="nowrap" valign="top">' . $content['ITEM'] . $content['HELP_ICON'] . '</td>';
+					  '<img name="req_' . $content['TABLE'] . '_' . $content['ID'] . '_' . $content['FIELD'] . '" src="clear.gif" width="10" height="10" alt="" />' .
+					  '<img name="cm_' . $content['TABLE'] . '_' . $content['ID'] . '_' . $content['FIELD'] . '" src="clear.gif" width="7" height="10" alt="" />' .
+					  '</td><td nowrap="nowrap" valign="top">' . $content['ITEM'] . $content['HELP_ICON'] . '</td>';
 		}
 		$out = '<table border="0" cellpadding="0" cellspacing="0">
 			<tr><td><img src="clear.gif" width="' . intval($this->paletteMargin) . '" height="1" alt="" /></td>' . implode('', $hRow) . '</tr>
@@ -84,7 +103,7 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 	 * Sets the fancy front-end design of the editor.
 	 * Frontend
 	 *
-	 * @return void
+	 * @return	void
 	 */
 	public function setFancyDesign() {
 		$this->fieldTemplate = '
@@ -112,23 +131,24 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 	 * backpath is automatically applied.
 	 * This method adds the library to $GLOBALS['TSFE']->additionalHeaderData[$lib].
 	 *
-	 * @param string $lib Library name. Call it with the full path like "contrib/prototype/prototype.js" to load it
-	 * @return void
+	 * @param	string		$lib: Library name. Call it with the full path like "contrib/prototype/prototype.js" to load it
+	 * @return	void
 	 */
 	public function loadJavascriptLib($lib) {
 		/** @var $pageRenderer t3lib_PageRenderer */
 		$pageRenderer = $GLOBALS['TSFE']->getPageRenderer();
 		$pageRenderer->addJsLibrary($lib, $this->prependBackPath($lib));
+
 	}
 
 	/**
 	 * Insert additional style sheet link
 	 *
-	 * @param string $key Some key identifying the style sheet
-	 * @param string $href Uri to the style sheet file
-	 * @param string $title Value for the title attribute of the link element
-	 * @param string $relation Value for the rel attribute of the link element
-	 * @return void
+	 * @param	string		$key: some key identifying the style sheet
+	 * @param	string		$href: uri to the style sheet file
+	 * @param	string		$title: value for the title attribute of the link element
+	 * @return	string		$relation: value for the rel attribute of the link element
+	 * @return	void
 	 */
 	public function addStyleSheet($key, $href, $title = '', $relation = 'stylesheet') {
 		/** @var $pageRenderer t3lib_PageRenderer */
@@ -140,9 +160,10 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 	 * Initializes an anonymous template container.
 	 * The created container can be compared to alt_doc.php in backend-only disposal.
 	 *
-	 * @return void
+	 * @return	void
 	 */
 	public function initializeTemplateContainer() {
+		t3lib_div::requireOnce(PATH_typo3 . 'template.php');
 		$GLOBALS['TBE_TEMPLATE'] = t3lib_div::makeInstance('frontendDoc');
 		$GLOBALS['TBE_TEMPLATE']->getPageRenderer()->addInlineSetting(
 			'', 'PATH_typo3', t3lib_div::dirname(t3lib_div::getIndpEnv('SCRIPT_NAME')) . '/' . TYPO3_mainDir
@@ -164,7 +185,12 @@ class t3lib_TCEforms_FE extends t3lib_TCEforms {
 		} else {
 			return $this->backPath . $url;
 		}
+
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tceforms_fe.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_tceforms_fe.php']);
 }
 
 ?>

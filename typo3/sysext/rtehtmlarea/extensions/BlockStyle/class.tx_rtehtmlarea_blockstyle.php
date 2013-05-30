@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_blockstyle extends tx_rtehtmlarea_api {
 
@@ -45,7 +47,12 @@ class tx_rtehtmlarea_blockstyle extends tx_rtehtmlarea_api {
 		'blockstylelabel'	=> 'I[Block style label]',
 		'blockstyle'		=> 'BlockStyle',
 		);
-	protected $requiresClassesConfiguration = TRUE;		// TRUE if the extension requires the PageTSConfig Classes configuration
+	protected $requiresClassesConfiguration = true;		// True if the extension requires the PageTSConfig Classes configuration
 
 } // end of class
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockStyle/class.tx_rtehtmlarea_blockstyle.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/BlockStyle/class.tx_rtehtmlarea_blockstyle.php']);
+}
+
 ?>

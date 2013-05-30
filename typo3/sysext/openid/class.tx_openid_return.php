@@ -21,6 +21,18 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   59: class tx_openid_return
+ *   65:     public function main()
+ *
+ * TOTAL FUNCTIONS: 1
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
 
 // Fix _GET/_POST values for authentication
 if (isset($_GET['login_status'])) {
@@ -32,6 +44,8 @@ require_once('../../init.php');
 
 /**
  * This class is the OpenID return script for the TYPO3 Backend.
+ *
+ * $Id$
  *
  * @author	Dmitry Dulepov <dmitry@typo3.org>
  */
@@ -48,6 +62,10 @@ class tx_openid_return {
 			t3lib_utility_Http::redirect($backendURL);
 		}
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_return.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/openid/class.tx_openid_return.php']);
 }
 
 $module = t3lib_div::makeInstance('tx_openid_return');

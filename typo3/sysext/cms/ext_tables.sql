@@ -1,4 +1,93 @@
 #
+# TYPO3 SVN ID: $Id$
+#
+
+
+#
+# Table structure for table 'cache_pages'
+#
+CREATE TABLE cache_pages (
+  id int(11) unsigned NOT NULL auto_increment,
+  hash varchar(32) DEFAULT '' NOT NULL,
+  page_id int(11) unsigned DEFAULT '0' NOT NULL,
+  reg1 int(11) unsigned DEFAULT '0' NOT NULL,
+  HTML mediumblob,
+  temp_content int(1) DEFAULT '0' NOT NULL,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  expires int(10) unsigned DEFAULT '0' NOT NULL,
+  cache_data mediumblob,
+  KEY page_id (page_id),
+  KEY sel (hash,page_id),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cache_pagesection'
+#
+CREATE TABLE cache_pagesection (
+  page_id int(11) unsigned DEFAULT '0' NOT NULL,
+  mpvar_hash int(11) unsigned DEFAULT '0' NOT NULL,
+  content blob,
+  tstamp int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (page_id,mpvar_hash)
+) ENGINE=InnoDB;
+
+
+
+
+#
+# Table structure for table 'cachingframework_cache_pages'
+#
+CREATE TABLE cachingframework_cache_pages (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumblob,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pages_tags'
+#
+CREATE TABLE cachingframework_cache_pages_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pagesection'
+#
+CREATE TABLE cachingframework_cache_pagesection (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  crdate int(11) unsigned DEFAULT '0' NOT NULL,
+  content mediumblob,
+  lifetime int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier)
+) ENGINE=InnoDB;
+
+
+#
+# Table structure for table 'cachingframework_cache_pagesection_tags'
+#
+CREATE TABLE cachingframework_cache_pagesection_tags (
+  id int(11) unsigned NOT NULL auto_increment,
+  identifier varchar(128) DEFAULT '' NOT NULL,
+  tag varchar(128) DEFAULT '' NOT NULL,
+  PRIMARY KEY (id),
+  KEY cache_id (identifier),
+  KEY cache_tag (tag)
+) ENGINE=InnoDB;
 
 
 #
@@ -97,8 +186,7 @@ CREATE TABLE fe_sessions (
   ses_tstamp int(11) unsigned DEFAULT '0' NOT NULL,
   ses_data blob,
   ses_permanent tinyint(1) unsigned DEFAULT '0' NOT NULL,
-  PRIMARY KEY (ses_id,ses_name),
-  KEY ses_tstamp (ses_tstamp)
+  PRIMARY KEY (ses_id,ses_name)
 ) ENGINE=InnoDB;
 
 
@@ -110,7 +198,7 @@ CREATE TABLE fe_users (
   pid int(11) unsigned DEFAULT '0' NOT NULL,
   tstamp int(11) unsigned DEFAULT '0' NOT NULL,
   username varchar(50) DEFAULT '' NOT NULL,
-  password varchar(60) DEFAULT '' NOT NULL,
+  password varchar(40) DEFAULT '' NOT NULL,
   usergroup tinytext,
   disable tinyint(4) unsigned DEFAULT '0' NOT NULL,
   starttime int(11) unsigned DEFAULT '0' NOT NULL,
@@ -173,7 +261,7 @@ CREATE TABLE pages_language_overlay (
   deleted tinyint(3) unsigned DEFAULT '0' NOT NULL,
   subtitle varchar(255) DEFAULT '' NOT NULL,
   nav_title varchar(255) DEFAULT '' NOT NULL,
-  media text,
+  media tinytext,
   keywords text,
   description text,
   abstract text,
@@ -203,7 +291,7 @@ CREATE TABLE sys_domain (
   cruser_id int(11) unsigned DEFAULT '0' NOT NULL,
   hidden tinyint(4) unsigned DEFAULT '0' NOT NULL,
   domainName varchar(80) DEFAULT '' NOT NULL,
-  redirectTo varchar(255) DEFAULT '' NOT NULL,
+  redirectTo varchar(120) DEFAULT '' NOT NULL,
   redirectHttpStatusCode int(4) unsigned DEFAULT '301' NOT NULL,
   sorting int(10) unsigned DEFAULT '0' NOT NULL,
   prepend_params int(10) DEFAULT '0' NOT NULL,
@@ -244,6 +332,8 @@ CREATE TABLE sys_template (
   include_static_file text,
   constants text,
   config text,
+  editorcfg text,
+  resources text,
   nextLevel varchar(5) DEFAULT '' NOT NULL,
   description text,
   basedOn tinytext,
@@ -253,7 +343,7 @@ CREATE TABLE sys_template (
   tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
   PRIMARY KEY (uid),
   KEY t3ver_oid (t3ver_oid,t3ver_wsid),
-  KEY parent (pid,deleted,hidden,sorting)
+  KEY parent (pid,sorting,deleted,hidden)
 );
 
 
@@ -282,10 +372,7 @@ CREATE TABLE tt_content (
   header varchar(255) DEFAULT '' NOT NULL,
   header_position varchar(6) DEFAULT '' NOT NULL,
   bodytext mediumtext,
-
-  # Even though we're using FAL and an IRRE field for images now, it needs to stay "text" for the migration to work
   image text,
-
   imagewidth mediumint(11) unsigned DEFAULT '0' NOT NULL,
   imageorient tinyint(4) unsigned DEFAULT '0' NOT NULL,
   imagecaption text,
@@ -321,7 +408,7 @@ CREATE TABLE tt_content (
   text_color tinyint(3) unsigned DEFAULT '0' NOT NULL,
   text_properties tinyint(3) unsigned DEFAULT '0' NOT NULL,
   menu_type varchar(30) DEFAULT '0' NOT NULL,
-  list_type varchar(255) DEFAULT '0' NOT NULL,
+  list_type varchar(36) DEFAULT '0' NOT NULL,
   table_border tinyint(3) unsigned DEFAULT '0' NOT NULL,
   table_cellspacing tinyint(3) unsigned DEFAULT '0' NOT NULL,
   table_cellpadding tinyint(3) unsigned DEFAULT '0' NOT NULL,
@@ -329,10 +416,7 @@ CREATE TABLE tt_content (
   select_key varchar(80) DEFAULT '' NOT NULL,
   sectionIndex tinyint(3) unsigned DEFAULT '0' NOT NULL,
   linkToTop tinyint(3) unsigned DEFAULT '0' NOT NULL,
-  file_collections text,
   filelink_size tinyint(3) unsigned DEFAULT '0' NOT NULL,
-  filelink_sorting tinytext NOT NULL,
-  target varchar(30) DEFAULT '' NOT NULL,
   section_frame tinyint(3) unsigned DEFAULT '0' NOT NULL,
   date int(10) unsigned DEFAULT '0' NOT NULL,
   splash_layout varchar(30) DEFAULT '0' NOT NULL,
@@ -344,9 +428,6 @@ CREATE TABLE tt_content (
   sys_language_uid int(11) DEFAULT '0' NOT NULL,
   tx_impexp_origuid int(11) DEFAULT '0' NOT NULL,
   pi_flexform mediumtext,
-  accessibility_title varchar(30) DEFAULT '' NOT NULL,
-  accessibility_bypass tinyint(3) unsigned DEFAULT '0' NOT NULL,
-  accessibility_bypass_text varchar(30) DEFAULT '' NOT NULL,
   l18n_parent int(11) DEFAULT '0' NOT NULL,
   l18n_diffsource mediumblob,
 

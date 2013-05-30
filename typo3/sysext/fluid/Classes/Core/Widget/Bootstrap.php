@@ -1,12 +1,12 @@
 <?php
 
 /*
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
- *                                                                        *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -23,6 +23,7 @@
 /**
  * This is the bootstrap for Ajax Widget responses
  *
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class Tx_Fluid_Core_Widget_Bootstrap {
 
@@ -45,6 +46,7 @@ class Tx_Fluid_Core_Widget_Bootstrap {
 	 * @return string $content The processed content
 	 */
 	public function run($content, $configuration) {
+		$this->initializeClassLoader();
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
 		$this->initializeConfiguration($configuration);
 		$this->configureObjectManager();
@@ -58,6 +60,21 @@ class Tx_Fluid_Core_Widget_Bootstrap {
 		$extbaseBootstrap = $this->objectManager->get('Tx_Extbase_Core_Bootstrap');
 		$extbaseBootstrap->cObj = $this->cObj;
 		return $extbaseBootstrap->run($content, $configuration);
+	}
+
+	/**
+	 * Initializes the autoload mechanism of Extbase. This is supplement to the core autoloader.
+	 *
+	 * @return void
+	 * @see initialize()
+	 */
+	protected function initializeClassLoader() {
+		if (!class_exists('Tx_Extbase_Utility_ClassLoader', FALSE)) {
+			require(t3lib_extmgm::extPath('extbase') . 'Classes/Utility/ClassLoader.php');
+		}
+
+		$classLoader = new Tx_Extbase_Utility_ClassLoader();
+		spl_autoload_register(array($classLoader, 'loadClass'));
 	}
 
 	/**

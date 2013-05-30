@@ -32,6 +32,8 @@ require_once(t3lib_extMgm::extPath('install', 'requirements.php'));
  * @author		Ingo Renner <ingo@typo3.org>
  * @package		TYPO3
  * @subpackage	tx_install
+ *
+ * $Id$
  */
 class tx_install_report_InstallStatus implements tx_reports_StatusProvider {
 
@@ -85,6 +87,7 @@ class tx_install_report_InstallStatus implements tx_reports_StatusProvider {
 			'uploads/'             => 2,
 			'uploads/pics/'        => 0,
 			'uploads/media/'       => 0,
+			'uploads/tf/'          => 0,
 			$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'] => -1,
 			$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'] . '_temp_/'    => 0,
 		);
@@ -169,5 +172,11 @@ class tx_install_report_InstallStatus implements tx_reports_StatusProvider {
 			$GLOBALS['LANG']->sL('LLL:EXT:install/report/locallang.xml:status_remainingUpdates'), $value, $message, $severity
 		);
 	}
+
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/report/class.tx_install_report_installstatus.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/report/class.tx_install_report_installstatus.php']);
+}
+
 ?>

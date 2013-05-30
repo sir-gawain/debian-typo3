@@ -25,13 +25,6 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-/**
- * ExtDirect connection for SOAP
- *
- * @author Steffen Kamper <steffen@typo3.org>
- * @package TYPO3
- * @subpackage em
- */
 class tx_em_Connection_ExtDirectSoap {
 	/**
 	 * @var tx_em_Repository
@@ -72,6 +65,35 @@ class tx_em_Connection_ExtDirectSoap {
 		if (isset($this->settings['fe_u']) && isset($this->settings['fe_p']) && $this->settings['fe_u'] !== '' && $this->settings['fe_p'] !== '' ) {
 			$this->setAccountData($this->settings['fe_u'], $this->settings['fe_p']);
 		}
+	}
+
+	/**
+	 * Login test with user credentials
+	 *
+	 * @return array
+	 */
+	public function testUserLogin() {
+		if (is_array($this->accountData)) {
+			$login = false;
+			if ($login) {
+				$data = array(
+					'success' => TRUE,
+					'id' => $login
+				);
+			} else {
+				$data = array(
+					'success' => FALSE,
+					'error' => $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:msg_loginFailed')
+				);
+			}
+		} else {
+			$data = array(
+				'success' => FALSE,
+				'error' => $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:msg_noUserLoginData')
+			);
+		}
+
+		return $data;
 	}
 
 	/**
@@ -126,7 +148,7 @@ class tx_em_Connection_ExtDirectSoap {
 	public function registerExtensionkey($parameter) {
 		$this->initSoap();
 		$params = array(
-			'registerExtensionKeyData' => array(
+		 	'registerExtensionKeyData' => array(
 				'extensionKey' => $parameter['extkey'],
 				'title' => $parameter['title'],
 				'description' => $parameter['description']
@@ -301,7 +323,7 @@ class tx_em_Connection_ExtDirectSoap {
 
 	/**
 	 * @param  $data
-	 * @return bool|NULL|string|tx_em_Settings|unknown
+	 * @return bool|null|string|tx_em_Settings|unknown
 	 */
 	protected function addUploads($data) {
 		if (count((array) $data) === 0) {
@@ -362,6 +384,8 @@ class tx_em_Connection_ExtDirectSoap {
 				'error' => $error->faultstring
 			);
 		}
+
+
 	}
 
 	/**
@@ -402,4 +426,9 @@ class tx_em_Connection_ExtDirectSoap {
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_extdirectsoap.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_extdirectsoap.php']);
+}
+
 ?>

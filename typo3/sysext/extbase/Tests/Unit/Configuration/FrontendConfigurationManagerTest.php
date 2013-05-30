@@ -48,11 +48,6 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	protected $extConfBackup;
 
 	/**
-	 * @var Tx_Extbase_Service_TypoScriptService
-	 */
-	protected $mockTypoScriptService;
-
-	/**
 	 * Sets up this testcase
 	 */
 	public function setUp() {
@@ -61,8 +56,6 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 		$this->extConfBackup = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase'];
 		$this->frontendConfigurationManager = $this->getAccessibleMock('Tx_Extbase_Configuration_FrontendConfigurationManager', array('dummy'));
 		$this->frontendConfigurationManager->_set('contentObject', $this->mockContentObject);
-		$this->mockTypoScriptService = $this->getAccessibleMock('Tx_Extbase_Service_TypoScriptService');
-		$this->frontendConfigurationManager->injectTypoScriptService($this->mockTypoScriptService);
 	}
 
 	/**
@@ -76,7 +69,7 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	/**
 	 * @test
 	 */
-	public function getTypoScriptSetupReturnsSetupFromTsfe() {
+	public function getTypoScriptSetupReturnsSetupFromTSFE() {
 		$GLOBALS['TSFE']->tmpl->setup = array('foo' => 'bar');
 		$this->assertEquals(array('foo' => 'bar'), $this->frontendConfigurationManager->_call('getTypoScriptSetup'));
 	}
@@ -95,29 +88,22 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	 * @test
 	 */
 	public function getPluginConfigurationReturnsExtensionConfiguration() {
-		$testSettings = array(
-			'settings.' => array(
-				'foo' => 'bar'
-			)
-		);
-		$testSettingsConverted = array(
-			'settings' => array(
-				'foo' => 'bar'
-			)
-		);
 		$testSetup = array(
 			'plugin.' => array(
-				'tx_someextensionname.' => $testSettings,
+				'tx_someextensionname.' => array(
+					'settings.' => array(
+						'foo' => 'bar'
+					)
+				),
 			),
 		);
-		$this->mockTypoScriptService->expects($this->any())->method('convertTypoScriptArrayToPlainArray')->with($testSettings)->will($this->returnValue($testSettingsConverted));
 		$GLOBALS['TSFE']->tmpl->setup = $testSetup;
 		$expectedResult = array(
 			'settings' => array(
 				'foo' => 'bar'
 			)
 		);
-		$actualResult = $this->frontendConfigurationManager->_call('getPluginConfiguration', 'SomeExtensionName');
+		$actualResult = $this->frontendConfigurationManager->_call('getPluginConfiguration', 'SomeExtensionName', 'SomePluginName');
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -125,22 +111,15 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	 * @test
 	 */
 	public function getPluginConfigurationReturnsPluginConfiguration() {
-		$testSettings = array(
-			'settings.' => array(
-				'foo' => 'bar'
-			)
-		);
-		$testSettingsConverted = array(
-			'settings' => array(
-				'foo' => 'bar'
-			)
-		);
 		$testSetup = array(
 			'plugin.' => array(
-				'tx_someextensionname_somepluginname.' => $testSettings
+				'tx_someextensionname_somepluginname.' => array(
+					'settings.' => array(
+						'foo' => 'bar'
+					)
+				),
 			),
 		);
-		$this->mockTypoScriptService->expects($this->any())->method('convertTypoScriptArrayToPlainArray')->with($testSettings)->will($this->returnValue($testSettingsConverted));
 		$GLOBALS['TSFE']->tmpl->setup = $testSetup;
 		$expectedResult = array(
 			'settings' => array(
@@ -155,46 +134,26 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	 * @test
 	 */
 	public function getPluginConfigurationRecursivelyMergesExtensionAndPluginConfiguration() {
-		$testExtensionSettings = array(
-			'settings.' => array(
-				'foo' => 'bar',
-				'some.' => array(
-					'nested' => 'value'
-				),
-			)
-		);
-		$testExtensionSettingsConverted = array(
-			'settings' => array(
-				'foo' => 'bar',
-				'some' => array(
-					'nested' => 'value'
-				),
-			)
-		);
-		$testPluginSettings = array(
-			'settings.' => array(
-				'some.' => array(
-					'nested' => 'valueOverridde',
-					'new' => 'value',
-				),
-			)
-		);
-		$testPluginSettingsConverted = array(
-			'settings' => array(
-				'some' => array(
-					'nested' => 'valueOverridde',
-					'new' => 'value',
-				),
-			)
-		);
 		$testSetup = array(
 			'plugin.' => array(
-				'tx_someextensionname.' => $testExtensionSettings,
-				'tx_someextensionname_somepluginname.' => $testPluginSettings,
+				'tx_someextensionname.' => array(
+					'settings.' => array(
+						'foo' => 'bar',
+						'some.' => array(
+							'nested' => 'value'
+						),
+					),
+				),
+				'tx_someextensionname_somepluginname.' => array(
+					'settings.' => array(
+						'some.' => array(
+							'nested' => 'valueOverridde',
+							'new' => 'value',
+						),
+					),
+				),
 			),
 		);
-		$this->mockTypoScriptService->expects($this->at(0))->method('convertTypoScriptArrayToPlainArray')->with($testExtensionSettings)->will($this->returnValue($testExtensionSettingsConverted));
-		$this->mockTypoScriptService->expects($this->at(1))->method('convertTypoScriptArrayToPlainArray')->with($testPluginSettings)->will($this->returnValue($testPluginSettingsConverted));
 		$GLOBALS['TSFE']->tmpl->setup = $testSetup;
 		$expectedResult = array(
 			'settings' => array(
@@ -247,7 +206,7 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	/**
 	 * @test
 	 */
-	public function overrideSwitchableControllerActionsFromFlexFormReturnsUnchangedFrameworkConfigurationIfNoFlexFormConfigurationIsFound() {
+	public function overrideSwitchableControllerActionsFromFlexformReturnsUnchangedFrameworkConfigurationIfNoFlexformConfigurationIsFound() {
 		$frameworkConfiguration = array(
 			'pluginName' => 'Pi1',
 			'extensionName' => 'SomeExtension',
@@ -263,15 +222,15 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 				)
 			)
 		);
-		$flexFormConfiguration = array();
-		$actualResult = $this->frontendConfigurationManager->_call('overrideSwitchableControllerActionsFromFlexForm', $frameworkConfiguration, $flexFormConfiguration);
+		$flexformConfiguration = array();
+		$actualResult = $this->frontendConfigurationManager->_call('overrideSwitchableControllerActionsFromFlexform', $frameworkConfiguration, $flexformConfiguration);
 		$this->assertSame($frameworkConfiguration, $actualResult);
 	}
 
 	/**
 	 * @test
 	 */
-	public function overrideSwitchableControllerActionsFromFlexFormMergesNonCacheableActions() {
+	public function overrideSwitchableControllerActionsFromFlexformMergesNonCacheableActions() {
 		$frameworkConfiguration = array(
 			'pluginName' => 'Pi1',
 			'extensionName' => 'SomeExtension',
@@ -285,7 +244,7 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 				)
 			)
 		);
-		$flexFormConfiguration = array(
+		$flexformConfiguration = array(
 			'switchableControllerActions' => 'Controller1  -> action2;Controller2->action3;  Controller2->action1'
 		);
 		$expectedResult = array(
@@ -301,7 +260,7 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 				)
 			)
 		);
-		$actualResult = $this->frontendConfigurationManager->_call('overrideSwitchableControllerActionsFromFlexForm', $frameworkConfiguration, $flexFormConfiguration);
+		$actualResult = $this->frontendConfigurationManager->_call('overrideSwitchableControllerActionsFromFlexform', $frameworkConfiguration, $flexformConfiguration);
 		$this->assertEquals($expectedResult, $actualResult);
 	}
 
@@ -309,7 +268,7 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 	 * @test
 	 * @expectedException Tx_Extbase_Configuration_Exception_ParseError
 	 */
-	public function overrideSwitchableControllerActionsThrowsExceptionIfFlexFormConfigurationIsInvalid() {
+	public function overrideSwitchableControllerActionsThrowsExceptionIfFlexformConfigurationIsInvalid() {
 		$frameworkConfiguration = array(
 			'pluginName' => 'Pi1',
 			'extensionName' => 'SomeExtension',
@@ -323,10 +282,10 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 				)
 			)
 		);
-		$flexFormConfiguration = array(
+		$flexformConfiguration = array(
 			'switchableControllerActions' => 'Controller1->;Controller2->action3;Controller2->action1'
 		);
-		$this->frontendConfigurationManager->_call('overrideSwitchableControllerActionsFromFlexForm', $frameworkConfiguration, $flexFormConfiguration);
+		$this->frontendConfigurationManager->_call('overrideSwitchableControllerActionsFromFlexform', $frameworkConfiguration, $flexformConfiguration);
 	}
 
 	/**
@@ -338,11 +297,11 @@ class Tx_Extbase_Tests_Unit_Configuration_FrontendConfigurationManagerTest exten
 				'framework' => 'configuration'
 			),
 		);
-		$frontendConfigurationManager = $this->getAccessibleMock('Tx_Extbase_Configuration_FrontendConfigurationManager', array('overrideStoragePidIfStartingPointIsSet', 'overrideConfigurationFromPlugin', 'overrideConfigurationFromFlexForm'));
+		$frontendConfigurationManager = $this->getAccessibleMock('Tx_Extbase_Configuration_FrontendConfigurationManager', array('overrideStoragePidIfStartingPointIsSet', 'overrideConfigurationFromPlugin', 'overrideConfigurationFromFlexform'));
 		$frontendConfigurationManager->expects($this->at(0))->method('overrideStoragePidIfStartingPointIsSet')->with($frameworkConfiguration)->will($this->returnValue(array('overridden' => 'storagePid')));
 		$frontendConfigurationManager->expects($this->at(1))->method('overrideConfigurationFromPlugin')->with(array('overridden' => 'storagePid'))->will($this->returnValue(array('overridden' => 'pluginConfiguration')));
-		$frontendConfigurationManager->expects($this->at(2))->method('overrideConfigurationFromFlexForm')->with(array('overridden' => 'pluginConfiguration'))->will($this->returnValue(array('overridden' => 'flexFormConfiguration')));
-		$expectedResult = array('overridden' => 'flexFormConfiguration');
+		$frontendConfigurationManager->expects($this->at(2))->method('overrideConfigurationFromFlexform')->with(array('overridden' => 'pluginConfiguration'))->will($this->returnValue(array('overridden' => 'flexformConfiguration')));
+		$expectedResult = array('overridden' => 'flexformConfiguration');
 		$actualResult = $frontendConfigurationManager->_call('getContextSpecificFrameworkConfiguration', $frameworkConfiguration);
 		$this->assertEquals($expectedResult, $actualResult);
 	}

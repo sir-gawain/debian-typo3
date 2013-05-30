@@ -27,6 +27,8 @@
  *
  * Module: Extension manager - DB access
  *
+ * $Id: class.tx_em_database.php 2082 2010-03-21 17:19:42Z steffenk $
+ *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -62,7 +64,7 @@ final class tx_em_Database {
 	 * @param   integer  $repository  (optional) repository uid of extensions to count
 	 * @return  integer  sum of extensions in database
 	 */
-	public static function getExtensionCountFromRepository($repository = NULL) {
+	public function getExtensionCountFromRepository($repository = NULL) {
 		if (is_null($repository)) {
 			return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
 				'DISTINCT extkey',
@@ -87,7 +89,7 @@ final class tx_em_Database {
 	 * @param string $limit
 	 * @return array
 	 */
-	public static function getExtensionListFromRepository($repository, $addFields = '', $andWhere = '', $order = '', $limit = '') {
+	public function getExtensionListFromRepository($repository, $addFields = '', $andWhere = '', $order = '', $limit = '') {
 		$ret = array();
 		$temp = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			'count(*) AS count',
@@ -106,7 +108,7 @@ final class tx_em_Database {
 			$order,
 			$limit
 		);
-
+		//debug($GLOBALS['TYPO3_DB']->debug_lastBuiltQuery);
 		return $ret;
 	}
 
@@ -117,7 +119,7 @@ final class tx_em_Database {
 	 * @param string $extKey
 	 * @return array $versions
 	 */
-	public static function getExtensionVersionsFromRepository($repository, $extKey) {
+	public function getExtensionVersionsFromRepository($repository, $extKey) {
 		$versions = array();
 		//TODO: implement
 		return $versions;
@@ -130,7 +132,7 @@ final class tx_em_Database {
 	 * @param   tx_em_Repository $repository  repository object
 	 * @return  void
 	 */
-	public static function updateRepository(tx_em_Repository $repository) {
+	public function updateRepository(tx_em_Repository $repository) {
 		$repositoryData = array(
 			'title' => $repository->getTitle(),
 			'description' => $repository->getDescription(),
@@ -155,7 +157,7 @@ final class tx_em_Database {
 	 * @param   tx_em_Repository $repository  repository object
 	 * @return  integer  UID of the newly inserted repository object
 	 */
-	public static function insertRepository(tx_em_Repository $repository) {
+	public function insertRepository(tx_em_Repository $repository) {
 		$repositoryData = array(
 			'title' => $repository->getTitle(),
 			'description' => $repository->getDescription(),
@@ -177,11 +179,11 @@ final class tx_em_Database {
 	 * @param  tx_em_Repository $repository  repository object
 	 * @return void
 	 */
-	public static function deleteRepository(tx_em_Repository $repository) {
-		$GLOBALS['TYPO3_DB']->exec_DELETEquery(
-			self::TABLE_REPOSITORY,
+	public function deleteRepository(tx_em_Repository $repository) {
+	 	$GLOBALS['TYPO3_DB']->exec_DELETEquery(
+			 self::TABLE_REPOSITORY,
 			'uid=' . $repository->getId()
-		);
+		 );
 	}
 
 	/**
@@ -190,14 +192,14 @@ final class tx_em_Database {
 	 * @param int $uid
 	 * @return void
 	 */
-	public static function updateRepositoryCount($extCount, $uid = 1) {
-		$GLOBALS['TYPO3_DB']->exec_UPDATEquery(
-			self::TABLE_REPOSITORY,
-			'uid=' . intval($uid),
-			array (
-				'lastUpdated' => time(),
+	public function updateRepositoryCount($extCount, $uid = 1) {
+	 	$GLOBALS['TYPO3_DB']->exec_UPDATEquery(
+			 self::TABLE_REPOSITORY,
+			 'uid=' . intval($uid),
+			 array (
+			  	'lastUpdated' => time(),
 				'extCount' => intval($extCount)
-			));
+			 ));
 	}
 
 	/**
@@ -206,7 +208,7 @@ final class tx_em_Database {
 	 * @param  $arrFields
 	 * @return void
 	 */
-	public static function insertVersion(array $arrFields) {
+	public function insertVersion(array $arrFields) {
 		$GLOBALS['TYPO3_DB']->exec_INSERTquery(self::TABLE_EXTENSION, $arrFields);
 	}
 
@@ -214,11 +216,11 @@ final class tx_em_Database {
 	 * Update the lastversion field after update
 	 *
 	 * @param int $repositoryUid
-	 * @return integer
+	 * @return void
 	 */
-	public static function insertLastVersion($repositoryUid = 1) {
+	public function insertLastVersion($repositoryUid = 1) {
 		$groupedRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-			'extkey, version, max(intversion) maxintversion',
+			'extkey, max(intversion) as maxintversion',
 			'cache_extensions',
 			'repository=' . intval($repositoryUid),
 			'extkey'
@@ -246,14 +248,14 @@ final class tx_em_Database {
 		return $extensions;
 	}
 
+
 	/**
 	 * Method finds and returns repository fields identified by its UID.
 	 *
 	 * @access  public
 	 * @param   int  $uid  repository UID
-	 * @return array
 	 */
-	public static function getRepositoryByUID($uid) {
+	public function getRepositoryByUID($uid) {
 		$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', self::TABLE_REPOSITORY, 'uid=' . intval($uid));
 
 		return $row;
@@ -263,9 +265,9 @@ final class tx_em_Database {
 	 * Method finds and returns repository identified by its title
 	 *
 	 * @param  $title
-	 * @return array
+	 * @return
 	 */
-	public static function getRepositoryByTitle($title) {
+	public function getRepositoryByTitle($title) {
 		return $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			'*',
 			self::TABLE_REPOSITORY,
@@ -280,7 +282,7 @@ final class tx_em_Database {
 	 * @param string $where
 	 * @return array
 	 */
-	public static function getRepositories($where = NULL) {
+	public function getRepositories($where = NULL) {
 		return $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			'*',
 			self::TABLE_REPOSITORY,
@@ -296,7 +298,7 @@ final class tx_em_Database {
 	 * @param	array		Field structure
 	 * @return	string		SQL Content of dump (INSERT statements)
 	 */
-	protected static function dumpTableContent($table, array $fieldStructure) {
+	function dumpTableContent($table, $fieldStructure) {
 
 		// Substitution of certain characters (borrowed from phpMySQL):
 		$search = array('\\', '\'', "\x00", "\x0a", "\x0d", "\x1a");
@@ -328,11 +330,11 @@ final class tx_em_Database {
 	 * Which fields and which tables are determined from the ext_tables.sql file
 	 *
 	 * @param	string		Array with table.field values
-	 * @return	array		Array of tables and fields split.
+	 * @return	array		Array of tables and fields splitted.
 	 */
-	public static function getTableAndFieldStructure($parts) {
-			/** @var $instObj t3lib_install_Sql */
-		$instObj = t3lib_div::makeInstance('t3lib_install_Sql');
+	function getTableAndFieldStructure($parts) {
+		// Instance of install tool
+		$instObj = new t3lib_install();
 		$dbFields = $instObj->getFieldDefinitions_database(TYPO3_db);
 
 		$outTables = array();
@@ -359,6 +361,7 @@ final class tx_em_Database {
 		return $outTables;
 	}
 
+
 	/**
 	 * Makes a dump of the tables/fields definitions for an extension
 	 *
@@ -366,7 +369,7 @@ final class tx_em_Database {
 	 * @return	string		SQL for the table definitions
 	 * @see dumpStaticTables()
 	 */
-	public static function dumpTableAndFieldStructure(array $arr) {
+	function dumpTableAndFieldStructure($arr) {
 		$tables = array();
 
 		if (count($arr)) {
@@ -392,7 +395,7 @@ final class tx_em_Database {
 	 * @param	array  $additionalLinkParameter
 	 * @return	string		HTML
 	 */
-	public static function dumpDataTablesLine(array $tablesArray, $extKey, array $additionalLinkParameter = array()) {
+	function dumpDataTablesLine($tablesArray, $extKey, $additionalLinkParameter = array()) {
 		$tables = array();
 		$tablesNA = array();
 		$allTables = array_keys($GLOBALS['TYPO3_DB']->admin_get_tables());
@@ -446,9 +449,8 @@ final class tx_em_Database {
 	 * @return	string		Returns the content
 	 * @see dumpTableAndFieldStructure()
 	 */
-	public static function dumpStaticTables($tableList) {
-			/** @var $instObj t3lib_install_Sql */
-		$instObj = t3lib_div::makeInstance('t3lib_install_Sql');
+	function dumpStaticTables($tableList) {
+		$instObj = t3lib_div::makeInstance('t3lib_install');
 		$dbFields = $instObj->getFieldDefinitions_database(TYPO3_db);
 
 		$out = '';
@@ -479,7 +481,7 @@ final class tx_em_Database {
 	 *
 	 * @return	string		Table header
 	 */
-	protected static function dumpHeader() {
+	function dumpHeader() {
 		return trim('
 # TYPO3 Extension Manager dump 1.1
 #
@@ -493,10 +495,10 @@ final class tx_em_Database {
 	 *
 	 * @param	string		Table name
 	 * @param	array		Field and key information (as provided from Install Tool class!)
-	 * @param	boolean		If TRUE, add "DROP TABLE IF EXISTS"
+	 * @param	boolean		If true, add "DROP TABLE IF EXISTS"
 	 * @return	string		Table definition SQL
 	 */
-	protected static function dumpTableHeader($table, array $fieldKeyInfo, $dropTableIfExists = FALSE) {
+	function dumpTableHeader($table, $fieldKeyInfo, $dropTableIfExists = 0) {
 		$lines = array();
 		$dump = '';
 

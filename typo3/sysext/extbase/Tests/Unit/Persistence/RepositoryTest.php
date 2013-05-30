@@ -59,11 +59,6 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 	 */
 	protected $querySettings;
 
-	/**
-	 * @var Tx_Extbase_Persistence_QuerySettingsInterface
-	 */
-	protected $mockQuerySettings;
-
 	public function setUp() {
 		$this->mockIdentityMap = $this->getMock('Tx_Extbase_Persistence_IdentityMap');
 		$this->mockQueryFactory = $this->getMock('Tx_Extbase_Persistence_QueryFactory');
@@ -160,23 +155,17 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 
 	/**
 	 * dataProvider for createQueryCallsQueryFactoryWithExpectedType
-	 * @return array
 	 */
 	public function modelAndRepositoryClassNames() {
 		return array(
 			array('Tx_BlogExample_Domain_Repository_BlogRepository', 'Tx_BlogExample_Domain_Model_Blog'),
-			array('﻿_Domain_Repository_Content_PageRepository', '﻿_Domain_Model_Content_Page'),
-			array('Tx_RepositoryExample_Domain_Repository_SomeModelRepository', 'Tx_RepositoryExample_Domain_Model_SomeModel'),
-			array('Tx_RepositoryExample_Domain_Repository_RepositoryRepository', 'Tx_RepositoryExample_Domain_Model_Repository'),
-			array('Tx_Repository_Domain_Repository_RepositoryRepository', 'Tx_Repository_Domain_Model_Repository'),
+			array('﻿_Domain_Repository_Content_PageRepository', '﻿_Domain_Model_Content_Page')
 		);
 	}
 
 	/**
 	 * @test
 	 * @dataProvider modelAndRepositoryClassNames
-	 * @param string $repositoryClassName
-	 * @param string $modelClassName
 	 */
 	public function constructSetsObjectTypeFromClassName($repositoryClassName, $modelClassName) {
 		$mockClassName = 'MockRepository' . uniqid();
@@ -247,6 +236,33 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 	}
 
 	/**
+	 * @test
+	 */
+	public function findByUidQueriesObjectAndRegistersItIfItWasNotFoundInIdentityMap() {
+		$fakeUid = '123';
+		$object = new stdClass();
+		$this->repository->_set('objectType', 'someObjectType');
+
+		$mockQuerySettings = $this->getMock('Tx_Extbase_Persistence_QuerySettingsInterface');
+		$this->mockQuery->expects($this->atLeastOnce())->method('getQuerySettings')->will($this->returnValue($mockQuerySettings));
+
+		$mockQueryResult = $this->getMock('Tx_Extbase_Persistence_QueryResultInterface');
+
+		$this->mockQuery->expects($this->once())->method('equals')->with('uid', $fakeUid)->will($this->returnValue('matchingConstraint'));
+		$this->mockQuery->expects($this->once())->method('matching')->with('matchingConstraint')->will($this->returnValue($this->mockQuery));
+		$this->mockQuery->expects($this->once())->method('execute')->will($this->returnValue($mockQueryResult));
+		$mockQueryResult->expects($this->once())->method('getFirst')->will($this->returnValue($object));
+
+		$this->mockIdentityMap->expects($this->once())->method('hasIdentifier')->with($fakeUid, 'someObjectType')->will($this->returnValue(FALSE));
+		$this->mockIdentityMap->expects($this->once())->method('registerObject')->with($object, $fakeUid);
+		$this->mockQueryFactory->expects($this->once())->method('create')->with('someObjectType')->will($this->returnValue($this->mockQuery));
+
+		$expectedResult = $object;
+		$actualResult = $this->repository->findByUid($fakeUid);
+		$this->assertSame($expectedResult, $actualResult);
+	}
+
+	/**
 	 * Replacing a reconstituted object (which has a uuid) by a new object
 	 * will ask the persistence backend to replace them accordingly in the
 	 * identity map.
@@ -283,7 +299,7 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 		$existingObject = $this->getMock('Tx_Extbase_DomainObject_DomainObjectInterface');
 		$newObject = $this->getMock('Tx_Extbase_DomainObject_DomainObjectInterface');
 
-		$removedObjects = new SplObjectStorage;
+		$removedObjects = new Tx_Extbase_Persistence_ObjectStorage();
 		$removedObjects->attach($existingObject);
 
 		$mockBackend = $this->getMock('Tx_Extbase_Persistence_BackendInterface');
@@ -314,7 +330,7 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 		$existingObject = $this->getMock('Tx_Extbase_DomainObject_DomainObjectInterface');
 		$newObject = $this->getMock('Tx_Extbase_DomainObject_DomainObjectInterface');
 
-		$addedObjects = new SplObjectStorage;
+		$addedObjects = new Tx_Extbase_Persistence_ObjectStorage();
 		$addedObjects->attach($existingObject);
 
 		$mockBackend = $this->getMock('Tx_Extbase_Persistence_BackendInterface');
@@ -405,6 +421,34 @@ class Tx_Extbase_Tests_Unit_Persistence_RepositoryTest extends Tx_Extbase_Tests_
 		$this->mockQuery->expects($this->once())->method('execute')->will($this->returnValue($mockQueryResult));
 
 		$this->assertSame($object, $this->repository->findOneByFoo('bar'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function magicCallMethodReturnsFirstArrayKeyInFindOneBySomethingIfQueryReturnsRawResult() {
+		$queryResultArray = array(
+			0 => array(
+				'foo' => 'bar',
+			),
+		);
+		$this->mockQuery->expects($this->once())->method('equals')->with('foo', 'bar')->will($this->returnValue('matchCriteria'));
+		$this->mockQuery->expects($this->once())->method('matching')->with('matchCriteria')->will($this->returnValue($this->mockQuery));
+		$this->mockQuery->expects($this->once())->method('setLimit')->with(1)->will($this->returnValue($this->mockQuery));
+		$this->mockQuery->expects($this->once())->method('execute')->will($this->returnValue($queryResultArray));
+		$this->assertSame(array('foo' => 'bar'), $this->repository->findOneByFoo('bar'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function magicCallMethodReturnsNullInFindOneBySomethingIfQueryReturnsEmptyRawResult() {
+		$queryResultArray = array();
+		$this->mockQuery->expects($this->once())->method('equals')->with('foo', 'bar')->will($this->returnValue('matchCriteria'));
+		$this->mockQuery->expects($this->once())->method('matching')->with('matchCriteria')->will($this->returnValue($this->mockQuery));
+		$this->mockQuery->expects($this->once())->method('setLimit')->with(1)->will($this->returnValue($this->mockQuery));
+		$this->mockQuery->expects($this->once())->method('execute')->will($this->returnValue($queryResultArray));
+		$this->assertNull($this->repository->findOneByFoo('bar'));
 	}
 
 	/**

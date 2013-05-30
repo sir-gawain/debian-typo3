@@ -27,84 +27,42 @@
 /**
  * Service 'User authentication' for the 'sv' extension.
  *
- * @author René Fritz <r.fritz@colorcube.de>
+ * @author	René Fritz <r.fritz@colorcube.de>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   56: class tx_sv_auth extends tx_sv_authbase
+ *   64:     function getUser()
+ *   89:     function authUser($user)
+ *  129:     function getGroups($user, $knownGroups)
+ *
+ * TOTAL FUNCTIONS: 3
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
+
 
 /**
  * Authentication services class
  *
- * @author René Fritz <r.fritz@colorcube.de>
+ * @author	René Fritz <r.fritz@colorcube.de>
  * @package TYPO3
  * @subpackage tx_sv
  */
-class tx_sv_auth extends tx_sv_authbase {
+class tx_sv_auth extends tx_sv_authbase 	{
 
-	/**
-	 * Process the submitted credentials.
-	 * In this case hash the clear text password if it has been submitted.
-	 *
-	 * @param array $loginData Credentials that are submitted and potentially modified by other services
-	 * @param string $passwordTransmissionStrategy Keyword of how the password has been hashed or encrypted before submission
-	 * @return bool
-	 */
-	public function processLoginData(array &$loginData, $passwordTransmissionStrategy) {
-		$isProcessed = TRUE;
-
-			// Processing data according to the state it was submitted in.
-		switch ($passwordTransmissionStrategy) {
-			case 'normal':
-				$loginData['uident_text'] = $loginData['uident'];
-			break;
-			case 'challenged':
-				$loginData['uident_text'] = '';
-				$loginData['uident_challenged'] = $loginData['uident'];
-				$loginData['uident_superchallenged'] = '';
-			break;
-			case 'superchallenged':
-				$loginData['uident_text'] = '';
-				$loginData['uident_challenged'] = '';
-				$loginData['uident_superchallenged'] = $loginData['uident'];
-			break;
-			default:
-				$isProcessed = FALSE;
-		}
-
-		if (!empty($loginData['uident_text'])) {
-			$loginData['uident_challenged'] = (string) md5($loginData['uname'] . ':' . $loginData['uident_text'] . ':' . $loginData['chalvalue']);
-			$loginData['uident_superchallenged'] = (string) md5($loginData['uname'] . ':' . (md5($loginData['uident_text'])) . ':' . $loginData['chalvalue']);
-
-			$this->processOriginalPasswordValue($loginData);
-
-			$isProcessed = TRUE;
-		}
-
-		return $isProcessed;
-	}
-
-	/**
-	 * This method ensures backwards compatibility of the processed loginData
-	 * with older TYPO3 versions.
-	 * Starting with TYPO3 6.1 $loginData['uident'] will always contain the raw
-	 * value of the submitted password field and will not be processed any further.
-	 *
-	 * @param array $loginData
-	 * @deprecated will be removed with 6.1
-	 */
-	protected function processOriginalPasswordValue(&$loginData) {
-		if ($this->authInfo['security_level'] === 'superchallenged') {
-			$loginData['uident'] = $loginData['uident_superchallenged'];
-		} elseif ($this->authInfo['security_level'] === 'challenged') {
-			$loginData['uident'] = $loginData['uident_challenged'];
-		}
-	}
 
 	/**
 	 * Find a user (eg. look up the user record in database when a login is sent)
 	 *
-	 * @return mixed User array or FALSE
+	 * @return	mixed		user array or false
 	 */
-	function getUser() {
-		$user = FALSE;
+	function getUser()	{
+		$user = false;
 
 		if ($this->login['status'] == 'login') {
 			if ($this->login['uident']) {
@@ -125,7 +83,7 @@ class tx_sv_auth extends tx_sv_authbase {
 							$this->login['uname']
 						),
 						'Core',
-						t3lib_div::SYSLOG_SEVERITY_WARNING
+						0
 					);
 				} else {
 					if ($this->writeDevLog) {
@@ -151,7 +109,7 @@ class tx_sv_auth extends tx_sv_authbase {
 						$this->login['uname']
 					),
 					'Core',
-					t3lib_div::SYSLOG_SEVERITY_WARNING
+					0
 				);
 			}
 		}
@@ -161,44 +119,46 @@ class tx_sv_auth extends tx_sv_authbase {
 	/**
 	 * Authenticate a user (Check various conditions for the user that might invalidate its authentication, eg. password match, domain, IP, etc.)
 	 *
-	 * @param array $user Data of user.
-	 * @return boolean
+	 * @param	array		Data of user.
+	 * @return	boolean
 	 */
 	public function authUser(array $user) {
 		$OK = 100;
 
-		if ($this->login['uident'] && $this->login['uname']) {
+		if ($this->login['uident'] && $this->login['uname'])	{
 
 				// Checking password match for user:
 			$OK = $this->compareUident($user, $this->login);
 
-			if (!$OK)     {
+			if(!$OK)     {
 					// Failed login attempt (wrong password) - write that to the log!
 				if ($this->writeAttemptLog) {
-					$this->writelog(255, 3, 3, 1, "Login-attempt from %s (%s), username '%s', password not accepted!", Array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname']));
+					$this->writelog(255,3,3,1,
+						"Login-attempt from %s (%s), username '%s', password not accepted!",
+						Array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname']));
 					t3lib_div::sysLog(
 						sprintf( "Login-attempt from %s (%s), username '%s', password not accepted!", $this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $this->login['uname'] ),
 						'Core',
-						t3lib_div::SYSLOG_SEVERITY_WARNING
+						0
 					);
 				}
-				if ($this->writeDevLog) {
-					t3lib_div::devLog('Password not accepted: '.$this->login['uident'], 'tx_sv_auth', 2);
-				}
+				if ($this->writeDevLog) 	t3lib_div::devLog('Password not accepted: '.$this->login['uident'], 'tx_sv_auth', 2);
 			}
 
 				// Checking the domain (lockToDomain)
-			if ($OK && $user['lockToDomain'] && $user['lockToDomain']!=$this->authInfo['HTTP_HOST']) {
+			if ($OK && $user['lockToDomain'] && $user['lockToDomain']!=$this->authInfo['HTTP_HOST'])	{
 					// Lock domain didn't match, so error:
 				if ($this->writeAttemptLog) {
-					$this->writelog(255, 3, 3, 1, "Login-attempt from %s (%s), username '%s', locked domain '%s' did not match '%s'!", Array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $user[$this->db_user['username_column']], $user['lockToDomain'], $this->authInfo['HTTP_HOST']));
+					$this->writelog(255,3,3,1,
+						"Login-attempt from %s (%s), username '%s', locked domain '%s' did not match '%s'!",
+						Array($this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $user[$this->db_user['username_column']], $user['lockToDomain'], $this->authInfo['HTTP_HOST']));
 					t3lib_div::sysLog(
 						sprintf( "Login-attempt from %s (%s), username '%s', locked domain '%s' did not match '%s'!", $this->authInfo['REMOTE_ADDR'], $this->authInfo['REMOTE_HOST'], $user[$this->db_user['username_column']], $user['lockToDomain'], $this->authInfo['HTTP_HOST'] ),
 						'Core',
-						t3lib_div::SYSLOG_SEVERITY_WARNING
+						0
 					);
 				}
-				$OK = FALSE;
+				$OK = false;
 			}
 		}
 
@@ -208,61 +168,53 @@ class tx_sv_auth extends tx_sv_authbase {
 	/**
 	 * Find usergroup records, currently only for frontend
 	 *
-	 * @param array $user Data of user.
-	 * @param array $knownGroups Group data array of already known groups. This is handy if you want select other related groups. Keys in this array are unique IDs of those groups.
-	 * @return mixed Groups array, keys = uid which must be unique
+	 * @param	array		Data of user.
+	 * @param	array		Group data array of already known groups. This is handy if you want select other related groups. Keys in this array are unique IDs of those groups.
+	 * @return	mixed		Groups array, keys = uid which must be unique
 	 */
-	function getGroups($user, $knownGroups) {
+	function getGroups($user, $knownGroups)	{
 		global $TYPO3_CONF_VARS;
 
 		$groupDataArr = array();
 
-		if($this->mode == 'getGroupsFE') {
+		if($this->mode=='getGroupsFE')	{
 
 			$groups = array();
-			if (is_array($user) && $user[$this->db_user['usergroup_column']]) {
+			if (is_array($user) && $user[$this->db_user['usergroup_column']])	{
 				$groupList = $user[$this->db_user['usergroup_column']];
 				$groups = array();
-				$this->getSubGroups($groupList, '', $groups);
+				$this->getSubGroups($groupList,'',$groups);
 			}
 
 				// ADD group-numbers if the IPmask matches.
-			if (is_array($TYPO3_CONF_VARS['FE']['IPmaskMountGroups'])) {
-				foreach ($TYPO3_CONF_VARS['FE']['IPmaskMountGroups'] as $IPel) {
-					if ($this->authInfo['REMOTE_ADDR'] && $IPel[0] && t3lib_div::cmpIP($this->authInfo['REMOTE_ADDR'], $IPel[0]))	{$groups[]=intval($IPel[1]);}
+			if (is_array($TYPO3_CONF_VARS['FE']['IPmaskMountGroups']))	{
+				foreach($TYPO3_CONF_VARS['FE']['IPmaskMountGroups'] as $IPel)	{
+					if ($this->authInfo['REMOTE_ADDR'] && $IPel[0] && t3lib_div::cmpIP($this->authInfo['REMOTE_ADDR'],$IPel[0]))	{$groups[]=intval($IPel[1]);}
 				}
 			}
 
 			$groups = array_unique($groups);
 
-			if (count($groups)) {
-				$list = implode(',', $groups);
+			if (count($groups))	{
+				$list = implode(',',$groups);
 
-				if ($this->writeDevLog) {
-					t3lib_div::devLog('Get usergroups with id: '.$list, 'tx_sv_auth');
-				}
+				if ($this->writeDevLog) 	t3lib_div::devLog('Get usergroups with id: '.$list, 'tx_sv_auth');
 
 				$lockToDomain_SQL = ' AND (lockToDomain=\'\' OR lockToDomain IS NULL OR lockToDomain=\''.$this->authInfo['HTTP_HOST'].'\')';
-				if (!$this->authInfo['showHiddenRecords']) {
-					$hiddenP = 'AND hidden=0 ';
-				}
+				if (!$this->authInfo['showHiddenRecords'])	$hiddenP = 'AND hidden=0 ';
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $this->db_groups['table'], 'deleted=0 '.$hiddenP.' AND uid IN ('.$list.')'.$lockToDomain_SQL);
-				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
 					$groupDataArr[$row['uid']] = $row;
 				}
-				if ($res) {
-					$GLOBALS['TYPO3_DB']->sql_free_result($res);
-				}
+				if ($res)	$GLOBALS['TYPO3_DB']->sql_free_result($res);
 
 			} else {
-				if ($this->writeDevLog) {
-					t3lib_div::devLog('No usergroups found.', 'tx_sv_auth', 2);
-				}
+				if ($this->writeDevLog) 	t3lib_div::devLog('No usergroups found.', 'tx_sv_auth', 2);
 			}
-		} elseif ($this->mode == 'getGroupsBE') {
+		} elseif ($this->mode=='getGroupsBE') {
 
-			// Get the BE groups here
-			// still needs to be implemented in t3lib_userauthgroup
+			# Get the BE groups here
+			# still needs to be implemented in t3lib_userauthgroup
 		}
 
 		return $groupDataArr;
@@ -272,50 +224,47 @@ class tx_sv_auth extends tx_sv_authbase {
 	 * Fetches subgroups of groups. Function is called recursively for each subgroup.
 	 * Function was previously copied from t3lib_userAuthGroup->fetchGroups and has been slightly modified.
 	 *
-	 * @param string $grList Commalist of fe_groups uid numbers
-	 * @param string $idList List of already processed fe_groups-uids so the function will not fall into a eternal recursion.
-	 * @param array $groups
-	 * @return array
+	 * @param	string		Commalist of fe_groups uid numbers
+	 * @param	string		List of already processed fe_groups-uids so the function will not fall into a eternal recursion.
+	 * @return	array
 	 * @access private
 	 */
-	function getSubGroups($grList, $idList = '', &$groups) {
+	function getSubGroups($grList, $idList='', &$groups)	{
 
 			// Fetching records of the groups in $grList (which are not blocked by lockedToDomain either):
 		$lockToDomain_SQL = ' AND (lockToDomain=\'\' OR lockToDomain IS NULL OR lockToDomain=\''.$this->authInfo['HTTP_HOST'].'\')';
-		if (!$this->authInfo['showHiddenRecords']) {
-			$hiddenP = 'AND hidden=0 ';
-		}
+		if (!$this->authInfo['showHiddenRecords'])	$hiddenP = 'AND hidden=0 ';
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,subgroup', 'fe_groups', 'deleted=0 '.$hiddenP.' AND uid IN ('.$grList.')'.$lockToDomain_SQL);
-			// Internal group record storage
-		$groupRows = array();
+
+		$groupRows = array();	// Internal group record storage
 
 			// The groups array is filled
-		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-			if(!in_array($row['uid'], $groups))	{
-				$groups[] = $row['uid'];
-			}
+		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+			if(!in_array($row['uid'], $groups))	{ $groups[] = $row['uid']; }
 			$groupRows[$row['uid']] = $row;
 		}
 
 			// Traversing records in the correct order
 		$include_staticArr = t3lib_div::intExplode(',', $grList);
-			// traversing list
-		foreach ($include_staticArr as $uid) {
+		foreach($include_staticArr as $uid)	{	// traversing list
 
 				// Get row:
-			$row = $groupRows[$uid];
-				// Must be an array and $uid should not be in the idList, because then it is somewhere previously in the grouplist
-			if (is_array($row) && !t3lib_div::inList($idList, $uid)) {
+			$row=$groupRows[$uid];
+			if (is_array($row) && !t3lib_div::inList($idList,$uid))	{	// Must be an array and $uid should not be in the idList, because then it is somewhere previously in the grouplist
 
 					// Include sub groups
-				if (trim($row['subgroup'])) {
-						// Make integer list
-					$theList = implode(',', t3lib_div::intExplode(',', $row['subgroup']));
-						// Call recursively, pass along list of already processed groups so they are not recursed again.
-					$this->getSubGroups($theList, $idList.','.$uid, $groups);
+				if (trim($row['subgroup']))	{
+					$theList = implode(',',t3lib_div::intExplode(',',$row['subgroup']));	// Make integer list
+					$this->getSubGroups($theList, $idList.','.$uid, $groups);		// Call recursively, pass along list of already processed groups so they are not recursed again.
 				}
 			}
 		}
 	}
+}
+
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_auth.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/sv/class.tx_sv_auth.php']);
 }
 ?>

@@ -24,15 +24,18 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-
 /**
  * Contains an implementation of the mediaWizardProvider supporting some
  * well known providers.
  *
- * @author Aishwara M.B.<aishu.moorthy@gmail.com>
- * @author Steffen Kamper <info@sk-typo3.de>
- * @author Ernesto Baschny <ernst@cron-it.de>
+ * $Id: $
+
+ * @author	Aishwara M.B.<aishu.moorthy@gmail.com>
+ * @author	Steffen Kamper <info@sk-typo3.de>
+ * @author	Ernesto Baschny <ernst@cron-it.de>
  */
+
+
 class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 
 	/**
@@ -58,7 +61,7 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	 * This is done by analysing the hostname of the URL and checking if it contains
 	 * any of our provider tags defined in $this->providers.
 	 *
-	 * @param string $url
+	 * @param  $url
 	 * @return string
 	 */
 	protected function getMethod($url) {
@@ -83,8 +86,8 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	 ***********************************************/
 
 	/**
-	 * @param string $url
-	 * @return boolean
+	 * @param  $url
+	 * @return bool
 	 * @see tslib_mediaWizardProvider::canHandle
 	 */
 	public function canHandle($url) {
@@ -92,7 +95,7 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	}
 
 	/**
-	 * @param string $url URL to rewrite
+	 * @param  $url	URL to rewrite
 	 * @return string The rewritten URL
 	 * @see tslib_mediaWizardProvider::rewriteUrl
 	 */
@@ -136,7 +139,7 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	 * @return string processed url
 	 */
 	protected function process_youtu($url) {
-		return $this->process_youtube($url);
+	    return $this->process_youtube($url);
 	}
 
 	/**
@@ -203,6 +206,7 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 		return $url;
 	}
 
+
 	/**
 	 * Parse google url
 	 *
@@ -248,6 +252,7 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 		return 'http://www.myvideo.de/movie/' . $videoId . '/';
 	}
 
+
 	/**
 	 * Parse liveleak url
 	 *
@@ -275,4 +280,9 @@ class tslib_mediaWizardCoreProvider implements tslib_mediaWizardProvider {
 	}
 
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_mediawizardcoreprovider.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/class.tslib_mediawizardcoreprovider.php']);
+}
+
 ?>

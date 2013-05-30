@@ -2,7 +2,7 @@
 *  Copyright notice
 *
 *  Copyright (c) 2003 dynarch.com. Authored by Mihai Bazon. Sponsored by www.americanbible.org.
-*  Copyright (c) 2004-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  Copyright (c) 2004-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,8 +29,13 @@
 ***************************************************************/
 /*
  * Context Menu Plugin for TYPO3 htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id$
  */
-HTMLArea.ContextMenu = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.ContextMenu = HTMLArea.Plugin.extend({
+	constructor : function(editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -49,7 +54,7 @@ HTMLArea.ContextMenu = Ext.extend(HTMLArea.Plugin, {
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '3.2',
+			version		: '3.1',
 			developer	: 'Mihai Bazon & Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'dynarch.com & Stanislas Rolland',
@@ -111,7 +116,7 @@ HTMLArea.ContextMenu = Ext.extend(HTMLArea.Plugin, {
 					// Add each item
 				Ext.each(group, function (itemId) {
 					convertedItemId = this.editorConfiguration.convertButtonId[itemId];
-					if ((!this.showButtons || this.showButtons.indexOf(convertedItemId) !== -1)
+					if ((!this.showButtons  || this.showButtons.indexOf(convertedItemId) !== -1)
 						&& (!this.hideButtons || this.hideButtons.indexOf(convertedItemId) === -1)) {
 						var button = this.getButton(itemId);
 						if (button && button.getXType() === 'htmlareabutton' && !button.hideInContextMenu) {
@@ -177,8 +182,8 @@ HTMLArea.ContextMenu = Ext.extend(HTMLArea.Plugin, {
 	 */
 	showMenu: function (target) {
 		this.showContextItems(target);
-		if (!HTMLArea.isIEBeforeIE9) {
-			this.ranges = this.editor.getSelection().getRanges();
+		if (!Ext.isIE) {
+			this.ranges = this.editor.getSelectionRanges();
 		}
 		var iframeEl = this.editor.iframe.getEl();
 			// Show the context menu
@@ -236,8 +241,8 @@ HTMLArea.ContextMenu = Ext.extend(HTMLArea.Plugin, {
 	 * Handler invoked when a menu item is clicked on
 	 */
 	onItemClick: function (item, event) {
-		if (!HTMLArea.isIEBeforeIE9) {
-			this.editor.getSelection().setRanges(this.ranges);
+		if (!Ext.isIE) {
+			this.editor.setSelectionRanges(this.ranges);
 		}
 		var button = this.getButton(item.getItemId());
 		if (button) {
@@ -254,11 +259,11 @@ HTMLArea.ContextMenu = Ext.extend(HTMLArea.Plugin, {
 			var nextSibling = this.deleteTarget.nextSibling;
 			var previousSibling = this.deleteTarget.previousSibling;
 			if (nextSibling) {
-				this.editor.getSelection().selectNode(nextSibling, true);
+				this.editor.selectNode(nextSibling, true);
 			} else if (previousSibling) {
-				this.editor.getSelection().selectNode(previousSibling, false);
+				this.editor.selectNode(previousSibling, false);
 			}
-			HTMLArea.DOM.removeFromParent(this.deleteTarget);
+			HTMLArea.removeFromParent(this.deleteTarget);
 			this.editor.updateToolbar();
 		}
 	},

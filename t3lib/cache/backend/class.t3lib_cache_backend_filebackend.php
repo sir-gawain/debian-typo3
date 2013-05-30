@@ -22,6 +22,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
  * A caching backend which stores cache entries in files
  *
@@ -29,11 +30,8 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @author Robert Lemke <robert@typo3.org>
- * @author Christian Kuhn <lolli@schwarzbu.ch>
- * @author Karsten Dambekalns <karsten@typo3.org>
  * @api
- * @scope prototype
+ * @version $Id$
  */
 class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBackend implements t3lib_cache_backend_PhpCapableBackend {
 
@@ -45,63 +43,52 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	const DATASIZE_DIGITS = 10;
 
 	/**
-	 * Directory where the files are stored
-	 *
-	 * @var string
+	 * @var string Directory where the files are stored
 	 */
 	protected $cacheDirectory = '';
 
 	/**
-	 * TYPO3 v4 note: This variable is only available in v5
-	 * Temporary path to cache directory before setCache() was called. It is
-	 * set by setCacheDirectory() and used in setCache() method which calls
-	 * the directory creation if needed. The variable is not used afterwards,
-	 * the final cache directory path is stored in $this->cacheDirectory then.
-	 *
-	 * @var string Temporary path to cache directory
+	 * @var string Absolute path to root, usually document root of website
 	 */
-	protected $temporaryCacheDirectory = '';
+	protected $root = '/';
 
 	/**
-	 * A file extension to use for each cache entry.
+	 * Maximum allowed file path length in the current environment.
 	 *
-	 * @var string
+	 * @var integer
 	 */
-	protected $cacheEntryFileExtension = '';
+	protected $maximumPathLength = null;
 
+	/**
+	 * Constructs this backend
+	 *
+	 * @param array $options Configuration options - depends on the actual backend
+	 */
+	public function __construct(array $options = array()) {
+		parent::__construct($options);
+
+		if (is_null($this->maximumPathLength)) {
+			$this->maximumPathLength = t3lib_div::getMaximumPathLength();
+		}
+	}
 
 	/**
 	 * Sets a reference to the cache frontend which uses this backend and
-	 * initializes the default cache directory.
+	 * initializes the default cache directory
 	 *
-	 * TYPO3 v4 note: This method is different between TYPO3 v4 and FLOW3
-	 * because the Environment class to get the path to a temporary directory
-	 * does not exist in v4.
-	 *
-	 * @param t3lib_cache_frontend_Frontend $cache The cache frontend
-	 * @return void
+	 * @void
+	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function setCache(t3lib_cache_frontend_Frontend $cache) {
 		parent::setCache($cache);
 
-		if (empty($this->temporaryCacheDirectory)) {
-				// If no cache directory was given with cacheDirectory
-				// configuration option, set it to a path below typo3temp/
-			$temporaryCacheDirectory = PATH_site . 'typo3temp/';
-		} else {
-			$temporaryCacheDirectory = $this->temporaryCacheDirectory;
+		if (empty($this->cacheDirectory)) {
+			$cacheDirectory = 'typo3temp/cache/';
+			try {
+				$this->setCacheDirectory($cacheDirectory);
+			} catch (t3lib_cache_Exception $exception) {
+			}
 		}
-
-		$codeOrData = ($cache instanceof t3lib_cache_frontend_PhpFrontend) ? 'Code' : 'Data';
-		$finalCacheDirectory = $temporaryCacheDirectory . 'Cache/' . $codeOrData . '/' . $this->cacheIdentifier . '/';
-
-		if (!is_dir($finalCacheDirectory)) {
-			$this->createFinalCacheDirectory($finalCacheDirectory);
-		}
-		unset($this->temporaryCacheDirectory);
-		$this->cacheDirectory = $finalCacheDirectory;
-
-		$this->cacheEntryFileExtension = ($cache instanceof t3lib_cache_frontend_PhpFrontend) ? '.php' : '';
 	}
 
 	/**
@@ -109,27 +96,13 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 * assumed that the directory is below the TYPO3_DOCUMENT_ROOT. However, an
 	 * absolute path can be selected, too.
 	 *
-	 * This method does not exist in FLOW3 anymore, but it is needed in
-	 * TYPO3 v4 to enable a cache path outside of document root. The final
-	 * cache path is checked and created in createFinalCachDirectory(),
-	 * called by setCache() method, which is done _after_ the cacheDirectory
-	 * option was handled.
-	 *
-	 * @param string $cacheDirectory The cache base directory. If a relative path
-	 * 		is given, it is assumed it is in TYPO3_DOCUMENT_ROOT. If an absolute
-	 * 		path is given it is taken as is.
+	 * @param string The directory. If a relative path is given, it's assumed it's in TYPO3_DOCUMENT_ROOT. If an absolute path is given it is taken as is.
 	 * @return void
-	 * @throws t3lib_cache_Exception if the directory is not within allowed
-	 * 		open_basedir path.
+	 * @throws t3lib_cache_Exception if the directory does not exist, is not writable or could not be created.
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @author Ingo Renner <ingo@typo3.org>
 	 */
 	public function setCacheDirectory($cacheDirectory) {
-			// Skip handling if directory is a stream ressource
-			// This is used by unit tests with vfs:// directoryies
-		if (strpos($cacheDirectory, '://')) {
-			$this->temporaryCacheDirectory = $cacheDirectory;
-			return;
-		}
-
 		$documentRoot = PATH_site;
 
 		if (($open_basedir = ini_get('open_basedir'))) {
@@ -174,7 +147,7 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 				$documentRoot = '/';
 			}
 			if (TYPO3_OS === 'WIN') {
-				if (substr($cacheDirectory, 0, strlen($documentRoot)) === $documentRoot) {
+				if (substr($cacheDirectory, 0,  strlen($documentRoot)) === $documentRoot) {
 					$documentRoot = '';
 				}
 			}
@@ -184,44 +157,43 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 		if ($cacheDirectory[strlen($cacheDirectory) - 1] !== '/') {
 			$cacheDirectory .= '/';
 		}
+		$cacheDirectory .= $this->cacheIdentifier;
+		if ($cacheDirectory[strlen($cacheDirectory) - 1] !== '/') {
+			$cacheDirectory .= '/';
+		}
 
-		$this->temporaryCacheDirectory = $documentRoot . $cacheDirectory . $this->cacheIdentifier . '/';
-	}
-
-	/**
-	 * Create the final cache directory if it does not exist. This method
-	 * exists in TYPO3 v4 only.
-	 *
-	 * @param string $finalCacheDirectory Absolute path to final cache directory
-	 * @return void
-	 * @throws \t3lib_cache_Exception If directory is not writable after creation
-	 */
-	protected function createFinalCacheDirectory($finalCacheDirectory) {
-		try {
-			t3lib_div::mkdir_deep($finalCacheDirectory);
-		} catch (\RuntimeException $e) {
-			throw new \t3lib_cache_Exception(
-				'The directory "' . $finalCacheDirectory . '" can not be created.',
-				1303669848,
-				$e
+		if (!is_writable($documentRoot . $cacheDirectory)) {
+			t3lib_div::mkdir_deep(
+				$documentRoot,
+				$cacheDirectory
 			);
 		}
-		if (!is_writable($finalCacheDirectory)) {
-			throw new \t3lib_cache_Exception(
-				'The directory "' . $finalCacheDirectory . '" is not writable.',
+		if (!is_dir($documentRoot . $cacheDirectory)) {
+			throw new t3lib_cache_Exception(
+				'The directory "' . $documentRoot . $cacheDirectory . '" does not exist.',
+				1203965199
+			);
+		}
+		if (!is_writable($documentRoot . $cacheDirectory)) {
+			throw new t3lib_cache_Exception(
+				'The directory "' . $documentRoot . $cacheDirectory . '" is not writable.',
 				1203965200
 			);
 		}
+
+		$this->root = $documentRoot;
+		$this->cacheDirectory = $cacheDirectory;
 	}
 
 	/**
 	 * Returns the directory where the cache files are stored
 	 *
 	 * @return string Full path of the cache directory
+	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function getCacheDirectory() {
-		return $this->cacheDirectory;
+		return $this->root . $this->cacheDirectory;
 	}
 
 	/**
@@ -234,9 +206,17 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 * @return void
 	 * @throws t3lib_cache_Exception if the directory does not exist or is not writable or exceeds the maximum allowed path length, or if no cache frontend has been set.
 	 * @throws t3lib_cache_exception_InvalidData if the data to bes stored is not a string.
+	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function set($entryIdentifier, $data, array $tags = array(), $lifetime = NULL) {
+		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
+			throw new t3lib_cache_Exception(
+				'No cache frontend has been set yet via setCache().',
+				1204111375
+			);
+		}
+
 		if (!is_string($data)) {
 			throw new t3lib_cache_Exception_InvalidData(
 				'The specified data is of type "' . gettype($data) . '" but a string is expected.',
@@ -245,27 +225,20 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 		}
 
 		if ($entryIdentifier !== basename($entryIdentifier)) {
-			throw new \InvalidArgumentException(
+			throw new InvalidArgumentException(
 				'The specified entry identifier must not contain a path segment.',
 				1282073032
 			);
 		}
 
-		if ($entryIdentifier === '') {
-			throw new \InvalidArgumentException(
-				'The specified entry identifier must not be empty.',
-				1298114280
-			);
-		}
-
 		$this->remove($entryIdentifier);
 
-		$temporaryCacheEntryPathAndFilename = $this->cacheDirectory . uniqid() . '.temp';
-		if (strlen($temporaryCacheEntryPathAndFilename) > t3lib_div::getMaximumPathLength()) {
+		$temporaryCacheEntryPathAndFilename = $this->root . $this->cacheDirectory . uniqid() . '.temp';
+		if (strlen($temporaryCacheEntryPathAndFilename) > $this->maximumPathLength) {
 			throw new t3lib_cache_Exception(
 				'The length of the temporary cache file path "' . $temporaryCacheEntryPathAndFilename .
 				'" is ' . strlen($temporaryCacheEntryPathAndFilename) . ' characters long and exceeds the maximum path length of ' .
-				t3lib_div::getMaximumPathLength() . '. Please consider setting the temporaryDirectoryBase option to a shorter path. ',
+				$this->maximumPathLength . '. Please consider setting the temporaryDirectoryBase option to a shorter path. ',
 				1248710426
 			);
 		}
@@ -283,7 +256,7 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 		}
 
 		$i = 0;
-		$cacheEntryPathAndFilename = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
+		$cacheEntryPathAndFilename = $this->root . $this->cacheDirectory . $entryIdentifier;
 			// @TODO: Figure out why the heck this is done and maybe find a smarter solution, report to FLOW3
 		while (!rename($temporaryCacheEntryPathAndFilename, $cacheEntryPathAndFilename) && $i < 5) {
 			$i++;
@@ -303,18 +276,19 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 *
 	 * @param string $entryIdentifier An identifier which describes the cache entry to load
 	 * @return mixed The cache entry's content as a string or FALSE if the cache entry could not be loaded
-	 * @throws \InvalidArgumentException If identifier is invalid
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @api
 	 */
 	public function get($entryIdentifier) {
 		if ($entryIdentifier !== basename($entryIdentifier)) {
-			throw new \InvalidArgumentException(
+			throw new InvalidArgumentException(
 				'The specified entry identifier must not contain a path segment.',
 				1282073033
 			);
 		}
 
-		$pathAndFilename = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
+		$pathAndFilename = $this->root . $this->cacheDirectory . $entryIdentifier;
 		if ($this->isCacheFileExpired($pathAndFilename)) {
 			return FALSE;
 		}
@@ -325,19 +299,20 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	/**
 	 * Checks if a cache entry with the specified identifier exists.
 	 *
-	 * @param string $entryIdentifier
-	 * @return boolean TRUE if such an entry exists, FALSE if not
+	 * @param string $entryIdentifier Specifies the cache entry to remove
+	 * @return boolean TRUE if (at least) an entry could be removed or FALSE if no entry was found
+	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function has($entryIdentifier) {
 		if ($entryIdentifier !== basename($entryIdentifier)) {
-			throw new \InvalidArgumentException(
+			throw new InvalidArgumentException(
 				'The specified entry identifier must not contain a path segment.',
 				1282073034
 			);
 		}
 
-		return !$this->isCacheFileExpired($this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension);
+		return !$this->isCacheFileExpired($this->root . $this->cacheDirectory . $entryIdentifier);
 	}
 
 	/**
@@ -346,24 +321,19 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 *
 	 * @param string $entryIdentifier Specifies the cache entry to remove
 	 * @return boolean TRUE if (at least) an entry could be removed or FALSE if no entry was found
+	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function remove($entryIdentifier) {
 		if ($entryIdentifier !== basename($entryIdentifier)) {
-			throw new \InvalidArgumentException(
+			throw new InvalidArgumentException(
 				'The specified entry identifier must not contain a path segment.',
 				1282073035
 			);
 		}
-		if ($entryIdentifier === '') {
-			throw new \InvalidArgumentException(
-				'The specified entry identifier must not be empty.',
-				1298114279
-			);
-		}
 
-		$pathAndFilename = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
-		if (file_exists($pathAndFilename) === FALSE) {
+		$pathAndFilename = $this->root . $this->cacheDirectory . $entryIdentifier;
+		if (!file_exists($pathAndFilename)) {
 			return FALSE;
 		}
 		if (unlink($pathAndFilename) === FALSE) {
@@ -378,13 +348,14 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 *
 	 * @param string $searchedTag The tag to search for
 	 * @return array An array with identifiers of all matching entries. An empty array if no entries matched
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @api
 	 */
 	public function findIdentifiersByTag($searchedTag) {
 		$entryIdentifiers = array();
 		$now = $GLOBALS['EXEC_TIME'];
-		$cacheEntryFileExtensionLength = strlen($this->cacheEntryFileExtension);
-		for ($directoryIterator = t3lib_div::makeInstance('DirectoryIterator', $this->cacheDirectory); $directoryIterator->valid(); $directoryIterator->next()) {
+		for ($directoryIterator = t3lib_div::makeInstance('DirectoryIterator', $this->root . $this->cacheDirectory); $directoryIterator->valid(); $directoryIterator->next()) {
 			if ($directoryIterator->isDot()) {
 				continue;
 			}
@@ -397,11 +368,38 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 				continue;
 			}
 			if (in_array($searchedTag, explode(' ', substr($metaData, self::EXPIRYTIME_LENGTH, -self::DATASIZE_DIGITS)))) {
-				if ($cacheEntryFileExtensionLength > 0) {
-					$entryIdentifiers[] = substr($directoryIterator->getFilename(), 0, - $cacheEntryFileExtensionLength);
-				} else {
-					$entryIdentifiers[] = $directoryIterator->getFilename();
-				}
+				$entryIdentifiers[] = $directoryIterator->getFilename();
+			}
+		}
+		return $entryIdentifiers;
+	}
+
+	/**
+	 * Finds and returns all cache entry identifiers which are tagged by the
+	 * specified tags.
+	 *
+	 * @param array $searchedTags Array of tags to search for
+	 * @return array An array with identifiers of all matching entries. An empty array if no entries matched
+	 * @author Ingo Renner <ingo@typo3.org>
+	 * @author Christian Kuhn <lolli@schwarzbu.ch>
+	 * @api
+	 */
+	public function findIdentifiersByTags(array $searchedTags) {
+		$entryIdentifiers = array();
+		for ($directoryIterator = t3lib_div::makeInstance('DirectoryIterator', $this->root . $this->cacheDirectory); $directoryIterator->valid(); $directoryIterator->next()) {
+			if ($directoryIterator->isDot()) {
+				continue;
+			}
+			$cacheEntryPathAndFilename = $directoryIterator->getPathname();
+			$index = (integer) file_get_contents($cacheEntryPathAndFilename, NULL, NULL, filesize($cacheEntryPathAndFilename) - self::DATASIZE_DIGITS, self::DATASIZE_DIGITS);
+			$metaData = file_get_contents($cacheEntryPathAndFilename, NULL, NULL, $index);
+
+			$expiryTime = (integer) substr($metaData, 0, self::EXPIRYTIME_LENGTH);
+			if ($expiryTime !== 0 && $expiryTime < $GLOBALS['EXEC_TIME']) {
+				continue;
+			}
+			if (in_array($searchedTags, explode(' ', substr($metaData, self::EXPIRYTIME_LENGTH, -self::DATASIZE_DIGITS)))) {
+				$entryIdentifiers[] = $directoryIterator->getFilename();
 			}
 		}
 		return $entryIdentifiers;
@@ -411,11 +409,12 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 * Removes all cache entries of this cache.
 	 *
 	 * @return void
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @author Christian Kuhn <lolli@schwarzbu.ch>
 	 * @api
 	 */
 	public function flush() {
-		t3lib_div::rmdir($this->cacheDirectory, TRUE);
-		$this->createFinalCacheDirectory($this->cacheDirectory);
+		t3lib_div::rmdir($this->root . $this->cacheDirectory, TRUE);
 	}
 
 	/**
@@ -423,6 +422,7 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 *
 	 * @param string $tag The tag the entries must have
 	 * @return void
+	 * @author Ingo Renner <ingo@typo3.org>
 	 * @api
 	 */
 	public function flushByTag($tag) {
@@ -437,15 +437,29 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	}
 
 	/**
+	 * Removes all cache entries of this cache which are tagged by the specified tag.
+	 *
+	 * @param array $tags The tags the entries must have
+	 * @return void
+	 * @author Ingo Renner <ingo@typo3.org>
+	 * @api
+	 */
+	public function flushByTags(array $tags) {
+		foreach ($tags as $tag) {
+			$this->flushByTag($tag);
+		}
+	}
+
+	/**
 	 * Checks if the given cache entry files are still valid or if their
 	 * lifetime has exceeded.
 	 *
 	 * @param string $cacheEntryPathAndFilename
 	 * @return boolean
-	 * @api
+	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	protected function isCacheFileExpired($cacheEntryPathAndFilename) {
-		if (file_exists($cacheEntryPathAndFilename) === FALSE) {
+		if (!file_exists($cacheEntryPathAndFilename)) {
 			return TRUE;
 		}
 		$index = (integer) file_get_contents($cacheEntryPathAndFilename, NULL, NULL, filesize($cacheEntryPathAndFilename) - self::DATASIZE_DIGITS, self::DATASIZE_DIGITS);
@@ -457,20 +471,24 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 * Does garbage collection
 	 *
 	 * @return void
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @api
 	 */
 	public function collectGarbage() {
-		for ($directoryIterator = new \DirectoryIterator($this->cacheDirectory); $directoryIterator->valid(); $directoryIterator->next()) {
-			if ($directoryIterator->isDot()) {
-				continue;
-			}
+		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
+			throw new t3lib_cache_Exception(
+				'Yet no cache frontend has been set via setCache().',
+				1222686150
+			);
+		}
 
-			if ($this->isCacheFileExpired($directoryIterator->getPathname())) {
-				$cacheEntryFileExtensionLength = strlen($this->cacheEntryFileExtension);
-				if ($cacheEntryFileExtensionLength > 0) {
-					$this->remove(substr($directoryIterator->getFilename(), 0, - $cacheEntryFileExtensionLength));
-				} else {
-					$this->remove($directoryIterator->getFilename());
+		$pattern = $this->root . $this->cacheDirectory . '*';
+		$filesFound = glob($pattern);
+
+		if (is_array($filesFound)) {
+			foreach ($filesFound as $cacheFilename) {
+				if ($this->isCacheFileExpired($cacheFilename)) {
+					$this->remove(basename($cacheFilename));
 				}
 			}
 		}
@@ -483,10 +501,19 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 *
 	 * @param string $entryIdentifier The cache entry identifier
 	 * @return mixed The file names (including path) as an array if one or more entries could be found, otherwise FALSE
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @throws t3lib_cache_Exception if no frontend has been set
 	 * @internal
 	 */
 	protected function findCacheFilesByIdentifier($entryIdentifier) {
-		$pattern = $this->cacheDirectory . $entryIdentifier;
+		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
+			throw new t3lib_cache_Exception(
+				'Yet no cache frontend has been set via setCache().',
+				1204111376
+			);
+		}
+
+		$pattern = $this->root . $this->cacheDirectory . $entryIdentifier;
 		$filesFound = glob($pattern);
 		if ($filesFound === FALSE || count($filesFound) === 0) {
 			return FALSE;
@@ -504,14 +531,20 @@ class t3lib_cache_backend_FileBackend extends t3lib_cache_backend_AbstractBacken
 	 */
 	public function requireOnce($entryIdentifier) {
 		if ($entryIdentifier !== basename($entryIdentifier)) {
-			throw new \InvalidArgumentException(
+			throw new InvalidArgumentException(
 				'The specified entry identifier must not contain a path segment.',
 				1282073036
 			);
 		}
 
-		$pathAndFilename = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
+		$pathAndFilename = $this->root . $this->cacheDirectory . $entryIdentifier;
 		return ($this->isCacheFileExpired($pathAndFilename)) ? FALSE : require_once($pathAndFilename);
 	}
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_filebackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_filebackend.php']);
+}
+
 ?>

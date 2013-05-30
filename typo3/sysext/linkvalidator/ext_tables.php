@@ -4,7 +4,7 @@ if (!defined ('TYPO3_MODE')) {
 }
 
 if (TYPO3_MODE == 'BE') {
-		// Add module
+		// add module
 	t3lib_extMgm::insertModuleFunction(
 		'web_info',
 		'tx_linkvalidator_ModFuncReport',

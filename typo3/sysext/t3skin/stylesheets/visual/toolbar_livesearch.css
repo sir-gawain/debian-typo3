@@ -2,14 +2,10 @@
 Backend  Live Search
 - - - - - - - - - - - - - - - - - - - - - */
 
-#typo3-toolbar #live-search-menu {
-	padding-top: 4px;
-}
-
 .live-search-results .t3-icon-toolbar-menu-search {
 	position: absolute;
 	z-index: 3000;
-	top: 3px;
+	top: 0;
 	margin: 3px;
 }
 

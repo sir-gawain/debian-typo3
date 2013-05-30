@@ -24,35 +24,49 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-
 /**
  * No-document script
- * This is used by eg. the Doc module if no documents is registered as "open"
- * (a concept which is better known from the "classic backend"...)
+ * This is used by eg. the Doc module if no documents is registered as "open" (a concept which is better known from the "classic backend"...)
  *
+ * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   72: class SC_alt_doc_nodoc
+ *   84:     function init()
+ *  108:     function main()
+ *  168:     function printContent()
+ *
+ * TOTAL FUNCTIONS: 3
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
  */
 
 require('init.php');
+require('template.php');
 $LANG->includeLLFile('EXT:lang/locallang_alt_doc.xml');
 
 require_once(t3lib_extMgm::extPath('opendocs') . 'class.tx_opendocs.php');
 
+
 /**
  * Script Class for the "No-doc" display; This shows most recently edited records.
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_alt_doc_nodoc {
 
 		// Internal:
-		// Content accumulation
-	var $content;
+	var $content;		// Content accumulation
 
 	/**
 	 * Document template object
@@ -71,14 +85,16 @@ class SC_alt_doc_nodoc {
 	/**
 	 * Constructor, initialize.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function init() {
+	function init()	{
+		global $BACK_PATH;
+
 			// Start the template object:
 		$this->doc = t3lib_div::makeInstance('mediumDoc');
-		$this->doc->bodyTagMargins['x'] = 5;
-		$this->doc->bodyTagMargins['y'] = 5;
-		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->bodyTagMargins['x']=5;
+		$this->doc->bodyTagMargins['y']=5;
+		$this->doc->backPath = $BACK_PATH;
 
 			// Add JS
 		$this->doc->JScode = $this->doc->wrapScriptTags('
@@ -96,8 +112,8 @@ class SC_alt_doc_nodoc {
 		');
 
 			// Start the page:
-		$this->content = '';
-		$this->content .= $this->doc->startPage('TYPO3 Edit Document');
+		$this->content='';
+		$this->content.=$this->doc->startPage('TYPO3 Edit Document');
 
 			// Loads the backend modules available for the logged in user.
 		$this->loadModules = t3lib_div::makeInstance('t3lib_loadModules');
@@ -107,47 +123,47 @@ class SC_alt_doc_nodoc {
 	/**
 	 * Rendering the content.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function main() {
-		$msg = array();
+	function main()	{
+		global $BE_USER,$LANG,$BACK_PATH;
+
+		$msg=array();
 
 			// Add a message, telling that no documents were open...
-		$msg[] = '<p>' . $GLOBALS['LANG']->getLL('noDocuments_msg', 1) . '</p><br />';
+		$msg[]='<p>'.$LANG->getLL('noDocuments_msg',1).'</p><br />';
 
 			// If another page module was specified, replace the default Page module with the new one
-		$newPageModule = trim($GLOBALS['BE_USER']->getTSConfigVal('options.overridePageModule'));
+		$newPageModule = trim($BE_USER->getTSConfigVal('options.overridePageModule'));
 		$pageModule = t3lib_BEfunc::isModuleSetInTBE_MODULES($newPageModule) ? $newPageModule : 'web_layout';
 
 			// Perform some acccess checks:
-		$a_wl = $GLOBALS['BE_USER']->check('modules', 'web_list');
-		$a_wp = t3lib_extMgm::isLoaded('cms') && $GLOBALS['BE_USER']->check('modules', $pageModule);
+		$a_wl = $BE_USER->check('modules','web_list');
+		$a_wp = t3lib_extMgm::isLoaded('cms') && $BE_USER->check('modules',$pageModule);
+
 
 			// Finding module images: PAGE
-		$imgFile = $GLOBALS['LANG']->moduleLabels['tabs_images']['web_layout_tab'];
+		$imgFile = $LANG->moduleLabels['tabs_images']['web_layout_tab'];
 		$imgInfo = @getimagesize($imgFile);
-		$img_web_layout = is_array($imgInfo) ? '<img src="../'.substr($imgFile, strlen(PATH_site)).'" '.$imgInfo[3].' alt="" />' : '';
+		$img_web_layout = is_array($imgInfo) ? '<img src="../'.substr($imgFile,strlen(PATH_site)).'" '.$imgInfo[3].' alt="" />' : '';
 
 			// Finding module images: LIST
-		$imgFile = $GLOBALS['LANG']->moduleLabels['tabs_images']['web_list_tab'];
+		$imgFile = $LANG->moduleLabels['tabs_images']['web_list_tab'];
 		$imgInfo = @getimagesize($imgFile);
-		$img_web_list = is_array($imgInfo) ? '<img src="../'.substr($imgFile, strlen(PATH_site)).'" '.$imgInfo[3].' alt="" />' : '';
+		$img_web_list = is_array($imgInfo) ? '<img src="../'.substr($imgFile,strlen(PATH_site)).'" '.$imgInfo[3].' alt="" />' : '';
+
 
 			// If either the Web>List OR Web>Page module are active, show the little message with links to those modules:
-		if ($a_wl || $a_wp) {
+		if ($a_wl || $a_wp)	{
 			$msg_2 = array();
-				// Web>Page:
-			if ($a_wp) {
-				$msg_2[] = '<strong><a href="#" onclick="top.goToModule(\'' . $pageModule . '\'); return false;">' . $GLOBALS['LANG']->getLL('noDocuments_pagemodule', 1) . $img_web_layout . '</a></strong>';
-				if ($a_wl) {
-					$msg_2[] = $GLOBALS['LANG']->getLL('noDocuments_OR');
-				}
+			if ($a_wp)	{	// Web>Page:
+				$msg_2[]='<strong><a href="#" onclick="top.goToModule(\''.$pageModule.'\'); return false;">'.$LANG->getLL('noDocuments_pagemodule',1).$img_web_layout.'</a></strong>';
+				if ($a_wl)	$msg_2[]=$LANG->getLL('noDocuments_OR');
 			}
-				// Web>List
-			if ($a_wl) {
-				$msg_2[] = '<strong><a href="#" onclick="top.goToModule(\'web_list\'); return false;">' . $GLOBALS['LANG']->getLL('noDocuments_listmodule', 1) . $img_web_list . '</a></strong>';
+			if ($a_wl)	{	// Web>List
+				$msg_2[]='<strong><a href="#" onclick="top.goToModule(\'web_list\'); return false;">'.$LANG->getLL('noDocuments_listmodule',1).$img_web_list.'</a></strong>';
 			}
-			$msg[] = '<p>' . sprintf($GLOBALS['LANG']->getLL('noDocuments_msg2', 1), implode(' ', $msg_2)) . '</p><br />';
+			$msg[]='<p>'.sprintf($LANG->getLL('noDocuments_msg2',1),implode(' ',$msg_2)).'</p><br />';
 		}
 
 			// Display the list of the most recently edited documents:
@@ -155,22 +171,29 @@ class SC_alt_doc_nodoc {
 		$msg[] = '<p>' . $GLOBALS['LANG']->getLL('noDocuments_msg3', TRUE) . '</p><br />' . $modObj->renderMenu();
 
 			// Adding the content:
-		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('noDocuments'), implode(' ', $msg), 0, 1);
+		$this->content.=$this->doc->section($LANG->getLL('noDocuments'),implode(' ',$msg),0,1);
 	}
 
 	/**
 	 * Printing the content.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function printContent() {
-		$this->content .= $this->doc->endPage();
+	function printContent()	{
+		$this->content.= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 		echo $this->content;
 	}
 }
 
-	// Make instance:
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_doc_nodoc.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/alt_doc_nodoc.php']);
+}
+
+
+
+// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_alt_doc_nodoc');
 $SOBE->init();
 $SOBE->main();

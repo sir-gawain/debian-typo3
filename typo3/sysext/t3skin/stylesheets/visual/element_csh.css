@@ -1,6 +1,7 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Context Sensitive Help (CSH)
 
+$Id$
 - - - - - - - - - - - - - - - - - - - - - */
 
 table.typo3-csh-inline {
@@ -68,7 +69,7 @@ a.t3-help-link {
 }
 
 
-/*  EXT:cshmanual */
+/*  view_help.php */
 #typo3-view-help-php {
 }
 

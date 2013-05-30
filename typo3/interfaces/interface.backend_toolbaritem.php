@@ -25,40 +25,41 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
 /**
- * Interface for classes which extend the backend by adding items to the top toolbar
+ * interface for classes which extend the backend by adding items to the top toolbar
  *
- * @author Ingo Renner <ingo@typo3.org>
+ * @author	Ingo Renner <ingo@typo3.org>
  * @package TYPO3
  * @subpackage t3lib
  */
 interface backend_toolbarItem {
 
 	/**
-	 * Constructor that receives a back reference to the backend
+	 * constructor that receives a back reference to the backend
 	 *
-	 * @param TYPO3backend $backendReference TYPO3 backend object reference
+	 * @param	TYPO3backend	TYPO3 backend object reference
 	 */
-	public function __construct(TYPO3backend &$backendReference = NULL);
+	public function __construct(TYPO3backend &$backendReference = null);
 
 	/**
-	 * Checks whether the user has access to this toolbar item
+	 * checks whether the user has access to this toolbar item
 	 *
-	 * @return boolean TRUE if user has access, FALSE if not
+	 * @return  boolean  true if user has access, false if not
 	 */
 	public function checkAccess();
 
 	/**
-	 * Renders the toolbar item
+	 * renders the toolbar item
 	 *
-	 * @return string The toolbar item rendered as HTML string
+	 * @return	string	the toolbar item rendered as HTML string
 	 */
 	public function render();
 
 	/**
-	 * Returns additional attributes for the list item in the toolbar
+	 * returns additional attributes for the list item in the toolbar
 	 *
-	 * @return string List item HTML attibutes
+	 * @return	string		list item HTML attibutes
 	 */
 	public function getAdditionalAttributes();
 }

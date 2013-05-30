@@ -5,3 +5,5 @@ setPageTSconfig = 1
 removePositionTypes = 1
 
 
+
+# TYPO3 SVN ID: $Id$

@@ -29,6 +29,7 @@
 /**
  * Contains CONTENT class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,16 +38,14 @@ class tslib_content_Content extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, CONTENT
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$theValue = '';
 
 		$originalRec = $GLOBALS['TSFE']->currentRecord;
-			// If the currentRecord is set, we register, that this record has invoked this function.
-			// It's should not be allowed to do this again then!!
-		if ($originalRec) {
+		if ($originalRec) { // If the currentRecord is set, we register, that this record has invoked this function. It's should not be allowed to do this again then!!
 			$GLOBALS['TSFE']->recordRegister[$originalRec]++;
 		}
 
@@ -106,7 +105,6 @@ class tslib_content_Content extends tslib_content_Abstract {
 				} else {
 					$this->cObj->currentRecordTotal = $GLOBALS['TYPO3_DB']->sql_num_rows($res);
 					$GLOBALS['TT']->setTSlogMessage('NUMROWS: ' . $GLOBALS['TYPO3_DB']->sql_num_rows($res));
-					/** @var $cObj tslib_cObj */
 					$cObj = t3lib_div::makeInstance('tslib_cObj');
 					$cObj->setParent($this->cObj->data, $this->cObj->currentRecord);
 					$this->cObj->currentRecordNumber = 0;
@@ -125,17 +123,14 @@ class tslib_content_Content extends tslib_content_Abstract {
 							}
 						}
 
-							// Might be unset in the sys_language_contentOL
-						if (is_array($row)) {
+						if (is_array($row)) { // Might be unset in the sys_language_contentOL
 								// Call hook for possible manipulation of database row for cObj->data
-							if (is_array($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'])) {
-								foreach($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'] as $_classRef) {
+							if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow']))	{
+								foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'] as $_classRef)	{
 									$_procObj = t3lib_div::getUserObj($_classRef);
 									$_procObj->modifyDBRow($row, $conf['table']);
 								}
 							}
-
-							t3lib_file_Service_BackwardsCompatibility_TslibContentAdapterService::modifyDBRow($row, $conf['table']);
 
 							if (!$GLOBALS['TSFE']->recordRegister[$conf['table'] . ':' . $row['uid']]) {
 								$this->cObj->currentRecordNumber++;
@@ -174,7 +169,7 @@ class tslib_content_Content extends tslib_content_Abstract {
 		}
 
 		$wrap = isset($conf['wrap.'])
-			? $this->cObj->stdWrap($conf['wrap'], $conf['wrap.'])
+			? $this->cObj->stdWrap($conf['wrap'],$conf['wrap.'])
 			: $conf['wrap'];
 		if ($wrap) {
 			$theValue = $this->cObj->wrap($theValue, $wrap);
@@ -184,10 +179,17 @@ class tslib_content_Content extends tslib_content_Abstract {
 			$theValue = $this->cObj->stdWrap($theValue, $conf['stdWrap.']);
 		}
 
-			// Restore
-		$GLOBALS['TSFE']->currentRecord = $originalRec;
+		$GLOBALS['TSFE']->currentRecord = $originalRec; // Restore
 
 		return $theValue;
+
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_content.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_content.php']);
+}
+
 ?>

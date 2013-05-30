@@ -29,6 +29,7 @@
 /**
  * Contains USER_INT class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,8 +38,8 @@ class tslib_content_UserInternal extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, USER_INT
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$this->cObj->setUserObjectType(tslib_cObj::OBJECTTYPE_USER_INT);
@@ -58,5 +59,12 @@ class tslib_content_UserInternal extends tslib_content_Abstract {
 		$this->cObj->setUserObjectType(FALSE);
 		return $content;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_userinternal.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_userinternal.php']);
+}
+
 ?>

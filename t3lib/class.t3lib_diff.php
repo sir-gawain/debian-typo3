@@ -27,40 +27,55 @@
 /**
  * Contains class which has functions that generates a difference output of a content string
  *
+ * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML Compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   66: class t3lib_diff
+ *   86:	 function makeDiffDisplay($str1,$str2,$wrapTag='span')
+ *  163:	 function getDiff($str1,$str2)
+ *  189:	 function addClearBuffer($clearBuffer,$last=0)
+ *  205:	 function explodeStringIntoWords($str)
+ *  226:	 function tagSpace($str,$rev=0)
+ *
+ * TOTAL FUNCTIONS: 5
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 /**
  * This class has functions which generates a difference output of a content string
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage t3lib
  */
 class t3lib_diff {
 
-		// External, static
-		// If set, the HTML tags are stripped from the input strings first.
-	var $stripTags = 0;
-		// Diff options. eg "--unified=3"
-	var $diffOptions = '';
+		// External, static:
+	var $stripTags = 0; // If set, the HTML tags are stripped from the input strings first.
+	var $diffOptions = ''; // Diff options. eg "--unified=3"
 
-		// Internal, dynamic
-		// This indicates the number of times the function addClearBuffer has been called - and used to detect the very first call...
-	var $clearBufferIdx = 0;
+		// Internal, dynamic:
+	var $clearBufferIdx = 0; // This indicates the number of times the function addClearBuffer has been called - and used to detect the very first call...
 	var $differenceLgd = 0;
 
 
 	/**
 	 * This will produce a color-marked-up diff output in HTML from the input strings.
 	 *
-	 * @param string $str1 String 1
-	 * @param string $str2 String 2
-	 * @param string $wrapTag Setting the wrapping tag name
-	 * @return string Formatted output.
+	 * @param	string		String 1
+	 * @param	string		String 2
+	 * @param	string		Setting the wrapping tag name
+	 * @return	string		Formatted output.
 	 */
 	function makeDiffDisplay($str1, $str2, $wrapTag = 'span') {
 		if ($this->stripTags) {
@@ -98,8 +113,7 @@ class t3lib_diff {
 			$clearBuffer = '';
 			for ($a = -1; $a < count($str1Lines); $a++) {
 				if (is_array($diffResArray[$a + 1])) {
-						// a=Add, c=change, d=delete: If a, then the content is Added after the entry and we must insert the line content as well.
-					if (strstr($diffResArray[$a + 1]['changeInfo'], 'a')) {
+					if (strstr($diffResArray[$a + 1]['changeInfo'], 'a')) { // a=Add, c=change, d=delete: If a, then the content is Added after the entry and we must insert the line content as well.
 						$clearBuffer .= htmlspecialchars($str1Lines[$a]) . ' ';
 					}
 
@@ -136,9 +150,9 @@ class t3lib_diff {
 	 * Produce a diff (using the "diff" application) between two strings
 	 * The function will write the two input strings to temporary files, then execute the diff program, delete the temp files and return the result.
 	 *
-	 * @param string $str1 String 1
-	 * @param string $str2 String 2
-	 * @return array The result from the exec() function call.
+	 * @param	string		String 1
+	 * @param	string		String 2
+	 * @return	array		The result from the exec() function call.
 	 * @access private
 	 */
 	function getDiff($str1, $str2) {
@@ -162,9 +176,9 @@ class t3lib_diff {
 	/**
 	 * Will bring down the length of strings to < 150 chars if they were longer than 200 chars. This done by preserving the 70 first and last chars and concatenate those strings with "..." and a number indicating the string length
 	 *
-	 * @param string $clearBuffer The input string.
-	 * @param boolean $last If set, it indicates that the string should just end with ... (thus no "complete" ending)
-	 * @return string Processed string.
+	 * @param	string		The input string.
+	 * @param	boolean		If set, it indicates that the string should just end with ... (thus no "complete" ending)
+	 * @return	string		Processed string.
 	 * @access private
 	 */
 	function addClearBuffer($clearBuffer, $last = 0) {
@@ -179,8 +193,8 @@ class t3lib_diff {
 	 * Explodes the input string into words.
 	 * This is done by splitting first by lines, then by space char. Each word will be in stored as a value in an array. Lines will be indicated by two subsequent empty values.
 	 *
-	 * @param string $str The string input
-	 * @return array Array with words.
+	 * @param	string		The string input
+	 * @return	array		Array with words.
 	 * @access private
 	 */
 	function explodeStringIntoWords($str) {
@@ -198,9 +212,9 @@ class t3lib_diff {
 	/**
 	 * Adds a space character before and after HTML tags (more precisely any found < or >)
 	 *
-	 * @param string $str String to process
-	 * @param boolean $rev If set, the < > searched for will be &lt; and &gt;
-	 * @return string Processed string
+	 * @param	string		String to process
+	 * @param	boolean		If set, the < > searched for will be &lt; and &gt;
+	 * @return	string		Processed string
 	 * @access private
 	 */
 	function tagSpace($str, $rev = 0) {
@@ -212,4 +226,7 @@ class t3lib_diff {
 	}
 }
 
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_diff.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_diff.php']);
+}
 ?>

@@ -43,6 +43,8 @@
  * $formProtection->injectInstallTool($this);
  * </pre>
  *
+ * $Id$
+ *
  * @package TYPO3
  * @subpackage t3lib
  *
@@ -94,7 +96,7 @@ final class t3lib_formprotection_Factory {
 	 * @return string
 	 */
 	protected static function getClassNameByState() {
-		switch (TRUE) {
+		switch (true) {
 			case self::isInstallToolSession():
 				$className = 't3lib_formprotection_InstallToolFormProtection';
 				break;
@@ -208,4 +210,7 @@ final class t3lib_formprotection_Factory {
 	}
 }
 
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/formprotection/class.t3lib_formprotection_factory.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/formprotection/class.t3lib_formprotection_factory.php']);
+}
 ?>

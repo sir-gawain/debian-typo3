@@ -27,6 +27,8 @@
  *
  * Module: Extension manager - mirrors.xml pull-parser
  *
+ * $Id: class.tx_em_parser_mirrorxmlpullparser.php 1913 2010-02-21 15:47:37Z mkrause $
+ *
  * @author  Marcus Krause <marcus#exp2010@t3sec.info>
  * @author  Steffen Kamper <info@sk-typo3.de>
  */
@@ -47,11 +49,17 @@
  */
 class tx_em_Parser_MirrorXmlPullParser extends tx_em_Parser_MirrorXmlAbstractParser implements SplSubject {
 
+	/**
+	 * Keeps XML parser.
+	 *
+	 * @var null|XMLReader
+	 */
+	protected $objXML = NULL;
 
 	/**
 	 * Keeps list of attached observers.
 	 *
-	 * @var  SplObserver[]
+	 * @var  array
 	 */
 	protected $observers = array();
 
@@ -64,10 +72,16 @@ class tx_em_Parser_MirrorXmlPullParser extends tx_em_Parser_MirrorXmlAbstractPar
 	 */
 	function __construct() {
 		$this->requiredPHPExt = 'xmlreader';
+	}
 
-		if ($this->isAvailable()) {
-			$this->objXML = new XMLReader();
-		}
+	/**
+	 * Method creates the required parser.
+	 *
+	 * @access  protected
+	 * @return  void
+	 */
+	protected function createParser() {
+		$this->objXML = new XMLReader();
 	}
 
 	/**
@@ -76,13 +90,14 @@ class tx_em_Parser_MirrorXmlPullParser extends tx_em_Parser_MirrorXmlAbstractPar
 	 * @access  public
 	 * @param   string  $file  file resource, typically a stream
 	 * @return  void
-	 * @throws  tx_em_MirrorXmlException  in case of XML parser errors
+	 * @throws  em_mirrorxml_Exception  in case of XML parser errors
 	 */
 	public function parseXML($file) {
+		$this->createParser();
 		if (!(is_object($this->objXML) && (get_class($this->objXML) == 'XMLReader'))) {
 			$this->throwException('Unable to create XML parser.');
 		}
-		$this->objXML->open($file, 'utf-8') || $this->throwException(sprintf('Unable to open file resource %s.', htmlspecialchars($file)));
+		$this->objXML->open($file, 'utf-8') || $this->throwException(sprintf('Unable to open file ressource %s.', htmlspecialchars($file)));
 
 		while ($this->objXML->read()) {
 
@@ -203,8 +218,8 @@ class tx_em_Parser_MirrorXmlPullParser extends tx_em_Parser_MirrorXmlAbstractPar
 	 * @see	 $observers, attach(), notify()
 	 */
 	public function detach(SplObserver $observer) {
-		$key = array_search($observer, $this->observers, TRUE);
-		if (!($key === FALSE)) {
+		$key = array_search($observer, $this->observers, true);
+		if (!($key === false)) {
 			unset($this->observers[$key]);
 		}
 	}
@@ -222,4 +237,9 @@ class tx_em_Parser_MirrorXmlPullParser extends tx_em_Parser_MirrorXmlAbstractPar
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_mirrorxmlpullparser.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_mirrorxmlpullparser.php']);
+}
+
 ?>

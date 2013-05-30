@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2008-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2008-2011 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_charactermap extends tx_rtehtmlarea_api {
 
@@ -38,10 +40,9 @@ class tx_rtehtmlarea_charactermap extends tx_rtehtmlarea_api {
 	protected $toolbar;				// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 				// Frontend language array
 
-	protected $pluginButtons = 'insertcharacter,insertsofthyphen';
+	protected $pluginButtons = 'insertcharacter';
 	protected $convertToolbarForHtmlAreaArray = array (
 		'insertcharacter'	=> 'InsertCharacter',
-		'insertsofthyphen'	=> 'InsertSoftHyphen',
 		);
 
 	/**
@@ -63,4 +64,9 @@ class tx_rtehtmlarea_charactermap extends tx_rtehtmlarea_api {
 	}
 
 } // end of class
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/CharacterMap/class.tx_rtehtmlarea_charactermap.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/CharacterMap/class.tx_rtehtmlarea_charactermap.php']);
+}
+
 ?>

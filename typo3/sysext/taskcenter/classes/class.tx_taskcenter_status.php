@@ -22,24 +22,26 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
 /**
  * Status of tasks
  *
- * @author Georg Ringer <typo3@ringerge.org>
- * @package TYPO3
- * @subpackage taskcenter
+ * @author		Georg Ringer <typo3@ringerge.org>
+ * @package		TYPO3
+ * @subpackage	taskcenter
+ *
  */
 class tx_taskcenter_status {
 
 	/**
 	 * Saves the section toggle state of tasks in the backend user's uc
 	 *
-	 * @param array $params Array of parameters from the AJAX interface, currently unused
-	 * @param TYPO3AJAX $ajaxObj Object of type TYPO3AJAX
-	 * @return void
+	 * @param	array		array of parameters from the AJAX interface, currently unused
+	 * @param	TYPO3AJAX	object of type TYPO3AJAX
+	 * @return	void
 	 */
 	public function saveCollapseState(array $params, TYPO3AJAX $ajaxObj) {
-			// Remove 'el_' in the beginning which is needed for the saveSortingState()
+			// remove 'el_' in the beginning which is needed for the saveSortingState()
 		$item	= substr(htmlspecialchars(t3lib_div::_POST('item')), 3);
 		$state	= (bool)t3lib_div::_POST('state');
 
@@ -47,22 +49,28 @@ class tx_taskcenter_status {
 		$GLOBALS['BE_USER']->writeUC();
 	}
 
+
 	/**
 	 * Saves the sorting order of tasks in the backend user's uc
 	 *
-	 * @param array $params Array of parameters from the AJAX interface, currently unused
-	 * @param TYPO3AJAX $ajaxObj Object of type TYPO3AJAX
-	 * @return void
+	 * @param	array		array of parameters from the AJAX interface, currently unused
+	 * @param	TYPO3AJAX	object of type TYPO3AJAX
+	 * @return	void
 	 */
 	public function saveSortingState(array $params, TYPO3AJAX $ajaxObj) {
 		$sort = array();
 		$items = explode('&', t3lib_div::_POST('data'));
-		foreach ($items as $item) {
-			$sort[] = substr($item, 12);
+		foreach($items as $item) {
+		 $sort[] = substr($item, 12);
 		}
 
 		$GLOBALS['BE_USER']->uc['taskcenter']['sorting'] = serialize($sort);
 		$GLOBALS['BE_USER']->writeUC();
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/taskcenter/classes/class.tx_taskcenter_status.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/taskcenter/classes/class.tx_taskcenter_status.php']);
+}
+
 ?>

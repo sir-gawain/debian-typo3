@@ -23,26 +23,38 @@
 ***************************************************************/
 
 /**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ * $Id$
+ */
+
+
+/**
  * This class contains the abstract storage for the RSA private keys
  *
- * @author Dmitry Dulepov <dmitry@typo3.org>
- * @package TYPO3
- * @subpackage tx_rsaauth
+ * @author	Dmitry Dulepov <dmitry@typo3.org>
+ * @package	TYPO3
+ * @subpackage	tx_rsaauth
  */
 abstract class tx_rsaauth_abstract_storage {
 
 	/**
 	 * Retrieves the key from the storage
 	 *
-	 * @return string The key or NULL
+	 * @return	string	The key or null
 	 */
 	abstract public function get();
 
 	/**
 	 * Stores the key in the storage
 	 *
-	 * @param string $key The key
+	 * @param	string	$key	The key
 	 */
 	abstract public function put($key);
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/storage/class.tx_rsaauth_abstract_storage.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/storage/class.tx_rsaauth_abstract_storage.php']);
+}
+
 ?>

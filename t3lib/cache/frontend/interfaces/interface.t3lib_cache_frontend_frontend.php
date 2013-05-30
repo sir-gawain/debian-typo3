@@ -25,13 +25,14 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
- * Contract for a Cache (frontend)
+ * interface for a Cache Frontend
  *
- * @author Ingo Renner <ingo@typo3.org>
+ * @author	Ingo Renner <ingo@typo3.org>
  * @package TYPO3
- * @subpackage t3lib_cache
  * @api
+ * @subpackage t3lib_cache
  */
 interface t3lib_cache_frontend_Frontend {
 
@@ -39,11 +40,6 @@ interface t3lib_cache_frontend_Frontend {
 	 * "Magic" tag for class-related entries
 	 */
 	const TAG_CLASS = '%CLASS%';
-
-	/**
-	 * "Magic" tag for package-related entries
-	 */
-	const TAG_PACKAGE = '%PACKAGE%';
 
 	/**
 	 * Pattern an entry identifer must match.
@@ -59,7 +55,6 @@ interface t3lib_cache_frontend_Frontend {
 	 * Returns this cache's identifier
 	 *
 	 * @return string The identifier for this cache
-	 * @api
 	 */
 	public function getIdentifier();
 
@@ -73,90 +68,95 @@ interface t3lib_cache_frontend_Frontend {
 	/**
 	 * Saves data in the cache.
 	 *
-	 * @param string $entryIdentifier Something which identifies the data - depends on concrete cache
-	 * @param mixed $data The data to cache - also depends on the concrete cache implementation
-	 * @param array $tags Tags to associate with this cache entry
-	 * @param integer $lifetime Lifetime of this cache entry in seconds. If NULL is specified, the default lifetime is used. "0" means unlimited liftime.
-	 * @return void
-	 * @api
+	 * @param	string	Something which identifies the data - depends on concrete cache
+	 * @param	mixed	The data to cache - also depends on the concrete cache implementation
+	 * @param	array	Tags to associate with this cache entry
+	 * @param	integer	Lifetime of this cache entry in seconds. If NULL is specified, the default lifetime is used. "0" means unlimited liftime.
+	 * @return	void
 	 */
-	public function set($entryIdentifier, $data, array $tags = array(), $lifetime = NULL);
+	public function set($entryIdentifier, $data, $tags = array(), $lifetime = NULL);
 
 	/**
 	 * Finds and returns data from the cache.
 	 *
-	 * @param string $entryIdentifier Something which identifies the cache entry - depends on concrete cache
-	 * @return mixed
-	 * @api
+	 * @param	string	Something which identifies the cache entry - depends on concrete cache
+	 * @return	mixed
 	 */
 	public function get($entryIdentifier);
 
 	/**
 	 * Finds and returns all cache entries which are tagged by the specified tag.
 	 *
-	 * @param string $tag The tag to search for
-	 * @return array An array with the content of all matching entries. An empty array if no entries matched
-	 * @api
+	 * @param	string	The tag to search for
+	 * @return	array	An array with the content of all matching entries. An empty array if no entries matched
 	 */
 	public function getByTag($tag);
 
 	/**
 	 * Checks if a cache entry with the specified identifier exists.
 	 *
-	 * @param string $entryIdentifier An identifier specifying the cache entry
-	 * @return boolean TRUE if such an entry exists, FALSE if not
-	 * @api
+	 * @param	string	An identifier specifying the cache entry
+	 * @return	boolean	TRUE if such an entry exists, FALSE if not
 	 */
 	public function has($entryIdentifier);
 
 	/**
 	 * Removes the given cache entry from the cache.
 	 *
-	 * @param string $entryIdentifier An identifier specifying the cache entry
-	 * @return boolean TRUE if such an entry exists, FALSE if not
+	 * @param	string	An identifier specifying the cache entry
+	 * @return	boolean	TRUE if such an entry exists, FALSE if not
+	 * @internal
 	 */
 	public function remove($entryIdentifier);
 
 	/**
 	 * Removes all cache entries of this cache.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	public function flush();
+	function flush();
 
 	/**
 	 * Removes all cache entries of this cache which are tagged by the specified tag.
 	 *
-	 * @param string $tag The tag the entries must have
-	 * @return void
-	 * @api
+	 * @param	string	The tag the entries must have
+	 * @return	void
 	 */
 	public function flushByTag($tag);
 
 	/**
+	 * Removes all cache entries of this cache which are tagged by the specified tag.
+	 *
+	 * @param	array	Array of tags to search for and to remove the cache entries, the "*" wildcard is supported
+	 * @return	void
+	 * @author Ingo Renner <ingo@typo3.org>
+	 */
+	public function flushByTags(array $tags);
+
+	/**
 	 * Does garbage collection
 	 *
-	 * @return void
-	 * @api
+	 * @return	void
 	 */
 	public function collectGarbage();
 
 	/**
-	 * Checks the validity of an entry identifier. Returns TRUE if it's valid.
+	 * Checks the validity of an entry identifier. Returns true if it's valid.
 	 *
 	 * @param string $identifier An identifier to be checked for validity
 	 * @return boolean
-	 * @api
 	 */
 	public function isValidEntryIdentifier($identifier);
 
 	/**
-	 * Checks the validity of a tag. Returns TRUE if it's valid.
+	 * Checks the validity of a tag. Returns true if it's valid.
 	 *
 	 * @param string $tag A tag to be checked for validity
 	 * @return boolean
-	 * @api
 	 */
 	public function isValidTag($tag);
+
 }
+
+
 ?>

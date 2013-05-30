@@ -29,7 +29,7 @@
  * @package Workspaces
  * @subpackage Service
  */
-class Tx_Workspaces_Service_AutoPublish {
+class tx_Workspaces_Service_AutoPublish {
 	/**
 	 * This method is called by the Scheduler task that triggers
 	 * the autopublication process
@@ -57,7 +57,7 @@ class Tx_Workspaces_Service_AutoPublish {
 				t3lib_BEfunc::deleteClause('sys_workspace')
 			);
 
-		$workspaceService = t3lib_div::makeInstance('Tx_Workspaces_Service_Workspaces');
+		$workspaceService = t3lib_div::makeInstance('tx_Workspaces_Service_Workspaces');
 
 		foreach ($workspaces as $rec) {
 
@@ -78,5 +78,10 @@ class Tx_Workspaces_Service_AutoPublish {
 			// Restore admin status
 		$GLOBALS['BE_USER']->user['admin'] = $currentAdminStatus;
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/AutoPublish.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/workspaces/Classes/Service/AutoPublish.php']);
 }
 ?>

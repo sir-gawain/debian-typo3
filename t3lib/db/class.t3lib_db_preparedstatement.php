@@ -39,7 +39,7 @@
  * $statement->free();
  * </code>
  *
- * @author Xavier Perseguers <typo3@perseguers.ch>
+ * @author	Xavier Perseguers <typo3@perseguers.ch>
  * @package TYPO3
  * @subpackage t3lib
  */
@@ -143,7 +143,7 @@ class t3lib_db_PreparedStatement {
 	 * This constructor may only be used by t3lib_DB.
 	 *
 	 * @param string $query SQL query to be executed
-	 * @param string $table FROM table, used to call $GLOBALS['TYPO3_DB']->fullQuoteStr().
+	 * @param string FROM table, used to call $GLOBALS['TYPO3_DB']->fullQuoteStr().
 	 * @param array $precompiledQueryParts Components of the query to be executed
 	 * @access private
 	 */
@@ -172,7 +172,7 @@ class t3lib_db_PreparedStatement {
 	 * $statement->bindValues(array(':nickname' => 'goofy', ':status' => 'FIXED'));
 	 * </code>
 	 *
-	 * @param array $values The values to bind to the parameter. The PHP type of each array value will be used to decide which PARAM_* type to use (int, string, boolean, NULL), so make sure your variables are properly casted, if needed.
+	 * @param array $values The values to bind to the parameter. The PHP type of each array value will be used to decide which PARAM_* type to use (int, string, boolean, null), so make sure your variables are properly casted, if needed.
 	 * @return t3lib_db_PreparedStatement The current prepared statement to allow method chaining
 	 * @api
 	 */
@@ -261,7 +261,7 @@ class t3lib_db_PreparedStatement {
 	 * $statement->execute(array(':nickname' => 'goofy', ':status' => 'FIXED'));
 	 * </code>
 	 *
-	 * @param array $input_parameters An array of values with as many elements as there are bound parameters in the SQL statement being executed. The PHP type of each array value will be used to decide which PARAM_* type to use (int, string, boolean, NULL), so make sure your variables are properly casted, if needed.
+	 * @param array $input_parameters An array of values with as many elements as there are bound parameters in the SQL statement being executed. The PHP type of each array value will be used to decide which PARAM_* type to use (int, string, boolean, null), so make sure your variables are properly casted, if needed.
 	 * @return boolean Returns TRUE on success or FALSE on failure.
 	 * @api
 	 */
@@ -486,10 +486,10 @@ class t3lib_db_PreparedStatement {
 	/**
 	 * Replace the markers with unpredictable token markers.
 	 *
+	 * @throws InvalidArgumentException
 	 * @param string $query
 	 * @param array $parameterValues
 	 * @return string
-	 * @throws InvalidArgumentException
 	 */
 	protected function tokenizeQueryParameterMarkers($query, array $parameterValues) {
 		$unnamedParameterCount = 0;
@@ -498,9 +498,9 @@ class t3lib_db_PreparedStatement {
 				if (!preg_match('/^:[\w]+$/', $key)) {
 					throw new InvalidArgumentException('Parameter names must start with ":" followed by an arbitrary number of alphanumerical characters.', 1282348825);
 				}
-					// Replace the marker (not preceeded by a word character or a ':' but
-					// followed by a word boundary)
-				$query = preg_replace('/(?<![\w:])' . $key . '\b/', $this->parameterWrapToken . $key . $this->parameterWrapToken, $query);
+				// Replace the marker (not preceeded by a word character or a ':' but
+				// followed by a word boundary)
+				$query = preg_replace('/(?<![\w:])' . preg_quote($key, '/') . '\b/', $this->parameterWrapToken . $key . $this->parameterWrapToken, $query);
 			} else {
 				$unnamedParameterCount++;
 			}
@@ -519,6 +519,11 @@ class t3lib_db_PreparedStatement {
 	protected function generateParameterWrapToken() {
 		return '__' . t3lib_div::getRandomHexString(16) . '__';
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/db/class.t3lib_db_PreparedStatement.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/db/class.t3lib_db_PreparedStatement.php']);
 }
 
 ?>

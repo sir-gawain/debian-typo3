@@ -28,13 +28,28 @@
  * Cleaner module: Lost files
  * User function called from tx_lowlevel_cleaner_core configured in ext_localconf.php
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   56: class tx_lowlevel_lost_files extends tx_lowlevel_cleaner_core
+ *   65:     function tx_lowlevel_lost_files()
+ *  103:     function main()
+ *  181:     function main_autoFix($resultArray)
+ *
+ * TOTAL FUNCTIONS: 3
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 /**
  * Looking for Lost files
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tx_lowlevel
  */
@@ -44,9 +59,11 @@ class tx_lowlevel_lost_files extends tx_lowlevel_cleaner_core {
 
 	/**
 	 * Constructor
+	 *
+	 * @return	void
 	 */
-	function __construct() {
-		parent::__construct();
+	function tx_lowlevel_lost_files()	{
+		parent::tx_lowlevel_cleaner_core();
 
 		$this->cli_options[] = array('--excludePath [path-list]', 'Comma separated list of paths to exclude. Example: "uploads/[path1],uploads/[path2],..."');
 
@@ -74,6 +91,7 @@ Automatic Repair of Errors:
 Will report lost files.';
 	}
 
+
 	/**
 	 * Find lost files in uploads/ folder
 	 * FIX METHOD: Simply delete the file...
@@ -82,7 +100,7 @@ Will report lost files.';
 	 * TODO: Add parameter to list more file names/patterns to ignore
 	 * TODO: Add parameter to include RTEmagic images
 	 *
-	 * @return array
+	 * @return	array
 	 */
 	function main() {
 		global $TYPO3_DB;
@@ -91,11 +109,11 @@ Will report lost files.';
 		$resultArray = array(
 			'message' => $this->cli_help['name'].LF.LF.$this->cli_help['description'],
 			'headers' => array(
-				'managedFiles' => array('Files related to TYPO3 records and managed by TCEmain', 'These files you definitely want to keep.', 0),
-				'ignoredFiles' => array('Ignored files (index.html, .htaccess etc.)', 'These files are allowed in uploads/ folder', 0),
-				'RTEmagicFiles' => array('RTE magic images - those found (and ignored)', 'These files are also allowed in some uploads/ folders as RTEmagic images.', 0),
-				'lostFiles' => array('Lost files - those you can delete', 'You can delete these files!', 3),
-				'warnings' => array('Warnings picked up', '', 2)
+				'managedFiles' => array('Files related to TYPO3 records and managed by TCEmain','These files you definitely want to keep.',0),
+				'ignoredFiles' => array('Ignored files (index.html, .htaccess etc.)','These files are allowed in uploads/ folder',0),
+				'RTEmagicFiles' => array('RTE magic images - those found (and ignored)','These files are also allowed in some uploads/ folders as RTEmagic images.',0),
+				'lostFiles' => array('Lost files - those you can delete','You can delete these files!',3),
+				'warnings' => array('Warnings picked up','',2)
 			),
 			'managedFiles' => array(),
 			'ignoredFiles' => array(),
@@ -106,27 +124,27 @@ Will report lost files.';
 
 			// Get all files:
 		$fileArr = array();
-		$fileArr = t3lib_div::getAllFilesAndFoldersInPath($fileArr, PATH_site.'uploads/');
-		$fileArr = t3lib_div::removePrefixPathFromList($fileArr, PATH_site);
+		$fileArr = t3lib_div::getAllFilesAndFoldersInPath($fileArr,PATH_site.'uploads/');
+		$fileArr = t3lib_div::removePrefixPathFromList($fileArr,PATH_site);
 
-		$excludePaths = t3lib_div::trimExplode(',', $this->cli_argValue('--excludePath', 0), 1);
+		$excludePaths = t3lib_div::trimExplode(',',$this->cli_argValue('--excludePath',0),1);
 
 			// Traverse files and for each, look up if its found in the reference index.
-		foreach ($fileArr as $key => $value) {
+		foreach($fileArr as $key => $value) {
 
 			$include = TRUE;
-			foreach ($excludePaths as $exclPath) {
-				if (t3lib_div::isFirstPartOfStr($value, $exclPath)) {
+			foreach($excludePaths as $exclPath)	{
+				if (t3lib_div::isFirstPartOfStr($value,$exclPath))	{
 					$include = FALSE;
 				}
 			}
 
 			$shortKey = t3lib_div::shortmd5($value);
 
-			if ($include) {
+			if ($include)	{
 					// First, allow "index.html", ".htaccess" files since they are often used for good reasons
-				if (substr($value, -11) == '/index.html' || substr($value, -10) == '/.htaccess') {
-					unset($fileArr[$key]);
+				if (substr($value,-11) == '/index.html' || substr($value,-10) == '/.htaccess')	{
+					unset($fileArr[$key])	;
 					$resultArray['ignoredFiles'][$shortKey] = $value;
 				} else {
 						// Looking for a reference from a field which is NOT a soft reference (thus, only fields with a proper TCA/Flexform configuration)
@@ -142,19 +160,19 @@ Will report lost files.';
 
 						// If found, unset entry:
 					if (count($recs))		{
-						unset($fileArr[$key]);
+						unset($fileArr[$key])	;
 						$resultArray['managedFiles'][$shortKey] = $value;
-						if (count($recs)>1) {
+						if (count($recs)>1)	{
 							$resultArray['warnings'][$shortKey] = 'Warning: File "'.$value.'" had '.count($recs).' references from group-fields, should have only one!';
 						}
 					} else {
 							// When here it means the file was not found. So we test if it has a RTEmagic-image name and if so, we allow it:
-						if (preg_match('/^RTEmagic[P|C]_/', basename($value))) {
-							unset($fileArr[$key]);
+						if (preg_match('/^RTEmagic[P|C]_/',basename($value)))	{
+							unset($fileArr[$key])	;
 							$resultArray['RTEmagicFiles'][$shortKey] = $value;
 						} else {
 								// We conclude that the file is lost...:
-							unset($fileArr[$key]);
+							unset($fileArr[$key])	;
 							$resultArray['lostFiles'][$shortKey] = $value;
 						}
 					}
@@ -170,6 +188,7 @@ Will report lost files.';
 
 		// $fileArr variable should now be empty with all contents transferred to the result array keys.
 
+
 		return $resultArray;
 	}
 
@@ -177,17 +196,17 @@ Will report lost files.';
 	 * Mandatory autofix function
 	 * Will run auto-fix on the result array. Echos status during processing.
 	 *
-	 * @param array $resultArray Result array from main() function
-	 * @return void
+	 * @param	array		Result array from main() function
+	 * @return	void
 	 */
-	function main_autoFix($resultArray) {
-		foreach($resultArray['lostFiles'] as $key => $value) {
+	function main_autoFix($resultArray)	{
+		foreach($resultArray['lostFiles'] as $key => $value)	{
 			$absFileName = t3lib_div::getFileAbsFileName($value);
 			echo 'Deleting file: "'.$absFileName.'": ';
-			if ($bypass = $this->cli_noExecutionCheck($absFileName)) {
+			if ($bypass = $this->cli_noExecutionCheck($absFileName))	{
 				echo $bypass;
 			} else {
-				if ($absFileName && @is_file($absFileName)) {
+				if ($absFileName && @is_file($absFileName))	{
 					unlink($absFileName);
 					echo 'DONE';
 				} else {

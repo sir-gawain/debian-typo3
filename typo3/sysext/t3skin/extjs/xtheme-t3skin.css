@@ -27,6 +27,7 @@
 
 .x-panel-tbar {
 	border-bottom: 1px solid #cdcdcd;
+	padding-bottom: 10px;
 }
 
 .x-panel-body {
@@ -168,11 +169,6 @@
 }
 .x-toolbar .x-btn-text-icon .x-btn-menu-arrow-wrap .x-btn-center button {
 	background-image:url(images/toolbar/btn-arrow.gif);
-}
-
-.x-btn {
-	margin-left: 1px;
-	margin-right: 1px;
 }
 
 /* Tabs */
@@ -2195,19 +2191,19 @@ body.x-body-masked .x-window-plain .x-window-mc {
 }
 
 .x-window-dlg .ext-mb-info {
-	background-image:url(images/window/icon-info-big.png);
+	background-image:url(images/window/icon-info.gif);
 }
 
 .x-window-dlg .ext-mb-warning {
-	background-image:url(images/window/icon-warning-big.png);
+	background-image:url(images/window/icon-warning.gif);
 }
 
 .x-window-dlg .ext-mb-question {
-	background-image:url(images/window/icon-question-big.png);
+	background-image:url(images/window/icon-question.gif);
 }
 
 .x-window-dlg .ext-mb-error {
-	background-image:url(images/window/icon-error-big.png);
+	background-image:url(images/window/icon-error.gif);
 }
 
 /*ADDONS*/
@@ -2224,22 +2220,6 @@ body.x-body-masked .x-window-plain .x-window-mc {
 #typo3-module-menu-xsplit,
 #typo3-navigationContainer-xsplit {
 	width: 0;
-}
-
-/* Tree frame split bar fix for Google Chrome 14 in Ext JS 3.4, see #27660 */
-body.ext-chrome #typo3-module-menu-xsplit,
-body.ext-chrome #typo3-navigationContainer-xsplit {
-	width: 5px;
-	background-image: url('images/splitbar/splitbar-background-top.png');
-	background-repeat: repeat-x;
-}
-
-body.ext-chrome #typo3-module-menu-xsplit {
-	background-color: #ebebeb;
-}
-
-body.ext-chrome #typo3-navigationContainer-xsplit {
-	background-color: #f8f8f8;
 }
 
 /* Collapse icon */
@@ -2292,7 +2272,7 @@ body.ext-chrome #typo3-navigationContainer-xsplit {
 .no-boxshadow #typo3-navigationContainer-xcollapsed,
 .no-boxshadow #typo3-navigationDummy  {
 	background-image: url("data:image/png;base64,R0lGODlhAgABAIAAAMjIyLOzsyH5BAAAAAAALAAAAAACAAEAAAICRAoAOw==");
-	/* star-hack targets IE7 */
+	/* star-hack targets IE6+7 */
 	*background-image: url("../images/backgrounds/module-menu-right.png");
 	background-position: right;
 	background-repeat: repeat-y;
@@ -2400,12 +2380,3 @@ div.x-grid3-row:hover img.t3-icon-extensions-workspaces {
 	width: 17px
 }
 
-.t3skin-typo3-module-panel-toolbar .x-toolbar{
-	background-color: #585858;
-	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAABCAYAAAAb4BS0AAAAGElEQVR42gENAPL/AEBAQExAQECzQEBA/xb3BD8CHBN0AAAAAElFTkSuQmCC");
-	background-position: right;
-	background-repeat: repeat-y;
-	border: none;
-	padding: 0;
-	margin: 0;
-}

@@ -25,14 +25,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-/**
- * Extension reports
- *
- * @author Steffen Kamper <steffen@typo3.org>
- * @package TYPO3
- * @subpackage em
- */
-class tx_em_reports_ExtensionStatus implements tx_reports_StatusProvider {
+class tx_em_reports_ExtensionStatus  implements tx_reports_StatusProvider {
 
 	/**
 	 * @var string
@@ -53,7 +46,7 @@ class tx_em_reports_ExtensionStatus implements tx_reports_StatusProvider {
 	 * Determines the status of extension manager
 	 *
 	 * @return	array	List of statuses
-	 * @see tx_reports_StatusProvider::getStatus()
+	 * @see typo3/sysext/reports/interfaces/tx_reports_StatusProvider::getStatus()
 	 */
 	public function getStatus() {
 		$this->ok = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:msg_ok');
@@ -95,12 +88,12 @@ class tx_em_reports_ExtensionStatus implements tx_reports_StatusProvider {
 				$message = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_MainRepositoryNotFound');
 			} else {
 				if ($row['extCount'] == 0) {
-					$value = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_NoExtensionsFound');
+				 	$value = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_NoExtensionsFound');
 					$severity = tx_reports_reports_status_Status::WARNING;
 					$message = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_MainRepositoryNoExtensions');
 				} else {
 					if ($row['lastUpdated'] < $GLOBALS['EXEC_TIME'] - (3600*24*7)) {
-						$value = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_ExtensionsNotUpToDate');
+					 	$value = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_ExtensionsNotUpToDate');
 						$severity = tx_reports_reports_status_Status::NOTICE;
 						$message = $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_MainRepositoryOldList');
 					} else {
@@ -131,10 +124,10 @@ class tx_em_reports_ExtensionStatus implements tx_reports_StatusProvider {
 		);
 		$message  = array('', '');
 		$severity = array(tx_reports_reports_status_Status::OK, tx_reports_reports_status_Status::OK);
-		$initialMessage = array(
-			$GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_insecureInstalledExtensions') . '<br><br>',
-			$GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_insecureExistingExtensions') . '<br><br>',
-		);
+	   $initialMessage = array(
+		   $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_insecureInstalledExtensions') . '<br><br>',
+		   $GLOBALS['LANG']->sL('LLL:EXT:em/language/locallang.xml:reports_insecureExistingExtensions') . '<br><br>',
+	   );
 		$extensionList = array();
 		$installedExtensionList = array();
 		$extensionCompareList = array();
@@ -202,5 +195,11 @@ class tx_em_reports_ExtensionStatus implements tx_reports_StatusProvider {
 
 		return $status;
 	}
+
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/em/classes/reports/class.tx_em_reports_extensionstatus.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/em/classes/reports/class.tx_em_reports_extensionstatus.php']);
+}
+
 ?>

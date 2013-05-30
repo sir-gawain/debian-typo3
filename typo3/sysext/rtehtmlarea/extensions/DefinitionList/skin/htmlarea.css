@@ -1,4 +1,5 @@
 /* Selectors for the Definition List extension of htmlArea RTE */
+/* TYPO3 SVN ID: $Id$ */
 .htmlarea-action-definition-list {
 	background-image: url('images/definitionList.gif') !important;
 }

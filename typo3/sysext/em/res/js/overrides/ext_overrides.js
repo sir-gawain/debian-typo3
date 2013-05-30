@@ -5,6 +5,7 @@
  * @author Steffen Kamper <info@sk-typo3.de>
  * @package TYPO3
  * @subpackage extension manager
+ * @version $Id: $
  */
 
 /***********************************/

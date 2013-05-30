@@ -28,24 +28,42 @@
  * Module: Advanced functions
  * Advanced Functions related to pages
  *
+ * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   71: class SC_mod_web_func_index extends t3lib_SCbase
+ *   84:     function main()
+ *  172:     function printContent()
+ *
+ * TOTAL FUNCTIONS: 2
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 unset($MCONF);
 require('conf.php');
 require($BACK_PATH.'init.php');
+require($BACK_PATH.'template.php');
 $LANG->includeLLFile('EXT:lang/locallang_mod_web_func.xml');
 
-$BE_USER->modAccess($MCONF, 1);
+$BE_USER->modAccess($MCONF,1);
+
+
 
 /**
  * Script Class for the Web > Functions module
  * This class creates the framework to which other extensions can connect their sub-modules
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -62,17 +80,19 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 	 */
 	var $doc;
 
+
+
 	/**
 	 * Initialize module header etc and call extObjContent function
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function main() {
-		global $LANG,$BACK_PATH;
+	function main()	{
+		global $BE_USER,$LANG,$BACK_PATH;
 
-			// Access check...
-			// The page will show only if there is a valid page and if this page may be viewed by the user
-		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id, $this->perms_clause);
+		// Access check...
+		// The page will show only if there is a valid page and if this page may be viewed by the user
+		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$this->perms_clause);
 		$access = is_array($this->pageinfo) ? 1 : 0;
 
 			// Template markers
@@ -86,12 +106,14 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/func.html');
 
-			// Main
-		if ($this->id && $access) {
+		// **************************
+		// Main
+		// **************************
+		if ($this->id && $access)	{
 				// JavaScript
 			$this->doc->JScode = $this->doc->wrapScriptTags('
 				script_ended = 0;
-				function jumpToUrl(URL) {	//
+				function jumpToUrl(URL)	{	//
 					window.location.href = URL;
 				}
 			');
@@ -100,15 +122,17 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 				if (top.fsMod) top.fsMod.recentIds["web"] = '.intval($this->id).';
 			');
 
+
 				// Setting up the context sensitive menu:
 			$this->doc->getContextMenuCode();
 
-			$this->doc->form = '<form action="index.php" method="post"><input type="hidden" name="id" value="'.$this->id.'" />';
+			$this->doc->form='<form action="index.php" method="post"><input type="hidden" name="id" value="'.$this->id.'" />';
 
-			$vContent = $this->doc->getVersionSelector($this->id, 1);
-			if ($vContent) {
-				$this->content .= $this->doc->section('', $vContent);
+			$vContent = $this->doc->getVersionSelector($this->id,1);
+			if ($vContent)	{
+				$this->content.=$this->doc->section('',$vContent);
 			}
+
 
 			$this->extObjContent();
 
@@ -144,19 +168,19 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 	/**
 	 * Print module content (from $this->content)
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function printContent() {
+	function printContent()	{
 		echo $this->content;
 	}
 
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return array All available buttons as an assoc. array
+	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons() {
-		global $BACK_PATH;
+	protected function getButtons()	{
+		global $TCA, $LANG, $BACK_PATH, $BE_USER;
 
 		$buttons = array(
 			'csh' => '',
@@ -176,7 +200,7 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 				">' .	t3lib_iconWorks::getSpriteIcon('actions-document-view') . '</a>';
 
 				// Shortcut
-			if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
+			if ($BE_USER->mayMakeShortcut())	{
 				$buttons['shortcut'] = $this->doc->makeShortcutIcon('id, edit_record, pointer, new_unique_uid, search_field, search_levels, showLimit', implode(',', array_keys($this->MOD_MENU)), $this->MCONF['name']);
 			}
 
@@ -194,23 +218,24 @@ class SC_mod_web_func_index extends t3lib_SCbase {
 	}
 }
 
-	// Make instance:
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/func/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/func/index.php']);
+}
+
+
+
+// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_mod_web_func_index');
 $SOBE->init();
 
 // Include files?
-foreach ($SOBE->include_once as $INC_FILE) {
-	include_once($INC_FILE);
-}
-	// Checking for first level external objects
-$SOBE->checkExtObj();
+foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+$SOBE->checkExtObj();	// Checking for first level external objects
 
-	// Repeat Include files! - if any files has been added by second-level extensions
-foreach ($SOBE->include_once as $INC_FILE) {
-	include_once($INC_FILE);
-}
-	// Checking second level external objects
-$SOBE->checkSubExtObj();
+// Repeat Include files! - if any files has been added by second-level extensions
+foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+$SOBE->checkSubExtObj();	// Checking second level external objects
 
 $SOBE->main();
 $SOBE->printContent();

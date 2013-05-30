@@ -35,8 +35,8 @@ class tslib_content_EditPanel extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, EDITPANEL
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$theValue = '';
@@ -50,5 +50,12 @@ class tslib_content_EditPanel extends tslib_content_Abstract {
 
 		return $theValue;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_editpanel.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_editpanel.php']);
+}
+
 ?>

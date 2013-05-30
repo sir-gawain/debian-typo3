@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2005-2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,8 +26,13 @@
 ***************************************************************/
 /*
  * Acronym plugin for htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id$
  */
-HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.Acronym = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
@@ -37,7 +42,7 @@ HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '3.0',
+			version		: '2.3',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -87,19 +92,20 @@ HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
-		var abbr = editor.getSelection().getParentElement();
+		var selection = editor._getSelection();
+		var abbr = editor._activeElement(selection);
 			// Working around Safari issue
 		if (!abbr && this.editor.statusBar && this.editor.statusBar.getSelection()) {
 			abbr = this.editor.statusBar.getSelection();
 		}
 		if (!abbr || !/^(acronym|abbr)$/i.test(abbr.nodeName)) {
-			abbr = editor.getSelection().getFirstAncestorOfType(['acronym', 'abbr']);
+			abbr = editor._getFirstAncestor(selection, ['acronym', 'abbr']);
 		}
 		var type = !Ext.isEmpty(abbr) ? abbr.nodeName.toLowerCase() : '';
 		this.params = {
 			abbr: abbr,
 			title: !Ext.isEmpty(abbr) ? abbr.title : '',
-			text: !Ext.isEmpty(abbr) ? abbr.innerHTML : this.editor.getSelection().getHtml()
+			text: !Ext.isEmpty(abbr) ? abbr.innerHTML : this.editor.getSelectedHTML()
 		};
 			// Open the dialogue window
 		this.openDialogue(
@@ -128,6 +134,8 @@ HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
 		this.dialog = new Ext.Window({
 			title: this.getHelpTip('', title),
 			cls: 'htmlarea-window',
+				// As of ExtJS 3.1, JS error with IE when the window is resizable
+			resizable: !Ext.isIE,
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
@@ -511,7 +519,7 @@ HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
 			if (language) {
 				this.getPluginInstance('Language').setLanguageAttributes(abbr, language);
 			}
-			this.editor.getSelection().insertNode(abbr);
+			this.editor.insertNodeAtSelection(abbr);
 		} else {
 			var abbr = this.params.abbr;
 			abbr.title = tab.find('itemId', 'useTerm')[0].getValue();
@@ -532,7 +540,7 @@ HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
 		this.restoreSelection();
 		var abbr = this.params.abbr;
 		if (abbr) {
-			this.editor.getDomNode().removeMarkup(abbr);
+			this.editor.removeMarkup(abbr);
 		}
 		this.close();
 		event.stopEvent();
@@ -542,7 +550,7 @@ HTMLArea.Acronym = Ext.extend(HTMLArea.Plugin, {
 	 */
 	onUpdateToolbar: function (button, mode, selectionEmpty, ancestors) {
 		if ((mode === 'wysiwyg') && this.editor.isEditable()) {
-			var el = this.editor.getSelection().getParentElement();
+			var el = this.editor.getParentElement();
 			if (el) {
 				button.setDisabled(((el.nodeName.toLowerCase() == 'acronym' && this.pageTSConfiguration.noAcronym) || (el.nodeName.toLowerCase() == 'abbr' && this.pageTSConfiguration.noAbbr)));
 				button.setInactive(!(el.nodeName.toLowerCase() == 'acronym' && !this.pageTSConfiguration.noAcronym) && !(el.nodeName.toLowerCase() == 'abbr' && !this.pageTSConfiguration.noAbbr));

@@ -1,12 +1,12 @@
 <?php
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
- *                                                                        *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -25,6 +25,7 @@
  * Is available inside every view helper as $this->arguments - and you use it as if it was an array.
  * However, you can only read, and not write to it.
  *
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
  */
 class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
@@ -38,6 +39,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 * Constructor.
 	 *
 	 * @param array $arguments Array of arguments
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function __construct(array $arguments) {
@@ -49,6 +51,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 *
 	 * @param string $key Key to check
 	 * @return boolean true if exists
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function offsetExists($key) {
 		return array_key_exists($key, $this->arguments);
@@ -59,6 +62,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 *
 	 * @param string $key Key to get.
 	 * @return object associated value
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function offsetGet($key) {
 		if (!array_key_exists($key, $this->arguments)) {
@@ -73,6 +77,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 *
 	 * @param string $key
 	 * @param object $value
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function offsetSet($key, $value) {
 		throw new Tx_Fluid_Core_Exception('Tried to set argument "' . $key . '", but setting arguments is forbidden.', 1236080693);
@@ -82,6 +87,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 * Throw exception if you try to unset a value.
 	 *
 	 * @param string $key
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function offsetUnset($key) {
 		throw new Tx_Fluid_Core_Exception('Tried to unset argument "' . $key . '", but setting arguments is forbidden.', 1236080702);
@@ -93,6 +99,7 @@ class Tx_Fluid_Core_ViewHelper_Arguments implements ArrayAccess {
 	 * @param string $argumentName Name of the argument to check for
 	 * @return boolean TRUE if such an argument exists, otherwise FALSE
 	 * @see offsetExists()
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function hasArgument($argumentName) {
 		return $this->offsetExists($argumentName) && $this->arguments[$argumentName] !== NULL;

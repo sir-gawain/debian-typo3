@@ -32,6 +32,7 @@
  * @package TYPO3
  * @subpackage t3lib_tree
  */
+
 class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTcaTreeDataProvider {
 
 	const MODE_CHILDREN = 1;
@@ -59,7 +60,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	protected $tableWhere = '';
 
 	/**
-	 * @var integer
+	 * @var int
 	 */
 	protected $lookupMode = t3lib_tree_tca_DatabaseTreeDataProvider::MODE_CHILDREN;
 
@@ -69,7 +70,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	protected $lookupField = '';
 
 	/**
-	 * @var integer
+	 * @var int
 	 */
 	protected $rootUid = 0;
 
@@ -77,6 +78,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	 * @var array
 	 */
 	protected $idCache = array();
+
 
 	/**
 	 * Stores TCA-Configuration of the LookUpField in tableName
@@ -157,7 +159,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Sets the lookup mode
 	 *
-	 * @param integer $lookupMode
+	 * @param int $lookupMode
 	 * @return void
 	 */
 	public function setLookupMode($lookupMode) {
@@ -167,11 +169,12 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Gets the lookup mode
 	 *
-	 * @return integer
+	 * @return int
 	 */
 	public function getLookupMode() {
 		return $this->lookupMode;
 	}
+
 
 	/**
 	 * Gets the nodes
@@ -195,7 +198,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Sets the root uid
 	 *
-	 * @param integer $rootUid
+	 * @param  $rootUid
 	 * @return void
 	 */
 	public function setRootUid($rootUid) {
@@ -205,7 +208,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Gets the root uid
 	 *
-	 * @return integer
+	 * @return int
 	 */
 	public function getRootUid() {
 		return $this->rootUid;
@@ -234,9 +237,9 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	 * Builds a complete node including childs
 	 *
 	 * @param t3lib_tree_Node $basicNode
-	 * @param NULL|t3lib_tree_tca_DatabaseNode $parent
-	 * @param integer $level
-	 * @return An object
+	 * @param null|t3lib_tree_tca_DatabaseNode $parent
+	 * @param int $level
+	 * @return A|object
 	 */
 	protected function buildRepresentationForNode(t3lib_tree_Node $basicNode, t3lib_tree_tca_DatabaseNode $parent = NULL, $level = 0) {
 		$node = t3lib_div::makeInstance('t3lib_tree_tca_DatabaseNode');
@@ -291,7 +294,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 		if (isset($this->columnConfiguration['foreign_table']) && $this->columnConfiguration['foreign_table'] != $this->getTableName()) {
 			throw new InvalidArgumentException(
 				'TCA Tree configuration is invalid: tree for different node-Tables is not implemented yet',
-				1290944650
+				'1290944650'
 			);
 		}
 
@@ -308,8 +311,8 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	 * Gets node children
 	 *
 	 * @param t3lib_tree_Node $node
-	 * @param integer $level
-	 * @return NULL|object
+	 * @param  $level
+	 * @return A|null|object
 	 */
 	protected function getChildrenOf(t3lib_tree_Node $node, $level) {
 		$nodeData = NULL;
@@ -332,6 +335,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 			$storage = t3lib_div::makeInstance('t3lib_tree_NodeCollection');
 			foreach ($children as $child) {
 				$node = t3lib_div::makeInstance('t3lib_tree_Node');
+				;
 				$node->setId($child);
 				if ($level <= $this->levelMaximum) {
 					$children = $this->getChildrenOf($node, $level + 1);
@@ -349,7 +353,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Gets related records depending on TCA configuration
 	 *
-	 * @param array $row
+	 * @param  $row
 	 * @return array
 	 */
 	protected function getRelatedRecords(array $row) {
@@ -374,7 +378,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Gets related records depending on TCA configuration
 	 *
-	 * @param array $row
+	 * @param  $row
 	 * @return array
 	 */
 	protected function getChildrenUidsFromParentRelation(array $row) {
@@ -385,7 +389,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 			case 'select':
 				if ($this->columnConfiguration['MM']) {
 					$dbGroup = t3lib_div::makeInstance('t3lib_loadDBGroup');
-						// Dummy field for setting "look from other site"
+						// dummy field for setting "look from other site"
 					$this->columnConfiguration['MM_oppositeField'] = 'children';
 
 					$dbGroup->start(
@@ -414,7 +418,7 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	/**
 	 * Gets related children records depending on TCA configuration
 	 *
-	 * @param array $row
+	 * @param  $row
 	 * @return array
 	 */
 	protected function getChildrenUidsFromChildrenRelation(array $row) {
@@ -461,9 +465,9 @@ class t3lib_tree_Tca_DatabaseTreeDataProvider extends t3lib_tree_Tca_AbstractTca
 	 * Queries the table for an field which might contain a list.
 	 *
 	 * @param string $fieldName the name of the field to be queried
-	 * @param integer $queryId the uid to search for
+	 * @param int $queryId the uid to search for
 	 *
-	 * @return integer[] all uids found
+	 * @return int[] all uids found
 	 */
 	protected function listFieldQuery($fieldName, $queryId) {
 		$records = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(

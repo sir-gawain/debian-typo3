@@ -47,12 +47,12 @@ class extDirect_dataProvider_BackendLiveSearch {
 	/**
 	 * @var t3lib_search_livesearch
 	 */
-	protected $liveSearch = NULL;
+	protected $liveSearch = null;
 
 	/**
 	 * @var t3lib_search_livesearch_queryParser
 	 */
-	protected $queryParser = NULL;
+	protected $queryParser = null;
 
 	/**
 	 * Initialize the live search
@@ -67,6 +67,7 @@ class extDirect_dataProvider_BackendLiveSearch {
 
 	/**
 	 *
+	 *
 	 * @param stdClass $command
 	 *
 	 * @return array
@@ -76,7 +77,7 @@ class extDirect_dataProvider_BackendLiveSearch {
 		$this->liveSearch->setLimitCount($command->limit);
 		$this->liveSearch->setQueryString($command->query);
 
-			// Jump & edit - find page and retrieve an edit link (this is only for pages
+			// jump & edit - find page and retrieve an edit link (this is only for pages
 		if ($this->queryParser->isValidPageJump($command->query)) {
 			$this->searchResults['pageJump'] = $this->liveSearch->findPage($command->query);
 			$commandQuery = $this->queryParser->getCommandForPageJump($command->query);
@@ -85,7 +86,7 @@ class extDirect_dataProvider_BackendLiveSearch {
 			}
 		}
 
-			// Search through the database and find records who match to the given search string
+			// search through the database and find records who match to the given search string
 		$resultArray = $this->liveSearch->find($command->query);
 
 		foreach ($resultArray as $resultFromTable) {
@@ -96,6 +97,7 @@ class extDirect_dataProvider_BackendLiveSearch {
 
 		return $this->searchResults;
 	}
+
 }
 
 ?>

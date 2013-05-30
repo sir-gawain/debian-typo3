@@ -34,7 +34,6 @@
  * @api
  */
 abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbase_MVC_Controller_ControllerInterface {
-
 	/**
 	 * @var Tx_Extbase_Object_ObjectManagerInterface
 	 */
@@ -76,9 +75,8 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 
 	/**
 	 * @var Tx_Extbase_Property_Mapper
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
-	protected $deprecatedPropertyMapper;
+	protected $propertyMapper;
 
 	/**
 	 * @var Tx_Extbase_Validation_ValidatorResolver
@@ -94,7 +92,6 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	 * The results of the mapping of request arguments to controller arguments
 	 * @var Tx_Extbase_Property_MappingResults
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	protected $argumentsMappingResults;
 
@@ -113,8 +110,10 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	protected $controllerContext;
 
 	/**
+	 * The flash messages. DEPRECATED. Use $this->flashMessageContainer instead.
+	 *
 	 * @var Tx_Extbase_MVC_Controller_FlashMessages
-	 * @deprecated since Extbase 1.1; will be removed in Extbase 6.0
+	 * @deprecated
 	 */
 	protected $flashMessages;
 
@@ -127,7 +126,7 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	protected $flashMessageContainer;
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var Tx_Extbase_Configuration_ConfigurationManager
 	 */
 	protected $configurationManager;
 
@@ -139,10 +138,10 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	}
 
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param Tx_Extbase_Configuration_ConfigurationManager $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManager $configurationManager) {
 		$this->configurationManager = $configurationManager;
 		$this->settings = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS);
 	}
@@ -150,12 +149,11 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	/**
 	 * Injects the property mapper
 	 *
-	 * @param Tx_Extbase_Property_Mapper $deprecatedPropertyMapper The property mapper
+	 * @param Tx_Extbase_Property_Mapper $propertyMapper The property mapper
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
-	public function injectDeprecatedPropertyMapper(Tx_Extbase_Property_Mapper $deprecatedPropertyMapper) {
-		$this->deprecatedPropertyMapper = $deprecatedPropertyMapper;
+	public function injectPropertyMapper(Tx_Extbase_Property_Mapper $propertyMapper) {
+		$this->propertyMapper = $propertyMapper;
 	}
 
 	/**
@@ -182,13 +180,12 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	/**
 	 * Injects the flash messages container
 	 *
-	 * @param Tx_Extbase_MVC_Controller_FlashMessages $flashMessageContainer
+	 * @param Tx_Extbase_MVC_Controller_FlashMessages $flashMessages
 	 * @return void
 	 */
 	public function injectFlashMessageContainer(Tx_Extbase_MVC_Controller_FlashMessages $flashMessageContainer) {
 		$this->flashMessageContainer = $flashMessageContainer;
-			// @deprecated since Extbase 1.1; will be removed in Extbase 6.0
-		$this->flashMessages = $flashMessageContainer;
+		$this->flashMessages = $flashMessageContainer; // deprecated, but should still work.
 	}
 
 	/**
@@ -198,7 +195,7 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	 * replace / modify the supporteRequestTypes property or override this
 	 * method.
 	 *
-	 * @param Tx_Extbase_MVC_RequestInterface $request The current request
+	 * @param Tx_Extbase_MVC_Request $request The current request
 	 * @return boolean TRUE if this request type is supported, otherwise FALSE
 	 * @api
 	 */
@@ -212,8 +209,8 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	/**
 	 * Processes a general request. The result can be returned by altering the given response.
 	 *
-	 * @param Tx_Extbase_MVC_RequestInterface $request The request object
-	 * @param Tx_Extbase_MVC_ResponseInterface $response The response, modified by this handler
+	 * @param Tx_Extbase_MVC_Request $request The request object
+	 * @param Tx_Extbase_MVC_Response $response The response, modified by this handler
 	 * @return void
 	 * @throws Tx_Extbase_MVC_Exception_UnsupportedRequestType if the controller doesn't support the current request type
 	 * @api
@@ -221,7 +218,6 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	public function processRequest(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response) {
 		if (!$this->canProcessRequest($request)) throw new Tx_Extbase_MVC_Exception_UnsupportedRequestType(get_class($this) . ' does not support requests of type "' . get_class($request) . '". Supported types are: ' . implode(' ', $this->supportedRequestTypes) , 1187701131);
 
-		$response->setRequest($request);
 		$this->request = $request;
 		$this->request->setDispatched(TRUE);
 		$this->response = $response;
@@ -310,9 +306,8 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 		$uri = $this->uriBuilder
 			->reset()
 			->setTargetPageUid($pageUid)
-			->setCreateAbsoluteUri(TRUE)
 			->uriFor($actionName, $arguments, $controllerName, $extensionName);
-		$this->redirectToUri($uri, $delay, $statusCode);
+		$this->redirectToURI($uri, $delay, $statusCode);
 	}
 
 	/**
@@ -327,7 +322,7 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	 * @throws Tx_Extbase_MVC_Exception_StopAction
 	 * @api
 	 */
-	protected function redirectToUri($uri, $delay = 0, $statusCode = 303) {
+	protected function redirectToURI($uri, $delay = 0, $statusCode = 303) {
 		if (!$this->request instanceof Tx_Extbase_MVC_Web_Request) throw new Tx_Extbase_MVC_Exception_UnsupportedRequestType('redirect() only supports web requests.', 1220539734);
 
 		$uri = $this->addBaseUriIfNecessary($uri);
@@ -342,10 +337,14 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	 * Adds the base uri if not already in place.
 	 *
 	 * @param string $uri The URI
-	 * @return string
+	 * @return void
 	 */
 	protected function addBaseUriIfNecessary($uri) {
-		return t3lib_div::locationHeaderUrl((string)$uri);
+		$baseUri = $this->request->getBaseURI();
+		if(stripos($uri, 'http://') !== 0 && stripos($uri, 'https://') !== 0) {
+			$uri = $baseUri . (string)$uri;
+		}
+		return $uri;
 	}
 
 	/**
@@ -388,29 +387,16 @@ abstract class Tx_Extbase_MVC_Controller_AbstractController implements Tx_Extbas
 	 * @return void
 	 */
 	protected function mapRequestArgumentsToControllerArguments() {
-		if ($this->configurationManager->isFeatureEnabled('rewrittenPropertyMapper')) {
-			foreach ($this->arguments as $argument) {
-				$argumentName = $argument->getName();
-
-				if ($this->request->hasArgument($argumentName)) {
-					$argument->setValue($this->request->getArgument($argumentName));
-				} elseif ($argument->isRequired()) {
-					throw new Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException('Required argument "' . $argumentName  . '" is not set.', 1298012500);
-				}
-			}
-		} else {
-			// @deprecated since Extbase 1.4, will be removed in Extbase 6.0
-			$optionalPropertyNames = array();
-			$allPropertyNames = $this->arguments->getArgumentNames();
-			foreach ($allPropertyNames as $propertyName) {
-				if ($this->arguments[$propertyName]->isRequired() === FALSE) $optionalPropertyNames[] = $propertyName;
-			}
-
-			$validator = $this->objectManager->create('Tx_Extbase_MVC_Controller_ArgumentsValidator');
-			$this->deprecatedPropertyMapper->mapAndValidate($allPropertyNames, $this->request->getArguments(), $this->arguments, $optionalPropertyNames, $validator);
-
-			$this->argumentsMappingResults = $this->deprecatedPropertyMapper->getMappingResults();
+		$optionalPropertyNames = array();
+		$allPropertyNames = $this->arguments->getArgumentNames();
+		foreach ($allPropertyNames as $propertyName) {
+			if ($this->arguments[$propertyName]->isRequired() === FALSE) $optionalPropertyNames[] = $propertyName;
 		}
+
+		$validator = $this->objectManager->create('Tx_Extbase_MVC_Controller_ArgumentsValidator');
+		$this->propertyMapper->mapAndValidate($allPropertyNames, $this->request->getArguments(), $this->arguments, $optionalPropertyNames, $validator);
+
+		$this->argumentsMappingResults = $this->propertyMapper->getMappingResults();
 	}
 }
 ?>

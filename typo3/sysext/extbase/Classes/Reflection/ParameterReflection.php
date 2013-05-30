@@ -34,8 +34,9 @@ class Tx_Extbase_Reflection_ParameterReflection extends ReflectionParameter {
 	/**
 	 * The constructor, initializes the reflection parameter
 	 *
-	 * @param string $function
-	 * @param string $parameterName
+	 * @param  string $functionName: Name of the function
+	 * @param  string $propertyName: Name of the property to reflect
+	 * @return void
 	 */
 	public function __construct($function, $parameterName) {
 		parent::__construct($function, $parameterName);

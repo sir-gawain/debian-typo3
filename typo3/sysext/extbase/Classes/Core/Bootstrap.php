@@ -24,14 +24,14 @@
 
 /**
  * Creates a request an dispatches it to the controller which was specified
- * by TS Setup, flexForm and returns the content to the v4 framework.
+ * by TS Setup, Flexform and returns the content to the v4 framework.
  *
  * This class is the main entry point for extbase extensions.
  *
  * @package Extbase
  * @version $ID:$
  */
-class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
+class Tx_Extbase_Core_Bootstrap {
 
 	/**
 	 * Back reference to the parent content object
@@ -73,6 +73,11 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 	protected $persistenceManager;
 
 	/**
+	 * @var boolean
+	 */
+	protected $isInitialized = FALSE;
+
+	/**
 	 * Explicitly initializes all necessary Extbase objects by invoking the various initialize* methods.
 	 *
 	 * Usually this method is only called from unit tests or other applications which need a more fine grained control over
@@ -84,20 +89,36 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 	 * @api
 	 */
 	public function initialize($configuration) {
-		if (!defined('TYPO3_cliMode') || TYPO3_cliMode !== TRUE) {
-			if (!isset($configuration['extensionName']) || strlen($configuration['extensionName']) === 0) {
-				throw new RuntimeException('Invalid configuration: "extensionName" is not set', 1290623020);
-			}
-			if (!isset($configuration['pluginName']) || strlen($configuration['pluginName']) === 0) {
-				throw new RuntimeException('Invalid configuration: "pluginName" is not set', 1290623027);
-			}
+		if (!isset($configuration['extensionName']) || strlen($configuration['extensionName']) === 0) {
+			throw new RuntimeException('Invalid configuration: "extensionName" is not set', 1290623020);
 		}
+		if (!isset($configuration['pluginName']) || strlen($configuration['pluginName']) === 0) {
+			throw new RuntimeException('Invalid configuration: "pluginName" is not set', 1290623027);
+		}
+		$this->initializeClassLoader();
 		$this->initializeObjectManager();
 		$this->initializeConfiguration($configuration);
 		$this->configureObjectManager();
 		$this->initializeCache();
 		$this->initializeReflection();
 		$this->initializePersistence();
+		$this->initializeBackwardsCompatibility();
+		$this->isInitialized = TRUE;
+	}
+
+	/**
+	 * Initializes the autoload mechanism of Extbase. This is supplement to the core autoloader.
+	 *
+	 * @return void
+	 * @see initialize()
+	 */
+	protected function initializeClassLoader() {
+		if (!class_exists('Tx_Extbase_Utility_ClassLoader', FALSE)) {
+			require(t3lib_extmgm::extPath('extbase') . 'Classes/Utility/ClassLoader.php');
+		}
+
+		$classLoader = new Tx_Extbase_Utility_ClassLoader();
+		spl_autoload_register(array($classLoader, 'loadClass'));
 	}
 
 	/**
@@ -113,7 +134,6 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 	/**
 	 * Initializes the Object framework.
 	 *
-	 * @param array $configuration
 	 * @return void
 	 * @see initialize()
 	 */
@@ -152,7 +172,18 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 	 * @see initialize()
 	 */
 	protected function initializeCache() {
+		t3lib_cache::initializeCachingFramework();
 		$this->cacheManager = $GLOBALS['typo3CacheManager'];
+		try {
+			$this->cacheManager->getCache('cache_extbase_reflection');
+		} catch (t3lib_cache_exception_NoSuchCache $exception) {
+			$GLOBALS['typo3CacheFactory']->create(
+				'cache_extbase_reflection',
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_reflection']['frontend'],
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_reflection']['backend'],
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_extbase_reflection']['options']
+			);
+		}
 	}
 
 	/**
@@ -163,7 +194,7 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 	 */
 	protected function initializeReflection() {
 		$this->reflectionService = $this->objectManager->get('Tx_Extbase_Reflection_Service');
-		$this->reflectionService->setDataCache($this->cacheManager->getCache('extbase_reflection'));
+		$this->reflectionService->setDataCache($this->cacheManager->getCache('cache_extbase_reflection'));
 		if (!$this->reflectionService->isInitialized()) {
 			$this->reflectionService->initialize();
 		}
@@ -180,48 +211,36 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 	}
 
 	/**
+	 * Initializes the backwards compatibility. This is necessary because the
+	 * old Dispatcher provided several static methods.
+	 *
+	 * @return void
+	 * @see initialize()
+	 */
+	protected function initializeBackwardsCompatibility() {
+		$dispatcher = t3lib_div::makeInstance('Tx_Extbase_Dispatcher');
+		$dispatcher->injectConfigurationManager($this->configurationManager);
+		$dispatcher->injectPersistenceManager($this->persistenceManager);
+	}
+
+	/**
 	 * Runs the the Extbase Framework by resolving an appropriate Request Handler and passing control to it.
 	 * If the Framework is not initialized yet, it will be initialized.
 	 *
-	 * @param string $content The content. Not used
+	 * @param string $content The content
 	 * @param array $configuration The TS configuration array
 	 * @return string $content The processed content
 	 * @api
 	 */
 	public function run($content, $configuration) {
+		//var_dump(Tx_Extbase_Utility_Extension::createAutoloadRegistryForExtension('extbase', t3lib_extMgm::extPath('extbase'), array(
+		//	'tx_extbase_basetestcase' => '$extensionClassesPath . \'../Tests/BaseTestCase.php\'',
+		//	'tx_extbase_tests_unit_basetestcase' => '$extensionClassesPath . \'../Tests/Unit/BaseTestCase.php\'',
+		//)));
+		//die("autoload registry");
+
 		$this->initialize($configuration);
 
-			// CLI
-		if (defined('TYPO3_cliMode') && TYPO3_cliMode === TRUE) {
-			$content = $this->handleCommandLineRequest();
-		} else {
-			$content = $this->handleWebRequest();
-		}
-		return $content;
-	}
-
-	/**
-	 * @return string
-	 */
-	protected function handleCommandLineRequest() {
-		$commandLine = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
-
-		$request = $this->objectManager->get('Tx_Extbase_MVC_CLI_RequestBuilder')->build(array_slice($commandLine, 1));
-		$response = $this->objectManager->get('Tx_Extbase_MVC_CLI_Response');
-		$extensionName = $request->getControllerExtensionName();
-		$this->configurationManager->setConfiguration(array('extensionName' => $extensionName));
-		$this->objectManager->get('Tx_Extbase_MVC_Dispatcher')->dispatch($request, $response);
-
-		$content = $response->getContent();
-
-		$this->resetSingletons();
-		return $content;
-	}
-
-	/**
-	 * @return string
-	 */
-	protected function handleWebRequest() {
 		$requestHandlerResolver = $this->objectManager->get('Tx_Extbase_MVC_RequestHandlerResolver');
 		$requestHandler = $requestHandlerResolver->resolveRequestHandler();
 
@@ -232,7 +251,7 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 		// @see Tx_Extbase_MVC_Web_FrontendRequestHandler::handleRequest()
 		if ($response === NULL) {
 			$this->reflectionService->shutdown();
-			return '';
+			return;
 		}
 		if (count($response->getAdditionalHeaderData()) > 0) {
 			$GLOBALS['TSFE']->additionalHeaderData[] = implode(chr(10), $response->getAdditionalHeaderData());
@@ -293,6 +312,5 @@ class Tx_Extbase_Core_Bootstrap implements Tx_Extbase_Core_BootstrapInterface {
 		print $content;
 		return TRUE;
 	}
-
 }
 ?>

@@ -24,12 +24,11 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-
 /**
- * Interface for classes which hook into tslib_mediawizard adding additional
+ * interface for classes which hook into tslib_mediawizard adding additional
  * media wizard providers
  *
- * @author Ernesto Baschny <ernst@cron-it.de>
+ * @author	Ernesto Baschny <ernst@cron-it.de>
  * @package TYPO3
  * @subpackage tslib
  */
@@ -38,16 +37,16 @@ interface tslib_mediaWizardProvider {
 	/**
 	 * Tells the calling party if we can handle the URL passed to the constructor
 	 *
-	 * @param string $url URL to be handled
-	 * @return boolean
+	 * @param	string	URL to be handled
+	 * @return	boolean
 	 */
 	public function canHandle($url);
 
 	/**
 	 * Rewrites a media provider URL into a canonized form that can be embedded
 	 *
-	 * @param string $url URL to be handled
-	 * @return string Canonized URL that can be used to embedd
+	 * @param	string	URL to be handled
+	 * @return	string	canonized URL that can be used to embedd
 	 */
 	public function rewriteUrl($url);
 

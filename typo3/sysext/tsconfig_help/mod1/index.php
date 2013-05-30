@@ -22,38 +22,54 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
+// DEFAULT initialization of a module [BEGIN]
+unset($MCONF);
+require_once('conf.php');
+require_once($BACK_PATH.'init.php');
+require_once($BACK_PATH.'template.php');
+
 $LANG->includeLLFile('EXT:tsconfig_help/mod1/locallang.xml');
-	// This checks permissions and exits if the users has no permission for entry.
-$BE_USER->modAccess($MCONF, 1);
+$BE_USER->modAccess($MCONF,1);	// This checks permissions and exits if the users has no permission for entry.
+// DEFAULT initialization of a module [END]
+
 
 /**
  * Module 'TypoScript Help' for the 'tsconfig_help' extension.
  *
- * @author Stephane Schitter <stephane.schitter@free.fr>
- * @package TYPO3
- * @subpackage tx_tsconfighelp
+ * @author	Stephane Schitter <stephane.schitter@free.fr>
+ * @package	TYPO3
+ * @subpackage	tx_tsconfighelp
  */
 class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	var $pageinfo;
-		// This is used to count how many times the same obj_string appears in each extension manual
-	var $objStringsPerExtension = array();
-		// This is used to count how many times the same obj_string appears across all extensions
-	var $allObjStrings = array();
+	var $objStringsPerExtension = array(); // This is used to count how many times the same obj_string appears in each extension manual
+	var $allObjStrings = array(); // This is used to count how many times the same obj_string appears across all extensions
+
+	/**
+	 * Initializes the Module
+	 * @return	void
+	 */
+	function init()	{
+		global $BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
+		parent::init();
+	}
 
 	/**
 	 * Adds items to the ->MOD_MENU array. Used for the function menu selector.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function menuConfig() {
+	function menuConfig()	{
+		global $LANG;
 		$this->MOD_MENU = array(
 			'function' => array(
-				'1' => $GLOBALS['LANG']->getLL('display')
+				'1' => $LANG->getLL('display')
 			)
 		);
 
-		if($GLOBALS['BE_USER']->user['admin']) {
-			$this->MOD_MENU['function']['2'] = $GLOBALS['LANG']->getLL('rebuild');
+		if($GLOBALS['BE_USER']->user['admin'])	{
+			$this->MOD_MENU['function']['2'] = $LANG->getLL('rebuild');
 		}
 
 		parent::menuConfig();
@@ -62,18 +78,20 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	/**
 	 * Main function of the module. Write the content to $this->content
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function main() {
+	function main()	{
+		global $BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$CLIENT,$TYPO3_CONF_VARS;
+
 		// Access check!
-		$access = $GLOBALS['BE_USER']->check('modules', 'help_txtsconfighelpM1');
+		$access = $BE_USER->check('modules', 'help_txtsconfighelpM1');
 
 			// Draw the header.
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/tsconfig_help.html');
 
-		if ($access || $GLOBALS['BE_USER']->user['admin']) {
+		if ($access || $BE_USER->user['admin'])	{
 
 			$this->doc->form = '<form action="" method="post">';
 
@@ -81,7 +99,7 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 			$this->doc->JScode = '
 				<script language="javascript" type="text/javascript">
 					script_ended = 0;
-					function jumpToUrl(URL) {
+					function jumpToUrl(URL)	{
 						document.location = URL;
 					}
 				</script>
@@ -93,16 +111,19 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 				</script>
 			';
 
-			$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('title'));
+			$headerSection = $this->doc->getHeader('pages',$this->pageinfo,$this->pageinfo['_thePath']).'<br />'.$LANG->sL('LLL:EXT:lang/locallang_core.xml:labels.path').': '.t3lib_div::fixed_lgd_cs($this->pageinfo['_thePath'],-50);
+
+			$this->content .= $this->doc->header($LANG->getLL('title'));
+			$this->content .= $this->doc->spacer(5);
 
 			// Render content:
 			$this->moduleContent();
 
 			$this->content .= $this->doc->spacer(10);
 
-			$markers['FUNC_MENU'] = t3lib_BEfunc::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']);
+			$markers['FUNC_MENU'] = t3lib_BEfunc::getFuncMenu($this->id,'SET[function]',$this->MOD_SETTINGS['function'],$this->MOD_MENU['function']);
 		} else {
-			$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('title'));
+			$this->content .= $this->doc->header($LANG->getLL('title'));
 			$markers['FUNC_MENU'] = '';
 		}
 			// Setting up the buttons and markers for docheader
@@ -114,7 +135,7 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 		$this->content = $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
 			// Renders the module page
 		$this->content = $this->doc->render(
-			$GLOBALS['LANG']->getLL('title'),
+			$LANG->getLL('title'),
 			$this->content
 		);
 	}
@@ -122,26 +143,30 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	/**
 	 * Prints out the module HTML
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function printContent() {
+	function printContent()	{
 		echo $this->content;
 	}
 
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return array All available buttons as an assoc. array
+	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons() {
+	protected function getButtons()	{
+		global $TCA, $LANG, $BACK_PATH, $BE_USER;
+
 		$buttons = array(
 			'csh' => '',
 			'shortcut' => '',
 		);
+			// CSH
+		//$buttons['csh'] = t3lib_BEfunc::cshItem('_MOD_web_func', '', $GLOBALS['BACK_PATH']);
 
-		if (($this->id && is_array($this->pageinfo)) || ($GLOBALS['BE_USER']->user['admin'] && !$this->id)) {
+		if (($this->id && is_array($this->pageinfo)) || ($BE_USER->user['admin'] && !$this->id)) {
 				// Shortcut
-			if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
+			if ($BE_USER->mayMakeShortcut()) {
 				$buttons['shortcut'] = $this->doc->makeShortcutIcon('id', implode(',', array_keys($this->MOD_MENU)), $this->MCONF['name']);
 			}
 		}
@@ -151,39 +176,41 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	/**
 	 * Generates the module content
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function moduleContent() {
-		switch ((string)$this->MOD_SETTINGS['function']) {
+	function moduleContent()	{
+		global $BACK_PATH, $TYPO3_LOADED_EXT, $LANG;
+
+		switch ((string)$this->MOD_SETTINGS['function'])	{
 			case 1:
-				$content = '<div align="left"><strong>' . $GLOBALS['LANG']->getLL('referenceExplanation') . '</strong></div>';
-				$content .= '<p>' . $GLOBALS['LANG']->getLL('referenceExplanationDetailed') . '</p><br />';
-				$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('displayReferences'), $content, 0, 1);
-				$this->content .= '<a href="#" onclick="vHWin=window.open(\'' . $GLOBALS['BACK_PATH'] . 'wizard_tsconfig.php?mode=tsref&amp;P[formName]=editForm\',\'popUp\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;" title="TSref reference">' . t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open') . 'TSREF</a><br />';
-				$this->content .= '<a href="#" onclick="vHWin=window.open(\'' . $GLOBALS['BACK_PATH'] . 'wizard_tsconfig.php?mode=beuser&amp;P[formName]=editForm\',\'popUp\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;" title="TSref reference">' . t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open') . 'USER TSCONFIG</a><br />';
-				$this->content .= '<a href="#" onclick="vHWin=window.open(\'' . $GLOBALS['BACK_PATH'] . 'wizard_tsconfig.php?mode=page&amp;P[formName]=editForm\',\'popUp\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;" title="TSref reference">' . t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open') . 'PAGE TSCONFIG</a><br />';
+				$content = '<div align="left"><strong>'.$LANG->getLL('referenceExplanation').'</strong></div>';
+				$content .= '<p>'.$LANG->getLL('referenceExplanationDetailed').'</p><br />';
+				$this->content .= $this->doc->section($LANG->getLL('displayReferences'),$content,0,1);
+				$this->content .= '<a href="#" onclick="vHWin=window.open(\''.$BACK_PATH.'wizard_tsconfig.php?mode=tsref&amp;P[formName]=editForm\',\'popUp\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;" title="TSref reference">'.t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open').'TSREF</a><br />';
+				$this->content .= '<a href="#" onclick="vHWin=window.open(\''.$BACK_PATH.'wizard_tsconfig.php?mode=beuser&amp;P[formName]=editForm\',\'popUp\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;" title="TSref reference">'.t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open').'USER TSCONFIG</a><br />';
+				$this->content .= '<a href="#" onclick="vHWin=window.open(\''.$BACK_PATH.'wizard_tsconfig.php?mode=page&amp;P[formName]=editForm\',\'popUp\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;" title="TSref reference">'.t3lib_iconWorks::getSpriteIcon('actions-system-typoscript-documentation-open').'PAGE TSCONFIG</a><br />';
 			break;
 
 			case 2:
-				if ($GLOBALS['BE_USER']->user['admin']) {
-					if (t3lib_div::_GP('_rebuild')) {
+				if ($GLOBALS['BE_USER']->user['admin'])	{
+					if (t3lib_div::_GP('_rebuild'))	{
 							// remove all data from the database
 						$this->purgeSQLContents();
 
 							// get all loaded extension keys
-						$extArray = $GLOBALS['TYPO3_LOADED_EXT'];
+						$extArray = $TYPO3_LOADED_EXT;
 
-						$content = '<div align="left"><strong>' . $GLOBALS['LANG']->getLL('loadedTSfrom') . '</strong></div><br />';
+						$content = '<div align="left"><strong>'.$LANG->getLL('loadedTSfrom').'</strong></div><br />';
 
 							// parse the extension names only (no need for all details from the TYPO3_LOADED_EXT table
-						foreach ($extArray as $extName => $dummy) {
+						foreach ($extArray as $extName => $dummy)	{
 								// check that the extension is really loaded (which should always be the case)
-							if (t3lib_extMgm::isLoaded($extName)) {
+							if (t3lib_extMgm::isLoaded($extName))	{
 									// extract the content.xml from the manual.sxw ZIP file
 								$manual = $this->getZIPFileContents(t3lib_extMgm::extPath($extName).'doc/manual.sxw', 'content.xml');
 
 									// check if the manual file actually exists and if the content.xml could be loaded
-								if ($manual != '') {
+								if ($manual != '')	{
 										// if the manual file exists, proceed with the load into the SQL database
 									$content .= '<p>Extension '.$extName.'...';
 
@@ -191,34 +218,32 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 									$number = $this->loadExtensionManual($extName, $manual);
 
 										// print a status message with a link to the openoffice manual
-									$content .= $number . ' ' . $GLOBALS['LANG']->getLL('sections') . ' (<a href="' .
-										t3lib_div::getIndpEnv('TYPO3_SITE_URL') . TYPO3_mainDir . t3lib_extMgm::extRelPath($extName) .
-										'doc/manual.sxw">manual</a>)</p>';
+									$content .= $number.' '.$LANG->getLL('sections').' (<a href="'.t3lib_div::getIndpEnv('TYPO3_SITE_URL').TYPO3_mainDir.t3lib_extMgm::extRelPath($extName).'doc/manual.sxw">manual</a>)</p>';
 								}
 							} else	{
-									// This should never happen!
-								die('Fatal error : loaded extension not actually loaded? Please file a bug report at http://forge.typo3.org!');
+									// this should never happen!
+								die ("Fatal error : loaded extension not actually loaded? Please file a bug report at http://bugs.typo3.org!");
 							}
 						}
 
-						$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('rebuildTS'), $content . '<br />', 0, 1);
+						$this->content .= $this->doc->section($LANG->getLL('rebuildTS'),$content.'<br />',0,1);
 
 							// Issue warnings about duplicate or empty obj_strings, if any
 							// An obj_string should be unique. It should appear in only one extension manual and then only once
 							// If the sum of all occurrences of a given obj_string is more than one, issue a list of duplicate entries as a warning
 						$duplicateWarnings = '';
 						$emptyWarnings = '';
-						foreach ($this->objStringsPerExtension as $obj_string => $extensions) {
-							if (empty($obj_string)) {
-								$emptyWarnings = '<p class="typo3-red">' . $GLOBALS['LANG']->getLL('warning_manualsWithoutMarkers');
-								foreach ($extensions as $extensionKey => $counter) {
+						foreach ($this->objStringsPerExtension as $obj_string => $extensions)	{
+							if (empty($obj_string))	{
+								$emptyWarnings = '<p class="typo3-red">'.$LANG->getLL('warning_manualsWithoutMarkers');
+								foreach ($extensions as $extensionKey => $counter)	{
 									$emptyWarnings .= ' '.$extensionKey.' ('.$counter.')<br />';
 								}
 								$emptyWarnings .= '</p><br />';
 							} else {
-								if (array_sum($extensions) > 1) {
+								if (array_sum($extensions) > 1)	{
 									$duplicateWarnings .= $obj_string.':';
-									foreach ($extensions as $extensionKey => $counter) {
+									foreach ($extensions as $extensionKey => $counter)	{
 										$duplicateWarnings .= ' '.$extensionKey.' ('.$counter.')';
 									}
 									$duplicateWarnings .= '<br />';
@@ -226,20 +251,22 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 							}
 						}
 						$warnings = $emptyWarnings;
-						if (!empty($duplicateWarnings)) {
-							$warnings .= '<p class="typo3-red">'.$GLOBALS['LANG']->getLL('warning_duplicateMarkers').'<br />'.$duplicateWarnings.'</p>';
+						if (!empty($duplicateWarnings))	{
+							$warnings .= '<p class="typo3-red">'.$LANG->getLL('warning_duplicateMarkers').'<br />'.$duplicateWarnings.'</p>';
 						}
-						if (!empty($warnings)) {
-							$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('updateWarnings'), '<div>'.$warnings.'</div>', 0, 1);
+						if (!empty($warnings))	{
+							$this->content .= $this->doc->section($LANG->getLL('updateWarnings'),'<div>'.$warnings.'</div>',0,1);
 						}
 					}
 
-					$content = '<p>' . $GLOBALS['LANG']->getLL('rebuildExplanation') . '</p><br />';
-					$content .= $GLOBALS['LANG']->getLL('rebuild') . ' <input type="submit" name="_rebuild" value="Rebuild" /><br />';
-					$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('rebuildTS'), $content, 0, 1);
+					$content = '<p>'.$LANG->getLL('rebuildExplanation').'</p><br />';
+					$content .= $LANG->getLL('rebuild').' <input type="submit" name="_rebuild" value="Rebuild" /><br />';
+					$this->content .= $this->doc->section($LANG->getLL('rebuildTS'),$content,0,1);
 				} else {
-					$this->content .= '<p>' . $GLOBALS['LANG']->getLL('adminAccessOnly') . '</p><br />';
+					$this->content .= '<p>'.$LANG->getLL('adminAccessOnly').'</p><br />';
 				}
+
+
 			break;
 		}
 	}
@@ -247,16 +274,16 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	/**
 	 * Returns the contents of a specific file within the ZIP
 	 *
-	 * @return string Contents
+	 * @return	string	contents
 	 */
-	function getZIPFileContents($ZIPfile, $filename) {
-		if (file_exists($ZIPfile)) {
+	function getZIPFileContents($ZIPfile, $filename)	{
+		if (file_exists($ZIPfile))	{
 				// Unzipping SXW file, getting filelist:
-			$tempPath = PATH_site . 'typo3temp/tx_tsconfighelp_ziptemp/';
+			$tempPath = PATH_site.'typo3temp/tx_tsconfighelp_ziptemp/';
 			t3lib_div::mkdir($tempPath);
 
 			$this->unzip($ZIPfile, $tempPath);
-			$output = t3lib_div::getUrl($tempPath.$filename);
+			$output = t3lib_div::getURL($tempPath.$filename);
 
 			$cmd = 'rm -r "'.$tempPath.'"';
 			t3lib_utility_Command::exec($cmd);
@@ -269,15 +296,16 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 * Unzips a zip file in the given path.
 	 * Uses the Extension Manager unzip functions.
 	 *
-	 * @param string $file Full path to zip file
-	 * @param string $path Path to change to before extracting
-	 * @return boolean TRUE on success, FALSE in failure
+	 *
+	 * @param string $file		Full path to zip file
+	 * @param string $path		Path to change to before extracting
+	 * @return boolean	True on success, false in failure
 	 */
-	function unzip($file, $path) {
-			// We use the unzip class of the Extension Manager here
+	function unzip($file, $path)	{
+			// we use the unzip class of the Extension Manager here
 			// TODO: move unzip class to core
 		if (!t3lib_extMgm::isLoaded('em')) {
-				// Em is not loaded, so include the unzip class
+				//em is not loaded, so include the unzip class
 			t3lib_div::requireOnce(PATH_typo3 . 'sysext/em/classes/tools/class.tx_em_tools_unzip.php');
 		}
 		$unzip = t3lib_div::makeInstance('tx_em_Tools_Unzip', $file);
@@ -295,44 +323,41 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 * This function assumes the STYLE definitions are not nested. If they are then, then "close" type will need to be used
 	 * more carefully, and a depth counter will need to be implemented.
 	 *
-	 * @param array $vals The XML values array. The XML index is not necessary in this function.
-	 * @return array Array that contains the different styles with their parent (required to recognise "Table Contents"-type styles), and their style (bold/italic)
+	 * @param	array		The XML values array. The XML index is not necessary in this function.
+	 * @return	array		Array that contains the different styles with their parent (required to recognise "Table Contents"-type styles), and their style (bold/italic)
 	 */
-	function parseStyles($vals) {
+	function parseStyles($vals)	{
 		$currentStyleName = '';
 		$style = array ();
 
-		foreach ($vals as $node) {
-			switch ($node['type']) {
+		foreach ($vals as $node)	{
+			switch ($node['type'])	{
 				case 'open':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'STYLE:STYLE':
 							$currentStyleName = $node['attributes']['STYLE:NAME'];
 
-							if (array_key_exists('STYLE:PARENT-STYLE-NAME', $node['attributes'])) {
+							if (array_key_exists('STYLE:PARENT-STYLE-NAME',$node['attributes']))	{
 								$parentStyleName = $node['attributes']['STYLE:PARENT-STYLE-NAME'];
-									// Keep trace of parents in the style array
-								$style[$currentStyleName]['parents'][] = $parentStyleName;
+								$style[$currentStyleName]['parents'][] = $parentStyleName; // keep trace of parents in the style array
 							} else {
-									// This style has no parent, therefore clean the variable to avoid side effects with next use of that variable
-								$parentStyleName = '';
+								$parentStyleName = ''; // this style has no parent, therefore clean the variable to avoid side effects with next use of that variable
 							}
-								// The style parent is already documented in the array
-							if (array_key_exists($parentStyleName, $style)) {
-									// Inherit parent style
-								$style[$currentStyleName] = $style[$parentStyleName];
+
+							if (array_key_exists($parentStyleName, $style))	{ // the style parent is already documented in the array
+								$style[$currentStyleName] = $style[$parentStyleName]; // inherit parent style
 							}
 						break;
 					}
 				break;
 
 				case 'complete':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'STYLE:PROPERTIES':
-							if (is_array($node['attributes']) && array_key_exists('FO:FONT-WEIGHT', $node['attributes'])) {
+							if (is_array($node['attributes']) && array_key_exists('FO:FONT-WEIGHT',$node['attributes']))	{
 								$style[$currentStyleName]['font-weight'] = $node['attributes']['FO:FONT-WEIGHT'];	// bold for example
 							}
-							if (is_array($node['attributes']) && array_key_exists('FO:FONT-STYLE', $node['attributes'])) {
+							if (is_array($node['attributes']) && array_key_exists('FO:FONT-STYLE',$node['attributes']))	{
 								$style[$currentStyleName]['font-style'] = $node['attributes']['FO:FONT-STYLE'];	// italic for example
 							}
 						break;
@@ -340,7 +365,7 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 				break;
 
 				case 'close':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'STYLE:STYLE':
 							$currentStyleName = '';
 						break;
@@ -354,6 +379,7 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 		return $style;
 	}
 
+
 	/**
 	 * Checks if the style is a child of a specified parent. This is useful for example to check if a specific style that has
 	 * a generic name ("P8" for example) is a child of the "Table Contents" style. It would not only inherit its style (bold/
@@ -361,20 +387,20 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 *
 	 * This function references the global $Styles variables which must have been created previously with parseStyles()
 	 *
-	 * @param string $child Name of the child style that we want to get properties for
-	 * @param string $parent Name of the parent style that we want to compare the child against
-	 * @return boolean TRUE if the child and parent are linked together. FALSE otherwise.
+	 * @param	string		Name of the child style that we want to get properties for
+	 * @param	string		Name of the parent style that we want to compare the child against
+	 * @return	boolean		true if the child and parent are linked together. false otherwise.
 	 */
 	function isStyleChildOf($child, $parent) {
 		global $Styles;
-			// The child is actually the same as the parent. They are obviously linked together
-		if (!strcmp($child, $parent)) {
+
+		if (!strcmp($child, $parent))	{ // the child is actually the same as the parent. They are obviously linked together
 			return TRUE;
 		}
 
 		if (is_array($Styles[$child])  // the child is a documented style
-			&& array_key_exists('parents', $Styles[$child])  // it has some parents
-			&& (array_search($parent, $Styles[$child]['parents']) !== FALSE)) { // and the parent appears amongst its ancestors
+		 && array_key_exists('parents',$Styles[$child])  // it has some parents
+		 && (array_search($parent, $Styles[$child]['parents']) !== FALSE))	{ // and the parent appears amongst its ancestors
 			return TRUE;
 		}
 		return FALSE;
@@ -392,54 +418,54 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 * This function uses the unusual index XML array in addition to the values, this is necessary to find where in the XML
 	 * tree a TABLE starts once we found where it ends.
 	 *
-	 * @param array $vals The XML values array
-	 * @param array $index The XML index array
-	 * @param integer $id This is a reference to the index in the array where we should be starting the search
-	 * @return array Array of the table start index and table end index where TS is defined. table start is FALSE if there are no more TS entries in the document (consider it similar to an EOF reached status).
+	 * @param	array		The XML values array
+	 * @param	array		The XML index array
+	 * @param	integer		This is a reference to the index in the array where we should be starting the search
+	 * @return	array		Array of the table start index and table end index where TS is defined. table start is FALSE if there are no more TS entries in the document (consider it similar to an EOF reached status).
 	 */
-	function nextTSDefinitionTable($vals, $index, &$id) {
-			// Browse the table where we left off last time
-		while ($id < count ($vals)) {
+	function nextTSDefinitionTable($vals, $index, &$id)	{
+			// browse the table where we left off last time
+		while ($id < count ($vals))	{
 			$node = $vals[$id];
-				// check if next entry is a candidate
-			if (!strcmp($node['type'], 'close') && !strcmp($node['tag'], 'TABLE:TABLE')) {
+			if (!strcmp($node['type'], 'close') && !strcmp($node['tag'], 'TABLE:TABLE'))	{ // check if next entry is a candidate
 				$nextNode = $vals[$id+1];
-				if (!strcmp($nextNode['tag'], 'TEXT:P') && $this->isStyleChildOf($nextNode['attributes']['TEXT:STYLE-NAME'], 'Table Contents')) {
-						// We found a good entry
-						// Find the ID in the list of table items
-					$closeIndex = array_search($id, $index['TABLE:TABLE']);
-						// Find the matching start of the table in the $vals array
-					$tableStart = $index['TABLE:TABLE'][$closeIndex-1];
+				if (!strcmp($nextNode['tag'], 'TEXT:P') && $this->isStyleChildOf($nextNode['attributes']['TEXT:STYLE-NAME'], 'Table Contents'))	{
+						// we found a good entry
+					$closeIndex = array_search($id, $index['TABLE:TABLE']);	// find the ID in the list of table items
+
+					$tableStart = $index['TABLE:TABLE'][$closeIndex-1]; // find the matching start of the table in the $vals array
 
 					return array($tableStart, $id++);
 				}
 			}
 			$id = $id+1;
 		}
-			// Marks the end of the input, no more table to find. WARNING: needs to be tested with === FALSE
-		return array(FALSE, 0);
+		return array(FALSE, 0); // marks the end of the input, no more table to find. WARNING: needs to be tested with === FALSE
 	}
 
 	/**
 	 * Converts an Open Office like style (font-weight:bold for example) into an HTML style (b is for bold). This function uses the global
 	 * $Styles defined through the parseStyles function
 	 *
-	 * @param array $node An array containing the [attributes][style] items in the OO format
-	 * @return array An array where the items are all the HTML styles to apply to closely match the input OO-like styles
+	 * @param	array		an array containing the [attributes][style] items in the OO format
+	 * @return	array		an array where the items are all the HTML styles to apply to closely match the input OO-like styles
 	 */
-	function styleTags($node) {
+	function styleTags($node)	{
 		global $Styles;
 
 		$styleName = $node['attributes']['TEXT:STYLE-NAME'];
-		switch ($Styles[$styleName]['font-weight']) {
+		switch ($Styles[$styleName]['font-weight'])	{
 			case 'bold':
 				$styleTags[] = 'b';
 			break;
 		}
-		switch ($Styles[$styleName]['font-style']) {
+		switch ($Styles[$styleName]['font-style'])	{
 			case 'italic':
 				$styleTags[] = 'i';
 			break;
+		}
+		if (!strcmp($styleName,'Table Contents/PRE'))	{
+			//$styleTags[]='pre'; // unused yet, but could be <pre> in the future - this is for inline code in the manuals
 		}
 		return $styleTags;
 	}
@@ -447,14 +473,14 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	/**
 	 * Converts an array containing style strings (for example ['b','i']) into their HTML equivalents
 	 *
-	 * @param array $style An array containing all the style tags
-	 * @param string $char Either '' or '/' depending on whether the style definition is to open or close the style
-	 * @return string The sequence of tags to open or close the style, for example <strong><i>
+	 * @param	array		an array containing all the style tags
+	 * @param	string		either '' or '/' depending on whether the style definition is to open or close the style
+	 * @return	string		the sequence of tags to open or close the style, for example <strong><i>
 	 */
-	function styleHTML($style, $char) {
+	function styleHTML($style, $char)	{
 		$string = '';
-		if (count ($style) > 0) {
-			foreach ($style as $tag) {
+		if (count ($style) > 0)	{
+			foreach ($style as $tag)	{
 				$string .= '<'.$char.$tag.'>';
 			}
 		}
@@ -468,15 +494,14 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 * &nbsp if empty : if the input is empty, we return a &nbsp; string so that in the HTML output something will be 	displayed
 	 * utf8 to entities cleaning : in some SXW docs we can find UTF8 characters that need to be converted to be displayed on screen
 	 *
-	 * @param string $text Text that will need to be transformed according to the HSC and other rules
-	 * @return string Transformed text that can now be freely serialized or exported to HTML
+	 * @param	string		Text that will need to be transformed according to the HSC and other rules
+	 * @return	string		Transformed text that can now be freely serialized or exported to HTML
 	 */
 	function HSCtext($text) {
 		global $LANG;
-			// Rhere is some content in the text field
-		if (strcmp($text, '')) {
-				// Stripslashes required as it could confuse unserialize
-			$cleantext = stripslashes(htmlspecialchars($text, ENT_QUOTES));
+
+		if (strcmp($text,''))	{ // there is some content in the text field
+			$cleantext = stripslashes(htmlspecialchars($text, ENT_QUOTES)); // stripslashes required as it could confuse unserialize
 			return $LANG->csConvObj->utf8_to_entities($cleantext, $LANG->charSet);
 		} else { // there is no text, it's empty
 			return '&nbsp;';
@@ -495,61 +520,49 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 *   column_count => number of columns found in table. Usually 4, but for spanned columns, it would be less (1 for example)
 	 *   is_propertyTable => ??? (almost always equal to 1)
 	 *
-	 * @param array $vals This is the input XML data that is to be parsed
-	 * @param integer $start The starting ID in the XML array to parse the data from
-	 * @param integer $end The ending ID in the XML array to stop parsing data
-	 * @return array An array with the contents of the different columns extracted from the input data
+	 * @param	array		This is the input XML data that is to be parsed
+	 * @param	integer		The starting ID in the XML array to parse the data from
+	 * @param	integer		The ending ID in the XML array to stop parsing data
+	 * @return	array		An array with the contents of the different columns extracted from the input data
 	 */
 	function parseTable($vals, $start, $end) {
 		$sectionHeader = 0;
 		$sectionRow = 0;
 		$sectionCell = 0;
 		$sectionP = 0;
-			// This variable will either be empty (no newline required) or '\n' (newline required)
-		$newLineRequired = '';
-			// This will be the list of tag styles to apply to the text
-		$textStyle = array ();
+
+		$newLineRequired = ''; // this variable will either be empty (no newline required) or '\n' (newline required)
+		$textStyle = array (); // this will be the list of tag styles to apply to the text
 
 		$currentRow = 0;
 		$currentCell = 0;
 
 		$rowID = 0;
-			// Also gets reset at every top-level row
-		$cellID = 0;
-			// Will contain the results of the function
-		$table = array();
+		$cellID = 0;  // also gets reset at every top-level row
+
+		$table = array(); // will contain the results of the function
 
 		$id = $start;
-		while ($id < $end) {
+		while ($id < $end)	{
 			$node = $vals[$id];
 
-				// Sanity check
-			if ($sectionHeader < 0) {
-				die('Malformed XML (header-rows)'.LF);
-			}
-			if ($sectionRow < 0) {
-				die('Malformed XML (row)'.LF);
-			}
-			if ($sectionCell < 0) {
-				die ('Malformed XML (cell)'.LF);
-			}
-			if ($sectionP < 0) {
-				die('Malformed XML (P)'.LF);
-			}
+			// sanity check
+			if ($sectionHeader < 0)	die ('Malformed XML (header-rows)'.LF);
+			if ($sectionRow < 0)	die ('Malformed XML (row)'.LF);
+			if ($sectionCell < 0)	die ('Malformed XML (cell)'.LF);
+			if ($sectionP < 0)		die ('Malformed XML (P)'.LF);
 
-			switch ($node['type']) {
+			switch ($node['type'])	{
 				case 'open':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'TABLE:TABLE-HEADER-ROWS':
 							$sectionHeader++;
 						break;
 
 						case 'TABLE:TABLE-ROW':
-								// Skip section header, we only look at the *contents* of the table
-							if (!$sectionHeader) {
+							if (!$sectionHeader)	{ // skip section header, we only look at the *contents* of the table
 								$sectionRow++;
-									// Make sure we are within a top-level row
-								if ($sectionRow == 1) {
+								if ($sectionRow == 1)	{ // make sure we are within a top-level row
 									$rowID++;
 									$cellID = 0;
 								}
@@ -557,25 +570,20 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 						break;
 
 						case 'TABLE:TABLE-CELL':
-								// Skip section header, we only look at the *contents* of the table
-							if (!$sectionHeader) {
+							if (!$sectionHeader)	{ // skip section header, we only look at the *contents* of the table
 								$sectionCell++;
-									// Make sure we are within a top-level cell
-								if ($sectionCell == 1) {
+								if ($sectionCell == 1)	{ // make sure we are within a top-level cell
 									$cellID++;
-										// No newline required after this
-									$newLineRequired = '';
+									$newLineRequired = ''; // no newline required after this
 								}
 							}
 						break;
 
 						case 'TEXT:P':
-								// Make sure we are in a cell
-							if ($sectionCell) {
+							if ($sectionCell)	{ // make sure we are in a cell
 								$sectionP++;
-								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node), '') . $newLineRequired.$this->HSCtext($node['value']);
-									// No newline required after this
-								$newLineRequired = '';
+								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node),'') . $newLineRequired.$this->HSCtext($node['value']);
+								$newLineRequired = ''; // no newline required after this
 								$latestTEXTPopen = $node;
 							}
 						break;
@@ -583,74 +591,65 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 				break;
 
 				case 'complete':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'TEXT:P':
-								// make sure we are in a cell
-							if ($sectionCell) {
-								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node), '') . $newLineRequired.$this->HSCtext($node['value']).$this->styleHTML($this->styleTags($node), '/');
+							if ($sectionCell)	{ // make sure we are in a cell
+								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node),'') . $newLineRequired.$this->HSCtext($node['value']).$this->styleHTML($this->styleTags($node),'/');
 								$newLineRequired = '<br>'; // after a paragraph, require a new-line
 							}
 						break;
 
 						case 'TEXT:SPAN':
-								// make sure we are in a cell
-							if ($sectionCell) {
-								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node), '').$newLineRequired.$this->HSCtext($node['value']).$this->styleHTML($this->styleTags($node), '/');
+							if ($sectionCell)	{ // make sure we are in a cell
+								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node),'').$newLineRequired.$this->HSCtext($node['value']).$this->styleHTML($this->styleTags($node),'/');
 								$newLineRequired = ''; // no newline required after this
 							}
 						break;
 
 						case 'TEXT:S':
-								// make sure we are in a cell
-							if ($sectionCell) {
-								for ($i = 0; $i < $node['attributes']['TEXT:C']; $i++) {
+							if ($sectionCell)	{ // make sure we are in a cell
+								for ($i=0; $i<$node['attributes']['TEXT:C']; $i++)	{
 									$table[$rowID-1][$cellID-1] .= '&nbsp;';
 								}
-									// no newline required after this
-								$newLineRequired = '';
+								$newLineRequired = ''; // no newline required after this
 							}
 						break;
 					}
 				break;
 
 				case 'cdata':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'TEXT:P':
-								// make sure we are in a cell
-							if ($sectionCell) {
-								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node), '') . $newLineRequired.$this->HSCtext($node['value']).$this->styleHTML($this->styleTags($node), '/');
-									// no newline required after this
-								$newLineRequired = '';
+							if ($sectionCell)	{ // make sure we are in a cell
+								$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($node),'') . $newLineRequired.$this->HSCtext($node['value']).$this->styleHTML($this->styleTags($node),'/');
+								$newLineRequired = ''; // no newline required after this
 							}
 						break;
 					}
 				break;
 
 				case 'close':
-					switch ($node['tag']) {
+					switch ($node['tag'])	{
 						case 'TABLE:TABLE-HEADER-ROWS':
 							$sectionHeader--;
 						break;
 
 						case 'TABLE:TABLE-ROW':
-								// skip section header, we only look at the *contents* of the table
-							if (!$sectionHeader) {
+							if (!$sectionHeader)	{ // skip section header, we only look at the *contents* of the table
 								$sectionRow--;
 							}
 						break;
 
 						case 'TABLE:TABLE-CELL':
-								// skip section header, we only look at the *contents* of the table
-							if (!$sectionHeader) {
+							if (!$sectionHeader)	{ // skip section header, we only look at the *contents* of the table
 								$sectionCell--;
 							}
 						break;
 
 						case 'TEXT:P':
 							$sectionP--;
-								// after a paragraph, require a new-line
-							$newLineRequired = '<br>';
-							$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($latestTEXTPopen), '/');
+							$newLineRequired = '<br>'; // after a paragraph, require a new-line
+							$table[$rowID-1][$cellID-1] .= $this->styleHTML($this->styleTags($latestTEXTPopen),'/');
 						break;
 					}
 				break;
@@ -663,22 +662,20 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	/**
 	 * Load the contents of the table into the SQL database
 	 *
-	 * @param string $extension Name of the extension to load the documentation for. This is used to make the unique hash in the database
-	 * @param array $table Contents of the documentation table
-	 * @param string $tableName Name of the table from the source document (name at the bottom of the table in OpenOffice)
-	 * @return boolean TRUE on success and FALSE on failure from the INSERT database query
+	 * @param	string		Name of the extension to load the documentation for. This is used to make the unique hash in the database
+	 * @param	array		Contents of the documentation table
+	 * @param	string		Name of the table from the source document (name at the bottom of the table in OpenOffice)
+	 * @return	boolean		TRUE on success and FALSE on failure from the INSERT database query
 	 */
-	function dumpIntoSQL($extension, $table, $tableName) {
+	function dumpIntoSQL($extension, $table, $tableName)	{
 		global $uid;
 
-		foreach ($table as $row) {
+		foreach ($table as $row)	{
 			$tempArray = array();
 			$tempArray['property'] = $row[0];
 
-				// in the case there are only 2 columns, the second one is the description !
-			$tempArray['datatype'] = count($row) == 2 ? '&nbsp;':$row[1];
-				// in the case there are only 2 columns, the second one is the description !
-			$tempArray['description'] = count($row) == 2 ? $row[1]:$row[2];
+			$tempArray['datatype'] = count($row)==2 ? '&nbsp;':$row[1];	// in the case there are only 2 columns, the second one is the description !
+			$tempArray['description'] = count($row)==2 ? $row[1]:$row[2];  // in the case there are only 2 columns, the second one is the description !
 			$tempArray['default'] = $row[3];
 			$tempArray['column_count'] = count($row);
 			$tempArray['is_propertyTable'] = 1;
@@ -687,8 +684,8 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 		$appdata = serialize($tsHelpArray);
 		$obj_string = trim($tableName, '[]');
 
-		if (isset($this->objStringsPerExtension[$obj_string])) {
-			if (isset($this->objStringsPerExtension[$obj_string][$extension])) {
+		if (isset($this->objStringsPerExtension[$obj_string]))	{
+			if (isset($this->objStringsPerExtension[$obj_string][$extension]))	{
 				$this->objStringsPerExtension[$obj_string][$extension]++;
 			} else {
 				$this->objStringsPerExtension[$obj_string][$extension] = 1;
@@ -701,19 +698,16 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 			// If the obj_string was already encountered increase its counter. If not initialise it as 0
 			// The counter (when bigger than 0) is appended to the obj_string to make it unique
 			// This way the tables do not overwrite each other in the online help
-		if (isset($this->allObjStrings[$obj_string])) {
+		if (isset($this->allObjStrings[$obj_string]))	{
 			$this->allObjStrings[$obj_string]++;
 			$obj_string .= ' ('.$this->allObjStrings[$obj_string].')';
 		} else {
 			$this->allObjStrings[$obj_string] = 0;
 		}
 		$md5hash = md5($obj_string);
-			// unused
-		$description = '';
-			// try to find a way to uniquely identify the source extension and place the identified into the "guide" column
-		$guide = hexdec(substr(md5($extension), 6, 6));
-			// unused
-		$title = '';
+		$description = ''; // unused
+		$guide = hexdec(substr(md5($extension),6,6));  // try to find a way to uniquely identify the source extension and place the identified into the "guide" column
+		$title = ''; // unused
 
 		$insertFields = array(
 			'guide' => $guide,
@@ -731,12 +725,12 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 * Purges the existing contents for TypoScript help in the database. This ensures that several runs of the import process will not push
 	 * duplicate information in the database, but that we clean it first before adding new contents.
 	 *
-	 * @param string $extension Name of the extension for which to delete all the data in the database. If empty, all database will be cleaned
-	 * @return void
+	 * @param	string		Name of the extension for which to delete all the data in the database. If empty, all database will be cleaned
+	 * @return	void
 	 */
-	function purgeSQLContents($extension = '') {
+	function purgeSQLContents($extension='')	{
 		$guide = hexdec(substr(md5($extension), 6, 6));
-		if ($extension != '') {
+		if ($extension != '')	{
 			$GLOBALS['TYPO3_DB']->exec_DELETEquery('static_tsconfig_help', 'guide='.$guide);
 		} else {
 			$GLOBALS['TYPO3_DB']->exec_TRUNCATEquery('static_tsconfig_help');
@@ -748,34 +742,34 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	 * the styles associated with the contents so that later on we can distinguish bold and italic characters for example. It then parses the XML
 	 * array to find all the TS-like description tables and parses them before loading them into the SQL database.
 	 *
-	 * @param string $extension Name of the extension to load manual from
-	 * @param string $contents Input data from the manual.sxw in a string form. One large string with the whole OO manual document.
-	 * @return integer Number of individual tables found in the document and loaded into the SQL database
+	 * @param	string		Name of the extension to load manual from
+	 * @param	string		Input data from the manual.sxw in a string form. One large string with the whole OO manual document.
+	 * @return	integer		Number of individual tables found in the document and loaded into the SQL database
 	 */
-	function loadExtensionManual($extension, $contents) {
+	function loadExtensionManual($extension, $contents)	{
 		global $Styles;
 
-			// Read the contents into an XML array
+			// read the contents into an XML array
 		$parser = xml_parser_create();
 		xml_parse_into_struct($parser, $contents, $vals, $index);
 
 		xml_parser_free($parser);
 
-			// Parse styles from the manual for future rendering
+			// parse styles from the manual for future rendering
 		$Styles = $this->parseStyles($vals);
 
 		$id = 0;
 		$tableNumber = 0;
 		do {
 			list($tableStart, $tableEnd) = $this->nextTSDefinitionTable($vals, $index, $id);
-			if ($tableStart !== FALSE) {
+			if ($tableStart !== FALSE)	{
 					// The title of the table can either be self-contained in a single complete entry
-				if (!strcmp($vals[$id]['type'], 'complete')) {
+				if (!strcmp($vals[$id]['type'], 'complete'))	{
 					$title = $vals[$id]['value'];
 				} else { // or it can be spread across a number of spans or similar
 					$watchTag = $vals[$id]['tag'];
 					$title = '';
-					while (strcmp($vals[$id]['tag'], $watchTag) || strcmp($vals[$id]['type'], 'close')) {
+					while (strcmp($vals[$id]['tag'], $watchTag) || strcmp($vals[$id]['type'], 'close'))	{
 						$title .= $vals[$id++]['value'];
 					}
 				}
@@ -788,14 +782,20 @@ class tx_tsconfighelp_module1 extends t3lib_SCbase {
 	}
 }
 
-	// Make instance:
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/tsconfig_help/mod1/index.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/tsconfig_help/mod1/index.php']);
+}
+
+
+
+
+// Make instance:
 $SOBE = t3lib_div::makeInstance('tx_tsconfighelp_module1');
 $SOBE->init();
 
-	// Include files?
-foreach ($SOBE->include_once as $INC_FILE) {
-	include_once($INC_FILE);
-}
+// Include files?
+foreach ($SOBE->include_once as $INC_FILE) include_once($INC_FILE);
 
 $SOBE->main();
 $SOBE->printContent();

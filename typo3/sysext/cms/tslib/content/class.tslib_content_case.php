@@ -29,6 +29,7 @@
 /**
  * Contains CASE class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,13 +38,13 @@ class tslib_content_Case extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, CASE
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		if ($this->cObj->checkIf($conf['if.'])) {
 			$setCurrent = isset($conf['setCurrent.']) ? $this->cObj->stdWrap($conf['setCurrent'], $conf['setCurrent.']) : $conf['setCurrent'];
-			if ($setCurrent) {
+			if($setCurrent) {
 				$this->cObj->data[$this->cObj->currentValKey] = $setCurrent;
 			}
 			$key = isset($conf['key.']) ? $this->cObj->stdWrap($conf['key'], $conf['key.']) : $conf['key'];
@@ -56,5 +57,12 @@ class tslib_content_Case extends tslib_content_Abstract {
 			return $theValue;
 		}
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_case.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_case.php']);
+}
+
 ?>

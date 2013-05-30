@@ -29,6 +29,7 @@
 /**
  * Contains TEMPLATE class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  * @author Bastian Waidelich <bastian@typo3.org>
@@ -54,11 +55,11 @@ class tslib_content_FluidTemplate extends tslib_content_Abstract {
 	 *    mylabel.value = Label from TypoScript coming
 	 * }
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string The HTML output
-	 * @author Steffen Ritter <info@steffen-ritter.net>
-	 * @author Benjamin Mack <benni@typo3.org>
-	 * @author Bastian Waidelich <bastian@typo3.org>
+	 * @param	array		array of TypoScript properties
+	 * @return	string		the HTML output
+	 * @author	Steffen Ritter		<info@steffen-ritter.net>
+	 * @author	Benjamin Mack		<benni@typo3.org>
+	 * @author	Bastian Waidelich	<bastian@typo3.org>
 	 */
 	public function render($conf = array()) {
 			// check if the needed extensions are installed
@@ -70,32 +71,32 @@ class tslib_content_FluidTemplate extends tslib_content_Abstract {
 		 * 1. initializing Fluid StandaloneView and setting configuration parameters
 		 **/
 		$view = t3lib_div::makeInstance('Tx_Fluid_View_StandaloneView');
-			// Fetch the Fluid template
+			// fetch the Fluid template
 		$file = isset($conf['file.'])
 			? $this->cObj->stdWrap($conf['file'], $conf['file.'])
 			: $conf['file'];
 		$templatePathAndFilename = $GLOBALS['TSFE']->tmpl->getFileName($file);
 		$view->setTemplatePathAndFilename($templatePathAndFilename);
 
-			// Override the default layout path via typoscript
+			// override the default layout path via typoscript
 		$layoutRootPath = isset($conf['layoutRootPath.'])
 			? $this->cObj->stdWrap($conf['layoutRootPath'], $conf['layoutRootPath.'])
 			: $conf['layoutRootPath'];
-		if ($layoutRootPath) {
+		if($layoutRootPath) {
 			$layoutRootPath = t3lib_div::getFileAbsFileName($layoutRootPath);
 			$view->setLayoutRootPath($layoutRootPath);
 		}
 
-			// Override the default partials path via typoscript
+			// override the default partials path via typoscript
 		$partialRootPath = isset($conf['partialRootPath.'])
 			? $this->cObj->stdWrap($conf['partialRootPath'], $conf['partialRootPath.'])
 			: $conf['partialRootPath'];
-		if ($partialRootPath) {
+		if($partialRootPath) {
 			$partialRootPath = t3lib_div::getFileAbsFileName($partialRootPath);
 			$view->setPartialRootPath($partialRootPath);
 		}
 
-			// Override the default format
+			// override the default format
 		$format = isset($conf['format.'])
 			? $this->cObj->stdWrap($conf['format'], $conf['format.'])
 			: $conf['format'];
@@ -103,47 +104,47 @@ class tslib_content_FluidTemplate extends tslib_content_Abstract {
 			$view->setFormat($format);
 		}
 
-			// Set some default variables for initializing Extbase
+			// set some default variables for initializing Extbase
 		$requestPluginName = isset($conf['extbase.']['pluginName.'])
 			? $this->cObj->stdWrap($conf['extbase.']['pluginName'], $conf['extbase.']['pluginName.'])
 			: $conf['extbase.']['pluginName'];
-		if ($requestPluginName) {
+		if($requestPluginName) {
 			$view->getRequest()->setPluginName($requestPluginName);
 		}
 
 		$requestControllerExtensionName = isset($conf['extbase.']['controllerExtensionName.'])
 			? $this->cObj->stdWrap($conf['extbase.']['controllerExtensionName'], $conf['extbase.']['controllerExtensionName.'])
 			: $conf['extbase.']['controllerExtensionName'];
-		if ($requestControllerExtensionName) {
+		if($requestControllerExtensionName) {
 			$view->getRequest()->setControllerExtensionName($requestControllerExtensionName);
 		}
 
 		$requestControllerName = isset($conf['extbase.']['controllerName.'])
 			? $this->cObj->stdWrap($conf['extbase.']['controllerName'], $conf['extbase.']['controllerName.'])
 			: $conf['extbase.']['controllerName'];
-		if ($requestControllerName) {
+		if($requestControllerName) {
 			$view->getRequest()->setControllerName($requestControllerName);
 		}
 
 		$requestControllerActionName = isset($conf['extbase.']['controllerActionName.'])
 			? $this->cObj->stdWrap($conf['extbase.']['controllerActionName'], $conf['extbase.']['controllerActionName.'])
 			: $conf['extbase.']['controllerActionName'];
-		if ($requestControllerActionName) {
+		if($requestControllerActionName) {
 			$view->getRequest()->setControllerActionName($requestControllerActionName);
 		}
 
 		/**
 		 * 2. variable assignment
-		 */
+ 		 */
 		$reservedVariables = array('data', 'current');
-			// Accumulate the variables to be replaced
+			// accumulate the variables to be replaced
 			// and loop them through cObjGetSingle
 		$variables = (array) $conf['variables.'];
 		foreach ($variables as $variableName => $cObjType) {
 			if (is_array($cObjType)) {
 				continue;
 			}
-			if (!in_array($variableName, $reservedVariables)) {
+			if(!in_array($variableName, $reservedVariables)) {
 				$view->assign($variableName, $this->cObj->cObjGetSingle($cObjType, $variables[$variableName . '.']));
 			} else {
 				throw new InvalidArgumentException('Cannot use reserved name "' . $variableName . '" as variable name in FLUIDTEMPLATE.', 1288095720);
@@ -157,11 +158,19 @@ class tslib_content_FluidTemplate extends tslib_content_Abstract {
 		 */
 		$theValue = $view->render();
 
-		if (isset($conf['stdWrap.'])) {
+		if(isset($conf['stdWrap.'])) {
 			$theValue = $this->cObj->stdWrap($theValue, $conf['stdWrap.']);
 		}
 
 		return $theValue;
+
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_fluidtemplate.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_fluidtemplate.php']);
+}
+
 ?>

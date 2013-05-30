@@ -1,4 +1,5 @@
 /* Selectors for the Edit Element extension of htmlArea RTE */
+/* TYPO3 SVN ID: $Id: htmlarea.css $ */
 .htmlarea-action-element-edit {
 	background-image: url('images/element-edit.png') !important;
 	background-position: 0 0 !important;

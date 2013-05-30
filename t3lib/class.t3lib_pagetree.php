@@ -27,17 +27,34 @@
 /**
  * Generate a page-tree, non-browsable.
  *
+ * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @coauthor René Fritz <r.fritz@colorcube.de>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @coauthor	René Fritz <r.fritz@colorcube.de>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   78: class t3lib_pageTree extends t3lib_treeView
+ *   90:	 function init($clause='')
+ *  106:	 function expandNext($id)
+ *  123:	 function PMicon($row,$a,$c,$nextCount,$exp)
+ *  138:	 function initializePositionSaving()
+ *
+ * TOTAL FUNCTIONS: 4
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 /**
  * Class for generating a page tree.
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @coauthor René Fritz <r.fritz@colorcube.de>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @coauthor	René Fritz <r.fritz@colorcube.de>
  * @see t3lib_treeView, t3lib_browseTree
  * @package TYPO3
  * @subpackage t3lib
@@ -50,6 +67,7 @@ class t3lib_pageTree extends t3lib_treeView {
 		'php_tree_stop',
 		't3ver_id',
 		't3ver_state',
+		't3ver_swapmode'
 	);
 	var $defaultList = 'uid,pid,tstamp,sorting,deleted,perms_userid,perms_groupid,perms_user,perms_group,perms_everybody,crdate,cruser_id';
 	var $setRecs = 0;
@@ -58,24 +76,23 @@ class t3lib_pageTree extends t3lib_treeView {
 	 * Init function
 	 * REMEMBER to feed a $clause which will filter out non-readable pages!
 	 *
-	 * @param string $clause Part of where query which will filter out non-readable pages.
-	 * @param string $orderByFields Record ORDER BY field
-	 * @return void
+	 * @param	string		Part of where query which will filter out non-readable pages.
+	 * @return	void
 	 */
-	function init($clause = '', $orderByFields = '') {
+	function init($clause = '') {
 		parent::init(' AND deleted=0 ' . $clause, 'sorting');
 
 		if (t3lib_extMgm::isLoaded('cms')) {
 			$this->fieldArray = array_merge(
 				$this->fieldArray,
 				array(
-					'hidden',
-					'starttime',
-					'endtime',
-					'fe_group',
-					'module',
-					'extendToSubpages',
-					'nav_hide')
+					 'hidden',
+					 'starttime',
+					 'endtime',
+					 'fe_group',
+					 'module',
+					 'extendToSubpages',
+					 'nav_hide')
 			);
 		}
 		$this->table = 'pages';
@@ -83,10 +100,10 @@ class t3lib_pageTree extends t3lib_treeView {
 	}
 
 	/**
-	 * Returns TRUE/FALSE if the next level for $id should be expanded - and all levels should, so we always return 1.
+	 * Returns true/false if the next level for $id should be expanded - and all levels should, so we always return 1.
 	 *
-	 * @param integer $id ID (uid) to test for (see extending classes where this is checked againts session data)
-	 * @return boolean
+	 * @param	integer		ID (uid) to test for (see extending classes where this is checked againts session data)
+	 * @return	boolean
 	 */
 	function expandNext($id) {
 		return 1;
@@ -96,12 +113,12 @@ class t3lib_pageTree extends t3lib_treeView {
 	 * Generate the plus/minus icon for the browsable tree.
 	 * In this case, there is no plus-minus icon displayed.
 	 *
-	 * @param array $row Record for the entry
-	 * @param integer $a The current entry number
-	 * @param integer $c The total number of entries. If equal to $a, a 'bottom' element is returned.
-	 * @param integer $nextCount The number of sub-elements to the current element.
-	 * @param boolean $exp The element was expanded to render subelements if this flag is set.
-	 * @return string Image tag with the plus/minus icon.
+	 * @param	array		record for the entry
+	 * @param	integer		The current entry number
+	 * @param	integer		The total number of entries. If equal to $a, a 'bottom' element is returned.
+	 * @param	integer		The number of sub-elements to the current element.
+	 * @param	boolean		The element was expanded to render subelements if this flag is set.
+	 * @return	string		Image tag with the plus/minus icon.
 	 * @access private
 	 * @see t3lib_treeView::PMicon()
 	 */
@@ -113,11 +130,12 @@ class t3lib_pageTree extends t3lib_treeView {
 		return $icon;
 	}
 
+
 	/**
 	 * Get stored tree structure AND updating it if needed according to incoming PM GET var.
 	 * - Here we just set it to nothing since we want to just render the tree, nothing more.
 	 *
-	 * @return void
+	 * @return	void
 	 * @access private
 	 */
 	function initializePositionSaving() {
@@ -125,4 +143,8 @@ class t3lib_pageTree extends t3lib_treeView {
 	}
 }
 
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_pagetree.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_pagetree.php']);
+}
 ?>

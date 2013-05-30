@@ -94,7 +94,6 @@ abstract class Tx_Extbase_DomainObject_AbstractDomainObject implements Tx_Extbas
 	/**
 	 * Setter for the pid.
 	 *
-	 * @param integer|NULL $pid
 	 * @return void
 	 */
 	public function setPid($pid) {
@@ -117,13 +116,13 @@ abstract class Tx_Extbase_DomainObject_AbstractDomainObject implements Tx_Extbas
 			return (int)$this->pid;
 		}
 	}
-
+	
 	/**
 	 * Reconstitutes a property. Only for internal use.
 	 *
 	 * @param string $propertyName
-	 * @param mixed $propertyValue
-	 * @return boolean
+	 * @param string $value
+	 * @return void
 	 */
 	public function _setProperty($propertyName, $propertyValue) {
 		if ($this->_hasProperty($propertyName)) {
@@ -136,7 +135,6 @@ abstract class Tx_Extbase_DomainObject_AbstractDomainObject implements Tx_Extbas
 	/**
 	 * Returns the property value of the given property name. Only for internal use.
 	 *
-	 * @param string $propertyName
 	 * @return mixed The propertyValue
 	 */
 	public function _getProperty($propertyName) {
@@ -157,12 +155,12 @@ abstract class Tx_Extbase_DomainObject_AbstractDomainObject implements Tx_Extbas
 		}
 		return $properties;
 	}
-
+	
 	/**
 	 * Returns the property value of the given property name. Only for internal use.
 	 *
-	 * @param string $propertyName
-	 * @return boolean TRUE bool true if the property exists, FALSE if it doesn't exist or NULL in case of an error.
+	 * @return boolean TRUE bool true if the property exists, FALSE if it doesn't exist or
+	 * NULL in case of an error.
 	 */
 	public function _hasProperty($propertyName) {
 		return property_exists($this, $propertyName);
@@ -249,7 +247,7 @@ abstract class Tx_Extbase_DomainObject_AbstractDomainObject implements Tx_Extbas
 			return NULL;
 		}
 	}
-
+	
 	/**
 	 * Returns TRUE if the properties were modified after reconstitution
 	 *
@@ -293,7 +291,7 @@ abstract class Tx_Extbase_DomainObject_AbstractDomainObject implements Tx_Extbas
 		}
 		return $result;
 	}
-
+	
 	/**
 	 * Returns TRUE if the object has been clonesd, cloned, FALSE otherwise.
 	 *

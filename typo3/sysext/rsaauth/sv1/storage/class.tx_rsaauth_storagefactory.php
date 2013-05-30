@@ -23,11 +23,19 @@
 ***************************************************************/
 
 /**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ * $Id$
+ */
+
+require_once(t3lib_extMgm::extPath('rsaauth', 'sv1/storage/class.tx_rsaauth_abstract_storage.php'));
+
+/**
  * This class contains a factory for the RSA backends.
  *
- * @author Dmitry Dulepov <dmitry@typo3.org>
- * @package TYPO3
- * @subpackage tx_rsaauth
+ * @author	Dmitry Dulepov <dmitry@typo3.org>
+ * @package	TYPO3
+ * @subpackage	tx_rsaauth
  */
 class tx_rsaauth_storagefactory {
 
@@ -36,7 +44,7 @@ class tx_rsaauth_storagefactory {
 	 * This is for security reasons to avoid inserting some dummy storage to
 	 * the list.
 	 *
-	 * @var string
+	 * @var	string
 	 */
 	static protected $preferredStorage = 'EXT:rsaauth/sv1/storage/class.tx_rsaauth_split_storage.php:tx_rsaauth_split_storage';
 
@@ -47,16 +55,16 @@ class tx_rsaauth_storagefactory {
 	 *
 	 * <!-- Please, keep the variable type! It helps IDEs to provide autocomple! -->
 	 *
-	 * @var tx_rsaauth_abstract_storage
+	 * @var	tx_rsaauth_abstract_storage
 	 */
-	static protected $storageInstance = NULL;
+	static protected $storageInstance = null;
 
 	/**
 	 * Obtains a storage. This function will return a non-abstract class, which
 	 * is derieved from the tx_rsaauth_abstract_storage. Applications should
 	 * not use anoy methods that are not declared in the tx_rsaauth_abstract_storage.
 	 *
-	 * @return tx_rsaauth_abstract_storage A storage
+	 * @return	tx_rsaauth_abstract_storage	A storage
 	 */
 	static public function getStorage() {
 		if (is_null(self::$storageInstance)) {
@@ -69,11 +77,16 @@ class tx_rsaauth_storagefactory {
 	 * Sets the preffered storage to the factory. This method can be called from
 	 * another extension or ext_localconf.php
 	 *
-	 * @param string $preferredStorage Preffered storage
-	 * @return void
+	 * @param	string	$preferredStorage	Preffered storage
+	 * @return	void
 	 */
 	static public function setPreferredStorage($preferredStorage) {
 		self::$preferredStorage = $preferredStorage;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/storage/class.tx_rsaauth_storagefactory.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/storage/class.tx_rsaauth_storagefactory.php']);
+}
+
 ?>

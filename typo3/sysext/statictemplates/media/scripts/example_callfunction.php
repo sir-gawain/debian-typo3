@@ -27,21 +27,26 @@
 /**
  * USER cObject EXAMPLE FILE
  *
- * This is an example of how to use your own functions and classes
- * directly from TYPO3.
+ * This is an example of how to use your own functions and classes directly from TYPO3.
  * Used in the "testsite" package
  *
+ * $Id: example_callfunction.php 5165 2009-03-09 18:28:59Z ohader $
  * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
+
+
+
+
+
 
 /**
  * Call custom function from TypoScript for data processing
  *
- * Example can be found in the testsite package at the page-path
- * "/Intro/TypoScript examples/Custom Dynamic Co.../Passing a string.../"
+ * Example can be found in the testsite package at the page-path "/Intro/TypoScript examples/Custom Dynamic Co.../Passing a string.../"
  * This TypoScript configuration will also demonstrate it:
  *
  * includeLibs.something = media/scripts/example_callfunction.php
@@ -53,14 +58,14 @@
  *     preUserFunc.uppercase = 1
  * }
  *
- * @param string $content When custom functions are used for data processing the $content variable will hold the value to be processed. When functions are meant to just return some generated content this variable is empty.
- * @param array $conf TypoScript properties passed on to this function.
- * @return string The input string reversed. If the TypoScript property "uppercase" was set it will also be in uppercase.
+ * @param	string		When custom functions are used for data processing the $content variable will hold the value to be processed. When functions are meant to just return some generated content this variable is empty.
+ * @param	array		TypoScript properties passed on to this function.
+ * @return	string		The input string reversed. If the TypoScript property "uppercase" was set it will also be in uppercase.
  */
-function user_reverseString($content, $conf) {
+function user_reverseString($content,$conf)	{
 	$content = strrev($content);
-	if ($conf['uppercase']) {
-		$content = strtoupper($content);
+	if ($conf['uppercase'])	{
+		$content=strtoupper($content);
 	}
 	return $content;
 }
@@ -78,36 +83,38 @@ function user_reverseString($content, $conf) {
  *   userFunc = user_printTime
  * }
  *
- * @param string $content Empty string (no content to process)
- * @param array $conf TypoScript configuration
- * @return string HTML output, showing the current server time.
+ * @param	string		Empty string (no content to process)
+ * @param	array		TypoScript configuration
+ * @return	string		HTML output, showing the current server time.
  */
-function user_printTime($content, $conf) {
+function user_printTime($content,$conf)	{
 	return '<font color="red">Dynamic time: '.date('H:i:s').'</font><br />';
 }
 
+
+
 /**
  * Example of calling a method in a PHP class from TypoScript
+ *
  */
 class user_various	{
-		// Reference to the parent (calling) cObj set from TypoScript
-	var $cObj;
+	var $cObj;		// Reference to the parent (calling) cObj set from TypoScript
 
 	/**
 	 * Doing the same as user_reverseString() but with a class. Also demonstrates how this gives us the ability to use methods in the parent object.
 	 *
-	 * @param string $content String to process (from stdWrap)
-	 * @param array $conf TypoScript properties passed on to this method.
-	 * @return string The input string reversed. If the TypoScript property "uppercase" was set it will also be in uppercase. May also be linked.
+	 * @param	string		String to process (from stdWrap)
+	 * @param	array		TypoScript properties passed on to this method.
+	 * @return	string		The input string reversed. If the TypoScript property "uppercase" was set it will also be in uppercase. May also be linked.
 	 * @see user_reverseString()
 	 */
-	function reverseString($content, $conf) {
+	function reverseString($content,$conf)	{
 		$content = strrev($content);
-		if ($conf['uppercase']) {
-			$content = $this->cObj->caseshift($content, 'upper');
+		if ($conf['uppercase'])	{
+			$content=$this->cObj->caseshift($content,'upper');
 		}
-		if ($conf['typolink']) {
-			$content = $this->cObj->getTypoLink($content, $conf['typolink']);
+		if ($conf['typolink'])	{
+			$content=$this->cObj->getTypoLink($content,$conf['typolink']);
 		}
 		return $content;
 	}
@@ -126,11 +133,11 @@ class user_various	{
 	 *   reverseOrder = 1
 	 * }
 	 *
-	 * @param string $content Empty string (no content to process)
-	 * @param array $conf TypoScript configuration
-	 * @return string HTML output, showing content elements (in reverse order if configured.)
+	 * @param	string		Empty string (no content to process)
+	 * @param	array		TypoScript configuration
+	 * @return	string		HTML output, showing content elements (in reverse order if configured.)
 	 */
-	function listContentRecordsOnPage($content, $conf) {
+	function listContentRecordsOnPage($content,$conf)	{
 		$query = $GLOBALS['TYPO3_DB']->SELECTquery(
 						'header',
 						'tt_content',
@@ -145,17 +152,17 @@ class user_various	{
 	/**
 	 * Selecting the records by input $query and returning the header field values
 	 *
-	 * @param string $query SQL query selecting the content elements.
-	 * @return string The header field values of the content elements imploded by a <br /> tag
+	 * @param	string		SQL query selecting the content elements.
+	 * @return	string		The header field values of the content elements imploded by a <br /> tag
 	 * @access private
 	 */
-	function selectThem($query) {
+	function selectThem($query)	{
 		$res = $GLOBALS['TYPO3_DB']->sql_query($query);
-		$output = array();
-		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-			$output[] = $row['header'];
+		$output=array();
+		while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+			$output[]=$row['header'];
 		}
-		return implode($output, '<br />');
+		return implode($output,'<br />');
 	}
 }
 

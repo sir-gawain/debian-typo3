@@ -88,7 +88,7 @@ abstract class t3lib_contextmenu_AbstractDataProvider {
 	}
 
 	/**
-	 * Evaluates a given display condition and returns TRUE if the condition matches
+	 * Evaluates a given display condition and returns true if the condition matches
 	 *
 	 * Examples:
 	 * getContextInfo|inCutMode:1 || isInCopyMode:1
@@ -104,7 +104,7 @@ abstract class t3lib_contextmenu_AbstractDataProvider {
 			return TRUE;
 		}
 
-			// Parse condition string
+			// parse condition string
 		$conditions = array();
 		preg_match_all('/(.+?)(>=|<=|!=|=|>|<)(.+?)(\|\||&&|$)/is', $displayCondition, $conditions);
 
@@ -112,20 +112,20 @@ abstract class t3lib_contextmenu_AbstractDataProvider {
 		$chainType = '';
 		$amountOfConditions = count($conditions[0]);
 		for ($i = 0; $i < $amountOfConditions; ++$i) {
-				// Check method for existence
+				// check method for existence
 			$method = trim($conditions[1][$i]);
 			list($method, $index) = explode('|', $method);
 			if (!method_exists($node, $method)) {
 				continue;
 			}
 
-				// Fetch compare value
+				// fetch compare value
 			$returnValue = call_user_func(array($node, $method));
 			if (is_array($returnValue)) {
 				$returnValue = $returnValue[$index];
 			}
 
-				// Compare fetched and expected values
+				// compare fetched and expected values
 			$operator = trim($conditions[2][$i]);
 			$expected = trim($conditions[3][$i]);
 			if ($operator === '=') {
@@ -145,7 +145,7 @@ abstract class t3lib_contextmenu_AbstractDataProvider {
 				$lastResult = FALSE;
 			}
 
-				// Chain last result and the current if requested
+				// chain last result and the current if requested
 			if ($chainType === '||') {
 				$lastResult = ($lastResult || $returnValue);
 			} elseif ($chainType === '&&') {
@@ -154,7 +154,7 @@ abstract class t3lib_contextmenu_AbstractDataProvider {
 				$lastResult = $returnValue;
 			}
 
-				// Save chain type for the next condition
+				// save chain type for the next condition
 			$chainType = trim($conditions[4][$i]);
 		}
 
@@ -166,7 +166,7 @@ abstract class t3lib_contextmenu_AbstractDataProvider {
 	 *
 	 * @param array $actions
 	 * @param t3lib_tree_Node $node
-	 * @param integer $level
+	 * @param int $level
 	 * @return t3lib_contextmenu_ActionCollection
 	 */
 	protected function getNextContextMenuLevel(array $actions, t3lib_tree_Node $node, $level = 0) {

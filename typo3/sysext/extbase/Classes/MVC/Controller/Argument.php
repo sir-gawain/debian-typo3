@@ -47,42 +47,14 @@ class Tx_Extbase_MVC_Controller_Argument {
 	protected $queryFactory;
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
-	 */
-	protected $configurationManager;
-
-	/**
-	 * This is the old property mapper, which has been completely rewritten for 1.4.
 	 * @var Tx_Extbase_Property_Mapper
 	 */
-	protected $deprecatedPropertyMapper;
-
-	/**
-	 * The new, completely rewritten property mapper since Extbase 1.4.
-	 *
-	 * @var Tx_Extbase_Property_PropertyMapper
-	 */
 	protected $propertyMapper;
-
-	/**
-	 * @var Tx_Extbase_Property_PropertyMappingConfigurationBuilder
-	 */
-	protected $propertyMappingConfigurationBuilder;
-
-	/**
-	 * @var Tx_Extbase_MVC_Controller_MvcPropertyMappingConfiguration
-	 */
-	protected $propertyMappingConfiguration;
 
 	/**
 	 * @var Tx_Extbase_Reflection_Service
 	 */
 	protected $reflectionService;
-
-	/**
-	 * @var Tx_Extbase_Service_TypeHandlingService
-	 */
-	protected $typeHandlingService;
 
 	/**
 	 * Name of this argument
@@ -133,12 +105,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	protected $validator = NULL;
 
 	/**
-	 * The validation results. This can be asked if the argument has errors.
-	 * @var Tx_Extbase_Error_Result
-	 */
-	protected $validationResults = NULL;
-
-	/**
 	 * Uid for the argument, if it has one
 	 * @var string
 	 */
@@ -156,11 +122,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * @var integer
 	 */
 	protected $origin = 0;
-
-	/**
-	 * @var Tx_Extbase_Persistence_ManagerInterface
-	 */
-	protected $persistenceManager;
 
 	/**
 	 * Constructs this controller argument
@@ -188,27 +149,11 @@ class Tx_Extbase_MVC_Controller_Argument {
 	}
 
 	/**
-	 * @param Tx_Extbase_Property_Mapper $deprecatedPropertyMapper
+	 * @param Tx_Extbase_Property_Mapper $propertyMapper
 	 * @return void
 	 */
-	public function injectDeprecatedPropertyMapper(Tx_Extbase_Property_Mapper $deprecatedPropertyMapper) {
-		$this->deprecatedPropertyMapper = $deprecatedPropertyMapper;
-	}
-
-	/**
-	 * @param Tx_Extbase_Property_PropertyMapper $propertyMapper
-	 * @return void
-	 */
-	public function injectPropertyMapper(Tx_Extbase_Property_PropertyMapper $propertyMapper) {
+	public function injectPropertyMapper(Tx_Extbase_Property_Mapper $propertyMapper) {
 		$this->propertyMapper = $propertyMapper;
-	}
-
-	/**
-	 * @param Tx_Extbase_Property_PropertyMappingConfigurationBuilder $propertyMappingConfigurationBuilder
-	 * @return void
-	 */
-	public function injectPropertyMappingConfigurationBuilder(Tx_Extbase_Property_PropertyMappingConfigurationBuilder $propertyMappingConfigurationBuilder) {
-		$this->propertyMappingConfigurationBuilder = $propertyMappingConfigurationBuilder;
 	}
 
 	/**
@@ -217,7 +162,7 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 */
 	public function injectReflectionService(Tx_Extbase_Reflection_Service $reflectionService) {
 		$this->reflectionService = $reflectionService;
-		$this->dataTypeClassSchema = (strpos($this->dataType, '_') !== FALSE) ? $this->reflectionService->getClassSchema($this->dataType) : NULL;
+		$this->dataTypeClassSchema = (strstr($this->dataType, '_') !== FALSE) ? $this->reflectionService->getClassSchema($this->dataType) : NULL;
 	}
 
 	/**
@@ -238,32 +183,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 */
 	public function injectQueryFactory(Tx_Extbase_Persistence_QueryFactoryInterface $queryFactory) {
 		$this->queryFactory = $queryFactory;
-	}
-
-	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
-	 * @return void
-	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
-		$this->configurationManager = $configurationManager;
-	}
-
-	/**
-	 * Initializer.
-	 *
-	 * @return void
-	 */
-	public function initializeObject() {
-		$this->propertyMappingConfiguration = $this->propertyMappingConfigurationBuilder->build('Tx_Extbase_MVC_Controller_MvcPropertyMappingConfiguration');
-	}
-
-	/**
-	 * @param Tx_Extbase_Service_TypeHandlingService $typeHandlingService
-	 * @return void
-	 */
-	public function injectTypeHandlingService(Tx_Extbase_Service_TypeHandlingService $typeHandlingService) {
-		$this->typeHandlingService = $typeHandlingService;
-		$this->dataType = $this->typeHandlingService->normalizeType($this->dataType);
 	}
 
 	/**
@@ -349,12 +268,11 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * Sets the default value of the argument
 	 *
 	 * @param mixed $defaultValue Default value
-	 * @return Tx_Extbase_MVC_Controller_Argument $this
+	 * @return void
 	 * @api
 	 */
 	public function setDefaultValue($defaultValue) {
 		$this->defaultValue = $defaultValue;
-		return $this;
 	}
 
 	/**
@@ -385,7 +303,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * @param array Object names of the validators
 	 * @return Tx_Extbase_MVC_Controller_Argument Returns $this (used for fluent interface)
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function setNewValidatorConjunction(array $objectNames) {
 		if ($this->validator === NULL) {
@@ -415,7 +332,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 *
 	 * @return integer one of the ORIGIN_* constants
 	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.0
 	 */
 	public function getOrigin() {
 		return $this->origin;
@@ -424,37 +340,17 @@ class Tx_Extbase_MVC_Controller_Argument {
 	/**
 	 * Sets the value of this argument.
 	 *
-	 * @param mixed $rawValue: The value of this argument
+	 * @param mixed $value: The value of this argument
 	 * @return Tx_Extbase_MVC_Controller_Argument $this
 	 * @throws Tx_Extbase_MVC_Exception_InvalidArgumentValue if the argument is not a valid object of type $dataType
 	 */
-	public function setValue($rawValue) {
-		if ($this->configurationManager->isFeatureEnabled('rewrittenPropertyMapper')) {
-			if ($rawValue === NULL) {
-				$this->value = NULL;
-				return $this;
-			}
-			if (is_object($rawValue) && $rawValue instanceof $this->dataType) {
-				$this->value = $rawValue;
-				return $this;
-			}
-			$this->value = $this->propertyMapper->convert($rawValue, $this->dataType, $this->propertyMappingConfiguration);
-			$this->validationResults = $this->propertyMapper->getMessages();
-			if ($this->validator !== NULL) {
-				// TODO: Validation API has also changed!!!
-				$validationMessages = $this->validator->validate($this->value);
-				$this->validationResults->merge($validationMessages);
-			}
-
-			return $this;
+	public function setValue($value) {
+		if ($value === NULL || (is_object($value) && $value instanceof $this->dataType)) {
+			$this->value = $value;
 		} else {
-			if ($rawValue === NULL || (is_object($rawValue) && $rawValue instanceof $this->dataType)) {
-				$this->value = $rawValue;
-			} else {
-				$this->value = $this->transformValue($rawValue);
-			}
-			return $this;
+			$this->value = $this->transformValue($value);
 		}
+		return $this;
 	}
 
 	/**
@@ -466,7 +362,6 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 *
 	 * @param mixed $value The value of an argument
 	 * @return mixed
-	 * @deprecated since Extbase 1.4, will be removed in Extbase 6.0
 	 */
 	protected function transformValue($value) {
 		if (!class_exists($this->dataType)) {
@@ -480,14 +375,14 @@ class Tx_Extbase_MVC_Controller_Argument {
 				$transformedValue = $this->findObjectByUid($value);
 			} elseif (is_array($value)) {
 				$this->origin = self::ORIGIN_PERSISTENCE_AND_MODIFIED;
-				$transformedValue = $this->deprecatedPropertyMapper->map(array_keys($value), $value, $this->dataType);
+				$transformedValue = $this->propertyMapper->map(array_keys($value), $value, $this->dataType);
 			}
 		} else {
 			if (!is_array($value)) {
 				throw new Tx_Extbase_MVC_Exception_InvalidArgumentValue('The value was a simple type, so we could not map it to an object. Maybe the @entity or @valueobject annotations are missing?', 1251730701);
 			}
 			$this->origin = self::ORIGIN_NEWLY_CREATED;
-			$transformedValue = $this->deprecatedPropertyMapper->map(array_keys($value), $value, $this->dataType);
+			$transformedValue = $this->propertyMapper->map(array_keys($value), $value, $this->dataType);
 		}
 
 		if (!($transformedValue instanceof $this->dataType) && ($transformedValue !== NULL || $this->isRequired())) {
@@ -495,8 +390,8 @@ class Tx_Extbase_MVC_Controller_Argument {
 				'The value must be of type "' . $this->dataType . '", but was of type "'
 					. (is_object($transformedValue) ? get_class($transformedValue) : gettype($transformedValue)) . '".'
 						// add mappingResult errors to exception
-					. ($this->deprecatedPropertyMapper->getMappingResults()->hasErrors()
-						? '<p>' . implode('<br />', $this->deprecatedPropertyMapper->getMappingResults()->getErrors()) . '</p>'
+					. ($this->propertyMapper->getMappingResults()->hasErrors()
+						? '<p>' . implode('<br />', $this->propertyMapper->getMappingResults()->getErrors()) . '</p>'
 						: ''),
 				1251730701);
 		}
@@ -537,39 +432,9 @@ class Tx_Extbase_MVC_Controller_Argument {
 	 * Checks if this argument has a value set.
 	 *
 	 * @return boolean TRUE if a value was set, otherwise FALSE
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.0
 	 */
 	public function isValue() {
 		return $this->value !== NULL;
-	}
-
-	/**
-	 * Return the Property Mapping Configuration used for this argument; can be used by the initialize*action to modify the Property Mapping.
-	 *
-	 * @return Tx_Extbase_MVC_Controller_MvcPropertyMappingConfiguration
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @api
-	 */
-	public function getPropertyMappingConfiguration() {
-		return $this->propertyMappingConfiguration;
-	}
-
-	/**
-	 * @return boolean TRUE if the argument is valid, FALSE otherwise
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @api
-	 */
-	public function isValid() {
-		return !$this->validationResults->hasErrors();
-	}
-
-	/**
-	 * @return array<Tx_Extbase_Error_Result> Validation errors which have occured.
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @api
-	 */
-	public function getValidationResults() {
-		return $this->validationResults;
 	}
 
 	/**

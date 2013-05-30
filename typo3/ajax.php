@@ -24,24 +24,21 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-
 /**
  * AJAX dispatcher
- *
- * @author Benjamin Mack <mack@xnos.org>
- * @package TYPO3
- * @subpackage core
+ * @author	Benjamin Mack <mack@xnos.org>
+ * @package	TYPO3
  */
 
-$TYPO3_AJAX = TRUE;
+$TYPO3_AJAX = true;
 
-	// Include t3lib_div at this time to get the GET/POST methods it provides
+// include t3lib_div at this time to get the GET/POST methods it provides
 require_once(dirname(__FILE__) . '/../t3lib/class.t3lib_div.php');
 
-	// First get the ajaxID
+// first get the ajaxID
 $ajaxID = (string)t3lib_div::_GP('ajaxID');
 
-	// This is a list of requests that don't necessarily need a valid BE user
+// this is a list of requests that don't necessarily need a valid BE user
 $noUserAjaxIDs = array(
 	'BackendLogin::login',
 	'BackendLogin::logout',
@@ -50,35 +47,36 @@ $noUserAjaxIDs = array(
 	'BackendLogin::getChallenge',
 );
 
-	// If we're trying to do an ajax login, don't require a user.
-if (in_array($ajaxID, $noUserAjaxIDs)) {
+// if we're trying to do an ajax login, don't require a user.
+if(in_array($ajaxID, $noUserAjaxIDs)) {
 	define('TYPO3_PROCEED_IF_NO_USER', 2);
 }
 
 require('init.php');
+require('classes/class.typo3ajax.php');
 
 	// finding the script path from the variable
 $ajaxScript = $TYPO3_CONF_VARS['BE']['AJAX'][$ajaxID];
 
 
-	// Instantiating the AJAX object
-$ajaxObj = t3lib_div::makeInstance('TYPO3AJAX', $ajaxID);
+	// instantiating the AJAX object
+$ajaxObj    = t3lib_div::makeInstance('TYPO3AJAX', $ajaxID);
 $ajaxParams = array();
 
 
-	// Evaluating the arguments and calling the AJAX method/function
+	// evaluating the arguments and calling the AJAX method/function
 if (empty($ajaxID)) {
 	$ajaxObj->setError('No valid ajaxID parameter given.');
-} elseif (empty($ajaxScript)) {
+} else if (empty($ajaxScript)) {
 	$ajaxObj->setError('No backend function registered for ajaxID "'.$ajaxID.'".');
 } else {
-	$ret = t3lib_div::callUserFunction($ajaxScript, $ajaxParams, $ajaxObj, FALSE, TRUE);
-	if ($ret === FALSE) {
+	$ret = t3lib_div::callUserFunction($ajaxScript, $ajaxParams, $ajaxObj, false, true);
+	if ($ret === false) {
 		$ajaxObj->setError('Registered backend function for ajaxID "'.$ajaxID.'" was not found.');
 	}
 }
 
-	// Outputting the content (and setting the X-JSON-Header)
+	// outputting the content (and setting the X-JSON-Header)
 $ajaxObj->render();
 
 ?>

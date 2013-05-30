@@ -60,12 +60,11 @@ class tx_scheduler_CronCmd {
 	 * Constructor
 	 *
 	 * @api
-	 * @param string $cronCommand The cron command can hold any combination documented as valid
-	 *		  expression in usual unix like crons like vixiecron. Special commands like
-	 * 		 "@weekly", ranges, steps and three letter month and weekday abbreviations are allowed.
-	 * @param bool|int $timestamp Optional start time, used in unit tests
-	 *
-	 * @return tx_scheduler_CronCmd
+	 * @param string $cronCommand: The cron command can hold any combination documented as valid
+	 * 		expression in usual unix like crons like vixiecron. Special commands like @weekly,
+	 * 		ranges, steps and three letter month and weekday abbreviations are allowed.
+	 * @param integer $timestamp: optional start time, used in unit tests
+	 * @return void
 	 */
 	public function __construct($cronCommand, $timestamp = FALSE) {
 		$cronCommand = tx_scheduler_CronCmd_Normalize::normalize($cronCommand);
@@ -84,12 +83,17 @@ class tx_scheduler_CronCmd {
 	}
 
 	/**
-	 * Calculates the date of the next execution.
+	 * Calulates the date of the next execution.
 	 *
 	 * @api
+	 * @param integer $level (Deprecated) Number of the current level, e.g. 2 is the day level
 	 * @return void
 	 */
-	public function calculateNextValue() {
+	public function calculateNextValue($level = NULL) {
+		if (!is_null($level)) {
+			t3lib_div::deprecationLog('The parameter $level is deprecated since TYPO3 version 4.5.');
+		}
+
 		$newTimestamp = $this->getTimestamp();
 
 			// Calculate next minute and hour field
@@ -143,7 +147,7 @@ class tx_scheduler_CronCmd {
 
 	/**
 	 * Get cron command sections. Array of strings, each containing either
-	 * a list of comma separated integers or *
+	 * a list of comma seperated integers or *
 	 *
 	 * @return array command sections:
 	 * 	0 => minute
@@ -244,7 +248,7 @@ class tx_scheduler_CronCmd {
 	 * and on last sunday of october they are set back one hour (from 3:00 to 2:00).
 	 * This shortens and lengthens the length of a day by one hour.
 	 *
-	 * @param integer $timestamp Unix timestamp
+	 * @param integer timestamp
 	 * @return integer Number of seconds of day
 	 */
 	protected function numberOfSecondsInDay($timestamp) {
@@ -259,11 +263,51 @@ class tx_scheduler_CronCmd {
 	/**
 	 * Round a timestamp down to full minute.
 	 *
-	 * @param integer $timestamp Unix timestamp
+	 * @param integer timestamp
 	 * @return integer Rounded timestamp
 	 */
 	protected function roundTimestamp($timestamp) {
 		return mktime(date('H', $timestamp), date('i', $timestamp), 0, date('n', $timestamp), date('j', $timestamp), date('Y', $timestamp));
 	}
+
+	/**
+	 * Returns the first value that is higher than the current value
+	 * from a list of possible values.
+	 *
+	 * @deprecated since 4.5
+	 * @param	mixed	$currentValue: the value to be searched in the list
+	 * @param	array	$listArray: the list of values
+	 * @return	mixed	The value from the list right after the current value
+	 */
+	public function getNextValue($currentValue, array $listArray) {
+		t3lib_div::deprecationLog('The method is deprecated since TYPO3 version 4.5.');
+
+		$next_value = false;
+
+		$numValues = count($listArray);
+		for ($i = 0; $i < $numValues; $i++) {
+			if ($listArray[$i] > $currentValue) {
+				$next_value = $listArray[$i];
+				break;
+			}
+		}
+
+		return $next_value;
+	}
+
+	/**
+	 * Returns the timestamp for the value parts in $this->values.
+	 *
+	 * @deprecated since 4.5
+	 * @return integer unix timestamp
+	 */
+	public function getTstamp() {
+		t3lib_div::deprecationLog('The method is deprecated since TYPO3 version 4.5.');
+		return $this->getTimestamp();
+	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_croncmd.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/class.tx_scheduler_croncmd.php']);
 }
 ?>

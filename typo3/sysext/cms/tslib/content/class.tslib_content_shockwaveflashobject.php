@@ -29,6 +29,7 @@
 /**
  * Contains SWFOBJECT class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,8 +38,8 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, SWFOBJECT
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 		$prefix = '';
@@ -48,13 +49,14 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 		if ($GLOBALS['TSFE']->absRefPrefix) {
 			$prefix = $GLOBALS['TSFE']->absRefPrefix;
 		}
+		;
 
 		$type = isset($conf['type.'])
 			? $this->cObj->stdWrap($conf['type'], $conf['type.'])
 			: $conf['type'];
 		$typeConf = $conf[$type . '.'];
 
-			// Add SWFobject js-file
+			//add SWFobject js-file
 		$GLOBALS['TSFE']->getPageRenderer()->addJsFile(TYPO3_mainDir . 'contrib/flashmedia/swfobject/swfobject.js');
 
 		$player = isset($typeConf['player.'])
@@ -64,7 +66,7 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 		$installUrl = isset($conf['installUrl.'])
 			? $this->cObj->stdWrap($conf['installUrl'], $conf['installUrl.'])
 			: $conf['installUrl'];
-		if (!$installUrl) {
+		if(!$installUrl) {
 			$installUrl = $prefix . TYPO3_mainDir . 'contrib/flashmedia/swfobject/expressInstall.swf';
 		}
 
@@ -95,7 +97,7 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 		$conf['filename'] = $filename;
 		$conf['prefix'] = $prefix;
 
-			// Merge with default parameters
+			// merge with default parameters
 		$conf['flashvars.'] = array_merge((array) $typeConf['default.']['flashvars.'], (array) $conf['flashvars.']);
 		$conf['params.'] = array_merge((array) $typeConf['default.']['params.'], (array) $conf['params.']);
 		$conf['attributes.'] = array_merge((array) $typeConf['default.']['attributes.'], (array) $conf['attributes.']);
@@ -146,16 +148,17 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 		$width = isset($conf['width.'])
 			? $this->cObj->stdWrap($conf['width'], $conf['width.'])
 			: $conf['width'];
-		if (!$width) {
+		if(!$width) {
 			$width = $conf[$type . '.']['defaultWidth'];
 		}
 
-		$height = isset($conf['height.'])
+        $height = isset($conf['height.'])
 			? $this->cObj->stdWrap($conf['height'], $conf['height.'])
 			: $conf['height'];
-		if (!$height) {
+		if(!$height) {
 			$height = $conf[$type . '.']['defaultHeight'];
 		}
+
 
 		$embed = 'swfobject.embedSWF("' . $conf['player'] . '", "' . $replaceElementIdString . '", "' . $width . '", "' . $height . '",
 		 		"' . $flashVersion . '", "' . $installUrl . '", ' . $conf['embedParams'] . ');';
@@ -169,5 +172,12 @@ class tslib_content_ShockwaveFlashObject extends tslib_content_Abstract {
 
 		return $content;
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_shockwaveflashobject.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_shockwaveflashobject.php']);
+}
+
 ?>

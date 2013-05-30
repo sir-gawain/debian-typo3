@@ -82,6 +82,7 @@ class Tx_Fluid_ViewHelpers_ImageViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 	 * Initialize arguments.
 	 *
 	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function initializeArguments() {
 		parent::initializeArguments();
@@ -105,6 +106,8 @@ class Tx_Fluid_ViewHelpers_ImageViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 	 * @param integer $maxHeight maximum height of the image
 	 *
 	 * @return string rendered tag.
+	 * @author Sebastian Böttger <sboettger@cross-content.com>
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function render($src, $width = NULL, $height = NULL, $minWidth = NULL, $minHeight = NULL, $maxWidth = NULL, $maxHeight = NULL) {
 		if (TYPO3_MODE === 'BE') {
@@ -124,6 +127,9 @@ class Tx_Fluid_ViewHelpers_ImageViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 		$imageInfo = $this->contentObject->getImgResource($src, $setup);
 		$GLOBALS['TSFE']->lastImageInfo = $imageInfo;
 		if (!is_array($imageInfo)) {
+			if (TYPO3_MODE === 'BE') {
+				$this->resetFrontendEnvironment();
+			}
 			throw new Tx_Fluid_Core_ViewHelper_Exception('Could not get image resource for "' . htmlspecialchars($src) . '".' , 1253191060);
 		}
 		$imageInfo[3] = t3lib_div::png_to_gif_by_imagemagick($imageInfo[3]);
@@ -137,7 +143,11 @@ class Tx_Fluid_ViewHelpers_ImageViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 		$this->tag->addAttribute('src', $imageSource);
 		$this->tag->addAttribute('width', $imageInfo[0]);
 		$this->tag->addAttribute('height', $imageInfo[1]);
-		if ($this->arguments['title'] === '') {
+		//the alt-attribute is mandatory to have valid html-code, therefore add it even if it is empty
+		if (empty($this->arguments['alt'])) {
+			$this->tag->addAttribute('alt', '');
+		}
+		if (empty($this->arguments['title']) && !empty($this->arguments['alt'])) {
 			$this->tag->addAttribute('title', $this->arguments['alt']);
 		}
 
@@ -149,6 +159,7 @@ class Tx_Fluid_ViewHelpers_ImageViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 	 * This somewhat hacky work around is currently needed because the getImgResource() function of tslib_cObj relies on those variables to be set
 	 *
 	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	protected function simulateFrontendEnvironment() {
 		$this->tsfeBackup = isset($GLOBALS['TSFE']) ? $GLOBALS['TSFE'] : NULL;
@@ -171,6 +182,7 @@ class Tx_Fluid_ViewHelpers_ImageViewHelper extends Tx_Fluid_Core_ViewHelper_Abst
 	 * Resets $GLOBALS['TSFE'] if it was previously changed by simulateFrontendEnvironment()
 	 *
 	 * @return void
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 * @see simulateFrontendEnvironment()
 	 */
 	protected function resetFrontendEnvironment() {

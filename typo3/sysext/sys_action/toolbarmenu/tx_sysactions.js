@@ -26,6 +26,8 @@
 
 /**
  * class to handle the dev links menu
+ *
+ * $Id$
  */
 var SysActionMenu = Class.create({
 

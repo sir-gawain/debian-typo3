@@ -44,6 +44,7 @@ abstract class t3lib_tree_AbstractDataProvider {
 	/**
 	 * Returns the root node
 	 *
+	 * @abstract
 	 * @return t3lib_tree_Node
 	 */
 	abstract public function getRoot();
@@ -51,6 +52,7 @@ abstract class t3lib_tree_AbstractDataProvider {
 	/**
 	 * Fetches the subnodes of the given node
 	 *
+	 * @abstract
 	 * @param t3lib_tree_Node $node
 	 * @return t3lib_tree_NodeCollection
 	 */

@@ -45,26 +45,58 @@ class tx_scheduler_CachingFrameworkGarbageCollection extends tx_scheduler_Task {
 	/**
 	 * Execute garbage collection, called by scheduler.
 	 *
-	 * @return boolean
+	 * @return void
 	 */
 	public function execute() {
-			// Global sub-array with all configured caches
-		$cacheConfigurations = $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'];
+			// Don't do anything if caching framework is not used at all
+		if (t3lib_cache::isCachingFrameworkInitialized()) {
+				// Global subarray with all configured caches
+			$cacheConfigurations = $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'];
 
-		if (is_array($cacheConfigurations)) {
-				// Iterate through configured caches and call garbage collection if
-				// backend is within selected backends in additonal field of task
-			foreach ($cacheConfigurations as $cacheName => $cacheConfiguration) {
-					// The cache backend used for this cache
-				$usedCacheBackend = $cacheConfiguration['backend'];
+			if (is_array($cacheConfigurations)) {
+					// Iterate through configured caches and call garbage collection if
+					// backend is within selected backends in additonal field of task
+				foreach ($cacheConfigurations as $cacheName => $cacheConfiguration) {
+						// The cache backend used for this cache
+					$usedCacheBackend = $cacheConfiguration['backend'];
 
-				if (in_array($usedCacheBackend, $this->selectedBackends)) {
-					$GLOBALS['typo3CacheManager']->getCache($cacheName)->collectGarbage();
+					if (in_array($usedCacheBackend, $this->selectedBackends)) {
+						$this->callGarbageCollectionOfCache($cacheName, $cacheConfiguration);
+					}
 				}
 			}
 		}
 
-		return TRUE;
+		return(TRUE);
+	}
+
+	/**
+	 * Get an instance of cache and call garbage collection
+	 *
+	 * @param string Cache name
+	 * @param array Cache configuration
+	 */
+	protected function callGarbageCollectionOfCache($cacheName, array $cacheConfiguration) {
+			// Get existing cache instance or create a new one
+		try {
+			$cache = $GLOBALS['typo3CacheManager']->getCache($cacheName);
+		} catch (t3lib_cache_exception_NoSuchCache $exception) {
+			$GLOBALS['typo3CacheFactory']->create(
+				$cacheName,
+				$cacheConfiguration['frontend'],
+				$cacheConfiguration['backend'],
+				$cacheConfiguration['options']
+			);
+			$cache = $GLOBALS['typo3CacheManager']->getCache($cacheName);
+		}
+
+			// Call garbage collection of this cache
+		$cache->collectGarbage();
 	}
 } // End of class
+
+if (defined('TYPO3_MODE') && $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/tasks/class.tx_scheduler_cachingframeworkgarbagecollection.php']) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/tasks/class.tx_scheduler_cachingframeworkgarbagecollection.php']);
+}
+
 ?>

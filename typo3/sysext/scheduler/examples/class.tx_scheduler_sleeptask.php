@@ -29,21 +29,23 @@
  * @author		François Suter <francois@typo3.org>
  * @package		TYPO3
  * @subpackage	tx_scheduler
+ *
+ * $Id$
  */
 class tx_scheduler_SleepTask extends tx_scheduler_Task {
 
 	/**
 	 * Number of seconds the task should be sleeping for
 	 *
-	 * @var integer $sleepTime
+	 * @var	integer		$sleepTime
 	 */
-	public $sleepTime = 10;
+	 public $sleepTime = 10;
 
 	/**
 	 * Function executed from the Scheduler.
 	 * Goes to sleep ;-)
 	 *
-	 * @return boolean
+	 * @return	void
 	 */
 	public function execute() {
 		$time = 10;
@@ -54,16 +56,21 @@ class tx_scheduler_SleepTask extends tx_scheduler_Task {
 
 		sleep($time);
 
-		return TRUE;
+		return true;
 	}
 
 	/**
 	 * This method returns the sleep duration as additional information
 	 *
-	 * @return string Information to display
+	 * @return	string	Information to display
 	 */
 	public function getAdditionalInformation() {
 		return $GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:label.sleepTime') . ': ' . $this->sleepTime;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_sleeptask.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_sleeptask.php']);
+}
+
 ?>

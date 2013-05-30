@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_spellchecker extends tx_rtehtmlarea_api {
 
@@ -72,9 +74,10 @@ class tx_rtehtmlarea_spellchecker extends tx_rtehtmlarea_api {
 			$spellCheckerMode = 'normal';
 		}
 			// Set the use of personal dictionary
-		$enablePersonalDicts = $this->thisConfig['buttons.'][$button.'.']['enablePersonalDictionaries'] ? ((isset($GLOBALS['BE_USER']->userTS['options.']['enablePersonalDicts']) && $GLOBALS['BE_USER']->userTS['options.']['enablePersonalDicts']) ? TRUE : FALSE) : FALSE;
-		if ($this->htmlAreaRTE->is_FE()) {
-			$enablePersonalDicts = FALSE;
+			// $this->thisConfig['enablePersonalDicts'] is DEPRECATED as of 4.3.0
+		$enablePersonalDicts = ($this->thisConfig['buttons.'][$button.'.']['enablePersonalDictionaries'] || $this->thisConfig['enablePersonalDicts']) ? ((isset($GLOBALS['BE_USER']->userTS['options.']['enablePersonalDicts']) && $GLOBALS['BE_USER']->userTS['options.']['enablePersonalDicts']) ? true : false) : false;
+		if (t3lib_utility_PhpOptions::isSafeModeEnabled() || $this->htmlAreaRTE->is_FE()) {
+			$enablePersonalDicts = false;
 		}
 
 		$registerRTEinJavascriptString = '';
@@ -94,5 +97,8 @@ class tx_rtehtmlarea_spellchecker extends tx_rtehtmlarea_api {
 		}
 		return $registerRTEinJavascriptString;
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SpellChecker/class.tx_rtehtmlarea_spellchecker.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/SpellChecker/class.tx_rtehtmlarea_spellchecker.php']);
 }
 ?>

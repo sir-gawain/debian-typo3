@@ -150,18 +150,17 @@ class t3lib_tree_RepresentationNode extends t3lib_tree_Node {
 	/**
 	 * Returns the node in an array representation that can be used for serialization
 	 *
-	 * @param bool $addChildNodes
 	 * @return array
 	 */
-	public function toArray($addChildNodes = TRUE) {
+	public function toArray() {
 		$arrayRepresentation = parent::toArray();
 		$arrayRepresentation = array_merge($arrayRepresentation, array(
-																	'label' => $this->label,
-																	'type' => $this->type,
-																	'class' => $this->class,
-																	'icon' => $this->icon,
-																	'callbackAction' => $this->callbackAction
-																));
+																	  'label' => $this->label,
+																	  'type' => $this->type,
+																	  'class' => $this->class,
+																	  'icon' => $this->icon,
+																	  'callbackAction' => $this->callbackAction
+																 ));
 		return $arrayRepresentation;
 	}
 

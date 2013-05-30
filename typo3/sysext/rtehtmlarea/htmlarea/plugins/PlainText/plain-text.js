@@ -1,7 +1,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+*  (c) 2010 Stanislas Rolland <typo3(arobas)sjbr.ca>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,18 +26,23 @@
 ***************************************************************/
 /*
  * Paste as Plain Text Plugin for TYPO3 htmlArea RTE
+ *
+ * TYPO3 SVN ID: $Id: plain-text.js 8945 2010-10-04 03:00:03Z stan $
  */
-HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
+HTMLArea.PlainText = HTMLArea.Plugin.extend({
+	constructor: function(editor, pluginName) {
+		this.base(editor, pluginName);
+	},
 	/*
 	 * This function gets called by the class constructor
 	 */
-	configurePlugin: function (editor) {
+	configurePlugin: function(editor) {
 		this.buttonsConfiguration = this.editorConfiguration.buttons;
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
-			version		: '1.3',
+			version		: '1.0',
 			developer	: 'Stanislas Rolland',
 			developerUrl	: 'http://www.sjbr.ca/',
 			copyrightOwner	: 'Stanislas Rolland',
@@ -57,12 +62,6 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 				action		: 'onButtonPress',
 				dialog		: buttonConf[2]
 			};
-			if (buttonId == 'PasteToggle' && this.buttonsConfiguration && this.buttonsConfiguration[buttonConf[0]] && this.buttonsConfiguration[buttonConf[0]].hidden) {
-				buttonConfiguration.hide = true;
-				buttonConfiguration.hideInContextMenu = true;
-				buttonConfiguration.hotKey = null;
-				this.buttonsConfiguration[buttonConf[0]].hotKey = null;
-			}
 			this.registerButton(buttonConfiguration);
 		}, this);
 		return true;
@@ -79,11 +78,11 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 	 */
 	cleanerConfig: {
 	 	pasteStructure: {
-	 	 	keepTags: /^(a|p|h[0-6]|pre|address|article|aside|blockquote|div|footer|header|nav|section|hr|br|table|thead|tbody|tfoot|caption|tr|th|td|ul|ol|dl|li|dt|dd)$/i,
+	 	 	keepTags: /^(a|p|h[0-6]|pre|address|blockquote|div|hr|br|table|thead|tbody|tfoot|caption|tr|th|td|ul|ol|dl|li|dt|dd)$/i,
 	 	 	removeAttributes: /^(id|on*|style|class|className|lang|align|valign|bgcolor|color|border|face|.*:.*)$/i
 	 	},
 		pasteFormat: {
-			keepTags: /^(a|p|h[0-6]|pre|address|article|aside|blockquote|div|footer|header|nav|section|hr|br|table|thead|tbody|tfoot|caption|tr|th|td|ul|ol|dl|li|dt|dd|b|bdo|big|cite|code|del|dfn|em|i|ins|kbd|label|q|samp|small|strike|strong|sub|sup|tt|u|var)$/i,
+			keepTags: /^(a|p|h[0-6]|pre|address|blockquote|div|hr|br|table|thead|tbody|tfoot|caption|tr|th|td|ul|ol|dl|li|dt|dd|b|bdo|big|cite|code|del|dfn|em|i|ins|kbd|label|q|samp|small|strike|strong|sub|sup|tt|u|var)$/i,
 			removeAttributes:  /^(id|on*|style|class|className|lang|align|valign|bgcolor|color|border|face|.*:.*)$/i
 	 	}
 	},
@@ -112,10 +111,6 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 			// May be set in TYPO3 User Settings
 		if (this.buttonsConfiguration && this.buttonsConfiguration['pastebehaviour'] && this.buttonsConfiguration['pastebehaviour']['current']) {
 			this.currentBehaviour = this.buttonsConfiguration['pastebehaviour']['current'];
-		}
-			// Set the toggle ON, if configured
-		if (this.buttonsConfiguration && this.buttonsConfiguration['pastetoggle'] && this.buttonsConfiguration['pastetoggle'].setActiveOnRteOpen) {
-			this.toggleButton('PasteToggle');
 		}
 			// Start monitoring paste events
 		this.editor.iframe.mon(Ext.get(Ext.isIE ? this.editor.document.body : this.editor.document.documentElement), 'paste', this.onPaste, this);
@@ -182,6 +177,8 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
+				// As of ExtJS 3.1, JS error with IE when the window is resizable
+			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				close: {
@@ -249,11 +246,11 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 		if (!this.getButton('PasteToggle').inactive) {
 			switch (this.currentBehaviour) {
 				case 'plainText':
-						// Only IE and WebKit will allow access to the clipboard content, in plain text only however
-					if (Ext.isIE || Ext.isWebKit) {
+						// Only IE and Chrome will allow access to the clipboard content, in plain text only however
+					if (Ext.isIE || Ext.isChrome) {
 						var clipboardText = this.grabClipboardText(event);
 						if (clipboardText) {
-							this.editor.getSelection().insertHtml(clipboardText);
+							this.editor.insertHTML(clipboardText);
 						}
 						return !this.clipboardText;
 					}
@@ -261,7 +258,8 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 				case 'pasteFormat':
 					if (Ext.isIE) {
 							// Save the current selection
-						this.bookmark = this.editor.getBookMark().get(this.editor.getSelection().createRange());
+						this.editor.focus();
+						this.bookmark = this.editor.getBookmark(this.editor._createRange(this.editor._getSelection()));
 							// Show the pasting pad
 						this.openPastingPad(
 							'PasteToggle',
@@ -321,8 +319,9 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 	 * @return	void
 	 */
 	redirectPaste: function () {
+		this.editor.focus();
 			// Save the current selection
-		this.bookmark = this.editor.getBookMark().get(this.editor.getSelection().createRange());
+		this.bookmark = this.editor.getBookmark(this.editor._createRange(this.editor._getSelection()));
 			// Create and append hidden section
 		var hiddenSection = this.editor.document.createElement('div');
 		HTMLArea.DOM.addClass(hiddenSection, 'htmlarea-paste-hidden-section');
@@ -332,7 +331,7 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 			hiddenSection.innerHTML = '&nbsp;';
 		}
 			// Move the selection to the hidden section and let the browser paste into the hidden section
-		this.editor.getSelection().selectNodeContents(hiddenSection);
+		this.editor.selectNodeContents(hiddenSection);
 	},
 	/*
 	 * Process the pasted content that was redirected towards a hidden section
@@ -347,7 +346,7 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 		var hiddenSection = divs[0];
 			// Delete any other hidden sections
 		for (var i = divs.length; --i >= 1;) {
-			HTMLArea.DOM.removeFromParent(divs[i]);
+			HTMLArea.removeFromParent(divs[i]);
 		}
 		var content = '';
 		switch (this.currentBehaviour) {
@@ -362,12 +361,12 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 				break;
 		}
 			// Remove the hidden section from the document
-		HTMLArea.DOM.removeFromParent(hiddenSection);
+		HTMLArea.removeFromParent(hiddenSection);
 			// Restore the selection
-		this.editor.getSelection().selectRange(this.editor.getBookMark().moveTo(this.bookmark));
+		this.editor.selectRange(this.editor.moveToBookmark(this.bookmark));
 			// Insert the cleaned content
 		if (content) {
-			this.editor.getSelection().execCommand('insertHTML', false, content);
+			this.editor.execCommand('insertHTML', false, content);
 		}
 	},
 	/*
@@ -387,6 +386,8 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 			border: false,
 			width: dimensions.width,
 			height: 'auto',
+				// As of ExtJS 3.1, JS error with IE when the window is resizable
+			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
 			listeners: {
 				afterrender: {
@@ -455,9 +456,10 @@ HTMLArea.PlainText = Ext.extend(HTMLArea.Plugin, {
 	 */
 	onPastingPadOK: function () {
 	 	 	// Restore the selection
+	 	this.editor.focus();
 		this.restoreSelection();
 			// Insert the cleaned pasting pad content
-		this.editor.getSelection().insertHtml(this.pastingPadBody.innerHTML);
+		this.editor.insertHTML(this.pastingPadBody.innerHTML);
 		this.close();
 		return false;
 	},

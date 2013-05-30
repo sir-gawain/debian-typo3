@@ -25,6 +25,7 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+/* $Id: class.tx_em_extensions_list.php 2084 2010-03-22 01:46:37Z steffenk $ */
 
 /**
  * This class handles extension listings
@@ -159,6 +160,8 @@ class tx_em_Extensions_List {
 	 * @see getInstalledExtensions()
 	 */
 	function getFlatInstExtList($path, &$list, $type) {
+
+
 		if (@is_dir($path)) {
 			$extList = t3lib_div::get_dirs($path);
 			if (is_array($extList)) {
@@ -194,6 +197,8 @@ class tx_em_Extensions_List {
 				$key = count($list);
 				$loaded = t3lib_extMgm::isLoaded($extKey);
 
+
+
 				$exist = $this->findIndex($extKey, $list);
 				if ($exist !== FALSE) {
 					$key = $exist;
@@ -219,6 +224,7 @@ class tx_em_Extensions_List {
 				$list[$key]['type'] = $this->types[$type];
 				$list[$key]['typeShort'] = $type;
 				$list[$key]['installed'] = $loaded ? 1 : 0;
+
 
 				$state = htmlspecialchars($emConf['state']);
 				$list[$key]['state'] = $this->states[$state];
@@ -249,12 +255,13 @@ class tx_em_Extensions_List {
 
 				$list[$key]['categoryShort'] = $list[$key]['category'];
 				$list[$key]['category'] = isset($this->categories[$list[$key]['category']]) ? $this->categories[$list[$key]['category']] : $list[$key]['category'];
-				$list[$key]['required'] = in_array($extKey, t3lib_extMgm::getRequiredExtensionListArray(), TRUE);
+				$list[$key]['required'] = t3lib_div::inList(t3lib_extMgm::getRequiredExtensionList(), $extKey);
 
 				$constraints = $this->humanizeConstraints($list[$key]['constraints']);
 				$list[$key]['depends'] = $constraints['depends'];
 				$list[$key]['conflicts'] = $constraints['conflicts'];
 				$list[$key]['suggests'] = $constraints['suggests'];
+
 
 				unset($list[$key]['_md5_values_when_last_written']);
 			}
@@ -381,7 +388,7 @@ class tx_em_Extensions_List {
 		$content .= '</form>
 
 			<!-- Loaded Extensions List -->
-			<table cellspacing="0" class="t3-em-extension-list t3-em-extension-list-loaded">' . implode('', $lines) . '</table>';
+			<table cellspacing="1" class="t3-em-extension-list t3-em-extension-list-loaded">' . implode('', $lines) . '</table>';
 
 		return $content;
 	}
@@ -462,7 +469,7 @@ EXTENSION KEYS:
 			$content .= '<label for="lookUp">' . $GLOBALS['LANG']->getLL('look_up') . '</label> <input type="text" id="lookUp" name="lookUp" value="' . htmlspecialchars($this->parentObject->lookUpStr) . '" /><input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:search') . '" /></form><br /><br />';
 			$content .= $this->securityHint . '<br /><br />';
 
-			$content .= '<table cellspacing="0" class="t3-em-extension-list t3-em-extension-list-installed">' . implode('', $lines) . '</table>';
+			$content .= '<table cellspacing="1" class="t3-em-extension-list t3-em-extension-list-installed">' . implode('', $lines) . '</table>';
 
 			return $content;
 		}
@@ -719,7 +726,7 @@ EXTENSION KEYS:
 		global $LANG;
 		$extList = $this->getInstalledExtensions();
 
-		$content = '<table cellspacing="0" class="t3-em-extension-list t3-em-extension-list-to-update">' .
+		$content = '<table cellspacing="1" class="t3-em-extension-list t3-em-extension-list-to-update">' .
 				'<tr class="t3-row-header">' .
 				'<td></td>' .
 				'<td>' . $LANG->sL('LLL:EXT:lang/locallang_mod_tools_em.xml:tab_mod_name') . '</td>' .
@@ -756,7 +763,7 @@ EXTENSION KEYS:
 				$comment = '<table cellpadding="0" cellspacing="0" width="100%">';
 				foreach ($versions as $vk) {
 					$va = & $v[$vk];
-					if (t3lib_utility_VersionNumber::convertVersionNumberToInteger($vk) <= t3lib_utility_VersionNumber::convertVersionNumberToInteger($data['EM_CONF']['version'])) {
+					if (t3lib_div::int_from_ver($vk) <= t3lib_div::int_from_ver($data['EM_CONF']['version'])) {
 						continue;
 					}
 					$comment .= '<tr><td valign="top" style="padding-right:2px;border-bottom:1px dotted gray">' . $vk . '</td>' . '<td valign="top" style="border-bottom:1px dotted gray">' . nl2br($va[uploadcomment]) . '</td></tr>';
@@ -807,12 +814,13 @@ EXTENSION KEYS:
 	 * @param	boolean		If set the info in the internal extensionsXML array will be unset before returning the result.
 	 * @return	array		List array and category index as key 0 / 1 in an array.
 	 */
-	function prepareImportExtList($unsetProc = FALSE) {
+	function prepareImportExtList($unsetProc = false) {
 		$list = array();
 		$cat = tx_em_Tools::getDefaultCategory();
 		$filepath = $this->parentObject->getMirrorURL();
 
 		foreach ($this->parentObject->xmlHandler->extensionsXML as $extKey => $data) {
+			$GLOBALS['LANG']->csConvObj->convarray($data, 'utf-8', $GLOBALS['LANG']->charSet); // is there a better place for conversion?
 			$list[$extKey]['type'] = '_';
 			$version = array_keys($data['versions']);
 			$extPath = t3lib_div::strtolower($extKey);
@@ -930,9 +938,9 @@ EXTENSION KEYS:
 	 * @see removeExtFromList(), addExtToList()
 	 */
 	function removeRequiredExtFromListArr($listArr) {
-		$requiredExtensions = t3lib_extMgm::getRequiredExtensionListArray();
+		$requiredExtensions = t3lib_div::trimExplode(',', t3lib_extMgm::getRequiredExtensionList(), 1);
 		foreach ($listArr as $k => $ext) {
-			if (in_array($ext, $requiredExtensions)) {
+			if (in_array($ext, $requiredExtensions) || !strcmp($ext, '_CACHEFILE')) {
 				unset($listArr[$k]);
 			}
 		}
@@ -955,4 +963,9 @@ EXTENSION KEYS:
 		return FALSE;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/extensions/class.tx_em_extensions_list.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/extensions/class.tx_em_extensions_list.php']);
+}
+
 ?>

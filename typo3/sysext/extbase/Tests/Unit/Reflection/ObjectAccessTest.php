@@ -27,9 +27,6 @@
 require_once('Fixture/DummyClassWithGettersAndSetters.php');
 require_once('Fixture/ArrayAccessClass.php');
 
-/**
- * Test Unit Test Base Class
- */
 class Tx_Extbase_Tests_Unit_Reflection_ObjectAccessTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
 	protected $dummyObject;
@@ -59,31 +56,6 @@ class Tx_Extbase_Tests_Unit_Reflection_ObjectAccessTest extends Tx_Extbase_Tests
 
 	/**
 	 * @test
-	 */
-	public function getPropertyReturnsExpectedValueForUnexposedPropertyIfForceDirectAccessIsTrue() {
-		$property = Tx_Extbase_Reflection_ObjectAccess::getProperty($this->dummyObject, 'unexposedProperty', TRUE);
-		$this->assertEquals($property, 'unexposed', 'A property of a given object was not returned correctly.');
-	}
-
-	/**
-	 * @test
-	 */
-	public function getPropertyReturnsExpectedValueForUnknownPropertyIfForceDirectAccessIsTrue() {
-		$this->dummyObject->unknownProperty = 'unknown';
-		$property = Tx_Extbase_Reflection_ObjectAccess::getProperty($this->dummyObject, 'unknownProperty', TRUE);
-		$this->assertEquals($property, 'unknown', 'A property of a given object was not returned correctly.');
-	}
-
-	/**
-	 * @test
-	 * @expectedException Tx_Extbase_Reflection_Exception_PropertyNotAccessibleException
-	 */
-	public function getPropertyReturnsPropertyNotAccessibleExceptionForNotExistingPropertyIfForceDirectAccessIsTrue() {
-		$property = Tx_Extbase_Reflection_ObjectAccess::getProperty($this->dummyObject, 'notExistingProperty', TRUE);
-	}
-
-	/**
-	 * @test
 	 * @expectedException Tx_Extbase_Reflection_Exception_PropertyNotAccessibleException
 	 */
 	public function getPropertyReturnsThrowsExceptionIfPropertyDoesNotExist() {
@@ -103,10 +75,7 @@ class Tx_Extbase_Tests_Unit_Reflection_ObjectAccessTest extends Tx_Extbase_Tests
 	 */
 	public function getPropertyTriesToCallABooleanGetterMethodIfItExists() {
 		$property = Tx_Extbase_Reflection_ObjectAccess::getProperty($this->dummyObject, 'booleanProperty');
-
-		$this->assertTrue(
-			$property
-		);
+		$this->assertTrue($property);
 	}
 
 	/**
@@ -130,22 +99,6 @@ class Tx_Extbase_Tests_Unit_Reflection_ObjectAccessTest extends Tx_Extbase_Tests
 	 */
 	public function setPropertyReturnsFalseIfPropertyIsNotAccessible() {
 		$this->assertFalse(Tx_Extbase_Reflection_ObjectAccess::setProperty($this->dummyObject, 'protectedProperty', 42));
-	}
-
-	/**
-	 * @test
-	 */
-	public function setPropertySetsValueIfPropertyIsNotAccessibleWhenForceDirectAccessIsTrue() {
-		$this->assertTrue(Tx_Extbase_Reflection_ObjectAccess::setProperty($this->dummyObject, 'unexposedProperty', 'was set anyway', TRUE));
-		$this->assertAttributeEquals('was set anyway', 'unexposedProperty', $this->dummyObject);
-	}
-
-	/**
-	 * @test
-	 */
-	public function setPropertySetsValueIfPropertyDoesNotExistWhenForceDirectAccessIsTrue() {
-		$this->assertTrue(Tx_Extbase_Reflection_ObjectAccess::setProperty($this->dummyObject, 'unknownProperty', 'was set anyway', TRUE));
-		$this->assertAttributeEquals('was set anyway', 'unknownProperty', $this->dummyObject);
 	}
 
 	/**
@@ -367,25 +320,6 @@ class Tx_Extbase_Tests_Unit_Reflection_ObjectAccessTest extends Tx_Extbase_Tests
 		$this->dummyObject->setProperty2($alternativeObject);
 
 		$this->assertNull(Tx_Extbase_Reflection_ObjectAccess::getPropertyPath($this->dummyObject, 'property2.property.not.existing'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function getPropertyPathReturnsNullIfSubjectIsNoObject() {
-		$string = 'Hello world';
-
-		$this->assertNull(Tx_Extbase_Reflection_ObjectAccess::getPropertyPath($string, 'property2'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function getPropertyPathReturnsNullIfSubjectOnPathIsNoObject() {
-		$object = new \stdClass();
-		$object->foo = 'Hello World';
-
-		$this->assertNull(Tx_Extbase_Reflection_ObjectAccess::getPropertyPath($object, 'foo.bar'));
 	}
 
 }

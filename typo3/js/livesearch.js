@@ -44,7 +44,7 @@ TYPO3.BackendLiveSearch = Ext.extend(Ext.form.ComboBox, {
 	listWidth: 315,
 	listHovered: false,
 	loadingText: null,
-	minChars: 1,
+	minChars: 2,
 	resizable: false,
 	title: null,
 	width: 205,
@@ -74,7 +74,6 @@ TYPO3.BackendLiveSearch = Ext.extend(Ext.form.ComboBox, {
 		root : 'searchItems',
 		fields : [
 			{name: 'recordTitle'},
-			{name: 'pageId'},
 			{name: 'id'},
 			{name: 'iconHTML'},
 			{name: 'title'},
@@ -85,7 +84,7 @@ TYPO3.BackendLiveSearch = Ext.extend(Ext.form.ComboBox, {
 		select : {
 			scope: this,
 			fn: function (combo, record, index) {
-				jump(record.data.editLink, 'web_list', 'web', record.data.pageId);
+				jump(record.data.editLink, 'web_list', 'web');
 			}
 		},
 		focus : {
@@ -180,7 +179,7 @@ TYPO3.BackendLiveSearch = Ext.extend(Ext.form.ComboBox, {
 					click : function () {
 							// go to db_list.php and search for given search value
 							// @todo the current selected page ID from the page tree is required, also we need the
-							// values of $GLOBALS['BE_USER']->returnWebmounts() to search only during the allowed pages
+							// values of $BE_USER->returnWebmounts() to search only during the allowed pages
 						TYPO3.ModuleMenu.App.showModule('web_list', this.getSearchResultsUrl(this.getValue()));
 						this.collapse();
 					}
@@ -258,7 +257,6 @@ TYPO3.BackendLiveSearch = Ext.extend(Ext.form.ComboBox, {
 
 	onFocus : function() {
 		TYPO3.BackendLiveSearch.superclass.onFocus.apply(this, arguments);
-		TYPO3BackendToolbarManager.hideAll();
 
 		// If search is blank, show the help on focus. Otherwise, show last results
 		if (this.getValue() == '') {

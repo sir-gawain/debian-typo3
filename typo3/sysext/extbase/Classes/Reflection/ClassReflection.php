@@ -68,7 +68,6 @@ class Tx_Extbase_Reflection_ClassReflection extends ReflectionClass {
 	 * that Tx_Extbase_Reflection_MethodReflection objects are returned instead of the
 	 * orginal ReflectionMethod instances.
 	 *
-	 * @param string $name
 	 * @return Tx_Extbase_Reflection_MethodReflection Method reflection object of the named method
 	 */
 	public function getMethod($name) {
@@ -170,7 +169,6 @@ class Tx_Extbase_Reflection_ClassReflection extends ReflectionClass {
 
 	/**
 	 * Returns the values of the specified tag
-	 * @param string $tag
 	 * @return array Values of the given tag
 	 */
 	public function getTagValues($tag) {

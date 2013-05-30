@@ -35,7 +35,7 @@
  * @author Karsten Dambekalns <karsten@typo3.org>
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
- * @subpackage em
+ * @subpackage EM
  */
 class tx_em_Connection_Ter {
 	var $wsdlURL;
@@ -63,11 +63,11 @@ class tx_em_Connection_Ter {
 	function fetchExtension($extKey, $version, $expectedMD5, $mirrorURL) {
 		$extPath = t3lib_div::strtolower($extKey);
 		$mirrorURL .= $extPath{0} . '/' . $extPath{1} . '/' . $extPath . '_' . $version . '.t3x';
-		$t3x = t3lib_div::getUrl($mirrorURL, 0, array(TYPO3_user_agent));
+		$t3x = t3lib_div::getURL($mirrorURL, 0, array(TYPO3_user_agent));
 		$MD5 = md5($t3x);
 
 		if ($t3x === FALSE) {
-			return sprintf('The T3X file "%s" could not be fetched. Possible reasons: network problems, allow_url_fopen is off, cURL is not enabled in Install Tool.', $mirrorURL);
+			return 'The T3X file could not be fetched. Possible reasons: network problems, allow_url_fopen is off, curl is not enabled in Install tool.';
 		}
 
 		if ($MD5 == $expectedMD5) {
@@ -89,9 +89,9 @@ class tx_em_Connection_Ter {
 	function fetchTranslation($extKey, $lang, $mirrorURL) {
 		$extPath = t3lib_div::strtolower($extKey);
 		$mirrorURL .= $extPath{0} . '/' . $extPath{1} . '/' . $extPath . '-l10n/' . $extPath . '-l10n-' . $lang . '.zip';
-		$l10n = t3lib_div::getUrl($mirrorURL, 0, array(TYPO3_user_agent));
+		$l10n = t3lib_div::getURL($mirrorURL, 0, array(TYPO3_user_agent));
 
-		if ($l10n !== FALSE) {
+		if ($l10n !== false) {
 			return array($l10n);
 		} else {
 			return 'Error: Translation could not be fetched.';
@@ -104,7 +104,7 @@ class tx_em_Connection_Ter {
 	 * @param string $extKey		The extension key to install the translations for
 	 * @param string $lang		Language code of translation to fetch
 	 * @param string $mirrorURL		Mirror URL to fetch data from
-	 * @return mixed	TRUE on success, error string on fauilure
+	 * @return mixed	true on success, error string on fauilure
 	 */
 	function updateTranslation($extKey, $lang, $mirrorURL) {
 		$l10n = $this->fetchTranslation($extKey, $lang, $mirrorURL);
@@ -119,7 +119,6 @@ class tx_em_Connection_Ter {
 			t3lib_div::rmdir(PATH_typo3conf . $path . $extKey, TRUE);
 
 			if (tx_em_Tools::unzip($file, PATH_typo3conf . $path)) {
-				t3lib_div::fixPermissions(PATH_typo3conf . $path, TRUE);
 				return TRUE;
 			}
 		}
@@ -136,11 +135,11 @@ class tx_em_Connection_Ter {
 	function fetchTranslationStatus($extKey, $mirrorURL) {
 		$extPath = t3lib_div::strtolower($extKey);
 		$mirrorURL .= $extPath{0} . '/' . $extPath{1} . '/' . $extPath . '-l10n/' . $extPath . '-l10n.xml';
-		$remote = t3lib_div::getUrl($mirrorURL, 0, array(TYPO3_user_agent));
+		$remote = t3lib_div::getURL($mirrorURL, 0, array(TYPO3_user_agent));
 
-		if ($remote !== FALSE) {
+		if ($remote !== false) {
 			$parsed = $this->emObj->xmlHandler->parseL10nXML($remote);
-			return $parsed['languagePackIndex'];
+			return is_array($parsed['languagePackIndex']) ? $parsed['languagePackIndex'] : FALSE;
 		}
 
 		return FALSE;
@@ -325,6 +324,7 @@ class tx_em_Connection_Ter {
 				'priority' => utf8_encode($uArr['EM_CONF']['priority']),
 				'clearCacheOnLoad' => (boolean) intval($uArr['EM_CONF']['clearCacheOnLoad']),
 				'lockType' => utf8_encode($uArr['EM_CONF']['lockType']),
+				'doNotLoadInFEe' => utf8_encode($uArr['EM_CONF']['doNotLoadInFE']),
 				'docPath' => utf8_encode($uArr['EM_CONF']['docPath']),
 			),
 			'infoData' => array(
@@ -372,5 +372,9 @@ class tx_em_Connection_Ter {
 
 		return $response;
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_ter.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_ter.php']);
 }
 ?>

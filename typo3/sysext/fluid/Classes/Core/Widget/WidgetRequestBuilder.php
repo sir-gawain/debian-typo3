@@ -1,12 +1,12 @@
 <?php
 
 /*
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
- *                                                                        *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -23,6 +23,7 @@
 /**
  * Builds the WidgetRequest if an AJAX widget is called.
  *
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class Tx_Fluid_Core_Widget_WidgetRequestBuilder extends Tx_Extbase_MVC_Web_RequestBuilder {
 
@@ -34,6 +35,7 @@ class Tx_Fluid_Core_Widget_WidgetRequestBuilder extends Tx_Extbase_MVC_Web_Reque
 	/**
 	 * @param Tx_Fluid_Core_Widget_AjaxWidgetContextHolder $ajaxWidgetContextHolder
 	 * @return void
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function injectAjaxWidgetContextHolder(Tx_Fluid_Core_Widget_AjaxWidgetContextHolder $ajaxWidgetContextHolder) {
 		$this->ajaxWidgetContextHolder = $ajaxWidgetContextHolder;
@@ -43,6 +45,7 @@ class Tx_Fluid_Core_Widget_WidgetRequestBuilder extends Tx_Extbase_MVC_Web_Reque
 	 * Builds a widget request object from the raw HTTP information
 	 *
 	 * @return Tx_Fluid_Core_Widget_WidgetRequest The widget request as an object
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function build() {
 		$request = $this->objectManager->create('Tx_Fluid_Core_Widget_WidgetRequest');

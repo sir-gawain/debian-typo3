@@ -37,11 +37,6 @@ class Tx_Extbase_MVC_Web_FrontendRequestHandler extends Tx_Extbase_MVC_Web_Abstr
 	protected $configurationManager;
 
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
-	 */
-	protected $extensionService;
-
-	/**
 	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
@@ -50,33 +45,25 @@ class Tx_Extbase_MVC_Web_FrontendRequestHandler extends Tx_Extbase_MVC_Web_Abstr
 	}
 
 	/**
-	 * @param Tx_Extbase_Service_ExtensionService $extensionService
-	 * @return void
-	 */
-	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
-		$this->extensionService = $extensionService;
-	}
-
-	/**
 	 * Handles the web request. The response will automatically be sent to the client.
 	 *
-	 * @return Tx_Extbase_MVC_Web_Response|NULL
+	 * @return Tx_Extbase_MVC_Web_Response
 	 */
 	public function handleRequest() {
 		$request = $this->requestBuilder->build();
 
-		/** @var $requestHashService Tx_Extbase_Security_Channel_RequestHashService */
-		$requestHashService = $this->objectManager->get('Tx_Extbase_Security_Channel_RequestHashService');
+		// Request hash service
+		$requestHashService = $this->objectManager->get('Tx_Extbase_Security_Channel_RequestHashService'); // singleton
 		$requestHashService->verifyRequest($request);
 
-		if ($this->extensionService->isActionCacheable(NULL, NULL, $request->getControllerName(), $request->getControllerActionName())) {
+		if ($this->isCacheable($request->getControllerName(), $request->getControllerActionName())) {
 			$request->setIsCached(TRUE);
 		} else {
 			$contentObject = $this->configurationManager->getContentObject();
 			if ($contentObject->getUserObjectType() === tslib_cObj::OBJECTTYPE_USER) {
 				$contentObject->convertToUserIntObject();
 				// tslib_cObj::convertToUserIntObject() will recreate the object, so we have to stop the request here
-				return NULL;
+				return;
 			}
 			$request->setIsCached(FALSE);
 		}
@@ -95,5 +82,22 @@ class Tx_Extbase_MVC_Web_FrontendRequestHandler extends Tx_Extbase_MVC_Web_Abstr
 	public function canHandleRequest() {
 		return TYPO3_MODE === 'FE';
 	}
+
+	/**
+	 * Determines whether the current action can be cached
+	 *
+	 * @param string $controllerName
+	 * @param string $actionName
+	 * @return boolean TRUE if the given action should be cached, otherwise FALSE
+	 */
+	protected function isCacheable($controllerName, $actionName) {
+		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+		if (isset($frameworkConfiguration['controllerConfiguration'][$controllerName]['nonCacheableActions'])
+			&& in_array($actionName, $frameworkConfiguration['controllerConfiguration'][$controllerName]['nonCacheableActions'])) {
+				return FALSE;
+			}
+		return TRUE;
+	}
+
 }
 ?>

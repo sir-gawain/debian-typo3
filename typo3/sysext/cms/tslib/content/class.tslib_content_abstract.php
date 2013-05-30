@@ -29,13 +29,14 @@
 /**
  * Contains an abstract class for all tslib content class implementations.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
 abstract class tslib_content_Abstract {
 
 	/**
-	 * @var tslib_cObj $cObj
+	 * @var $cObj tslib_cObj
 	 */
 	protected $cObj;
 
@@ -46,7 +47,6 @@ abstract class tslib_content_Abstract {
 	 */
 	public function __construct(tslib_cObj $cObj) {
 		$this->cObj = $cObj;
-		$this->fileFactory = t3lib_file_Factory::getInstance();
 	}
 
 	/**
@@ -67,9 +67,18 @@ abstract class tslib_content_Abstract {
 	}
 
 	/**
-	 * @var t3lib_file_Factory
+	 * Compatibility stdWrap wrapper.
+	 *
+	 * @param	string		$content The content to manipulate using stdWrap functions.
+	 * @param	array		$conf stdWrap configuration.
+	 * @deprecated since TYPO3 4.5, this function will be removed in TYPO3 4.7, use $this->cObj->stdWrap() instead.
 	 */
-	protected $fileFactory = NULL;
+	public function stdWrap($content = '', $conf = array()) {
+		t3lib_div::logDeprecatedFunction();
+
+		return $this->cObj->stdWrap($content, $conf);
+	}
+
 }
 
 ?>

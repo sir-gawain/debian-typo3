@@ -26,6 +26,8 @@
 
 /**
  * class to handle the pagetree filter menu
+ *
+ * $Id$
  */
 var PagetreeFilterMenu = Class.create({
 

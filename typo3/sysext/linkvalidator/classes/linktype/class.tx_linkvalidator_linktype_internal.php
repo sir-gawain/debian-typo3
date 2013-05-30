@@ -23,7 +23,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * This class provides Check Internal Links plugin implementation
+ * This class provides Check Internal Links plugin implementation.
  *
  * @author Dimitri König <dk@cabag.ch>
  * @author Michael Miousse <michael.miousse@infoglobe.ca>
@@ -38,21 +38,21 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 	const NOTEXISTING = 'notExisting';
 
 	/**
-	 * All parameters needed for rendering the error message
+	 * All parameters needed for rendering the error message.
 	 *
 	 * @var array
 	 */
 	protected $errorParams = array();
 
 	/**
-	 * Result of the check, if the current page uid is valid or not
+	 * Result of the check, if the current page uid is valid or not.
 	 *
 	 * @var boolean
 	 */
 	protected $responsePage = TRUE;
 
 	/**
-	 * Result of the check, if the current content uid is valid or not
+	 * Result of the check, if the current content uid is valid or not.
 	 *
 	 * @var boolean
 	 */
@@ -61,16 +61,18 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 	/**
 	 * Checks a given URL + /path/filename.ext for validity
 	 *
-	 * @param string $url Url to check as page-id or page-id#anchor (if anchor is present)
-	 * @param array $softRefEntry: The soft reference entry which builds the context of that url
-	 * @param tx_linkvalidator_Processor $reference Parent instance of tx_linkvalidator_Processor
-	 * @return boolean TRUE on success or FALSE on error
+	 * @param   string	  $url: url to check as page-id or page-id#anchor (if anchor is present)
+	 * @param	 array	  $softRefEntry: the softref entry which builds the context of that url
+	 * @param   object	  $reference:  parent instance of tx_linkvalidator_Processor
+	 * @return  string	  TRUE on success or FALSE on error
 	 */
 	public function checkLink($url, $softRefEntry, $reference) {
+		$page = '';
 		$anchor = '';
+		$response = TRUE;
 		$this->responseContent = TRUE;
 
-			// Might already contain values - empty it
+			// Might already contain values - empty it.
 		unset($this->errorParams);
 
 			// defines the linked page and anchor (if any).
@@ -82,13 +84,13 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 			$page = $url;
 		}
 
-			// Check if the linked page is OK
+			// Check if the linked page is OK.
 		$this->responsePage = $this->checkPage($page, $softRefEntry, $reference);
 
-			// Check if the linked content element is OK
+			// Check if the linked content element is OK.
 		if ($anchor) {
 
-				// Check if the content element is OK
+				// Check if the content element is OK.
 			$this->responseContent = $this->checkContent($page, $anchor, $softRefEntry, $reference);
 
 		}
@@ -110,10 +112,10 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 	/**
 	 * Checks a given page uid for validity
 	 *
-	 * @param string $page Page uid to check
-	 * @param array $softRefEntry The soft reference entry which builds the context of that url
-	 * @param tx_linkvalidator_Processor $reference Parent instance of tx_linkvalidator_Processor
-	 * @return boolean TRUE on success or FALSE on error
+	 * @param   string	  $page: page uid to check
+	 * @param	 array	  $softRefEntry: the softref entry which builds the context of that url
+	 * @param   object	  $reference:  parent instance of tx_linkvalidator_Processor
+	 * @return  string	  TRUE on success or FALSE on error
 	 */
 	protected function checkPage($page, $softRefEntry, $reference) {
 		$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
@@ -125,20 +127,20 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 
 		if ($row) {
 			if ($row['deleted'] == '1') {
-				$this->errorParams['errorType']['page'] = self::DELETED;
+				$this->errorParams['errorType']['page'] = DELETED;
 				$this->errorParams['page']['title'] = $row['title'];
 				$this->errorParams['page']['uid'] = $row['uid'];
 				$this->responsePage = FALSE;
 			} elseif ($row['hidden'] == '1'
 				|| $GLOBALS['EXEC_TIME'] < intval($row['starttime'])
 				|| ($row['endtime'] && intval($row['endtime']) < $GLOBALS['EXEC_TIME'])) {
-				$this->errorParams['errorType']['page'] = self::HIDDEN;
+				$this->errorParams['errorType']['page'] = HIDDEN;
 				$this->errorParams['page']['title'] = $row['title'];
 				$this->errorParams['page']['uid'] = $row['uid'];
 				$this->responsePage = FALSE;
 			}
 		} else {
-			$this->errorParams['errorType']['page'] = self::NOTEXISTING;
+			$this->errorParams['errorType']['page'] = NOTEXISTING;
 			$this->errorParams['page']['uid'] = intval($page);
 			$this->responsePage = FALSE;
 		}
@@ -149,11 +151,11 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 	/**
 	 * Checks a given content uid for validity
 	 *
-	 * @param string $page Uid of the page to which the link is pointing
-	 * @param string $anchor Uid of the content element to check
-	 * @param array $softRefEntry The soft reference entry which builds the context of that url
-	 * @param tx_linkvalidator_Processor $reference Parent instance of tx_linkvalidator_Processor
-	 * @return boolean TRUE on success or FALSE on error
+	 * @param   string    $page: uid of the page to which the link is pointing
+	 * @param   string	  $anchor: uid of the content element to check
+	 * @param	 array	  $softRefEntry: the softref entry which builds the context of that url
+	 * @param   object	  $reference:  parent instance of tx_linkvalidator_Processor
+	 * @return  string	  TRUE on success or FALSE on error
 	 */
 	protected function checkContent($page, $anchor, $softRefEntry, $reference) {
 			// Get page ID on which the content element in fact is located
@@ -169,26 +171,26 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 				// page ID on which this CE is in fact located.
 			$correctPageID = $res['pid'];
 
-				// Check if the element is on the linked page
-				// (The element might have been moved to another page)
+				// check if the element is on the linked page
+				// (the element might have been moved to another page)
 			if (!($correctPageID === $page)) {
-				$this->errorParams['errorType']['content'] = self::MOVED;
+				$this->errorParams['errorType']['content'] = MOVED;
 				$this->errorParams['content']['uid'] = intval($anchor);
 				$this->errorParams['content']['wrongPage'] = intval($page);
 				$this->errorParams['content']['rightPage'] = intval($correctPageID);
 				$this->responseContent = FALSE;
 
 			} else {
-					// The element is located on the page to which the link is pointing
+					// the element is located on the page to which the link is pointing
 				if ($res['deleted'] == '1') {
-					$this->errorParams['errorType']['content'] = self::DELETED;
+					$this->errorParams['errorType']['content'] = DELETED;
 					$this->errorParams['content']['title'] = $res['header'];
 					$this->errorParams['content']['uid'] = $res['uid'];
 					$this->responseContent = FALSE;
 				} elseif ($res['hidden'] == '1'
 					|| $GLOBALS['EXEC_TIME'] < intval($res['starttime'])
 					|| ($res['endtime'] && intval($res['endtime']) < $GLOBALS['EXEC_TIME'])) {
-					$this->errorParams['errorType']['content'] = self::HIDDEN;
+					$this->errorParams['errorType']['content'] = HIDDEN;
 					$this->errorParams['content']['title'] = $res['header'];
 					$this->errorParams['content']['uid'] = $res['uid'];
 					$this->responseContent = FALSE;
@@ -196,8 +198,8 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 			}
 
 		} else {
-				// The content element does not exist
-			$this->errorParams['errorType']['content'] = self::NOTEXISTING;
+				// content element does not exist
+			$this->errorParams['errorType']['content'] = NOTEXISTING;
 			$this->errorParams['content']['uid'] = intval($anchor);
 			$this->responseContent = FALSE;
 		}
@@ -206,23 +208,23 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 	}
 
 	/**
-	 * Generate the localized error message from the error params saved from the parsing
+	 * Generate the localized error message from the error params saved from the parsing.
 	 *
-	 * @param array $errorParams All parameters needed for the rendering of the error message
-	 * @return string Validation error message
+	 * @param   array    all parameters needed for the rendering of the error message
+	 * @return  string    validation error message
 	 */
 	public function getErrorMessage($errorParams) {
 		$errorType = $errorParams['errorType'];
 
 		if (is_array($errorParams['page'])) {
 			switch ($errorType['page']) {
-				case self::DELETED:
+				case DELETED:
 					$errorPage = $GLOBALS['LANG']->getLL('list.report.pagedeleted');
 					$errorPage = str_replace('###title###', $errorParams['page']['title'], $errorPage);
 					$errorPage = str_replace('###uid###', $errorParams['page']['uid'], $errorPage);
 					break;
 
-				case self::HIDDEN:
+				case HIDDEN:
 					$errorPage = $GLOBALS['LANG']->getLL('list.report.pagenotvisible');
 					$errorPage = str_replace('###title###', $errorParams['page']['title'], $errorPage);
 					$errorPage = str_replace('###uid###', $errorParams['page']['uid'], $errorPage);
@@ -236,19 +238,19 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 
 		if (is_array($errorParams['content'])) {
 			switch ($errorType['content']) {
-				case self::DELETED:
+				case DELETED:
 					$errorContent = $GLOBALS['LANG']->getLL('list.report.contentdeleted');
 					$errorContent = str_replace('###title###', $errorParams['content']['title'], $errorContent);
 					$errorContent = str_replace('###uid###', $errorParams['content']['uid'], $errorContent);
 					break;
 
-				case self::HIDDEN:
+				case HIDDEN:
 					$errorContent = $GLOBALS['LANG']->getLL('list.report.contentnotvisible');
 					$errorContent = str_replace('###title###', $errorParams['content']['title'], $errorContent);
 					$errorContent = str_replace('###uid###', $errorParams['content']['uid'], $errorContent);
 					break;
 
-				case self::MOVED:
+				case MOVED:
 					$errorContent = $GLOBALS['LANG']->getLL('list.report.contentmoved');
 					$errorContent = str_replace('###title###', $errorParams['content']['title'], $errorContent);
 					$errorContent = str_replace('###uid###', $errorParams['content']['uid'], $errorContent);
@@ -262,25 +264,22 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 			}
 		}
 
-		if (isset($errorPage) && isset($errorContent)) {
+		if ($errorPage && $errorContent) {
 			$response = $errorPage . '<br />' . $errorContent;
-		} elseif (isset($errorPage)) {
+		} elseif ($errorPage) {
 			$response = $errorPage;
-		} elseif (isset($errorContent)) {
+		} elseif ($errorContent) {
 			$response = $errorContent;
-		} else {
-				// This should not happen
-			$response = $GLOBALS['LANG']->getLL('list.report.noinformation');
 		}
 
 		return $response;
 	}
 
 	/**
-	 * Construct a valid Url for browser output
+	 * Url parsing
 	 *
-	 * @param array $row Broken link record
-	 * @return string Parsed broken url
+	 * @param   array	   $row: broken link record
+	 * @return  string	  parsed broken url
 	 */
 	public function getBrokenUrl($row) {
 		$domain = rtrim(t3lib_div::getIndpEnv('TYPO3_SITE_URL'), '/');
@@ -289,12 +288,16 @@ class tx_linkvalidator_linktype_Internal extends tx_linkvalidator_linktype_Abstr
 		if (count($rootLine) > 0) {
 				$protocol = t3lib_div::getIndpEnv('TYPO3_SSL') ? 'https://' : 'http://';
 				$domainRecord = t3lib_BEfunc::firstDomainRecord($rootLine);
-				if (!empty($domainRecord)) {
+				if(!empty($domainRecord)) {
 					$domain = $protocol . $domainRecord;
 				}
 		}
 		return $domain . '/index.php?id=' . $row['url'];
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/linkvalidator/classes/linktypes/class.tx_linkvalidator_linktypes_internal.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/linkvalidator/classes/linktypes/class.tx_linkvalidator_linktypes_internal.php']);
 }
 
 ?>

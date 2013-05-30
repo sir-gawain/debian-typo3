@@ -29,6 +29,7 @@
 /**
  * Contains CTABLE class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,30 +38,30 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, CTABLE
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 
 		$controlTable = t3lib_div::makeInstance('tslib_controlTable');
 
 		$tableParams = isset($conf['tableParams.'])
-			? $this->cObj->stdWrap($conf['tableParams'], $conf['tableParams.'])
+			? $this->cObj->stdWrap($conf['tableParams'],$conf['tableParams.'])
 			: $conf['tableParams'];
 		if ($tableParams) {
 			$controlTable->tableParams = $tableParams;
 		}
 			// loads the pagecontent
 		$conf['cWidth'] = isset($conf['cWidth.'])
-			? $this->cObj->stdWrap($conf['cWidth'], $conf['cWidth.'])
+			? $this->cObj->stdWrap($conf['cWidth'],$conf['cWidth.'])
 			: $conf['cWidth'];
 		$controlTable->contentW = $conf['cWidth'];
 
-			// loads the menues if any
+		// loads the menues if any
 		if (is_array($conf['c.'])) {
 			$controlTable->content = $this->cObj->cObjGet($conf['c.'], 'c.');
 			$contentTDParams = isset($conf['c.']['TDParams.'])
-				? $this->cObj->stdWrap($conf['c.']['TDParams'], $conf['c.']['TDParams.'])
+				? $this->cObj->stdWrap($conf['c.']['TDParams'],$conf['c.']['TDParams.'])
 				: $conf['c.']['TDParams'];
 			$controlTable->contentTDparams = isset($contentTDParams)
 				? $contentTDParams
@@ -69,7 +70,7 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 		if (is_array($conf['lm.'])) {
 			$controlTable->lm = $this->cObj->cObjGet($conf['lm.'], 'lm.');
 			$lmTDParams = isset($conf['lm.']['TDParams.'])
-				? $this->cObj->stdWrap($conf['lm.']['TDParams'], $conf['lm.']['TDParams.'])
+				? $this->cObj->stdWrap($conf['lm.']['TDParams'],$conf['lm.']['TDParams.'])
 				: $conf['lm.']['TDParams'];
 			$controlTable->lmTDparams = isset($lmTDParams)
 				? $lmTDParams
@@ -78,7 +79,7 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 		if (is_array($conf['tm.'])) {
 			$controlTable->tm = $this->cObj->cObjGet($conf['tm.'], 'tm.');
 			$tmTDParams = isset($conf['tm.']['TDParams.'])
-				? $this->cObj->stdWrap($conf['tm.']['TDParams'], $conf['tm.']['TDParams.'])
+				? $this->cObj->stdWrap($conf['tm.']['TDParams'],$conf['tm.']['TDParams.'])
 				: $conf['tm.']['TDParams'];
 			$controlTable->tmTDparams = isset($tmTDParams)
 				? $tmTDParams
@@ -87,7 +88,7 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 		if (is_array($conf['rm.'])) {
 			$controlTable->rm = $this->cObj->cObjGet($conf['rm.'], 'rm.');
 			$rmTDParams = isset($conf['rm.']['TDParams.'])
-				? $this->cObj->stdWrap($conf['rm.']['TDParams'], $conf['rm.']['TDParams.'])
+				? $this->cObj->stdWrap($conf['rm.']['TDParams'],$conf['rm.']['TDParams.'])
 				: $conf['rm.']['TDParams'];
 			$controlTable->rmTDparams = isset($rmTDParams)
 				? $rmTDParams
@@ -96,7 +97,7 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 		if (is_array($conf['bm.'])) {
 			$controlTable->bm = $this->cObj->cObjGet($conf['bm.'], 'bm.');
 			$bmTDParams = isset($conf['bm.']['TDParams.'])
-				? $this->cObj->stdWrap($conf['bm.']['TDParams'], $conf['bm.']['TDParams.'])
+				? $this->cObj->stdWrap($conf['bm.']['TDParams'],$conf['bm.']['TDParams.'])
 				: $conf['bm.']['TDParams'];
 			$controlTable->bmTDparams = isset($bmTDParams)
 				? $bmTDParams
@@ -104,11 +105,11 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 		}
 
 		$conf['offset'] = isset($conf['offset.'])
-				? $this->cObj->stdWrap($conf['offset'], $conf['offset.'])
+				? $this->cObj->stdWrap($conf['offset'],$conf['offset.'])
 				: $conf['offset'];
 
 		$conf['cMargins'] = isset($conf['cMargins.'])
-				? $this->cObj->stdWrap($conf['cMargins'], $conf['cMargins.'])
+				? $this->cObj->stdWrap($conf['cMargins'],$conf['cMargins.'])
 				: $conf['cMargins'];
 
 		$theValue = $controlTable->start($conf['offset'], $conf['cMargins']);
@@ -118,6 +119,13 @@ class tslib_content_ContentTable extends tslib_content_Abstract {
 		}
 
 		return $theValue;
+
 	}
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_contenttable.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_contenttable.php']);
+}
+
 ?>

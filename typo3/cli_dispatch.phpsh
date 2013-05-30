@@ -1,9 +1,9 @@
-#! /usr/bin/env php
+#! /usr/bin/php -q
 <?php
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2005-2012 Kasper Skaarhoj (kasperYYYY@typo3.com)
+*  (c) 2005-2008 Kasper Skaarhoj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,69 +29,100 @@
 /**
  * Command Line Interface module dispatcher
  *
- * This script takes a "cliKey" as first argument and uses that to dispatch
- * the call to a registered script with that key.
- * Valid cliKeys must be registered in
- * $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['cliKeys'].
+ * $Id$
  *
- * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author      Kasper Skaarhoj <kasperYYYY@typo3.com>
+ *
+ * This script takes a "cliKey" as first argument and uses that to look up the path of the script to include in the end.
+ * See configuration of this feature in $TYPO3_CONF_VARS['SC_OPTIONS']['GLOBAL']['cliKeys'].
+ * The point is to have only ONE script dealing with the environment initialization while the actual processing is all a developer should care for.
+ *
  */
 
-define('TYPO3_MODE', 'BE');
-define('TYPO3_cliMode', TRUE);
+if (substr(php_sapi_name(), 0, 3) == 'cgi') {
+        // sanity check: ensure that we're running in a shell or cronjob (and NOT via HTTP)
+        $checkEnvVars = array('HTTP_USER_AGENT', 'HTTP_HOST', 'SERVER_NAME', 'REMOTE_ADDR', 'REMOTE_PORT', 'SERVER_PROTOCOL');
+        foreach ($checkEnvVars as $var) {
+                if (array_key_exists($var, $_SERVER)) {
+                        echo 'SECURITY CHECK FAILED! This script cannot be used within your browser!' . chr(10);
+                        echo 'If you are sure that we run in a shell or cronjob, please unset' . chr(10);
+                        echo 'environment variable ' . $var . ' (usually using \'unset ' . $var . '\')' . chr(10);
+                        echo 'before starting this script.' . chr(10);
+                        exit;
+                }
+        }
+        unset($checkEnvVars);
 
-	// We use require instead of require_once here so we get a fatal error if classes/Bootstrap.php is accidentally included twice
-	// (which would indicate a clear bug).
-require('classes/Bootstrap/Cli.php');
-Typo3_Bootstrap_Cli::checkEnvironmentOrDie();
-
-require('classes/Bootstrap.php');
-Typo3_Bootstrap::getInstance()
-	->baseSetup('typo3/')
-	->registerExtDirectComponents()
-	->populateLocalConfiguration()
-	->initializeCachingFramework()
-	->registerAutoloader()
-	->checkUtf8DatabaseSettingsOrDie()
-	->transferDeprecatedCurlSettings()
-	->setCacheHashOptions()
-	->enforceCorrectProxyAuthScheme()
-	->setDefaultTimezone()
-	->initializeL10nLocales()
-	->configureImageProcessingOptions()
-	->convertPageNotFoundHandlingToBoolean()
-	->registerGlobalDebugFunctions()
-	->registerSwiftMailer()
-	->configureExceptionHandling()
-	->setMemoryLimit()
-	->defineTypo3RequestTypes()
-	->populateTypo3LoadedExtGlobal(TRUE)
-	->loadAdditionalConfigurationFromExtensions(TRUE)
-	->deprecationLogForOldExtCacheSetting()
-	->initializeExceptionHandling()
-	->requireAdditionalExtensionFiles()
-	->setFinalCachingFrameworkCacheConfiguration()
-	->defineLoggingAndExceptionConstants()
-	->unsetReservedGlobalVariables()
-	->initializeTypo3DbGlobal(TRUE);
-Typo3_Bootstrap_Cli::initializeCliKeyOrDie();
-Typo3_Bootstrap::getInstance()
-	->loadExtensionTables(TRUE)
-		// TODO: Check if we really need the sprite manager on the command line
-	->initializeSpriteManager(TRUE)
-	->initializeBackendUser()
-	->initializeBackendUserMounts()
-	->initializeLanguageObject();
-
-	// Make sure output is not buffered, so command-line output and interaction can take place
-t3lib_div::flushOutputBuffers();
-
-try {
-	include(TYPO3_cliInclude);
-} catch (Exception $e) {
-	fwrite(STDERR, $e->getMessage() . LF);
-	exit(99);
+	// mimic CLI API in CGI API (you must use the -C/-no-chdir and the -q/--no-header switches!)
+	ini_set('html_errors', 0);
+	ini_set('implicit_flush', 1);
+	ini_set('max_execution_time', 0);
+	if (!ini_get('register_argc_argv')) {
+		$argv = $_SERVER['argv'];
+		$argc = $_SERVER['argc'];
+	}
+	define(STDIN, fopen('php://stdin', 'r'));
+	define(STDOUT, fopen('php://stdout', 'w'));
+	define(STDERR, fopen('php://stderr', 'w'));
+} elseif (php_sapi_name() != 'cli') {
+	die('Not called from a command line interface (e.g. a shell or scheduler).' . chr(10));
 }
 
-Typo3_Bootstrap::getInstance()->shutdown();
+	// Defining circumstances for CLI mode:
+define('TYPO3_cliMode', TRUE);
+
+	// Get path to this script
+$temp_PATH_thisScript = isset($_SERVER['argv'][0]) ? $_SERVER['argv'][0] : (isset($_ENV['_']) ? $_ENV['_'] : $_SERVER['_']);
+
+	// Figure out if the path is relative
+$relativePath = FALSE;
+if (stristr(PHP_OS,'win') && !stristr(PHP_OS,'darwin')) {
+		// Windows
+	if (!preg_match('/^([A-Z]:)?\\\/', $temp_PATH_thisScript)) {
+		$relativePath = TRUE;
+	}
+} else {
+		// *nix, et al
+	if ($temp_PATH_thisScript{0} != '/') {
+		$relativePath = TRUE;
+	}
+}
+
+	// Resolve path
+if ($relativePath) {
+	$workingDirectory = isset($_SERVER['PWD']) ? $_SERVER['PWD'] : getcwd();
+	if ($workingDirectory) {
+		$temp_PATH_thisScript =
+			$workingDirectory.'/'.preg_replace('/\.\//','',$temp_PATH_thisScript);
+		if (!@is_file($temp_PATH_thisScript)) {
+			die('Relative path found, but an error occurred while resolving the absolute path: ' . $temp_PATH_thisScript . chr(10));
+		}
+	} else {
+		die ('Relative path found, but resolving absolute path is not supported on this platform.'.chr(10));
+	}
+}
+
+	// Define absolute path to this script
+define('PATH_thisScript',$temp_PATH_thisScript);
+
+if (!isset($_SERVER['argv'][1]))	{
+	die ('The first argument must be a valid key.'.chr(10));
+}
+
+	// First argument is a key that points to the script configuration
+define('TYPO3_cliKey', $_SERVER['argv'][1]);
+
+	// Include init file:
+require(dirname(PATH_thisScript).'/init.php');
+
+	// Make sure output is not buffered,
+	// so that command-line output and interaction can take place
+t3lib_div::flushOutputBuffers();
+
+if (defined('TYPO3_cliInclude')) {
+	include(TYPO3_cliInclude);
+} else {
+	die('No include file configured for key "'.TYPO3_cliKey.'".'.chr(10));
+}
+
 ?>

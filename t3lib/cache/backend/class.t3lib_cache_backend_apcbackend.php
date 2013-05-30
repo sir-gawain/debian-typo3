@@ -22,6 +22,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+
 /**
  * A caching backend which stores cache entries by using APC.
  *
@@ -46,49 +47,85 @@
  *
  * @package TYPO3
  * @subpackage t3lib_cache
- * @author Robert Lemke <robert@typo3.org>
- * @author Karsten Dambekalns <karsten@typo3.org>
- * @author Christian Jul Jensen <julle@typo3.org>
- * @author Dmitry Dulepov <dmitry@typo3.org>
  * @api
- * @scope prototype
+ * @version $Id$
  */
 class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend {
 
 	/**
 	 * A prefix to seperate stored data from other data possible stored in the APC
+	 *
 	 * @var string
 	 */
 	protected $identifierPrefix;
 
 	/**
+	 * Set the cache identifier prefix.
+	 *
+	 * @param string $identifierPrefix
+	 */
+	protected function setIdentifierPrefix($identifierPrefix) {
+		$this->identifierPrefix = $identifierPrefix;
+	}
+
+	/**
+	 * Retrieves the cache identifier prefix.
+	 *
+	 * @return string
+	 */
+	protected function getIdentifierPrefix() {
+		return $this->identifierPrefix;
+	}
+
+	/**
 	 * Constructs this backend
 	 *
-	 * @param string $context FLOW3's application context
 	 * @param array $options Configuration options - unused here
+	 * @author Robert Lemke <robert@typo3.org>
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
-	public function __construct($context, array $options = array()) {
+	public function __construct(array $options = array()) {
 		if (!extension_loaded('apc')) {
 			throw new t3lib_cache_Exception(
-				'The PHP extension "apc" must be installed and loaded in order to use the APC backend.',
+				'The PHP extension "apc" or "apcu" must be installed and loaded in order to use the APC backend.',
 				1232985414
 			);
 		}
 
-		parent::__construct($context, $options);
+		parent::__construct($options);
 	}
 
 	/**
 	 * Initializes the identifier prefix when setting the cache.
 	 *
-	 * @param t3lib_cache_frontend_Frontend $cache
+	 * @param t3lib_cache_frontend_Frontend $cache The frontend for this backend
 	 * @return void
+	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function setCache(t3lib_cache_frontend_Frontend $cache) {
 		parent::setCache($cache);
-		$processUser = extension_loaded('posix') ? posix_getpwuid(posix_geteuid()) : array('name' => 'default');
-		$pathHash = t3lib_div::shortMD5(PATH_site . $processUser['name'] . $this->context, 12);
-		$this->identifierPrefix = 'TYPO3_' . $pathHash;
+		$processUser = $this->getCurrentUserData();
+		$pathHash = t3lib_div::shortMD5($this->getPathSite() . $processUser['name'] . $cache->getIdentifier(), 12);
+		$this->setIdentifierPrefix('TYPO3_' . $pathHash);
+	}
+
+	/**
+	 * Returns the current user data with posix_getpwuid or a default structure when
+	 * posix_getpwuid is not available.
+	 *
+	 * @return array
+	 */
+	protected function getCurrentUserData() {
+		return extension_loaded('posix') ? posix_getpwuid(posix_geteuid()) : array('name' => 'default');
+	}
+
+	/**
+	 * Returns the PATH_site constant.
+	 *
+	 * @return string
+	 */
+	protected function getPathSite() {
+		return PATH_site;
 	}
 
 	/**
@@ -100,9 +137,10 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 * @param integer $lifetime Lifetime of this cache entry in seconds. If NULL is specified, the default lifetime is used. "0" means unlimited liftime.
 	 * @return void
 	 * @throws t3lib_cache_Exception if no cache frontend has been set.
-	 * @throws \InvalidArgumentException if the identifier is not valid
+	 * @throws InvalidArgumentException if the identifier is not valid
 	 * @throws t3lib_cache_exception_InvalidData if $data is not a string
-	 * @api
+	 * @author Christian Jul Jensen <julle@typo3.org>
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function set($entryIdentifier, $data, array $tags = array(), $lifetime = NULL) {
 		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
@@ -122,7 +160,7 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 		$tags[] = '%APCBE%' . $this->cacheIdentifier;
 		$expiration = $lifetime !== NULL ? $lifetime : $this->defaultLifetime;
 
-		$success = apc_store($this->identifierPrefix . $entryIdentifier, $data, $expiration);
+		$success = apc_store($this->getIdentifierPrefix() . $entryIdentifier, $data, $expiration);
 		if ($success === TRUE) {
 			$this->removeIdentifierFromAllTags($entryIdentifier);
 			$this->addIdentifierToTags($entryIdentifier, $tags);
@@ -139,11 +177,11 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 *
 	 * @param string $entryIdentifier An identifier which describes the cache entry to load
 	 * @return mixed The cache entry's content as a string or FALSE if the cache entry could not be loaded
-	 * @api
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function get($entryIdentifier) {
 		$success = FALSE;
-		$value = apc_fetch($this->identifierPrefix . $entryIdentifier, $success);
+		$value = apc_fetch($this->getIdentifierPrefix() . $entryIdentifier, $success);
 
 		return ($success ? $value : $success);
 	}
@@ -153,11 +191,11 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 *
 	 * @param string $entryIdentifier An identifier specifying the cache entry
 	 * @return boolean TRUE if such an entry exists, FALSE if not
-	 * @api
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function has($entryIdentifier) {
 		$success = FALSE;
-		apc_fetch($this->identifierPrefix . $entryIdentifier, $success);
+		apc_fetch($this->getIdentifierPrefix() . $entryIdentifier, $success);
 		return $success;
 	}
 
@@ -168,11 +206,12 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 *
 	 * @param string $entryIdentifier Specifies the cache entry to remove
 	 * @return boolean TRUE if (at least) an entry could be removed or FALSE if no entry was found
-	 * @api
+	 * @author Christian Jul Jensen <julle@typo3.org>
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function remove($entryIdentifier) {
 		$this->removeIdentifierFromAllTags($entryIdentifier);
-		return apc_delete($this->identifierPrefix . $entryIdentifier);
+		return apc_delete($this->getIdentifierPrefix() . $entryIdentifier);
 	}
 
 	/**
@@ -181,11 +220,12 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 *
 	 * @param string $tag The tag to search for
 	 * @return array An array with identifiers of all matching entries. An empty array if no entries matched
-	 * @api
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function findIdentifiersByTag($tag) {
 		$success = FALSE;
-		$identifiers = apc_fetch($this->identifierPrefix . 'tag_' . $tag, $success);
+		$identifiers = apc_fetch($this->getIdentifierPrefix() . 'tag_' . $tag, $success);
+
 		if ($success === FALSE) {
 			return array();
 		} else {
@@ -194,23 +234,52 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	}
 
 	/**
+	 * Finds and returns all cache entry identifiers which are tagged by the
+	 * specified tags.
+	 *
+	 * @param array Array of tags to search for
+	 * @return array An array with identifiers of all matching entries. An empty array if no entries matched
+	 * @author Ingo Renner <ingo@typo3.org>
+	 */
+	public function findIdentifiersByTags(array $tags) {
+		$taggedEntries = array();
+		$foundEntries = array();
+
+		foreach ($tags as $tag) {
+			$taggedEntries[$tag] = $this->findIdentifiersByTag($tag);
+		}
+
+		$intersectedTaggedEntries = call_user_func_array('array_intersect', $taggedEntries);
+
+		foreach ($intersectedTaggedEntries as $entryIdentifier) {
+			if ($this->has($entryIdentifier)) {
+				$foundEntries[$entryIdentifier] = $entryIdentifier;
+			}
+		}
+
+		return $foundEntries;
+	}
+
+	/**
 	 * Finds all tags for the given identifier. This function uses reverse tag
 	 * index to search for tags.
 	 *
 	 * @param string $identifier Identifier to find tags by
 	 * @return array Array with tags
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	protected function findTagsByIdentifier($identifier) {
 		$success = FALSE;
-		$tags = apc_fetch($this->identifierPrefix . 'ident_' . $identifier, $success);
-		return ($success ? (array)$tags : array());
+		$tags = apc_fetch($this->getIdentifierPrefix() . 'ident_' . $identifier, $success);
+
+		return ($success ? (array) $tags : array());
 	}
 
 	/**
 	 * Removes all cache entries of this cache.
 	 *
 	 * @return void
-	 * @api
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function flush() {
 		if (!$this->cache instanceof t3lib_cache_frontend_Frontend) {
@@ -224,16 +293,31 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	}
 
 	/**
-	 * Removes all cache entries of this cache which are tagged by the specified tag.
+	 * Removes all cache entries of this cache which are tagged by the specified
+	 * tag.
 	 *
 	 * @param string $tag The tag the entries must have
 	 * @return void
-	 * @api
+	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function flushByTag($tag) {
 		$identifiers = $this->findIdentifiersByTag($tag);
+
 		foreach ($identifiers as $identifier) {
 			$this->remove($identifier);
+		}
+	}
+
+	/**
+	 * Removes all cache entries of this cache which are tagged by the specified tag.
+	 *
+	 * @param array	The tags the entries must have
+	 * @return void
+	 * @author Ingo Renner <ingo@typo3.org>
+	 */
+	public function flushByTags(array $tags) {
+		foreach ($tags as $tag) {
+			$this->flushByTag($tag);
 		}
 	}
 
@@ -242,6 +326,8 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 *
 	 * @param string $entryIdentifier
 	 * @param array $tags
+	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @author Dmitry Dulepov <dmitry.@typo3.org>
 	 */
 	protected function addIdentifierToTags($entryIdentifier, array $tags) {
 		foreach ($tags as $tag) {
@@ -249,13 +335,13 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 			$identifiers = $this->findIdentifiersByTag($tag);
 			if (array_search($entryIdentifier, $identifiers) === FALSE) {
 				$identifiers[] = $entryIdentifier;
-				apc_store($this->identifierPrefix . 'tag_' . $tag, $identifiers);
+				apc_store($this->getIdentifierPrefix() . 'tag_' . $tag, $identifiers);
 			}
 
 				// Update identifier-to-tag index
 			$existingTags = $this->findTagsByIdentifier($entryIdentifier);
-			if (array_search($entryIdentifier, $existingTags) === FALSE) {
-				apc_store($this->identifierPrefix . 'ident_' . $entryIdentifier, array_merge($existingTags, $tags));
+			if (array_search($entryIdentifier, $existingTags) === false) {
+				apc_store($this->getIdentifierPrefix() . 'ident_' . $entryIdentifier, array_merge($existingTags, $tags));
 			}
 
 		}
@@ -266,6 +352,8 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 	 *
 	 * @param string $entryIdentifier
 	 * @param array $tags
+	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @author Dmitry Dulepov <dmitry.@typo3.org>
 	 */
 	protected function removeIdentifierFromAllTags($entryIdentifier) {
 			// Get tags for this identifier
@@ -273,22 +361,22 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 			// Deassociate tags with this identifier
 		foreach ($tags as $tag) {
 			$identifiers = $this->findIdentifiersByTag($tag);
-				// Formally array_search() below should never return FALSE due to
+				// Formally array_search() below should never return false due to
 				// the behavior of findTagsByIdentifier(). But if reverse index is
-				// corrupted, we still can get 'FALSE' from array_search(). This is
+				// corrupted, we still can get 'false' from array_search(). This is
 				// not a problem because we are removing this identifier from
 				// anywhere.
 			if (($key = array_search($entryIdentifier, $identifiers)) !== FALSE) {
 				unset($identifiers[$key]);
 				if (count($identifiers)) {
-					apc_store($this->identifierPrefix . 'tag_' . $tag, $identifiers);
+					apc_store($this->getIdentifierPrefix() . 'tag_' . $tag, $identifiers);
 				} else {
-					apc_delete($this->identifierPrefix . 'tag_' . $tag);
+					apc_delete($this->getIdentifierPrefix() . 'tag_' . $tag);
 				}
 			}
 		}
 			// Clear reverse tag index for this identifier
-		apc_delete($this->identifierPrefix . 'ident_' . $entryIdentifier);
+		apc_delete($this->getIdentifierPrefix() . 'ident_' . $entryIdentifier);
 	}
 
 	/**
@@ -300,4 +388,10 @@ class t3lib_cache_backend_ApcBackend extends t3lib_cache_backend_AbstractBackend
 
 	}
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_apcbackend.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/cache/backend/class.t3lib_cache_backend_apcbackend.php']);
+}
+
 ?>

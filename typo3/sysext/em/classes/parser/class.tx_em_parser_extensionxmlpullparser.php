@@ -24,6 +24,8 @@
  ***************************************************************/
 /**
  * Module: Extension manager - Extension.xml pull-parser
+ *
+ * $Id: class.tx_em_parser_extensionxmlpullparser.php 1913 2010-02-21 15:47:37Z mkrause $
  */
 
 /**
@@ -41,11 +43,17 @@
  */
 class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstractParser implements SplSubject {
 
+	/**
+	 * Keeps XML parser.
+	 *
+	 * @var null|XMLReader
+	 */
+	protected $objXML = NULL;
 
 	/**
 	 * Keeps list of attached observers.
 	 *
-	 * @var  SplObserver[]
+	 * @var  array
 	 */
 	protected $observers = array();
 
@@ -56,10 +64,16 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 	 */
 	function __construct() {
 		$this->requiredPHPExt = 'xmlreader';
+	}
 
-		if ($this->isAvailable()) {
-			$this->objXML = new XMLReader();
-		}
+	/**
+	 * Method creates the required parser.
+	 *
+	 * @access  protected
+	 * @return  void
+	 */
+	protected function createParser() {
+		$this->objXML = new XMLReader();
 	}
 
 	/**
@@ -67,13 +81,14 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 	 *
 	 * @param   string  $file: GZIP stream resource
 	 * @return  void
-	 * @throws  tx_em_ExtensionXmlException  in case of XML parser errors
+	 * @throws  em_extensionxml_Exception  in case of XML parser errors
 	 */
 	public function parseXML($file) {
+		$this->createParser();
 		if (!(is_object($this->objXML) && (get_class($this->objXML) == 'XMLReader'))) {
 			$this->throwException('Unable to create XML parser.');
 		}
-		$this->objXML->open($file, 'utf-8') || $this->throwException(sprintf('Unable to open file resource %s.', htmlspecialchars($file)));
+		$this->objXML->open($file, 'utf-8') || $this->throwException(sprintf('Unable to open file ressource %s.', htmlspecialchars($file)));
 
 		while ($this->objXML->read()) {
 
@@ -221,8 +236,8 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 	 * @return  void
 	 */
 	public function detach(SplObserver $observer) {
-		$key = array_search($observer, $this->observers, TRUE);
-		if (!($key === FALSE)) {
+		$key = array_search($observer, $this->observers, true);
+		if (!($key === false)) {
 			unset($this->observers[$key]);
 		}
 	}
@@ -238,4 +253,9 @@ class tx_em_Parser_ExtensionXmlPullParser extends tx_em_Parser_ExtensionXmlAbstr
 		}
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_extensionxmlpullparser.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/parser/class.tx_em_parser_extensionxmlpullparser.php']);
+}
+
 ?>

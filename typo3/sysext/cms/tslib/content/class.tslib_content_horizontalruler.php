@@ -29,6 +29,7 @@
 /**
  * Contains TEXT class object.
  *
+ * $Id: class.tslib_content.php 7905 2010-06-13 14:42:33Z ohader $
  * @author Xavier Perseguers <typo3@perseguers.ch>
  * @author Steffen Kamper <steffen@typo3.org>
  */
@@ -37,20 +38,20 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 	/**
 	 * Rendering the cObject, HRULER
 	 *
-	 * @param array $conf Array of TypoScript properties
-	 * @return string Output
+	 * @param	array		Array of TypoScript properties
+	 * @return	string		Output
 	 */
 	public function render($conf = array()) {
 
 		$lineThickness = isset($conf['lineThickness.'])
 			? $this->cObj->stdWrap($conf['lineThickness'], $conf['lineThickness.'])
 			: $conf['lineThickness'];
-		$lineThickness = t3lib_utility_Math::forceIntegerInRange($lineThickness, 1, 50);
+		$lineThickness = t3lib_div::intInRange($lineThickness, 1, 50);
 
 		$lineColor = isset($conf['lineColor.'])
 			? $this->cObj->stdWrap($conf['lineColor'], $conf['lineColor.'])
 			: $conf['lineColor'];
-		if (!$lineColor) {
+		if(!$lineColor) {
 			$lineColor = 'black';
 		}
 
@@ -65,7 +66,7 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 		$tableWidth = isset($conf['tableWidth.'])
 			? intval($this->cObj->stdWrap($conf['tableWidth'], $conf['tableWidth.']))
 			: intval($conf['tableWidth']);
-		if (!$tableWidth) {
+		if(!$tableWidth) {
 			$tableWidth = '99%';
 		}
 
@@ -101,6 +102,14 @@ class tslib_content_HorizontalRuler extends tslib_content_Abstract {
 		}
 
 		return $theValue;
+
 	}
+
 }
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_horizontalruler.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['tslib/content/class.tslib_content_horizontalruler.php']);
+}
+
 ?>

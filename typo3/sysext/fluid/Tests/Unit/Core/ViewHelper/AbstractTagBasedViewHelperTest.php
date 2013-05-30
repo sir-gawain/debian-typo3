@@ -1,18 +1,29 @@
 <?php
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
+ *                                                                        *
+ * This script is distributed in the hope that it will be useful, but     *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
+ * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser       *
+ * General Public License for more details.                               *
+ *                                                                        *
+ * You should have received a copy of the GNU Lesser General Public       *
+ * License along with the script.                                         *
+ * If not, see http://www.gnu.org/licenses/lgpl.html                      *
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
 
 /**
- * Testcase for TagBasedViewHelper
+ * Testcase for AbstractTagBasedViewHelper
  *
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class Tx_Fluid_Tests_Unit_Core_ViewHelper_AbstractTagBasedViewHelperTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
@@ -22,45 +33,51 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_AbstractTagBasedViewHelperTest extends
 
 	/**
 	 * @test
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function initializeResetsUnderlyingTagBuilder() {
 		$mockTagBuilder = $this->getMock('Tx_Fluid_Core_ViewHelper_TagBuilder', array('reset'), array(), '', FALSE);
 		$mockTagBuilder->expects($this->once())->method('reset');
-		$this->viewHelper->injectTagBuilder($mockTagBuilder);
+		$this->viewHelper->_set('tag', $mockTagBuilder);
 
 		$this->viewHelper->initialize();
 	}
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function oneTagAttributeIsRenderedCorrectly() {
 		$mockTagBuilder = $this->getMock('Tx_Fluid_Core_ViewHelper_TagBuilder', array('addAttribute'), array(), '', FALSE);
 		$mockTagBuilder->expects($this->once())->method('addAttribute')->with('foo', 'bar');
-		$this->viewHelper->injectTagBuilder($mockTagBuilder);
+		$this->viewHelper->_set('tag', $mockTagBuilder);
 
 		$this->viewHelper->_call('registerTagAttribute', 'foo', 'string', 'Description', FALSE);
-		$arguments = array('foo' => 'bar');
+		$arguments = new Tx_Fluid_Core_ViewHelper_Arguments(array('foo' => 'bar'));
 		$this->viewHelper->setArguments($arguments);
 		$this->viewHelper->initialize();
 	}
 
 	/**
 	 * @test
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function additionalTagAttributesAreRenderedCorrectly() {
 		$mockTagBuilder = $this->getMock('Tx_Fluid_Core_ViewHelper_TagBuilder', array('addAttribute'), array(), '', FALSE);
 		$mockTagBuilder->expects($this->once())->method('addAttribute')->with('foo', 'bar');
-		$this->viewHelper->injectTagBuilder($mockTagBuilder);
+		$this->viewHelper->_set('tag', $mockTagBuilder);
 
 		$this->viewHelper->_call('registerTagAttribute', 'foo', 'string', 'Description', FALSE);
-		$arguments = array('additionalAttributes' => array('foo' => 'bar'));
+		$arguments = new Tx_Fluid_Core_ViewHelper_Arguments(array('additionalAttributes' => array('foo' => 'bar')));
 		$this->viewHelper->setArguments($arguments);
 		$this->viewHelper->initialize();
 	}
 
 	/**
 	 * @test
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function standardTagAttributesAreRegistered() {
 		$mockTagBuilder = $this->getMock('Tx_Fluid_Core_ViewHelper_TagBuilder', array('addAttribute'), array(), '', FALSE);
@@ -72,17 +89,19 @@ class Tx_Fluid_Tests_Unit_Core_ViewHelper_AbstractTagBasedViewHelperTest extends
 		$mockTagBuilder->expects($this->at(5))->method('addAttribute')->with('title', 'titleAttribute');
 		$mockTagBuilder->expects($this->at(6))->method('addAttribute')->with('accesskey', 'accesskeyAttribute');
 		$mockTagBuilder->expects($this->at(7))->method('addAttribute')->with('tabindex', 'tabindexAttribute');
-		$this->viewHelper->injectTagBuilder($mockTagBuilder);
+		$this->viewHelper->_set('tag', $mockTagBuilder);
 
-		$arguments = array(
-			'class' => 'classAttribute',
-			'dir' => 'dirAttribute',
-			'id' => 'idAttribute',
-			'lang' => 'langAttribute',
-			'style' => 'styleAttribute',
-			'title' => 'titleAttribute',
-			'accesskey' => 'accesskeyAttribute',
-			'tabindex' => 'tabindexAttribute'
+		$arguments = new Tx_Fluid_Core_ViewHelper_Arguments(
+			array(
+				'class' => 'classAttribute',
+				'dir' => 'dirAttribute',
+				'id' => 'idAttribute',
+				'lang' => 'langAttribute',
+				'style' => 'styleAttribute',
+				'title' => 'titleAttribute',
+				'accesskey' => 'accesskeyAttribute',
+				'tabindex' => 'tabindexAttribute'
+			)
 		);
 		$this->viewHelper->_call('registerUniversalTagAttributes');
 		$this->viewHelper->setArguments($arguments);

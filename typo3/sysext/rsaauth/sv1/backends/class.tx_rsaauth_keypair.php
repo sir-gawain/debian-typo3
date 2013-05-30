@@ -23,40 +23,47 @@
 ***************************************************************/
 
 /**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ * $Id$
+ */
+
+
+/**
  * This class contain an RSA keypair class. Its purpose is to keep to keys
  * and trasnfer these keys between other PHP classes.
  *
- * @author Dmitry Dulepov <dmitry@typo3.org>
- * @package TYPO3
- * @subpackage tx_rsaauth
+ * @author	Dmitry Dulepov <dmitry@typo3.org>
+ * @package	TYPO3
+ * @subpackage	tx_rsaauth
  */
 final class tx_rsaauth_keypair {
 
 	/**
 	 * RSA public exponent (3 or 0x10001)
 	 *
-	 * @var integer
+	 * @var	int
 	 */
-	protected $exponent = 0x10001;
+	protected	$exponent = 0x10001;
 
 	/**
 	 * The private key
 	 *
-	 * @var string
+	 * @var	string
 	 */
-	protected $privateKey = '';
+	protected	$privateKey = '';
 
 	/**
 	 * The public key modulus
 	 *
-	 * @var string
+	 * @var	string
 	 */
-	protected $publicKeyModulus = '';
+	protected	$publicKeyModulus = '';
 
 	/**
 	 * Retrieves the exponent.
 	 *
-	 * @return string The exponent
+	 * @return	string	The exponent
 	 */
 	public function getExponent() {
 		return $this->exponent;
@@ -65,8 +72,8 @@ final class tx_rsaauth_keypair {
 	/**
 	 * Sets the private key
 	 *
-	 * @param string $privateKey The new private key
-	 * @return void
+	 * @param	string	$privateKey	The new private key
+	 * @return	void
 	 */
 	public function setExponent($exponent) {
 		$this->exponent = $exponent;
@@ -75,7 +82,7 @@ final class tx_rsaauth_keypair {
 	/**
 	 * Retrieves the private key.
 	 *
-	 * @return string The private key
+	 * @return	string	The private key
 	 */
 	public function getPrivateKey() {
 		return $this->privateKey;
@@ -84,8 +91,8 @@ final class tx_rsaauth_keypair {
 	/**
 	 * Sets the private key
 	 *
-	 * @param string $privateKey The new private key
-	 * @return void
+	 * @param	string	$privateKey	The new private key
+	 * @return	void
 	 */
 	public function setPrivateKey($privateKey) {
 		$this->privateKey = $privateKey;
@@ -94,7 +101,7 @@ final class tx_rsaauth_keypair {
 	/**
 	 * Retrieves the public key modulus
 	 *
-	 * @return string The public key modulus
+	 * @return	string	The public key modulus
 	 */
 	public function getPublicKeyModulus() {
 		return $this->publicKeyModulus;
@@ -103,11 +110,16 @@ final class tx_rsaauth_keypair {
 	/**
 	 * Sets the public key modulus
 	 *
-	 * @param string $publicKeyModulus The new public key modulus
-	 * @return void
+	 * @param	string	$publicKeyModulus	The new public key modulus
+	 * @return	void
 	 */
 	public function setPublicKey($publicKeyModulus) {
 		$this->publicKeyModulus = $publicKeyModulus;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backends/class.tx_rsaauth_keypair.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rsaauth/sv1/backends/class.tx_rsaauth_keypair.php']);
+}
+
 ?>

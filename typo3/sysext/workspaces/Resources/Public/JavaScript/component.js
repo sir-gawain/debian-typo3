@@ -78,18 +78,18 @@ TYPO3.Workspaces.RowDetail.rowDetailTemplate = new Ext.XTemplate(
 			'<table class="char_select_template" width="100%">',
 				'<tr class="header">',
 					'<th class="char_select_profile_titleLeft">',
-						'{[TYPO3.l10n.localize(\'workspace_version\')]}',
+						'Workspace Version',
 					'</th>',
 					'<th class="char_select_profile_titleRight">',
-						'{[TYPO3.l10n.localize(\'live_workspace\')]}',
+						'Live Workspace',
 					'</th>',
 				'</tr>',
 				'<tr>',
 					'<td class="t3-workspaces-foldout-subheaderLeft">',
-						'{[String.format(TYPO3.l10n.localize(\'current_step\'), values.label_Stage, values.stage_position, values.stage_count)]}',
+						'<b>Current stage step:</b> {label_Stage} (<b>{stage_position}</b>/{stage_count})',
 					'</td>',
 					'<td class="t3-workspaces-foldout-subheaderRight">',
-						'{[String.format(TYPO3.l10n.localize(\'path\'), values.path_Live)]}',
+						'<b>Path:</b> {path_Live}',
 					'</td>',
 				'</tr>',
 				'<tr>',
@@ -125,9 +125,7 @@ TYPO3.Workspaces.RowDetail.rowDetailTemplate = new Ext.XTemplate(
 				'<tpl if="this.hasComments(comments)">',
 				'<tr>',
 					'<td class="t3-workspaces-foldout-subheaderLeft">',
-						'<div class="t3-workspaces-foldout-subheader-container">',
-							'{[String.format(TYPO3.l10n.localize(\'comments\'), values.stage_position, values.label_Stage)]}',
-						'</div>',
+						'<div class="t3-workspaces-foldout-subheader-container">User comments for <b>step {stage_position} of stage</b> "{label_Stage}"</div>',
 					'</td>',
 					'<td class="t3-workspaces-foldout-subheaderRight">',
 						'&nbsp;',
@@ -143,7 +141,7 @@ TYPO3.Workspaces.RowDetail.rowDetailTemplate = new Ext.XTemplate(
 								'</div>',
 								'<div class="t3-workspaces-comments-singleComment-content-wrapper"><div class="t3-workspaces-comments-singleComment-content">',
 									'<span class="t3-workspaces-comments-singleComment-content-date">{tstamp}</span>',
-									'<div class="t3-workspaces-comments-singleComment-content-title">@ {[String.format(TYPO3.l10n.localize(\'stage\'), values.stage_title)]}</div>',
+									'<div class="t3-workspaces-comments-singleComment-content-title">@ Stage {stage_title}</div>',
 									'<div class="t3-workspaces-comments-singleComment-content-text">{user_comment}</div>',
 								'</div></div>',
 							'</div>',
@@ -180,7 +178,7 @@ Ext.ux.TYPO3.Workspace.RowPanel = Ext.extend(Ext.Panel, {
 			width:'100%',
 			autoHeight:true,
 			layout:'fit',
-			title: TYPO3.l10n.localize('rowDetails')
+			title: TYPO3.lang.rowDetails
 		};
 		Ext.apply(this, config);
 		Ext.ux.TYPO3.Workspace.RowPanel.superclass.constructor.call(this, config);
@@ -276,5 +274,40 @@ TYPO3.Workspaces.RowExpander = new Ext.grid.RowExpander({
 			Ext.fly(row).replaceClass('x-grid3-row-expanded', 'x-grid3-row-collapsed');
 			this.fireEvent('collapse', this, record, body, row.rowIndex);
 		}
+	}
+});
+
+
+TYPO3.Workspaces.MainStore = new Ext.data.GroupingStore({
+	storeId : 'workspacesMainStore',
+	reader : new Ext.data.JsonReader({
+		idProperty : 'id',
+		root : 'data',
+		totalProperty : 'total'
+	}, TYPO3.Workspaces.Configuration.StoreFieldArray),
+	groupField: 'path_Workspace',
+	paramsAsHash : true,
+	sortInfo : {
+		field : 'label_Live',
+		direction : "ASC"
+	},
+	remoteSort : true,
+	baseParams: {
+		depth : 990,
+		id: TYPO3.settings.Workspaces.id,
+		query: '',
+		start: 0,
+		limit: 30
+	},
+
+	showAction : false,
+	listeners : {
+		beforeload : function() {
+		},
+		load : function(store, records) {
+		},
+		datachanged : function(store) {
+		},
+		scope : this
 	}
 });

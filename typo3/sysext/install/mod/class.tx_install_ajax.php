@@ -25,6 +25,43 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
+
+// *******************************
+// Set error reporting
+// *******************************
+if (defined('E_DEPRECATED')) {
+    error_reporting(E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED));
+} else {
+    error_reporting(E_ALL ^ E_NOTICE);
+}
+
+
+// ***********************
+// Paths are setup
+// ***********************
+define('TYPO3_OS', stristr(PHP_OS,'win')&&!stristr(PHP_OS,'darwin')?'WIN':'');
+define('TYPO3_MODE','FE');
+
+if(!defined('PATH_thisScript')) {
+	define('PATH_thisScript', str_replace('//', '/', str_replace('\\', '/',
+		(PHP_SAPI == 'fpm-fcgi' || PHP_SAPI == 'cgi' || PHP_SAPI == 'isapi' || PHP_SAPI == 'cgi-fcgi') &&
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) ?
+		($_SERVER['ORIG_PATH_TRANSLATED'] ? $_SERVER['ORIG_PATH_TRANSLATED'] : $_SERVER['PATH_TRANSLATED']) :
+		($_SERVER['ORIG_SCRIPT_FILENAME'] ? $_SERVER['ORIG_SCRIPT_FILENAME'] : $_SERVER['SCRIPT_FILENAME']))));
+}
+
+if (!defined('PATH_site')) 			define('PATH_site', dirname(PATH_thisScript).'/');
+if (!defined('PATH_t3lib')) 		define('PATH_t3lib', PATH_site.'t3lib/');
+define('PATH_tslib', PATH_site.'tslib/');
+define('PATH_typo3conf', PATH_site.'typo3conf/');
+define('TYPO3_mainDir', 'typo3/');		// This is the directory of the backend administration for the sites of this TYPO3 installation.
+
+if (!@is_dir(PATH_typo3conf))	die('Cannot find configuration. This file is probably executed from the wrong location.');
+
+
+require_once(PATH_t3lib.'class.t3lib_div.php');
+
 /**
  * This is the eID handler for install tool AJAX calls.
  *
@@ -53,7 +90,7 @@ class tx_install_ajax {
 	 *
 	 * @return	void
 	 */
-	function init() {
+	function init()	{
 		$this->cmd = t3lib_div::_GP('cmd');
 	}
 
@@ -63,7 +100,7 @@ class tx_install_ajax {
 	 *
 	 * @return	void
 	 */
-	function main() {
+	function main()	{
 			// Create output:
 		switch ($this->cmd) {
 			case 'encryptionKey':
@@ -79,7 +116,7 @@ class tx_install_ajax {
 	 *
 	 * @return	void
 	 */
-	function printContent() {
+	function printContent()	{
 		if (!headers_sent()) {
 			header('Content-Length: ' . strlen($this->content));
 		}
@@ -94,7 +131,7 @@ class tx_install_ajax {
 	 */
 	function createEncryptionKey($keyLength = 96) {
 		if (!headers_sent()) {
-			header('Content-type: text/plain');
+			header("Content-type: text/plain");
 		}
 
 		return t3lib_div::getRandomHexString($keyLength);
@@ -121,4 +158,8 @@ $SOBE = t3lib_div::makeInstance('tx_install_ajax');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/install/mod/class.tx_install_ajax.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/install/mod/class.tx_install_ajax.php']);
+}
 ?>

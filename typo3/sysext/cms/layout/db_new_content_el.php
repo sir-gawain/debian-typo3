@@ -24,38 +24,70 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-
 /**
  * New content elements wizard
  * (Part of the 'cms' extension)
  *
+ * $Id$
  * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
  * XHTML compatible.
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *  101: class ext_posMap extends t3lib_positionMap
+ *  111:     function wrapRecordTitle($str,$row)
+ *  125:     function onClickInsertRecord($row,$vv,$moveUid,$pid,$sys_lang=0)
+ *
+ *
+ *  153: class SC_db_new_content_el
+ *  176:     function init()
+ *  212:     function main()
+ *  359:     function printContent()
+ *
+ *              SECTION: OTHER FUNCTIONS:
+ *  388:     function getWizardItems()
+ *  398:     function wizardArray()
+ *  549:     function removeInvalidElements(&$wizardItems)
+ *
+ * TOTAL FUNCTIONS: 8
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+
 
 unset($MCONF);
 require('conf.php');
 require($BACK_PATH.'init.php');
+require($BACK_PATH.'template.php');
 
 	// Unset MCONF/MLANG since all we wanted was back path etc. for this particular script.
 unset($MCONF);
 unset($MLANG);
 
 	// Merging locallang files/arrays:
-$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xml');
+$LANG->includeLLFile('EXT:lang/locallang_misc.xml');
 $LOCAL_LANG_orig = $LOCAL_LANG;
 $LANG->includeLLFile('EXT:cms/layout/locallang_db_new_content_el.xml');
-$LOCAL_LANG = t3lib_div::array_merge_recursive_overrule($LOCAL_LANG_orig, $LOCAL_LANG);
+$LOCAL_LANG = t3lib_div::array_merge_recursive_overrule($LOCAL_LANG_orig,$LOCAL_LANG);
 
 	// Exits if 'cms' extension is not loaded:
-t3lib_extMgm::isLoaded('cms', 1);
+t3lib_extMgm::isLoaded('cms',1);
+
+
+
+
+
+
 
 /**
  * Local position map class
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
@@ -65,56 +97,63 @@ class ext_posMap extends t3lib_positionMap {
 	/**
 	 * Wrapping the title of the record - here we just return it.
 	 *
-	 * @param string $str The title value.
-	 * @param array $row The record row.
-	 * @return string Wrapped title string.
+	 * @param	string		The title value.
+	 * @param	array		The record row.
+	 * @return	string		Wrapped title string.
 	 */
-	function wrapRecordTitle($str, $row) {
+	function wrapRecordTitle($str,$row)	{
 		return $str;
 	}
 
 	/**
 	 * Create on-click event value.
 	 *
-	 * @param array $row The record.
-	 * @param string $vv Column position value.
-	 * @param integer $moveUid Move uid
-	 * @param integer $pid PID value.
-	 * @param integer $sys_lang System language
-	 * @return string
+	 * @param	array		The record.
+	 * @param	string		Column position value.
+	 * @param	integer		Move uid
+	 * @param	integer		PID value.
+	 * @param	integer		System language
+	 * @return	string
 	 */
-	function onClickInsertRecord($row, $vv, $moveUid, $pid, $sys_lang = 0) {
-		$table = 'tt_content';
+	function onClickInsertRecord($row,$vv,$moveUid,$pid,$sys_lang=0) {
+		$table='tt_content';
 
-		$location = $this->backPath.'alt_doc.php?edit[tt_content]['.(is_array($row)?-$row['uid']:$pid).']=new&defVals[tt_content][colPos]='.$vv.'&defVals[tt_content][sys_language_uid]='.$sys_lang.'&returnUrl='.rawurlencode($GLOBALS['SOBE']->R_URI);
+		$location=$this->backPath.'alt_doc.php?edit[tt_content]['.(is_array($row)?-$row['uid']:$pid).']=new&defVals[tt_content][colPos]='.$vv.'&defVals[tt_content][sys_language_uid]='.$sys_lang.'&returnUrl='.rawurlencode($GLOBALS['SOBE']->R_URI);
 
 		return 'window.location.href=\''.$location.'\'+document.editForm.defValues.value; return false;';
 	}
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Script Class for the New Content element wizard
  *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage core
  */
 class SC_db_new_content_el {
 
 		// Internal, static (from GPvars):
-		// Page id
-	var $id;
-		// Sys language
-	var $sys_language = 0;
-		// Return URL.
-	var $R_URI = '';
-		// If set, the content is destined for a specific column.
-	var $colPos;
-	var $uid_pid;
+	var $id;					// Page id
+	var $sys_language=0;		// Sys language
+	var $R_URI='';				// Return URL.
+	var $colPos;				// If set, the content is destined for a specific column.
+	var $uid_pid;				//
 
 		// Internal, static:
-		// Module TSconfig.
-	var $modTSconfig = array();
+	var $modTSconfig=array();	// Module TSconfig.
 
 	/**
 	 * Internal backend template object
@@ -124,24 +163,23 @@ class SC_db_new_content_el {
 	var $doc;
 
 		// Internal, dynamic:
-		// Includes a list of files to include between init() and main() - see init()
-	var $include_once = array();
-		// Used to accumulate the content of the module.
-	var $content;
-		// Access boolean.
-	var $access;
-		// config of the wizard
-	var $config;
+	var $include_once = array();	// Includes a list of files to include between init() and main() - see init()
+	var $content;					// Used to accumulate the content of the module.
+	var $access;					// Access boolean.
+	var $config;					// config of the wizard
+
 
 	/**
 	 * Constructor, initializing internal variables.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function init() {
+	function init()	{
+		global $BE_USER,$BACK_PATH,$TBE_MODULES_EXT;
+
 			// Setting class files to include:
-		if (is_array($GLOBALS['TBE_MODULES_EXT']['xMOD_db_new_content_el']['addElClasses'])) {
-			$this->include_once = array_merge($this->include_once, $GLOBALS['TBE_MODULES_EXT']['xMOD_db_new_content_el']['addElClasses']);
+		if (is_array($TBE_MODULES_EXT['xMOD_db_new_content_el']['addElClasses']))	{
+			$this->include_once = array_merge($this->include_once,$TBE_MODULES_EXT['xMOD_db_new_content_el']['addElClasses']);
 		}
 
 			// Setting internal vars:
@@ -159,56 +197,59 @@ class SC_db_new_content_el {
 
 			// Starting the document template object:
 		$this->doc = t3lib_div::makeInstance('template');
-		$this->doc->backPath = $GLOBALS['BACK_PATH'];
+		$this->doc->backPath = $BACK_PATH;
 		$this->doc->setModuleTemplate('templates/db_new_content_el.html');
-		$this->doc->JScode = '';
-		$this->doc->form = '<form action="" name="editForm"><input type="hidden" name="defValues" value="" />';
+		$this->doc->JScode='';
+		$this->doc->form='<form action="" name="editForm"><input type="hidden" name="defValues" value="" />';
 
 			// Setting up the context sensitive menu:
 		$this->doc->getContextMenuCode();
 
 			// Getting the current page and receiving access information (used in main())
-		$perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
-		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id, $perms_clause);
+		$perms_clause = $BE_USER->getPagePermsClause(1);
+		$this->pageinfo = t3lib_BEfunc::readPageAccess($this->id,$perms_clause);
 		$this->access = is_array($this->pageinfo) ? 1 : 0;
 	}
 
 	/**
 	 * Creating the module output.
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function main() {
-		if ($this->id && $this->access) {
+	function main()	{
+		global $LANG,$BACK_PATH;
+
+
+		if ($this->id && $this->access)	{
 
 				// Init position map object:
 			$posMap = t3lib_div::makeInstance('ext_posMap');
 			$posMap->cur_sys_language = $this->sys_language;
-			$posMap->backPath = $GLOBALS['BACK_PATH'];
+			$posMap->backPath = $BACK_PATH;
 
-				// If a column is pre-set:
-			if ((string)$this->colPos != '') {
-				if ($this->uid_pid < 0) {
-					$row = array();
-					$row['uid'] = abs($this->uid_pid);
+			if ((string)$this->colPos!='')	{	// If a column is pre-set:
+				if ($this->uid_pid<0)	{
+					$row=array();
+					$row['uid']=abs($this->uid_pid);
 				} else {
-					$row = '';
+					$row='';
 				}
 				$this->onClickEvent = $posMap->onClickInsertRecord($row, $this->colPos, '', $this->uid_pid, $this->sys_language);
 			} else {
 				$this->onClickEvent = '';
 			}
 
-				// ***************************
-				// Creating content
-				// ***************************
+
+			// ***************************
+			// Creating content
+			// ***************************
 				// use a wrapper div
 			$this->content .= '<div id="user-setup-wrapper">';
-			$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('newContentElement'));
-			$this->content .= $this->doc->spacer(5);
+			$this->content.=$this->doc->header($LANG->getLL('newContentElement'));
+			$this->content.=$this->doc->spacer(5);
 
 				// Wizard
-			$code = '';
+			$code='';
 			$wizardItems = $this->getWizardItems();
 
 				// Wrapper for wizards
@@ -216,15 +257,16 @@ class SC_db_new_content_el {
 			$this->elementWrapper['section'] = array('<table border="0" cellpadding="1" cellspacing="2">', '</table>');
 			$this->elementWrapper['wizard'] = array('<tr>', '</tr>');
 			$this->elementWrapper['wizardPart'] = array('<td>', '</td>');
-				// Copy wrapper for tabs
+				// copy wrapper for tabs
 			$this->elementWrapperForTabs = $this->elementWrapper;
 
+
 				// Hook for manipulating wizardItems, wrapper, onClickEvent etc.
-			if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook'])) {
+			if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook'])) {
 				foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook'] as $classData) {
 					$hookObject = t3lib_div::getUserObj($classData);
 
-					if (!($hookObject instanceof cms_newContentElementWizardsHook)) {
+					if(!($hookObject instanceof cms_newContentElementWizardsHook)) {
 						throw new UnexpectedValueException('$hookObject must implement interface cms_newContentElementWizardItemsHook', 1227834741);
 					}
 
@@ -233,13 +275,13 @@ class SC_db_new_content_el {
 			}
 
 			if ($this->config['renderMode'] == 'tabs' && $this->elementWrapperForTabs != $this->elementWrapper) {
-					// Restore wrapper for tabs if they are overwritten in hook
+					// restore wrapper for tabs if they are overwritten in hook
 				$this->elementWrapper = $this->elementWrapperForTabs;
 			}
 
-				// Add document inline javascript
+				// add document inline javascript
 			$this->doc->JScode = $this->doc->wrapScriptTags('
-				function goToalt_doc() {	//
+				function goToalt_doc()	{	//
 					' . $this->onClickEvent . '
 				}
 
@@ -254,8 +296,8 @@ class SC_db_new_content_el {
 				// An item is either a header or an item rendered with a radio button and title/description and icon:
 			$cc = $key = 0;
 			$menuItems = array();
-			foreach ($wizardItems as $k => $wInfo) {
-				if ($wInfo['header']) {
+			foreach ($wizardItems as $k => $wInfo)	{
+				if ($wInfo['header'])	{
 					$menuItems[] = array(
 							'label'   => htmlspecialchars($wInfo['header']),
 							'content' => $this->elementWrapper['section'][0]
@@ -290,10 +332,12 @@ class SC_db_new_content_el {
 					$cc++;
 				}
 			}
-				// Add closing section-tag
+				// add closing section-tag
 			foreach ($menuItems as $key => $val) {
 				$menuItems[$key]['content'] .=  $this->elementWrapper['section'][1];
 			}
+
+
 
 				// Add the wizard table to the content, wrapped in tabs:
 			if ($this->config['renderMode'] == 'tabs') {
@@ -302,42 +346,44 @@ class SC_db_new_content_el {
 					.typo3-dyntabmenu-divs table { margin: 15px; }
 					.typo3-dyntabmenu-divs table td { padding: 3px; }
 				';
-				$code = $GLOBALS['LANG']->getLL('sel1', 1) . '<br /><br />' . $this->doc->getDynTabMenu($menuItems, 'new-content-element-wizard', FALSE, FALSE);
+				$code = $LANG->getLL('sel1', 1) . '<br /><br />' . $this->doc->getDynTabMenu($menuItems, 'new-content-element-wizard', FALSE, FALSE);
 			} else {
-				$code = $GLOBALS['LANG']->getLL('sel1', 1) . '<br /><br />';
+				$code = $LANG->getLL('sel1',1) . '<br /><br />';
 				foreach ($menuItems as $section) {
 					$code .= $this->elementWrapper['sectionHeader'][0] . $section['label'] . $this->elementWrapper['sectionHeader'][1] . $section['content'];
 				}
 			}
 
-			$this->content.= $this->doc->section(!$this->onClickEvent ? $GLOBALS['LANG']->getLL('1_selectType') : '', $code, 0, 1);
+			$this->content.= $this->doc->section(!$this->onClickEvent ? $LANG->getLL('1_selectType') : '', $code, 0, 1);
+
+
 
 				// If the user must also select a column:
 			if (!$this->onClickEvent) {
 
 					// Add anchor "sel2"
-				$this->content .= $this->doc->section('', '<a name="sel2"></a>');
-				$this->content .= $this->doc->spacer(20);
+				$this->content.= $this->doc->section('','<a name="sel2"></a>');
+				$this->content.= $this->doc->spacer(20);
 
 					// Select position
-				$code = $GLOBALS['LANG']->getLL('sel2', 1) . '<br /><br />';
+				$code = $LANG->getLL('sel2',1).'<br /><br />';
 
 					// Load SHARED page-TSconfig settings and retrieve column list from there, if applicable:
-				$modTSconfig_SHARED = t3lib_BEfunc::getModTSconfig($this->id, 'mod.SHARED');
-				$colPosList = strcmp(trim($modTSconfig_SHARED['properties']['colPos_list']), '') ? trim($modTSconfig_SHARED['properties']['colPos_list']) : '1,0,2,3';
-				$colPosList = implode(',', array_unique(t3lib_div::intExplode(',', $colPosList)));		// Removing duplicates, if any
+				$modTSconfig_SHARED = t3lib_BEfunc::getModTSconfig($this->id,'mod.SHARED');
+				$colPosList = strcmp(trim($modTSconfig_SHARED['properties']['colPos_list']),'') ? trim($modTSconfig_SHARED['properties']['colPos_list']) : '1,0,2,3';
+				$colPosList = implode(',',array_unique(t3lib_div::intExplode(',',$colPosList)));		// Removing duplicates, if any
 
 					// Finally, add the content of the column selector to the content:
-				$code .= $posMap->printContentElementColumns($this->id, 0, $colPosList, 1, $this->R_URI);
-				$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('2_selectPosition'), $code, 0, 1);
+				$code.= $posMap->printContentElementColumns($this->id,0,$colPosList,1,$this->R_URI);
+				$this->content.= $this->doc->section($LANG->getLL('2_selectPosition'),$code,0,1);
 			}
 
 				// Close wrapper div
 			$this->content .= '</div>';
 		} else {		// In case of no access:
 			$this->content = '';
-			$this->content .= $this->doc->header($GLOBALS['LANG']->getLL('newContentElement'));
-			$this->content .= $this->doc->spacer(5);
+			$this->content.= $this->doc->header($LANG->getLL('newContentElement'));
+			$this->content.= $this->doc->spacer(5);
 		}
 
 			// Setting up the buttons and markers for docheader
@@ -346,47 +392,59 @@ class SC_db_new_content_el {
 		$markers['CONTENT'] = $this->content;
 
 			// Build the <body> for the module
-		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('newContentElement'));
-		$this->content .= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
+		$this->content = $this->doc->startPage($LANG->getLL('newContentElement'));
+		$this->content.= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
 		$this->content .= $this->doc->sectionEnd();
-		$this->content .= $this->doc->endPage();
+		$this->content.= $this->doc->endPage();
 		$this->content = $this->doc->insertStylesAndJS($this->content);
 	}
 
 	/**
 	 * Print out the accumulated content:
 	 *
-	 * @return void
+	 * @return	void
 	 */
-	function printContent() {
+	function printContent()	{
 		echo $this->content;
 	}
 
 	/**
 	 * Create the panel of buttons for submitting the form or otherwise perform operations.
 	 *
-	 * @return array All available buttons as an assoc. array
+	 * @return	array	all available buttons as an assoc. array
 	 */
-	protected function getButtons() {
+	protected function getButtons()	{
+		global $LANG, $BACK_PATH;
+
 		$buttons = array(
 			'csh' => '',
 			'back' => ''
 		);
 
-		if ($this->id && $this->access) {
+
+		if ($this->id && $this->access)	{
 				// CSH
 			$buttons['csh'] = t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'new_ce', $GLOBALS['BACK_PATH'], '', TRUE);
 
 				// Back
-			if ($this->R_URI) {
-				$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->getLL('goBack', TRUE) . '">' .
+			if ($this->R_URI)	{
+				$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $LANG->getLL('goBack', TRUE) . '">' .
 						t3lib_iconWorks::getSpriteIcon('actions-view-go-back') .
 					'</a>';
 			}
 		}
 
+
 		return $buttons;
 	}
+
+
+
+
+
+
+
+
 
 	/***************************
 	 *
@@ -394,12 +452,13 @@ class SC_db_new_content_el {
 	 *
 	 ***************************/
 
+
 	/**
 	 * Returns the content of wizardArray() function...
 	 *
-	 * @return array Returns the content of wizardArray() function...
+	 * @return	array		Returns the content of wizardArray() function...
 	 */
-	function getWizardItems() {
+	function getWizardItems()	{
 		return $this->wizardArray();
 	}
 
@@ -407,9 +466,9 @@ class SC_db_new_content_el {
 	 * Returns the array of elements in the wizard display.
 	 * For the plugin section there is support for adding elements there from a global variable.
 	 *
-	 * @return array
+	 * @return	array
 	 */
-	function wizardArray() {
+	function wizardArray()	{
 
 		if (is_array($this->config)) {
 			$wizards = $this->config['wizardItems.'];
@@ -421,8 +480,8 @@ class SC_db_new_content_el {
 		if (is_array($wizards)) {
 			foreach ($wizards as $groupKey => $wizardGroup) {
 				$groupKey = preg_replace('/\.$/', '', $groupKey);
-				$showItems = t3lib_div::trimExplode(',', $wizardGroup['show'], TRUE);
-				$showAll = (strcmp($wizardGroup['show'], '*') ? FALSE : TRUE);
+				$showItems = t3lib_div::trimExplode(',', $wizardGroup['show'], true);
+				$showAll = (strcmp($wizardGroup['show'], '*') ? false : true);
 				$groupItems = array();
 
 				if (is_array($appendWizards[$groupKey . '.']['elements.'])) {
@@ -438,8 +497,8 @@ class SC_db_new_content_el {
 							$tmpItem = $this->wizard_getItem($groupKey, $itemKey, $itemConf);
 							if ($tmpItem) {
 								$groupItems[$groupKey . '_' . $itemKey] = $tmpItem;
-							}
-						}
+			}
+		}
 					}
 				}
 				if (count($groupItems)) {
@@ -455,11 +514,6 @@ class SC_db_new_content_el {
 		return $wizardItems;
 	}
 
-	/**
-	 *
-	 * @param mixed $wizardElements
-	 * @return array
-	 */
 	function wizard_appendWizards($wizardElements) {
 		if (!is_array($wizardElements)) {
 			$wizardElements = array();
@@ -480,13 +534,7 @@ class SC_db_new_content_el {
 		return $returnElements;
 	}
 
-	/**
-	 *
-	 * @param string Not used
-	 * @param string Not used
-	 * @param array $itemConf
-	 * @return array
-	 */
+
 	function wizard_getItem($groupKey, $itemKey, $itemConf) {
 		$itemConf['title'] = $GLOBALS['LANG']->sL($itemConf['title']);
 		$itemConf['description'] = $GLOBALS['LANG']->sL($itemConf['description']);
@@ -495,26 +543,22 @@ class SC_db_new_content_el {
 		return $itemConf;
 	}
 
-	/**
-	 *
-	 * @param string Not used
-	 * @param array $wizardGroup
-	 * @return array
-	 */
 	function wizard_getGroupHeader($groupKey, $wizardGroup) {
 		return array(
 			'header' => $GLOBALS['LANG']->sL($wizardGroup['header'])
 		);
 	}
 
+
 	/**
 	 * Checks the array for elements which might contain unallowed default values and will unset them!
 	 * Looks for the "tt_content_defValues" key in each element and if found it will traverse that array as fieldname / value pairs and check. The values will be added to the "params" key of the array (which should probably be unset or empty by default).
 	 *
-	 * @param array $wizardItems Wizard items, passed by reference
-	 * @return void
+	 * @param	array		Wizard items, passed by reference
+	 * @return	void
 	 */
-	function removeInvalidElements(&$wizardItems) {
+	function removeInvalidElements(&$wizardItems)	{
+		global $TCA;
 
 			// Load full table definition:
 		t3lib_div::loadTCA('tt_content');
@@ -527,32 +571,32 @@ class SC_db_new_content_el {
 
 		$headersUsed = Array();
 			// Traverse wizard items:
-		foreach ($wizardItems as $key => $cfg) {
+		foreach($wizardItems as $key => $cfg)	{
 
 				// Exploding parameter string, if any (old style)
-			if ($wizardItems[$key]['params']) {
+			if ($wizardItems[$key]['params'])	{
 					// Explode GET vars recursively
-				$tempGetVars = t3lib_div::explodeUrl2Array($wizardItems[$key]['params'], TRUE);
+				$tempGetVars = t3lib_div::explodeUrl2Array($wizardItems[$key]['params'],TRUE);
 					// If tt_content values are set, merge them into the tt_content_defValues array, unset them from $tempGetVars and re-implode $tempGetVars into the param string (in case remaining parameters are around).
-				if (is_array($tempGetVars['defVals']['tt_content'])) {
+				if (is_array($tempGetVars['defVals']['tt_content']))	{
 					$wizardItems[$key]['tt_content_defValues'] = array_merge(is_array($wizardItems[$key]['tt_content_defValues']) ? $wizardItems[$key]['tt_content_defValues'] : array(), $tempGetVars['defVals']['tt_content']);
 					unset($tempGetVars['defVals']['tt_content']);
-					$wizardItems[$key]['params'] = t3lib_div::implodeArrayForUrl('', $tempGetVars);
+					$wizardItems[$key]['params'] = t3lib_div::implodeArrayForUrl('',$tempGetVars);
 				}
 			}
 
 				// If tt_content_defValues are defined...:
-			if (is_array($wizardItems[$key]['tt_content_defValues'])) {
+			if (is_array($wizardItems[$key]['tt_content_defValues']))	{
 
 					// Traverse field values:
-				foreach ($wizardItems[$key]['tt_content_defValues'] as $fN => $fV) {
-					if (is_array($GLOBALS['TCA']['tt_content']['columns'][$fN])) {
+				foreach($wizardItems[$key]['tt_content_defValues'] as $fN => $fV)	{
+					if (is_array($TCA['tt_content']['columns'][$fN]))	{
 							// Get information about if the field value is OK:
-						$config = &$GLOBALS['TCA']['tt_content']['columns'][$fN]['config'];
+						$config = &$TCA['tt_content']['columns'][$fN]['config'];
 						$authModeDeny = ($config['type']=='select' && $config['authMode'] && !$GLOBALS['BE_USER']->checkAuthMode('tt_content', $fN, $fV, $config['authMode']));
 						$isNotInKeepItems = (count($keepItems) && !in_array($fV, $keepItems));
 
-						if ($authModeDeny || ($fN=='CType' && in_array($fV, $removeItems)) || $isNotInKeepItems) {
+						if ($authModeDeny || ($fN=='CType' && in_array($fV,$removeItems)) || $isNotInKeepItems) {
 								// Remove element all together:
 							unset($wizardItems[$key]);
 							break;
@@ -567,23 +611,28 @@ class SC_db_new_content_el {
 			}
 		}
 			// remove headers without elements
-		foreach ($wizardItems as $key => $cfg) {
-			$tmp = explode('_', $key);
-			if ($tmp[0] && !$tmp[1] && !in_array($tmp[0], $headersUsed)) {
+		foreach ($wizardItems as $key => $cfg)	{
+			$tmp = explode('_',$key);
+			if ($tmp[0] && !$tmp[1] && !in_array($tmp[0], $headersUsed))	{
 				unset($wizardItems[$key]);
 			}
 		}
 	}
 }
 
-	// Make instance:
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/layout/db_new_content_el.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/cms/layout/db_new_content_el.php']);
+}
+
+
+
+// Make instance:
 $SOBE = t3lib_div::makeInstance('SC_db_new_content_el');
 $SOBE->init();
 
-	// Include files?
-foreach($SOBE->include_once as $INC_FILE) {
-	include_once($INC_FILE);
-}
+// Include files?
+foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
 
 $SOBE->main();
 $SOBE->printContent();

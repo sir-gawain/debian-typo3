@@ -57,17 +57,6 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	/**
 	 * @test
 	 */
-	public function resolveValidatorObjectNameCanResolveShorthandValidatornames() {
-		$mockObjectManager = $this->getMock('Tx_Extbase_Object_ObjectManagerInterface');
-		eval('class Tx_Mypkg_Validation_Validator_MyValidator {}');
-		$validatorResolver = $this->getAccessibleMock('Tx_Extbase_Validation_ValidatorResolver', array('dummy'));
-		$validatorResolver->_set('objectManager', $mockObjectManager);
-		$this->assertSame('Tx_Mypkg_Validation_Validator_MyValidator', $validatorResolver->_call('resolveValidatorObjectName', 'Mypkg:My'));
-	}
-
-	/**
-	 * @test
-	 */
 	public function resolveValidatorObjectNameCanResolveShortNamesOfBuiltInValidators() {
 		$mockObjectManager = $this->getMock('Tx_Extbase_Object_ObjectManagerInterface');
 		eval('class Tx_Extbase_Validation_Validator_FooValidator {}');
@@ -81,7 +70,7 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	 */
 	public function createValidatorResolvesAndReturnsAValidatorAndPassesTheGivenOptions() {
 		$className = uniqid('Test');
-		$mockValidator = $this->getMock('Tx_Extbase_Validation_Validator_ObjectValidatorInterface', array('setOptions', 'canValidate', 'isPropertyValid'), array(), $className);
+		$mockValidator = $this->getMock('Tx_Extbase_Validation_Validator_ObjectValidatorInterface', array(), array(), $className);
 		$mockValidator->expects($this->once())->method('setOptions')->with(array('foo' => 'bar'));
 
 		$mockObjectManager = $this->getMock('Tx_Extbase_Object_ObjectManagerInterface');
@@ -317,7 +306,7 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	 * @test
 	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
-	public function unifyDataTypeCorrectlyRenamesPhpDataTypes() {
+	public function unifyDataTypeCorrectlyRenamesPHPDataTypes() {
 		$mockValidatorResolver = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Validation_ValidatorResolver'), array('dummy'));
 		$this->assertEquals('Integer', $mockValidatorResolver->_call('unifyDataType', 'integer'));
 		$this->assertEquals('Integer', $mockValidatorResolver->_call('unifyDataType', 'int'));
@@ -345,7 +334,6 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	 * dataProvider for parseValidatorAnnotationCanParseAnnotations
 	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 * @author Christopher Hlubek <hlubek@networkteam.com>
-	 * @return array
 	 */
 	public function validatorAnnotations() {
 		return array(
@@ -387,8 +375,6 @@ class Tx_Extbase_Tests_Unit_Validation_ValidatorResolverTest extends Tx_Extbase_
 	 * @test
 	 * @dataProvider validatorAnnotations
 	 * @author Karsten Dambekalns <karsten@typo3.org>
-	 * @param mixed $annotation
-	 * @param mixed $expectedResult
 	 */
 	public function parseValidatorAnnotationCanParseAnnotations($annotation, $expectedResult) {
 		$mockValidatorResolver = $this->getMock($this->buildAccessibleProxy('Tx_Extbase_Validation_ValidatorResolver'), array('dummy'));

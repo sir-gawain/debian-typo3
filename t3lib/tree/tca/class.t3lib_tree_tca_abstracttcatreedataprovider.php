@@ -39,7 +39,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	protected $expandAll = FALSE;
 
 	/**
-	 * @var integer
+	 * @var int
 	 */
 	protected $levelMaximum = 2;
 
@@ -98,7 +98,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	/**
 	 * Sets the expandAll
 	 *
-	 * @param boolean $expandAll
+	 * @param bool $expandAll
 	 * @return void
 	 */
 	public function setExpandAll($expandAll) {
@@ -108,7 +108,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	/**
 	 * Gets the expamdAll
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function getExpandAll() {
 		return $this->expandAll;
@@ -117,7 +117,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	/**
 	 * Sets the levelMaximum
 	 *
-	 * @param integer $levelMaximum
+	 * @param int $levelMaximum
 	 * @return void
 	 */
 	public function setLevelMaximum($levelMaximum) {
@@ -127,7 +127,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	/**
 	 * Gets the levelMaximum
 	 *
-	 * @return integer
+	 * @return int
 	 */
 	public function getLevelMaximum() {
 		return $this->levelMaximum;
@@ -137,11 +137,12 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	 * Gets the expanded state of a given node
 	 *
 	 * @param t3lib_tree_AbstractNode $node
-	 * @return boolean
+	 * @return bool
 	 */
 	protected function isExpanded(t3lib_tree_Node $node) {
 		return $this->getExpandAll() || t3lib_div::inList($this->expandedList, $node->getId());
 	}
+
 
 	/**
 	 * Sets the list for expanded nodes
@@ -174,7 +175,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	/**
 	 * Sets the list for selected nodes
 	 *
-	 * @param string $selectedList
+	 * @param  $selectedList
 	 * @return void
 	 */
 	public function setSelectedList($selectedList) {
@@ -193,7 +194,7 @@ abstract class t3lib_tree_Tca_AbstractTcaTreeDataProvider extends t3lib_tree_Abs
 	/**
 	 * Sets the list for non selectabal tree levels
 	 *
-	 * @param string $nonSelectableLevelList
+	 * @param  $nonSelectableLevelList
 	 * @return void
 	 */
 	public function setNonSelectableLevelList($nonSelectableLevelList) {

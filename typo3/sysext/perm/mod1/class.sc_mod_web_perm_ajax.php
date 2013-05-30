@@ -21,6 +21,31 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+/**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *   66: class SC_mod_web_perm_ajax
+ *
+ *              SECTION: Init method for this class
+ *   97:     public function __construct()
+ *
+ *              SECTION: Main dispatcher method
+ *  143:     public function dispatch($params = array(), TYPO3AJAX &$ajaxObj = null)
+ *
+ *              SECTION: Helpers for this script
+ *  259:     private function renderUserSelector($page, $ownerUid, $username = '')
+ *  302:     private function renderGroupSelector($page, $groupUid, $groupname = '')
+ *  350:     private function renderOwnername($page, $ownerUid, $username)
+ *  363:     private function renderGroupname($page, $groupUid, $groupname)
+ *  375:     private function renderToggleEditLock($page, $editlockstate)
+ *  389:     private function renderPermissions($int, $pageId = 0, $who = 'user')
+ *
+ * TOTAL FUNCTIONS: 8
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
 
 $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_perm.xml');
 
@@ -29,17 +54,17 @@ $GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_perm.xml');
  * convenient methods of editing of page permissions (including page ownership
  * (user and group)) via new TYPO3AJAX facility
  *
- * @author Andreas Kundoch <typo3@mehrwert.de>
- * @package TYPO3
- * @subpackage core
- * @license GPL
- * @since TYPO3_4-2
+ * @author		Andreas Kundoch <typo3@mehrwert.de>
+ * @version		$Id$
+ * @package		TYPO3
+ * @subpackage	core
+ * @license		GPL
+ * @since		TYPO3_4-2
  */
 class SC_mod_web_perm_ajax {
-		// The local configuration array
-	protected $conf = array();
-		// TYPO3 Back Path
-	protected $backPath = '../../../';
+
+	protected $conf = array();	// The local configuration array
+	protected $backPath = '../../../';	// TYPO3 Back Path
 
 	/********************************************
 	 *
@@ -49,6 +74,8 @@ class SC_mod_web_perm_ajax {
 
 	/**
 	 * The constructor of this class
+	 *
+	 * @return	Void
 	 */
 	public function __construct() {
 
@@ -96,18 +123,17 @@ class SC_mod_web_perm_ajax {
 	/**
 	 * The main dispatcher function. Collect data and prepare HTML output.
 	 *
-	 * @param array $params array of parameters from the AJAX interface, currently unused
-	 * @param TYPO3AJAX $ajaxObj object of type TYPO3AJAX
-	 * @return void
+	 * @param	array		$params: array of parameters from the AJAX interface, currently unused
+	 * @param	TYPO3AJAX		$ajaxObj: object of type TYPO3AJAX
+	 * @return	Void
 	 */
-	public function dispatch($params = array(), TYPO3AJAX &$ajaxObj = NULL) {
+	public function dispatch($params = array(), TYPO3AJAX &$ajaxObj = null) {
 		$content = '';
 
 			// Basic test for required value
 		if ($this->conf['page'] > 0) {
 
 				// Init TCE for execution of update
-			/** @var $tce t3lib_TCEmain */
 			$tce = t3lib_div::makeInstance('t3lib_TCEmain');
 			$tce->stripslashes_values = 1;
 
@@ -129,7 +155,7 @@ class SC_mod_web_perm_ajax {
 							// Execute TCE Update
 						$tce->start($data, array());
 						$tce->process_datamap();
-						$content = self::renderOwnername($this->conf['page'], $this->conf['new_owner_uid'], $this->conf['new_owner_username']);
+						$content = $this->renderOwnername($this->conf['page'], $this->conf['new_owner_uid'], $this->conf['new_owner_username']);
 					} else {
 						$ajaxObj->setError('An error occured: No page owner uid specified.');
 					}
@@ -152,7 +178,7 @@ class SC_mod_web_perm_ajax {
 						$tce->start($data, array());
 						$tce->process_datamap();
 
-						$content = self::renderGroupname($this->conf['page'], $this->conf['new_group_uid'], $this->conf['new_group_username']);
+						$content = $this->renderGroupname($this->conf['page'], $this->conf['new_group_uid'], $this->conf['new_group_username']);
 					} else {
 						$ajaxObj->setError('An error occured: No page group uid specified.');
 					}
@@ -188,7 +214,7 @@ class SC_mod_web_perm_ajax {
 					$tce->start($data, array());
 					$tce->process_datamap();
 
-					$content = self::renderPermissions($this->conf['permissions'], $this->conf['page'], $this->conf['who']);
+					$content = $this->renderPermissions($this->conf['permissions'], $this->conf['page'], $this->conf['who']);
 			}
 		} else {
 			$ajaxObj->setError('This script cannot be called directly.');
@@ -205,10 +231,10 @@ class SC_mod_web_perm_ajax {
 	/**
 	 * Generate the user selector element
 	 *
-	 * @param integer $page The page id to change the user for
-	 * @param integer $ownerUid The page owner uid
-	 * @param string $username The username to display
-	 * @return string The html select element
+	 * @param	Integer		$page: The page id to change the user for
+	 * @param	Integer		$ownerUid: The page owner uid
+	 * @param	String		$username: The username to display
+	 * @return	String		The html select element
 	 */
 	protected function renderUserSelector($page, $ownerUid, $username = '') {
 
@@ -243,10 +269,10 @@ class SC_mod_web_perm_ajax {
 	/**
 	 * Generate the group selector element
 	 *
-	 * @param integer $page The page id to change the user for
-	 * @param integer $groupUid The page group uid
-	 * @param string $username The username to display
-	 * @return string The html select element
+	 * @param	Integer		$page: The page id to change the user for
+	 * @param	Integer		$groupUid: The page group uid
+	 * @param	String		$username: The username to display
+	 * @return	String		The html select element
 	 */
 	protected function renderGroupSelector($page, $groupUid, $groupname = '') {
 
@@ -289,42 +315,45 @@ class SC_mod_web_perm_ajax {
 		return $ret;
 	}
 
+
 	/**
 	 * Print the string with the new owner of a page record
 	 *
-	 * @param integer $page The TYPO3 page id
-	 * @param integer $ownerUid The new page user uid
-	 * @param string $username The TYPO3 BE username (used to display in the element)
-	 * @param boolean $validUser Must be set to FALSE, if the user has no name or is deleted
-	 * @return string The new group wrapped in HTML
+	 * @param	Integer		$page: The TYPO3 page id
+	 * @param	Integer		$ownerUid: The new page user uid
+	 * @param	String		$username: The TYPO3 BE username (used to display in the element)
+	 * @param	Boolean		$validUser: Must be set to FALSE, if the user has no name or is deleted
+	 * @return	String		The new group wrapped in HTML
 	 */
-	public static function renderOwnername($page, $ownerUid, $username, $validUser = TRUE) {
+	public function renderOwnername($page, $ownerUid, $username, $validUser = true) {
 		$elementId = 'o_'.$page;
 		$ret = '<span id="' . $elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeOwnerSelector(' . $page . ', ' . $ownerUid . ', \'' . $elementId.'\', \'' . htmlspecialchars($username) . '\');">' . ($validUser ? ($username == '' ? ('<span class=not_set>['. $GLOBALS['LANG']->getLL('notSet') .']</span>') : htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20))) :  ('<span class=not_set title="' . htmlspecialchars(t3lib_div::fixed_lgd_cs($username, 20)) . '">[' . $GLOBALS['LANG']->getLL('deleted') . ']</span>')) . '</a></span>';
 		return $ret;
 	}
 
+
 	/**
 	 * Print the string with the new group of a page record
 	 *
-	 * @param integer $page The TYPO3 page id
-	 * @param integer $groupUid The new page group uid
-	 * @param string $groupname The TYPO3 BE groupname (used to display in the element)
-	 * @param boolean $validGroup Must be set to FALSE, if the group has no name or is deleted
-	 * @return string The new group wrapped in HTML
+	 * @param	Integer		$page: The TYPO3 page id
+	 * @param	Integer		$groupUid: The new page group uid
+	 * @param	String		$groupname: The TYPO3 BE groupname (used to display in the element)
+	 * @param	Boolean		$validGroup: Must be set to FALSE, if the group has no name or is deleted
+	 * @return	String		The new group wrapped in HTML
 	 */
-	public static function renderGroupname($page, $groupUid, $groupname, $validGroup = TRUE) {
+	public function renderGroupname($page, $groupUid, $groupname, $validGroup = true) {
 		$elementId = 'g_'.$page;
 		$ret = '<span id="'.$elementId . '"><a class="ug_selector" onclick="WebPermissions.showChangeGroupSelector(' . $page . ', ' . $groupUid . ', \'' . $elementId . '\', \'' . htmlspecialchars($groupname) . '\');">'. ($validGroup ? ($groupname == '' ? ('<span class=not_set>['. $GLOBALS['LANG']->getLL('notSet') .']</span>') : htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20))) : ('<span class=not_set title="' . htmlspecialchars(t3lib_div::fixed_lgd_cs($groupname, 20)) . '">[' . $GLOBALS['LANG']->getLL('deleted') . ']</span>')) . '</a></span>';
 		return $ret;
 	}
 
+
 	/**
 	 * Print the string with the new edit lock state of a page record
 	 *
-	 * @param integer $page The TYPO3 page id
-	 * @param string $editlockstate The state of the TYPO3 page (locked, unlocked)
-	 * @return string The new edit lock string wrapped in HTML
+	 * @param	Integer		$page: The TYPO3 page id
+	 * @param	String		$editlockstate: The state of the TYPO3 page (locked, unlocked)
+	 * @return	String		The new edit lock string wrapped in HTML
 	 */
 	protected function renderToggleEditLock($page, $editLockState) {
 		if ($editLockState === 1) {
@@ -339,39 +368,46 @@ class SC_mod_web_perm_ajax {
 	/**
 	 * Print a set of permissions. Also used in index.php
 	 *
-	 * @param integer $int Permission integer (bits)
-	 * @param integer $page The TYPO3 page id
-	 * @param string $who The scope (user, group or everybody)
-	 * @return string HTML marked up x/* indications.
+	 * @param	integer		Permission integer (bits)
+	 * @param	Integer		$page: The TYPO3 page id
+	 * @param	String		$who: The scope (user, group or everybody)
+	 * @return	string		HTML marked up x/* indications.
 	 */
-	public static function renderPermissions($int, $pageId = 0, $who = 'user') {
+	public function renderPermissions($int, $pageId = 0, $who = 'user') {
+		global $LANG;
 		$str = '';
 
 		$permissions = array(1, 16, 2, 4, 8);
 		foreach ($permissions as $permission) {
 			if ($int&$permission) {
 				$str .= t3lib_iconWorks::getSpriteIcon(
-							'status-status-permission-granted',
-							array(
-								'tag' => 'a',
-								'title' => $GLOBALS['LANG']->getLL($permission, TRUE),
-								'onclick'=> 'WebPermissions.setPermissions(' . $pageId . ', ' . $permission . ', \'delete\', \'' . $who . '\', ' . $int . ');',
-								'style' => 'cursor:pointer'
-							)
-						);
+					'status-status-permission-granted',
+					array(
+						'tag' => 'a',
+						'title' => $GLOBALS['LANG']->getLL($permission, TRUE),
+						'onclick'=> 'WebPermissions.setPermissions(' . $pageId . ', ' . $permission . ', \'delete\', \'' . $who . '\', ' . $int . ');',
+						'style' => 'cursor:pointer'
+					)
+				);
 			} else {
 				$str .= t3lib_iconWorks::getSpriteIcon(
-							'status-status-permission-denied',
-							array(
-								'tag' => 'a',
-								'title' => $GLOBALS['LANG']->getLL($permission, TRUE),
-								'onclick' => 'WebPermissions.setPermissions(' . $pageId . ', ' . $permission . ', \'add\', \'' . $who . '\', ' . $int . ');',
-								'style' => 'cursor:pointer'
-							)
-						);
+					'status-status-permission-denied',
+					array(
+						'tag' => 'a',
+						'title' => $GLOBALS['LANG']->getLL($permission, TRUE),
+						'onclick' => 'WebPermissions.setPermissions(' . $pageId . ', ' . $permission . ', \'add\', \'' . $who . '\', ' . $int . ');',
+						'style' => 'cursor:pointer'
+					)
+				);
 			}
 		}
 		return '<span id="' . $pageId . '_' . $who . '">' . $str . '</span>';
 	}
+
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/perm/class.sc_mod_web_perm_ajax.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/mod/web/perm/class.sc_mod_web_perm_ajax.php']);
+}
+
 ?>

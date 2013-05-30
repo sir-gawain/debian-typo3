@@ -26,6 +26,8 @@
 /**
  * Module: Extension manager
  *
+ * $Id: class.tx_em_tools_unzip.php 1977 2010-03-09 03:13:20Z mkrause $
+ *
  * @author	Vincent Blavet <vincent@phpconcept.net>
  * @author	Karsten Dambekalns <karsten@typo3.org>
  */
@@ -121,8 +123,9 @@ class tx_em_Tools_Unzip {
 		// Check the zlib
 		if (!extension_loaded('zlib')) {
 			throw new RuntimeException(
-				'TYPO3 Fatal Error: The extension "zlib" could not be found.' . LF .
-					'Please make sure your version of PHP was built with zlib support.' . LF,
+				'TYPO3 Fatal Error: ' . "The extension 'zlib' couldn't be found.\n" .
+						"Please make sure your version of PHP was built " .
+						"with 'zlib' support.\n",
 				1270853984
 			);
 		}
@@ -167,10 +170,10 @@ class tx_em_Tools_Unzip {
 			$p_params = array();
 		}
 		if ($this->_check_parameters($p_params,
-			array('extract_as_string' => FALSE,
+			array('extract_as_string' => false,
 				'add_path' => '',
 				'remove_path' => '',
-				'remove_all_path' => FALSE,
+				'remove_all_path' => false,
 				'callback_pre_extract' => '',
 				'callback_post_extract' => '',
 				'set_chmod' => 0)) != 1) {
@@ -201,10 +204,10 @@ class tx_em_Tools_Unzip {
 	 * This method gives the latest error code name.
 	 *
 	 * @access public
-	 * @param  boolean $p_with_code  If TRUE, gives the name and the int value.
+	 * @param  boolean $p_with_code  If true, gives the name and the int value.
 	 * @return string The error name.
 	 */
-	function errorName($p_with_code = FALSE) {
+	function errorName($p_with_code = false) {
 		$v_const_list = get_defined_constants();
 
 		// Extract error constants from all const.
@@ -216,8 +219,8 @@ class tx_em_Tools_Unzip {
 		}
 
 		// Search the name form the code value
-		$v_key = array_search($this->_error_code, $v_error_list, TRUE);
-		if ($v_key != FALSE) {
+		$v_key = array_search($this->_error_code, $v_error_list, true);
+		if ($v_key != false) {
 			$v_value = $v_key;
 		} else {
 			$v_value = 'NoName';
@@ -234,17 +237,17 @@ class tx_em_Tools_Unzip {
 	 * This method returns the description associated with the latest error.
 	 *
 	 * @access public
-	 * @param  boolean $p_full If set to TRUE gives the description with the
+	 * @param  boolean $p_full If set to true gives the description with the
 	 *						 error code, the name and the description.
-	 *						 If set to FALSE gives only the description
+	 *						 If set to false gives only the description
 	 *						 and the error code.
 	 * @return string The error description.
 	 */
-	function errorInfo($p_full = FALSE) {
+	function errorInfo($p_full = false) {
 		if ($p_full) {
-			return ($this->errorName(TRUE) . ' : ' . $this->_error_string);
+			return ($this->errorName(true) . " : " . $this->_error_string);
 		} else {
-			return ($this->_error_string . ' [code ' . $this->_error_code . ']');
+			return ($this->_error_string . " [code " . $this->_error_code . "]");
 		}
 	}
 
@@ -257,7 +260,7 @@ class tx_em_Tools_Unzip {
 	 * @param integer $p_level
 	 */
 	function _checkFormat($p_level = 0) {
-		$v_result = TRUE;
+		$v_result = true;
 
 		// Reset the error handler
 		$this->_errorReset();
@@ -266,16 +269,16 @@ class tx_em_Tools_Unzip {
 		if (!is_file($this->_zipname)) {
 			// Error log
 			$this->_errorLog(ARCHIVE_ZIP_ERR_MISSING_FILE,
-					'Missing archive file \'' . $this->_zipname . '\'');
-			return (FALSE);
+					"Missing archive file '" . $this->_zipname . "'");
+			return (false);
 		}
 
 		// Check that the file is readeable
 		if (!is_readable($this->_zipname)) {
 			// Error log
 			$this->_errorLog(ARCHIVE_ZIP_ERR_READ_OPEN_FAIL,
-					'Unable to read archive \'' . $this->_zipname . '\'');
-			return (FALSE);
+					"Unable to read archive '" . $this->_zipname . "'");
+			return (false);
 		}
 
 		// Check the magic code
@@ -293,7 +296,7 @@ class tx_em_Tools_Unzip {
 
 
 	/**
-	 * self::_openFd()
+	 * tx_em_Tools_Unzip::_openFd()
 	 *
 	 * { Description }
 	 *
@@ -305,7 +308,7 @@ class tx_em_Tools_Unzip {
 		if ($this->_zip_fd != 0) {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_READ_OPEN_FAIL,
 					'Zip file \'' . $this->_zipname . '\' already open');
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Open the zip file
@@ -313,7 +316,7 @@ class tx_em_Tools_Unzip {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_READ_OPEN_FAIL,
 					'Unable to open archive \'' . $this->_zipname
 							. '\' in ' . $p_mode . ' mode');
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Return
@@ -393,16 +396,16 @@ class tx_em_Tools_Unzip {
 		$p_remove_all_path = $p_params['remove_all_path'];
 
 		// Check the path
-		if (($p_path == '')
-				|| ((substr($p_path, 0, 1) != '/')
-						&& (substr($p_path, 0, 3) != '../') && (substr($p_path, 1, 2) != ':/'))) {
-			$p_path = './' . $p_path;
+		if (($p_path == "")
+				|| ((substr($p_path, 0, 1) != "/")
+						&& (substr($p_path, 0, 3) != "../") && (substr($p_path, 1, 2) != ":/"))) {
+			$p_path = "./" . $p_path;
 		}
 
 		// Reduce the path last (and duplicated) '/'
-		if (($p_path != './') && ($p_path != '/')) {
+		if (($p_path != "./") && ($p_path != "/")) {
 			// Look for the path end '/'
-			while (substr($p_path, -1) == '/') {
+			while (substr($p_path, -1) == "/") {
 				$p_path = substr($p_path, 0, strlen($p_path) - 1);
 			}
 		}
@@ -435,7 +438,7 @@ class tx_em_Tools_Unzip {
 				$this->_errorLog(ARCHIVE_ZIP_ERR_INVALID_ARCHIVE_ZIP,
 					'Invalid archive size');
 
-				return self::errorCode();
+				return tx_em_Tools_Unzip::errorCode();
 			}
 
 			// Read the file header
@@ -452,6 +455,7 @@ class tx_em_Tools_Unzip {
 			// Store the file position
 			$v_pos_entry = ftell($this->_zip_fd);
 
+
 			// Go to the file position
 			@rewind($this->_zip_fd);
 			if (@fseek($this->_zip_fd, $v_header['offset'])) {
@@ -462,7 +466,7 @@ class tx_em_Tools_Unzip {
 				$this->_errorLog(ARCHIVE_ZIP_ERR_INVALID_ARCHIVE_ZIP, 'Invalid archive size');
 
 				// Return
-				return self::errorCode();
+				return tx_em_Tools_Unzip::errorCode();
 			}
 
 			// Extracting the file
@@ -505,22 +509,24 @@ class tx_em_Tools_Unzip {
 			return $v_result;
 		}
 
+
 		// Check that the file header is coherent with $p_entry info
 		// TBC
 
 		// Look for all path to remove
-		if ($p_remove_all_path == TRUE) {
+		if ($p_remove_all_path == true) {
 			// Get the basename of the path
 			$p_entry['filename'] = basename($p_entry['filename']);
 		}
 
 			// Look for path to remove
 		else {
-			if ($p_remove_path != '') {
+			if ($p_remove_path != "") {
+				//if (strcmp($p_remove_path, $p_entry['filename'])==0)
 				if ($this->_tool_PathInclusion($p_remove_path, $p_entry['filename']) == 2) {
 
 					// Change the file status
-					$p_entry['status'] = 'filtered';
+					$p_entry['status'] = "filtered";
 
 					// Return
 					return $v_result;
@@ -543,7 +549,7 @@ class tx_em_Tools_Unzip {
 
 		// Add the path
 		if ($p_path != '') {
-			$p_entry['filename'] = $p_path . '/' . $p_entry['filename'];
+			$p_entry['filename'] = $p_path . "/" . $p_entry['filename'];
 		}
 
 		// Look for pre-extract callback
@@ -560,7 +566,7 @@ class tx_em_Tools_Unzip {
 			eval('$v_result = ' . $p_params[ARCHIVE_ZIP_PARAM_PRE_EXTRACT] . '(ARCHIVE_ZIP_PARAM_PRE_EXTRACT, $v_local_header);');
 			if ($v_result == 0) {
 				// Change the file status
-				$p_entry['status'] = 'skipped';
+				$p_entry['status'] = "skipped";
 				$v_result = 1;
 			}
 
@@ -579,20 +585,29 @@ class tx_em_Tools_Unzip {
 				// Look if file is a directory
 				if (is_dir($p_entry['filename'])) {
 					// Change the file status
-					$p_entry['status'] = 'already_a_directory';
+					$p_entry['status'] = "already_a_directory";
+
+					// Return
+					//return $v_result;
 				}
 					// Look if file is write protected
 				else {
 					if (!is_writeable($p_entry['filename'])) {
 						// Change the file status
-						$p_entry['status'] = 'write_protected';
+						$p_entry['status'] = "write_protected";
+
+						// Return
+						//return $v_result;
 					}
 
 						// Look if the extracted file is older
 					else {
 						if (filemtime($p_entry['filename']) > $p_entry['mtime']) {
 							// Change the file status
-							$p_entry['status'] = 'newer_exist';
+							$p_entry['status'] = "newer_exist";
+
+							// Return
+							//return $v_result;
 						}
 					}
 				}
@@ -604,8 +619,8 @@ class tx_em_Tools_Unzip {
 					$v_dir_to_check = $p_entry['filename'];
 				}
 				else {
-					if (!strstr($p_entry['filename'], '/')) {
-						$v_dir_to_check = '';
+					if (!strstr($p_entry['filename'], "/")) {
+						$v_dir_to_check = "";
 					}
 					else
 					{
@@ -615,9 +630,10 @@ class tx_em_Tools_Unzip {
 
 				if (($v_result = $this->_dirCheck($v_dir_to_check, (($p_entry['external'] & 0x00000010) == 0x00000010))) != 1) {
 					// Change the file status
-					$p_entry['status'] = 'path_creation_fail';
+					$p_entry['status'] = "path_creation_fail";
 
 					// Return
+					//return $v_result;
 					$v_result = 1;
 				}
 			}
@@ -632,11 +648,12 @@ class tx_em_Tools_Unzip {
 					// Opening destination file
 					if (($v_dest_file = @fopen($p_entry['filename'], 'wb')) == 0) {
 						// Change the file status
-						$p_entry['status'] = 'write_error';
+						$p_entry['status'] = "write_error";
 
 						// Return
 						return $v_result;
 					}
+
 
 					// Read the file by ARCHIVE_ZIP_READ_BLOCK_SIZE octets blocks
 					$v_size = $p_entry['compressed_size'];
@@ -660,10 +677,11 @@ class tx_em_Tools_Unzip {
 					if (($v_dest_file = @fopen($p_entry['filename'], 'wb')) == 0) {
 
 						// Change the file status
-						$p_entry['status'] = 'write_error';
+						$p_entry['status'] = "write_error";
 
 						return $v_result;
 					}
+
 
 					// Read the compressed file in a buffer (one shot)
 					$v_buffer = @fread($this->_zip_fd, $p_entry['compressed_size']);
@@ -732,7 +750,7 @@ class tx_em_Tools_Unzip {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT, 'Invalid archive structure');
 
 			// Return
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Read the first 42 bytes of the header
@@ -740,14 +758,14 @@ class tx_em_Tools_Unzip {
 
 		// Look for invalid block size
 		if (strlen($v_binary_data) != 26) {
-			$p_header['filename'] = '';
-			$p_header['status'] = 'invalid_header';
+			$p_header['filename'] = "";
+			$p_header['status'] = "invalid_header";
 
 			// Error log
-			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT, 'Invalid block size : ' . strlen($v_binary_data));
+			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT, "Invalid block size : " . strlen($v_binary_data));
 
 			// Return
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Extract the values
@@ -794,11 +812,15 @@ class tx_em_Tools_Unzip {
 
 		// Other informations
 
+		// TBC
+		//for(reset($v_data); $key = key($v_data); next($v_data)) {
+		//}
+
 		// Set the stored filename
 		$p_header['stored_filename'] = $p_header['filename'];
 
 		// Set the status field
-		$p_header['status'] = 'ok';
+		$p_header['status'] = "ok";
 
 		// Return
 		return $v_result;
@@ -824,7 +846,7 @@ class tx_em_Tools_Unzip {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT, 'Invalid archive structure');
 
 			// Return
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Read the first 42 bytes of the header
@@ -832,14 +854,14 @@ class tx_em_Tools_Unzip {
 
 		// Look for invalid block size
 		if (strlen($v_binary_data) != 42) {
-			$p_header['filename'] = '';
-			$p_header['status'] = 'invalid_header';
+			$p_header['filename'] = "";
+			$p_header['status'] = "invalid_header";
 
 			// Error log
-			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT, 'Invalid block size : ' . strlen($v_binary_data));
+			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT, "Invalid block size : " . strlen($v_binary_data));
 
 			// Return
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Extract the values
@@ -904,6 +926,7 @@ class tx_em_Tools_Unzip {
 			$p_header['external'] = 0x41FF0010;
 		}
 
+
 		// Return
 		return $v_result;
 	}
@@ -924,7 +947,7 @@ class tx_em_Tools_Unzip {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT,
 					'Unable to go to the end of the archive \''
 							. $this->_zipname . '\'');
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// First try : look if this is an archive with no commentaries
@@ -937,7 +960,7 @@ class tx_em_Tools_Unzip {
 				$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT,
 						'Unable to seek back to the middle of the archive \''
 								. $this->_zipname . '\'');
-				return self::errorCode();
+				return tx_em_Tools_Unzip::errorCode();
 			}
 
 			// Read for bytes
@@ -963,7 +986,7 @@ class tx_em_Tools_Unzip {
 				$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT,
 						'Unable to seek back to the middle of the archive \''
 								. $this->_zipname . '\'');
-				return self::errorCode();
+				return tx_em_Tools_Unzip::errorCode();
 			}
 
 			// Read byte per byte in order to find the signature
@@ -988,8 +1011,8 @@ class tx_em_Tools_Unzip {
 			// Look if not found end of central dir
 			if ($v_pos == $v_size) {
 				$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT,
-					'Unable to find End of Central Dir Record signature');
-				return self::errorCode();
+					"Unable to find End of Central Dir Record signature");
+				return tx_em_Tools_Unzip::errorCode();
 			}
 		}
 
@@ -999,9 +1022,9 @@ class tx_em_Tools_Unzip {
 		// Look for invalid block size
 		if (strlen($v_binary_data) != 18) {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT,
-					'Invalid End of Central Dir Record size : '
+					"Invalid End of Central Dir Record size : "
 							. strlen($v_binary_data));
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Extract the values
@@ -1010,8 +1033,8 @@ class tx_em_Tools_Unzip {
 		// Check the global size
 		if (($v_pos + $v_data['comment_size'] + 18) != $v_size) {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_BAD_FORMAT,
-				'Fail to find the right signature');
-			return self::errorCode();
+				"Fail to find the right signature");
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Get comment
@@ -1041,7 +1064,7 @@ class tx_em_Tools_Unzip {
 	 *
 	 * @param [type] $p_is_dir
 	 */
-	function _dirCheck($p_dir, $p_is_dir = FALSE) {
+	function _dirCheck($p_dir, $p_is_dir = false) {
 		$v_result = 1;
 
 		// Remove the final '/'
@@ -1050,7 +1073,7 @@ class tx_em_Tools_Unzip {
 		}
 
 		// Check the directory availability
-		if ((is_dir($p_dir)) || ($p_dir == '')) {
+		if ((is_dir($p_dir)) || ($p_dir == "")) {
 			return 1;
 		}
 
@@ -1060,7 +1083,7 @@ class tx_em_Tools_Unzip {
 		// Just a check
 		if ($p_parent_dir != $p_dir) {
 			// Look for parent directory
-			if ($p_parent_dir != '') {
+			if ($p_parent_dir != "") {
 				if (($v_result = $this->_dirCheck($p_parent_dir)) != 1) {
 					return $v_result;
 				}
@@ -1070,8 +1093,8 @@ class tx_em_Tools_Unzip {
 		// Create the directory
 		if (!@mkdir($p_dir, 0777)) {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_DIR_CREATE_FAIL,
-				'Unable to create directory "' . $p_dir . '"');
-			return self::errorCode();
+				"Unable to create directory '$p_dir'");
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Return
@@ -1092,7 +1115,7 @@ class tx_em_Tools_Unzip {
 		if (!is_array($p_params)) {
 			$this->_errorLog(ARCHIVE_ZIP_ERR_INVALID_PARAMETER,
 				'Unsupported parameter, waiting for an array');
-			return self::errorCode();
+			return tx_em_Tools_Unzip::errorCode();
 		}
 
 		// Check that all the params are valid
@@ -1101,7 +1124,7 @@ class tx_em_Tools_Unzip {
 				$this->_errorLog(ARCHIVE_ZIP_ERR_INVALID_PARAMETER,
 						'Unsupported parameter with key \'' . $v_key . '\'');
 
-				return self::errorCode();
+				return tx_em_Tools_Unzip::errorCode();
 			}
 		}
 
@@ -1120,10 +1143,10 @@ class tx_em_Tools_Unzip {
 			if ((isset($p_params[$v_key])) && ($p_params[$v_key] != '')) {
 				if (!function_exists($p_params[$v_key])) {
 					$this->_errorLog(ARCHIVE_ZIP_ERR_INVALID_PARAM_VALUE,
-							'Callback \'' . $p_params[$v_key]
-									. '()\' is not an existing function for '
-									. 'parameter \'' . $v_key . '\'');
-					return self::errorCode();
+							"Callback '" . $p_params[$v_key]
+									. "()' is not an existing function for "
+									. "parameter '" . $v_key . "'");
+					return tx_em_Tools_Unzip::errorCode();
 				}
 			}
 		}
@@ -1162,29 +1185,29 @@ class tx_em_Tools_Unzip {
 	 *
 	 */
 	function _tool_PathReduction($p_dir) {
-		$v_result = '';
+		$v_result = "";
 
 		// Look for not empty path
-		if ($p_dir != '') {
+		if ($p_dir != "") {
 			// Explode path by directory names
-			$v_list = explode('/', $p_dir);
+			$v_list = explode("/", $p_dir);
 
 			// Study directories from last to first
 			for ($i = sizeof($v_list) - 1; $i >= 0; $i--) {
 				// Look for current path
-				if ($v_list[$i] == '.') {
+				if ($v_list[$i] == ".") {
 					// Ignore this directory
 					// Should be the first $i=0, but no check is done
 				} else {
-					if ($v_list[$i] == '..') {
+					if ($v_list[$i] == "..") {
 						// Ignore it and ignore the $i-1
 						$i--;
 					} else {
-						if (($v_list[$i] == '') && ($i != (sizeof($v_list) - 1)) && ($i != 0)) {
+						if (($v_list[$i] == "") && ($i != (sizeof($v_list) - 1)) && ($i != 0)) {
 							// Ignore only the double '//' in path,
 							// but not the first and last '/'
 						} else {
-							$v_result = $v_list[$i] . ($i != (sizeof($v_list) - 1) ? '/' . $v_result : '');
+							$v_result = $v_list[$i] . ($i != (sizeof($v_list) - 1) ? "/" . $v_result : "");
 						}
 					}
 				}
@@ -1205,9 +1228,9 @@ class tx_em_Tools_Unzip {
 		$v_result = 1;
 
 		// Explode dir and path by directory separator
-		$v_list_dir = explode('/', $p_dir);
+		$v_list_dir = explode("/", $p_dir);
 		$v_list_dir_size = sizeof($v_list_dir);
-		$v_list_path = explode('/', $p_path);
+		$v_list_path = explode("/", $p_path);
 		$v_list_path_size = sizeof($v_list_path);
 
 		// Study directories paths
@@ -1347,11 +1370,11 @@ class tx_em_Tools_Unzip {
 	 *
 	 * @param [type] $p_remove_disk_letter
 	 */
-	function _tool_TranslateWinPath($p_path, $p_remove_disk_letter = TRUE) {
+	function _tool_TranslateWinPath($p_path, $p_remove_disk_letter = true) {
 		if (stristr(php_uname(), 'windows')) {
 			// Look for potential disk letter
 			if (($p_remove_disk_letter)
-					&& (($v_position = strpos($p_path, ':')) != FALSE)) {
+					&& (($v_position = strpos($p_path, ':')) != false)) {
 				$p_path = substr($p_path, $v_position + 1);
 			}
 			// Change potential windows directory separator
@@ -1361,5 +1384,10 @@ class tx_em_Tools_Unzip {
 		}
 		return $p_path;
 	}
+
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/tools/class.tx_em_tools_unzip.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/tools/class.tx_em_tools_unzip.php']);
 }
 ?>

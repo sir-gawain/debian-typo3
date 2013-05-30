@@ -25,13 +25,11 @@
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
+/* $Id: class.tx_em_Connection_Soap.php 1978 2010-03-09 03:18:50Z mkrause $ */
 
 /**
- * Connection class for SOAP
+ * Enter description here...
  *
- * @author Karsten Dambekalns <karsten@typo3.org>
- * @package TYPO3
- * @subpackage em
  */
 class tx_em_Connection_Soap {
 	/**
@@ -56,12 +54,12 @@ class tx_em_Connection_Soap {
 	 *
 	 * @var SoapClient
 	 */
-	var $client = FALSE;
+	var $client = false;
 
-	var $error = FALSE;
-	var $username = FALSE;
-	var $password = FALSE;
-	var $reactid = FALSE;
+	var $error = false;
+	var $username = false;
+	var $password = false;
+	var $reactid = false;
 
 	/**
 	 * Init Soap
@@ -71,9 +69,9 @@ class tx_em_Connection_Soap {
 	 * @param	string		$password
 	 * @return	[type]		...
 	 */
-	function init($options = FALSE, $username = FALSE, $password = FALSE) {
-		if ($username !== FALSE) {
-			if ($password === FALSE) {
+	function init($options = false, $username = false, $password = false) {
+		if ($username !== false) {
+			if ($password === false) {
 				$this->reactid = $username;
 			} else {
 				$this->username = $username;
@@ -83,7 +81,7 @@ class tx_em_Connection_Soap {
 
 		$options['format'] = $options['format'] == 'object' ? 'object' : 'array';
 
-		if ($options !== FALSE) {
+		if ($options !== false) {
 			$this->options = (array) $options;
 		}
 
@@ -100,18 +98,18 @@ class tx_em_Connection_Soap {
 	 *
 	 * @param	string		$username
 	 * @param	string		$password
-	 * @return	mixed		FALSE on failure, $reactid on success
+	 * @return	mixed		false on failure, $reactid on success
 	 */
 	function login($username, $password) {
 		$reactid = $this->call('login', array('username' => $username, 'password' => $password));
 
 		if ($this->error) {
-			return FALSE;
+			return false;
 		}
 
 		$this->reactid = $reactid;
 		$this->username = $username;
-		$this->password = FALSE;
+		$this->password = false;
 
 		return $reactid;
 	}
@@ -123,11 +121,11 @@ class tx_em_Connection_Soap {
 	 */
 	function logout() {
 		$this->call('logout');
-		$this->reactid = FALSE;
+		$this->reactid = false;
 		if ($this->error) {
-			return FALSE;
+			return false;
 		}
-		return TRUE;
+		return true;
 	}
 
 
@@ -140,16 +138,16 @@ class tx_em_Connection_Soap {
 	 * @param	unknown_type		$password
 	 * @return	unknown
 	 */
-	function call($func, $param = array(), $username = FALSE, $password = FALSE) {
+	function call($func, $param = array(), $username = false, $password = false) {
 		if (!$this->client) {
 			$this->error = sprintf(
 				'Error in %s: No soap client implementation found. ' .
 						'Make sure PHP soap extension is available!', __FILE__);
-			return FALSE;
+			return false;
 		}
 
-		if ($username !== FALSE) {
-			if ($password === FALSE) {
+		if ($username !== false) {
+			if ($password === false) {
 				$this->reactid = $username;
 			} else {
 				$this->username = $username;
@@ -164,7 +162,7 @@ class tx_em_Connection_Soap {
 		if ($this->options['prefix']) {
 			$func = $this->options['prefix'] . ucfirst($func);
 		}
-		$this->error = FALSE;
+		$this->error = false;
 
 		return $this->callPhpSOAP($func, $param);
 	}
@@ -177,7 +175,7 @@ class tx_em_Connection_Soap {
 	 * @return	unknown
 	 */
 	function callPhpSOAP($func, $param) {
-		$header = NULL;
+		$header = null;
 		if ($this->options['authentication'] == 'headers') {
 			if ($this->reactid) {
 				$header = new SoapHeader(
@@ -192,15 +190,20 @@ class tx_em_Connection_Soap {
 						'password' => $this->password
 					), 1
 				);
-				$this->password = FALSE;
+				$this->password = false;
 			}
 		}
+		 /*return array(
+						'username' => $this->username,
+						'password' => $this->password,
+			 		'func' => $func
+					); */
 
 		$result = $this->client->__soapCall($func, $param, NULL, $header);
 
 		if (is_soap_fault($result)) {
 			$this->error = $result;
-			return FALSE;
+			return false;
 		}
 
 		if (is_a($this->client->headersIn['HeaderAuthenticate'], 'stdClass')) {
@@ -271,5 +274,9 @@ class tx_em_Connection_Soap {
 	function getFunctions() {
 		return $this->client->__getFunctions();
 	}
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_soap.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/sysext/em/classes/connection/class.tx_em_connection_soap.php']);
 }
 ?>

@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_tableoperations extends tx_rtehtmlarea_api {
 
@@ -37,7 +39,7 @@ class tx_rtehtmlarea_tableoperations extends tx_rtehtmlarea_api {
 	protected $thisConfig;					// Reference to RTE PageTSConfig
 	protected $toolbar;					// Reference to RTE toolbar array
 	protected $LOCAL_LANG; 					// Frontend language array
-	protected $requiresClassesConfiguration = TRUE;		// TRUE if the registered plugin requires the PageTSConfig Classes configuration
+	protected $requiresClassesConfiguration = true;		// True if the registered plugin requires the PageTSConfig Classes configuration
 	protected $requiredPlugins = 'TYPO3Color,BlockStyle';	// The comma-separated list of names of prerequisite plugins
 	protected $pluginButtons = 'table, toggleborders, tableproperties, tablerestyle, rowproperties, rowinsertabove, rowinsertunder, rowdelete, rowsplit,
 						columnproperties, columninsertbefore, columninsertafter, columndelete, columnsplit,
@@ -106,7 +108,7 @@ class tx_rtehtmlarea_tableoperations extends tx_rtehtmlarea_api {
 							$registerRTEinJavascriptString .= '
 					RTEarea['.$RTEcounter.'].buttons.'.$dialogue.' = new Object();
 					RTEarea['.$RTEcounter.'].buttons.'.$dialogue.'.removeFieldsets = "' . $disabledFieldsets . '";';
-						} elseif ($this->thisConfig['buttons.'][$dialogue.'.']['removeFieldsets']) {
+						} else if ($this->thisConfig['buttons.'][$dialogue.'.']['removeFieldsets']) {
 							$registerRTEinJavascriptString .= '
 					RTEarea['.$RTEcounter.'].buttons.'.$dialogue.'.removeFieldsets += ",' . $disabledFieldsets . '";';
 						} else {
@@ -119,6 +121,18 @@ class tx_rtehtmlarea_tableoperations extends tx_rtehtmlarea_api {
 
 			$registerRTEinJavascriptString .= '
 			RTEarea['.$RTEcounter.'].hideTableOperationsInToolbar = ' . (trim($this->thisConfig['hideTableOperationsInToolbar']) ? 'true' : 'false') . ';';
+
+				// Deprecated toggleborders button configuration
+			if (in_array('toggleborders',$this->toolbar) && $this->thisConfig['keepToggleBordersInToolbar']) {
+				if (!is_array($this->thisConfig['buttons.']['toggleborders.'])) {
+					$registerRTEinJavascriptString .= '
+			RTEarea['.$RTEcounter.'].buttons.toggleborders = new Object();
+			RTEarea['.$RTEcounter.'].buttons.toggleborders.keepInToolbar = true;';
+				} elseif (!$this->thisConfig['buttons.']['toggleborders.']['keepInToolbar']) {
+					$registerRTEinJavascriptString .= '
+			RTEarea['.$RTEcounter.'].buttons.toggleborders.keepInToolbar = true;';
+				}
+			}
 		}
 		return $registerRTEinJavascriptString;
 	}
@@ -137,5 +151,8 @@ class tx_rtehtmlarea_tableoperations extends tx_rtehtmlarea_api {
 			return $show;
 		}
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TableOperations/class.tx_rtehtmlarea_tableoperations.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TableOperations/class.tx_rtehtmlarea_tableoperations.php']);
 }
 ?>

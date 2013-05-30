@@ -73,11 +73,10 @@ class tx_dbal_installtool {
 	 * Hooks into Installer to set required PHP modules.
 	 *
 	 * @param array $modules
-	 * @param tx_install|tx_reports_reports_status_SystemStatus $instObj
+	 * @param tx_install $instObj
 	 * @return array modules
 	 */
-	public function setRequiredPhpModules(array &$modules, $instObj) {
-		$modifiedModules = array();
+	public function setRequiredPhpModules(array &$modules, tx_install $instObj) {
 		foreach ($modules as $key => $module) {
 			if ($module === 'mysql') {
 				$dbModules = array();
@@ -113,7 +112,7 @@ class tx_dbal_installtool {
 	/**
 	 * Hooks into Installer to modify lines to be written to localconf.php.
 	 *
-	 * @param array $lines This parameter is obsolet as of TYPO3 6.0
+	 * @param array $lines
 	 * @param integer $step
 	 * @param tx_install $instObj
 	 * @return void
@@ -122,7 +121,7 @@ class tx_dbal_installtool {
 		switch ($step) {
 			case 3:
 			case 4:
-				$driver = $instObj->INSTALL['Database']['typo_db_driver'];
+				$driver = $instObj->INSTALL['localconf.php']['typo_db_driver'];
 				if (!$driver && $this->driver) {
 					// Driver was already configured
 					break;
@@ -130,32 +129,28 @@ class tx_dbal_installtool {
 				$driverConfig = '';
 				switch ($driver) {
 					case 'oci8':
-						$driverConfig = array(
-							'driverOptions' => array(
-								'connectSID' =>  ($instObj->INSTALL['Database']['typo_db_type'] === 'sid' ? TRUE : FALSE)
-							)
-						);
+						$driverConfig = '\'driverOptions\' => array(' .
+								'\'connectSID\' => ' . ($instObj->INSTALL['localconf.php']['typo_db_type'] === 'sid' ? 'TRUE' : 'FALSE') .
+								')';
 						break;
 					case 'mssql':
 					case 'odbc_mssql':
-						$driverConfig = array(
-							'useNameQuote' => TRUE,
-							'quoteClob' => FALSE
-						);
+						$driverConfig = '\'useNameQuote\' => TRUE,'
+								. '\'quoteClob\' => FALSE';
 						break;
 					case 'mysql':
 						return;
 				}
-				$config = array(
-					'_DEFAULT' => array(
-						'type' => 'adodb',
-						'config' => array(
-							'driver' =>  $driver,
-							$driverConfig
-						)
-					)
-				);
-				t3lib_Configuration::setLocalConfigurationValuesByPathValuePairs('EXTCONF/dbal/handlerCfg', $config);
+				$config = 'array(' .
+						'\'_DEFAULT\' => array(' .
+						'\'type\' => \'adodb\',' .
+						'\'config\' => array(' .
+						'\'driver\' => \'' . $driver . '\',' .
+						$driverConfig .
+						')' .
+						')' .
+						');';
+				$instObj->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'EXTCONF\'][\'dbal\'][\'handlerCfg\']', $config, FALSE);
 				break;
 		}
 	}
@@ -190,7 +185,7 @@ class tx_dbal_installtool {
 			// Only MySQL is actually available (PDO support may be compiled in
 			// PHP itself and as such DBAL was activated, behaves as if DBAL were
 			// not activated
-			$driverSubPart = '<input type="hidden" name="TYPO3_INSTALL[Database][typo_db_driver]" value="mysql" />';
+			$driverSubPart = '<input type="hidden" name="TYPO3_INSTALL[localconf.php][typo_db_driver]" value="mysql" />';
 		} else {
 			$driverTemplate = t3lib_parsehtml::getSubpart(
 				$formSubPart, '###DATABASE_DRIVER###'
@@ -582,5 +577,10 @@ class tx_dbal_installtool {
 		}
 	}
 
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/class.tx_dbal_installtool.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/dbal/class.tx_dbal_installtool.php']);
 }
 ?>

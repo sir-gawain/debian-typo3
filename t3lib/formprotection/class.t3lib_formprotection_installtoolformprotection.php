@@ -63,10 +63,8 @@
  * }
  * </pre>
  *
- */
-
-/**
- * Install Tool form protection
+ *
+ * $Id$
  *
  * @package TYPO3
  * @subpackage t3lib
@@ -140,6 +138,19 @@ class t3lib_formprotection_InstallToolFormProtection extends t3lib_formProtectio
 	public function persistSessionToken() {
 		$_SESSION['installToolFormToken'] = $this->sessionToken;
 	}
+
+	/**
+	 * This method was once used for persisting all tokens.
+	 *
+	 * @deprecated since TYPO3 4.5.3, will be removed in TYPO3 4.7
+	 * @return void
+	 */
+	public function persistTokens() {
+		t3lib_div::logDeprecatedFunction();
+	}
 }
 
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_formprotection.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/install/mod/class.tx_install_formprotection.php']);
+}
 ?>

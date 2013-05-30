@@ -28,24 +28,26 @@
  * @author		Markus Friedrich <markus.friedrich@dkd.de>
  * @package		TYPO3
  * @subpackage	tx_scheduler
+ *
+ * $Id$
  */
 class tx_scheduler_TestTask extends tx_scheduler_Task {
 
 	/**
 	 * An email address to be used during the process
 	 *
-	 * @var string $email
+	 * @var	string		$email
 	 */
-	var $email;
+	 var $email;
 
 	/**
 	 * Function executed from the Scheduler.
 	 * Sends an email
 	 *
-	 * @return boolean
+	 * @return	void
 	 */
 	public function execute() {
-		$success = FALSE;
+		$success = false;
 
 		if (!empty($this->email)) {
 				// If an email address is defined, send a message to it
@@ -111,10 +113,15 @@ class tx_scheduler_TestTask extends tx_scheduler_Task {
 	/**
 	 * This method returns the destination mail address as additional information
 	 *
-	 * @return string Information to display
+	 * @return	string	Information to display
 	 */
 	public function getAdditionalInformation() {
 		return $GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:label.email') . ': ' . $this->email;
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_testtask.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/scheduler/examples/class.tx_scheduler_testtask.php']);
+}
+
 ?>

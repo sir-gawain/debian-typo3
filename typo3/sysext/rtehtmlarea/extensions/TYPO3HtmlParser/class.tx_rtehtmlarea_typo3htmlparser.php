@@ -26,6 +26,8 @@
  *
  * @author Stanislas Rolland <typo3(arobas)sjbr.ca>
  *
+ * TYPO3 SVN ID: $Id$
+ *
  */
 class tx_rtehtmlarea_typo3htmlparser extends tx_rtehtmlarea_api {
 
@@ -85,5 +87,8 @@ class tx_rtehtmlarea_typo3htmlparser extends tx_rtehtmlarea_api {
 	public function applyToolbarConstraints($show) {
 		return array_unique(array_merge($show, t3lib_div::trimExplode(',', $this->pluginButtons)));
 	}
+}
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TYPO3HtmlParser/class.tx_rtehtmlarea_typo3htmlparser.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/rtehtmlarea/extensions/TYPO3HtmlParser/class.tx_rtehtmlarea_typo3htmlparser.php']);
 }
 ?>

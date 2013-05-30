@@ -31,6 +31,102 @@
  * Originally Christian Jul Jensen <christian@jul.net> helped as well.
  */
 /**
+ * [CLASS/FUNCTION INDEX of SCRIPT]
+ *
+ *
+ *
+ *  141: class tx_indexedsearch_indexer
+ *  207:     function hook_indexContent(&$pObj)
+ *
+ *              SECTION: Backend API
+ *  308:     function backend_initIndexer($id, $type, $sys_language_uid, $MP, $uidRL, $cHash_array=array(), $createCHash=FALSE)
+ *  347:     function backend_setFreeIndexUid($freeIndexUid, $freeIndexSetId=0)
+ *  365:     function backend_indexAsTYPO3Page($title, $keywords, $description, $content, $charset, $mtime, $crdate=0, $recordUid=0)
+ *
+ *              SECTION: Initialization
+ *  416:     function init()
+ *  468:     function initializeExternalParsers()
+ *
+ *              SECTION: Indexing; TYPO3 pages (HTML content)
+ *  509:     function indexTypo3PageContent()
+ *  596:     function splitHTMLContent($content)
+ *  642:     function getHTMLcharset($content)
+ *  657:     function convertHTMLToUtf8($content,$charset='')
+ *  685:     function embracingTags($string,$tagName,&$tagContent,&$stringAfter,&$paramList)
+ *  712:     function typoSearchTags(&$body)
+ *  741:     function extractLinks($content)
+ *  812:     function extractHyperLinks($string)
+ *
+ *              SECTION: Indexing; external URL
+ *  871:     function indexExternalUrl($externalUrl)
+ *  902:     function getUrlHeaders($url)
+ *
+ *              SECTION: Indexing; external files (PDF, DOC, etc)
+ *  948:     function indexRegularDocument($file, $force=FALSE, $contentTmpFile='', $altExtension='')
+ * 1054:     function readFileContent($ext,$absFile,$cPKey)
+ * 1071:     function fileContentParts($ext,$absFile)
+ * 1089:     function splitRegularContent($content)
+ *
+ *              SECTION: Analysing content, Extracting words
+ * 1122:     function charsetEntity2utf8(&$contentArr, $charset)
+ * 1145:     function processWordsInArrays($contentArr)
+ * 1170:     function procesWordsInArrays($contentArr)
+ * 1180:     function bodyDescription($contentArr)
+ * 1202:     function indexAnalyze($content)
+ * 1223:     function analyzeHeaderinfo(&$retArr,$content,$key,$offset)
+ * 1242:     function analyzeBody(&$retArr,$content)
+ * 1262:     function metaphone($word,$retRaw=FALSE)
+ *
+ *              SECTION: SQL; TYPO3 Pages
+ * 1304:     function submitPage()
+ * 1378:     function submit_grlist($hash,$phash_x)
+ * 1398:     function submit_section($hash,$hash_t3)
+ * 1416:     function removeOldIndexedPages($phash)
+ *
+ *              SECTION: SQL; External media
+ * 1459:     function submitFilePage($hash,$file,$subinfo,$ext,$mtime,$ctime,$size,$content_md5h,$contentParts)
+ * 1525:     function submitFile_grlist($hash)
+ * 1539:     function submitFile_section($hash)
+ * 1553:     function removeOldIndexedFiles($phash)
+ *
+ *              SECTION: SQL Helper functions
+ * 1589:     function checkMtimeTstamp($mtime,$phash)
+ * 1625:     function checkContentHash()
+ * 1642:     function checkExternalDocContentHash($hashGr,$content_md5h)
+ * 1656:     function is_grlist_set($phash_x)
+ * 1669:     function update_grlist($phash,$phash_x)
+ * 1684:     function updateTstamp($phash,$mtime=0)
+ * 1699:     function updateSetId($phash)
+ * 1714:     function updateParsetime($phash,$parsetime)
+ * 1727:     function updateRootline()
+ * 1742:     function getRootLineFields(&$fieldArr)
+ * 1761:     function removeLoginpagesWithContentHash()
+ * 1778:     function includeCrawlerClass()
+ *
+ *              SECTION: SQL; Submitting words
+ * 1805:     function checkWordList($wl)
+ * 1842:     function submitWords($wl,$phash)
+ * 1866:     function freqMap($freq)
+ *
+ *              SECTION: Hashing
+ * 1899:     function setT3Hashes()
+ * 1925:     function setExtHashes($file,$subinfo=array())
+ * 1949:     function md5inthash($str)
+ * 1959:     function makeCHash($paramArray)
+ *
+ *              SECTION: Internal logging functions
+ * 1991:     function log_push($msg,$key)
+ * 2000:     function log_pull()
+ * 2011:     function log_setTSlogMessage($msg, $errorNum=0)
+ *
+ *              SECTION: tslib_fe hooks:
+ * 2036:     function fe_headerNoCache(&$params, $ref)
+ *
+ * TOTAL FUNCTIONS: 59
+ * (This index is automatically created/updated by the extension "extdeveval")
+ *
+ */
+/**
  * Indexing class for TYPO3 frontend
  *
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
@@ -63,7 +159,7 @@ class tx_indexedsearch_indexer {
 	var $tstamp_minAge = 0;		// If set, this tells a minimum limit before a document can be indexed again. This is regardless of mtime.
 	var $maxExternalFiles = 0;	// Max number of external files to index.
 
-	var $forceIndexing = FALSE;		// If TRUE, indexing is forced despite of hashes etc.
+	var $forceIndexing = FALSE;		// If true, indexing is forced despite of hashes etc.
 	var $crawlerActive = FALSE;		// Set when crawler is detected (internal)
 
 		// INTERNALS:
@@ -90,10 +186,6 @@ class tx_indexedsearch_indexer {
 	var $freqRange = 32000;
 	var $freqMax = 0.1;
 
-	var $enableMetaphoneSearch = FALSE;
-	var $storeMetaphoneInfoAsWords;
-	var $metaphoneContent = '';
-
 		// Objects:
 	/**
 	 * Charset class object
@@ -116,7 +208,7 @@ class tx_indexedsearch_indexer {
 	 */
 	var $lexerObj;
 
-	var $flagBitMask;
+
 
 	/**
 	 * Parent Object (TSFE) Initialization
@@ -124,7 +216,7 @@ class tx_indexedsearch_indexer {
 	 * @param	object		Parent Object (frontend TSFE object), passed by reference
 	 * @return	void
 	 */
-	function hook_indexContent(&$pObj) {
+	function hook_indexContent(&$pObj)	{
 
 			// Indexer configuration from Extension Manager interface:
 		$indexerConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['indexed_search']);
@@ -133,7 +225,7 @@ class tx_indexedsearch_indexer {
 			// Requirements are that the crawler is loaded, a crawler session is running and re-indexing requested as processing instruction:
 		if (t3lib_extMgm::isLoaded('crawler')
 				&& $pObj->applicationData['tx_crawler']['running']
-				&& in_array('tx_indexedsearch_reindex', $pObj->applicationData['tx_crawler']['parameters']['procInstructions'])) {
+				&& in_array('tx_indexedsearch_reindex', $pObj->applicationData['tx_crawler']['parameters']['procInstructions']))	{
 
 				// Setting simple log message:
 			$pObj->applicationData['tx_crawler']['log'][] = 'Forced Re-indexing enabled';
@@ -144,13 +236,13 @@ class tx_indexedsearch_indexer {
 		}
 
 			// Determine if page should be indexed, and if so, configure and initialize indexer
-		if ($pObj->config['config']['index_enable']) {
-			$this->log_push('Index page', '');
+		if ($pObj->config['config']['index_enable'])	{
+			$this->log_push('Index page','');
 
-			if (!$indexerConfig['disableFrontendIndexing'] || $this->crawlerActive) {
-				if (!$pObj->page['no_search']) {
-					if (!$pObj->no_cache) {
-						if (!strcmp($pObj->sys_language_uid, $pObj->sys_language_content)) {
+			if (!$indexerConfig['disableFrontendIndexing'] || $this->crawlerActive)	{
+				if (!$pObj->page['no_search'])	{
+					if (!$pObj->no_cache)	{
+						if (!strcmp($pObj->sys_language_uid,$pObj->sys_language_content))	{
 
 								// Setting up internal configuration from config array:
 							$this->conf = array();
@@ -170,7 +262,7 @@ class tx_indexedsearch_indexer {
 
 								// Root line uids
 							$this->conf['rootline_uids'] = array();
-							foreach($pObj->config['rootLine'] as $rlkey => $rldat) {
+							foreach($pObj->config['rootLine'] as $rlkey => $rldat)	{
 								$this->conf['rootline_uids'][$rlkey] = $rldat['uid'];
 							}
 
@@ -183,7 +275,7 @@ class tx_indexedsearch_indexer {
 								// Configuration of behavior:
 							$this->conf['index_externals'] = $pObj->config['config']['index_externals'];	// Whether to index external documents like PDF, DOC etc. (if possible)
 							$this->conf['index_descrLgd'] = $pObj->config['config']['index_descrLgd'];		// Length of description text (max 250, default 200)
-							$this->conf['index_metatags'] = isset($pObj->config['config']['index_metatags']) ? $pObj->config['config']['index_metatags'] : TRUE;
+							$this->conf['index_metatags'] = isset($pObj->config['config']['index_metatags']) ? $pObj->config['config']['index_metatags'] : true;
 
 								// Set to zero:
 							$this->conf['recordUid'] = 0;
@@ -193,18 +285,10 @@ class tx_indexedsearch_indexer {
 								// Init and start indexing:
 							$this->init();
 							$this->indexTypo3PageContent();
-						} else {
-							$this->log_setTSlogMessage('Index page? No, ->sys_language_uid was different from sys_language_content which indicates that the page contains fall-back content and that would be falsely indexed as localized content.');
-						}
-					} else {
-						$this->log_setTSlogMessage('Index page? No, page was set to "no_cache" and so cannot be indexed.');
-					}
-				} else {
-					$this->log_setTSlogMessage('Index page? No, The "No Search" flag has been set in the page properties!');
-				}
-			} else {
-				$this->log_setTSlogMessage('Index page? No, Ordinary Frontend indexing during rendering is disabled.');
-			}
+						} else $this->log_setTSlogMessage('Index page? No, ->sys_language_uid was different from sys_language_content which indicates that the page contains fall-back content and that would be falsely indexed as localized content.');
+					} else $this->log_setTSlogMessage('Index page? No, page was set to "no_cache" and so cannot be indexed.');
+				} else $this->log_setTSlogMessage('Index page? No, The "No Search" flag has been set in the page properties!');
+			} else $this->log_setTSlogMessage('Index page? No, Ordinary Frontend indexing during rendering is disabled.');
 			$this->log_pull();
 		}
 	}
@@ -234,7 +318,7 @@ class tx_indexedsearch_indexer {
 	 * @param	boolean		If set, calculates a cHash value from the $cHash_array. Probably you will not do that since such cases are indexed through the frontend and the idea of this interface is to index non-cachable pages from the backend!
 	 * @return	void
 	 */
-	function backend_initIndexer($id, $type, $sys_language_uid, $MP, $uidRL, $cHash_array=array(), $createCHash=FALSE) {
+	function backend_initIndexer($id, $type, $sys_language_uid, $MP, $uidRL, $cHash_array=array(), $createCHash=FALSE)	{
 
 			// Setting up internal configuration from config array:
 		$this->conf = array();
@@ -261,7 +345,7 @@ class tx_indexedsearch_indexer {
 			// Configuration of behavior:
 		$this->conf['index_externals'] = 1;	// Whether to index external documents like PDF, DOC etc. (if possible)
 		$this->conf['index_descrLgd'] = 200;		// Length of description text (max 250, default 200)
-		$this->conf['index_metatags'] = TRUE;	// Whether to index document keywords and description (if present)
+		$this->conf['index_metatags'] = true;	// Whether to index document keywords and description (if present)
 
 			// Init and start indexing:
 		$this->init();
@@ -274,7 +358,7 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		Set id - an integer identifying the "set" of indexing operations.
 	 * @return	void
 	 */
-	function backend_setFreeIndexUid($freeIndexUid, $freeIndexSetId=0) {
+	function backend_setFreeIndexUid($freeIndexUid, $freeIndexSetId=0)	{
 		$this->conf['freeIndexUid'] = $freeIndexUid;
 		$this->conf['freeIndexSetId'] = $freeIndexSetId;
 	}
@@ -292,7 +376,7 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		The record UID that the content comes from (for registration with the indexed rows)
 	 * @return	void
 	 */
-	function backend_indexAsTYPO3Page($title, $keywords, $description, $content, $charset, $mtime, $crdate=0, $recordUid=0) {
+	function backend_indexAsTYPO3Page($title, $keywords, $description, $content, $charset, $mtime, $crdate=0, $recordUid=0)	{
 
 			// Content of page:
 		$this->conf['mtime'] = $mtime;			// Most recent modification time (seconds) of the content
@@ -343,16 +427,13 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function init() {
+	function init()	{
 		global $TYPO3_CONF_VARS;
 
 			// Initializing:
 		$this->cHashParams = $this->conf['cHash_array'];
-		if (is_array($this->cHashParams) && count($this->cHashParams)) {
-			if ($this->conf['cHash']) {
-					// Add this so that URL's come out right...
-				$this->cHashParams['cHash'] = $this->conf['cHash'];
-			}
+		if (is_array($this->cHashParams) && count($this->cHashParams))	{
+			if ($this->conf['cHash'])	$this->cHashParams['cHash'] = $this->conf['cHash'];	// Add this so that URL's come out right...
 			unset($this->cHashParams['encryptionKey']);		// encryptionKey is added inside TSFE in order to calculate the cHash value and it should NOT be a part of this array!!! If it is it will be exposed in links!!!
 		}
 
@@ -361,19 +442,14 @@ class tx_indexedsearch_indexer {
 
 			// Indexer configuration from Extension Manager interface:
 		$this->indexerConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['indexed_search']);
-		$this->tstamp_minAge = t3lib_utility_Math::forceIntegerInRange($this->indexerConfig['minAge']*3600, 0);
-		$this->tstamp_maxAge = t3lib_utility_Math::forceIntegerInRange($this->indexerConfig['maxAge']*3600, 0);
-		$this->maxExternalFiles = t3lib_utility_Math::forceIntegerInRange($this->indexerConfig['maxExternalFiles'], 0, 1000, 5);
-		$this->flagBitMask = t3lib_utility_Math::forceIntegerInRange($this->indexerConfig['flagBitMask'], 0, 255);
-
-			// Workaround: If the extension configuration was not updated yet, the value is not existing
-		$this->enableMetaphoneSearch = isset($this->indexerConfig['enableMetaphoneSearch']) ? ($this->indexerConfig['enableMetaphoneSearch'] ? TRUE : FALSE) : TRUE;
-
-		$this->storeMetaphoneInfoAsWords = tx_indexedsearch_util::isTableUsed('index_words') ? FALSE : ($this->enableMetaphoneSearch ? TRUE : FALSE);
+		$this->tstamp_minAge = t3lib_div::intInRange($this->indexerConfig['minAge']*3600,0);
+		$this->tstamp_maxAge = t3lib_div::intInRange($this->indexerConfig['maxAge']*3600,0);
+		$this->maxExternalFiles = t3lib_div::intInRange($this->indexerConfig['maxExternalFiles'],0,1000,5);
+		$this->flagBitMask = t3lib_div::intInRange($this->indexerConfig['flagBitMask'],0,255);
 
 			// Initialize external document parsers:
 			// Example configuration, see ext_localconf.php of this file!
-		if ($this->conf['index_externals']) {
+		if ($this->conf['index_externals'])	{
 			$this->initializeExternalParsers();
 		}
 
@@ -387,8 +463,7 @@ class tx_indexedsearch_indexer {
 
 			// Initialize metaphone hook:
 			// Example configuration (localconf.php) for this hook: $TYPO3_CONF_VARS['EXTCONF']['indexed_search']['metaphone'] = 'EXT:indexed_search/class.doublemetaphone.php:&user_DoubleMetaPhone';
-			// Make sure that the hook is loaded _after_ indexed_search as this may overwrite the hook depending on the configuration.
-		if ($this->enableMetaphoneSearch && $TYPO3_CONF_VARS['EXTCONF']['indexed_search']['metaphone']) {
+		if ($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['metaphone'])	{
 			$this->metaphoneObj = t3lib_div::getUserObj($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['metaphone']);
 			$this->metaphoneObj->pObj = $this;
 		}
@@ -404,16 +479,16 @@ class tx_indexedsearch_indexer {
 	 * @access private
 	 * @see init()
 	 */
-	function initializeExternalParsers() {
+	function initializeExternalParsers()	{
 		global $TYPO3_CONF_VARS;
 
-		if (is_array($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers'])) {
-			foreach($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers'] as $extension => $_objRef) {
+		if (is_array($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers']))	{
+			foreach($TYPO3_CONF_VARS['EXTCONF']['indexed_search']['external_parsers'] as $extension => $_objRef)	{
 				$this->external_parsers[$extension] = t3lib_div::getUserObj($_objRef);
 				$this->external_parsers[$extension]->pObj = $this;
 
-					// Init parser and if it returns FALSE, unset its entry again:
-				if (!$this->external_parsers[$extension]->initParser($extension)) {
+					// Init parser and if it returns false, unset its entry again:
+				if (!$this->external_parsers[$extension]->initParser($extension))	{
 					unset($this->external_parsers[$extension]);
 				}
 			}
@@ -445,82 +520,78 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function indexTypo3PageContent() {
+	function indexTypo3PageContent()	{
 
 		$check = $this->checkMtimeTstamp($this->conf['mtime'], $this->hash['phash']);
 		$is_grlist = $this->is_grlist_set($this->hash['phash']);
 
-		if ($check > 0 || !$is_grlist || $this->forceIndexing) {
+		if ($check > 0 || !$is_grlist || $this->forceIndexing)	{
 
 				// Setting message:
-			if ($this->forceIndexing) {
-				$this->log_setTSlogMessage('Indexing needed, reason: Forced', 1);
-			} elseif ($check > 0) {
-				$this->log_setTSlogMessage('Indexing needed, reason: ' . $this->reasons[$check], 1);
+			if ($this->forceIndexing)	{
+				$this->log_setTSlogMessage('Indexing needed, reason: Forced',1);
+			} elseif ($check > 0)	{
+				$this->log_setTSlogMessage('Indexing needed, reason: '.$this->reasons[$check],1);
 			} else {
-				$this->log_setTSlogMessage('Indexing needed, reason: Updates gr_list!', 1);
+				$this->log_setTSlogMessage('Indexing needed, reason: Updates gr_list!',1);
 			}
 
 					// Divide into title,keywords,description and body:
-			$this->log_push('Split content', '');
+			$this->log_push('Split content','');
 				$this->contentParts = $this->splitHTMLContent($this->conf['content']);
-				if ($this->conf['indexedDocTitle']) {
+				if ($this->conf['indexedDocTitle'])	{
 					$this->contentParts['title'] = $this->conf['indexedDocTitle'];
 				}
 			$this->log_pull();
 
 				// Calculating a hash over what is to be the actual page content. Maybe this hash should not include title,description and keywords? The bodytext is the primary concern. (on the other hand a changed page-title would make no difference then, so dont!)
-			$this->content_md5h = tx_indexedsearch_util::md5inthash(implode('', $this->contentParts));
+			$this->content_md5h = $this->md5inthash(implode($this->contentParts,''));
 
 				// This function checks if there is already a page (with gr_list = 0,-1) indexed and if that page has the very same contentHash.
 				// If the contentHash is the same, then we can rest assured that this page is already indexed and regardless of mtime and origContent we don't need to do anything more.
 				// This will also prevent pages from being indexed if a fe_users has logged in and it turns out that the page content is not changed anyway. fe_users logged in should always search with hash_gr_list = "0,-1" OR "[their_group_list]". This situation will be prevented only if the page has been indexed with no user login on before hand. Else the page will be indexed by users until that event. However that does not present a serious problem.
 			$checkCHash = $this->checkContentHash();
-			if (!is_array($checkCHash) || $check===1) {
+			if (!is_array($checkCHash) || $check===1)	{
 				$Pstart=t3lib_div::milliseconds();
 
-				$this->log_push('Converting charset of content (' . $this->conf['metaCharset'] . ') to utf-8', '');
-					$this->charsetEntity2utf8($this->contentParts, $this->conf['metaCharset']);
+				$this->log_push('Converting charset of content ('.$this->conf['metaCharset'].') to utf-8','');
+					$this->charsetEntity2utf8($this->contentParts,$this->conf['metaCharset']);
 				$this->log_pull();
 
 						// Splitting words
-				$this->log_push('Extract words from content', '');
+				$this->log_push('Extract words from content','');
 					$splitInWords = $this->processWordsInArrays($this->contentParts);
 				$this->log_pull();
 
 						// Analyse the indexed words.
-				$this->log_push('Analyse the extracted words', '');
+				$this->log_push('Analyse the extracted words','');
 					$indexArr = $this->indexAnalyze($splitInWords);
 				$this->log_pull();
 
 						// Submitting page (phash) record
-				$this->log_push('Submitting page', '');
+				$this->log_push('Submitting page','');
 					$this->submitPage();
 				$this->log_pull();
 
 						// Check words and submit to word list if not there
-				$this->log_push('Check word list and submit words', '');
-					if (tx_indexedsearch_util::isTableUsed('index_words')) {
-						$this->checkWordList($indexArr);
-						$this->submitWords($indexArr, $this->hash['phash']);
-					}
+				$this->log_push('Check word list and submit words','');
+					$this->checkWordList($indexArr);
+					$this->submitWords($indexArr,$this->hash['phash']);
 				$this->log_pull();
 
 						// Set parsetime
-				$this->updateParsetime($this->hash['phash'], t3lib_div::milliseconds() - $Pstart);
+				$this->updateParsetime($this->hash['phash'],t3lib_div::milliseconds()-$Pstart);
 
 						// Checking external files if configured for.
-				$this->log_push('Checking external files', '');
-				if ($this->conf['index_externals']) {
+				$this->log_push('Checking external files','');
+				if ($this->conf['index_externals'])	{
 					$this->extractLinks($this->conf['content']);
 				}
 				$this->log_pull();
 			} else {
-					// Update the timestamp
-				$this->updateTstamp($this->hash['phash'], $this->conf['mtime']);
+				$this->updateTstamp($this->hash['phash'],$this->conf['mtime']);	// Update the timestatmp
 				$this->updateSetId($this->hash['phash']);
-					// $checkCHash['phash'] is the phash of the result row that is similar to the current phash regarding the content hash.
-				$this->update_grlist($checkCHash['phash'], $this->hash['phash']);
+				$this->update_grlist($checkCHash['phash'],$this->hash['phash']);	// $checkCHash['phash'] is the phash of the result row that is similar to the current phash regarding the content hash.
 				$this->updateRootline();
 				$this->log_setTSlogMessage('Indexing not needed, the contentHash, '.$this->content_md5h.', has not changed. Timestamp, grlist and rootline updated if necessary.');
 			}
@@ -540,23 +611,18 @@ class tx_indexedsearch_indexer {
 
 			// divide head from body ( u-ouh :) )
 		$contentArr = $this->defaultContentArray;
-		$contentArr['body'] = stristr($content, '<body');
-		$headPart = substr($content, 0, -strlen($contentArr['body']));
+		$contentArr['body'] = stristr($content,'<body');
+		$headPart = substr($content,0,-strlen($contentArr['body']));
 
 			// get title
-		$this->embracingTags($headPart, 'TITLE', $contentArr['title'], $dummy2, $dummy);
-		$titleParts = explode(':', $contentArr['title'], 2);
+		$this->embracingTags($headPart,'TITLE',$contentArr['title'],$dummy2,$dummy);
+		$titleParts = explode(':',$contentArr['title'],2);
 		$contentArr['title'] = trim(isset($titleParts[1]) ? $titleParts[1] : $titleParts[0]);
 
 			// get keywords and description metatags
-		if ($this->conf['index_metatags']) {
-			$meta = array();
-			$i = 0;
-			while ($this->embracingTags($headPart, 'meta', $dummy, $headPart, $meta[$i])) {
-				$i++;
-			}
-				// TODO The code below stops at first unset tag. Is that correct?
-			for ($i = 0; isset($meta[$i]); $i++) {
+		if($this->conf['index_metatags']) {
+			for($i=0;$this->embracingTags($headPart,'meta',$dummy,$headPart,$meta[$i]);$i++) { /*nothing*/ }
+			for($i=0;isset($meta[$i]);$i++) {
 				$meta[$i] = t3lib_div::get_tag_attributes($meta[$i]);
 				if (stristr($meta[$i]['name'], 'keywords')) {
 					$contentArr['keywords'] .= ',' . $this->addSpacesToKeywordList($meta[$i]['content']);
@@ -571,13 +637,13 @@ class tx_indexedsearch_indexer {
 		$this->typoSearchTags($contentArr['body']);
 
 			// Get rid of unwanted sections (ie. scripting and style stuff) in body
-		$tagList = explode(',', $this->excludeSections);
-		foreach ($tagList as $tag) {
-			while($this->embracingTags($contentArr['body'], $tag, $dummy, $contentArr['body'], $dummy2));
+		$tagList = explode(',',$this->excludeSections);
+		foreach($tagList as $tag)	{
+			while($this->embracingTags($contentArr['body'],$tag,$dummy,$contentArr['body'],$dummy2));
 		}
 
 			// remove tags, but first make sure we don't concatenate words by doing it
-		$contentArr['body'] = str_replace('<', ' <', $contentArr['body']);
+		$contentArr['body'] = str_replace('<',' <',$contentArr['body']);
 		$contentArr['body'] = trim(strip_tags($contentArr['body']));
 
 		$contentArr['keywords'] = trim($contentArr['keywords']);
@@ -593,9 +659,9 @@ class tx_indexedsearch_indexer {
 	 * @param	string		HTML content
 	 * @return	string		The charset value if found.
 	 */
-	function getHTMLcharset($content) {
-		if (preg_match('/<meta[[:space:]]+[^>]*http-equiv[[:space:]]*=[[:space:]]*["\']CONTENT-TYPE["\'][^>]*>/i', $content, $reg)) {
-			if (preg_match('/charset[[:space:]]*=[[:space:]]*([[:alnum:]-]+)/i', $reg[0], $reg2)) {
+	function getHTMLcharset($content)	{
+		if (preg_match('/<meta[[:space:]]+[^>]*http-equiv[[:space:]]*=[[:space:]]*["\']CONTENT-TYPE["\'][^>]*>/i',$content,$reg))	{
+			if (preg_match('/charset[[:space:]]*=[[:space:]]*([[:alnum:]-]+)/i',$reg[0],$reg2))	{
 				return $reg2[1];
 			}
 		}
@@ -608,14 +674,14 @@ class tx_indexedsearch_indexer {
 	 * @param	string		Optional charset (otherwise extracted from HTML)
 	 * @return	string		Converted HTML
 	 */
-	function convertHTMLToUtf8($content, $charset = '') {
+	function convertHTMLToUtf8($content,$charset='')	{
 
 			// Find charset:
 		$charset = $charset ? $charset : $this->getHTMLcharset($content);
 		$charset = $this->csObj->parse_charset($charset);
 
 			// Convert charset:
-		if ($charset && $charset!=='utf-8') {
+		if ($charset && $charset!=='utf-8')	{
 			$content = $this->csObj->utf8_encode($content, $charset);
 		}
 			// Convert entities, assuming document is now UTF-8:
@@ -626,7 +692,7 @@ class tx_indexedsearch_indexer {
 
 	/**
 	 * Finds first occurence of embracing tags and returns the embraced content and the original string with
-	 * the tag removed in the two passed variables. Returns FALSE if no match found. ie. useful for finding
+	 * the tag removed in the two passed variables. Returns false if no match found. ie. useful for finding
 	 * <title> of document or removing <script>-sections
 	 *
 	 * @param	string		String to search in
@@ -634,48 +700,43 @@ class tx_indexedsearch_indexer {
 	 * @param	string		Passed by reference: Content inside found tag
 	 * @param	string		Passed by reference: Content after found tag
 	 * @param	string		Passed by reference: Attributes of the found tag.
-	 * @return	boolean		Returns FALSE if tag was not found, otherwise TRUE.
+	 * @return	boolean		Returns false if tag was not found, otherwise true.
 	 */
-	function embracingTags($string, $tagName, &$tagContent, &$stringAfter, &$paramList) {
+	function embracingTags($string,$tagName,&$tagContent,&$stringAfter,&$paramList) {
 		$endTag = '</'.$tagName.'>';
 		$startTag = '<'.$tagName;
 
-			// stristr used because we want a case-insensitive search for the tag.
-		$isTagInText = stristr($string, $startTag);
-			// if the tag was not found, return FALSE
-		if(!$isTagInText) {
-			return FALSE;
-		}
+		$isTagInText = stristr($string,$startTag);		// stristr used because we want a case-insensitive search for the tag.
+		if(!$isTagInText) return false;	// if the tag was not found, return false
 
-		list($paramList, $isTagInText) = explode('>', substr($isTagInText, strlen($startTag)), 2);
-		$afterTagInText = stristr($isTagInText, $endTag);
-		if ($afterTagInText) {
+		list($paramList,$isTagInText) = explode('>',substr($isTagInText,strlen($startTag)),2);
+		$afterTagInText = stristr($isTagInText,$endTag);
+		if ($afterTagInText)	{
 			$stringBefore = substr($string, 0, strpos(strtolower($string), strtolower($startTag)));
-			$tagContent = substr($isTagInText, 0, strlen($isTagInText) - strlen($afterTagInText));
-			$stringAfter = $stringBefore . substr($afterTagInText, strlen($endTag));
-			// If there was no ending tag, the tagContent is blank and anything after the tag it self is returned.
-		} else {
+			$tagContent = substr($isTagInText,0,strlen($isTagInText)-strlen($afterTagInText));
+			$stringAfter = $stringBefore.substr($afterTagInText,strlen($endTag));
+		} else {	// If there was no ending tag, the tagContent is blank and anything after the tag it self is returned.
 			$tagContent='';
 			$stringAfter = $isTagInText;
 		}
 
-		return TRUE;
+		return true;
 	}
 
 	/**
 	 * Removes content that shouldn't be indexed according to TYPO3SEARCH-tags.
 	 *
 	 * @param	string		HTML Content, passed by reference
-	 * @return	boolean		Returns TRUE if a TYPOSEARCH_ tag was found, otherwise FALSE.
+	 * @return	boolean		Returns true if a TYPOSEARCH_ tag was found, otherwise false.
 	 */
 	function typoSearchTags(&$body) {
-		$expBody = preg_split('/\<\!\-\-[\s]?TYPO3SEARCH_/', $body);
+		$expBody = preg_split('/\<\!\-\-[\s]?TYPO3SEARCH_/',$body);
 
 		if(count($expBody)>1) {
 			$body = '';
 
-			foreach($expBody as $val) {
-				$part = explode('-->', $val, 2);
+			foreach($expBody as $val)	{
+				$part = explode('-->',$val,2);
 				if(trim($part[0])=='begin') {
 					$body.= $part[1];
 					$prev = '';
@@ -685,9 +746,9 @@ class tx_indexedsearch_indexer {
 					$prev = $val;
 				}
 			}
-			return TRUE;
+			return true;
 		} else {
-			return FALSE;
+			return false;
 		}
 	}
 
@@ -702,13 +763,13 @@ class tx_indexedsearch_indexer {
 			// Get links:
 		$list = $this->extractHyperLinks($content);
 
-		if ($this->indexerConfig['useCrawlerForExternalFiles'] && t3lib_extMgm::isLoaded('crawler')) {
+		if ($this->indexerConfig['useCrawlerForExternalFiles'] && t3lib_extMgm::isLoaded('crawler'))	{
 			$this->includeCrawlerClass();
 			$crawler = t3lib_div::makeInstance('tx_crawler_lib');
 		}
 
 			// Traverse links:
-		foreach($list as $linkInfo) {
+		foreach($list as $linkInfo)	{
 
 				// Decode entities:
 			if ($linkInfo['localPath'])	{	// localPath means: This file is sent by a download script. While the indexed URL has to point to $linkInfo['href'], the absolute path to the file is specified here!
@@ -721,32 +782,32 @@ class tx_indexedsearch_indexer {
 			$qParts = parse_url($linkSource);
 
 				// Check for jumpurl (TYPO3 specific thing...)
-			if ($qParts['query'] && strstr($qParts['query'], 'jumpurl=')) {
-				parse_str($qParts['query'], $getP);
+			if ($qParts['query'] && strstr($qParts['query'],'jumpurl='))	{
+				parse_str($qParts['query'],$getP);
 				$linkSource = $getP['jumpurl'];
 				$qParts = parse_url($linkSource);	// parse again due to new linkSource!
 			}
 
 			if (!$linkInfo['localPath'] && $qParts['scheme']) {
-				if ($this->indexerConfig['indexExternalURLs']) {
+				if ($this->indexerConfig['indexExternalURLs'])	{
 						// Index external URL (http or otherwise)
 					$this->indexExternalUrl($linkSource);
 				}
 			} elseif (!$qParts['query']) {
 				$linkSource = urldecode($linkSource);
-				if (t3lib_div::isAllowedAbsPath($linkSource)) {
+				if (t3lib_div::isAllowedAbsPath($linkSource))	{
 					$localFile = $linkSource;
 				} else {
 					$localFile = t3lib_div::getFileAbsFileName(PATH_site.$linkSource);
 				}
-				if ($localFile && @is_file($localFile)) {
+				if ($localFile && @is_file($localFile))	{
 
 						// Index local file:
-					if ($linkInfo['localPath']) {
+					if ($linkInfo['localPath'])	{
 
 						$fI = pathinfo($linkSource);
 						$ext = strtolower($fI['extension']);
-						if (is_object($crawler)) {
+						if (is_object($crawler))	{
 							$params = array(
 								'document' => $linkSource,
 								'alturl' => $linkInfo['href'],
@@ -754,20 +815,20 @@ class tx_indexedsearch_indexer {
 							);
 							unset($params['conf']['content']);
 
-							$crawler->addQueueEntry_callBack(0, $params, 'EXT:indexed_search/class.crawler.php:&tx_indexedsearch_files', $this->conf['id']);
-							$this->log_setTSlogMessage('media "' . $params['document'] . '" added to "crawler" queue.', 1);
+							$crawler->addQueueEntry_callBack(0,$params,'EXT:indexed_search/class.crawler.php:&tx_indexedsearch_files',$this->conf['id']);
+							$this->log_setTSlogMessage('media "'.$params['document'].'" added to "crawler" queue.',1);
 						} else {
-							$this->indexRegularDocument($linkInfo['href'], FALSE, $linkSource, $ext);
+							$this->indexRegularDocument($linkInfo['href'], false, $linkSource, $ext);
 						}
 					} else {
-						if (is_object($crawler)) {
+						if (is_object($crawler))	{
 							$params = array(
 								'document' => $linkSource,
 								'conf' => $this->conf
 							);
 							unset($params['conf']['content']);
-							$crawler->addQueueEntry_callBack(0, $params, 'EXT:indexed_search/class.crawler.php:&tx_indexedsearch_files', $this->conf['id']);
-							$this->log_setTSlogMessage('media "' . $params['document'] . '" added to "crawler" queue.', 1);
+							$crawler->addQueueEntry_callBack(0,$params,'EXT:indexed_search/class.crawler.php:&tx_indexedsearch_files',$this->conf['id']);
+							$this->log_setTSlogMessage('media "'.$params['document'].'" added to "crawler" queue.',1);
 						} else {
 							$this->indexRegularDocument($linkSource);
 						}
@@ -784,12 +845,12 @@ class tx_indexedsearch_indexer {
 	 * @return array Array of hyperlinks (keys: tag, href, localPath (empty if not local))
 	 * @see extractLinks()
 	 */
-	function extractHyperLinks($html) {
+	function extractHyperLinks($html)	{
 		$htmlParser = t3lib_div::makeInstance('t3lib_parseHtml');
 		$htmlParts = $htmlParser->splitTags('a', $html);
 		$hyperLinksData = array();
 		foreach ($htmlParts as $index => $tagData) {
-			if (($index % 2) !== 0) {
+			if (($index % 2) !== 0)	{
 				$tagAttributes = $htmlParser->get_tag_attributes($tagData, TRUE);
 				$firstTagName = $htmlParser->getFirstTagName($tagData);
 
@@ -820,7 +881,7 @@ class tx_indexedsearch_indexer {
 		$htmlParts = $htmlParser->splitTags('base', $html);
 		foreach ($htmlParts as $index => $tagData) {
 			if (($index % 2) !== 0) {
-				$tagAttributes = $htmlParser->get_tag_attributes($tagData, TRUE);
+				$tagAttributes = $htmlParser->get_tag_attributes($tagData, true);
 				$firstTagName = $htmlParser->getFirstTagName($tagData);
 				if (strtolower($firstTagName) == 'base') {
 					$href = $tagAttributes[0]['href'];
@@ -847,7 +908,7 @@ class tx_indexedsearch_indexer {
 	 * @return	void
 	 * @see indexRegularDocument()
 	 */
-	function indexExternalUrl($externalUrl) {
+	function indexExternalUrl($externalUrl)	{
 
 			// Parse External URL:
 		$qParts = parse_url($externalUrl);
@@ -856,9 +917,9 @@ class tx_indexedsearch_indexer {
 
 			// Get headers:
 		$urlHeaders = $this->getUrlHeaders($externalUrl);
-		if (stristr($urlHeaders['Content-Type'], 'text/html')) {
+		if (stristr($urlHeaders['Content-Type'],'text/html'))	{
 			$content = $this->indexExternalUrl_content = t3lib_div::getUrl($externalUrl);
-			if (strlen($content)) {
+			if (strlen($content))	{
 
 					// Create temporary file:
 				$tmpFile = t3lib_div::tempnam('EXTERNAL_URL');
@@ -878,18 +939,17 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @param	string		The URL
 	 * @param	integer		Timeout (seconds?)
-	 * @return	mixed		If no answer, returns FALSE. Otherwise an array where HTTP headers are keys
+	 * @return	mixed		If no answer, returns false. Otherwise an array where HTTP headers are keys
 	 */
-	function getUrlHeaders($url) {
-			// Try to get the headers only
-		$content = t3lib_div::getUrl($url, 2);
+	function getUrlHeaders($url)	{
+		$content = t3lib_div::getURL($url,2);	// Try to get the headers only
 
-		if (strlen($content)) {
+		if (strlen($content))	{
 				// Compile headers:
-			$headers = t3lib_div::trimExplode(LF, $content, 1);
+			$headers = t3lib_div::trimExplode(LF,$content,1);
 			$retVal = array();
-			foreach($headers as $line) {
-				if (!strlen(trim($line))) {
+			foreach($headers as $line)	{
+				if (!strlen(trim($line)))	{
 					break;	// Stop at the first empty line (= end of header)
 				}
 
@@ -1067,14 +1127,14 @@ class tx_indexedsearch_indexer {
 	 * @param	string		File extension for temporary file.
 	 * @return	void
 	 */
-	function indexRegularDocument($file, $force=FALSE, $contentTmpFile='', $altExtension='') {
+	function indexRegularDocument($file, $force=FALSE, $contentTmpFile='', $altExtension='')	{
 
 			// Init
 		$fI = pathinfo($file);
 		$ext = $altExtension ? $altExtension : strtolower($fI['extension']);
 
 			// Create abs-path:
-		if (!$contentTmpFile) {
+		if (!$contentTmpFile)	{
 			if (!t3lib_div::isAbsPath($file))	{	// Relative, prepend PATH_site:
 				$absFile = t3lib_div::getFileAbsFileName(PATH_site.$file);
 			} else {	// Absolute, pass-through:
@@ -1086,95 +1146,82 @@ class tx_indexedsearch_indexer {
 		}
 
 			// Indexing the document:
-		if ($absFile && @is_file($absFile)) {
-			if ($this->external_parsers[$ext]) {
+		if ($absFile && @is_file($absFile))	{
+			if ($this->external_parsers[$ext])	{
 				$mtime = filemtime($absFile);
-				$cParts = $this->fileContentParts($ext, $absFile);
+				$cParts = $this->fileContentParts($ext,$absFile);
 
-				foreach($cParts as $cPKey) {
+				foreach($cParts as $cPKey)	{
 					$this->internal_log = array();
-					$this->log_push('Index: ' . str_replace('.', '_', basename($file)) . ($cPKey ? '#' . $cPKey : ''), '');
+					$this->log_push('Index: '.str_replace('.','_',basename($file)).($cPKey?'#'.$cPKey:''),'');
 					$Pstart = t3lib_div::milliseconds();
 					$subinfo = array('key' => $cPKey);	// Setting page range. This is "0" (zero) when no division is made, otherwise a range like "1-3"
-					$phash_arr = $this->file_phash_arr = $this->setExtHashes($file, $subinfo);
+					$phash_arr = $this->file_phash_arr = $this->setExtHashes($file,$subinfo);
 					$check = $this->checkMtimeTstamp($mtime, $phash_arr['phash']);
-					if ($check > 0 || $force) {
-						if ($check > 0) {
-							$this->log_setTSlogMessage('Indexing needed, reason: ' . $this->reasons[$check], 1);
+					if ($check > 0 || $force)	{
+						if ($check > 0)	{
+							$this->log_setTSlogMessage('Indexing needed, reason: '.$this->reasons[$check],1);
 						} else {
-							$this->log_setTSlogMessage('Indexing forced by flag', 1);
+							$this->log_setTSlogMessage('Indexing forced by flag',1);
 						}
 
 							// Check external file counter:
-						if ($this->externalFileCounter < $this->maxExternalFiles || $force) {
+						if ($this->externalFileCounter < $this->maxExternalFiles || $force)	{
 
 									// Divide into title,keywords,description and body:
-							$this->log_push('Split content', '');
-								$contentParts = $this->readFileContent($ext, $absFile, $cPKey);
+							$this->log_push('Split content','');
+								$contentParts = $this->readFileContent($ext,$absFile,$cPKey);
 							$this->log_pull();
 
-							if (is_array($contentParts)) {
+							if (is_array($contentParts))	{
 									// Calculating a hash over what is to be the actual content. (see indexTypo3PageContent())
-								$content_md5h = tx_indexedsearch_util::md5inthash(implode($contentParts, ''));
+								$content_md5h = $this->md5inthash(implode($contentParts,''));
 
-								if ($this->checkExternalDocContentHash($phash_arr['phash_grouping'], $content_md5h) || $force) {
+								if ($this->checkExternalDocContentHash($phash_arr['phash_grouping'], $content_md5h) || $force)	{
 
 										// Increment counter:
 									$this->externalFileCounter++;
 
 										// Splitting words
-									$this->log_push('Extract words from content', '');
+									$this->log_push('Extract words from content','');
 										$splitInWords = $this->processWordsInArrays($contentParts);
 									$this->log_pull();
 
 										// Analyse the indexed words.
-									$this->log_push('Analyse the extracted words', '');
+									$this->log_push('Analyse the extracted words','');
 										$indexArr = $this->indexAnalyze($splitInWords);
 									$this->log_pull();
 
 										// Submitting page (phash) record
-									$this->log_push('Submitting page', '');
+									$this->log_push('Submitting page','');
 										$size = filesize($absFile);
-											// Unfortunately I cannot determine WHEN a file is originally made - so I must return the modification time...
-										$ctime = filemtime($absFile);
-										$this->submitFilePage($phash_arr, $file, $subinfo, $ext, $mtime, $ctime, $size, $content_md5h, $contentParts);
+										$ctime = filemtime($absFile);	// Unfortunately I cannot determine WHEN a file is originally made - so I must return the modification time...
+										$this->submitFilePage($phash_arr,$file,$subinfo,$ext,$mtime,$ctime,$size,$content_md5h,$contentParts);
 									$this->log_pull();
 
 										// Check words and submit to word list if not there
-									$this->log_push('Check word list and submit words', '');
-										if (tx_indexedsearch_util::isTableUsed('index_words')) {
-											$this->checkWordList($indexArr);
-											$this->submitWords($indexArr, $phash_arr['phash']);
-										}
+									$this->log_push('Check word list and submit words','');
+										$this->checkWordList($indexArr);
+										$this->submitWords($indexArr,$phash_arr['phash']);
 									$this->log_pull();
 
 										// Set parsetime
-									$this->updateParsetime($phash_arr['phash'], t3lib_div::milliseconds() - $Pstart);
+									$this->updateParsetime($phash_arr['phash'],t3lib_div::milliseconds()-$Pstart);
 								} else {
-										// Update the timestamp
-									$this->updateTstamp($phash_arr['phash'], $mtime);
-									$this->log_setTSlogMessage('Indexing not needed, the contentHash, ' . $content_md5h . ', has not changed. Timestamp updated.');
+									$this->updateTstamp($phash_arr['phash'],$mtime);	// Update the timestamp
+									$this->log_setTSlogMessage('Indexing not needed, the contentHash, '.$content_md5h.', has not changed. Timestamp updated.');
 								}
-							} else {
-								$this->log_setTSlogMessage('Could not index file! Unsupported extension.');
-							}
-						} else {
-							$this->log_setTSlogMessage('The limit of '.$this->maxExternalFiles.' has already been exceeded, so no indexing will take place this time.');
-						}
-					} else {
-						$this->log_setTSlogMessage('Indexing not needed, reason: '.$this->reasons[$check]);
-					}
+							} else $this->log_setTSlogMessage('Could not index file! Unsupported extension.');
+						} else $this->log_setTSlogMessage('The limit of '.$this->maxExternalFiles.' has already been exceeded, so no indexing will take place this time.');
+					} else $this->log_setTSlogMessage('Indexing not needed, reason: '.$this->reasons[$check]);
 
 						// Checking and setting sections:
+		#			$this->submitFile_grlist($phash_arr['phash']);	// Setting a gr_list record if there is none already (set for default fe_group)
 					$this->submitFile_section($phash_arr['phash']);		// Setting a section-record for the file. This is done also if the file is not indexed. Notice that section records are deleted when the page is indexed.
 					$this->log_pull();
 				}
-			} else {
-				$this->log_setTSlogMessage('Indexing not possible; The extension "'.$ext.'" was not supported.');
-			}
-		} else {
-			$this->log_setTSlogMessage('Indexing not possible; File "'.$absFile.'" not found or valid.');
-		}
+			} else $this->log_setTSlogMessage('Indexing not possible; The extension "'.$ext.'" was not supported.');
+		} else $this->log_setTSlogMessage('Indexing not possible; File "'.$absFile.'" not found or valid.');
 	}
 
 	/**
@@ -1186,15 +1233,14 @@ class tx_indexedsearch_indexer {
 	 * @param	string		Pointer to section (zero for all other than PDF which will have an indication of pages into which the document should be splitted.)
 	 * @return	array		Standard content array (title, description, keywords, body keys)
 	 */
-	function readFileContent($fileExtension, $absoluteFileName, $sectionPointer) {
-		$contentArray = NULL;
+	function readFileContent($ext,$absFile,$cPKey)	{
 
 			// Consult relevant external document parser:
-		if (is_object($this->external_parsers[$fileExtension])) {
-			$contentArray = $this->external_parsers[$fileExtension]->readFileContent($fileExtension, $absoluteFileName, $sectionPointer);
+		if (is_object($this->external_parsers[$ext]))	{
+			$contentArr = $this->external_parsers[$ext]->readFileContent($ext,$absFile,$cPKey);
 		}
 
-		return $contentArray;
+		return $contentArr;
 	}
 
 	/**
@@ -1204,12 +1250,12 @@ class tx_indexedsearch_indexer {
 	 * @param	string		Absolute filename (must exist and be validated OK before calling function)
 	 * @return	array		Array of pointers to sections that the document should be divided into
 	 */
-	function fileContentParts($ext, $absFile) {
+	function fileContentParts($ext,$absFile)	{
 		$cParts = array(0);
 
 			// Consult relevant external document parser:
-		if (is_object($this->external_parsers[$ext])) {
-			$cParts = $this->external_parsers[$ext]->fileContentParts($ext, $absFile);
+		if (is_object($this->external_parsers[$ext]))	{
+			$cParts = $this->external_parsers[$ext]->fileContentParts($ext,$absFile);
 		}
 
 		return $cParts;
@@ -1255,18 +1301,18 @@ class tx_indexedsearch_indexer {
 	 * @param	string		Charset of the input content (converted to utf-8)
 	 * @return	void
 	 */
-	function charsetEntity2utf8(&$contentArr, $charset) {
+	function charsetEntity2utf8(&$contentArr, $charset)	{
 
 			// Convert charset if necessary
 		foreach ($contentArr as $key => $value) {
-			if (strlen($contentArr[$key])) {
+			if (strlen($contentArr[$key]))	{
 
-				if ($charset!=='utf-8') {
+				if ($charset!=='utf-8')	{
 					$contentArr[$key] = $this->csObj->utf8_encode($contentArr[$key], $charset);
 				}
 
 					// decode all numeric / html-entities in the string to real characters:
-				$contentArr[$key] = $this->csObj->entities_to_utf8($contentArr[$key], TRUE);
+				$contentArr[$key] = $this->csObj->entities_to_utf8($contentArr[$key],TRUE);
 			}
 		}
 	}
@@ -1277,7 +1323,7 @@ class tx_indexedsearch_indexer {
 	 * @param	array		Array of content to index, see splitHTMLContent() and splitRegularContent()
 	 * @return	array		Content input array modified so each key is not a unique array of words
 	 */
-	function processWordsInArrays($contentArr) {
+	function processWordsInArrays($contentArr)	{
 
 			// split all parts to words
 		foreach ($contentArr as $key => $value) {
@@ -1294,17 +1340,33 @@ class tx_indexedsearch_indexer {
 	}
 
 	/**
+	 * Processing words in the array from split*Content -functions
+	 * This function is only a wrapper because the function has been removed (see above).
+	 *
+	 * @param	array		Array of content to index, see splitHTMLContent() and splitRegularContent()
+	 * @return	array		Content input array modified so each key is not a unique array of words
+	 * @deprecated since TYPO3 4.0, this function will be removed in TYPO3 4.6.
+	 */
+	function procesWordsInArrays($contentArr)	{
+		t3lib_div::logDeprecatedFunction();
+
+		return $this->processWordsInArrays($contentArr);
+	}
+
+	/**
 	 * Extracts the sample description text from the content array.
 	 *
 	 * @param	array		Content array
 	 * @return	string		Description string
 	 */
-	function bodyDescription($contentArr) {
+	function bodyDescription($contentArr)	{
 
 			// Setting description
-		$maxL = t3lib_utility_Math::forceIntegerInRange($this->conf['index_descrLgd'], 0, 255, 200);
-		if ($maxL) {
-			$bodyDescription = str_replace(array(' ', TAB, CR, LF), ' ', $contentArr['body']);
+		$maxL = t3lib_div::intInRange($this->conf['index_descrLgd'],0,255,200);
+		if ($maxL)	{
+				// Takes the quadruple lenght first, because whitespace and entities may be removed and thus shorten the string more yet.
+	#		$bodyDescription = implode(' ',split('[[:space:],]+',substr(trim($contentArr['body']),0,$maxL*4)));
+			$bodyDescription = str_replace(array(' ',TAB,CR,LF),' ',$contentArr['body']);
 
 				// Shorten the string:
 			$bodyDescription = $this->csObj->strtrunc('utf-8', $bodyDescription, $maxL);
@@ -1323,12 +1385,12 @@ class tx_indexedsearch_indexer {
 		$indexArr = Array();
 		$counter = 0;
 
-		$this->analyzeHeaderinfo($indexArr, $content, 'title', 7);
-		$this->analyzeHeaderinfo($indexArr, $content, 'keywords', 6);
-		$this->analyzeHeaderinfo($indexArr, $content, 'description', 5);
-		$this->analyzeBody($indexArr, $content);
+		$this->analyzeHeaderinfo($indexArr,$content,'title',7);
+		$this->analyzeHeaderinfo($indexArr,$content,'keywords',6);
+		$this->analyzeHeaderinfo($indexArr,$content,'description',5);
+		$this->analyzeBody($indexArr,$content);
 
-		return $indexArr;
+		return ($indexArr);
 	}
 
 	/**
@@ -1340,31 +1402,13 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		Bit-wise priority to type
 	 * @return	void
 	 */
-	function analyzeHeaderinfo(&$retArr, $content, $key, $offset) {
+	function analyzeHeaderinfo(&$retArr,$content,$key,$offset) {
 		foreach ($content[$key] as $val) {
-			$val = substr($val, 0, 60);	// Cut after 60 chars because the index_words.baseword varchar field has this length. This MUST be the same.
-
-			if (!isset($retArr[$val])) {
-					// Word ID (wid)
-				$retArr[$val]['hash'] = tx_indexedsearch_util::md5inthash($val);
-
-					// Metaphone value is also 60 only chars long
-				$metaphone = $this->enableMetaphoneSearch
-						? substr($this->metaphone($val, $this->storeMetaphoneInfoAsWords), 0, 60)
-						: '';
-				$retArr[$val]['metaphone'] = $metaphone;
-			}
-
-				// Build metaphone fulltext string (can be used for fulltext indexing)
-			if ($this->storeMetaphoneInfoAsWords) {
-				$this->metaphoneContent .= ' ' . $retArr[$val]['metaphone'];
-			}
-
-				// Priority used for flagBitMask feature (see extension configuration)
-			$retArr[$val]['cmp'] = $retArr[$val]['cmp']|pow(2, $offset);
-
-				// Increase number of occurences
-			$retArr[$val]['count']++;
+			$val = substr($val,0,60);	// Max 60 - because the baseword varchar IS 60. This MUST be the same.
+			$retArr[$val]['cmp'] = $retArr[$val]['cmp']|pow(2,$offset);
+			$retArr[$val]['count'] = $retArr[$val]['count']+1;
+			$retArr[$val]['hash'] = hexdec(substr(md5($val),0,7));
+			$retArr[$val]['metaphone'] = $this->metaphone($val);
 			$this->wordcount++;
 		}
 	}
@@ -1376,31 +1420,15 @@ class tx_indexedsearch_indexer {
 	 * @param	array		Standard content array
 	 * @return	void
 	 */
-	function analyzeBody(&$retArr, $content) {
-		foreach ($content['body'] as $key => $val) {
-			$val = substr($val, 0, 60);	// Cut after 60 chars because the index_words.baseword varchar field has this length. This MUST be the same.
-
-			if (!isset($retArr[$val])) {
-					// First occurence (used for ranking results)
+	function analyzeBody(&$retArr,$content) {
+		foreach($content['body'] as $key => $val)	{
+			$val = substr($val,0,60);	// Max 60 - because the baseword varchar IS 60. This MUST be the same.
+			if(!isset($retArr[$val])) {
 				$retArr[$val]['first'] = $key;
-
-					// Word ID (wid)
-				$retArr[$val]['hash'] = tx_indexedsearch_util::md5inthash($val);
-
-					// Metaphone value is also only 60 chars long
-				$metaphone = $this->enableMetaphoneSearch
-						? substr($this->metaphone($val, $this->storeMetaphoneInfoAsWords), 0, 60)
-						: '';
-				$retArr[$val]['metaphone'] = $metaphone;
+				$retArr[$val]['hash'] = hexdec(substr(md5($val),0,7));
+				$retArr[$val]['metaphone'] = $this->metaphone($val);
 			}
-
-				// Build metaphone fulltext string (can be used for fulltext indexing)
-			if ($this->storeMetaphoneInfoAsWords) {
-				$this->metaphoneContent .= ' ' . $retArr[$val]['metaphone'];
-			}
-
-				// Increase number of occurences
-			$retArr[$val]['count']++;
+			$retArr[$val]['count'] = $retArr[$val]['count']+1;
 			$this->wordcount++;
 		}
 	}
@@ -1412,25 +1440,20 @@ class tx_indexedsearch_indexer {
 	 * @param	boolean		If set, returns the raw metaphone value (not hashed)
 	 * @return	mixed		Metaphone hash integer (or raw value, string)
 	 */
-	function metaphone($word, $returnRawMetaphoneValue=FALSE) {
+	function metaphone($word,$retRaw=FALSE) {
 
-		if (is_object($this->metaphoneObj)) {
-			$metaphoneRawValue = $this->metaphoneObj->metaphone($word, $this->conf['sys_language_uid']);
+		if (is_object($this->metaphoneObj))	{
+			$tmp = $this->metaphoneObj->metaphone($word, $this->conf['sys_language_uid']);
 		} else {
-				// Use native PHP function instead of advanced doubleMetaphone class
-			$metaphoneRawValue = metaphone($word);
+			$tmp = metaphone($word);
 		}
 
-		if ($returnRawMetaphoneValue) {
-			$result = $metaphoneRawValue;
-		} elseif (strlen($metaphoneRawValue)) {
-				// Create hash and return integer
-			$result = tx_indexedsearch_util::md5inthash($metaphoneRawValue);
-		} else {
-			$result = 0;
-		}
+			// Return raw value?
+		if ($retRaw)	return $tmp;
 
-		return $result;
+			// Otherwise create hash and return integer
+		if($tmp=='') $ret=0; else $ret=hexdec(substr(md5($tmp),0,7));
+		return $ret;
 	}
 
 
@@ -1459,7 +1482,7 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function submitPage() {
+	function submitPage()	{
 
 			// Remove any current data for this phash:
 		$this->removeOldIndexedPages($this->hash['phash']);
@@ -1484,51 +1507,44 @@ class tx_indexedsearch_indexer {
 			'crdate' => $GLOBALS['EXEC_TIME'],
 			'item_crdate' => $this->conf['crdate'],	// Creation date of page
 			'sys_language_uid' => $this->conf['sys_language_uid'],	// Sys language uid of the page. Should reflect which language it DOES actually display!
-			'externalUrl' => 0,
-			'recordUid' => intval($this->conf['recordUid']),
-			'freeIndexUid' => intval($this->conf['freeIndexUid']),
-			'freeIndexSetId' => intval($this->conf['freeIndexSetId']),
+ 			'externalUrl' => 0,
+ 			'recordUid' => intval($this->conf['recordUid']),
+ 			'freeIndexUid' => intval($this->conf['freeIndexUid']),
+ 			'freeIndexSetId' => intval($this->conf['freeIndexSetId']),
 		);
 
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_phash', $fields);
-		}
+		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_phash', $fields);
 
 			// PROCESSING index_section
-		$this->submit_section($this->hash['phash'], $this->hash['phash']);
+		$this->submit_section($this->hash['phash'],$this->hash['phash']);
 
 			// PROCESSING index_grlist
-		$this->submit_grlist($this->hash['phash'], $this->hash['phash']);
+		$this->submit_grlist($this->hash['phash'],$this->hash['phash']);
 
 			// PROCESSING index_fulltext
 		$fields = array(
 			'phash' => $this->hash['phash'],
-			'fulltextdata' => implode(' ', $this->contentParts),
-			'metaphonedata' => $this->metaphoneContent
+			'fulltextdata' => implode(' ', $this->contentParts)
 		);
-		if ($this->indexerConfig['fullTextDataLength']>0) {
-			$fields['fulltextdata'] = substr($fields['fulltextdata'], 0, $this->indexerConfig['fullTextDataLength']);
+		if ($this->indexerConfig['fullTextDataLength']>0)	{
+			$fields['fulltextdata'] = substr($fields['fulltextdata'],0,$this->indexerConfig['fullTextDataLength']);
 		}
-		if (tx_indexedsearch_util::isTableUsed('index_fulltext')) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_fulltext', $fields);
-		}
+		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_fulltext', $fields);
 
 			// PROCESSING index_debug
-		if ($this->indexerConfig['debugMode']) {
+		if ($this->indexerConfig['debugMode'])	{
 			$fields = array(
 				'phash' => $this->hash['phash'],
 				'debuginfo' => serialize(array(
 						'cHashParams' => $this->cHashParams,
 						'external_parsers initialized' => array_keys($this->external_parsers),
-						'conf' => array_merge($this->conf, array('content'=>substr($this->conf['content'], 0, 1000))),
-						'contentParts' => array_merge($this->contentParts, array('body' => substr($this->contentParts['body'], 0, 1000))),
+						'conf' => array_merge($this->conf,array('content'=>substr($this->conf['content'],0,1000))),
+						'contentParts' => array_merge($this->contentParts,array('body' => substr($this->contentParts['body'],0,1000))),
 						'logs' => $this->internal_log,
 						'lexer' => $this->lexerObj->debugString,
 					))
 			);
-			if (tx_indexedsearch_util::isTableUsed('index_debug')) {
-				$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_debug', $fields);
-			}
+			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_debug', $fields);
 		}
 	}
 
@@ -1540,18 +1556,16 @@ class tx_indexedsearch_indexer {
 	 * @return	void
 	 * @see update_grlist()
 	 */
-	function submit_grlist($hash, $phash_x) {
+	function submit_grlist($hash,$phash_x)	{
 
 			// Setting the gr_list record
 		$fields = array(
 			'phash' => $hash,
 			'phash_x' => $phash_x,
-			'hash_gr_list' => tx_indexedsearch_util::md5inthash($this->conf['gr_list']),
+			'hash_gr_list' => $this->md5inthash($this->conf['gr_list']),
 			'gr_list' => $this->conf['gr_list']
 		);
-		if (tx_indexedsearch_util::isTableUsed('index_grlist')) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_grlist', $fields);
-		}
+		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_grlist', $fields);
 	}
 
 	/**
@@ -1562,7 +1576,7 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash of the file indexation search record
 	 * @return	void
 	 */
-	function submit_section($hash, $hash_t3) {
+	function submit_section($hash,$hash_t3)	{
 		$fields = array(
 			'phash' => $hash,
 			'phash_t3' => $hash_t3,
@@ -1571,9 +1585,7 @@ class tx_indexedsearch_indexer {
 
 		$this->getRootLineFields($fields);
 
-		if (tx_indexedsearch_util::isTableUsed('index_section')) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_section', $fields);
-		}
+		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_section', $fields);
 	}
 
 	/**
@@ -1582,18 +1594,14 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash value to flush
 	 * @return	void
 	 */
-	function removeOldIndexedPages($phash) {
+	function removeOldIndexedPages($phash)	{
 			// Removing old registrations for all tables. Because the pages are TYPO3 pages there can be nothing else than 1-1 relations here.
-		$tableArray = explode(',', 'index_phash,index_section,index_grlist,index_fulltext,index_debug');
-		foreach ($tableArray as $table) {
-			if (tx_indexedsearch_util::isTableUsed($table)) {
-				$GLOBALS['TYPO3_DB']->exec_DELETEquery($table, 'phash=' . intval($phash));
-			}
+		$tableArr = explode(',','index_phash,index_section,index_grlist,index_fulltext,index_debug');
+		foreach($tableArr as $table)	{
+			$GLOBALS['TYPO3_DB']->exec_DELETEquery($table, 'phash='.intval($phash));
 		}
 			// Removing all index_section records with hash_t3 set to this hash (this includes such records set for external media on the page as well!). The re-insert of these records are done in indexRegularDocument($file).
-		if (tx_indexedsearch_util::isTableUsed('index_section')) {
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('index_section', 'phash_t3=' . intval($phash));
-		}
+		$GLOBALS['TYPO3_DB']->exec_DELETEquery('index_section', 'phash_t3='.intval($phash));
 	}
 
 
@@ -1629,7 +1637,7 @@ class tx_indexedsearch_indexer {
 	 * @param	array		Standard content array (using only title and body for a file)
 	 * @return	void
 	 */
-	function submitFilePage($hash, $file, $subinfo, $ext, $mtime, $ctime, $size, $content_md5h, $contentParts) {
+	function submitFilePage($hash,$file,$subinfo,$ext,$mtime,$ctime,$size,$content_md5h,$contentParts)	{
 
 			// Find item Type:
 		$storeItemType = $this->external_parsers[$ext]->ext2itemtype_map[$ext];
@@ -1657,42 +1665,35 @@ class tx_indexedsearch_indexer {
 			'tstamp' => $GLOBALS['EXEC_TIME'],
 			'crdate' => $GLOBALS['EXEC_TIME'],
 			'gr_list' => $this->conf['gr_list'],
-			'externalUrl' => $fileParts['scheme'] ? 1 : 0,
-			'recordUid' => intval($this->conf['recordUid']),
-			'freeIndexUid' => intval($this->conf['freeIndexUid']),
-			'freeIndexSetId' => intval($this->conf['freeIndexSetId']),
+ 			'externalUrl' => $fileParts['scheme'] ? 1 : 0,
+ 			'recordUid' => intval($this->conf['recordUid']),
+ 			'freeIndexUid' => intval($this->conf['freeIndexUid']),
+ 			'freeIndexSetId' => intval($this->conf['freeIndexSetId']),
 		);
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_phash', $fields);
-		}
+		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_phash', $fields);
 
 			// PROCESSING index_fulltext
 		$fields = array(
 			'phash' => $hash['phash'],
-			'fulltextdata' => implode(' ', $contentParts),
-			'metaphonedata' => $this->metaphoneContent
+			'fulltextdata' => implode(' ', $contentParts)
 		);
-		if ($this->indexerConfig['fullTextDataLength']>0) {
-			$fields['fulltextdata'] = substr($fields['fulltextdata'], 0, $this->indexerConfig['fullTextDataLength']);
+		if ($this->indexerConfig['fullTextDataLength']>0)	{
+			$fields['fulltextdata'] = substr($fields['fulltextdata'],0,$this->indexerConfig['fullTextDataLength']);
 		}
-		if (tx_indexedsearch_util::isTableUsed('index_fulltext')) {
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_fulltext', $fields);
-		}
+		$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_fulltext', $fields);
 
 			// PROCESSING index_debug
-		if ($this->indexerConfig['debugMode']) {
+		if ($this->indexerConfig['debugMode'])	{
 			$fields = array(
 				'phash' => $hash['phash'],
 				'debuginfo' => serialize(array(
 						'cHashParams' => $subinfo,
-						'contentParts' => array_merge($contentParts, array('body' => substr($contentParts['body'], 0, 1000))),
+						'contentParts' => array_merge($contentParts,array('body' => substr($contentParts['body'],0,1000))),
 						'logs' => $this->internal_log,
 						'lexer' => $this->lexerObj->debugString,
 					))
 			);
-			if (tx_indexedsearch_util::isTableUsed('index_debug')) {
-				$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_debug', $fields);
-			}
+			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_debug', $fields);
 		}
 	}
 
@@ -1702,13 +1703,17 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash value of file
 	 * @return	void
 	 */
-	function submitFile_grlist($hash) {
+	function submitFile_grlist($hash)	{
 			// Testing if there is a gr_list record for a non-logged in user and if so, there is no need to place another one.
-		if (tx_indexedsearch_util::isTableUsed('index_grlist')) {
-			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('phash', 'index_grlist', 'phash=' . intval($hash) . ' AND (hash_gr_list=' . tx_indexedsearch_util::md5inthash($this->defaultGrList) . ' OR hash_gr_list=' . tx_indexedsearch_util::md5inthash($this->conf['gr_list']) . ')');
-			if ($count == 0) {
-				$this->submit_grlist($hash, $hash);
-			}
+		$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'phash',
+			'index_grlist',
+			'phash=' . intval($hash) .
+				' AND (hash_gr_list=' . $this->md5inthash($this->defaultGrList) .
+				' OR hash_gr_list=' . $this->md5inthash($this->conf['gr_list']) . ')'
+		);
+		if (!$count) {
+			$this->submit_grlist($hash,$hash);
 		}
 	}
 
@@ -1718,13 +1723,11 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash value of file
 	 * @return	void
 	 */
-	function submitFile_section($hash) {
-			// Testing if there is already a section
-		if (tx_indexedsearch_util::isTableUsed('index_section')) {
-			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('phash', 'index_section', 'phash=' . intval($hash) . ' AND page_id=' . intval($this->conf['id']));
-			if ($count == 0) {
-				$this->submit_section($hash, $this->hash['phash']);
-			}
+	function submitFile_section($hash)	{
+			// Testing if there is a section
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('phash', 'index_section', 'phash='.intval($hash).' AND page_id='.intval($this->conf['id']));
+		if (!$GLOBALS['TYPO3_DB']->sql_num_rows($res))	{
+			$this->submit_section($hash,$this->hash['phash']);
 		}
 	}
 
@@ -1734,13 +1737,12 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash value to flush
 	 * @return	void
 	 */
-	function removeOldIndexedFiles($phash) {
+	function removeOldIndexedFiles($phash)	{
+
 			// Removing old registrations for tables.
-		$tableArray = explode(',', 'index_phash,index_grlist,index_fulltext,index_debug');
-		foreach ($tableArray as $table) {
-			if (tx_indexedsearch_util::isTableUsed($table)) {
-				$GLOBALS['TYPO3_DB']->exec_DELETEquery($table, 'phash=' . intval($phash));
-			}
+		$tableArr = explode(',','index_phash,index_grlist,index_fulltext,index_debug');
+		foreach($tableArr as $table)	{
+			$GLOBALS['TYPO3_DB']->exec_DELETEquery($table, 'phash='.intval($phash));
 		}
 	}
 
@@ -1771,105 +1773,79 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		"phash" used to select any already indexed page to see what its mtime is.
 	 * @return	integer		Result integer: Generally: <0 = No indexing, >0 = Do indexing (see $this->reasons): -2) Min age was NOT exceeded and so indexing cannot occur.  -1) mtime matched so no need to reindex page. 0) N/A   1) Max age exceeded, page must be indexed again.   2) mtime of indexed page doesn't match mtime given for current content and we must index page.  3) No mtime was set, so we will index...  4) No indexed page found, so of course we will index.
 	 */
-	function checkMtimeTstamp($mtime, $phash) {
-		if (!tx_indexedsearch_util::isTableUsed('index_phash')) {
-				// Not indexed (not in index_phash)
-			$result = 4;
-		}
-		else {
-			$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('item_mtime,tstamp', 'index_phash', 'phash=' . intval($phash));
+	function checkMtimeTstamp($mtime,$phash)	{
+
+			// Select indexed page:
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('item_mtime,tstamp', 'index_phash', 'phash='.intval($phash));
+		$out = 0;
 
 			// If there was an indexing of the page...:
-			if ($row) {
-				if ($this->tstamp_maxAge && ($row['tstamp'] + $this->tstamp_maxAge) < $GLOBALS['EXEC_TIME']) {
-						// If max age is exceeded, index the page
-						// The configured max-age was exceeded for the document and thus it's indexed.
-					$result = 1;
-				} else {
-					if (!$this->tstamp_minAge || ($row['tstamp'] + $this->tstamp_minAge) < $GLOBALS['EXEC_TIME']) {
-							// if minAge is not set or if minAge is exceeded, consider at mtime
-						if ($mtime) {
-								// It mtime is set, then it's tested. If not, the page must clearly be indexed.
-							if ($row['item_mtime'] != $mtime) {
-									// And if mtime is different from the index_phash mtime, it's about time to re-index.
-									// The minimum age was exceed and mtime was set and the mtime was different, so the page was indexed.
-								$result = 2;
-							} else {
-									// mtime matched the document, so no changes detected and no content updated
-								$result = -1;
-								if ($this->tstamp_maxAge) {
-									$this->log_setTSlogMessage('mtime matched, timestamp NOT updated because a maxAge is set (' . ($row['tstamp'] + $this->tstamp_maxAge - $GLOBALS['EXEC_TIME']) . ' seconds to expire time).', 1);
-								} else {
-									$this->updateTstamp($phash);
-									$this->log_setTSlogMessage('mtime matched, timestamp updated.', 1);
-								}
-							}
-						} else {
-								// The minimum age was exceed, but mtime was not set, so the page was indexed.
-							$result = 3;
-						}
-					} else {
-							// The minimum age was not exceeded
-						$result = -2;
-					}
-				}
+		if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+			if ($this->tstamp_maxAge && ($row['tstamp'] + $this->tstamp_maxAge) < $GLOBALS['EXEC_TIME']) {	// If max age is exceeded, index the page
+				$out = 1;		// The configured max-age was exceeded for the document and thus it's indexed.
 			} else {
-					// Page has never been indexed (is not represented in the index_phash table).
-				$result = 4;
+				if (!$this->tstamp_minAge || ($row['tstamp'] + $this->tstamp_minAge) < $GLOBALS['EXEC_TIME']) {	// if minAge is not set or if minAge is exceeded, consider at mtime
+					if ($mtime)	{		// It mtime is set, then it's tested. If not, the page must clearly be indexed.
+						if ($row['item_mtime'] != $mtime)	{	// And if mtime is different from the index_phash mtime, it's about time to re-index.
+							$out = 2;		// The minimum age was exceed and mtime was set and the mtime was different, so the page was indexed.
+						} else {
+							$out = -1;		// mtime matched the document, so no changes detected and no content updated
+							if ($this->tstamp_maxAge)	{
+								$this->log_setTSlogMessage('mtime matched, timestamp NOT updated because a maxAge is set (' . ($row['tstamp'] + $this->tstamp_maxAge - $GLOBALS['EXEC_TIME']) . ' seconds to expire time).', 1);
+							} else {
+								$this->updateTstamp($phash);	// Update the timestatmp
+								$this->log_setTSlogMessage('mtime matched, timestamp updated.',1);
+							}
+						}
+					} else {$out = 3;	}	// The minimum age was exceed, but mtime was not set, so the page was indexed.
+				} else {$out = -2;}			// The minimum age was not exceeded
 			}
-		}
-		return $result;
+		} else {$out = 4;}	// Page has never been indexed (is not represented in the index_phash table).
+		return $out;
 	}
 
 	/**
 	 * Check content hash in phash table
 	 *
-	 * @return	mixed		Returns TRUE if the page needs to be indexed (that is, there was no result), otherwise the phash value (in an array) of the phash record to which the grlist_record should be related!
+	 * @return	mixed		Returns true if the page needs to be indexed (that is, there was no result), otherwise the phash value (in an array) of the phash record to which the grlist_record should be related!
 	 */
-	function checkContentHash() {
+	function checkContentHash()	{
 			// With this query the page will only be indexed if it's content is different from the same "phash_grouping" -page.
-		$result = TRUE;
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('phash', 'index_phash', 'phash_grouping='.intval($this->hash['phash_grouping']).' AND contentHash='.intval($this->content_md5h));
-			if ($row) {
-				$result = $row;
-			}
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('phash', 'index_phash A', 'A.phash_grouping='.intval($this->hash['phash_grouping']).' AND A.contentHash='.intval($this->content_md5h));
+		if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+			return $row;
 		}
-
-		return $result;
+		return 1;
 	}
 
 	/**
 	 * Check content hash for external documents
-	 * Returns TRUE if the document needs to be indexed (that is, there was no result)
+	 * Returns true if the document needs to be indexed (that is, there was no result)
 	 *
 	 * @param	integer		phash value to check (phash_grouping)
 	 * @param	integer		Content hash to check
-	 * @return	boolean		Returns TRUE if the document needs to be indexed (that is, there was no result)
+	 * @return	boolean		Returns true if the document needs to be indexed (that is, there was no result)
 	 */
-	function checkExternalDocContentHash($hashGr, $content_md5h) {
-		$result = TRUE;
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', 'index_phash', 'phash_grouping=' . intval($hashGr) . ' AND contentHash=' . intval($content_md5h));
-			$result = ($count == 0);
+	function checkExternalDocContentHash($hashGr,$content_md5h)	{
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'index_phash A', 'A.phash_grouping='.intval($hashGr).' AND A.contentHash='.intval($content_md5h));
+		if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))	{
+			return 0;
 		}
-
-		return $result;
+		return 1;
 	}
 
 	/**
 	 * Checks if a grlist record has been set for the phash value input (looking at the "real" phash of the current content, not the linked-to phash of the common search result page)
 	 *
 	 * @param	integer		Phash integer to test.
-	 * @return	boolean
+	 * @return	void
 	 */
-	function is_grlist_set($phash_x) {
-		$result = FALSE;
-		if (tx_indexedsearch_util::isTableUsed('index_grlist')) {
-			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('phash_x', 'index_grlist', 'phash_x=' . intval($phash_x));
-			$result = ($count > 0);
-		}
-		return $result;
+	function is_grlist_set($phash_x)	{
+		return $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'phash_x',
+			'index_grlist',
+			'phash_x=' . intval($phash_x)
+		);
 	}
 
 	/**
@@ -1880,13 +1856,11 @@ class tx_indexedsearch_indexer {
 	 * @return	void
 	 * @see submit_grlist()
 	 */
-	function update_grlist($phash, $phash_x) {
-		if (tx_indexedsearch_util::isTableUsed('index_grlist')) {
-			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('phash', 'index_grlist', 'phash=' . intval($phash) . ' AND hash_gr_list=' . tx_indexedsearch_util::md5inthash($this->conf['gr_list']));
-			if ($count == 0) {
-				$this->submit_grlist($phash, $phash_x);
-				$this->log_setTSlogMessage("Inserted gr_list '" . $this->conf['gr_list'] . "' for phash '" . $phash . "'", 1);
-			}
+	function update_grlist($phash,$phash_x)	{
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('phash', 'index_grlist', 'phash='.intval($phash).' AND hash_gr_list='.$this->md5inthash($this->conf['gr_list']));
+		if (!$GLOBALS['TYPO3_DB']->sql_num_rows($res))	{
+			$this->submit_grlist($phash,$phash_x);
+			$this->log_setTSlogMessage("Inserted gr_list '".$this->conf['gr_list']."' for phash '".$phash."'",1);
 		}
 	}
 
@@ -1897,16 +1871,13 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		If set, update the mtime field to this value.
 	 * @return	void
 	 */
-	function updateTstamp($phash, $mtime = 0) {
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$updateFields = array(
-				'tstamp' => $GLOBALS['EXEC_TIME']
-			);
-			if ($mtime) {
-				$updateFields['item_mtime'] = intval($mtime);
-			}
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_phash', 'phash=' . intval($phash), $updateFields);
-		}
+	function updateTstamp($phash,$mtime=0)	{
+		$updateFields = array(
+			'tstamp' => $GLOBALS['EXEC_TIME']
+		);
+		if ($mtime)	{ $updateFields['item_mtime'] = intval($mtime); }
+
+		$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_phash', 'phash='.intval($phash), $updateFields);
 	}
 
 	/**
@@ -1915,13 +1886,12 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash value
 	 * @return	void
 	 */
-	function updateSetId($phash) {
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$updateFields = array(
-				'freeIndexSetId' => intval($this->conf['freeIndexSetId'])
-			);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_phash', 'phash=' . intval($phash), $updateFields);
-		}
+	function updateSetId($phash)	{
+		$updateFields = array(
+			'freeIndexSetId' => intval($this->conf['freeIndexSetId'])
+		);
+
+		$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_phash', 'phash='.intval($phash), $updateFields);
 	}
 
 	/**
@@ -1931,13 +1901,12 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		Parsetime value to set.
 	 * @return	void
 	 */
-	function updateParsetime($phash, $parsetime) {
-		if (tx_indexedsearch_util::isTableUsed('index_phash')) {
-			$updateFields = array(
-				'parsetime' => intval($parsetime)
-			);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_phash', 'phash=' . intval($phash), $updateFields);
-		}
+	function updateParsetime($phash,$parsetime)	{
+		$updateFields = array(
+			'parsetime' => intval($parsetime)
+		);
+
+		$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_phash', 'phash='.intval($phash), $updateFields);
 	}
 
 	/**
@@ -1945,12 +1914,12 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function updateRootline() {
-		if (tx_indexedsearch_util::isTableUsed('index_section')) {
-			$updateFields = array();
-			$this->getRootLineFields($updateFields);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_section', 'page_id=' . intval($this->conf['id']), $updateFields);
-		}
+	function updateRootline()	{
+
+		$updateFields = array();
+		$this->getRootLineFields($updateFields);
+
+		$GLOBALS['TYPO3_DB']->exec_UPDATEquery('index_section', 'page_id='.intval($this->conf['id']), $updateFields);
 	}
 
 	/**
@@ -1960,14 +1929,15 @@ class tx_indexedsearch_indexer {
 	 * @param	array		Field array, passed by reference
 	 * @return	void
 	 */
-	function getRootLineFields(array &$fieldArray) {
-		$fieldArray['rl0'] = intval($this->conf['rootline_uids'][0]);
-		$fieldArray['rl1'] = intval($this->conf['rootline_uids'][1]);
-		$fieldArray['rl2'] = intval($this->conf['rootline_uids'][2]);
+	function getRootLineFields(&$fieldArr)	{
 
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['addRootLineFields'])) {
-			foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['addRootLineFields'] as $fieldName => $rootLineLevel) {
-				$fieldArray[$fieldName] = intval($this->conf['rootline_uids'][$rootLineLevel]);
+		$fieldArr['rl0'] = intval($this->conf['rootline_uids'][0]);
+		$fieldArr['rl1'] = intval($this->conf['rootline_uids'][1]);
+		$fieldArr['rl2'] = intval($this->conf['rootline_uids'][2]);
+
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['addRootLineFields']))	{
+			foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['addRootLineFields'] as $fieldName => $rootLineLevel)	{
+				$fieldArr[$fieldName] = intval($this->conf['rootline_uids'][$rootLineLevel]);
 			}
 		}
 	}
@@ -1978,19 +1948,17 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function removeLoginpagesWithContentHash() {
-		if (tx_indexedsearch_util::isTableUsed('index_phash') && tx_indexedsearch_util::isTableUsed('index_grlist')) {
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('A.phash', 'index_phash A,index_grlist B', '
+	function removeLoginpagesWithContentHash()	{
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'index_phash A,index_grlist B', '
 					A.phash=B.phash
-					AND A.phash_grouping='.intval($this->hash['phash_grouping']) . '
-					AND B.hash_gr_list<>'.tx_indexedsearch_util::md5inthash($this->defaultGrList) . '
+					AND A.phash_grouping='.intval($this->hash['phash_grouping']).'
+					AND B.hash_gr_list<>'.$this->md5inthash($this->defaultGrList).'
 					AND A.contentHash='.intval($this->content_md5h));
-			while ($res && FALSE !== ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))) {
-				$this->log_setTSlogMessage('The currently indexed page was indexed under no user-login and apparently this page has been indexed under login conditions earlier, but with the SAME content. Therefore the old similar page with phash=\'' . $row['phash'] . '\' are now removed.', 1);
-				$this->removeOldIndexedPages($row['phash']);
-			}
-			$GLOBALS['TYPO3_DB']->sql_free_result($res);
+		while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))       {
+			$this->log_setTSlogMessage("The currently indexed page was indexed under no user-login and apparently this page has been indexed under login conditions earlier, but with the SAME content. Therefore the old similar page with phash='".$row['phash']."' are now removed.",1);
+			$this->removeOldIndexedPages($row['phash']);
 		}
+		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 	}
 
 	/**
@@ -1998,8 +1966,10 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function includeCrawlerClass() {
-		t3lib_div::requireOnce(t3lib_extMgm::extPath('crawler') . 'class.tx_crawler_lib.php');
+	function includeCrawlerClass()	{
+		global $TYPO3_CONF_VARS;
+
+		require_once(t3lib_extMgm::extPath('crawler').'class.tx_crawler_lib.php');
 	}
 
 
@@ -2020,38 +1990,34 @@ class tx_indexedsearch_indexer {
 	/**
 	 * Adds new words to db
 	 *
-	 * @param array $wordListArray Word List array (where each word has information about position etc).
-	 * @return void
+	 * @param	array		Word List array (where each word has information about position etc).
+	 * @return	void
 	 */
-	function checkWordList($wordListArray) {
-		if (tx_indexedsearch_util::isTableUsed('index_words')) {
-			if (count($wordListArray)) {
-				$phashArray = array();
-				foreach ($wordListArray as $value) {
-					$phashArray[] = intval($value['hash']);
-				}
-				$cwl = implode(',', $phashArray);
-				$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('baseword', 'index_words', 'wid IN (' . $cwl . ')');
-				if ($count != count($wordListArray)) {
-					$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('baseword', 'index_words', 'wid IN (' . $cwl . ')');
-					$this->log_setTSlogMessage('Inserting words: ' . (count($wordListArray) - $count), 1);
-					while (FALSE != ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res))) {
-						unset($wordListArray[$row['baseword']]);
-					}
-					$GLOBALS['TYPO3_DB']->sql_free_result($res);
+	function checkWordList($wl) {
+		$phashArr = array();
+		foreach ($wl as $key => $value) {
+			$phashArr[] = $wl[$key]['hash'];
+		}
+		if (count($phashArr))	{
+			$cwl = implode(',',$phashArr);
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('baseword', 'index_words', 'wid IN ('.$cwl.')');
 
-					foreach ($wordListArray as $key => $val) {
-						$insertFields = array(
-							'wid' => $val['hash'],
-							'baseword' => $key,
-							'metaphone' => $val['metaphone']
-						);
-							// A duplicate-key error will occur here if a word is NOT unset in the unset() line. However as long as the words in $wl are NOT longer as 60 chars (the baseword varchar is 60 characters...) this is not a problem.
-						$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_words', $insertFields);
-					}
+			if($GLOBALS['TYPO3_DB']->sql_num_rows($res)!=count($wl)) {
+				$this->log_setTSlogMessage('Inserting words: '.(count($wl)-$GLOBALS['TYPO3_DB']->sql_num_rows($res)),1);
+				while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+					unset($wl[$row['baseword']]);
+				}
+
+				foreach ($wl as $key => $val) {
+					$insertFields = array(
+						'wid' => $val['hash'],
+						'baseword' => $key,
+						'metaphone' => $val['metaphone']
+					);
+						// A duplicate-key error will occur here if a word is NOT unset in the unset() line. However as long as the words in $wl are NOT longer as 60 chars (the baseword varchar is 60 characters...) this is not a problem.
+					$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_words', $insertFields);
 				}
 			}
-
 		}
 	}
 
@@ -2062,22 +2028,20 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		phash value
 	 * @return	void
 	 */
-	function submitWords($wordList, $phash) {
-		if (tx_indexedsearch_util::isTableUsed('index_rel')) {
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('index_rel', 'phash=' . intval($phash));
+	function submitWords($wl,$phash) {
+		$GLOBALS['TYPO3_DB']->exec_DELETEquery('index_rel', 'phash='.intval($phash));
 
-			foreach ($wordList as $val) {
-				$insertFields = array(
-					'phash' => $phash,
-					'wid' => $val['hash'],
-					'count' => $val['count'],
-					'first' => $val['first'],
-					'freq' => $this->freqMap(($val['count']/$this->wordcount)),
-					'flags' => ($val['cmp'] & $this->flagBitMask)
-				);
+		foreach($wl as $val)	{
+			$insertFields = array(
+				'phash' => $phash,
+				'wid' => $val['hash'],
+				'count' => $val['count'],
+				'first' => $val['first'],
+				'freq' => $this->freqMap(($val['count']/$this->wordcount)),
+				'flags' => ($val['cmp'] & $this->flagBitMask)
+			);
 
-				$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_rel', $insertFields);
-			}
+			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_rel', $insertFields);
 		}
 	}
 
@@ -2090,13 +2054,14 @@ class tx_indexedsearch_indexer {
 	 */
 	function freqMap($freq) {
 		$mapFactor = $this->freqMax*100*$this->freqRange;
-		if ($freq < 1) {
+		if($freq<1) {
 			$newFreq = $freq*$mapFactor;
-			$newFreq = $newFreq>$this->freqRange ? $this->freqRange : $newFreq;
+			$newFreq = $newFreq>$this->freqRange?$this->freqRange:$newFreq;
 		} else {
 			$newFreq = $freq/$mapFactor;
 		}
 		return $newFreq;
+
 	}
 
 
@@ -2120,7 +2085,7 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function setT3Hashes() {
+	function setT3Hashes()	{
 
 			//  Set main array:
 		$hArray = array(
@@ -2132,11 +2097,11 @@ class tx_indexedsearch_indexer {
 		);
 
 			// Set grouping hash (Identifies a "page" combined of id, type, language, mountpoint and cHash parameters):
-		$this->hash['phash_grouping'] = tx_indexedsearch_util::md5inthash(serialize($hArray));
+		$this->hash['phash_grouping'] = $this->md5inthash(serialize($hArray));
 
 			// Add gr_list and set plain phash (Subdivision where special page composition based on login is taken into account as well. It is expected that such pages are normally similar regardless of the login.)
 		$hArray['gr_list'] = (string)$this->conf['gr_list'];
-		$this->hash['phash'] = tx_indexedsearch_util::md5inthash(serialize($hArray));
+		$this->hash['phash'] = $this->md5inthash(serialize($hArray));
 	}
 
 	/**
@@ -2146,7 +2111,7 @@ class tx_indexedsearch_indexer {
 	 * @param	array		Additional content identifying the (subpart of) content. For instance; PDF files are divided into groups of pages for indexing.
 	 * @return	array		Array with "phash_grouping" and "phash" inside.
 	 */
-	function setExtHashes($file, $subinfo = array()) {
+	function setExtHashes($file,$subinfo=array())	{
 			//  Set main array:
 		$hash = array();
 		$hArray = array(
@@ -2154,14 +2119,53 @@ class tx_indexedsearch_indexer {
 		);
 
 			// Set grouping hash:
-		$hash['phash_grouping'] = tx_indexedsearch_util::md5inthash(serialize($hArray));
+		$hash['phash_grouping'] = $this->md5inthash(serialize($hArray));
 
 			// Add subinfo
 		$hArray['subinfo'] = $subinfo;
-		$hash['phash'] = tx_indexedsearch_util::md5inthash(serialize($hArray));
+		$hash['phash'] = $this->md5inthash(serialize($hArray));
 
 		return $hash;
 	}
+
+	/**
+	 * md5 integer hash
+	 * Using 7 instead of 8 just because that makes the integers lower than 32 bit (28 bit) and so they do not interfere with UNSIGNED integers or PHP-versions which has varying output from the hexdec function.
+	 *
+	 * @param	string		String to hash
+	 * @return	integer		Integer intepretation of the md5 hash of input string.
+	 */
+	function md5inthash($str)	{
+		return hexdec(substr(md5($str),0,7));
+	}
+
+	/**
+	 * Calculates the cHash value of input GET array (for constructing cHash values if needed)
+	 *
+	 * @param	array		Array of GET parameters to encode
+	 * @return	void
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.6, use directly t3lib_div::calculateCHash()
+	 */
+	function makeCHash($paramArray)	{
+		t3lib_div::logDeprecatedFunction();
+
+		$addQueryParams = t3lib_div::implodeArrayForUrl('', $paramArray);
+
+		$pA = t3lib_div::cHashParams($addQueryParams);
+
+		return t3lib_div::shortMD5(serialize($pA));
+	}
+
+
+
+
+
+
+
+
+
+
+
 
 	/*********************************
 	 *
@@ -2176,10 +2180,8 @@ class tx_indexedsearch_indexer {
 	 * @param	string		Key (?)
 	 * @return	void
 	 */
-	function log_push($msg, $key) {
-		if (is_object($GLOBALS['TT'])) {
-			$GLOBALS['TT']->push($msg, $key);
-		}
+	function log_push($msg,$key)	{
+		if (is_object($GLOBALS['TT']))		$GLOBALS['TT']->push($msg,$key);
 	}
 
 	/**
@@ -2187,10 +2189,8 @@ class tx_indexedsearch_indexer {
 	 *
 	 * @return	void
 	 */
-	function log_pull() {
-		if (is_object($GLOBALS['TT'])) {
-			$GLOBALS['TT']->pull();
-		}
+	function log_pull()	{
+		if (is_object($GLOBALS['TT']))		$GLOBALS['TT']->pull();
 	}
 
 	/**
@@ -2200,10 +2200,8 @@ class tx_indexedsearch_indexer {
 	 * @param	integer		Error number
 	 * @return	void
 	 */
-	function log_setTSlogMessage($msg, $errorNum=0) {
-		if (is_object($GLOBALS['TT'])) {
-			$GLOBALS['TT']->setTSlogMessage($msg, $errorNum);
-		}
+	function log_setTSlogMessage($msg, $errorNum=0)	{
+		if (is_object($GLOBALS['TT']))		$GLOBALS['TT']->setTSlogMessage($msg,$errorNum);
 		$this->internal_log[] = $msg;
 	}
 
@@ -2221,6 +2219,21 @@ class tx_indexedsearch_indexer {
 	 **************************/
 
 	/**
+	 * Frontend hook: If the page is not being re-generated this is our chance to force it to be (because re-generation of the page is required in order to have the indexer called!)
+	 *
+	 * @param	array		Parameters from frontend
+	 * @param	object		TSFE object (reference under PHP5)
+	 * @return	void
+	 * @deprecated since TYPO3 4.3, this function will be removed in TYPO3 4.6, the method was extracted to hooks/class.tx_indexedsearch_tslib_fe_hook.php
+	 */
+	function fe_headerNoCache(&$params, $ref)	{
+		t3lib_div::logDeprecatedFunction();
+
+		require_once t3lib_extMgm::extPath('indexed_search') . 'hooks/class.tx_indexedsearch_tslib_fe_hook.php';
+		t3lib_div::makeInstance('tx_indexedsearch_tslib_fe_hook')->headerNoCache($params, $ref);
+	}
+
+	/**
 	 * Makes sure that keywords are space-separated. This is impotant for their
 	 * proper displaying as a part of fulltext index.
 	 *
@@ -2232,5 +2245,10 @@ class tx_indexedsearch_indexer {
 		$keywords = t3lib_div::trimExplode(',', $keywordList);
 		return ' ' . implode(', ', $keywords) . ' ';
 	}
+}
+
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.indexer.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/indexed_search/class.indexer.php']);
 }
 ?>

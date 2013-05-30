@@ -27,11 +27,12 @@ require_once(t3lib_extMgm::extPath('recycler', 'classes/helper/class.tx_recycler
 /**
  * Deleted Records View
  *
- * @author Erik Frister <erik_frister@otq-solutions.com>
- * @author Julian Kleinhans <typo3@kj187.de>
- * @package TYPO3
- * @subpackage tx_recycler
- */
+ * @author  Erik Frister <erik_frister@otq-solutions.com>
+ * @author	Julian Kleinhans <typo3@kj187.de>
+ * @package	TYPO3
+ * @subpackage	tx_recycler
+ * @version $Id$
+ **/
 class tx_recycler_view_deletedRecords {
 
 	/**
@@ -59,8 +60,8 @@ class tx_recycler_view_deletedRecords {
 						'uid'	=> $row['uid'],
 						'pid'	=> $row['pid'],
 						'table'	=> $table,
-						'crdate' => t3lib_BEfunc::datetime($row[$GLOBALS['TCA'][$table]['ctrl']['crdate']]),
-						'tstamp' => t3lib_BEfunc::datetime($row[$GLOBALS['TCA'][$table]['ctrl']['tstamp']]),
+						'crdate' => date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $row[$GLOBALS['TCA'][$table]['ctrl']['crdate']]),
+						'tstamp' => date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'], $row[$GLOBALS['TCA'][$table]['ctrl']['tstamp']]),
 						'owner' => htmlspecialchars($backendUser['username']),
 						'owner_uid' => $row[$GLOBALS['TCA'][$table]['ctrl']['cruser_id']],
 						'tableTitle' => tx_recycler_helper::getUtf8String(
@@ -79,4 +80,9 @@ class tx_recycler_view_deletedRecords {
 		return json_encode($jsonArray);
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/recycler/classes/view/class.tx_recycler_view_deletedRecords.php']);
+}
+
 ?>

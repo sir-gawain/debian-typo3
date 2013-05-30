@@ -1,11 +1,11 @@
 <?php
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
- * the terms of the GNU Lesser General Public License, either version 3   *
- *  of the License, or (at your option) any later version.                *
- *                                                                        *
+ * the terms of the GNU Lesser General Public License as published by the *
+ * Free Software Foundation, either version 3 of the License, or (at your *
+ * option) any later version.                                             *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -47,6 +47,9 @@
  * localized selectbox
  * <output>
  *
+ * @author Steffen Kamper <info@sk-typo3.de>
+ * @author Bastian Waidelich <bastian@typo3.org>
+ * @license http://www.gnu.org/copyleft/gpl.html
  */
 class Tx_Fluid_ViewHelpers_Be_Menus_ActionMenuViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractTagBasedViewHelper implements Tx_Fluid_Core_ViewHelper_Facets_ChildNodeAccessInterface {
 
@@ -66,6 +69,7 @@ class Tx_Fluid_ViewHelpers_Be_Menus_ActionMenuViewHelper extends Tx_Fluid_Core_V
 	 *
 	 * @param array $childNodes Child nodes of this syntax tree node
 	 * @return void
+	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function setChildNodes(array $childNodes) {
@@ -83,7 +87,7 @@ class Tx_Fluid_ViewHelpers_Be_Menus_ActionMenuViewHelper extends Tx_Fluid_Core_V
 		$options = '';
 		foreach ($this->childNodes as $childNode) {
 			if ($childNode instanceof Tx_Fluid_Core_Parser_SyntaxTree_ViewHelperNode) {
-				$options .= $childNode->evaluate($this->renderingContext);
+				$options .= $childNode->evaluate($this->getRenderingContext());
 			}
 		}
 		$this->tag->setContent($options);

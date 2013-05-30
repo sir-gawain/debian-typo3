@@ -31,6 +31,8 @@
  * This will use the setting in TYPO3_CONF_VARS to choose the correct transport
  * for it to work out-of-the-box.
  *
+ * $Id$
+ *
  * @author Ernesto Baschny <ernst@cron-it.de>
  * @package TYPO3
  * @subpackage t3lib
@@ -44,7 +46,7 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 
 	/**
 	 * Create a new MailTransport
-	 * @param string $debugFile
+	 * @param Swift_Transport_Log $log
 	 */
 	public function __construct($debugFile) {
 		$this->debugFile = $debugFile;
@@ -77,7 +79,7 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 	 * @return int
 	 * @throws RuntimeException
 	 */
-	public function send(Swift_Mime_Message $message, &$failedRecipients = NULL) {
+	public function send(Swift_Mime_Message $message, &$failedRecipients = null) {
 		$message->generateId();
 
 			// Create a mbox-like header
@@ -97,7 +99,7 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 		$file = @fopen($this->debugFile, 'a');
 		if (!$file) {
 			$lockObject->release();
-			throw new RuntimeException(
+			throw new Exception(
 				sprintf('Could not write to file "%s" when sending an email to debug transport', $this->debugFile),
 				1291064151
 			);
@@ -123,7 +125,7 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 	 * Determine the best-use reverse path for this message
 	 *
 	 * @param Swift_Mime_Message $message
-	 * @return mixed|NULL
+	 * @return mixed|null
 	 */
 	private function getReversePath(Swift_Mime_Message $message) {
 		$return = $message->getReturnPath();
@@ -150,6 +152,10 @@ class t3lib_mail_MboxTransport implements Swift_Transport {
 	public function registerPlugin(Swift_Events_EventListener $plugin) {
 		return TRUE;
 	}
+}
+
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_mail_mboxtransport.php']) {
+	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_mail_mboxtransport.php']);
 }
 
 ?>

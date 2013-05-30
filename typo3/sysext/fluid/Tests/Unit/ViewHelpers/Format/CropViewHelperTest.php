@@ -1,12 +1,12 @@
 <?php
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script belongs to the FLOW3 package "Fluid".                      *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU General Public License as published by the Free   *
  * Software Foundation, either version 3 of the License, or (at your      *
- *                                                                        *
+ * option) any later version.                                             *
  *                                                                        *
  * This script is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
@@ -25,7 +25,7 @@
 class Tx_Fluid_Tests_Unit_ViewHelpers_Format_CropViewHelperTest extends Tx_Extbase_Tests_Unit_BaseTestCase {
 
 	/**
-	 * @var Tx_Fluid_ViewHelpers_Format_CropViewHelper
+	 * var Tx_Fluid_ViewHelpers_Format_CropViewHelper
 	 */
 	protected $viewHelper;
 
@@ -52,6 +52,7 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_Format_CropViewHelperTest extends Tx_Extba
 
 	/**
 	 * @test
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function viewHelperCallsCropHtmlByDefault() {
 		$this->mockContentObject->expects($this->once())->method('cropHTML')->with('Some Content', '123|...|1')->will($this->returnValue('Cropped Content'));
@@ -61,6 +62,7 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_Format_CropViewHelperTest extends Tx_Extba
 
 	/**
 	 * @test
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function viewHelperCallsCropHtmlByDefault2() {
 		$this->mockContentObject->expects($this->once())->method('cropHTML')->with('Some Content', '-321|custom suffix|1')->will($this->returnValue('Cropped Content'));
@@ -70,6 +72,7 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_Format_CropViewHelperTest extends Tx_Extba
 
 	/**
 	 * @test
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function respectWordBoundariesCanBeDisabled() {
 		$this->mockContentObject->expects($this->once())->method('cropHTML')->with('Some Content', '123|...|')->will($this->returnValue('Cropped Content'));
@@ -79,6 +82,7 @@ class Tx_Fluid_Tests_Unit_ViewHelpers_Format_CropViewHelperTest extends Tx_Extba
 
 	/**
 	 * @test
+	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	public function respectHtmlCanBeDisabled() {
 		$this->mockContentObject->expects($this->once())->method('crop')->with('Some Content', '123|...|1')->will($this->returnValue('Cropped Content'));

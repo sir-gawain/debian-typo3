@@ -1,25 +1,26 @@
 <?php
 
 /***************************************************************
-* Extension Manager/Repository config file for ext "aboutmodules".
-*
-* Auto generated 25-10-2011 13:10
-*
-* Manual updates:
-* Only the data in the array - everything else is removed by next
-* writing. "version" and "dependencies" must not be touched!
-***************************************************************/
+ * Extension Manager/Repository config file for ext "aboutmodules".
+ *
+ * Auto generated 12-11-2012 20:31
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Help>About Modules',
 	'description' => 'Shows an overview of the installed and available modules including description and links.',
 	'category' => 'module',
 	'shy' => 1,
-	'dependencies' => 'extbase,fluid',
+	'dependencies' => '',
 	'conflicts' => '',
 	'priority' => '',
 	'loadOrder' => '',
 	'module' => 'mod',
+	'doNotLoadInFE' => 1,
 	'state' => 'stable',
 	'internal' => 0,
 	'uploadfolder' => 0,
@@ -32,12 +33,12 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '2.0.0',
-	'_md5_values_when_last_written' => 'a:8:{s:35:"class.tx_aboutmodules_functions.php";s:4:"80cb";s:16:"ext_autoload.php";s:4:"06c5";s:12:"ext_icon.gif";s:4:"6101";s:14:"ext_tables.php";s:4:"920d";s:20:"mod/aboutmodules.gif";s:4:"711d";s:12:"mod/conf.php";s:4:"9a03";s:13:"mod/index.php";s:4:"acd7";s:21:"mod/locallang_mod.xlf";s:4:"8645";}',
+	'version' => '1.0.0',
+	'_md5_values_when_last_written' => 'a:5:{s:12:"ext_icon.gif";s:4:"6101";s:14:"ext_tables.php";s:4:"920d";s:20:"mod/aboutmodules.gif";s:4:"711d";s:12:"mod/conf.php";s:4:"d61c";s:21:"mod/locallang_mod.xml";s:4:"f533";}',
 	'constraints' => array(
 		'depends' => array(
-			'php' => '5.3.0-0.0.0',
-			'typo3' => '4.6.0-0.0.0',
+			'php' => '5.1.0-0.0.0',
+			'typo3' => '4.4.0-0.0.0',
 		),
 		'conflicts' => array(
 		),
