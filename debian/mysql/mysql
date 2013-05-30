@@ -1556,3 +1556,7 @@ CREATE TABLE tx_linkvalidator_link (
 -- 4.5.15+dfsg1-1
 
 ALTER TABLE be_users CHANGE uc uc mediumtext;
+
+-- 4.5.27+dfsg1
+
+ALTER TABLE be_users CHANGE userMods userMods text;
