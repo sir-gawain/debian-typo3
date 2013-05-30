@@ -152,7 +152,7 @@
 +		'encryptionKey' => '###ENCKEY###',
 +
 +			// Set compat level to current version
-+		'compat_version' => '6.0',
++		'compat_version' => '6.1',
 +
 +			// define search path for binaries
 +		'binPath' => '/var/lib/typo3-dummy/execdir/',

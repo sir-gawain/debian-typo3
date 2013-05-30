@@ -20,7 +20,7 @@ In other words: You can have several TYPO3 installations with just one
 source package. A typical directory structure looks like this:
 
 /usr/share/typo3/typo3_src-4.5/     # the core files for 4.5
-/usr/share/typo3/typo3-6.0/         # the core files for 6.0
+/usr/share/typo3/typo3-6.1/         # the core files for 6.1
 
 /var/www/installation1/     # dummy package for TYPO3 4.5
  ./typo3_src  --> /usr/share/typo3/typo3_src-4.5/   # a symlink to the 4.5 core
@@ -29,8 +29,8 @@ source package. A typical directory structure looks like this:
  ./fileadmin/
  ./.../
 
-/var/www/installation2/     # dummy package for TYPO3 6.0
- ./typo3_src  --> /usr/share/typo3/typo3-6.0/       # a symlink to the 6.0 core
+/var/www/installation2/     # dummy package for TYPO3 6.1
+ ./typo3_src  --> /usr/share/typo3/typo3-6.1/       # a symlink to the 6.1 core
  ./typo3conf/
  ./typo3temp/
  ./fileadmin/
@@ -72,7 +72,7 @@ Here are some typical pitfalls:
     the source directory, e.g.
 
     # file /var/lib/typo3-dummy/typo3_src
-    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3-6.0'
+    /var/lib/typo3-dummy/typo3_src:       symlink to `/usr/share/typo3/typo3-6.1'
 
 
 WHAT SHOULD YOU DO IF PROBLEM STILL REMAINS?

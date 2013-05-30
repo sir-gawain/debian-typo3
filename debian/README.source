@@ -1,4 +1,4 @@
-typo3-src (6.0.0+ds1-1)
+typo3-src (6.1.1+ds1-1)
 
   * Changed +dfsg to +ds because all non dfsg files have been removed by
     upstream. Nevertheless we have to remove some embedded stuff, thats
