@@ -1,6 +1,13 @@
-typo3-src (4.5.27+dfsg1-1) UNRELEASED; urgency=low
+typo3-src (4.5.27+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
+  * Removed patch for wheezy patch level version.
+  * Removed patch for TYPO3-SA-2013-001 (integrated into upstream).
+  * Removed patch for TYPO3-CORE-SA-2012-004 (integrated into upstream).
+  * Set standards version to 3.9.4.
+  * Removed DM-Upload-Allowed header.
+  * Removed access to /lib/init/vars.sh from typo3-dummy.init.
+  * Added database schema change for typo3 bug 16762.
 
  -- Christian Welzel <gawain@camlann.de>  Thu, 30 May 2013 17:37:22 +0200
 
