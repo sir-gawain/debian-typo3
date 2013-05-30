@@ -1,5 +1,3 @@
-security-sa-2012-005-692775.patch
-security-sa-2012-005-692775-regression.patch
 dummy-defaults.patch
 dummy-addindexpages.patch
 fix-im-command.patch
