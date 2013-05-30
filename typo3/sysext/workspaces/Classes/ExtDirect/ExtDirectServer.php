@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Workspaces\ExtDirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ *  (c) 2010-2013 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -84,7 +84,7 @@ class ExtDirectServer extends \TYPO3\CMS\Workspaces\ExtDirect\AbstractHandler {
 	public function getHistory($parameters) {
 		/** @var $historyService \TYPO3\CMS\Workspaces\Service\HistoryService */
 		$historyService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Workspaces\\Service\\HistoryService');
-		$history = $historyService->getHistory($parameters->table, $parameters->versionId);
+		$history = $historyService->getHistory($parameters->table, $parameters->liveId);
 		return array(
 			'data' => $history,
 			'total' => count($history)
@@ -129,8 +129,6 @@ class ExtDirectServer extends \TYPO3\CMS\Workspaces\ExtDirect\AbstractHandler {
 		$icon_Workspace = \TYPO3\CMS\Backend\Utility\IconUtility::mapRecordTypeToSpriteIconClass($parameter->table, $versionRecord);
 		$stagePosition = $this->getStagesService()->getPositionOfCurrentStage($parameter->stage);
 		$fieldsOfRecords = array_keys($liveRecord);
-		// get field list from TCA configuration, if available
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($parameter->table);
 		if ($GLOBALS['TCA'][$parameter->table]) {
 			if ($GLOBALS['TCA'][$parameter->table]['interface']['showRecordFieldList']) {
 				$fieldsOfRecords = $GLOBALS['TCA'][$parameter->table]['interface']['showRecordFieldList'];

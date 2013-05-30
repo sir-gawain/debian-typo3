@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Saltedpasswords\Tests\Unit\Evaluation;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Marcus Krause <marcus#exp2009@t3sec.info>
+ *  (c) 2009-2013 Marcus Krause <marcus#exp2009@t3sec.info>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,13 +33,6 @@ namespace TYPO3\CMS\Saltedpasswords\Tests\Unit\Evaluation;
  * @author Marcus Krause <marcus#exp2009@t3sec.info>
  */
 class EvaluatorTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * @var \TYPO3\CMS\Saltedpasswords\Evaluation\Evaluator

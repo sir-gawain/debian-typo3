@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Page;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2009-2011 Steffen Kamper (info@sk-typo3.de)
+ * (c) 2009-2013 Steffen Kamper (info@sk-typo3.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,13 +29,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Page;
  * @author Steffen Kamper (info@sk-typo3.de)
  */
 class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * @var \TYPO3\CMS\Core\Page\PageRenderer
@@ -407,7 +400,7 @@ class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	/**
-	 * @expectedException UnexpectedValueException
+	 * @expectedException \UnexpectedValueException
 	 * @test
 	 */
 	public function includingNotAvailableLocalJqueryVersionThrowsException() {
@@ -416,7 +409,7 @@ class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	/**
-	 * @expectedException UnexpectedValueException
+	 * @expectedException \UnexpectedValueException
 	 * @test
 	 */
 	public function includingJqueryWithNonAlphnumericNamespaceThrowsException() {
@@ -630,7 +623,7 @@ class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function areInlineLanguageLabelsNotProcessable() {
 		$this->fixture->setLanguage(NULL);
-		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xml');
+		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xlf');
 		$out = $this->fixture->render();
 	}
 
@@ -641,7 +634,7 @@ class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function areInlineLanguageLabelsPassed() {
 		$this->fixture->setLanguage($GLOBALS['LANG']->lang);
-		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xml');
+		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xlf');
 		$out = $this->fixture->render();
 		$this->assertContains('labels.beUser', $out);
 		$this->assertContains('labels.feUser', $out);
@@ -665,7 +658,7 @@ class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function areInlineLanguageLabelsSelected() {
 		$this->fixture->setLanguage($GLOBALS['LANG']->lang);
-		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xml', 'labels.');
+		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xlf', 'labels.');
 		$out = $this->fixture->render();
 		$this->assertContains('labels.beUser', $out);
 		$this->assertContains('labels.feUser', $out);
@@ -678,7 +671,7 @@ class PageRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function areInlineLanguageLabelsSelectedAndStripped() {
 		$this->fixture->setLanguage($GLOBALS['LANG']->lang);
-		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xml', 'labels.', 'lock');
+		$this->fixture->addInlineLanguageLabelFile('EXT:lang/locallang_core.xlf', 'labels.', 'lock');
 		$out = $this->fixture->render();
 		$this->assertContains('edRecord', $out);
 		$this->assertContains('edRecord_content', $out);

@@ -77,18 +77,15 @@ class StandaloneView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		}
 		$configurationManager->setContentObject($contentObject);
 		$this->templateParser = $this->objectManager->get('TYPO3\\CMS\\Fluid\\Core\\Parser\\TemplateParser');
-		$this->setRenderingContext($this->objectManager->create('TYPO3\\CMS\\Fluid\\Core\\Rendering\\RenderingContext'));
-		$request = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Request');
+		$this->setRenderingContext($this->objectManager->get('TYPO3\\CMS\\Fluid\\Core\\Rendering\\RenderingContext'));
+		$request = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Request');
 		$request->setRequestURI(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL'));
 		$request->setBaseURI(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL'));
-		$uriBuilder = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
+		$uriBuilder = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
 		$uriBuilder->setRequest($request);
-		$controllerContext = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ControllerContext');
+		$controllerContext = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ControllerContext');
 		$controllerContext->setRequest($request);
 		$controllerContext->setUriBuilder($uriBuilder);
-		$flashMessageContainer = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\FlashMessageContainer');
-		// singleton
-		$controllerContext->setFlashMessageContainer($flashMessageContainer);
 		$this->setControllerContext($controllerContext);
 		$this->templateCompiler = $this->objectManager->get('TYPO3\\CMS\\Fluid\\Core\\Compiler\\TemplateCompiler');
 		// singleton
@@ -320,7 +317,7 @@ class StandaloneView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		$possibleLayoutPaths[] = \TYPO3\CMS\Core\Utility\GeneralUtility::fixWindowsFilePath($layoutRootPath . '/' . $layoutName . '.' . $this->getRequest()->getFormat());
 		$possibleLayoutPaths[] = \TYPO3\CMS\Core\Utility\GeneralUtility::fixWindowsFilePath($layoutRootPath . '/' . $layoutName);
 		foreach ($possibleLayoutPaths as $layoutPathAndFilename) {
-			if (file_exists($layoutPathAndFilename)) {
+			if (is_file($layoutPathAndFilename)) {
 				return $layoutPathAndFilename;
 			}
 		}
@@ -373,7 +370,7 @@ class StandaloneView extends \TYPO3\CMS\Fluid\View\AbstractTemplateView {
 		$possiblePartialPaths[] = \TYPO3\CMS\Core\Utility\GeneralUtility::fixWindowsFilePath($partialRootPath . '/' . $partialName . '.' . $this->getRequest()->getFormat());
 		$possiblePartialPaths[] = \TYPO3\CMS\Core\Utility\GeneralUtility::fixWindowsFilePath($partialRootPath . '/' . $partialName);
 		foreach ($possiblePartialPaths as $partialPathAndFilename) {
-			if (file_exists($partialPathAndFilename)) {
+			if (is_file($partialPathAndFilename)) {
 				return $partialPathAndFilename;
 			}
 		}

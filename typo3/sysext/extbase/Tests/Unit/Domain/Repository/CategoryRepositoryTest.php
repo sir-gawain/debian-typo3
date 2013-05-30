@@ -52,7 +52,7 @@ class CategoryRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase 
 		$fixture = new \TYPO3\CMS\Extbase\Domain\Repository\CategoryRepository($objectManager);
 		$querySettings = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Typo3QuerySettings');
 		$querySettings->expects($this->once())->method('setRespectStoragePage')->with(FALSE);
-		$objectManager->expects($this->once())->method('create')->with('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Typo3QuerySettings')->will($this->returnValue($querySettings));
+		$objectManager->expects($this->once())->method('get')->with('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Typo3QuerySettings')->will($this->returnValue($querySettings));
 		$fixture->initializeObject();
 	}
 }

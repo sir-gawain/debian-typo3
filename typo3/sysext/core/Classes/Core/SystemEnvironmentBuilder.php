@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Core;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -57,8 +57,6 @@ class SystemEnvironmentBuilder {
 	 * @return void
 	 */
 	static public function run($relativePathPart = '') {
-		self::ensureRequiredEnvironment();
-		self::checkGlobalsAreNotSetViaPostOrGet();
 		self::defineBaseConstants();
 		self::definePaths($relativePathPart);
 		self::checkMainPathsExist();
@@ -72,51 +70,16 @@ class SystemEnvironmentBuilder {
 	}
 
 	/**
-	 * Check php version requirement or exit script
-	 *
-	 * @return void
-	 */
-	static protected function ensureRequiredEnvironment() {
-		if (version_compare(phpversion(), '5.3', '<')) {
-			die('TYPO3 requires PHP 5.3.0 or higher.');
-		}
-		if (self::getPhpIniValueBoolean('register_globals')) {
-			die('TYPO3 requires PHP setting "register_globals" set to Off. (Error: #1345284320)');
-		}
-	}
-
-	/**
-	 * Cast a on/off php ini value to boolean
-	 *
-	 * @param string $configOption
-	 * @return boolean TRUE if the given option is enabled, FALSE if disabled
-	 * @see t3lib_utility_PhpOptions::getIniValueBoolean
-	 */
-	static protected function getPhpIniValueBoolean($configOption) {
-		return filter_var(ini_get($configOption), FILTER_VALIDATE_BOOLEAN, array(FILTER_REQUIRE_SCALAR, FILTER_NULL_ON_FAILURE));
-	}
-
-	/**
-	 * Exit script if globals are set via post or get
-	 *
-	 * @return void
-	 */
-	static protected function checkGlobalsAreNotSetViaPostOrGet() {
-		if (isset($_POST['GLOBALS']) || isset($_GET['GLOBALS'])) {
-			die('You cannot set the GLOBALS array from outside the script.');
-		}
-	}
-
-	/**
 	 * Define all simple constants that have no dependency to local configuration
 	 *
 	 * @return void
 	 */
 	static protected function defineBaseConstants() {
 		// This version, branch and copyright
-		define('TYPO3_version', '6.0.0');
-		define('TYPO3_branch', '6.0');
-		define('TYPO3_copyright_year', '1998-2012');
+		define('TYPO3_version', '6.1.1');
+		define('TYPO3_branch', '6.1');
+		define('TYPO3_copyright_year', '1998-2013');
+
 		// TYPO3 external links
 		define('TYPO3_URL_GENERAL', 'http://typo3.org/');
 		define('TYPO3_URL_ORG', 'http://typo3.org/');
@@ -124,28 +87,52 @@ class SystemEnvironmentBuilder {
 		define('TYPO3_URL_EXCEPTION', 'http://typo3.org/go/exception/v4/');
 		define('TYPO3_URL_MAILINGLISTS', 'http://lists.typo3.org/cgi-bin/mailman/listinfo');
 		define('TYPO3_URL_DOCUMENTATION', 'http://typo3.org/documentation/');
-		define('TYPO3_URL_DOCUMENTATION_TSREF', 'http://typo3.org/documentation/document-library/core-documentation/doc_core_tsref/current/view/');
-		define('TYPO3_URL_DOCUMENTATION_TSCONFIG', 'http://typo3.org/documentation/document-library/core-documentation/doc_core_tsconfig/current/view/');
+		define('TYPO3_URL_DOCUMENTATION_TSREF', 'http://docs.typo3.org/typo3cms/TyposcriptReference/');
+		define('TYPO3_URL_DOCUMENTATION_TSCONFIG', 'http://docs.typo3.org/typo3cms/TSconfigReference/');
 		define('TYPO3_URL_CONSULTANCY', 'http://typo3.org/support/professional-services/');
 		define('TYPO3_URL_CONTRIBUTE', 'http://typo3.org/contribute/');
 		define('TYPO3_URL_SECURITY', 'http://typo3.org/teams/security/');
 		define('TYPO3_URL_DOWNLOAD', 'http://typo3.org/download/');
 		define('TYPO3_URL_SYSTEMREQUIREMENTS', 'http://typo3.org/about/typo3-the-cms/system-requirements/');
 		define('TYPO3_URL_DONATE', 'http://typo3.org/donate/online-donation/');
+
 		// A tabulator, a linefeed, a carriage return, a CR-LF combination
 		define('TAB', chr(9));
 		define('LF', chr(10));
 		define('CR', chr(13));
 		define('CRLF', CR . LF);
+
 		// Security related constant: Default value of fileDenyPattern
 		define('FILE_DENY_PATTERN_DEFAULT', '\\.(php[3-6]?|phpsh|phtml)(\\..*)?$|^\\.htaccess$');
 		// Security related constant: List of file extensions that should be registered as php script file extensions
 		define('PHP_EXTENSIONS_DEFAULT', 'php,php3,php4,php5,php6,phpsh,inc,phtml');
+
 		// List of extensions required to run the core
-		define('REQUIRED_EXTENSIONS', 'core,backend,frontend,cms,lang,sv,extensionmanager,recordlist,extbase,fluid,cshmanual');
+		define('REQUIRED_EXTENSIONS', 'core,backend,frontend,cms,lang,sv,extensionmanager,recordlist,extbase,fluid,cshmanual,install');
+
 		// Operating system identifier
 		// Either "WIN" or empty string
 		define('TYPO3_OS', self::getTypo3Os());
+
+		// Service error constants
+		// General error - something went wrong
+		define('T3_ERR_SV_GENERAL', -1);
+		// During execution it showed that the service is not available and should be ignored. The service itself should call $this->setNonAvailable()
+		define('T3_ERR_SV_NOT_AVAIL', -2);
+		// Passed subtype is not possible with this service
+		define('T3_ERR_SV_WRONG_SUBTYPE', -3);
+		// Passed subtype is not possible with this service
+		define('T3_ERR_SV_NO_INPUT', -4);
+		// File not found which the service should process
+		define('T3_ERR_SV_FILE_NOT_FOUND', -20);
+		// File not readable
+		define('T3_ERR_SV_FILE_READ', -21);
+		// File not writable
+		define('T3_ERR_SV_FILE_WRITE', -22);
+		// Passed subtype is not possible with this service
+		define('T3_ERR_SV_PROG_NOT_FOUND', -40);
+		// Passed subtype is not possible with this service
+		define('T3_ERR_SV_PROG_FAILED', -41);
 	}
 
 	/**
@@ -245,7 +232,6 @@ class SystemEnvironmentBuilder {
 	 *
 	 * @return void
 	 * @deprecated since 6.0, will be removed in 6.2
-	 * @see t3lib/class.t3lib_div.php, t3lib/class.t3lib_extmgm.php
 	 */
 	static public function setupClassAliasForLegacyBaseClasses() {
 		class_alias('TYPO3\\CMS\\Core\\Utility\\GeneralUtility', 't3lib_div');
@@ -271,7 +257,8 @@ class SystemEnvironmentBuilder {
 	 * include path, because the shipped PEAR packages use
 	 * relative paths to include their files.
 	 *
-	 * This is required for t3lib_http_Request to work.
+	 * This is required for \TYPO3\CMS\Core\Http\HttpRequest
+	 * to work.
 	 *
 	 * Having the TYPO3 folder first will make sure that the
 	 * shipped version is loaded before any local PEAR package,

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Object;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,12 +43,6 @@ interface ObjectManagerInterface extends \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Returns a fresh or existing instance of the object specified by $objectName.
 	 *
-	 * Important:
-	 *
-	 * If possible, instances of Prototype objects should always be created with the
-	 * Object Manager's create() method and Singleton objects should rather be
-	 * injected by some type of Dependency Injection.
-	 *
 	 * @param string $objectName The name of the object to return an instance of
 	 * @return object The object instance
 	 * @api
@@ -65,8 +59,7 @@ interface ObjectManagerInterface extends \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param string $objectName The name of the object to create
 	 * @return object The new object instance
-	 * @throws \TYPO3\CMS\Extbase\Object\Exception\WrongScopeException if the created object is not of scope prototype
-	 * @api
+	 * @deprecated since 6.1
 	 */
 	public function create($objectName);
 

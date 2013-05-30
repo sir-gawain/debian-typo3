@@ -4,10 +4,9 @@ if (!defined('TYPO3_MODE')) {
 }
 if (TYPO3_MODE == 'BE') {
 	// register Extbase dispatcher for modules
-	$TBE_MODULES['_dispatcher'][] = 'TYPO3\\CMS\\Extbase\\Core\\BootstrapInterface';
+	$TBE_MODULES['_dispatcher'][] = 'TYPO3\\CMS\\Extbase\\Core\\ModuleRunnerInterface';
 }
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['reports']['tx_reports']['status']['providers']['extbase'][] = 'TYPO3\\CMS\\Extbase\\Utility\\ExtbaseRequirementsCheckUtility';
-\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA('fe_users');
 if (!isset($TCA['fe_users']['ctrl']['type'])) {
 	$tempColumns = array(
 		'tx_extbase_type' => array(
@@ -30,7 +29,6 @@ if (!isset($TCA['fe_users']['ctrl']['type'])) {
 	$TCA['fe_users']['ctrl']['type'] = 'tx_extbase_type';
 }
 $TCA['fe_users']['types']['Tx_Extbase_Domain_Model_FrontendUser'] = $TCA['fe_users']['types']['0'];
-\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA('fe_groups');
 if (!isset($TCA['fe_groups']['ctrl']['type'])) {
 	$tempColumns = array(
 		'tx_extbase_type' => array(

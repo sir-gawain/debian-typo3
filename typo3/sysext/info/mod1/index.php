@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -36,7 +36,7 @@
 unset($MCONF);
 require 'conf.php';
 require $BACK_PATH . 'init.php';
-$LANG->includeLLFile('EXT:lang/locallang_mod_web_info.xml');
+$LANG->includeLLFile('EXT:lang/locallang_mod_web_info.xlf');
 $BE_USER->modAccess($MCONF, 1);
 /*
  * @deprecated since 6.0, the classname SC_mod_web_info_index and this file is obsolete

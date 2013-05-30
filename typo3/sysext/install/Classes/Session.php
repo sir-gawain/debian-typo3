@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ernesto Baschny <ernst@cron-it.de>
+ *  (c) 2009-2013 Ernesto Baschny <ernst@cron-it.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -95,9 +95,6 @@ class Session {
 		ini_set('session.gc_probability', 100);
 		ini_set('session.gc_divisor', 100);
 		ini_set('session.gc_maxlifetime', $this->expireTimeInMinutes * 2 * 60);
-		if (version_compare(phpversion(), '5.2', '<')) {
-			ini_set('session.cookie_httponly', TRUE);
-		}
 		if (\TYPO3\CMS\Core\Utility\PhpOptionsUtility::isSessionAutoStartEnabled()) {
 			$sessionCreationError = 'Error: session.auto-start is enabled.<br />';
 			$sessionCreationError .= 'The PHP option session.auto-start is enabled. Disable this option in php.ini or .htaccess:<br />';
@@ -165,17 +162,10 @@ class Session {
 	/**
 	 * Generates a new session ID and sends it to the client.
 	 *
-	 * Also moves session information from the old session to the new one
-	 * (in PHP 5.1 or later)
-	 *
 	 * @return string the new session ID
 	 */
 	private function renewSession() {
-		if (version_compare(phpversion(), '5.1', '<')) {
-			session_regenerate_id(TRUE);
-		} else {
-			session_regenerate_id();
-		}
+		session_regenerate_id();
 		return session_id();
 	}
 
@@ -377,8 +367,8 @@ class Session {
 	 * Writes the session data in a proper context that is not affected by the APC bug:
 	 * http://pecl.php.net/bugs/bug.php?id=16721.
 	 *
-	 * This behaviour was introduced in #17511, where self::write() made use of t3lib_div
-	 * which due to the APC bug throws a "Fatal error: Class 't3lib_div' not found"
+	 * This behaviour was introduced in #17511, where self::write() made use of GeneralUtility
+	 * which due to the APC bug throws a "Fatal error: Class 'GeneralUtility' not found"
 	 * (and the session data is not saved). Calling session_write_close() at this point
 	 * seems to be the most easy solution, according to PHP author.
 	 *

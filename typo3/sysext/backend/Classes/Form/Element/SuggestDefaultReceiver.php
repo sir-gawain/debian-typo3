@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Form\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2007-2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2007-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -169,7 +169,9 @@ class SuggestDefaultReceiver {
 				if (!$this->checkRecordAccess($row, $row['uid'])) {
 					continue;
 				}
-				$iconPath = $this->getIcon($row);
+				$spriteIcon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord(
+					$this->table, $row, array('style' => 'margin: 0 4px 0 -20px; padding: 0;')
+				);
 				$uid = $row['t3ver_oid'] > 0 ? $row['t3ver_oid'] : $row['uid'];
 				$path = $this->getRecordPath($row, $uid);
 				if (strlen($path) > 30) {
@@ -185,9 +187,9 @@ class SuggestDefaultReceiver {
 					'label' => $label,
 					'path' => $path,
 					'uid' => $uid,
-					'icon' => $iconPath,
-					'style' => 'background-image:url(' . $iconPath . ');',
-					'class' => isset($this->config['cssClass']) ? $this->config['cssClass'] : ''
+					'style' => '',
+					'class' => isset($this->config['cssClass']) ? $this->config['cssClass'] : '',
+					'sprite' => $spriteIcon
 				);
 				$rows[$this->table . '_' . $uid] = $this->renderRecord($row, $entry);
 			}
@@ -329,7 +331,7 @@ class SuggestDefaultReceiver {
 	}
 
 	/**
-	 * Return the icon for a record - just a wrapper for two functions from t3lib_iconWorks
+	 * Return the icon for a record - just a wrapper for two functions from \TYPO3\CMS\Backend\Utility\IconUtility
 	 *
 	 * @param array $row The record to get the icon for
 	 * @return string The path to the icon
@@ -363,7 +365,7 @@ class SuggestDefaultReceiver {
 	}
 
 	/**
-	 * Returns a label for a given record; usually only a wrapper for t3lib_BEfunc::getRecordTitle
+	 * Returns a label for a given record; usually only a wrapper for \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle
 	 *
 	 * @param array $row The record to get the label for
 	 * @return string The label

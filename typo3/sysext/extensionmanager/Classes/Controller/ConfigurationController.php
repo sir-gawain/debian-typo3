@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <typo3@susannemoog.de>
+ *  (c) 2012-2013 Susanne Moog, <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -50,12 +50,20 @@ class ConfigurationController extends \TYPO3\CMS\Extensionmanager\Controller\Abs
 	 * Show the extension configuration form. The whole form field handling is done
 	 * in the corresponding view helper
 	 *
-	 * @param array $extension
+	 * @param array $extension Extension information, must contain at least the key
+	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
+	 * @return void
 	 */
-	public function showConfigurationFormAction($extension) {
-		$extension = array_merge($extension, $GLOBALS['TYPO3_LOADED_EXT'][$extension['key']]);
-		$configuration = $this->configurationItemRepository->findByExtension($extension);
-		$this->view->assign('configuration', $configuration)->assign('extension', $extension);
+	public function showConfigurationFormAction(array $extension) {
+		if (!array_key_exists('key', $extension)) {
+			throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException(
+				'Extension key not found.',
+				1359206803
+			);
+		}
+		$this->view
+			->assign('configuration', $this->configurationItemRepository->findByExtensionKey($extension['key']))
+			->assign('extension', $extension);
 	}
 
 	/**

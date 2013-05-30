@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -196,6 +196,8 @@ class ThumbnailView {
 	 * @todo Define visibility
 	 */
 	public function main() {
+		// Clean output buffer to ensure no extraneous output exists
+		ob_clean();
 		// If file exists, we make a thumbnail of the file.
 		if (is_object($this->image)) {
 			// Check file extension:

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -52,7 +52,7 @@ class ControllerContext {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Property\MappingResults
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected $argumentsMappingResults;
 
@@ -65,6 +65,47 @@ class ControllerContext {
 	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
 	 */
 	protected $flashMessageContainer;
+
+	/**
+	 * @var \TYPO3\CMS\Core\Messaging\FlashMessageQueue
+	 */
+	protected $flashMessageQueue;
+
+	/**
+	 * @var \TYPO3\CMS\Core\Messaging\FlashMessageService
+	 */
+	protected $flashMessageService;
+
+	/**
+	 * @param \TYPO3\CMS\Core\Messaging\FlashMessageService $flashMessageService
+	 */
+	public function injectFlashMessageService(\TYPO3\CMS\Core\Messaging\FlashMessageService $flashMessageService) {
+		$this->flashMessageService = $flashMessageService;
+	}
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
+	 */
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+	}
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
+	 */
+	protected $extensionService;
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
+	 */
+	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
+		$this->extensionService = $extensionService;
+	}
 
 	/**
 	 * Set the request of the controller
@@ -131,7 +172,7 @@ class ControllerContext {
 	 *
 	 * @param \TYPO3\CMS\Extbase\Property\MappingResults $argumentsMappingResults
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function setArgumentsMappingResults(\TYPO3\CMS\Extbase\Property\MappingResults $argumentsMappingResults) {
 		$this->argumentsMappingResults = $argumentsMappingResults;
@@ -142,7 +183,7 @@ class ControllerContext {
 	 *
 	 * @return \TYPO3\CMS\Extbase\Property\MappingResults
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function getArgumentsMappingResults() {
 		return $this->argumentsMappingResults;
@@ -168,20 +209,52 @@ class ControllerContext {
 	 * Set the flash messages
 	 *
 	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer
+	 * @deprecated since 6.1, will be removed 2 versions later
 	 * @return void
 	 */
 	public function setFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
 		$this->flashMessageContainer = $flashMessageContainer;
+		$flashMessageContainer->setControllerContext($this);
 	}
 
 	/**
 	 * Get the flash messages
 	 *
 	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
-	 * @api
+	 * @deprecated since 6.1, will be removed 2 versions later
 	 */
 	public function getFlashMessageContainer() {
+		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
 		return $this->flashMessageContainer;
+	}
+
+	/**
+	 * @return \TYPO3\CMS\Core\Messaging\FlashMessageQueue
+	 * @api
+	 */
+	public function getFlashMessageQueue() {
+		if (!$this->flashMessageQueue instanceof \TYPO3\CMS\Core\Messaging\FlashMessageQueue) {
+			if ($this->useLegacyFlashMessageHandling()) {
+				$this->flashMessageQueue = $this->flashMessageService->getMessageQueueByIdentifier();
+			} else {
+				$this->flashMessageQueue = $this->flashMessageService->getMessageQueueByIdentifier(
+					'extbase.flashmessages.' . $this->extensionService->getPluginNamespace($this->request->getControllerExtensionName(), $this->request->getPluginName())
+				);
+			}
+		}
+
+		return $this->flashMessageQueue;
+	}
+
+	/**
+	 * @deprecated since 6.1, will be removed 2 versions later
+	 * @return boolean
+	 */
+	public function useLegacyFlashMessageHandling() {
+		return (boolean) \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getPropertyPath(
+			$this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK),
+			'legacy.enableLegacyFlashMessageHandling'
+		);
 	}
 }
 

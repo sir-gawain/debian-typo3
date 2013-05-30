@@ -47,9 +47,9 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	protected $requestBuilder;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
+	 * @var \TYPO3\CMS\Extbase\Service\EnvironmentService
 	 */
-	protected $flashMessageContainer;
+	protected $environmentService;
 
 	/**
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
@@ -57,14 +57,6 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	 */
 	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer
-	 * @return void
-	 */
-	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
-		$this->flashMessageContainer = $flashMessageContainer;
 	}
 
 	/**
@@ -84,15 +76,23 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	}
 
 	/**
+	 * @param \TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService
+	 * @return void
+	 */
+	public function injectEnvironmentService(\TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService) {
+		$this->environmentService = $environmentService;
+	}
+
+	/**
 	 * Handles the request
 	 *
 	 * @return void
-	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function handleRequest() {
-		$request = $this->requestBuilder->build();
+		$commandLine = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
+		$request = $this->requestBuilder->build(array_slice($commandLine, 1));
 		/** @var $response \TYPO3\CMS\Extbase\Mvc\Cli\Response */
-		$response = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Response');
+		$response = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Response');
 		$this->dispatcher->dispatch($request, $response);
 		$response->send();
 	}
@@ -101,10 +101,9 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	 * This request handler can handle any command line request.
 	 *
 	 * @return boolean If the request is a command line request, TRUE otherwise FALSE
-	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function canHandleRequest() {
-		return PHP_SAPI === 'cli';
+		return $this->environmentService->isEnvironmentInCliMode();
 	}
 
 	/**
@@ -112,10 +111,9 @@ class RequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestHandlerInterface {
 	 * request.
 	 *
 	 * @return integer The priority of the request handler.
-	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function getPriority() {
-		return 90;
+		return 100;
 	}
 }
 

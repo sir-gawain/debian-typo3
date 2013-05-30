@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log\Writer;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011-2012 Steffen Gebert (steffen.gebert@typo3.org)
+ * (c) 2011-2013 Steffen Gebert (steffen.gebert@typo3.org)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,16 +32,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log\Writer;
 class DatabaseTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
-	 * Backup and restore of the $GLOBALS array.
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobalsArray = array();
-
-	/**
-	 * Mock object of t3lib_db
-	 *
-	 * @var PHPUnit_Framework_MockObject_MockObject
+	 * @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Database\DatabaseConnection
 	 */
 	private $databaseStub;
 
@@ -52,17 +43,7 @@ class DatabaseTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @return void
 	 */
 	public function setUp() {
-		$this->backupGlobalsArray['TYPO3_DB'] = $GLOBALS['TYPO3_DB'];
 		$this->databaseStub = $this->setUpAndReturnDatabaseStub();
-	}
-
-	/**
-	 * Restore global database object.
-	 *
-	 * @return void
-	 */
-	protected function tearDown() {
-		$GLOBALS['TYPO3_DB'] = $this->backupGlobalsArray['TYPO3_DB'];
 	}
 
 	//////////////////////
@@ -74,9 +55,9 @@ class DatabaseTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @return PHPUnit_Framework_MockObject_MockObject
 	 */
 	private function setUpAndReturnDatabaseStub() {
-		$databaseLink = $GLOBALS['TYPO3_DB']->link;
+		$databaseLink = $GLOBALS['TYPO3_DB']->getDatabaseHandle();
 		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection', array('exec_INSERTquery'), array(), '', FALSE, FALSE);
-		$GLOBALS['TYPO3_DB']->link = $databaseLink;
+		$GLOBALS['TYPO3_DB']->setDatabaseHandle($databaseLink);
 		return $GLOBALS['TYPO3_DB'];
 	}
 

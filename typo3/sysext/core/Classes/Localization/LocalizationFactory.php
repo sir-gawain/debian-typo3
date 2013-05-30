@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Localization;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Dominique Feyer <dfeyer@reelpeek.net>
+ *  (c) 2011-2013 Dominique Feyer <dfeyer@reelpeek.net>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -77,7 +77,7 @@ class LocalizationFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Returns parsed data from a given file and language key.
 	 *
-	 * @param string $fileReference Input is a file-reference (see t3lib_div::getFileAbsFileName). That file is expected to be a supported locallang file format
+	 * @param string $fileReference Input is a file-reference (see \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName). That file is expected to be a supported locallang file format
 	 * @param string $languageKey Language key
 	 * @param string $charset Character set (option); if not set, determined by the language key
 	 * @param integer $errorMode Error mode (when file could not be found): 0 - syslog entry, 1 - do nothing, 2 - throw an exception$
@@ -88,8 +88,6 @@ class LocalizationFactory implements \TYPO3\CMS\Core\SingletonInterface {
 		try {
 			$hash = md5($fileReference . $languageKey . $charset);
 			$this->errorMode = $errorMode;
-			// English is the default language
-			$languageKey = $languageKey === 'en' ? 'default' : $languageKey;
 			// Check if the default language is processed before processing other language
 			if (!$this->store->hasData($fileReference, 'default') && $languageKey !== 'default') {
 				$this->getParsedData($fileReference, 'default', $charset, $this->errorMode);
@@ -98,12 +96,14 @@ class LocalizationFactory implements \TYPO3\CMS\Core\SingletonInterface {
 			if ($this->store->hasData($fileReference, $languageKey)) {
 				return $this->store->getData($fileReference);
 			}
+
 			// If the content is in cache (system cache), use it
-			if ($this->cacheInstance->has($hash)) {
-				// Load data from the caching framework
-				$this->store->setData($fileReference, $languageKey, $this->cacheInstance->get($hash));
+			$data = $this->cacheInstance->get($hash);
+			if ($data !== FALSE) {
+				$this->store->setData($fileReference, $languageKey, $data);
 				return $this->store->getData($fileReference, $languageKey);
 			}
+
 			$this->store->setConfiguration($fileReference, $languageKey, $charset);
 			/** @var $parser \TYPO3\CMS\Core\Localization\Parser\LocalizationParserInterface */
 			$parser = $this->store->getParserInstance($fileReference);

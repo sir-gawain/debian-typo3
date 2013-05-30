@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\FormProtection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Oliver Klee <typo3-coding@oliverklee.de>
+ * (c) 2010-2013 Oliver Klee <typo3-coding@oliverklee.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,9 +23,8 @@ namespace TYPO3\CMS\Core\FormProtection;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Class t3lib_formprotection_Factory.
- *
  * This class creates and manages instances of the various form protection
  * classes.
  *
@@ -34,13 +33,13 @@ namespace TYPO3\CMS\Core\FormProtection;
  * Usage for the back-end form protection:
  *
  * <pre>
- * $formProtection = t3lib_formprotection_Factory::get();
+ * $formProtection = \TYPO3\CMS\Core\FormProtection\FormProtectionFactory::get();
  * </pre>
  *
  * Usage for the install tool form protection:
  *
  * <pre>
- * $formProtection = t3lib_formprotection_Factory::get();
+ * $formProtection = \TYPO3\CMS\Core\FormProtection\FormProtectionFactory::get();
  * $formProtection->injectInstallTool($this);
  * </pre>
  *
@@ -53,7 +52,7 @@ class FormProtectionFactory {
 	/**
 	 * created instances of form protections using the type as array key
 	 *
-	 * @var array<t3lib_formProtectionAbstract>
+	 * @var array<AbstracFormtProtection>
 	 */
 	static protected $instances = array();
 
@@ -130,7 +129,7 @@ class FormProtectionFactory {
 	 * @return boolean
 	 */
 	static protected function isFrontendSession() {
-		return is_object($GLOBALS['TSFE']) && $GLOBALS['TSFE']->fe_user instanceof \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthtenication && isset($GLOBALS['TSFE']->fe_user->user['uid']) && TYPO3_MODE === 'FE';
+		return is_object($GLOBALS['TSFE']) && $GLOBALS['TSFE']->fe_user instanceof \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication && isset($GLOBALS['TSFE']->fe_user->user['uid']) && TYPO3_MODE === 'FE';
 	}
 
 	/**

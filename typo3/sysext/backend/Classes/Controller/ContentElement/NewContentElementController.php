@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller\ContentElement;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class for the New Content element wizard
  *
@@ -48,7 +74,7 @@ class NewContentElementController {
 	/**
 	 * Internal backend template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\MediumDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -193,11 +219,17 @@ class NewContentElementController {
 					$key = count($menuItems) - 1;
 				} else {
 					$content = '';
-					// Radio button:
-					$oC = 'document.editForm.defValues.value=unescape(\'' . rawurlencode($wInfo['params']) . '\');goToalt_doc();' . (!$this->onClickEvent ? 'window.location.hash=\'#sel2\';' : '');
-					$content .= $this->elementWrapper['wizardPart'][0] . '<input type="radio" name="tempB" value="' . htmlspecialchars($k) . '" onclick="' . htmlspecialchars($oC) . '" />' . $this->elementWrapper['wizardPart'][1];
-					// Onclick action for icon/title:
-					$aOnClick = 'document.getElementsByName(\'tempB\')[' . $cc . '].checked=1;' . $oC . 'return false;';
+
+					if (!$this->onClickEvent) {
+						// Radio button:
+						$oC = 'document.editForm.defValues.value=unescape(\'' . rawurlencode($wInfo['params']) . '\');goToalt_doc();' . (!$this->onClickEvent ? 'window.location.hash=\'#sel2\';' : '');
+						$content .= $this->elementWrapper['wizardPart'][0] . '<input type="radio" name="tempB" value="' . htmlspecialchars($k) . '" onclick="' . htmlspecialchars($oC) . '" />' . $this->elementWrapper['wizardPart'][1];
+						// Onclick action for icon/title:
+						$aOnClick = 'document.getElementsByName(\'tempB\')[' . $cc . '].checked=1;' . $oC . 'return false;';
+					} else {
+						$aOnClick = "document.editForm.defValues.value=unescape('".rawurlencode($wInfo['params'])."');goToalt_doc();".(!$this->onClickEvent?"window.location.hash='#sel2';":'');
+					}
+
 					// Icon:
 					$iInfo = @getimagesize($wInfo['icon']);
 					$content .= $this->elementWrapper['wizardPart'][0] . '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">
@@ -417,8 +449,6 @@ class NewContentElementController {
 	 * @todo Define visibility
 	 */
 	public function removeInvalidElements(&$wizardItems) {
-		// Load full table definition:
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA('tt_content');
 		// Get TCEFORM from TSconfig of current page
 		$row = array('pid' => $this->id);
 		$TCEFORM_TSconfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getTCEFORM_TSconfig('tt_content', $row);

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\IndexedSearch;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2001-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2001-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -353,7 +353,13 @@ class Indexer {
 		$this->conf['gr_list'] = '0,-1';
 		// Group list (hardcoded for now...)
 		// cHash values:
-		$this->conf['cHash'] = $createCHash ? \TYPO3\CMS\Core\Utility\GeneralUtility::generateCHash(\TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', $cHash_array)) : '';
+		if ($createCHash) {
+			/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
+			$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
+			$this->conf['cHash'] = $cacheHash->generateForParameters(\TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', $cHash_array));
+		} else {
+			$this->conf['cHash'] = '';
+		}
 		// cHash string for additional parameters
 		$this->conf['cHash_array'] = $cHash_array;
 		// Array of the additional parameters
@@ -828,7 +834,7 @@ class Indexer {
 	 * @todo Define visibility
 	 */
 	public function extractHyperLinks($html) {
-		$htmlParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_parseHtml');
+		$htmlParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Html\HtmlParser');
 		$htmlParts = $htmlParser->splitTags('a', $html);
 		$hyperLinksData = array();
 		foreach ($htmlParts as $index => $tagData) {
@@ -857,7 +863,7 @@ class Indexer {
 	 */
 	public function extractBaseHref($html) {
 		$href = '';
-		$htmlParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_parseHtml');
+		$htmlParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Html\HtmlParser');
 		$htmlParts = $htmlParser->splitTags('base', $html);
 		foreach ($htmlParts as $index => $tagData) {
 			if ($index % 2 !== 0) {
@@ -1094,7 +1100,7 @@ class Indexer {
 	/**
 	 * Indexing a regular document given as $file (relative to PATH_site, local file)
 	 *
-	 * @param 	string		Relative Filename, relative to PATH_site. It can also be an absolute path as long as it is inside the lockRootPath (validated with t3lib_div::isAbsPath()). Finally, if $contentTmpFile is set, this value can be anything, most likely a URL
+	 * @param 	string		Relative Filename, relative to PATH_site. It can also be an absolute path as long as it is inside the lockRootPath (validated with \TYPO3\CMS\Core\Utility\GeneralUtility::isAbsPath()). Finally, if $contentTmpFile is set, this value can be anything, most likely a URL
 	 * @param 	boolean		If set, indexing is forced (despite content hashes, mtime etc).
 	 * @param 	string		Temporary file with the content to read it from (instead of $file). Used when the $file is a URL.
 	 * @param 	string		File extension for temporary file.

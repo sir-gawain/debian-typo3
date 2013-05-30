@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Backend\Search\LiveSearch\ExtDirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Michael Klapper <michael.klapper@aoemedia.de>
- *  (c) 2010-2011 Jeff Segars <jeff@webempoweredchurch.org>
+ *  (c) 2009-2013 Michael Klapper <michael.klapper@aoemedia.de>
+ *  (c) 2010-2013 Jeff Segars <jeff@webempoweredchurch.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -57,8 +57,6 @@ class LiveSearchDataProvider {
 	 * Initialize the live search
 	 */
 	public function __construct() {
-		// @todo Use the autoloader for this. Not sure why its not working.
-		require_once PATH_t3lib . 'search/class.t3lib_search_livesearch_queryParser.php';
 		$this->liveSearch = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Search\\LiveSearch\\LiveSearch');
 		$this->queryParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Search\\LiveSearch\\QueryParser');
 	}

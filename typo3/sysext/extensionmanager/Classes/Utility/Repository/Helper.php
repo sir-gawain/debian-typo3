@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Utility\Repository;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010 Marcus Krause <marcus#exp2010@t3sec.info>
+ * (c) 2010-2013 Marcus Krause <marcus#exp2010@t3sec.info>
  * Steffen Kamper <info@sk-typo3.de>
  * All rights reserved
  *
@@ -135,7 +135,7 @@ class Helper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $remoteResource remote resource to read contents from
 	 * @param string $localResource local resource (absolute file path) to store retrieved contents to
 	 * @return void
-	 * @see t3lib_div::getUrl(), t3lib_div::writeFile()
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(), \TYPO3\CMS\Core\Utility\GeneralUtility::writeFile()
 	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
 	 */
 	protected function fetchFile($remoteResource, $localResource) {
@@ -288,8 +288,10 @@ class Helper implements \TYPO3\CMS\Core\SingletonInterface {
 			if ($updateNecessity & self::PROBLEM_NO_VERSIONS_IN_DATABASE) {
 				$updateNecessity &= ~self::PROBLEM_NO_VERSIONS_IN_DATABASE;
 			} else {
-				// using straight sql here as extbases "remove" runs into memory problems
-				$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_extensionmanager_domain_model_extension', 'repository=' . $this->repository->getUid());
+				// Use straight query as extbase "remove" is too slow here
+				// This truncates the whole table. It would be more correct to remove only rows of a specific
+				// repository, but multiple repository handling is not implemented, and truncate is quicker.
+				$this->getDatabaseConnection()->exec_TRUNCATEquery('tx_extensionmanager_domain_model_extension');
 			}
 			// no further problems - start of import process
 			if ($updateNecessity === 0) {
@@ -301,6 +303,15 @@ class Helper implements \TYPO3\CMS\Core\SingletonInterface {
 			}
 		}
 		return $updated;
+	}
+
+	/**
+	 * Get database connection
+	 *
+	 * @return \TYPO3\CMS\Core\Database\DatabaseConnection
+	 */
+	protected function getDatabaseConnection() {
+		return $GLOBALS['TYPO3_DB'];
 	}
 
 }

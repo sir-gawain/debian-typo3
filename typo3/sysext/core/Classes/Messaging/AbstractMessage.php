@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\Messaging;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
- *  (c) 2010-2011 Benjamin Mack <benni@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
+ *  (c) 2010-2013 Benjamin Mack <benni@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -102,7 +102,7 @@ abstract class AbstractMessage {
 	/**
 	 * Gets the message' severity.
 	 *
-	 * @return integer The message' severity, either of t3lib_message_AbstractMessage::INFO,
+	 * @return integer The message' severity, must be one of AbstractMessage::INFO or similar contstants
 	 */
 	public function getSeverity() {
 		return $this->severity;
@@ -111,7 +111,7 @@ abstract class AbstractMessage {
 	/**
 	 * Sets the message' severity
 	 *
-	 * @param integer $severity The severity, must be either of t3lib_message_AbstractMessage::INFO,
+	 * @param integer $severity The severity, must be one of AbstractMessage::INFO or similar constants
 	 * @return void
 	 */
 	public function setSeverity($severity = self::OK) {

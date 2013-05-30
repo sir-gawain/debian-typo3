@@ -1,22 +1,39 @@
 
+.typo3-extensionmanager-headerRowLeft {
+	display: inline-block;
+
+	.typo3-extensionmanager-searchTerFieldWrapper {
+		display: inline-block;
+		position: relative;
+
+		input {
+			height: 15px;
+		}
+
+		.t3-icon-input-clear {
+			position: absolute;
+			right: 3px;
+			top: 4px;
+		}
+	}
+}
+
 // Upload extension
+.headerRow { overflow: auto; width: 100% }
+
+.typo3-extensionmanager-headerRowLeft {
+	float: left;
+}
+
 .typo3-extensionmanager-headerRowRight {
 	float: right;
 }
 
+.ui-toolbar {
+	margin-bottom: 5px;
 
-// Search
-.contentWrapper {
-	@include linear-gradient(#ececec, rgb(255,255,255) 0, rgb(236,236,236) 36%);
-	padding: 15px;
-	border: 1px solid #adadad;
-
-	.ui-toolbar {
-		margin-bottom: 5px;
-
-		.dataTables_filter {
-			float: left;
-		}
+	.dataTables_filter {
+		float: left;
 	}
 }
 
@@ -29,7 +46,7 @@
 
 	// Header
 	thead {
-		@include linear-gradient(#5b5b5b, #7f7f7f 10%, #5b5b5b 100%);
+		background-color: #666;
 
 		tr {
 			background: none !important;
@@ -53,6 +70,7 @@
 		color: #fff;
 
 		cursor: pointer;
+		white-space: nowrap;
 
 
 		&:hover {
@@ -84,13 +102,13 @@
 				td {
 					background: none;
 
-					&.stable {
-						@include stable;
-					}
-
-					&.beta {
-						@include beta;
-					}
+					&.alpha { @include alpha; }
+					&.beta { @include beta; }
+					&.stable { @include stable; }
+					&.experimental { @include experimental; }
+					&.test { @include test; }
+					&.obsolete { @include obsolete; }
+					&.excludeFromUpdates { @include excludeFromUpdates; }
 				}
 			}
 		}
@@ -100,15 +118,18 @@
 			background: none;
 			padding: 8px 10px;
 			vertical-align: middle;
-			border-bottom: 1px solid #fff;
 
-			&.stable {
-				@include stable;
+			&.state {
+				width: 70px;
 			}
 
-			&.beta {
-				@include beta;
-			}
+			&.alpha { @include alpha; }
+			&.beta { @include beta; }
+			&.stable { @include stable; }
+			&.experimental { @include experimental; }
+			&.test { @include test; }
+			&.obsolete { @include obsolete; }
+			&.excludeFromUpdates { @include excludeFromUpdates; }
 
 			img {
 				vertical-align: middle;
@@ -148,3 +169,31 @@
 
 
 
+.uploadForm {
+	background-color: #ededed;
+	border-top: 1px solid #cdcdcd;
+	border-bottom: 1px solid #cdcdcd;
+	padding: 12px;
+	margin-bottom: 24px;
+
+	form {
+		.control-group {
+			clear: both;
+			margin-bottom: 5px;
+		}
+
+		label {
+			float: left;
+			height: 20px;
+			padding: 4px 0;
+			line-height: 20px;
+			width: 90px;
+		}
+
+		.control {
+			min-height: 20px;
+			padding: 4px 0;
+			margin-left: 110px;
+		}
+	}
+}

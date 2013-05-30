@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Beuser\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Felix Kopp <felix-source@phorax.com>
+ *  (c) 2012-2013 Felix Kopp <felix-source@phorax.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Beuser\ViewHelpers;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Issue command ViewHelper, see TYPO3 Core Engine method issueCommand
  *
@@ -36,9 +37,9 @@ class IssueCommandViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 	 * Returns a URL with a command to TYPO3 Core Engine (tce_db.php)
 	 *
 	 * @param string $parameters Is a set of GET params to send to tce_db.php. Example: "&cmd[tt_content][123][move]=456" or "&data[tt_content][123][hidden]=1&data[tt_content][123][title]=Hello%20World
-	 * @param string $redirectUrl Redirect URL if any other that t3lib_div::getIndpEnv('REQUEST_URI') is wished
+	 * @param string $redirectUrl Redirect URL if any other that \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI') is wished
 	 * @return string URL to tce_db.php + parameters
-	 * @see t3lib_BEfunc::editOnClick()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::editOnClick()
 	 * @see template::issueCommand()
 	 */
 	public function render($parameters, $redirectUrl = '') {

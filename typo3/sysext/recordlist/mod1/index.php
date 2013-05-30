@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -38,7 +38,7 @@
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
-$LANG->includeLLFile('EXT:lang/locallang_mod_web_list.xml');
+$LANG->includeLLFile('EXT:lang/locallang_mod_web_list.xlf');
 $BE_USER->modAccess($MCONF, 1);
 \TYPO3\CMS\Backend\Utility\BackendUtility::lockRecords();
 /*

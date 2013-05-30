@@ -30,11 +30,11 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '6.0.0',
-	'_md5_values_when_last_written' => 'a:4:{s:31:"class.tx_extrapagecmoptions.php";s:4:"acf5";s:12:"ext_icon.gif";s:4:"955b";s:14:"ext_tables.php";s:4:"ac39";s:13:"locallang.xlf";s:4:"db7f";}',
+	'version' => '6.1.0',
+	'_md5_values_when_last_written' => '',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '6.0.0-0.0.0'
+			'typo3' => '6.1.0-6.1.99',
 		),
 		'conflicts' => array(),
 		'suggests' => array()

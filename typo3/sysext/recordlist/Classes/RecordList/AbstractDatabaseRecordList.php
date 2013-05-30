@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Recordlist\RecordList;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -388,8 +388,6 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 			// Checking if the table should be rendered:
 			// Checks that we see only permitted/requested tables:
 			if ((!$this->table || $tableName == $this->table) && (!$this->tableList || \TYPO3\CMS\Core\Utility\GeneralUtility::inList($this->tableList, $tableName)) && $GLOBALS['BE_USER']->check('tables_select', $tableName)) {
-				// Load full table definitions:
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($tableName);
 				// Don't show table if hidden by TCA ctrl section
 				$hideTable = $GLOBALS['TCA'][$tableName]['ctrl']['hideTable'] ? TRUE : FALSE;
 				// Don't show table if hidden by pageTSconfig mod.web_list.hideTables
@@ -452,7 +450,7 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 		}
 		// Make level selector:
 		$opt = array();
-		$parts = explode('|', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.enterSearchLevels'));
+		$parts = explode('|', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.enterSearchLevels'));
 		foreach ($parts as $kv => $label) {
 			$opt[] = '<option value="' . $kv . '"' . ($kv == intval($this->searchLevels) ? ' selected="selected"' : '') . '>' . htmlspecialchars($label) . '</option>';
 		}
@@ -466,13 +464,13 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 				-->
 				<table border="0" cellpadding="0" cellspacing="0" id="typo3-dblist-search">
 					<tr>
-						<td><label for="search_field">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.enterSearchString', 1) . '</label></td>
+						<td><label for="search_field">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.enterSearchString', 1) . '</label></td>
 						<td><input type="text" name="search_field" id="search_field" value="' . htmlspecialchars($this->searchString) . '"' . $GLOBALS['TBE_TEMPLATE']->formWidth(10) . ' /></td>
 						<td>' . $lMenu . '</td>
-						<td><input type="submit" name="search" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.search', 1) . '" /></td>
+						<td><input type="submit" name="search" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.search', 1) . '" /></td>
 					</tr>
 					<tr>
-						<td><label for="showLimit">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showRecords', 1) . ':</label></td>
+						<td><label for="showLimit">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showRecords', 1) . ':</label></td>
 						<td colspan="3"><input type="text" name="showLimit" id="showLimit" value="' . htmlspecialchars(($this->showLimit ? $this->showLimit : '')) . '"' . $GLOBALS['TBE_TEMPLATE']->formWidth(4) . ' /></td>
 					</tr>
 				</table>
@@ -624,8 +622,6 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 			$result = ' AND 0=1';
 			$searchableFields = $this->getSearchFields($table);
 			if (count($searchableFields) > 0) {
-				// Loading full table description - we need to traverse fields:
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 				if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($this->searchString)) {
 					$whereParts = array(
 						'uid=' . $this->searchString
@@ -741,11 +737,11 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 		$origCode = $code;
 		// If the title is blank, make a "no title" label:
 		if (!strcmp($code, '')) {
-			$code = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.no_title', 1) . ']</i> - ' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs(\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($table, $row), $GLOBALS['BE_USER']->uc['titleLen']));
+			$code = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', 1) . ']</i> - ' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs(\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($table, $row), $GLOBALS['BE_USER']->uc['titleLen']));
 		} else {
-			$code = htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($code, $this->fixedL));
+			$code = htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($code, $this->fixedL), ENT_QUOTES, 'UTF-8', FALSE);
 			if ($code != htmlspecialchars($origCode)) {
-				$code = '<span title="' . htmlspecialchars($origCode) . '">' . $code . '</span>';
+				$code = '<span title="' . htmlspecialchars($origCode, ENT_QUOTES, 'UTF-8', FALSE) . '">' . $code . '</span>';
 			}
 		}
 		switch ((string) $this->clickTitleMode) {
@@ -766,7 +762,7 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 		case 'show':
 			// "Show" link (only pages and tt_content elements)
 			if ($table == 'pages' || $table == 'tt_content') {
-				$code = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick(($table == 'tt_content' ? $this->id . '#' . $row['uid'] : $row['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '">' . $code . '</a>';
+				$code = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick(($table == 'tt_content' ? $this->id . '#' . $row['uid'] : $row['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', 1) . '">' . $code . '</a>';
 			}
 			break;
 		case 'info':
@@ -881,7 +877,6 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 		$fieldListArr = array();
 		// Check table:
 		if (is_array($GLOBALS['TCA'][$table]) && isset($GLOBALS['TCA'][$table]['columns']) && is_array($GLOBALS['TCA'][$table]['columns'])) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			if (isset($GLOBALS['TCA'][$table]['columns']) && is_array($GLOBALS['TCA'][$table]['columns'])) {
 				// Traverse configured columns and add them to field array, if available for user.
 				foreach ($GLOBALS['TCA'][$table]['columns'] as $fN => $fieldValue) {
@@ -925,12 +920,13 @@ class AbstractDatabaseRecordList extends \TYPO3\CMS\Backend\RecordList\AbstractR
 	}
 
 	/**
-	 * Creates an instance of t3lib_pageTree which will select a page tree to $depth and return the object. In that object we will find the ids of the tree.
+	 * Creates an instance of \TYPO3\CMS\Backend\Tree\View\PageTreeView which will select a page
+	 * tree to $depth and return the object. In that object we will find the ids of the tree.
 	 *
 	 * @param integer $id Page id.
 	 * @param integer $depth Depth to go down.
 	 * @param string $perms_clause Select clause
-	 * @return object t3lib_pageTree instance with created list of ids.
+	 * @return \TYPO3\CMS\Backend\Tree\View\PageTreeView instance with created list of ids.
 	 * @todo Define visibility
 	 */
 	public function getTreeObject($id, $depth, $perms_clause) {

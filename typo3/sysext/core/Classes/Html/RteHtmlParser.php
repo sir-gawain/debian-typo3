@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Html;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -80,7 +80,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 	/**
 	 * @todo Define visibility
 	 */
-	public $procOptions = '';
+	public $procOptions = array();
 
 	// Internal, dynamic
 	// Run-away brake for recursive calls.
@@ -151,12 +151,12 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 
 	/**
 	 * Evaluate the environment for editing a staticFileEdit file.
-	 * Called for almost all fields being saved in the database. Is called without an instance of the object: t3lib_parsehtml_proc::evalWriteFile()
+	 * Called for almost all fields being saved in the database. Is called without
+	 * an instance of \TYPO3\CMS\Core\Html\RteHtmlParser::evalWriteFile()
 	 *
 	 * @param array $pArr Parameters for the current field as found in types-config
 	 * @param array $currentRecord Current record we are editing.
 	 * @return mixed On success an array with various information is returned, otherwise a string with an error message
-	 * @see t3lib_TCEmain, t3lib_transferData
 	 */
 	static public function evalWriteFile($pArr, $currentRecord) {
 		// Write file configuration:
@@ -203,13 +203,12 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 	 * @param string Direction of the transformation. Two keywords are allowed; "db" or "rte". If "db" it means the transformation will clean up content coming from the Rich Text Editor and goes into the database. The other direction, "rte", is of course when content is coming from database and must be transformed to fit the RTE.
 	 * @param array Parsed TypoScript content configuring the RTE, probably coming from Page TSconfig.
 	 * @return string Output value
-	 * @see t3lib_TCEmain::fillInFieldArray(), t3lib_transferData::renderRecord_typesProc()
 	 * @todo Define visibility
 	 */
 	public function RTE_transform($value, $specConf, $direction = 'rte', $thisConfig = array()) {
 		// Init:
 		$this->tsConfig = $thisConfig;
-		$this->procOptions = $thisConfig['proc.'];
+		$this->procOptions = (array) $thisConfig['proc.'];
 		$this->preserveTags = strtoupper(implode(',', \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->procOptions['preserveTags'])));
 		// dynamic configuration of blockElementList
 		if ($this->procOptions['blockElementList']) {
@@ -277,9 +276,13 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 					case 'ts_transform':
 
 					case 'css_transform':
-						// Has a very disturbing effect, so just remove all '13' - depend on '10'
-						$value = str_replace(CR, '', $value);
 						$this->allowedClasses = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->procOptions['allowedClasses'], 1);
+						// CR has a very disturbing effect, so just remove all CR and rely on LF
+						$value = str_replace(CR, '', $value);
+						// Transform empty paragraphs into spacing paragraphs
+						$value = str_replace('<p></p>', '<p>&nbsp;</p>', $value);
+						// Double any trailing spacing paragraph so that it does not get removed by divideIntoLines()
+						$value = preg_replace('/<p>&nbsp;<\/p>$/', '<p>&nbsp;</p>' . '<p>&nbsp;</p>', $value);
 						$value = $this->TS_transform_db($value, $cmd == 'css_transform');
 						break;
 					case 'ts_strip':
@@ -740,7 +743,9 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 				$link_param = $tagCode[1];
 				$href = '';
 				// Parsing the typolink data. This parsing is roughly done like in tslib_content->typolink()
-				if (strstr($link_param, '@')) {
+				// Parse URL:
+				$pU = parse_url($link_param);
+				if (strstr($link_param, '@') && (!$pU['scheme'] || $pU['scheme'] == 'mailto')) {
 					// mailadr
 					$href = 'mailto:' . preg_replace('/^mailto:/i', '', $link_param);
 				} elseif (substr($link_param, 0, 1) == '#') {
@@ -754,8 +759,6 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 					} else {
 						$fileChar = intval(strpos($link_param, '/'));
 						$urlChar = intval(strpos($link_param, '.'));
-						// Parse URL:
-						$pU = parse_url($link_param);
 						// Detects if a file is found in site-root.
 						list($rootFileDat) = explode('?', $link_param);
 						$rFD_fI = pathinfo($rootFileDat);
@@ -951,7 +954,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 						if (!isset($this->procOptions['typolist']) || $this->procOptions['typolist']) {
 							$parts = $this->getAllParts($this->splitIntoBlock('LI', $this->removeFirstAndLastTag($blockSplit[$k])), 1, 0);
 							foreach ($parts as $k2 => $value) {
-								$parts[$k2] = preg_replace('/[' . preg_quote((LF . CR)) . ']+/', '', $parts[$k2]);
+								$parts[$k2] = preg_replace('/[' . LF . CR . ']+/', '', $parts[$k2]);
 								// remove all linesbreaks!
 								$parts[$k2] = $this->defaultTStagMapping($parts[$k2], 'db');
 								$parts[$k2] = $this->cleanFontTags($parts[$k2], 0, 0, 0);
@@ -965,7 +968,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 							$blockSplit[$k] = '<typolist' . $params . '>' . LF . implode(LF, $parts) . LF . '</typolist>' . $lastBR;
 						}
 					} else {
-						$blockSplit[$k] = preg_replace(('/[' . preg_quote((LF . CR)) . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+						$blockSplit[$k] = preg_replace(('/[' . LF . CR . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 					}
 					break;
 				case 'table':
@@ -973,7 +976,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 					if (!$this->procOptions['preserveTables'] && !$css) {
 						$blockSplit[$k] = $this->TS_transform_db($this->removeTables($blockSplit[$k]));
 					} else {
-						$blockSplit[$k] = preg_replace(('/[' . preg_quote((LF . CR)) . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+						$blockSplit[$k] = preg_replace(('/[' . LF . CR . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 					}
 					break;
 				case 'h1':
@@ -999,12 +1002,12 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 						}
 					} else {
 						// Eliminate true linebreaks inside Hx tags
-						$blockSplit[$k] = preg_replace(('/[' . preg_quote((LF . CR)) . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+						$blockSplit[$k] = preg_replace(('/[' . LF . CR . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 					}
 					break;
 				default:
 					// Eliminate true linebreaks inside other headlist tags
-					$blockSplit[$k] = preg_replace(('/[' . preg_quote((LF . CR)) . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+					$blockSplit[$k] = preg_replace(('/[' . LF . CR . ']+/'), ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 					break;
 				}
 			} else {
@@ -1012,11 +1015,11 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 				if (strcmp(trim($blockSplit[$k]), '')) {
 					$blockSplit[$k] = preg_replace('/<hr\\/>/', '<hr />', $blockSplit[$k]);
 					// Remove linebreaks preceding hr tags
-					$blockSplit[$k] = preg_replace('/[' . preg_quote((LF . CR)) . ']+<(hr)(\\s[^>\\/]*)?[[:space:]]*\\/?>/', '<$1$2/>', $blockSplit[$k]);
+					$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+<(hr)(\\s[^>\\/]*)?[[:space:]]*\\/?>/', '<$1$2/>', $blockSplit[$k]);
 					// Remove linebreaks following hr tags
-					$blockSplit[$k] = preg_replace('/<(hr)(\\s[^>\\/]*)?[[:space:]]*\\/?>[' . preg_quote((LF . CR)) . ']+/', '<$1$2/>', $blockSplit[$k]);
+					$blockSplit[$k] = preg_replace('/<(hr)(\\s[^>\\/]*)?[[:space:]]*\\/?>[' . LF . CR . ']+/', '<$1$2/>', $blockSplit[$k]);
 					// Replace other linebreaks with space
-					$blockSplit[$k] = preg_replace('/[' . preg_quote((LF . CR)) . ']+/', ' ', $blockSplit[$k]);
+					$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+/', ' ', $blockSplit[$k]);
 					$blockSplit[$k] = $this->divideIntoLines($blockSplit[$k]) . $lastBR;
 					$blockSplit[$k] = $this->transformStyledATags($blockSplit[$k]);
 				} else {
@@ -1065,8 +1068,9 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 	 * @todo Define visibility
 	 */
 	public function TS_transform_rte($value, $css = 0) {
-		// Split the content from Database by the occurence of these blocks:
-		$blockSplit = $this->splitIntoBlock('TABLE,BLOCKQUOTE,TYPOLIST,TYPOHEAD,' . ($this->procOptions['preserveDIVSections'] ? 'DIV,' : '') . $this->blockElementList, $value);
+		// Split the content from database by the occurence of the block elements
+		$blockElementList = 'TABLE,BLOCKQUOTE,TYPOLIST,TYPOHEAD,' . ($this->procOptions['preserveDIVSections'] ? 'DIV,' : '') . $this->blockElementList;
+		$blockSplit = $this->splitIntoBlock($blockElementList, $value);
 		// Traverse the blocks
 		foreach ($blockSplit as $k => $v) {
 			if ($k % 2) {
@@ -1125,13 +1129,19 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 			} else {
 				// NON-block:
 				$nextFTN = $this->getFirstTagName($blockSplit[$k + 1]);
-				$singleLineBreak = $blockSplit[$k] == LF;
-				if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList('TABLE,BLOCKQUOTE,TYPOLIST,TYPOHEAD,' . ($this->procOptions['preserveDIVSections'] ? 'DIV,' : '') . $this->blockElementList, $nextFTN)) {
-					// Removing linebreak if typolist/typohead
-					$blockSplit[$k] = preg_replace('/' . LF . '[ ]*$/', '', $blockSplit[$k]);
+				$onlyLineBreaks = (preg_match('/^[ ]*' . LF . '+[ ]*$/', $blockSplit[$k]) == 1);
+				// If the line is followed by a block or is the last line:
+				if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($blockElementList, $nextFTN) || !isset($blockSplit[$k + 1])) {
+					// If the line contains more than just linebreaks, reduce the number of trailing linebreaks by 1
+					if (!$onlyLineBreaks) {
+						$blockSplit[$k] = preg_replace('/(' . LF . '*)' . LF . '[ ]*$/', '$1', $blockSplit[$k]);
+					} else {
+						// If the line contains only linebreaks, remove the leading linebreak
+						$blockSplit[$k] = preg_replace('/^[ ]*' . LF . '/', '', $blockSplit[$k]);
+					}
 				}
-				// If $blockSplit[$k] is blank then unset the line. UNLESS the line happend to be a single line break.
-				if (!strcmp($blockSplit[$k], '') && !$singleLineBreak) {
+				// If $blockSplit[$k] is blank then unset the line, unless the line only contained linebreaks
+				if (!strcmp($blockSplit[$k], '') && !$onlyLineBreaks) {
 					unset($blockSplit[$k]);
 				} else {
 					$blockSplit[$k] = $this->setDivTags($blockSplit[$k], $this->procOptions['useDIVasParagraphTagForRTE'] ? 'div' : 'p');
@@ -1164,7 +1174,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 	 *
 	 * @param string $url Filepath/URL to read
 	 * @return string The content from the resource given as input.
-	 * @see t3lib_div::getUrl()
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl()
 	 * @todo Define visibility
 	 */
 	public function getUrl($url) {
@@ -1347,8 +1357,8 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 		if (count($divSplit) <= 1 || $count <= 0) {
 			// Wrap hr tags with LF's
 			$newValue = preg_replace('/<(hr)(\\s[^>\\/]*)?[[:space:]]*\\/?>/i', LF . '<$1$2/>' . LF, $value);
-			$newValue = preg_replace('/' . preg_quote((LF . LF)) . '/i', LF, $newValue);
-			$newValue = preg_replace('/(^' . preg_quote(LF) . ')|(' . preg_quote(LF) . '$)/i', '', $newValue);
+			$newValue = preg_replace('/' . LF . LF . '/i', LF, $newValue);
+			$newValue = preg_replace('/(^' . LF . ')|(' . LF . '$)/i', '', $newValue);
 			return $newValue;
 		}
 		// Traverse the splitted sections:
@@ -1436,8 +1446,8 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 				$divSplit[$k] = trim(strip_tags($divSplit[$k], '<' . implode('><', $allowTagsOutside) . '>'));
 				// Wrap hr tags with LF's
 				$divSplit[$k] = preg_replace('/<(hr)(\\s[^>\\/]*)?[[:space:]]*\\/?>/i', LF . '<$1$2/>' . LF, $divSplit[$k]);
-				$divSplit[$k] = preg_replace('/' . preg_quote((LF . LF)) . '/i', LF, $divSplit[$k]);
-				$divSplit[$k] = preg_replace('/(^' . preg_quote(LF) . ')|(' . preg_quote(LF) . '$)/i', '', $divSplit[$k]);
+				$divSplit[$k] = preg_replace('/' . LF . LF . '/i', LF, $divSplit[$k]);
+				$divSplit[$k] = preg_replace('/(^' . LF . ')|(' . LF . '$)/i', '', $divSplit[$k]);
 				if (!strcmp($divSplit[$k], '')) {
 					unset($divSplit[$k]);
 				}
@@ -1542,8 +1552,8 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 	/**
 	 * Returns SiteURL based on thisScript.
 	 *
-	 * @return string Value of t3lib_div::getIndpEnv('TYPO3_SITE_URL');
-	 * @see t3lib_div::getIndpEnv()
+	 * @return string Value of \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv()
 	 * @todo Define visibility
 	 */
 	public function siteUrl() {

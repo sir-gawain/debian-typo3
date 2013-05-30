@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Configuration\TypoScript\ConditionMatching;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Oliver Hader <oliver@typo3.org>
+ *  (c) 2009-2013 Oliver Hader <oliver@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -41,7 +41,7 @@ class ConditionMatcher extends \TYPO3\CMS\Core\Configuration\TypoScript\Conditio
 	 *
 	 * @param string $string The condition to match against its criterias.
 	 * @return boolean Whether the condition matched
-	 * @see t3lib_tsparser::parse()
+	 * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser::parse()
 	 */
 	protected function evaluateCondition($string) {
 		list($key, $value) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('=', $string, FALSE, 2);

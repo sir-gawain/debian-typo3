@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Domain\Model;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,10 +25,11 @@ namespace TYPO3\CMS\Belog\Domain\Model;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Stub model for workspaces - only properties required for belog module are added currently
  *
- * @TODO : This should be extended and put at some more central place
+ * @todo : This should be extended and put at some more central place
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class Workspace extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
@@ -37,10 +38,12 @@ class Workspace extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * @var integer
 	 */
 	const UID_LIVE_WORKSPACE = 0;
+
 	/**
 	 * @var integer
 	 */
 	const UID_ANY_WORKSPACE = -99;
+
 	/**
 	 * title of the workspace
 	 *
@@ -68,6 +71,5 @@ class Workspace extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 }
-
 
 ?>

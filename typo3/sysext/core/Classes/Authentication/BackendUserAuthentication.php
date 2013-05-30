@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Authentication;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -313,7 +313,6 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 		'edit_showFieldHelp' => 'icon',
 		'edit_RTE' => '1',
 		'edit_docModuleUpload' => '1',
-		'enableFlashUploader' => '1',
 		'navFrameWidth' => '',
 		// Default is 245 pixels
 		'navFrameResizable' => 0,
@@ -419,7 +418,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 		}
 		$id = intval($id);
 		// Check if input id is an offline version page in which case we will map id to the online version:
-		$checkRec = \t3lib_beFUnc::getRecord('pages', $id, 'pid,t3ver_oid');
+		$checkRec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('pages', $id, 'pid,t3ver_oid');
 		if ($checkRec['pid'] == -1) {
 			$id = intval($checkRec['t3ver_oid']);
 		}
@@ -652,7 +651,6 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 			}
 			break;
 		case 'individual':
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$field])) {
 				$items = $GLOBALS['TCA'][$table]['columns'][$field]['config']['items'];
 				if (is_array($items)) {
@@ -749,7 +747,6 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 	 */
 	public function recordEditAccessInternals($table, $idOrRow, $newRecord = FALSE, $deletedRecord = FALSE, $checkFullLanguageAccess = FALSE) {
 		if (isset($GLOBALS['TCA'][$table])) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// Always return TRUE for Admin users.
 			if ($this->isAdmin()) {
 				return TRUE;
@@ -1118,51 +1115,6 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 	}
 
 	/**
-	 * Workspace Versioning type access. Check wether the requsted type of versioning (element/page/branch) is allowd in current workspace
-	 * (element/pages/branches type of versioning can/could be set on custom workspaces on filed "vtype")
-	 *
-	 * @todo workspacecleanup: this seems mostly obsolete and should be removed
-	 * @todo Define visibility
-	 * @param integer $type Versioning type to evaluation: -1, 0, >1
-	 * @return boolean TRUE if OK
-	 * @deprecated since TYPO3 4.4, will be removed in TYPO3 6.0 as only element versioning is supported now
-	 */
-	public function workspaceVersioningTypeAccess($type) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		$type = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($type, -1);
-		// only element versioning is allowed now
-		return $type == -1;
-	}
-
-	/**
-	 * Finding "closest" versioning type, used for creation of new records.
-	 *
-	 * @see workspaceVersioningTypeAccess() for hints on $type
-	 * @param integer $type Versioning type to evaluation: -1, 0, >1
-	 * @return integer Returning versioning type
-	 * @deprecated since TYPO3 4.4, will be removed in TYPO3 6.0 as only element versioning is supported now
-	 * @todo Define visibility
-	 */
-	public function workspaceVersioningTypeGetClosest($type) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		$type = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($type, -1);
-		if ($this->workspace > 0) {
-			switch ((int) $type) {
-			case -1:
-				$type = -1;
-				break;
-			case 0:
-				$type = $this->workspaceVersioningTypeAccess($type) ? $type : -1;
-				break;
-			default:
-				$type = $this->workspaceVersioningTypeAccess($type) ? $type : ($this->workspaceVersioningTypeAccess(0) ? 0 : -1);
-				break;
-			}
-		}
-		return $type;
-	}
-
-	/**
 	 * Returns the value/properties of a TS-object as given by $objectString, eg. 'options.dontMountAdminMounts'
 	 * Nice (general!) function for returning a part of a TypoScript array!
 	 *
@@ -1220,20 +1172,6 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 	}
 
 	/**
-	 * Returns TRUE if $item is in $in_list
-	 *
-	 * @param string $in_list Comma list with items, no spaces between items!
-	 * @param string $item The string to find in the list of items
-	 * @return string Boolean
-	 * @deprecated since TYPO3 4.7, should be removed in TYPO3 6.1, use equivalent function t3lib_div::inList()
-	 * @todo Define visibility
-	 */
-	public function inList($in_list, $item) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		return \TYPO3\CMS\Core\Utility\GeneralUtility::inList($in_list, $item);
-	}
-
-	/**
 	 * Returns an array with the webmounts.
 	 * If no webmounts, and empty array is returned.
 	 * NOTICE: Deleted pages WILL NOT be filtered out! So if a mounted page has been deleted it is STILL coming out as a webmount. This is not checked due to performance.
@@ -1278,12 +1216,12 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 
 	/**
 	 * Initializes a lot of stuff like the access-lists, database-mountpoints and filemountpoints
-	 * This method is called by ->backendCheckLogin() (from extending class t3lib_beuserauth) if the backend user login has verified OK.
+	 * This method is called by ->backendCheckLogin() (from extending \TYPO3\CMS\Core\Authentication\BackendUserAuthentication) if the backend user login has verified OK.
 	 * Generally this is required initialization of a backend user.
 	 *
 	 * @return void
 	 * @access private
-	 * @see t3lib_TSparser
+	 * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser
 	 * @todo Define visibility
 	 */
 	public function fetchGroupData() {
@@ -1522,11 +1460,11 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 					$storageObject = $storageRepository->findByUid($userHomeStorageUid);
 					// First try and mount with [uid]_[username]
 					$userHomeFilterIdentifier = $userHomeFilter . $this->user['uid'] . '_' . $this->user['username'] . $GLOBALS['TYPO3_CONF_VARS']['BE']['userUploadDir'];
-					$didMount = $storageObject->injectFileMount($userHomeFilterIdentifier);
+					$didMount = $storageObject->addFileMount($userHomeFilterIdentifier);
 					// If that failed, try and mount with only [uid]
 					if (!$didMount) {
 						$userHomeFilterIdentifier = $userHomeFilter . $this->user['uid'] . '_' . $this->user['username'] . $GLOBALS['TYPO3_CONF_VARS']['BE']['userUploadDir'];
-						$storageObject->injectFileMount($userHomeFilterIdentifier);
+						$storageObject->addFileMount($userHomeFilterIdentifier);
 					}
 					$this->fileStorages[$storageObject->getUid()] = $storageObject;
 				}
@@ -1540,7 +1478,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 					$storageObject = $storageRepository->findByUid($groupHomeStorageUid);
 					foreach ($this->userGroups as $groupUid => $groupData) {
 						$groupHomeFilterIdentifier = $groupHomeFilter . $groupData['uid'];
-						$storageObject->injectFileMount($groupHomeFilterIdentifier);
+						$storageObject->addFileMount($groupHomeFilterIdentifier);
 					}
 					$this->fileStorages[$storageObject->getUid()] = $storageObject;
 				}
@@ -1552,7 +1490,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'sys_filemounts', 'deleted=0 AND hidden=0 AND pid=0 AND uid IN (' . $this->dataLists['filemount_list'] . ')', '', $orderBy);
 				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					$storageObject = $storageRepository->findByUid($row['base']);
-					$storageObject->injectFileMount($row['path'], $row);
+					$storageObject->addFileMount($row['path'], $row);
 					$this->fileStorages[$storageObject->getUid()] = $storageObject;
 				}
 				$GLOBALS['TYPO3_DB']->sql_free_result($res);
@@ -1561,7 +1499,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 		// Injects the users' permissions to each storage
 		foreach ($this->fileStorages as $storageObject) {
 			$storagePermissions = $this->getFilePermissionsForStorage($storageObject);
-			$storageObject->injectUserPermissions($storagePermissions);
+			$storageObject->setUserPermissions($storagePermissions);
 		}
 		// more narrowing down through the workspace
 		$this->initializeFileStoragesForWorkspace();
@@ -1619,7 +1557,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 	 * removeFile = 1
 	 *
 	 * addFolder = 1
-	 * browseFolder = 1
+	 * readFolder = 1
 	 * moveFolder = 1
 	 * writeFolder = 1
 	 * renameFolder = 1
@@ -1657,7 +1595,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 				'unzipFile' => TRUE,
 				'removeFile' => TRUE,
 				'addFolder' => TRUE,
-				'browseFolder' => TRUE,
+				'readFolder' => TRUE,
 				// new option,, generic check of the user rights
 				'moveFolder' => TRUE,
 				'renameFolder' => TRUE,
@@ -1715,7 +1653,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 		$storagePermissionsArray = $this->getTSConfig('permissions.file.storage.' . $storageObject->getUid());
 		$storageFilePermissions = $storagePermissionsArray['properties'];
 		if (is_array($storageFilePermissions) && count($storageFilePermissions)) {
-			return array_merge($storageFilePermissions, $defaultFilePermissions);
+			return array_merge($defaultFilePermissions, $storageFilePermissions);
 		} else {
 			return $defaultFilePermissions;
 		}
@@ -1942,7 +1880,7 @@ class BackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\AbstractU
 					// TODO: check if the filter is narrowing down the existing user
 					$storageObject = $storageRepository->findByUid($row['base']);
 					if (isset($existingFileStoragesOfUser[$storageObject->getUid()])) {
-						$storageObject->injectFileMount($row['path']);
+						$storageObject->addFileMount($row['path']);
 						$this->fileStorages[$storageObject->getUid()] = $storageObject;
 					}
 				}
@@ -2191,7 +2129,6 @@ This is a dump of the failures:
 					$email_body .= date(($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm']), $testRows['tstamp']) . ':  ' . @sprintf($testRows['details'], ('' . $theData[0]), ('' . $theData[1]), ('' . $theData[2]));
 					$email_body .= LF;
 				}
-				$GLOBALS['TYPO3_DB']->sql_free_result($res);
 				$from = \TYPO3\CMS\Core\Utility\MailUtility::getSystemFrom();
 				/** @var $mail \TYPO3\CMS\Core\Mail\MailMessage */
 				$mail = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Mail\\MailMessage');
@@ -2199,6 +2136,7 @@ This is a dump of the failures:
 				$mail->send();
 				// Logout written to log
 				$this->writelog(255, 4, 0, 3, 'Failure warning (%s failures within %s seconds) sent by email to %s', array($GLOBALS['TYPO3_DB']->sql_num_rows($res), $secondsBack, $email));
+				$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			}
 		}
 	}
@@ -2343,7 +2281,6 @@ This is a dump of the failures:
 		}
 		// Saving if updated.
 		if ($U) {
-			// Method from the t3lib_userauth class.
 			$this->writeUC();
 		}
 	}

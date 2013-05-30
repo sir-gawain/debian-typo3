@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install\CoreUpdates;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Helge Funk <helge.funk@e-net.info>
+ *  (c) 2012-2013 Helge Funk <helge.funk@e-net.info>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -68,6 +68,7 @@ class LocalConfigurationUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate
 		$result = FALSE;
 		try {
 			$localConfigurationContent = file(PATH_typo3conf . 'localconf.php');
+
 			// Line array for the three categories: localConfiguration, db settings, additionalConfiguration
 			$typo3ConfigurationVariables = array();
 			$typo3DatabaseVariables = array();
@@ -76,12 +77,24 @@ class LocalConfigurationUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate
 				$line = trim($line);
 				$matches = array();
 				// Convert extList to array
-				if (preg_match('/^\\$TYPO3_CONF_VARS\\[\'EXT\'\\]\\[\'extList\'\\] *={1} *\'(.+)\';{1}/', $line, $matches) === 1) {
+				if (
+					preg_match('/^\\$TYPO3_CONF_VARS\\[\'EXT\'\\]\\[\'extList\'\\] *={1} *\'(.+)\';{1}/', $line, $matches) === 1
+					|| preg_match('/^\\$GLOBALS\\[\'TYPO3_CONF_VARS\'\\]\\[\'EXT\'\\]\\[\'extList\'\\] *={1} *\'(.+)\';{1}/', $line, $matches) === 1
+				) {
 					$extListAsArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $matches[1], TRUE);
 					$typo3ConfigurationVariables[] = '$TYPO3_CONF_VARS[\'EXT\'][\'extListArray\'] = ' . var_export($extListAsArray, TRUE) . ';';
-				} elseif (preg_match('/^\\$TYPO3_CONF_VARS.+;{1}/', $line, $matches) === 1) {
+				} elseif (
+					preg_match('/^\\$TYPO3_CONF_VARS.+;{1}/', $line, $matches) === 1
+				) {
 					$typo3ConfigurationVariables[] = $matches[0];
-				} elseif (preg_match('/^\\$typo_db.+;{1}/', $line, $matches) === 1) {
+				} elseif (
+					preg_match('/^\\$GLOBALS\\[\'TYPO3_CONF_VARS\'\\].+;{1}/', $line, $matches) === 1
+				) {
+					$lineWithoutGlobals = str_replace('$GLOBALS[\'TYPO3_CONF_VARS\']', '$TYPO3_CONF_VARS', $matches[0]);
+					$typo3ConfigurationVariables[] = $lineWithoutGlobals;
+				} elseif (
+					preg_match('/^\\$typo_db.+;{1}/', $line, $matches) === 1
+				) {
 					eval($matches[0]);
 					if (isset($typo_db_host)) {
 						$typo3DatabaseVariables['host'] = $typo_db_host;
@@ -95,29 +108,31 @@ class LocalConfigurationUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate
 						$typo3DatabaseVariables['extTablesDefinitionScript'] = $typo_db_extTableDef_script;
 					}
 					unset($typo_db_host, $typo_db, $typo_db_username, $typo_db_password, $typo_db_extTableDef_script);
-				} elseif (strlen($line) > 0 && preg_match('/^\\/\\/.+|^#.+|^<\\?php$|^<\\?$|^\\?>$/', $line, $matches) === 0) {
+				} elseif (
+					strlen($line) > 0 && preg_match('/^\\/\\/.+|^#.+|^<\\?php$|^<\\?$|^\\?>$/', $line, $matches) === 0
+				) {
 					$additionalConfiguration[] = $line;
 				}
 			}
+
 			// Build new TYPO3_CONF_VARS array
 			$TYPO3_CONF_VARS = NULL;
 			eval(implode(LF, $typo3ConfigurationVariables));
+
 			// Add db settings to array
 			$TYPO3_CONF_VARS['DB'] = $typo3DatabaseVariables;
 			$TYPO3_CONF_VARS = \TYPO3\CMS\Core\Utility\ArrayUtility::sortByKeyRecursive($TYPO3_CONF_VARS);
-			// Build new (empty) LocalConfiguration file if not exists as the function writeLocalConfiguration depends on it
-			\TYPO3\CMS\Core\Utility\GeneralUtility::writeFile(
-				\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')->getLocalConfigurationFileResource(),
-				''
-			);
+
 			// Write out new LocalConfiguration file
 			\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')->writeLocalConfiguration($TYPO3_CONF_VARS);
+
 			// Write out new AdditionalConfiguration file
 			if (sizeof($additionalConfiguration) > 0) {
 				\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')->writeAdditionalConfiguration($additionalConfiguration);
 			} else {
-				@unlink(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')->getAdditionalConfigurationFileResource());
+				@unlink(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')->getAdditionalConfigurationFileLocation());
 			}
+
 			rename(PATH_site . 'typo3conf/localconf.php', PATH_site . 'typo3conf/localconf.obsolete.php');
 			$result = TRUE;
 		} catch (\Exception $e) {

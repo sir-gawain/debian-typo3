@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2012 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -64,7 +64,6 @@ class transferData extends \TYPO3\CMS\Backend\Form\DataPreprocessor {
 	 * @todo Define visibility
 	 */
 	public function regItem($table, $id, $field, $content) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		$config = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
 		switch ($config['type']) {
 		case 'input':

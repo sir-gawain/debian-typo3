@@ -30,7 +30,7 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Mvc\Controller;
 /**
  * This test checks the Argument behavior before Extbase 1.4, i.e. with the old property mapper.
  *
- * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+ * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
  */
 class ArgumentBehaviorBeforeExtbase14Test extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
@@ -133,7 +133,7 @@ class ArgumentBehaviorBeforeExtbase14Test extends \TYPO3\CMS\Extbase\Tests\Unit\
 		$argument = new \TYPO3\CMS\Extbase\Mvc\Controller\Argument('dummy', 'Text');
 		$mockConjunctionValidator = $this->getMock('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator');
 		$mockObjectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
-		$mockObjectManager->expects($this->once())->method('create')->with('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator')->will($this->returnValue($mockConjunctionValidator));
+		$mockObjectManager->expects($this->once())->method('get')->with('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator')->will($this->returnValue($mockConjunctionValidator));
 		$argument->injectObjectManager($mockObjectManager);
 		$argument->setNewValidatorConjunction(array());
 		$this->assertSame($mockConjunctionValidator, $argument->getValidator());

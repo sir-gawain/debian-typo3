@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Tests\Unit\Domain\Repository;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Susanne Moog, <susanne.moog@typo3.org>
+ * (c) 2012-2013 Susanne Moog, <susanne.moog@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,40 +31,159 @@ namespace TYPO3\CMS\Extensionmanager\Tests\Unit\Domain\Repository;
 class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * @var boolean Backup globals
+	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ConfigurationItemRepository|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject
 	 */
-	protected $backupGlobals = TRUE;
+	protected $configurationItemRepository;
 
 	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ConfigurationItemRepository|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface|\PHPUnit_Framework_MockObject_MockObject
 	 */
-	public $configurationItemRepository;
+	protected $injectedObjectManagerMock;
 
 	/**
+	 * Set up
 	 *
 	 * @return void
 	 */
 	public function setUp() {
+		// Mock system under test to make protected methods accessible
 		$this->configurationItemRepository = $this->getAccessibleMock(
 			'TYPO3\\CMS\\Extensionmanager\\Domain\\Repository\\ConfigurationItemRepository',
-			array('dummy',)
-		);
-		$configurationManagerMock = $this->getAccessibleMock(
-			'TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager',
 			array('dummy')
 		);
-		$this->configurationItemRepository->injectConfigurationManager($configurationManagerMock);
+
+		$this->injectedObjectManagerMock = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
+		$this->configurationItemRepository->_set(
+			'objectManager',
+			$this->injectedObjectManagerMock
+		);
 	}
 
 	/**
-	 * @return void
+	 * @test
 	 */
-	public function tearDown() {
-		unset($this->configurationItemRepository);
+	public function getConfigurationArrayFromExtensionKeyReturnsSortedHierarchicArray() {
+		$flatConfigurationItemArray = array(
+			'item1' => array(
+				'cat' => 'basic',
+				'subcat_name' => 'enable',
+				'subcat' => 'a/enable/10z',
+				'type' => 'string',
+				'label' => 'Item 1: This is the first configuration item',
+				'name' =>'item1',
+				'value' => 'one',
+				'default_value' => 'one',
+				'subcat_label' => 'Enable features',
+			),
+			'integerValue' => array(
+				'cat' => 'basic',
+				'subcat_name' => 'enable',
+				'subcat' => 'a/enable/20z',
+				'type' => 'int+',
+				'label' => 'Integer Value: Please insert a positive integer value',
+				'name' =>'integerValue',
+				'value' => '1',
+				'default_value' => '1',
+				'subcat_label' => 'Enable features',
+			),
+			'enableJquery' => array(
+				'cat' => 'advanced',
+				'subcat_name' => 'file',
+				'subcat' => 'c/file/10z',
+				'type' => 'boolean',
+				'label' => 'enableJquery: Insert jQuery plugin',
+				'name' =>'enableJquery',
+				'value' => '1',
+				'default_value' => '1',
+				'subcat_label' => 'Files',
+			),
+		);
+
+		$configurationItemRepository = $this->getAccessibleMock(
+			'TYPO3\\CMS\\Extensionmanager\\Domain\\Repository\\ConfigurationItemRepository',
+			array('mergeWithExistingConfiguration')
+		);
+		$configurationItemRepository->_set(
+			'objectManager',
+			$this->injectedObjectManagerMock
+		);
+		$configurationUtilityMock = $this->getMock('TYPO3\\CMS\\Extensionmanager\\Utility\\ConfigurationUtility');
+		$configurationUtilityMock
+			->expects($this->once())
+			->method('getDefaultConfigurationFromExtConfTemplateAsValuedArray')
+			->will($this->returnValue($flatConfigurationItemArray));
+		$this->injectedObjectManagerMock
+			->expects($this->any())
+			->method('get')
+			->will($this->returnValue($configurationUtilityMock));
+		$configurationItemRepository
+			->expects($this->any())
+			->method('mergeWithExistingConfiguration')
+			->will($this->returnValue($flatConfigurationItemArray));
+
+		$expectedArray = array(
+			'basic' => array(
+				'enable' => array(
+					'item1' => array(
+						'cat' => 'basic',
+						'subcat_name' => 'enable',
+						'subcat' => 'a/enable/10z',
+						'type' => 'string',
+						'label' => 'Item 1: This is the first configuration item',
+						'name' =>'item1',
+						'value' => 'one',
+						'default_value' => 'one',
+						'subcat_label' => 'Enable features',
+						'labels' => array(
+							0 => 'Item 1',
+							1 => 'This is the first configuration item'
+						)
+					),
+					'integerValue' => array(
+						'cat' => 'basic',
+						'subcat_name' => 'enable',
+						'subcat' => 'a/enable/20z',
+						'type' => 'int+',
+						'label' => 'Integer Value: Please insert a positive integer value',
+						'name' =>'integerValue',
+						'value' => '1',
+						'default_value' => '1',
+						'subcat_label' => 'Enable features',
+						'labels' => array(
+							0 => 'Integer Value',
+							1 => 'Please insert a positive integer value'
+						)
+					)
+				)
+			),
+			'advanced' => array(
+				'file' => array(
+					'enableJquery' => array(
+						'cat' => 'advanced',
+						'subcat_name' => 'file',
+						'subcat' => 'c/file/10z',
+						'type' => 'boolean',
+						'label' => 'enableJquery: Insert jQuery plugin',
+						'name' =>'enableJquery',
+						'value' => '1',
+						'default_value' => '1',
+						'subcat_label' => 'Files',
+						'labels' => array(
+							0 => 'enableJquery',
+							1 => 'Insert jQuery plugin'
+						)
+					),
+				)
+			)
+		);
+
+		$this->assertSame(
+			$expectedArray,
+			$configurationItemRepository->_call('getConfigurationArrayFromExtensionKey', uniqid('some_extension'))
+		);
 	}
 
 	/**
-	 *
 	 * @test
 	 * @return void
 	 */
@@ -91,7 +210,6 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 	}
 
 	/**
-	 *
 	 * @return array
 	 */
 	public function extractInformationForConfigFieldsOfTypeUserAddsGenericAndTypeInformationDataProvider() {
@@ -139,7 +257,6 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 	}
 
 	/**
-	 *
 	 * @test
 	 * @dataProvider extractInformationForConfigFieldsOfTypeUserAddsGenericAndTypeInformationDataProvider
 	 * @param $configurationOption
@@ -152,7 +269,6 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 	}
 
 	/**
-	 *
 	 * @test
 	 * @return void
 	 */
@@ -182,7 +298,6 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 	}
 
 	/**
-	 *
 	 * @test
 	 * @return void
 	 */
@@ -212,68 +327,80 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 	}
 
 	/**
-	 *
+	 * @test
+	 * @return void
+	 */
+	public function mergeDefaultConfigurationCatchesExceptionOfConfigurationManagerIfNoLocalConfigurationExists() {
+		$exception = $this->getMock('RuntimeException');
+		$configurationManagerMock = $this->getMock('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+		$configurationManagerMock
+			->expects($this->once())
+			->method('getConfigurationValueByPath')
+			->will($this->throwException($exception));
+		$this->injectedObjectManagerMock
+			->expects($this->any())
+			->method('get')
+			->will($this->returnValue($configurationManagerMock));
+
+		$this->configurationItemRepository->_call(
+			'mergeWithExistingConfiguration',
+			array(),
+			uniqid('not_existing_extension')
+		);
+	}
+
+	/**
 	 * @test
 	 * @return void
 	 */
 	public function mergeDefaultConfigurationWithNoCurrentValuesReturnsTheDefaultConfiguration() {
-
-			// @TODO: Possible tests that can be added if ConfigurationManager is not static
-			// and can be mocked:
-		/*
-			// Value is set to null
-		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extensionKey] = NULL;
-		$configuration = $this->configurationItemRepository->mergeWithExistingConfiguration($defaultConfiguration, $extension);
-		$this->assertEquals($defaultConfiguration, $configuration);
-
-			// Value is set to integer
-		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extensionKey] = 123;
-		$configuration = $this->configurationItemRepository->mergeWithExistingConfiguration($defaultConfiguration, $extension);
-		$this->assertEquals($defaultConfiguration, $configuration);
-
-			// valid configuration value - an empty serialized array
-		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extensionKey] = 'a:0:{}';
-		$configuration = $this->configurationItemRepository->mergeWithExistingConfiguration($defaultConfiguration, $extension);
-		$this->assertEquals($defaultConfiguration, $configuration);
-		*/
-
-		$extensionKey = 'some_non_existing_extension';
-		$extension = array(
-			'key' => $extensionKey
-		);
+		$exception = $this->getMock('RuntimeException');
+		$configurationManagerMock = $this->getMock('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+		$configurationManagerMock
+			->expects($this->once())
+			->method('getConfigurationValueByPath')
+			->will($this->throwException($exception));
+		$this->injectedObjectManagerMock
+			->expects($this->any())
+			->method('get')
+			->will($this->returnValue($configurationManagerMock));
 		$defaultConfiguration = array(
 			'foo' => 'bar'
 		);
-
-		// No value is set
-		$configuration = $this->configurationItemRepository->_callRef('mergeWithExistingConfiguration', $defaultConfiguration, $extension);
+		$configuration = $this->configurationItemRepository->_call(
+			'mergeWithExistingConfiguration',
+			$defaultConfiguration,
+			uniqid('not_existing_extension')
+		);
 		$this->assertEquals($defaultConfiguration, $configuration);
 	}
 
 	/**
-	 *
 	 * @test
 	 * @return void
 	 */
 	public function mergeWithExistingConfigurationOverwritesDefaultKeysWithCurrent() {
-		$configurationManagerMock = $this->getAccessibleMock(
-			'TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+		$localConfiguration = serialize(array(
+			'FE.' => array(
+				'enabled' => '1',
+				'saltedPWHashingMethod' => 'TYPO3\\CMS\\Saltedpasswords\\Salt\\SaltInterface_sha1'
+			),
+			'CLI.' => array(
+				'enabled' => '0'
+			)
+		));
+
+		$configurationManagerMock = $this->getMock('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
 		$configurationManagerMock
-				->expects($this->once())
-				->method('getConfigurationValueByPath')
-				->with('EXT/extConf/testextensionkey')
-				->will($this->returnValue(
-					serialize(array(
-						'FE.' => array(
-							'enabled' => '1',
-							'saltedPWHashingMethod' => 'TYPO3\\CMS\\Saltedpasswords\\Salt\\SaltInterface_sha1'
-						),
-						'CLI.' => array(
-							'enabled' => '0'
-						)
-					))
-				));
-		$this->configurationItemRepository->injectConfigurationManager($configurationManagerMock);
+			->expects($this->once())
+			->method('getConfigurationValueByPath')
+			->with('EXT/extConf/testextensionkey')
+			->will($this->returnValue($localConfiguration));
+
+		$this->injectedObjectManagerMock
+			->expects($this->any())
+			->method('get')
+			->will($this->returnValue($configurationManagerMock));
 
 		$defaultConfiguration = array(
 			'FE.enabled' => array(
@@ -289,6 +416,7 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 				'value' => 'TYPO3\\CMS\\Saltedpasswords\\Salt\\Md5Salt'
 			)
 		);
+
 		$expectedResult = array(
 			'FE.enabled' => array(
 				'value' => '1'
@@ -306,176 +434,15 @@ class ConfigurationItemRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 				'value' => '0'
 			)
 		);
-		$result = $this->configurationItemRepository->_call('mergeWithExistingConfiguration', $defaultConfiguration, array('key' => 'testextensionkey'));
-		$this->assertEquals($expectedResult, $result);
-	}
 
-	/**
-	 *
-	 * @return array
-	 */
-	public function createArrayFromConstantsCreatesAnArrayWithMetaInformationDataProvider() {
-		return array(
-			'demo data from salted passwords' => array(
-				'
-# cat=basic/enable; type=user[EXT:saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php:TYPO3\\CMS\\Saltedpasswords\\Utility\\ExtensionManagerConfigurationUtility->checkConfigurationFrontend]; label=Frontend configuration check
-checkConfigurationFE=0
-
-# cat=advancedBackend; type=boolean; label=Force salted passwords: Enforce usage of SaltedPasswords. Old MD5 hashed passwords will stop working.
-BE.forceSalted = 0
-
-TSConstantEditor.advancedbackend {
-  description = <span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">1</span> Install tool has hardcoded md5 hashing, enabling this setting will prevent use of a install-tool-created BE user.<br />Currently same is for changin password with user setup module unless you use pending patch!
-			1=BE.forceSalted
-}',
-				array(
-					'checkConfigurationFE' => array(
-						'cat' => 'basic',
-						'subcat_name' => 'enable',
-						'subcat' => 'a/enable/z',
-						'type' => 'user[EXT:saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php:TYPO3\\CMS\\Saltedpasswords\\Utility\\ExtensionManagerConfigurationUtility->checkConfigurationFrontend]',
-						'label' => 'Frontend configuration check',
-						'name' => 'checkConfigurationFE',
-						'value' => '0',
-						'default_value' => '0'
-					),
-					'BE.forceSalted' => array(
-						'cat' => 'advancedbackend',
-						'subcat' => 'x/z',
-						'type' => 'boolean',
-						'label' => 'Force salted passwords: Enforce usage of SaltedPasswords. Old MD5 hashed passwords will stop working.',
-						'name' => 'BE.forceSalted',
-						'value' => '0',
-						'default_value' => '0'
-					)
-				),
-				array(
-					'advancedbackend.' => array(
-						'description' => '<span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">1</span> Install tool has hardcoded md5 hashing, enabling this setting will prevent use of a install-tool-created BE user.<br />Currently same is for changin password with user setup module unless you use pending patch!',
-						1 => 'BE.forceSalted'
-					)
-				),
-				array(
-					'checkConfigurationFE' => array(
-						'cat' => 'basic',
-						'subcat_name' => 'enable',
-						'subcat' => 'a/enable/z',
-						'type' => 'user[EXT:saltedpasswords/classes/class.tx_saltedpasswords_emconfhelper.php:TYPO3\\CMS\\Saltedpasswords\\Utility\\ExtensionManagerConfigurationUtility->checkConfigurationFrontend]',
-						'label' => 'Frontend configuration check',
-						'name' => 'checkConfigurationFE',
-						'value' => '0',
-						'default_value' => '0'
-					),
-					'BE.forceSalted' => array(
-						'cat' => 'advancedbackend',
-						'subcat' => 'x/z',
-						'type' => 'boolean',
-						'label' => 'Force salted passwords: Enforce usage of SaltedPasswords. Old MD5 hashed passwords will stop working.',
-						'name' => 'BE.forceSalted',
-						'value' => '0',
-						'default_value' => '0',
-						'highlight' => 1
-					),
-					'__meta__' => array(
-						'advancedbackend' => array(
-							'highlightText' => '<span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">1</span> Install tool has hardcoded md5 hashing, enabling this setting will prevent use of a install-tool-created BE user.<br />Currently same is for changin password with user setup module unless you use pending patch!'
-						)
-					)
-				)
-			)
-		);
-	}
-
-	/**
-	 *
-	 * @test
-	 * @dataProvider createArrayFromConstantsCreatesAnArrayWithMetaInformationDataProvider
-	 * @param $raw
-	 * @param $constants
-	 * @param $setupTsConstantEditor
-	 * @param $expected
-	 * @return void
-	 */
-	public function createArrayFromConstantsCreatesAnArrayWithMetaInformation($raw, $constants, $setupTsConstantEditor, $expected) {
-		$tsStyleConfig = $this->getMock('TYPO3\\CMS\\Core\\TypoScript\\ConfigurationForm');
-		$configurationItemRepositoryMock = $this->getMock('TYPO3\\CMS\\Extensionmanager\\Domain\\Repository\\ConfigurationItemRepository', array('getT3libTsStyleConfig'));
-		$configurationItemRepositoryMock->expects($this->once())->method('getT3libTsStyleConfig')->will($this->returnValue($tsStyleConfig));
-		$tsStyleConfig->expects($this->once())->method('ext_initTSstyleConfig')->with($raw, $this->anything(), $this->anything(), $this->anything())->will($this->returnValue($constants));
-		$tsStyleConfig->setup['constants']['TSConstantEditor.'] = $setupTsConstantEditor;
-		$constantsResult = $configurationItemRepositoryMock->createArrayFromConstants($raw, array());
-		$this->assertEquals($expected, $constantsResult);
-	}
-
-	/**
-	 * @test
-	 */
-	public function convertRawConfigurationToArrayReturnsSortedHierarchicArray() {
-		$configRaw = '# cat=basic/enable/10; type=string; label=Item 1: This is the first configuration item
-item1 = one
-
-# cat=basic/enable/20; type=int+; label=Integer Value: Please insert a positive integer value
-integerValue = 1
-
-# cat=advanced/file/10; type=boolean; label=enableJquery: Insert jQuery plugin
-enableJquery = 1';
-		$extension = array();
-
-		$expectedArray = array(
-			'basic' => array(
-				'enable' => array(
-					'item1' => array(
-						'cat' => 'basic',
-						'subcat_name' => 'enable',
-						'subcat' => 'a/enable/10z',
-						'type' => 'string',
-						'label' => 'Item 1: This is the first configuration item',
-						'name' =>'item1',
-						'value' => 'one',
-						'default_value' => 'one',
-						'labels' => array(
-							0 => 'Item 1',
-							1 => 'This is the first configuration item'
-						)
-					),
-					'integerValue' => array(
-						'cat' => 'basic',
-						'subcat_name' => 'enable',
-						'subcat' => 'a/enable/20z',
-						'type' => 'int+',
-						'label' => 'Integer Value: Please insert a positive integer value',
-						'name' =>'integerValue',
-						'value' => '1',
-						'default_value' => '1',
-						'labels' => array(
-							0 => 'Integer Value',
-							1 => 'Please insert a positive integer value'
-						)
-					)
-				)
-			),
-			'advanced' => array(
-				'file' => array(
-					'enableJquery' => array(
-						'cat' => 'advanced',
-						'subcat_name' => 'file',
-						'subcat' => 'c/file/10z',
-						'type' => 'boolean',
-						'label' => 'enableJquery: Insert jQuery plugin',
-						'name' =>'enableJquery',
-						'value' => '1',
-						'default_value' => '1',
-						'labels' => array(
-							0 => 'enableJquery',
-							1 => 'Insert jQuery plugin'
-						)
-					),
-				)
-			)
+		$actualResult = $this->configurationItemRepository->_call(
+			'mergeWithExistingConfiguration',
+			$defaultConfiguration,
+			'testextensionkey'
 		);
 
-		$this->assertSame($expectedArray, $this->configurationItemRepository->_callRef('convertRawConfigurationToArray', $configRaw, $extension));
+		$this->assertEquals($expectedResult, $actualResult);
 	}
-
 }
 
 

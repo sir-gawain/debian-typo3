@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Database;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Ernesto Baschny (ernst@cron-it.de)
+ * (c) 2010-2013 Ernesto Baschny (ernst@cron-it.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -34,9 +34,9 @@ class DatabaseConnectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
 	 */
-	private $fixture = NULL;
+	protected $fixture = NULL;
 
-	private $testTable;
+	protected $testTable;
 
 	public function setUp() {
 		$this->fixture = $GLOBALS['TYPO3_DB'];
@@ -92,6 +92,79 @@ class DatabaseConnectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	public function listQueryWithIntegerCommaAsValue() {
 		// Note: 44 = ord(',')
 		$this->assertEquals($this->fixture->listQuery('dummy', 44, 'table'), $this->fixture->listQuery('dummy', '44', 'table'));
+	}
+
+	////////////////////////////////
+	// Tests concerning searchQuery
+	////////////////////////////////
+
+	/**
+	 * Data provider for searchQueryCreatesQuery
+	 *
+	 * @return array
+	 */
+	public function searchQueryDataProvider() {
+		return array(
+			'One search word in one field' => array(
+				'(pages.title LIKE \'%TYPO3%\')',
+				array('TYPO3'),
+				array('title'),
+				'pages',
+				'AND'
+			),
+
+			'One search word in multiple fields' => array(
+				'(pages.title LIKE \'%TYPO3%\' OR pages.keyword LIKE \'%TYPO3%\' OR pages.description LIKE \'%TYPO3%\')',
+				array('TYPO3'),
+				array('title', 'keyword', 'description'),
+				'pages',
+				'AND'
+			),
+
+			'Multiple search words in one field with AND constraint' => array(
+				'(pages.title LIKE \'%TYPO3%\') AND (pages.title LIKE \'%is%\') AND (pages.title LIKE \'%great%\')',
+				array('TYPO3', 'is', 'great'),
+				array('title'),
+				'pages',
+				'AND'
+			),
+
+			'Multiple search words in one field with OR constraint' => array(
+				'(pages.title LIKE \'%TYPO3%\') OR (pages.title LIKE \'%is%\') OR (pages.title LIKE \'%great%\')',
+				array('TYPO3', 'is', 'great'),
+				array('title'),
+				'pages',
+				'OR'
+			),
+
+			'Multiple search words in multiple fields with AND constraint' => array(
+				'(pages.title LIKE \'%TYPO3%\' OR pages.keywords LIKE \'%TYPO3%\' OR pages.description LIKE \'%TYPO3%\') AND ' .
+					'(pages.title LIKE \'%is%\' OR pages.keywords LIKE \'%is%\' OR pages.description LIKE \'%is%\') AND ' .
+					'(pages.title LIKE \'%great%\' OR pages.keywords LIKE \'%great%\' OR pages.description LIKE \'%great%\')',
+				array('TYPO3', 'is', 'great'),
+				array('title', 'keywords', 'description'),
+				'pages',
+				'AND'
+			),
+
+			'Multiple search words in multiple fields with OR constraint' => array(
+				'(pages.title LIKE \'%TYPO3%\' OR pages.keywords LIKE \'%TYPO3%\' OR pages.description LIKE \'%TYPO3%\') OR ' .
+					'(pages.title LIKE \'%is%\' OR pages.keywords LIKE \'%is%\' OR pages.description LIKE \'%is%\') OR ' .
+					'(pages.title LIKE \'%great%\' OR pages.keywords LIKE \'%great%\' OR pages.description LIKE \'%great%\')',
+				array('TYPO3', 'is', 'great'),
+				array('title', 'keywords', 'description'),
+				'pages',
+				'OR'
+			),
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider searchQueryDataProvider
+	 */
+	public function searchQueryCreatesQuery($expectedResult, $searchWords, $fields, $table, $constraint) {
+		$this->assertSame($expectedResult, $this->fixture->searchQuery($searchWords, $fields, $table, $constraint));
 	}
 
 	/////////////////////////////////////////////////
@@ -176,7 +249,6 @@ class DatabaseConnectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$strippedQuery = $this->fixture->stripGroupBy($groupByClause);
 		$this->assertEquals($expectedResult, $strippedQuery);
 	}
-
 }
 
 ?>

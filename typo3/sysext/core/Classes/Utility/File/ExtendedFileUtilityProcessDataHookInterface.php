@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Utility\File;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Xavier Perseguers <typo3@perseguers.ch>
+ *  (c) 2010-2013 Xavier Perseguers <typo3@perseguers.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,15 +31,14 @@ namespace TYPO3\CMS\Core\Utility\File;
  *
  * @author Xavier Perseguers <typo3@perseguers.ch>
  */
-interface ExtendedFileUtilityProcessDataHookInterface
-{
+interface ExtendedFileUtilityProcessDataHookInterface {
 	/**
 	 * Post-process a file action.
 	 *
 	 * @param string $action The action
 	 * @param array $cmdArr The parameter sent to the action handler
 	 * @param array $result The results of all calls to the action handler
-	 * @param \TYPO3\CMS\Core\Utility\File\ExtendedFileUtility $parentObject Parent t3lib_extFileFunctions object
+	 * @param \TYPO3\CMS\Core\Utility\File\ExtendedFileUtility $parentObject Parent object
 	 * @return void
 	 */
 	public function processData_postProcessAction($action, array $cmdArr, array $result, \TYPO3\CMS\Core\Utility\File\ExtendedFileUtility $parentObject);

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Filter;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,13 +23,14 @@ namespace TYPO3\CMS\Form\Filter;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Interface for filters
  *
  * @author Patrick Broens <patrick@patrickbroens.nl>
  */
-interface FilterInterface
-{
+interface FilterInterface {
+
 	/**
 	 * Return filtered value
 	 *

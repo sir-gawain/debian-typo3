@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -138,14 +138,14 @@ class FileBackend extends \TYPO3\CMS\Core\Cache\Backend\SimpleFileBackend implem
 	 * @param integer $lifetime Lifetime of this cache entry in seconds. If NULL is specified, the default lifetime is used. "0" means unlimited lifetime.
 	 * @return void
 	 * @throws \RuntimeException
-	 * @throws \t3lib_cache_Exception_InvalidData if the directory does not exist or is not writable or exceeds the maximum allowed path length, or if no cache frontend has been set.
+	 * @throws \TYPO3\CMS\Core\Cache\Exception\InvalidDataException if the directory does not exist or is not writable or exceeds the maximum allowed path length, or if no cache frontend has been set.
 	 * @throws \TYPO3\CMS\Core\Cache\Exception if the directory does not exist or is not writable or exceeds the maximum allowed path length, or if no cache frontend has been set.
 	 * @throws \InvalidArgumentException
 	 * @api
 	 */
 	public function set($entryIdentifier, $data, array $tags = array(), $lifetime = NULL) {
 		if (!is_string($data)) {
-			throw new \t3lib_cache_Exception_InvalidData('The specified data is of type "' . gettype($data) . '" but a string is expected.', 1204481674);
+			throw new \TYPO3\CMS\Core\Cache\Exception\InvalidDataException('The specified data is of type "' . gettype($data) . '" but a string is expected.', 1204481674);
 		}
 		if ($entryIdentifier !== basename($entryIdentifier)) {
 			throw new \InvalidArgumentException('The specified entry identifier must not contain a path segment.', 1282073032);
@@ -164,7 +164,7 @@ class FileBackend extends \TYPO3\CMS\Core\Cache\Backend\SimpleFileBackend implem
 		$result = file_put_contents($temporaryCacheEntryPathAndFilename, $data . $metaData);
 		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($temporaryCacheEntryPathAndFilename);
 		if ($result === FALSE) {
-			throw new \t3lib_cache_exception('The temporary cache file "' . $temporaryCacheEntryPathAndFilename . '" could not be written.', 1204026251);
+			throw new \TYPO3\CMS\Core\Cache\Exception('The temporary cache file "' . $temporaryCacheEntryPathAndFilename . '" could not be written.', 1204026251);
 		}
 		$i = 0;
 		$cacheEntryPathAndFilename = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
@@ -172,7 +172,7 @@ class FileBackend extends \TYPO3\CMS\Core\Cache\Backend\SimpleFileBackend implem
 			$i++;
 		}
 		if ($result === FALSE) {
-			throw new \t3lib_cache_exception('The cache file "' . $cacheEntryPathAndFilename . '" could not be written.', 1222361632);
+			throw new \TYPO3\CMS\Core\Cache\Exception('The cache file "' . $cacheEntryPathAndFilename . '" could not be written.', 1222361632);
 		}
 	}
 
@@ -288,8 +288,7 @@ class FileBackend extends \TYPO3\CMS\Core\Cache\Backend\SimpleFileBackend implem
 	 * @api
 	 */
 	public function flush() {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($this->cacheDirectory, TRUE);
-		$this->createFinalCacheDirectory($this->cacheDirectory);
+		parent::flush();
 		if ($this->frozen === TRUE) {
 			$this->frozen = FALSE;
 		}

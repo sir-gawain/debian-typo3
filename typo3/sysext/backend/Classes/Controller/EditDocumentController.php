@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class: Drawing the editing form for editing records in TYPO3.
  * Notice: It does NOT use tce_db.php to submit data to, rather it handles submissions itself
@@ -11,7 +37,7 @@ class EditDocumentController {
 
 	// Internal, static: GPvars:
 	// GPvar "edit": Is an array looking approx like [tablename][list-of-ids]=command, eg.
-	// "&edit[pages][123]=edit". See t3lib_BEfunc::editOnClick(). Value can be seen modified
+	// "&edit[pages][123]=edit". See \TYPO3\CMS\Backend\Utility\BackendUtility::editOnClick(). Value can be seen modified
 	// internally (converting NEW keyword to id, workspace/versioning etc).
 	/**
 	 * @todo Define visibility
@@ -164,7 +190,7 @@ class EditDocumentController {
 	/**
 	 * document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\MediumDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -815,7 +841,7 @@ class EditDocumentController {
 									// Setting variables in TCEforms object:
 									$this->tceforms->hiddenFieldList = '';
 									$this->tceforms->globalShowHelp = $this->disHelp ? 0 : 1;
-									if (is_array($this->overrideVals[$table])) {
+									if (is_array($this->overrideVals) && is_array($this->overrideVals[$table])) {
 										$this->tceforms->hiddenFieldListArr = array_keys($this->overrideVals[$table]);
 									}
 									// Register default language labels, if any:
@@ -839,8 +865,12 @@ class EditDocumentController {
 									}
 									// Display "is-locked" message:
 									if ($lockInfo = \TYPO3\CMS\Backend\Utility\BackendUtility::isRecordLocked($table, $rec['uid'])) {
-										$lockedMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', htmlspecialchars($lockInfo['msg']), '', \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING);
-										\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage($lockedMessage);
+										$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', htmlspecialchars($lockInfo['msg']), '', \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING);
+										/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+										$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+										/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+										$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+										$defaultFlashMessageQueue->enqueue($flashMessage);
 									}
 									// Combine it all:
 									$editForm .= $panel;
@@ -848,7 +878,7 @@ class EditDocumentController {
 								$thePrevUid = $rec['uid'];
 							} else {
 								$this->errorC++;
-								$editForm .= $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.noEditPermission', 1) . '<br /><br />' . ($deniedAccessReason ? 'Reason: ' . htmlspecialchars($deniedAccessReason) . '<br /><br />' : '');
+								$editForm .= $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.noEditPermission', 1) . '<br /><br />' . ($deniedAccessReason ? 'Reason: ' . htmlspecialchars($deniedAccessReason) . '<br /><br />' : '');
 							}
 						}
 					}
@@ -882,25 +912,25 @@ class EditDocumentController {
 		// The action of each button is decided by its name attribute. (See doProcessData())
 		if (!$this->errorC && !$GLOBALS['TCA'][$this->firstEl['table']]['ctrl']['readOnly']) {
 			// SAVE button:
-			$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="_savedok" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />'));
+			$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="_savedok" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', 1) . '" />'));
 			// SAVE / VIEW button:
 			if ($this->viewId && !$this->noView && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms') && $this->getNewIconMode($this->firstEl['table'], 'saveDocView')) {
-				$buttons['save_view'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-view', array('html' => '<input type="image" class="c-inputButton" name="_savedokview" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDocShow', 1) . '" />'));
+				$buttons['save_view'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-view', array('html' => '<input type="image" class="c-inputButton" name="_savedokview" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDocShow', 1) . '" />'));
 			}
 			// SAVE / NEW button:
 			if (count($this->elementsData) == 1 && $this->getNewIconMode($this->firstEl['table'])) {
-				$buttons['save_new'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-new', array('html' => '<input type="image" class="c-inputButton" name="_savedoknew" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveNewDoc', 1) . '" />'));
+				$buttons['save_new'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-new', array('html' => '<input type="image" class="c-inputButton" name="_savedoknew" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveNewDoc', 1) . '" />'));
 			}
 			// SAVE / CLOSE
-			$buttons['save_close'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close', array('html' => '<input type="image" class="c-inputButton" name="_saveandclosedok" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', 1) . '" />'));
+			$buttons['save_close'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close', array('html' => '<input type="image" class="c-inputButton" name="_saveandclosedok" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', 1) . '" />'));
 			// FINISH TRANSLATION / SAVE / CLOSE
 			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['explicitConfirmationOfTranslation']) {
-				$buttons['translation_save'] = '<input type="image" class="c-inputButton" name="_translation_savedok" src="' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/translationsavedok.gif', '', 1) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.translationSaveDoc', 1) . '" />';
-				$buttons['translation_saveclear'] = '<input type="image" class="c-inputButton" name="_translation_savedokclear" src="' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/translationsavedok_clear.gif', '', 1) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.translationSaveDocClear', 1) . '" />';
+				$buttons['translation_save'] = '<input type="image" class="c-inputButton" name="_translation_savedok" src="' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/translationsavedok.gif', '', 1) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.translationSaveDoc', 1) . '" />';
+				$buttons['translation_saveclear'] = '<input type="image" class="c-inputButton" name="_translation_savedokclear" src="' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/translationsavedok_clear.gif', '', 1) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.translationSaveDocClear', 1) . '" />';
 			}
 		}
 		// CLOSE button:
-		$buttons['close'] = '<a href="#" onclick="document.editform.closeDoc.value=1; document.editform.submit(); return false;" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close') . '</a>';
+		$buttons['close'] = '<a href="#" onclick="document.editform.closeDoc.value=1; document.editform.submit(); return false;" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.closeDoc', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close') . '</a>';
 		// DELETE + UNDO buttons:
 		if (!$this->errorC && !$GLOBALS['TCA'][$this->firstEl['table']]['ctrl']['readOnly'] && count($this->elementsData) == 1) {
 			if ($this->firstEl['cmd'] != 'new' && \TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($this->firstEl['uid'])) {
@@ -913,7 +943,7 @@ class EditDocumentController {
 				$undoRes = $GLOBALS['TYPO3_DB']->exec_SELECTquery('tstamp', 'sys_history', 'tablename=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->firstEl['table'], 'sys_history') . ' AND recuid=' . intval($this->firstEl['uid']), '', 'tstamp DESC', '1');
 				if ($undoButtonR = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($undoRes)) {
 					$aOnClick = 'window.location.href=\'show_rechis.php?element=' . rawurlencode(($this->firstEl['table'] . ':' . $this->firstEl['uid'])) . '&revert=ALL_FIELDS&sumUp=-1&returnUrl=' . rawurlencode($this->R_URI) . '\'; return false;';
-					$buttons['undo'] = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '"' . ' title="' . htmlspecialchars(sprintf($GLOBALS['LANG']->getLL('undoLastChange'), \TYPO3\CMS\Backend\Utility\BackendUtility::calcAge(($GLOBALS['EXEC_TIME'] - $undoButtonR['tstamp']), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')))) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-undo') . '</a>';
+					$buttons['undo'] = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '"' . ' title="' . htmlspecialchars(sprintf($GLOBALS['LANG']->getLL('undoLastChange'), \TYPO3\CMS\Backend\Utility\BackendUtility::calcAge(($GLOBALS['EXEC_TIME'] - $undoButtonR['tstamp']), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')))) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-undo') . '</a>';
 				}
 				if ($this->getNewIconMode($this->firstEl['table'], 'showHistory')) {
 					$aOnClick = 'window.location.href=\'show_rechis.php?element=' . rawurlencode(($this->firstEl['table'] . ':' . $this->firstEl['uid'])) . '&returnUrl=' . rawurlencode($this->R_URI) . '\'; return false;';
@@ -1003,7 +1033,7 @@ class EditDocumentController {
 			// Show palettes:
 			return '
 				<!-- Function menu (checkbox for showing all palettes): -->
-				<br />' . \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncCheck('', 'SET[showPalettes]', $this->MOD_SETTINGS['showPalettes'], 'alt_doc.php', (\TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', array_merge($this->R_URL_getvars, array('SET' => ''))) . \TYPO3\CMS\Backend\Utility\BackendUtility::getUrlToken('editRecord')), 'id="checkShowPalettes"') . '<label for="checkShowPalettes">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPalettes', 1) . '</label>';
+				<br />' . \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncCheck('', 'SET[showPalettes]', $this->MOD_SETTINGS['showPalettes'], 'alt_doc.php', (\TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', array_merge($this->R_URL_getvars, array('SET' => ''))) . \TYPO3\CMS\Backend\Utility\BackendUtility::getUrlToken('editRecord')), 'id="checkShowPalettes"') . '<label for="checkShowPalettes">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPalettes', 1) . '</label>';
 		} else {
 			return '';
 		}
@@ -1033,7 +1063,7 @@ class EditDocumentController {
 			return '';
 		}
 		$aOnClick = 'vHWin=window.open(\'' . \TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('returnUrl' => 'close.html')) . '\',\'' . md5($this->R_URI) . '\',\'width=670,height=500,status=0,menubar=0,scrollbars=1,resizable=1\');vHWin.focus();return false;';
-		return '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.openInNewWindow', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-window-open') . '</a>';
+		return '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.openInNewWindow', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-window-open') . '</a>';
 	}
 
 	/**
@@ -1111,7 +1141,7 @@ class EditDocumentController {
 					$langSelItems = array();
 					foreach ($langRows as $lang) {
 						if ($GLOBALS['BE_USER']->checkLanguageAccess($lang['uid'])) {
-							$newTranslation = isset($rowsByLang[$lang['uid']]) ? '' : ' [' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.new', 1) . ']';
+							$newTranslation = isset($rowsByLang[$lang['uid']]) ? '' : ' [' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.new', 1) . ']';
 							// Create url for creating a localized record
 							if ($newTranslation) {
 								$href = $this->doc->issueCommand('&cmd[' . $table . '][' . $rowsByLang[0]['uid'] . '][localize]=' . $lang['uid'], $this->backPath . 'alt_doc.php?justLocalized=' . rawurlencode(($table . ':' . $rowsByLang[0]['uid'] . ':' . $lang['uid'])) . '&returnUrl=' . rawurlencode($this->retUrl) . \TYPO3\CMS\Backend\Utility\BackendUtility::getUrlToken('editRecord'));
@@ -1127,7 +1157,7 @@ class EditDocumentController {
 					// If any languages are left, make selector:
 					if (count($langSelItems) > 1) {
 						$onChange = 'if(this.options[this.selectedIndex].value){window.location.href=(this.options[this.selectedIndex].value);}';
-						$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.language', 1) . ' <select name="_langSelector" onchange="' . htmlspecialchars($onChange) . '">
+						$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.language', 1) . ' <select name="_langSelector" onchange="' . htmlspecialchars($onChange) . '">
 							' . implode('', $langSelItems) . '
 							</select>';
 					}
@@ -1176,7 +1206,7 @@ class EditDocumentController {
 				'uid' => 0,
 				'pid' => 0,
 				'hidden' => 0,
-				'title' => strlen($modSharedTSconfig['properties']['defaultLanguageLabel']) ? $modSharedTSconfig['properties']['defaultLanguageLabel'] . ' (' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xml:defaultLanguage') . ')' : $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xml:defaultLanguage'),
+				'title' => strlen($modSharedTSconfig['properties']['defaultLanguageLabel']) ? $modSharedTSconfig['properties']['defaultLanguageLabel'] . ' (' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xlf:defaultLanguage') . ')' : $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xlf:defaultLanguage'),
 				'flag' => $modSharedTSconfig['properties']['defaultLanguageFlag']
 			)
 		);

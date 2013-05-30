@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Workspaces\Service;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ *  (c) 2010-2013 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -255,7 +255,10 @@ class StagesService {
 				$orderedAllowedStages = $workspaceStageRecs;
 			} else {
 				foreach ($workspaceStageRecs as $workspaceStageRec) {
-					if ($this->isStageAllowedForUser($workspaceStageRec['uid'])) {
+					if ($workspaceStageRec['uid'] === self::STAGE_EDIT_ID) {
+						$allowedStages[self::STAGE_EDIT_ID] = $workspaceStageRec;
+						$stagesForWSUserData[$workspaceStageRec['uid']] = $workspaceStageRec;
+					} elseif ($this->isStageAllowedForUser($workspaceStageRec['uid'])) {
 						$stagesForWSUserData[$workspaceStageRec['uid']] = $workspaceStageRec;
 					} elseif ($workspaceStageRec['uid'] == self::STAGE_PUBLISH_EXECUTE_ID && $GLOBALS['BE_USER']->workspacePublishAccess($this->getWorkspaceId())) {
 						$allowedStages[] = $workspaceStageRec;

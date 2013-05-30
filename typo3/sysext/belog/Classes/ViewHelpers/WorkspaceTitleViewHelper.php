@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Belog\ViewHelpers;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Get workspace title from workspace id
  *
@@ -34,18 +35,9 @@ class WorkspaceTitleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abstract
 
 	/**
 	 * @var \TYPO3\CMS\Belog\Domain\Repository\WorkspaceRepository
+	 * @inject
 	 */
 	protected $workspaceRepository = NULL;
-
-	/**
-	 * Inject the workspace repository
-	 *
-	 * @param \TYPO3\CMS\Belog\Domain\Repository\WorkspaceRepository $workspaceRepository
-	 * @return void
-	 */
-	public function injectWorkspaceRepository(\TYPO3\CMS\Belog\Domain\Repository\WorkspaceRepository $workspaceRepository) {
-		$this->workspaceRepository = $workspaceRepository;
-	}
 
 	/**
 	 * Resolve workspace title from UID.
@@ -71,6 +63,5 @@ class WorkspaceTitleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abstract
 	}
 
 }
-
 
 ?>

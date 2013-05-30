@@ -4,9 +4,9 @@ namespace TYPO3\CMS\Rtehtmlarea;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2004-2011 Kasper Skårhøj (kasper@typo3.com)
- *  (c) 2004-2011 Philipp Borgmann <philipp.borgmann@gmx.de>
- *  (c) 2004-2012 Stanislas Rolland <typo3(arobas)sjbr.ca>
+ *  (c) 2004-2013 Kasper Skårhøj (kasper@typo3.com)
+ *  (c) 2004-2013 Philipp Borgmann <philipp.borgmann@gmx.de>
+ *  (c) 2004-2013 Stanislas Rolland <typo3(arobas)sjbr.ca>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -59,6 +59,9 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 			)
 		),
 		'webkit' => array(
+			array(
+				'version' => 534
+			),
 			array(
 				'version' => 523,
 				'system' => array(
@@ -1360,7 +1363,7 @@ class RteHtmlAreaBase extends \TYPO3\CMS\Backend\Rte\AbstractRte {
 	/**
 	 * Client Browser Information
 	 *
-	 * @param 	string		$userAgent: The useragent string, t3lib_div::getIndpEnv('HTTP_USER_AGENT')
+	 * @param 	string		$userAgent: The useragent string, \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('HTTP_USER_AGENT')
 	 * @return 	array		Contains keys "useragent", "browser", "version", "system
 	 * @todo Define visibility
 	 */

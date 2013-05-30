@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -45,7 +45,11 @@ class NumberValidator extends \TYPO3\CMS\Extbase\Validation\Validator\AbstractVa
 		if (is_numeric($value)) {
 			return TRUE;
 		}
-		$this->addError('The given subject was not a valid number.', 1221563685);
+		$this->addError(
+			\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+				'validator.number.notvalid',
+				'extbase'
+			), 1221563685);
 		return FALSE;
 	}
 }

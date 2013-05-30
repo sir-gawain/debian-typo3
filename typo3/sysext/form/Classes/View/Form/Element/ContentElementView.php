@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Form\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\View\Form\Element;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * View object for the content element
  *
@@ -40,6 +41,5 @@ class ContentElementView extends \TYPO3\CMS\Form\View\Form\Element\AbstractEleme
 	';
 
 }
-
 
 ?>

@@ -105,9 +105,8 @@ table.typo3-TCEforms span.typo3-TCEforms-recHeader {
 	font-weight: bold;
 }
 
-table.typo3-TCEforms div.typo3-dyntabmenu-tabs,
 table.typo3-TCEforms tr.typo3-TCEforms-recHeaderRow td {
-	background: #f8f8f8;
+	background: #fff;
 }
 
 table.typo3-TCEforms tr.typo3-TCEforms-recHeaderRow td {
@@ -449,6 +448,11 @@ table.typo3-TCEforms .t3-form-field-container-inline .wrapperTable5 {
 	border: 0;
 }
 
+.t3-form-field-header-inline td.t3-form-field-header-inline-summary,
+.t3-form-field-header-inline td.t3-form-field-header-inline-icon {
+	cursor: pointer;
+}
+
 /* - - - - - - - - - - - - - - - - - - - - -
 TCEforms Sections
 - - - - - - - - - - - - - - - - - - - - - */
@@ -514,8 +518,11 @@ TCEforms Sections
 
 .t3-form-field-item {
 	position: relative;
-	display: inline-block;
 	border: 1px solid transparent;
+}
+
+.t3-tceforms-widget-null-wrapper + .t3-form-field-item {
+	display: inline-block;
 }
 
 .t3-form-field-item.disabled {

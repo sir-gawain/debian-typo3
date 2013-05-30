@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Resource\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Oliver Hader <oliver.hader@typo3.org>
+ *  (c) 2012-2013 Oliver Hader <oliver.hader@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -50,7 +50,7 @@ class FileExtensionFilterTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	protected $parameters;
 
 	/**
-	 * @var t3lib_TCEmain|PHPUnit_Framework_MockObject_MockObject
+	 * @var \TYPO3\CMS\Core\DataHandling\DataHandler|PHPUnit_Framework_MockObject_MockObject
 	 */
 	protected $tceMainMock;
 

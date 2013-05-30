@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Scheduler\Example;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 François Suter <francois@typo3.org>
+ *  (c) 2009-2013 François Suter <francois@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -55,7 +55,7 @@ class SleepTaskAdditionalFieldProvider implements \TYPO3\CMS\Scheduler\Additiona
 		}
 		// Write the code for the field
 		$fieldID = 'task_sleepTime';
-		$fieldCode = '<input type="text" name="TYPO3\\CMS\\Scheduler\\Scheduler[sleepTime]" id="' . $fieldID . '" value="' . $taskInfo['sleepTime'] . '" size="10" />';
+		$fieldCode = '<input type="text" name="tx_scheduler[sleepTime]" id="' . $fieldID . '" value="' . $taskInfo['sleepTime'] . '" size="10" />';
 		$additionalFields = array();
 		$additionalFields[$fieldID] = array(
 			'code' => $fieldCode,

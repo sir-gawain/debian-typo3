@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -62,11 +62,6 @@ class Argument {
 	 * @var \TYPO3\CMS\Extbase\Property\PropertyMapper
 	 */
 	protected $propertyMapper;
-
-	/**
-	 * @var \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationBuilder
-	 */
-	protected $propertyMappingConfigurationBuilder;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfiguration
@@ -218,14 +213,6 @@ class Argument {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationBuilder $propertyMappingConfigurationBuilder
-	 * @return void
-	 */
-	public function injectPropertyMappingConfigurationBuilder(\TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationBuilder $propertyMappingConfigurationBuilder) {
-		$this->propertyMappingConfigurationBuilder = $propertyMappingConfigurationBuilder;
-	}
-
-	/**
 	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
@@ -238,7 +225,7 @@ class Argument {
 	/**
 	 * Injects the Persistence Manager
 	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface
+	 * @param \TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface $persistenceManager
 	 * @return void
 	 */
 	public function injectPersistenceManager(\TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface $persistenceManager) {
@@ -264,21 +251,20 @@ class Argument {
 	}
 
 	/**
-	 * Initializer.
-	 *
-	 * @return void
-	 */
-	public function initializeObject() {
-		$this->propertyMappingConfiguration = $this->propertyMappingConfigurationBuilder->build('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\MvcPropertyMappingConfiguration');
-	}
-
-	/**
 	 * @param \TYPO3\CMS\Extbase\Service\TypeHandlingService $typeHandlingService
 	 * @return void
 	 */
 	public function injectTypeHandlingService(\TYPO3\CMS\Extbase\Service\TypeHandlingService $typeHandlingService) {
 		$this->typeHandlingService = $typeHandlingService;
 		$this->dataType = $this->typeHandlingService->normalizeType($this->dataType);
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfiguration $mvcPropertyMappingConfiguration
+	 * @return void
+	 */
+	public function injectPropertyMappingConfiguration(\TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfiguration $mvcPropertyMappingConfiguration) {
+		$this->propertyMappingConfiguration = $mvcPropertyMappingConfiguration;
 	}
 
 	/**
@@ -399,14 +385,14 @@ class Argument {
 	/**
 	 * Create and set a validator chain
 	 *
-	 * @param array Object names of the validators
+	 * @param array $objectNames Object names of the validators
 	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\Argument Returns $this (used for fluent interface)
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function setNewValidatorConjunction(array $objectNames) {
 		if ($this->validator === NULL) {
-			$this->validator = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator');
+			$this->validator = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Validation\\Validator\\ConjunctionValidator');
 		}
 		foreach ($objectNames as $objectName) {
 			if (!class_exists($objectName)) {
@@ -431,8 +417,7 @@ class Argument {
 	 * Get the origin of the argument value. This is only meaningful after argument mapping.
 	 *
 	 * @return integer one of the ORIGIN_* constants
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function getOrigin() {
 		return $this->origin;
@@ -441,8 +426,8 @@ class Argument {
 	/**
 	 * Sets the value of this argument.
 	 *
-	 * @param mixed $rawValue: The value of this argument
-	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\Argument $this
+	 * @param mixed $rawValue The value of this argument
+	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\Argument
 	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidArgumentValueException if the argument is not a valid object of type $dataType
 	 */
 	public function setValue($rawValue) {
@@ -483,7 +468,7 @@ class Argument {
 	 * @param mixed $value The value of an argument
 	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidArgumentValueException
 	 * @return mixed
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected function transformValue($value) {
 		if (!class_exists($this->dataType)) {
@@ -543,7 +528,7 @@ class Argument {
 	 * Checks if this argument has a value set.
 	 *
 	 * @return boolean TRUE if a value was set, otherwise FALSE
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function isValue() {
 		return $this->value !== NULL;
@@ -553,7 +538,6 @@ class Argument {
 	 * Return the Property Mapping Configuration used for this argument; can be used by the initialize*action to modify the Property Mapping.
 	 *
 	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfiguration
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function getPropertyMappingConfiguration() {
@@ -562,7 +546,6 @@ class Argument {
 
 	/**
 	 * @return boolean TRUE if the argument is valid, FALSE otherwise
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function isValid() {
@@ -571,7 +554,6 @@ class Argument {
 
 	/**
 	 * @return array<\TYPO3\CMS\Extbase\Error\Result> Validation errors which have occured.
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function getValidationResults() {

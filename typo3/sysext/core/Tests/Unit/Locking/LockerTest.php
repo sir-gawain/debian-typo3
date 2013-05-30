@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Locking;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,13 +30,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Locking;
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class LockerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	///////////////////////////////
 	// tests concerning __construct
@@ -251,7 +244,7 @@ class LockerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		if (!is_file($file)) {
 			$this->markTestSkipped('releaseDoesNotRemoveFilesNotWithinTypo3TempLocksDirectory() skipped: Test file could not be created');
 		}
-		// Create t3lib_lock instance, set lockfile to invalid path
+		// Create instance, set lockfile to invalid path
 		$instance = new \TYPO3\CMS\Core\Locking\Locker(999999999, $lockMethod);
 		$instance->setEnableLogging(FALSE);
 		$t3libLockReflection = new \ReflectionClass('TYPO3\\CMS\\Core\\Locking\\Locker');

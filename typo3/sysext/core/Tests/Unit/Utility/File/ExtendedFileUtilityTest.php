@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility\File;
 /* * *************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Fabien Udriot <fabien.udriot@ecodev.ch>
+ *  (c) 2011-2013 Fabien Udriot <fabien.udriot@ecodev.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,11 +29,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility\File;
  * @author Fabien Udriot <fabien.udriot@ecodev.ch>
  */
 class ExtendedFileUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * @var boolean Enable backup of global and system variables
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * @var array A backup of registered singleton instances

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tree\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,14 +26,12 @@ namespace TYPO3\CMS\Backend\Tree\View;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Base class for creating a browsable array/page/folder tree in HTML
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author René Fritz <r.fritz@colorcube.de>
- * @see t3lib_browsetree
- * @see t3lib_pagetree
- * @see t3lib_foldertree
  */
 abstract class AbstractTreeView {
 
@@ -333,9 +331,6 @@ abstract class AbstractTreeView {
 			$this->MOUNTS = array(0 => 0);
 		}
 		$this->setTreeName();
-		if ($this->table) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($this->table);
-		}
 		// Setting this to FALSE disables the use of array-trees by default
 		$this->data = FALSE;
 		$this->dataLookup = FALSE;
@@ -496,7 +491,7 @@ abstract class AbstractTreeView {
 	 * @param boolean $exp The element was expanded to render subelements if this flag is set.
 	 * @return string Image tag with the plus/minus icon.
 	 * @access private
-	 * @see t3lib_pageTree::PMicon()
+	 * @see \TYPO3\CMS\Backend\Tree\View\PageTreeView::PMicon()
 	 * @todo Define visibility
 	 */
 	public function PMicon($row, $a, $c, $nextCount, $exp) {
@@ -603,7 +598,7 @@ abstract class AbstractTreeView {
 	 * @param integer $id Record id/key
 	 * @return boolean
 	 * @access private
-	 * @see t3lib_pageTree::expandNext()
+	 * @see \TYPO3\CMS\Backend\Tree\View\PageTreeView::expandNext()
 	 * @todo Define visibility
 	 */
 	public function expandNext($id) {
@@ -699,13 +694,13 @@ abstract class AbstractTreeView {
 	 */
 	public function getTitleStr($row, $titleLen = 30) {
 		if ($this->ext_showNavTitle && strlen(trim($row['nav_title'])) > 0) {
-			$title = '<span title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xml:title', 1) . ' ' . htmlspecialchars(trim($row['title'])) . '">' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($row['nav_title'], $titleLen)) . '</span>';
+			$title = '<span title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xlf:title', 1) . ' ' . htmlspecialchars(trim($row['title'])) . '">' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($row['nav_title'], $titleLen)) . '</span>';
 		} else {
 			$title = htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($row['title'], $titleLen));
 			if (strlen(trim($row['nav_title'])) > 0) {
-				$title = '<span title="' . $GLOBALS['LANG']->sL('LLL:EXT:cms/locallang_tca.xml:pages.nav_title', 1) . ' ' . htmlspecialchars(trim($row['nav_title'])) . '">' . $title . '</span>';
+				$title = '<span title="' . $GLOBALS['LANG']->sL('LLL:EXT:cms/locallang_tca.xlf:pages.nav_title', 1) . ' ' . htmlspecialchars(trim($row['nav_title'])) . '">' . $title . '</span>';
 			}
-			$title = strlen(trim($row['title'])) == 0 ? '<em>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.no_title', 1) . ']</em>' : $title;
+			$title = strlen(trim($row['title'])) == 0 ? '<em>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', 1) . ']</em>' : $title;
 		}
 		return $title;
 	}

@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Main script class for the page tree navigation frame
  *
@@ -166,7 +192,7 @@ class PageTreeNavigationController {
 		// Outputting Temporary DB mount notice:
 		if ($this->active_tempMountPoint) {
 			$flashText = '
-				<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('setTempDBmount' => 0))) . '">' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xml:labels.temporaryDBmount', 1) . '</a>		<br />' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xml:labels.path', 1) . ': <span title="' . htmlspecialchars($this->active_tempMountPoint['_thePathFull']) . '">' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->active_tempMountPoint['_thePath'], -50)) . '</span>
+				<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('setTempDBmount' => 0))) . '">' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xlf:labels.temporaryDBmount', 1) . '</a>		<br />' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xlf:labels.path', 1) . ': <span title="' . htmlspecialchars($this->active_tempMountPoint['_thePathFull']) . '">' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->active_tempMountPoint['_thePath'], -50)) . '</span>
 			';
 			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $flashText, '', \TYPO3\CMS\Core\Messaging\FlashMessage::INFO);
 			$this->content .= $flashMessage->render();
@@ -182,8 +208,8 @@ class PageTreeNavigationController {
 		$markers = array(
 			'IMG_RESET' => \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close', array(
 				'id' => 'treeFilterReset',
-				'alt' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.resetFilter'),
-				'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.resetFilter')
+				'alt' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.resetFilter'),
+				'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.resetFilter')
 			)),
 			'WORKSPACEINFO' => $this->getWorkspaceInfo(),
 			'CONTENT' => $this->content
@@ -225,7 +251,7 @@ class PageTreeNavigationController {
 		$onclickNewPageWizard = 'top.content.list_frame.location.href=top.TS.PATH_typo3+\'db_new.php?pagesOnly=1&amp;id=\'+Tree.pageID;';
 		$buttons['new_page'] = '<a href="#" onclick="' . $onclickNewPageWizard . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:cms/layout/locallang.xml:newPage', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-page-new') . '</a>';
 		// Refresh
-		$buttons['refresh'] = '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.refresh', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-refresh') . '</a>';
+		$buttons['refresh'] = '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.refresh', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-refresh') . '</a>';
 		// CSH
 		$buttons['csh'] = str_replace('typo3-csh-inline', 'typo3-csh-inline show-right', \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('xMOD_csh_corebe', 'pagetree', $GLOBALS['BACK_PATH'], '', TRUE));
 		// Filter
@@ -242,7 +268,7 @@ class PageTreeNavigationController {
 	 */
 	protected function getWorkspaceInfo() {
 		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces') && ($GLOBALS['BE_USER']->workspace !== 0 || $GLOBALS['BE_USER']->getTSConfigVal('options.pageTree.onlineWorkspaceInfo'))) {
-			$wsTitle = htmlspecialchars(\tx_Workspaces_Service_Workspaces::getWorkspaceTitle($GLOBALS['BE_USER']->workspace));
+			$wsTitle = htmlspecialchars(\TYPO3\CMS\Workspaces\Service\WorkspaceService::getWorkspaceTitle($GLOBALS['BE_USER']->workspace));
 			$workspaceInfo = '
 				<div class="bgColor4 workspace-info">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('apps-toolbar-menu-workspace', array(
 				'title' => $wsTitle,

@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Lowlevel\View;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script class for the Config module
  *
@@ -26,7 +52,7 @@ class ConfigurationView {
 	/**
 	 * Document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\StandardDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -122,9 +148,6 @@ class ConfigurationView {
 			$arrayBrowser->varName = '$TYPO3_CONF_VARS';
 			break;
 		case 1:
-			foreach ($GLOBALS['TCA'] as $table => $config) {
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
-			}
 			$theVar = $GLOBALS['TCA'];
 			\TYPO3\CMS\Core\Utility\GeneralUtility::naturalKeySortRecursive($theVar);
 			$arrayBrowser->varName = '$TCA';
@@ -214,14 +237,6 @@ class ConfigurationView {
 				if ($var === '$TCA') {
 					// check if we are editing the TCA
 					preg_match_all('/\\[\'([^\']+)\'\\]/', $line, $parts);
-					if ($parts[1][1] !== 'ctrl') {
-						// anything else than ctrl section requires to load TCA
-						$loadTCA = 'TYPO3\\CMS\\Core\\Utility\\GeneralUtility::loadTCA(\'' . $parts[1][0] . '\');';
-						if (strpos($extTables, $loadTCA) === FALSE) {
-							// check if the loadTCA statement is not already present in the file
-							$changedLine = $loadTCA . LF . $changedLine;
-						}
-					}
 				}
 				// insert line in extTables.php
 				$extTables = preg_replace('/<\\?php|\\?>/is', '', $extTables);
@@ -229,10 +244,25 @@ class ConfigurationView {
 				$success = \TYPO3\CMS\Core\Utility\GeneralUtility::writeFile(PATH_typo3conf . TYPO3_extTableDef_script, $extTables);
 				if ($success) {
 					// show flash message
-					$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', '', sprintf($GLOBALS['LANG']->getLL('writeMessage', TRUE), TYPO3_extTableDef_script, '<br />', '<strong>' . nl2br($changedLine) . '</strong>'), \TYPO3\CMS\Core\Messaging\FlashMessage::OK);
+					$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+						'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+						'',
+						sprintf(
+							$GLOBALS['LANG']->getLL('writeMessage', TRUE),
+							TYPO3_extTableDef_script,
+							'<br />',
+							'<strong>' . nl2br(htmlspecialchars($changedLine)) . '</strong>'
+						),
+						\TYPO3\CMS\Core\Messaging\FlashMessage::OK
+					);
 				} else {
 					// Error: show flash message
-					$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', '', sprintf($GLOBALS['LANG']->getLL('writeMessageFailed', TRUE), TYPO3_extTableDef_script), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+					$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+						'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+						'',
+						sprintf($GLOBALS['LANG']->getLL('writeMessageFailed', TRUE), TYPO3_extTableDef_script),
+						\TYPO3\CMS\Core\Messaging\FlashMessage::ERROR
+					);
 				}
 				$this->content .= $flashMessage->render();
 			}

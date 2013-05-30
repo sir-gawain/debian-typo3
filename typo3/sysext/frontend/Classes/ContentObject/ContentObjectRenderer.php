@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\ContentObject;
 /***************************************************************
  * Copyright notice
  *
- * (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ * (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -61,6 +61,8 @@ class ContentObjectRenderer {
 		// this is a placeholder for checking if the content is available in cache
 		'setContentToCurrent' => 'boolean',
 		'setContentToCurrent.' => 'array',
+		'addPageCacheTags' => 'string',
+		'addPageCacheTags.' => 'array',
 		'setCurrent' => 'string',
 		'setCurrent.' => 'array',
 		'lang.' => 'array',
@@ -92,6 +94,7 @@ class ContentObjectRenderer {
 		'listNum.' => 'array',
 		'trim' => 'boolean',
 		'trim.' => 'array',
+		'strPad.' => 'array',
 		'stdWrap' => 'stdWrap',
 		'stdWrap.' => 'array',
 		'stdWrapProcess' => 'hook',
@@ -803,12 +806,15 @@ class ContentObjectRenderer {
 			'FLOWPLAYER' => 'FlowPlayer',
 			'QTOBJECT' => 'QuicktimeObject',
 			'SVG' => 'ScalableVectorGraphics',
-			'EDITPANEL' => 'EditPanel'
+			'EDITPANEL' => 'EditPanel',
 		);
 		$name = $classMapping[$name];
 		if (!array_key_exists($name, $this->contentObjects)) {
 			try {
-				$this->contentObjects[$name] = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_content_' . $name, $this);
+				$this->contentObjects[$name] = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+					'TYPO3\\CMS\\Frontend\\ContentObject\\' . $name . 'ContentObject',
+					$this
+				);
 			} catch (\ReflectionException $e) {
 				$this->contentObjects[$name] = NULL;
 			}
@@ -1318,16 +1324,21 @@ class ContentObjectRenderer {
 		$info = $this->getImgResource($file, $conf['file.']);
 		$GLOBALS['TSFE']->lastImageInfo = $info;
 		if (is_array($info)) {
-			$info[3] = \TYPO3\CMS\Core\Utility\GeneralUtility::png_to_gif_by_imagemagick($info[3]);
+			if (\TYPO3\CMS\Core\Utility\GeneralUtility::isAllowedAbsPath(PATH_site . $info['3'])) {
+				$source = \TYPO3\CMS\Core\Utility\GeneralUtility::rawUrlEncodeFP(\TYPO3\CMS\Core\Utility\GeneralUtility::png_to_gif_by_imagemagick($info[3]));
+				$source = $GLOBALS['TSFE']->absRefPrefix . $source;
+			} else {
+				$source = $info[3];
+			}
 			// This array is used to collect the image-refs on the page...
-			$GLOBALS['TSFE']->imagesOnPage[] = $info[3];
+			$GLOBALS['TSFE']->imagesOnPage[] = $source;
 			$altParam = $this->getAltParam($conf);
 			if ($conf['params'] && !isset($conf['params.'])) {
 				$params = ' ' . $conf['params'];
 			} else {
 				$params = isset($conf['params.']) ? ' ' . $this->stdWrap($conf['params'], $conf['params.']) : '';
 			}
-			$theValue = '<img src="' . htmlspecialchars(($GLOBALS['TSFE']->absRefPrefix . \TYPO3\CMS\Core\Utility\GeneralUtility::rawUrlEncodeFP($info[3]))) . '" width="' . $info[0] . '" height="' . $info[1] . '"' . $this->getBorderAttr((' border="' . intval($conf['border']) . '"')) . $params . $altParam . (!empty($GLOBALS['TSFE']->xhtmlDoctype) ? ' /' : '') . '>';
+			$theValue = '<img src="' . htmlspecialchars($source) . '" width="' . $info[0] . '" height="' . $info[1] . '"' . $this->getBorderAttr(' border="' . intval($conf['border']) . '"') . $params . $altParam . (!empty($GLOBALS['TSFE']->xhtmlDoctype) ? ' /' : '') . '>';
 			$linkWrap = isset($conf['linkWrap.']) ? $this->stdWrap($conf['linkWrap'], $conf['linkWrap.']) : $conf['linkWrap'];
 			if ($linkWrap) {
 				$theValue = $this->linkWrap($theValue, $linkWrap);
@@ -1635,12 +1646,11 @@ class ContentObjectRenderer {
 	 * " World. How are ". The input content string could just as well have
 	 * been "Hello ###sub1### World. How are ###sub1### you?" and the result
 	 * would be the same
-	 * Wrapper for t3lib_parsehtml::getSubpart which behaves identical
+	 * Wrapper for \TYPO3\CMS\Core\Html\HtmlParser::getSubpart which behaves identical
 	 *
 	 * @param string $content The content stream, typically HTML template content.
 	 * @param string $marker The marker string, typically on the form "###[the marker string]###
 	 * @return string The subpart found, if found.
-	 * @see substituteSubpart(), t3lib_parsehtml::getSubpart()
 	 */
 	public function getSubpart($content, $marker) {
 		return \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($content, $marker);
@@ -1650,14 +1660,13 @@ class ContentObjectRenderer {
 	 * Substitute subpart in input template stream.
 	 * This function substitutes a subpart in $content with the content of
 	 * $subpartContent.
-	 * Wrapper for t3lib_parsehtml::substituteSubpart which behaves identical
+	 * Wrapper for \TYPO3\CMS\Core\Html\HtmlParser::substituteSubpart which behaves identical
 	 *
 	 * @param string $content The content stream, typically HTML template content.
 	 * @param string $marker The marker string, typically on the form "###[the marker string]###
 	 * @param mixed $subpartContent The content to insert instead of the subpart found. If a string, then just plain substitution happens (includes removing the HTML comments of the subpart if found). If $subpartContent happens to be an array, it's [0] and [1] elements are wrapped around the EXISTING content of the subpart (fetched by getSubpart()) thereby not removing the original content.
 	 * @param boolean $recursive If $recursive is set, the function calls itself with the content set to the remaining part of the content after the second marker. This means that proceding subparts are ALSO substituted!
 	 * @return string The processed HTML content string.
-	 * @see getSubpart(), t3lib_parsehtml::substituteSubpart()
 	 */
 	public function substituteSubpart($content, $marker, $subpartContent, $recursive = 1) {
 		return \TYPO3\CMS\Core\Html\HtmlParser::substituteSubpart($content, $marker, $subpartContent, $recursive);
@@ -1860,7 +1869,6 @@ class ContentObjectRenderer {
 	 * @param boolean $uppercase
 	 * @param boolean $deleteUnused
 	 * @return string
-	 * @see t3lib_parsehtml::substituteMarkerAndSubpartArrayRecursive()
 	 */
 	public function substituteMarkerAndSubpartArrayRecursive($content, array $markersAndSubparts, $wrap = '', $uppercase = FALSE, $deleteUnused = FALSE) {
 		return \TYPO3\CMS\Core\Html\HtmlParser::substituteMarkerAndSubpartArrayRecursive($content, $markersAndSubparts, $wrap, $uppercase, $deleteUnused);
@@ -2049,6 +2057,24 @@ class ContentObjectRenderer {
 				$content = $cacheFrontend->get($conf['cache.']['key']);
 				$this->stopRendering[$this->stdWrapRecursionLevel] = TRUE;
 			}
+		}
+		return $content;
+	}
+
+	/**
+	 * Add tags to page cache (comma-separated list)
+	 *
+	 * @param string $content Input value undergoing processing in these functions.
+	 * @param array $conf All stdWrap properties, not just the ones for a particular function.
+	 * @return string The processed input value
+	 */
+	public function stdWrap_addPageCacheTags($content = '', $conf = array()) {
+		$tags = isset($conf['addPageCacheTags.'])
+			? $this->stdWrap($conf['addPageCacheTags'], $conf['addPageCacheTags.'])
+			: $conf['addPageCacheTags'];
+		if (!empty($tags)) {
+			$cacheTags = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $tags, TRUE);
+			$GLOBALS['TSFE']->addCacheTags($cacheTags);
 		}
 		return $content;
 	}
@@ -2307,6 +2333,38 @@ class ContentObjectRenderer {
 	 */
 	public function stdWrap_trim($content = '', $conf = array()) {
 		$content = trim($content);
+		return $content;
+	}
+
+	/**
+	 * strPad
+	 * Will return a string padded left/right/on both sides, based on configuration given as stdWrap properties
+	 *
+	 * @param string $content Input value undergoing processing in this function.
+	 * @param array $conf stdWrap properties for strPad.
+	 * @return string The processed input value
+	 */
+	public function stdWrap_strPad($content = '', $conf = array()) {
+		// Must specify a length in conf for this to make sense
+		$length = 0;
+		// Padding with space is PHP-default
+		$padWith = ' ';
+		// Padding on the right side is PHP-default
+		$padType = STR_PAD_RIGHT;
+		if (!empty($conf['strPad.']['length'])) {
+			$length = intval($conf['strPad.']['length']);
+		}
+		if (!empty($conf['strPad.']['padWith'])) {
+			$padWith = $conf['strPad.']['padWith'];
+		}
+		if (!empty($conf['strPad.']['type'])) {
+			if (strtolower($conf['strPad.']['type']) === 'left') {
+				$padType = STR_PAD_LEFT;
+			} elseif (strtolower($conf['strPad.']['type']) === 'both') {
+				$padType = STR_PAD_BOTH;
+			}
+		}
+		$content = str_pad($content, $length, $padWith, $padType);
 		return $content;
 	}
 
@@ -2693,8 +2751,8 @@ class ContentObjectRenderer {
 	}
 
 	/**
-	 * cropHTML
-	 * Crops content to a given size without caring abhout HTML tags
+	 * crop
+	 * Crops content to a given size without caring about HTML tags
 	 *
 	 * @param string $content Input value undergoing processing in this function.
 	 * @param array $conf stdWrap properties for crop.
@@ -3047,7 +3105,17 @@ class ContentObjectRenderer {
 	 * @return string The processed input value
 	 */
 	public function stdWrap_noTrimWrap($content = '', $conf = array()) {
-		$content = $this->noTrimWrap($content, $conf['noTrimWrap']);
+		$splitChar = isset($conf['noTrimWrap.']['splitChar.'])
+			? $this->stdWrap($conf['noTrimWrap.']['splitChar'], $conf['noTrimWrap.']['splitChar.'])
+			: $conf['noTrimWrap.']['splitChar'];
+		if ($splitChar === NULL || $splitChar === '') {
+			$splitChar = '|';
+		}
+		$content = $this->noTrimWrap(
+			$content,
+			$conf['noTrimWrap'],
+			$splitChar
+		);
 		return $content;
 	}
 
@@ -3605,12 +3673,14 @@ class ContentObjectRenderer {
 	}
 
 	/**
-	 * Passes the input value, $theValue, to an instance of "t3lib_parsehtml" together with the TypoScript options which are first converted from a TS style array to a set of arrays with options for the t3lib_parsehtml class.
+	 * Passes the input value, $theValue, to an instance of "\TYPO3\CMS\Core\Html\HtmlParser"
+	 * together with the TypoScript options which are first converted from a TS style array
+	 * to a set of arrays with options for the \TYPO3\CMS\Core\Html\HtmlParser class.
 	 *
-	 * @param string $theValue The value to parse by the class "t3lib_parsehtml
+	 * @param string $theValue The value to parse by the class \TYPO3\CMS\Core\Html\HtmlParser
 	 * @param array $conf TypoScript properties for the parser. See link.
 	 * @return string Return value.
-	 * @see stdWrap(), t3lib_parsehtml::HTMLparserConfig(), t3lib_parsehtml::HTMLcleaner()
+	 * @see stdWrap(), \TYPO3\CMS\Core\Html\HtmlParser::HTMLparserConfig(), \TYPO3\CMS\Core\Html\HtmlParser::HTMLcleaner()
 	 * @todo Define visibility
 	 */
 	public function HTMLparser_TSbridge($theValue, $conf) {
@@ -3807,17 +3877,17 @@ class ContentObjectRenderer {
 					$cropPosition = $absChars - $strLen;
 					// The snippet "&[^&\s;]{2,8};" in the RegEx below represents entities.
 					$patternMatchEntityAsSingleChar = '(&[^&\\s;]{2,8};|.)';
-					$cropRegEx = $chars < 0 ? '#' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}$#ui' : '#^' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}#ui';
+					$cropRegEx = $chars < 0 ? '#' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}$#uis' : '#^' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}#uis';
 					if (preg_match($cropRegEx, $tempContent, $croppedMatch)) {
 						$tempContentPlusOneCharacter = $croppedMatch[0];
 					} else {
 						$tempContentPlusOneCharacter = FALSE;
 					}
-					$cropRegEx = $chars < 0 ? '#' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#ui' : '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}#ui';
+					$cropRegEx = $chars < 0 ? '#' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#uis' : '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}#uis';
 					if (preg_match($cropRegEx, $tempContent, $croppedMatch)) {
 						$tempContent = $croppedMatch[0];
 						if ($crop2space && $tempContentPlusOneCharacter !== FALSE) {
-							$cropRegEx = $chars < 0 ? '#(?<=\\s)' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#ui' : '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}(?=\\s)#ui';
+							$cropRegEx = $chars < 0 ? '#(?<=\\s)' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#uis' : '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}(?=\\s)#uis';
 							if (preg_match($cropRegEx, $tempContentPlusOneCharacter, $croppedMatch)) {
 								$tempContent = $croppedMatch[0];
 							}
@@ -4160,7 +4230,7 @@ class ContentObjectRenderer {
 							}
 							$check = basename($theFile) . ':' . filemtime($theFile) . ':' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'];
 							$md5sum = '&md5sum=' . md5($check);
-							$icon = 't3lib/thumbs.php?file=' . rawurlencode(('../' . $theFile)) . $thumbSize . $md5sum;
+							$icon = 'typo3/thumbs.php?file=' . rawurlencode(('../' . $theFile)) . $thumbSize . $md5sum;
 						} else {
 							$icon = TYPO3_mainDir . 'gfx/fileicons/notfound_thumb.gif';
 						}
@@ -4255,11 +4325,11 @@ class ContentObjectRenderer {
 	}
 
 	/**
-	 * Performs basic mathematical evaluation of the input string. Does NOT take parathesis and operator precedence into account! (for that, see t3lib_utility_Math::calculateWithPriorityToAdditionAndSubtraction())
+	 * Performs basic mathematical evaluation of the input string. Does NOT take parathesis and operator precedence into account! (for that, see \TYPO3\CMS\Core\Utility\MathUtility::calculateWithPriorityToAdditionAndSubtraction())
 	 *
 	 * @param string $val The string to evaluate. Example: "3+4*10/5" will generate "35". Only integer numbers can be used.
 	 * @return integer The result (might be a float if you did a division of the numbers).
-	 * @see t3lib_utility_Math::calculateWithPriorityToAdditionAndSubtraction()
+	 * @see \TYPO3\CMS\Core\Utility\MathUtility::calculateWithPriorityToAdditionAndSubtraction()
 	 * @todo Define visibility
 	 */
 	public function calc($val) {
@@ -4304,7 +4374,7 @@ class ContentObjectRenderer {
 	public function calcIntExplode($delim, $string) {
 		$temp = explode($delim, $string);
 		foreach ($temp as $key => $val) {
-			$temp[$key] = intval(self::calc($val));
+			$temp[$key] = intval($this->calc($val));
 		}
 		return $temp;
 	}
@@ -4958,7 +5028,9 @@ class ContentObjectRenderer {
 					$target = $GLOBALS['TSFE']->extTarget;
 				}
 				if ($GLOBALS['TSFE']->config['config']['jumpurl_enable']) {
-					$res = '<a' . ' href="' . htmlspecialchars(($GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode(('http://' . $parts[0])) . $GLOBALS['TSFE']->getMethodUrlIdToken)) . '"' . ($target ? ' target="' . $target . '"' : '') . $aTagParams . $this->extLinkATagParams(('http://' . $parts[0]), 'url') . '>';
+					$jumpurl = 'http://' . $parts[0];
+					$juHash = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($jumpurl, 'jumpurl');
+					$res = '<a' . ' href="' . htmlspecialchars(($GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($jumpurl))) . '&juHash=' . $juHash . $GLOBALS['TSFE']->getMethodUrlIdToken . '"' . ($target ? ' target="' . $target . '"' : '') . $aTagParams . $this->extLinkATagParams(('http://' . $parts[0]), 'url') . '>';
 				} else {
 					$res = '<a' . ' href="http://' . htmlspecialchars($parts[0]) . '"' . ($target ? ' target="' . $target . '"' : '') . $aTagParams . $this->extLinkATagParams(('http://' . $parts[0]), 'url') . '>';
 				}
@@ -5090,6 +5162,11 @@ class ContentObjectRenderer {
 					$processingConfiguration['minHeight'] = isset($fileArray['minH.']) ? intval($this->stdWrap($fileArray['minH'], $fileArray['minH.'])) : intval($fileArray['minH']);
 					$processingConfiguration['noScale'] = isset($fileArray['noScale.']) ? $this->stdWrap($fileArray['noScale'], $fileArray['noScale.']) : $fileArray['noScale'];
 					$processingConfiguration['additionalParameters'] = isset($fileArray['params.']) ? $this->stdWrap($fileArray['params'], $fileArray['params.']) : $fileArray['params'];
+					// Possibility to cancel/force profile extraction
+					// see $TYPO3_CONF_VARS['GFX']['im_stripProfileCommand']
+					if (isset($fileArray['stripProfile'])) {
+						$processingConfiguration['stripProfile'] = $fileArray['stripProfile'];
+					}
 					// Check if we can handle this type of file for editing
 					if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileObject->getExtension())) {
 						$maskArray = $fileArray['m.'];
@@ -5149,25 +5226,6 @@ class ContentObjectRenderer {
 			}
 		}
 		return $imageResource;
-	}
-
-	/**
-	 * Modifies the parameters for ImageMagick for stripping of profile information.
-	 *
-	 * @param string $parameters The parameters to be modified (if required)
-	 * @param array $configuration The TypoScript configuration of [IMAGE].file
-	 * @return string The modified parameters
-	 */
-	protected function modifyImageMagickStripProfileParameters($parameters, array $configuration) {
-		// Strips profile information of image to save some space:
-		if (isset($configuration['stripProfile'])) {
-			if ($configuration['stripProfile']) {
-				$parameters = $GLOBALS['TYPO3_CONF_VARS']['GFX']['im_stripProfileCommand'] . $parameters;
-			} else {
-				$parameters .= '###SkipStripProfile###';
-			}
-		}
-		return $parameters;
 	}
 
 	/***********************************************
@@ -5506,8 +5564,6 @@ class ContentObjectRenderer {
 		$table = $conf['table'];
 		$field = $conf['field'];
 		$delimiter = $conf['delimiter'] ? $conf['delimiter'] : ' ,';
-		$GLOBALS['TSFE']->includeTCA();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$field]) && is_array($GLOBALS['TCA'][$table]['columns'][$field]['config']['items'])) {
 			$values = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $inputValue);
 			$output = array();
@@ -5690,7 +5746,10 @@ class ContentObjectRenderer {
 						$scheme = '';
 					}
 					if ($GLOBALS['TSFE']->config['config']['jumpurl_enable']) {
-						$this->lastTypoLinkUrl = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode(($scheme . $link_param)) . $GLOBALS['TSFE']->getMethodUrlIdToken;
+						$url = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP;
+						$jumpurl = $scheme . $link_param;
+						$juHash = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($jumpurl, 'jumpurl');
+						$this->lastTypoLinkUrl = $url . '&jumpurl=' . rawurlencode($jumpurl) . '&juHash='. $juHash . $GLOBALS['TSFE']->getMethodUrlIdToken;
 					} else {
 						$this->lastTypoLinkUrl = $scheme . $link_param;
 					}
@@ -5708,7 +5767,13 @@ class ContentObjectRenderer {
 						}
 						if ($GLOBALS['TSFE']->config['config']['jumpurl_enable'] || $conf['jumpurl']) {
 							$theFileEnc = str_replace('%2F', '/', rawurlencode(rawurldecode($link_param)));
-							$this->lastTypoLinkUrl = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($link_param) . ($conf['jumpurl.']['secure'] ? $this->locDataJU($theFileEnc, $conf['jumpurl.']['secure.']) : '') . $GLOBALS['TSFE']->getMethodUrlIdToken;
+							$url = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($link_param);
+							if ($conf['jumpurl.']['secure']) {
+								$url .= $this->locDataJU($theFileEnc, $conf['jumpurl.']['secure.']);
+							} else {
+								$url .= '&juHash=' . \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($link_param, 'jumpurl');
+							}
+							$this->lastTypoLinkUrl =  $url . $GLOBALS['TSFE']->getMethodUrlIdToken;
 						} else {
 							$this->lastTypoLinkUrl = $GLOBALS['TSFE']->absRefPrefix . $link_param;
 						}
@@ -5833,44 +5898,11 @@ class ContentObjectRenderer {
 									$page = $page2;
 								}
 							}
-							// Find all domain records in the rootline of the target page
-							$targetPageRootline = $GLOBALS['TSFE']->sys_page->getRootLine($page['uid']);
-							$foundDomains = array();
-							$firstFoundDomains = array();
-							$firstFoundForcedDomains = array();
-							$targetPageRootlinePids = array();
-							foreach ($targetPageRootline as $data) {
-								$targetPageRootlinePids[] = intval($data['uid']);
-							}
-							$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('pid, domainName, forced', 'sys_domain', 'pid IN (' . implode(',', $targetPageRootlinePids) . ') ' . ' AND redirectTo=\'\' ' . $this->enableFields('sys_domain'), '', 'sorting ASC');
-							// TODO maybe it makes sense to hold all sys_domain records in a cache to save additional DB querys on each typolink
-							while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-								$foundDomains[] = preg_replace('/\\/$/', '', $row['domainName']);
-								if (!isset($firstFoundDomains[$row['pid']])) {
-									$firstFoundDomains[$row['pid']] = preg_replace('/\\/$/', '', $row['domainName']);
-								}
-								if ($row['forced'] && !isset($firstFoundForcedDomains[$row['pid']])) {
-									$firstFoundForcedDomains[$row['pid']] = preg_replace('/\\/$/', '', $row['domainName']);
-								}
-							}
-							$GLOBALS['TYPO3_DB']->sql_free_result($res);
-							// Set targetDomain to first found domain record if the target page cannot be reached within the current domain
-							if (count($foundDomains) > 0 && (!in_array($currentDomain, $foundDomains) && !in_array(($currentDomain . trim(preg_replace('/\\/[^\\/]*$/', '', \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('SCRIPT_NAME')))), $foundDomains) || count($firstFoundForcedDomains) > 0)) {
-								foreach ($targetPageRootlinePids as $pid) {
-									// Always use the 'forced' domain if we found one
-									if (isset($firstFoundForcedDomains[$pid])) {
-										$targetDomain = $firstFoundForcedDomains[$pid];
-										break;
-									}
-									// Use the first found domain record
-									if ($targetDomain === '' && isset($firstFoundDomains[$pid])) {
-										$targetDomain = $firstFoundDomains[$pid];
-									}
-								}
-								// Do not prepend the domain if its the current hostname
-								if ($targetDomain === $currentDomain) {
-									$targetDomain = '';
-								}
+
+							$targetDomain = $GLOBALS['TSFE']->getDomainNameForPid($page['uid']);
+							// Do not prepend the domain if it is the current hostname
+							if (!$targetDomain || $targetDomain === $currentDomain) {
+								$targetDomain = '';
 							}
 						}
 						$absoluteUrlScheme = 'http';
@@ -5880,7 +5912,7 @@ class ContentObjectRenderer {
 							if (isset($conf['forceAbsoluteUrl.']['scheme']) && $conf['forceAbsoluteUrl.']['scheme']) {
 								$absoluteUrlScheme = $conf['forceAbsoluteUrl.']['scheme'];
 							} elseif ($page['url_scheme'] > 0) {
-								$absoluteUrlScheme = (int) $page['url_scheme'] === \t3lib_utility_http::SCHEME_HTTP ? 'http' : 'https';
+								$absoluteUrlScheme = (int) $page['url_scheme'] === \TYPO3\CMS\Core\Utility\HttpUtility::SCHEME_HTTP ? 'http' : 'https';
 							}
 							// If no domain records are defined, use current domain:
 							$currentUrlScheme = parse_url(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL'), PHP_URL_SCHEME);
@@ -6090,7 +6122,7 @@ class ContentObjectRenderer {
 	 *
 	 * @param string $label Text string being wrapped by the link.
 	 * @param string $params Link parameter; eg. "123" for page id, "kasperYYYY@typo3.com" for email address, "http://...." for URL, "fileadmin/blabla.txt" for file.
-	 * @param array $urlParameters An array with key/value pairs representing URL parameters to set. Values NOT URL-encoded yet.
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
 	 * @param string $target Specific target set, if any. (Default is using the current)
 	 * @return string The wrapped $label-text string
 	 * @see getTypoLink_URL()
@@ -6119,7 +6151,7 @@ class ContentObjectRenderer {
 	 * Returns the URL of a "typolink" create from the input parameter string, url-parameters and target
 	 *
 	 * @param string $params Link parameter; eg. "123" for page id, "kasperYYYY@typo3.com" for email address, "http://...." for URL, "fileadmin/blabla.txt" for file.
-	 * @param array $urlParameters An array with key/value pairs representing URL parameters to set. Values NOT URL-encoded yet.
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
 	 * @param string $target Specific target set, if any. (Default is using the current)
 	 * @return string The URL
 	 * @see getTypoLink()
@@ -6146,7 +6178,7 @@ class ContentObjectRenderer {
 	/**
 	 * Returns the current page URL
 	 *
-	 * @param array $urlParameters Optionally you can specify additional URL parameters. An array with key/value pairs representing URL parameters to set. Values NOT URL-encoded yet.
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
 	 * @param integer $id An alternative ID to the current id ($GLOBALS['TSFE']->id)
 	 * @return string The URL
 	 * @see getTypoLink_URL()
@@ -6167,7 +6199,7 @@ class ContentObjectRenderer {
 	 * @todo Define visibility
 	 */
 	public function getClosestMPvalueForPage($pageId, $raw = FALSE) {
-		// MointPoints:
+		// MountPoints:
 		if ($GLOBALS['TYPO3_CONF_VARS']['FE']['enable_mount_pids'] && $GLOBALS['TSFE']->MP) {
 			// Same page as current.
 			if (!strcmp($GLOBALS['TSFE']->id, $pageId)) {
@@ -6245,7 +6277,8 @@ class ContentObjectRenderer {
 				$linktxt = str_ireplace($mailAddress, $spamProtectedMailAddress, $linktxt);
 			}
 		} else {
-			$mailToUrl = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($mailToUrl) . $GLOBALS['TSFE']->getMethodUrlIdToken;
+			$juHash = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($mailToUrl, 'jumpurl');
+			$mailToUrl = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($mailToUrl) . '&juHash=' . $juHash . $GLOBALS['TSFE']->getMethodUrlIdToken;
 		}
 		return array(
 			$mailToUrl,
@@ -6328,13 +6361,14 @@ class ContentObjectRenderer {
 	 *
 	 * @param string $content The content to wrap, eg. "HELLO WORLD
 	 * @param string $wrap The wrap value, eg. " | <strong> | </strong>
+	 * @param string $char The char used to split the wrapping value, default is "|"
 	 * @return string Wrapped input string, eg. " <strong> HELLO WORD </strong>
 	 * @see wrap()
 	 * @todo Define visibility
 	 */
-	public function noTrimWrap($content, $wrap) {
+	public function noTrimWrap($content, $wrap, $char = '|') {
 		if ($wrap) {
-			$wrapArr = explode('|', $wrap);
+			$wrapArr = explode($char, $wrap);
 			return $wrapArr[1] . $content . $wrapArr[2];
 		} else {
 			return $content;
@@ -6551,41 +6585,63 @@ class ContentObjectRenderer {
 	}
 
 	/**
-	 * Sending a notification email using $GLOBALS['TSFE']->plainMailEncoded()
+	 * Sends a notification email
 	 *
-	 * @param string $msg The message content. If blank, no email is sent.
+	 * @param string $message The message content. If blank, no email is sent.
 	 * @param string $recipients Comma list of recipient email addresses
 	 * @param string $cc Email address of recipient of an extra mail. The same mail will be sent ONCE more; not using a CC header but sending twice.
-	 * @param string $email_from "From" email address
-	 * @param string $email_fromName Optional "From" name
+	 * @param string $senderAddress "From" email address
+	 * @param string $senderName Optional "From" name
 	 * @param string $replyTo Optional "Reply-To" header email address.
 	 * @return boolean Returns TRUE if sent
-	 * @todo Define visibility
 	 */
-	public function sendNotifyEmail($msg, $recipients, $cc, $email_from, $email_fromName = '', $replyTo = '') {
-		// Sends order emails:
-		$headers = array();
-		if ($email_from) {
-			$headers[] = 'From: ' . $email_fromName . ' <' . $email_from . '>';
+	public function sendNotifyEmail($message, $recipients, $cc, $senderAddress, $senderName = '', $replyTo = '') {
+		$result = FALSE;
+		/** @var $mail \TYPO3\CMS\Core\Mail\MailMessage */
+		$mail = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Mail\\MailMessage');
+		$senderName = trim($senderName);
+		$senderAddress = trim($senderAddress);
+		if ($senderName !== '' && $senderAddress !== '') {
+			$sender = array($senderAddress => $senderName);
+		} elseif ($senderAddress !== '') {
+			$sender = array($senderAddress);
+		} else {
+			$sender = \TYPO3\CMS\Core\Utility\MailUtility::getSystemFrom();
 		}
-		if ($replyTo) {
-			$headers[] = 'Reply-To: ' . $replyTo;
+		$mail->setFrom($sender);
+		$parsedReplyTo = \TYPO3\CMS\Core\Utility\MailUtility::parseAddresses($replyTo);
+		if (count($parsedReplyTo) > 0) {
+			$mail->setReplyTo($parsedReplyTo);
 		}
-		$recipients = implode(',', \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $recipients, 1));
-		$emailContent = trim($msg);
-		if ($emailContent) {
+		$message = trim($message);
+		if ($message !== '') {
 			// First line is subject
-			$parts = explode(LF, $emailContent, 2);
-			$subject = trim($parts[0]);
-			$plain_message = trim($parts[1]);
-			if ($recipients) {
-				$GLOBALS['TSFE']->plainMailEncoded($recipients, $subject, $plain_message, implode(LF, $headers));
+			$messageParts = explode(LF, $message, 2);
+			$subject = trim($messageParts[0]);
+			$plainMessage = trim($messageParts[1]);
+			$parsedRecipients = \TYPO3\CMS\Core\Utility\MailUtility::parseAddresses($recipients);
+			if (count($parsedRecipients) > 0) {
+				$mail->setTo($parsedRecipients)
+					->setSubject($subject)
+					->setBody($plainMessage);
+				$mail->send();
 			}
-			if ($cc) {
-				$GLOBALS['TSFE']->plainMailEncoded($cc, $subject, $plain_message, implode(LF, $headers));
+			$parsedCc = \TYPO3\CMS\Core\Utility\MailUtility::parseAddresses($cc);
+			if (count($parsedCc) > 0) {
+				/** @var $mail \TYPO3\CMS\Core\Mail\MailMessage */
+				$mail = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Mail\\MailMessage');
+				if (count($parsedReplyTo) > 0) {
+					$mail->setReplyTo($parsedReplyTo);
+				}
+				$mail->setFrom($sender)
+					->setTo($parsedCc)
+					->setSubject($subject)
+					->setBody($plainMessage);
+				$mail->send();
 			}
-			return TRUE;
+			$result = TRUE;
 		}
+		return $result;
 	}
 
 	/**
@@ -7068,13 +7124,12 @@ class ContentObjectRenderer {
 	 * THIS IS A VERY IMPORTANT FUNCTION: Basically you must add the output from this function for EVERY select query you create
 	 * for selecting records of tables in your own applications - thus they will always be filtered according to the "enablefields"
 	 * configured in TCA
-	 * Simply calls t3lib_pageSelect::enableFields() BUT will send the show_hidden flag along!
+	 * Simply calls \TYPO3\CMS\Frontend\Page\PageRepository::enableFields() BUT will send the show_hidden flag along!
 	 * This means this function will work in conjunction with the preview facilities of the frontend engine/Admin Panel.
 	 *
 	 * @param string $table The table for which to get the where clause
 	 * @param boolean $show_hidden If set, then you want NOT to filter out hidden records. Otherwise hidden record are filtered based on the current preview settings.
 	 * @return string The part of the where clause on the form " AND [fieldname]=0 AND ...". Eg. " AND hidden=0 AND starttime < 123345567
-	 * @see t3lib_pageSelect::enableFields()
 	 * @todo Define visibility
 	 */
 	public function enableFields($table, $show_hidden = 0) {
@@ -7730,7 +7785,7 @@ class ContentObjectRenderer {
 			if (!count($dataArr)) {
 				$dataArr = $this->data;
 			}
-			// Delegate rendering of the edit panel to the t3lib_frontendedit class.
+			// Delegate rendering of the edit panel to the frontend edit
 			$content = $GLOBALS['BE_USER']->frontendEdit->displayEditPanel($content, $conf, $currentRecord, $dataArr);
 		}
 		return $content;
@@ -7757,7 +7812,7 @@ class ContentObjectRenderer {
 			if (!count($dataArr)) {
 				$dataArr = $this->data;
 			}
-			// Delegate rendering of the edit panel to the t3lib_frontendedit class.
+			// Delegate rendering of the edit panel to frontend edit class.
 			$content = $GLOBALS['BE_USER']->frontendEdit->displayEditIcons($content, $params, $conf, $currentRecord, $dataArr, $addUrlParamStr);
 		}
 		return $content;

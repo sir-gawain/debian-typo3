@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,15 +24,12 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Contains a class for various syntax highlighting.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * Syntax Highlighting class.
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @deprecated since 6.0, will be removed with 6.2
  */
 class t3lib_syntaxhl {
 
@@ -86,6 +83,14 @@ class t3lib_syntaxhl {
 		'currentSheetId' => array('<span style="color: #000080;">', '</span>'),
 		'currentLangId' => array('<span style="color: #000080;">', '</span>')
 	);
+
+	/**
+	 * Deprecation constructor
+	 */
+	public function __construct() {
+		\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('Class t3lib_syntaxhl is deprecated and unused since TYPO3 6.0. It will be removed with version 6.2.');
+	}
+
 
 	/*************************************
 	 *

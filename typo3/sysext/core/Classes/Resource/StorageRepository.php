@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2011-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,7 +32,7 @@ namespace TYPO3\CMS\Core\Resource;
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  * @author Ingmar Schlecht <ingmar@typo3.org>
  */
-class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
+class StorageRepository extends AbstractRepository {
 
 	/**
 	 * @var string
@@ -66,10 +66,10 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 	 * Finds storages by type.
 	 *
 	 * @param string $storageType
-	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage[]
+	 * @return ResourceStorage[]
 	 */
 	public function findByStorageType($storageType) {
-		/** @var $driverRegistry \TYPO3\CMS\Core\Resource\Driver\DriverRegistry */
+		/** @var $driverRegistry Driver\DriverRegistry */
 		$driverRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Resource\Driver\DriverRegistry');
 		$storageObjects = array();
 		$whereClause = $this->typeField . ' = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($storageType, $this->table);
@@ -96,7 +96,7 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 	 * Returns a list of mountpoints that are available in the VFS.
 	 * In case no storage exists this automatically created a storage for fileadmin/
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage[]
+	 * @return ResourceStorage[]
 	 */
 	public function findAll() {
 			// check if we have never created a storage before (no records, regardless of the enableFields),
@@ -122,7 +122,7 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 			($whereClause ? $whereClause : '1=1') . $this->getWhereClauseForEnabledFields()
 		);
 
-		/** @var $driverRegistry \TYPO3\CMS\Core\Resource\Driver\DriverRegistry */
+		/** @var $driverRegistry Driver\DriverRegistry */
 		$driverRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Resource\Driver\DriverRegistry');
 
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
@@ -188,7 +188,7 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 	 * Creates an object managed by this repository.
 	 *
 	 * @param array $databaseRow
-	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage
+	 * @return ResourceStorage
 	 */
 	protected function createDomainObject(array $databaseRow) {
 		return $this->factory->getStorageObject($databaseRow['uid'], $databaseRow);
@@ -204,9 +204,11 @@ class StorageRepository extends \TYPO3\CMS\Core\Resource\AbstractRepository {
 		if (is_object($GLOBALS['TSFE'])) {
 			// frontend context
 			$whereClause = $GLOBALS['TSFE']->sys_page->enableFields($this->table);
+			$whereClause .= $GLOBALS['TSFE']->sys_page->deleteClause($this->table);
 		} else {
 			// backend context
 			$whereClause = \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields($this->table);
+			$whereClause .= \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause($this->table);
 		}
 		return $whereClause;
 	}

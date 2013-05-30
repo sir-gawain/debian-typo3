@@ -4,8 +4,8 @@ namespace TYPO3\CMS\SysAction;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
- *  (c) 2010-2011 Georg Ringer <typo3@ringerge.org>
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2010-2013 Georg Ringer <typo3@ringerge.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,6 +24,7 @@ namespace TYPO3\CMS\SysAction;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * This class provides a task for the taskcenter
  *
@@ -32,9 +33,13 @@ namespace TYPO3\CMS\SysAction;
  */
 class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 
+	/**
+	 * @var \TYPO3\CMS\Taskcenter\Controller\TaskModuleController
+	 */
 	protected $taskObject;
 
 	/**
+	 * @var \TYPO3\CMS\Backend\Form\FormEngine
 	 * @todo Define visibility
 	 */
 	public $t3lib_TCEforms;
@@ -87,24 +92,29 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 				$content .= $this->taskObject->description($record['title'], $record['description']);
 				// Output depends on the type
 				switch ($record['type']) {
-				case 1:
-					$content .= $this->viewNewBackendUser($record);
-					break;
-				case 2:
-					$content .= $this->viewSqlQuery($record);
-					break;
-				case 3:
-					$content .= $this->viewRecordList($record);
-					break;
-				case 4:
-					$content .= $this->viewEditRecord($record);
-					break;
-				case 5:
-					$content .= $this->viewNewRecord($record);
-					break;
-				default:
-					$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $GLOBALS['LANG']->getLL('action_noType', TRUE), $GLOBALS['LANG']->getLL('action_error'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
-					$content .= '<br />' . $flashMessage->render();
+					case 1:
+						$content .= $this->viewNewBackendUser($record);
+						break;
+					case 2:
+						$content .= $this->viewSqlQuery($record);
+						break;
+					case 3:
+						$content .= $this->viewRecordList($record);
+						break;
+					case 4:
+						$content .= $this->viewEditRecord($record);
+						break;
+					case 5:
+						$content .= $this->viewNewRecord($record);
+						break;
+					default:
+						$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+							'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+							$GLOBALS['LANG']->getLL('action_noType', TRUE),
+							$GLOBALS['LANG']->getLL('action_error'),
+							\TYPO3\CMS\Core\Messaging\FlashMessage::ERROR
+						);
+						$content .= '<br />' . $flashMessage->render();
 				}
 			}
 		}
@@ -267,23 +277,23 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 						<fieldset class="fields">
 							<legend>General fields</legend>
 							<div class="row">
-								<label for="field_disable">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.disable') . '</label>
+								<label for="field_disable">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.disable') . '</label>
 								<input type="checkbox" id="field_disable" name="data[disable]" value="1" class="checkbox" ' . ($vars['disable'] == 1 ? ' checked="checked" ' : '') . ' />
 							</div>
 							<div class="row">
-								<label for="field_realname">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.name') . '</label>
+								<label for="field_realname">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.name') . '</label>
 								<input type="text" id="field_realname" name="data[realName]" value="' . htmlspecialchars($vars['realName']) . '" />
 							</div>
 							<div class="row">
-								<label for="field_username">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xml:be_users.username') . '</label>
+								<label for="field_username">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xlf:be_users.username') . '</label>
 								<input type="text" id="field_username" name="data[username]" value="' . htmlspecialchars($vars['username']) . '" />
 							</div>
 							<div class="row">
-								<label for="field_password">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xml:be_users.password') . '</label>
+								<label for="field_password">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xlf:be_users.password') . '</label>
 								<input type="password" id="field_password" name="data[password]" value="" />
 							</div>
 							<div class="row">
-								<label for="field_email">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.email') . '</label>
+								<label for="field_email">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.email') . '</label>
 								<input type="text" id="field_email" name="data[email]" value="' . htmlspecialchars($vars['email']) . '" />
 							</div>
 						</fieldset>
@@ -291,13 +301,13 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 							<legend>Configuration</legend>
 
 							<div class="row">
-								<label for="field_usergroup">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xml:be_users.usergroup') . '</label>
+								<label for="field_usergroup">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xlf:be_users.usergroup') . '</label>
 								<select id="field_usergroup" name="data[usergroup][]" multiple="multiple">
 									' . $this->getUsergroups($record, $vars) . '
 								</select>
 							</div>
 							<div class="row">
-								<label for="field_db_mountpoints">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xml:be_users.options_db_mounts') . '</label>
+								<label for="field_db_mountpoints">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tca.xlf:be_users.options_db_mounts') . '</label>
 								' . $this->t3lib_TCEforms->dbFileIcons('data[db_mountpoints]', 'db', 'pages', $loadDB->itemArray, '', array('size' => 3)) . '
 							</div>
 							<div class="row">
@@ -358,7 +368,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'be_users', 'cruser_id=' . $GLOBALS['BE_USER']->user['uid'] . ' AND createdByAction=' . intval($action['uid']) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('be_users'), '', 'username');
 		// Render the user records
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-			$icon = \t3lib_iconworks::getSpriteIconForRecord('be_users', $row, array('title' => 'uid=' . $row['uid']));
+			$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord('be_users', $row, array('title' => 'uid=' . $row['uid']));
 			$line = $icon . $this->action_linkUserName($row['username'], $row['realName'], $action['uid'], $row['uid']);
 			// Selected user
 			if ($row['uid'] == $selectedUser) {
@@ -636,7 +646,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 		$content = '';
 		$actionList = array();
 		$dbAnalysis = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\RelationHandler');
-		$dbAnalysis->fromTC = 0;
+		$dbAnalysis->setFetchAllFields(TRUE);
 		$dbAnalysis->start($record['t4_recordsToEdit'], '*');
 		$dbAnalysis->getFromDB();
 		// collect the records
@@ -654,7 +664,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 				'description' => \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($el['table'], $dbAnalysis->results[$el['table']][$el['id']]),
 				'descriptionHtml' => $description,
 				'link' => $GLOBALS['BACK_PATH'] . 'alt_doc.php?returnUrl=' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')) . '&edit[' . $el['table'] . '][' . $el['id'] . ']=edit',
-				'icon' => \t3lib_iconworks::getSpriteIconForRecord($el['table'], $dbAnalysis->results[$el['table']][$el['id']], array('title' => htmlspecialchars($path)))
+				'icon' => \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($el['table'], $dbAnalysis->results[$el['table']][$el['id']], array('title' => htmlspecialchars($path)))
 			);
 		}
 		// Render the record list
@@ -709,8 +719,13 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 					if (!$queryIsEmpty) {
 						$actionContent .= '<hr /> ' . $fullsearch->tableWrap($sql_query['qSelect']);
 					}
-					$actionContent .= '<br /><a title="' . $GLOBALS['LANG']->getLL('action_editQuery') . '" href="' . $GLOBALS['BACK_PATH'] . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('lowlevel') . 'dbint/index.php?id=' . '&SET[function]=search' . '&SET[search]=query' . '&storeControl[STORE]=-' . $record['uid'] . '&storeControl[LOAD]=1' . '">
-						<img class="icon"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif') . ' alt="" />' . $GLOBALS['LANG']->getLL(($queryIsEmpty ? 'action_createQuery' : 'action_editQuery')) . '</a><br /><br />';
+					$actionContent .= '<br /><a title="' . $GLOBALS['LANG']->getLL('action_editQuery') . '" href="'
+						. \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_dbint')
+						. '&id=' . '&SET[function]=search' . '&SET[search]=query'
+						. '&storeControl[STORE]=-' . $record['uid'] . '&storeControl[LOAD]=1' . '">
+						<img class="icon"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'],
+						'gfx/edit2.gif') . ' alt="" />' . $GLOBALS['LANG']->getLL(($queryIsEmpty ? 'action_createQuery'
+						: 'action_editQuery')) . '</a><br /><br />';
 				}
 				$content .= $this->taskObject->doc->section($GLOBALS['LANG']->getLL('action_t2_result'), $actionContent, 0, 1);
 			} else {

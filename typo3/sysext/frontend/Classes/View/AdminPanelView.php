@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Frontend\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008-2011 Jeff Segars <jeff@webempoweredchurch.org>
- *  (c) 2008-2011 David Slayback <dave@webempoweredchurch.org>
+ *  (c) 2008-2013 Jeff Segars <jeff@webempoweredchurch.org>
+ *  (c) 2008-2013 David Slayback <dave@webempoweredchurch.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -74,7 +74,7 @@ class AdminPanelView {
 		$GLOBALS['TSFE']->displayEditIcons = $this->extGetFeAdminValue('edit', 'displayIcons');
 		$GLOBALS['TSFE']->displayFieldEditIcons = $this->extGetFeAdminValue('edit', 'displayFieldIcons');
 		if ($this->extGetFeAdminValue('tsdebug', 'displayQueries')) {
-			// do not override if the value is already set in t3lib_db
+			// Do not override if the value is already set in \TYPO3\CMS\Core\Database\DatabaseConnection
 			if ($GLOBALS['TYPO3_DB']->explainOutput == 0) {
 				// Enable execution of EXPLAIN SELECT queries
 				$GLOBALS['TYPO3_DB']->explainOutput = 3;
@@ -92,8 +92,12 @@ class AdminPanelView {
 			$GLOBALS['BE_USER']->uc['TSFE_adminConfig']['preview_simulateDate'] = intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('ADMCMD_simTime'));
 			$this->ext_forcePreview = TRUE;
 		}
-		if ($GLOBALS['TSFE']->forceTemplateParsing || $GLOBALS['TSFE']->displayEditIcons || $GLOBALS['TSFE']->displayFieldEditIcons) {
-			$GLOBALS['TSFE']->set_no_cache();
+		if ($GLOBALS['TSFE']->forceTemplateParsing) {
+			$GLOBALS['TSFE']->set_no_cache('Admin Panel: Force template parsing', TRUE);
+		} elseif ($GLOBALS['TSFE']->displayEditIcons) {
+			$GLOBALS['TSFE']->set_no_cache('Admin Panel: Display edit icons', TRUE);
+		} elseif ($GLOBALS['TSFE']->displayFieldEditIcons) {
+			$GLOBALS['TSFE']->set_no_cache('Admin Panel: Display field edit icons', TRUE);
 		}
 	}
 
@@ -105,7 +109,6 @@ class AdminPanelView {
 	public function getAdminPanelHeaderData() {
 		$result = '';
 		// Include BE styles
-		$GLOBALS['TSFE']->includeTCA();
 		if (!empty($GLOBALS['TBE_STYLES']['stylesheets']['admPanel'])) {
 			$result = '<link rel="stylesheet" type="text/css" href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::locationHeaderUrl($GLOBALS['TBE_STYLES']['stylesheets']['admPanel'])) . '" />';
 		}
@@ -145,7 +148,7 @@ class AdminPanelView {
 		if (is_array($input)) {
 			// Setting
 			$GLOBALS['BE_USER']->uc['TSFE_adminConfig'] = array_merge(!is_array($GLOBALS['BE_USER']->uc['TSFE_adminConfig']) ? array() : $GLOBALS['BE_USER']->uc['TSFE_adminConfig'], $input);
-			// Candidate for t3lib_div::array_merge() if integer-keys will some day make trouble...
+			// Candidate for \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge() if integer-keys will some day make trouble...
 			unset($GLOBALS['BE_USER']->uc['TSFE_adminConfig']['action']);
 			// Actions:
 			if ($input['action']['clearCache'] && $this->isAdminModuleEnabled('cache')) {
@@ -158,7 +161,7 @@ class AdminPanelView {
 		}
 		$GLOBALS['TT']->LR = $this->extGetFeAdminValue('tsdebug', 'LR');
 		if ($this->extGetFeAdminValue('cache', 'noCache')) {
-			$GLOBALS['TSFE']->set_no_cache();
+			$GLOBALS['TSFE']->set_no_cache('Admin Panel: No Caching', TRUE);
 		}
 	}
 
@@ -229,7 +232,7 @@ class AdminPanelView {
 	 * @return string HTML for the Admin Panel
 	 */
 	public function display() {
-		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_tsfe.php');
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_tsfe.xlf');
 		$moduleContent = '';
 		if ($GLOBALS['BE_USER']->uc['TSFE_adminConfig']['display_top']) {
 			if ($this->isAdminModuleEnabled('preview')) {
@@ -641,11 +644,11 @@ class AdminPanelView {
 
 	/**
 	 * Returns the label for key, $key. If a translation for the language set in $GLOBALS['BE_USER']->uc['lang'] is found that is returned, otherwise the default value.
-	 * IF the global variable $LOCAL_LANG is NOT an array (yet) then this function loads the global $LOCAL_LANG array with the content of "sysext/lang/locallang_tsfe.php" so that the values therein can be used for labels in the Admin Panel
+	 * IF the global variable $LOCAL_LANG is NOT an array (yet) then this function loads the global $LOCAL_LANG array with the content of "sysext/lang/locallang_tsfe.xlf" so that the values therein can be used for labels in the Admin Panel
 	 *
 	 * FIXME The function should convert to $TSFE->renderCharset, not to UTF8!
 	 *
-	 * @param string $key Key for a label in the $LOCAL_LANG array of "sysext/lang/locallang_tsfe.php
+	 * @param string $key Key for a label in the $LOCAL_LANG array of "sysext/lang/locallang_tsfe.xlf
 	 * @return string The value for the $key
 	 */
 	public function extGetLL($key) {

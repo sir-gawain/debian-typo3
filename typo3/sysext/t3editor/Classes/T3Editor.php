@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\T3Editor;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2007-2013 Tobias Liebig <mail_typo3@etobi.de>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Provides a javascript-driven code editor with syntax highlighting for TS, HTML, CSS and more
  *
@@ -151,7 +177,7 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 	public function getJavascriptCode($doc) {
 		$content = '';
 		if ($this->isEnabled()) {
-			$path_t3e = \t3lib_extmgm::extRelPath('t3editor');
+			$path_t3e = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('t3editor');
 			$path_codemirror = 'contrib/codemirror/js/';
 			// Include needed javascript-frameworks
 			$pageRenderer = $doc->getPageRenderer();
@@ -159,7 +185,7 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 			$pageRenderer->loadPrototype();
 			$pageRenderer->loadScriptaculous();
 			// Include editor-css
-			$content .= '<link href="' . \TYPO3\CMS\Core\Utility\GeneralUtility::createVersionNumberedFilename(($GLOBALS['BACK_PATH'] . \t3lib_extmgm::extRelPath('t3editor') . 'res/css/t3editor.css')) . '" type="text/css" rel="stylesheet" />';
+			$content .= '<link href="' . \TYPO3\CMS\Core\Utility\GeneralUtility::createVersionNumberedFilename(($GLOBALS['BACK_PATH'] . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('t3editor') . 'res/css/t3editor.css')) . '" type="text/css" rel="stylesheet" />';
 			// Include editor-js-lib
 			$doc->loadJavascriptLib($path_codemirror . 'codemirror.js');
 			$doc->loadJavascriptLib($path_t3e . 'res/jslib/t3editor.js');
@@ -187,7 +213,7 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 		if (empty($this->mode)) {
 			return '';
 		}
-		$path_t3e = $GLOBALS['BACK_PATH'] . \t3lib_extmgm::extRelPath('t3editor');
+		$path_t3e = $GLOBALS['BACK_PATH'] . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('t3editor');
 		$content = '';
 		if ($this->mode === self::MODE_TYPOSCRIPT) {
 			$content .= '<script type="text/javascript" src="' . $path_t3e . 'res/jslib/ts_codecompletion/tsref.js' . '"></script>';
@@ -220,7 +246,7 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 	protected function getParserfileByMode($mode) {
 		switch ($mode) {
 		case self::MODE_TYPOSCRIPT:
-			$relPath = ($GLOBALS['BACK_PATH'] ? $GLOBALS['BACK_PATH'] : '../../../') . \t3lib_extmgm::extRelPath('t3editor') . 'res/jslib/parse_typoscript/';
+			$relPath = ($GLOBALS['BACK_PATH'] ? $GLOBALS['BACK_PATH'] : '../../../') . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('t3editor') . 'res/jslib/parse_typoscript/';
 			$parserfile = '["' . $relPath . 'tokenizetyposcript.js", "' . $relPath . 'parsetyposcript.js"]';
 			break;
 		case self::MODE_JAVASCRIPT:
@@ -342,7 +368,7 @@ class T3Editor implements \TYPO3\CMS\Core\SingletonInterface {
 			if (!empty($alt)) {
 				$alt = ' alt="' . $alt . '"';
 			}
-			$code .= '<div>' . '<textarea id="t3editor_' . $this->editorCounter . '" ' . 'name="' . $name . '" ' . 'class="' . $class . '" ' . $additionalParams . ' ' . $alt . '>' . $content . '</textarea></div>';
+			$code .= '<div>' . '<textarea id="t3editor_' . $this->editorCounter . '" ' . 'name="' . $name . '" ' . 'class="' . $class . '" ' . $additionalParams . ' ' . $alt . '>' . htmlspecialchars($content) . '</textarea></div>';
 			$checked = $GLOBALS['BE_USER']->uc['disableT3Editor'] ? 'checked="checked"' : '';
 			$code .= '<br /><br />' . '<input type="checkbox" ' . 'class="checkbox t3editor_disableEditor" ' . 'onclick="T3editor.toggleEditor(this);" ' . 'name="t3editor_disableEditor" ' . 'value="true" ' . 'id="t3editor_disableEditor_' . $this->editorCounter . '_checkbox" ' . $checked . ' />&nbsp;' . '<label for="t3editor_disableEditor_' . $this->editorCounter . '_checkbox">' . $GLOBALS['LANG']->getLL('deactivate') . '</label>' . '<br /><br />';
 			if (count($hiddenfields)) {

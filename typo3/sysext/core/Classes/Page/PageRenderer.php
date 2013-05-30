@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\Page;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Steffen Kamper <info@sk-typo3.de>
- *  (c) 2011 Kai Vogel <kai.vogel@speedprogs.de>
+ *  (c) 2009-2013 Steffen Kamper <info@sk-typo3.de>
+ *  (c) 2011-2013 Kai Vogel <kai.vogel@speedprogs.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -45,7 +45,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	const EXTJS_ADAPTER_PROTOTYPE = 'prototype';
 	const EXTJS_ADAPTER_YUI = 'yui';
 	// jQuery Core version that is shipped with TYPO3
-	const JQUERY_VERSION_LATEST = '1.8.2';
+	const JQUERY_VERSION_LATEST = '1.9.1';
 	// jQuery namespace options
 	const JQUERY_NAMESPACE_NONE = 'none';
 	const JQUERY_NAMESPACE_DEFAULT = 'jQuery';
@@ -102,6 +102,14 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @var string
 	 */
 	protected $lang;
+
+	/**
+	 * List of language dependencies for actual language. This is used for local variants of a language
+	 * that depend on their "main" language, like Brazilian Portuguese or Canadian French.
+	 *
+	 * @var array
+	 */
+	protected $languageDependencies = array();
 
 	/**
 	 * @var \TYPO3\CMS\Core\Resource\ResourceCompressor
@@ -262,6 +270,13 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $jsLibraryNames = array('prototype', 'scriptaculous', 'extjs');
 
 	// Paths to contibuted libraries
+
+	/**
+	 * default path to the requireJS library, relative to the typo3/ directory
+	 * @var string
+	 */
+	protected $requireJsPath = 'contrib/requirejs/';
+
 	/**
 	 * @var string
 	 */
@@ -320,6 +335,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @var array
 	 */
 	protected $availableLocalJqueryVersions = array(
+		'1.8.2',	// jquery version shipped with TYPO3 6.0, still available in the contrib/ directory
 		self::JQUERY_VERSION_LATEST
 	);
 
@@ -333,6 +349,18 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		'msn' => '//ajax.aspnetcdn.com/ajax/jQuery/jquery-%1$s%2$s.js',
 		'jquery' => 'http://code.jquery.com/jquery-%1$s%2$s.js'
 	);
+
+	/**
+	 * if set, the requireJS library is included
+	 * @var boolean
+	 */
+	protected $addRequireJs = FALSE;
+
+	/**
+	 * inline configuration for requireJS
+	 * @var array
+	 */
+	protected $requireJsConfig = array();
 
 	/**
 	 * @var boolean
@@ -550,6 +578,15 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function setLanguage($lang) {
 		$this->lang = $lang;
+		$this->languageDependencies = array();
+
+		// Language is found. Configure it:
+		if (in_array($this->lang, $this->locales->getLocales())) {
+			$this->languageDependencies[] = $this->lang;
+			foreach ($this->locales->getLocaleDependencies($this->lang) as $language) {
+				$this->languageDependencies[] = $language;
+			}
+		}
 	}
 
 	/**
@@ -640,6 +677,16 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function setBodyContent($content) {
 		$this->bodyContent = $content;
+	}
+
+	/**
+	 * Sets path to requireJS library (relative to typo3 directory)
+	 *
+	 * @param string $path Path to requireJS library
+	 * @return void
+	 */
+	public function setRequireJsPath($path) {
+		$this->requireJsPath = $path;
 	}
 
 	/**
@@ -1331,13 +1378,13 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		// Add language labels for ExtDirect
 		if (TYPO3_MODE === 'FE') {
 			$this->addInlineLanguageLabelArray(array(
-				'extDirect_timeoutHeader' => $GLOBALS['TSFE']->sL('LLL:EXT:lang/locallang_misc.xml:extDirect_timeoutHeader'),
-				'extDirect_timeoutMessage' => $GLOBALS['TSFE']->sL('LLL:EXT:lang/locallang_misc.xml:extDirect_timeoutMessage')
+				'extDirect_timeoutHeader' => $GLOBALS['TSFE']->sL('LLL:EXT:lang/locallang_misc.xlf:extDirect_timeoutHeader'),
+				'extDirect_timeoutMessage' => $GLOBALS['TSFE']->sL('LLL:EXT:lang/locallang_misc.xlf:extDirect_timeoutMessage')
 			));
 		} else {
 			$this->addInlineLanguageLabelArray(array(
-				'extDirect_timeoutHeader' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:extDirect_timeoutHeader'),
-				'extDirect_timeoutMessage' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xml:extDirect_timeoutMessage')
+				'extDirect_timeoutHeader' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:extDirect_timeoutHeader'),
+				'extDirect_timeoutMessage' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:extDirect_timeoutMessage')
 			));
 		}
 		$token = ($api = '');
@@ -1507,13 +1554,72 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		if ($source === 'local' && !in_array($version, $this->availableLocalJqueryVersions)) {
 			throw new \UnexpectedValueException('The requested jQuery version is not available in the local filesystem.', 1341505305);
 		}
-		if (!ctype_alnum($namespace)) {
+		if (!preg_match('/^[a-zA-Z0-9]+$/', $namespace)) {
 			throw new \UnexpectedValueException('The requested namespace contains non alphanumeric characters.', 1341571604);
 		}
 		$this->jQueryVersions[$namespace] = array(
 			'version' => $version,
 			'source' => $source
 		);
+	}
+
+	/**
+	 * Call function if you need the requireJS library
+	 * this automatically adds the JavaScript path of all loaded extensions in the requireJS path option
+	 * so it resolves names like TYPO3/CMS/MyExtension/MyJsFile to EXT:MyExtension/Resources/Public/JavaScript/MyJsFile.js
+	 * when using requireJS
+	 *
+	 * @return void
+	 */
+	public function loadRequireJs() {
+
+			// load all paths to map to package names / namespaces
+		if (count($this->requireJsConfig) === 0) {
+				// first, load all paths for the namespaces
+			$this->requireJsConfig['paths'] = array();
+			// get all extensions that are loaded
+			$loadedExtensions = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getLoadedExtensionListArray();
+			foreach ($loadedExtensions as $packageName) {
+				$fullJsPath = 'EXT:' . $packageName . '/Resources/Public/JavaScript/';
+				$fullJsPath = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($fullJsPath);
+				$fullJsPath = \TYPO3\CMS\Core\Utility\PathUtility::getRelativePath(PATH_typo3, $fullJsPath);
+				$fullJsPath = rtrim($fullJsPath, '/');
+				if ($fullJsPath) {
+					$this->requireJsConfig['paths']['TYPO3/CMS/' . \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToUpperCamelCase($packageName)] = $this->backPath . $fullJsPath;
+				}
+			}
+
+				// check if additional AMD modules need to be loaded if a single AMD module is initialized
+			if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['RequireJS']['postInitializationModules'])) {
+				$this->addInlineSettingArray('RequireJS.PostInitializationModules', $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['RequireJS']['postInitializationModules']);
+			}
+		}
+
+		$this->addRequireJs = TRUE;
+	}
+
+	/**
+	 * includes a AMD-compatible JS file by resolving the ModuleName, and then requires the file via a requireJS request
+	 *
+	 * this function only works for AMD-ready JS modules, used like "define('TYPO3/CMS/Backend/FormEngine..."
+	 * in the JS file
+	 *
+	 *	TYPO3/CMS/Backend/FormEngine =>
+	 * 		"TYPO3": Vendor Name
+	 * 		"CMS": Product Name
+	 *		"Backend": Extension Name
+	 *		"FormEngine": FileName in the Resources/Public/JavaScript folder
+	 *
+	 * @param $mainModuleName must be in the form of "TYPO3/CMS/PackageName/ModuleName" e.g. "TYPO3/CMS/Backend/FormEngine"
+	 * @return void
+	 */
+	public function loadRequireJsModule($mainModuleName) {
+
+		// make sure requireJS is initialized
+		$this->loadRequireJs();
+
+		// execute the main module
+		$this->addJsInlineCode('RequireJS-Module-' . $mainModuleName, 'require(["' . $mainModuleName . '"]);');
 	}
 
 	/**
@@ -1672,7 +1778,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Gets labels to be used in JavaScript fetched from a locallang file.
 	 *
-	 * @param string $fileRef Input is a file-reference (see t3lib_div::getFileAbsFileName). That file is expected to be a 'locallang.xml' file containing a valid XML TYPO3 language structure.
+	 * @param string $fileRef Input is a file-reference (see \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName). That file is expected to be a 'locallang.xml' file containing a valid XML TYPO3 language structure.
 	 * @param string $selectionPrefix Prefix to select the correct labels (default: '')
 	 * @param string $stripFromSelectionName Sub-prefix to be removed from label names in the result (default: '')
 	 * @param integer $errorMode Error mode (when file could not be found): 0 - syslog entry, 1 - do nothing, 2 - throw an exception
@@ -1968,14 +2074,23 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * Helper function for render the main JavaScript libraries,
-	 * currently: jQuery, prototype, SVG, ExtJs
+	 * currently: RequireJS, jQuery, PrototypeJS, Scriptaculous, SVG, ExtJs
 	 *
 	 * @return string Content with JavaScript libraries
 	 */
 	protected function renderMainJavaScriptLibraries() {
 		$out = '';
+
+		// Include RequireJS
+		if ($this->addRequireJs) {
+				// load the paths of the requireJS configuration
+			$out .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('var require = ' . json_encode($this->requireJsConfig)) . LF;
+				// directly after that, include the require.js file
+			$out .= '<script src="' . $this->processJsFile(($this->backPath . $this->requireJsPath . 'require.js')) . '" type="text/javascript"></script>' . LF;
+		}
+
 		if ($this->addSvg) {
-			$out .= '<script src="' . $this->processJsFile(($this->backPath . $this->svgPath . 'svg.js')) . '" data-path="' . $this->backPath . $this->svgPath . '"' . ($this->enableSvgDebug ? ' data-debug="true"' : '') . '></script>';
+			$out .= '<script src="' . $this->processJsFile(($this->backPath . $this->svgPath . 'svg.js')) . '" data-path="' . $this->backPath . $this->svgPath . '"' . ($this->enableSvgDebug ? ' data-debug="true"' : '') . '></script>' . LF;
 		}
 		// Include jQuery Core for each namespace, depending on the version and source
 		if (!empty($this->jQueryVersions)) {
@@ -2085,7 +2200,10 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		} else {
-			if ($inlineSettings) {
+			// no extJS loaded, but still inline settings
+			if ($inlineSettings !== '') {
+				// make sure the global TYPO3 is available
+				$inlineSettings = 'var TYPO3 = TYPO3 || {};' . CRLF . $inlineSettings;
 				$out .= $this->inlineJavascriptWrap[0] . $inlineSettings . $this->inlineJavascriptWrap[1];
 			}
 		}
@@ -2126,14 +2244,14 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		// Set the noConflict mode to be available via "TYPO3.jQuery" in all installations
 		switch ($namespace) {
 		case self::JQUERY_NAMESPACE_DEFAULT_NOCONFLICT:
-			$scriptTag .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('jQuery.noConflict();');
+			$scriptTag .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('jQuery.noConflict();') . LF;
 			break;
 		case self::JQUERY_NAMESPACE_NONE:
 			break;
 		case self::JQUERY_NAMESPACE_DEFAULT:
 
 		default:
-			$scriptTag .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('var TYPO3 = TYPO3 || {}; TYPO3.' . $namespace . ' = jQuery.noConflict(true);');
+			$scriptTag .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('var TYPO3 = TYPO3 || {}; TYPO3.' . $namespace . ' = jQuery.noConflict(true);') . LF;
 			break;
 		}
 		return $scriptTag;
@@ -2313,7 +2431,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			throw new \RuntimeException('Language and character encoding are not set.', 1284906026);
 		}
 		$labelsFromFile = array();
-		$allLabels = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile($fileRef, $this->lang, $this->charSet, $errorMode);
+		$allLabels = $this->readLLfile($fileRef, $errorMode);
 		// Regular expression to strip the selection prefix and possibly something from the label name:
 		$labelPattern = '#^' . preg_quote($selectionPrefix, '#') . '(' . preg_quote($stripFromSelectionName, '#') . ')?#';
 		if ($allLabels !== FALSE) {
@@ -2335,6 +2453,42 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			$this->inlineLanguageLabels = array_merge($this->inlineLanguageLabels, $labelsFromFile);
 		}
 	}
+
+	/**
+	 * Reads a locallang file.
+	 *
+	 * @param string $fileRef Reference to a relative filename to include.
+	 * @param integer $errorMode Error mode (when file could not be found): 0 - syslog entry, 1 - do nothing, 2 - throw an exception
+	 * @return array Returns the $LOCAL_LANG array found in the file. If no array found, returns empty array.
+	 */
+	protected function readLLfile($fileRef, $errorMode = 0) {
+		if ($this->lang !== 'default') {
+			$languages = array_reverse($this->languageDependencies);
+			// At least we need to have English
+			if (empty($languages)) {
+				$languages[] = 'default';
+			}
+		} else {
+			$languages = array('default');
+		}
+
+		$localLanguage = array();
+		foreach ($languages as $language) {
+			$tempLL = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile($fileRef, $language, $this->charSet, $errorMode);
+			$localLanguage['default'] = $tempLL['default'];
+			if (!isset($localLanguage[$this->lang])) {
+				$localLanguage[$this->lang] = $localLanguage['default'];
+			}
+			if ($this->lang !== 'default' && isset($tempLL[$language])) {
+				// Merge current language labels onto labels from previous language
+				// This way we have a labels with fall back applied
+				$localLanguage[$this->lang] = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($localLanguage[$this->lang], $tempLL[$language], FALSE, FALSE);
+			}
+		}
+
+		return $localLanguage;
+	}
+
 
 	/*****************************************************/
 	/*                                                   */
@@ -2475,9 +2629,9 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * Returns instance of t3lib_Compressor
+	 * Returns instance of \TYPO3\CMS\Core\Resource\ResourceCompressor
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\ResourceCompressor Instance of t3lib_Compressor
+	 * @return \TYPO3\CMS\Core\Resource\ResourceCompressor
 	 */
 	protected function getCompressor() {
 		if ($this->compressor === NULL) {

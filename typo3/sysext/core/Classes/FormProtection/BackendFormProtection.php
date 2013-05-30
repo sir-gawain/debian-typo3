@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\FormProtection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Oliver Klee <typo3-coding@oliverklee.de>
- * (c) 2010-2011 Helmut Hummel <helmut.hummel@typo3.org>
+ * (c) 2010-2013 Oliver Klee <typo3-coding@oliverklee.de>
+ * (c) 2010-2013 Helmut Hummel <helmut.hummel@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,9 +24,8 @@ namespace TYPO3\CMS\Core\FormProtection;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Class t3lib_formprotection_BackendFormProtection.
- *
  * This class provides protection against cross-site request forgery (XSRF/CSRF)
  * for forms in the BE.
  *
@@ -37,7 +36,7 @@ namespace TYPO3\CMS\Core\FormProtection;
  * matter; you only need it to get the form token for verifying it.
  *
  * <pre>
- * $formToken = t3lib_formprotection_Factory::get()
+ * $formToken = TYPO3\CMS\Core\FormProtection\BackendFormProtectionFactory::get()
  * ->generateToken(
  * 'BE user setup', 'edit'
  * );
@@ -54,7 +53,7 @@ namespace TYPO3\CMS\Core\FormProtection;
  * For editing a tt_content record, the call could look like this:
  *
  * <pre>
- * $formToken = t3lib_formprotection_Factory::get()
+ * $formToken = \TYPO3\CMS\Core\FormProtection\BackendFormProtectionFactory::get()
  * ->getFormProtection()->generateToken(
  * 'tt_content', 'edit', $uid
  * );
@@ -65,9 +64,9 @@ namespace TYPO3\CMS\Core\FormProtection;
  * that the form token is valid like this:
  *
  * <pre>
- * if ($dataHasBeenSubmitted && t3lib_formprotection_Factory::get()
+ * if ($dataHasBeenSubmitted && TYPO3\CMS\Core\FormProtection\BackendFormProtectionFactory::get()
  * ->validateToken(
- * t3lib_div::_POST('formToken'),
+ * \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('formToken'),
  * 'BE user setup', 'edit
  * )
  * ) {
@@ -120,8 +119,20 @@ class BackendFormProtection extends \TYPO3\CMS\Core\FormProtection\AbstractFormP
 	 * @return void
 	 */
 	protected function createValidationErrorMessage() {
-		$message = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:error.formProtection.tokenInvalid'), '', \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR, !(isset($GLOBALS['TYPO3_AJAX']) && $GLOBALS['TYPO3_AJAX'] === TRUE));
-		\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage($message);
+		$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+			'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+			$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:error.formProtection.tokenInvalid'),
+			'',
+			\TYPO3\CMS\Core\Messaging\FlashMessage::ERROR,
+			!(isset($GLOBALS['TYPO3_AJAX']) && $GLOBALS['TYPO3_AJAX'] === TRUE)
+		);
+		/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+		$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+			'TYPO3\\CMS\\Core\\Messaging\\FlashMessageService'
+		);
+		/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+		$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+		$defaultFlashMessageQueue->enqueue($flashMessage);
 	}
 
 	/**

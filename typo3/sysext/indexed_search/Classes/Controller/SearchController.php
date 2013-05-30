@@ -4,7 +4,7 @@ namespace TYPO3\CMS\IndexedSearch\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Benjamin Mack (benni@typo3.org)
+ *  (c) 2011-2013 Benjamin Mack (benni@typo3.org)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -577,7 +577,7 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
 	 * @return string HTML string
 	 * @todo overwork this
 	 */
-	protected function makeDescription($row, $noMarkup = FALSE, $lgd = 180) {
+	protected function makeDescription($row, $noMarkup = FALSE, $length = 180) {
 		if ($row['show_resume']) {
 			if (!$noMarkup) {
 				$markedSW = '';
@@ -777,7 +777,7 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
 	protected function procSearchWordsByLexer($searchWords) {
 		$newSearchWords = array();
 		// Init lexer (used to post-processing of search words)
-		$lexerObjRef = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['lexer'] ? $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['lexer'] : 'EXT:indexed_search/class.lexer.php:&TYPO3\\CMS\\IndexedSearch\\Controller\\SearchFormController_lexer';
+		$lexerObjRef = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['lexer'] ? $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['indexed_search']['lexer'] : 'EXT:indexed_search/Classes/Lexer.php:&TYPO3\\CMS\\IndexedSearch\\Lexer';
 		$this->lexerObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($lexerObjRef);
 		// Traverse the search word array
 		foreach ($searchWords as $wordDef) {

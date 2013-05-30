@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -244,7 +244,7 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 		if ($this->getQuerySettings()->getReturnRawQueryResult() === TRUE) {
 			return $this->persistenceManager->getObjectDataByQuery($this);
 		} else {
-			return $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\QueryResultInterface', $this);
+			return $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\QueryResultInterface', $this);
 		}
 	}
 
@@ -593,7 +593,6 @@ class Query implements \TYPO3\CMS\Extbase\Persistence\QueryInterface {
 	 * It matches if the multivalued property contains no values or is NULL.
 	 *
 	 * @param string $propertyName The name of the multivalued property to compare against
-	 * @return boolean
 	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Exception\NotImplementedException
 	 * @throws \TYPO3\CMS\Extbase\Persistence\Exception\InvalidQueryException if used on a single-valued property
 	 * @api

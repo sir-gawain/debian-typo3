@@ -2,14 +2,26 @@
 (function ($) {
 
 	$(document).ready(function() {
-		$('.splash-receivedata a').each(function() {
-			$(this).data('href', $(this).attr('href'));
-			$(this).attr('href', '#');
-			$(this).click(function() {
-					// force update on click
-				updateFromTer($(this).data('href'), 1);
+
+		// Register "update from ter" action
+		$('.update-from-ter').each(function() {
+
+			// "this" is the form which updates the extension list from
+			// TER on submit
+			var updateURL = $(this).attr('action');
+			$(this).attr('action', '#');
+
+			$(this).submit(function() {
+				// Force update on click.
+				updateFromTer(updateURL, 1);
+
+				// Prevent normal submit action.
+				return false;
 			});
-			updateFromTer($(this).data('href'), 0);
+
+			// This might give problems when there are more "update"-buttons,
+			// each one would trigger a TER-update.
+			updateFromTer(updateURL, 0);
 		});
 	});
 
@@ -17,18 +29,19 @@
 		if (forceUpdate == 1) {
 			url = url + '&tx_extensionmanager_tools_extensionmanagerextensionmanager%5BforceUpdateCheck%5D=1';
 		}
-		$('.splash-receivedata').addClass('is-shown');
-		$('.typo3-extensionmanager-headerRowRight .splash-receivedata').addClass('is-hidden');
 
+		// Hide triggers for TER update
+		$('.update-from-ter').addClass('is-hidden');
+
+		// Show loaders
+		$('.splash-receivedata').addClass('is-shown');
 		$('#terTable_wrapper').addClass('is-loading');
 
 		$.ajax({
 			url: url,
 			dataType: 'json',
+			cache: false,
 			success: function(data) {
-
-				// Hide loader
-				$('.splash-receivedata').removeClass('is-shown');
 
 				// Something went wrong, show message
 				if (data.errorMessage.length) {
@@ -36,15 +49,12 @@
 				}
 
 				// Message with latest updates
-				$('.typo3-extensionmanager-headerRowRight .splash-receivedata .text').html(
-					data.message
+				var $lastUpdate = $('.update-from-ter .time-since-last-update');
+				$lastUpdate.text(data.timeSinceLastUpdate);
+				$lastUpdate.attr(
+					'title',
+					TYPO3.l10n.localize('extensionList.updateFromTer.lastUpdate.timeOfLastUpdate') + data.lastUpdateTime
 				);
-
-				// Show content
-				$('#terTable_wrapper').removeClass('is-loading');
-
-				// Header: Show message
-				$('.typo3-extensionmanager-headerRowRight .splash-receivedata').removeClass('is-hidden');
 
 				if (data.updated) {
 					$.ajax({
@@ -58,6 +68,27 @@
 						}
 					});
 				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				// Create an error message with diagnosis info.
+				var errorMessage = textStatus + '(' + errorThrown + '): ' + jqXHR.responseText;
+
+
+				TYPO3.Flashmessage.display(
+					TYPO3.Severity.warning,
+					TYPO3.l10n.localize('extensionList.updateFromTerFlashMessage.title'),
+					errorMessage,
+					10
+				);
+			},
+			complete: function() {
+
+				// Hide loaders
+				$('.splash-receivedata').removeClass('is-shown');
+				$('#terTable_wrapper').removeClass('is-loading');
+
+				// Show triggers for TER-update
+				$('.update-from-ter').removeClass('is-hidden');
 			}
 		});
 	}

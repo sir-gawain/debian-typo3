@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tree\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,20 +26,13 @@ namespace TYPO3\CMS\Backend\Tree\View;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Generate a folder tree
- *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
+ * Generate a folder tree,
+ * specially made for browsing folders in the File module
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @coauthor René Fritz <r.fritz@colorcube.de>
- */
-/**
- * Extension class for the t3lib_treeView class, specially made for browsing folders in the File module
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @coauthor René Fritz <r.fritz@colorcube.de>
- * @see class t3lib_treeView
  */
 class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 
@@ -85,7 +78,7 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 	 * @param boolean $isExpanded The element was expanded to render subelements if this flag is set.
 	 * @return string Image tag with the plus/minus icon.
 	 * @internal
-	 * @see t3lib_pageTree::PMicon()
+	 * @see \TYPO3\CMS\Backend\Tree\View\PageTreeView::PMicon()
 	 */
 	public function PMicon(\TYPO3\CMS\Core\Resource\Folder $folderObject, $subFolderCounter, $totalSubFolders, $nextCount, $isExpanded) {
 		$PM = $nextCount ? ($isExpanded ? 'minus' : 'plus') : 'join';
@@ -130,7 +123,10 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 		$theFolderIcon = $this->addTagAttributes($icon, $this->titleAttrib ? $this->titleAttrib . '="' . $this->getTitleAttrib($folderObject) . '"' : '');
 		// Wrap icon in click-menu link.
 		if (!$this->ext_IconMode) {
-			$theFolderIcon = $GLOBALS['TBE_TEMPLATE']->wrapClickMenuOnIcon($theFolderIcon, $folderObject->getCombinedIdentifier(), '', 0);
+			// Check storage access to wrap with click menu
+			if ($folderObject->getStorage()->hasFolder('/')) {
+				$theFolderIcon = $GLOBALS['TBE_TEMPLATE']->wrapClickMenuOnIcon($theFolderIcon, $folderObject->getCombinedIdentifier(), '', 0);
+			}
 		} elseif (!strcmp($this->ext_IconMode, 'titlelink')) {
 			$aOnClick = 'return jumpTo(\'' . $this->getJumpToParam($folderObject) . '\',this,\'' . $this->domIdPrefix . $this->getId($folderObject) . '\',' . $this->bank . ');';
 			$theFolderIcon = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . $theFolderIcon . '</a>';
@@ -148,8 +144,13 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 	 * @internal
 	 */
 	public function wrapTitle($title, \TYPO3\CMS\Core\Resource\Folder $folderObject, $bank = 0) {
+		// Check storage access to wrap with click menu
+		if (!$folderObject->getStorage()->hasFolder('/')) {
+			return $title;
+		}
 		$aOnClick = 'return jumpTo(\'' . $this->getJumpToParam($folderObject) . '\', this, \'' . $this->domIdPrefix . $this->getId($folderObject) . '\', ' . $bank . ');';
 		$CSM = ' oncontextmenu="' . htmlspecialchars($GLOBALS['TBE_TEMPLATE']->wrapClickMenuOnIcon('', $folderObject->getCombinedIdentifier(), '', 0, ('&bank=' . $this->bank), '', TRUE)) . '"';
+
 		return '<a href="#" title="' . htmlspecialchars($title) . '" onclick="' . htmlspecialchars($aOnClick) . '"' . $CSM . '>' . $title . '</a>';
 	}
 
@@ -268,7 +269,12 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 				$rootIcon = 'minusonly';
 			}
 			$icon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, ('gfx/ol/' . $rootIcon . '.gif')) . ' alt="" />';
-			$firstHtml = $this->PM_ATagWrap($icon, $cmd);
+			// Only link icon if storage is browseable
+			if (in_array($rootIcon, array('minusonly', 'plusonly'))) {
+				$firstHtml = $this->PM_ATagWrap($icon, $cmd);
+			} else {
+				$firstHtml = $icon;
+			}
 			// @todo: create sprite icons for user/group mounts etc
 			if ($storageObject->isBrowsable() === FALSE) {
 				$icon = 'apps-filetree-folder-locked';
@@ -315,13 +321,17 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 	 */
 	public function getFolderTree(\TYPO3\CMS\Core\Resource\Folder $folderObject, $depth = 999, $type = '') {
 		$depth = intval($depth);
+
 		// This generates the directory tree
+		/* array of \TYPO3\CMS\Core\Resource\Folder */
 		$subFolders = $folderObject->getSubfolders();
-		sort($subFolders);
+		$subFolders = \TYPO3\CMS\Core\Resource\Utility\ListUtility::resolveSpecialFolderNames($subFolders);
+		uksort($subFolders, 'strnatcasecmp');
+
 		$totalSubFolders = count($subFolders);
 		$HTML = '';
 		$subFolderCounter = 0;
-		foreach ($subFolders as $subFolder) {
+		foreach ($subFolders as $subFolderName => $subFolder) {
 			$subFolderCounter++;
 			// Reserve space.
 			$this->tree[] = array();
@@ -333,7 +343,7 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 			$row = array(
 				'uid' => $specUID,
 				'path' => $subFolder->getCombinedIdentifier(),
-				'title' => $subFolder->getName(),
+				'title' => $subFolderName,
 				'folder' => $subFolder
 			);
 			// Make a recursive call to the next level
@@ -361,17 +371,16 @@ class FolderTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 				} else {
 					$icon = 'apps-filetree-folder-default';
 				}
-				if ($subFolder->getIdentifier() == '_temp_') {
+				$role = $subFolder->getRole();
+				if ($role !== \TYPO3\CMS\Core\Resource\FolderInterface::ROLE_DEFAULT) {
+					$row['_title'] = '<strong>' . $subFolderName . '</strong>';
+				}
+				if ($role === \TYPO3\CMS\Core\Resource\FolderInterface::ROLE_TEMPORARY) {
 					$icon = 'apps-filetree-folder-temp';
-					$row['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:temp', TRUE);
-					$row['_title'] = '<strong>' . $row['title'] . '</strong>';
-				}
-				if ($subFolder->getIdentifier() == '_recycler_') {
+				} elseif ($role === \TYPO3\CMS\Core\Resource\FolderInterface::ROLE_RECYCLER) {
 					$icon = 'apps-filetree-folder-recycler';
-					$row['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:recycler', TRUE);
-					$row['_title'] = '<strong>' . $row['title'] . '</strong>';
 				}
-				$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon($icon, array('title' => $subFolder->getIdentifier()), $overlays);
+				$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon($icon, array('title' => $subFolderName), $overlays);
 				$HTML .= $this->wrapIcon($icon, $subFolder);
 			}
 			// Finally, add the row/HTML content to the ->tree array in the reserved key.

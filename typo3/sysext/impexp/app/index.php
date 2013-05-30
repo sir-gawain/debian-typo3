@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -63,7 +63,7 @@
 unset($MCONF);
 require 'conf.php';
 require_once $BACK_PATH . 'init.php';
-$LANG->includeLLFile('EXT:impexp/app/locallang.php');
+$LANG->includeLLFile('EXT:impexp/app/locallang.xlf');
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('impexp', 1);
 /*
  * @deprecated since 6.0, the classname SC_mod_tools_log_index and this file is obsolete

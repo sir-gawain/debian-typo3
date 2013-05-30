@@ -20,13 +20,20 @@ namespace TYPO3\CMS\Extbase\Property;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
+
+use TYPO3\CMS\Core\Core\ClassLoader;
+
 /**
  * Concrete configuration object for the PropertyMapper.
  *
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
  */
 class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface {
+
+	/**
+	 * Placeholder in property paths for multi-valued types
+	 */
+	const PROPERTY_PATH_PLACEHOLDER = '*';
 
 	/**
 	 * multi-dimensional array which stores type-converter specific configuration:
@@ -46,13 +53,6 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	protected $subConfigurationForProperty = array();
 
 	/**
-	 * The parent PropertyMappingConfiguration. If a configuration value for the current entry is not found, we propagate the question to the parent.
-	 *
-	 * @var \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface
-	 */
-	protected $parentConfiguration;
-
-	/**
 	 * Keys which should be renamed
 	 *
 	 * @var array
@@ -65,27 +65,161 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	protected $typeConverter = NULL;
 
 	/**
-	 * Set the parent PropertyMappingConfiguration. Only used internally!
+	 * List of allowed property names to be converted
 	 *
-	 * @param \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $parentConfiguration
-	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @var array
 	 */
-	protected function setParent(\TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $parentConfiguration) {
-		$this->parentConfiguration = $parentConfiguration;
-	}
+	protected $propertiesToBeMapped = array();
 
 	/**
-	 * returns TRUE if the given propertyName should be mapped, FALSE otherwise.
+	 * List of property names to be skipped during property mapping
+	 *
+	 * @var array
+	 */
+	protected $propertiesToSkip = array();
+
+	/**
+	 * List of disallowed property names which will be ignored while property mapping
+	 *
+	 * @var array
+	 */
+	protected $propertiesNotToBeMapped = array();
+
+	/**
+	 * If TRUE, unknown properties will be skipped during property mapping
+	 *
+	 * @var boolean
+	 */
+	protected $skipUnknownProperties = FALSE;
+
+	/**
+	 * If TRUE, unknown properties will be mapped.
+	 *
+	 * @var boolean
+	 */
+	protected $mapUnknownProperties = FALSE;
+
+	/**
+	 * The behavior is as follows:
+	 *
+	 * - if a property has been explicitly forbidden using allowAllPropertiesExcept(...), it is directly rejected
+	 * - if a property has been allowed using allowProperties(...), it is directly allowed.
+	 * - if allowAllProperties* has been called, we allow unknown properties
+	 * - else, return FALSE.
 	 *
 	 * @param string $propertyName
-	 * @return boolean
-	 * @todo : extend to enable whitelisting / blacklisting of properties.
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @return boolean TRUE if the given propertyName should be mapped, FALSE otherwise.
 	 * @api
 	 */
 	public function shouldMap($propertyName) {
-		return TRUE;
+		if (isset($this->propertiesNotToBeMapped[$propertyName])) {
+			return FALSE;
+		}
+
+		if (isset($this->propertiesToBeMapped[$propertyName])) {
+			return TRUE;
+		}
+
+		if (isset($this->subConfigurationForProperty[self::PROPERTY_PATH_PLACEHOLDER])) {
+			return TRUE;
+		}
+
+		return $this->mapUnknownProperties;
+	}
+
+	/**
+	 * Check if the given $propertyName should be skipped during mapping.
+	 *
+	 * @param string $propertyName
+	 * @return boolean
+	 * @api
+	 */
+	public function shouldSkip($propertyName) {
+		return isset($this->propertiesToSkip[$propertyName]);
+	}
+
+	/**
+	 * Allow all properties in property mapping, even unknown ones.
+	 *
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
+	 * @api
+	 */
+	public function allowAllProperties() {
+		$this->mapUnknownProperties = TRUE;
+		return $this;
+	}
+
+	/**
+	 * Allow a list of specific properties. All arguments of
+	 * allowProperties are used here (varargs).
+	 *
+	 * Example: allowProperties('title', 'content', 'author')
+	 *
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration
+	 * @api
+	 */
+	public function allowProperties() {
+		foreach (func_get_args() as $propertyName) {
+			$this->propertiesToBeMapped[$propertyName] = $propertyName;
+		}
+		return $this;
+	}
+
+	/**
+	 * Skip a list of specific properties. All arguments of
+	 * skipProperties are used here (varargs).
+	 *
+	 * Example: skipProperties('unused', 'dummy')
+	 *
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
+	 * @api
+	 */
+	public function skipProperties() {
+		foreach (func_get_args() as $propertyName) {
+			$this->propertiesToSkip[$propertyName] = $propertyName;
+		}
+		return $this;
+	}
+
+	/**
+	 * Allow all properties during property mapping, but reject a few
+	 * selected ones (blacklist).
+	 *
+	 * Example: allowAllPropertiesExcept('password', 'userGroup')
+	 *
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
+	 * @api
+	 */
+	public function allowAllPropertiesExcept() {
+		$this->mapUnknownProperties = TRUE;
+
+		foreach (func_get_args() as $propertyName) {
+			$this->propertiesNotToBeMapped[$propertyName] = $propertyName;
+		}
+		return $this;
+	}
+
+	/**
+	 * When this is enabled, properties that are disallowed will be skipped
+	 * instead of triggering an error during mapping.
+	 *
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
+	 * @api
+	 */
+	public function skipUnknownProperties() {
+		$this->skipUnknownProperties = TRUE;
+		return $this;
+	}
+
+	/**
+	 * Whether unknown (unconfigured) properties should be skipped during
+	 * mapping, instead if causing an error.
+	 *
+	 * @return boolean
+	 * @api
+	 */
+	public function shouldSkipUnknownProperties() {
+		return $this->skipUnknownProperties;
 	}
 
 	/**
@@ -93,13 +227,15 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 *
 	 * @param string $propertyName
 	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface the property mapping configuration for the given $propertyName.
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function getConfigurationFor($propertyName) {
 		if (isset($this->subConfigurationForProperty[$propertyName])) {
 			return $this->subConfigurationForProperty[$propertyName];
+		} elseif (isset($this->subConfigurationForProperty[self::PROPERTY_PATH_PLACEHOLDER])) {
+			return $this->subConfigurationForProperty[self::PROPERTY_PATH_PLACEHOLDER];
 		}
+
 		return new \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration();
 	}
 
@@ -108,7 +244,6 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 *
 	 * @param string $sourcePropertyName
 	 * @return string property name of target
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function getTargetPropertyName($sourcePropertyName) {
@@ -122,13 +257,13 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 * @param string $typeConverterClassName
 	 * @param string $key
 	 * @return mixed configuration value for the specific $typeConverterClassName. Can be used by Type Converters to fetch converter-specific configuration.
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function getConfigurationValue($typeConverterClassName, $key) {
 		if (!isset($this->configuration[$typeConverterClassName][$key])) {
 			return NULL;
 		}
+
 		return $this->configuration[$typeConverterClassName][$key];
 	}
 
@@ -137,12 +272,12 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 *
 	 * @param string $sourcePropertyName
 	 * @param string $targetPropertyName
-	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
 	 * @api
 	 */
 	public function setMapping($sourcePropertyName, $targetPropertyName) {
 		$this->mapping[$sourcePropertyName] = $targetPropertyName;
+		return $this;
 	}
 
 	/**
@@ -150,12 +285,17 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 *
 	 * @param string $typeConverter class name of type converter
 	 * @param array $options
-	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
 	 * @api
 	 */
 	public function setTypeConverterOptions($typeConverter, array $options) {
-		$this->configuration[$typeConverter] = $options;
+		if (strpos($typeConverter, '_') !== FALSE) {
+			$typeConverter = ClassLoader::getClassNameForAlias($typeConverter);
+		}
+		foreach ($this->getTypeConvertersWithParentClasses($typeConverter) as $typeConverter) {
+			$this->configuration[$typeConverter] = $options;
+		}
+		return $this;
 	}
 
 	/**
@@ -164,12 +304,33 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 * @param string $typeConverter class name of type converter
 	 * @param string $optionKey
 	 * @param mixed $optionValue
-	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
 	 * @api
 	 */
 	public function setTypeConverterOption($typeConverter, $optionKey, $optionValue) {
-		$this->configuration[$typeConverter][$optionKey] = $optionValue;
+		if (strpos($typeConverter, '_') !== FALSE) {
+			$typeConverter = ClassLoader::getClassNameForAlias($typeConverter);
+		}
+		foreach ($this->getTypeConvertersWithParentClasses($typeConverter) as $typeConverter) {
+			$this->configuration[$typeConverter][$optionKey] = $optionValue;
+		}
+		return $this;
+	}
+
+	/**
+	 * Get type converter classes including parents for the given type converter
+	 *
+	 * When setting an option on a subclassed type converter, this option must also be set on
+	 * all its parent type converters.
+	 *
+	 * @param string $typeConverter The type converter class
+	 * @return array Class names of type converters
+	 */
+	protected function getTypeConvertersWithParentClasses($typeConverter) {
+		$typeConverterClasses = class_parents($typeConverter);
+		$typeConverterClasses = $typeConverterClasses === FALSE ? array() : $typeConverterClasses;
+		$typeConverterClasses[] = $typeConverter;
+		return $typeConverterClasses;
 	}
 
 	/**
@@ -179,7 +340,6 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 *
 	 * @param string $propertyPath
 	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration (or a subclass thereof)
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function forProperty($propertyPath) {
@@ -192,17 +352,20 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 *
 	 * @param array $splittedPropertyPath
 	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration (or a subclass thereof)
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function traverseProperties(array $splittedPropertyPath) {
 		if (count($splittedPropertyPath) === 0) {
 			return $this;
 		}
+
 		$currentProperty = array_shift($splittedPropertyPath);
 		if (!isset($this->subConfigurationForProperty[$currentProperty])) {
 			$type = get_class($this);
-			$this->subConfigurationForProperty[$currentProperty] = new $type();
-			$this->subConfigurationForProperty[$currentProperty]->setParent($this);
+			if (isset($this->subConfigurationForProperty[self::PROPERTY_PATH_PLACEHOLDER])) {
+				$this->subConfigurationForProperty[$currentProperty] = clone $this->subConfigurationForProperty[self::PROPERTY_PATH_PLACEHOLDER];
+			} else {
+				$this->subConfigurationForProperty[$currentProperty] = new $type;
+			}
 		}
 		return $this->subConfigurationForProperty[$currentProperty]->traverseProperties($splittedPropertyPath);
 	}
@@ -221,11 +384,12 @@ class PropertyMappingConfiguration implements \TYPO3\CMS\Extbase\Property\Proper
 	 * Set a type converter which should be used for this specific conversion.
 	 *
 	 * @param \TYPO3\CMS\Extbase\Property\TypeConverterInterface $typeConverter
-	 * @return void
+	 * @return \TYPO3\CMS\Extbase\Property\PropertyMappingConfiguration this
 	 * @api
 	 */
 	public function setTypeConverter(\TYPO3\CMS\Extbase\Property\TypeConverterInterface $typeConverter) {
 		$this->typeConverter = $typeConverter;
+		return $this;
 	}
 }
 

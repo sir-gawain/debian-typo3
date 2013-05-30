@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Json;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Oliver Hader <oliver.hader@typo3.org>
+ *  (c) 2011-2013 Oliver Hader <oliver.hader@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Json;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * JSON textblock
  *
@@ -68,7 +69,7 @@ class TextblockJsonElement extends \TYPO3\CMS\Form\Domain\Model\Json\AbstractJso
 	 *
 	 * @param array $parameters Configuration array
 	 * @return void
-	 * @see tx_form_Domain_Model_Json_Element::setParameters()
+	 * @see \TYPO3\CMS\Form\Domain\Model\Json\AbstractJsonElement::setParameters()
 	 */
 	public function setParameters(array $parameters) {
 		parent::setParameters($parameters);
@@ -90,6 +91,5 @@ class TextblockJsonElement extends \TYPO3\CMS\Form\Domain\Model\Json\AbstractJso
 	}
 
 }
-
 
 ?>

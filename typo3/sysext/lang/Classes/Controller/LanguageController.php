@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Lang\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Sebastian Fischer <typo3@evoweb.de>
- *      2012 Kai Vogel <kai.vogel@speedprogs.de>
+ *  (c) 2012-2013 Sebastian Fischer <typo3@evoweb.de>
+ *      2012-2013 Kai Vogel <kai.vogel@speedprogs.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -45,21 +45,25 @@ class LanguageController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControl
 
 	/**
 	 * @var \TYPO3\CMS\Lang\Domain\Repository\LanguageRepository
+	 * @inject
 	 */
 	protected $languageRepository;
 
 	/**
 	 * @var \TYPO3\CMS\Lang\Domain\Repository\ExtensionRepository
+	 * @inject
 	 */
 	protected $extensionRepository;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\Repository\Helper
+	 * @inject
 	 */
 	protected $repositoryHelper;
 
 	/**
 	 * @var \TYPO3\CMS\Lang\Utility\Connection\Ter
+	 * @inject
 	 */
 	protected $terConnection;
 
@@ -75,46 +79,6 @@ class LanguageController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControl
 	protected $jsonActions = array('updateTranslation');
 
 	/**
-	 * Inject the language repository
-	 *
-	 * @param \TYPO3\CMS\Lang\Domain\Repository\LanguageRepository $repository
-	 * @return void
-	 */
-	public function injectLanguageRepository(\TYPO3\CMS\Lang\Domain\Repository\LanguageRepository $repository) {
-		$this->languageRepository = $repository;
-	}
-
-	/**
-	 * Inject the extension repository
-	 *
-	 * @param \TYPO3\CMS\Lang\Domain\Repository\ExtensionRepository $repository
-	 * @return void
-	 */
-	public function injectExtensionRepository(\TYPO3\CMS\Lang\Domain\Repository\ExtensionRepository $repository) {
-		$this->extensionRepository = $repository;
-	}
-
-	/**
-	 * Inject the repository helper
-	 *
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\Repository\Helper $repositoryHelper
-	 * @return void
-	 */
-	public function injectRepositoryHelper(\TYPO3\CMS\Extensionmanager\Utility\Repository\Helper $repositoryHelper) {
-		$this->repositoryHelper = $repositoryHelper;
-	}
-
-	/**
-	 * Inject the repository helper
-	 *
-	 * @param \TYPO3\CMS\Lang\Utility\Connection\Ter $terConnection
-	 * @return void
-	 */
-	public function injectTerConnection(\TYPO3\CMS\Lang\Utility\Connection\Ter $terConnection) {
-		$this->terConnection = $terConnection;
-	}
-
-	/**
 	 * Force JSON output for defined actions
 	 *
 	 * @param \TYPO3\CMS\Extbase\Mvc\View\ViewInterface $view The view to be initialized
@@ -124,7 +88,7 @@ class LanguageController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControl
 		$actionName = $this->request->getControllerActionName();
 		if (in_array($actionName, $this->jsonActions)) {
 			$viewObjectName = 'TYPO3\\CMS\\Lang\\View\\Language\\' . ucfirst($actionName) . 'Json';
-			$this->view = $this->objectManager->create($viewObjectName);
+			$this->view = $this->objectManager->get($viewObjectName);
 			$this->view->setControllerContext($this->controllerContext);
 			$this->view->initializeView();
 		}
@@ -141,7 +105,7 @@ class LanguageController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControl
 	 */
 	public function indexAction(\TYPO3\CMS\Lang\Domain\Model\LanguageSelectionForm $languageSelectionForm = NULL, $extensions = NULL) {
 		if ($languageSelectionForm === NULL) {
-			$languageSelectionForm = $this->objectManager->create('TYPO3\\CMS\\Lang\\Domain\\Model\\LanguageSelectionForm');
+			$languageSelectionForm = $this->objectManager->get('TYPO3\\CMS\\Lang\\Domain\\Model\\LanguageSelectionForm');
 			$languageSelectionForm->setLanguages($this->languageRepository->findAll());
 			$languageSelectionForm->setSelectedLanguages($this->languageRepository->findSelected());
 		}
@@ -169,10 +133,11 @@ class LanguageController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControl
 	}
 
 	/**
-	 * Update translation for one extension
+	 * Update translation for one extension.
+	 * The view of this action returns JSON!
 	 *
 	 * @param string $extension The extension key
-	 * @param mixed $locales List or array of locales to update
+	 * @param string $locales Comma separated list of locales to update
 	 * @return void
 	 */
 	public function updateTranslationAction($extension, $locales) {

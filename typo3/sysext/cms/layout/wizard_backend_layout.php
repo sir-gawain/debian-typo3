@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Sk?rh?j (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Sk?rh?j (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@
  */
 require_once 'conf.php';
 require $BACK_PATH . 'init.php';
-$LANG->includeLLFile('EXT:lang/locallang_wizards.xml');
+$LANG->includeLLFile('EXT:lang/locallang_wizards.xlf');
 /*
  * @deprecated since 6.0, the classname SC_wizard_backend_layout and this file is obsolete
  * and will be removed with 6.2. The class was renamed and is now located at:

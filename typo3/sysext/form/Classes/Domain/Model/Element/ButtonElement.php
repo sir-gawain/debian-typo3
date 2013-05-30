@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Button model object
  *
@@ -69,7 +70,7 @@ class ButtonElement extends \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement
 	 *
 	 * @param string $value Value to display on button
 	 * @return void
-	 * @see tx_form_Domain_Model_Element::setValue()
+	 * @see \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement::setValue()
 	 */
 	public function setValue($value = '') {
 		/** @var $localizationHandler \TYPO3\CMS\Form\Localization */
@@ -87,6 +88,5 @@ class ButtonElement extends \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement
 	}
 
 }
-
 
 ?>

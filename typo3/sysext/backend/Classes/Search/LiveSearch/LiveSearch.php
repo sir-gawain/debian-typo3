@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Backend\Search\LiveSearch;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Michael Klapper <michael.klapper@aoemedia.de>
- *  (c) 2010-2011 Jeff Segars <jeff@webempoweredchurch.org>
+ *  (c) 2009-2013 Michael Klapper <michael.klapper@aoemedia.de>
+ *  (c) 2010-2013 Jeff Segars <jeff@webempoweredchurch.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -201,10 +201,7 @@ class LiveSearch {
 	 * @param string $orderBy
 	 * @param string $limit MySql Limit notation
 	 * @return array
-	 * @see t3lib_db::exec_SELECT_queryArray()
-	 * @see t3lib_db::sql_num_rows()
-	 * @see t3lib_db::sql_fetch_assoc()
-	 * @see t3lib_iconWorks::getSpriteIconForRecord()
+	 * @see \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord()
 	 * @see getTitleFromCurrentRow()
 	 * @see getEditLink()
 	 */
@@ -241,7 +238,7 @@ class LiveSearch {
 	 * @param string $tableName Record table name
 	 * @param array $row Current record row from database.
 	 * @return string Link to open an edit window for record.
-	 * @see t3lib_BEfunc::readPageAccess()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess()
 	 */
 	protected function getEditLink($tableName, $row) {
 		$pageInfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess($row['pid'], $this->userPermissions);
@@ -311,8 +308,6 @@ class LiveSearch {
 	protected function makeQuerySearchByTable($tableName, array $fieldsToSearchWithin) {
 		$queryPart = '';
 		$whereParts = array();
-		// Load the full TCA for the table, as we need to access column configuration
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($tableName);
 		// If the search string is a simple integer, assemble an equality comparison
 		if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($this->queryString)) {
 			foreach ($fieldsToSearchWithin as $fieldName) {
@@ -371,7 +366,6 @@ class LiveSearch {
 	 *
 	 * @param string $tableName Record table name
 	 * @return string
-	 * @see t3lib_db::stripOrderBy()
 	 */
 	protected function makeOrderByTable($tableName) {
 		$orderBy = '';
@@ -412,7 +406,6 @@ class LiveSearch {
 	 *
 	 * @param string $tableName
 	 * @return string
-	 * @see t3lib_db::quoteStr()
 	 */
 	public function getQueryString($tableName = '') {
 		return $GLOBALS['TYPO3_DB']->quoteStr($this->queryString, $tableName);
@@ -446,15 +439,15 @@ class LiveSearch {
 	 *
 	 * @param string $queryString
 	 * @return void
-	 * @see t3lib_div::removeXSS()
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::removeXSS()
 	 */
 	public function setQueryString($queryString) {
 		$this->queryString = \TYPO3\CMS\Core\Utility\GeneralUtility::removeXSS($queryString);
 	}
 
 	/**
-	 * Creates an instance of t3lib_pageTree which will select a page tree to
-	 * $depth and return the object. In that object we will find the ids of the tree.
+	 * Creates an instance of \TYPO3\CMS\Backend\Tree\View\PageTreeView which will select a
+	 * page tree to $depth and return the object. In that object we will find the ids of the tree.
 	 *
 	 * @param integer $id Page id.
 	 * @param integer $depth Depth to go down.

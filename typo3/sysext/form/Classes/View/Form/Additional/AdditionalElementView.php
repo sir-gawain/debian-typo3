@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Form\Additional;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\View\Form\Additional;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Additional elements for FORM object
  *
@@ -41,7 +42,6 @@ class AdditionalElementView extends \TYPO3\CMS\Form\View\Form\Element\AbstractEl
 	 * Constructor
 	 *
 	 * @param object $model The parent model
-	 * @return void
 	 */
 	public function __construct($model) {
 		$this->model = $model;
@@ -53,10 +53,12 @@ class AdditionalElementView extends \TYPO3\CMS\Form\View\Form\Element\AbstractEl
 	 * @return string The value of the additional
 	 */
 	public function getAdditionalValue() {
-		return htmlspecialchars($this->model->getAdditionalValue(\TYPO3\CMS\Form\Utility\FormUtility::getInstance()->getLastPartOfClassName($this, TRUE)), ENT_QUOTES);
+		return htmlspecialchars(
+			$this->model->getAdditionalValue(\TYPO3\CMS\Form\Utility\FormUtility::getInstance()->getLastPartOfClassName($this, TRUE)),
+			ENT_QUOTES
+		);
 	}
 
 }
-
 
 ?>

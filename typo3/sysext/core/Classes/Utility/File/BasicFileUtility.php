@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Utility\File;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,18 +26,15 @@ namespace TYPO3\CMS\Core\Utility\File;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Contains class with basic file management functions
  *
- * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
+ * Contains functions for management, validation etc of files in TYPO3,
+ * using the concepts of web- and ftp-space. Please see the comment for the
+ * init() function
  *
  * @author 	Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * Contains functions for management, validation etc of files in TYPO3, using the concepts of web- and ftp-space. Please see the comment for the init() function
- *
- * @author 	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @see t3lib_basicFileFunctions::init()
  */
 class BasicFileUtility {
 
@@ -130,7 +127,7 @@ class BasicFileUtility {
 	 * @param 	array		Contains the paths of the file mounts for the current BE user. Normally $GLOBALS['FILEMOUNTS'] is passed. This variable is set during backend user initialization; $FILEMOUNTS = $GLOBALS['BE_USER']->returnFilemounts(); (see typo3/init.php)
 	 * @param 	array		Array with information about allowed and denied file extensions. Typically passed: $GLOBALS['TYPO3_CONF_VARS']['BE']['fileExtensions']
 	 * @return 	void
-	 * @see typo3/init.php, t3lib_beUserAuth::returnFilemounts()
+	 * @see typo3/init.php, \TYPO3\CMS\Core\Authentication\BackendUserAuthentication::returnFilemounts()
 	 * @todo Define visibility
 	 */
 	public function init($mounts, $f_ext) {
@@ -297,11 +294,11 @@ class BasicFileUtility {
 	}
 
 	/**
-	 * Wrapper for t3lib_div::validPathStr()
+	 * Wrapper for \TYPO3\CMS\Core\Utility\GeneralUtility::validPathStr()
 	 *
 	 * @param 	string		Filepath to evaluate
 	 * @return 	boolean		TRUE, if no '//', '..' or '\' is in the $theFile
-	 * @see 	t3lib_div::validPathStr()
+	 * @see 	\TYPO3\CMS\Core\Utility\GeneralUtility::validPathStr()
 	 * @todo Define visibility
 	 */
 	public function isPathValid($theFile) {
@@ -318,7 +315,7 @@ class BasicFileUtility {
 	 * @param 	string		The directory for which to return a unique filename for $theFile. $theDest MUST be a valid directory. Should be absolute.
 	 * @param 	boolean		If set the filename is returned with the path prepended without checking whether it already existed!
 	 * @return 	string		The destination absolute filepath (not just the name!) of a unique filename/foldername in that path.
-	 * @see t3lib_TCEmain::checkValue()
+	 * @see \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue()
 	 * @todo Define visibility
 	 */
 	public function getUniqueName($theFile, $theDest, $dontCheckForUnique = 0) {

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\TypoScript\Parser;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,18 +26,11 @@ namespace TYPO3\CMS\Core\TypoScript\Parser;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Contains the TypoScript parser class
- *
- * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
+
 /**
  * The TypoScript parser
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @see t3lib_tstemplate, t3lib_BEfunc::getPagesTSconfig(), t3lib_beUserAuth::fetchGroupData(), t3lib_TStemplate::generateConfig()
  */
 class TypoScriptParser {
 
@@ -214,7 +207,7 @@ class TypoScriptParser {
 	 */
 	public $highLightBlockStyles_basecolor = '#cccccc';
 
-	//Instance of parentObject, used by t3lib_tsparser_ext
+	//Instance of parentObject, used by \TYPO3\CMS\Core\TypoScript\ExtendedTemplateService
 	public $parentObject;
 
 	/**
@@ -373,45 +366,12 @@ class TypoScriptParser {
 								}
 								// Checking for special TSparser properties (to change TS values at parsetime)
 								$match = array();
-								if (preg_match('/^:=([^\\(]+)\\((.+)\\).*/', $line, $match)) {
+								if (preg_match('/^:=([^\\(]+)\\((.*)\\).*/', $line, $match)) {
 									$tsFunc = trim($match[1]);
 									$tsFuncArg = $match[2];
 									list($currentValue) = $this->getVal($objStrName, $setup);
 									$tsFuncArg = str_replace(array('\\\\', '\\n', '\\t'), array('\\', LF, TAB), $tsFuncArg);
-									switch ($tsFunc) {
-									case 'prependString':
-										$newValue = $tsFuncArg . $currentValue;
-										break;
-									case 'appendString':
-										$newValue = $currentValue . $tsFuncArg;
-										break;
-									case 'removeString':
-										$newValue = str_replace($tsFuncArg, '', $currentValue);
-										break;
-									case 'replaceString':
-										list($fromStr, $toStr) = explode('|', $tsFuncArg, 2);
-										$newValue = str_replace($fromStr, $toStr, $currentValue);
-										break;
-									case 'addToList':
-										$newValue = (strcmp('', $currentValue) ? $currentValue . ',' : '') . trim($tsFuncArg);
-										break;
-									case 'removeFromList':
-										$existingElements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $currentValue);
-										$removeElements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $tsFuncArg);
-										if (count($removeElements)) {
-											$newValue = implode(',', array_diff($existingElements, $removeElements));
-										}
-										break;
-									default:
-										if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc])) {
-											$hookMethod = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$tsFunc];
-											$params = array('currentValue' => $currentValue, 'functionArgument' => $tsFuncArg);
-											$fakeThis = FALSE;
-											$newValue = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($hookMethod, $params, $fakeThis);
-										} else {
-											\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('Missing function definition for ' . $tsFunc . ' on TypoScript line ' . $lineP, 'Core', \TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_WARNING);
-										}
-									}
+									$newValue = $this->executeValueModifier($tsFunc, $tsFuncArg, $currentValue);
 									if (isset($newValue)) {
 										$line = '= ' . $newValue;
 									}
@@ -517,6 +477,80 @@ class TypoScriptParser {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Executes operator functions, called from TypoScript
+	 * example: page.10.value := appendString(!)
+	 *
+	 * @param string $modifierName TypoScript function called
+	 * @param string $modifierArgument Function arguments; In case of multiple arguments, the method must split on its own
+	 * @param string $currentValue Current TypoScript value
+	 * @return string Modification result
+	 */
+	protected function executeValueModifier($modifierName, $modifierArgument = NULL, $currentValue = NULL) {
+		$newValue = NULL;
+		switch ($modifierName) {
+			case 'prependString':
+				$newValue = $modifierArgument . $currentValue;
+				break;
+			case 'appendString':
+				$newValue = $currentValue . $modifierArgument;
+				break;
+			case 'removeString':
+				$newValue = str_replace($modifierArgument, '', $currentValue);
+				break;
+			case 'replaceString':
+				list($fromStr, $toStr) = explode('|', $modifierArgument, 2);
+				$newValue = str_replace($fromStr, $toStr, $currentValue);
+				break;
+			case 'addToList':
+				$newValue = (strcmp('', $currentValue) ? $currentValue . ',' : '') . trim($modifierArgument);
+				break;
+			case 'removeFromList':
+				$existingElements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $currentValue);
+				$removeElements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $modifierArgument);
+				if (count($removeElements)) {
+					$newValue = implode(',', array_diff($existingElements, $removeElements));
+				}
+				break;
+			case 'uniqueList':
+				$elements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $currentValue);
+				$newValue = implode(',', array_unique($elements));
+				break;
+			case 'reverseList':
+				$elements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $currentValue);
+				$newValue = implode(',', array_reverse($elements));
+				break;
+			case 'sortList':
+				$elements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $currentValue);
+				$arguments = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $modifierArgument);
+				$arguments = array_map('strtolower', $arguments);
+				$sort_flags = SORT_REGULAR;
+				if (in_array('numeric', $arguments)) {
+					$sort_flags = SORT_NUMERIC;
+				}
+				sort($elements, $sort_flags);
+				if (in_array('descending', $arguments)) {
+					$elements = array_reverse($elements);
+				}
+				$newValue = implode(',', $elements);
+				break;
+			default:
+				if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$modifierName])) {
+					$hookMethod = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tsparser.php']['preParseFunc'][$modifierName];
+					$params = array('currentValue' => $currentValue, 'functionArgument' => $modifierArgument);
+					$fakeThis = FALSE;
+					$newValue = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($hookMethod, $params, $fakeThis);
+				} else {
+					\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog(
+						'Missing function definition for ' . $modifierName . ' on TypoScript',
+						'Core',
+						\TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_WARNING
+					);
+				}
+		}
+		return $newValue;
 	}
 
 	/**
@@ -654,7 +688,7 @@ class TypoScriptParser {
 
 	/**
 	 * Checks the input string (un-parsed TypoScript) for include-commands ("<INCLUDE_TYPOSCRIPT: ....")
-	 * Use: t3lib_TSparser::checkIncludeLines()
+	 * Use: \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser::checkIncludeLines()
 	 *
 	 * @param string $string Unparsed TypoScript
 	 * @param integer $cycle_counter Counter for detecting endless loops
@@ -799,7 +833,8 @@ class TypoScriptParser {
 		$skipNextLineIfEmpty = FALSE;
 		$openingCommentedIncludeStatement = NULL;
 		foreach ($lines as $line) {
-			// t3lib_TSparser::checkIncludeLines inserts an additional empty line, remove this again
+			// \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser::checkIncludeLines inserts
+			// an additional empty line, remove this again
 			if ($skipNextLineIfEmpty) {
 				if (trim($line) == '') {
 					continue;
@@ -857,7 +892,8 @@ class TypoScriptParser {
 					$fileName = NULL;
 					$inIncludePart = FALSE;
 					$openingCommentedIncludeStatement = NULL;
-					// t3lib_TSparser::checkIncludeLines inserts an additional empty line, remove this again
+					// \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser::checkIncludeLines inserts
+					// an additional empty line, remove this again
 					$skipNextLineIfEmpty = TRUE;
 				} else {
 					// If this is not a ending commented include statement this line goes into the file content

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Ingmar Schlecht <ingmar@typo3.org>
+ *  (c) 2011-2013 Ingmar Schlecht <ingmar@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,12 +26,15 @@ namespace TYPO3\CMS\Core\Resource;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\PathUtility;
+
 /**
  * Abstract file representation in the file abstraction layer.
  *
  * @author Ingmar Schlecht <ingmar@typo3.org>
  */
-abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
+abstract class AbstractFile implements FileInterface {
 
 	/**
 	 * Various file properties
@@ -47,7 +50,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * The storage this file is located in
 	 *
-	 * @var \TYPO3\CMS\Core\Resource\ResourceStorage
+	 * @var ResourceStorage
 	 */
 	protected $storage = NULL;
 
@@ -78,26 +81,43 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * any other file
 	 */
 	const FILETYPE_UNKNOWN = 0;
+
 	/**
 	 * Any kind of text
+	 * @see http://www.iana.org/assignments/media-types/text
 	 */
 	const FILETYPE_TEXT = 1;
+
 	/**
 	 * Any kind of image
+	 * @see http://www.iana.org/assignments/media-types/image
 	 */
 	const FILETYPE_IMAGE = 2;
+
 	/**
 	 * Any kind of audio file
+	 * @see http://www.iana.org/assignments/media-types/audio
 	 */
 	const FILETYPE_AUDIO = 3;
+
 	/**
 	 * Any kind of video
+	 * @see http://www.iana.org/assignments/media-types/video
 	 */
 	const FILETYPE_VIDEO = 4;
+
+	/**
+	 * Any kind of application
+	 * @see http://www.iana.org/assignments/media-types/application
+	 */
+	const FILETYPE_APPLICATION = 5;
+
 	/**
 	 * Any kind of software, often known as "application"
+	 * @deprecated since 6.1, will be removed in 6.3. Use rather FILETYPE_APPLICATION which matches the Iana standard.
 	 */
 	const FILETYPE_SOFTWARE = 5;
+
 	/******************
 	 * VARIOUS FILE PROPERTY GETTERS
 	 ******************/
@@ -156,12 +176,13 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * @return string
 	 */
 	public function getNameWithoutExtension() {
-		return pathinfo($this->getName(), PATHINFO_FILENAME);
+		return PathUtility::pathinfo($this->getName(), PATHINFO_FILENAME);
 	}
 
 	/**
 	 * Returns the size of this file
 	 *
+	 * @throws \RuntimeException
 	 * @return integer
 	 */
 	public function getSize() {
@@ -183,6 +204,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Returns the Sha1 of this file
 	 *
+	 * @throws \RuntimeException
 	 * @return string
 	 */
 	public function getSha1() {
@@ -195,6 +217,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Returns the creation time of the file as Unix timestamp
 	 *
+	 * @throws \RuntimeException
 	 * @return integer
 	 */
 	public function getCreationTime() {
@@ -207,6 +230,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Returns the date (as UNIX timestamp) the file was last modified.
 	 *
+	 * @throws \RuntimeException
 	 * @return integer
 	 */
 	public function getModificationTime() {
@@ -222,7 +246,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * @return string The file extension
 	 */
 	public function getExtension() {
-		$pathinfo = pathinfo($this->getName());
+		$pathinfo = PathUtility::pathinfo($this->getName());
 
 		$extension = strtolower($pathinfo['extension']);
 
@@ -276,7 +300,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 			case 'application':
 
 			case 'software':
-				$this->properties['type'] = self::FILETYPE_SOFTWARE;
+				$this->properties['type'] = self::FILETYPE_APPLICATION;
 				break;
 			default:
 				$this->properties['type'] = self::FILETYPE_UNKNOWN;
@@ -291,6 +315,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Get the contents of this file
 	 *
+	 * @throws \RuntimeException
 	 * @return string File contents
 	 */
 	public function getContents() {
@@ -304,7 +329,9 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * Replace the current file contents with the given string
 	 *
 	 * @param string $contents The contents to write to the file.
-	 * @return \TYPO3\CMS\Core\Resource\File The file object (allows chaining).
+	 *
+	 * @throws \RuntimeException
+	 * @return File The file object (allows chaining).
 	 */
 	public function setContents($contents) {
 		if ($this->deleted) {
@@ -320,7 +347,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Get the storage this file is located in
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage
+	 * @return ResourceStorage
 	 */
 	public function getStorage() {
 		if ($this->storage === NULL) {
@@ -337,7 +364,7 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	protected function loadStorage() {
 		$storageUid = $this->getProperty('storage');
 		if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($storageUid)) {
-			/** @var $fileFactory \TYPO3\CMS\Core\Resource\ResourceFactory */
+			/** @var $fileFactory ResourceFactory */
 			$fileFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
 			$this->storage = $fileFactory->getStorageObject($storageUid);
 		}
@@ -359,15 +386,15 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 
 	/**
 	 * Sets the storage this file is located in. This is only meant for
-	 * t3lib/file/-internal usage; don't use it to move files.
+	 * \TYPO3\CMS\Core\Resource-internal usage; don't use it to move files.
 	 *
 	 * @internal Should only be used by other parts of the File API (e.g. drivers after moving a file)
-	 * @param integer|\TYPO3\CMS\Core\Resource\ResourceStorage $storage
-	 * @return \TYPO3\CMS\Core\Resource\File
+	 * @param integer|ResourceStorage $storage
+	 * @return File
 	 */
 	public function setStorage($storage) {
 		// Do not check for deleted file here as we might need this method for the recycler later on
-		if (is_object($storage) && $storage instanceof \TYPO3\CMS\Core\Resource\ResourceStorage) {
+		if (is_object($storage) && $storage instanceof ResourceStorage) {
 			$this->storage = $storage;
 			$this->properties['storage'] = $storage->getUid();
 		} else {
@@ -436,7 +463,9 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * Renames this file.
 	 *
 	 * @param string $newName The new file name
-	 * @return \TYPO3\CMS\Core\Resource\File
+	 *
+	 * @throws \RuntimeException
+	 * @return File
 	 */
 	public function rename($newName) {
 		if ($this->deleted) {
@@ -448,12 +477,14 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Copies this file into a target folder
 	 *
-	 * @param \TYPO3\CMS\Core\Resource\Folder $targetFolder Folder to copy file into.
+	 * @param Folder $targetFolder Folder to copy file into.
 	 * @param string $targetFileName an optional destination fileName
 	 * @param string $conflictMode overrideExistingFile", "renameNewFile", "cancel
-	 * @return \TYPO3\CMS\Core\Resource\File The new (copied) file.
+	 *
+	 * @throws \RuntimeException
+	 * @return File The new (copied) file.
 	 */
-	public function copyTo(\TYPO3\CMS\Core\Resource\Folder $targetFolder, $targetFileName = NULL, $conflictMode = 'renameNewFile') {
+	public function copyTo(Folder $targetFolder, $targetFileName = NULL, $conflictMode = 'renameNewFile') {
 		if ($this->deleted) {
 			throw new \RuntimeException('File has been deleted.', 1329821483);
 		}
@@ -463,12 +494,14 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Moves the file into the target folder
 	 *
-	 * @param \TYPO3\CMS\Core\Resource\Folder $targetFolder Folder to move file into.
+	 * @param Folder $targetFolder Folder to move file into.
 	 * @param string $targetFileName an optional destination fileName
 	 * @param string $conflictMode overrideExistingFile", "renameNewFile", "cancel
-	 * @return \TYPO3\CMS\Core\Resource\File This file object, with updated properties.
+	 *
+	 * @throws \RuntimeException
+	 * @return File This file object, with updated properties.
 	 */
-	public function moveTo(\TYPO3\CMS\Core\Resource\Folder $targetFolder, $targetFileName = NULL, $conflictMode = 'renameNewFile') {
+	public function moveTo(Folder $targetFolder, $targetFileName = NULL, $conflictMode = 'renameNewFile') {
 		if ($this->deleted) {
 			throw new \RuntimeException('File has been deleted.', 1329821484);
 		}
@@ -485,6 +518,8 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * web-based authentication. You have to take care of this yourself.
 	 *
 	 * @param bool  $relativeToCurrentScript   Determines whether the URL returned should be relative to the current script, in case it is relative at all (only for the LocalDriver)
+	 *
+	 * @throws \RuntimeException
 	 * @return string
 	 */
 	public function getPublicUrl($relativeToCurrentScript = FALSE) {
@@ -500,6 +535,8 @@ abstract class AbstractFile implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * If the file is already on the local system, this only makes a new copy if $writable is set to TRUE.
 	 *
 	 * @param boolean $writable Set this to FALSE if you only want to do read operations on the file.
+	 *
+	 * @throws \RuntimeException
 	 * @return string
 	 */
 	public function getForLocalProcessing($writable = TRUE) {

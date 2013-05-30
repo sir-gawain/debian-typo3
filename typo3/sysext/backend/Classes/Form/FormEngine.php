@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Form;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,14 +26,7 @@ namespace TYPO3\CMS\Backend\Form;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Contains TYPO3 Core Form generator - AKA "TCEforms"
- *
- * Revised for TYPO3 3.6 August/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
+
 /**
  * 'TCEforms' - Class for creating the backend editing forms.
  *
@@ -155,7 +148,7 @@ class FormEngine {
 	 */
 	public $backPath = '';
 
-	// Alternative return URL path (default is t3lib_div::linkThisScript())
+	// Alternative return URL path (default is \TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript())
 	/**
 	 * @todo Define visibility
 	 */
@@ -532,8 +525,6 @@ class FormEngine {
 	public $additionalJS_delete = array();
 
 	/**
-	 * Instance of t3lib_tceforms_inline
-	 *
 	 * @var \TYPO3\CMS\Backend\Form\Element\InlineElement
 	 * @todo Define visibility
 	 */
@@ -600,11 +591,11 @@ class FormEngine {
 			'group' => array('size', 'autoSizeMax', 'max_size', 'show_thumbs', 'maxitems', 'minitems', 'disable_controls', 'readOnly'),
 			'inline' => array('appearance', 'behaviour', 'foreign_label', 'foreign_selector', 'foreign_unique', 'maxitems', 'minitems', 'size', 'autoSizeMax', 'symmetric_label', 'readOnly')
 		);
-		// Create instance of t3lib_TCEforms_inline only if this a non-IRRE-AJAX call:
+		// Create instance of \TYPO3\CMS\Backend\Form\Element\InlineElement only if this a non-IRRE-AJAX call:
 		if (!isset($GLOBALS['ajaxID']) || strpos($GLOBALS['ajaxID'], 'TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement::') !== 0) {
 			$this->inline = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement');
 		}
-		// Create instance of t3lib_TCEforms_suggest only if this a non-Suggest-AJAX call:
+		// Create instance of \TYPO3\CMS\Backend\Form\Element\SuggestElement only if this a non-Suggest-AJAX call:
 		if (!isset($GLOBALS['ajaxID']) || strpos($GLOBALS['ajaxID'], 'TYPO3\\CMS\\Backend\\Form\\Element\\SuggestElement::') !== 0) {
 			$this->suggest = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\SuggestElement');
 		}
@@ -660,7 +651,6 @@ class FormEngine {
 	 */
 	public function getSoloField($table, $row, $theFieldToReturn) {
 		if ($GLOBALS['TCA'][$table]) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$typeNum = $this->getRTypeNum($table, $row);
 			if ($GLOBALS['TCA'][$table]['types'][$typeNum]) {
 				$itemList = $GLOBALS['TCA'][$table]['types'][$typeNum]['showitem'];
@@ -684,7 +674,9 @@ class FormEngine {
 
 	/**
 	 * Based on the $table and $row of content, this displays the complete TCEform for the record.
-	 * The input-$row is required to be preprocessed if necessary by eg. the t3lib_transferdata class. For instance the RTE content should be transformed through this class first.
+	 * The input-$row is required to be preprocessed if necessary by eg.
+	 * the \TYPO3\CMS\Backend\Form\DataPreprocessor class. For instance the RTE content
+	 * should be transformed through this class first.
 	 *
 	 * @param string $table The table name
 	 * @param array $row The record from the table for which to render a field.
@@ -714,8 +706,6 @@ class FormEngine {
 			}
 		}
 		if ($GLOBALS['TCA'][$table]) {
-			// Load the full TCA for the table.
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// Get dividers2tabs setting from TCA of the current table:
 			$dividers2tabs = &$GLOBALS['TCA'][$table]['ctrl']['dividers2tabs'];
 			// Load the description content for the table.
@@ -910,7 +900,6 @@ class FormEngine {
 	 * @todo Define visibility
 	 */
 	public function getListedFields($table, $row, $list) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if ($this->edit_showFieldHelp || $this->doLoadTableDescr($table)) {
 			$GLOBALS['LANG']->loadSingleTableDescription($table);
 		}
@@ -1007,15 +996,31 @@ class FormEngine {
 		$PA['palette'] = $palette;
 		$PA['extra'] = $extra;
 		$PA['pal'] = $pal;
-		// Make sure to load full $GLOBALS['TCA'] array for the table:
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// Get the TCA configuration for the current field:
 		$PA['fieldConf'] = $GLOBALS['TCA'][$table]['columns'][$field];
 		$PA['fieldConf']['config']['form_type'] = $PA['fieldConf']['config']['form_type'] ? $PA['fieldConf']['config']['form_type'] : $PA['fieldConf']['config']['type'];
 		// Using "form_type" locally in this script
 		$skipThisField = $this->inline->skipField($table, $field, $row, $PA['fieldConf']['config']);
-		// Now, check if this field is configured and editable (according to excludefields + other configuration)
-		if (is_array($PA['fieldConf']) && !$skipThisField && (!$PA['fieldConf']['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $table . ':' . $field)) && $PA['fieldConf']['config']['form_type'] != 'passthrough' && ($this->RTEenabled || !$PA['fieldConf']['config']['showIfRTE']) && (!$PA['fieldConf']['displayCond'] || $this->isDisplayCondition($PA['fieldConf']['displayCond'], $row)) && (!$GLOBALS['TCA'][$table]['ctrl']['languageField'] || $PA['fieldConf']['l10n_display'] || strcmp($PA['fieldConf']['l10n_mode'], 'exclude') || $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] <= 0) && (!$GLOBALS['TCA'][$table]['ctrl']['languageField'] || !$this->localizationMode || $this->localizationMode === $PA['fieldConf']['l10n_cat'])) {
+
+		// Evaluate display condition
+		$displayConditionResult = TRUE;
+		if (is_array($PA['fieldConf']) && $PA['fieldConf']['displayCond'] && is_array($row)) {
+			/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
+			$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+			$displayConditionResult = $elementConditionMatcher->match($PA['fieldConf']['displayCond'], $row);
+		}
+
+		// Check if this field is configured and editable (according to excludefields + other configuration)
+		if (
+			is_array($PA['fieldConf'])
+			&& !$skipThisField
+			&& (!$PA['fieldConf']['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $table . ':' . $field))
+			&& $PA['fieldConf']['config']['form_type'] != 'passthrough'
+			&& ($this->RTEenabled || !$PA['fieldConf']['config']['showIfRTE'])
+			&& $displayConditionResult
+			&& (!$GLOBALS['TCA'][$table]['ctrl']['languageField'] || $PA['fieldConf']['l10n_display'] || strcmp($PA['fieldConf']['l10n_mode'], 'exclude') || $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] <= 0)
+			&& (!$GLOBALS['TCA'][$table]['ctrl']['languageField'] || !$this->localizationMode || $this->localizationMode === $PA['fieldConf']['l10n_cat'])
+		) {
 			// Fetching the TSconfig for the current table/field. This includes the $row which means that
 			$PA['fieldTSConfig'] = $this->setTSconfig($table, $row, $field);
 			// If the field is NOT disabled from TSconfig (which it could have been) then render it
@@ -1317,7 +1322,7 @@ class FormEngine {
 				}
 				break;
 			default:
-				// Pair hook to the one in t3lib_TCEmain::checkValue_input_Eval()
+				// Pair hook to the one in \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_input_Eval()
 				$evalObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$func] . ':&' . $func);
 				if (is_object($evalObj) && method_exists($evalObj, 'deevaluateFieldValue')) {
 					$_params = array(
@@ -1545,7 +1550,7 @@ function ' . $evalData . '(value) {
 						$this->registerRequiredProperty('field', $table . '_' . $row['uid'] . '_' . $field, $PA['itemFormElName']);
 						break;
 					default:
-						// Pair hook to the one in t3lib_TCEmain::checkValue_input_Eval() and t3lib_TCEmain::checkValue_text_Eval()
+						// Pair hook to the one in \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_input_Eval() and \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_text_Eval()
 						$evalObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$func] . ':&' . $func);
 						if (is_object($evalObj) && method_exists($evalObj, 'deevaluateFieldValue')) {
 							$_params = array(
@@ -2619,6 +2624,10 @@ function ' . $evalData . '(value) {
 			} else {
 				$tabsToTraverse = array($sheet);
 			}
+
+			/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
+			$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+
 			foreach ($rotateLang as $lKey) {
 				if (!$langChildren && !$langDisabled) {
 					$item .= '<strong>' . $this->getLanguageIcon($table, $row, ('v' . $lKey)) . $lKey . ':</strong>';
@@ -2656,8 +2665,12 @@ function ' . $evalData . '(value) {
 							$skipCondition = TRUE;
 							break;
 						}
+						$displayConditionResult = TRUE;
+						if ($dataStruct['ROOT']['TCEforms']['displayCond']) {
+							$displayConditionResult = $elementConditionMatcher->match($dataStruct['ROOT']['TCEforms']['displayCond'], $fakeRow, 'vDEF');
+						}
 						// If sheets displayCond leads to false
-						if (!$skipCondition && !$this->isDisplayCondition($dataStruct['ROOT']['TCEforms']['displayCond'], $fakeRow, 'vDEF')) {
+						if (!$skipCondition && !$displayConditionResult) {
 							// Don't create this sheet
 							continue;
 						}
@@ -2787,11 +2800,7 @@ function ' . $evalData . '(value) {
 					// for whatever reason,
 					// now, only using <title> in an unnested way is fine.
 					$theTitle = $value['title'];
-					// Old syntax is deprecated and will be removed in TYPO3 6.1
-					if (!$theTitle && isset($value['tx_templavoila']['title'])) {
-						\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('The flexform XML, used in ' . htmlspecialchars($table) . ':' . htmlspecialchars($field) . ' is using legacy syntax, the <title> is wrapped in <tx_templavoila>, however should be moved outside of that XML tag container. This functionality will be removed in TYPO3 6.1.');
-						$theTitle = $value['tx_templavoila']['title'];
-					}
+
 					// If there is a title, check for LLL label
 					if (strlen($theTitle) > 0) {
 						$theTitle = htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->sL($theTitle), 30));
@@ -2852,13 +2861,13 @@ function ' . $evalData . '(value) {
 								// Kasper's comment (kept for history): Maybe there is a better way to do this than store the HTML for the new element in rawurlencoded format - maybe it even breaks with certain charsets? But for now this works...
 								$this->additionalJS_post = $additionalJS_post_saved;
 								$this->additionalJS_submit = $additionalJS_submit_saved;
-								$new = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.new', 1);
+								$new = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.new', 1);
 								$newElementsLinks[] = '<a href="#" onclick="' . htmlspecialchars($onClickInsert) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-new') . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->sL($nCfg['tx_templavoila']['title']), 30)) . '</a>';
 							}
 							// Reverting internal variables we don't want to change:
 							$this->requiredElements = $TEMP_requiredElements;
 							// Adding the sections:
-							$toggleAll = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.toggleall', 1);
+							$toggleAll = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.toggleall', 1);
 							$output .= '
 							<div class="t3-form-field-toggle-flexsection">
 								<a href="#" onclick="' . htmlspecialchars(('flexFormToggleSubs("' . $idTagPrefix . '"); return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-right', array('title' => $toggleAll)) . $toggleAll . '
@@ -2866,7 +2875,7 @@ function ' . $evalData . '(value) {
 							</div>
 
 							<div id="' . $idTagPrefix . '" class="t3-form-field-container-flexsection">' . implode('', $tRows) . '</div>';
-							$output .= $mayRestructureFlexforms ? '<div class="t3-form-field-add-flexsection"><strong>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.addnew', 1) . ':</strong> ' . implode(' | ', $newElementsLinks) . '</div>' : '';
+							$output .= $mayRestructureFlexforms ? '<div class="t3-form-field-add-flexsection"><strong>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.addnew', 1) . ':</strong> ' . implode(' | ', $newElementsLinks) . '</div>' : '';
 						} else {
 							// It is a container
 							$toggleIcon_open = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-down');
@@ -2922,9 +2931,17 @@ function ' . $evalData . '(value) {
 						// Add current $row to data processed by isDisplayCondition()
 						$conditionData['parentRec'] = $row;
 						$tRows = array();
+
+						/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
+						$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+
 						foreach ($rotateLang as $vDEFkey) {
 							$vDEFkey = 'v' . $vDEFkey;
-							if (!$value['TCEforms']['displayCond'] || $this->isDisplayCondition($value['TCEforms']['displayCond'], $conditionData, $vDEFkey)) {
+							$displayConditionResult = TRUE;
+							if ($value['TCEforms']['displayCond']) {
+								$displayConditionResult = $elementConditionMatcher->match($value['TCEforms']['displayCond'], $conditionData, $vDEFkey);
+							}
+							if ($displayConditionResult) {
 								$fakePA = array();
 								$fakePA['fieldConf'] = array(
 									'label' => $this->sL(trim($value['TCEforms']['label'])),
@@ -3063,7 +3080,7 @@ function ' . $evalData . '(value) {
 				$value = '';
 			}
 			if ($config['format.']['appendAge']) {
-				$value .= ' (' . \TYPO3\CMS\Backend\Utility\BackendUtility::calcAge(($GLOBALS['EXEC_TIME'] - $itemValue), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')) . ')';
+				$value .= ' (' . \TYPO3\CMS\Backend\Utility\BackendUtility::calcAge(($GLOBALS['EXEC_TIME'] - $itemValue), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')) . ')';
 			}
 			$itemValue = $value;
 			break;
@@ -3160,7 +3177,6 @@ function ' . $evalData . '(value) {
 				}
 				if ($foreignUid) {
 					$foreignRow = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($foreignTable, $foreignUid, $foreignTypeField);
-					\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($foreignTable);
 					$this->registerDefaultLanguageData($foreignTable, $foreignRow);
 					if ($foreignRow[$foreignTypeField]) {
 						$foreignTypeFieldConfig = $GLOBALS['TCA'][$table]['columns'][$field];
@@ -3204,7 +3220,7 @@ function ' . $evalData . '(value) {
 			}
 		}
 		ksort($newFields);
-		// Candidate for t3lib_div::array_merge() if integer-keys will some day make trouble...
+		// Candidate for \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge() if integer-keys will some day make trouble...
 		$fields = array_merge($newFields, $fields);
 		return $fields;
 	}
@@ -3306,7 +3322,7 @@ function ' . $evalData . '(value) {
 	 * @param array $row The table row (Should at least contain the "uid" value, even if "NEW..." string. The "pid" field is important as well, and negative values will be intepreted as pointing to a record from the same table.)
 	 * @param string $field Optionally you can specify the field name as well. In that case the TSconfig for the field is returned.
 	 * @return mixed The TSconfig values (probably in an array)
-	 * @see t3lib_BEfunc::getTCEFORM_TSconfig()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getTCEFORM_TSconfig()
 	 * @todo Define visibility
 	 */
 	public function setTSconfig($table, $row, $field = '') {
@@ -3360,7 +3376,7 @@ function ' . $evalData . '(value) {
 	 * @param array $row The table row (Should at least contain the "uid" value, even if "NEW..." string. The "pid" field is important as well, and negative values will be intepreted as pointing to a record from the same table.)
 	 * @param string $field Specify the field name.
 	 * @return array
-	 * @see getSpecConfFromString(), t3lib_BEfunc::getTCAtypes()
+	 * @see getSpecConfFromString(), \TYPO3\CMS\Backend\Utility\BackendUtility::getTCAtypes()
 	 * @todo Define visibility
 	 */
 	public function getSpecConfForField($table, $row, $field) {
@@ -3383,7 +3399,7 @@ function ' . $evalData . '(value) {
 	 * @param string $extraString The "Part 4" of the fields configuration in "types" "showitem" lists.
 	 * @param string $defaultExtras The ['defaultExtras'] value from field configuration
 	 * @return array An array with the special options in.
-	 * @see getSpecConfForField(), t3lib_BEfunc::getSpecConfParts()
+	 * @see getSpecConfForField(), \TYPO3\CMS\Backend\Utility\BackendUtility::getSpecConfParts()
 	 * @todo Define visibility
 	 */
 	public function getSpecConfFromString($extraString, $defaultExtras) {
@@ -3400,7 +3416,6 @@ function ' . $evalData . '(value) {
 	 * @return array The palette elements
 	 */
 	public function loadPaletteElements($table, $row, $palette, $itemList = '') {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		$parts = array();
 		// Getting excludeElements, if any.
 		if (!is_array($this->excludeElements)) {
@@ -3656,7 +3671,7 @@ function ' . $evalData . '(value) {
 		// Create selector box of the options
 		$sSize = $params['autoSizeMax'] ? \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($itemArrayC + 1, \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($params['size'], 1), $params['autoSizeMax']) : $params['size'];
 		if (!$selector) {
-			$isMultiple = $params['size'] != 1;
+			$isMultiple = $params['maxitems'] != 1 && $params['size'] != 1;
 			$selector = '<select id="' . uniqid('tceforms-multiselect-') . '" ' . ($params['noList'] ? 'style="display: none"' : 'size="' . $sSize . '"' . $this->insertDefStyle('group', 'tceforms-multiselect')) . ($isMultiple ? ' multiple="multiple"' : '') . ' name="' . $fName . '_list" ' . $onFocus . $params['style'] . $disabled . '>' . implode('', $opt) . '</select>';
 		}
 		$icons = array(
@@ -4264,7 +4279,7 @@ function ' . $evalData . '(value) {
 	}
 
 	/**
-	 * Returns the "returnUrl" of the form. Can be set externally or will be taken from "t3lib_div::linkThisScript()"
+	 * Returns the "returnUrl" of the form. Can be set externally or will be taken from "\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript()"
 	 *
 	 * @return string Return URL of current script
 	 * @todo Define visibility
@@ -4285,7 +4300,6 @@ function ' . $evalData . '(value) {
 	 */
 	public function getSingleHiddenField($table, $field, $row) {
 		$item = '';
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if ($GLOBALS['TCA'][$table]['columns'][$field]) {
 			$uid = $row['uid'];
 			$itemName = $this->prependFormFieldNames . '[' . $table . '][' . $uid . '][' . $field . ']';
@@ -4766,7 +4780,7 @@ function ' . $evalData . '(value) {
 	 * @param string $field The fieldname
 	 * @param boolean $pFFlag If set, then we are fetching the 'neg_' foreign tables.
 	 * @return array The $items array modified.
-	 * @see addSelectOptionsToItemArray(), t3lib_BEfunc::exec_foreign_table_where_query()
+	 * @see addSelectOptionsToItemArray(), \TYPO3\CMS\Backend\Utility\BackendUtility::exec_foreign_table_where_query()
 	 * @todo Define visibility
 	 */
 	public function foreignTable($items, $fieldValue, $TSconfig, $field, $pFFlag = 0) {
@@ -4780,11 +4794,15 @@ function ' . $evalData . '(value) {
 		if ($GLOBALS['TYPO3_DB']->sql_error()) {
 			$msg = htmlspecialchars($GLOBALS['TYPO3_DB']->sql_error());
 			$msg .= '<br />' . LF;
-			$msg .= $this->sL('LLL:EXT:lang/locallang_core.php:error.database_schema_mismatch');
-			$msgTitle = $this->sL('LLL:EXT:lang/locallang_core.php:error.database_schema_mismatch_title');
+			$msg .= $this->sL('LLL:EXT:lang/locallang_core.xlf:error.database_schema_mismatch');
+			$msgTitle = $this->sL('LLL:EXT:lang/locallang_core.xlf:error.database_schema_mismatch_title');
 			/** @var $flashMessage \TYPO3\CMS\Core\Messaging\FlashMessage */
 			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $msg, $msgTitle, \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR, TRUE);
-			\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage($flashMessage);
+			/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+			$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+			/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+			$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+			$defaultFlashMessageQueue->enqueue($flashMessage);
 			return array();
 		}
 		// Get label prefix.
@@ -4928,8 +4946,8 @@ function ' . $evalData . '(value) {
 	public function replaceTableWrap($arr, $rec, $table) {
 		// Make "new"-label
 		if (strstr($rec['uid'], 'NEW')) {
-			$newLabel = ' <span class="typo3-TCEforms-newToken">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.new', 1) . '</span>';
-			// t3lib_BEfunc::fixVersioningPid Should not be used here because NEW records are not offline workspace versions...
+			$newLabel = ' <span class="typo3-TCEforms-newToken">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.new', 1) . '</span>';
+			// \TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid Should not be used here because NEW records are not offline workspace versions...
 			$truePid = \TYPO3\CMS\Backend\Utility\BackendUtility::getTSconfig_pidValue($table, $rec['uid'], $rec['pid']);
 			$prec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL('pages', $truePid, 'title');
 			$pageTitle = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle('pages', $prec, TRUE, FALSE);
@@ -4937,12 +4955,12 @@ function ' . $evalData . '(value) {
 			// Fetch translated title of the table
 			$tableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title']);
 			if ($table === 'pages') {
-				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.createNewPage', TRUE);
+				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.createNewPage', TRUE);
 				$pageTitle = sprintf($label, $tableTitle);
 			} else {
-				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.createNewRecord', TRUE);
+				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.createNewRecord', TRUE);
 				if ($rec['pid'] == 0) {
-					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.createNewRecordRootLevel', TRUE);
+					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.createNewRecordRootLevel', TRUE);
 				}
 				$pageTitle = sprintf($label, $tableTitle, $pageTitle);
 			}
@@ -4953,17 +4971,17 @@ function ' . $evalData . '(value) {
 			// Fetch translated title of the table
 			$tableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title']);
 			if ($table === 'pages') {
-				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.editPage', TRUE);
+				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editPage', TRUE);
 				// Just take the record title and prepend an edit label.
 				$pageTitle = sprintf($label, $tableTitle, $rLabel);
 			} else {
-				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.editRecord', TRUE);
+				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editRecord', TRUE);
 				$pageTitle = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle('pages', $prec, TRUE, FALSE);
 				if ($rLabel === \TYPO3\CMS\Backend\Utility\BackendUtility::getNoRecordTitle(TRUE)) {
-					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.editRecordNoTitle', TRUE);
+					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editRecordNoTitle', TRUE);
 				}
 				if ($rec['pid'] == 0) {
-					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.editRecordRootLevel', TRUE);
+					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editRecordRootLevel', TRUE);
 				}
 				if ($rLabel !== \TYPO3\CMS\Backend\Utility\BackendUtility::getNoRecordTitle(TRUE)) {
 					// Just take the record title and prepend an edit label.
@@ -5392,8 +5410,8 @@ function ' . $evalData . '(value) {
 			TBE_EDITOR.prependFormFieldNamesCnt = ' . substr_count($this->prependFormFieldNames, '[') . ';
 			TBE_EDITOR.isPalettedoc = ' . ($this->isPalettedoc ? addslashes($this->isPalettedoc) : 'null') . ';
 			TBE_EDITOR.doSaveFieldName = "' . ($this->doSaveFieldName ? addslashes($this->doSaveFieldName) : '') . '";
-			TBE_EDITOR.labels.fieldsChanged = ' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.fieldsChanged')) . ';
-			TBE_EDITOR.labels.fieldsMissing = ' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.fieldsMissing')) . ';
+			TBE_EDITOR.labels.fieldsChanged = ' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.fieldsChanged')) . ';
+			TBE_EDITOR.labels.fieldsMissing = ' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.fieldsMissing')) . ';
 			TBE_EDITOR.labels.refresh_login = ' . $GLOBALS['LANG']->JScharCode($this->getLL('m_refresh_login')) . ';
 			TBE_EDITOR.labels.onChangeAlert = ' . $GLOBALS['LANG']->JScharCode($this->getLL('m_onChangeAlert')) . ';
 			evalFunc.USmode = ' . ($GLOBALS['TYPO3_CONF_VARS']['SYS']['USdateFormat'] ? '1' : '0') . ';
@@ -5750,8 +5768,8 @@ function ' . $evalData . '(value) {
 	public function printNeededJSFunctions() {
 		// JS evaluation:
 		$out = $this->JSbottom($this->formName);
-		// Integrate JS functions for the element browser if such fields or IRRE fields were processed:
-		if ($this->printNeededJS['dbFileIcons'] || $this->inline->inlineCount) {
+		// Integrate JS functions for the element browser if such fields or IRRE fields or suggest wizard were processed:
+		if ($this->printNeededJS['dbFileIcons'] > 0 || $this->inline->inlineCount > 0 || $this->suggest->suggestCount > 0) {
 			$out .= '
 
 
@@ -5762,7 +5780,7 @@ function ' . $evalData . '(value) {
 
 			<script type="text/javascript">
 				/*<![CDATA[*/
-			' . $this->dbFileCon(('document.' . $this->formName)) . '
+			' . $this->dbFileCon('document.' . $this->formName) . '
 				/*]]>*/
 			</script>';
 		}
@@ -5808,7 +5826,6 @@ function ' . $evalData . '(value) {
 	 */
 	public function getDefaultRecord($table, $pid = 0) {
 		if ($GLOBALS['TCA'][$table]) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$row = array();
 			if ($pid < 0 && $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues']) {
 				// Fetches the previous record:
@@ -5834,12 +5851,12 @@ function ' . $evalData . '(value) {
 	}
 
 	/**
-	 * Return record path (visually formatted, using t3lib_BEfunc::getRecordPath() )
+	 * Return record path (visually formatted, using \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath() )
 	 *
 	 * @param string $table Table name
 	 * @param array $rec Record array
 	 * @return string The record path.
-	 * @see t3lib_BEfunc::getRecordPath()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath()
 	 * @todo Define visibility
 	 */
 	public function getRecordPath($table, $rec) {
@@ -5868,7 +5885,7 @@ function ' . $evalData . '(value) {
 	/**
 	 * Fetches language label for key
 	 *
-	 * @param string $str Language label reference, eg. 'LLL:EXT:lang/locallang_core.php:labels.blablabla'
+	 * @param string $str Language label reference, eg. 'LLL:EXT:lang/locallang_core.xlf:labels.blablabla'
 	 * @return string The value of the label, fetched for the current backend language.
 	 * @todo Define visibility
 	 */
@@ -5877,10 +5894,10 @@ function ' . $evalData . '(value) {
 	}
 
 	/**
-	 * Returns language label from locallang_core.php
+	 * Returns language label from locallang_core.xlf
 	 * Labels must be prefixed with either "l_" or "m_".
-	 * The prefix "l_" maps to the prefix "labels." inside locallang_core.php
-	 * The prefix "m_" maps to the prefix "mess." inside locallang_core.php
+	 * The prefix "l_" maps to the prefix "labels." inside locallang_core.xlf
+	 * The prefix "m_" maps to the prefix "mess." inside locallang_core.xlf
 	 *
 	 * @param string $str The label key
 	 * @return string The value of the label, fetched for the current backend language.
@@ -5890,10 +5907,10 @@ function ' . $evalData . '(value) {
 		$content = '';
 		switch (substr($str, 0, 2)) {
 		case 'l_':
-			$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.' . substr($str, 2));
+			$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.' . substr($str, 2));
 			break;
 		case 'm_':
-			$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.' . substr($str, 2));
+			$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:mess.' . substr($str, 2));
 			break;
 		}
 		return $content;
@@ -5928,141 +5945,26 @@ function ' . $evalData . '(value) {
 	 * @param string $ffValueKey FlexForm value key, eg. vDEF
 	 * @return boolean
 	 * @todo Define visibility
+	 * @deprecated since TYPO3 6.1, will be removed 2 versions later - Use \TYPO3\CMS\Backend\Form\ElementConditionMatcher instead
 	 */
 	public function isDisplayCondition($displayCond, $row, $ffValueKey = '') {
-		$output = FALSE;
-		$parts = explode(':', $displayCond);
-		// Type of condition:
-		switch ((string) $parts[0]) {
-		case 'FIELD':
-			if ($ffValueKey) {
-				if (strpos($parts[1], 'parentRec.') !== FALSE) {
-					$fParts = explode('.', $parts[1]);
-					$theFieldValue = $row['parentRec'][$fParts[1]];
-				} else {
-					$theFieldValue = $row[$parts[1]][$ffValueKey];
-				}
-			} else {
-				$theFieldValue = $row[$parts[1]];
-			}
-			switch ((string) $parts[2]) {
-			case 'REQ':
-				if (strtolower($parts[3]) == 'true') {
-					$output = $theFieldValue ? TRUE : FALSE;
-				} elseif (strtolower($parts[3]) == 'false') {
-					$output = !$theFieldValue ? TRUE : FALSE;
-				}
-				break;
-			case '>':
-				$output = $theFieldValue > $parts[3];
-				break;
-			case '<':
-				$output = $theFieldValue < $parts[3];
-				break;
-			case '>=':
-				$output = $theFieldValue >= $parts[3];
-				break;
-			case '<=':
-				$output = $theFieldValue <= $parts[3];
-				break;
-			case '-':
-
-			case '!-':
-				$cmpParts = explode('-', $parts[3]);
-				$output = $theFieldValue >= $cmpParts[0] && $theFieldValue <= $cmpParts[1];
-				if ($parts[2][0] == '!') {
-					$output = !$output;
-				}
-				break;
-			case 'IN':
-
-			case '!IN':
-				$output = \TYPO3\CMS\Core\Utility\GeneralUtility::inList($parts[3], $theFieldValue);
-				if ($parts[2][0] == '!') {
-					$output = !$output;
-				}
-				break;
-			case '=':
-
-			case '!=':
-				$output = \TYPO3\CMS\Core\Utility\GeneralUtility::inList($parts[3], $theFieldValue);
-				if ($parts[2][0] == '!') {
-					$output = !$output;
-				}
-				break;
-			}
-			break;
-		case 'EXT':
-			switch ((string) $parts[2]) {
-			case 'LOADED':
-				if (strtolower($parts[3]) == 'true') {
-					$output = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($parts[1]) ? TRUE : FALSE;
-				} elseif (strtolower($parts[3]) == 'false') {
-					$output = !\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($parts[1]) ? TRUE : FALSE;
-				}
-				break;
-			}
-			break;
-		case 'REC':
-			switch ((string) $parts[1]) {
-			case 'NEW':
-				if (strtolower($parts[2]) == 'true') {
-					$output = !(intval($row['uid']) > 0) ? TRUE : FALSE;
-				} elseif (strtolower($parts[2]) == 'false') {
-					$output = intval($row['uid']) > 0 ? TRUE : FALSE;
-				}
-				break;
-			}
-			break;
-		case 'HIDE_L10N_SIBLINGS':
-			if ($ffValueKey === 'vDEF') {
-				$output = TRUE;
-			} elseif ($parts[1] === 'except_admin' && $GLOBALS['BE_USER']->isAdmin()) {
-				$output = TRUE;
-			}
-			break;
-		case 'HIDE_FOR_NON_ADMINS':
-			$output = $GLOBALS['BE_USER']->isAdmin() ? TRUE : FALSE;
-			break;
-		case 'VERSION':
-			switch ((string) $parts[1]) {
-			case 'IS':
-				$isNewRecord = intval($row['uid']) > 0 ? FALSE : TRUE;
-				// Detection of version can be done be detecting the workspace of the user
-				$isUserInWorkspace = $GLOBALS['BE_USER']->workspace > 0 ? TRUE : FALSE;
-				if (intval($row['pid']) == -1 || intval($row['_ORIG_pid']) == -1) {
-					$isRecordDetectedAsVersion = TRUE;
-				} else {
-					$isRecordDetectedAsVersion = FALSE;
-				}
-				// New records in a workspace are not handled as a version record
-				// if it's no new version, we detect versions like this:
-				// -- if user is in workspace: always TRUE
-				// -- if editor is in live ws: only TRUE if pid == -1
-				$isVersion = ($isUserInWorkspace || $isRecordDetectedAsVersion) && !$isNewRecord;
-				if (strtolower($parts[2]) == 'true') {
-					$output = $isVersion;
-				} else {
-					if (strtolower($parts[2]) == 'false') {
-						$output = !$isVersion;
-					}
-				}
-				break;
-			}
-			break;
-		}
-		return $output;
+		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
+		/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
+		$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+		$elementConditionMatcher->setRecord($row);
+		$elementConditionMatcher->setFlexformValueKey($ffValueKey);
+		return $elementConditionMatcher->match($displayCond);
 	}
 
 	/**
 	 * Return TSCpid (cached)
-	 * Using t3lib_BEfunc::getTSCpid()
+	 * Using \TYPO3\CMS\Backend\Utility\BackendUtility::getTSCpid()
 	 *
 	 * @param string $table Tablename
 	 * @param string $uid UID value
 	 * @param string $pid PID value
 	 * @return integer Returns the REAL pid of the record, if possible. If both $uid and $pid is strings, then pid=-1 is returned as an error indication.
-	 * @see t3lib_BEfunc::getTSCpid()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getTSCpid()
 	 * @todo Define visibility
 	 */
 	public function getTSCpid($table, $uid, $pid) {
@@ -6170,7 +6072,7 @@ function ' . $evalData . '(value) {
 	protected function getMergeBehaviourIcon($l10nMode) {
 		$icon = '';
 		if ($l10nMode === 'mergeIfNotBlank') {
-			$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-merge-localization', array('title' => $this->sL('LLL:EXT:lang/locallang_misc.xml:localizeMergeIfNotBlank')));
+			$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-merge-localization', array('title' => $this->sL('LLL:EXT:lang/locallang_misc.xlf:localizeMergeIfNotBlank')));
 		}
 		return $icon;
 	}
@@ -6369,7 +6271,7 @@ function ' . $evalData . '(value) {
 					if (!empty($keySegments[1])) {
 						// Use any field in the foreign record
 						list($foreignTable, $foreignUid) = \TYPO3\CMS\Backend\Utility\BackendUtility::splitTable_Uid($foreignIdentifier);
-						$foreignRecord = \t3lib_befunc::getRecord($foreignTable, $foreignUid);
+						$foreignRecord = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($foreignTable, $foreignUid);
 						if (isset($foreignRecord[$keySegments[1]])) {
 							$value = $foreignRecord[$keySegments[1]];
 						}

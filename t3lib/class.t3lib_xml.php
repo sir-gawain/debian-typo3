@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -57,7 +57,7 @@ class t3lib_xml {
 	 * @return void
 	 */
 	public function __construct($topLevelName) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('Class TYPO3\\CMS\\Core\\Utility\\GeneralUtility is deprecated since TYPO3 6.0. ' . 'It will be removed with TYPO3 6.2, please use other xml helper solutions instead.');
+		\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('Class t3lib_xml is deprecated since TYPO3 6.0. It will be removed with TYPO3 6.2, please use other xml helper solutions instead.');
 		$this->topLevelName = $topLevelName;
 	}
 
@@ -179,7 +179,7 @@ class t3lib_xml {
 	 * Takes a SQL result for $table and traverses it, adding rows
 	 *
 	 * @param string $table Tablename
-	 * @param pointer $res SQL resource pointer, should be reset
+	 * @param boolean|\mysqli_result|object $res MySQLi result object / DBAL object
 	 * @return void
 	 */
 	public function renderRecords($table, $res) {

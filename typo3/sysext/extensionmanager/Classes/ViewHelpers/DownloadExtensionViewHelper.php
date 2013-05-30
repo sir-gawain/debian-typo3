@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog <susanne.moog@typo3.org>
+ *  (c) 2012-2013 Susanne Moog <susanne.moog@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -68,7 +68,7 @@ class DownloadExtensionViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\FormViewH
 		$label = '<input title="' . \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('extensionList.downloadViewHelper.submit', 'extensionmanager') . '" type="submit" class="' . $iconClasses . '" value="' . \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('extensionList.downloadViewHelper.submit', 'extensionmanager') . '">';
 
 		$this->tag->setContent($label . $pathSelector);
-		$this->tag->addAttribute('class', 'download');
+		$this->tag->addAttribute('class', 'download onClickMaskExtensionManager');
 		return '<div id="' . htmlspecialchars($extension->getExtensionKey()) . '-downloadFromTer" class="downloadFromTer">' . $this->tag->render() . '</div>';
 	}
 

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tree\TableConfiguration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Ritter <info@steffen-ritter.net>
+ *  (c) 2010-2013 Steffen Ritter <info@steffen-ritter.net>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,8 @@ namespace TYPO3\CMS\Core\Tree\TableConfiguration;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Builds a t3lib_tree_Tca_DatabaseTreeDataProvider object based on some TCA configuration
+ * Builds a \TYPO3\CMS\Core\Tree\TableConfiguration\DatabaseTreeDataProvider
+ * object based on some TCA configuration
  *
  * @author Steffen Ritter <info@steffen-ritter.net>
  */
@@ -67,7 +68,6 @@ class TreeDataProviderFactory {
 				if ($tableName == $table) {
 					$unselectableUids[] = $currentValue['uid'];
 				}
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($tableName);
 			} else {
 				throw new \InvalidArgumentException('TCA Tree configuration is invalid: "foreign_table" not set', 1288215888);
 			}
@@ -95,10 +95,10 @@ class TreeDataProviderFactory {
 				$dataProvider->setNonSelectableLevelList('');
 			}
 			if (isset($treeConfiguration['childrenField'])) {
-				$dataProvider->setLookupMode(\t3lib_tree_tca_DatabaseTreeDataProvider::MODE_CHILDREN);
+				$dataProvider->setLookupMode(\TYPO3\CMS\Core\Tree\TableConfiguration\DatabaseTreeDataProvider::MODE_CHILDREN);
 				$dataProvider->setLookupField($treeConfiguration['childrenField']);
 			} elseif (isset($treeConfiguration['parentField'])) {
-				$dataProvider->setLookupMode(\t3lib_tree_tca_DatabaseTreeDataProvider::MODE_PARENT);
+				$dataProvider->setLookupMode(\TYPO3\CMS\Core\Tree\TableConfiguration\DatabaseTreeDataProvider::MODE_PARENT);
 				$dataProvider->setLookupField($treeConfiguration['parentField']);
 			} else {
 				throw new \InvalidArgumentException('TCA Tree configuration is invalid: neither "childrenField" nor "parentField" is set', 1288215889);

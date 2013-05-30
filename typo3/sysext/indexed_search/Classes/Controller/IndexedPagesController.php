@@ -1,6 +1,29 @@
 <?php
 namespace TYPO3\CMS\IndexedSearch\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2001-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Indexing class for TYPO3 frontend
  *
@@ -56,11 +79,11 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 		global $LANG;
 		return array(
 			'depth' => array(
-				0 => $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.depth_0'),
-				1 => $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.depth_1'),
-				2 => $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.depth_2'),
-				3 => $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.depth_3'),
-				999 => $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.depth_infi')
+				0 => $LANG->sL('LLL:EXT:lang/locallang_core.xlf:labels.depth_0'),
+				1 => $LANG->sL('LLL:EXT:lang/locallang_core.xlf:labels.depth_1'),
+				2 => $LANG->sL('LLL:EXT:lang/locallang_core.xlf:labels.depth_2'),
+				3 => $LANG->sL('LLL:EXT:lang/locallang_core.xlf:labels.depth_3'),
+				999 => $LANG->sL('LLL:EXT:lang/locallang_core.xlf:labels.depth_infi')
 			),
 			'type' => array(
 				0 => 'Overview',
@@ -279,7 +302,7 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 		} else {
 			$page = '';
 		}
-		$elTitle = $this->linkDetails($row['item_title'] ? htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->utf8_to_currentCharset($row['item_title']), 20) . $page) : '<em>[No Title]</em>', $row['phash']);
+		$elTitle = $this->linkDetails($row['item_title'] ? htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($row['item_title'], 20) . $page) : '<em>[No Title]</em>', $row['phash']);
 		$cmdLinks = $this->printRemoveIndexed($row['phash'], 'Clear phash-row') . $this->printReindex($row, 'Re-index element');
 		switch ($this->pObj->MOD_SETTINGS['type']) {
 		case 1:
@@ -315,7 +338,7 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 			$arr = unserialize($row['cHashParams']);
 			if (!is_array($arr)) {
 				$arr = array(
-					'cHash' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xml:LGL.error', TRUE)
+					'cHash' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.error', TRUE)
 				);
 			}
 			$theCHash = $arr['cHash'];
@@ -344,14 +367,14 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 			$lines[] = '<td>' . $cmdLinks . '</td>';
 			// Query:
 			$ftrow = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', 'index_fulltext', 'phash = ' . intval($row['phash']));
-			$lines[] = '<td style="white-space: normal;">' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->utf8_to_currentCharset($ftrow['fulltextdata']), 3000)) . '<hr/><em>Size: ' . strlen($ftrow['fulltextdata']) . '</em>' . '</td>';
+			$lines[] = '<td style="white-space: normal;">' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($ftrow['fulltextdata'], 3000)) . '<hr/><em>Size: ' . strlen($ftrow['fulltextdata']) . '</em>' . '</td>';
 			// Query:
 			$ftrows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('index_words.baseword, index_rel.*', 'index_rel, index_words', 'index_rel.phash = ' . intval($row['phash']) . ' AND index_words.wid = index_rel.wid', '', '', '', 'baseword');
 			$wordList = '';
 			if (is_array($ftrows)) {
 				$indexed_words = array_keys($ftrows);
 				sort($indexed_words);
-				$wordList = htmlspecialchars($this->utf8_to_currentCharset(implode(' ', $indexed_words)));
+				$wordList = htmlspecialchars(implode(' ', $indexed_words));
 				$wordList .= '<hr/><em>Count: ' . count($indexed_words) . '</em>';
 			}
 			$lines[] = '<td style="white-space: normal;">' . $wordList . '</td>';
@@ -368,7 +391,7 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 			$lines[] = '<td' . $titleCellAttribs . '>' . $elTitle . '</td>';
 			// Remove-indexing-link:
 			$lines[] = '<td>' . $cmdLinks . '</td>';
-			$lines[] = '<td style="white-space: normal;">' . htmlspecialchars($this->utf8_to_currentCharset($row['item_description'])) . '...</td>';
+			$lines[] = '<td style="white-space: normal;">' . htmlspecialchars($row['item_description']) . '...</td>';
 			$lines[] = '<td>' . \TYPO3\CMS\Core\Utility\GeneralUtility::formatSize($row['item_size']) . '</td>';
 			$lines[] = '<td>' . \TYPO3\CMS\Backend\Utility\BackendUtility::dateTimeAge($row['tstamp']) . '</td>';
 			break;
@@ -467,15 +490,15 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 		$phashRecord = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', 'index_phash', 'phash = ' . intval($phash));
 		// If found, display:
 		if (is_array($phashRecord)) {
-			$content .= '<h4>phash row content:</h4>' . $this->utf8_to_currentCharset(\TYPO3\CMS\Core\Utility\DebugUtility::viewArray($phashRecord));
+			$content .= '<h4>phash row content:</h4>' . \TYPO3\CMS\Core\Utility\DebugUtility::viewArray($phashRecord);
 			// Getting debug information if any:
 			$ftrows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'index_debug', 'phash = ' . intval($phash));
 			if (is_array($ftrows)) {
 				$debugInfo = unserialize($ftrows[0]['debuginfo']);
 				$lexer = $debugInfo['lexer'];
 				unset($debugInfo['lexer']);
-				$content .= '<h3>Debug information:</h3>' . $this->utf8_to_currentCharset(\TYPO3\CMS\Core\Utility\DebugUtility::viewArray($debugInfo));
-				$content .= '<h4>Debug information / lexer splitting:</h4>' . '<hr/><strong>' . $this->utf8_to_currentCharset($lexer) . '</strong><hr/>';
+				$content .= '<h3>Debug information:</h3>' . \TYPO3\CMS\Core\Utility\DebugUtility::viewArray($debugInfo);
+				$content .= '<h4>Debug information / lexer splitting:</h4>' . '<hr/><strong>' . $lexer . '</strong><hr/>';
 			}
 			$content .= '<h3>Word statistics</h3>';
 			// Finding all words for this phash:
@@ -542,7 +565,7 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 			$trows .= '
 				<tr class="' . ($row['is_stopword'] ? 'bgColor' : 'bgColor4') . '">
 					' . ($stopWordBoxes ? '<td align="center"' . ($row['is_stopword'] ? ' style="background-color:red;"' : '') . '>' . $hiddenField . '<input type="checkbox" name="stopWord[' . $row['wid'] . ']" value="1"' . ($row['is_stopword'] ? 'checked="checked"' : '') . ' /></td>' : '') . '
-					<td>' . $this->linkWordDetails(htmlspecialchars($this->utf8_to_currentCharset($row['baseword'])), $row['wid']) . '</td>
+					<td>' . $this->linkWordDetails(htmlspecialchars($row['baseword']), $row['wid']) . '</td>
 					<td>' . htmlspecialchars($row['count']) . '</td>
 					<td>' . htmlspecialchars($row['first']) . '</td>
 					<td>' . htmlspecialchars($row['freq']) . '</td>
@@ -582,7 +605,7 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 						<td>' . $this->linkMetaPhoneDetails($this->indexerObj->metaphone($words[0], 1), $metaphone) . '</td>
 						<td>' . htmlspecialchars($metaphone) . '</td>
 						<td>' . htmlspecialchars(count($words)) . '</td>
-						<td style="white-space: normal;">' . htmlspecialchars($this->utf8_to_currentCharset(implode(', ', $words))) . '</td>
+						<td style="white-space: normal;">' . htmlspecialchars(implode(', ', $words)) . '</td>
 					</tr>
 				';
 			}
@@ -852,19 +875,6 @@ class IndexedPagesController extends \TYPO3\CMS\Backend\Module\AbstractFunctionM
 			}
 		}
 		return str_replace('###TITLE_ATTRIBUTE###', htmlspecialchars($it . ': ' . $alt), $this->iconFileNameCache[$it]);
-	}
-
-	/**
-	 * Converts the input string from utf-8 to the backend charset.
-	 *
-	 * @param 	string		String to convert (utf-8)
-	 * @return 	string		Converted string (backend charset if different from utf-8)
-	 * @deprecated since 4.7, will be removed in 6.1
-	 * @todo Define visibility
-	 */
-	public function utf8_to_currentCharset($string) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		return $string;
 	}
 
 	/********************************

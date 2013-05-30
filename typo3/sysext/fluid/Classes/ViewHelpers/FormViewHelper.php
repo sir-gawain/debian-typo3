@@ -65,6 +65,11 @@ class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormViewH
 	protected $hashService;
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService
+	 */
+	protected $mvcPropertyMappingConfigurationService;
+
+	/**
 	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
@@ -116,6 +121,14 @@ class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormViewH
 	}
 
 	/**
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService $mvcPropertyMapperConfigurationService
+	 * @return void
+	 */
+	public function injectMvcPropertyMapperConfigurationService(\TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService $mvcPropertyMapperConfigurationService) {
+		$this->mvcPropertyMappingConfigurationService = $mvcPropertyMapperConfigurationService;
+	}
+
+	/**
 	 * Initialize arguments.
 	 *
 	 * @return void
@@ -151,9 +164,10 @@ class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormViewH
 	 * @param string $fieldNamePrefix Prefix that will be added to all field names within this form. If not set the prefix will be tx_yourExtension_plugin
 	 * @param string $actionUri can be used to overwrite the "action" attribute of the form tag
 	 * @param string $objectName name of the object that is bound to this form. If this argument is not specified, the name attribute of this form is used to determine the FormObjectName
+	 * @param string $hiddenFieldClassName
 	 * @return string rendered form
 	 */
-	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $pageUid = NULL, $object = NULL, $pageType = 0, $noCache = FALSE, $noCacheHash = FALSE, $section = '', $format = '', array $additionalParams = array(), $absolute = FALSE, $addQueryString = FALSE, array $argumentsToBeExcludedFromQueryString = array(), $fieldNamePrefix = NULL, $actionUri = NULL, $objectName = NULL) {
+	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $pageUid = NULL, $object = NULL, $pageType = 0, $noCache = FALSE, $noCacheHash = FALSE, $section = '', $format = '', array $additionalParams = array(), $absolute = FALSE, $addQueryString = FALSE, array $argumentsToBeExcludedFromQueryString = array(), $fieldNamePrefix = NULL, $actionUri = NULL, $objectName = NULL, $hiddenFieldClassName = NULL) {
 		$this->setFormActionUri();
 		if (strtolower($this->arguments['method']) === 'get') {
 			$this->tag->addAttribute('method', 'get');
@@ -165,12 +179,23 @@ class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormViewH
 		$this->addFieldNamePrefixToViewHelperVariableContainer();
 		$this->addFormFieldNamesToViewHelperVariableContainer();
 		$formContent = $this->renderChildren();
-		$content = chr(10) . '<div style="display: none">';
+
+		if ($this->arguments['hiddenFieldClassName'] !== NULL) {
+			$content = chr(10) . '<div class="' . htmlspecialchars($this->arguments['hiddenFieldClassName']) . '">';
+		} else {
+			$content = chr(10) . '<div>';
+		}
+
 		$content .= $this->renderHiddenIdentityField($this->arguments['object'], $this->getFormObjectName());
 		$content .= $this->renderAdditionalIdentityFields();
 		$content .= $this->renderHiddenReferrerFields();
-		$content .= $this->renderRequestHashField();
-		// Render hmac after everything else has been rendered
+		if ($this->configurationManager->isFeatureEnabled('rewrittenPropertyMapper') === FALSE) {
+			// Render hmac after everything else has been rendered
+			$content .= $this->renderRequestHashField();
+		} else {
+			// Render the trusted list of all properties after everything else has been rendered
+			$content .= $this->renderTrustedPropertiesField();
+		}
 		$content .= chr(10) . '</div>' . chr(10);
 		$content .= $formContent;
 		$this->tag->setContent($content);
@@ -235,7 +260,7 @@ class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormViewH
 			$result .= '<input type="hidden" name="' . $this->prefixFieldName('__referrer[@action]') . '" value="' . $actionName . '" />' . chr(10);
 			$result .= '<input type="hidden" name="' . $this->prefixFieldName('__referrer[arguments]') . '" value="' . htmlspecialchars($this->hashService->appendHmac(base64_encode(serialize($request->getArguments())))) . '" />' . chr(10);
 		} else {
-			// @deprecated since Fluid 1.4.0, will be removed with Fluid 6.1.
+			// @deprecated since Fluid 1.4.0, will be removed two versions after Fluid 6.1.
 			$result .= '<input type="hidden" name="' . $this->prefixFieldName('__referrer[extensionName]') . '" value="' . $extensionName . '" />' . chr(10);
 			$result .= '<input type="hidden" name="' . $this->prefixFieldName('__referrer[controllerName]') . '" value="' . $controllerName . '" />' . chr(10);
 			$result .= '<input type="hidden" name="' . $this->prefixFieldName('__referrer[actionName]') . '" value="' . $actionName . '" />' . chr(10);
@@ -419,6 +444,17 @@ class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormViewH
 		if ($this->viewHelperVariableContainer->exists('TYPO3\\CMS\\Fluid\\ViewHelpers\\Form\\CheckboxViewHelper', 'checkboxFieldNames')) {
 			$this->viewHelperVariableContainer->remove('TYPO3\\CMS\\Fluid\\ViewHelpers\\Form\\CheckboxViewHelper', 'checkboxFieldNames');
 		}
+	}
+
+	/**
+	 * Render the request hash field
+	 *
+	 * @return string The hmac field
+	 */
+	protected function renderTrustedPropertiesField() {
+		$formFieldNames = $this->viewHelperVariableContainer->get('TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper', 'formFieldNames');
+		$requestHash = $this->mvcPropertyMappingConfigurationService->generateTrustedPropertiesToken($formFieldNames, $this->getFieldNamePrefix());
+		return '<input type="hidden" name="' . $this->prefixFieldName('__trustedProperties') . '" value="' . htmlspecialchars($requestHash) . '" />';
 	}
 }
 

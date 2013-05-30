@@ -4,11 +4,9 @@ namespace TYPO3\CMS\Extbase\Object\Container;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010 Extbase Team
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
- *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
  *  free software; you can redistribute it and/or modify
@@ -18,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Object\Container;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -64,6 +65,7 @@ class ClassInfoCache {
 	 * Gets the cache for the id
 	 *
 	 * @param string $id
+	 * @return mixed
 	 */
 	public function get($id) {
 		if (!isset($this->level1Cache[$id])) {
@@ -75,8 +77,8 @@ class ClassInfoCache {
 	/**
 	 * sets the cache for the id
 	 *
-	 * @param $id
-	 * @param $value
+	 * @param string $id
+	 * @param mixed $value
 	 */
 	public function set($id, $value) {
 		$this->level1Cache[$id] = $value;

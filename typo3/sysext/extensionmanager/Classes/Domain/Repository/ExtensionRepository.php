@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <typo3@susannemoog.de>
+ *  (c) 2012-2013 Susanne Moog, <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -57,7 +57,7 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 */
 	public function initializeObject() {
 		/** @var $defaultQuerySettings \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface */
-		$defaultQuerySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+		$defaultQuerySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
 		$defaultQuerySettings->setRespectStoragePage(FALSE);
 		$this->setDefaultQuerySettings($defaultQuerySettings);
 		$this->databaseConnection = $GLOBALS['TYPO3_DB'];
@@ -96,6 +96,25 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 		$query->matching($query->logicalAnd($query->equals('extensionKey', $extensionKey), $query->greaterThanOrEqual('reviewState', 0)));
 		$query->setOrderings(array('version' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_DESCENDING));
 		return $query->execute();
+	}
+
+	/**
+	 * Find the current version by extension key
+	 *
+	 * @param string $extensionKey
+	 * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
+	 */
+	public function findOneByCurrentVersionByExtensionKey($extensionKey) {
+		$query = $this->createQuery();
+		$query->matching(
+			$query->logicalAnd(
+				$query->equals('extensionKey', $extensionKey),
+				$query->greaterThanOrEqual('reviewState', 0),
+				$query->equals('currentVersion', 1)
+			)
+		);
+		$query->setLimit(1);
+		return $query->execute()->getFirst();
 	}
 
 	/**

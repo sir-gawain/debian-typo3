@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\TypoScript;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -152,7 +152,7 @@ class ConfigurationForm extends \TYPO3\CMS\Core\TypoScript\ExtendedTemplateServi
 		}
 		$content .= $addFields;
 		$content .= $printFields;
-		$content .= '<input type="submit" name="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tsfe.xml:update', TRUE) . '" id="configuration-submit-' . htmlspecialchars($extKey) . '" />';
+		$content .= '<input type="submit" name="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_tsfe.xlf:update', TRUE) . '" id="configuration-submit-' . htmlspecialchars($extKey) . '" />';
 		$example = $this->ext_displayExample();
 		$content .= $example ? '<hr/>' . $example : '';
 		return $content;

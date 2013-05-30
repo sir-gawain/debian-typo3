@@ -18,6 +18,9 @@
 			<trans-unit id="extConfTemplate.headline" xml:space="preserve">
 				<source>Configure Extension</source>
 			</trans-unit>
+			<trans-unit id="extConfTemplate.other" xml:space="preserve">
+				<source>Other</source>
+			</trans-unit>
 			<trans-unit id="extConfTemplate.type.int+" xml:space="preserve">
 				<source>positive integer</source>
 			</trans-unit>
@@ -57,8 +60,17 @@
 			<trans-unit id="extConfTemplate.submitButton" xml:space="preserve">
 				<source>Submit</source>
 			</trans-unit>
+			<trans-unit id="updateScript.headline" xml:space="preserve">
+				<source>Update script for %s</source>
+			</trans-unit>
+			<trans-unit id="updateScript.none" xml:space="preserve">
+				<source>No update necessary.</source>
+			</trans-unit>
 			<trans-unit id="extensionList.configure" xml:space="preserve">
 				<source>Configure</source>
+			</trans-unit>
+			<trans-unit id="extensionList.update.script" xml:space="preserve">
+				<source>Execute the update script</source>
 			</trans-unit>
 			<trans-unit id="extensionList.downloadsql" xml:space="preserve">
 				<source>Download SQL Dump</source>
@@ -68,6 +80,9 @@
 			</trans-unit>
 			<trans-unit id="extensionList.update" xml:space="preserve">
 				<source>Update</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateToVersion" xml:space="preserve">
+				<source>Update to version %s</source>
 			</trans-unit>
 			<trans-unit id="extensionList.deactivate" xml:space="preserve">
 				<source>Deactivate</source>
@@ -105,6 +120,9 @@
 			<trans-unit id="extensionList.header.extensionName" xml:space="preserve">
 				<source>Extension</source>
 			</trans-unit>
+			<trans-unit id="extensionList.header.version" xml:space="preserve">
+				<source>Version</source>
+			</trans-unit>
 			<trans-unit id="extensionList.header.extensionKey" xml:space="preserve">
 				<source>Key</source>
 			</trans-unit>
@@ -129,14 +147,20 @@
 			<trans-unit id="extensionList.header.author" xml:space="preserve">
 				<source>Author</source>
 			</trans-unit>
+			<trans-unit id="searchTemplate.searchExtensions" xml:space="preserve">
+				<source>Search extensions</source>
+			</trans-unit>
 			<trans-unit id="searchTemplate.submitButton" xml:space="preserve">
-				<source>Submit</source>
+				<source>Go</source>
 			</trans-unit>
 			<trans-unit id="searchTemplate.resetSearchButton" xml:space="preserve">
 				<source>Reset Search</source>
 			</trans-unit>
 			<trans-unit id="searchTemplate.yourSearch" xml:space="preserve">
 				<source>Your search</source>
+			</trans-unit>
+			<trans-unit id="searchTemplate.searchAgain" xml:space="preserve">
+				<source>Search again</source>
 			</trans-unit>
 			<trans-unit id="uploadTemplate.uploadButton" xml:space="preserve">
 				<source>Upload!</source>
@@ -226,8 +250,54 @@
 			<trans-unit id="extensionList.showAllVersions.label" xml:space="preserve">
 				<source>Show all versions</source>
 			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.extensionKey" xml:space="preserve">
+				<source>Extension key</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.version" xml:space="preserve">
+				<source>Version</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.lastUploaded" xml:space="preserve">
+				<source>Last uploaded</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.downloads" xml:space="preserve">
+				<source>Downloads</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.category" xml:space="preserve">
+				<source>Category</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.manual" xml:space="preserve">
+				<source>Manual</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.author" xml:space="preserve">
+				<source>Author</source>
+			</trans-unit>
+			<trans-unit id="extensionList.showAllVersions.readOnline" xml:space="preserve">
+				<source>Read online</source>
+			</trans-unit>
+
 			<trans-unit id="extensionList.updateFromTer.label" xml:space="preserve">
 				<source>Retrieving Extension-List from TYPO3 Extension Repository (TER)</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.buttonLabel" xml:space="preserve">
+				<source>Update now</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.lastUpdate.label" xml:space="preserve">
+				<source>Last update:</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.lastUpdate.timeSinceLastUpdateLabel" xml:space="preserve">
+				<source>Time since last update:</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.lastUpdate.noInfo" xml:space="preserve">
+				<source>unknown</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.lastUpdate.fullTimeFormat" xml:space="preserve">
+				<source>Y-m-d H:i:s</source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.lastUpdate.timeOfLastUpdate" xml:space="preserve">
+				<source>Time of last update: </source>
+			</trans-unit>
+			<trans-unit id="extensionList.updateFromTer.lastUpdate.noTimeOfLastUpdate" xml:space="preserve">
+				<source>No last update time known.</source>
 			</trans-unit>
 
 			<trans-unit id="task.updateExtensionListTask.name" xml:space="preserve">

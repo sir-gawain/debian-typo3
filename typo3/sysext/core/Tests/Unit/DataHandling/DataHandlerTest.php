@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\DataHandler;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2009-2011 Oliver Klee (typo3-coding@oliverklee.de)
+ * (c) 2009-2013 Oliver Klee (typo3-coding@oliverklee.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,20 +32,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\DataHandler;
 class DataHandlerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
-	 * a backup of the global database
-	 *
-	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
-	 */
-	protected $databaseBackup = NULL;
-
-	/**
 	 * @var array A backup of registered singleton instances
 	 */
 	protected $singletonInstances = array();
@@ -62,7 +48,6 @@ class DataHandlerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	public function setUp() {
 		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
-		$this->databaseBackup = $GLOBALS['TYPO3_DB'];
 		$this->backEndUser = $this->getMock('TYPO3\\CMS\\Core\\Authentication\\BackendUserAuthentication');
 		$this->fixture = new \TYPO3\CMS\Core\DataHandling\DataHandler();
 		$this->fixture->start(array(), '', $this->backEndUser);
@@ -70,8 +55,7 @@ class DataHandlerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	public function tearDown() {
 		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances($this->singletonInstances);
-		$GLOBALS['TYPO3_DB'] = $this->databaseBackup;
-		unset($this->fixture->BE_USER, $this->fixture, $this->backEndUser, $this->databaseBackup);
+		unset($this->fixture->BE_USER, $this->fixture, $this->backEndUser);
 	}
 
 	//////////////////////////////////////
@@ -155,15 +139,54 @@ class DataHandlerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		}
 	}
 
+	/**
+	 * Data provider for inputValueCheckRecognizesStringValuesAsIntegerValuesCorrectly
+	 *
+	 * @return array
+	 */
+	public function inputValuesStringsDataProvider() {
+		return array(
+			'"0" returns zero as integer' => array(
+				'0',
+				0
+			),
+			'"-1999999" is interpreted correctly as -1999999 and is lot lower then -200000' => array(
+				'-1999999',
+				-1999999
+			),
+			'"3000000" is interpreted correctly as 3000000 but is higher then 200000 and set to 200000' => array(
+				'3000000',
+				2000000
+			),
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider inputValuesStringsDataProvider
+	 */
+	public function inputValueCheckRecognizesStringValuesAsIntegerValuesCorrectly($value, $expectedReturnValue) {
+		$tcaFieldConf = array(
+			'input' => array(),
+			'eval' => 'int',
+			'range' => array(
+				'lower' => '-2000000',
+				'upper' => '2000000'
+			)
+		);
+		$returnValue = $this->fixture->checkValue_input(array(), $value, $tcaFieldConf, array());
+		$this->assertSame($returnValue['value'], $expectedReturnValue);
+	}
+
 	///////////////////////////////////////////
 	// Tests concerning checkModifyAccessList
 	///////////////////////////////////////////
+	//
 	/**
 	 * Tests whether a wrong interface on the 'checkModifyAccessList' hook throws an exception.
 	 *
 	 * @test
 	 * @expectedException UnexpectedValueException
-	 * @see t3lib_TCEmain::checkModifyAccessList()
 	 */
 	public function doesCheckModifyAccessListThrowExceptionOnWrongHookInterface() {
 		$hookClass = uniqid('tx_coretest');
@@ -176,7 +199,6 @@ class DataHandlerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * Tests whether the 'checkModifyAccessList' hook is called correctly.
 	 *
 	 * @test
-	 * @see t3lib_TCEmain::checkModifyAccessList()
 	 */
 	public function doesCheckModifyAccessListHookGetsCalled() {
 		$hookClass = uniqid('tx_coretest');
@@ -191,7 +213,6 @@ class DataHandlerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * Tests whether the 'checkModifyAccessList' hook modifies the $accessAllowed variable.
 	 *
 	 * @test
-	 * @see t3lib_TCEmain::checkModifyAccessList()
 	 */
 	public function doesCheckModifyAccessListHookModifyAccessAllowed() {
 		$hookClass = uniqid('tx_coretest');

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\ViewHelpers\Be;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <typo3@susannemoog.de>
+ *  (c) 2012-2013 Susanne Moog, <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -68,7 +68,7 @@ class ContainerViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\AbstractBacken
 	 * @param array $triggers Defined triggers to be forwarded to client (e.g. refreshing backend widgets)
 	 * @return string
 	 * @see template
-	 * @see t3lib_PageRenderer
+	 * @see \TYPO3\CMS\Core\Page\PageRenderer
 	 */
 	public function render($pageTitle = '', $enableJumpToUrl = TRUE, $enableClickMenu = TRUE, $loadPrototype = TRUE, $loadScriptaculous = FALSE, $scriptaculousModule = '', $loadExtJs = FALSE, $loadExtJsTheme = TRUE, $extJsAdapter = '', $enableExtJsDebug = FALSE, $addCssFiles = array(), $addJsFiles = array(), $triggers = array()) {
 		$doc = $this->getDocInstance();

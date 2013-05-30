@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,19 +43,35 @@ class NotEmptyValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abstract
 	public function isValid($value) {
 		$this->errors = array();
 		if ($value === NULL) {
-			$this->addError('The given subject was NULL.', 1221560910);
+			$this->addError(
+				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+					'validator.notempty.null',
+					'extbase'
+				), 1221560910);
 			return FALSE;
 		}
 		if ($value === '') {
-			$this->addError('The given subject was empty.', 1221560718);
+			$this->addError(
+				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+					'validator.notempty.empty',
+					'extbase'
+				), 1221560718);
 			return FALSE;
 		}
 		if (is_array($value) && empty($value)) {
-			$this->addError('The given subject was empty.', 1347992400);
+			$this->addError(
+				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+					'validator.notempty.empty',
+					'extbase'
+				), 1347992400);
 			return FALSE;
 		}
 		if (is_object($value) && $value instanceof \Countable && $value->count() === 0) {
-			$this->addError('The given subject was empty.', 1347992453);
+			$this->addError(
+				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+					'validator.notempty.empty',
+					'extbase'
+				), 1347992453);
 			return FALSE;
 		}
 		return TRUE;

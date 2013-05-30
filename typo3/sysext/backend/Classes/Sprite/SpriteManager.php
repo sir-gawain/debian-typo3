@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Sprite;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Ritter <info@steffen-ritter.net>
+ *  (c) 2010-2013 Steffen Ritter <info@steffen-ritter.net>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -149,7 +149,7 @@ class SpriteManager {
 
 	/**
 	 * API for extensions to register new sprite images which can be used with
-	 * t3lib_iconWorks::getSpriteIcon('extensions-$extKey-iconName');
+	 * \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('extensions-$extKey-iconName');
 	 *
 	 * @param array $icons Icons to be registered, $iconname => $iconFile, $iconFile must be relative to PATH_site
 	 * @param string $extKey Extension key

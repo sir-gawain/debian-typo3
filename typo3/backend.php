@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2007-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2007-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,7 +25,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 require_once 'init.php';
-$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xml');
+$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xlf');
 /*
  * @deprecated since 6.0, the classname TYPO3backend and this file is obsolete
  * and will be removed with 6.2. The class was renamed and is now located at:

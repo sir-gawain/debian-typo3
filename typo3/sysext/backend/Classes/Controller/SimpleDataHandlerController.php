@@ -1,8 +1,36 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
- * Script Class, creating object of t3lib_TCEmain and sending the posted data to the object.
+ * Script Class, creating object of \TYPO3\CMS\Core\DataHandling\DataHandler and
+ * sending the posted data to the object.
+ *
  * Used by many smaller forms/links in TYPO3, including the QuickEdit module.
  * Is not used by alt_doc.php though (main form rendering script) - that uses the same class (TCEmain) but makes its own initialization (to save the redirect request).
  * For all other cases than alt_doc.php it is recommended to use this script for submitting your editing forms - but the best solution in any case would probably be to link your application to alt_doc.php, that will give you easy form-rendering as well.
@@ -184,7 +212,9 @@ class SimpleDataHandlerController {
 			$this->tce->process_datamap();
 			$this->tce->process_cmdmap();
 			// Clearing cache:
-			$this->tce->clear_cacheCmd($this->cacheCmd);
+			if (!empty($this->cacheCmd)) {
+				$this->tce->clear_cacheCmd($this->cacheCmd);
+			}
 			// Update page tree?
 			if ($this->uPT && (isset($this->data['pages']) || isset($this->cmd['pages']))) {
 				\TYPO3\CMS\Backend\Utility\BackendUtility::setUpdateSignal('updatePageTree');

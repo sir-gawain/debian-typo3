@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Messaging;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -56,7 +56,7 @@ class FlashMessage extends \TYPO3\CMS\Core\Messaging\AbstractMessage {
 	 *
 	 * @param string $message The message.
 	 * @param string $title Optional message title.
-	 * @param integer $severity Optional severity, must be either of t3lib_FlashMessage::INFO, t3lib_FlashMessage::OK,
+	 * @param integer $severity Optional severity, must be either of one of \TYPO3\CMS\Core\Messaging\FlashMessage constants
 	 * @param boolean $storeInSession Optional, defines whether the message should be stored in the session or only for one request (default)
 	 * @return void
 	 */

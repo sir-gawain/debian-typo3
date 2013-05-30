@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Backend\Form\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Ritter <info@steffen-ritter.net>
- *  (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ *  (c) 2010-2013 Steffen Ritter <info@steffen-ritter.net>
+ *  (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -104,7 +104,7 @@ class ValueSlider {
 			elementType: "' . $elementType . '"
 		});
 		';
-		/** @var $pageRenderer t3lib_pageRenderer */
+		/** @var $pageRenderer \TYPO3\CMS\Core\Page\PageRenderer */
 		$pageRenderer = $GLOBALS['SOBE']->doc->getPageRenderer();
 		$pageRenderer->addExtOnReadyCode($js);
 		return $contents;

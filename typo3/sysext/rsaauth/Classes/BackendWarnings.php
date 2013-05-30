@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Rsaauth;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Dmitry Dulepov <dmitry@typo3.org>
+ *  (c) 2009-2013 Dmitry Dulepov <dmitry@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -36,7 +36,7 @@ class BackendWarnings {
 	 *
 	 * @param array $warnings Warnings
 	 * @return void
-	 * @see 	t3lib_BEfunc::displayWarningMessages()
+	 * @see 	\TYPO3\CMS\Backend\Utility\BackendUtility::displayWarningMessages()
 	 */
 	public function displayWarningMessages_postProcess(array &$warnings) {
 		$backend = \TYPO3\CMS\Rsaauth\Backend\BackendFactory::getBackend();

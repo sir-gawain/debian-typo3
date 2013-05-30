@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Tests\Unit\Domain\Model;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Oliver Klee <typo3-coding@oliverklee.de>
+ * (c) 2012-2013 Oliver Klee <typo3-coding@oliverklee.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Belog\Tests\Unit\Domain\Model;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Testcase
  *
@@ -84,6 +85,5 @@ class LogEntryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	}
 
 }
-
 
 ?>

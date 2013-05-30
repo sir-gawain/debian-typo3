@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\TstemplateInfo\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * This class displays the Info/Modify screen of the Web > Template module
  *
@@ -30,7 +56,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 			'id' => $this->pObj->id
 		);
 		$aHref = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('web_ts', $urlParameters);
-		$ret .= '<a href="' . htmlspecialchars(($aHref . '&e[' . $field . ']=1')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:editField', TRUE))) . '<strong>' . $label . '&nbsp;&nbsp;</strong></a>';
+		$ret .= '<a href="' . htmlspecialchars(($aHref . '&e[' . $field . ']=1')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:editField', TRUE))) . '<strong>' . $label . '&nbsp;&nbsp;</strong></a>';
 		$ret .= '</td><td width="80%" class="bgColor4">' . $data . '&nbsp;</td></tr>';
 		return $ret;
 	}
@@ -44,7 +70,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 	 * @todo Define visibility
 	 */
 	public function procesResources($resources, $func = FALSE) {
-		$arr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $resources . ',,', 1);
+		$arr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $resources . ',,', TRUE);
 		$out = '';
 		$bgcol = $func ? ' class="bgColor4"' : '';
 		foreach ($arr as $k => $v) {
@@ -60,7 +86,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 						'id' => $this->pObj->id
 					);
 					$aHref = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('web_ts', $urlParameters);
-					$functions .= '<a href="' . htmlspecialchars(($aHref . '&e[file]=' . rawurlencode($v))) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:editFile', TRUE))) . '</a>';
+					$functions .= '<a href="' . htmlspecialchars(($aHref . '&e[file]=' . rawurlencode($v))) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:editFile', TRUE))) . '</a>';
 				}
 				$functions .= '</td>';
 			}
@@ -94,7 +120,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 		$rootLine = $sys_page->getRootLine($id);
 		// This generates the constants/config + hierarchy info for the template.
 		$tmpl->runThroughTemplates($rootLine, $template_uid);
-		$theResources = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $tmpl->resources, 1);
+		$theResources = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $tmpl->resources, TRUE);
 		foreach ($theResources as $k => $v) {
 			$fI = pathinfo($v);
 			if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($this->pObj->textExtensions, strtolower($fI['extension']))) {
@@ -108,7 +134,8 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 	}
 
 	/**
-	 * Create an instance of t3lib_tsparser_ext in $GLOBALS['tmpl'] and looks for the first (visible) template
+	 * Create an instance of \TYPO3\CMS\Core\TypoScript\ExtendedTemplateService in
+	 * $GLOBALS['tmpl'] and looks for the first (visible) template
 	 * record. If $template_uid was given and greater than zero, this record will be checked.
 	 *
 	 * @param integer $pageId The uid of the current page
@@ -175,10 +202,10 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 	public function main() {
 		global $BACK_PATH;
 		global $tmpl, $tplRow, $theConstants;
+		$GLOBALS['LANG']->includeLLFile('EXT:tstemplate_info/locallang.xlf');
 		$this->pObj->MOD_MENU['includeTypoScriptFileContent'] = TRUE;
 		$edit = $this->pObj->edit;
 		$e = $this->pObj->e;
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA('sys_template');
 		// Checking for more than one template an if, set a menu...
 		$manyTemplatesMenu = $this->pObj->templateMenu();
 		$template_uid = 0;
@@ -214,16 +241,16 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 				if (is_array($POST['data'])) {
 					foreach ($POST['data'] as $field => $val) {
 						switch ($field) {
-						case 'constants':
+							case 'constants':
 
-						case 'config':
+							case 'config':
 
-						case 'title':
+							case 'title':
 
-						case 'sitetitle':
+							case 'sitetitle':
 
-						case 'description':
-							$recData['sys_template'][$saveId][$field] = $val;
+							case 'description':
+								$recData['sys_template'][$saveId][$field] = $val;
 							break;
 						}
 					}
@@ -284,7 +311,8 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 					}
 				}
 			}
-			$content = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord('sys_template', $tplRow) . '<strong>' . htmlspecialchars($tplRow['title']) . '</strong>' . htmlspecialchars((trim($tplRow['sitetitle']) ? ' (' . $tplRow['sitetitle'] . ')' : ''));
+			$content = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord('sys_template', $tplRow, array('oncontextmenu' => "showClickmenu(
+'sys_template', '" . $tplRow['uid'] . "', '1', '', '', ''); return false;", 'onclick' => "showClickmenu('sys_template', '" . $tplRow['uid'] . "', '1', '','', ''); return false;")) . '<strong>' . htmlspecialchars($tplRow['title']) . '</strong>' . htmlspecialchars((trim($tplRow['sitetitle']) ? ' (' . $tplRow['sitetitle'] . ')' : ''));
 			$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('templateInformation'), $content, 0, 1);
 			if ($manyTemplatesMenu) {
 				$theOutput .= $this->pObj->doc->section('', $manyTemplatesMenu);
@@ -356,7 +384,7 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 						'formName' => 'editForm',
 						'itemName' => 'data[config]'
 					);
-					$outCode .= '<a href="#" onClick="vHWin=window.open(\'' . $url . \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', array('P' => $params)) . '\',\'popUp' . $md5ID . '\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-typoscript-documentation-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:tsRef', TRUE))) . '</a>';
+					$outCode .= '<a href="#" onClick="vHWin=window.open(\'' . $url . \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', array('P' => $params)) . '\',\'popUp' . $md5ID . '\',\'height=500,width=780,status=0,menubar=0,scrollbars=1\');vHWin.focus();return false;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-typoscript-documentation-open', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:tsRef', TRUE))) . '</a>';
 				}
 				$theOutput .= $this->pObj->doc->spacer(15);
 				$theOutput .= $this->pObj->doc->section($GLOBALS['LANG']->getLL('setup'), '', TRUE);
@@ -396,6 +424,5 @@ class TypoScriptTemplateInformationModuleFunctionController extends \TYPO3\CMS\B
 	}
 
 }
-
 
 ?>

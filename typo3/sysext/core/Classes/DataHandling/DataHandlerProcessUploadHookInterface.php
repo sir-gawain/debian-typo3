@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\DataHandling;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Xavier Perseguers <typo3@perseguers.ch>
+ *  (c) 2010-2013 Xavier Perseguers <typo3@perseguers.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,13 +32,12 @@ namespace TYPO3\CMS\Core\DataHandling;
  *
  * @author Xavier Perseguers <typo3@perseguers.ch>
  */
-interface DataHandlerProcessUploadHookInterface
-{
+interface DataHandlerProcessUploadHookInterface {
 	/**
 	 * Post-process a file upload.
 	 *
 	 * @param string $filename The uploaded file
-	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $parentObject Parent t3lib_TCEmain object
+	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $parentObject
 	 * @return void
 	 */
 	public function processUpload_postProcessAction(&$filename, \TYPO3\CMS\Core\DataHandling\DataHandler $parentObject);

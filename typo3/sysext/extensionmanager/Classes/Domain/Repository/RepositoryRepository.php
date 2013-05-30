@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <susanne.moog@typo3.org>
+ *  (c) 2012-2013 Susanne Moog, <susanne.moog@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,7 +37,7 @@ class RepositoryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 */
 	public function initializeObject() {
 		/** @var $defaultQuerySettings \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface */
-		$defaultQuerySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+		$defaultQuerySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
 		$defaultQuerySettings->setRespectStoragePage(FALSE);
 		$this->setDefaultQuerySettings($defaultQuerySettings);
 	}
@@ -50,10 +50,12 @@ class RepositoryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 * @return void
 	 */
 	public function updateRepositoryCount($extCount, $uid = 1) {
-		$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_extensionmanager_domain_model_repository', 'uid=' . intval($uid), array(
-			'last_update' => time(),
-			'extension_count' => intval($extCount)
-		));
+		$repository = $this->findByUid($uid);
+
+		$repository->setLastUpdate(new \DateTime());
+		$repository->setExtensionCount(intval($extCount));
+
+		$this->update($repository);
 	}
 
 	/**

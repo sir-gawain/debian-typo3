@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\RecordList;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Backend\RecordList;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Library with a single function addElement that returns table
  * rows based on some input.
@@ -156,7 +157,7 @@ abstract class AbstractRecordList {
 	public $translateTools;
 
 	/**
-	 * Constructor for t3lib_recordList
+	 * Constructor
 	 */
 	public function __construct() {
 		if (isset($GLOBALS['BE_USER']->uc['titleLen']) && $GLOBALS['BE_USER']->uc['titleLen'] > 0) {
@@ -420,7 +421,7 @@ abstract class AbstractRecordList {
 	}
 
 	/**
-	 * Gets an instance of t3lib_transl8tools.
+	 * Gets an instance of TranslationConfigurationProvider
 	 *
 	 * @return \TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider
 	 */
@@ -455,7 +456,7 @@ abstract class AbstractRecordList {
 				$htmlCode .= ' onclick="' . htmlspecialchars(('top.launchView(' . $launchViewParameter . '); return false;')) . '"';
 			}
 			$htmlCode .= ' title="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs(implode(' / ', $result), 100)) . '">';
-			$htmlCode .= count($result);
+			$htmlCode .= count($references);
 			$htmlCode .= '</a>';
 		}
 		return $htmlCode;

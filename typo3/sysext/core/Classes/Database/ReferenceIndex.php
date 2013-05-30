@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Database;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -200,7 +200,6 @@ class ReferenceIndex {
 					}
 				}
 				// Word indexing:
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 				foreach ($GLOBALS['TCA'][$table]['columns'] as $field => $conf) {
 					if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList('input,text', $conf['config']['type']) && strcmp($record[$field], '') && !\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($record[$field])) {
 						$this->words_strings[$field] = $record[$field];
@@ -341,8 +340,6 @@ class ReferenceIndex {
 	 * @todo Define visibility
 	 */
 	public function getRelations($table, $row, $onlyField = '') {
-		// Load full table description
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// Initialize:
 		$uid = $row['uid'];
 		$nonFields = explode(',', 'uid,perms_userid,perms_groupid,perms_user,perms_group,perms_everybody,pid');
@@ -369,7 +366,7 @@ class ReferenceIndex {
 				// For "flex" fieldtypes we need to traverse the structure looking for file and db references of course!
 				if ($conf['type'] == 'flex') {
 					// Get current value array:
-					// NOTICE: failure to resolve Data Structures can lead to integrity problems with the reference index. Please look up the note in the JavaDoc documentation for the function t3lib_BEfunc::getFlexFormDS()
+					// NOTICE: failure to resolve Data Structures can lead to integrity problems with the reference index. Please look up the note in the JavaDoc documentation for the function \TYPO3\CMS\Backend\Utility\BackendUtility::getFlexFormDS()
 					$dataStructArray = \TYPO3\CMS\Backend\Utility\BackendUtility::getFlexFormDS($conf, $row, $table, '', $this->WSOL);
 					$currentValueArray = \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array($value);
 					// Traversing the XML structure, processing files:
@@ -422,7 +419,7 @@ class ReferenceIndex {
 	 * @param string $structurePath Path of value in DS structure
 	 * @param object $pObj Object reference to caller
 	 * @return void
-	 * @see t3lib_TCEmain::checkValue_flex_procInData_travDS()
+	 * @see \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_flex_procInData_travDS()
 	 * @todo Define visibility
 	 */
 	public function getRelations_flexFormCallBack($dsArr, $dataValue, $PA, $structurePath, $pObj) {

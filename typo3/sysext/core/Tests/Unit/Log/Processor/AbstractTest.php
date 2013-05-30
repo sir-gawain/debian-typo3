@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log\Processor;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Steffen Müller (typo3@t3node.com)
+ * (c) 2012-2013 Steffen Müller (typo3@t3node.com)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log\Processor;
 require_once __DIR__ . DIRECTORY_SEPARATOR . '../Fixtures/ProcessorFixture.php';
 
 /**
- * Testcase for t3lib_log_processor_Abstract
+ * Testcase for \TYPO3\CMS\Core\Log\Processor\Abstract
  *
  * @author Steffen Müller <typo3@t3node.com>
  */

@@ -31,8 +31,7 @@ namespace TYPO3\CMS\Core\Resource;
  *
  * @author Ingmar Schlecht <ingmar@typo3.org>
  */
-interface ResourceInterface
-{
+interface ResourceInterface {
 	/**
 	 * Returns the identifier of this file
 	 *
@@ -50,7 +49,7 @@ interface ResourceInterface
 	/**
 	 * Get the storage this file is located in
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage
+	 * @return ResourceStorage
 	 */
 	public function getStorage();
 

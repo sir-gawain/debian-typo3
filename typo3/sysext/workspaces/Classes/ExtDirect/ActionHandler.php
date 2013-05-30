@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Workspaces\ExtDirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ *  (c) 2010-2013 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -233,7 +233,7 @@ class ActionHandler extends \TYPO3\CMS\Workspaces\ExtDirect\AbstractHandler {
 		}
 		$recipients = array();
 		foreach ($uidOfRecipients as $userUid) {
-			$beUserRecord = \t3lib_befunc::getRecord('be_users', intval($userUid));
+			$beUserRecord = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('be_users', intval($userUid));
 			if (is_array($beUserRecord) && $beUserRecord['email'] !== '') {
 				$uc = $beUserRecord['uc'] ? unserialize($beUserRecord['uc']) : array();
 				$recipients[$beUserRecord['email']] = array(

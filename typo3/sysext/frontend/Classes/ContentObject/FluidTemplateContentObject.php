@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Frontend\ContentObject;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Xavier Perseguers <typo3@perseguers.ch>
- *  (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ *  (c) 2010-2013 Xavier Perseguers <typo3@perseguers.ch>
+ *  (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -44,9 +44,11 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 	 */
 	protected $view = NULL;
 
+	/**
+	 * Constructor
+	 */
 	public function __construct(\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $contentObjectRenderer) {
 		parent::__construct($contentObjectRenderer);
-		$this->view = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Fluid\\View\\StandaloneView');
 	}
 
 	/**
@@ -64,7 +66,8 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 	 *
 	 * Example:
 	 * 10 = FLUIDTEMPLATE
-	 * 10.file = fileadmin/templates/mytemplate.html
+	 * 10.template = FILE
+	 * 10.template.file = fileadmin/templates/mytemplate.html
 	 * 10.partialRootPath = fileadmin/templates/partial/
 	 * 10.variables {
 	 *   mylabel = TEXT
@@ -75,6 +78,8 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 	 * @return string The HTML output
 	 */
 	public function render($conf = array()) {
+		$this->initializeStandaloneViewInstance();
+
 		if (!is_array($conf)) {
 			$conf = array();
 		}
@@ -84,6 +89,7 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 		$this->setPartialRootPath($conf);
 		$this->setFormat($conf);
 		$this->setExtbaseVariables($conf);
+		$this->assignSettings($conf);
 		$this->assignContentObjectVariables($conf);
 		$this->assignContentObjectDataAndCurrent($conf);
 
@@ -93,18 +99,37 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 	}
 
 	/**
+	 * Creating standalone view instance must not be done in construct() as
+	 * it can lead to a nasty cache issue since content object instances
+	 * are not always re-created by the content object rendered for every
+	 * usage, but can be re-used. Thus, we need a fresh instance of
+	 * StandaloneView every time render() is called.
+	 *
+	 * @return void
+	 */
+	protected function initializeStandaloneViewInstance() {
+		$this->view = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Fluid\\View\\StandaloneView');
+	}
+
+	/**
 	 * Set template
 	 *
 	 * @param array $conf With possibly set file resource
 	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
 	protected function setTemplate(array $conf) {
 		// Fetch the Fluid template
-		$file = isset($conf['file.']) ? $this->cObj->stdWrap($conf['file'], $conf['file.']) : $conf['file'];
-		/** @var $templateService \TYPO3\CMS\Core\TypoScript\TemplateService */
-		$templateService = $GLOBALS['TSFE']->tmpl;
-		$templatePathAndFilename = $templateService->getFileName($file);
-		$this->view->setTemplatePathAndFilename($templatePathAndFilename);
+		if (!empty($conf['template']) && !empty($conf['template.'])) {
+			$templateSource = $this->cObj->cObjGetSingle($conf['template'], $conf['template.']);
+			$this->view->setTemplateSource($templateSource);
+		} else {
+			$file = isset($conf['file.']) ? $this->cObj->stdWrap($conf['file'], $conf['file.']) : $conf['file'];
+			/** @var $templateService \TYPO3\CMS\Core\TypoScript\TemplateService */
+			$templateService = $GLOBALS['TSFE']->tmpl;
+			$templatePathAndFilename = $templateService->getFileName($file);
+			$this->view->setTemplatePathAndFilename($templatePathAndFilename);
+		}
 	}
 
 	/**
@@ -114,6 +139,7 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 	 * @return void
 	 */
 	protected function setLayoutRootPath(array $conf) {
+		// Override the default layout path via typoscript
 		$layoutRootPath = isset($conf['layoutRootPath.']) ? $this->cObj->stdWrap($conf['layoutRootPath'], $conf['layoutRootPath.']) : $conf['layoutRootPath'];
 		if ($layoutRootPath) {
 			$layoutRootPath = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($layoutRootPath);
@@ -200,6 +226,22 @@ class FluidTemplateContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstr
 					1288095720
 				);
 			}
+		}
+	}
+
+	/**
+	 * Set any TypoScript settings to the view. This is similar to a
+	 * default MVC action controller in extbase.
+	 *
+	 * @param array $conf Configuration
+	 * @return void
+	 */
+	protected function assignSettings(array $conf) {
+		if (array_key_exists('settings.', $conf)) {
+			/** @var $typoScriptService \TYPO3\CMS\Extbase\Service\TypoScriptService */
+			$typoScriptService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Service\\TypoScriptService');
+			$settings = $typoScriptService->convertTypoScriptArrayToPlainArray($conf['settings.']);
+			$this->view->assign('settings', $settings);
 		}
 	}
 

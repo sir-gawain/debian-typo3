@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Module;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,13 +25,14 @@ namespace TYPO3\CMS\Backend\Module;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Parent class for 'Extension Objects' in backend modules.
  *
  * Used for 'submodules' to other modules. Also called 'Function menu modules'
- * in t3lib_extMgm. And now its even called 'Extension Objects'. Or
- * 'Module functions'. Wish we had just one name. Or a name at all...(?)
- * Thank God its not so advanced when it works...
+ * in \TYPO3\CMS\Core\Utility\ExtensionManagementUtility. And now its even called
+ * 'Extension Objects'. Or 'Module functions'. Wish we had just one name. Or a
+ * name at all...(?) Thank God its not so advanced when it works...
  *
  * In other words this class is used for backend modules which is not true
  * backend modules appearing in the menu but rather adds themselves as a new
@@ -43,19 +44,20 @@ namespace TYPO3\CMS\Backend\Module;
  * of the classname, script-path and a label (title/name).
  *
  * For more information about this, please see the large example comment for the
- * class t3lib_SCbase. This will show the principle of a 'level-1' connection.
- * The more advanced example - having two layers as it is done by the 'func_wizards'
- * extension with the 'web_info' module - can be seen in the comment above.
+ * class \TYPO3\CMS\Backend\Module\BaseScriptClass. This will show the principle of a
+ * 'level-1' connection. The more advanced example - having two layers as it is done
+ * by the 'func_wizards' extension with the 'web_info' module - can be seen in the
+ * comment above.
  *
  * EXAMPLE: One level.
  * This can be seen in the extension 'cms' where the info module have a
  * function added. In 'ext_tables.php' this is done by this function call:
  *
- * t3lib_extMgm::insertModuleFunction(
+ * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::insertModuleFunction(
  * 'web_info',
  * 'tx_cms_webinfo_page',
- * t3lib_extMgm::extPath($_EXTKEY).'web_info/class.tx_cms_webinfo.php',
- * 'LLL:EXT:cms/locallang_tca.php:mod_tx_cms_webinfo_page'
+ * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($_EXTKEY).'web_info/class.tx_cms_webinfo.php',
+ * 'LLL:EXT:cms/locallang_tca.xlf:mod_tx_cms_webinfo_page'
  * );
  *
  * EXAMPLE: Two levels.
@@ -66,10 +68,10 @@ namespace TYPO3\CMS\Backend\Module;
  * In the 'ext_tables.php' file of an extension ('wizard_crpages') which uses the
  * framework provided by 'func_wizards' this looks like this:
  *
- * t3lib_extMgm::insertModuleFunction(
+ * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::insertModuleFunction(
  * 'web_func',
  * 'tx_wizardcrpages_webfunc_2',
- * t3lib_extMgm::extPath($_EXTKEY).'class.tx_wizardcrpages_webfunc_2.php',
+ * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($_EXTKEY).'class.tx_wizardcrpages_webfunc_2.php',
  * 'LLL:EXT:wizard_crpages/locallang.php:wiz_crMany',
  * 'wiz'
  * );
@@ -80,7 +82,7 @@ namespace TYPO3\CMS\Backend\Module;
  * times inclusion sections in their index.php scripts. For example (from web_func):
  *
  * Make instance:
- * $SOBE = t3lib_div::makeInstance("SC_mod_web_func_index");
+ * $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance("SC_mod_web_func_index");
  * $SOBE->init();
  *
  * Include files?
@@ -99,13 +101,14 @@ namespace TYPO3\CMS\Backend\Module;
  * But then again ->include_once is traversed IF the initialization of
  * the level-1 modules might have added more files!!
  * And after that $SOBE->checkSubExtObj() is called to initialize the second level.
+ *
  * In this way even a third level could be supported - but most likely that is
  * a too layered model to be practical.
  *
  * Anyways, the final interesting thing is to see what the framework
  * "func_wizard" actually does:
  *
- * class tx_funcwizards_webfunc extends t3lib_extobjbase {
+ * class WebFunctionWizardsBaseController extends \TYPO3\CMS\Backend\Module\AbstractFunctionModule {
  * var $localLangFile = "locallang.php";
  * var $function_key = "wiz";
  * function init(&$pObj, $conf) {
@@ -119,14 +122,14 @@ namespace TYPO3\CMS\Backend\Module;
  * }
  * }
  *
- * Notice that the handleExternalFunctionValue of this class (t3lib_extobjbase)
+ * Notice that the handleExternalFunctionValue of this class
  * is called and that the ->function_key internal var is set!
  *
  * The two level-2 sub-module "wizard_crpages" and "wizard_sortpages"
  * are totally normal "submodules".
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @see t3lib_SCbase
+ * @see \TYPO3\CMS\Backend\Module\BaseScriptClass
  * @see tx_funcwizards_webfunc::init()
  * @see tx_funcwizards_webfunc
  * @see tx_wizardsortpages_webfunc_2
@@ -134,7 +137,8 @@ namespace TYPO3\CMS\Backend\Module;
 abstract class AbstractFunctionModule {
 
 	/**
-	 * Contains a reference to the parent (calling) object (which is probably an instance of an extension class to t3lib_SCbase)
+	 * Contains a reference to the parent (calling) object (which is probably an instance of
+	 * an extension class to \TYPO3\CMS\Backend\Module\BaseScriptClass
 	 *
 	 * @var \TYPO3\CMS\Backend\Module\BaseScriptClass
 	 * @see init()
@@ -179,10 +183,12 @@ abstract class AbstractFunctionModule {
 	/**
 	 * Initialize the object
 	 *
-	 * @param object $pObj A reference to the parent (calling) object (which is probably an instance of an extension class to t3lib_SCbase)
+	 * @param object $pObj A reference to the parent (calling) object (which is probably an instance of an
+	 * extension class to \TYPO3\CMS\Backend\Module\BaseScriptClass
+	 *
 	 * @param array $conf The configuration set for this module - from global array TBE_MODULES_EXT
 	 * @return void
-	 * @see t3lib_SCbase::checkExtObj()
+	 * @see \TYPO3\CMS\Backend\Module\BaseScriptClass::checkExtObj()
 	 * @todo Define visibility
 	 */
 	public function init(&$pObj, $conf) {
@@ -232,10 +238,10 @@ abstract class AbstractFunctionModule {
 	}
 
 	/**
-	 * Same as t3lib_SCbase::checkExtObj()
+	 * Same as \TYPO3\CMS\Backend\Module\BaseScriptClass::checkExtObj()
 	 *
 	 * @return void
-	 * @see t3lib_SCbase::checkExtObj()
+	 * @see \TYPO3\CMS\Backend\Module\BaseScriptClass::checkExtObj()
 	 * @todo Define visibility
 	 */
 	public function checkExtObj() {

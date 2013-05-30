@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Lowlevel;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -76,7 +76,8 @@ This will show you missing files in the TYPO3 system and only report back if err
 
 	/**
 	 * Find file references that points to non-existing files in system
-	 * Fix methods: API in t3lib_refindex that allows to change the value of a reference (or remove it)
+	 * Fix methods: API in \TYPO3\CMS\Core\Database\ReferenceIndex that allows to
+	 * change the value of a reference (or remove it)
 	 *
 	 * @return array
 	 * @todo Define visibility

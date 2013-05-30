@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Mail\Plain\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2011-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\View\Mail\Plain\Element;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * View object for the textarea element
  *
@@ -61,12 +62,14 @@ class TextareaElementView extends \TYPO3\CMS\Form\View\Mail\Plain\Element\Abstra
 		return $label;
 	}
 
+	/**
+	 * @return string
+	 */
 	protected function getData() {
 		$value = str_replace(chr(10), chr(10) . str_repeat(chr(32), ($this->spaces + 4)), $this->model->getData());
 		return $value;
 	}
 
 }
-
 
 ?>

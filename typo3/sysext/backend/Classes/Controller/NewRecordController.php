@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script class for 'db_new'
  *
@@ -109,7 +135,7 @@ class NewRecordController {
 	/**
 	 * Document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\MediumDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -154,7 +180,7 @@ class NewRecordController {
 		$this->doc->getContextMenuCode();
 		// Creating content
 		$this->content = '';
-		$this->content .= $this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:db_new.php.pagetitle'));
+		$this->content .= $this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.pagetitle'));
 		// Id a positive id is supplied, ask for the page record with permission information contained:
 		if ($this->id > 0) {
 			$this->pageinfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess($this->id, $this->perms_clause);
@@ -235,7 +261,7 @@ class NewRecordController {
 			$markers['CSH'] = $docHeaderButtons['csh'];
 			$markers['CONTENT'] = $this->content;
 			// Build the <body> for the module
-			$this->content = $this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:db_new.php.pagetitle'));
+			$this->content = $this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.pagetitle'));
 			$this->content .= $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
 			$this->content .= $this->doc->endPage();
 			$this->content = $this->doc->insertStylesAndJS($this->content);
@@ -269,11 +295,11 @@ class NewRecordController {
 		}
 		// Back
 		if ($this->R_URI) {
-			$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.goBack', 1) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
+			$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.goBack', 1) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
 		}
 		if (is_array($this->pageinfo) && $this->pageinfo['uid']) {
 			// View
-			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->pageinfo['uid'], $this->backPath, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
+			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->pageinfo['uid'], $this->backPath, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', 1) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
 		}
 		return $buttons;
 	}
@@ -342,11 +368,11 @@ class NewRecordController {
 		$newPageLinks = array();
 		if ($this->newPagesInto && $this->isTableAllowedForThisPage($this->pageinfo, 'pages') && $GLOBALS['BE_USER']->check('tables_modify', 'pages') && $GLOBALS['BE_USER']->workspaceCreateNewRecord(($this->pageinfo['_ORIG_uid'] ? $this->pageinfo['_ORIG_uid'] : $this->id), 'pages')) {
 			// Create link to new page inside:
-			$newPageLinks[] = $this->linkWrap(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($table, array()) . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:db_new.php.inside', 1) . ')', $table, $this->id);
+			$newPageLinks[] = $this->linkWrap(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($table, array()) . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.inside', 1) . ')', $table, $this->id);
 		}
 		// New pages AFTER this pages
 		if ($this->newPagesAfter && $this->isTableAllowedForThisPage($this->pidInfo, 'pages') && $GLOBALS['BE_USER']->check('tables_modify', 'pages') && $GLOBALS['BE_USER']->workspaceCreateNewRecord($this->pidInfo['uid'], 'pages')) {
-			$newPageLinks[] = $this->linkWrap($pageIcon . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:db_new.php.after', 1) . ')', 'pages', -$this->id);
+			$newPageLinks[] = $this->linkWrap($pageIcon . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.after', 1) . ')', 'pages', -$this->id);
 		}
 		// New pages at selection position
 		if ($this->newPagesSelectPosition) {

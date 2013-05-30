@@ -21,7 +21,7 @@ namespace TYPO3\CMS\Extbase\Tests\Unit\Property;
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
 
-require_once(__DIR__ . '/../../Fixture/TxClassWithGettersAndSetters.php');
+require_once __DIR__ . '/../../Fixture/TxClassWithGettersAndSetters.php';
 
 /**
  * Testcase for the Property Mapper
@@ -47,17 +47,17 @@ class MapperTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$objectManager = new \TYPO3\CMS\Extbase\Object\ObjectManager();
 
 		/** @var \TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager $persistenceManager */
-		$persistenceManager = new \TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager();
+		$persistenceManager = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\PersistenceManager');
 
 		/** @var \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory $queryFactory */
-		$queryFactory = new \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory();
+		$queryFactory = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QueryFactory');
 
 		/** @var \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService */
-		$reflectionService = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
+		$reflectionService = $this->getMock('TYPO3\\CMS\\Extbase\\Reflection\\ReflectionService');
 		$reflectionService->injectObjectManager($objectManager);
 
 		/** @var \TYPO3\CMS\Extbase\Validation\ValidatorResolver $validatorResolver */
-		$validatorResolver = new \TYPO3\CMS\Extbase\Validation\ValidatorResolver();
+		$validatorResolver = $this->getMock('TYPO3\\CMS\\Extbase\\Validation\\ValidatorResolver');
 
 		$this->fixture = new \TYPO3\CMS\Extbase\Property\Mapper();
 		$this->fixture->injectObjectManager($objectManager);

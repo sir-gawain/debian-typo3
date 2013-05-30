@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Domain\Model;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010 Marcus Krause <marcus#exp2010@t3sec.info>
+ * (c) 2010-2013 Marcus Krause <marcus#exp2010@t3sec.info>
  *          Steffen Kamper <info@sk-typo3.de>
  * All rights reserved
  *
@@ -207,7 +207,7 @@ class Repository extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * Method returns extension count
 	 *
 	 * @access public
-	 * @return int count of read extensions
+	 * @return integer count of read extensions
 	 */
 	public function getExtensionCount() {
 		return $this->extensionCount;

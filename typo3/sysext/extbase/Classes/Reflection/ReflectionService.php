@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Reflection;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009 Christopher Hlubek <hlubek@networkteam.com>
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Reflection;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,6 +27,9 @@ namespace TYPO3\CMS\Extbase\Reflection;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\ClassNamingUtility;
+
 /**
  * A backport of the FLOW3 reflection service for aquiring reflection based information.
  * Most of the code is based on the FLOW3 reflection service.
@@ -230,7 +237,6 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param mixed $classNameOrObject The class name or an object
 	 * @return \TYPO3\CMS\Extbase\Reflection\ClassSchema
-	 * @author Karsten Dambekalns <karsten@typo3.org>
 	 */
 	public function getClassSchema($classNameOrObject) {
 		$className = is_object($classNameOrObject) ? get_class($classNameOrObject) : $classNameOrObject;
@@ -304,7 +310,6 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $propertyName Name of the tagged property
 	 * @param string $tag Tag to return the values of
 	 * @return array An array of values or an empty array if the tag was not found
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function getPropertyTagValues($className, $propertyName, $tag) {
@@ -323,7 +328,6 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param string $className Name of the class
 	 * @return boolean If the class is reflected by this service
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function isClassReflected($className) {
@@ -336,7 +340,6 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $className Name of the class
 	 * @param string $tag Tag to check for
 	 * @return boolean TRUE if the class is tagged with $tag, otherwise FALSE
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function isClassTaggedWith($className, $tag) {
@@ -359,7 +362,6 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $propertyName Name of the property
 	 * @param string $tag Tag to check for
 	 * @return boolean TRUE if the class property is tagged with $tag, otherwise FALSE
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function isPropertyTaggedWith($className, $propertyName, $tag) {
@@ -425,21 +427,15 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 		if (!class_exists($className)) {
 			throw new \TYPO3\CMS\Extbase\Reflection\Exception\UnknownClassException('The classname "' . $className . '" was not found and thus can not be reflected.', 1278450972);
 		}
-		$classSchema = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Reflection\\ClassSchema', $className);
+		$classSchema = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Reflection\\ClassSchema', $className);
 		if (is_subclass_of($className, 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity')) {
 			$classSchema->setModelType(\TYPO3\CMS\Extbase\Reflection\ClassSchema::MODELTYPE_ENTITY);
-			if (strpos($className, '\\') !== FALSE) {
-				$possibleRepositoryClassName = str_replace('\\Model\\', '\\Repository\\', $className) . 'Repository';
-			} else {
-				$possibleRepositoryClassName = str_replace('_Model_', '_Repository_', $className) . 'Repository';
-			}
+			$possibleRepositoryClassName = ClassNamingUtility::translateModelNameToRepositoryName($className);
 			if (class_exists($possibleRepositoryClassName)) {
 				$classSchema->setAggregateRoot(TRUE);
 			}
 		} elseif (is_subclass_of($className, 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject')) {
 			$classSchema->setModelType(\TYPO3\CMS\Extbase\Reflection\ClassSchema::MODELTYPE_VALUEOBJECT);
-		} else {
-			return NULL;
 		}
 		foreach ($this->getClassPropertyNames($className) as $propertyName) {
 			if (!$this->isPropertyTaggedWith($className, $propertyName, 'transient') && $this->isPropertyTaggedWith($className, $propertyName, 'var')) {

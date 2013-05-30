@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Template;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * TYPO3 Backend Template Class
  *
@@ -115,7 +141,7 @@ class DocumentTemplate {
 	 */
 	public $form_rowsToStylewidth = 9.58;
 
-	// Compensation for large documents (used in class.t3lib_tceforms.php)
+	// Compensation for large documents (used in \TYPO3\CMS\Backend\Form\FormEngine)
 	/**
 	 * @todo Define visibility
 	 */
@@ -449,9 +475,9 @@ class DocumentTemplate {
 		$str = \TYPO3\CMS\Backend\Utility\BackendUtility::getListViewLink(array(
 			'id' => $id,
 			'returnUrl' => \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')
-		), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showList'));
+		), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showList'));
 		// Make link to view page
-		$str .= '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($id, $backPath, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($id))) . '">' . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($backPath, 'gfx/zoom.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', 1) . '"' . ($addParams ? ' ' . trim($addParams) : '') . ' hspace="3" alt="" />' . '</a>';
+		$str .= '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($id, $backPath, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($id))) . '">' . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($backPath, 'gfx/zoom.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', 1) . '"' . ($addParams ? ' ' . trim($addParams) : '') . ' hspace="3" alt="" />' . '</a>';
 		return $str;
 	}
 
@@ -460,9 +486,9 @@ class DocumentTemplate {
 	 * See description of the API elsewhere.
 	 *
 	 * @param string $params is a set of GET params to send to tce_db.php. Example: "&cmd[tt_content][123][move]=456" or "&data[tt_content][123][hidden]=1&data[tt_content][123][title]=Hello%20World
-	 * @param string $redirectUrl Redirect URL if any other that t3lib_div::getIndpEnv('REQUEST_URI') is wished
+	 * @param string $redirectUrl Redirect URL if any other that \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI') is wished
 	 * @return string URL to tce_db.php + parameters (backpath is taken from $this->backPath)
-	 * @see t3lib_BEfunc::editOnClick()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::editOnClick()
 	 * @todo Define visibility
 	 */
 	public function issueCommand($params, $redirectUrl = '') {
@@ -555,8 +581,8 @@ class DocumentTemplate {
 		} else {
 			$mMN = '';
 		}
-		$onClick = 'top.ShortcutManager.createShortcut(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.makeBookmark')) . ', ' . '\'' . $backPath . '\', ' . '\'' . rawurlencode($modName) . '\', ' . '\'' . rawurlencode(($pathInfo['path'] . '?' . $storeUrl)) . $mMN . '\'' . ');return false;';
-		$sIcon = '<a href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.makeBookmark', TRUE) . '">' . \t3lib_iconworks::getSpriteIcon('actions-system-shortcut-new') . '</a>';
+		$onClick = 'top.ShortcutManager.createShortcut(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.makeBookmark')) . ', ' . '\'' . $backPath . '\', ' . '\'' . rawurlencode($modName) . '\', ' . '\'' . rawurlencode(($pathInfo['path'] . '?' . $storeUrl)) . $mMN . '\'' . ');return false;';
+		$sIcon = '<a href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.makeBookmark', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-shortcut-new') . '</a>';
 		return $sIcon;
 	}
 
@@ -1849,7 +1875,11 @@ class DocumentTemplate {
 		}
 		// adding flash messages
 		if ($this->showFlashMessages) {
-			$flashMessages = \TYPO3\CMS\Core\Messaging\FlashMessageQueue::renderFlashMessages();
+			/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+			$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+			/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+			$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+			$flashMessages = $defaultFlashMessageQueue->renderFlashMessages();
 			if (!empty($flashMessages)) {
 				$markerArray['FLASHMESSAGES'] = '<div id="typo3-messages">' . $flashMessages . '</div>';
 				// If there is no dedicated marker for the messages present
@@ -1940,7 +1970,7 @@ class DocumentTemplate {
 			$title = '';
 		}
 		// Setting the path of the page
-		$pagePath = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.path', 1) . ': <span class="typo3-docheader-pagePath">';
+		$pagePath = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.path', 1) . ': <span class="typo3-docheader-pagePath">';
 		// crop the title to title limit (or 50, if not defined)
 		$cropLength = empty($GLOBALS['BE_USER']->uc['titleLen']) ? 50 : $GLOBALS['BE_USER']->uc['titleLen'];
 		$croppedTitle = \TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($title, -$cropLength);

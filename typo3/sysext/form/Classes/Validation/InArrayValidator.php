@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Validation;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Validation;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * In array rule
  *
@@ -48,7 +49,6 @@ class InArrayValidator extends \TYPO3\CMS\Form\Validation\AbstractValidator {
 	 * Constructor
 	 *
 	 * @param array $arguments Typoscript configuration
-	 * @return void
 	 */
 	public function __construct($arguments) {
 		$this->setArray($arguments['array.'])->setStrict($arguments['strict']);
@@ -59,7 +59,7 @@ class InArrayValidator extends \TYPO3\CMS\Form\Validation\AbstractValidator {
 	 * Returns TRUE if submitted value validates according to rule
 	 *
 	 * @return boolean
-	 * @see tx_form_System_Validate_Interface::isValid()
+	 * @see \TYPO3\CMS\Form\Validation\ValidatorInterface::isValid()
 	 */
 	public function isValid() {
 		if ($this->requestHandler->has($this->fieldName)) {
@@ -94,6 +94,5 @@ class InArrayValidator extends \TYPO3\CMS\Form\Validation\AbstractValidator {
 	}
 
 }
-
 
 ?>

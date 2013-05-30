@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Reset button model object
  *
@@ -69,11 +70,11 @@ class ResetElement extends \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement 
 	 *
 	 * @param string $value Value to display on button
 	 * @return void
-	 * @see tx_form_Domain_Model_Element::setValue()
+	 * @see \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement::setValue()
 	 */
 	public function setValue($value = '') {
 		$localizationHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Form\\Localization');
-		// value not set from typoscript
+		// Value not set from typoscript
 		$oldValue = $this->getAttributeValue('value');
 		if (empty($oldValue)) {
 			if (!empty($value)) {
@@ -87,6 +88,5 @@ class ResetElement extends \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement 
 	}
 
 }
-
 
 ?>

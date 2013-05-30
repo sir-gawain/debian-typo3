@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2011-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -40,7 +40,7 @@ abstract class AbstractRepository implements \TYPO3\CMS\Extbase\Persistence\Repo
 	protected $table = '';
 
 	/**
-	 * @var \TYPO3\CMS\Core\Resource\ResourceFactory
+	 * @var ResourceFactory
 	 */
 	protected $factory;
 
@@ -179,6 +179,9 @@ abstract class AbstractRepository implements \TYPO3\CMS\Extbase\Persistence\Repo
 	 * Finds an object matching the given identifier.
 	 *
 	 * @param int $uid The identifier of the object to find
+	 *
+	 * @throws \RuntimeException
+	 * @throws \InvalidArgumentException
 	 * @return object The matching object
 	 * @api
 	 */
@@ -188,7 +191,7 @@ abstract class AbstractRepository implements \TYPO3\CMS\Extbase\Persistence\Repo
 		}
 		$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', $this->table, 'uid=' . intval($uid) . ' AND deleted=0');
 		if (empty($row) || !is_array($row)) {
-			throw new \RuntimeException('Could not find row with uid "' . $uid . '" in table $this->table.', 1314354065);
+			throw new \RuntimeException('Could not find row with uid "' . $uid . '" in table ' . $this->table, 1314354065);
 		}
 		return $this->createDomainObject($row);
 	}
@@ -202,6 +205,8 @@ abstract class AbstractRepository implements \TYPO3\CMS\Extbase\Persistence\Repo
 	 * )
 	 *
 	 * @param array $defaultOrderings The property names to order by
+	 *
+	 * @throws \BadMethodCallException
 	 * @return void
 	 * @api
 	 */
@@ -213,6 +218,8 @@ abstract class AbstractRepository implements \TYPO3\CMS\Extbase\Persistence\Repo
 	 * Sets the default query settings to be used in this repository
 	 *
 	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface $defaultQuerySettings The query settings to be used by default
+	 *
+	 * @throws \BadMethodCallException
 	 * @return void
 	 * @api
 	 */
@@ -223,11 +230,44 @@ abstract class AbstractRepository implements \TYPO3\CMS\Extbase\Persistence\Repo
 	/**
 	 * Returns a query for objects of this repository
 	 *
+	 * @throws \BadMethodCallException
 	 * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface
 	 * @api
 	 */
 	public function createQuery() {
 		throw new \BadMethodCallException('Repository does not support the createQuery() method.', 1313185908);
+	}
+
+	/**
+	 * Finds an object matching the given identifier.
+	 *
+	 * @param mixed $identifier The identifier of the object to find
+	 * @return object The matching object if found, otherwise NULL
+	 * @api
+	 */
+	public function findByIdentifier($identifier) {
+		return $this->findByUid($identifier);
+	}
+
+	/**
+	 * Magic call method for repository methods.
+	 *
+	 * @param string $method Name of the method
+	 * @param array $arguments The arguments
+	 * @return void
+	 */
+	public function __call($method, $arguments) {
+		// deliberately empty
+	}
+
+	/**
+	 * Returns the object type this repository is managing.
+	 *
+	 * @return string
+	 * @api
+	 */
+	public function getEntityClassName() {
+		return $this->objectType;
 	}
 
 }

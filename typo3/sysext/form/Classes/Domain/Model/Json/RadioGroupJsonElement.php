@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Json;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2011-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Json;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * JSON radiogroup
  *
@@ -72,7 +73,7 @@ class RadioGroupJsonElement extends \TYPO3\CMS\Form\Domain\Model\Json\FieldsetJs
 	 *
 	 * @param array $parameters Configuration array
 	 * @return void
-	 * @see tx_form_Domain_Model_Json_Fieldset::setParameters()
+	 * @see \TYPO3\CMS\Form\Domain\Model\Json\FieldsetJsonElement::setParameters()
 	 */
 	public function setParameters(array $parameters) {
 		parent::setParameters($parameters);
@@ -122,6 +123,5 @@ class RadioGroupJsonElement extends \TYPO3\CMS\Form\Domain\Model\Json\FieldsetJs
 	}
 
 }
-
 
 ?>

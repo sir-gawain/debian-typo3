@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010 Patrick Broens <patrick@patrickbroens.nl>
+ *  (c) 2010-2013 Patrick Broens <patrick@patrickbroens.nl>
  *
  *  All rights reserved
  *
@@ -24,10 +24,10 @@ namespace TYPO3\CMS\Form\Domain\Repository;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Repository for tx_form_Domain_Model_Content
  *
- * @category Repository
  * @author Patrick Broens <patrick@patrickbroens.nl>
  */
 class ContentRepository {
@@ -37,7 +37,7 @@ class ContentRepository {
 	 *
 	 * Using the GET or POST variable 'P'
 	 *
-	 * @return boolean|tx_form_Domain_Model_Content if found, FALSE if not
+	 * @return boolean|\TYPO3\CMS\Form\Domain\Model\Content if found, FALSE if not
 	 */
 	public function getRecord() {
 		$record = FALSE;
@@ -46,9 +46,18 @@ class ContentRepository {
 		$recordId = (int) $getPostVariables['uid'];
 		$row = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, $recordId);
 		if (is_array($row)) {
-			/** @var $typoScriptParser t3lib_tsparser */
-			$typoScriptParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_tsparser');
-			$typoScriptParser->parse($row['bodytext']);
+			// strip off the leading "[Translate to XY]" text after localizing the original record
+			$languageField = $GLOBALS['TCA']['tt_content']['ctrl']['languageField'];
+			$transOrigPointerField = $GLOBALS['TCA']['tt_content']['ctrl']['transOrigPointerField'];
+			if ($row[$languageField] > 0 && $row[$transOrigPointerField] > 0) {
+				$bodytext = preg_replace('/^\[.*?\] /', '', $row['bodytext'], 1);
+			} else {
+				$bodytext = $row['bodytext'];
+			}
+
+			/** @var $typoScriptParser \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser */
+			$typoScriptParser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
+			$typoScriptParser->parse($bodytext);
 			/** @var $record \TYPO3\CMS\Form\Domain\Model\Content */
 			$record = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Form\\Domain\\Model\\Content');
 			$record->setUid($row['uid']);
@@ -113,6 +122,5 @@ class ContentRepository {
 	}
 
 }
-
 
 ?>

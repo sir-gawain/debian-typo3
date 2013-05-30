@@ -6,7 +6,8 @@ if (!defined('TYPO3_MODE')) {
 	options.saveDocView = 1
 	options.saveDocNew = 1
 	options.saveDocNew.pages = 0
-	options.saveDocNew.pages_language_overlay = 1
+	options.saveDocNew.sys_file = 0
+	options.disableDelete.sys_file = 1
 ');
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('
 mod.wizards.newContentElement {
@@ -14,6 +15,14 @@ mod.wizards.newContentElement {
 	wizardItems {
 		common.header = LLL:EXT:cms/layout/locallang_db_new_content_el.xml:common
 		common.elements {
+			header {
+				icon = gfx/c_wiz/regular_header.gif
+				title = LLL:EXT:cms/layout/locallang_db_new_content_el.xml:common_headerOnly_title
+				description = LLL:EXT:cms/layout/locallang_db_new_content_el.xml:common_headerOnly_description
+				tt_content_defValues {
+					CType = header
+				}
+			}
 			text {
 				icon = gfx/c_wiz/regular_text.gif
 				title = LLL:EXT:cms/layout/locallang_db_new_content_el.xml:common_regularText_title
@@ -58,7 +67,7 @@ mod.wizards.newContentElement {
 			}
 
 		}
-		common.show = text,textpic,image,bullets,table
+		common.show = header,text,textpic,image,bullets,table
 
 		special.header = LLL:EXT:cms/layout/locallang_db_new_content_el.xml:special
 		special.elements {

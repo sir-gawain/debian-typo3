@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Oliver Hader <oliver.hader@typo3.org>
+ * (c) 2012-2013 Oliver Hader <oliver.hader@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -49,7 +49,7 @@ class HttpUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function isUrlBuiltCorrectlyDataProvider() {
 		return array(
-			'rebuild url withouth scheme' => array(
+			'rebuild url without scheme' => array(
 				parse_url('typo3.org/path/index.php'),
 				'typo3.org/path/index.php'
 			),
@@ -58,8 +58,8 @@ class HttpUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 				'http://typo3.org/path/index.php'
 			),
 			'rebuild url with all properties' => array(
-				parse_url('http://editor:secret@typo3.org/path/index.php?query=data#fragment'),
-				'http://editor:secret@typo3.org/path/index.php?query=data#fragment'
+				parse_url('http://editor:secret@typo3.org:8080/path/index.php?query=data#fragment'),
+				'http://editor:secret@typo3.org:8080/path/index.php?query=data#fragment'
 			),
 			'url without username, but password' => array(
 				array(

@@ -5,7 +5,7 @@ use \TYPO3\CMS\Core\Utility\GeneralUtility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog <susanne.moog@typo3.org>
+ *  (c) 2012-2013 Susanne Moog <susanne.moog@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -250,8 +250,13 @@ class FileHandlingUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return void
 	 */
 	public function removeDirectory($extDirPath) {
-		$res = GeneralUtility::rmdir($extDirPath, TRUE);
-		if ($res === FALSE) {
+		$extensionPathWithoutTrailingSlash = rtrim($extDirPath, DIRECTORY_SEPARATOR);
+		if (is_link($extensionPathWithoutTrailingSlash)) {
+			$result = unlink($extensionPathWithoutTrailingSlash);
+		} else {
+			$result = GeneralUtility::rmdir($extDirPath, TRUE);
+		}
+		if ($result === FALSE) {
 			throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException(sprintf($GLOBALS['LANG']->getLL('clearMakeExtDir_could_not_remove_dir'), $this->getRelativePath($extDirPath)), 1337280415);
 		}
 	}
@@ -337,23 +342,54 @@ class FileHandlingUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	 * Create a zip file from an extension
 	 *
 	 * @param array $extension
-	 * @return string
+	 * @return string Name and path of create zip file
 	 */
 	public function createZipFileFromExtension($extension) {
+
 		$extensionPath = $this->getAbsoluteExtensionPath($extension);
+
+		// Add trailing slash to the extension path, getAllFilesAndFoldersInPath explicitly requires that.
+		$extensionPath = \TYPO3\CMS\Core\Utility\PathUtility::sanitizeTrailingSeparator($extensionPath);
+
 		$version = $this->getExtensionVersion($extension);
+		if (empty($version)) {
+			$version =  '0.0.0';
+		}
+
 		$fileName = $this->getAbsolutePath('typo3temp/' . $extension . '_' . $version . '.zip');
+
 		$zip = new \ZipArchive();
 		$zip->open($fileName, \ZipArchive::CREATE);
-		$iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($extensionPath));
-		foreach ($iterator as $key => $value) {
-			$archiveName = str_replace($extensionPath, '', $key);
-			if (\TYPO3\CMS\Core\Utility\StringUtility::isLastPartOfString($key, '.')) {
-				continue;
+
+		$excludePattern = $GLOBALS['TYPO3_CONF_VARS']['EXT']['excludeForPackaging'];
+
+		// Get all the files of the extension, but exclude the ones specified in the excludePattern
+		$files = \TYPO3\CMS\Core\Utility\GeneralUtility::getAllFilesAndFoldersInPath(
+			array(),			// No files pre-added
+			$extensionPath,		// Start from here
+			'',					// Do not filter files by extension
+			TRUE,				// Include subdirectories
+			PHP_INT_MAX,		// Recursion level
+			$excludePattern		// Files and directories to exclude.
+		);
+
+		// Make paths relative to extension root directory.
+		$files = \TYPO3\CMS\Core\Utility\GeneralUtility::removePrefixPathFromList($files, $extensionPath);
+
+		// Remove the one empty path that is the extension dir itself.
+		$files = array_filter($files);
+
+		foreach ($files as $file) {
+			$fullPath = $extensionPath . $file;
+			// Distinguish between files and directories, as creation of the archive
+			// fails on Windows when trying to add a directory with "addFile".
+			if (is_dir($fullPath)) {
+				$zip->addEmptyDir($file);
 			} else {
-				$zip->addFile($key, $archiveName);
+				$zip->addFile($fullPath, $file);
 			}
 		}
+
 		$zip->close();
 		return $fileName;
 	}

@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\Format;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU General Public License, either version 3 of the   *
@@ -10,6 +10,7 @@ namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\Format;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
+
 class CurrencyViewHelperTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
@@ -130,6 +131,26 @@ class CurrencyViewHelperTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase 
 		$viewHelper->expects($this->once())->method('renderChildren')->will($this->returnValue('12,34.00'));
 		$actualResult = $viewHelper->render();
 		$this->assertEquals('12,00', $actualResult);
+	}
+
+	/**
+	 * @test
+	 */
+	public function viewHelperRendersValuesWithoutDecimals() {
+		$viewHelper = $this->getMock('TYPO3\\CMS\\Fluid\\ViewHelpers\\Format\\CurrencyViewHelper', array('renderChildren'));
+		$viewHelper->expects($this->once())->method('renderChildren')->will($this->returnValue('54321'));
+		$actualResult = $viewHelper->render('', ',', '.', FALSE, TRUE, 0);
+		$this->assertEquals('54.321', $actualResult);
+	}
+
+	/**
+	 * @test
+	 */
+	public function viewHelperRendersThreeDecimals() {
+		$viewHelper = $this->getMock('TYPO3\\CMS\\Fluid\\ViewHelpers\\Format\\CurrencyViewHelper', array('renderChildren'));
+		$viewHelper->expects($this->once())->method('renderChildren')->will($this->returnValue('54321'));
+		$actualResult = $viewHelper->render('', ',', '.', FALSE, TRUE, 3);
+		$this->assertEquals('54.321,000', $actualResult);
 	}
 }
 

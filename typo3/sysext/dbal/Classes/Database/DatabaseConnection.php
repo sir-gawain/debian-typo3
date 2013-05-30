@@ -4,9 +4,9 @@ namespace TYPO3\CMS\Dbal\Database;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2004-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
- *  (c) 2004-2009 Karsten Dambekalns <karsten@typo3.org>
- *  (c) 2009-2011 Xavier Perseguers <xavier@typo3.org>
+ *  (c) 2004-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2004-2013 Karsten Dambekalns <karsten@typo3.org>
+ *  (c) 2009-2013 Xavier Perseguers <xavier@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,18 +28,13 @@ namespace TYPO3\CMS\Dbal\Database;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Contains a database abstraction layer class for TYPO3
- *
- * @author 	Kasper Skårhøj <kasperYYYY@typo3.com>
- * @author 	Karsten Dambekalns <karsten@typo3.org>
- * @author 	Xavier Perseguers <xavier@typo3.org>
- */
+
 /**
  * TYPO3 database abstraction layer
  *
  * @author 	Kasper Skårhøj <kasper@typo3.com>
  * @author 	Karsten Dambekalns <k.dambekalns@fishfarm.de>
+ * @author 	Xavier Perseguers <xavier@typo3.org>
  */
 class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 
@@ -179,14 +174,6 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	public $SQLparser;
 
 	/**
-	 * Installer
-	 *
-	 * @var t3lib_install
-	 * @todo Define visibility
-	 */
-	public $Installer;
-
-	/**
 	 * @var \TYPO3\CMS\Install\Sql\SchemaMigrator
 	 */
 	protected $installerSql = NULL;
@@ -205,7 +192,6 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	public function __construct() {
 		// Set SQL parser object for internal use:
 		$this->SQLparser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\SqlParser');
-		$this->Installer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_install');
 		$this->installerSql = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator');
 		$this->queryCache = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Cache\\CacheManager')->getCache('dbal');
 		// Set internal variables with configuration:
@@ -260,23 +246,11 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 			$this->cache_fieldType = $fieldInformation['fieldTypes'];
 			$this->cache_primaryKeys = $fieldInformation['primaryKeys'];
 		} else {
-			$this->analyzeCoreTables();
 			$this->analyzeCachingTables();
 			$this->analyzeExtensionTables();
 			$completeFieldInformation = $this->getCompleteFieldInformation();
 			$phpCodeCache->set($this->cacheIdentifier, $this->getCacheableString($completeFieldInformation), array('t3lib_db'));
 		}
-	}
-
-	/**
-	 * Handle stddb.sql and caching tables
-	 * parse and analyze table definitions
-	 *
-	 * @return void
-	 */
-	protected function analyzeCoreTables() {
-		$coreSql = file_get_contents(PATH_t3lib . 'stddb/tables.sql');
-		$this->parseAndAnalyzeSql($coreSql);
 	}
 
 	/**
@@ -344,9 +318,8 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	/**
 	 * Analyzes fields and adds the extracted information to the field type, auto increment and primary key info caches.
 	 *
-	 * @param array $parsedExtSQL The output produced by t3lib_install_Sql->getFieldDefinitions_fileContent()
+	 * @param array $parsedExtSQL The output produced by \TYPO3\CMS\Install\Sql\SchemaMigrator->getFieldDefinitions_fileContent()
 	 * @return void
-	 * @see t3lib_install_Sql->getFieldDefinitions_fileContent()
 	 */
 	protected function analyzeFields($parsedExtSQL) {
 		foreach ($parsedExtSQL as $table => $tdef) {
@@ -448,6 +421,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		$hType = (string) $this->handlerCfg[$this->lastHandlerKey]['type'];
 		switch ($hType) {
 		case 'native':
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
 			$this->lastQuery = $this->INSERTquery($table, $fields_values, $no_quote_fields);
 			if (is_string($this->lastQuery)) {
 				$sqlResult = mysql_query($this->lastQuery, $this->handlerInstance[$this->lastHandlerKey]['link']);
@@ -569,7 +545,14 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 */
 	public function exec_INSERTmultipleRows($table, array $fields, array $rows, $no_quote_fields = FALSE) {
 		if ((string) $this->handlerCfg[$this->lastHandlerKey]['type'] === 'native') {
-			return parent::exec_INSERTmultipleRows($table, $fields, $rows, $no_quote_fields);
+			$this->lastHandlerKey = $this->handler_getFromTableList($table);
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
+			mysql_query(
+				parent::INSERTmultipleRows($table, $fields, $rows, $no_quote_fields),
+				$this->handlerInstance[$this->lastHandlerKey]['link']
+			);
 		}
 		foreach ($rows as $row) {
 			$fields_values = array();
@@ -616,6 +599,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		$hType = (string) $this->handlerCfg[$this->lastHandlerKey]['type'];
 		switch ($hType) {
 		case 'native':
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
 			$this->lastQuery = $this->UPDATEquery($table, $where, $fields_values, $no_quote_fields);
 			if (is_string($this->lastQuery)) {
 				$sqlResult = mysql_query($this->lastQuery, $this->handlerInstance[$this->lastHandlerKey]['link']);
@@ -697,6 +683,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		$hType = (string) $this->handlerCfg[$this->lastHandlerKey]['type'];
 		switch ($hType) {
 		case 'native':
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
 			$this->lastQuery = $this->DELETEquery($table, $where);
 			$sqlResult = mysql_query($this->lastQuery, $this->handlerInstance[$this->lastHandlerKey]['link']);
 			break;
@@ -760,6 +749,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		$hType = (string) $this->handlerCfg[$this->lastHandlerKey]['type'];
 		switch ($hType) {
 		case 'native':
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
 			if (count($remappedParameters) > 0) {
 				list($select_fields, $from_table, $where_clause, $groupBy, $orderBy) = $this->compileSelectParameters($remappedParameters);
 			}
@@ -850,6 +842,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		$hType = (string) $this->handlerCfg[$this->lastHandlerKey]['type'];
 		switch ($hType) {
 		case 'native':
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
 			$this->lastQuery = $this->TRUNCATEquery($table);
 			$sqlResult = mysql_query($this->lastQuery, $this->handlerInstance[$this->lastHandlerKey]['link']);
 			break;
@@ -882,7 +877,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 * Executes a query.
 	 * EXPERIMENTAL since TYPO3 4.4.
 	 *
-	 * @param array $queryParts SQL parsed by method parseSQL() of t3lib_sqlparser
+	 * @param array $queryParts SQL parsed by method parseSQL() of \TYPO3\CMS\Core\Database\SqlParser
 	 * @return pointer Result pointer / DBAL object
 	 * @see self::sql_query()
 	 */
@@ -1273,7 +1268,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 * @param string See exec_SELECTquery()
 	 * @param string See exec_SELECTquery()
 	 * @param string See exec_SELECTquery()
-	 * @param array $input_parameters An array of values with as many elements as there are bound parameters in the SQL statement being executed. All values are treated as t3lib_db_PreparedStatement::PARAM_AUTOTYPE.
+	 * @param array $input_parameters An array of values with as many elements as there are bound parameters in the SQL statement being executed. All values are treated as \TYPO3\CMS\Core\Database\PreparedStatement::PARAM_AUTOTYPE.
 	 * @return \TYPO3\CMS\Core\Database\PreparedStatement Prepared statement
 	 */
 	public function prepare_SELECTquery($select_fields, $from_table, $where_clause, $groupBy = '', $orderBy = '', $limit = '', array $input_parameters = array()) {
@@ -1436,6 +1431,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		$precompiledParts['ORIG_tableName'] = $components['ORIG_tableName'];
 		switch ($hType) {
 		case 'native':
+			if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+				$this->connectDB();
+			}
 			$query = parent::SELECTquery($select_fields, $from_table, $where_clause, $groupBy, $orderBy, $limit);
 			$precompiledParts['queryParts'] = explode($parameterWrap, $query);
 			break;
@@ -1464,7 +1462,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 * @param string $query The query to execute
 	 * @param array $queryComponents The components of the query to execute
 	 * @return pointer MySQL result pointer / DBAL object
-	 * @access protected This method may only be called by t3lib_db_PreparedStatement
+	 * @access protected This method may only be called by \TYPO3\CMS\Core\Database\PreparedStatement
 	 */
 	public function exec_PREPAREDquery($query, array $precompiledParts) {
 		if ($this->debug) {
@@ -1703,7 +1701,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 					// quoteStr that will be used for Oracle
 					$pattern = str_replace($where_clause[$k]['func']['str'][1], '\\' . $where_clause[$k]['func']['str'][1], $where_clause[$k]['func']['str'][0]);
 					// table is not really needed and may in fact be empty in real statements
-					// but it's not overriden from t3lib_db at the moment...
+					// but it's not overriden from \TYPO3\CMS\Core\Database\DatabaseConnection at the moment...
 					$patternForLike = $this->escapeStrForLike($pattern, $where_clause[$k]['func']['table']);
 					$where_clause[$k]['func']['str_like'] = $patternForLike;
 				case 'IFNULL':
@@ -1864,6 +1862,9 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 		switch ((string) $this->handlerCfg[$this->lastHandlerKey]['type']) {
 		case 'native':
 			if ($this->handlerInstance[$this->lastHandlerKey]['link']) {
+				if ($this->lastHandlerKey === '_DEFAULT' && !$this->isConnected()) {
+					$this->connectDB();
+				}
 				$str = mysql_real_escape_string($str, $this->handlerInstance[$this->lastHandlerKey]['link']);
 			} else {
 				// link may be null when unit testing DBAL
@@ -2446,18 +2447,22 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 * This is typically done by the scripts "init.php" in the backend or "index_ts.php" in the frontend (tslib_fe->connectToDB())
 	 * You wouldn't need to use this at any time - let TYPO3 core handle this.
 	 *
-	 * @param 	string		Database host IP/domain
-	 * @param 	string		Username to connect with.
-	 * @param 	string		Password to connect with.
+	 * @param string $host Deprecated since 6.1, will be removed in two versions. Database host IP/domain[:port]
+	 * @param string $username Deprecated since 6.1, will be removed in two versions. Username to connect with.
+	 * @param string $password Deprecated since 6.1, will be removed in two versions. Password to connect with.
 	 * @return 	mixed		Returns handler connection value
 	 * @see handler_init()
 	 */
-	public function sql_pconnect($TYPO3_db_host, $TYPO3_db_username, $TYPO3_db_password) {
+	public function sql_pconnect($host = NULL, $username = NULL, $password = NULL) {
+		if ($host || $username || $password) {
+			$this->handleDeprecatedConnectArguments($host, $username, $password);
+		}
+
 		// Overriding the _DEFAULT handler configuration of username, password, localhost and database name:
-		$this->handlerCfg['_DEFAULT']['config']['username'] = $TYPO3_db_username;
-		$this->handlerCfg['_DEFAULT']['config']['password'] = $TYPO3_db_password;
-		$this->handlerCfg['_DEFAULT']['config']['host'] = $TYPO3_db_host;
-		$this->handlerCfg['_DEFAULT']['config']['database'] = TYPO3_db;
+		$this->handlerCfg['_DEFAULT']['config']['username'] = $this->databaseUsername;
+		$this->handlerCfg['_DEFAULT']['config']['password'] = $this->databaseUserPassword;
+		$this->handlerCfg['_DEFAULT']['config']['host'] = $this->databaseHost . ':' . $this->databasePort;
+		$this->handlerCfg['_DEFAULT']['config']['database'] = $this->databaseName;
 		// Initializing and output value:
 		$sqlResult = $this->handler_init('_DEFAULT');
 		return $sqlResult;
@@ -2469,7 +2474,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 * @param 	string		Database to connect to.
 	 * @return 	boolean		Always returns TRUE; function is obsolete, database selection is made in handler_init() function!
 	 */
-	public function sql_select_db($TYPO3_db) {
+	public function sql_select_db($TYPO3_db = '') {
 		return TRUE;
 	}
 
@@ -2524,7 +2529,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	 *
 	 * @return 	array		Tables in an array (tablename is in both key and value)
 	 * @todo 	Should the check for Oracle Recycle Bin stuff be moved elsewhere?
-	 * @todo 	Should return table details in value! see t3lib_db::admin_get_tables()
+	 * @todo Should return table details in value! see \TYPO3\CMS\Core\Database\DatabaseConnection::admin_get_tables()
 	 */
 	public function admin_get_tables() {
 		$whichTables = array();
@@ -2890,9 +2895,10 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 				$this->handlerInstance[$handlerKey] = array('handlerType' => 'native', 'link' => $link);
 				// If link succeeded:
 				if ($link) {
-					// For default, set ->link (see t3lib_DB)
+					// For default, set ->link (see \TYPO3\CMS\Core\Database\DatabaseConnection)
 					if ($handlerKey == '_DEFAULT') {
 						$this->link = $link;
+						$this->isConnected = TRUE;
 					}
 					// Select database as well:
 					if (mysql_select_db($cfgArray['config']['database'], $link)) {
@@ -3225,7 +3231,7 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	}
 
 	/**
-	 * Generic mapping of table/field names arrays (as parsed by t3lib_sqlparser)
+	 * Generic mapping of table/field names arrays (as parsed by \TYPO3\CMS\Core\Database\SqlParser)
 	 *
 	 * @param 	array		Array with parsed SQL parts; Takes both fields, tables, where-parts, group and order-by. Passed by reference.
 	 * @param 	string		Default table name to assume if no table is found in $sqlPartArray
@@ -3418,12 +3424,12 @@ class DatabaseConnection extends \TYPO3\CMS\Core\Database\DatabaseConnection {
 	}
 
 	/**
-	 * Will do table/field mapping on a general t3lib_sqlparser-compliant SQL query
+	 * Will do table/field mapping on a general \TYPO3\CMS\Core\Database\SqlParser-compliant SQL query
 	 * (May still not support all query types...)
 	 *
-	 * @param 	array		Parsed QUERY as from t3lib_sqlparser::parseSQL(). NOTICE: Passed by reference!
+	 * @param array Parsed QUERY as from \TYPO3\CMS\Core\Database\SqlParser::parseSQL(). NOTICE: Passed by reference!
 	 * @return 	void
-	 * @see t3lib_sqlparser::parseSQL()
+	 * @see \TYPO3\CMS\Core\Database\SqlParser::parseSQL()
 	 */
 	protected function map_genericQueryParsed(&$parsedQuery) {
 		// Getting table - same for all:

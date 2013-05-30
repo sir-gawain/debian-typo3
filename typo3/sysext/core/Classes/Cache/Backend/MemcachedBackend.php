@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -195,7 +195,7 @@ class MemcachedBackend extends \TYPO3\CMS\Core\Cache\Backend\AbstractBackend imp
 			throw new \TYPO3\CMS\Core\Cache\Exception('No cache frontend has been set yet via setCache().', 1207149215);
 		}
 		if (!is_string($data)) {
-			throw new \t3lib_cache_Exception_InvalidData('The specified data is of type "' . gettype($data) . '" but a string is expected.', 1207149231);
+			throw new \TYPO3\CMS\Core\Cache\Exception\InvalidDataException('The specified data is of type "' . gettype($data) . '" but a string is expected.', 1207149231);
 		}
 		$tags[] = '%MEMCACHEBE%' . $this->cacheIdentifier;
 		$expiration = $lifetime !== NULL ? $lifetime : $this->defaultLifetime;

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -39,7 +39,7 @@ abstract class AbstractValidator implements \TYPO3\CMS\Extbase\Validation\Valida
 
 	/**
 	 * @var array
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1. You should use constructor parameter to set validation options.
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1. You should use constructor parameter to set validation options.
 	 */
 	protected $errors = array();
 
@@ -86,7 +86,7 @@ abstract class AbstractValidator implements \TYPO3\CMS\Extbase\Validation\Valida
 	 *
 	 * @param array $options Options for the validator
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1. use constructor instead.
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1. use constructor instead.
 	 */
 	public function setOptions(array $options) {
 		$this->options = $options;
@@ -96,7 +96,7 @@ abstract class AbstractValidator implements \TYPO3\CMS\Extbase\Validation\Valida
 	 * Returns an array of errors which occurred during the last isValid() call.
 	 *
 	 * @return array An array of \TYPO3\CMS\Extbase\Validation\Error objects or an empty array if no errors occurred.
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1. use validate() instead.
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1. use validate() instead.
 	 */
 	public function getErrors() {
 		return $this->errors;

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011-2012 Ingo Renner (ingo@typo3.org)
- * (c) 2011-2012 Steffen Gebert (steffen.gebert@typo3.org)
+ * (c) 2011-2013 Ingo Renner (ingo@typo3.org)
+ * (c) 2011-2013 Steffen Gebert (steffen.gebert@typo3.org)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,13 +32,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Log;
  * @author Steffen Gebert <steffen.gebert@typo3.org>
  */
 class LogManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * @var \TYPO3\CMS\Core\Log\LogManager

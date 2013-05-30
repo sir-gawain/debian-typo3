@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\ExtDirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Sebastian Kurfürst <sebastian@typo3.org>
+ *  (c) 2010-2013 Sebastian Kurfürst <sebastian@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -117,19 +117,19 @@ class ExtDirectApi {
 				}
 				if (is_array($configuration)) {
 					$className = $configuration['callbackClass'];
-				}
-				$serverObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($className, FALSE);
-				$javascriptNamespaces[$javascriptNamespace]['actions'][$javascriptObjectName] = array();
-				foreach (get_class_methods($serverObject) as $methodName) {
-					$reflectionMethod = new \ReflectionMethod($serverObject, $methodName);
-					$numberOfParameters = $reflectionMethod->getNumberOfParameters();
-					$docHeader = $reflectionMethod->getDocComment();
-					$formHandler = strpos($docHeader, '@formHandler') !== FALSE;
-					$javascriptNamespaces[$javascriptNamespace]['actions'][$javascriptObjectName][] = array(
-						'name' => $methodName,
-						'len' => $numberOfParameters,
-						'formHandler' => $formHandler
-					);
+					$serverObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($className, FALSE);
+					$javascriptNamespaces[$javascriptNamespace]['actions'][$javascriptObjectName] = array();
+					foreach (get_class_methods($serverObject) as $methodName) {
+						$reflectionMethod = new \ReflectionMethod($serverObject, $methodName);
+						$numberOfParameters = $reflectionMethod->getNumberOfParameters();
+						$docHeader = $reflectionMethod->getDocComment();
+						$formHandler = strpos($docHeader, '@formHandler') !== FALSE;
+						$javascriptNamespaces[$javascriptNamespace]['actions'][$javascriptObjectName][] = array(
+							'name' => $methodName,
+							'len' => $numberOfParameters,
+							'formHandler' => $formHandler
+						);
+					}
 				}
 			}
 		}
@@ -188,10 +188,10 @@ class ExtDirectApi {
 	protected function getNamespaceError(array $filterNamespaces) {
 		if (count($filterNamespaces)) {
 			// Namespace error
-			$errorMessage = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:ExtDirect.namespaceError'), __CLASS__, implode(',', $filterNamespaces));
+			$errorMessage = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:ExtDirect.namespaceError'), __CLASS__, implode(',', $filterNamespaces));
 		} else {
 			// No namespace given
-			$errorMessage = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:ExtDirect.noNamespace'), __CLASS__);
+			$errorMessage = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:ExtDirect.noNamespace'), __CLASS__);
 		}
 		return $errorMessage;
 	}

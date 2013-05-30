@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Impexp;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,14 +26,7 @@ namespace TYPO3\CMS\Impexp;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Adding Import/Export clickmenu item
- *
- * Revised for TYPO3 3.6 December/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
+
 /**
  * Adding Import/Export clickmenu item
  *
@@ -55,9 +48,9 @@ class Clickmenu {
 	public function main(&$backRef, $menuItems, $table, $uid) {
 		$localItems = array();
 		// Show import/export on second level menu OR root level.
-		if ($backRef->cmLevel && \t3lib_div::_GP('subname') == 'moreoptions' || $table === 'pages' && $uid == 0) {
+		if ($backRef->cmLevel && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('subname') == 'moreoptions' || $table === 'pages' && $uid == 0) {
 			$LL = $this->includeLL();
-			$modUrl = $backRef->backPath . t3lib_extMgm::extRelPath('impexp') . 'app/index.php';
+			$modUrl = $backRef->backPath . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('impexp') . 'app/index.php';
 			$url = $modUrl . '?tx_impexp[action]=export&id=' . ($table == 'pages' ? $uid : $backRef->rec['pid']);
 			if ($table == 'pages') {
 				$url .= '&tx_impexp[pagetree][id]=' . $uid;
@@ -67,10 +60,10 @@ class Clickmenu {
 				$url .= '&tx_impexp[record][]=' . rawurlencode(($table . ':' . $uid));
 				$url .= '&tx_impexp[external_ref][tables][]=_ALL';
 			}
-			$localItems[] = $backRef->linkItem($GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('export', $LL)), $backRef->excludeIcon(\t3lib_iconWorks::getSpriteIcon('actions-document-export-t3d')), $backRef->urlRefForCM($url), 1);
+			$localItems[] = $backRef->linkItem($GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('export', $LL)), $backRef->excludeIcon(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-export-t3d')), $backRef->urlRefForCM($url), 1);
 			if ($table == 'pages') {
 				$url = $modUrl . '?id=' . $uid . '&table=' . $table . '&tx_impexp[action]=import';
-				$localItems[] = $backRef->linkItem($GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('import', $LL)), $backRef->excludeIcon(\t3lib_iconWorks::getSpriteIcon('actions-document-import-t3d')), $backRef->urlRefForCM($url), 1);
+				$localItems[] = $backRef->linkItem($GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->getLLL('import', $LL)), $backRef->excludeIcon(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-import-t3d')), $backRef->urlRefForCM($url), 1);
 			}
 		}
 		return array_merge($menuItems, $localItems);
@@ -84,10 +77,9 @@ class Clickmenu {
 	 */
 	public function includeLL() {
 		global $LANG;
-		return $LANG->includeLLFile('EXT:impexp/app/locallang.php', FALSE);
+		return $LANG->includeLLFile('EXT:impexp/app/locallang.xlf', FALSE);
 	}
 
 }
-
 
 ?>

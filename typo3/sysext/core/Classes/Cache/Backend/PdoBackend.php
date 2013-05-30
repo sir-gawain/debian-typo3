@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -48,7 +48,7 @@ class PdoBackend extends \TYPO3\CMS\Core\Cache\Backend\AbstractBackend implement
 	protected $password;
 
 	/**
-	 * @var PDO
+	 * @var \PDO
 	 */
 	protected $databaseHandle;
 
@@ -119,9 +119,7 @@ class PdoBackend extends \TYPO3\CMS\Core\Cache\Backend\AbstractBackend implement
 		if (!is_string($data)) {
 			throw new \TYPO3\CMS\Core\Cache\Exception\InvalidDataException('The specified data is of type "' . gettype($data) . '" but a string is expected.', 1259515601);
 		}
-		if ($this->has($entryIdentifier)) {
-			$this->remove($entryIdentifier);
-		}
+		$this->remove($entryIdentifier);
 		$lifetime = $lifetime === NULL ? $this->defaultLifetime : $lifetime;
 		$statementHandle = $this->databaseHandle->prepare('INSERT INTO "cache" ("identifier", "context", "cache", "created", "lifetime", "content") VALUES (?, ?, ?, ?, ?, ?)');
 		$result = $statementHandle->execute(array($entryIdentifier, $this->context, $this->cacheIdentifier, $GLOBALS['EXEC_TIME'], $lifetime, $data));
@@ -260,7 +258,7 @@ class PdoBackend extends \TYPO3\CMS\Core\Cache\Backend\AbstractBackend implement
 				$this->databaseHandle = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('PDO', $this->dataSourceName, $this->username, $this->password);
 			}
 			$this->databaseHandle->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-			if ($this->pdoDriver === 'mysql') {
+			if (substr($this->pdoDriver, 0, 5) === 'mysql') {
 				$this->databaseHandle->exec('SET SESSION sql_mode=\'ANSI\';');
 			}
 		} catch (\PDOException $e) {
@@ -276,7 +274,12 @@ class PdoBackend extends \TYPO3\CMS\Core\Cache\Backend\AbstractBackend implement
 	 */
 	protected function createCacheTables() {
 		try {
-			\TYPO3\CMS\Core\Database\PdoHelper::importSql($this->databaseHandle, $this->pdoDriver, PATH_t3lib . 'cache/backend/resources/ddl.sql');
+			\TYPO3\CMS\Core\Database\PdoHelper::importSql(
+				$this->databaseHandle,
+				$this->pdoDriver,
+				\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('core') .
+				'Resources/Private/Sql/Cache/Backend/PdoBackendCacheAndTags.sql'
+			);
 		} catch (\PDOException $e) {
 			throw new \RuntimeException('Could not create cache tables with DSN "' . $this->dataSourceName . '". PDO error: ' . $e->getMessage(), 1259576985);
 		}

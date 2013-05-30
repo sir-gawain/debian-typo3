@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Beuser\Service;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Felix Kopp <felix-source@phorax.com>
+ *  (c) 2012-2013 Felix Kopp <felix-source@phorax.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Beuser\Service;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Module data storage service.
  * Used to store and retrieve module state (eg. checkboxes, selections).
@@ -53,7 +54,7 @@ class ModuleDataStorageService implements \TYPO3\CMS\Core\SingletonInterface {
 	public function loadModuleData() {
 		$moduleData = $GLOBALS['BE_USER']->getModuleData(self::KEY);
 		if (empty($moduleData) || !$moduleData) {
-			$moduleData = $this->objectManager->create('TYPO3\\CMS\\Beuser\\Domain\\Model\\ModuleData');
+			$moduleData = $this->objectManager->get('TYPO3\\CMS\\Beuser\\Domain\\Model\\ModuleData');
 		} else {
 			$moduleData = @unserialize($moduleData);
 		}

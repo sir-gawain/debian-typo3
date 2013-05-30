@@ -4,7 +4,7 @@ namespace TYPO3\CMS\IndexedSearch;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2001-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2001-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -716,7 +716,7 @@ class FileContentParser {
 	 * Return icon for file extension
 	 *
 	 * @param 	string		File extension, lowercase.
-	 * @return 	string		Relative file reference, resolvable by t3lib_div::getFileAbsFileName()
+	 * @return 	string		Relative file reference, resolvable by \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName()
 	 * @todo Define visibility
 	 */
 	public function getIcon($extension) {

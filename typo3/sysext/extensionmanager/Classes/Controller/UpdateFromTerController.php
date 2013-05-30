@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <typo3@susannemoog.de>
+ *  (c) 2012-2013 Susanne Moog, <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -100,15 +100,16 @@ class UpdateFromTerController extends \TYPO3\CMS\Extensionmanager\Controller\Abs
 	public function updateExtensionListFromTerAction($forceUpdateCheck = FALSE) {
 		$updated = FALSE;
 		$errorMessage = '';
-		/** @var $repository \TYPO3\CMS\Extensionmanager\Domain\Model\Repository */
-		$repository = $this->repositoryRepository->findOneByUid((int)$this->settings['repositoryUid']);
-		if ($repository->getExtensionCount() === 0 || $forceUpdateCheck) {
+
+		if ($this->extensionRepository->countAll() === 0 || $forceUpdateCheck) {
 			try {
 				$updated = $this->repositoryHelper->updateExtList();
 			} catch (\TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException $e) {
 				$errorMessage = $e->getMessage();
 			}
 		}
+		/** @var $repository \TYPO3\CMS\Extensionmanager\Domain\Model\Repository */
+		$repository = $this->repositoryRepository->findByUid((int)$this->settings['repositoryUid']);
 		$this->view->assign('updated', $updated)
 				->assign('repository', $repository)
 				->assign('errorMessage', $errorMessage);

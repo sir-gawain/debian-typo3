@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Reports\Report\Status;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -63,11 +63,6 @@ class ConfigurationStatus implements \TYPO3\CMS\Reports\StatusProviderInterface 
 			'emptyReferenceIndex' => $this->getReferenceIndexStatus(),
 			'deprecationLog' => $this->getDeprecationLogStatus()
 		);
-		// Do not show status about non-existent features
-		if (version_compare(phpversion(), '5.4', '<')) {
-			$statuses['safeModeEnabled'] = $this->getPhpSafeModeStatus();
-			$statuses['magicQuotesGpcEnabled'] = $this->getPhpMagicQuotesGpcStatus();
-		}
 		if ($this->isMemcachedUsed()) {
 			$statuses['memcachedConnection'] = $this->getMemcachedConnectionStatus();
 		}
@@ -93,44 +88,10 @@ class ConfigurationStatus implements \TYPO3\CMS\Reports\StatusProviderInterface 
 		if (!$count && $lastRefIndexUpdate) {
 			$value = $GLOBALS['LANG']->getLL('status_empty');
 			$severity = \TYPO3\CMS\Reports\Status::WARNING;
-			$url = 'sysext/lowlevel/dbint/index.php?&id=0&SET[function]=refindex';
-			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.backend_reference_index'), '<a href="' . $url . '">', '</a>', \t3lib_BeFunc::dateTime($lastRefIndexUpdate));
+			$url =  \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_dbint') . '&id=0&SET[function]=refindex';
+			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.backend_reference_index'), '<a href="' . $url . '">', '</a>', \TYPO3\CMS\Backend\Utility\BackendUtility::dateTime($lastRefIndexUpdate));
 		}
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status', $GLOBALS['LANG']->getLL('status_referenceIndex'), $value, $message, $severity);
-	}
-
-	/**
-	 * Checks if PHP safe_mode is enabled.
-	 *
-	 * @return \TYPO3\CMS\Reports\Status A tx_reports_reports_status_Status object representing whether the safe_mode is enabled or not
-	 */
-	protected function getPhpSafeModeStatus() {
-		$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:disabled');
-		$message = '';
-		$severity = \TYPO3\CMS\Reports\Status::OK;
-		if (\TYPO3\CMS\Core\Utility\PhpOptionsUtility::isSafeModeEnabled()) {
-			$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:enabled');
-			$severity = \TYPO3\CMS\Reports\Status::WARNING;
-			$message = $GLOBALS['LANG']->getLL('status_configuration_PhpSafeModeEnabled');
-		}
-		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status', $GLOBALS['LANG']->getLL('status_PhpSafeMode'), $value, $message, $severity);
-	}
-
-	/**
-	 * Checks if PHP magic_quotes_gpc is enabled.
-	 *
-	 * @return \TYPO3\CMS\Reports\Status A tx_reports_reports_status_Status object representing whether the magic_quote_gpc is enabled or not
-	 */
-	protected function getPhpMagicQuotesGpcStatus() {
-		$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:disabled');
-		$message = '';
-		$severity = \TYPO3\CMS\Reports\Status::OK;
-		if (\TYPO3\CMS\Core\Utility\PhpOptionsUtility::isMagicQuotesGpcEnabled()) {
-			$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:enabled');
-			$severity = \TYPO3\CMS\Reports\Status::WARNING;
-			$message = $GLOBALS['LANG']->getLL('status_configuration_PhpMagicQuotesGpcEnabled');
-		}
-		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status', $GLOBALS['LANG']->getLL('status_PhpMagicQuotesGpc'), $value, $message, $severity);
 	}
 
 	/**
@@ -209,7 +170,7 @@ class ConfigurationStatus implements \TYPO3\CMS\Reports\StatusProviderInterface 
 		if (count($failedConnections)) {
 			$value = $GLOBALS['LANG']->getLL('status_connectionFailed');
 			$severity = \TYPO3\CMS\Reports\Status::WARNING;
-			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.memcache_not_usable') . '<br /><br />' . '<ul><li>' . implode('</li><li>', $failedConnections) . '</li></ul>';
+			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.memcache_not_usable') . '<br /><br />' . '<ul><li>' . implode('</li><li>', $failedConnections) . '</li></ul>';
 		}
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status', $GLOBALS['LANG']->getLL('status_memcachedConfiguration'), $value, $message, $severity);
 	}
@@ -222,11 +183,11 @@ class ConfigurationStatus implements \TYPO3\CMS\Reports\StatusProviderInterface 
 	 */
 	protected function getDeprecationLogStatus() {
 		$title = $GLOBALS['LANG']->getLL('status_configuration_DeprecationLog');
-		$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:disabled');
+		$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:disabled');
 		$message = '';
 		$severity = \TYPO3\CMS\Reports\Status::OK;
 		if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog']) {
-			$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:enabled');
+			$value = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:enabled');
 			$message = '<p>' . $GLOBALS['LANG']->getLL('status_configuration_DeprecationLogEnabled') . '</p>';
 			$severity = \TYPO3\CMS\Reports\Status::NOTICE;
 			$logFile = \TYPO3\CMS\Core\Utility\GeneralUtility::getDeprecationLogFileName();
@@ -327,7 +288,12 @@ class ConfigurationStatus implements \TYPO3\CMS\Reports\StatusProviderInterface 
 			$message = $GLOBALS['LANG']->getLL('status_configuration_DeprecationLogDeletionFailed');
 			$severity = \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR;
 		}
-		\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $message, '', $severity, TRUE));
+		$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $message, '', $severity, TRUE);
+		/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+		$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+		/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+		$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+		$defaultFlashMessageQueue->enqueue($flashMessage);
 	}
 
 }

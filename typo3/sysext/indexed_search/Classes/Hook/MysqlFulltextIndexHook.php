@@ -4,7 +4,7 @@ namespace TYPO3\CMS\IndexedSearch\Hook;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Michael Stucki (michael@typo3.org)
+ *  (c) 2011-2013 Michael Stucki (michael@typo3.org)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -48,7 +48,7 @@ class MysqlFulltextIndexHook {
 	 *
 	 * @param array $searchWordsArray Search words
 	 * @param int $freeIndexUid Pointer to which indexing configuration you want to search in. -1 means no filtering. 0 means only regular indexed content.
-	 * @return resource|false
+	 * @return boolean|\mysqli_result|object MySQLi result object / DBAL object
 	 */
 	public function getResultRows_SQLpointer($searchWordsArray, $freeIndexUid = -1) {
 		// Build the search string, detect which fulltext index to use, and decide whether boolean search is needed or not
@@ -149,7 +149,7 @@ class MysqlFulltextIndexHook {
 	 *
 	 * @param array $searchData Array with search string, boolean indicator, and fulltext index reference
 	 * @param int $freeIndexUid Pointer to which indexing configuration you want to search in. -1 means no filtering. 0 means only regular indexed content.
-	 * @return resource Query result
+	 * @return boolean|\mysqli_result|object MySQLi result object / DBAL object
 	 */
 	protected function execFinalQuery_fulltext($searchData, $freeIndexUid = -1) {
 		// Setting up methods of filtering results based on page types, access, etc.

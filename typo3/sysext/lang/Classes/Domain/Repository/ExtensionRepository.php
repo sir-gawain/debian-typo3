@@ -3,7 +3,7 @@ namespace TYPO3\CMS\Lang\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Sebastian Fischer <typo3@evoweb.de>
+ *  (c) 2012-2013 Sebastian Fischer <typo3@evoweb.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -79,7 +79,7 @@ class ExtensionRepository {
 
 			foreach ($availableAndInstalledExtensions as $entry) {
 				/** @var $extension \TYPO3\CMS\Lang\Domain\Model\Extension */
-				$extension = $this->objectManager->create(
+				$extension = $this->objectManager->get(
 					'TYPO3\CMS\Lang\Domain\Model\Extension',
 					$entry['key'],
 					$entry['title'],

@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,6 +33,20 @@ namespace TYPO3\CMS\Extbase\Configuration;
 class BackendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\AbstractConfigurationManager {
 
 	/**
+	 * @var \TYPO3\CMS\Core\Database\QueryGenerator Needed to recursively fetch a page tree
+	 */
+	protected $queryGenerator;
+
+	/**
+	 * Inject query generator
+	 *
+	 * @param \TYPO3\CMS\Core\Database\QueryGenerator $queryGenerator
+	 */
+	public function injectQueryGenerator(\TYPO3\CMS\Core\Database\QueryGenerator $queryGenerator) {
+		$this->queryGenerator = $queryGenerator;
+	}
+
+	/**
 	 * @var array
 	 */
 	protected $typoScriptSetupCache = array();
@@ -45,9 +60,12 @@ class BackendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abstr
 		$pageId = $this->getCurrentPageId();
 
 		if (!array_key_exists($pageId, $this->typoScriptSetupCache)) {
+			/** @var $template \TYPO3\CMS\Core\TypoScript\TemplateService */
 			$template = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\TemplateService');
 			// do not log time-performance information
 			$template->tt_track = 0;
+			// Explicitly trigger processing of extension static files
+			$template->setProcessExtensionStatics(TRUE);
 			$template->init();
 			// Get the root line
 			$rootline = array();
@@ -158,6 +176,32 @@ class BackendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abstr
 		}
 		return $frameworkConfiguration;
 	}
+
+
+	/**
+	 * Returns a comma separated list of storagePid that are below a certain storage pid.
+	 *
+	 * @param string $storagePid Storage PID to start at; multiple PIDs possible as comma-separated list
+	 * @param integer $recursionDepth Maximum number of levels to search, 0 to disable recursive lookup
+	 * @return string storage PIDs
+	 */
+	protected function getRecursiveStoragePids($storagePid, $recursionDepth = 0) {
+		if ($recursionDepth <= 0) {
+			return $storagePid;
+		}
+
+		$recursiveStoragePids = '';
+		$storagePids = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $storagePid);
+		foreach ($storagePids as $startPid) {
+			$pids = $this->queryGenerator->getTreeList($startPid, $recursionDepth, 0, 1);
+			if (strlen($pids) > 0) {
+				$recursiveStoragePids .= $pids . ',';
+			}
+		}
+
+		return rtrim($recursiveStoragePids, ',');
+	}
+
 }
 
 ?>

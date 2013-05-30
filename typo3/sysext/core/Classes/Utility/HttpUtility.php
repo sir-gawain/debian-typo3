@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -118,7 +118,14 @@ class HttpUtility {
 	 * @see http://www.php.net/parse_url
 	 */
 	static public function buildUrl(array $urlParts) {
-		return (isset($urlParts['scheme']) ? $urlParts['scheme'] . '://' : '') . (isset($urlParts['user']) ? $urlParts['user'] . (isset($urlParts['pass']) ? ':' . $urlParts['pass'] : '') . '@' : '') . (isset($urlParts['host']) ? $urlParts['host'] : '') . (isset($urlParts['path']) ? $urlParts['path'] : '') . (isset($urlParts['query']) ? '?' . $urlParts['query'] : '') . (isset($urlParts['fragment']) ? '#' . $urlParts['fragment'] : '');
+		return (isset($urlParts['scheme']) ? $urlParts['scheme'] . '://' : '') .
+			(isset($urlParts['user']) ? $urlParts['user'] .
+			(isset($urlParts['pass']) ? ':' . $urlParts['pass'] : '') . '@' : '') .
+			(isset($urlParts['host']) ? $urlParts['host'] : '') .
+			(isset($urlParts['port']) ? ':' . $urlParts['port'] : '') .
+			(isset($urlParts['path']) ? $urlParts['path'] : '') .
+			(isset($urlParts['query']) ? '?' . $urlParts['query'] : '') .
+			(isset($urlParts['fragment']) ? '#' . $urlParts['fragment'] : '');
 	}
 
 }

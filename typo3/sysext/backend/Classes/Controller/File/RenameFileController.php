@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller\File;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class for the rename-file form.
  *
@@ -12,7 +38,7 @@ class RenameFileController {
 	/**
 	 * Document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\SmallDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -65,8 +91,8 @@ class RenameFileController {
 			$this->fileOrFolderObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($this->target);
 		}
 		if (!$this->fileOrFolderObject) {
-			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:paramError', TRUE);
-			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xml:targetNoDir', TRUE);
+			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:paramError', TRUE);
+			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:targetNoDir', TRUE);
 			throw new \RuntimeException($title . ': ' . $message, 1294586844);
 		}
 		// If a folder should be renamed, AND the returnURL should go to the old directory name, the redirect is forced
@@ -103,8 +129,8 @@ class RenameFileController {
 	public function main() {
 		//TODO: change locallang*.php to locallang*.xml
 		// Make page header:
-		$this->content = $this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_rename.php.pagetitle'));
-		$pageContent = $this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_rename.php.pagetitle'));
+		$this->content = $this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.pagetitle'));
+		$pageContent = $this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.pagetitle'));
 		$pageContent .= $this->doc->spacer(5);
 		$pageContent .= $this->doc->divider(5);
 		if ($this->fileOrFolderObject instanceof \TYPO3\CMS\Core\Resource\Folder) {
@@ -124,16 +150,24 @@ class RenameFileController {
 		// Making submit button:
 		$code .= '
 			<div id="c-submit">
-				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:file_rename.php.submit', 1) . '" />
-				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.cancel', 1) . '" onclick="backToList(); return false;" />
+				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.submit', 1) . '" />
+				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.cancel', 1) . '" onclick="backToList(); return false;" />
 				<input type="hidden" name="redirect" value="' . htmlspecialchars($this->returnUrl) . '" />
 			</div>
 		';
 		$code .= '</form>';
 		// Add the HTML as a section:
 		$pageContent .= $code;
-		$docHeaderButtons = array();
+
+		$docHeaderButtons = array(
+			'back' => ''
+		);
 		$docHeaderButtons['csh'] = \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('xMOD_csh_corebe', 'file_rename', $GLOBALS['BACK_PATH']);
+		// Back
+		if ($this->returnUrl) {
+			$docHeaderButtons['back'] = '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisUrl($this->returnUrl)) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.goBack', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
+		}
+
 		// Add the HTML as a section:
 		$markerArray = array(
 			'CSH' => $docHeaderButtons['csh'],

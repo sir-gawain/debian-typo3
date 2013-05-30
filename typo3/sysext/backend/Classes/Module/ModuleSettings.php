@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,15 +26,11 @@ namespace TYPO3\CMS\Backend;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Manage storing and restoring of $GLOBALS['SOBE']->MOD_SETTINGS settings.
  * Provides a presets box for BE modules.
  *
- * inspired by t3lib_fullsearch
- *
- * @author René Fritz <r.fritz@colorcube.de>
- */
-/**
  * usage inside of scbase class
  *
  * ....
@@ -49,7 +45,7 @@ namespace TYPO3\CMS\Backend;
  *
  * function main() {
  * reStore settings
- * $store = t3lib_div::makeInstance('t3lib_modSettings');
+ * $store = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\ModuleSettings');
  * $store->init('tx_dam_select');
  * $store->setStoreList('tx_dam_select');
  * $store->processStoreControl();
@@ -71,10 +67,6 @@ namespace TYPO3\CMS\Backend;
  * 'another id' => ...
  *
  * ) );
- */
-/**
- * Manage storing and restoring of $GLOBALS['SOBE']->MOD_SETTINGS settings.
- * Provides a presets box for BE modules.
  *
  * @author René Fritz <r.fritz@colorcube.de>
  */
@@ -209,6 +201,7 @@ class ModuleSettings {
 	 */
 	public function addToStoreListFromPrefix($prefix = '') {
 		$prefix = $prefix ? $prefix : $this->prefix;
+		$prefix = preg_quote($prefix, '/');
 		foreach ($GLOBALS['SOBE']->MOD_SETTINGS as $key => $value) {
 			if (preg_match('/^' . $prefix . '/', $key)) {
 				$this->storeList[$key] = $key;

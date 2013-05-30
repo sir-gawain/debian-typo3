@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -40,13 +40,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class RedisBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * If set, the tearDown() method will flush the cache used by this unit test.
@@ -170,7 +163,7 @@ class RedisBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test Functional
-	 * @expectedException t3lib_cache_Exception_InvalidData
+	 * @expectedException \TYPO3\CMS\Core\Cache\Exception\InvalidDataException
 	 */
 	public function setThrowsExceptionIfDataIsNotAString() {
 		$this->setUpBackend();

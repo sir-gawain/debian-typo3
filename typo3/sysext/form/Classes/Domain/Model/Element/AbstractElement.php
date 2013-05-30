@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Abstract for the form elements
  *
@@ -30,8 +31,19 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
  */
 abstract class AbstractElement {
 
+	/**
+	 * @var string
+	 */
 	const ELEMENT_TYPE_FORM = 'FORM';
+
+	/**
+	 * @var string
+	 */
 	const ELEMENT_TYPE_PLAIN = 'PLAIN';
+
+	/**
+	 * @var string
+	 */
 	const ELEMENT_TYPE_CONTENT = 'CONTENT';
 	/**
 	 * Internal Id of the element
@@ -150,7 +162,6 @@ abstract class AbstractElement {
 	 *
 	 * @param integer $elementId Internal Id of the element
 	 * @param array $arguments Configuration array
-	 * @return void
 	 */
 	public function __construct() {
 		$this->localCobj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
@@ -513,6 +524,5 @@ abstract class AbstractElement {
 	}
 
 }
-
 
 ?>

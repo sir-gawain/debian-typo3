@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog <susanne.moog@typo3.org>
+ *  (c) 2012-2013 Susanne Moog <susanne.moog@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -75,7 +75,7 @@ class ImageViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\ImageViewHelper {
 		$image = '';
 		try {
 			$image = parent::render($src, $width, $height, $minWidth, $minHeight, $maxWidth, $maxHeight);
-		} catch (\TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException $e) {
+		} catch (\Exception $e) {
 
 		}
 		return $image;

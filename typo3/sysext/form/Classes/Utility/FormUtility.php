@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Oliver Hader <oliver.hader@typo3.org>
+ *  (c) 2011-2013 Oliver Hader <oliver.hader@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Utility;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Common helper methods.
  *
@@ -102,7 +103,7 @@ class FormUtility implements \TYPO3\CMS\Core\SingletonInterface {
 		foreach ($this->getFormObjects() as $formObject) {
 			$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['cObjTypeAndClass'][] = array(
 				$formObject,
-				'EXT:form/Classes/Controller/Form.php:&TYPO3\\CMS\\Form\\Controller\\FormController'
+				'EXT:form/Classes/Controller/FormController.php:&TYPO3\\CMS\\Form\\Controller\\FormController'
 			);
 		}
 		return $this;
@@ -135,6 +136,5 @@ class FormUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 }
-
 
 ?>

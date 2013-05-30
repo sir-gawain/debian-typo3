@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Sv;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2004-2011 René Fritz <r.fritz@colorcube.de>
+ *  (c) 2004-2013 René Fritz <r.fritz@colorcube.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -212,7 +212,8 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AbstractAuthenticationService 
 
 	/**
 	 * Fetches subgroups of groups. Function is called recursively for each subgroup.
-	 * Function was previously copied from t3lib_beUserAuth->fetchGroups and has been slightly modified.
+	 * Function was previously copied from
+	 * \TYPO3\CMS\Core\Authentication\BackendUserAuthentication->fetchGroups and has been slightly modified.
 	 *
 	 * @param string $grList Commalist of fe_groups uid numbers
 	 * @param string $idList List of already processed fe_groups-uids so the function will not fall into a eternal recursion.

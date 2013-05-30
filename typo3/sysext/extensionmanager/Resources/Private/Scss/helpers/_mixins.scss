@@ -67,21 +67,15 @@ $useIEFilters: 0;
 	        box-sizing: $type;
 }
 
-
 // Hardware Xalleration
 @mixin xallerate ($values: '') {
 	@include transform(translate3d(0,0,0) #{$values});
 }
 
-
-
-@mixin stable {
-	@include linear-gradient(#87b374, #87b374 0%, #5f8d4b 100%);
-}
-
-
-@mixin beta {
-	@include linear-gradient(#f39300, #f39300 0%, #d15e00 100%);
-}
-
-
+@mixin alpha { color: #f14400; }
+@mixin beta { color: #f4bd00; }
+@mixin stable { color: #3db900; }
+@mixin experimental { color: #000; }
+@mixin test { color: #000; }
+@mixin obsolete { color: #8c8c8c; }
+@mixin excludeFromUpdates { color: #000; }

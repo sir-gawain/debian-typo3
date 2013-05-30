@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\FormProtection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Oliver Klee (typo3-coding@oliverklee.de)
+ * (c) 2010-2013 Oliver Klee (typo3-coding@oliverklee.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\FormProtection;
 require_once 'Fixtures/FormProtectionTesting.php';
 
 /**
- * Testcase for the t3lib_formprotection_Factory class.
+ * Testcase
  *
  * @author Oliver Klee <typo3-coding@oliverklee.de>
  * @author Ernesto Baschny <ernst@cron-it.de>

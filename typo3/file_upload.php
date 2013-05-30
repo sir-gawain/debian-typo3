@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,7 +33,7 @@
  */
 $BACK_PATH = '';
 require 'init.php';
-$LANG->includeLLFile('EXT:lang/locallang_misc.xml');
+$LANG->includeLLFile('EXT:lang/locallang_misc.xlf');
 /*
  * @deprecated since 6.0, the classname SC_file_upload and this file is obsolete
  * and will be removed with 6.2. The class was renamed and is now located at:

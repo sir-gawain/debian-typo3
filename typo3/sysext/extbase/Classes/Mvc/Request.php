@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,6 +27,9 @@ namespace TYPO3\CMS\Extbase\Mvc;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\ClassNamingUtility;
+
 /**
  * Represents a generic request.
  *
@@ -123,7 +126,7 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 
 	/**
 	 * @var array Errors that occured during this request
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected $errors = array();
 
@@ -191,25 +194,11 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 * @return void
 	 */
 	public function setControllerObjectName($controllerObjectName) {
-		$matches = array();
-		if (strpos($controllerObjectName, '\\') !== FALSE) {
-			if (substr($controllerObjectName, 0, 9) === 'TYPO3\CMS') {
-				$extensionName = '^(?P<vendorName>[^\\\]+\\\[^\\\]+)\\\(?P<extensionName>[^\\\]+)';
-			} else {
-				$extensionName = '^(?P<vendorName>[^\\\]+)\\\(?P<extensionName>[^\\\]+)';
-			}
-			preg_match('/' .
-				$extensionName . '\\\(Controller|(?P<subpackageKey>.+)\\\Controller)\\\(?P<controllerName>[a-z\\\]+)Controller
-				$/ix', $controllerObjectName, $matches);
-		} else {
-			preg_match('/
-				^Tx_(?P<extensionName>[^_]+)_(Controller|(?P<subpackageKey>.+)_Controller)_(?P<controllerName>[a-z_]+)Controller
-				$/ix', $controllerObjectName, $matches);
-		}
-		$this->controllerVendorName = isset($matches['vendorName']) ? $matches['vendorName'] : NULL;
-		$this->controllerExtensionName = $matches['extensionName'];
-		$this->controllerSubpackageKey = isset($matches['subpackageKey']) ? $matches['subpackageKey'] : NULL;
-		$this->controllerName = $matches['controllerName'];
+		$nameParts = ClassNamingUtility::explodeObjectControllerName($controllerObjectName);
+		$this->controllerVendorName = isset($nameParts['vendorName']) ? $nameParts['vendorName'] : NULL;
+		$this->controllerExtensionName = $nameParts['extensionName'];
+		$this->controllerSubpackageKey = isset($nameParts['subpackageKey']) ? $nameParts['subpackageKey'] : NULL;
+		$this->controllerName = $nameParts['controllerName'];
 	}
 
 	/**
@@ -327,7 +316,7 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 *
 	 * Note that the action name must start with a lower case letter and is case sensitive.
 	 *
-	 * @param string $actionName: Name of the action to execute by the controller
+	 * @param string $actionName Name of the action to execute by the controller
 	 *
 	 * @return void
 	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidActionNameException if the action name is not valid
@@ -487,7 +476,6 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 * @param string $format The desired format, something like "html", "xml", "png", "json" or the like. Can even be something like "rss.xml".
 	 *
 	 * @return void
-	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	public function setFormat($format) {
 		$this->format = $format;
@@ -497,7 +485,6 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 * Returns the requested representation format
 	 *
 	 * @return string The desired format, something like "html", "xml", "png", "json" or the like.
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function getFormat() {
@@ -510,7 +497,7 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 * @param array $errors An array of \TYPO3\CMS\Extbase\Error\Error objects
 	 *
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function setErrors(array $errors) {
 		$this->errors = $errors;
@@ -520,7 +507,7 @@ class Request implements \TYPO3\CMS\Extbase\Mvc\RequestInterface {
 	 * Get errors that occured during the request (e.g. argument mapping errors)
 	 *
 	 * @return array The errors that occured during the request
-	 * @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function getErrors() {
 		return $this->errors;

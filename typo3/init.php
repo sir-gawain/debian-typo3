@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,8 +43,6 @@
  * - extracts and defines path's
  * - includes certain libraries
  * - authenticates the user
- * - sets the configuration values (localconf.php)
- * - includes tables.php that sets more values and possibly overrides others
  * - load the groupdata for the user and set filemounts / webmounts
  *
  * For a detailed description of this script, the scope of constants and variables in it,
@@ -58,17 +56,16 @@ require 'sysext/core/Classes/Core/Bootstrap.php';
 
 \TYPO3\CMS\Core\Core\Bootstrap::getInstance()
 	->baseSetup('typo3/')
+	->redirectToInstallToolIfLocalConfigurationFileDoesNotExist('../')
 	->startOutputBuffering()
 	->loadConfigurationAndInitialize()
 	->loadTypo3LoadedExtAndExtLocalconf(TRUE)
 	->applyAdditionalConfigurationSettings()
-	->initializeTypo3DbGlobal(FALSE)
+	->initializeTypo3DbGlobal()
 	->checkLockedBackendAndRedirectOrDie()
 	->checkBackendIpOrDie()
 	->checkSslBackendAndRedirectIfNeeded()
-	->redirectToInstallToolIfDatabaseCredentialsAreMissing()
 	->checkValidBrowserOrDie()
-	->establishDatabaseConnection()
 	->loadExtensionTables(TRUE)
 	->initializeSpriteManager()
 	->initializeBackendUser()

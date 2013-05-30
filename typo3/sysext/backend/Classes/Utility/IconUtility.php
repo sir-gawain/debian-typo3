@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,7 @@ namespace TYPO3\CMS\Backend\Utility;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Contains class for icon generation in the backend
  * This library has functions that returns - and if necessary creates - the icon for an element in TYPO3
@@ -39,7 +40,7 @@ namespace TYPO3\CMS\Backend\Utility;
  * Notes:
  * These functions are strongly related to the interface of TYPO3.
  * The class is included in eg. init.php
- * ALL functions called without making a class instance, eg. "t3lib_iconWorks::getIconImage()"
+ * Static class, functions called without making a class instance.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
@@ -122,8 +123,11 @@ class IconUtility {
 	 * @param boolean $shaded If set, the icon will be grayed/shaded
 	 * @return string <img>-tag
 	 * @see getIcon()
+	 * @deprecated since TYPO3 6.1 will be removed in 7.0, should not be used anymore as only sprite icons are used since TYPO3 4.4
 	 */
 	static public function getIconImage($table, $row = array(), $backPath, $params = '', $shaded = FALSE) {
+		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
+
 		$str = '<img' . self::skinImg($backPath, self::getIcon($table, $row, $shaded), 'width="18" height="16"') . (trim($params) ? ' ' . trim($params) : '');
 		if (!stristr($str, 'alt="')) {
 			$str .= ' alt=""';
@@ -336,7 +340,7 @@ class IconUtility {
 		if (preg_match('/(.*)_i(\\....)$/', $srcBasename, $matches)) {
 			$temp_path = dirname(PATH_thisScript) . '/';
 			if (!@is_file(($temp_path . $backPath . $src))) {
-				$srcOrg = preg_replace('/_i' . preg_quote($matches[2]) . '$/', $matches[2], $src);
+				$srcOrg = preg_replace('/_i' . preg_quote($matches[2], '/') . '$/', $matches[2], $src);
 				$src = self::makeIcon($backPath . $srcOrg, 'disabled', 0, FALSE, $temp_path . $backPath . $srcOrg, $srcBasename);
 			}
 		}
@@ -480,7 +484,8 @@ class IconUtility {
 	/**
 	 * The necessity of using this function for combining two images if GD is version 2 is that
 	 * GD2 cannot manage to combine two indexed-color images without totally spoiling everything.
-	 * In class.t3lib_stdgraphic this was solved by combining the images onto a first created true color image
+	 * In class \TYPO3\CMS\Core\Imaging\GraphicalFunctions this was solved by combining the images
+	 * onto a first created true color image.
 	 * However it has turned out that this method will not work if the indexed png-files contains transparency.
 	 * So I had to turn my attention to ImageMagick - my 'enemy of death'.
 	 * And so it happend - ImageMagick is now used to combine my two indexed-color images with transparency. And that works.
@@ -499,19 +504,19 @@ class IconUtility {
 	 * @param integer $sourceHeight Source height
 	 * @return void
 	 * @access private
-	 * @see t3lib_stdGraphic::imagecopyresized()
+	 * @see \TYPO3\CMS\Core\Imaging\GraphicalFunctions::imagecopyresized()
 	 */
 	static public function imagecopyresized(&$destinationImage, $sourceImage, $destinationX, $destinationY, $sourceX, $sourceY, $destinationWidth, $destinationHeight, $sourceWidth, $sourceHeight) {
 		imagecopyresized($destinationImage, $sourceImage, $destinationX, $destinationY, $sourceX, $sourceY, $destinationWidth, $destinationHeight, $sourceWidth, $sourceHeight);
 	}
 
 	/**
-	 * Create new image pointer from input file (either gif/png, in case the wrong format it is converted by t3lib_div::read_png_gif())
+	 * Create new image pointer from input file (either gif/png, in case the wrong format it is converted by \TYPO3\CMS\Core\Utility\GeneralUtility::read_png_gif())
 	 *
 	 * @param string $file Absolute filename of the image file from which to start the icon creation.
 	 * @return mixed If success, image pointer, otherwise "-1
 	 * @access private
-	 * @see t3lib_div::read_png_gif
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::read_png_gif
 	 */
 	static public function imagecreatefrom($file) {
 		$file = \TYPO3\CMS\Core\Utility\GeneralUtility::read_png_gif($file, $GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png']);
@@ -551,13 +556,13 @@ class IconUtility {
 	 * There are three ways to use this API:
 	 *
 	 * 1) for any given TCA record
-	 *	$spriteIconHtml = t3lib_iconWorks::getSpriteIconForRecord('pages', $row);
+	 *	$spriteIconHtml = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord('pages', $row);
 	 *
 	 * 2) for any given file
-	 *	$spriteIconHtml = t3lib_iconWorks::getSpriteIconForFile('myimage.png');
+	 *	$spriteIconHtml = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForFile('myimage.png');
 	 *
 	 * 3) for any other icon you know the name
-	 *	$spriteIconHtml = t3lib_iconWorks::getSpriteIcon('actions-document-open');
+	 *	$spriteIconHtml = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open');
 	 *
 	 **********************************************/
 	/**
@@ -621,7 +626,7 @@ class IconUtility {
 	 * usually called from getSpriteIconForFile or ExtJs Provider
 	 *
 	 * @param string $fileExtension FileExtension can be jpg, gif etc, but also be 'mount' or 'folder', but can also be a full path which will be resolved then
-	 * @return string The string of the CSS class, see t3lib_iconworks::$fileSpriteIconNames
+	 * @return string The string of the CSS class, see \TYPO3\CMS\Backend\Utility\IconUtility::$fileSpriteIconNames
 	 * @access private
 	 */
 	static public function mapFileExtensionToSpriteIconClass($fileExtension) {
@@ -633,7 +638,7 @@ class IconUtility {
 	 * usually called from mapFileExtensionToSpriteIconClass and tceforms
 	 *
 	 * @param string $fileExtension FileExtension can be jpg, gif etc, but also be 'mount' or 'folder', but can also be a full path which will be resolved then
-	 * @return string The string of the CSS class, see t3lib_iconworks::$fileSpriteIconNames
+	 * @return string The string of the CSS class, see \TYPO3\CMS\Backend\Utility\IconUtility::$fileSpriteIconNames
 	 * @access private
 	 */
 	static public function mapFileExtensionToSpriteIconName($fileExtension) {
@@ -705,7 +710,7 @@ class IconUtility {
 	 * statuses, used for overlays.
 	 * You should not use this directly besides if you need classes for ExtJS iconCls.
 	 *
-	 * see t3lib/stddb/tables.php for an example with the TCA table "pages"
+	 * see ext:core/Configuration/TCA/pages.php for an example with the TCA table "pages"
 	 *
 	 * @param string $table The TCA table
 	 * @param array	$row The selected record
@@ -727,7 +732,7 @@ class IconUtility {
 	 * statuses, used for overlays.
 	 * You should not use this directly besides if you need it in tceforms/core classes
 	 *
-	 * see t3lib/stddb/tables.php for an example with the TCA table "pages"
+	 * see ext:core/Configuration/TCA/pages.php for an example with the TCA table "pages"
 	 *
 	 * @param string $tableThe TCA table
 	 * @param array $row The selected record
@@ -810,7 +815,7 @@ class IconUtility {
 	 * We wanted to not have these icons blown over by tons of overlays, so this is limited
 	 * to just one.
 	 *
-	 * see t3lib/stddb/DefaultSettings for the default options, you will find
+	 * see ext:core/Configuration/DefaultConfiguration.php for the default options, you will find
 	 * $GLOBALS['TYPO3_CONF_VARS']['BE']['spriteIconRecordOverlayNames'] that shows
 	 * the list of CSS classes that will be used for the sprites, mapped to the statuses here
 	 *

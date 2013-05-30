@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tree;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
+ *  (c) 2010-2013 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -60,7 +60,7 @@ class TreeNodeCollection extends \ArrayObject {
 	/**
 	 * Compares a node with another one
 	 *
-	 * @see t3lib_tree_Node::compareTo
+	 * @see \TYPO3\CMS\Backend\Tree\TreeNode::compareTo
 	 * @return void
 	 * @noapi
 	 */

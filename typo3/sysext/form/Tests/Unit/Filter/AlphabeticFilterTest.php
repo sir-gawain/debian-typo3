@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Tests\Unit\Filter;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Andreas Lappe <a.lappe@kuehlhaus.com>, kuehlhaus AG
+ *  (c) 2012-2013 Andreas Lappe <a.lappe@kuehlhaus.com>, kuehlhaus AG
  *
  *  All rights reserved
  *
@@ -24,12 +24,13 @@ namespace TYPO3\CMS\Form\Tests\Unit\Filter;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Testcase for AlphabeticFilter
+ * Test case
  *
  * @author Andreas Lappe <a.lappe@kuehlhaus.com>
  */
-class AlphabeticFilterTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
+class AlphabeticFilterTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @var \TYPO3\CMS\Form\Filter\AlphabeticFilter

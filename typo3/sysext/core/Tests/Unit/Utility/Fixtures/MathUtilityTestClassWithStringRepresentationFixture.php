@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility\Fixtures;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Philipp Gampe (forge.typo3.org@philippgampe.info)
+ *  (c) 2012-2013 Philipp Gampe (forge.typo3.org@philippgampe.info)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,10 +28,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility\Fixtures;
  ***************************************************************/
 
 /**
- * Class t3lib_utility_math_fixture_classWithStringRepresentation.
- *
- * This is a fixture subclass for t3lib_utility_math
- *
+ * This is a fixture subclass for \TYPO3\CMS\Core\Utility\MathUtility
  */
 class MathUtilityTestClassWithStringRepresentationFixture {
 

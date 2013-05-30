@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\DomainObject;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -261,9 +262,10 @@ abstract class AbstractDomainObject implements \TYPO3\CMS\Extbase\DomainObject\D
 	 * @return boolean
 	 */
 	public function _isDirty($propertyName = NULL) {
-		if ($this->uid !== NULL && is_array($this->_cleanProperties) && $this->uid != $this->_getCleanProperty('uid')) {
+		if ($this->uid !== NULL && $this->_getCleanProperty('uid') !== NULL && $this->uid != $this->_getCleanProperty('uid')) {
 			throw new \TYPO3\CMS\Extbase\Persistence\Generic\Exception\TooDirtyException('The uid "' . $this->uid . '" has been modified, that is simply too much.', 1222871239);
 		}
+
 		if ($propertyName === NULL) {
 			foreach ($this->_getCleanProperties() as $propertyName => $cleanPropertyValue) {
 				if ($this->isPropertyDirty($cleanPropertyValue, $this->{$propertyName}) === TRUE) {

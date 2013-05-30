@@ -4,7 +4,7 @@ namespace TYPO3\CMS\WizardCrpages\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -80,7 +80,7 @@ class CreatePagesWizardModuleFunctionController extends \TYPO3\CMS\Backend\Modul
 	 * @todo Define visibility
 	 */
 	public function main() {
-		global $SOBE, $LANG;
+		$GLOBALS['LANG']->includeLLFile('EXT:wizard_crpages/locallang.xlf');
 		$theCode = '';
 		$this->tsConfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig($this->pObj->id);
 		$this->pagesTsConfig = isset($this->tsConfig['TCEFORM.']['pages.']) ? $this->tsConfig['TCEFORM.']['pages.'] : array();
@@ -147,17 +147,17 @@ class CreatePagesWizardModuleFunctionController extends \TYPO3\CMS\Backend\Modul
 						$lines[] = '<nobr>' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord('pages', $rec, array('title' => \TYPO3\CMS\Backend\Utility\BackendUtility::titleAttribForPages($rec, '', FALSE))) . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($rec['title'], $GLOBALS['BE_USER']->uc['titleLen'])) . '</nobr>';
 					}
 				}
-				$theCode .= '<h4>' . $LANG->getLL('wiz_newPages_currentMenu') . '</h4>' . implode('<br />', $lines);
+				$theCode .= '<h4>' . $GLOBALS['LANG']->getLL('wiz_newPages_currentMenu') . '</h4>' . implode('<br />', $lines);
 			} else {
 				// Display create form
 				$lines = array();
 				for ($a = 0; $a < 9; $a++) {
 					$lines[] = $this->getFormLine($a);
 				}
-				$theCode .= '<h4>' . $LANG->getLL('wiz_newPages') . ':</h4>' . '<div id="formFieldContainer">' . implode('', $lines) . '</div>' . '<br class="clearLeft" />' . '<input type="button" id="createNewFormFields" value="' . $LANG->getLL('wiz_newPages_addMoreLines') . '" />' . '<br /><br />
-				<input type="checkbox" name="createInListEnd" id="createInListEnd" value="1" /> <label for="createInListEnd">' . $LANG->getLL('wiz_newPages_listEnd') . '</label><br />
-				<input type="checkbox" name="hidePages" id="hidePages" value="1" /> <label for="hidePages">' . $LANG->getLL('wiz_newPages_hidePages') . '</label><br /><br />
-				<input type="submit" name="create" value="' . $LANG->getLL('wiz_newPages_lCreate') . '" />&nbsp;<input type="reset" value="' . $LANG->getLL('wiz_newPages_lReset') . '" /><br />';
+				$theCode .= '<h4>' . $GLOBALS['LANG']->getLL('wiz_newPages') . ':</h4>' . '<div id="formFieldContainer">' . implode('', $lines) . '</div>' . '<br class="clearLeft" />' . '<input type="button" id="createNewFormFields" value="' . $GLOBALS['LANG']->getLL('wiz_newPages_addMoreLines') . '" />' . '<br /><br />
+				<input type="checkbox" name="createInListEnd" id="createInListEnd" value="1" /> <label for="createInListEnd">' . $GLOBALS['LANG']->getLL('wiz_newPages_listEnd') . '</label><br />
+				<input type="checkbox" name="hidePages" id="hidePages" value="1" /> <label for="hidePages">' . $GLOBALS['LANG']->getLL('wiz_newPages_hidePages') . '</label><br /><br />
+				<input type="submit" name="create" value="' . $GLOBALS['LANG']->getLL('wiz_newPages_lCreate') . '" />&nbsp;<input type="reset" value="' . $GLOBALS['LANG']->getLL('wiz_newPages_lReset') . '" /><br />';
 				// Add ExtJS inline code
 				$extCode = '
 					var tpl = "' . addslashes(str_replace(array(LF, TAB), array('', ''), $this->getFormLine('#'))) . '", i, line, div, bg, label;
@@ -173,7 +173,7 @@ class CreatePagesWizardModuleFunctionController extends \TYPO3\CMS\Backend\Modul
 						lineCounter += 5;
 					});
 				';
-				/** @var t3lib_pageRenderer * */
+				/** @var \TYPO3\CMS\Core\Page\PageRenderer */
 				$pageRenderer = $GLOBALS['TBE_TEMPLATE']->getPageRenderer();
 				$pageRenderer->loadExtJS();
 				$pageRenderer->addExtOnReadyCode($extCode);
@@ -186,11 +186,11 @@ class CreatePagesWizardModuleFunctionController extends \TYPO3\CMS\Backend\Modul
 				');
 			}
 		} else {
-			$theCode .= $GLOBALS['TBE_TEMPLATE']->rfw($LANG->getLL('wiz_newPages_errorMsg1'));
+			$theCode .= $GLOBALS['TBE_TEMPLATE']->rfw($GLOBALS['LANG']->getLL('wiz_newPages_errorMsg1'));
 		}
 		// CSH
 		$theCode .= \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('_MOD_web_func', 'tx_wizardcrpages', $GLOBALS['BACK_PATH'], '<br />|');
-		$out = $this->pObj->doc->header($LANG->getLL('wiz_crMany'));
+		$out = $this->pObj->doc->header($GLOBALS['LANG']->getLL('wiz_crMany'));
 		$out .= $this->pObj->doc->section('', $theCode, 0, 1);
 		return $out;
 	}
@@ -229,7 +229,7 @@ class CreatePagesWizardModuleFunctionController extends \TYPO3\CMS\Backend\Modul
 		// Lorem ipsum link, if available
 		$content .= is_object($this->loremIpsumObject) ? '<a href="#" onclick="' . htmlspecialchars($this->loremIpsumObject->getHeaderTitleJS(('document.forms[0][\'data[pages][NEW' . $index . '][title]\'].value'), 'title')) . '">' . $this->loremIpsumObject->getIcon('', $this->pObj->doc->backPath) . '</a>' : '';
 		// type selector
-		$content .= '<span>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.php:LGL.type') . '</span>';
+		$content .= '<span>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.type') . '</span>';
 		$content .= '<select onchange="this.style.backgroundImage=this.options[this.selectedIndex].style.backgroundImage;if (this.options[this.selectedIndex].value==\'--div--\') {this.selectedIndex=1;}" ';
 		$content .= 'class="select icon-select" name="data[pages][NEW' . $index . '][doktype]" style="background: url(&quot;' . $backPath . 'sysext/t3skin/icons/gfx/i/pages.gif&quot;) no-repeat scroll 0% 50% rgb(255, 255, 255); padding: 1px 1px 1px 24px;">';
 		// dokType
@@ -276,6 +276,5 @@ class CreatePagesWizardModuleFunctionController extends \TYPO3\CMS\Backend\Modul
 	}
 
 }
-
 
 ?>

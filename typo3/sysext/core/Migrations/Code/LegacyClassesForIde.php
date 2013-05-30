@@ -9,11 +9,6 @@ class Tx_About_Controller_AboutController extends \TYPO3\CMS\About\Controller\Ab
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-interface tx_about_customSections extends \TYPO3\CMS\About\CustomSectionsInterface {}
-
-/**
- * @deprecated since 6.0 will be removed in 7.0
- */
 class Tx_About_Domain_Model_Extension extends \TYPO3\CMS\About\Domain\Model\Extension {}
 
 /**
@@ -30,11 +25,6 @@ class Tx_About_ViewHelpers_SkinImageViewHelper extends \TYPO3\CMS\About\ViewHelp
  * @deprecated since 6.0 will be removed in 7.0
  */
 class Tx_Aboutmodules_Controller_ModulesController extends \TYPO3\CMS\Aboutmodules\Controller\ModulesController {}
-
-/**
- * @deprecated since 6.0 will be removed in 7.0
- */
-class tx_aboutmodules_Functions extends \TYPO3\CMS\Aboutmodules\Utility\FunctionsUtility {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -90,6 +80,11 @@ abstract class t3lib_contextmenu_AbstractDataProvider extends \TYPO3\CMS\Backend
  * @deprecated since 6.0 will be removed in 7.0
  */
 class t3lib_contextmenu_Action extends \TYPO3\CMS\Backend\ContextMenu\ContextMenuAction {}
+
+/**
+ * @deprecated since 6.0 will be removed in 7.0
+ */
+class t3lib_formmail extends \TYPO3\CMS\Frontend\Controller\DataSubmissionController {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -1485,11 +1480,6 @@ class tx_dbal_module1 extends \TYPO3\CMS\Dbal\Controller\ModuleController {}
  * @deprecated since 6.0 will be removed in 7.0
  */
 class tx_dbal_tsparserext extends \TYPO3\CMS\Dbal\ExtensionManager\MessageDisplay {}
-
-/**
- * @deprecated since 6.0 will be removed in 7.0
- */
-class tx_dbal_em extends \TYPO3\CMS\Dbal\Hooks\ExtensionManagerHooks {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -4894,7 +4884,7 @@ class tx_form_View_Wizard_Wizard extends \TYPO3\CMS\Form\View\Wizard\WizardView 
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-class tslib_feUserAuth extends \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthtenication {}
+class tslib_feUserAuth extends \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -5064,12 +5054,12 @@ class tslib_gmenu extends \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuCo
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-class tslib_gmenu_foldout extends \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuFoldout {}
+class tslib_gmenu_foldout extends \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuFoldoutContentObject {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-class tslib_gmenu_layers extends \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuLayers {}
+class tslib_gmenu_layers extends \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuLayersContentObject {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -5089,7 +5079,7 @@ class tslib_tmenu extends \TYPO3\CMS\Frontend\ContentObject\Menu\TextMenuContent
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-class tslib_tmenu_layers extends \TYPO3\CMS\Frontend\ContentObject\Menu\TextMenuLayers {}
+class tslib_tmenu_layers extends \TYPO3\CMS\Frontend\ContentObject\Menu\TextMenuLayersContentObject {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -5139,7 +5129,7 @@ class tslib_content_SearchResult extends \TYPO3\CMS\Frontend\ContentObject\Searc
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-class tslib_content_ShockwaveFlashObject extends \TYPO3\CMS\Frontend\ContentObject\ShockwaveFlashContentObject {}
+class tslib_content_ShockwaveFlashObject extends \TYPO3\CMS\Frontend\ContentObject\ShockwaveFlashObjectContentObject {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -5495,11 +5485,6 @@ class tx_coreupdates_migrateworkspaces extends \TYPO3\CMS\Install\CoreUpdates\Mi
  * @deprecated since 6.0 will be removed in 7.0
  */
 class tx_coreupdates_notinmenu extends \TYPO3\CMS\Install\CoreUpdates\NotInMenuUpdate {}
-
-/**
- * @deprecated since 6.0 will be removed in 7.0
- */
-class tx_coreupdates_statictemplates extends \TYPO3\CMS\Install\CoreUpdates\StaticTemplatesUpdate {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0
@@ -6369,11 +6354,6 @@ class SC_mod_user_setup_index extends \TYPO3\CMS\Setup\Controller\SetupModuleCon
 /**
  * @deprecated since 6.0 will be removed in 7.0
  */
-class tx_statictemplates extends \TYPO3\CMS\Statictemplates\StaticTemplatesHook {}
-
-/**
- * @deprecated since 6.0 will be removed in 7.0
- */
 abstract class tx_sv_authbase extends \TYPO3\CMS\Sv\AbstractAuthenticationService {}
 
 /**
@@ -6485,11 +6465,6 @@ class tx_tstemplateobjbrowser extends \TYPO3\CMS\TstemplateObjbrowser\Controller
  * @deprecated since 6.0 will be removed in 7.0
  */
 class tx_version_cm1 extends \TYPO3\CMS\Version\Controller\VersionModuleController {}
-
-/**
- * @deprecated since 6.0 will be removed in 7.0
- */
-class SC_mod_user_ws_index extends \TYPO3\CMS\Version\Controller\WorkspaceModuleController {}
 
 /**
  * @deprecated since 6.0 will be removed in 7.0

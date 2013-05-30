@@ -1,21 +1,4 @@
 config.tx_extbase {
-	objects {
-		TYPO3\CMS\Extbase\Persistence\QueryInterface {
-			className = TYPO3\CMS\Extbase\Persistence\Generic\Query
-		}
-		TYPO3\CMS\Extbase\Persistence\QueryResultInterface {
-			className = TYPO3\CMS\Extbase\Persistence\Generic\QueryResult
-		}
-		TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface {
-			className = TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager
-		}
-		TYPO3\CMS\Extbase\Persistence\Generic\Storage\BackendInterface {
-			className = TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo3DbBackend
-		}
-		TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface {
-			className = TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings
-		}
-	}
 	mvc {
 		requestHandlers {
 			TYPO3\CMS\Extbase\Mvc\Web\FrontendRequestHandler = TYPO3\CMS\Extbase\Mvc\Web\FrontendRequestHandler
@@ -36,6 +19,16 @@ config.tx_extbase {
 						path.mapOnProperty = path
 						base.mapOnProperty = isAbsolutePath
 					}
+				}
+			}
+			TYPO3\CMS\Extbase\Domain\Model\FileReference {
+				mapping {
+					tableName = sys_file_reference
+				}
+			}
+			TYPO3\CMS\Extbase\Domain\Model\File {
+				mapping {
+					tableName = sys_file
 				}
 			}
 			TYPO3\CMS\Extbase\Domain\Model\BackendUser {
@@ -77,7 +70,6 @@ config.tx_extbase {
 			TYPO3\CMS\Extbase\Domain\Model\FrontendUser {
 				mapping {
 					tableName = fe_users
-					recordType = TYPO3\CMS\Extbase\Domain\Model\FrontendUser
 					columns {
 						lockToDomain.mapOnProperty = lockToDomain
 					}
@@ -86,7 +78,6 @@ config.tx_extbase {
 			TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup {
 				mapping {
 					tableName = fe_groups
-					recordType = TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup
 					columns {
 						lockToDomain.mapOnProperty = lockToDomain
 					}
@@ -101,10 +92,13 @@ config.tx_extbase {
 	}
 	features {
 		 # this enables/disables the reworked property mapper (see http://forge.typo3.org/projects/typo3v4-mvc/wiki/PropertyMapper_rework)
-		rewrittenPropertyMapper = 0
+		rewrittenPropertyMapper = 1
 		 # if enabled, default controller and/or action is skipped when creating URIs through the URI Builder (see http://forge.typo3.org/projects/typo3v4-mvc/wiki/Skip_default_arguments_in_URIs)
 		skipDefaultArguments = 0
 		# if set to 1, the enable fields are ignored in BE context
 		ignoreAllEnableFieldsInBe = 0
+	}
+	legacy {
+		enableLegacyFlashMessageHandling = 1
 	}
 }

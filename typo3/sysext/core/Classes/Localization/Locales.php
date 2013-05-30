@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Localization;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Xavier Perseguers <typo3@perseguers.ch>
+ *  (c) 2011-2013 Xavier Perseguers <typo3@perseguers.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,10 +31,10 @@ namespace TYPO3\CMS\Core\Localization;
  *
  * Defining backend system languages
  * When adding new keys, remember to:
- * - Add character encoding for lang. key in t3lib/class.t3lib_cs.php
+ * - Add character encoding for lang. key in \TYPO3\CMS\Core\Charset\CharsetConverter
  * (default for new languages is "utf-8")
- * - Add mappings for language in t3lib/class.t3lib_cs.php (TYPO3/ISO,
- * language/script, script/charset)
+ * - Add mappings for language in \TYPO3\CMS\Core\Charset\CharsetConverter
+ * (TYPO3/ISO, language/script, script/charset)
  * - Update 'setup' extension labels (sysext/setup/mod/locallang.xlf)
  * That's it!
  *
@@ -101,14 +101,6 @@ class Locales implements \TYPO3\CMS\Core\SingletonInterface {
 		'vi' => 'Vietnamese',
 		'zh' => 'Chinese (Trad.)'
 	);
-
-	/**
-	 * Supported TYPO3 locales
-	 *
-	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 6.0
-	 * @var array
-	 */
-	protected $locales = array();
 
 	/**
 	 * Mapping with codes used by TYPO3 4.5 and below
@@ -195,10 +187,6 @@ class Locales implements \TYPO3\CMS\Core\SingletonInterface {
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['localization']['locales']['dependencies']) && is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['localization']['locales']['dependencies'])) {
 			$instance->localeDependencies = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($instance->localeDependencies, $GLOBALS['TYPO3_CONF_VARS']['SYS']['localization']['locales']['dependencies']);
 		}
-		/** @deprecated since TYPO3 4.6, will be removed in TYPO3 6.0 */
-		$instance->locales = array_keys($instance->languages);
-		/** @deprecated since TYPO3 4.6, will be removed in TYPO3 6.0 */
-		define('TYPO3_languages', implode('|', $instance->getLocales()));
 	}
 
 	/**

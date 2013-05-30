@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\ViewHelpers\Form;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Belog\ViewHelpers\Form;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Extends the usual select view helper, but additionally translates
  * the select option labels
@@ -55,7 +56,7 @@ class TranslateLabelSelectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\S
 	 * Extend the default handling by iterating over calculated options array and
 	 * try to translate the value
 	 *
-	 * @return array an associative array of options, key will be the value of the option tag
+	 * @return array An associative array of options, key will be the value of the option tag
 	 */
 	protected function getOptions() {
 		$options = parent::getOptions();
@@ -81,6 +82,5 @@ class TranslateLabelSelectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Form\S
 	}
 
 }
-
 
 ?>

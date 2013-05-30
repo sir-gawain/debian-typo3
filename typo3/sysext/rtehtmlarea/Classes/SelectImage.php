@@ -1,6 +1,33 @@
 <?php
 namespace TYPO3\CMS\Rtehtmlarea;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasper@typo3.com)
+ *  (c) 2004-2013 Stanislas Rolland <typo3(arobas)jbr.ca>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class
  *
@@ -46,12 +73,10 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 
 	protected $imgObj;
 
-	// Instance object of t3lib_stdGraphic
 	/**
 	 * Initialisation
 	 *
-	 * @return 	void
-	 * @todo Define visibility
+	 * @return void
 	 */
 	public function init() {
 		$this->initVariables();
@@ -123,7 +148,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 	}
 
 	/**
-	 * Initialize hook objects implementing interface t3lib_browseLinksHook
+	 * Initialize hook objects implementing the hook interface
 	 *
 	 * @return 	void
 	 */
@@ -970,7 +995,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 	/**
 	 * Render list of files.
 	 *
-	 * @param 	array		List of files. See t3lib_div::getFilesInDir
+	 * @param 	array		List of files. See \TYPO3\CMS\Core\Utility\GeneralUtility::getFilesInDir
 	 * @param 	string		If set a header with a folder icon and folder name are shown
 	 * @param 	boolean		Whether to show thumbnails or not. If set, no thumbnails are shown.
 	 * @return 	string		HTML output

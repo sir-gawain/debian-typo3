@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Backend\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
- *  (c) 2007-2011 Kraft Bernhard (kraftb@kraftb.at)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2007-2013 Kraft Bernhard (kraftb@kraftb.at)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -47,7 +47,6 @@ class TsConfigParser extends \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser 
 	 * @param integer $id The uid of the page being handled
 	 * @param array $rootLine The rootline of the page being handled
 	 * @return array Array containing the parsed TSConfig and a flag whether the content was retrieved from cache
-	 * @see t3lib_TSparser
 	 */
 	public function parseTSconfig($TStext, $type, $id = 0, array $rootLine = array()) {
 		$this->type = $type;

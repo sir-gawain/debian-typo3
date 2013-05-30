@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Version\Hook;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
- *  (c) 2010-2011 Benjamin Mack (benni@typo3.org)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2010-2013 Benjamin Mack (benni@typo3.org)
  *
  *  All rights reserved
  *
@@ -90,6 +90,7 @@ class DataHandlerHook {
 			$commandIsProcessed = TRUE;
 			$action = (string) $value['action'];
 			$comment = (isset($value['comment']) && $value['comment'] ? $value['comment'] : $this->generalComment);
+			$notificationAlternativeRecipients = (isset($value['notificationAlternativeRecipients'])) && is_array($value['notificationAlternativeRecipients']) ? $value['notificationAlternativeRecipients'] : array();
 			switch ($action) {
 			case 'new':
 				// check if page / branch versioning is needed,
@@ -109,7 +110,7 @@ class DataHandlerHook {
 						$tcemainObj,
 						$comment,
 						TRUE,
-						$value['notificationAlternativeRecipients']
+						$notificationAlternativeRecipients
 					);
 				break;
 			case 'clearWSID':
@@ -125,7 +126,7 @@ class DataHandlerHook {
 							$comment,
 							TRUE,
 							$tcemainObj,
-							$value['notificationAlternativeRecipients']
+							$notificationAlternativeRecipients
 						);
 				}
 				break;
@@ -263,8 +264,8 @@ class DataHandlerHook {
 	}
 
 	/**
-	 * hook for t3lib_TCEmain::moveRecord that cares about moving records that
-	 * are *not* in the live workspace
+	 * Hook for \TYPO3\CMS\Core\DataHandling\DataHandler::moveRecord that cares about
+	 * moving records that are *not* in the live workspace
 	 *
 	 * @param string $table the table of the record
 	 * @param integer $id the ID of the record
@@ -332,7 +333,7 @@ class DataHandlerHook {
 	/**
 	 * Send an email notification to users in workspace
 	 *
-	 * @param array $stat Workspace access array (from t3lib_userauthgroup::checkWorkspace())
+	 * @param array $stat Workspace access array from \TYPO3\CMS\Core\Authentication\BackendUserAuthentication::checkWorkspace()
 	 * @param integer $stageId New Stage number: 0 = editing, 1= just ready for review, 10 = ready for publication, -1 = rejected!
 	 * @param string $table Table name of element (or list of element names if $id is zero)
 	 * @param integer $id Record uid of element (if zero, then $table is used as reference to element(s) alone)
@@ -480,7 +481,6 @@ class DataHandlerHook {
 				}
 				// send an email to each individual user, to ensure the
 				// multilanguage version of the email
-				$emailHeaders = $emailConfig['additionalHeaders'];
 				$emailRecipients = array();
 				// an array of language objects that are needed
 				// for emails with different languages
@@ -517,10 +517,21 @@ class DataHandlerHook {
 							$emailMessage = $languageObject->sL($emailMessage);
 						}
 					}
-					$emailSubject = \t3lib_parseHtml::substituteMarkerArray($emailSubject, $markers, '', TRUE, TRUE);
-					$emailMessage = \t3lib_parseHtml::substituteMarkerArray($emailMessage, $markers, '', TRUE, TRUE);
+					$emailSubject = \TYPO3\CMS\Core\Html\HtmlParser::substituteMarkerArray($emailSubject, $markers, '', TRUE, TRUE);
+					$emailMessage = \TYPO3\CMS\Core\Html\HtmlParser::substituteMarkerArray($emailMessage, $markers, '', TRUE, TRUE);
 					// Send an email to the recipient
-					\TYPO3\CMS\Core\Utility\GeneralUtility::plainMailEncoded($recipientData['email'], $emailSubject, $emailMessage, $emailHeaders);
+					/** @var $mail \TYPO3\CMS\Core\Mail\MailMessage */
+					$mail = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Mail\\MailMessage');
+					if (!empty($recipientData['realName'])) {
+						$recipient = array($recipientData['email'] => $recipientData['realName']);
+					} else {
+						$recipient = $recipientData['email'];
+					}
+					$mail->setTo($recipient)
+						->setSubject($emailSubject)
+						->setFrom(\TYPO3\CMS\Core\Utility\MailUtility::getSystemFrom())
+						->setBody($emailMessage);
+					$mail->send();
 				}
 				$emailRecipients = implode(',', $emailRecipients);
 				$tcemainObj->newlog2('Notification email for stage change was sent to "' . $emailRecipients . '"', $table, $id);
@@ -634,7 +645,7 @@ class DataHandlerHook {
 			// Remove the possible inline child tables from the tables to be versioniozed automatically:
 			$verTablesArray = array_diff($verTablesArray, $this->getPossibleInlineChildTablesOfParentTable('pages'));
 			// Begin to copy pages if we're allowed to:
-			if ($tcemainObj->BE_USER->workspaceVersioningTypeAccess($versionizeTree)) {
+			if ($versionizeTree === -1) {
 				// Versionize this page:
 				$theNewRootID = $tcemainObj->versionizeRecord('pages', $uid, $label, FALSE, $versionizeTree);
 				if ($theNewRootID) {
@@ -737,7 +748,7 @@ class DataHandlerHook {
 										// In case of swapping and the offline record has a state
 										// (like 2 or 4 for deleting or move-pointer) we set the
 										// current workspace ID so the record is not deselected
-										// in the interface by t3lib_BEfunc::versioningPlaceholderClause()
+										// in the interface by \TYPO3\CMS\Backend\Utility\BackendUtility::versioningPlaceholderClause()
 										$swapVersion['t3ver_wsid'] = 0;
 										if ($swapIntoWS) {
 											if ($t3ver_state['swapVersion'] > 0) {
@@ -1124,7 +1135,7 @@ class DataHandlerHook {
 			while (FALSE !== ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res))) {
 				$pageIdList[] = $row[0];
 				// Find ws version
-				// Note: cannot use t3lib_BEfunc::getRecordWSOL()
+				// Note: cannot use \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL()
 				// here because it does not accept workspace id!
 				$rec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('pages', $row[0]);
 				\TYPO3\CMS\Backend\Utility\BackendUtility::workspaceOL('pages', $rec, $workspaceId);
@@ -1244,7 +1255,6 @@ class DataHandlerHook {
 	 * @return array
 	 */
 	protected function getPossibleInlineChildTablesOfParentTable($parentTable, array $possibleInlineChildren = array()) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($parentTable);
 		foreach ($GLOBALS['TCA'][$parentTable]['columns'] as $parentField => $parentFieldDefinition) {
 			if (isset($parentFieldDefinition['config']['type'])) {
 				$parentFieldConfiguration = $parentFieldDefinition['config'];
@@ -1262,7 +1272,7 @@ class DataHandlerHook {
 	 * Gets an instance of the command map helper.
 	 *
 	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tceMain TCEmain object
-	 * @param array $commandMap The command map as submitted to t3lib_TCEmain
+	 * @param array $commandMap The command map as submitted to \TYPO3\CMS\Core\DataHandling\DataHandler
 	 * @return \TYPO3\CMS\Version\DataHandler\CommandMap
 	 */
 	public function getCommandMap(\TYPO3\CMS\Core\DataHandling\DataHandler $tceMain, array $commandMap) {
@@ -1277,7 +1287,6 @@ class DataHandlerHook {
 	 */
 	protected function getUniqueFields($table) {
 		$listArr = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if ($GLOBALS['TCA'][$table]['columns']) {
 			foreach ($GLOBALS['TCA'][$table]['columns'] as $field => $configArr) {
 				if ($configArr['config']['type'] === 'input') {

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Belog\Domain\Repository;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Find system history entries
  *
@@ -40,12 +41,11 @@ class HistoryEntryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	 */
 	public function initializeObject() {
 		/** @var $querySettings \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface */
-		$querySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+		$querySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
 		$querySettings->setRespectStoragePage(FALSE);
 		$this->setDefaultQuerySettings($querySettings);
 	}
 
 }
-
 
 ?>

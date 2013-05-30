@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\Form;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -10,7 +10,8 @@ namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\Form;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
-require_once dirname(__FILE__) . '/FormFieldViewHelperBaseTestcase.php';
+
+require_once(__DIR__ . '/FormFieldViewHelperBaseTestcase.php');
 
 /**
  * Test for the "Submit" Form view helper
@@ -18,7 +19,7 @@ require_once dirname(__FILE__) . '/FormFieldViewHelperBaseTestcase.php';
 class SubmitViewHelperTest extends \TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\Form\FormFieldViewHelperBaseTestcase {
 
 	/**
-	 * @var Tx_Fluid_ViewHelpers_Form_ubmitViewHelper
+	 * @var \TYPO3\CMS\Fluid\ViewHelpers\Form\ubmitViewHelper
 	 */
 	protected $viewHelper;
 
@@ -37,7 +38,9 @@ class SubmitViewHelperTest extends \TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers\Form\
 		$mockTagBuilder = $this->getMock('TYPO3\\CMS\\Fluid\\Core\\ViewHelper\\TagBuilder', array('setTagName', 'addAttribute'));
 		$mockTagBuilder->expects($this->once())->method('setTagName')->with('input');
 		$mockTagBuilder->expects($this->at(1))->method('addAttribute')->with('type', 'submit');
+
 		$this->viewHelper->injectTagBuilder($mockTagBuilder);
+
 		$this->viewHelper->initialize();
 		$this->viewHelper->render();
 	}

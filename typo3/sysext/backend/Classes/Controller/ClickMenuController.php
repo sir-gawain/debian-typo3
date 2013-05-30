@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class for the Context Sensitive Menu in TYPO3 (rendered in top frame, normally writing content dynamically to list frames).
  *
@@ -41,9 +67,10 @@ class ClickMenuController {
 	 */
 	public $doc;
 
-	// Files to include_once() - set in init() function
 	/**
-	 * @todo Define visibility
+	 * Files to include_once() - set in init() function
+	 *
+	 * @deprecated since 6.1, will be removed 2 versions later
 	 */
 	public $include_once = array();
 
@@ -76,9 +103,13 @@ class ClickMenuController {
 		// Setting internal array of classes for extending the clickmenu:
 		$this->extClassArray = $GLOBALS['TBE_MODULES_EXT']['xMOD_alt_clickmenu']['extendCMclasses'];
 		// Traversing that array and setting files for inclusion:
+		// @deprecated since 6.1, will be removed 2 versions later
 		if (is_array($this->extClassArray)) {
 			foreach ($this->extClassArray as $extClassConf) {
-				if ($extClassConf['path']) {
+				if (isset($extClassConf['path'])) {
+					\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog(
+						'$GLOBALS[\'TBE_MODULES_EXT\'][\'xMOD_alt_clickmenu\'][\'extendCMclasses\'][\'path\'] option is not needed anymore. The autoloader takes care of loading the class.'
+					);
 					$this->include_once[] = $extClassConf['path'];
 				}
 			}

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,10 +29,10 @@ namespace TYPO3\CMS\Backend\Utility;
 /**
  * Standard functions available for the TYPO3 backend.
  * You are encouraged to use this class in your own applications (Backend Modules)
- * Don't instantiate - call functions with "t3lib_BEfunc::" prefixed the function name.
+ * Don't instantiate - call functions with "\TYPO3\CMS\Backend\Utility\BackendUtility::" prefixed the function name.
  *
  * Call ALL methods without making an object!
- * Eg. to get a page-record 51 do this: 't3lib_BEfunc::getRecord('pages',51)'
+ * Eg. to get a page-record 51 do this: '\TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('pages',51)'
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
@@ -443,21 +443,31 @@ class BackendUtility {
 	 * @return array Array of arrays with excludeFields (fieldname, table:fieldname) from all TCA entries and from FlexForms (fieldname, table:extkey;sheetname;fieldname)
 	 */
 	static public function getExcludeFields() {
+		$finalExcludeArray = array();
+
 		// All TCA keys
-		$theExcludeArray = array();
-		$tc_keys = array_keys($GLOBALS['TCA']);
-		foreach ($tc_keys as $table) {
-			// Load table
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
+		$tableNamesFromTca = array_keys($GLOBALS['TCA']);
+		// Fetch translations for table names
+		foreach ($tableNamesFromTca as $table) {
+			$tableNamesFromTca[$table] = $GLOBALS['LANG']->sl($GLOBALS['TCA'][$table]['ctrl']['title']);
+		}
+		// Sort by translations
+		asort($tableNamesFromTca);
+		foreach ($tableNamesFromTca as $table => $translatedTable) {
+			$excludeArrayTable = array();
+
 			// All field names configured and not restricted to admins
-			if (is_array($GLOBALS['TCA'][$table]['columns']) && $GLOBALS['TCA'][$table]['ctrl']['adminOnly'] != 1 && $GLOBALS['TCA'][$table]['ctrl']['rootLevel'] != 1) {
-				$f_keys = array_keys($GLOBALS['TCA'][$table]['columns']);
-				foreach ($f_keys as $field) {
+			if (is_array($GLOBALS['TCA'][$table]['columns'])
+					&& empty($GLOBALS['TCA'][$table]['ctrl']['adminOnly'])
+					&& (empty($GLOBALS['TCA'][$table]['ctrl']['rootLevel']) || !empty($GLOBALS['TCA'][$table]['ctrl']['security']['ignoreRootLevelRestriction']))
+			) {
+				$fieldKeys = array_keys($GLOBALS['TCA'][$table]['columns']);
+				foreach ($fieldKeys as $field) {
 					if ($GLOBALS['TCA'][$table]['columns'][$field]['exclude']) {
-						// Get human readable names of fields and table
-						$Fname = $GLOBALS['LANG']->sl($GLOBALS['TCA'][$table]['ctrl']['title']) . ': ' . $GLOBALS['LANG']->sl($GLOBALS['TCA'][$table]['columns'][$field]['label']);
+						// Get human readable names of fields
+						$translatedField = $GLOBALS['LANG']->sl($GLOBALS['TCA'][$table]['columns'][$field]['label']);
 						// Add entry
-						$theExcludeArray[] = array($Fname, $table . ':' . $field);
+						$excludeArrayTable[] = array($translatedTable . ': ' . $translatedField, $table . ':' . $field);
 					}
 				}
 			}
@@ -484,15 +494,19 @@ class BackendUtility {
 							}
 							$fieldLabel = !empty($field['TCEforms']['label']) ? $GLOBALS['LANG']->sl($field['TCEforms']['label']) : $fieldName;
 							$fieldIdent = $table . ':' . $tableField . ';' . $extIdent . ';' . $sheetName . ';' . $fieldName;
-							$theExcludeArray[] = array(trim(($labelPrefix . ' ' . $extTitle), ': ') . ': ' . $fieldLabel, $fieldIdent);
+							$excludeArrayTable[] = array(trim(($labelPrefix . ' ' . $extTitle), ': ') . ': ' . $fieldLabel, $fieldIdent);
 						}
 					}
 				}
 			}
+			// Sort fields by the translated value
+			if (count($excludeArrayTable) > 0) {
+				usort($excludeArrayTable, array('TYPO3\\CMS\\Backend\\Form\\FlexFormsHelper', 'compareArraysByFirstValue'));
+				$finalExcludeArray = array_merge($finalExcludeArray, $excludeArrayTable);
+			}
 		}
-		// Sort fields by label
-		usort($theExcludeArray, array(t3lib_TCEforms_Flexforms, 'compareArraysByFirstValue'));
-		return $theExcludeArray;
+
+		return $finalExcludeArray;
 	}
 
 	/**
@@ -504,15 +518,13 @@ class BackendUtility {
 	static public function getExplicitAuthFieldValues() {
 		// Initialize:
 		$adLabel = array(
-			'ALLOW' => $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xml:labels.allow'),
-			'DENY' => $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xml:labels.deny')
+			'ALLOW' => $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xlf:labels.allow'),
+			'DENY' => $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xlf:labels.deny')
 		);
 		// All TCA keys:
 		$allowDenyOptions = array();
 		$tc_keys = array_keys($GLOBALS['TCA']);
 		foreach ($tc_keys as $table) {
-			// Load table
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// All field names configured:
 			if (is_array($GLOBALS['TCA'][$table]['columns'])) {
 				$f_keys = array_keys($GLOBALS['TCA'][$table]['columns']);
@@ -563,8 +575,8 @@ class BackendUtility {
 	 *
 	 * Since TYPO3 4.5 the flagIcon is not returned as a filename in "gfx/flags/*" anymore,
 	 * but as a string <flags-xx>. The calling party should call
-	 * t3lib_iconWorks::getSpriteIcon(<flags-xx>) to get an HTML which will represent
-	 * the flag of this language.
+	 * \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon(<flags-xx>) to get an HTML
+	 * which will represent the flag of this language.
 	 *
 	 * @return array Array with languages (title, uid, flagIcon)
 	 */
@@ -681,7 +693,6 @@ class BackendUtility {
 	 * @return array
 	 */
 	static public function getTCAtypes($table, $rec, $useFieldNameAsKey = 0) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if ($GLOBALS['TCA'][$table]) {
 			// Get type value:
 			$fieldValue = self::getTCAtypeValue($table, $rec);
@@ -719,9 +730,10 @@ class BackendUtility {
 	 * If no "type" field is configured in the "ctrl"-section of the $GLOBALS['TCA'] for the table, zero is used.
 	 * If zero is not an index in the "types" section of $GLOBALS['TCA'] for the table, then the $fieldValue returned will default to 1 (no matter if that is an index or not)
 	 *
-	 * Note: This method is very similar to t3lib_TCEforms::getRTypeNum(), however, it has two differences:
+	 * Note: This method is very similar to \TYPO3\CMS\Backend\Form\FormEngine::getRTypeNum(),
+	 * however, it has two differences:
 	 * 1) The method in TCEForms also takes care of localization (which is difficult to do here as the whole infrastructure for language overlays is only in TCEforms).
-	 * 2) The $rec array looks different in TCEForms, as in there it's not the raw record but the t3lib_transferdata version of it, which changes e.g. how "select"
+	 * 2) The $rec array looks different in TCEForms, as in there it's not the raw record but the \TYPO3\CMS\Backend\Form\DataPreprocessor version of it, which changes e.g. how "select"
 	 * and "group" field values are stored, which makes different processing of the "foreign pointer field" type field variant necessary.
 	 *
 	 * @param string $table Table name present in TCA
@@ -731,7 +743,6 @@ class BackendUtility {
 	 */
 	static public function getTCAtypeValue($table, $row) {
 		$typeNum = 0;
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if ($GLOBALS['TCA'][$table]) {
 			$field = $GLOBALS['TCA'][$table]['ctrl']['type'];
 			if (strpos($field, ':') !== FALSE) {
@@ -839,7 +850,7 @@ class BackendUtility {
 	 * @param boolean $WSOL Boolean; If set, workspace overlay is applied to records. This is correct behaviour for all presentation and export, but NOT if you want a TRUE reflection of how things are in the live workspace.
 	 * @param integer $newRecordPidValue SPECIAL CASES: Use this, if the DataStructure may come from a parent record and the INPUT row doesn't have a uid yet (hence, the pid cannot be looked up). Then it is necessary to supply a PID value to search recursively in for the DS (used from TCEmain)
 	 * @return mixed If array, the data structure was found and returned as an array. Otherwise (string) it is an error message.
-	 * @see t3lib_TCEforms::getSingleField_typeFlex()
+	 * @see \TYPO3\CMS\Backend\Form\FormEngine::getSingleField_typeFlex()
 	 */
 	static public function getFlexFormDS($conf, $row, $table, $fieldName = '', $WSOL = TRUE, $newRecordPidValue = 0) {
 		// Get pointer field etc from TCA-config:
@@ -978,7 +989,7 @@ class BackendUtility {
 	 *
 	 * @param string $table The content table
 	 * @return array The data structures with speaking extension title
-	 * @see t3lib_BEfunc::getExcludeFields()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getExcludeFields()
 	 */
 	static public function getRegisteredFlexForms($table = 'tt_content') {
 		if (empty($table) || empty($GLOBALS['TCA'][$table]['columns'])) {
@@ -1054,7 +1065,7 @@ class BackendUtility {
 	/**
 	 * Stores the string value $data in the 'cache_hash' cache with the
 	 * hash key, $hash, and visual/symbolic identification, $ident
-	 * IDENTICAL to the function by same name found in t3lib_page:
+	 * IDENTICAL to the function by same name found in \TYPO3\CMS\Frontend\Page\PageRepository
 	 *
 	 * @param string $hash 32 bit hash string (eg. a md5 hash of a serialized array identifying the data being stored)
 	 * @param string $data The data string. If you want to store an array, then just serialize it first.
@@ -1069,7 +1080,7 @@ class BackendUtility {
 	 * Returns string value stored for the hash string in the cache "cache_hash"
 	 * Can be used to retrieved a cached value
 	 *
-	 * IDENTICAL to the function by same name found in t3lib_page
+	 * IDENTICAL to the function by same name found in \TYPO3\CMS\Frontend\Page\PageRepository
 	 *
 	 * @param string $hash The hash-string which was used to store the data value
 	 * @param integer $expTime Variabele is not used in the function
@@ -1091,13 +1102,12 @@ class BackendUtility {
 	 *******************************************/
 	/**
 	 * Returns the Page TSconfig for page with id, $id
-	 * Requires class "t3lib_TSparser"
 	 *
 	 * @param $id integer Page uid for which to create Page TSconfig
 	 * @param $rootLine array If $rootLine is an array, that is used as rootline, otherwise rootline is just calculated
 	 * @param boolean $returnPartArray If $returnPartArray is set, then the array with accumulated Page TSconfig is returned non-parsed. Otherwise the output will be parsed by the TypoScript parser.
 	 * @return array Page TSconfig
-	 * @see t3lib_TSparser
+	 * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser
 	 */
 	static public function getPagesTSconfig($id, $rootLine = '', $returnPartArray = 0) {
 		$id = intval($id);
@@ -1119,7 +1129,7 @@ class BackendUtility {
 		// Parsing the page TS-Config (or getting from cache)
 		$pageTS = implode(LF . '[GLOBAL]' . LF, $TSdataArray);
 		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['TSconfigConditions']) {
-			/* @var $parseObj t3lib_TSparser_TSconfig */
+			/* @var $parseObj \TYPO3\CMS\Backend\Configuration\TsConfigParser */
 			$parseObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TsConfigParser');
 			$res = $parseObj->parseTSconfig($pageTS, 'PAGES', $id, $rootLine);
 			if ($res) {
@@ -1283,7 +1293,7 @@ class BackendUtility {
 	/**
 	 * Returns the array $usernames with the names of all users NOT IN $groupArray changed to the uid (hides the usernames!).
 	 * If $excludeBlindedFlag is set, then these records are unset from the array $usernames
-	 * Takes $usernames (array made by t3lib_BEfunc::getUserNames()) and a $groupArray (array with the groups a certain user is member of) as input
+	 * Takes $usernames (array made by \TYPO3\CMS\Backend\Utility\BackendUtility::getUserNames()) and a $groupArray (array with the groups a certain user is member of) as input
 	 *
 	 * @param array $usernames User names
 	 * @param array $groupArray Group names
@@ -1400,20 +1410,20 @@ class BackendUtility {
 	 * Returns the "age" in minutes / hours / days / years of the number of $seconds inputted.
 	 *
 	 * @param integer $seconds Seconds could be the difference of a certain timestamp and time()
-	 * @param string $labels Labels should be something like ' min| hrs| days| yrs| min| hour| day| year'. This value is typically delivered by this function call: $GLOBALS["LANG"]->sL("LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears")
+	 * @param string $labels Labels should be something like ' min| hrs| days| yrs| min| hour| day| year'. This value is typically delivered by this function call: $GLOBALS["LANG"]->sL("LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears")
 	 * @return string Formatted time
 	 */
 	static public function calcAge($seconds, $labels = ' min| hrs| days| yrs| min| hour| day| year') {
 		$labelArr = explode('|', $labels);
 		$absSeconds = abs($seconds);
-		$sign = $seconds > 0 ? 1 : -1;
-		if ($seconds < 3600) {
+		$sign = $seconds < 0 ? -1 : 1;
+		if ($absSeconds < 3600) {
 			$val = round($absSeconds / 60);
 			$seconds = $sign * $val . ($val == 1 ? $labelArr[4] : $labelArr[0]);
-		} elseif ($seconds < 24 * 3600) {
+		} elseif ($absSeconds < 24 * 3600) {
 			$val = round($absSeconds / 3600);
 			$seconds = $sign * $val . ($val == 1 ? $labelArr[5] : $labelArr[1]);
-		} elseif ($seconds < 365 * 24 * 3600) {
+		} elseif ($absSeconds < 365 * 24 * 3600) {
 			$val = round($absSeconds / (24 * 3600));
 			$seconds = $sign * $val . ($val == 1 ? $labelArr[6] : $labelArr[2]);
 		} else {
@@ -1433,7 +1443,7 @@ class BackendUtility {
 	 * @return string
 	 */
 	static public function dateTimeAge($tstamp, $prefix = 1, $date = '') {
-		return $tstamp ? ($date == 'date' ? self::date($tstamp) : self::datetime($tstamp)) . ' (' . self::calcAge($prefix * ($GLOBALS['EXEC_TIME'] - $tstamp), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')) . ')' : '';
+		return $tstamp ? ($date == 'date' ? self::date($tstamp) : self::datetime($tstamp)) . ' (' . self::calcAge($prefix * ($GLOBALS['EXEC_TIME'] - $tstamp), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')) . ')' : '';
 	}
 
 	/**
@@ -1467,8 +1477,6 @@ class BackendUtility {
 	 * @return string Thumbnail image tag.
 	 */
 	static public function thumbCode($row, $table, $field, $backPath, $thumbScript = '', $uploaddir = NULL, $abs = 0, $tparams = '', $size = '', $linkInfoPopup = TRUE) {
-		// Load table.
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		$tcaConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
 		// Check and parse the size parameter
 		$sizeParts = array(64, 64);
@@ -1524,7 +1532,7 @@ class BackendUtility {
 						))->getPublicUrl(TRUE);
 						if (!$fileObject->checkActionPermission('read')) {
 							/** @var $flashMessage \TYPO3\CMS\Core\Messaging\FlashMessage */
-							$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_missing_text') . ' <abbr title="' . htmlspecialchars($fileObject->getName()) . '">' . htmlspecialchars($fileObject->getName()) . '</abbr>', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_missing'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+							$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.file_missing_text') . ' <abbr title="' . htmlspecialchars($fileObject->getName()) . '">' . htmlspecialchars($fileObject->getName()) . '</abbr>', $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.file_missing'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
 							$thumbData .= $flashMessage->render();
 							continue;
 						}
@@ -1634,7 +1642,7 @@ class BackendUtility {
 			$parts[] = rtrim($GLOBALS['LANG']->sL($GLOBALS['TCA']['pages']['columns']['nav_hide']['label']), ':');
 		}
 		if ($row['hidden']) {
-			$parts[] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.hidden');
+			$parts[] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.hidden');
 		}
 		if ($row['starttime']) {
 			$parts[] = $GLOBALS['LANG']->sL($GLOBALS['TCA']['pages']['columns']['starttime']['label']) . ' ' . self::dateTimeAge($row['starttime'], -1, 'date');
@@ -1702,15 +1710,15 @@ class BackendUtility {
 			}
 			// Hidden
 			if ($ctrl['disabled']) {
-				$out .= $row[$ctrl['disabled']] ? ' - ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.hidden') : '';
+				$out .= $row[$ctrl['disabled']] ? ' - ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.hidden') : '';
 			}
 			if ($ctrl['starttime']) {
 				if ($row[$ctrl['starttime']] > $GLOBALS['EXEC_TIME']) {
-					$out .= ' - ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.starttime') . ':' . self::date($row[$ctrl['starttime']]) . ' (' . self::daysUntil($row[$ctrl['starttime']]) . ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.days') . ')';
+					$out .= ' - ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.starttime') . ':' . self::date($row[$ctrl['starttime']]) . ' (' . self::daysUntil($row[$ctrl['starttime']]) . ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.days') . ')';
 				}
 			}
 			if ($row[$ctrl['endtime']]) {
-				$out .= ' - ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.endtime') . ': ' . self::date($row[$ctrl['endtime']]) . ' (' . self::daysUntil($row[$ctrl['endtime']]) . ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.days') . ')';
+				$out .= ' - ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.endtime') . ': ' . self::date($row[$ctrl['endtime']]) . ' (' . self::daysUntil($row[$ctrl['endtime']]) . ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.days') . ')';
 			}
 		}
 		return htmlspecialchars($out);
@@ -1725,8 +1733,6 @@ class BackendUtility {
 	 * @return string Label for item entry
 	 */
 	static public function getLabelFromItemlist($table, $col, $key) {
-		// Load full TCA for $table
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// Check, if there is an "items" array:
 		if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$col]) && is_array($GLOBALS['TCA'][$table]['columns'][$col]['config']['items'])) {
 			// Traverse the items-array...
@@ -1780,8 +1786,6 @@ class BackendUtility {
 		$labels = array();
 		$values = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $key, TRUE);
 		if (count($values) > 0) {
-			// Load full TCA for $table
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// Check if there is an "items" array
 			if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$column]) && is_array($GLOBALS['TCA'][$table]['columns'][$column]['config']['items'])) {
 				// Loop on all selected values
@@ -1807,19 +1811,15 @@ class BackendUtility {
 	 * @param string $table Table name, present in $GLOBALS['TCA']
 	 * @param string $col Field name
 	 * @param string $printAllWrap Wrap value - set function description
-	 * @return string
+	 * @return string or NULL if $col is not found in the TCA table
 	 */
 	static public function getItemLabel($table, $col, $printAllWrap = '') {
-		// Load full TCA for $table
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// Check if column exists
 		if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$col])) {
 			return $GLOBALS['TCA'][$table]['columns'][$col]['label'];
 		}
-		if ($printAllWrap) {
-			$parts = explode('|', $printAllWrap);
-			return $parts[0] . $col . $parts[1];
-		}
+
+		return NULL;
 	}
 
 	/**
@@ -1909,7 +1909,7 @@ class BackendUtility {
 	 * @return string Localized [No title] string
 	 */
 	static public function getNoRecordTitle($prep = FALSE) {
-		$noTitle = '[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.no_title', 1) . ']';
+		$noTitle = '[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', 1) . ']';
 		if ($prep) {
 			$noTitle = '<em>' . $noTitle . '</em>';
 		}
@@ -1929,7 +1929,7 @@ class BackendUtility {
 	 * @param boolean $defaultPassthrough Flag means that values for columns that has no conversion will just be pass through directly (otherwise cropped to 200 chars or returned as "N/A")
 	 * @param boolean $noRecordLookup If set, no records will be looked up, UIDs are just shown.
 	 * @param integer $uid Uid of the current record
-	 * @param boolean $forceResult If t3lib_BEfunc::getRecordTitle is used to process the value, this parameter is forwarded.
+	 * @param boolean $forceResult If \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle is used to process the value, this parameter is forwarded.
 	 * @return string
 	 */
 	static public function getProcessedValue($table, $col, $value, $fixed_lgd_chars = 0, $defaultPassthrough = 0, $noRecordLookup = FALSE, $uid = 0, $forceResult = TRUE) {
@@ -1937,8 +1937,6 @@ class BackendUtility {
 			// No need to load TCA as uid is not in TCA-array
 			return $value;
 		}
-		// Load full TCA for $table
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// Check if table and field is configured:
 		if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$col])) {
 			// Depending on the fields configuration, make a meaningful output value.
@@ -2020,11 +2018,33 @@ class BackendUtility {
 				}
 				break;
 			case 'group':
-				$l = implode(', ', \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $value, 1));
+				// resolve the titles for DB records
+				if ($theColConf['internal_type'] === 'db') {
+					$finalValues = array();
+					$relationTableName = $theColConf['allowed'];
+					$explodedValues = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $value, TRUE);
+
+					foreach ($explodedValues as $explodedValue) {
+
+						if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($explodedValue)) {
+							$relationTableNameForField = $relationTableName;
+						} else {
+							list($relationTableNameForField, $explodedValue) = self::splitTable_Uid($explodedValue);
+						}
+
+						$relationRecord = static::getRecordWSOL($relationTableNameForField, $explodedValue);
+						$finalValues[] = static::getRecordTitle($relationTableNameForField, $relationRecord);
+					}
+
+					$l = implode(', ', $finalValues);
+				} else {
+					$l = implode(', ', \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $value, TRUE));
+				}
+
 				break;
 			case 'check':
 				if (!is_array($theColConf['items']) || count($theColConf['items']) == 1) {
-					$l = $value ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
+					$l = $value ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:yes') : $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:no');
 				} else {
 					$lA = array();
 					foreach ($theColConf['items'] as $key => $val) {
@@ -2046,7 +2066,7 @@ class BackendUtility {
 							$value = $value !== $emptyValue ? strtotime($value) : 0;
 						}
 						if (!empty($value)) {
-							$l = self::date($value) . ' (' . ($GLOBALS['EXEC_TIME'] - $value > 0 ? '-' : '') . self::calcAge(abs(($GLOBALS['EXEC_TIME'] - $value)), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')) . ')';
+							$l = self::date($value) . ' (' . ($GLOBALS['EXEC_TIME'] - $value > 0 ? '-' : '') . self::calcAge(abs(($GLOBALS['EXEC_TIME'] - $value)), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')) . ')';
 						}
 					} elseif (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($theColConf['eval'], 'time')) {
 						if (!empty($value)) {
@@ -2122,7 +2142,7 @@ class BackendUtility {
 	 * @param string $fV Field value
 	 * @param integer $fixed_lgd_chars The max amount of characters the value may occupy
 	 * @param integer $uid Uid of the current record
-	 * @param boolean $forceResult If t3lib_BEfunc::getRecordTitle is used to process the value, this parameter is forwarded.
+	 * @param boolean $forceResult If \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle is used to process the value, this parameter is forwarded.
 	 * @return string
 	 * @see getProcessedValue()
 	 */
@@ -2326,18 +2346,14 @@ class BackendUtility {
 	}
 
 	/**
-	 * Returns CSH help text (description), if configured for.
-	 * $GLOBALS['TCA_DESCR'] must be loaded prior to this function and $GLOBALS['BE_USER'] must have "edit_showFieldHelp" set to "text",
-	 * otherwise nothing is returned.
+	 * Returns CSH help text
 	 *
 	 * @param string $table Table name
 	 * @param string $field Field name
 	 * @return string HTML content for help text
-	 * @depreacted since 6.0, will be removed two versions later
+	 * @see wrapInHelp()
 	 */
 	static public function helpText($table, $field) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-
 		$helpTextArray = self::helpTextArray($table, $field);
 		$output = '';
 		$arrow = '';
@@ -2705,7 +2721,7 @@ class BackendUtility {
 	 * @param string $set Key to set the update signal. When setting, this value contains strings telling WHAT to set. At this point it seems that the value "updatePageTree" is the only one it makes sense to set. If empty, all update signals will be removed.
 	 * @param mixed $params Additional information for the update signal, used to only refresh a branch of the tree
 	 * @return void
-	 * @see 	t3lib_BEfunc::getUpdateSignalCode()
+	 * @see 	\TYPO3\CMS\Backend\Utility\BackendUtility::getUpdateSignalCode()
 	 */
 	static public function setUpdateSignal($set = '', $params = '') {
 		$modData = $GLOBALS['BE_USER']->getModuleData('TYPO3\\CMS\\Backend\\Utility\\BackendUtility::getUpdateSignal', 'ses');
@@ -2726,7 +2742,7 @@ class BackendUtility {
 	 * setUpdateSignal(). It will return some JavaScript that does the update (called in the typo3/template.php file, end() function)
 	 *
 	 * @return string HTML javascript code
-	 * @see 	t3lib_BEfunc::setUpdateSignal()
+	 * @see 	\TYPO3\CMS\Backend\Utility\BackendUtility::setUpdateSignal()
 	 */
 	static public function getUpdateSignalCode() {
 		$signals = array();
@@ -2908,37 +2924,6 @@ class BackendUtility {
 	 *
 	 *******************************************/
 	/**
-	 * Set preview keyword, eg:
-	 * $previewUrl = t3lib_div::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.t3lib_BEfunc::compilePreviewKeyword('id=' . $pageId . '&L=' . $language . '&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS=' . $this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
-	 *
-	 * todo for sys_preview:
-	 * - Add a comment which can be shown to previewer in frontend in some way (plus maybe ability to write back, take other action?)
-	 * - Add possibility for the preview keyword to work in the backend as well: So it becomes a quick way to a certain action of sorts?
-	 *
-	 * @param 	string		Get variables to preview, eg. 'id=1150&L=0&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS=8'
-	 * @param 	string		32 byte MD5 hash keyword for the URL: "?ADMCMD_prev=[keyword]
-	 * @param 	integer		Time-To-Live for keyword
-	 * @param 	integer		Which workspace to preview. Workspace UID, -1 or >0. If set, the getVars is ignored in the frontend, so that string can be empty
-	 * @return 	string		Returns keyword to use in URL for ADMCMD_prev=
-	 * @deprecated since TYPO3 4.6, will be removed in TYPO3 6.0, functionality is now in Tx_Version_Preview
-	 */
-	static public function compilePreviewKeyword($getVarsStr, $beUserUid, $ttl = 172800, $fullWorkspace = NULL) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
-		$field_array = array(
-			'keyword' => md5(uniqid(microtime())),
-			'tstamp' => $GLOBALS['EXEC_TIME'],
-			'endtime' => $GLOBALS['EXEC_TIME'] + $ttl,
-			'config' => serialize(array(
-				'fullWorkspace' => $fullWorkspace,
-				'getVars' => $getVarsStr,
-				'BEUSER_uid' => $beUserUid
-			))
-		);
-		$GLOBALS['TYPO3_DB']->exec_INSERTquery('sys_preview', $field_array);
-		return $field_array['keyword'];
-	}
-
-	/**
 	 * Unlock or Lock a record from $table with $uid
 	 * If $table and $uid is not set, then all locking for the current BE_USER is removed!
 	 *
@@ -2947,23 +2932,24 @@ class BackendUtility {
 	 * @param integer $pid Record pid
 	 * @return void
 	 * @internal
-	 * @see t3lib_transferData::lockRecord(), alt_doc.php, db_layout.php, db_list.php, wizard_rte.php
 	 */
 	static public function lockRecords($table = '', $uid = 0, $pid = 0) {
-		$user_id = intval($GLOBALS['BE_USER']->user['uid']);
-		if ($table && $uid) {
-			$fields_values = array(
-				'userid' => $user_id,
-				'feuserid' => 0,
-				'tstamp' => $GLOBALS['EXEC_TIME'],
-				'record_table' => $table,
-				'record_uid' => $uid,
-				'username' => $GLOBALS['BE_USER']->user['username'],
-				'record_pid' => $pid
-			);
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('sys_lockedrecords', $fields_values);
-		} else {
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('sys_lockedrecords', 'userid=' . intval($user_id));
+		if (isset($GLOBALS['BE_USER']->user['uid'])) {
+			$user_id = intval($GLOBALS['BE_USER']->user['uid']);
+			if ($table && $uid) {
+				$fields_values = array(
+					'userid' => $user_id,
+					'feuserid' => 0,
+					'tstamp' => $GLOBALS['EXEC_TIME'],
+					'record_table' => $table,
+					'record_uid' => $uid,
+					'username' => $GLOBALS['BE_USER']->user['username'],
+					'record_pid' => $pid
+				);
+				$GLOBALS['TYPO3_DB']->exec_INSERTquery('sys_lockedrecords', $fields_values);
+			} else {
+				$GLOBALS['TYPO3_DB']->exec_DELETEquery('sys_lockedrecords', 'userid=' . intval($user_id));
+			}
 		}
 	}
 
@@ -2991,17 +2977,17 @@ class BackendUtility {
 				} else {
 					$userTypeLabel = 'user';
 				}
-				$userType = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.' . $userTypeLabel);
+				$userType = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.' . $userTypeLabel);
 				// Get the username (if available):
 				if ($row['username']) {
 					$userName = $row['username'];
 				} else {
-					$userName = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.unknownUser');
+					$userName = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.unknownUser');
 				}
 				$GLOBALS['LOCKED_RECORDS'][$row['record_table'] . ':' . $row['record_uid']] = $row;
-				$GLOBALS['LOCKED_RECORDS'][$row['record_table'] . ':' . $row['record_uid']]['msg'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.lockedRecordUser'), $userType, $userName, self::calcAge($GLOBALS['EXEC_TIME'] - $row['tstamp'], $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')));
+				$GLOBALS['LOCKED_RECORDS'][$row['record_table'] . ':' . $row['record_uid']]['msg'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.lockedRecordUser'), $userType, $userName, self::calcAge($GLOBALS['EXEC_TIME'] - $row['tstamp'], $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')));
 				if ($row['record_pid'] && !isset($GLOBALS['LOCKED_RECORDS'][($row['record_table'] . ':' . $row['record_pid'])])) {
-					$GLOBALS['LOCKED_RECORDS']['pages:' . $row['record_pid']]['msg'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.lockedRecordUser_content'), $userType, $userName, self::calcAge($GLOBALS['EXEC_TIME'] - $row['tstamp'], $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.minutesHoursDaysYears')));
+					$GLOBALS['LOCKED_RECORDS']['pages:' . $row['record_pid']]['msg'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.lockedRecordUser_content'), $userType, $userName, self::calcAge($GLOBALS['EXEC_TIME'] - $row['tstamp'], $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')));
 				}
 			}
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
@@ -3018,11 +3004,9 @@ class BackendUtility {
 	 * @param string $prefix Prefix string for the key "*foreign_table_where" from $fieldValue array
 	 * @return string Part of query
 	 * @internal
-	 * @see t3lib_transferData::renderRecord(), t3lib_TCEforms::foreignTable()
 	 */
 	static public function exec_foreign_table_where_query($fieldValue, $field = '', $TSconfig = array(), $prefix = '') {
 		$foreign_table = $fieldValue['config'][$prefix . 'foreign_table'];
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($foreign_table);
 		$rootLevel = $GLOBALS['TCA'][$foreign_table]['ctrl']['rootLevel'];
 		$fTWHERE = $fieldValue['config'][$prefix . 'foreign_table_where'];
 		if (strstr($fTWHERE, '###REC_FIELD_')) {
@@ -3047,13 +3031,16 @@ class BackendUtility {
 		$fTWHERE = str_replace('###PAGE_TSCONFIG_ID###', intval($TSconfig[$field]['PAGE_TSCONFIG_ID']), $fTWHERE);
 		$fTWHERE = str_replace('###PAGE_TSCONFIG_IDLIST###', $GLOBALS['TYPO3_DB']->cleanIntList($TSconfig[$field]['PAGE_TSCONFIG_IDLIST']), $fTWHERE);
 		$fTWHERE = str_replace('###PAGE_TSCONFIG_STR###', $GLOBALS['TYPO3_DB']->quoteStr($TSconfig[$field]['PAGE_TSCONFIG_STR'], $foreign_table), $fTWHERE);
-		// rootLevel = -1 is not handled 'properly' here - it goes as if it was rootLevel = 1 (that is pid=0)
 		$wgolParts = $GLOBALS['TYPO3_DB']->splitGroupOrderLimit($fTWHERE);
-		if ($rootLevel) {
+		// rootLevel = -1 means that elements can be on the rootlevel OR on any page (pid!=-1)
+		// rootLevel = 0 means that elements are not allowed on root level
+		// rootLevel = 1 means that elements are only on the root level (pid=0)
+		if ($rootLevel == 1 || $rootLevel == -1) {
+			$pidWhere = $foreign_table . '.pid' . (($rootLevel == -1) ? '<>-1' : '=0');
 			$queryParts = array(
 				'SELECT' => self::getCommonSelectFields($foreign_table, $foreign_table . '.'),
 				'FROM' => $foreign_table,
-				'WHERE' => $foreign_table . '.pid=0 ' . self::deleteClause($foreign_table) . ' ' . $wgolParts['WHERE'],
+				'WHERE' => $pidWhere . ' ' . self::deleteClause($foreign_table) . ' ' . $wgolParts['WHERE'],
 				'GROUPBY' => $wgolParts['GROUPBY'],
 				'ORDERBY' => $wgolParts['ORDERBY'],
 				'LIMIT' => $wgolParts['LIMIT']
@@ -3092,7 +3079,6 @@ class BackendUtility {
 	 * @param string $table Table name present in TCA
 	 * @param array $row Row from table
 	 * @return array
-	 * @see t3lib_transferData::renderRecord(), t3lib_TCEforms::setTSconfig(), SC_wizard_list::main(), SC_wizard_add::main()
 	 */
 	static public function getTCEFORM_TSconfig($table, $row) {
 		self::fixVersioningPid($table, $row);
@@ -3136,14 +3122,14 @@ class BackendUtility {
 	 * Find the real PID of the record (with $uid from $table).
 	 * This MAY be impossible if the pid is set as a reference to the former record or a page (if two records are created at one time).
 	 * NOTICE: Make sure that the input PID is never negative because the record was an offline version!
-	 * Therefore, you should always use t3lib_BEfunc::fixVersioningPid($table,$row); on the data you input before calling this function!
+	 * Therefore, you should always use \TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid($table,$row); on the data you input before calling this function!
 	 *
 	 * @param string $table Table name
 	 * @param integer $uid Record uid
 	 * @param integer $pid Record pid, could be negative then pointing to a record from same table whose pid to find and return.
 	 * @return integer
 	 * @internal
-	 * @see t3lib_TCEmain::copyRecord(), getTSCpid()
+	 * @see \TYPO3\CMS\Core\DataHandling\DataHandler::copyRecord(), getTSCpid()
 	 */
 	static public function getTSconfig_pidValue($table, $uid, $pid) {
 		// If pid is an integer this takes precedence in our lookup.
@@ -3185,7 +3171,7 @@ class BackendUtility {
 	 * @param integer $pid Record pid
 	 * @return integer
 	 * @internal
-	 * @see t3lib_TCEforms::getTSCpid()
+	 * @see \TYPO3\CMS\Backend\Form\FormEngine::getTSCpid()
 	 */
 	static public function getPidForModTSconfig($table, $uid, $pid) {
 		$retVal = $table == 'pages' && \TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($uid) ? $uid : $pid;
@@ -3200,7 +3186,7 @@ class BackendUtility {
 	 * @param integer $pid Record pid
 	 * @return array Array of two integers; first is the REAL PID of a record and if its a new record negative values are resolved to the true PID, second value is the PID value for TSconfig (uid if table is pages, otherwise the pid)
 	 * @internal
-	 * @see t3lib_TCEmain::setHistory(), t3lib_TCEmain::process_datamap()
+	 * @see \TYPO3\CMS\Core\DataHandling\DataHandler::setHistory(), \TYPO3\CMS\Core\DataHandling\DataHandler::process_datamap()
 	 */
 	static public function getTSCpid($table, $uid, $pid) {
 		// If pid is negative (referring to another record) the pid of the other record is fetched and returned.
@@ -3278,7 +3264,7 @@ class BackendUtility {
 
 	/**
 	 * Returns first possible RTE object if available.
-	 * Usage: $RTEobj = &t3lib_BEfunc::RTEgetObj();
+	 * Usage: $RTEobj = &\TYPO3\CMS\Backend\Utility\BackendUtility::RTEgetObj();
 	 *
 	 * @return mixed If available, returns RTE object, otherwise an array of messages from possible RTEs
 	 */
@@ -3311,7 +3297,7 @@ class BackendUtility {
 
 	/**
 	 * Returns soft-reference parser for the softRef processing type
-	 * Usage: $softRefObj = &t3lib_BEfunc::softRefParserObj('[parser key]');
+	 * Usage: $softRefObj = &\TYPO3\CMS\Backend\Utility\BackendUtility::softRefParserObj('[parser key]');
 	 *
 	 * @param string $spKey softRef parser key
 	 * @return mixed If available, returns Soft link parser object.
@@ -3322,7 +3308,9 @@ class BackendUtility {
 			// Set the object string to blank by default:
 			$GLOBALS['T3_VAR']['softRefParser'][$spKey] = '';
 			// Now, try to create parser object:
-			$objRef = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['softRefParser'][$spKey] ? $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['softRefParser'][$spKey] : $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['softRefParser_GL'][$spKey];
+			$objRef = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['softRefParser'][$spKey]
+				? $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['softRefParser'][$spKey]
+				: $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['softRefParser_GL'][$spKey];
 			if ($objRef) {
 				$softRefParserObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($objRef, '');
 				if (is_object($softRefParserObj)) {
@@ -3493,7 +3481,7 @@ class BackendUtility {
 	 * @param array $rr Record array passed by reference. As minimum, "pid" and "uid" fields must exist! "t3ver_oid" and "t3ver_wsid" is nice and will save you a DB query.
 	 * @param boolean $ignoreWorkspaceMatch Ignore workspace match
 	 * @return void (Passed by ref). If the record had its pid corrected to the online versions pid, then "_ORIG_pid" is set to the original pid value (-1 of course). The field "_ORIG_pid" is used by various other functions to detect if a record was in fact in a versionized branch.
-	 * @see t3lib_page::fixVersioningPid()
+	 * @see \TYPO3\CMS\Frontend\Page\PageRepository::fixVersioningPid()
 	 */
 	static public function fixVersioningPid($table, &$rr, $ignoreWorkspaceMatch = FALSE) {
 		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('version')) {
@@ -3610,7 +3598,7 @@ class BackendUtility {
 	 * @param string $table Table name
 	 * @param array $row Row (passed by reference) - must be online record!
 	 * @return boolean TRUE if overlay is made.
-	 * @see t3lib_page::movePlhOl()
+	 * @see \TYPO3\CMS\Frontend\Page\PageRepository::movePlhOl()
 	 */
 	static public function movePlhOL($table, &$row) {
 		// Only for WS ver 2... (moving)
@@ -3805,23 +3793,23 @@ class BackendUtility {
 		$loginCopyrightWarrantyURL = strip_tags(trim($GLOBALS['TYPO3_CONF_VARS']['SYS']['loginCopyrightWarrantyURL']));
 
 		$versionNumber = $showVersionNumber ?
-				' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:version.short') . ' ' .
+				' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:version.short') . ' ' .
 				htmlspecialchars(TYPO3_version) : '';
 
 		if (strlen($loginCopyrightWarrantyProvider) >= 2 && strlen($loginCopyrightWarrantyURL) >= 10) {
-			$warrantyNote = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:warranty.by'), htmlspecialchars($loginCopyrightWarrantyProvider), '<a href="' . htmlspecialchars($loginCopyrightWarrantyURL) . '" target="_blank">', '</a>');
+			$warrantyNote = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:warranty.by'), htmlspecialchars($loginCopyrightWarrantyProvider), '<a href="' . htmlspecialchars($loginCopyrightWarrantyURL) . '" target="_blank">', '</a>');
 		} else {
-			$warrantyNote = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:no.warranty'), '<a href="' . TYPO3_URL_LICENSE . '" target="_blank">', '</a>');
+			$warrantyNote = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:no.warranty'), '<a href="' . TYPO3_URL_LICENSE . '" target="_blank">', '</a>');
 		}
 		$cNotice = '<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' .
-				'<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/loginlogo_transp.gif', 'width="75" height="24" vspace="2" hspace="4"') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:typo3.logo') . '" align="left" />' .
-				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:typo3.cms') . $versionNumber . '</a>. ' .
-				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:copyright') . ' &copy; ' . htmlspecialchars(TYPO3_copyright_year) . ' Kasper Sk&aring;rh&oslash;j. ' .
-				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:extension.copyright') . ' ' .
-				sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:details.link'), ('<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . TYPO3_URL_GENERAL . '</a>')) . ' ' .
+				'<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/loginlogo_transp.gif', 'width="75" height="24" vspace="2" hspace="4"') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:typo3.logo') . '" align="left" />' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:typo3.cms') . $versionNumber . '</a>. ' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:copyright') . ' &copy; ' . htmlspecialchars(TYPO3_copyright_year) . ' Kasper Sk&aring;rh&oslash;j. ' .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:extension.copyright') . ' ' .
+				sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:details.link'), ('<a href="' . TYPO3_URL_GENERAL . '" target="_blank">' . TYPO3_URL_GENERAL . '</a>')) . ' ' .
 				strip_tags($warrantyNote, '<a>') . ' ' .
-				sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:free.software'), ('<a href="' . TYPO3_URL_LICENSE . '" target="_blank">'), '</a> ') .
-				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xml:keep.notice');
+				sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:free.software'), ('<a href="' . TYPO3_URL_LICENSE . '" target="_blank">'), '</a> ') .
+				$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_login.xlf:keep.notice');
 		return $cNotice;
 	}
 
@@ -3829,7 +3817,7 @@ class BackendUtility {
 	 * Display some warning messages if this installation is obviously insecure!!
 	 * These warnings are only displayed to admin users
 	 *
-	 * @return void
+	 * @return string Rendered messages as HTML
 	 */
 	static public function displayWarningMessages() {
 		if ($GLOBALS['BE_USER']->isAdmin()) {
@@ -3849,50 +3837,50 @@ class BackendUtility {
 			// Check if the Install Tool Password is still default: joh316
 			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'] == md5('joh316')) {
 				$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=about');
-				$warnings['install_password'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_password'), '<a href="' . $url . '">', '</a>');
+				$warnings['install_password'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.install_password'), '<a href="' . $url . '">', '</a>');
 			}
 			// Check if there is still a default user 'admin' with password 'password' (MD5sum = 5f4dcc3b5aa765d61d8327deb882cf99)
 			$where_clause = 'username=' . $GLOBALS['TYPO3_DB']->fullQuoteStr('admin', 'be_users') . ' AND password=' . $GLOBALS['TYPO3_DB']->fullQuoteStr('5f4dcc3b5aa765d61d8327deb882cf99', 'be_users') . self::deleteClause('be_users');
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid, username, password', 'be_users', $where_clause);
 			if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-				$url = 'alt_doc.php?returnUrl=alt_intro.php&edit[be_users][' . $row['uid'] . ']=edit';
-				$warnings['backend_admin'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.backend_admin'), '<a href="' . htmlspecialchars($url) . '">', '</a>');
+				$url = 'alt_doc.php?returnUrl=' . urlencode('mod.php?M=help_AboutmodulesAboutmodules') . '&edit[be_users][' . $row['uid'] . ']=edit';
+				$warnings['backend_admin'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.backend_admin'), '<a href="' . htmlspecialchars($url) . '">', '</a>');
 			}
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			// Check whether the file ENABLE_INSTALL_TOOL contains the string "KEEP_FILE" which permanently unlocks the install tool
 			if (is_file($enableInstallToolFile) && trim(file_get_contents($enableInstallToolFile)) === 'KEEP_FILE') {
 				$url = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_SCRIPT') . '?adminWarning_cmd=remove_ENABLE_INSTALL_TOOL';
-				$warnings['install_enabled'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_enabled'), '<span style="white-space:nowrap;">' . $enableInstallToolFile . '</span>');
-				$warnings['install_enabled'] .= ' <a href="' . $url . '">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_enabled_cmd') . '</a>';
+				$warnings['install_enabled'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.install_enabled'), '<span style="white-space:nowrap;">' . $enableInstallToolFile . '</span>');
+				$warnings['install_enabled'] .= ' <a href="' . $url . '">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.install_enabled_cmd') . '</a>';
 			}
 			// Check if the encryption key is empty
 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] == '') {
 				$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=config#set_encryptionKey');
-				$warnings['install_encryption'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_encryption'), '<a href="' . $url . '">', '</a>');
+				$warnings['install_encryption'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.install_encryption'), '<a href="' . $url . '">', '</a>');
 			}
 			// Check if parts of fileDenyPattern were removed which is dangerous on Apache
 			$defaultParts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('|', FILE_DENY_PATTERN_DEFAULT, TRUE);
 			$givenParts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('|', $GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'], TRUE);
 			$result = array_intersect($defaultParts, $givenParts);
 			if ($defaultParts !== $result) {
-				$warnings['file_deny_pattern'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_deny_pattern_partsNotPresent'), '<br /><pre>' . htmlspecialchars(FILE_DENY_PATTERN_DEFAULT) . '</pre><br />');
+				$warnings['file_deny_pattern'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.file_deny_pattern_partsNotPresent'), '<br /><pre>' . htmlspecialchars(FILE_DENY_PATTERN_DEFAULT) . '</pre><br />');
 			}
 			// Check if fileDenyPattern allows to upload .htaccess files which is dangerous on Apache
 			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['fileDenyPattern'] != FILE_DENY_PATTERN_DEFAULT && \TYPO3\CMS\Core\Utility\GeneralUtility::verifyFilenameAgainstDenyPattern('.htaccess')) {
-				$warnings['file_deny_htaccess'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.file_deny_htaccess');
+				$warnings['file_deny_htaccess'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.file_deny_htaccess');
 			}
 			// Check if there are still updates to perform
 			if (!\TYPO3\CMS\Core\Utility\GeneralUtility::compat_version(TYPO3_branch)) {
 				$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=update');
-				$warnings['install_update'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_update'), '<a href="' . $url . '">', '</a>');
+				$warnings['install_update'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.install_update'), '<a href="' . $url . '">', '</a>');
 			}
 			// Check if sys_refindex is empty
 			$count = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', 'sys_refindex');
 			$registry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Registry');
 			$lastRefIndexUpdate = $registry->get('core', 'sys_refindex_lastUpdate');
 			if (!$count && $lastRefIndexUpdate) {
-				$url = 'sysext/lowlevel/dbint/index.php?&id=0&SET[function]=refindex';
-				$warnings['backend_reference'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.backend_reference_index'), '<a href="' . $url . '">', '</a>', self::dateTime($lastRefIndexUpdate));
+				$url =  \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_dbint') . '&id=0&SET[function]=refindex';
+				$warnings['backend_reference'] = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.backend_reference_index'), '<a href="' . $url . '">', '</a>', self::dateTime($lastRefIndexUpdate));
 			}
 			// Check for memcached if configured
 			$memCacheUse = FALSE;
@@ -3939,7 +3927,7 @@ class BackendUtility {
 						}
 					}
 					if (count($failed) > 0) {
-						$warnings['memcached'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.memcache_not_usable') . '<br/>' . implode(', ', $failed);
+						$warnings['memcached'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.memcache_not_usable') . '<br/>' . implode(', ', $failed);
 					}
 				}
 			}
@@ -3958,7 +3946,7 @@ class BackendUtility {
 				} else {
 					$securityWarnings = '<p>' . implode('', $warnings) . '</p>';
 				}
-				$securityMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $securityWarnings, $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.header'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+				$securityMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $securityWarnings, $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.header'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
 				$content = '<div style="margin: 20px 0px;">' . $securityMessage->render() . '</div>';
 				unset($warnings);
 				return $content;
@@ -4060,7 +4048,6 @@ class BackendUtility {
 	 */
 	static public function getTcaFieldConfiguration($table, $field) {
 		$configuration = array();
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if (isset($GLOBALS['TCA'][$table]['columns'][$field]['config'])) {
 			$configuration = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
 		}

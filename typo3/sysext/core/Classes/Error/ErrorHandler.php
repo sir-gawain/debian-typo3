@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Error;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -102,8 +102,8 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 			// We need to manually require the exception classes in case the autoloader is not available at this point yet.
 			// @see http://forge.typo3.org/issues/23444
 			if (!class_exists('TYPO3\\CMS\\Core\\Error\\Exception', FALSE)) {
-				require_once PATH_t3lib . 'class.t3lib_exception.php';
-				require_once PATH_t3lib . 'error/class.t3lib_error_exception.php';
+				require_once PATH_site . 'typo3/sysext/core/Classes/Exception.php';
+				require_once PATH_site . 'typo3/sysext/core/Classes/Error/Exception.php';
 			}
 			throw new \TYPO3\CMS\Core\Error\Exception($message, 1);
 		} else {
@@ -128,15 +128,6 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 			if ($errorLevel & $GLOBALS['TYPO3_CONF_VARS']['SYS']['syslogErrorReporting']) {
 				\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog($message, $logTitle, $severity);
 			}
-			// In case an error occurs before a database connection exists, try
-			// to connect to the DB to be able to write an entry to devlog/sys_log
-			if (is_object($GLOBALS['TYPO3_DB']) && empty($GLOBALS['TYPO3_DB']->link)) {
-				try {
-					$GLOBALS['TYPO3_DB']->connectDB();
-				} catch (\Exception $e) {
-
-				}
-			}
 			// Write error message to devlog extension(s),
 			// see: $TYPO3_CONF_VARS['SYS']['enable_errorDLOG']
 			if (TYPO3_ERROR_DLOG) {
@@ -148,12 +139,21 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 			}
 			// Write error message to sys_log table (ext: belog, Tools->Log)
 			if ($errorLevel & $GLOBALS['TYPO3_CONF_VARS']['SYS']['belogErrorReporting']) {
-				$this->writeLog($logTitle . ': ' . $message, $severity);
+				// Silently catch in case an error occurs before a database connection exists,
+				// but DatabaseConnection fails to connect.
+				try {
+					$this->writeLog($logTitle . ': ' . $message, $severity);
+				} catch (\Exception $e) {
+				}
 			}
 			// Add error message to the flashmessageQueue
 			if (defined('TYPO3_ERRORHANDLER_MODE') && TYPO3_ERRORHANDLER_MODE == 'debug') {
 				$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $message, 'PHP ' . $errorLevels[$errorLevel], $severity);
-				\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage($flashMessage);
+				/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+				$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+				/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+				$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+				$defaultFlashMessageQueue->enqueue($flashMessage);
 			}
 		}
 		// Don't execute PHP internal error handler

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2011-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,13 +29,6 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\View;
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class AdminPanelViewTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/////////////////////////////////////////////
 	// Test concerning extendAdminPanel hook

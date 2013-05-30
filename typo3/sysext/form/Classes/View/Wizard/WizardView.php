@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Wizard;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010 Patrick Broens <patrick@patrickbroens.nl>
+ *  (c) 2010-2013 Patrick Broens <patrick@patrickbroens.nl>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,10 +23,10 @@ namespace TYPO3\CMS\Form\View\Wizard;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * The form wizard view
  *
- * @category View
  * @author Patrick Broens <patrick@patrickbroens.nl>
  */
 class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
@@ -37,7 +37,7 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	 * Needs to be a local variable of the class, because this will be used by
 	 * the TYPO3 Backend Template Class typo3/template.php
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\MediumDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 */
 	public $doc;
 
@@ -50,7 +50,7 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	 *
 	 * Defines the document template object.
 	 *
-	 * @return void
+	 * @param \TYPO3\CMS\Form\Domain\Repository\ContentRepository $repository
 	 */
 	public function __construct(\TYPO3\CMS\Form\Domain\Repository\ContentRepository $repository) {
 		parent::__construct($repository);
@@ -208,6 +208,7 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 			'Viewport/Left/Options/Forms/Validation/Required.js',
 			'Viewport/Left/Options/Forms/Validation/Uri.js',
 			'Viewport/Left/Form.js',
+			'Viewport/Left/Form/Behaviour.js',
 			'Viewport/Left/Form/Attributes.js',
 			'Viewport/Left/Form/Prefix.js',
 			'Viewport/Left/Form/PostProcessor.js',
@@ -263,11 +264,11 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	/**
 	 * Reads locallang file into array (for possible include in header)
 	 *
-	 * @param $file
+	 * @return void
 	 */
 	protected function loadLocalization() {
-		$wizardLabels = $GLOBALS['LANG']->includeLLFile('EXT:form/Resources/Private/Language/locallang_wizard.xml', FALSE, TRUE);
-		$controllerLabels = $GLOBALS['LANG']->includeLLFile('EXT:form/Resources/Private/Language/locallang_controller.xml', FALSE, TRUE);
+		$wizardLabels = $GLOBALS['LANG']->includeLLFile('EXT:form/Resources/Private/Language/locallang_wizard.xlf', FALSE, TRUE);
+		$controllerLabels = $GLOBALS['LANG']->includeLLFile('EXT:form/Resources/Private/Language/locallang_controller.xlf', FALSE, TRUE);
 		$labels = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($controllerLabels, $wizardLabels);
 		$this->pageRenderer->addInlineLanguageLabelArray($labels['default']);
 	}
@@ -276,7 +277,7 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	 * Hook to extend the wizard interface.
 	 *
 	 * The hook is called just before content rendering. Use it by adding your function to the array
-	 * $TYPO3_CONF_VARS['EXTCONF']['form']['hooks']['renderWizard']
+	 * $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['form']['hooks']['renderWizard']
 	 *
 	 * @return void
 	 */
@@ -293,6 +294,7 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	 * Remove the trailing dots from the values in Typoscript
 	 *
 	 * @param array $array The array with the trailing dots
+	 * @return void
 	 */
 	protected function removeTrailingDotsFromTyposcript(array &$array) {
 		foreach ($array as $key => $value) {
@@ -329,7 +331,7 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 		// Close
 		$getPostVariables = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('P');
 		$buttons['close'] = '<a href="#" onclick="' . htmlspecialchars(('jumpToUrl(unescape(\'' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl($getPostVariables['returnUrl'])) . '\')); return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close', array(
-			'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE)
+			'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.closeDoc', TRUE)
 		)) . '</a>';
 		return $buttons;
 	}
@@ -354,6 +356,5 @@ class WizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	}
 
 }
-
 
 ?>

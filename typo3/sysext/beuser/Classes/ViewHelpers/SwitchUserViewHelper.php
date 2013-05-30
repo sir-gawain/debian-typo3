@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Beuser\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Felix Kopp <felix-source@phorax.com>
+ *  (c) 2012-2013 Felix Kopp <felix-source@phorax.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Beuser\ViewHelpers;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Displays 'SwitchUser' link with sprite icon to change current backend user to target (non-admin) backendUser
  *
@@ -33,6 +34,8 @@ namespace TYPO3\CMS\Beuser\ViewHelpers;
 class SwitchUserViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
+	 * Render link with sprite icon to change current backend user to target
+	 *
 	 * @param \TYPO3\CMS\Beuser\Domain\Model\BackendUser $backendUser Target backendUser to switch active session to
 	 * @param boolean $emulate Return to current session or logout after target session termination?
 	 * @return string

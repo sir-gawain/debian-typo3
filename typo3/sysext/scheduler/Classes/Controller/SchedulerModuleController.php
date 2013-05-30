@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Scheduler\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 François Suter <francois@typo3.org>
- *  (c) 2005 Christian Jul Jensen <julle@typo3.org>
+ *  (c) 2009-2013 François Suter <francois@typo3.org>
+ *  (c) 2005-2013 Christian Jul Jensen <julle@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -158,15 +158,23 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 		$this->submittedData = \TYPO3\CMS\Core\Utility\GeneralUtility::_GPmerged('tx_scheduler');
 		$this->submittedData['uid'] = intval($this->submittedData['uid']);
 		// If a save command was submitted, handle saving now
-		if ($this->CMD == 'save') {
+		if ($this->CMD == 'save' || $this->CMD == 'saveclose') {
 			$previousCMD = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('previousCMD');
 			// First check the submitted data
 			$result = $this->preprocessData();
 			// If result is ok, proceed with saving
 			if ($result) {
 				$this->saveTask();
-				// Unset command, so that default screen gets displayed
-				unset($this->CMD);
+				if ($this->CMD == 'saveclose') {
+					// Unset command, so that default screen gets displayed
+					unset($this->CMD);
+				} elseif ($this->CMD == 'save') {
+					// After saving a "add form", return to edit
+					$this->CMD = 'edit';
+				} else {
+					// Return to edit form
+					$this->CMD = $previousCMD;
+				}
 			} else {
 				$this->CMD = $previousCMD;
 			}
@@ -420,7 +428,7 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 				$table[$tr][] = $classInfo['extension'];
 				$table[$tr][] = $classInfo['description'];
 				$link = $GLOBALS['MCONF']['_'] . '&SET[function]=list&CMD=add&tx_scheduler[class]=' . $class;
-				$table[$tr][] = '<a href="' . htmlspecialchars($link) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:new', TRUE) . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-new') . '</a>';
+				$table[$tr][] = '<a href="' . htmlspecialchars($link) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:new', TRUE) . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-new') . '</a>';
 				$tr++;
 			}
 			// Render the table and return it
@@ -651,14 +659,13 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 		// Start rendering the add/edit form
 		$content .= '<input type="hidden" name="tx_scheduler[uid]" value="' . $this->submittedData['uid'] . '" />';
 		$content .= '<input type="hidden" name="previousCMD" value="' . $this->CMD . '" />';
-		$content .= '<input type="hidden" name="CMD" value="save" />';
 		$table = array();
 		$tr = 0;
 		$defaultCell = array('<td class="td-input">', '</td>');
 		// Disable checkbox
-		$label = '<label for="task_disable">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:disable') . '</label>';
+		$label = '<label for="task_disable">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:disable') . '</label>';
 		$table[$tr][] = \TYPO3\CMS\Backend\Utility\BackendUtility::wrapInHelp($this->cshKey, 'task_disable', $label);
-		$table[$tr][] = '<input type="hidden"   name="tx_scheduler[disable]" value="0" />
+		$table[$tr][] = '<input type="hidden" name="tx_scheduler[disable]" value="0" />
 			 <input type="checkbox" name="tx_scheduler[disable]" value="1" id="task_disable"' . ($taskInfo['disable'] == 1 ? ' checked="checked"' : '') . ' />';
 		$tableLayout[$tr] = array(
 			'tr' => array('<tr id="task_disable_row">', '</tr>'),
@@ -879,7 +886,7 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 				'0' => array(
 					'tr' => array('<tr class="t3-row-header">', '</tr>'),
 					'defCol' => array('<td>', '</td>'),
-					'1' => array('<td style="width: 36px;">', '</td>'),
+					'1' => array('<td style="width: 56px;">', '</td>'),
 					'3' => array('<td colspan="2">', '</td>')
 				),
 				'defRow' => array(
@@ -918,9 +925,10 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 			// Loop on all tasks
 			while ($schedulerRecord = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				// Define action icons
-				$editAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&CMD=edit&tx_scheduler[uid]=' . $schedulerRecord['uid'] . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:edit', TRUE) . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open') . '</a>';
-				$deleteAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&CMD=delete&tx_scheduler[uid]=' . $schedulerRecord['uid'] . '" onclick="return confirm(\'' . $GLOBALS['LANG']->getLL('msg.delete') . '\');" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:delete', TRUE) . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-delete') . '</a>';
-				$stopAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&CMD=stop&tx_scheduler[uid]=' . $schedulerRecord['uid'] . '" onclick="return confirm(\'' . $GLOBALS['LANG']->getLL('msg.stop') . '\');" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:stop', TRUE) . '" class="icon"><img ' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('scheduler') . '/res/gfx/stop.png')) . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:stop') . '" /></a>';
+				$editAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&CMD=edit&tx_scheduler[uid]=' . $schedulerRecord['uid'] . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:edit', TRUE) . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-open') . '</a>';
+				$deleteAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&CMD=delete&tx_scheduler[uid]=' . $schedulerRecord['uid'] . '" onclick="return confirm(\'' . $GLOBALS['LANG']->getLL('msg.delete') . '\');" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:delete', TRUE) . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-delete') . '</a>';
+				$stopAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&CMD=stop&tx_scheduler[uid]=' . $schedulerRecord['uid'] . '" onclick="return confirm(\'' . $GLOBALS['LANG']->getLL('msg.stop') . '\');" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:stop', TRUE) . '" class="icon"><img ' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('scheduler') . '/res/gfx/stop.png')) . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:stop') . '" /></a>';
+				$runAction = '<a href="' . $GLOBALS['MCONF']['_'] . '&tx_scheduler[execute][]=' . $schedulerRecord['uid'] . '" title="' . $GLOBALS['LANG']->getLL('action.run_task') . '" class="icon">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('extensions-scheduler-run-task') . '</a>';
 				// Define some default values
 				$lastExecution = '-';
 				$isRunning = FALSE;
@@ -996,23 +1004,29 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 					}
 					// Get multiple executions setting
 					if ($task->getExecution()->getMultiple()) {
-						$multiple = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
+						$multiple = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:yes');
 					} else {
-						$multiple = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
+						$multiple = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:no');
 					}
 					// Define checkbox
 					$startExecutionElement = '<input type="checkbox" name="tx_scheduler[execute][]" value="' . $schedulerRecord['uid'] . '" id="task_' . $schedulerRecord['uid'] . '" class="checkboxes" />';
-					// Show no action links (edit, delete) if task is running
+
 					$actions = $editAction . $deleteAction;
-					if ($isRunning) {
-						$actions = $stopAction;
-					}
+
 					// Check the disable status
 					// Row is shown dimmed if task is disabled, unless it is still running
 					if ($schedulerRecord['disable'] == 1 && !$isRunning) {
 						$tableLayout[$tr] = $disabledTaskRow;
 						$executionStatus = 'disabled';
 					}
+
+					// Show no action links (edit, delete) if task is running
+					if ($isRunning) {
+						$actions = $stopAction;
+					} else {
+						$actions .= $runAction;
+					}
+
 					// Check if the last run failed
 					$failureOutput = '';
 					if (!empty($schedulerRecord['lastexecution_failure'])) {
@@ -1160,6 +1174,10 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 			if ($result) {
 				$GLOBALS['BE_USER']->writeLog(4, 0, 0, 0, 'Scheduler task "%s" (UID: %s, Class: "%s") was added', array($task->getTaskTitle(), $task->getTaskUid(), $task->getTaskClassName()));
 				$this->addMessage($GLOBALS['LANG']->getLL('msg.addSuccess'));
+
+				// set the uid of the just created task so that we
+				// can continue editing after initial saving
+				$this->submittedData['uid'] = $task->getTaskUid();
 			} else {
 				$this->addMessage($GLOBALS['LANG']->getLL('msg.addError'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
 			}
@@ -1303,12 +1321,16 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 	 * This method is used to add a message to the internal queue
 	 *
 	 * @param string $message The message itself
-	 * @param integer $severity Message level (according to t3lib_FlashMessage class constants)
+	 * @param integer $severity Message level (according to \TYPO3\CMS\Core\Messaging\FlashMessage class constants)
 	 * @return void
 	 */
 	public function addMessage($message, $severity = \TYPO3\CMS\Core\Messaging\FlashMessage::OK) {
-		$message = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $message, '', $severity);
-		\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage($message);
+		$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $message, '', $severity);
+		/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+		$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+		/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+		$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+		$defaultFlashMessageQueue->enqueue($flashMessage);
 	}
 
 	/**
@@ -1381,20 +1403,22 @@ class SchedulerModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClas
 			'addtask' => '',
 			'close' => '',
 			'save' => '',
+			'saveclose' => '',
 			'reload' => '',
 			'shortcut' => $this->getShortcutButton()
 		);
 		if (empty($this->CMD) || $this->CMD == 'list' || $this->CMD == 'delete') {
-			$buttons['reload'] = '<a href="' . $GLOBALS['MCONF']['_'] . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.reload', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-refresh') . '</a>';
+			$buttons['reload'] = '<a href="' . $GLOBALS['MCONF']['_'] . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.reload', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-refresh') . '</a>';
 			if ($this->MOD_SETTINGS['function'] === 'scheduler' && count(self::getRegisteredClasses())) {
 				$link = $GLOBALS['MCONF']['_'] . '&CMD=add';
-				$image = '<img ' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/new_el.gif') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:new', TRUE) . '" />';
+				$image = '<img ' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/new_el.gif') . ' alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:new', TRUE) . '" />';
 				$buttons['addtask'] = '<a href="' . htmlspecialchars($link) . '" ' . 'title="' . $GLOBALS['LANG']->getLL('action.add') . '">' . $image . '</a>';
 			}
 		}
 		if ($this->CMD === 'add' || $this->CMD === 'edit') {
-			$buttons['close'] = '<a href="#" onclick="document.location=\'' . $GLOBALS['MCONF']['_'] . '\'" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:cancel', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close') . '</a>';
-			$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close', array('html' => '<input type="image" name="data[save]" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:saveAndClose', TRUE) . '" />'));
+			$buttons['close'] = '<a href="#" onclick="document.location=\'' . $GLOBALS['MCONF']['_'] . '\'" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:cancel', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close') . '</a>';
+			$buttons['save'] = '<button style="padding: 0; margin: 0; cursor: pointer;" type="submit" name="CMD" value="save" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:save', TRUE) . '" />' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save') . '</button>';
+			$buttons['saveclose'] = '<button style="padding: 0; margin: 0; cursor: pointer;" type="submit" name="CMD" value="saveclose" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:saveAndClose', TRUE) . '" />' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close') . '</button>';
 		}
 		return $buttons;
 	}

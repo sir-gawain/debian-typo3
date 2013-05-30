@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012
+ *  (c) 2012-2013 Susanne Moog <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -155,6 +155,7 @@ class ListUtility implements \TYPO3\CMS\Core\SingletonInterface {
 				if ($terObject instanceof \TYPO3\CMS\Extensionmanager\Domain\Model\Extension) {
 					$extensions[$extensionKey]['terObject'] = $terObject;
 					$extensions[$extensionKey]['updateAvailable'] = $this->installUtility->isUpdateAvailable($terObject);
+					$extensions[$extensionKey]['updateToVersion'] = $this->extensionRepository->findHighestAvailableVersion($extensionKey);
 				}
 			} else {
 				unset($extensions[$extensionKey]);
