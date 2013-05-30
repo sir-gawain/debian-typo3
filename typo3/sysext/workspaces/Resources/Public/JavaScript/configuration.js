@@ -96,6 +96,7 @@ TYPO3.Workspaces.Configuration.WsPath = {
 	},
 	filter : {type: 'string'}
 };
+
 TYPO3.Workspaces.Configuration.LivePath = {
 	id: 'path_Live',
 	dataIndex : 'path_Live',
@@ -110,6 +111,7 @@ TYPO3.Workspaces.Configuration.LivePath = {
 	},
 	filter : {type: 'string'}
 };
+
 TYPO3.Workspaces.Configuration.WsTitleWithIcon = {
 	id: 'label_Workspace',
 	dataIndex : 'label_Workspace',
@@ -129,6 +131,7 @@ TYPO3.Workspaces.Configuration.WsTitleWithIcon = {
 	},
 	filter : {type: 'string'}
 };
+
 TYPO3.Workspaces.Configuration.TitleWithIcon = {
 	id: 'label_Live',
 	dataIndex : 'label_Live',
@@ -148,18 +151,7 @@ TYPO3.Workspaces.Configuration.TitleWithIcon = {
 	},
 	filter : {type: 'string'}
 };
-TYPO3.Workspaces.Configuration.ChangeState = {
-	id: 'state-change',
-	dataIndex : 'change',
-	width: 80,
-	sortable: true,
-	hidden: true,
-	header : TYPO3.lang["column.difference"],
-	renderer: function(value, metaData) {
-		return value + "%";
-	},
-	filter : {type: 'numeric'}
-};
+
 TYPO3.Workspaces.Configuration.ChangeDate = {
 	id: 'workspace_Tstamp',
 	dataIndex : 'workspace_Tstamp',
@@ -275,7 +267,7 @@ TYPO3.Workspaces.Configuration.RowButtons = {
 			tooltip: TYPO3.lang["tooltip.editElementAction"],
 			handler: function(grid, rowIndex, colIndex) {
 				var record = TYPO3.Workspaces.MainStore.getAt(rowIndex);
-				var newUrl = 'alt_doc.php?returnUrl=' + Ext.urlEncode({}, document.location.href).replace("?","%3F").replace("=", "%3D").replace(":","%3A").replace("/", "%2f") + '&id=' + TYPO3.settings.Workspaces.id + '&edit[' + record.json.table + '][' + record.json.uid + ']=edit';
+				var newUrl = 'alt_doc.php?returnUrl=' + encodeURIComponent(document.location.href) + '&id=' + TYPO3.settings.Workspaces.id + '&edit[' + record.json.table + '][' + record.json.uid + ']=edit';
 				window.location.href = newUrl;
 			},
 			getClass: function(v, meta, rec) {
@@ -369,4 +361,3 @@ TYPO3.Workspaces.Configuration.SwapButton = {
 		}
 	]
 };
-

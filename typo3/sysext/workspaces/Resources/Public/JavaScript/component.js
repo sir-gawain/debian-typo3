@@ -190,7 +190,7 @@ TYPO3.Workspaces.RowExpander = new Ext.grid.RowExpander({
 	hideable: false,
 	getRowClass : function(record, rowIndex, p, ds) {
 		cssClass = '';
-		if (!record.json.allowedAction_nextStage && !record.json.allowedAction_prevStage) {
+		if (!record.json.allowedAction_nextStage && !record.json.allowedAction_prevStage && !record.json.allowedAction_swap) {
 			cssClass = 'typo3-workspaces-row-disabled ';
 		}
 		if(this.state[record.id]) {
@@ -297,7 +297,7 @@ TYPO3.Workspaces.MainStore = new Ext.data.GroupingStore({
 		id: TYPO3.settings.Workspaces.id,
 		query: '',
 		start: 0,
-		limit: 10
+		limit: 30
 	},
 
 	showAction : false,

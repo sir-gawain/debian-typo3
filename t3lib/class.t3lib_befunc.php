@@ -755,8 +755,11 @@ final class t3lib_BEfunc {
 		foreach ($tc_keys as $table) {
 				// Load table
 			t3lib_div::loadTCA($table);
-				// All field names configured
-			if (is_array($GLOBALS['TCA'][$table]['columns'])) {
+				// All field names configured and not restricted to admins
+			if (is_array($GLOBALS['TCA'][$table]['columns'])
+					&& $GLOBALS['TCA'][$table]['ctrl']['adminOnly'] != 1
+					&& $GLOBALS['TCA'][$table]['ctrl']['rootLevel'] != 1
+					) {
 				$f_keys = array_keys($GLOBALS['TCA'][$table]['columns']);
 				foreach ($f_keys as $field) {
 					if ($GLOBALS['TCA'][$table]['columns'][$field]['exclude']) {
@@ -3088,8 +3091,18 @@ final class t3lib_BEfunc {
 			$mainParams .= (t3lib_div::_GET('M') ? '&M=' . rawurlencode(t3lib_div::_GET('M')) : '');
 		}
 
-		$onClick = 'jumpToUrl(\'' . $script . '?' . $mainParams . $addparams . '&' . $elementName . '=\'+(this.checked?1:0),this);';
-		return '<input type="checkbox" class="checkbox" name="' . $elementName . '"' . ($currentValue ? ' checked="checked"' : '') . ' onclick="' . htmlspecialchars($onClick) . '"' . ($tagParams ? ' ' . $tagParams : '') . ' />';
+		$onClick = 'jumpToUrl(' . t3lib_div::quoteJSvalue($script . '?' . $mainParams . $addparams . '&' . $elementName . '=') . '+(this.checked?1:0),this);';
+
+		return
+		'<input' .
+			' type="checkbox"' .
+			' class="checkbox"' .
+			' name="' . $elementName . '"' .
+			($currentValue ? ' checked="checked"' : '') .
+			' onclick="' . htmlspecialchars($onClick) . '"' .
+			($tagParams ? ' ' . $tagParams : '') .
+			' value="1"' .
+		' />';
 	}
 
 	/**
@@ -3446,21 +3459,22 @@ final class t3lib_BEfunc {
 	 * @see t3lib_transferData::lockRecord(), alt_doc.php, db_layout.php, db_list.php, wizard_rte.php
 	 */
 	public static function lockRecords($table = '', $uid = 0, $pid = 0) {
-		$user_id = intval($GLOBALS['BE_USER']->user['uid']);
-		if ($table && $uid) {
-			$fields_values = array(
-				'userid' => $user_id,
-				'feuserid' => 0,
-				'tstamp' => $GLOBALS['EXEC_TIME'],
-				'record_table' => $table,
-				'record_uid' => $uid,
-				'username' => $GLOBALS['BE_USER']->user['username'],
-				'record_pid' => $pid
-			);
-
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('sys_lockedrecords', $fields_values);
-		} else {
-			$GLOBALS['TYPO3_DB']->exec_DELETEquery('sys_lockedrecords', 'userid=' . intval($user_id));
+		if (isset($GLOBALS['BE_USER']->user['uid'])) {
+			$user_id = intval($GLOBALS['BE_USER']->user['uid']);
+			if ($table && $uid) {
+				$fields_values = array(
+					'userid' => $user_id,
+					'feuserid' => 0,
+					'tstamp' => $GLOBALS['EXEC_TIME'],
+					'record_table' => $table,
+					'record_uid' => $uid,
+					'username' => $GLOBALS['BE_USER']->user['username'],
+					'record_pid' => $pid
+				);
+				$GLOBALS['TYPO3_DB']->exec_INSERTquery('sys_lockedrecords', $fields_values);
+			} else {
+				$GLOBALS['TYPO3_DB']->exec_DELETEquery('sys_lockedrecords', 'userid=' . intval($user_id));
+			}
 		}
 	}
 

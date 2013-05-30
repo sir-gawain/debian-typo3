@@ -1,14 +1,14 @@
 <?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "feedit".
-#
-# Auto generated 26-01-2011 20:08
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+ * Extension Manager/Repository config file for ext "feedit".
+ *
+ * Auto generated 12-11-2012 20:32
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Frontend Editing',
@@ -40,7 +40,7 @@ $EM_CONF[$_EXTKEY] = array(
 		'suggests' => array(
 		),
 	),
-	'_md5_values_when_last_written' => 'a:3:{s:12:"ext_icon.gif";s:4:"9f86";s:17:"ext_localconf.php";s:4:"0933";s:34:"view/class.tx_feedit_editpanel.php";s:4:"7413";}',
+	'_md5_values_when_last_written' => 'a:3:{s:12:"ext_icon.gif";s:4:"9f86";s:17:"ext_localconf.php";s:4:"0933";s:34:"view/class.tx_feedit_editpanel.php";s:4:"2620";}',
 	'suggests' => array(
 	),
 );

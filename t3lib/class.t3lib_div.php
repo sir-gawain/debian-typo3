@@ -1195,27 +1195,28 @@ final class t3lib_div {
 	/**
 	 * Returns a proper HMAC on a given input string and secret TYPO3 encryption key.
 	 *
-	 * @param	 string		Input string to create HMAC from
-	 * @return	 string		resulting (hexadecimal) HMAC currently with a length of 40 (HMAC-SHA-1)
+	 * @param string $input Input string to create HMAC from
+	 * @param string $additionalSecret additionalSecret to prevent hmac beeing used in a different context
+	 * @return string resulting (hexadecimal) HMAC currently with a length of 40 (HMAC-SHA-1)
 	 */
-	public static function hmac($input) {
+	public static function hmac($input, $additionalSecret = '') {
 		$hashAlgorithm = 'sha1';
 		$hashBlocksize = 64;
 		$hmac = '';
-
+		$secret = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] . $additionalSecret;
 		if (extension_loaded('hash') && function_exists('hash_hmac') && function_exists('hash_algos') && in_array($hashAlgorithm, hash_algos())) {
-			$hmac = hash_hmac($hashAlgorithm, $input, $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
+			$hmac = hash_hmac($hashAlgorithm, $input, $secret);
 		} else {
 				// outer padding
 			$opad = str_repeat(chr(0x5C), $hashBlocksize);
 				// innner padding
 			$ipad = str_repeat(chr(0x36), $hashBlocksize);
-			if (strlen($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']) > $hashBlocksize) {
+			if (strlen($secret) > $hashBlocksize) {
 					// keys longer than blocksize are shorten
-				$key = str_pad(pack('H*', call_user_func($hashAlgorithm, $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'])), $hashBlocksize, chr(0x00));
+				$key = str_pad(pack('H*', call_user_func($hashAlgorithm, $secret)), $hashBlocksize, chr(0x00));
 			} else {
 					// keys shorter than blocksize are zero-padded
-				$key = str_pad($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'], $hashBlocksize, chr(0x00));
+				$key = str_pad($secret, $hashBlocksize, chr(0x00));
 			}
 			$hmac = call_user_func($hashAlgorithm, ($key ^ $opad) . pack('H*', call_user_func($hashAlgorithm, ($key ^ $ipad) . $input)));
 		}
@@ -2379,7 +2380,7 @@ final class t3lib_div {
 						$name = '';
 					}
 				} else {
-					if ($key = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $val))) {
+					if ($key = strtolower(preg_replace('/[^[:alnum:]_\:\-]/', '', $val))) {
 						$attributes[$key] = '';
 						$name = $key;
 					}
@@ -4529,9 +4530,12 @@ final class t3lib_div {
 	 * @see upload_to_tempfile(), tempnam()
 	 */
 	public static function unlink_tempfile($uploadedTempFileName) {
-		if ($uploadedTempFileName && self::validPathStr($uploadedTempFileName) && self::isFirstPartOfStr($uploadedTempFileName, PATH_site . 'typo3temp/') && @is_file($uploadedTempFileName)) {
-			if (unlink($uploadedTempFileName)) {
-				return TRUE;
+		if ($uploadedTempFileName) {
+			$uploadedTempFileName = self::fixWindowsFilePath($uploadedTempFileName);
+			if (self::validPathStr($uploadedTempFileName) && self::isFirstPartOfStr($uploadedTempFileName, PATH_site . 'typo3temp/') && @is_file($uploadedTempFileName)) {
+				if (unlink($uploadedTempFileName)) {
+					return TRUE;
+				}
 			}
 		}
 	}
@@ -5777,29 +5781,32 @@ final class t3lib_div {
 	 * @see makeRedirectUrl()
 	 */
 	public static function substUrlsInPlainText($message, $urlmode = '76', $index_script_url = '') {
-			// Substitute URLs with shorter links:
-		foreach (array('http', 'https') as $protocol) {
-			$urlSplit = explode($protocol . '://', $message);
-			foreach ($urlSplit as $c => &$v) {
-				if ($c) {
-					$newParts = preg_split('/\s|[<>"{}|\\\^`()\']/', $v, 2);
-					$newURL = $protocol . '://' . $newParts[0];
+		$lengthLimit = FALSE;
 
-					switch ((string) $urlmode) {
-						case 'all':
-							$newURL = self::makeRedirectUrl($newURL, 0, $index_script_url);
-							break;
-						case '76':
-							$newURL = self::makeRedirectUrl($newURL, 76, $index_script_url);
-							break;
-					}
-					$v = $newURL . substr($v, strlen($newParts[0]));
-				}
-			}
-			$message = implode('', $urlSplit);
+		switch ((string) $urlmode) {
+			case '':
+				$lengthLimit = FALSE;
+				break;
+			case 'all':
+				$lengthLimit = 0;
+				break;
+			case '76':
+			default:
+				$lengthLimit = (int) $urlmode;
 		}
 
-		return $message;
+		if ($lengthLimit === FALSE) {
+				// no processing
+			$messageSubstituted = $message;
+		} else {
+			$messageSubstituted = preg_replace(
+				'/(http|https):\/\/.+(?=[\]\.\?]*([\! \'"()<>]+|$))/eiU',
+				'self::makeRedirectUrl("\\0",' . $lengthLimit . ',"' . $index_script_url . '")',
+				$message
+			);
+		}
+
+		return $messageSubstituted;
 	}
 
 	/**
@@ -6231,8 +6238,8 @@ final class t3lib_div {
 	public static function flushOutputBuffers() {
 		$obContent = '';
 
-		while ($obContent .= ob_get_clean()) {
-			;
+		while ($content = ob_get_clean()) {
+			$obContent .= $content;
 		}
 
 			// if previously a "Content-Encoding: whatever" has been set, we have to unset it

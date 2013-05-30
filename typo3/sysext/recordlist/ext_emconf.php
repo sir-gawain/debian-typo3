@@ -1,14 +1,14 @@
 <?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "recordlist".
-#
-# Auto generated 26-01-2011 20:08
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+ * Extension Manager/Repository config file for ext "recordlist".
+ *
+ * Auto generated 12-11-2012 20:32
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Web>List',
@@ -34,7 +34,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
 	'version' => '1.1.0',
-	'_md5_values_when_last_written' => 'a:7:{s:16:"ext_autoload.php";s:4:"5a67";s:12:"ext_icon.gif";s:4:"f201";s:14:"ext_tables.php";s:4:"c03b";s:14:"mod1/clear.gif";s:4:"cc11";s:13:"mod1/conf.php";s:4:"8da2";s:14:"mod1/index.php";s:4:"6c0a";s:13:"mod1/list.gif";s:4:"2225";}',
+	'_md5_values_when_last_written' => 'a:7:{s:16:"ext_autoload.php";s:4:"5a67";s:12:"ext_icon.gif";s:4:"f201";s:14:"ext_tables.php";s:4:"c03b";s:14:"mod1/clear.gif";s:4:"cc11";s:13:"mod1/conf.php";s:4:"8da2";s:14:"mod1/index.php";s:4:"3f2f";s:13:"mod1/list.gif";s:4:"2225";}',
 	'constraints' => array(
 		'depends' => array(
 			'cms' => '',

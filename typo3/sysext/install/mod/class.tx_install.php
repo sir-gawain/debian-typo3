@@ -306,9 +306,10 @@ class tx_install extends t3lib_install {
 				// Check for mandatory PHP modules
 			$missingPhpModules = $this->getMissingPhpModules();
 			if (count($missingPhpModules) > 0) {
-				throw new RuntimeException('TYPO3 Installation Error: The following PHP module(s) is/are missing: <em>' .
-						implode(', ', $missingPhpModules) .
-						'</em><br /><br />You need to install and enable these modules first to be able to install TYPO3.'
+				throw new RuntimeException('TYPO3 Installation Error: The following PHP module(s) is/are missing: "' .
+						implode('", "', $missingPhpModules) .
+						'". You need to install and enable these modules first to be able to install TYPO3.',
+					1294587482
 				);
 			}
 		}
@@ -3758,7 +3759,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 						// New database?
 					if (trim($this->INSTALL['localconf.php']['NEW_DATABASE_NAME'])) {
 						$newdbname=trim($this->INSTALL['localconf.php']['NEW_DATABASE_NAME']);
-						if (!preg_match('/[^[:alnum:]_-]/',$newdbname)) {
+						if (!preg_match('/[^[:alnum:]_]/',$newdbname)) {
 							if ($result = $GLOBALS['TYPO3_DB']->sql_pconnect(TYPO3_db_host, TYPO3_db_username, TYPO3_db_password)) {
 								if ($GLOBALS['TYPO3_DB']->admin_query('CREATE DATABASE '.$newdbname)) {
 									$this->INSTALL['localconf.php']['typo_db'] = $newdbname;
@@ -3787,7 +3788,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					foreach ($this->INSTALL['localconf.php'] as $key => $value) {
 						switch((string)$key) {
 							case 'typo_db_username':
-								if (strlen($value)<50) {
+								if (strlen($value) <= 50) {
 									if (strcmp(TYPO3_db_username,$value))		$this->setValueInLocalconfFile($lines, '$typo_db_username', trim($value));
 								} else {
 									$this->errorMessages[] = '
@@ -3797,7 +3798,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 								}
 							break;
 							case 'typo_db_password':
-								if (strlen($value)<50) {
+								if (strlen($value) <= 50) {
 									if (strcmp(TYPO3_db_password,$value))		$this->setValueInLocalconfFile($lines, '$typo_db_password',  trim($value));
 								} else {
 									$this->errorMessages[] = '
@@ -3806,7 +3807,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 								}
 							break;
 							case 'typo_db_host':
-								if (preg_match('/^[a-zA-Z0-9_\.-]+(:.+)?$/',$value) && strlen($value)<50) {
+								if (preg_match('/^[a-zA-Z0-9_\.-]+(:.+)?$/',$value) && strlen($value) <= 50) {
 									if (strcmp(TYPO3_db_host,$value))		$this->setValueInLocalconfFile($lines, '$typo_db_host', $value);
 								} else {
 									$this->errorMessages[] = '
@@ -3817,7 +3818,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 								}
 							break;
 							case 'typo_db':
-								if (strlen($value)<50) {
+								if (strlen($value) <= 50) {
 									if (strcmp(TYPO3_db,$value))		$this->setValueInLocalconfFile($lines, '$typo_db',  trim($value));
 								} else {
 									$this->errorMessages[] = '
@@ -4658,6 +4659,10 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 						The tool \'convert\' is used to read the image and write
 						a temporary JPG-file
 					</p>
+					<p>
+						In case the images appear remarkably darker than the reference images,
+						try to set [TYPO3_CONF_VARS][GFX][colorspace] = sRGB.
+					</p>
 				');
 
 				if ($imActive) {
@@ -4671,7 +4676,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 							if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 
 							$imageProc->imageMagickConvert_forceFileNameBody='read_'.$ext;
-							$fileInfo = $imageProc->imageMagickConvert($theFile,'jpg',"",'',"",'',"",1);
+							$fileInfo = $imageProc->imageMagickConvert($theFile, 'jpg', '', '', '', '', array(), TRUE);
 							$result = $this->displayTwinImage($fileInfo[3],$imageProc->IM_commands);
 							$this->message($headCode,"Read ".strtoupper($ext),$result[0],$result[1]);
 						}
@@ -4683,7 +4688,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 						if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 
 						$imageProc->imageMagickConvert_forceFileNameBody='read_pdf';
-						$fileInfo = $imageProc->imageMagickConvert($theFile,'jpg',"170",'',"",'',"",1);
+						$fileInfo = $imageProc->imageMagickConvert($theFile, 'jpg', '170', '', '', '', array(), TRUE);
 						$result = $this->displayTwinImage($fileInfo[3],$imageProc->IM_commands);
 						$this->message($headCode,'Read PDF',$result[0],$result[1]);
 					}
@@ -4693,7 +4698,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 						if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 
 						$imageProc->imageMagickConvert_forceFileNameBody='read_ai';
-						$fileInfo = $imageProc->imageMagickConvert($theFile,'jpg',"170",'',"",'',"",1);
+						$fileInfo = $imageProc->imageMagickConvert($theFile, 'jpg', '170', '', '', '', array(), TRUE);
 						$result = $this->displayTwinImage($fileInfo[3],$imageProc->IM_commands);
 						$this->message($headCode,'Read AI',$result[0],$result[1]);
 					}
@@ -4731,7 +4736,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 
 					$imageProc->imageMagickConvert_forceFileNameBody='write_gif';
-					$fileInfo = $imageProc->imageMagickConvert($theFile,'gif',"",'',"",'',"",1);
+					$fileInfo = $imageProc->imageMagickConvert($theFile, 'gif', '', '', '', '', array(), TRUE);
 					if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gif_compress']) {
 						clearstatcache();
 						$prevSize=t3lib_div::formatSize(@filesize($fileInfo[3]));
@@ -4749,7 +4754,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					$theFile = t3lib_extMgm::extPath('install').'imgs/jesus.gif';
 
 					$imageProc->imageMagickConvert_forceFileNameBody='write_png';
-					$fileInfo = $imageProc->imageMagickConvert($theFile,'png',"",'',"",'',"",1);
+					$fileInfo = $imageProc->imageMagickConvert($theFile, 'png', '', '', '', '', array(), TRUE);
 					$result = $this->displayTwinImage($fileInfo[3],$imageProc->IM_commands);
 					$this->message($headCode,'Write PNG',$result[0],$result[1]);
 				} else {
@@ -4783,7 +4788,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 
 					$imageProc->imageMagickConvert_forceFileNameBody='scale_gif';
-					$fileInfo = $imageProc->imageMagickConvert($theFile,'gif',"150",'',"",'',"",1);
+					$fileInfo = $imageProc->imageMagickConvert($theFile, 'gif', '150', '', '', '', array(), TRUE);
 					if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gif_compress']) {
 						clearstatcache();
 						$prevSize=t3lib_div::formatSize(@filesize($fileInfo[3]));
@@ -4800,7 +4805,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 
 					$imageProc->imageMagickConvert_forceFileNameBody='scale_png';
-					$fileInfo = $imageProc->imageMagickConvert($theFile,'png',"150",'',"",'',"",1);
+					$fileInfo = $imageProc->imageMagickConvert($theFile, 'png', '150', '', '', '', array(), TRUE);
 					$result = $this->displayTwinImage($fileInfo[3],$imageProc->IM_commands);
 					$this->message($headCode,'PNG to PNG, 150 pixels wide',$result[0],$result[1]);
 
@@ -4808,7 +4813,7 @@ REMOTE_ADDR was '".t3lib_div::getIndpEnv('REMOTE_ADDR')."' (".t3lib_div::getIndp
 					$theFile = t3lib_extMgm::extPath('install').'imgs/jesus2_transp.gif';
 					if (!@is_file($theFile))	die('Error: '.$theFile.' was not a file');
 					$imageProc->imageMagickConvert_forceFileNameBody='scale_jpg';
-					$fileInfo = $imageProc->imageMagickConvert($theFile,'jpg',"150",'',"",'',"",1);
+					$fileInfo = $imageProc->imageMagickConvert($theFile, 'jpg', '150', '', '', '', array(), TRUE);
 					$result = $this->displayTwinImage($fileInfo[3],$imageProc->IM_commands);
 					$this->message($headCode,'GIF to JPG, 150 pixels wide',$result[0],$result[1]);
 				} else {

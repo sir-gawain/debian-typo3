@@ -876,19 +876,33 @@
 	}
 
 	/**
-	 * Checks if the page is hidden. If it is hidden, preview flags will be set.
+	 * Checks if the page is hidden in the active workspace.
+	 * If it is hidden, preview flags will be set.
 	 *
 	 * @return bool
 	 */
 	protected function determineIdIsHiddenPage() {
 		$field = t3lib_div::testInt($this->id) ? 'uid' : 'alias';
 		$pageSelectCondition = $field . '=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->id, 'pages');
-		$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('uid,hidden,starttime,endtime', 'pages',
-			$pageSelectCondition . ' AND pid>=0 AND deleted=0');
-		$result = is_array($page) && (
-			$page['hidden'] || $page['starttime'] > $GLOBALS['SIM_EXEC_TIME'] ||
-				($page['endtime'] != 0 && $page['endtime'] <= $GLOBALS['SIM_EXEC_TIME'])
+		$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+			'uid,hidden,starttime,endtime',
+			'pages',
+			$pageSelectCondition . ' AND pid>=0 AND deleted=0'
 		);
+		$workspace = $this->whichWorkspace();
+		if ($workspace !== 0 && $workspace !== FALSE) {
+				// Fetch overlay of page if in workspace and check if it is hidden
+			$pageSelectObject = t3lib_div::makeInstance('t3lib_pageSelect');
+			$pageSelectObject->versioningPreview = TRUE;
+			$pageSelectObject->init(FALSE);
+			$targetPage = $pageSelectObject->getWorkspaceVersionOfRecord($this->whichWorkspace(), 'pages', $page['uid']);
+			$result = ($targetPage === -1 || $targetPage === -2);
+		} else {
+			$result = is_array($page) && (
+				$page['hidden'] || $page['starttime'] > $GLOBALS['SIM_EXEC_TIME'] ||
+					($page['endtime'] != 0 && $page['endtime'] <= $GLOBALS['SIM_EXEC_TIME'])
+			);
+		}
 		return $result;
 	}
 
@@ -2630,6 +2644,7 @@
 	function setExternalJumpUrl()	{
 		if ($extUrl = $this->sys_page->getExtURL($this->page, $this->config['config']['disablePageExternalUrl']))	{
 			$this->jumpurl = $extUrl;
+			t3lib_div::_GETset(t3lib_div::hmac($this->jumpurl, 'jumpurl'), 'juHash');
 		}
 	}
 
@@ -2710,7 +2725,27 @@
 							break;
 					}
 				}
-				t3lib_utility_Http::redirect($this->jumpurl, $statusCode);
+				$allowRedirect = FALSE;
+				if (t3lib_div::hmac($this->jumpurl, 'jumpurl') === (string)t3lib_div::_GP('juHash')) {
+					$allowRedirect = TRUE;
+				} elseif (is_array($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['jumpurlRedirectHandler'])) {
+					foreach ($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['jumpurlRedirectHandler'] as $classReference) {
+						$hookObject = t3lib_div::getUserObj($classReference);
+						$allowRedirectFromHook = FALSE;
+						if (method_exists($hookObject, 'jumpurlRedirectHandler')) {
+							$allowRedirectFromHook = $hookObject->jumpurlRedirectHandler($this->jumpurl, $this);
+						}
+						if ($allowRedirectFromHook === TRUE) {
+							$allowRedirect = TRUE;
+							break;
+						}
+					}
+				}
+				if ($allowRedirect) {
+					t3lib_utility_Http::redirect($this->jumpurl, $statusCode);
+				} else {
+					throw new Exception('jumpurl: Calculated juHash did not match the submitted juHash.', 1359987599);
+				}
 			}
 		}
 	}
@@ -3307,35 +3342,46 @@
 	 * @access private
 	 */
 	function INTincScript_loadJSCode()	{
-		if ($this->JSImgCode)	{	// If any images added, then add them to the javascript section
-			$this->additionalHeaderData['JSImgCode']='
+		// If any images added, then add them to the javascript section
+		$jsImgCode = trim($this->JSImgCode);
+		if ($jsImgCode !== '') {
+			$this->additionalHeaderData['JSImgCode'] = '
 <script type="text/javascript">
 	/*<![CDATA[*/
 <!--
 if (version == "n3") {
-'.trim($this->JSImgCode).'
+' . $jsImgCode . '
 }
 // -->
 	/*]]>*/
 </script>';
 		}
-		if ($this->JSCode || count($this->additionalJavaScript))	{	// Add javascript
-			$this->additionalHeaderData['JSCode']='
+		// Add javascript
+		$jsCode = trim($this->JSCode);
+		$additionalJavaScript = is_array($this->additionalJavaScript)
+			? implode(LF, $this->additionalJavaScript)
+			: $this->additionalJavaScript;
+		$additionalJavaScript = trim($additionalJavaScript);
+		if ($jsCode !== '' || $additionalJavaScript !== '') {
+			$this->additionalHeaderData['JSCode'] = '
 <script type="text/javascript">
 	/*<![CDATA[*/
 <!--
-'.implode(LF,$this->additionalJavaScript).'
-'.trim($this->JSCode).'
+' . $additionalJavaScript . '
+' . $jsCode . '
 // -->
 	/*]]>*/
 </script>';
 		}
-		if (count($this->additionalCSS))	{	// Add javascript
-			$this->additionalHeaderData['_CSS']='
+		// Add CSS
+		$additionalCss = is_array($this->additionalCSS) ? implode(LF, $this->additionalCSS) : $this->additionalCSS;
+		$additionalCss = trim($additionalCss);
+		if ($additionalCss !== '') {
+			$this->additionalHeaderData['_CSS'] = '
 <style type="text/css">
 	/*<![CDATA[*/
 <!--
-'.implode(LF,$this->additionalCSS).'
+' . $additionalCss . '
 // -->
 	/*]]>*/
 </style>';

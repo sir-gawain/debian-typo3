@@ -99,7 +99,7 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 	var $relPath = ''; // Relative path
 	var $relBackPath = ''; // Relative back-path
 	public $tsConfig = array(); // Current Page TSConfig
-	var $procOptions = ''; // Set to the TSconfig options coming from Page TSconfig
+	var $procOptions = array(); // Set to the TSconfig options coming from Page TSconfig
 
 		// Internal, dynamic
 	var $TS_transform_db_safecounter = 100; // Run-away brake for recursive calls.
@@ -209,7 +209,7 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 
 			// Init:
 		$this->tsConfig = $thisConfig;
-		$this->procOptions = $thisConfig['proc.'];
+		$this->procOptions = (array) $thisConfig['proc.'];
 		$this->preserveTags = strtoupper(implode(',', t3lib_div::trimExplode(',', $this->procOptions['preserveTags'])));
 
 			// dynamic configuration of blockElementList
@@ -285,8 +285,13 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 						break;
 						case 'ts_transform':
 						case 'css_transform':
-							$value = str_replace(CR, '', $value); // Has a very disturbing effect, so just remove all '13' - depend on '10'
 							$this->allowedClasses = t3lib_div::trimExplode(',', $this->procOptions['allowedClasses'], 1);
+								// CR has a very disturbing effect, so just remove all CR and rely on LF
+							$value = str_replace(CR, '', $value);
+								// Transform empty paragraphs into spacing paragraphs
+							$value = str_replace('<p></p>', '<p>&nbsp;</p>', $value);
+								// Double any trailing spacing paragraph so that it does not get removed by divideIntoLines()
+							$value = preg_replace('/<p>&nbsp;<\/p>$/', '<p>&nbsp;</p>' . '<p>&nbsp;</p>', $value);
 							$value = $this->TS_transform_db($value, $cmd == 'css_transform');
 						break;
 						case 'ts_strip':
@@ -839,7 +844,7 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 							if (!isset($this->procOptions['typolist']) || $this->procOptions['typolist']) {
 								$parts = $this->getAllParts($this->splitIntoBlock('LI', $this->removeFirstAndLastTag($blockSplit[$k])), 1, 0);
 								foreach ($parts as $k2 => $value) {
-									$parts[$k2] = preg_replace('/[' . preg_quote(LF . CR) . ']+/', '', $parts[$k2]); // remove all linesbreaks!
+									$parts[$k2] = preg_replace('/[' . LF . CR . ']+/', '', $parts[$k2]); // remove all linesbreaks!
 									$parts[$k2] = $this->defaultTStagMapping($parts[$k2], 'db');
 									$parts[$k2] = $this->cleanFontTags($parts[$k2], 0, 0, 0);
 									$parts[$k2] = $this->HTMLcleaner_db($parts[$k2], strtolower($this->procOptions['allowTagsInTypolists'] ? $this->procOptions['allowTagsInTypolists'] : 'br,font,b,i,u,a,img,span,strong,em'));
@@ -852,14 +857,14 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 								$blockSplit[$k] = '<typolist' . $params . '>' . LF . implode(LF, $parts) . LF . '</typolist>' . $lastBR;
 							}
 						} else {
-							$blockSplit[$k] = preg_replace('/[' . preg_quote(LF . CR) . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+							$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 						}
 					break;
 					case 'table': // Tables are NOT allowed in any form (unless preserveTables is set or CSS is the mode)
 						if (!$this->procOptions['preserveTables'] && !$css) {
 							$blockSplit[$k] = $this->TS_transform_db($this->removeTables($blockSplit[$k]));
 						} else {
-							$blockSplit[$k] = preg_replace('/[' . preg_quote(LF . CR) . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+							$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 						}
 					break;
 					case 'h1':
@@ -894,23 +899,23 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 							}
 						} else {
 								// Eliminate true linebreaks inside Hx tags
-							$blockSplit[$k] = preg_replace('/[' . preg_quote(LF . CR) . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+							$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 						}
 					break;
 					default:
 							// Eliminate true linebreaks inside other headlist tags
-						$blockSplit[$k] = preg_replace('/[' . preg_quote(LF . CR) . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
+						$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+/', ' ', $this->transformStyledATags($blockSplit[$k])) . $lastBR;
 					break;
 				}
 			} else { // NON-block:
 				if (strcmp(trim($blockSplit[$k]), '')) {
 					$blockSplit[$k] = preg_replace('/<hr\/>/', '<hr />', $blockSplit[$k]);
 						// Remove linebreaks preceding hr tags
-					$blockSplit[$k] = preg_replace('/[' . preg_quote(LF . CR) . ']+<(hr)(\s[^>\/]*)?[[:space:]]*\/?>/', '<$1$2/>', $blockSplit[$k]);
+					$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+<(hr)(\s[^>\/]*)?[[:space:]]*\/?>/', '<$1$2/>', $blockSplit[$k]);
 						// Remove linebreaks following hr tags
-					$blockSplit[$k] = preg_replace('/<(hr)(\s[^>\/]*)?[[:space:]]*\/?>[' . preg_quote(LF . CR) . ']+/', '<$1$2/>', $blockSplit[$k]);
+					$blockSplit[$k] = preg_replace('/<(hr)(\s[^>\/]*)?[[:space:]]*\/?>[' . LF . CR . ']+/', '<$1$2/>', $blockSplit[$k]);
 						// Replace other linebreaks with space
-					$blockSplit[$k] = preg_replace('/[' . preg_quote(LF . CR) . ']+/', ' ', $blockSplit[$k]);
+					$blockSplit[$k] = preg_replace('/[' . LF . CR . ']+/', ' ', $blockSplit[$k]);
 					$blockSplit[$k] = $this->divideIntoLines($blockSplit[$k]) . $lastBR;
 					$blockSplit[$k] = $this->transformStyledATags($blockSplit[$k]);
 				} else {
@@ -957,10 +962,9 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 	 * @see TS_transform_db()
 	 */
 	function TS_transform_rte($value, $css = 0) {
-
-			// Split the content from Database by the occurence of these blocks:
-		$blockSplit = $this->splitIntoBlock('TABLE,BLOCKQUOTE,TYPOLIST,TYPOHEAD,' . ($this->procOptions['preserveDIVSections'] ? 'DIV,' : '') . $this->blockElementList, $value);
-
+			// Split the content from database by the occurence of the block elements
+		$blockElementList = 'TABLE,BLOCKQUOTE,TYPOLIST,TYPOHEAD,' . ($this->procOptions['preserveDIVSections'] ? 'DIV,' : '') . $this->blockElementList;
+		$blockSplit = $this->splitIntoBlock($blockElementList, $value);
 			// Traverse the blocks
 		foreach ($blockSplit as $k => $v) {
 			if ($k % 2) { // Inside one of the blocks:
@@ -1009,12 +1013,19 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 				$blockSplit[$k + 1] = preg_replace('/^[ ]*' . LF . '/', '', $blockSplit[$k + 1]); // Removing linebreak if typohead
 			} else { // NON-block:
 				$nextFTN = $this->getFirstTagName($blockSplit[$k + 1]);
-				$singleLineBreak = $blockSplit[$k] == LF;
-				if (t3lib_div::inList('TABLE,BLOCKQUOTE,TYPOLIST,TYPOHEAD,' . ($this->procOptions['preserveDIVSections'] ? 'DIV,' : '') . $this->blockElementList, $nextFTN)) { // Removing linebreak if typolist/typohead
-					$blockSplit[$k] = preg_replace('/' . LF . '[ ]*$/', '', $blockSplit[$k]);
+				$onlyLineBreaks = (preg_match('/^[ ]*' . LF . '+[ ]*$/', $blockSplit[$k]) == 1);
+					// If the line is followed by a block or is the last line:
+				if (t3lib_div::inList($blockElementList, $nextFTN) || !isset($blockSplit[$k + 1])) {
+						// If the line contains more than just linebreaks, reduce the number of trailing linebreaks by 1
+					if (!$onlyLineBreaks) {
+						$blockSplit[$k] = preg_replace('/(' . LF . '*)' . LF . '[ ]*$/', '$1', $blockSplit[$k]);
+					} else {
+							// If the line contains only linebreaks, remove the leading linebreak
+						$blockSplit[$k] = preg_replace('/^[ ]*' . LF . '/', '', $blockSplit[$k]);
+					}
 				}
-					// If $blockSplit[$k] is blank then unset the line. UNLESS the line happend to be a single line break.
-				if (!strcmp($blockSplit[$k], '') && !$singleLineBreak) {
+					// If $blockSplit[$k] is blank then unset the line, unless the line only contained linebreaks
+				if (!strcmp($blockSplit[$k], '') && !$onlyLineBreaks) {
 					unset($blockSplit[$k]);
 				} else {
 					$blockSplit[$k] = $this->setDivTags($blockSplit[$k], ($this->procOptions['useDIVasParagraphTagForRTE'] ? 'div' : 'p'));
@@ -1244,8 +1255,8 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 		if (count($divSplit) <= 1 || $count <= 0) {
 				// Wrap hr tags with LF's
 			$newValue = preg_replace('/<(hr)(\s[^>\/]*)?[[:space:]]*\/?>/i', LF . '<$1$2/>' . LF, $value);
-			$newValue = preg_replace('/' . preg_quote(LF . LF) . '/i', LF, $newValue);
-			$newValue = preg_replace('/(^' . preg_quote(LF) . ')|(' . preg_quote(LF) . '$)/i', '', $newValue);
+			$newValue = preg_replace('/' . LF . LF . '/i', LF, $newValue);
+			$newValue = preg_replace('/(^' . LF . ')|(' . LF . '$)/i', '', $newValue);
 			return $newValue;
 		}
 
@@ -1337,8 +1348,8 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 				$divSplit[$k] = trim(strip_tags($divSplit[$k], '<' . implode('><', $allowTagsOutside) . '>'));
 					// Wrap hr tags with LF's
 				$divSplit[$k] = preg_replace('/<(hr)(\s[^>\/]*)?[[:space:]]*\/?>/i', LF . '<$1$2/>' . LF, $divSplit[$k]);
-				$divSplit[$k] = preg_replace('/' . preg_quote(LF . LF) . '/i', LF, $divSplit[$k]);
-				$divSplit[$k] = preg_replace('/(^' . preg_quote(LF) . ')|(' . preg_quote(LF) . '$)/i', '', $divSplit[$k]);
+				$divSplit[$k] = preg_replace('/' . LF . LF . '/i', LF, $divSplit[$k]);
+				$divSplit[$k] = preg_replace('/(^' . LF . ')|(' . LF . '$)/i', '', $divSplit[$k]);
 				if (!strcmp($divSplit[$k], '')) {
 					unset($divSplit[$k]);
 				} // Remove part if it's empty
@@ -1639,7 +1650,6 @@ class t3lib_parsehtml_proc extends t3lib_parsehtml {
 		return implode('', $blockSplit);
 	}
 }
-
 
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_parsehtml_proc.php'])) {
 	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_parsehtml_proc.php']);

@@ -27,7 +27,7 @@
 /**
  * Contains the TMENU_LAYERS extension class, tslib_tmenu_layers
  *
- * $Id: tmenu_layers.php 5165 2009-03-09 18:28:59Z ohader $
+ * $Id$
  * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
  * XHTML compliant
  *
@@ -78,7 +78,6 @@
  * @author	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @package TYPO3
  * @subpackage tslib
- * @link http://typo3.org/doc.0.html?&tx_extrepmgm_pi1[extUid]=270&tx_extrepmgm_pi1[tocEl]=385&cHash=648519dd66
  * @see diff.xmenu_layers.txt
  */
 class tslib_tmenu_layers extends tslib_tmenu {
@@ -114,7 +113,7 @@ class tslib_tmenu_layers extends tslib_tmenu {
 	 * @return	void
 	 */
 	function extProc_init()	{
-		$this->WMid = trim($this->mconf['layer_menu_id'])?trim($this->mconf['layer_menu_id']).'x':substr(md5(microtime()),0,6);	// NO '_' (underscore) in the ID!!! NN4 breaks!
+		$this->WMid = trim($this->mconf['layer_menu_id']) ? trim($this->mconf['layer_menu_id']) . 'x' : substr(md5('gl' . serialize($this->mconf)), 0, 6);
 
 		$GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid'][]=$this->WMid;
 		$this->WMtempStore = $GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid'];
@@ -354,7 +353,7 @@ if (!GLV_doReset["'.$mIdStr.'"] && GLV_currentLayer["'.$mIdStr.'"]!=null)	resetS
 		}
 		$GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid']=array_merge($this->WMtempStore,$GLOBALS['TSFE']->applicationData['GMENU_LAYERS']['WMid']);
 		$GLOBALS['TSFE']->additionalHeaderData['gmenu_layer_shared']='<script type="text/javascript" src="'.t3lib_extMgm::siteRelPath('cms').'tslib/media/scripts/jsfunc.layermenu.js"></script>';
-		$GLOBALS['TSFE']->JSCode.= '
+		$GLOBALS['TSFE']->additionalJavaScript['gmenu_layer_code'].= '
 
 GLV_curLayerWidth["'.$this->WMid.'"]=0;
 GLV_curLayerHeight["'.$this->WMid.'"]=0;
@@ -378,7 +377,7 @@ GLV_menuXY["'.$this->WMid.'"] = new Array();
 '.$this->WMrestoreVars;
 
 		if ($this->mconf['freezeMouseover'])	{
-			$GLOBALS['TSFE']->JSCode.= '
+			$GLOBALS['TSFE']->additionalJavaScript['gmenu_layer_code'].= '
 // Alternative rollover/out functions for use with GMENU_LAYER
 function GL'.$this->WMid.'_over(mitm_id)	{
 	GL'.$this->WMid.'_out("");	// removes any old roll over state of an item. Needed for alwaysKeep and Opera browsers.
@@ -395,7 +394,7 @@ function GL'.$this->WMid.'_out(mitm_id)	{
 }
 ';
 		}
-		$GLOBALS["TSFE"]->JSCode.= '
+		$GLOBALS["TSFE"]->additionalJavaScript['gmenu_layer_code'].= '
 function GL'.$this->WMid.'_getMouse(e) {
 	if (GLV_menuOn["'.$this->WMid.'"]!=null && !GLV_dontFollowMouse["'.$this->WMid.'"]){
 '.implode(LF,$GLV_menuOn).'
@@ -423,8 +422,10 @@ GLV_timeout_count++;
 ';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onload']['GL_initLayers()']= 'GL_initLayers();';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onload'][$this->WMid]=	'GL_restoreMenu("'.$this->WMid.'");';
-		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove']['GL_getMouse(e)']= 'GL_getMouse(e);';	// Should be called BEFORE any of the 'local' getMouse functions!
-		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove'][$this->WMid]= 'GL'.$this->WMid.'_getMouse(e);';
+		// Should be called BEFORE any of the 'local' getMouse functions!
+		// is put inside in a try catch block to avoid JS errors in IE
+		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove']['GL_getMouse(e)']= 'try{GL_getMouse(e);}catch(ex){};';
+		$GLOBALS['TSFE']->JSeventFuncCalls['onmousemove'][$this->WMid]= 'try{GL'.$this->WMid.'_getMouse(e);}catch(ex){};';
 		$GLOBALS['TSFE']->JSeventFuncCalls['onmouseup'][$this->WMid]= 'GL_mouseUp(\''.$this->WMid.'\',e);';
 
 		$GLOBALS['TSFE']->divSection.=implode($this->divLayers,LF).LF;

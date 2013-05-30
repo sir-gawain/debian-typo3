@@ -191,10 +191,14 @@ class t3lib_TCEforms_Tree {
 					},
 					checkchange: TYPO3.Components.Tree.TcaCheckChangeHandler,
 					collapsenode: function(node) {
-						top.TYPO3.BackendUserSettings.ExtDirect.removeFromList("tcaTrees." + this.ucId, node.attributes.uid);
+						if (node.id !== "root") {
+							top.TYPO3.BackendUserSettings.ExtDirect.removeFromList("tcaTrees." + this.ucId, node.attributes.uid);
+						}
 					},
 					expandnode: function(node) {
-						top.TYPO3.BackendUserSettings.ExtDirect.addToList("tcaTrees." + this.ucId, node.attributes.uid);
+						if (node.id !== "root") {
+							top.TYPO3.BackendUserSettings.ExtDirect.addToList("tcaTrees." + this.ucId, node.attributes.uid);
+						}
 					}
 				},
 				tcaMaxItems: ' . ($PA['fieldConf']['config']['maxitems'] ? intval($PA['fieldConf']['config']['maxitems']) : 99999) . ',
@@ -215,7 +219,7 @@ class t3lib_TCEforms_Tree {
 
 		$formField = '
 			<div class="typo3-tceforms-tree">
-				<input type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" id="treeinput' . $id . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />
+				<input class="treeRecord" type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" id="treeinput' . $id . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />
 			</div>
 			<div id="tree_' . $id . '">
 

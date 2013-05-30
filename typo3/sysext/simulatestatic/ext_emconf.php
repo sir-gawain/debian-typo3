@@ -1,14 +1,14 @@
 <?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "simulatestatic".
-#
-# Auto generated 26-01-2011 20:08
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+ * Extension Manager/Repository config file for ext "simulatestatic".
+ *
+ * Auto generated 12-11-2012 20:33
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Simulate Static URLs',
@@ -33,7 +33,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
 	'version' => '1.0.0',
-	'_md5_values_when_last_written' => 'a:2:{s:27:"class.tx_simulatestatic.php";s:4:"46c0";s:17:"ext_localconf.php";s:4:"eace";}',
+	'_md5_values_when_last_written' => 'a:2:{s:27:"class.tx_simulatestatic.php";s:4:"346a";s:17:"ext_localconf.php";s:4:"eace";}',
 	'constraints' => array(
 		'depends' => array(
 			'php' => '5.1.0-0.0.0',

@@ -57,6 +57,7 @@ $TYPO3_CONF_VARS = array(
 		'TTFLocaleConv' => '',					// String: Enter locale conversion string used to recode input to TrueType functions. Eg. 'cp1250..UTF-8'. Deprecated from ver. 3.6.0 of TYPO3. Set up <a href="#BE-forceCharset">[BE][forceCharset]</a> as strings are automatically converted from database charset to UTF-8.
 		'TTFdpi' => 72,							// Integer: Enter how many dpi the FreeType module uses. Freetype1 should be set to 72. Freetype2 should be set to 96 (otherwise fonts are rendered way bigger than FreeType1). This works as a global scaling factor for Freetype.
 		'png_truecolor' => FALSE,				// Boolean: If set PNGs will get created as truecolor PNGs. If you use GDlib2 you can create truecolor images if they look not well currently. Note that this results in an increased image size. JPEGs get always created in truecolor now (GDlib2 required)
+		'colorspace' => 'RGB', // String: Specifiy the colorspace to use. Some ImageMagick versions (like 6.7.0 and above) use the sRGB colorspace, so all images are darker then the original. <br />Possible Values: CMY, CMYK, Grey, HCL, HSB, HSL, HWB, Lab, LCH, LMS, Log, Luv, OHTA, Rec601Luma, Rec601YCbCr, Rec709Luma, Rec709YCbCr, RGB, sRGB, Transparent, XYZ, YCbCr, YCC, YIQ, YCbCr, YUV
 	),
 	'SYS' => array(			// System related concerning both frontend and backend.
 		'sitename' => 'TYPO3',					// Name of the base-site. This title shows up in the root of the tree structure if you're an 'admin' backend user.
@@ -157,12 +158,12 @@ $TYPO3_CONF_VARS = array(
 		'productionExceptionHandler'  => 't3lib_error_ProductionExceptionHandler',	// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "t3lib_error_ProductionExceptionHandler". This exception handler displays a nice error message when something went wrong. The error message is logged to the configured logs. Note: The configured "productionExceptionHandler" is used if displayErrors is set to "0" or to "-1" and devIPmask doesn't match the users IP.
 		'debugExceptionHandler' => 't3lib_error_DebugExceptionHandler',				// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "t3lib_error_DebugExceptionHandler". This exception handler displays the complete stack trace of any encountered exception. The error message and the stack trace  is logged to the configured logs. Note: The configured "debugExceptionHandler" is used if displayErrors is set to "1" and if displayErrors is "-1"  or "2" and the devIPmask matches the users IP.
 		'errorHandler' => 't3lib_error_ErrorHandler',	// String: Classname to handle PHP errors. E.g.: t3lib_error_ErrorHandler. This class displays and logs all errors that are registered as "errorHandlerErrors" (<a href="#SYS-errorHandlerErrors">[SYS][errorHandlerErrors]</a>). Leave empty to disable error handling. Errors can be logged to syslog (see: <a href="#SYS-systemLog">[SYS][systemLog]</a>) to the installed developer log and to the "syslog" table. If an error is registered in "exceptionalErrors" ([SYS][exceptionalErrors]) it will be turned into an exception to be handled by the configured exceptionHandler.
-		'errorHandlerErrors' => E_ALL & ~(E_STRICT | E_NOTICE),	// Integer: The E_* constant that will be handled by the errorhandler. Default is "E_ALL ^ E_NOTICE".
-		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),	// Integer: The E_* constant that will be handled as an exception by t3lib_error_ErrorHandler. Default is <tt>E_ALL ^ E_NOTICE ^ E_DEPRECATED ^ E_WARNING ^ E_USER_ERROR ^ E_USER_NOTICE ^ E_USER_WARNING</tt> (20725) and "0" if <tt>displayErrors=0</tt> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
+		'errorHandlerErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR),	// Integer: The E_* constant that will be handled by the errorhandler. Not all PHP error types can be handled! Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR)</tt>.
+		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),	// Integer: The E_* constant that will be handled as an exception by t3lib_error_ErrorHandler. Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING)</tt> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
 		'enable_errorDLOG' => 0,				// Boolean: If set, errors are written to the developer log (requires an installed *devlog* extension).
 		'enable_exceptionDLOG' => 0,			// Boolean: If set, exceptions are written to the developer log (requires an installed *devlog* extension).
-		'syslogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),	// Integer: Configures which PHP errors should be logged to the configured syslogs (see: [SYS][systemLog]). If set to "0" no PHP errors are logged to the syslog. Default is "E_ALL ^ E_NOTICE" (6135).
-		'belogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),	// Integer: Configures which PHP errors should be logged to the "syslog" table (extension: belog). If set to "0" no PHP errors are logged to the sys_log table. Default is "E_ALL ^ E_NOTICE" (6135).
+		'syslogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),	// Integer: Configures which PHP errors should be logged to the configured syslogs (see: [SYS][systemLog]). If set to "0" no PHP errors are logged to the syslog. Default is "E_ALL & ~(E_STRICT | E_NOTICE)" (22519).
+		'belogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),	// Integer: Configures which PHP errors should be logged to the "syslog" table (extension: belog). If set to "0" no PHP errors are logged to the sys_log table. Default is "E_ALL & ~(E_STRICT | E_NOTICE)" (22519).
 		'locallangXMLOverride' => array(),				// For extension/overriding of the arrays in 'locallang' files in frontend and backend. See 'Inside TYPO3' for more information.
 		'generateApacheHtaccess' => 1,			// Boolean: TYPO3 can create <em>.htaccess</em> files which are used by Apache Webserver. They are useful for access protection or performance improvements. Currently <em>.htaccess</em> files in the following directories are created, if they do not exist: <ul><li>typo3temp/compressor/</li></ul>You want to disable this feature, if you are not running Apache or want to use own rulesets.
 	),
@@ -672,10 +673,10 @@ if (TYPO3_MODE === 'BE') {
 $T3_VAR = array();	// Initialize.
 
 	// TYPO3 version
-$TYPO_VERSION = '4.5.19';	// deprecated: use the constants defined below
+$TYPO_VERSION = '4.5.27';	// deprecated: use the constants defined below
 define('TYPO3_version', $TYPO_VERSION);
 define('TYPO3_branch', '4.5');
-define('TYPO3_copyright_year', '1998-2012');
+define('TYPO3_copyright_year', '1998-2013');
 define('TYPO3_user_agent', 'User-Agent: TYPO3/'.TYPO3_version);
 
 // Database-variables are cleared!
@@ -693,8 +694,8 @@ define('TYPO3_URL_LICENSE', 'http://typo3.org/license');
 define('TYPO3_URL_EXCEPTION', 'http://typo3.org/go/exception/');
 define('TYPO3_URL_MAILINGLISTS', 'http://lists.typo3.org/cgi-bin/mailman/listinfo');
 define('TYPO3_URL_DOCUMENTATION', 'http://typo3.org/documentation/');
-define('TYPO3_URL_DOCUMENTATION_TSREF', 'http://typo3.org/documentation/document-library/references/doc_core_tsref/current/view/');
-define('TYPO3_URL_DOCUMENTATION_TSCONFIG', 'http://typo3.org/documentation/document-library/references/doc_core_tsconfig/current/view/');
+define('TYPO3_URL_DOCUMENTATION_TSREF', 'http://docs.typo3.org/typo3cms/TyposcriptReference/');
+define('TYPO3_URL_DOCUMENTATION_TSCONFIG', 'http://docs.typo3.org/typo3cms/TSconfigReference/');
 define('TYPO3_URL_CONSULTANCY', 'http://typo3.com/Consultancies.1248.0.html');
 define('TYPO3_URL_CONTRIBUTE', 'http://typo3.org/community/participate/');
 define('TYPO3_URL_SECURITY', 'http://typo3.org/teams/security/');

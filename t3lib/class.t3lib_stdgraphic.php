@@ -44,7 +44,7 @@
  *  366:	 function maskImageOntoImage(&$im,$conf,$workArea)
  *  436:	 function copyImageOntoImage(&$im,$conf,$workArea)
  *  458:	 function copyGifOntoGif(&$im,$cpImg,$conf,$workArea)
- *  537:	 function imagecopyresized(&$im, $cpImg, $Xstart, $Ystart, $cpImgCutX, $cpImgCutY, $w, $h, $w, $h)
+ *  537:	 function imagecopyresized(&$dstImg, $srcImg, $dstX, $dstY, $srcX, $srcY, $dstWidth, $dstHeight, $srcWidth, $srcHeight)
  *
  *			  SECTION: Text / "TEXT" GIFBUILDER object
  *  587:	 function makeText(&$im,$conf,$workArea)
@@ -209,6 +209,47 @@ class t3lib_stdGraphic {
 	);
 
 	/**
+	 * defines the RGB colorspace to use
+	 *
+	 * @var string
+	 */
+	protected $colorspace = 'RGB';
+
+	/**
+	 * colorspace names allowed
+	 *
+	 * @var array
+	 */
+	protected $allowedColorSpaceNames = array(
+		'CMY',
+		'CMYK',
+		'Grey',
+		'HCL',
+		'HSB',
+		'HSL',
+		'HWB',
+		'Lab',
+		'LCH',
+		'LMS',
+		'Log',
+		'Luv',
+		'OHTA',
+		'Rec601Luma',
+		'Rec601YCbCr',
+		'Rec709Luma',
+		'Rec709YCbCr',
+		'RGB',
+		'sRGB',
+		'Transparent',
+		'XYZ',
+		'YCbCr',
+		'YCC',
+		'YIQ',
+		'YCbCr',
+		'YUV'
+	);
+
+	/**
 	 * Charset conversion object:
 	 *
 	 * @var t3lib_cs
@@ -235,18 +276,20 @@ class t3lib_stdGraphic {
 		if (function_exists('imagecreatefromgif') && function_exists('imagegif')) {
 			$this->gdlibExtensions .= ',gif';
 		}
-		if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['png_truecolor']) {
-			$this->png_truecolor = true;
+		if ($gfxConf['png_truecolor']) {
+			$this->png_truecolor = TRUE;
+		}
+		if ($gfxConf['colorspace'] && in_array($gfxConf['colorspace'], $this->allowedColorSpaceNames, TRUE)) {
+			$this->colorspace = $gfxConf['colorspace'];
 		}
 		if ($gfxConf['im']) {
 			if (!$gfxConf['im_version_5']) {
 				t3lib_div::deprecationLog('The option $TYPO3_CONF_VARS[\'GFX\'][\'im_version_5\'] is not set, ImageMagic 4 is assumed. This is deprecated since TYPO3 4.5, support will be removed in TYPO3 4.6. Make sure to upgrade to ImageMagick version 6 or GraphichsMagick.');
-				$this->im_version_4 = true;
+				$this->im_version_4 = TRUE;
 			} elseif ($gfxConf['im_version_5'] === 'im5') {
 				t3lib_div::deprecationLog('The option $TYPO3_CONF_VARS[\'GFX\'][\'im_version_5\'] is set to \'im5\'. This is deprecated since TYPO3 4.5, support will be removed in TYPO3 4.6. Make sure to upgrade to ImageMagick version 6 or GraphichsMagick.');
 			}
 		}
-
 			// When GIFBUILDER gets used in truecolor mode
 			// No colors parameter if we generate truecolor images.
 		if ($this->png_truecolor) {
@@ -255,7 +298,7 @@ class t3lib_stdGraphic {
 
 			// Setting default JPG parameters:
 		$this->jpegQuality = t3lib_div::intInRange($gfxConf['jpg_quality'], 10, 100, 75);
-		$this->cmds['jpg'] = $this->cmds['jpeg'] = '-colorspace RGB -sharpen 50 -quality ' . $this->jpegQuality;
+		$this->cmds['jpg'] = $this->cmds['jpeg'] = '-colorspace ' . $this->colorspace . ' -sharpen 50 -quality ' . $this->jpegQuality;
 
 		if ($gfxConf['im_combine_filename']) {
 			$this->combineScript = $gfxConf['im_combine_filename'];
@@ -294,7 +337,7 @@ class t3lib_stdGraphic {
 				// - therefore must be disabled in order not to perform sharpen, blurring and such.
 			$this->NO_IM_EFFECTS = 1;
 
-			$this->cmds['jpg'] = $this->cmds['jpeg'] = '-colorspace RGB -quality ' . $this->jpegQuality;
+			$this->cmds['jpg'] = $this->cmds['jpeg'] = '-colorspace ' . $this->colorspace . ' -quality ' . $this->jpegQuality;
 		}
 			// ... but if 'im_v5effects' is set, don't care about 'im_no_effects'
 		if ($gfxConf['im_v5effects']) {
@@ -302,7 +345,7 @@ class t3lib_stdGraphic {
 			$this->V5_EFFECTS = 1;
 
 			if ($gfxConf['im_v5effects'] > 0) {
-				$this->cmds['jpg'] = $this->cmds['jpeg'] = '-colorspace RGB -quality ' . intval($gfxConf['jpg_quality']) . $this->v5_sharpen(10);
+				$this->cmds['jpg'] = $this->cmds['jpeg'] = '-colorspace ' . $this->colorspace . ' -quality ' . intval($gfxConf['jpg_quality']) . $this->v5_sharpen(10);
 			}
 		}
 
@@ -347,14 +390,14 @@ class t3lib_stdGraphic {
 			$imgInf = pathinfo($conf['file']);
 			$imgExt = strtolower($imgInf['extension']);
 			if (!t3lib_div::inList($this->gdlibExtensions, $imgExt)) {
-				$BBimage = $this->imageMagickConvert($conf['file'], $this->gifExtension, '', '', '', '', '');
+				$BBimage = $this->imageMagickConvert($conf['file'], $this->gifExtension);
 			} else {
 				$BBimage = $this->getImageDimensions($conf['file']);
 			}
 			$maskInf = pathinfo($conf['mask']);
 			$maskExt = strtolower($maskInf['extension']);
 			if (!t3lib_div::inList($this->gdlibExtensions, $maskExt)) {
-				$BBmask = $this->imageMagickConvert($conf['mask'], $this->gifExtension, '', '', '', '', '');
+				$BBmask = $this->imageMagickConvert($conf['mask'], $this->gifExtension);
 			} else {
 				$BBmask = $this->getImageDimensions($conf['mask']);
 			}
@@ -415,7 +458,7 @@ class t3lib_stdGraphic {
 	function copyImageOntoImage(&$im, $conf, $workArea) {
 		if ($conf['file']) {
 			if (!t3lib_div::inList($this->gdlibExtensions, $conf['BBOX'][2])) {
-				$conf['BBOX'] = $this->imageMagickConvert($conf['BBOX'][3], $this->gifExtension, '', '', '', '', '');
+				$conf['BBOX'] = $this->imageMagickConvert($conf['BBOX'][3], $this->gifExtension);
 				$conf['file'] = $conf['BBOX'][3];
 			}
 			$cpImg = $this->imageCreateFromFile($conf['file']);
@@ -497,33 +540,35 @@ class t3lib_stdGraphic {
 	 * It works, but the resulting images is now a true-color PNG which may be very large.
 	 * So, why not use 'imagetruecolortopalette ($im, TRUE, 256)' - well because it does NOT WORK! So simple is that.
 	 *
-	 * For parameters, see PHP function "imagecopyresized()"
-	 *
-	 * @param	pointer		see PHP function "imagecopyresized()"
-	 * @param	pointer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @param	integer		see PHP function "imagecopyresized()"
-	 * @return	void
+	 * @param resource $dstImg destination image
+	 * @param resource $srcImg source image
+	 * @param integer $dstX destination x-coordinate
+	 * @param integer $dstY destination y-coordinate
+	 * @param integer $srcX source x-coordinate
+	 * @param integer $srcY source y-coordinate
+	 * @param integer $dstWidth destination width
+	 * @param integer $dstHeight destination height
+	 * @param integer $srcWidth source width
+	 * @param integer $srcHeight source height
+	 * @return void
 	 * @access private
 	 * @see t3lib_iconWorks::imagecopyresized()
 	 */
-	function imagecopyresized(&$im, $cpImg, $Xstart, $Ystart, $cpImgCutX, $cpImgCutY, $w, $h, $w, $h) {
+	function imagecopyresized(&$dstImg, $srcImg, $dstX, $dstY, $srcX, $srcY, $dstWidth, $dstHeight, $srcWidth, $srcHeight) {
 		if ($this->imagecopyresized_fix) {
-			$im_base = imagecreatetruecolor(imagesx($im), imagesy($im)); // Make true color image
-			imagecopyresized($im_base, $im, 0, 0, 0, 0, imagesx($im), imagesy($im), imagesx($im), imagesy($im)); // Copy the source image onto that
-			imagecopyresized($im_base, $cpImg, $Xstart, $Ystart, $cpImgCutX, $cpImgCutY, $w, $h, $w, $h); // Then copy the $cpImg onto that (the actual operation!)
-			$im = $im_base; // Set pointer
+				// Make true color image
+			$tmpImg = imagecreatetruecolor(imagesx($dstImg), imagesy($dstImg));
+				// Copy the source image onto that
+			imagecopyresized($tmpImg, $dstImg, 0, 0, 0, 0, imagesx($dstImg), imagesy($dstImg), imagesx($dstImg), imagesy($dstImg));
+				// Then copy the source image onto that (the actual operation!)
+			imagecopyresized($tmpImg, $srcImg, $dstX, $dstY, $srcX, $srcY, $dstWidth, $dstHeight, $srcWidth, $srcHeight);
+				// Set the destination image
+			$dstImg = $tmpImg;
 			if (!$this->truecolor) {
-				$this->makeEffect($im, array('value' => 'colors=' . t3lib_div::intInRange($this->setup['reduceColors'], 256, $this->truecolorColors, 256))); // Reduce to "reduceColors" colors - make SURE that IM is working then!
+				$this->makeEffect($dstImg, array('value' => 'colors=' . t3lib_div::intInRange($this->setup['reduceColors'], 256, $this->truecolorColors, 256))); // Reduce to "reduceColors" colors - make SURE that IM is working then!
 			}
 		} else {
-			imagecopyresized($im, $cpImg, $Xstart, $Ystart, $cpImgCutX, $cpImgCutY, $w, $h, $w, $h);
+			imagecopyresized($dstImg, $srcImg, $dstX, $dstY, $srcX, $srcY, $dstWidth, $dstHeight, $srcWidth, $srcHeight);
 		}
 	}
 
@@ -1792,7 +1837,7 @@ class t3lib_stdGraphic {
 			$tmpStr = $this->randomName();
 			$theFile = $tmpStr . '.' . $this->gifExtension;
 			$this->ImageWrite($im, $theFile);
-			$theNewFile = $this->imageMagickConvert($theFile, $this->gifExtension, $conf['width'], $conf['height'], $conf['params'], '', '');
+			$theNewFile = $this->imageMagickConvert($theFile, $this->gifExtension, $conf['width'], $conf['height'], $conf['params']);
 			$tmpImg = $this->imageCreateFromFile($theNewFile[3]);
 			if ($tmpImg) {
 				ImageDestroy($im);
@@ -2226,7 +2271,7 @@ class t3lib_stdGraphic {
 	 * @return	array		[0]/[1] is w/h, [2] is file extension and [3] is the filename.
 	 * @see getImageScale(), typo3/show_item.php, fileList_ext::renderImage(), tslib_cObj::getImgResource(), SC_tslib_showpic::show(), maskImageOntoImage(), copyImageOntoImage(), scale()
 	 */
-	function imageMagickConvert($imagefile, $newExt = '', $w = '', $h = '', $params = '', $frame = '', $options = '', $mustCreate = 0) {
+	function imageMagickConvert($imagefile, $newExt = '', $w = '', $h = '', $params = '', $frame = '', $options = array(), $mustCreate = FALSE) {
 		if ($this->NO_IMAGE_MAGICK) {
 				// Returning file info right away
 			return $this->getImageDimensions($imagefile);
@@ -2268,7 +2313,7 @@ class t3lib_stdGraphic {
 				if ($noScale && !$data['crs'] && !$params && !$frame && $newExt == $info[2] && !$mustCreate) {
 						// set the new width and height before returning,
 						// if the noScale option is set
-					if ($options['noScale']) {
+					if (!empty($options['noScale'])) {
 						$info[0] = $data[0];
 						$info[1] = $data[1];
 					}
@@ -2468,7 +2513,7 @@ class t3lib_stdGraphic {
 		$w = intval($w);
 		$h = intval($h);
 			// if there are max-values...
-		if ($options['maxW']) {
+		if (!empty($options['maxW'])) {
 			if ($w) { // if width is given...
 				if ($w > $options['maxW']) {
 					$w = $options['maxW'];
@@ -2481,7 +2526,7 @@ class t3lib_stdGraphic {
 				}
 			}
 		}
-		if ($options['maxH']) {
+		if (!empty($options['maxH'])) {
 			if ($h) { // if height is given...
 				if ($h > $options['maxH']) {
 					$h = $options['maxH'];
@@ -2539,13 +2584,13 @@ class t3lib_stdGraphic {
 		$out[0] = $info[0];
 		$out[1] = $info[1];
 			// Set minimum-measures!
-		if ($options['minW'] && $out[0] < $options['minW']) {
+		if (isset($options['minW']) && $out[0] < $options['minW']) {
 			if (($max || $crs) && $out[0]) {
 				$out[1] = round($out[1] * $options['minW'] / $out[0]);
 			}
 			$out[0] = $options['minW'];
 		}
-		if ($options['minH'] && $out[1] < $options['minH']) {
+		if (isset($options['minH']) && $out[1] < $options['minH']) {
 			if (($max || $crs) && $out[1]) {
 				$out[0] = round($out[0] * $options['minH'] / $out[1]);
 			}

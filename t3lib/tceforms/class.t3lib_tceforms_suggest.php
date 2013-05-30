@@ -168,7 +168,22 @@ class t3lib_TCEforms_Suggest {
 		$wizardConfig = $fieldConfig['wizards']['suggest'];
 
 		if (isset($fieldConfig['allowed'])) {
-			$queryTables = t3lib_div::trimExplode(',', $fieldConfig['allowed']);
+			if ($fieldConfig['allowed'] === '*') {
+				foreach ($GLOBALS['TCA'] as $tableName => $tableConfig) {
+					// TODO: Refactor function to BackendUtility
+					if (empty($tableConfig['ctrl']['hideTable'])
+						&& ($GLOBALS['BE_USER']->isAdmin()
+							|| (empty($tableConfig['ctrl']['adminOnly'])
+								&& (empty($tableConfig['ctrl']['rootLevel'])
+									|| !empty($tableConfig['ctrl']['security']['ignoreRootLevelRestriction']))))
+					) {
+						$queryTables[] = $tableName;
+					}
+				}
+				unset($tableName, $tableConfig);
+			} else {
+				$queryTables = t3lib_div::trimExplode(',', $fieldConfig['allowed']);
+			}
 		} elseif (isset($fieldConfig['foreign_table'])) {
 			$queryTables = array($fieldConfig['foreign_table']);
 			$foreign_table_where = $fieldConfig['foreign_table_where'];
@@ -257,8 +272,8 @@ class t3lib_TCEforms_Suggest {
 			for ($i = 0; $i < $maxItems; $i++) {
 				$row = $resultRows[$rowsSort[$i]];
 				$rowId = $row['table'] . '-' . $row['uid'] . '-' . $table . '-' . $uid . '-' . $field;
-				$listItems[] = '<li' . ($row['class'] != '' ? ' class="' . $row['class'] . '"' : '') .
-							   ' id="' . $rowId . '" style="' . $row['style'] . '">' . $row['text'] . '</li>';
+				$listItems[] = '<li' . ($row['class'] != '' ? ' class="' . $row['class'] . '"' : '') . ' id="' . $rowId . '"' .
+					($row['style'] != '' ? ' style="' . $row['style'] . '"' : '') . '>' . $row['sprite'] . $row['text'] . '</li>';
 			}
 		}
 

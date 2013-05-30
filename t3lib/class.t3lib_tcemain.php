@@ -1373,10 +1373,10 @@ class t3lib_TCEmain {
 
 			// Checking range of value:
 		if ($tcaFieldConf['range'] && $value != $tcaFieldConf['checkbox'] && intval($value) !== intval($tcaFieldConf['default'])) {
-			if (isset($tcaFieldConf['range']['upper']) && $value > $tcaFieldConf['range']['upper']) {
+			if (isset($tcaFieldConf['range']['upper']) && intval($value) > intval($tcaFieldConf['range']['upper'])) {
 				$value = $tcaFieldConf['range']['upper'];
 			}
-			if (isset($tcaFieldConf['range']['lower']) && $value < $tcaFieldConf['range']['lower']) {
+			if (isset($tcaFieldConf['range']['lower']) && intval($value) < intval($tcaFieldConf['range']['lower'])) {
 				$value = $tcaFieldConf['range']['lower'];
 			}
 		}
@@ -3070,8 +3070,6 @@ class t3lib_TCEmain {
 
 			// Finally, insert record:
 		$this->insertDB($table, $id, $fieldArray, TRUE);
-			// Process the remap stack in case we dealed with relations:
-		$this->processRemapStack();
 
 			// Resets dontProcessTransformations to the previous state.
 		$this->dontProcessTransformations = $backupDontProcessTransformations;
@@ -3617,7 +3615,7 @@ class t3lib_TCEmain {
 					// Create query for update:
 				$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, 'uid=' . intval($uid), $updateFields);
 					// check for the localizations of that element
-				$this->moveL10nOverlayRecords($table, $uid, $destPid, 0);
+				$this->moveL10nOverlayRecords($table, $uid, $destPid, $destPid);
 
 					// Call post processing hooks:
 				foreach ($hookObjectsArr as $hookObj) {
@@ -7217,7 +7215,7 @@ class t3lib_TCEmain {
 	 * @param integer $id Uid of the record
 	 * @return integer
 	 */
-	protected function getAutoVersionId($table, $id) {
+	public function getAutoVersionId($table, $id) {
 		$result = NULL;
 
 		if (isset($this->autoVersionIdMap[$table][$id])) {

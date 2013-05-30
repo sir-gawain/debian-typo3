@@ -1,14 +1,14 @@
 <?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "tstemplate_info".
-#
-# Auto generated 26-01-2011 20:08
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+ * Extension Manager/Repository config file for ext "tstemplate_info".
+ *
+ * Auto generated 12-11-2012 20:33
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Web>Template, Info/Modify',
@@ -34,7 +34,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
 	'version' => '1.0.0',
-	'_md5_values_when_last_written' => 'a:5:{s:9:"ChangeLog";s:4:"4105";s:27:"class.tx_tstemplateinfo.php";s:4:"9075";s:12:"ext_icon.gif";s:4:"a332";s:14:"ext_tables.php";s:4:"d827";s:13:"locallang.xml";s:4:"c478";}',
+	'_md5_values_when_last_written' => 'a:5:{s:9:"ChangeLog";s:4:"4105";s:27:"class.tx_tstemplateinfo.php";s:4:"390b";s:12:"ext_icon.gif";s:4:"a332";s:14:"ext_tables.php";s:4:"d827";s:13:"locallang.xml";s:4:"c478";}',
 	'constraints' => array(
 		'depends' => array(
 			'tstemplate' => '',

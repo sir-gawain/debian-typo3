@@ -1486,7 +1486,7 @@ class tslib_cObj {
 					$gifCreator->init();
 					$gifCreator->mayScaleUp = 0;
 
-					$dims = $gifCreator->getImageScale($gifCreator->getImageDimensions($imageFile), $conf['width'], $conf['height'], '');
+					$dims = $gifCreator->getImageScale($gifCreator->getImageDimensions($imageFile), $conf['width'], $conf['height'], array());
 					$JSwindowExpand = isset($conf['JSwindow.']['expand.'])
 						? $this->stdWrap($conf['JSwindow.']['expand'], $conf['JSwindow.']['expand.'])
 						: $conf['JSwindow.']['expand'];
@@ -2568,6 +2568,8 @@ class tslib_cObj {
 	 * @return	string		The processed input value
 	 */
 	public function stdWrap_strftime($content = '', $conf = array()) {
+			// Check for zero length string to mimic default case of strtime/gmstrftime
+		$content = $content == '' ? $GLOBALS['EXEC_TIME'] : intval($content);
 		$content = ($conf['strftime.']['GMT'] ? gmstrftime($conf['strftime'], $content) : strftime($conf['strftime'], $content));
 		$tmp_charset = $conf['strftime.']['charset'] ? $conf['strftime.']['charset'] : $GLOBALS['TSFE']->localeCharset;
 		if ($tmp_charset) {
@@ -2669,8 +2671,8 @@ class tslib_cObj {
 	}
 
 	/**
-	 * cropHTML
-	 * Crops content to a given size without caring abhout HTML tags
+	 * crop
+	 * Crops content to a given size without caring about HTML tags
 	 *
 	 * @param	string		Input value undergoing processing in this function.
 	 * @param	array		stdWrap properties for crop.
@@ -3722,8 +3724,8 @@ class tslib_cObj {
 					$patternMatchEntityAsSingleChar = '(&[^&\s;]{2,8};|.)';
 
 					$cropRegEx = $chars < 0
-						? '#' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}$#ui'
-						: '#^' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}#ui';
+						? '#' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}$#uis'
+						: '#^' . $patternMatchEntityAsSingleChar . '{0,' . ($cropPosition + 1) . '}#uis';
 					if (preg_match($cropRegEx, $tempContent, $croppedMatch)) {
 						$tempContentPlusOneCharacter = $croppedMatch[0];
 					} else {
@@ -3731,14 +3733,14 @@ class tslib_cObj {
 					}
 
 					$cropRegEx = $chars < 0
-						? '#' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#ui'
-						: '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}#ui';
+						? '#' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#uis'
+						: '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}#uis';
 					if (preg_match($cropRegEx, $tempContent, $croppedMatch)) {
 						$tempContent = $croppedMatch[0];
 						if (($crop2space) && ($tempContentPlusOneCharacter !== FALSE)) {
 							$cropRegEx = $chars < 0
-								? '#(?<=\s)' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#ui'
-								: '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}(?=\s)#ui';
+								? '#(?<=\s)' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}$#uis'
+								: '#^' . $patternMatchEntityAsSingleChar . '{0,' . $cropPosition . '}(?=\s)#uis';
 							if (preg_match($cropRegEx, $tempContentPlusOneCharacter, $croppedMatch)) {
 								$tempContent = $croppedMatch[0];
 							}
@@ -4847,12 +4849,9 @@ class tslib_cObj {
 				}
 				$target = isset($conf['extTarget']) ? $conf['extTarget'] : $GLOBALS['TSFE']->extTarget;
 				if ($GLOBALS['TSFE']->config['config']['jumpurl_enable']) {
-					$res = '<a' . ' href="' . htmlspecialchars($GLOBALS['TSFE']->absRefPrefix .
-						$GLOBALS['TSFE']->config['mainScript'] . $initP .
-						'&jumpurl=' . rawurlencode('http://' . $parts[0]) . $GLOBALS['TSFE']->getMethodUrlIdToken) . '"' .
-						($target ? ' target="' . $target . '"' : '') .
-						$aTagParams . $this->extLinkATagParams('http://' . $parts[0], 'url') .
-						'>';
+					$jumpurl = 'http://' . $parts[0];
+					$juHash = t3lib_div::hmac($jumpurl, 'jumpurl');
+					$res = '<a' . ' href="' . htmlspecialchars(($GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($jumpurl))) . '&juHash=' . $juHash . $GLOBALS['TSFE']->getMethodUrlIdToken . '"' . ($target ? ' target="' . $target . '"' : '') . $aTagParams . $this->extLinkATagParams(('http://' . $parts[0]), 'url') . '>';
 				} else {
 					$res = '<a' . ' href="http://' . htmlspecialchars($parts[0]) . '"' .
 						($target ? ' target="' . $target . '"' : '') .
@@ -5109,7 +5108,7 @@ class tslib_cObj {
 							} else { // Normal situation:
 								$fileArray['params'] = $this->modifyImageMagickStripProfileParameters($fileArray['params'], $fileArray);
 								$GLOBALS['TSFE']->tmpl->fileCache[$hash] = $gifCreator->imageMagickConvert($theImage, $fileArray['ext'], $fileArray['width'], $fileArray['height'], $fileArray['params'], $fileArray['frame'], $options);
-								if (($fileArray['reduceColors'] || ($imgExt == 'png' && !$gifCreator->png_truecolor)) && is_file($GLOBALS['TSFE']->tmpl->fileCache[$hash][3])) {
+								if (($fileArray['reduceColors'] || ($fileArray['ext'] == 'png' && !$gifCreator->png_truecolor)) && is_file($GLOBALS['TSFE']->tmpl->fileCache[$hash][3])) {
 									$reduced = $gifCreator->IMreduceColors($GLOBALS['TSFE']->tmpl->fileCache[$hash][3], t3lib_div::intInRange($fileArray['reduceColors'], 256, $gifCreator->truecolorColors, 256));
 									if (is_file($reduced)) {
 										unlink($GLOBALS['TSFE']->tmpl->fileCache[$hash][3]);
@@ -5134,7 +5133,7 @@ class tslib_cObj {
 			$gifCreator = t3lib_div::makeInstance('tslib_gifbuilder');
 			/* @var $gifCreator tslib_gifbuilder */
 			$gifCreator->init();
-			$info = $gifCreator->imageMagickConvert($theImage, 'WEB', '', '', '', '', '');
+			$info = $gifCreator->imageMagickConvert($theImage, 'WEB');
 			$info['origFile'] = $theImage;
 			$info['origFile_mtime'] = @filemtime($theImage); // This is needed by tslib_gifbuilder, ln 100ff in order for the setup-array to create a unique filename hash.
 			$imageResource = $info;
@@ -5601,10 +5600,10 @@ class tslib_cObj {
 						$scheme = '';
 					}
 					if ($GLOBALS['TSFE']->config['config']['jumpurl_enable']) {
-						$this->lastTypoLinkUrl = $GLOBALS['TSFE']->absRefPrefix .
-							$GLOBALS['TSFE']->config['mainScript'] . $initP .
-							'&jumpurl=' . rawurlencode($scheme . $link_param) .
-							$GLOBALS['TSFE']->getMethodUrlIdToken;
+						$url = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP;
+						$jumpurl = $scheme . $link_param;
+						$juHash = t3lib_div::hmac($jumpurl, 'jumpurl');
+						$this->lastTypoLinkUrl = $url . '&jumpurl=' . rawurlencode($jumpurl) . '&juHash='. $juHash . $GLOBALS['TSFE']->getMethodUrlIdToken;
 					} else {
 						$this->lastTypoLinkUrl = $scheme . $link_param;
 					}
@@ -5620,11 +5619,13 @@ class tslib_cObj {
 							$linktxt = rawurldecode($link_param);
 						if ($GLOBALS['TSFE']->config['config']['jumpurl_enable'] || $conf['jumpurl']) {
 							$theFileEnc = str_replace('%2F', '/', rawurlencode(rawurldecode($link_param)));
-							$this->lastTypoLinkUrl = $GLOBALS['TSFE']->absRefPrefix .
-								$GLOBALS['TSFE']->config['mainScript'] . $initP .
-								'&jumpurl=' . rawurlencode($link_param) .
-								($conf['jumpurl.']['secure'] ? $this->locDataJU($theFileEnc, $conf['jumpurl.']['secure.']) : '') .
-								$GLOBALS['TSFE']->getMethodUrlIdToken;
+							$url = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($link_param);
+							if ($conf['jumpurl.']['secure']) {
+								$url .= $this->locDataJU($theFileEnc, $conf['jumpurl.']['secure.']);
+							} else {
+								$url .= '&juHash=' . t3lib_div::hmac($link_param, 'jumpurl');
+							}
+							$this->lastTypoLinkUrl =  $url . $GLOBALS['TSFE']->getMethodUrlIdToken;
 						} else {
 							$this->lastTypoLinkUrl = $GLOBALS['TSFE']->absRefPrefix . $link_param;
 						}
@@ -5785,7 +5786,16 @@ class tslib_cObj {
 							$GLOBALS['TYPO3_DB']->sql_free_result($res);
 
 								// Set targetDomain to first found domain record if the target page cannot be reached within the current domain
-							if (count($foundDomains) > 0 && (!in_array($currentDomain, $foundDomains) || count($firstFoundForcedDomains) > 0)) {
+							if(
+								count($foundDomains) > 0 &&
+								(
+									(
+										!in_array($currentDomain, $foundDomains) &&
+										!in_array($currentDomain . trim(preg_replace('/\/[^\/]*$/', '', t3lib_div::getIndpEnv('SCRIPT_NAME'))), $foundDomains)
+									) ||
+									count($firstFoundForcedDomains) > 0
+								)
+							) {
 								foreach ($targetPageRootlinePids as $pid) {
 										// Always use the 'forced' domain if we found one
 									if (isset($firstFoundForcedDomains[$pid])) {
@@ -6070,13 +6080,13 @@ class tslib_cObj {
 	 * Returns a linked string made from typoLink parameters.
 	 *
 	 * This function takes $label as a string, wraps it in a link-tag based on the $params string, which should contain data like that you would normally pass to the popular <LINK>-tag in the TSFE.
-	 * Optionally you can supply $urlParameters which is an array with key/value pairs that are rawurlencoded and appended to the resulting url.
+	 * Optionally you can supply $urlParameters which is an array/string and appended to the resulting url.
 	 *
-	 * @param	string		Text string being wrapped by the link.
-	 * @param	string		Link parameter; eg. "123" for page id, "kasperYYYY@typo3.com" for email address, "http://...." for URL, "fileadmin/blabla.txt" for file.
-	 * @param	array		An array with key/value pairs representing URL parameters to set. Values NOT URL-encoded yet.
-	 * @param	string		Specific target set, if any. (Default is using the current)
-	 * @return	string		The wrapped $label-text string
+	 * @param string $label Text string being wrapped by the link.
+	 * @param string $params Link parameter; eg. "123" for page id, "kasperYYYY@typo3.com" for email address, "http://...." for URL, "fileadmin/blabla.txt" for file.
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
+	 * @param string $target Specific target set, if any. (Default is using the current)
+	 * @return string The wrapped $label-text string
 	 * @see getTypoLink_URL()
 	 */
 	function getTypoLink($label, $params, $urlParameters = array(), $target = '') {
@@ -6101,10 +6111,10 @@ class tslib_cObj {
 	/**
 	 * Returns the URL of a "typolink" create from the input parameter string, url-parameters and target
 	 *
-	 * @param	string		Link parameter; eg. "123" for page id, "kasperYYYY@typo3.com" for email address, "http://...." for URL, "fileadmin/blabla.txt" for file.
-	 * @param	array		An array with key/value pairs representing URL parameters to set. Values NOT URL-encoded yet.
-	 * @param	string		Specific target set, if any. (Default is using the current)
-	 * @return	string		The URL
+	 * @param string $params Link parameter; eg. "123" for page id, "kasperYYYY@typo3.com" for email address, "http://...." for URL, "fileadmin/blabla.txt" for file.
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
+	 * @param string $target Specific target set, if any. (Default is using the current)
+	 * @return string The URL
 	 * @see getTypoLink()
 	 */
 	function getTypoLink_URL($params, $urlParameters = array(), $target = '') {
@@ -6127,9 +6137,9 @@ class tslib_cObj {
 	/**
 	 * Returns the current page URL
 	 *
-	 * @param	array		Optionally you can specify additional URL parameters. An array with key/value pairs representing URL parameters to set. Values NOT URL-encoded yet.
-	 * @param	integer		An alternative ID to the current id ($GLOBALS['TSFE']->id)
-	 * @return	string		The URL
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
+	 * @param integer $id An alternative ID to the current id ($GLOBALS['TSFE']->id)
+	 * @return string The URL
 	 * @see getTypoLink_URL()
 	 */
 	function currentPageUrl($urlParameters = array(), $id = 0) {
@@ -6146,7 +6156,7 @@ class tslib_cObj {
 	 * @see typolink()
 	 */
 	function getClosestMPvalueForPage($pageId, $raw = FALSE) {
-			// MointPoints:
+			// MountPoints:
 		if ($GLOBALS['TYPO3_CONF_VARS']['FE']['enable_mount_pids'] && $GLOBALS['TSFE']->MP) {
 
 			if (!strcmp($GLOBALS['TSFE']->id, $pageId)) { // same page as current.
@@ -6229,8 +6239,8 @@ class tslib_cObj {
 				$linktxt = str_ireplace($mailAddress, $spamProtectedMailAddress, $linktxt);
 			}
 		} else {
-			$mailToUrl = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] .
-				$initP . '&jumpurl=' . rawurlencode($mailToUrl) . $GLOBALS['TSFE']->getMethodUrlIdToken;
+			$juHash = t3lib_div::hmac($mailToUrl, 'jumpurl');
+			$mailToUrl = $GLOBALS['TSFE']->absRefPrefix . $GLOBALS['TSFE']->config['mainScript'] . $initP . '&jumpurl=' . rawurlencode($mailToUrl) . '&juHash=' . $juHash . $GLOBALS['TSFE']->getMethodUrlIdToken;
 		}
 		return array(
 			$mailToUrl, $linktxt

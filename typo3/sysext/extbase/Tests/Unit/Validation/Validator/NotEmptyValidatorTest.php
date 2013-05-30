@@ -75,6 +75,43 @@ class Tx_Extbase_Tests_Unit_Validation_Validator_NotEmptyValidatorTest extends T
 		$notEmptyValidator->expects($this->once())->method('addError')->with('The given subject was NULL.', 1221560910);
 		$notEmptyValidator->isValid(NULL);
 	}
+
+	/**
+	 * @test
+	 * @author Ingo Pfennigstorf <i.pfennigstorf@gmail.com>
+	 */
+	public function notEmptyValidatorWorksForEmptyArrays() {
+		$validator = new Tx_Extbase_Validation_Validator_NotEmptyValidator();
+
+		$validator->isValid(array());
+		$this->assertNotEmpty($validator->getErrors());
+		$validator->isValid(array(1 => 2));
+		$this->assertEmpty($validator->getErrors());
+	}
+
+	/**
+	 * @test
+	 * @author Ingo Pfennigstorf <i.pfennigstorf@gmail.com>
+	 */
+	public function notEmptyValidatorWorksForEmptyCountableObjects() {
+		$validator = new Tx_Extbase_Validation_Validator_NotEmptyValidator();
+
+		$validator->isValid(new Tx_Extbase_Persistence_ObjectStorage());
+		$this->assertNotEmpty($validator->getErrors());
+	}
+
+	/**
+	 * @test
+	 * @author Alexander Schnitzler <alex.schnitzler@typovision.de>
+	 */
+	public function notEmptyValidatorWorksForNotEmptyCountableObjects() {
+		$validator = new Tx_Extbase_Validation_Validator_NotEmptyValidator();
+		$countableObject = new Tx_Extbase_Persistence_ObjectStorage();
+		$countableObject->attach(new stdClass());
+
+		$validator->isValid($countableObject);
+		$this->assertEmpty($validator->getErrors());
+	}
 }
 
 ?>
