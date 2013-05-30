@@ -1,3 +1,9 @@
+typo3-src (4.5.27+dfsg1-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 30 May 2013 17:37:22 +0200
+
 typo3-src (4.5.19+dfsg1-5) unstable; urgency=low
 
   * Added patch for TYPO3-SA-2013-001. (Closes: #702574)
