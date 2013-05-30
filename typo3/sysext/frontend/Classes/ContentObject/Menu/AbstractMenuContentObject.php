@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\ContentObject\Menu;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,33 +26,15 @@ namespace TYPO3\CMS\Frontend\ContentObject\Menu;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Generating navigation / menus from TypoScript
  *
- * This file contains five classes, four of which are extensions to the main class, tslib_menu.
- * The main class, tslib_menu, is also extended by other external PHP scripts such as the GMENU_LAYERS and GMENU_FOLDOUT scripts which creates pop-up menus.
- * Notice that extension classes (like "tslib_tmenu") must have their suffix (here "tmenu") listed in $this->tmpl->menuclasses - otherwise they cannot be instantiated.
- *
- * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
  * Base class. The HMENU content object uses this (or more precisely one of the extension classes).
  * Amoung others the class generates an array of menuitems. Thereafter functions from the subclasses are called.
  * The class is ALWAYS used through extension classes (like tslib_gmenu or tslib_tmenu which are classics) and
  *
- * Example of usage (from tslib_cObj):
- *
- * $menu = t3lib_div::makeInstance('tslib_'.$cls);
- * $menu->parent_cObj = $this;
- * $menu->start($GLOBALS['TSFE']->tmpl, $GLOBALS['TSFE']->sys_page, '', $conf,1);
- * $menu->makeMenu();
- * $content.=$menu->writeMenu();
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @see tslib_cObj::HMENU()
  */
 class AbstractMenuContentObject {
 
@@ -281,7 +263,7 @@ class AbstractMenuContentObject {
 				$this->doktypeExcludeList = $GLOBALS['TYPO3_DB']->cleanIntList($this->conf['excludeDoktypes']);
 			}
 			// EntryLevel
-			$this->entryLevel = \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getKey(isset($conf['entryLevel.']) ? $this->parent_cObj->stdWrap($conf['entryLevel'], $conf['entryLevel.']) : $conf['entryLevel'], $this->tmpl->rootLine);
+			$this->entryLevel = $this->parent_cObj->getKey(isset($conf['entryLevel.']) ? $this->parent_cObj->stdWrap($conf['entryLevel'], $conf['entryLevel.']) : $conf['entryLevel'], $this->tmpl->rootLine);
 			// Set parent page: If $id not stated with start() then the base-id will be found from rootLine[$this->entryLevel]
 			// Called as the next level in a menu. It is assumed that $this->MP_array is set from parent menu.
 			if ($id) {
@@ -464,7 +446,7 @@ class AbstractMenuContentObject {
 						// Get sub-pages:
 						$res = $this->parent_cObj->exec_getQuery('pages', array('pidInList' => $id, 'orderBy' => $altSortField));
 						while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-							$GLOBALS['TSFE']->sys_page->versionOL('pages', $row);
+							$GLOBALS['TSFE']->sys_page->versionOL('pages', $row, TRUE);
 							if (is_array($row)) {
 								// Keep mount point?
 								$mount_info = $this->sys_page->getMountPointInfo($row['uid'], $row);
@@ -497,9 +479,11 @@ class AbstractMenuContentObject {
 					if ($value == '') {
 						$value = $this->id;
 					}
-					$loadDB = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('FE_loadDBGroup');
+					/** @var \TYPO3\CMS\Core\Database\RelationHandler $loadDB*/
+					$loadDB = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\RelationHandler');
+					$loadDB->setFetchAllFields(TRUE);
 					$loadDB->start($value, 'pages');
-					$loadDB->additionalWhere['pages'] = \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::enableFields('pages');
+					$loadDB->additionalWhere['pages'] = $this->parent_cObj->enableFields('pages');
 					$loadDB->getFromDB();
 					foreach ($loadDB->itemArray as $val) {
 						$MP = $this->tmpl->getFromMPmap($val['id']);
@@ -553,7 +537,7 @@ class AbstractMenuContentObject {
 					}
 					// Max number of items
 					$limit = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($this->conf['special.']['limit'], 0, 100);
-					$maxAge = intval(\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::calc($this->conf['special.']['maxAge']));
+					$maxAge = intval($this->parent_cObj->calc($this->conf['special.']['maxAge']));
 					if (!$limit) {
 						$limit = 10;
 					}
@@ -602,7 +586,7 @@ class AbstractMenuContentObject {
 						'max' => $limit
 					));
 					while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-						$GLOBALS['TSFE']->sys_page->versionOL('pages', $row);
+						$GLOBALS['TSFE']->sys_page->versionOL('pages', $row, TRUE);
 						if (is_array($row)) {
 							$temp[$row['uid']] = $this->sys_page->getPageOverlay($row);
 						}
@@ -656,7 +640,7 @@ class AbstractMenuContentObject {
 						$extraWhere .= ' AND pages.no_search=0';
 					}
 					// Start point
-					$eLevel = \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getKey(isset($this->conf['special.']['entryLevel.']) ? $this->parent_cObj->stdWrap($this->conf['special.']['entryLevel'], $this->conf['special.']['entryLevel.']) : $this->conf['special.']['entryLevel'], $this->tmpl->rootLine);
+					$eLevel = $this->parent_cObj->getKey(isset($this->conf['special.']['entryLevel.']) ? $this->parent_cObj->stdWrap($this->conf['special.']['entryLevel'], $this->conf['special.']['entryLevel.']) : $this->conf['special.']['entryLevel'], $this->tmpl->rootLine);
 					$startUid = intval($this->tmpl->rootLine[$eLevel]['uid']);
 					// Which field is for keywords
 					$kfield = 'keywords';
@@ -676,7 +660,7 @@ class AbstractMenuContentObject {
 						}
 						$res = $this->parent_cObj->exec_getQuery('pages', array('pidInList' => '0', 'uidInList' => $id_list, 'where' => '(' . implode(' OR ', $keyWordsWhereArr) . ')' . $extraWhere, 'orderBy' => $altSortFieldValue ? $altSortFieldValue : $sortField . ' desc', 'max' => $limit));
 						while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-							$GLOBALS['TSFE']->sys_page->versionOL('pages', $row);
+							$GLOBALS['TSFE']->sys_page->versionOL('pages', $row, TRUE);
 							if (is_array($row)) {
 								$temp[$row['uid']] = $this->sys_page->getPageOverlay($row);
 							}
@@ -690,8 +674,8 @@ class AbstractMenuContentObject {
 					if (!\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($begin_end[1])) {
 						$begin_end[1] = -1;
 					}
-					$beginKey = \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getKey($begin_end[0], $this->tmpl->rootLine);
-					$endKey = \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getKey($begin_end[1], $this->tmpl->rootLine);
+					$beginKey = $this->parent_cObj->getKey($begin_end[0], $this->tmpl->rootLine);
+					$endKey = $this->parent_cObj->getKey($begin_end[1], $this->tmpl->rootLine);
 					if ($endKey < $beginKey) {
 						$endKey = $beginKey;
 					}
@@ -852,7 +836,7 @@ class AbstractMenuContentObject {
 			$c_b = 0;
 			$minItems = intval($this->mconf['minItems'] ? $this->mconf['minItems'] : $this->conf['minItems']);
 			$maxItems = intval($this->mconf['maxItems'] ? $this->mconf['maxItems'] : $this->conf['maxItems']);
-			$begin = \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::calc($this->mconf['begin'] ? $this->mconf['begin'] : $this->conf['begin']);
+			$begin = $this->parent_cObj->calc($this->mconf['begin'] ? $this->mconf['begin'] : $this->conf['begin']);
 			$minItemsConf = isset($this->mconf['minItems.']) ? $this->mconf['minItems.'] : (isset($this->conf['minItems.']) ? $this->conf['minItems.'] : NULL);
 			$minItems = is_array($minItemsConf) ? $this->parent_cObj->stdWrap($minItems, $minItemsConf) : $minItems;
 			$maxItemsConf = isset($this->mconf['maxItems.']) ? $this->mconf['maxItems.'] : (isset($this->conf['maxItems.']) ? $this->conf['maxItems.'] : NULL);
@@ -1390,38 +1374,41 @@ class AbstractMenuContentObject {
 			$altArray = $this->menuArr[$this->I['key']]['_SUB_MENU'];
 		}
 		// Make submenu if the page is the next active
-		$cls = strtolower($this->conf[($this->menuNumber + 1) . $objSuffix]);
-		$subLevelClass = $cls && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($this->tmpl->menuclasses, $cls) ? $cls : '';
+		$menuType = $this->conf[($this->menuNumber + 1) . $objSuffix];
 		// stdWrap for expAll
 		if (isset($this->mconf['expAll.'])) {
 			$this->mconf['expAll'] = $this->parent_cObj->stdWrap($this->mconf['expAll'], $this->mconf['expAll.']);
 		}
-		if ($subLevelClass && ($this->mconf['expAll'] || $this->isNext($uid, $this->getMPvar($this->I['key'])) || is_array($altArray)) && !$this->mconf['sectionIndex']) {
-			$submenu = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tslib_' . $subLevelClass);
-			$submenu->entryLevel = $this->entryLevel + 1;
-			$submenu->rL_uidRegister = $this->rL_uidRegister;
-			$submenu->MP_array = $this->MP_array;
-			if ($this->menuArr[$this->I['key']]['_MP_PARAM']) {
-				$submenu->MP_array[] = $this->menuArr[$this->I['key']]['_MP_PARAM'];
-			}
-			// Especially scripts that build the submenu needs the parent data
-			$submenu->parent_cObj = $this->parent_cObj;
-			$submenu->parentMenuArr = $this->menuArr;
-			// Setting alternativeMenuTempArray (will be effective only if an array)
-			if (is_array($altArray)) {
-				$submenu->alternativeMenuTempArray = $altArray;
-			}
-			if ($submenu->start($this->tmpl, $this->sys_page, $uid, $this->conf, $this->menuNumber + 1, $objSuffix)) {
-				$submenu->makeMenu();
-				// Memorize the current menu item count
-				$tempCountMenuObj = $GLOBALS['TSFE']->register['count_MENUOBJ'];
-				// Reset the menu item count for the submenu
-				$GLOBALS['TSFE']->register['count_MENUOBJ'] = 0;
-				$content = $submenu->writeMenu();
-				// Restore the item count now that the submenu has been handled
-				$GLOBALS['TSFE']->register['count_MENUOBJ'] = $tempCountMenuObj;
-				$GLOBALS['TSFE']->register['count_menuItems'] = count($this->menuArr);
-				return $content;
+		if (($this->mconf['expAll'] || $this->isNext($uid, $this->getMPvar($this->I['key'])) || is_array($altArray)) && !$this->mconf['sectionIndex']) {
+			try {
+				$menuObjectFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\Menu\\MenuContentObjectFactory');
+				$submenu = $menuObjectFactory->getMenuObjectByType($menuType);
+				$submenu->entryLevel = $this->entryLevel + 1;
+				$submenu->rL_uidRegister = $this->rL_uidRegister;
+				$submenu->MP_array = $this->MP_array;
+				if ($this->menuArr[$this->I['key']]['_MP_PARAM']) {
+					$submenu->MP_array[] = $this->menuArr[$this->I['key']]['_MP_PARAM'];
+				}
+				// Especially scripts that build the submenu needs the parent data
+				$submenu->parent_cObj = $this->parent_cObj;
+				$submenu->parentMenuArr = $this->menuArr;
+				// Setting alternativeMenuTempArray (will be effective only if an array)
+				if (is_array($altArray)) {
+					$submenu->alternativeMenuTempArray = $altArray;
+				}
+				if ($submenu->start($this->tmpl, $this->sys_page, $uid, $this->conf, $this->menuNumber + 1, $objSuffix)) {
+					$submenu->makeMenu();
+					// Memorize the current menu item count
+					$tempCountMenuObj = $GLOBALS['TSFE']->register['count_MENUOBJ'];
+					// Reset the menu item count for the submenu
+					$GLOBALS['TSFE']->register['count_MENUOBJ'] = 0;
+					$content = $submenu->writeMenu();
+					// Restore the item count now that the submenu has been handled
+					$GLOBALS['TSFE']->register['count_MENUOBJ'] = $tempCountMenuObj;
+					$GLOBALS['TSFE']->register['count_menuItems'] = count($this->menuArr);
+					return $content;
+				}
+			} catch (\TYPO3\CMS\Frontend\ContentObject\Menu\Exception\NoSuchMenuTypeException $e) {
 			}
 		}
 	}
@@ -1501,6 +1488,7 @@ class AbstractMenuContentObject {
 		}
 		$recs = $this->sys_page->getMenu($uid, 'uid,pid,doktype,mount_pid,mount_pid_ol,nav_hide,shortcut,shortcut_mode,l18n_cfg');
 		$hasSubPages = FALSE;
+		$bannedUids = $this->getBannedUids();
 		foreach ($recs as $theRec) {
 			// no valid subpage if the document type is excluded from the menu
 			if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($this->doktypeExcludeList, $theRec['doktype'])) {
@@ -1520,6 +1508,10 @@ class AbstractMenuContentObject {
 			// are requiring a valid overlay but it doesn't exists
 			$hideIfNotTranslated = \TYPO3\CMS\Core\Utility\GeneralUtility::hideIfNotTranslated($theRec['l18n_cfg']);
 			if ($GLOBALS['TSFE']->sys_language_uid && $hideIfNotTranslated && !$theRec['_PAGES_OVERLAY']) {
+				continue;
+			}
+			// No valid subpage if the subpage is banned by excludeUidList
+			if (in_array($theRec['uid'], $bannedUids)) {
 				continue;
 			}
 			$hasSubPages = TRUE;

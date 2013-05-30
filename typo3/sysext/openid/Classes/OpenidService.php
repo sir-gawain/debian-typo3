@@ -1,6 +1,31 @@
 <?php
 namespace TYPO3\CMS\Openid;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2008-2013 Dmitry Dulepov <dmitry@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
+require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('openid') . 'lib/php-openid/Auth/OpenID/Interface.php';
+
 /**
  * Service "OpenID Authentication" for the "openid" extension.
  *
@@ -30,8 +55,8 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	protected $loginData = array();
 
 	/**
-	 * Additional authentication information provided by t3lib_userAuth. We use
-	 * it to decide what database table contains user records.
+	 * Additional authentication information provided by \TYPO3\CMS\Core\Authentication\AbstractUserAuthentication.
+	 * We use it to decide what database table contains user records.
 	 */
 	protected $authenticationInformation = array();
 
@@ -44,14 +69,14 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	 * OpenID response object. It is initialized when OpenID provider returns
 	 * with success/failure response to us.
 	 *
-	 * @var 	Auth_OpenID_ConsumerResponse
+	 * @var \Auth_OpenID_ConsumerResponse
 	 */
 	protected $openIDResponse = NULL;
 
 	/**
 	 * A reference to the calling object
 	 *
-	 * @var 	t3lib_userAuth
+	 * @var \TYPO3\CMS\Core\Authentication\AbstractUserAuthentication
 	 */
 	protected $parentObject;
 
@@ -79,7 +104,7 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	 * - GMP or BCMATH PHP extensions are installed and functional
 	 * - set_include_path() PHP function is available
 	 *
-	 * @return 	boolean		TRUE if service is available
+	 * @return boolean TRUE if service is available
 	 */
 	public function init() {
 		$available = FALSE;
@@ -101,11 +126,11 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	/**
 	 * Initializes authentication for this service.
 	 *
-	 * @param 	string			$subType: Subtype for authentication (either "getUserFE" or "getUserBE")
-	 * @param 	array			$loginData: Login data submitted by user and preprocessed by t3lib/class.t3lib_userauth.php
-	 * @param 	array			$authenticationInformation: Additional TYPO3 information for authentication services (unused here)
-	 * @param 	t3lib_userAuth	$parentObject: Calling object
-	 * @return 	void
+	 * @param string $subType: Subtype for authentication (either "getUserFE" or "getUserBE")
+	 * @param array $loginData: Login data submitted by user and preprocessed by AbstractUserAuthentication
+	 * @param array $authenticationInformation: Additional TYPO3 information for authentication services (unused here)
+	 * @param \TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $parentObject Calling object
+	 * @return void
 	 */
 	public function initAuth($subType, array $loginData, array $authenticationInformation, \TYPO3\CMS\Core\Authentication\AbstractUserAuthentication &$parentObject) {
 		// Store login and authetication data
@@ -123,12 +148,12 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	}
 
 	/**
-	 * This function returns the user record back to the t3lib_userAuth. it does not
-	 * mean that user is authenticated, it means only that user is found. This
+	 * This function returns the user record back to the \TYPO3\CMS\Core\Authentication\AbstractUserAuthentication.
+	 * It does not mean that user is authenticated, it means only that user is found. This
 	 * function makes sure that user cannot be authenticated by any other service
 	 * if user tries to use OpenID to authenticate.
 	 *
-	 * @return 	mixed		User record (content of fe_users/be_users as appropriate for the current mode)
+	 * @return mixed User record (content of fe_users/be_users as appropriate for the current mode)
 	 */
 	public function getUser() {
 		$userRecord = NULL;
@@ -169,9 +194,8 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	/**
 	 * Authenticates user using OpenID.
 	 *
-	 * @param 	array		$userRecord	User record
-	 * @return 	int		Code that shows if user is really authenticated.
-	 * @see 	t3lib_userAuth::checkAuthentication()
+	 * @param array $userRecord	User record
+	 * @return integer Code that shows if user is really authenticated.
 	 */
 	public function authUser(array $userRecord) {
 		$result = 100;
@@ -210,7 +234,7 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	/**
 	 * Includes necessary files for the PHP OpenID library
 	 *
-	 * @return 	void
+	 * @return void
 	 */
 	protected function includePHPOpenIDLibrary() {
 		if (!self::$openIDLibrariesIncluded) {
@@ -250,8 +274,8 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	/**
 	 * Gets user record for the user with the OpenID provided by the user
 	 *
-	 * @param 	string		$openIDIdentifier	OpenID identifier to search for
-	 * @return 	array		Database fields from the table that corresponds to the current login mode (FE/BE)
+	 * @param string $openIDIdentifier	OpenID identifier to search for
+	 * @return array Database fields from the table that corresponds to the current login mode (FE/BE)
 	 */
 	protected function getUserRecord($openIDIdentifier) {
 		$record = NULL;
@@ -276,7 +300,7 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	 * is almost identical to the example from the PHP OpenID library.
 	 *
 	 * @todo use DB (or the caching framework) instead of the filesystem to store OpenID data
-	 * @return 	Auth_OpenID_Consumer		Consumer instance
+	 * @return Auth_OpenID_Consumer Consumer instance
 	 */
 	protected function getOpenIDConsumer() {
 		$openIDStore = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Openid\\OpenidStore');
@@ -297,7 +321,7 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	 * This function does not return on success. If it returns, it means something
 	 * went totally wrong with OpenID.
 	 *
-	 * @return 	void
+	 * @return void
 	 */
 	protected function sendOpenIDRequest() {
 		$this->includePHPOpenIDLibrary();
@@ -353,7 +377,7 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	 * the OpenID server, the user will be sent to this URL to complete
 	 * authentication process with the current site. We send it to our script.
 	 *
-	 * @return 	string		Return URL
+	 * @return string Return URL
 	 */
 	protected function getReturnURL() {
 		if ($this->authenticationInformation['loginType'] == 'FE') {
@@ -513,12 +537,10 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	 * This function accepts variable number of arguments and can format
 	 * parameters. The syntax is the same as for sprintf()
 	 *
-	 * @param 	string		$message	Message to output
+	 * @param string $message Message to output
 	 * @return 	void
-	 * @see 	sprintf()
-	 * @see 	t3lib::divLog()
-	 * @see 	t3lib_div::sysLog()
-	 * @see 	t3lib_timeTrack::setTSlogMessage()
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::sysLog()
+	 * @see \TYPO3\CMS\Core\TimeTracker\TimeTracker::setTSlogMessage()
 	 */
 	protected function writeLog($message) {
 		if (func_num_args() > 1) {
@@ -537,6 +559,5 @@ class OpenidService extends \TYPO3\CMS\Core\Service\AbstractService {
 	}
 
 }
-
 
 ?>

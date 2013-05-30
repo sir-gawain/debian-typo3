@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Dbal\RecordList;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2009 Kasper Skårhøj (kasperYYYY@typo3.com)
- *  (c) 2006-2009 Karsten Dambekalns <karsten@typo3.org>
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2006-2013 Karsten Dambekalns <karsten@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -54,8 +54,6 @@ class DatabaseRecordList extends \TYPO3\CMS\Recordlist\RecordList\DatabaseRecord
 	public function makeSearchString($table) {
 		// Make query, only if table is valid and a search string is actually defined:
 		if ($GLOBALS['TCA'][$table] && $this->searchString) {
-			// Loading full table description - we need to traverse fields:
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// Initialize field array:
 			$sfields = array();
 			$or = '';

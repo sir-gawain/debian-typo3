@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Toolbar;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2007-2013 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Class to render the shortcut menu
  *
@@ -67,7 +93,7 @@ class ShortcutToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookI
 	 * @return string Workspace selector as HTML select
 	 */
 	public function render() {
-		$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.bookmarks', TRUE);
+		$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.bookmarks', TRUE);
 		$this->addJavascriptToBackend();
 		$shortcutMenu = array();
 		$shortcutMenu[] = '<a href="#" class="toolbar-item">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('apps-toolbar-menu-shortcut', array('title' => $title)) . '</a>';
@@ -83,9 +109,9 @@ class ShortcutToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookI
 	 * @return string The menu's content
 	 */
 	public function renderMenu() {
-		$shortcutGroup = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.bookmarksGroup', TRUE);
-		$shortcutEdit = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.bookmarksEdit', TRUE);
-		$shortcutDelete = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.bookmarksDelete', TRUE);
+		$shortcutGroup = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.bookmarksGroup', TRUE);
+		$shortcutEdit = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.bookmarksEdit', TRUE);
+		$shortcutDelete = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.bookmarksDelete', TRUE);
 		$groupIcon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/i/sysf.gif', 'width="18" height="16"') . ' title="' . $shortcutGroup . '" alt="' . $shortcutGroup . '" />';
 		$editIcon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/edit2.gif', 'width="11" height="12"') . ' title="' . $shortcutEdit . '" alt="' . $shortcutEdit . '"';
 		$deleteIcon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/garbage.gif', 'width="11" height="12"') . ' title="' . $shortcutDelete . '" alt="' . $shortcutDelete . '" />';
@@ -137,11 +163,11 @@ class ShortcutToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookI
 		}
 		if (count($shortcutMenu) == 1) {
 			// No shortcuts added yet, show a small help message how to add shortcuts
-			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.bookmarks', TRUE);
+			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.bookmarks', TRUE);
 			$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-shortcut-new', array(
 				'title' => $title
 			));
-			$label = str_replace('%icon%', $icon, $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.php:bookmarkDescription'));
+			$label = str_replace('%icon%', $icon, $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:bookmarkDescription'));
 			$shortcutMenu[] = '<tr><td style="padding:1px 2px; color: #838383;">' . $label . '</td></tr>';
 		}
 		$shortcutMenu[] = '</table>';
@@ -316,7 +342,7 @@ class ShortcutToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookI
 		foreach ($this->shortcutGroups as $groupId => $groupLabel) {
 			$label = $groupLabel;
 			if ($groupLabel == '1') {
-				$label = $GLOBALS['LANG']->getLL('bookmark_group_' . abs($groupId), 1);
+				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:bookmark_group_' . abs($groupId), 1);
 				if (empty($label)) {
 					// Fallback label
 					$label = $GLOBALS['LANG']->getLL('bookmark_group', 1) . ' ' . abs($groupId);
@@ -324,7 +350,7 @@ class ShortcutToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookI
 			}
 			if ($groupId < 0) {
 				// Global group
-				$label = $GLOBALS['LANG']->getLL('bookmark_global', 1) . ': ' . (!empty($label) ? $label : abs($groupId));
+				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:bookmark_global', 1) . ': ' . (!empty($label) ? $label : abs($groupId));
 				if ($groupId == -100) {
 					$label = $GLOBALS['LANG']->getLL('bookmark_global', 1) . ': ' . $GLOBALS['LANG']->getLL('bookmark_all', 1);
 				}
@@ -591,7 +617,7 @@ class ShortcutToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookI
 				$icon = 'gfx/dummy_module.gif';
 			}
 		}
-		return '<img src="' . $icon . '" alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.shortcut', TRUE) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.shortcut', TRUE) . '" />';
+		return '<img src="' . $icon . '" alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.shortcut', TRUE) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:toolbarItems.shortcut', TRUE) . '" />';
 	}
 
 	/**

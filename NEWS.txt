@@ -2,285 +2,179 @@ This document is a part of the TYPO3 project. TYPO3 is an open source web
 content management system released under the GNU GPL. TYPO3 is copyright
 (c) 1999-2012 by Kasper Skaarhoj.
 
-This document contains information about TYPO3 version 6.0 has been released
-on November 27th 2012.
+This document contains information about TYPO3 version 6.1 has been released
+on April 30th 2013.
 
 An up-to-date version of this document also containing links to further in
 depth information can be found here:
 
-http://wiki.typo3.org/TYPO3_6.0
+http://wiki.typo3.org/TYPO3_6.1
 
 ===============================================================================
 Compatibility
 ===============================================================================
 
+During 6.1 development phase the 10.000th core merge was done.
+Inspiring people to share - special thanks to all contributors!
+
 -------------------------------------------------------------------------------
 System environment
 -------------------------------------------------------------------------------
 
-* PHP setting register_globals must be off
+* Switch from mysql to mysqli PHP database extension
 
-The bootstrap now verifies the PHP setting register_globals is disabled for
-security reasons. The script dies otherwise.
+The main database connection class (formerly known as TYPO3_DB) now uses
+"mysqli" instead of the old "mysql" extension. mysqli was introduced with
+PHP 5.0 and ships with all supported PHP versions by default. The original
+extension "mysql" is deprecated with the upcoming PHP 5.5 version, is only
+optimized for MySQL 4.1.3 or earlier, and lacks support for some newer
+features of MySQL Server.
 
--------------------------------------------------------------------------------
-PHP namespaces & TYPO3 autoloader
--------------------------------------------------------------------------------
+As TYPO3 CMS requires MySQL 5+ for some versions now, it is only natural to
+exchange the mysql library as well. As the mysql calls are encapsulated
+entirely in the main database connection class, there are only slight API
+changes -- all extension code using the API should run as before.
 
-* Introducing PHP namespaces
+"mysqli" is now a hard requirement in the PHP environment and must be loaded
+for TYPO3 to run.
 
-Almost every PHP class file has been modified to support PHP namespaces and
-was moved to a more meaningful location. Besides that old class names, e.g.
-t3lib_div still can be used - however it is deprecated - this works by using a
-class alias map pointing to the new namespaces class name.
+* Separated database host and port setting
 
-	see the files in typo3/sysext/core/Migrations/Code/ for the mentioned maps
-
-Basically the classes are now arranged in three basic components, which are
-core, backend and frontend - each of them are located in typo3/sysext/. The
-old class files (e.g. t3lib/class.t3lib_div.php) are still shipped with the
-Core and point to the new class files - this prevents PHP fatal errors if
-extension use hardcoded require_once() calls to old class names. This layer
-is deprecated as well.
-
-	see http://wiki.typo3.org/Namespaces for further details
-
-* New XCLASS handling
-
-The old way of registering XCLASSes in $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS'] is
-removed. XCLASSES must now be registered by adding a class implementation
-configuration to the $TYPO3_CONF_VARS['SYS']['Objects'] array. The key of the
-array is the class name for which you want to define an implementation class.
-
-Example:
-$TYPO3_CONF_VARS['SYS']['Objects']['TYPO3\\CMS\\Core\\Database\\DatabaseConnection'] =
-	array('className' => 'TYPO3\\CMS\\Dbal\\Database\\DatabaseConnection');
-
-As with Xclasses, the implementation resolving works recursively and you are free
-to put the implementation class name into the namespace of your own extension.
-
-This means that every XCLASS registration both for core and extension classes
-will not work any more with TYPO3 6.0.
-To keep compatibility for 6.0 and 4.x, extension authors should add their class
-to both the XCLASS array and the object implementation array.
-
--------------------------------------------------------------------------------
-PHP bootstrap and configuration
--------------------------------------------------------------------------------
-
-* Refactored bootstrap
-
-The bootstrap changes all basic initializations for frontend, backend, CLI and
-install tool rendering. If a copied and customized version of the frontend's
-index.php was used, it has to be updated to the current index.php file of the
-TYPO3 Core sources (this applies to custom symbolic links as well).
-
-* New handling of typo3conf/localconf.php
-
-The localconf.php file is deprecated and not used in the core any longer. As
-substitution the new file typo3conf/LocalConfiguration.php is introduced that
-basically only returns the local configuration as array. The install tool and
-other installation changing core code like the extension manager now writes
-the whole file if configuration is changed. As a result, no more local
-code is allowed in this file.
-To overload the local configuration with special instance specific code that
-might still be needed, it is possible to add the php code to the optional
-additional file typo3conf/AdditionalConfiguration.php that is executed during
-bootstrap of TYPO3 after LocalConfiguration.php.
-An ugrade wizard takes care of migrating contents of the previous localconf.php
-file to the new scheme.
-
-* List of loaded extensions stored as array
-
-The list of loaded extensions in typo3conf/LocalConfiguration (key EXT/extList)
-was transferred to an array for better readability and maintenance. It is
-available with the new key EXT/extListArray. The old, comma separated value is
-still kept, but not used in the core anymore. It will be removed with a later
-version from the core.
-
-* Moved default TYPO3_CONF_VARS
-
-The default TYPO3_CONF_VARS definitions where moved from t3lib/config_default.php
-to an own file in t3lib/stddb/DefaultSettings.php.
-
-* Removed TYPO3_tables_script constant
-
-It was possible to define a different base TCA definition file by defining the
-variable typo_db_tables_script in localconf.php. This functionality is removed
-without substitution.
-
-* Restricted access of global variables in ext_tables.php and ext_localconf.php
-
-With the bootstrap refactoring the visibility of ext_tables.php and
-ext_localconf.php was reduced. The files do not run in global context anymore,
-so variables like $TCA should be accessed through $GLOBALS['TCA']. There is a
-compatibility layer, but the core can not guarantee that extensions with
-strange setup does not break.
+As a side effect of the switch to mysqli, the database settings in
+TYPO3_CONF_VARS DB now accept a new "port" setting. This setting must be used
+if the database host is a ipv6 address and the port is different from the
+default port 3306, otherwise the backwards compatible logic could fail.
 
 -------------------------------------------------------------------------------
 Deprecated and removed components
 -------------------------------------------------------------------------------
 
-* Deprecated methods
+* Removed extension statictemplates
 
-Deprecated methods that were initially targeted to be removed in TYPO3 4.8/6.0
-have finally been removed. The deprecation log shows which functions were
-declared to be deprecated and will be removed in the next TYPO3 versions.
-
-* Removed classes prior to scheduled deprecation removal
-
-t3lib_BEDisplayLog: This class was used only by the old belog module, its
-functionality is now encapsulated in EXT:belog itself. Since it is very
-unlikely that the class was used by other external extensions, the file was
-removed instead of deprecating it.
-
-* Removed doNotLoadInFE flag
-
-With TYPO3 4.3 the flag doNotLoadInFE flag was introduced in ext_emconf.php
-extension files to hint the core that an extension has no frontend
-functionality. The performance gain of this change in the frontend was minimal.
-The flag is now removed and the according extList_FE setting in localconf.php
-has no effect anymore.
-
-* Removed system extension simulatestatic
-
-The system extension to simulate static documents was removed from the core.
-@TODO: Issue #36025 must be solved and this note here adapted, otherwise the
-removal will be reverted.
-
-* Removed TypoScript option noBlur
-
-The ancient noBlur TypoScript setting for old Browsers (Internet Explorer up to
-version 5.5) was removed without any alternatives. The setting has no effect
-anymore and can be removed from custom TypoScript objects, especially MENU.
-
-* Removed internal history cleanup feature
-
-TYPO3 will not clean the history (table "sys_history") on its own anymore.
-This can lead to a large amount of data in this table. Please consider using
-the garbage collection scheduler task to remove old entries.
-
-* Removed TypoScript resources
-
-The ancient feature to add images and other resources directly to TypoScript
-records is dropped and the handling removed. This old feature - accessible
-from the 'Info/modify' tab in the Template module - was hardly ever used
-and was partly broken.
-If this feature was still in use, it is recommended to not drop the
-resource field from table sys_template during upgrading, fix the using
-TypoScript to refer to resources located in fileadmin or similar directly,
-and afterwards to finally delete the resource field in the install tool.
-
-* Removed page hit logging functionality
-
-Writing log entries to some logfile during frontend page hit was removed.
-There are tons of solutions on the net and on server basis that can do a
-better job than the core implementation ever did. Therefor the complete
-code was dropped and all TypoScript config.stat* options are obsolete.
-
-* Removed compression of javascript files with jsmin
-
-The default compression of certain javascript files in frontend and backend
-with the jsmin library was removed from the core due to license issues. The
-code segment was substituted with a hook, so extensions can now deliver
-compression solutions if needed. In general, it is a good idea to configure
-a webserver to compress javascript and css files on the webserver with gzip.
-
+Static templates is an extension that delivers ready to use frontend templates
+like the "Green" template. The extension is outdated for years and currently
+unmaintained. It is removed from the core in the hope that it finds an
+interested new maintainer who can develop it further. If it still was in use
+for the given instance, an ugrade wizard is in place to fetch it from the
+online extension repository.
+Some frontend HMENU types are removed together with this extension as they use
+javascript files included in statictemplates. Namely GMENU_LAYERS, TMENU_LAYERS
+and GMENU_FOLDOUT are not delivered with the core anymore. If those TypoScript
+HMENU types are still used, the extension statictemplates should be fetched
+and installed from the TYPO3 extension repository as they are delivered
+together with the extension.
 
 ===============================================================================
 Changes and Improvements
 ===============================================================================
 
-This will list all changes and improvements between TYPO3 4.7 and 6.0. For
-technical details see ChangeLog included in the typo3_src package.
-
 -------------------------------------------------------------------------------
 General
 -------------------------------------------------------------------------------
 
-* Extbase and fluid always loaded
+* Improved TCA load mechanism
 
-The core extensions 'extbase' and 'fluid' are used in core classes like t3lib
-and in several important core extensions. Extbase and fluid are now required
-extensions and always loaded.
-
--------------------------------------------------------------------------------
-PHP namespaces & TYPO3 autoloader
--------------------------------------------------------------------------------
-
-* PHP namespaces in the TYPO3 autoloader
-
-The autoloader can now handle fully qualified namespaced class names.
-If you use the fully qualified namespaced class name like
-'\Tx\ExtName\Foo\Bar', the autoloader will find the containing class following
-the extbase naming scheme. The mentioned class will be found if it is located
-in file 'exttensionkey'/Classes/Foo/Bar.php.
-It is also possible to use class names not following the extbase naming scheme
-by providing the "name spaced class name -> file" mapping in ext_autoloader.php.
+The initialization of the central $GLOBAL['TCA'] array was refactored,
+accelerated and simplified. Frontend code can now rely on a fully loaded array
+including columns and the requirement to call loadTca() in ext_tables.php if
+manipulating TCA is gone.
+Extension authors should catch up with this evolvment: Definition of new TCA
+tables should be moved to the extensions Configuration/TCA/ directory, every
+table must be declared in an own file "tablename.php". The file must return the
+full TCA definition of the specific table, with ctrl and columns sections
+merged together, without the former dynamicConfigFile definition. The
+declaration of TCA for new tables can be dropped from ext_tables.php, the
+bootstrap will find and execute any new table definitions in Configuration/TCA
+automatically if the extension author sticks to the convention. Examples of
+correct registration can be found in sys_note and extensionmanager and other
+system extensions.
 
 -------------------------------------------------------------------------------
 Backend
 -------------------------------------------------------------------------------
 
-* New backend user administration module
-
-The backend user administration module was created from scratch again. The
-interface changed a lot, it is now possible to filter large groups of users
-with certain criteria and to compare specific user information. The code was
-made more flexible to easily cope with different use cases and to be more
-open for future enhancements.
-
-* New extension manager
-
-The extension manager was rewritten to be based on Extbase and thus to have a
-discrete controller and action API. The view utilized jQuery in the client's
-user interface and has been reduced to only contain required functionality
-for (un-)installing or configuring extensions. Uploading extensions to TER
-and directly modifying files of extensions is not supported in the Core
-anymore, but will be available as separate extension tools package in the TER.
-
-* Introducing global categorization
-
-A new global categorization has been introduced, thus any core component and
-extension can utilize this in the backend. An API call can be used to set
-accordant TCA and to create required SQL definition changes during runtime.
-
-See the following example to create a new field categories in a table:
-
-	\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::makeCategorizable(
-		'myextension',
-		'tx_myextension_table',
-		'categories'
-	);
-
-* Support for NULL values in backend forms
-
-In some situations it might become handy to have an "undefined" value, e.g.
-for timestamp fields where "0" has the meaning of the unix timestamp origin
-back in 1970. Therefore a new TCA "eval" subtype has been introduced to support
-that - which will be visualized in the backend with a new "enable field"
-checkbox. Besides that the SQL definition must not have the "NOT NULL"
-statement for that field.
-
-Example to add the "undefined" (NULL value) to the field "myfield":
-
-	$TCA['tx_myextension_table']['columns']['myfield']['config'] = array(
-		'type' => 'input',
-		'eval' => 'null',
-	);
-
 -------------------------------------------------------------------------------
 Administration / Customization
 -------------------------------------------------------------------------------
 
-* Introducing the File Abstraction Layer
+-------------------------------------------------------------------------------
+Extbase
+-------------------------------------------------------------------------------
 
-The File Abstraction Layer ("FAL") is used to create accordant database records
-for each file. This was the same file can be used (referenced) in multiple
-elements without having to clone and clutter the file-system anymore. The TYPO3
-Core already makes use of the new File Abstraction Layer, but elderly extensions
-still can use the old way. Besides that, the Install Tool provides several
-upgrade wizards to migrate files to the new structure.
+* Enabled rewritten property mapper as default mapper
 
-	see http://docs.typo3.org/typo3cms/FileAbstractionLayerReference/
+Property mapping is the process to create method parameters or objects from
+incoming form or ajax data. With TYPO3 CMS version 4.6 a new property mapper
+was included as a backport from FLOW. It is much better configurable
+and can for example handle complex mapping tasks like creating a DateTime
+object from different given string formats. The FLOW documentation at
+http://docs.typo3.org/flow/TYPO3FlowDocumentation/TheDefinitiveGuide/ section
+PropertyMapping can be used as basic feature reference.
+This mapper is now enabled by default deprecating the old mapper one. extbase
+extensions might have minor issues with the new default if not coded in a clean
+way. While it is better to fix those issues, a quick fix is to swich back
+to the old mapper with a TypoScript setting:
+plugin.tx_extname.features.rewrittenPropertyMapper = 0
 
+* Removed forced single table inheritance of frontend users and groups
+
+Single table inheritance in extbase is used to stuff similar objects into a
+table, but still create different objects from it, depending on the value of
+column record_type of a specific row.
+With versions prior to 6.1, this was done for fe_users and fe_groups table. As
+a result, a frontend user object was only created from a row in persistence, if
+the record type was set to TYPO3\CMS\Extbase\Domain\Model\FrontendUser.
+Single table inheritance for fe_users and fe_groups was meant as a show case
+of the functionality in early extbase days, but didn't fit the current use
+cases anymore and was removed with 6.1.
+This change might affect backwards compatibility for your extensions, if they
+rely on single table inheritance of frontend users or groups. In seldom cases,
+this could lead to more objects being constituted from persistence in your
+repository calls than before. So keep a look at your frontend user object and
+groups and verify there is now not a bigger number ob objects fetched from
+persistence. To rebuild the previous behavior, revert the TypoScript change of
+https://review.typo3.org/#/c/17879 in your extension.
+
+* Object persistence behaviour changed from implicit to explicit save
+
+Previously, every change to a database driven object got persisted
+automatically at the end of a controller action with a call to persistAll().
+In order to improve performannce and to further narrow the behavior from TYPO3
+Extbase to TYPO3 Flow, this implicit saving has been removed.
+This means that a changed object only gets persisted, if the according
+repository update function gets called for the object.
+As an extension author, please ensure proper usage of the update function
+calls and do not rely on implicit saving anymore.
+
+-------------------------------------------------------------------------------
+Fluid
+-------------------------------------------------------------------------------
+
+* Removed inline styling of f:form viewhelper hidden div
+
+The f:form view helper renders several hidden input fields. Those are
+encapsulated in a <div>. In versions prior to 6.1, this div had an inline style
+attribute 'sytle="display: none"'. This was removed in 6.1 for accessibility
+reasons. While this change won't have any effects on most systems, this is a
+potentially breaking change if javascript DOM manipulation is done. The new
+optional viewhelper parameter "hiddenFieldClassName" was introduced and can be
+used to match this div.
+
+* Allow Fluid arrays only in ViewHelper arguments
+
+Fluid arrays are a subset of the JavaScript object syntax, making it hard to
+work with them in mixed HTML/JavaScript documents. For example the following
+JavaScript Object was parsed by Fluid:
+var uris = {
+	endPoint1: '{f:uri.action(.)}',
+	endPoint2: '{f:uri.action(.)}',
+};
+With 6.1, Fluid now only parses arrays which are used inside ViewHelper
+arguments, such that an array inside normal text is not converted anymore.
+This change is only breaking in very rare cases where one relied on the inner
+contents of the ViewHelper being an array, eg. if one used the debug
+ViewHelper as follows:
+	<f:debug>{key1: 'value1', key2: 'value2'}</f:debug>
+ViewHelpers which were written like this should be re-written to take the array
+as ViewHelper argument:
+	<f:debug value="{key1: 'value1', key2: 'value2'}" />

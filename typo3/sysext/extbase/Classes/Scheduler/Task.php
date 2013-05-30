@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Scheduler;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Claus Due, Wildside A/S <claus@wildside.dk>
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Scheduler;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -59,19 +63,26 @@ class Task extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	protected $taskExecutor;
 
 	/**
+	 * Intanciates the Object Manager
+	 */
+	public function __construct() {
+		parent::__construct();
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->commandManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\CommandManager');
+		$this->taskExecutor = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Scheduler\\TaskExecutor');
+	}
+
+	/**
 	 * Function execute from the Scheduler
 	 *
 	 * @return boolean TRUE on successful execution, FALSE on error
 	 */
 	public function execute() {
-		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
-		$this->commandManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\CommandManager');
-		$this->taskExecutor = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Scheduler\\TaskExecutor');
 		try {
 			$this->taskExecutor->execute($this);
 			return TRUE;
 		} catch (\Exception $e) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog($e->getMessage(), $this->commandIdentifier, 3);
+			$this->logException($e);
 			return FALSE;
 		}
 	}
@@ -146,6 +157,13 @@ class Task extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 			$label .= ' ' . implode(', ', $arguments);
 		}
 		return $label;
+	}
+
+	/**
+	 * @param \Exception $e
+	 */
+	protected function logException(\Exception $e) {
+		\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog($e->getMessage(), $this->commandIdentifier, 3);
 	}
 }
 

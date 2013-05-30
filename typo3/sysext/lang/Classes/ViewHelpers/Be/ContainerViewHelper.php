@@ -3,7 +3,7 @@ namespace TYPO3\CMS\Lang\ViewHelpers\Be;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Kai Vogel <kai.vogel@speedprogs.de>
+ *  (c) 2012-2013 Kai Vogel <kai.vogel@speedprogs.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -65,7 +65,7 @@ class ContainerViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\AbstractBacken
 	 * @param array $addJsInlineLabels Custom labels to add to JavaScript inline labels
 	 * @return string
 	 * @see template
-	 * @see t3lib_PageRenderer
+	 * @see \TYPO3\CMS\Core\Page\PageRenderer
 	 */
 	public function render($pageTitle = '', $enableJumpToUrl = TRUE, $enableClickMenu = TRUE, $loadPrototype = TRUE, $loadScriptaculous = FALSE, $scriptaculousModule = '', $loadExtJs = FALSE, $loadExtJsTheme = TRUE, $extJsAdapter = '', $enableExtJsDebug = FALSE, $loadJQuery = FALSE, $addCssFiles = NULL, $addJsFiles = NULL, $addJsInlineLabels = NULL) {
 		$doc = $this->getDocInstance();
@@ -97,7 +97,7 @@ class ContainerViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\AbstractBacken
 			}
 		}
 		if ($loadJQuery) {
-			$pageRenderer->loadJquery();
+			$pageRenderer->loadJquery(NULL, NULL, $pageRenderer::JQUERY_NAMESPACE_DEFAULT_NOCONFLICT);
 		}
 		if (is_array($addCssFiles)) {
 			foreach ($addCssFiles as $addCssFile) {

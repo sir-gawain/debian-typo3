@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,7 +24,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-$GLOBALS['LANG']->includeLLFile('EXT:tstemplate/ts/locallang.xml');
+$GLOBALS['LANG']->includeLLFile('EXT:tstemplate/ts/locallang.xlf');
 $BE_USER->modAccess($MCONF, TRUE);
 /*
  * @deprecated since 6.0, the classname SC_mod_web_ts_index and this file is obsolete

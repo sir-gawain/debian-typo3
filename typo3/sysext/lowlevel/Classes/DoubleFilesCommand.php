@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Lowlevel;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -75,7 +75,8 @@ This will check the system for double files relations.';
 
 	/**
 	 * Find managed files which are referred to more than one time
-	 * Fix methods: API in t3lib_refindex that allows to change the value of a reference (we could copy the file) or remove reference
+	 * Fix methods: API in \TYPO3\CMS\Core\Database\ReferenceIndex that allows to
+	 * change the value of a reference (we could copy the file) or remove reference
 	 *
 	 * @return array
 	 * @todo Define visibility

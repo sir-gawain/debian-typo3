@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tree\Pagetree;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
+ *  (c) 2010-2013 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,7 @@ namespace TYPO3\CMS\Backend\Tree\Pagetree;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Page tree data provider.
  *
@@ -64,7 +65,7 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 	/**
 	 * Process collection hook objects
 	 *
-	 * @var array<t3lib_tree_pagetree_interfaces_collectionprocessor>
+	 * @var array<\TYPO3\CMS\Backend\Tree\Pagetree\CollectionProcessorInterface>
 	 */
 	protected $processCollectionHookObjects = array();
 
@@ -85,9 +86,9 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 		$hookElements = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/tree/pagetree/class.t3lib_tree_pagetree_dataprovider.php']['postProcessCollections'];
 		if (is_array($hookElements)) {
 			foreach ($hookElements as $classRef) {
-				/** @var $hookObject t3lib_tree_pagetree_interfaces_collectionprocessor */
+				/** @var $hookObject \TYPO3\CMS\Backend\Tree\Pagetree\CollectionProcessorInterface */
 				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
-				if ($hookObject instanceof \t3lib_tree_pagetree_interfaces_collectionprocessor) {
+				if ($hookObject instanceof \TYPO3\CMS\Backend\Tree\Pagetree\CollectionProcessorInterface) {
 					$this->processCollectionHookObjects[] = $hookObject;
 				}
 			}
@@ -171,21 +172,21 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 			}
 		}
 		foreach ($this->processCollectionHookObjects as $hookObject) {
-			/** @var $hookObject t3lib_tree_pagetree_interfaces_collectionprocessor */
+			/** @var $hookObject \TYPO3\CMS\Backend\Tree\Pagetree\CollectionProcessorInterface */
 			$hookObject->postProcessGetNodes($node, $mountPoint, $level, $nodeCollection);
 		}
 		return $nodeCollection;
 	}
 
 	/**
-	 * Wrapper method for t3lib_befunc::getRecordWSOL
+	 * Wrapper method for \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL
 	 *
 	 * @param integer $uid The page id
 	 * @param boolean $unsetMovePointers Whether to unset move pointers
 	 * @return array
 	 */
 	protected function getRecordWithWorkspaceOverlay($uid, $unsetMovePointers = FALSE) {
-		return \t3lib_befunc::getRecordWSOL('pages', $uid, '*', '', TRUE, $unsetMovePointers);
+		return \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL('pages', $uid, '*', '', TRUE, $unsetMovePointers);
 	}
 
 	/**
@@ -214,6 +215,7 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 			$mountPoints = array($mountPoints);
 		}
 		$isNumericSearchFilter = is_numeric($searchFilter) && $searchFilter > 0;
+		$searchFilterQuoted = preg_quote($searchFilter, '/');
 		$nodeId = intval($node->getId());
 		foreach ($records as $record) {
 			$record = \TYPO3\CMS\Backend\Tree\Pagetree\Commands::getNodeRecord($record['uid']);
@@ -242,10 +244,21 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 			$amountOfRootlineElements = count($rootline);
 			for ($i = 0; $i < $amountOfRootlineElements; ++$i) {
 				$rootlineElement = $rootline[$i];
-				if (intval($rootlineElement['pid']) === $nodeId || intval($rootlineElement['uid']) === $nodeId) {
+				$isInWebMount = $GLOBALS['BE_USER']->isInWebMount($rootlineElement['uid']);
+				if (!$isInWebMount
+					|| (intval($rootlineElement['uid']) === intval($mountPoints[0])
+						&& intval($rootlineElement['uid']) !== intval($isInWebMount))
+				) {
+					continue;
+				}
+				if (intval($rootlineElement['pid']) === $nodeId
+					|| intval($rootlineElement['uid']) === $nodeId
+					|| (intval($rootlineElement['uid']) === intval($isInWebMount)
+						&& in_array(intval($rootlineElement['uid']), $mountPoints, TRUE))
+				) {
 					$inFilteredRootline = TRUE;
 				}
-				if (!$inFilteredRootline) {
+				if (!$inFilteredRootline || intval($rootlineElement['uid']) === intval($mountPoint)) {
 					continue;
 				}
 				$rootlineElement = \TYPO3\CMS\Backend\Tree\Pagetree\Commands::getNodeRecord($rootlineElement['uid']);
@@ -266,7 +279,7 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 					if ($isNumericSearchFilter && intval($rootlineElement['uid']) === intval($searchFilter)) {
 						$text = str_replace('$1', $refNode->getText(), $replacement);
 					} else {
-						$text = preg_replace('/(' . $searchFilter . ')/i', $replacement, $refNode->getText());
+						$text = preg_replace('/(' . $searchFilterQuoted . ')/i', $replacement, $refNode->getText());
 					}
 					$refNode->setText($text, $refNode->getTextSourceField(), $refNode->getPrefix(), $refNode->getSuffix());
 					/** @var $childCollection \TYPO3\CMS\Backend\Tree\Pagetree\PagetreeNodeCollection */
@@ -289,7 +302,7 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 			}
 		}
 		foreach ($this->processCollectionHookObjects as $hookObject) {
-			/** @var $hookObject t3lib_tree_pagetree_interfaces_collectionprocessor */
+			/** @var $hookObject \TYPO3\CMS\Backend\Tree\Pagetree\CollectionProcessorInterface */
 			$hookObject->postProcessFilteredNodes($node, $searchFilter, $mountPoint, $nodeCollection);
 		}
 		return $nodeCollection;
@@ -376,7 +389,7 @@ class DataProvider extends \TYPO3\CMS\Backend\Tree\AbstractTreeDataProvider {
 			$nodeCollection->append($subNode);
 		}
 		foreach ($this->processCollectionHookObjects as $hookObject) {
-			/** @var $hookObject t3lib_tree_pagetree_interfaces_collectionprocessor */
+			/** @var $hookObject \TYPO3\CMS\Backend\Tree\Pagetree\CollectionProcessorInterface */
 			$hookObject->postProcessGetTreeMounts($searchFilter, $nodeCollection);
 		}
 		return $nodeCollection;

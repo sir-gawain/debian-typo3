@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -40,7 +40,7 @@ require $BACK_PATH . 'init.php';
 unset($MCONF);
 unset($MLANG);
 // Merging locallang files/arrays:
-$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xml');
+$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xlf');
 $LOCAL_LANG_orig = $LOCAL_LANG;
 $LANG->includeLLFile('EXT:cms/layout/locallang_db_new_content_el.xml');
 $LOCAL_LANG = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($LOCAL_LANG_orig, $LOCAL_LANG);

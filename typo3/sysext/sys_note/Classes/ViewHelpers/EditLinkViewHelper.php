@@ -4,7 +4,7 @@ namespace TYPO3\CMS\SysNote\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Georg Ringer <typo3@ringerge.org>
+ *  (c) 2012-2013 Georg Ringer <typo3@ringerge.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\SysNote\ViewHelpers;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * ViewHelper to create a link to edit a note
  *

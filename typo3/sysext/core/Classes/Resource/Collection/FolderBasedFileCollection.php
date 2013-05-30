@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Collection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ * (c) 2011-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -101,7 +101,7 @@ class FolderBasedFileCollection extends \TYPO3\CMS\Core\Resource\Collection\Abst
 	}
 
 	/**
-	 * Similar to method in t3lib_collection_AbstractRecordCollection,
+	 * Similar to method in \TYPO3\CMS\Core\Collection\AbstractRecordCollection,
 	 * but without $this->itemTableName= $array['table_name'],
 	 * but with $this->storageItemsFieldContent = $array[self::$storageItemsField];
 	 *

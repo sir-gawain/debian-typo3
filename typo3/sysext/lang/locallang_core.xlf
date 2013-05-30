@@ -645,6 +645,31 @@ Would you like to save now in order to refresh the display?</source>
 			<trans-unit id="rm.delete" xml:space="preserve">
 				<source>Delete</source>
 			</trans-unit>
+			<trans-unit id="message.header.fileNotDeletedHasReferences" xml:space="preserve">
+				<source>File not deleted</source>
+			</trans-unit>
+			<trans-unit id="message.description.fileNotDeletedHasReferences" xml:space="preserve">
+				<source>The file cannot be deleted since it is still used at the following places:</source>
+			</trans-unit>
+			<trans-unit id="message.header.fileDeleted" xml:space="preserve">
+				<source>File deleted</source>
+			</trans-unit>
+			<trans-unit id="message.description.fileDeleted" xml:space="preserve">
+				<source>The file "%s" was successfully deleted.</source>
+			</trans-unit>
+			<trans-unit id="message.header.folderDeleted" xml:space="preserve">
+				<source>Folder deleted</source>
+			</trans-unit>
+			<trans-unit id="message.description.folderDeleted" xml:space="preserve">
+				<source>The folder "%s" was successfully deleted.</source>
+			</trans-unit>
+			<trans-unit id="message.header.folderNotDeletedHasFiles" xml:space="preserve">
+				<source>Folder not deleted</source>
+			</trans-unit>
+			<trans-unit id="message.description.folderNotDeletedHasFiles" xml:space="preserve">
+				<source>The folder cannot be deleted since it still contains files.</source>
+			</trans-unit>
+
 			<trans-unit id="buttons.logout" xml:space="preserve">
 				<source>Logout</source>
 			</trans-unit>
@@ -701,6 +726,12 @@ Would you like to save now in order to refresh the display?</source>
 			</trans-unit>
 			<trans-unit id="cm.unhide" xml:space="preserve">
 				<source>Unhide</source>
+			</trans-unit>
+			<trans-unit id="cm.online" xml:space="preserve">
+				<source>Turn online</source>
+			</trans-unit>
+			<trans-unit id="cm.offline" xml:space="preserve">
+				<source>Turn offline</source>
 			</trans-unit>
 			<trans-unit id="cm.upload" xml:space="preserve">
 				<source>Upload Files</source>
@@ -912,7 +943,7 @@ Check also the following points:\n
 				<source>Extension "%s" is not installed.</source>
 			</trans-unit>
 			<trans-unit id="link.to.dblist.correctly" xml:space="preserve">
-				<source>Please, do not link to this page. Use t3lib_BEfunc::getListViewLink() for link generation.</source>
+				<source>Please, do not link to this page. Use \TYPO3\CMS\Backend\Utility\BackendUtility::getListViewLink() for link generation.</source>
 			</trans-unit>
 			<trans-unit id="link.to.filefile.correctly" xml:space="preserve">
 				<source>Please, do not link to this page.</source>

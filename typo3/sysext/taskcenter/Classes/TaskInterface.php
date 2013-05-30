@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Taskcenter;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Georg Ringer <typo3@ringerge.org>
+ *  (c) 2010-2013 Georg Ringer <typo3@ringerge.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,13 +26,14 @@ namespace TYPO3\CMS\Taskcenter;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Interface for classes which provide a task.
  *
  * @author Georg Ringer <typo3@ringerge.org
  */
-interface TaskInterface
-{
+interface TaskInterface {
+
 	/**
 	 * Returns the content for a task
 	 *

@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -39,13 +39,14 @@ require '../sysext/core/Classes/Core/Bootstrap.php';
 
 require '../sysext/install/Classes/InstallBootstrap.php';
 \TYPO3\CMS\Install\InstallBootstrap::checkEnabledInstallToolOrDie();
+\TYPO3\CMS\Install\InstallBootstrap::createLocalConfigurationIfNotExists();
 
 \TYPO3\CMS\Core\Core\Bootstrap::getInstance()
 	->startOutputBuffering()
 	->loadConfigurationAndInitialize()
 	->loadTypo3LoadedExtAndExtLocalconf(FALSE)
 	->applyAdditionalConfigurationSettings()
-	->initializeTypo3DbGlobal(FALSE)
+	->initializeTypo3DbGlobal()
 	->checkLockedBackendAndRedirectOrDie()
 	->checkBackendIpOrDie()
 	->checkSslBackendAndRedirectIfNeeded();

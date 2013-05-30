@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,7 +37,7 @@ class RawValidator implements \TYPO3\CMS\Extbase\Validation\Validator\ValidatorI
 	 *
 	 * @param mixed $value The value that should be validated
 	 * @return boolean TRUE
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function isValid($value) {
 		return TRUE;
@@ -48,7 +48,7 @@ class RawValidator implements \TYPO3\CMS\Extbase\Validation\Validator\ValidatorI
 	 *
 	 * @param array $options Not used
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function setOptions(array $options) {
 	}
@@ -57,7 +57,7 @@ class RawValidator implements \TYPO3\CMS\Extbase\Validation\Validator\ValidatorI
 	 * Returns an array of errors which occurred during the last isValid() call.
 	 *
 	 * @return array An array of error messages or an empty array if no errors occurred.
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function getErrors() {
 		return array();
@@ -68,7 +68,6 @@ class RawValidator implements \TYPO3\CMS\Extbase\Validation\Validator\ValidatorI
 	 *
 	 * @param mixed $value The value that should be validated
 	 * @return \TYPO3\CMS\Extbase\Error\Result
-	 * @author Robert Lemke <robert@typo3.org>
 	 * @api
 	 */
 	public function validate($value) {

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Backend\Form\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Ritter <info@steffen-ritter.net>
- *  (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ *  (c) 2010-2013 Steffen Ritter <info@steffen-ritter.net>
+ *  (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -148,7 +148,7 @@ class TreeElement {
 		$pageRenderer = $GLOBALS['SOBE']->doc->getPageRenderer();
 		$pageRenderer->loadExtJs();
 		$pageRenderer->addJsFile('../t3lib/js/extjs/tree/tree.js');
-		$pageRenderer->addInlineLanguageLabelFile(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('lang') . 'locallang_csh_corebe.xml', 'tcatree');
+		$pageRenderer->addInlineLanguageLabelFile(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('lang') . 'locallang_csh_corebe.xlf', 'tcatree');
 		$pageRenderer->addExtOnReadyCode('
 			TYPO3.Components.Tree.StandardTreeItemData["' . $id . '"] = ' . $treeData . ';
 			var tree' . $id . ' = new TYPO3.Components.Tree.StandardTree({

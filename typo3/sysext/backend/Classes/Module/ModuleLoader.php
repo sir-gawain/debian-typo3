@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Module;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,23 +26,18 @@ namespace TYPO3\CMS\Backend\Module;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * This document provides a class that loads the modules for the TYPO3 interface.
  *
- * Modifications by René Fritz, 2001
- * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @internal
- */
-/**
  * Load Backend Interface modules
  *
  * Typically instantiated like this:
- * $this->loadModules = t3lib_div::makeInstance('t3lib_loadModules');
+ * $this->loadModules = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Backend\Module\ModuleLoader');
  * $this->loadModules->load($TBE_MODULES);
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
+ * @internal
  */
 class ModuleLoader {
 

@@ -30,12 +30,12 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'Curby Soft Multimedia',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '6.0.0',
-	'_md5_values_when_last_written' => 'a:6:{s:9:"ChangeLog";s:4:"63a4";s:33:"class.tx_tstemplateobjbrowser.php";s:4:"aabf";s:12:"ext_icon.gif";s:4:"c2e1";s:14:"ext_tables.php";s:4:"a29f";s:13:"locallang.xlf";s:4:"9091";s:12:"doc/TODO.txt";s:4:"6bb0";}',
+	'version' => '6.1.0',
+	'_md5_values_when_last_written' => '',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '6.0.0-0.0.0',
-			'tstemplate' => '6.0.0-0.0.0'
+			'typo3' => '6.1.0-6.1.99',
+			'tstemplate' => '6.1.0-6.1.99',
 		),
 		'conflicts' => array(),
 		'suggests' => array()

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Core;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -88,7 +88,7 @@ class Bootstrap implements \TYPO3\CMS\Extbase\Core\BootstrapInterface {
 	 * @api
 	 */
 	public function initialize($configuration) {
-		if (!defined('TYPO3_cliMode') || TYPO3_cliMode !== TRUE) {
+		if (!$this->isInCliMode()) {
 			if (!isset($configuration['extensionName']) || strlen($configuration['extensionName']) === 0) {
 				throw new \RuntimeException('Invalid configuration: "extensionName" is not set', 1290623020);
 			}
@@ -130,18 +130,18 @@ class Bootstrap implements \TYPO3\CMS\Extbase\Core\BootstrapInterface {
 
 	/**
 	 * Configures the object manager object configuration from
-	 * config.tx_extbase.objects
+	 * config.tx_extbase.objects and plugin.tx_foo.objects
 	 *
 	 * @return void
 	 * @see initialize()
 	 */
 	public function configureObjectManager() {
-		$typoScriptSetup = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
-		if (!is_array($typoScriptSetup['config.']['tx_extbase.']['objects.'])) {
+		$frameworkSetup = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+		if (!is_array($frameworkSetup['objects'])) {
 			return;
 		}
 		$objectContainer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\Container\\Container');
-		foreach ($typoScriptSetup['config.']['tx_extbase.']['objects.'] as $classNameWithDot => $classConfiguration) {
+		foreach ($frameworkSetup['objects'] as $classNameWithDot => $classConfiguration) {
 			if (isset($classConfiguration['className'])) {
 				$originalClassName = rtrim($classNameWithDot, '.');
 				$objectContainer->registerImplementation($originalClassName, $classConfiguration['className']);
@@ -194,50 +194,30 @@ class Bootstrap implements \TYPO3\CMS\Extbase\Core\BootstrapInterface {
 	 */
 	public function run($content, $configuration) {
 		$this->initialize($configuration);
-		// CLI
-		if (defined('TYPO3_cliMode') && TYPO3_cliMode === TRUE) {
-			$content = $this->handleCommandLineRequest();
-		} else {
-			$content = $this->handleWebRequest();
-		}
-		return $content;
+		return $this->handleRequest();
 	}
 
 	/**
 	 * @return string
 	 */
-	protected function handleCommandLineRequest() {
-		$commandLine = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
-		$request = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\RequestBuilder')->build(array_slice($commandLine, 1));
-		$response = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Response');
-		$extensionName = $request->getControllerExtensionName();
-		$this->configurationManager->setConfiguration(array('extensionName' => $extensionName));
-		$this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Dispatcher')->dispatch($request, $response);
-		$content = $response->getContent();
-		$this->resetSingletons();
-		return $content;
-	}
-
-	/**
-	 * @return string
-	 */
-	protected function handleWebRequest() {
+	protected function handleRequest() {
+		/** @var $requestHandlerResolver \TYPO3\CMS\Extbase\Mvc\RequestHandlerResolver */
 		$requestHandlerResolver = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\RequestHandlerResolver');
 		$requestHandler = $requestHandlerResolver->resolveRequestHandler();
+
 		$response = $requestHandler->handleRequest();
 		// If response is NULL after handling the request we need to stop
 		// This happens for instance, when a USER object was converted to a USER_INT
 		// @see TYPO3\CMS\Extbase\Mvc\Web\FrontendRequestHandler::handleRequest()
 		if ($response === NULL) {
 			$this->reflectionService->shutdown();
-			return '';
+			$content = '';
+		} else {
+			$content = $response->shutdown();
+			$this->resetSingletons();
+			$this->objectManager->get('TYPO3\CMS\Extbase\Service\CacheService')->clearCachesOfRegisteredPageIds();
 		}
-		if (count($response->getAdditionalHeaderData()) > 0) {
-			$GLOBALS['TSFE']->additionalHeaderData[] = implode(chr(10), $response->getAdditionalHeaderData());
-		}
-		$response->sendHeaders();
-		$content = $response->getContent();
-		$this->resetSingletons();
+
 		return $content;
 	}
 
@@ -252,43 +232,10 @@ class Bootstrap implements \TYPO3\CMS\Extbase\Core\BootstrapInterface {
 	}
 
 	/**
-	 * This method forwards the call to run(). This method is invoked by the mod.php
-	 * function of TYPO3.
-	 *
-	 * @param string $moduleSignature
-	 * @throws \RuntimeException
-	 * @return boolean TRUE, if the request request could be dispatched
-	 * @see run()
+	 * @return boolean
 	 */
-	public function callModule($moduleSignature) {
-		if (!isset($GLOBALS['TBE_MODULES']['_configuration'][$moduleSignature])) {
-			return FALSE;
-		}
-		$moduleConfiguration = $GLOBALS['TBE_MODULES']['_configuration'][$moduleSignature];
-		// Check permissions and exit if the user has no permission for entry
-		$GLOBALS['BE_USER']->modAccess($moduleConfiguration, TRUE);
-		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('id')) {
-			// Check page access
-			$permClause = $GLOBALS['BE_USER']->getPagePermsClause(TRUE);
-			$access = is_array(\TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess((integer) \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('id'), $permClause));
-			if (!$access) {
-				throw new \RuntimeException('You don\'t have access to this page', 1289917924);
-			}
-		}
-		// BACK_PATH is the path from the typo3/ directory from within the
-		// directory containing the controller file. We are using mod.php dispatcher
-		// and thus we are already within typo3/ because we call typo3/mod.php
-		$GLOBALS['BACK_PATH'] = '';
-		$configuration = array(
-			'extensionName' => $moduleConfiguration['extensionName'],
-			'pluginName' => $moduleSignature
-		);
-		if (isset($moduleConfiguration['vendorName'])) {
-			$configuration['vendorName'] = $moduleConfiguration['vendorName'];
-		}
-		$content = $this->run('', $configuration);
-		print $content;
-		return TRUE;
+	protected function isInCliMode() {
+		return (defined('TYPO3_cliMode') && TYPO3_cliMode);
 	}
 }
 

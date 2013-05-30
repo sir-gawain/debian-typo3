@@ -4,9 +4,9 @@ namespace TYPO3\CMS\Core\Log;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011-2012 Ingo Renner (ingo@typo3.org)
- * (c) 2011-2012 Steffen Müller (typo3@t3node.com)
- * (c) 2011-2012 Steffen Gebert (steffen.gebert@typo3.org))
+ * (c) 2011-2013 Ingo Renner (ingo@typo3.org)
+ * (c) 2011-2013 Steffen Müller (typo3@t3node.com)
+ * (c) 2011-2013 Steffen Gebert (steffen.gebert@typo3.org))
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -78,7 +78,7 @@ class LogManager implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Gets a logger instance for the given name.
 	 *
-	 * t3lib_div::makeInstance('\TYPO3\CMS\Core\Log\LogManager')->getLogger('main.sub.subsub');
+	 * \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('\TYPO3\CMS\Core\Log\LogManager')->getLogger('main.sub.subsub');
 	 *
 	 * $name can also be submitted as a underscore-separated string, which will
 	 * be converted to dots. This is useful to call this method with __CLASS__

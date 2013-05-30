@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Page;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -91,7 +91,7 @@ class PageGenerator {
 		$GLOBALS['TSFE']->absRefPrefix = $GLOBALS['TSFE']->config['config']['absRefPrefix'] ? trim($GLOBALS['TSFE']->config['config']['absRefPrefix']) : '';
 		if ($GLOBALS['TSFE']->type && $GLOBALS['TSFE']->config['config']['frameReloadIfNotInFrameset']) {
 			$tdlLD = $GLOBALS['TSFE']->tmpl->linkData($GLOBALS['TSFE']->page, '_top', $GLOBALS['TSFE']->no_cache, '');
-			$GLOBALS['TSFE']->JSCode = 'if(!parent.' . trim($GLOBALS['TSFE']->sPre) . ' && !parent.view_frame) top.location.href="' . $GLOBALS['TSFE']->baseUrlWrap($tdlLD['totalURL']) . '"';
+			$GLOBALS['TSFE']->additionalJavaScript['JSCode'] .= 'if(!parent.' . trim($GLOBALS['TSFE']->sPre) . ' && !parent.view_frame) top.location.href="' . $GLOBALS['TSFE']->baseUrlWrap($tdlLD['totalURL']) . '"';
 		}
 		$GLOBALS['TSFE']->compensateFieldWidth = '' . $GLOBALS['TSFE']->config['config']['compensateFieldWidth'];
 		$GLOBALS['TSFE']->lockFilePath = '' . $GLOBALS['TSFE']->config['config']['lockFilePath'];
@@ -253,7 +253,6 @@ class PageGenerator {
 	 * @return void
 	 */
 	static public function renderContentWithHeader($pageContent) {
-		// get instance of t3lib_PageRenderer
 		/** @var $pageRenderer \TYPO3\CMS\Core\Page\PageRenderer */
 		$pageRenderer = $GLOBALS['TSFE']->getPageRenderer();
 		if ($GLOBALS['TSFE']->config['config']['moveJsFromHeaderToFooter']) {
@@ -430,7 +429,7 @@ class PageGenerator {
 					if ($iCSScode['_CSS_DEFAULT_STYLE'] && empty($GLOBALS['TSFE']->config['config']['removeDefaultCss'])) {
 						$temp_styleLines[] = '/* default styles for extension "' . substr($key, 0, -1) . '" */' . LF . $iCSScode['_CSS_DEFAULT_STYLE'];
 					}
-					if ($iCSScode['_CSS_PAGE_STYLE']) {
+					if ($iCSScode['_CSS_PAGE_STYLE'] && empty($GLOBALS['TSFE']->config['config']['removePageCss'])) {
 						$temp_styleLines[] = '/* specific page styles for extension "' . substr($key, 0, -1) . '" */' . LF . implode(LF, $iCSScode['_CSS_PAGE_STYLE']);
 					}
 				}
@@ -718,18 +717,8 @@ class PageGenerator {
 			$GLOBALS['TSFE']->INTincScript_loadJSCode();
 		}
 		$JSef = self::JSeventFunctions();
-		// Adding default Java Script:
-		$scriptJsCode = '
-		var browserName = navigator.appName;
-		var browserVer = parseInt(navigator.appVersion);
-		var version = "";
-		var msie4 = (browserName == "Microsoft Internet Explorer" && browserVer >= 4);
-		if ((browserName == "Netscape" && browserVer >= 3) || msie4 || browserName=="Konqueror" || browserName=="Opera") {version = "n3";} else {version = "n2";}
-			// Blurring links:
-		function blurLink(theObject) {	//
-			if (msie4) {theObject.blur();}
-		}
-		' . $JSef[0];
+		$scriptJsCode = $JSef[0];
+
 		if ($GLOBALS['TSFE']->spamProtectEmailAddresses && $GLOBALS['TSFE']->spamProtectEmailAddresses !== 'ascii') {
 			$scriptJsCode .= '
 			// decrypt helper function
@@ -831,7 +820,9 @@ class PageGenerator {
 			if ($inlineJSint) {
 				$pageRenderer->addJsInlineCode('TS_inlineJSint', $inlineJSint, $GLOBALS['TSFE']->config['config']['compressJs']);
 			}
-			$pageRenderer->addJsFile(self::inline2TempFile($scriptJsCode . $inlineJS, 'js'), 'text/javascript', $GLOBALS['TSFE']->config['config']['compressJs']);
+			if (trim($scriptJsCode . $inlineJS)) {
+				$pageRenderer->addJsFile(self::inline2TempFile($scriptJsCode . $inlineJS, 'js'), 'text/javascript', $GLOBALS['TSFE']->config['config']['compressJs']);
+			}
 			if ($inlineFooterJs) {
 				$inlineFooterJSint = '';
 				self::stripIntObjectPlaceholder($inlineFooterJs, $inlineFooterJSint);
@@ -891,28 +882,32 @@ class PageGenerator {
 			$pageRenderer->addBodyContent(LF . '<noframes>' . LF);
 		}
 		// Bodytag:
-		$defBT = $GLOBALS['TSFE']->pSetup['bodyTagCObject'] ? $GLOBALS['TSFE']->cObj->cObjGetSingle($GLOBALS['TSFE']->pSetup['bodyTagCObject'], $GLOBALS['TSFE']->pSetup['bodyTagCObject.'], 'bodyTagCObject') : '';
-		if (!$defBT) {
-			$defBT = $GLOBALS['TSFE']->defaultBodyTag;
-		}
-		$bodyTag = $GLOBALS['TSFE']->pSetup['bodyTag'] ? $GLOBALS['TSFE']->pSetup['bodyTag'] : $defBT;
-		if ($bgImg = $GLOBALS['TSFE']->cObj->getImgResource($GLOBALS['TSFE']->pSetup['bgImg'], $GLOBALS['TSFE']->pSetup['bgImg.'])) {
-			$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' background="' . $GLOBALS['TSFE']->absRefPrefix . $bgImg[3] . '">';
-		}
-		if (isset($GLOBALS['TSFE']->pSetup['bodyTagMargins'])) {
-			$margins = intval($GLOBALS['TSFE']->pSetup['bodyTagMargins']);
-			if ($GLOBALS['TSFE']->pSetup['bodyTagMargins.']['useCSS']) {
-
-			} else {
-				$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' leftmargin="' . $margins . '" topmargin="' . $margins . '" marginwidth="' . $margins . '" marginheight="' . $margins . '">';
+		if ($GLOBALS['TSFE']->config['config']['disableBodyTag']) {
+			$bodyTag = '';
+		} else {
+			$defBT = $GLOBALS['TSFE']->pSetup['bodyTagCObject'] ? $GLOBALS['TSFE']->cObj->cObjGetSingle($GLOBALS['TSFE']->pSetup['bodyTagCObject'], $GLOBALS['TSFE']->pSetup['bodyTagCObject.'], 'bodyTagCObject') : '';
+			if (!$defBT) {
+				$defBT = $GLOBALS['TSFE']->defaultBodyTag;
 			}
-		}
-		if (trim($GLOBALS['TSFE']->pSetup['bodyTagAdd'])) {
-			$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' ' . trim($GLOBALS['TSFE']->pSetup['bodyTagAdd']) . '>';
-		}
-		// Event functions
-		if (count($JSef[1])) {
-			$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' ' . trim(implode(' ', $JSef[1])) . '>';
+			$bodyTag = $GLOBALS['TSFE']->pSetup['bodyTag'] ? $GLOBALS['TSFE']->pSetup['bodyTag'] : $defBT;
+			if ($bgImg = $GLOBALS['TSFE']->cObj->getImgResource($GLOBALS['TSFE']->pSetup['bgImg'], $GLOBALS['TSFE']->pSetup['bgImg.'])) {
+				$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' background="' . $GLOBALS['TSFE']->absRefPrefix . $bgImg[3] . '">';
+			}
+			if (isset($GLOBALS['TSFE']->pSetup['bodyTagMargins'])) {
+				$margins = intval($GLOBALS['TSFE']->pSetup['bodyTagMargins']);
+				if ($GLOBALS['TSFE']->pSetup['bodyTagMargins.']['useCSS']) {
+
+				} else {
+					$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' leftmargin="' . $margins . '" topmargin="' . $margins . '" marginwidth="' . $margins . '" marginheight="' . $margins . '">';
+				}
+			}
+			if (trim($GLOBALS['TSFE']->pSetup['bodyTagAdd'])) {
+				$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' ' . trim($GLOBALS['TSFE']->pSetup['bodyTagAdd']) . '>';
+			}
+			// Event functions
+			if (count($JSef[1])) {
+				$bodyTag = preg_replace('/>$/', '', trim($bodyTag)) . ' ' . trim(implode(' ', $JSef[1])) . '>';
+			}
 		}
 		$pageRenderer->addBodyContent(LF . $bodyTag);
 		// Div-sections

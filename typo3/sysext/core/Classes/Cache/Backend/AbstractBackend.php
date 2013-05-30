@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -53,7 +53,7 @@ abstract class AbstractBackend implements \TYPO3\CMS\Core\Cache\Backend\BackendI
 	 * The current application context
 	 *
 	 * TYPO3 v4 note: This variable is currently unused in v4 context and set to
-	 * "production" always by t3lib_cache. It is only kept to stay in sync with
+	 * "production" always. It is only kept to stay in sync with
 	 * FLOW3 code.
 	 *
 	 * @var string

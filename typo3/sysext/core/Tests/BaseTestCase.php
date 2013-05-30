@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2005-2012 Robert Lemke (robert@typo3.org)
+ * (c) 2005-2013 Robert Lemke (robert@typo3.org)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -32,27 +32,20 @@ namespace TYPO3\CMS\Core\Tests;
  *
  */
 abstract class BaseTestCase extends \PHPUnit_Framework_TestCase {
+
 	/**
-	 * whether global variables should be backuped
+	 * Whether global variables should be backed up
 	 *
 	 * @var boolean
 	 */
 	protected $backupGlobals = TRUE;
 
 	/**
-	 * whether static attributes should be backuped
+	 * Whether static attributes should be backed up
 	 *
 	 * @var boolean
 	 */
 	protected $backupStaticAttributes = FALSE;
-
-	/**
-	 * Exclude TYPO3_DB from backup/restore of $GLOBALS
-	 * because resource types cannot be handled during serializing
-	 *
-	 * @var array
-	 */
-	protected $backupGlobalsBlacklist = array('TYPO3_DB');
 
 	/**
 	 * Creates a mock object which allows for calling protected methods and access of protected properties.

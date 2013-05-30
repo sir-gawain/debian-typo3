@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\ContentObject;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,6 +31,11 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\ContentObject;
 class FluidTemplateContentObjectTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
+	 * @var array A backup of registered singleton instances
+	 */
+	protected $singletonInstances = array();
+
+	/**
 	 * @var \TYPO3\CMS\Frontend\ContentObject\FluidTemplateContentObject|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
 	protected $fixture = NULL;
@@ -54,18 +59,26 @@ class FluidTemplateContentObjectTest extends \TYPO3\CMS\Core\Tests\UnitTestCase 
 	 * Set up
 	 */
 	public function setUp() {
+		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
 		$this->contentObjectRenderer = $this->getMock(
 			'TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer'
 		);
 		$this->fixture = $this->getAccessibleMock(
 			'TYPO3\\CMS\\Frontend\\ContentObject\\FluidTemplateContentObject',
-			array('dummy'),
+			array('dummy', 'initializeStandaloneViewInstance'),
 			array($this->contentObjectRenderer)
 		);
 		/** @var $tsfe \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController */
 		$tsfe = $this->getMock('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', array(), array(), '', FALSE);
 		$tsfe->tmpl = $this->getMock('TYPO3\\CMS\\Core\\TypoScript\\TemplateService');
 		$GLOBALS['TSFE'] = $tsfe;
+	}
+
+	/**
+	 * Tear down
+	 */
+	public function tearDown() {
+		\TYPO3\CMS\Core\Utility\GeneralUtility::resetSingletonInstances($this->singletonInstances);
 	}
 
 	/**
@@ -91,8 +104,12 @@ class FluidTemplateContentObjectTest extends \TYPO3\CMS\Core\Tests\UnitTestCase 
 	/**
 	 * @test
 	 */
-	public function constructCreatesInstanceOfFluidStandaloneView() {
-		$this->assertInstanceOf('TYPO3\\CMS\\Fluid\\View\\StandaloneView', $this->fixture->_get('view'));
+	public function renderCallsinitializeStandaloneViewInstance() {
+		$this->addMockViewToFixture();
+		$this->fixture
+			->expects($this->once())
+			->method('initializeStandaloneViewInstance');
+		$this->fixture->render(array());
 	}
 
 	/**
@@ -138,6 +155,31 @@ class FluidTemplateContentObjectTest extends \TYPO3\CMS\Core\Tests\UnitTestCase 
 			->method('setTemplatePathAndFilename')
 			->with('bar');
 		$this->fixture->render(array('file' => 'foo'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function renderSetsTemplateFileByTemplateInView() {
+		$this->addMockViewToFixture();
+
+		$this->contentObjectRenderer
+			->expects($this->any())
+			->method('cObjGetSingle')
+			->with('FILE', array('file' => PATH_site . 'foo/bar.html'))
+			->will($this->returnValue('baz'));
+
+		$this->standaloneView
+			->expects($this->any())
+			->method('setTemplateSource')
+			->with('baz');
+
+		$this->fixture->render(array(
+			'template' => 'FILE',
+			'template.' => array(
+				'file' => PATH_site . 'foo/bar.html'
+			)
+		));
 	}
 
 	/**
@@ -357,6 +399,44 @@ class FluidTemplateContentObjectTest extends \TYPO3\CMS\Core\Tests\UnitTestCase 
 				),
 			),
 		);
+		$this->fixture->render($configuration);
+	}
+
+	/**
+	 * @test
+	 */
+	public function renderAssignsSettingsArrayToView() {
+		$this->addMockViewToFixture();
+
+		$configuration = array(
+			'settings.' => array(
+				'foo' => 'value',
+				'bar.' => array(
+					'baz' => 'value2',
+				),
+			),
+		);
+
+		$expectedSettingsToBeSet = array(
+			'foo' => 'value',
+			'bar' => array(
+				'baz' => 'value2',
+			),
+		);
+
+		$typoScriptServiceMock = $this->getMock('TYPO3\\CMS\\Extbase\\Service\\TypoScriptService');
+		$typoScriptServiceMock
+			->expects($this->once())
+			->method('convertTypoScriptArrayToPlainArray')
+			->with($configuration['settings.'])
+			->will($this->returnValue($expectedSettingsToBeSet));
+		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Extbase\\Service\\TypoScriptService', $typoScriptServiceMock);
+
+		$this->standaloneView
+			->expects($this->at(1))
+			->method('assign')
+			->with('settings', $expectedSettingsToBeSet);
+
 		$this->fixture->render($configuration);
 	}
 

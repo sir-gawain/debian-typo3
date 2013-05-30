@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Scheduler\Tests\Unit\Task;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,13 +29,6 @@ namespace TYPO3\CMS\Scheduler\Tests\Unit\Task;
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class CachingFrameworkGarbageCollectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * @test

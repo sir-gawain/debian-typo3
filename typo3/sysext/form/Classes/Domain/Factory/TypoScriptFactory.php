@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Factory;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Factory;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Typoscript factory for form
  *
@@ -33,7 +34,11 @@ namespace TYPO3\CMS\Form\Domain\Factory;
  */
 class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 
+	/**
+	 * @var string
+	 */
 	const PROPERTY_DisableContentElement = 'disableContentElement';
+
 	/**
 	 * @var \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
@@ -188,6 +193,11 @@ class TypoScriptFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return void
 	 */
 	protected function reconstituteElement(\TYPO3\CMS\Form\Domain\Model\Element\AbstractElement $element, array $arguments = array()) {
+		if (isset($arguments['value.'])) {
+			$cObj = $this->getLocalConentObject();
+			$arguments['value'] = $cObj->stdWrap($arguments['value'], $arguments['value.']);
+		}
+
 		$this->setAttributes($element, $arguments);
 		$this->setAdditionals($element, $arguments);
 		if (isset($arguments['filters.'])) {

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <typo3@susannemoog.de>
+ *  (c) 2012-2013 Susanne Moog, <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -47,7 +47,7 @@ class ToggleExtensionInstallationStateViewHelper extends \TYPO3\CMS\Fluid\ViewHe
 	public function render($extension) {
 		$requiredExtensions = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getRequiredExtensionListArray();
 
-			// Required extensions can't be activated or deactivated
+		// Required extensions can't be deactivated, these are always activated
 		if (in_array($extension['key'], $requiredExtensions)) {
 			return '';
 		}
@@ -61,6 +61,7 @@ class ToggleExtensionInstallationStateViewHelper extends \TYPO3\CMS\Fluid\ViewHe
 		$label = $extension['installed'] ? 'deactivate' : 'activate';
 		$this->tag->addAttribute('title', \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('extensionList.' . $label, 'extensionmanager'));
 		$icon = $extension['installed'] ? 'uninstall' : 'install';
+		$this->tag->addAttribute('class', 'onClickMaskExtensionManager');
 		$this->tag->setContent(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-extension-' . $icon));
 		return $this->tag->render();
 	}

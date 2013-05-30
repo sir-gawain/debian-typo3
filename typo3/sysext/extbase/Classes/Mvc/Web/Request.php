@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Web;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -61,7 +61,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 
 	/**
 	 * @var boolean TRUE if the HMAC of this request could be verified, FALSE otherwise
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected $hmacVerified = FALSE;
 
@@ -76,6 +76,11 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	protected $configurationManager;
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Service\EnvironmentService
+	 */
+	protected $environmentService;
+
+	/**
 	 * @param \TYPO3\CMS\Extbase\Security\Cryptography\HashService $hashService
 	 */
 	public function injectHashService(\TYPO3\CMS\Extbase\Security\Cryptography\HashService $hashService) {
@@ -88,6 +93,15 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	 */
 	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService
+	 *
+	 * @return void
+	 */
+	public function injectEnvironmentService(\TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService) {
+		$this->environmentService = $environmentService;
 	}
 
 	/**
@@ -151,7 +165,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	 * @api
 	 */
 	public function getBaseUri() {
-		if (TYPO3_MODE === 'BE') {
+		if ($this->environmentService->isEnvironmentInBackendMode()) {
 			return $this->baseUri . TYPO3_mainDir;
 		} else {
 			return $this->baseUri;
@@ -163,8 +177,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	 *
 	 * @param boolean $hmacVerified TRUE if request could be verified, FALSE otherwise
 	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function setHmacVerified($hmacVerified) {
 		$this->hmacVerified = (boolean) $hmacVerified;
@@ -174,8 +187,7 @@ class Request extends \TYPO3\CMS\Extbase\Mvc\Request {
 	 * Could the request be verified via a HMAC?
 	 *
 	 * @return boolean TRUE if request could be verified, FALSE otherwise
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function isHmacVerified() {
 		return $this->hmacVerified;

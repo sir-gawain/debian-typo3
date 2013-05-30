@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Integrity;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ * (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,19 +33,6 @@ namespace TYPO3\CMS\Core\Tests\Integrity;
  * invalid mocking or backups.
  */
 class IntegrityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * This test fails if some test before either set
-	 * $backupGlobals to TRUE and did not add TYPO3_DB to
-	 * $backupGlobalsBlacklist, or if it mocked
-	 * TYPO3\CMS\Core\Database\DatabaseConnection and
-	 * did not reconstitute the existing connection.
-	 *
-	 * @test
-	 */
-	public function globalsTypo3DbDatabaseLinkIsAResource() {
-		$this->assertTrue(is_resource($GLOBALS['TYPO3_DB']->link));
-	}
 
 	/**
 	 * This test fails if some test before mocked or substituted

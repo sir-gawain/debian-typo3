@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Integrity;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -38,7 +38,7 @@ namespace TYPO3\CMS\Core\Integrity;
 /**
  * This class holds functions used by the TYPO3 backend to check the integrity of the database (The DBint module, 'lowlevel' extension)
  *
- * Depends on: Depends on loaddbgroup from t3lib/
+ * Depends on: Depends on \TYPO3\CMS\Core\Database\RelationHandler
  *
  * @todo Need to really extend this class when the tcemain library has been updated and the whole API is better defined. There are some known bugs in this library. Further it would be nice with a facility to not only analyze but also clean up!
  * @see SC_mod_tools_dbint_index::func_relations(), SC_mod_tools_dbint_index::func_records()
@@ -303,7 +303,6 @@ class DatabaseIntegrityCheck {
 		$this->lostPagesList = '';
 		if ($pid_list) {
 			foreach ($GLOBALS['TCA'] as $table => $tableConf) {
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 				$pid_list_tmp = $pid_list;
 				if (!isset($GLOBALS['TCA'][$table]['ctrl']['versioningWS']) || !$GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
 					// Remove preceding "-1," for non-versioned tables
@@ -363,7 +362,6 @@ class DatabaseIntegrityCheck {
 		$list_n = array();
 		if ($pid_list) {
 			foreach ($GLOBALS['TCA'] as $table => $tableConf) {
-				\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 				$pid_list_tmp = $pid_list;
 				if (!isset($GLOBALS['TCA'][$table]['ctrl']['versioningWS']) || !$GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
 					// Remove preceding "-1," for non-versioned tables
@@ -392,7 +390,6 @@ class DatabaseIntegrityCheck {
 	public function getGroupFields($mode) {
 		$result = array();
 		foreach ($GLOBALS['TCA'] as $table => $tableConf) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$cols = $GLOBALS['TCA'][$table]['columns'];
 			foreach ($cols as $field => $config) {
 				if ($config['config']['type'] == 'group') {
@@ -421,7 +418,6 @@ class DatabaseIntegrityCheck {
 	public function getFileFields($uploadfolder) {
 		$result = array();
 		foreach ($GLOBALS['TCA'] as $table => $tableConf) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$cols = $GLOBALS['TCA'][$table]['columns'];
 			foreach ($cols as $field => $config) {
 				if ($config['config']['type'] == 'group' && $config['config']['internal_type'] == 'file' && $config['config']['uploadfolder'] == $uploadfolder) {
@@ -442,7 +438,6 @@ class DatabaseIntegrityCheck {
 	public function getDBFields($theSearchTable) {
 		$result = array();
 		foreach ($GLOBALS['TCA'] as $table => $tableConf) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$cols = $GLOBALS['TCA'][$table]['columns'];
 			foreach ($cols as $field => $config) {
 				if ($config['config']['type'] == 'group' && $config['config']['internal_type'] == 'db') {
@@ -469,7 +464,6 @@ class DatabaseIntegrityCheck {
 		if (is_array($fkey_arrays)) {
 			foreach ($fkey_arrays as $table => $field_list) {
 				if ($GLOBALS['TCA'][$table] && trim($field_list)) {
-					\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 					$fieldArr = explode(',', $field_list);
 					if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('dbal')) {
 						$fields = $GLOBALS['TYPO3_DB']->admin_get_fields($table);
@@ -664,7 +658,6 @@ class DatabaseIntegrityCheck {
 		foreach ($fileFields as $info) {
 			$table = $info[0];
 			$field = $info[1];
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$mres = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,pid,' . $GLOBALS['TCA'][$table]['ctrl']['label'] . ',' . $field, $table, $field . ' LIKE \'%' . $GLOBALS['TYPO3_DB']->quoteStr($id, $table) . '%\'');
 			while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($mres)) {
 				// Now this is the field, where the reference COULD come from. But we're not garanteed, so we must carefully examine the data.

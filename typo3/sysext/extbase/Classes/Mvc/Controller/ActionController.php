@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -98,6 +98,12 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	protected $errorMethodName = 'errorAction';
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService
+	 * @api
+	 */
+	protected $mvcPropertyMappingConfigurationService;
+
+	/**
 	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
@@ -111,6 +117,13 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	 */
 	public function injectCacheService(\TYPO3\CMS\Extbase\Service\CacheService $cacheService) {
 		$this->cacheService = $cacheService;
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService $mvcPropertyMappingConfigurationService
+	 */
+	public function injectMvcPropertyMappingConfigurationService(\TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService $mvcPropertyMappingConfigurationService) {
+		$this->mvcPropertyMappingConfigurationService = $mvcPropertyMappingConfigurationService;
 	}
 
 	/**
@@ -145,11 +158,12 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 		$this->request = $request;
 		$this->request->setDispatched(TRUE);
 		$this->response = $response;
-		$this->uriBuilder = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
+		$this->uriBuilder = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
 		$this->uriBuilder->setRequest($request);
 		$this->actionMethodName = $this->resolveActionMethodName();
 		$this->initializeActionMethodArguments();
 		$this->initializeActionMethodValidators();
+		$this->mvcPropertyMappingConfigurationService->initializePropertyMappingConfigurationFromRequest($request, $this->arguments);
 		$this->initializeAction();
 		$actionInitializationMethodName = 'initialize' . ucfirst($this->actionMethodName);
 		if (method_exists($this, $actionInitializationMethodName)) {
@@ -280,13 +294,14 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 					$shouldCallActionMethod = FALSE;
 				}
 				if ($shouldCallActionMethod) {
+					$this->signalSlotDispatcher->dispatch(__CLASS__, 'beforeCallActionMethod', array('controllerName' => get_class($this), 'actionMethodName' => $this->actionMethodName, 'preparedArguments' => $preparedArguments));
 					$actionResult = call_user_func_array(array($this, $this->actionMethodName), $preparedArguments);
 				} else {
 					$actionResult = call_user_func(array($this, $this->errorMethodName));
 				}
 			}
 		} else {
-			// @deprecated since Extbase 1.4.0, will be removed with Extbase 6.1
+			// @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 			$preparedArguments = array();
 			foreach ($this->arguments as $argument) {
 				$preparedArguments[] = $argument->getValue();
@@ -294,6 +309,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 			if ($this->argumentsMappingResults->hasErrors()) {
 				$actionResult = call_user_func(array($this, $this->errorMethodName));
 			} else {
+				$this->signalSlotDispatcher->dispatch(__CLASS__, 'beforeCallActionMethod', array('controllerName' => get_class($this), 'actionMethodName' => $this->actionMethodName, 'preparedArguments' => $preparedArguments));
 				$actionResult = call_user_func_array(array($this, $this->actionMethodName), $preparedArguments);
 			}
 		}
@@ -318,7 +334,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 		$viewObjectName = $this->resolveViewObjectName();
 		if ($viewObjectName !== FALSE) {
 			/** @var $view \TYPO3\CMS\Extbase\Mvc\View\ViewInterface */
-			$view = $this->objectManager->create($viewObjectName);
+			$view = $this->objectManager->get($viewObjectName);
 			$this->setViewConfiguration($view);
 			if ($view->canRender($this->controllerContext) === FALSE) {
 				unset($view);
@@ -326,14 +342,14 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 		}
 		if (!isset($view) && $this->defaultViewObjectName != '') {
 			/** @var $view \TYPO3\CMS\Extbase\Mvc\View\ViewInterface */
-			$view = $this->objectManager->create($this->defaultViewObjectName);
+			$view = $this->objectManager->get($this->defaultViewObjectName);
 			$this->setViewConfiguration($view);
 			if ($view->canRender($this->controllerContext) === FALSE) {
 				unset($view);
 			}
 		}
 		if (!isset($view)) {
-			$view = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\View\\NotFoundView');
+			$view = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\View\\NotFoundView');
 			$view->assign('errorMessage', 'No template was found. View could not be resolved for action "' . $this->request->getControllerActionName() . '"');
 		}
 		$view->setControllerContext($this->controllerContext);
@@ -431,7 +447,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 		if ($this->configurationManager->isFeatureEnabled('rewrittenPropertyMapper')) {
 			$errorFlashMessage = $this->getErrorFlashMessage();
 			if ($errorFlashMessage !== FALSE) {
-				$this->flashMessageContainer->add($errorFlashMessage, '', \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+				$this->controllerContext->getFlashMessageQueue()->addMessage(new \TYPO3\CMS\Core\Messaging\FlashMessage($errorFlashMessage, '', \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR));
 			}
 			$referringRequest = $this->request->getReferringRequest();
 			if ($referringRequest !== NULL) {
@@ -448,11 +464,11 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 			}
 			return $message;
 		} else {
-			// @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+			// @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 			$this->request->setErrors($this->argumentsMappingResults->getErrors());
 			$errorFlashMessage = $this->getErrorFlashMessage();
 			if ($errorFlashMessage !== FALSE) {
-				$this->flashMessageContainer->add($errorFlashMessage, '', \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+				$this->controllerContext->getFlashMessageQueue()->addMessage(new \TYPO3\CMS\Core\Messaging\FlashMessage($errorFlashMessage, '', \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR));
 			}
 			$referrer = $this->request->getInternalArgument('__referrer');
 			if ($referrer !== NULL) {
@@ -474,7 +490,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	 * display no flash message at all on errors. Override this to customize
 	 * the flash message in your action controller.
 	 *
-	 * @return string|boolean The flash message or FALSE if no flash message should be set
+	 * @return string The flash message or FALSE if no flash message should be set
 	 * @api
 	 */
 	protected function getErrorFlashMessage() {
@@ -488,8 +504,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 	 *
 	 * @return void
 	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidOrNoRequestHashException In case request hash checking failed
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected function checkRequestHash() {
 		if ($this->configurationManager->isFeatureEnabled('rewrittenPropertyMapper')) {

@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Workspaces\ExtDirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2007-2011 Ingo Renner <ingo@typo3.org>
- *  (c) 2010-2011 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ *  (c) 2007-2013 Ingo Renner <ingo@typo3.org>
+ *  (c) 2010-2013 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,7 +29,7 @@ namespace TYPO3\CMS\Workspaces\ExtDirect;
  ***************************************************************/
 
 if (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX) {
-	require_once PATH_typo3 . 'interfaces/interface.backend_toolbaritem.php';
+	require_once \TYPO3\CMS\Core\Extension\ExtensionManager::extPath('backend') . 'Classes/Toolbar/ToolbarItemHookInterface.php';
 }
 
 /**
@@ -61,8 +61,8 @@ class WorkspaceSelectorToolbarItem implements \TYPO3\CMS\Backend\Toolbar\Toolbar
 		$this->backendReference = $backendReference;
 		$this->changeWorkspace = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('changeWorkspace');
 		$this->changeWorkspacePreview = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('changeWorkspacePreview');
-		$pageRenderer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_pageRenderer');
-		$this->backendReference->addJavaScript('TYPO3.Workspaces = { workspaceTitle : \'' . addslashes(\Tx_Workspaces_Service_Workspaces::getWorkspaceTitle($GLOBALS['BE_USER']->workspace)) . '\'};
+		$pageRenderer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Page\\PageRenderer');
+		$this->backendReference->addJavaScript('TYPO3.Workspaces = { workspaceTitle : \'' . addslashes(\TYPO3\CMS\Workspaces\Service\WorkspaceService::getWorkspaceTitle($GLOBALS['BE_USER']->workspace)) . '\'};
 ');
 	}
 
@@ -73,9 +73,9 @@ class WorkspaceSelectorToolbarItem implements \TYPO3\CMS\Backend\Toolbar\Toolbar
 	 * @return boolean  TRUE if user has access, FALSE if not
 	 */
 	public function checkAccess() {
-		if (\t3lib_extMgm::isLoaded('workspaces')) {
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('workspaces')) {
 			if ($this->checkAccess == NULL) {
-				$availableWorkspaces = \Tx_Workspaces_Service_Workspaces::getAvailableWorkspaces();
+				$availableWorkspaces = \TYPO3\CMS\Workspaces\Service\WorkspaceService::getAvailableWorkspaces();
 				if (count($availableWorkspaces) > 0) {
 					$this->checkAccess = TRUE;
 				} else {
@@ -95,7 +95,7 @@ class WorkspaceSelectorToolbarItem implements \TYPO3\CMS\Backend\Toolbar\Toolbar
 	public function render() {
 		$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:toolbarItems.workspace', TRUE);
 		$this->addJavascriptToBackend();
-		$availableWorkspaces = \Tx_Workspaces_Service_Workspaces::getAvailableWorkspaces();
+		$availableWorkspaces = \TYPO3\CMS\Workspaces\Service\WorkspaceService::getAvailableWorkspaces();
 		$workspaceMenu = array();
 		$stateCheckedIcon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('status-status-checked');
 		$stateUncheckedIcon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('empty-empty', array(

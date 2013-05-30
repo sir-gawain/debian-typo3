@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -36,7 +36,7 @@
 $BACK_PATH = '';
 require 'init.php';
 // Include local language labels:
-$LANG->includeLLFile('EXT:lang/locallang_misc.xml');
+$LANG->includeLLFile('EXT:lang/locallang_misc.xlf');
 /**
  * Local extension of the page tree class
  *

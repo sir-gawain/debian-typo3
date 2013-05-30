@@ -4,7 +4,7 @@ namespace TYPO3\CMS\IndexedSearch\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Benjamin Mack (benni@typo3.org)
+ *  (c) 2011-2013 Benjamin Mack (benni@typo3.org)
  *
  *  All rights reserved
  *
@@ -719,13 +719,13 @@ class IndexSearchRepository {
 	 * THIS IS A VERY IMPORTANT FUNCTION: Basically you must add the output from this function for EVERY select query you create
 	 * for selecting records of tables in your own applications - thus they will always be filtered according to the "enablefields"
 	 * configured in TCA
-	 * Simply calls t3lib_pageSelect::enableFields() BUT will send the show_hidden flag along!
+	 * Simply calls \TYPO3\CMS\Frontend\Page\PageRepository::enableFields() BUT will send the show_hidden flag along!
 	 * This means this function will work in conjunction with the preview facilities of the frontend engine/Admin Panel.
 	 *
 	 * @param 	string		The table for which to get the where clause
 	 * @param 	boolean		If set, then you want NOT to filter out hidden records. Otherwise hidden record are filtered based on the current preview settings.
 	 * @return 	string		The part of the where clause on the form " AND [fieldname]=0 AND ...". Eg. " AND hidden=0 AND starttime < 123345567
-	 * @see t3lib_pageSelect::enableFields()
+	 * @see \TYPO3\CMS\Frontend\Page\PageRepository::enableFields()
 	 */
 	protected function enableFields($table) {
 		return $GLOBALS['TSFE']->sys_page->enableFields($table, $table == 'pages' ? $GLOBALS['TSFE']->showHiddenPage : $GLOBALS['TSFE']->showHiddenRecords);
@@ -751,7 +751,7 @@ class IndexSearchRepository {
 	 * @return integer Integer intepretation of the md5 hash of input string.
 	 */
 	protected function md5inthash($str) {
-		return \TYPO3\CMS\IndexedSearch\Indexer::md5inthash($str);
+		return \TYPO3\CMS\IndexedSearch\Utility\IndexedSearchUtility::md5inthash($str);
 	}
 
 	/**
@@ -763,7 +763,7 @@ class IndexSearchRepository {
 	 * @return boolean TRUE if given tables are enabled
 	 */
 	protected function isTableUsed($table_list) {
-		return \TYPO3\CMS\IndexedSearch\Indexer::isTableUsed($table_list);
+		return \TYPO3\CMS\IndexedSearch\Utility\IndexedSearchUtility::isTableUsed($table_list);
 	}
 
 	/**

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\TypoScript;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,7 +37,8 @@ namespace TYPO3\CMS\Core\TypoScript;
  * Template object that is responsible for generating the TypoScript template based on template records.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @see 	t3lib_tsparser, t3lib_matchcondition_abstract
+ * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser
+ * @see \TYPO3\CMS\Core\Configuration\TypoScript\ConditionMatching\AbstractConditionMatcher
  */
 class TemplateService {
 
@@ -104,11 +105,6 @@ class TemplateService {
 	 * @todo Define visibility
 	 */
 	public $tempPath = 'typo3temp/';
-
-	/**
-	 * @todo Define visibility
-	 */
-	public $menuclasses = 'gmenu,tmenu,imgmenu,jsmenu';
 
 	// Set Internally:
 	// This MUST be initialized by the init() function
@@ -300,6 +296,38 @@ class TemplateService {
 	public $MPmap = '';
 
 	/**
+	 * Indicator that extension statics are processed.
+	 *
+	 * These files are considered if either a root template
+	 * has been processed or the $processExtensionStatics
+	 * property has been set to TRUE.
+	 *
+	 * @var boolean
+	 */
+	protected $extensionStaticsProcessed = FALSE;
+
+	/**
+	 * Trigger value, to ensure that extension statics are processed.
+	 *
+	 * @var boolean
+	 */
+	protected $processExtensionStatics = FALSE;
+
+	/**
+	 * @return boolean
+	 */
+	public function getProcessExtensionStatics() {
+		return $this->processExtensionStatics;
+	}
+
+	/**
+	 * @param boolean $processExtensionStatics
+	 */
+	public function setProcessExtensionStatics($processExtensionStatics) {
+		$this->processExtensionStatics = (bool) $processExtensionStatics;
+	}
+
+	/**
 	 * Initialize
 	 * MUST be called directly after creating a new template-object
 	 *
@@ -319,9 +347,6 @@ class TemplateService {
 			$this->simulationHiddenOrTime = 1;
 		}
 		$this->whereClause .= 'AND (starttime<=' . $GLOBALS['SIM_ACCESS_TIME'] . ') AND (endtime=0 OR endtime>' . $GLOBALS['SIM_ACCESS_TIME'] . ')';
-		if (!$GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib']) {
-			$this->menuclasses = 'tmenu,jsmenu,gmenu';
-		}
 		// Sets the paths from where TypoScript resources are allowed to be used:
 		$this->allowedPaths = array(
 			'media/',
@@ -359,7 +384,6 @@ class TemplateService {
 	 * because this will make a new portion of data in currentPageData string.
 	 *
 	 * @return array Returns the unmatched array $currentPageData if found cached in "cache_pagesection". Otherwise FALSE is returned which means that the array must be generated and stored in the cache
-	 * @see start(), tslib_fe::getFromCache()
 	 */
 	public function getCurrentPageData() {
 		return $GLOBALS['typo3CacheManager']->getCache('cache_pagesection')->get(intval($GLOBALS['TSFE']->id) . '_' . \TYPO3\CMS\Core\Utility\GeneralUtility::md5int($GLOBALS['TSFE']->MP));
@@ -370,7 +394,6 @@ class TemplateService {
 	 *
 	 * @param array $cc An array with three keys, "all", "rowSum" and "rootLine" - all coming from the "currentPageData" array
 	 * @return array The input array but with a new key added, "match" which contains the items from the "all" key which when passed to tslib_matchCondition returned TRUE.
-	 * @see t3lib_matchCondition, tslib_fe::getFromCache()
 	 * @todo Define visibility
 	 */
 	public function matching($cc) {
@@ -550,6 +573,10 @@ class TemplateService {
 			}
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			$this->rootLine[] = $this->absoluteRootLine[$a];
+		}
+		// Process extension static files if not done yet, but explicitly requested
+		if (!$this->extensionStaticsProcessed && $this->processExtensionStatics) {
+			$this->addExtensionStatics('sys_0', 'sys_0', 0, array());
 		}
 		$this->processIncludes();
 	}
@@ -757,6 +784,8 @@ class TemplateService {
 	 * @todo Define visibility
 	 */
 	public function addExtensionStatics($idList, $templateID, $pid, $row) {
+		$this->extensionStaticsProcessed = TRUE;
+
 		foreach ($GLOBALS['TYPO3_LOADED_EXT'] as $extKey => $files) {
 			if (is_array($files) && ($files['ext_typoscript_constants.txt'] || $files['ext_typoscript_setup.txt'])) {
 				$mExtKey = str_replace('_', '', $extKey);
@@ -821,7 +850,7 @@ class TemplateService {
 	 * Depends on $this->config and $this->constants to be set prior to this! (done by processTemplate/runThroughTemplates)
 	 *
 	 * @return void
-	 * @see t3lib_TSparser, start()
+	 * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser, start()
 	 * @todo Define visibility
 	 */
 	public function generateConfig() {
@@ -949,7 +978,7 @@ class TemplateService {
 	 * if needed.
 	 *
 	 * @return void
-	 * @see t3lib_TSparser, generateConfig()
+	 * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser, generateConfig()
 	 */
 	public function processIncludes() {
 		$files = array();
@@ -1232,7 +1261,13 @@ class TemplateService {
 		if ($pageTitle != '' && $siteTitle != '') {
 			$pageTitleSeparator = ': ';
 			if (isset($this->setup['config.']['pageTitleSeparator']) && $this->setup['config.']['pageTitleSeparator']) {
-				$pageTitleSeparator = $this->setup['config.']['pageTitleSeparator'] . ' ';
+				$pageTitleSeparator = $this->setup['config.']['pageTitleSeparator'];
+
+				if (is_object($GLOBALS['TSFE']->cObj) && isset($this->setup['config.']['pageTitleSeparator.']) && is_array($this->setup['config.']['pageTitleSeparator.'])) {
+					$pageTitleSeparator = $GLOBALS['TSFE']->cObj->stdWrap($pageTitleSeparator, $this->setup['config.']['pageTitleSeparator.']);
+				} else {
+					$pageTitleSeparator .= ' ';
+				}
 			}
 		}
 		return $siteTitle . $pageTitleSeparator . $pageTitle;
@@ -1240,11 +1275,11 @@ class TemplateService {
 
 	/**
 	 * Reads the fileContent of $fName and returns it.
-	 * Similar to t3lib_div::getUrl()
+	 * Similar to \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl()
 	 *
 	 * @param string $fName Absolute filepath to record
 	 * @return string The content returned
-	 * @see tslib_cObj::fileResource(), tslib_cObj::MULTIMEDIA(), t3lib_div::getUrl()
+	 * @see tslib_cObj::fileResource(), tslib_cObj::MULTIMEDIA(), \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl()
 	 * @todo Define visibility
 	 */
 	public function fileContent($fName) {
@@ -1290,7 +1325,7 @@ class TemplateService {
 
 	/**
 	 * Takes a TypoScript array as input and returns an array which contains all integer properties found which had a value (not only properties). The output array will be sorted numerically.
-	 * Call it like t3lib_TStemplate::sortedKeyList()
+	 * Call it like \TYPO3\CMS\Core\TypoScript\TemplateService::sortedKeyList()
 	 *
 	 * @param array $setupArr TypoScript array with numerical array in
 	 * @param boolean $acceptOnlyProperties If set, then a value is not required - the properties alone will be enough.

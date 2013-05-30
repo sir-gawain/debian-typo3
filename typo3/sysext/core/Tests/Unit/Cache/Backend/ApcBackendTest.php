@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,7 +25,10 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
  ***************************************************************/
 
 /**
- * Testcase for the APC cache backend
+ * Testcase for the APC cache backend.
+ *
+ * NOTE: If you want to execute these tests you need to enable apc in
+ * cli context (apc.enable_cli = 1)
  *
  * This file is a backport from FLOW3
  *
@@ -39,8 +42,9 @@ class ApcBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @return void
 	 */
 	public function setUp() {
+		// Currently APCu identifies itself both as "apcu" and "apc" (for compatibility) although it doesn't provide the APC-opcache functionality
 		if (!extension_loaded('apc')) {
-			$this->markTestSkipped('APC extension was not available');
+			$this->markTestSkipped('APC/APCu extension was not available');
 		}
 		if (ini_get('apc.slam_defense') == 1) {
 			$this->markTestSkipped('This testcase can only be executed with apc.slam_defense = Off');
@@ -62,6 +66,14 @@ class ApcBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function itIsPossibleToSetAndCheckExistenceInCache() {
+		// APC has some slam protection that tries to prevent hammering of cache
+		// entries. This can be disabled, but the option does not work at least
+		// in native PHP 5.3.3 on debian squeeze. While it is no problem with
+		// higher PHP version like the current one on travis-ci.org,
+		// the test is now just skipped on PHP environments that are knows for issues.
+		if (version_compare(phpversion(), '5.3.4', '<')) {
+			$this->markTestSkipped('This test is not reliable with PHP version below 5.3.3');
+		}
 		$backend = $this->setUpBackend();
 		$data = 'Some data';
 		$identifier = 'MyIdentifier' . md5(uniqid(mt_rand(), TRUE));
@@ -74,6 +86,14 @@ class ApcBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function itIsPossibleToSetAndGetEntry() {
+		// APC has some slam protection that tries to prevent hammering of cache
+		// entries. This can be disabled, but the option does not work at least
+		// in native PHP 5.3.3 on debian squeeze. While it is no problem with
+		// higher PHP version like the current one on travis-ci.org,
+		// the test is now just skipped on PHP environments that are knows for issues.
+		if (version_compare(phpversion(), '5.3.4', '<')) {
+			$this->markTestSkipped('This test is not reliable with PHP version below 5.3.3');
+		}
 		$backend = $this->setUpBackend();
 		$data = 'Some data';
 		$identifier = 'MyIdentifier' . md5(uniqid(mt_rand(), TRUE));
@@ -139,6 +159,35 @@ class ApcBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @test
 	 */
+	public function setCacheIsSettingIdentifierPrefixWithCacheIdentifier() {
+		$cacheMock = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\FrontendInterface', array(), array(), '', FALSE);
+		$cacheMock->expects($this->any())->method('getIdentifier')->will($this->returnValue(
+			'testidentifier'
+		));
+
+		/** @var $backendMock \TYPO3\CMS\Core\Cache\Backend\ApcBackend */
+		$backendMock = $this->getMock(
+			'TYPO3\\CMS\\Core\\Cache\\Backend\\ApcBackend',
+			array('setIdentifierPrefix','getCurrentUserData','getPathSite'),
+			array('testcontext')
+		);
+
+		$backendMock->expects($this->once())->method('getCurrentUserData')->will(
+			$this->returnValue(array('name' => 'testname'))
+		);
+
+		$backendMock->expects($this->once())->method('getPathSite')->will(
+			$this->returnValue('testpath')
+		);
+
+		$expectedIdentifier = 'TYPO3_' . \TYPO3\CMS\Core\Utility\GeneralUtility::shortMD5('testpath' . 'testname' . 'testcontext' . 'testidentifier', 12);
+		$backendMock->expects($this->once())->method('setIdentifierPrefix')->with($expectedIdentifier);
+		$backendMock->setCache($cacheMock);
+	}
+
+	/**
+	 * @test
+	 */
 	public function hasReturnsFalseIfTheEntryDoesntExist() {
 		$backend = $this->setUpBackend();
 		$identifier = 'NonExistingIdentifier' . md5(uniqid(mt_rand(), TRUE));
@@ -175,6 +224,14 @@ class ApcBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function flushRemovesAllCacheEntries() {
+		// APC has some slam protection that tries to prevent hammering of cache
+		// entries. This can be disabled, but the option does not work at least
+		// in native PHP 5.3.3 on debian squeeze. While it is no problem with
+		// higher PHP version like the current one on travis-ci.org,
+		// the test is now just skipped on PHP environments that are knows for issues.
+		if (version_compare(phpversion(), '5.3.4', '<')) {
+			$this->markTestSkipped('This test is not reliable with PHP version below 5.3.3');
+		}
 		$backend = $this->setUpBackend();
 		$data = 'some data' . microtime();
 		$backend->set('BackendAPCTest1', $data);

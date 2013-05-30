@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Backend\Toolbar;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Michael Klapper <michael.klapper@aoemedia.de>
- *  (c) 2010-2011 Jeff Segars <jeff@webempoweredchurch.org>
+ *  (c) 2009-2013 Michael Klapper <michael.klapper@aoemedia.de>
+ *  (c) 2010-2013 Jeff Segars <jeff@webempoweredchurch.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -77,7 +77,7 @@ class LiveSearchToolbarItem implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHoo
 	public function render() {
 		$this->addJavascriptToBackend();
 		return '<div class="live-search-wrapper">
-					<span title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:search') . '" class="t3-icon t3-icon-apps t3-icon-apps-toolbar t3-icon-toolbar-menu-search">&nbsp;</span>
+					<span title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:search') . '" class="t3-icon t3-icon-apps t3-icon-apps-toolbar t3-icon-toolbar-menu-search">&nbsp;</span>
 					<input id="live-search-box" />
 				</div>';
 	}

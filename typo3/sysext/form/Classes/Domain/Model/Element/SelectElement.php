@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Select model object
  *
@@ -81,7 +82,11 @@ class SelectElement extends \TYPO3\CMS\Form\Domain\Model\Element\ContainerElemen
 		if (array_key_exists($attribute, $this->allowedAttributes)) {
 			$this->attributes->addAttribute($attribute, $value);
 		}
-		if ($attribute === 'name' && $this->attributes->hasAttribute('multiple') && $this->attributes->getValue('multiple') === 'multiple' || $attribute === 'multiple' && $this->attributes->hasAttribute('name')) {
+		if (
+			$attribute === 'name' && $this->attributes->hasAttribute('multiple') &&
+			$this->attributes->getValue('multiple') === 'multiple' ||
+			$attribute === 'multiple' && $this->attributes->hasAttribute('name')
+		) {
 			/** @var $nameAttribute \TYPO3\CMS\Form\Domain\Model\Attribute\NameAttribute */
 			$nameAttribute = $this->attributes->getAttributeObjectByKey('name');
 			$nameAttribute->setAddition('[]');
@@ -90,6 +95,5 @@ class SelectElement extends \TYPO3\CMS\Form\Domain\Model\Element\ContainerElemen
 	}
 
 }
-
 
 ?>

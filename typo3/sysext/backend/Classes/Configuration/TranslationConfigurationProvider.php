@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2006-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2006-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,8 +43,8 @@ class TranslationConfigurationProvider {
 	 *
 	 * Since TYPO3 4.5 the flagIcon is not returned as a filename in "gfx/flags/*" anymore,
 	 * but as a string <flags-xx>. The calling party should call
-	 * t3lib_iconWorks::getSpriteIcon(<flags-xx>) to get an HTML which will represent
-	 * the flag of this language.
+	 * \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon(<flags-xx>) to get an HTML
+	 * which will represent the flag of this language.
 	 *
 	 * @param integer $page_id Page id (only used to get TSconfig configuration setting flag and label for default language)
 	 * @param string $backPath Backpath for flags
@@ -60,7 +60,7 @@ class TranslationConfigurationProvider {
 		}
 		$languageIconTitles[0] = array(
 			'uid' => 0,
-			'title' => strlen($modSharedTSconfig['properties']['defaultLanguageLabel']) ? $modSharedTSconfig['properties']['defaultLanguageLabel'] . ' (' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xml:defaultLanguage') . ')' : $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xml:defaultLanguage'),
+			'title' => strlen($modSharedTSconfig['properties']['defaultLanguageLabel']) ? $modSharedTSconfig['properties']['defaultLanguageLabel'] . ' (' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xlf:defaultLanguage') . ')' : $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_mod_web_list.xlf:defaultLanguage'),
 			'ISOcode' => 'DEF',
 			'flagIcon' => strlen($modSharedTSconfig['properties']['defaultLanguageFlag']) ? 'flags-' . $modSharedTSconfig['properties']['defaultLanguageFlag'] : 'empty-empty'
 		);
@@ -102,7 +102,6 @@ class TranslationConfigurationProvider {
 	 */
 	public function translationInfo($table, $uid, $sys_language_uid = 0, $row = NULL, $selFieldList = '') {
 		if ($GLOBALS['TCA'][$table] && $uid) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			if ($row === NULL) {
 				$row = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL($table, $uid);
 			}

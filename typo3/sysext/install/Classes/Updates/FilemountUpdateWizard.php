@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install\Updates;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Tolleiv Nietsch <typo3@tolleiv.de>
+ *  (c) 2012-2013 Tolleiv Nietsch <typo3@tolleiv.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -41,7 +41,7 @@ class FilemountUpdateWizard extends \TYPO3\CMS\Install\Updates\AbstractUpdate {
 	protected $title = 'Migrate existing filemounts to be file abstraction layer compatible.';
 
 	/**
-	 * @var t3lib_db
+	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
 	 */
 	protected $db;
 

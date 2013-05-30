@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\ViewHelpers\Form;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog, <typo3@susannemoog.de>
+ *  (c) 2012-2013 Susanne Moog, <typo3@susannemoog.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -45,8 +45,8 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		'user' => 'renderUserFunction',
 		'small' => 'renderSmallTextField',
 		'string' => 'renderTextField',
-		'input' => 'renderTextField',	// only for backwards compatibility, will be removed with TYPO3 6.1
-		'default' => 'renderTextField'	// only for backwards compatibility, will be removed with TYPO3 6.1
+		'input' => 'renderTextField',  // only for backwards compatibility, many extensions depend on that
+		'default' => 'renderTextField' // only for backwards compatibility, many extensions depend on that
 	);
 
 	public $tagName = 'input';
@@ -90,14 +90,14 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		$this->tag->setTagName('input');
 		$this->tag->addAttribute('type', 'text');
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		$doc = $this->getDocInstance();
 		$pageRenderer = $doc->getPageRenderer();
 		$pageRenderer->addCssFile('sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/farbtastic.css');
 		$pageRenderer->addJsFile('sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/farbtastic.js');
 		$pageRenderer->addJsInlineCode('colorpicker', '
 			jQuery(document).ready(function() {
-				jQuery(".colorPicker").farbtastic("#' . $configuration->getName() . '");
+				jQuery(".colorPicker").farbtastic("#em-' . $configuration->getName() . '");
 			});
 		');
 		if ($configuration->getValue() !== NULL) {
@@ -116,7 +116,7 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		$this->tag->setTagName('input');
 		$this->tag->addAttribute('type', 'text');
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		$this->tag->addAttribute('class', 'offset');
 		if ($configuration->getValue() !== NULL) {
 			$this->tag->addAttribute('value', $configuration->getValue());
@@ -134,7 +134,7 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		$this->tag->setTagName('input');
 		$this->tag->addAttribute('type', 'text');
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		$this->tag->addAttribute('class', 'wrap');
 		if ($configuration->getValue() !== NULL) {
 			$this->tag->addAttribute('value', $configuration->getValue());
@@ -150,7 +150,7 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 	 */
 	protected function renderOptionSelect(\TYPO3\CMS\Extensionmanager\Domain\Model\ConfigurationItem $configuration) {
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		$this->tag->setTagName('select');
 		$optionValueArray = $configuration->getGeneric();
 		$output = '';
@@ -176,7 +176,7 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		$this->tag->addAttribute('type', 'number');
 		$this->tag->addAttribute('min', '0');
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		if ($configuration->getValue() !== NULL) {
 			$this->tag->addAttribute('value', $configuration->getValue());
 		}
@@ -193,7 +193,7 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		$this->tag->setTagName('input');
 		$this->tag->addAttribute('type', 'number');
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		if ($configuration->getValue() !== NULL) {
 			$this->tag->addAttribute('value', $configuration->getValue());
 		}
@@ -207,14 +207,10 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 	 * @return string
 	 */
 	protected function renderTextField(\TYPO3\CMS\Extensionmanager\Domain\Model\ConfigurationItem $configuration) {
-		if ($configuration->getType() !== 'string') {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('The type "' . $configuration->getType() .
-				'" is deprecated and will be removed with TYPO3 6.1');
-		}
 		$this->tag->setTagName('input');
 		$this->tag->addAttribute('type', 'text');
 		$this->tag->addAttribute('name', $this->getName($configuration));
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		if ($configuration->getValue() !== NULL) {
 			$this->tag->addAttribute('value', $configuration->getValue());
 		}
@@ -242,7 +238,7 @@ class TypoScriptConstantsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abs
 		$this->tag->addAttribute('type', 'checkbox');
 		$this->tag->addAttribute('name', $this->getName($configuration));
 		$this->tag->addAttribute('value', 1);
-		$this->tag->addAttribute('id', $configuration->getName());
+		$this->tag->addAttribute('id', 'em-' . $configuration->getName());
 		if ($configuration->getValue() == 1) {
 			$this->tag->addAttribute('checked', 'checked');
 		}

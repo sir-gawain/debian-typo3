@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install\Sql;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2011-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,7 @@ namespace TYPO3\CMS\Install\Sql;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Verify TYPO3 DB table structure. Mainly used in install tool
  * compare wizard and extension manager.
@@ -269,9 +270,9 @@ class SchemaMigrator {
 		$total = array();
 		$tempKeys = array();
 		$tempKeysPrefix = array();
-		$GLOBALS['TYPO3_DB']->sql_select_db(TYPO3_db);
+		$GLOBALS['TYPO3_DB']->sql_select_db();
 		echo $GLOBALS['TYPO3_DB']->sql_error();
-		$tables = $GLOBALS['TYPO3_DB']->admin_get_tables(TYPO3_db);
+		$tables = $GLOBALS['TYPO3_DB']->admin_get_tables();
 		foreach ($tables as $tableName => $tableStatus) {
 			// Fields
 			$fieldInformation = $GLOBALS['TYPO3_DB']->admin_get_fields($tableName);
@@ -676,7 +677,7 @@ class SchemaMigrator {
 					$res = $GLOBALS['TYPO3_DB']->admin_query($string);
 					if ($res === FALSE) {
 						$result[$key] = $GLOBALS['TYPO3_DB']->sql_error();
-					} elseif (is_resource($res)) {
+					} elseif (is_resource($res) || is_a($res, '\\mysqli_result')) {
 						$GLOBALS['TYPO3_DB']->sql_free_result($res);
 					}
 				}
@@ -693,7 +694,7 @@ class SchemaMigrator {
 	 * Returns list of tables in the database
 	 *
 	 * @return array List of tables.
-	 * @see t3lib_db::admin_get_tables()
+	 * @see \TYPO3\CMS\Core\Database\DatabaseConnection::admin_get_tables()
 	 */
 	public function getListOfTables() {
 		$whichTables = $GLOBALS['TYPO3_DB']->admin_get_tables(TYPO3_db);

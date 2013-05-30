@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -34,15 +34,15 @@
  */
 $BACK_PATH = '';
 require 'init.php';
-$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_wizards.xml');
+$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_wizards.xlf');
 /*
  * @deprecated since 6.0, the classname SC_wizard_forms and this file is obsolete
  * and will be removed with 6.2. The class was renamed and is now located at:
  * typo3/sysext/backend/Classes/Controller/Wizard/FormsController.php
  */
-require_once t3lib_extMgm::extPath('backend') . 'Classes/Controller/Wizard/FormsController.php';
+require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/Controller/Wizard/FormsController.php';
 // Make instance:
-$SOBE = t3lib_div::makeInstance('SC_wizard_forms');
+$SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\Wizard\\FormsController');
 $SOBE->init();
 // Include files?
 foreach ($SOBE->include_once as $INC_FILE) {

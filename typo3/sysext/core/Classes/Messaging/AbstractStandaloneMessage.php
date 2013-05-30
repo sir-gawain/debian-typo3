@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\Messaging;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
- *  (c) 2010-2011 Benjamin Mack <benni@typo3.org>
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
+ *  (c) 2010-2013 Benjamin Mack <benni@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -60,7 +60,7 @@ abstract class AbstractStandaloneMessage extends \TYPO3\CMS\Core\Messaging\Abstr
 	 *
 	 * @param string $message Message
 	 * @param string $title Title
-	 * @param integer $severity Severity, see class constants of t3lib_message_AbstractMessage
+	 * @param integer $severity Severity, see class constants of AbstractMessage
 	 */
 	public function __construct($message = '', $title = '', $severity = \TYPO3\CMS\Core\Messaging\AbstractMessage::ERROR) {
 		if (!empty($message)) {

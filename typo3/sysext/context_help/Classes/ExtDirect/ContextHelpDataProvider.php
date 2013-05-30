@@ -4,7 +4,7 @@ namespace TYPO3\CMS\ContextHelp\ExtDirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ *  (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,7 @@ namespace TYPO3\CMS\ContextHelp\ExtDirect;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * ExtDirect DataProvider for ContextHelp
  *
@@ -41,7 +42,7 @@ class ContextHelpDataProvider {
 	 * @return array complete Help information
 	 */
 	public function getContextHelp($table, $field) {
-		$helpTextArray = \t3lib_befunc::helpTextArray($table, $field);
+		$helpTextArray = \TYPO3\CMS\Backend\Utility\BackendUtility::helpTextArray($table, $field);
 		$moreIcon = $helpTextArray['moreInfo'] ? \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-forward') : '';
 		return array(
 			'title' => $helpTextArray['title'],

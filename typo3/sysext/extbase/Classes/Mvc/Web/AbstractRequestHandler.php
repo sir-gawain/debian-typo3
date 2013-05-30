@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Web;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -48,9 +48,9 @@ abstract class AbstractRequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestH
 	protected $requestBuilder;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
+	 * @var \TYPO3\CMS\Extbase\Service\EnvironmentService
 	 */
-	protected $flashMessageContainer;
+	protected $environmentService;
 
 	/**
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
@@ -58,14 +58,6 @@ abstract class AbstractRequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestH
 	 */
 	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer
-	 * @return void
-	 */
-	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
-		$this->flashMessageContainer = $flashMessageContainer;
 	}
 
 	/**
@@ -82,6 +74,14 @@ abstract class AbstractRequestHandler implements \TYPO3\CMS\Extbase\Mvc\RequestH
 	 */
 	public function injectRequestBuilder(\TYPO3\CMS\Extbase\Mvc\Web\RequestBuilder $requestBuilder) {
 		$this->requestBuilder = $requestBuilder;
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService
+	 * @return void
+	 */
+	public function injectEnvironmentService(\TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService) {
+		$this->environmentService = $environmentService;
 	}
 
 	/**

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -108,9 +108,7 @@ class FrontendBackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\B
 	public $adminPanel = NULL;
 
 	/**
-	 * Class for frontend editing.
-	 *
-	 * @var 	t3lib_frontendedit
+	 * @var \TYPO3\CMS\Core\FrontendEditing\FrontendEditingController
 	 */
 	public $frontendEdit = NULL;
 
@@ -196,7 +194,6 @@ class FrontendBackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\B
 	 * Used in the frontend.
 	 *
 	 * @return boolean Returns TRUE if access is OK
-	 * @see 	typo3/init.php, t3lib_beuserauth::backendCheckLogin()
 	 */
 	public function checkBackendAccessSettingsFromInitPhp() {
 		// Check Hardcoded lock on BE
@@ -215,7 +212,7 @@ class FrontendBackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\B
 				return FALSE;
 			}
 		}
-		// Finally a check from t3lib_beuserauth::backendCheckLogin()
+		// Finally a check from \TYPO3\CMS\Core\Authentication\BackendUserAuthentication::backendCheckLogin()
 		if ($this->isUserAllowedToLogin()) {
 			return TRUE;
 		} else {
@@ -291,14 +288,14 @@ class FrontendBackendUserAuthentication extends \TYPO3\CMS\Core\Authentication\B
 	 ****************************************************/
 	/**
 	 * Returns the label for key, $key. If a translation for the language set in $this->uc['lang'] is found that is returned, otherwise the default value.
-	 * IF the global variable $LOCAL_LANG is NOT an array (yet) then this function loads the global $LOCAL_LANG array with the content of "sysext/lang/locallang_tsfe.php" so that the values therein can be used for labels in the Admin Panel
+	 * IF the global variable $LOCAL_LANG is NOT an array (yet) then this function loads the global $LOCAL_LANG array with the content of "sysext/lang/locallang_tsfe.xlf" so that the values therein can be used for labels in the Admin Panel
 	 *
-	 * @param string $key Key for a label in the $GLOBALS['LOCAL_LANG'] array of "sysext/lang/locallang_tsfe.php
+	 * @param string $key Key for a label in the $GLOBALS['LOCAL_LANG'] array of "sysext/lang/locallang_tsfe.xlf
 	 * @return string The value for the $key
 	 */
 	public function extGetLL($key) {
 		if (!is_array($GLOBALS['LOCAL_LANG'])) {
-			$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_tsfe.php');
+			$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_tsfe.xlf');
 			if (!is_array($GLOBALS['LOCAL_LANG'])) {
 				$GLOBALS['LOCAL_LANG'] = array();
 			}

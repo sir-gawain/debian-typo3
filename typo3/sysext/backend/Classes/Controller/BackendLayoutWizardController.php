@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Sk?rh?j (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class for grid wizard
  *
@@ -18,7 +44,7 @@ class BackendLayoutWizardController {
 	/**
 	 * Document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\SmallDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -43,7 +69,7 @@ class BackendLayoutWizardController {
 		$this->md5ID = $this->P['md5ID'];
 		$uid = intval($this->P['uid']);
 		// Initialize document object:
-		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\StandardDocumentTemplate');
+		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$pageRenderer = $this->doc->getPageRenderer();
 		$pageRenderer->addJsFile($GLOBALS['BACK_PATH'] . TYPO3_MOD_PATH . 'res/grideditor.js');
@@ -56,18 +82,18 @@ class BackendLayoutWizardController {
 			}
 			', FALSE);
 		$languageLabels = array(
-			'save' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_labelSave', 1),
-			'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_windowTitle', 1),
-			'name' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_labelName', 1),
-			'column' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_labelColumn', 1),
-			'editCell' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_editCell', 1),
-			'mergeCell' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_mergeCell', 1),
-			'splitCell' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_splitCell', 1),
-			'name' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_name', 1),
-			'column' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_column', 1),
-			'notSet' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_notSet', 1),
-			'nameHelp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_nameHelp', 1),
-			'columnHelp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_columnHelp', 1)
+			'save' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_labelSave', 1),
+			'title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_windowTitle', 1),
+			'name' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_labelName', 1),
+			'column' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_labelColumn', 1),
+			'editCell' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_editCell', 1),
+			'mergeCell' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_mergeCell', 1),
+			'splitCell' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_splitCell', 1),
+			'name' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_name', 1),
+			'column' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_column', 1),
+			'notSet' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_notSet', 1),
+			'nameHelp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_nameHelp', 1),
+			'columnHelp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xlf:grid_columnHelp', 1)
 		);
 		$pageRenderer->addInlineLanguageLabelArray($languageLabels);
 		// Select record
@@ -171,9 +197,9 @@ class BackendLayoutWizardController {
 	 * @todo Define visibility
 	 */
 	public function main() {
-		$content .= '<a href="#" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" onclick="storeData(t3Grid.export2LayoutRecord());return true;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save') . '</a>';
-		$content .= '<a href="#" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', TRUE) . '" onclick="storeData(t3Grid.export2LayoutRecord());window.close();return true;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close') . '</a>';
-		$content .= '<a href="#" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE) . '" onclick="window.close();return true;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close') . '</a>';
+		$content .= '<a href="#" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', TRUE) . '" onclick="storeData(t3Grid.export2LayoutRecord());return true;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save') . '</a>';
+		$content .= '<a href="#" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', TRUE) . '" onclick="storeData(t3Grid.export2LayoutRecord());window.close();return true;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close') . '</a>';
+		$content .= '<a href="#" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.closeDoc', TRUE) . '" onclick="window.close();return true;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close') . '</a>';
 		$content .= $this->doc->spacer(10);
 		$content .= '
 		<table border="0" width="100%" height="100%" id="outer_container">

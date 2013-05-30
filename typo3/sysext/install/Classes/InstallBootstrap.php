@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Install;
  *  GNU General Public License for more details.
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
+ *
  ***************************************************************/
 /**
  * Encapsulate install tool specific bootstrap methods.
@@ -36,6 +37,25 @@ namespace TYPO3\CMS\Install;
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class InstallBootstrap {
+
+	/**
+	 * During first install, typo3conf/LocalConfiguration.php does not
+	 * exist. It is created now based on factory configuration as a
+	 * first action in the install process.
+	 *
+	 * @return void
+	 * @internal This is not a public API method, do not use in own extensions
+	 */
+	static public function createLocalConfigurationIfNotExists() {
+		/** @var $configurationManager \TYPO3\CMS\Core\Configuration\ConfigurationManager */
+		$configurationManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+		if (
+			!file_exists($configurationManager->getLocalConfigurationFileLocation())
+			&& !file_exists($configurationManager->getLocalconfFileLocation())
+		) {
+			$configurationManager->createLocalConfigurationFromFactoryConfiguration();
+		}
+	}
 
 	/**
 	 * Check ENABLE_INSTALL_TOOL and FIRST_INSTALL file in typo3conf
@@ -76,7 +96,7 @@ class InstallBootstrap {
 	 * @return void
 	 */
 	static protected function dieWithLockedInstallToolMessage() {
-		require_once PATH_site . 't3lib/class.t3lib_parsehtml.php';
+		require_once PATH_site . 'typo3/sysext/core/Classes/Html/HtmlParser.php';
 		// Define the stylesheet
 		$stylesheet = '<link rel="stylesheet" type="text/css" href="' . '../stylesheets/install/install.css" />';
 		$javascript = '<script type="text/javascript" src="' . '../contrib/prototype/prototype.js"></script>';

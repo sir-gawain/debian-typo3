@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -80,6 +81,11 @@ abstract class AbstractConfigurationManager implements \TYPO3\CMS\Core\Singleton
 	protected $configurationCache = array();
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Service\EnvironmentService
+	 */
+	protected $environmentService;
+
+	/**
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
 	 * @return void
 	 */
@@ -93,6 +99,14 @@ abstract class AbstractConfigurationManager implements \TYPO3\CMS\Core\Singleton
 	 */
 	public function injectTypoScriptService(\TYPO3\CMS\Extbase\Service\TypoScriptService $typoScriptService) {
 		$this->typoScriptService = $typoScriptService;
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService
+	 * @return void
+	 */
+	public function injectEnvironmentService(\TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService) {
+		$this->environmentService = $environmentService;
 	}
 
 	/**
@@ -165,17 +179,26 @@ abstract class AbstractConfigurationManager implements \TYPO3\CMS\Core\Singleton
 		if ($extensionName === NULL || $extensionName === $this->extensionName && $pluginName === $this->pluginName) {
 			$frameworkConfiguration = $this->getContextSpecificFrameworkConfiguration($frameworkConfiguration);
 		}
-		if (!empty($frameworkConfiguration['persistence']['storagePid']) && is_array($frameworkConfiguration['persistence']['storagePid'])) {
-			/** We simulate the frontend to enable the use of cObjects in
-			stdWrap. Than we convert the configuration to normal TypoScript
-			and apply the stdWrap to the storagePid */
-			if (TYPO3_MODE !== 'FE') {
-				\TYPO3\CMS\Extbase\Utility\FrontendSimulatorUtility::simulateFrontendEnvironment($this->getContentObject());
+
+		if (!empty($frameworkConfiguration['persistence']['storagePid'])) {
+			if (is_array($frameworkConfiguration['persistence']['storagePid'])) {
+					/**
+					* We simulate the frontend to enable the use of cObjects in
+					* stdWrap. Than we convert the configuration to normal TypoScript
+					* and apply the stdWrap to the storagePid
+					*/
+				if (!$this->environmentService->isEnvironmentInFrontendMode()) {
+					\TYPO3\CMS\Extbase\Utility\FrontendSimulatorUtility::simulateFrontendEnvironment($this->getContentObject());
+				}
+				$conf = $this->typoScriptService->convertPlainArrayToTypoScriptArray($frameworkConfiguration['persistence']);
+				$frameworkConfiguration['persistence']['storagePid'] = $GLOBALS['TSFE']->cObj->stdWrap($conf['storagePid'], $conf['storagePid.']);
+				if (!$this->environmentService->isEnvironmentInFrontendMode()) {
+					\TYPO3\CMS\Extbase\Utility\FrontendSimulatorUtility::resetFrontendEnvironment();
+				}
 			}
-			$configuration = $this->typoScriptService->convertPlainArrayToTypoScriptArray($frameworkConfiguration['persistence']);
-			$frameworkConfiguration['persistence']['storagePid'] = $GLOBALS['TSFE']->cObj->stdWrap($configuration['storagePid'], $configuration['storagePid.']);
-			if (TYPO3_MODE !== 'FE') {
-				\TYPO3\CMS\Extbase\Utility\FrontendSimulatorUtility::resetFrontendEnvironment();
+
+			if (!empty($frameworkConfiguration['persistence']['recursive'])) {
+				$frameworkConfiguration['persistence']['storagePid'] = $this->getRecursiveStoragePids($frameworkConfiguration['persistence']['storagePid'], (int) $frameworkConfiguration['persistence']['recursive']);
 			}
 		}
 		// 1st level cache
@@ -274,6 +297,17 @@ abstract class AbstractConfigurationManager implements \TYPO3\CMS\Core\Singleton
 	 * @return array
 	 */
 	abstract protected function getSwitchableControllerActions($extensionName, $pluginName);
+
+	/**
+	 * The implementation of the methods to return a list of storagePid that are below a certain
+	 * storage pid.
+	 *
+	 * @param string $storagePid Storage PID to start at; multiple PIDs possible as comma-separated list
+	 * @param integer $recursionDepth Maximum number of levels to search, 0 to disable recursive lookup
+	 * @return string storage PIDs
+	 */
+	abstract protected function getRecursiveStoragePids($storagePid, $recursionDepth = 0);
+
 }
 
 ?>

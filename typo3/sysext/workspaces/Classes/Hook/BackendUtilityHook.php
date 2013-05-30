@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Workspaces\Hook;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ *  (c) 2010-2013 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,7 +43,7 @@ class BackendUtilityHook implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * Hooks into the t3lib_beFunc::viewOnClick and redirects to the workspace preview
+	 * Hooks into the \TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick and redirects to the workspace preview
 	 * only if we're in a workspace and if the frontend-preview is disabled.
 	 *
 	 * @param $pageUid
@@ -59,20 +59,6 @@ class BackendUtilityHook implements \TYPO3\CMS\Core\SingletonInterface {
 		if ($GLOBALS['BE_USER']->workspace !== 0) {
 			$viewScript = $this->getWorkspaceService()->generateWorkspaceSplittedPreviewLink($pageUid);
 		}
-	}
-
-	/**
-	 * Find the Live-Uid for a given page,
-	 * the results are cached at run-time to avoid too many database-queries
-	 *
-	 * @throws \InvalidArgumentException
-	 * @param integer $uid
-	 * @return integer
-	 * @deprecated since TYPO3 4.6 - use Tx_Workspaces_Service_Workspaces::getLivePageUid() instead
-	 */
-	protected function getLivePageUid($uid) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog(__METHOD__ . ' is deprected since TYPO3 4.6 - use TYPO3\\CMS\\Workspaces\\Service\\WorkspaceService::getLivePageUid() instead');
-		return $this->getWorkspaceService()->getLivePageUid($uid);
 	}
 
 	/**
@@ -101,7 +87,11 @@ class BackendUtilityHook implements \TYPO3\CMS\Core\SingletonInterface {
 				$editingName = $stages->getStageTitle(\TYPO3\CMS\Workspaces\Service\StagesService::STAGE_EDIT_ID);
 				$message = $GLOBALS['LANG']->sL('LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:info.elementAlreadyModified');
 				$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', sprintf($message, $stageName, $editingName), '', \TYPO3\CMS\Core\Messaging\FlashMessage::INFO, TRUE);
-				\TYPO3\CMS\Core\Messaging\FlashMessageQueue::addMessage($flashMessage);
+				/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+				$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+				/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+				$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+				$defaultFlashMessageQueue->enqueue($flashMessage);
 			}
 		}
 		return $params['hasAccess'];

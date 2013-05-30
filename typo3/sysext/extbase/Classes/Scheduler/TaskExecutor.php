@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Scheduler;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Claus Due, Wildside A/S <claus@wildside.dk>
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Scheduler;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,6 +34,21 @@ namespace TYPO3\CMS\Extbase\Scheduler;
  * defined therein.
  */
 class TaskExecutor implements \TYPO3\CMS\Core\SingletonInterface {
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Mvc\Cli\Request
+	 */
+	protected $request;
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Mvc\Cli\Response
+	 */
+	protected $response;
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\Mvc\Dispatcher
+	 */
+	protected $dispatcher;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
@@ -65,6 +84,15 @@ class TaskExecutor implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
+	}
+
+	/**
+	 * Initializes Request, Response and Dispatcher
+	 */
+	public function initializeObject() {
+		$this->request = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Request');
+		$this->response = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Response');
+		$this->dispatcher = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Dispatcher');
 	}
 
 	/**
@@ -110,15 +138,12 @@ class TaskExecutor implements \TYPO3\CMS\Core\SingletonInterface {
 		list($extensionKey, $controllerName, $commandName) = explode(':', $commandIdentifier);
 		$extensionName = \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToUpperCamelCase($extensionKey);
 		$this->initialize(array('extensionName' => $extensionName));
-		$request = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Request');
-		$dispatcher = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Dispatcher');
-		$response = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Cli\\Response');
 		// execute command
 		$command = $this->commandManager->getCommandByIdentifier($commandIdentifier);
-		$request->setControllerObjectName($command->getControllerClassName());
-		$request->setControllerCommandName($command->getControllerCommandName());
-		$request->setArguments($task->getArguments());
-		$dispatcher->dispatch($request, $response);
+		$this->request->setControllerObjectName($command->getControllerClassName());
+		$this->request->setControllerCommandName($command->getControllerCommandName());
+		$this->request->setArguments($task->getArguments());
+		$this->dispatcher->dispatch($this->request, $this->response);
 		$this->shutdown();
 	}
 

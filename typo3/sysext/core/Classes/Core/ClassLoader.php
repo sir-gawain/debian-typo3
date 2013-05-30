@@ -5,7 +5,7 @@ use \TYPO3\CMS\Core\Utility\GeneralUtility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008-2011 Dmitry Dulepov <dmitry@typo3.org>
+ *  (c) 2008-2013 Dmitry Dulepov <dmitry@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -189,7 +189,7 @@ class ClassLoader {
 	 *
 	 * @return void
 	 */
-	static protected function loadClassLoaderCache() {
+	static public function loadClassLoaderCache() {
 		$classRegistry = NULL;
 		$aliasToClassNameMapping = NULL;
 		/** @var $phpCodeCache \TYPO3\CMS\Core\Cache\Frontend\PhpFrontend */
@@ -281,7 +281,7 @@ class ClassLoader {
 	 * Get the full path to a class by looking it up in the registry.
 	 * If not found, returns NULL.
 	 *
-	 * Warning: This method is public as it is needed by t3lib_div::makeInstance(),
+	 * Warning: This method is public as it is needed by \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(),
 	 * but it is _not_ part of the public API and should not be used in own extensions!
 	 *
 	 * @param string $className Class name to find source file of
@@ -417,8 +417,8 @@ class ClassLoader {
 	/**
 	 * Lowercase all keys of the class registry.
 	 *
-	 * Use the multi byte safe version of strtolower from t3lib_div,
-	 * so array_change_key_case() can not be used
+	 * Use the multi byte safe version of strtolower from
+	 * GeneralUtility, so array_change_key_case() can not be used
 	 *
 	 * @param array $registry Given registry entries
 	 * @return array with lower cased keys

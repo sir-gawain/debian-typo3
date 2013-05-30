@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Georg Ringer <typo3@ringerge.org>
+ *  (c) 2010-2013 Georg Ringer <typo3@ringerge.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -21,7 +21,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-$LANG->includeLLFile('EXT:taskcenter/task/locallang.xml');
+$LANG->includeLLFile('EXT:taskcenter/task/locallang.xlf');
 $BE_USER->modAccess($MCONF, 1);
 /*
  * @deprecated since 6.0, the classname SC_mod_user_task_index and this file is obsolete

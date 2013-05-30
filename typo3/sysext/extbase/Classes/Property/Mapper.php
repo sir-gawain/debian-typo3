@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Property;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -48,7 +48,7 @@ namespace TYPO3\CMS\Extbase\Property;
  * Now the target object equals the source object.
  *
  * @api
- * @deprecated since Extbase 1.4.0
+ * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
  */
 class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 
@@ -80,7 +80,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $objectManager;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactoryInterface
 	 */
 	protected $queryFactory;
 
@@ -93,10 +93,10 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory $queryFactory
+	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactoryInterface $queryFactory
 	 * @return void
 	 */
-	public function injectQueryFactory(\TYPO3\CMS\Extbase\Persistence\Generic\QueryFactory $queryFactory) {
+	public function injectQueryFactory(\TYPO3\CMS\Extbase\Persistence\Generic\QueryFactoryInterface $queryFactory) {
 		$this->queryFactory = $queryFactory;
 	}
 
@@ -135,8 +135,9 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param array $propertyNames Names of the properties to map.
 	 * @param mixed $source Source containing the properties to map to the target object. Must either be an array, ArrayObject or any other object.
 	 * @param object $target The target object
-	 * @param \TYPO3\CMS\Extbase\Validation\Validator\ObjectValidatorInterface $targetObjectValidator A validator used for validating the target object
 	 * @param array $optionalPropertyNames Names of optional properties. If a property is specified here and it doesn't exist in the source, no error is issued.
+	 * @param \TYPO3\CMS\Extbase\Validation\Validator\ObjectValidatorInterface $targetObjectValidator A validator used for validating the target object
+	 *
 	 * @return boolean TRUE if the mapped properties are valid, otherwise FALSE
 	 * @see getMappingResults()
 	 * @see map()
@@ -164,7 +165,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Add errors to the mapping result from an object validator (property errors).
 	 *
-	 * @param array Array of \TYPO3\CMS\Extbase\Validation\PropertyError
+	 * @param array $errors Array of \TYPO3\CMS\Extbase\Validation\PropertyError
 	 * @return void
 	 */
 	protected function addErrorsFromObjectValidator($errors) {
@@ -185,11 +186,11 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param array $propertyNames Names of the properties to map.
 	 * @param mixed $source Source containing the properties to map to the target object. Must either be an array, ArrayObject or any other object.
-	 * @param object|array $target The target object
+	 * @param object|array|string $target The target object
 	 * @param array $optionalPropertyNames Names of optional properties. If a property is specified here and it doesn't exist in the source, no error is issued.
 	 * @throws Exception\InvalidSourceException
 	 * @throws Exception\InvalidTargetException
-	 * @return boolean TRUE if the properties could be mapped, otherwise FALSE
+	 * @return boolean TRUE if the properties could be mapped, otherwise FALSE, or the object in case it could be resolved
 	 * @see mapAndValidate()
 	 * @api
 	 */
@@ -250,7 +251,11 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 							continue;
 						}
 					}
-				} elseif ($targetClassSchema !== NULL) {
+				} elseif (
+					$targetClassSchema !== NULL
+					&& is_subclass_of($target, 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractEntity')
+					&& is_subclass_of($target, 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject')
+				) {
 					$this->mappingResults->addError(new \TYPO3\CMS\Extbase\Error\Error("Property '{$propertyName}' does not exist in target class schema.", 1251813614), $propertyName);
 				}
 				if (is_array($target)) {
@@ -280,7 +285,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 				$propertyValue = NULL;
 			} else {
 				try {
-					$propertyValue = $this->objectManager->create($targetType, $propertyValue);
+					$propertyValue = $this->objectManager->get($targetType, $propertyValue);
 				} catch (\Exception $e) {
 					$propertyValue = NULL;
 				}
@@ -309,7 +314,7 @@ class Mapper implements \TYPO3\CMS\Core\SingletonInterface {
 						}
 					}
 				} else {
-					$newObject = $this->objectManager->create($targetType);
+					$newObject = $this->objectManager->get($targetType);
 					if ($this->map(array_keys($propertyValue), $propertyValue, $newObject)) {
 						$propertyValue = $newObject;
 					} else {

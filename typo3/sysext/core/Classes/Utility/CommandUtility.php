@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Utility;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ * (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -261,7 +261,7 @@ class CommandUtility {
 	}
 
 	/**
-	 * Extend the preset paths. This way an extension can install an executable and provide the path to t3lib_exec.
+	 * Extend the preset paths. This way an extension can install an executable and provide the path to \TYPO3\CMS\Core\Utility\CommandUtility
 	 *
 	 * @param string $paths Comma separated list of extra paths where a command should be searched. Relative paths (without leading "/") are prepend with site root path (PATH_site).
 	 * @return void

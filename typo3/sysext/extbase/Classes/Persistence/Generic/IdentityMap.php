@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,26 +33,20 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @see \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper
  * @see \TYPO3\CMS\Extbase\Persistence\Generic\Backend
+ * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
  */
 class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Session
 	 */
-	protected $objectMap;
+	protected $persistenceSession;
 
 	/**
-	 * @var array
+	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Session
 	 */
-	protected $uuidMap = array();
-
-	/**
-	 * Constructs a new Identity Map
-	 *
-	 * @author Karsten Dambekalns <karsten@typo3.org>
-	 */
-	public function __construct() {
-		$this->objectMap = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+	public function injectPersistenceSession(\TYPO3\CMS\Extbase\Persistence\Generic\Session $persistenceSession) {
+		$this->persistenceSession = $persistenceSession;
 	}
 
 	/**
@@ -60,10 +54,10 @@ class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param object $object
 	 * @return boolean
-	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
 	 */
 	public function hasObject($object) {
-		return $this->objectMap->contains($object);
+		return $this->persistenceSession->hasObject($object);
 	}
 
 	/**
@@ -72,13 +66,10 @@ class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $uuid
 	 * @param string $className
 	 * @return boolean
+	 * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
 	 */
 	public function hasIdentifier($uuid, $className) {
-		if (is_array($this->uuidMap[$className])) {
-			return array_key_exists($uuid, $this->uuidMap[$className]);
-		} else {
-			return FALSE;
-		}
+		return $this->persistenceSession->hasIdentifier($uuid, $className);
 	}
 
 	/**
@@ -87,9 +78,10 @@ class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $uuid
 	 * @param string $className
 	 * @return object
+	 * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
 	 */
 	public function getObjectByIdentifier($uuid, $className) {
-		return $this->uuidMap[$className][$uuid];
+		return $this->persistenceSession->getObjectByIdentifier($uuid, $className);
 	}
 
 	/**
@@ -99,16 +91,10 @@ class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @throws \InvalidArgumentException
 	 * @throws \TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException
 	 * @return string
-	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
 	 */
 	public function getIdentifierByObject($object) {
-		if (!is_object($object)) {
-			throw new \InvalidArgumentException('Object expected, ' . gettype($object) . ' given.', 1246892972);
-		}
-		if (!isset($this->objectMap[$object])) {
-			throw new \TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException('The given object (class: ' . get_class($object) . ') is not registered in this Identity Map.', 1246892970);
-		}
-		return $this->objectMap[$object];
+		return $this->persistenceSession->getIdentifierByObject($object);
 	}
 
 	/**
@@ -116,11 +102,10 @@ class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param object $object
 	 * @param string $uuid
-	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
 	 */
 	public function registerObject($object, $uuid) {
-		$this->objectMap[$object] = $uuid;
-		$this->uuidMap[get_class($object)][$uuid] = $object;
+		$this->persistenceSession->registerObject($object, $uuid);
 	}
 
 	/**
@@ -128,11 +113,10 @@ class IdentityMap implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param object $object
 	 * @return void
-	 * @author Karsten Dambekalns <karsten@typo3.org>
+	 * @deprecated since 6.1, will be removed two versions later, use the persistence session instead
 	 */
 	public function unregisterObject($object) {
-		unset($this->uuidMap[get_class($object)][$this->objectMap[$object]]);
-		$this->objectMap->detach($object);
+		$this->persistenceSession->unregisterObject($object);
 	}
 }
 

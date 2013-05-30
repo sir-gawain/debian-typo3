@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Recycler\Domain\Model;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Julian Kleinhans <typo3@kj187.de>
+ *  (c) 2009-2013 Julian Kleinhans <typo3@kj187.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -309,7 +309,6 @@ class DeletedRecords {
 	 * @return 	boolean
 	 */
 	public function undeleteData($recordsArray, $recursive = FALSE) {
-		require_once PATH_t3lib . 'class.t3lib_tcemain.php';
 		$result = FALSE;
 		$depth = 999;
 		$recordsArray = json_decode($recordsArray);

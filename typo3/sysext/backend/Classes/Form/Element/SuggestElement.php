@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Form\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2007-2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2007-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -39,11 +39,13 @@ class SuggestElement {
 
 	public $cssClass = 'typo3-TCEforms-suggest';
 
-	// Reference to t3lib_tceforms
+	/**
+	 * @var \TYPO3\CMS\Backend\Form\FormEngine
+	 */
 	public $TCEformsObj;
 
 	/**
-	 * Initialize an instance of t3lib_TCEforms_suggest
+	 * Initialize an instance of SuggestElement
 	 *
 	 * @param \TYPO3\CMS\Backend\Form\FormEngine $tceForms Reference to an TCEforms instance
 	 * @return void
@@ -74,9 +76,9 @@ class SuggestElement {
 		}
 		$selector = '
 		<div class="' . $containerCssClass . '" id="' . $suggestId . '">
-			<input type="text" id="' . $fieldname . 'Suggest" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.findRecord') . '" class="' . $this->cssClass . '-search" />
+			<input type="text" id="' . $fieldname . 'Suggest" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.findRecord') . '" class="' . $this->cssClass . '-search" />
 			<div class="' . $this->cssClass . '-indicator" style="display: none;" id="' . $fieldname . 'SuggestIndicator">
-				<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/spinner.gif" alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:alttext.suggestSearching') . '" />
+				<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/spinner.gif" alt="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:alttext.suggestSearching') . '" />
 			</div>
 			<div class="' . $this->cssClass . '-choices" style="display: none;" id="' . $fieldname . 'SuggestChoices"></div>
 
@@ -94,7 +96,7 @@ class SuggestElement {
 		$jsObj = str_replace(' ', '', ucwords(str_replace('-', ' ', \TYPO3\CMS\Core\Utility\GeneralUtility::strtolower($suggestId))));
 		$this->TCEformsObj->additionalJS_post[] = '
 			var ' . $jsObj . ' = new TCEForms.Suggest("' . $fieldname . '", "' . $table . '", "' . $field . '", "' . $row['uid'] . '", ' . $row['pid'] . ', ' . $minChars . ');
-			' . $jsObj . '.defaultValue = "' . \TYPO3\CMS\Core\Utility\GeneralUtility::slashJS($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.findRecord')) . '";
+			' . $jsObj . '.defaultValue = "' . \TYPO3\CMS\Core\Utility\GeneralUtility::slashJS($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.findRecord')) . '";
 		';
 		return $selector;
 	}
@@ -113,7 +115,6 @@ class SuggestElement {
 		$field = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('field');
 		$uid = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('uid');
 		$pageId = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('pid');
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// If the $uid is numeric, we have an already existing element, so get the
 		// TSconfig of the page itself or the element container (for non-page elements)
 		// otherwise it's a new element, so use given id of parent page (i.e., don't modify it here)
@@ -155,6 +156,22 @@ class SuggestElement {
 		$wizardConfig = $fieldConfig['wizards']['suggest'];
 		if (isset($fieldConfig['allowed'])) {
 			$queryTables = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $fieldConfig['allowed']);
+			if ($fieldConfig['allowed'] === '*') {
+				foreach ($GLOBALS['TCA'] as $tableName => $tableConfig) {
+					// TODO: Refactor function to BackendUtility
+					if (empty($tableConfig['ctrl']['hideTable'])
+						&& ($GLOBALS['BE_USER']->isAdmin()
+							|| (empty($tableConfig['ctrl']['adminOnly'])
+								&& (empty($tableConfig['ctrl']['rootLevel'])
+									|| !empty($tableConfig['ctrl']['security']['ignoreRootLevelRestriction']))))
+					) {
+						$queryTables[] = $tableName;
+					}
+				}
+				unset($tableName, $tableConfig);
+			} else {
+				$queryTables = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $fieldConfig['allowed']);
+			}
 		} elseif (isset($fieldConfig['foreign_table'])) {
 			$queryTables = array($fieldConfig['foreign_table']);
 			$foreign_table_where = $fieldConfig['foreign_table_where'];
@@ -165,7 +182,6 @@ class SuggestElement {
 		// fetch the records for each query table. A query table is a table from which records are allowed to
 		// be added to the TCEForm selector, originally fetched from the "allowed" config option in the TCA
 		foreach ($queryTables as $queryTable) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($queryTable);
 			// if the table does not exist, skip it
 			if (!is_array($GLOBALS['TCA'][$queryTable]) || !count($GLOBALS['TCA'][$queryTable])) {
 				continue;
@@ -230,13 +246,13 @@ class SuggestElement {
 			for ($i = 0; $i < $maxItems; $i++) {
 				$row = $resultRows[$rowsSort[$i]];
 				$rowId = $row['table'] . '-' . $row['uid'] . '-' . $table . '-' . $uid . '-' . $field;
-				$listItems[] = '<li' . ($row['class'] != '' ? ' class="' . $row['class'] . '"' : '') . ' id="' . $rowId . '" style="' . $row['style'] . '">' . $row['text'] . '</li>';
+				$listItems[] = '<li' . ($row['class'] != '' ? ' class="' . $row['class'] . '"' : '') . ' id="' . $rowId . '"' . ($row['style'] != '' ? ' style="' . $row['style'] . '"' : '') . '>' . $row['sprite'] . $row['text'] . '</li>';
 			}
 		}
 		if (count($listItems) > 0) {
 			$list = implode('', $listItems);
 		} else {
-			$list = '<li class="suggest-noresults"><i>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.noRecordFound') . '</i></li>';
+			$list = '<li class="suggest-noresults"><i>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.noRecordFound') . '</i></li>';
 		}
 		$list = '<ul class="' . $this->cssClass . '-resultlist">' . $list . '</ul>';
 		$ajaxObj->addContent(0, $list);

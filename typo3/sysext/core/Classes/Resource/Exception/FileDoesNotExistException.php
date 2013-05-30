@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Exception;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2012-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@ namespace TYPO3\CMS\Core\Resource\Exception;
  * An exception to throw if a file does not exist
  *
  */
-class FileDoesNotExistException extends \TYPO3\CMS\Core\Resource\Exception {
+class FileDoesNotExistException extends ResourceDoesNotExistException {
 
 
 }

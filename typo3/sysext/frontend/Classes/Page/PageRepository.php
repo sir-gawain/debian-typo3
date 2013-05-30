@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Page;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -384,7 +384,10 @@ class PageRepository {
 								}
 								foreach ($row as $fN => $fV) {
 									if ($fN != 'uid' && $fN != 'pid' && isset($olrow[$fN])) {
-										if ($GLOBALS['TSFE']->TCAcachedExtras[$table]['l10n_mode'][$fN] != 'exclude' && ($GLOBALS['TSFE']->TCAcachedExtras[$table]['l10n_mode'][$fN] != 'mergeIfNotBlank' || strcmp(trim($olrow[$fN]), ''))) {
+										if (
+											$GLOBALS['TCA'][$table]['columns'][$fN]['l10n_mode'] != 'exclude'
+											&& ($GLOBALS['TCA'][$table]['columns'][$fN]['l10n_mode'] != 'mergeIfNotBlank' || strcmp(trim($olrow[$fN]), ''))
+										) {
 											$row[$fN] = $olrow[$fN];
 										}
 									} elseif ($fN == 'uid') {
@@ -499,8 +502,8 @@ class PageRepository {
 	 * Might exit after sending a redirect-header IF a found domain record instructs to do so.
 	 *
 	 * @param string $domain Domain name to search for. Eg. "www.typo3.com". Typical the HTTP_HOST value.
-	 * @param string $path Path for the current script in domain. Eg. "/somedir/subdir". Typ. supplied by t3lib_div::getIndpEnv('SCRIPT_NAME')
-	 * @param string $request_uri Request URI: Used to get parameters from if they should be appended. Typ. supplied by t3lib_div::getIndpEnv('REQUEST_URI')
+	 * @param string $path Path for the current script in domain. Eg. "/somedir/subdir". Typ. supplied by \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('SCRIPT_NAME')
+	 * @param string $request_uri Request URI: Used to get parameters from if they should be appended. Typ. supplied by \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')
 	 * @return mixed If found, returns integer with page UID where found. Otherwise blank. Might exit if location-header is sent, see description.
 	 * @see tslib_fe::findDomainRecord()
 	 * @todo Define visibility
@@ -554,18 +557,20 @@ class PageRepository {
 	 */
 	public function getRootLine($uid, $MP = '', $ignoreMPerrors = FALSE) {
 		$rootline = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\RootlineUtility', $uid, $MP, $this);
-		if ($ignoreMPerrors) {
-			try {
-				return $rootline->get();
-			} catch (\Exception $e) {
-				$this->error_getRootLine = $e->getMessage();
-				if (substr($e->getMessage(), -7) == 'uid -1.') {
+		try {
+			return $rootline->get();
+		} catch (\RuntimeException $ex) {
+			if ($ignoreMPerrors) {
+				$this->error_getRootLine = $ex->getMessage();
+				if (substr($this->error_getRootLine, -7) == 'uid -1.') {
 					$this->error_getRootLine_failPid = -1;
 				}
 				return array();
+			/** @see \TYPO3\CMS\Core\Utility\RootlineUtility::getRecordArray */
+			} elseif ($ex->getCode() === 1343589451) {
+				return array();
 			}
-		} else {
-			return $rootline->get();
+			throw $ex;
 		}
 	}
 
@@ -783,7 +788,7 @@ class PageRepository {
 	 * Can be used to retrieved a cached value
 	 * Can be used from your frontend plugins if you like. It is also used to
 	 * store the parsed TypoScript template structures. You can call it directly
-	 * like t3lib_pageSelect::getHash()
+	 * like \TYPO3\CMS\Frontend\Page\PageRepository::getHash()
 	 *
 	 * @param string $hash The hash-string which was used to store the data value
 	 * @param integer The expiration time (not used anymore)
@@ -805,7 +810,7 @@ class PageRepository {
 	/**
 	 * Stores a string value in the cache_hash cache identified by $hash.
 	 * Can be used from your frontend plugins if you like. You can call it
-	 * directly like t3lib_pageSelect::storeHash()
+	 * directly like \TYPO3\CMS\Frontend\Page\PageRepository::storeHash()
 	 *
 	 * @param string $hash 32 bit hash string (eg. a md5 hash of a serialized array identifying the data being stored)
 	 * @param string $data The data string. If you want to store an array, then just serialize it first.
@@ -950,7 +955,7 @@ class PageRepository {
 	 * @param string $table Table name
 	 * @param array $rr Record array passed by reference. As minimum, "pid" and "uid" fields must exist! "t3ver_oid" and "t3ver_wsid" is nice and will save you a DB query.
 	 * @return void (Passed by ref).
-	 * @see t3lib_BEfunc::fixVersioningPid(), versionOL(), getRootLine()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid(), versionOL(), getRootLine()
 	 * @todo Define visibility
 	 */
 	public function fixVersioningPid($table, &$rr) {
@@ -997,7 +1002,7 @@ class PageRepository {
 	 * @param boolean $unsetMovePointers If set, the $row is cleared in case it is a move-pointer. This is only for preview of moved records (to remove the record from the original location so it appears only in the new location)
 	 * @param boolean $bypassEnableFieldsCheck Unless this option is TRUE, the $row is unset if enablefields for BOTH the version AND the online record deselects it. This is because when versionOL() is called it is assumed that the online record is already selected with no regards to it's enablefields. However, after looking for a new version the online record enablefields must ALSO be evaluated of course. This is done all by this function!
 	 * @return void (Passed by ref).
-	 * @see fixVersioningPid(), t3lib_BEfunc::workspaceOL()
+	 * @see fixVersioningPid(), \TYPO3\CMS\Backend\Utility\BackendUtility::workspaceOL()
 	 * @todo Define visibility
 	 */
 	public function versionOL($table, &$row, $unsetMovePointers = FALSE, $bypassEnableFieldsCheck = FALSE) {
@@ -1052,7 +1057,7 @@ class PageRepository {
 	 * @param string $table Table name
 	 * @param array $row Row (passed by reference) - only online records...
 	 * @return boolean TRUE if overlay is made.
-	 * @see t3lib_BEfunc::movePlhOl()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::movePlhOl()
 	 * @todo Define visibility
 	 */
 	public function movePlhOL($table, &$row) {
@@ -1086,7 +1091,7 @@ class PageRepository {
 	 * @param integer $uid Record UID of online version
 	 * @param string $fields Field list, default is *
 	 * @return array If found, the record, otherwise nothing.
-	 * @see t3lib_BEfunc::getMovePlaceholder()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getMovePlaceholder()
 	 * @todo Define visibility
 	 */
 	public function getMovePlaceholder($table, $uid, $fields = '*') {
@@ -1115,7 +1120,7 @@ class PageRepository {
 	 * @param string $fields Field list to select
 	 * @param boolean $bypassEnableFieldsCheck If TRUE, enablefields are not checked for.
 	 * @return mixed If found, return record, otherwise other value: Returns 1 if version was sought for but not found, returns -1/-2 if record (offline/online) existed but had enableFields that would disable it. Returns FALSE if not in workspace or no versioning for record. Notice, that the enablefields of the online record is also tested.
-	 * @see t3lib_befunc::getWorkspaceVersionOfRecord()
+	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getWorkspaceVersionOfRecord()
 	 * @todo Define visibility
 	 */
 	public function getWorkspaceVersionOfRecord($workspace, $table, $uid, $fields = '*', $bypassEnableFieldsCheck = FALSE) {

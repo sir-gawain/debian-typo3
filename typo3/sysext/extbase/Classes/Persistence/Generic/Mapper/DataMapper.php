@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -110,7 +111,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Injects the Reflection Service
 	 *
-	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService
+	 * @param \TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService
 	 * @return void
 	 */
 	public function injectReflectionService(\TYPO3\CMS\Extbase\Reflection\ReflectionService $reflectionService) {
@@ -120,7 +121,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Injects the DataMap Factory
 	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapFactory
+	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapFactory $dataMapFactory
 	 * @return void
 	 */
 	public function injectDataMapFactory(\TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapFactory $dataMapFactory) {
@@ -206,7 +207,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			$this->identityMap->registerObject($object, $row['uid']);
 			$this->thawProperties($object, $row);
 			$object->_memorizeCleanState();
-			$this->persistenceSession->registerReconstitutedObject($object);
+			$this->persistenceSession->registerReconstitutedEntity($object);
 		}
 		return $object;
 	}
@@ -280,7 +281,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 						break;
 					default:
 						if ($propertyData['type'] === 'DateTime' || in_array('DateTime', class_parents($propertyData['type']))) {
-							$propertyValue = $this->mapDateTime($row[$columnName]);
+							$propertyValue = $this->mapDateTime($row[$columnName], $columnMap->getDateTimeStorageFormat());
 						} else {
 							$propertyValue = $this->mapResultToPropertyValue($object, $propertyName, $this->fetchRelated($object, $propertyName, $row[$columnName]));
 						}
@@ -294,18 +295,25 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * Creates a DateTime from an unix timestamp. If the input is empty
-	 * NULL is returned.
+	 * Creates a DateTime from an unix timestamp or date/datetime value.
+	 * If the input is empty, NULL is returned.
 	 *
-	 * @param integer $timestamp
+	 * @param integer|string $value Unix timestamp or date/datetime value
+	 * @param NULL|string $storageFormat Storage format for native date/datetime fields
 	 * @return \DateTime
 	 */
-	protected function mapDateTime($timestamp) {
-		if (empty($timestamp)) {
+	protected function mapDateTime($value, $storageFormat = NULL) {
+		if (empty($value) || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
 			// 0 -> NULL !!!
 			return NULL;
+		} elseif ($storageFormat === 'date' || $storageFormat === 'datetime') {
+			// native date/datetime values are stored in UTC
+			$utcTimeZone = new \DateTimeZone('UTC');
+			$utcDateTime = new \DateTime($value, $utcTimeZone);
+			$currentTimeZone = new \DateTimeZone(date_default_timezone_get());
+			return $utcDateTime->setTimezone($currentTimeZone);
 		} else {
-			return new \DateTime(date('c', $timestamp));
+			return new \DateTime(date('c', $value));
 		}
 	}
 
@@ -315,19 +323,19 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject The object instance this proxy is part of
 	 * @param string $propertyName The name of the proxied property in it's parent
 	 * @param mixed $fieldValue The raw field value.
-	 * @param bool $enableLazyLoading A flag indication if the related objects should be lazy loaded
+	 * @param boolean $enableLazyLoading A flag indication if the related objects should be lazy loaded
 	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\LazyObjectStorage|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface The result
 	 */
 	public function fetchRelated(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $propertyName, $fieldValue = '', $enableLazyLoading = TRUE) {
 		$propertyMetaData = $this->reflectionService->getClassSchema(get_class($parentObject))->getProperty($propertyName);
 		if ($enableLazyLoading === TRUE && $propertyMetaData['lazy']) {
 			if (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
-				$result = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
+				$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
 			} else {
 				if (empty($fieldValue)) {
 					$result = NULL;
 				} else {
-					$result = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyLoadingProxy', $parentObject, $propertyName, $fieldValue);
+					$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyLoadingProxy', $parentObject, $propertyName, $fieldValue);
 				}
 			}
 		} else {
@@ -350,7 +358,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject
-	 * @param $propertyName
+	 * @param string $propertyName
 	 * @return array|NULL
 	 */
 	protected function getEmptyRelationValue(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $propertyName) {
@@ -447,7 +455,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * Returns the given result as property value of the specified property type.
 	 *
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject
-	 * @param $propertyName
+	 * @param string $propertyName
 	 * @param mixed $result The result
 	 * @return mixed
 	 */
@@ -544,8 +552,8 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Returns the column name for a given property name of the specified class.
 	 *
-	 * @param string $className
 	 * @param string $propertyName
+	 * @param string $className
 	 * @return string The column name
 	 */
 	public function convertPropertyNameToColumnName($propertyName, $className = NULL) {

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Mail;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011 Ernesto Baschny (ernst@cron-it.de)
+ * (c) 2011-2013 Ernesto Baschny (ernst@cron-it.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -52,7 +52,7 @@ class MailerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	//////////////////////////
-	// Tests concerning t3lib_mail_Mailer
+	// Tests concerning TYPO3\CMS\Core\Mail\Mailer
 	//////////////////////////
 	/**
 	 * @test

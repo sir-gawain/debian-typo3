@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Impexp;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,7 @@ namespace TYPO3\CMS\Impexp;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Extension of the page tree class. Used to get the tree of pages to export.
  *
@@ -35,8 +36,6 @@ class LocalPageTree extends \TYPO3\CMS\Backend\Tree\View\BrowseTreeView {
 
 	/**
 	 * Initialization
-	 *
-	 * @todo Define visibility
 	 */
 	public function __construct() {
 		$this->init();
@@ -51,7 +50,7 @@ class LocalPageTree extends \TYPO3\CMS\Backend\Tree\View\BrowseTreeView {
 	 * @todo Define visibility
 	 */
 	public function wrapTitle($title, $v) {
-		$title = !strcmp(trim($title), '') ? '<em>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.no_title', 1) . ']</em>' : htmlspecialchars($title);
+		$title = !strcmp(trim($title), '') ? '<em>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', 1) . ']</em>' : htmlspecialchars($title);
 		return $title;
 	}
 
@@ -121,7 +120,7 @@ class LocalPageTree extends \TYPO3\CMS\Backend\Tree\View\BrowseTreeView {
 		$icon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, ('gfx/ol/' . ($isOpen ? 'minus' : 'plus') . 'only.gif'), 'width="18" height="16"') . ' align="top" alt="" />';
 		$firstHtml = $this->PM_ATagWrap($icon, $cmd);
 		if ($pid > 0) {
-			$rootRec = \t3lib_befunc::getRecordWSOL('pages', $pid);
+			$rootRec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL('pages', $pid);
 			$firstHtml .= $this->wrapIcon(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord('pages', $rootRec), $rootRec);
 		} else {
 			$rootRec = array(
@@ -151,6 +150,5 @@ class LocalPageTree extends \TYPO3\CMS\Backend\Tree\View\BrowseTreeView {
 	}
 
 }
-
 
 ?>

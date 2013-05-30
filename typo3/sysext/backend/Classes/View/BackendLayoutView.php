@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 GridView Team
+ *  (c) 2010-2013 GridView Team
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -76,8 +76,8 @@ class BackendLayoutView {
 	public function getColPosListItemsParsed($id) {
 		$tsConfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getModTSconfig($id, 'TCEFORM.tt_content.colPos');
 		$tcaConfig = $GLOBALS['TCA']['tt_content']['columns']['colPos']['config'];
-		/** @var $tceForms t3lib_TCEForms */
-		$tceForms = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_TCEForms');
+		/** @var $tceForms \TYPO3\CMS\Backend\Form\FormEngine */
+		$tceForms = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\FormEngine');
 		$tcaItems = $tcaConfig['items'];
 		$tcaItems = $tceForms->addItems($tcaItems, $tsConfig['properties']['addItems.']);
 		if (isset($tcaConfig['itemsProcFunc']) && $tcaConfig['itemsProcFunc']) {
@@ -126,12 +126,12 @@ class BackendLayoutView {
 		if ($backendLayoutUid) {
 			$backendLayout = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', 'backend_layout', 'uid=' . $backendLayoutUid);
 		} else {
-			$backendLayout['config'] = $this->getDefaultColumnLayout();
+			$backendLayout['config'] = self::getDefaultColumnLayout();
 		}
 		if ($backendLayout) {
 			/** @var $parser \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser */
 			$parser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
-			$parser->parse($backendLayout['config']);
+			$parser->parse($parser->checkIncludeLines($backendLayout['config']));
 			$backendLayout['__config'] = $parser->setup;
 			$backendLayout['__items'] = array();
 			$backendLayout['__colPosList'] = array();
@@ -158,8 +158,9 @@ class BackendLayoutView {
 	 * Get default columns layout
 	 *
 	 * @return string Default four column layout
+	 * @static
 	 */
-	public function getDefaultColumnLayout() {
+	static public function getDefaultColumnLayout() {
 		return '
 		backend_layout {
 			colCount = 4

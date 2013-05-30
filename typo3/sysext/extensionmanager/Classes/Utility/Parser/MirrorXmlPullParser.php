@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Utility\Parser;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010 Marcus Krause <marcus#exp2010@t3sec.info>
+ * (c) 2010-2013 Marcus Krause <marcus#exp2010@t3sec.info>
  *		 Steffen Kamper <info@sk-typo3.de>
  * All rights reserved
  *
@@ -50,9 +50,15 @@ class MirrorXmlPullParser extends \TYPO3\CMS\Extensionmanager\Utility\Parser\Abs
 	 */
 	public function __construct() {
 		$this->requiredPhpExtensions = 'xmlreader';
-		if ($this->isAvailable()) {
-			$this->objXml = new \XMLReader();
-		}
+	}
+
+	/**
+	 * Create required parser
+	 *
+	 * @return  void
+	 */
+	protected function createParser() {
+		$this->objXml = new \XMLReader();
 	}
 
 	/**
@@ -63,6 +69,7 @@ class MirrorXmlPullParser extends \TYPO3\CMS\Extensionmanager\Utility\Parser\Abs
 	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException in case of XML parser errors
 	 */
 	public function parseXml($file) {
+		$this->createParser();
 		if (!(is_object($this->objXml) && get_class($this->objXml) == 'XMLReader')) {
 			throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException('Unable to create XML parser.', 1342640820);
 		}

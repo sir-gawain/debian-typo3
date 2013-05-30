@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Utility;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Steffen Kamper (info@sk-typo3.de)
+ * (c) 2010-2013 Steffen Kamper (info@sk-typo3.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -78,7 +78,7 @@ class ClientUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	//////////////////////////////////////////////////////////
-	// Tests concerning t3lib_utility_Client::getBrowserInfo
+	// Tests concerning getBrowserInfo
 	//////////////////////////////////////////////////////////
 	/**
 	 * @test

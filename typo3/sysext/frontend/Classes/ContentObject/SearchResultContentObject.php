@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\ContentObject;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -283,8 +283,8 @@ class SearchResultContentObject extends \TYPO3\CMS\Frontend\ContentObject\Abstra
 			if (isset($conf['stdWrap.'])) {
 				$content = $this->cObj->stdWrap($content, $conf['stdWrap.']);
 			}
-			// returning
-			$GLOBALS['TSFE']->set_no_cache();
+			// Returning, do not cache the result of the search
+			$GLOBALS['TSFE']->set_no_cache('Search result page');
 			return $content;
 		}
 		return '';

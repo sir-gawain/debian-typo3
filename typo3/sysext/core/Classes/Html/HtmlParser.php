@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Html;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -220,7 +220,7 @@ class HtmlParser {
 				if (empty($wrap)) {
 					$wrapArr = array('###', '###');
 				}
-				$content = preg_replace('/' . preg_quote($wrapArr[0]) . '([A-Z0-9_|\\-]*)' . preg_quote($wrapArr[1]) . '/is', '', $content);
+				$content = preg_replace('/' . preg_quote($wrapArr[0], '/') . '([A-Z0-9_|\\-]*)' . preg_quote($wrapArr[1], '/') . '/is', '', $content);
 			}
 		}
 		return $content;
@@ -237,18 +237,21 @@ class HtmlParser {
 	 * markers.
 	 *
 	 * $markersAndSubparts = array (
-	 * '###SINGLEMARKER1###' => 'value 1',
-	 * '###SUBPARTMARKER1###' => array(
-	 * 0 => array(
-	 * '###SINGLEMARKER2###' => 'value 2',
-	 * ),
-	 * 1 => array(
-	 * '###SINGLEMARKER2###' => 'value 3',
-	 * )
-	 * )
+	 * 	'###SINGLEMARKER1###' => 'value 1',
+	 * 	'###SUBPARTMARKER1###' => array(
+	 * 		0 => array(
+	 * 			'###SINGLEMARKER2###' => 'value 2',
+	 * 		),
+	 * 		1 => array(
+	 * 			'###SINGLEMARKER2###' => 'value 3',
+	 * 		)
+	 * 	),
+	 * 	'###SUBPARTMARKER2###' => array(
+	 * 	),
 	 * )
 	 * Subparts can be nested, so below the 'SINGLEMARKER2' it is possible to have another subpart marker with an array as the
 	 * value, which in its turn contains the elements of the sub-subparts.
+	 * Empty arrays for Subparts will cause the subtemplate to be cleared.
 	 *
 	 * @static
 	 * @param string $content The content stream, typically HTML template content.
@@ -285,16 +288,21 @@ class HtmlParser {
 		}
 		// Replace the subpart contents recursively
 		foreach ($compoundItems as $subpartMarker) {
-			foreach ($markersAndSubparts[$subpartMarker] as $partialMarkersAndSubparts) {
-				$completeMarker = $subpartMarker;
-				if ($uppercase) {
-					// use strtr instead of strtoupper to avoid locale problems with Turkish
-					$completeMarker = strtr($completeMarker, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+			$completeMarker = $subpartMarker;
+			if ($uppercase) {
+				// use strtr instead of strtoupper to avoid locale problems with Turkish
+				$completeMarker = strtr($completeMarker, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+			}
+			if (count($wraps) > 0) {
+				$completeMarker = $wraps[0] . $completeMarker . $wraps[1];
+			}
+			if (count($markersAndSubparts[$subpartMarker]) > 0) {
+				foreach ($markersAndSubparts[$subpartMarker] as $partialMarkersAndSubparts) {
+					$subpartSubstitutes[$completeMarker] .= self::substituteMarkerAndSubpartArrayRecursive($subTemplates[$completeMarker],
+						$partialMarkersAndSubparts, $wrap, $uppercase, $deleteUnused);
 				}
-				if (count($wraps) > 0) {
-					$completeMarker = $wraps[0] . $completeMarker . $wraps[1];
-				}
-				$subpartSubstitutes[$completeMarker] .= self::substituteMarkerAndSubpartArrayRecursive($subTemplates[$completeMarker], $partialMarkersAndSubparts, $wrap, $uppercase, $deleteUnused);
+			} else {
+				$subpartSubstitutes[$completeMarker] = '';
 			}
 		}
 		// Substitute the single markers and subparts
@@ -322,6 +330,9 @@ class HtmlParser {
 	 */
 	public function splitIntoBlock($tag, $content, $eliminateExtraEndTags = FALSE) {
 		$tags = array_unique(\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $tag, 1));
+		foreach ($tags as &$tag) {
+			$tag = preg_quote($tag, '/');
+		}
 		$regexStr = '/\\<\\/?(' . implode('|', $tags) . ')(\\s*\\>|\\s[^\\>]*\\>)/si';
 		$parts = preg_split($regexStr, $content);
 		$newParts = array();
@@ -425,6 +436,9 @@ class HtmlParser {
 	 */
 	public function splitTags($tag, $content) {
 		$tags = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $tag, 1);
+		foreach ($tags as &$tag) {
+			$tag = preg_quote($tag, '/');
+		}
 		$regexStr = '/\\<(' . implode('|', $tags) . ')(\\s[^>]*)?\\/?>/si';
 		$parts = preg_split($regexStr, $content);
 		$pointer = strlen($parts[0]);
@@ -570,7 +584,7 @@ class HtmlParser {
 	 * @param string $tag The tag or attributes
 	 * @return array
 	 * @access private
-	 * @see t3lib_div::split_tag_attributes()
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::split_tag_attributes()
 	 * @todo Define visibility
 	 */
 	public function split_tag_attributes($tag) {
@@ -627,8 +641,8 @@ class HtmlParser {
 		// Block tags, must have endings...
 		$blockTags = explode(',', $blockTags);
 		foreach ($blockTags as $tagName) {
-			$countBegin = count(preg_split(('/\\<' . $tagName . '(\\s|\\>)/s'), $content)) - 1;
-			$countEnd = count(preg_split(('/\\<\\/' . $tagName . '(\\s|\\>)/s'), $content)) - 1;
+			$countBegin = count(preg_split(('/\\<' . preg_quote($tagName, '/') . '(\\s|\\>)/s'), $content)) - 1;
+			$countEnd = count(preg_split(('/\\<\\/' . preg_quote($tagName, '/') . '(\\s|\\>)/s'), $content)) - 1;
 			$analyzedOutput['blocks'][$tagName] = array($countBegin, $countEnd, $countBegin - $countEnd);
 			if ($countBegin) {
 				$analyzedOutput['counts'][$tagName] = $countBegin;
@@ -644,8 +658,8 @@ class HtmlParser {
 		// Solo tags, must NOT have endings...
 		$soloTags = explode(',', $soloTags);
 		foreach ($soloTags as $tagName) {
-			$countBegin = count(preg_split(('/\\<' . $tagName . '(\\s|\\>)/s'), $content)) - 1;
-			$countEnd = count(preg_split(('/\\<\\/' . $tagName . '(\\s|\\>)/s'), $content)) - 1;
+			$countBegin = count(preg_split(('/\\<' . preg_quote($tagName, '/') . '(\\s|\\>)/s'), $content)) - 1;
+			$countEnd = count(preg_split(('/\\<\\/' . preg_quote($tagName, '/') . '(\\s|\\>)/s'), $content)) - 1;
 			$analyzedOutput['solo'][$tagName] = array($countBegin, $countEnd);
 			if ($countBegin) {
 				$analyzedOutput['counts'][$tagName] = $countBegin;
@@ -1152,7 +1166,7 @@ class HtmlParser {
 	 */
 	public function mapTags($value, $tags = array(), $ltChar = '<', $ltChar2 = '<') {
 		foreach ($tags as $from => $to) {
-			$value = preg_replace('/' . preg_quote($ltChar) . '(\\/)?' . $from . '\\s([^\\>])*(\\/)?\\>/', $ltChar2 . '$1' . $to . ' $2$3>', $value);
+			$value = preg_replace('/' . preg_quote($ltChar, '/') . '(\\/)?' . $from . '\\s([^\\>])*(\\/)?\\>/', $ltChar2 . '$1' . $to . ' $2$3>', $value);
 		}
 		return $value;
 	}
@@ -1354,7 +1368,7 @@ class HtmlParser {
 									$keepTags[$key]['fixAttrib'][$atName] = array();
 								}
 								$keepTags[$key]['fixAttrib'][$atName] = array_merge($keepTags[$key]['fixAttrib'][$atName], $atConfig);
-								// Candidate for t3lib_div::array_merge() if integer-keys will some day make trouble...
+								// Candidate for \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge() if integer-keys will some day make trouble...
 								if (strcmp($keepTags[$key]['fixAttrib'][$atName]['range'], '')) {
 									$keepTags[$key]['fixAttrib'][$atName]['range'] = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $keepTags[$key]['fixAttrib'][$atName]['range']);
 								}
@@ -1366,7 +1380,7 @@ class HtmlParser {
 					}
 					unset($tagC['fixAttrib.']);
 					unset($tagC['fixAttrib']);
-					// Candidate for t3lib_div::array_merge() if integer-keys will some day make trouble...
+					// Candidate for \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge() if integer-keys will some day make trouble...
 					$keepTags[$key] = array_merge($keepTags[$key], $tagC);
 				}
 			}

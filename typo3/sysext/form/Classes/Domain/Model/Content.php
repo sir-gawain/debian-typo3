@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010 Patrick Broens <patrick@patrickbroens.nl>
+ *  (c) 2010-2013 Patrick Broens <patrick@patrickbroens.nl>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,10 +23,10 @@ namespace TYPO3\CMS\Form\Domain\Model;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Content domain model
  *
- * @category Model
  * @author Patrick Broens <patrick@patrickbroens.nl>
  */
 class Content {
@@ -110,6 +110,5 @@ class Content {
 	}
 
 }
-
 
 ?>

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Mail\Html\Additional;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2011-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\View\Mail\Html\Additional;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * View object for the legend tag
  *
@@ -46,6 +47,5 @@ class LegendAdditionalElementView extends \TYPO3\CMS\Form\View\Mail\Html\Additio
 	';
 
 }
-
 
 ?>

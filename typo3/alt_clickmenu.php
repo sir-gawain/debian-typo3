@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -41,7 +41,7 @@
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 require 'init.php';
-$LANG->includeLLFile('EXT:lang/locallang_misc.xml');
+$LANG->includeLLFile('EXT:lang/locallang_misc.xlf');
 /*
  * @deprecated since 6.0, the classname clickMenu and this file is obsolete
  * and will be removed with 6.2. The class was renamed and is now located at:
@@ -57,10 +57,15 @@ require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backen
 // Make instance:
 $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\ClickMenuController');
 $SOBE->init();
-// Include files?
+
+/**
+ * Include files for extra click menu options
+ * @deprecated since 6.1, will be removed 2 versions later
+ */
 foreach ($SOBE->include_once as $INC_FILE) {
 	include_once $INC_FILE;
 }
+
 $SOBE->main();
 $SOBE->printContent();
 ?>

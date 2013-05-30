@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Ingmar Schlecht <ingmar@typo3.org>
+ *  (c) 2011-2013 Ingmar Schlecht <ingmar@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -39,7 +39,7 @@ namespace TYPO3\CMS\Core\Resource;
  *
  * @author Ingmar Schlecht <ingmar@typo3.org>
  */
-class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
+class FileReference implements FileInterface {
 
 	/**
 	 * Various properties of the FileReference. Note that these information can be different
@@ -70,36 +70,35 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * The FileRepository object. Is needed e.g. for the delete() method to delete the usage record
 	 * (sys_file_reference record) of this file usage.
 	 *
-	 * @var \TYPO3\CMS\Core\Resource\FileRepository
+	 * @var FileRepository
 	 */
 	protected $fileRepository;
 
 	/**
 	 * Reference to the original File object underlying this FileReference.
 	 *
-	 * @var \TYPO3\CMS\Core\Resource\File
+	 * @var File
 	 */
 	protected $originalFile;
 
 	/**
-	 * Defines properties that are merged with the parent object (File) if
+	 * Properties merged with the parent object (File) if
 	 * the value is not defined (NULL). Thus, FileReference properties act
 	 * as overlays for the defined File properties.
 	 *
 	 * @var array
 	 */
-	protected $parentFallbackProperties = array(
-		'title' => 'title',
-		'description' => 'description',
-		'alternative' => 'alternative',
-	);
+	protected $mergedProperties = array();
 
 	/**
 	 * Constructor for a file in use object. Should normally not be used
 	 * directly, use the corresponding factory methods instead.
 	 *
 	 * @param array $fileReferenceData
-	 * @param \TYPO3\CMS\Core\Resource\ResourceFactory $factory
+	 * @param ResourceFactory $factory
+	 *
+	 * @throws \RuntimeException
+	 * @throws \InvalidArgumentException
 	 */
 	public function __construct(array $fileReferenceData, $factory = NULL) {
 		$this->propertiesOfFileReference = $fileReferenceData;
@@ -107,7 +106,7 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 			throw new \InvalidArgumentException('Incorrect reference to original file given for FileReference.', 1300098528);
 		}
 		if (!$factory) {
-			/** @var $factory \TYPO3\CMS\Core\Resource\ResourceFactory */
+			/** @var $factory ResourceFactory */
 			$factory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceFactory');
 		}
 		$this->originalFile = $factory->getFileObject($fileReferenceData['uid_local']);
@@ -128,7 +127,7 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * @return boolean
 	 */
 	public function hasProperty($key) {
-		return array_key_exists($key, $this->propertiesOfFileReference);
+		return array_key_exists($key, $this->getProperties());
 	}
 
 	/**
@@ -136,27 +135,26 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 *
 	 * @param string $key The property to be looked up
 	 * @return mixed
+	 * @throws \InvalidArgumentException
 	 */
 	public function getProperty($key) {
-		$value = $this->getReferenceProperty($key);
-
-		if ($value === NULL && !empty($this->parentFallbackProperties[$key])) {
-			$value = $this->originalFile->getProperty($key);
+		if (!$this->hasProperty($key)) {
+			throw new \InvalidArgumentException('Property "' . $key . '" was not found in file reference or original file.', 1314226805);
 		}
-
-		return $value;
+		$properties = $this->getProperties();
+		return $properties[$key];
 	}
 
 	/**
-	 * Gets a property.
+	 * Gets a property of the file reference.
 	 *
 	 * @param string $key The property to be looked up
 	 * @return mixed
 	 * @throws \InvalidArgumentException
 	 */
 	public function getReferenceProperty($key) {
-		if (!$this->hasProperty($key)) {
-			throw new \InvalidArgumentException('Property "' . $key . '" was not found.', 1314226805);
+		if (!array_key_exists($key, $this->propertiesOfFileReference)) {
+			throw new \InvalidArgumentException('Property "' . $key . '" of file reference was not found.', 1360684914);
 		}
 		return $this->propertiesOfFileReference[$key];
 	}
@@ -167,26 +165,39 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * @return array
 	 */
 	public function getProperties() {
-		$properties = $this->getReferenceProperties();
-		$keys = array_keys($properties);
+		if (empty($this->mergedProperties)) {
+			$this->mergedProperties = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule(
+				$this->propertiesOfFileReference,
+				$this->originalFile->getProperties(),
+				FALSE,
+				TRUE,
+				FALSE
+			);
+			array_walk($this->mergedProperties, array($this, 'restoreNonNullValuesCallback'));
+		}
 
-		foreach ($this->parentFallbackProperties as $localKey => $parentKey) {
-			if (array_key_exists($localKey, $keys) && $properties[$localKey] === NULL) {
-				$properties[$localKey] = $this->originalFile->getProperty($parentKey);
-			}
+		return $this->mergedProperties;
+	}
+
+	/**
+	 * Callback to handle the NULL value feature
+	 *
+	 * @param mixed $value
+	 * @param mixed $key
+	 */
+	protected function restoreNonNullValuesCallback(&$value, $key) {
+		if (array_key_exists($key, $this->propertiesOfFileReference) && $this->propertiesOfFileReference[$key] !== NULL) {
+			$value = $this->propertiesOfFileReference[$key];
 		}
 	}
 
 	/**
-	 * Gets all properties.
+	 * Gets all properties of the file reference.
 	 *
 	 * @return array
 	 */
 	public function getReferenceProperties() {
-		return \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule(
-			$this->originalFile->getProperties(),
-			$this->propertiesOfFileReference
-		);
+		return $this->propertiesOfFileReference;
 	}
 
 	/**
@@ -330,7 +341,7 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * Replace the current file contents with the given string
 	 *
 	 * @param string $contents The contents to write to the file.
-	 * @return \TYPO3\CMS\Core\Resource\File The file object (allows chaining).
+	 * @return File The file object (allows chaining).
 	 */
 	public function setContents($contents) {
 		return $this->originalFile->setContents($contents);
@@ -342,7 +353,7 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Get the storage the original file is located in
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\ResourceStorage
+	 * @return ResourceStorage
 	 */
 	public function getStorage() {
 		return $this->originalFile->getStorage();
@@ -370,6 +381,7 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * Deletes only this particular FileReference from the persistence layer
 	 * (database table sys_file_reference) but leaves the original file untouched.
 	 *
+	 * @throws \BadMethodCallException
 	 * @return boolean TRUE if deletion succeeded
 	 */
 	public function delete() {
@@ -383,7 +395,9 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	 * Renames the fileName in this particular usage.
 	 *
 	 * @param string $newName The new name
-	 * @return \TYPO3\CMS\Core\Resource\FileReference
+	 *
+	 * @throws \BadMethodCallException
+	 * @return FileReference
 	 */
 	public function rename($newName) {
 		// TODO: Implement this function. This should only rename the
@@ -446,7 +460,7 @@ class FileReference implements \TYPO3\CMS\Core\Resource\FileInterface {
 	/**
 	 * Gets the original file being referenced.
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\File
+	 * @return File
 	 */
 	public function getOriginalFile() {
 		return $this->originalFile;

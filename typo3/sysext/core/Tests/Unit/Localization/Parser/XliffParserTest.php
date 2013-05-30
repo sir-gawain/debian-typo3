@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Localization\Parser;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Xavier Perseguers <xavier@typo3.org>
+ *  (c) 2011-2013 Xavier Perseguers <xavier@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -145,7 +145,7 @@ class XliffParserTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	/**
-	 * This test will make sure method t3lib_div::llXmlAutoFileName() will not prefix twice the
+	 * This test will make sure method \TYPO3\CMS\Core\Utility\GeneralUtility::llXmlAutoFileName() will not prefix twice the
 	 * language key to the localization file.
 	 *
 	 * @test

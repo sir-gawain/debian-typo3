@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\ContextMenu\Extdirect;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
+ *  (c) 2010-2013 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,11 +43,11 @@ abstract class AbstractExtdirectContextMenu extends \TYPO3\CMS\Backend\ContextMe
 	 * Note: This method should be overriden to fit your specific needs.
 	 *
 	 * The informations should contain the basic informations of a
-	 * t3lib_tree_Node for further processing. Also the classname (property type)
-	 * of the node should be given, because we need this information
-	 * to create the ndoe.
+	 * \TYPO3\CMS\Backend\Tree\TreeNode for further processing. Also the classname
+	 * (property type) of the node should be given, because we need this information
+	 * to create the node.
 	 *
-	 * @param stdClass $nodeData
+	 * @param \stdClass $nodeData
 	 * @return array
 	 */
 	public function getActionsForNodeArray($nodeData) {

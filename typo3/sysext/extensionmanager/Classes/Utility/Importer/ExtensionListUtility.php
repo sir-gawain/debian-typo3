@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Utility\Importer;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010 Marcus Krause <marcus#exp2010@t3sec.info>
+ * (c) 2010-2013 Marcus Krause <marcus#exp2010@t3sec.info>
  * Steffen Kamper <info@sk-typo3.de>
  * All rights reserved
  *
@@ -193,7 +193,7 @@ class ExtensionListUtility implements \SplObserver {
 			$this->repositoryUid,
 			$this->extensionModel->getDefaultState($subject->getState() ? $subject->getState() : ''),
 			intval($subject->getReviewstate()),
-			$this->extensionModel->getDefaultCategory($subject->getCategory() ? $subject->getCategory() : ''),
+			$this->extensionModel->getCategoryIndexFromStringOrNumber($subject->getCategory() ? $subject->getCategory() : ''),
 			$subject->getDescription() ? $subject->getDescription() : '',
 			$subject->getDependencies() ? $subject->getDependencies() : '',
 			$subject->getUploadcomment() ? $subject->getUploadcomment() : ''

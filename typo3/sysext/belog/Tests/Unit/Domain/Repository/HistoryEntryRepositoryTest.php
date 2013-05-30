@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Tests\Unit\Domain\Repository;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Oliver Klee <typo3-coding@oliverklee.de>
+ * (c) 2012-2013 Oliver Klee <typo3-coding@oliverklee.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Belog\Tests\Unit\Domain\Repository;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Testcase
  *
@@ -38,7 +39,7 @@ class HistoryEntryRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestC
 	public function setUp() {
 		$this->querySettings = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
 		$this->objectManager = $this->getMock('TYPO3\\CMS\\Extbase\\Object\\ObjectManagerInterface');
-		$this->objectManager->expects($this->any())->method('create')->with('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface')->will($this->returnValue($this->querySettings));
+		$this->objectManager->expects($this->any())->method('get')->with('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface')->will($this->returnValue($this->querySettings));
 	}
 
 	public function tearDown() {
@@ -56,6 +57,5 @@ class HistoryEntryRepositoryTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestC
 	}
 
 }
-
 
 ?>

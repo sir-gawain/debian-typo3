@@ -4,7 +4,7 @@ namespace TYPO3\CMS\SysNote\Hook;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Georg Ringer <typo3@ringerge.org>
+ *  (c) 2012-2013 Georg Ringer <typo3@ringerge.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,10 +23,12 @@ namespace TYPO3\CMS\SysNote\Hook;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Hook for the page module
  *
  * @author Georg Ringer <typo3@ringerge.org>
+ * @author Kai Vogel <kai.vogel@speedprogs.de>
  */
 class PageHook {
 
@@ -38,9 +40,9 @@ class PageHook {
 	 * @return string
 	 */
 	public function render(array $params = array(), \TYPO3\CMS\Backend\Controller\PageLayoutController $parentObject) {
-		$sysNote = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\SysNote\\SysNoteRenderer');
-		$content = $sysNote->renderByPid($parentObject->id);
-		return $content;
+		/** @var $noteBootstrap \TYPO3\CMS\SysNote\Core\Bootstrap */
+		$noteBootstrap = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\SysNote\\Core\\Bootstrap');
+		return $noteBootstrap->run('Note', 'list', array('pids' => $parentObject->id));
 	}
 
 }

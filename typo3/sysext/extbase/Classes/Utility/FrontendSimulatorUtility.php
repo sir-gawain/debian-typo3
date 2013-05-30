@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010 Rens Admiraal <rens@rensnel.nl>
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -15,6 +16,9 @@ namespace TYPO3\CMS\Extbase\Utility;
  *
  *  The GNU General Public License can be found at
  *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
  *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -41,7 +45,6 @@ class FrontendSimulatorUtility {
 	 *
 	 * @param \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer|NULL $cObj
 	 * @return void
-	 * @author Bastian Waidelich <bastian@typo3.org>
 	 */
 	static public function simulateFrontendEnvironment(\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $cObj = NULL) {
 		self::$tsfeBackup = isset($GLOBALS['TSFE']) ? $GLOBALS['TSFE'] : NULL;
@@ -54,7 +57,6 @@ class FrontendSimulatorUtility {
 	 * Resets $GLOBALS['TSFE'] if it was previously changed by simulateFrontendEnvironment()
 	 *
 	 * @return void
-	 * @author Bastian Waidelich <bastian@typo3.org>(
 	 * @see simulateFrontendEnvironment()
 	 */
 	static public function resetFrontendEnvironment() {

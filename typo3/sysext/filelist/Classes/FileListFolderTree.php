@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Filelist;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,12 +26,13 @@ namespace TYPO3\CMS\Filelist;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Extension class for the t3lib_filetree class, needed for drag and drop and ajax functionality
+ * Class for drag and drop and ajax functionality
  *
  * @author Sebastian Kurfürst <sebastian@garbage-group.de>
- * @author Benjamin Mack   <bmack@xnos.org>
- * @see class t3lib_browseTree
+ * @author Benjamin Mack <bmack@xnos.org>
+ * @see class \TYPO3\CMS\Backend\Tree\View\BrowseTreeView
  */
 class FileListFolderTree extends \TYPO3\CMS\Backend\Tree\View\FolderTreeView {
 
@@ -71,6 +72,5 @@ class FileListFolderTree extends \TYPO3\CMS\Backend\Tree\View\FolderTreeView {
 	}
 
 }
-
 
 ?>

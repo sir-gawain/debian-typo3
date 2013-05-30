@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,7 +43,11 @@ class TextValidator extends \TYPO3\CMS\Extbase\Validation\Validator\AbstractVali
 	public function isValid($value) {
 		$this->errors = array();
 		if ($value !== filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES)) {
-			$this->addError('The given subject was not a valid text (e.g. contained XML tags).', 1221565786);
+			$this->addError(
+				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+					'validator.text.notvalid',
+					'extbase'
+				), 1221565786);
 			return FALSE;
 		}
 		return TRUE;

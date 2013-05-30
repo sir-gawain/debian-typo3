@@ -1,6 +1,29 @@
 <?php
 namespace TYPO3\CMS\Taskcenter\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2010-2013 Georg Ringer <typo3@ringerge.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * This class provides a taskcenter for BE users
  *
@@ -203,7 +226,7 @@ class TaskModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 							$icon = '<img src="' . $icon . '" title="' . $title . '" alt="' . $title . '" />';
 						}
 						if (@is_file($icon)) {
-							$icon = '<img' . \t3lib_iconworks::skinImg($GLOBALS['BACK_PATH'], $icon, 'width="16" height="16"') . ' title="' . $title . '" alt="' . $title . '" />';
+							$icon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], $icon, 'width="16" height="16"') . ' title="' . $title . '" alt="' . $title . '" />';
 						}
 					} else {
 						$icon = $item['icon'];
@@ -228,7 +251,7 @@ class TaskModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 				$active = (string) $this->MOD_SETTINGS['function'] == $item['uid'] ? ' active-task' : '';
 				// Main menu: Render additional syntax to sort tasks
 				if ($mainMenu) {
-					$dragIcon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/move.gif', 'width="16" height="16" hspace="2"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.move', 1) . '" alt="" />';
+					$dragIcon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/move.gif', 'width="16" height="16" hspace="2"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.move', 1) . '" alt="" />';
 					$section = '<div class="down">&nbsp;</div>
 								<div class="drag">' . $dragIcon . '</div>';
 					$backgroundClass = 't3-row-header ';
@@ -382,11 +405,10 @@ class TaskModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	protected function openInNewWindow() {
 		$url = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL');
 		$onClick = 'devlogWin=window.open(\'' . $url . '\',\'taskcenter\',\'width=790,status=0,menubar=1,resizable=1,location=0,scrollbars=1,toolbar=0\');return false;';
-		$content = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/open_in_new_window.gif', 'width="19" height="14"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.openInNewWindow', 1) . '" class="absmiddle" alt="" />' . '</a>';
+		$content = '<a href="#" onclick="' . htmlspecialchars($onClick) . '">' . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/open_in_new_window.gif', 'width="19" height="14"') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.openInNewWindow', 1) . '" class="absmiddle" alt="" />' . '</a>';
 		return $content;
 	}
 
 }
-
 
 ?>

@@ -40,11 +40,6 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $configurationBuilder;
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Service\TypeHandlingService
-	 */
-	protected $typeHandlingService;
-
-	/**
 	 * A multi-dimensional array which stores the Type Converters available in the system.
 	 * It has the following structure:
 	 * 1. Dimension: Source Type
@@ -80,20 +75,11 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Service\TypeHandlingService $typeHandlingService
-	 * @return void
-	 */
-	public function injectTypeHandlingService(\TYPO3\CMS\Extbase\Service\TypeHandlingService $typeHandlingService) {
-		$this->typeHandlingService = $typeHandlingService;
-	}
-
-	/**
 	 * Lifecycle method, called after all dependencies have been injected.
 	 * Here, the typeConverter array gets initialized.
 	 *
 	 * @throws Exception\DuplicateTypeConverterException
 	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function initializeObject() {
 		foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['typeConverters'] as $typeConverterClassName) {
@@ -115,7 +101,6 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $configuration Configuration for the property mapping. If NULL, the PropertyMappingConfigurationBuilder will create a default configuration.
 	 * @throws Exception
 	 * @return mixed an instance of $targetType
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function convert($source, $targetType, \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $configuration = NULL) {
@@ -125,7 +110,12 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		$currentPropertyPath = array();
 		$this->messages = new \TYPO3\CMS\Extbase\Error\Result();
 		try {
-			return $this->doMapping($source, $targetType, $configuration, $currentPropertyPath);
+			$result = $this->doMapping($source, $targetType, $configuration, $currentPropertyPath);
+			if ($result instanceof \TYPO3\CMS\Extbase\Error\Error) {
+				return NULL;
+			}
+
+			return $result;
 		} catch (\Exception $e) {
 			throw new \TYPO3\CMS\Extbase\Property\Exception('Exception while property mapping at property path "' . implode('.', $currentPropertyPath) . '":' . $e->getMessage(), 1297759968, $e);
 		}
@@ -135,7 +125,6 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * Get the messages of the last Property Mapping
 	 *
 	 * @return \TYPO3\CMS\Extbase\Error\Result
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 * @api
 	 */
 	public function getMessages() {
@@ -148,42 +137,63 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param mixed $source the source data to map. MUST be a simple type, NO object allowed!
 	 * @param string $targetType The type of the target; can be either a class name or a simple type.
 	 * @param \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $configuration Configuration for the property mapping.
-	 * @param array $currentPropertyPath The property path currently being mapped; used for knowing the context in case an exception is thrown.
+	 * @param array &$currentPropertyPath The property path currently being mapped; used for knowing the context in case an exception is thrown.
 	 * @throws Exception\TypeConverterException
 	 * @return mixed an instance of $targetType
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	protected function doMapping($source, $targetType, \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $configuration, &$currentPropertyPath) {
+		if (is_object($source)) {
+			// This is needed to correctly convert old class names to new ones
+			// This compatibility layer will be removed with 7.0
+			$targetType = \TYPO3\CMS\Core\Core\ClassLoader::getClassNameForAlias($targetType);
+			$targetType = $this->parseCompositeType($targetType);
+			if ($source instanceof $targetType) {
+				return $source;
+			}
+		}
+
 		if ($source === NULL) {
 			$source = '';
 		}
-		// This is needed to correctly convert old class names to new ones
-		// This compatibility layer will be removed with 7.0
-		$targetType = \TYPO3\CMS\Core\Core\ClassLoader::getClassNameForAlias($targetType);
+
 		$typeConverter = $this->findTypeConverter($source, $targetType, $configuration);
+		$targetType = $typeConverter->getTargetTypeForSource($source, $targetType, $configuration);
+
 		if (!is_object($typeConverter) || !$typeConverter instanceof \TYPO3\CMS\Extbase\Property\TypeConverterInterface) {
 			throw new \TYPO3\CMS\Extbase\Property\Exception\TypeConverterException('Type converter for "' . $source . '" -> "' . $targetType . '" not found.');
 		}
+
 		$convertedChildProperties = array();
 		foreach ($typeConverter->getSourceChildPropertiesToBeConverted($source) as $sourcePropertyName => $sourcePropertyValue) {
 			$targetPropertyName = $configuration->getTargetPropertyName($sourcePropertyName);
-			if (!$configuration->shouldMap($targetPropertyName)) {
+			if ($configuration->shouldSkip($targetPropertyName)) {
 				continue;
 			}
+
+			if (!$configuration->shouldMap($targetPropertyName)) {
+				if ($configuration->shouldSkipUnknownProperties()) {
+					continue;
+				}
+				throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidPropertyMappingConfigurationException('It is not allowed to map property "' . $targetPropertyName . '". You need to use $propertyMappingConfiguration->allowProperties(\'' . $targetPropertyName . '\') to enable mapping of this property.', 1355155913);
+			}
+
 			$targetPropertyType = $typeConverter->getTypeOfChildProperty($targetType, $targetPropertyName, $configuration);
+
 			$subConfiguration = $configuration->getConfigurationFor($targetPropertyName);
+
 			$currentPropertyPath[] = $targetPropertyName;
 			$targetPropertyValue = $this->doMapping($sourcePropertyValue, $targetPropertyType, $subConfiguration, $currentPropertyPath);
 			array_pop($currentPropertyPath);
-			if ($targetPropertyValue !== NULL) {
+			if (!($targetPropertyValue instanceof \TYPO3\CMS\Extbase\Error\Error)) {
 				$convertedChildProperties[$targetPropertyName] = $targetPropertyValue;
 			}
 		}
 		$result = $typeConverter->convertFrom($source, $targetType, $convertedChildProperties, $configuration);
+
 		if ($result instanceof \TYPO3\CMS\Extbase\Error\Error) {
 			$this->messages->forProperty(implode('.', $currentPropertyPath))->addError($result);
-			$result = NULL;
 		}
+
 		return $result;
 	}
 
@@ -196,30 +206,33 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @throws Exception\TypeConverterException
 	 * @throws Exception\InvalidTargetException
 	 * @return \TYPO3\CMS\Extbase\Property\TypeConverterInterface Type Converter which should be used to convert between $source and $targetType.
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	protected function findTypeConverter($source, $targetType, \TYPO3\CMS\Extbase\Property\PropertyMappingConfigurationInterface $configuration) {
 		if ($configuration->getTypeConverter() !== NULL) {
 			return $configuration->getTypeConverter();
 		}
+
 		$sourceType = $this->determineSourceType($source);
+
 		if (!is_string($targetType)) {
 			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidTargetException('The target type was no string, but of type "' . gettype($targetType) . '"', 1297941727);
 		}
-		if (strpos($targetType, '<') !== FALSE) {
-			$targetType = substr($targetType, 0, strpos($targetType, '<'));
-		}
+
+		$targetType = $this->parseCompositeType($targetType);
 		$converter = NULL;
-		if ($this->typeHandlingService->isSimpleType($targetType)) {
+
+		if (\TYPO3\CMS\Extbase\Utility\TypeHandlingUtility::isSimpleType($targetType)) {
 			if (isset($this->typeConverters[$sourceType][$targetType])) {
 				$converter = $this->findEligibleConverterWithHighestPriority($this->typeConverters[$sourceType][$targetType], $source, $targetType);
 			}
 		} else {
 			$converter = $this->findFirstEligibleTypeConverterInObjectHierarchy($source, $sourceType, $targetType);
 		}
+
 		if ($converter === NULL) {
 			throw new \TYPO3\CMS\Extbase\Property\Exception\TypeConverterException('No converter found which can be used to convert from "' . $sourceType . '" to "' . $targetType . '".');
 		}
+
 		return $converter;
 	}
 
@@ -236,9 +249,11 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		if (!class_exists($targetClass) && !interface_exists($targetClass)) {
 			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidTargetException('Could not find a suitable type converter for "' . $targetClass . '" because no such class or interface exists.', 1297948764);
 		}
+
 		if (!isset($this->typeConverters[$sourceType])) {
 			return NULL;
 		}
+
 		$convertersForSource = $this->typeConverters[$sourceType];
 		if (isset($convertersForSource[$targetClass])) {
 			$converter = $this->findEligibleConverterWithHighestPriority($convertersForSource[$targetClass], $source, $targetClass);
@@ -246,17 +261,21 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				return $converter;
 			}
 		}
+
 		foreach (class_parents($targetClass) as $parentClass) {
 			if (!isset($convertersForSource[$parentClass])) {
 				continue;
 			}
+
 			$converter = $this->findEligibleConverterWithHighestPriority($convertersForSource[$parentClass], $source, $targetClass);
 			if ($converter !== NULL) {
 				return $converter;
 			}
 		}
+
 		$converters = $this->getConvertersForInterfaces($convertersForSource, class_implements($targetClass));
 		$converter = $this->findEligibleConverterWithHighestPriority($converters, $source, $targetClass);
+
 		if ($converter !== NULL) {
 			return $converter;
 		}
@@ -314,7 +333,6 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param mixed $source
 	 * @throws Exception\InvalidSourceException
 	 * @return string the type of $source
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	protected function determineSourceType($source) {
 		if (is_string($source)) {
@@ -331,6 +349,21 @@ class PropertyMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			throw new \TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException('The source is not of type string, array, float, integer or boolean, but of type "' . gettype($source) . '"', 1297773150);
 		}
 	}
+
+	/**
+	 * Parse a composite type like \Foo\Collection<\Bar\Entity> into
+	 * \Foo\Collection
+	 *
+	 * @param string $compositeType
+	 * @return string
+	 */
+	public function parseCompositeType($compositeType) {
+		if (strpos($compositeType, '<') !== FALSE) {
+			$compositeType = substr($compositeType, 0, strpos($compositeType, '<'));
+		}
+		return $compositeType;
+	}
+
 }
 
 ?>

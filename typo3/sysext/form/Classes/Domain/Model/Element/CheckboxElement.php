@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Domain\Model\Element;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -77,7 +77,7 @@ class CheckboxElement extends \TYPO3\CMS\Form\Domain\Model\Element\AbstractEleme
 	 * it will change the checked attribute
 	 *
 	 * @return \TYPO3\CMS\Form\Domain\Model\Element\CheckboxElement
-	 * @see tx_form_Domain_Model_Element::checkFilterAndSetIncomingDataFromRequest()
+	 * @see \TYPO3\CMS\Form\Domain\Model\Element\AbstractElement::checkFilterAndSetIncomingDataFromRequest()
 	 */
 	public function checkFilterAndSetIncomingDataFromRequest() {
 		if ($this->value === '') {
@@ -119,6 +119,5 @@ class CheckboxElement extends \TYPO3\CMS\Form\Domain\Model\Element\AbstractEleme
 	}
 
 }
-
 
 ?>

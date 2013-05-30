@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Openid;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008-2011 Dmitry Dulepov <dmitry@typo3.org>
+ *  (c) 2008-2013 Dmitry Dulepov <dmitry@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,7 +43,6 @@ class OpenidEid {
 		// the user.
 		$GLOBALS['TYPO3_CONF_VARS']['SVCONF']['auth']['FE_fetchUserIfNoSession'] = TRUE;
 		// Initialize Frontend user
-		\TYPO3\CMS\Frontend\Utility\EidUtility::connectDB();
 		\TYPO3\CMS\Frontend\Utility\EidUtility::initFeUser();
 		// Redirect to the original location in any case (authenticated or not)
 		@ob_end_clean();

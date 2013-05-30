@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Form;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -112,7 +112,6 @@ class DataPreprocessor {
 			$idList = $this->prevPageID;
 		}
 		if ($GLOBALS['TCA'][$table]) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			// For each ID value (integer) we
 			$ids = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $idList, 1);
 			foreach ($ids as $id) {
@@ -133,13 +132,13 @@ class DataPreprocessor {
 							}
 						}
 						if ($id < 0) {
-							$record = \t3lib_beFunc::getRecord($table, abs($id), 'pid');
+							$record = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, abs($id), 'pid');
 							$pid = $record['pid'];
 							unset($record);
 						} else {
 							$pid = intval($id);
 						}
-						$pageTS = \t3lib_beFunc::getPagesTSconfig($pid);
+						$pageTS = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig($pid);
 						if (isset($pageTS['TCAdefaults.'])) {
 							$TCAPageTSOverride = $pageTS['TCAdefaults.'];
 							if (is_array($TCAPageTSOverride[$table . '.'])) {
@@ -216,7 +215,6 @@ class DataPreprocessor {
 		}
 		// Init:
 		$uniqueItemRef = $table . '_' . $id;
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		// Fetches the true PAGE TSconfig pid to use later, if needed. (Until now, only for the RTE, but later..., who knows?)
 		list($tscPID) = \TYPO3\CMS\Backend\Utility\BackendUtility::getTSCpid($table, $id, $pid);
 		$TSconfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getTCEFORM_TSconfig($table, array_merge($row, array('uid' => $id, 'pid' => $pid)));
@@ -260,7 +258,6 @@ class DataPreprocessor {
 		$totalRecordContent = array();
 		// Traverse the configured columns for the table (TCA):
 		// For each column configured, we will perform processing if needed based on the type (eg. for "group" and "select" types this is needed)
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		$copyOfColumns = $GLOBALS['TCA'][$table]['columns'];
 		foreach ($copyOfColumns as $field => $fieldConfig) {
 			// Set $data variable for the field, either inputted value from $row - or if not found, the default value as defined in the "config" array
@@ -548,7 +545,7 @@ class DataPreprocessor {
 	 * @param array $pParams Various parameters to pass-through
 	 * @return array Modified $dataPart array.
 	 * @access private
-	 * @see t3lib_TCEmain::checkValue_flex_procInData(), renderRecord_flexProc_procInData_travDS()
+	 * @see \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_flex_procInData(), renderRecord_flexProc_procInData_travDS()
 	 * @todo Define visibility
 	 */
 	public function renderRecord_flexProc_procInData($dataPart, $dataStructArray, $pParams) {
@@ -572,7 +569,7 @@ class DataPreprocessor {
 	 * @param array $DSelements Data structure
 	 * @param array $pParams Various parameters pass-through.
 	 * @return void
-	 * @see renderRecord_flexProc_procInData(), t3lib_TCEmain::checkValue_flex_procInData_travDS()
+	 * @see \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_flex_procInData(), renderRecord_flexProc_procInData_travDS()
 	 * @todo Define visibility
 	 */
 	public function renderRecord_flexProc_procInData_travDS(&$dataValues, $DSelements, $pParams) {
@@ -801,7 +798,7 @@ class DataPreprocessor {
 	 * @param array $elements The array of original elements - basically the field value exploded by ",
 	 * @param array $fieldConfig Field configuration from TCA
 	 * @param array $row The data array, currently. Used to set the "local_uid" for selecting MM relation records.
-	 * @param string $table Current table name. passed on to t3lib_loadDBGroup
+	 * @param string $table Current table name. passed on to \TYPO3\CMS\Core\Database\RelationHandler
 	 * @return array An array with ids of the records from the input elements array.
 	 * @access private
 	 * @todo Define visibility

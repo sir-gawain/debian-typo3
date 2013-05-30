@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Resource\Service;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2011-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,32 +33,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Resource\Service;
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
 class IndexerServiceTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * @var boolean Backup all $GLOBALS
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
-	 * @var Store backup of TYPO3_DB
-	 */
-	protected $dbBackup;
-
-	/**
-	 * Set up this test case
-	 */
-	public function setUp() {
-			// Store TYPO3_DB in local var, it is substituted with a mock in this test
-		$this->dbBackup = $GLOBALS['TYPO3_DB'];
-	}
-
-	/**
-	 * Tear down this test case
-	 */
-	public function tearDown() {
-			// Re constitute TYPO3_DB from backup
-		$GLOBALS['TYPO3_DB'] = $this->dbBackup;
-	}
 
 	/**
 	 * @test
@@ -105,10 +79,14 @@ class IndexerServiceTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$fixture->expects($this->any())->method('getRepository')->will($this->returnValue($repositoryMock));
 
 		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection', array(), array(), '', FALSE);
-		$GLOBALS['TYPO3_DB']->expects($this->once())->method('exec_INSERTquery')->with($this->anything(), $this->equalTo(array(
-			'crdate' => $GLOBALS['EXEC_TIME'],
-			'tstamp' => $GLOBALS['EXEC_TIME']
-		)));
+
+		$arrayConstraint = $this->logicalAnd(
+			$this->arrayHasKey('crdate'),
+			$this->arrayHasKey('tstamp'),
+			$this->contains($GLOBALS['EXEC_TIME'])
+		);
+
+		$GLOBALS['TYPO3_DB']->expects($this->once())->method('exec_INSERTquery')->with($this->anything(), $arrayConstraint);
 
 		$mockedFile = $this->getMock('TYPO3\\CMS\\Core\\Resource\\File', array(), array(), '', FALSE);
 

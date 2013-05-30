@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Configuration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +27,10 @@ namespace TYPO3\CMS\Extbase\Configuration;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+/**
+ * Class ConfigurationManagerInterface
+ */
 interface ConfigurationManagerInterface extends \TYPO3\CMS\Core\SingletonInterface {
 
 	const CONFIGURATION_TYPE_FRAMEWORK = 'Framework';

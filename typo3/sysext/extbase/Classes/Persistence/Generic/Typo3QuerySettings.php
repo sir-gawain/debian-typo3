@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -141,7 +141,7 @@ class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\Query
 	 * Sets the pid(s) of the storage page(s) that should be respected for the query.
 	 *
 	 * @param array $storagePageIds If TRUE the storage page ID will be determined and the statement will be extended accordingly.
-	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface instance of $this to allow method chaining
+	 * @return void
 	 * @api
 	 */
 	public function setStoragePageIds(array $storagePageIds) {
@@ -182,7 +182,7 @@ class Typo3QuerySettings implements \TYPO3\CMS\Extbase\Persistence\Generic\Query
 	 * Sets the language uid for the language overlay.
 	 *
 	 * @param integer $sysLanguageUid language uid for the language overlay
-	 * @return \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface instance of $this to allow method chaining
+	 * @return void
 	 * @api
 	 */
 	public function setSysLanguageUid($sysLanguageUid) {

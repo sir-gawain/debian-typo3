@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Resource\Driver;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Andreas Wolf <andreas.wolf@ikt-werk.de>
+ *  (c) 2011-2013 Andreas Wolf <andreas.wolf@ikt-werk.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,11 +33,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Resource\Driver;
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
 class DriverRegistryTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * @var boolean Enable backup of global and system variables
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * @var \TYPO3\CMS\Core\Resource\Driver\DriverRegistry

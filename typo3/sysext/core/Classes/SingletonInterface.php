@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008-2011 Robert Lemke <robert@typo3.org>, Martin Kutschker <masi@typo3.org>
+ *  (c) 2008-2013 Robert Lemke <robert@typo3.org>, Martin Kutschker <masi@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,10 +30,9 @@ namespace TYPO3\CMS\Core;
  * "empty" interface for singletons (marker interface pattern)
  *
  * @author Martin Kutschker <masi@typo3.org>
- * @see t3lib_div::makeInstance()
+ * @see \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance()
  */
-interface SingletonInterface
-{
+interface SingletonInterface {
 
 }
 

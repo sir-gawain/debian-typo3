@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Processing;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Andreas Wolf <andreas.wolf@typo3.org>
+ *  (c) 2012-2013 Andreas Wolf <andreas.wolf@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -50,6 +50,11 @@ abstract class AbstractTask implements TaskInterface {
 	protected $targetFile;
 
 	/**
+	 * @var Resource\File
+	 */
+	protected $sourceFile;
+
+	/**
 	 * @var array
 	 */
 	protected $configuration;
@@ -80,6 +85,7 @@ abstract class AbstractTask implements TaskInterface {
 	 */
 	public function __construct(Resource\ProcessedFile $targetFile, array $configuration) {
 		$this->targetFile = $targetFile;
+		$this->sourceFile = $targetFile->getOriginalFile();
 		$this->configuration = $configuration;
 	}
 
@@ -92,7 +98,7 @@ abstract class AbstractTask implements TaskInterface {
 	 */
 	protected function getChecksumData() {
 		return array(
-			$this->targetFile->getOriginalFile()->getUid(),
+			$this->getSourceFile()->getUid(),
 			$this->getType() . '.' . $this->getName(),
 			serialize($this->configuration)
 		);
@@ -115,7 +121,17 @@ abstract class AbstractTask implements TaskInterface {
 	public function getTargetFilename() {
 		return $this->targetFile->getNameWithoutExtension()
 			. '_' . $this->getConfigurationChecksum()
-			. '.' . $this->targetFile->getExtension();
+			. '.' . $this->getTargetFileExtension();
+	}
+
+	/**
+	 * Gets the file extension the processed file should
+	 * have in the filesystem.
+	 *
+	 * @return string
+	 */
+	public function getTargetFileExtension() {
+		return $this->targetFile->getExtension();
 	}
 
 	/**
@@ -141,6 +157,27 @@ abstract class AbstractTask implements TaskInterface {
 	 */
 	public function getTargetFile() {
 		return $this->targetFile;
+	}
+
+	/**
+	 * @param Resource\ProcessedFile $targetFile
+	 */
+	public function setTargetFile(Resource\ProcessedFile $targetFile) {
+		$this->targetFile = $targetFile;
+	}
+
+	/**
+	 * @return Resource\File
+	 */
+	public function getSourceFile() {
+		return $this->sourceFile;
+	}
+
+	/**
+	 * @param Resource\File $sourceFile
+	 */
+	public function setSourceFile(Resource\File $sourceFile) {
+		$this->sourceFile = $sourceFile;
 	}
 
 	/**

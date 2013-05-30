@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -102,7 +102,6 @@ class GenericObjectValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abs
 	 * @param array $validators The validators to be called on the value
 	 * @param \TYPO3\CMS\Extbase\Error\Result $messages the result object to which the validation errors should be added
 	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	protected function checkProperty($value, $validators, \TYPO3\CMS\Extbase\Error\Result $messages) {
 		foreach ($validators as $validator) {
@@ -118,11 +117,15 @@ class GenericObjectValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abs
 	 * @param mixed $value The value that should be validated
 	 * @return boolean TRUE if the value is valid, FALSE if an error occured
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function isValid($value) {
 		if (!is_object($value)) {
-			$this->addError('Value is no object.', 1241099148);
+			$this->addError(
+				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+					'validator.genericobject.noobject',
+					'extbase'
+				), 1241099148);
 			return FALSE;
 		}
 		$result = TRUE;
@@ -155,7 +158,7 @@ class GenericObjectValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abs
 	 * @throws \InvalidArgumentException
 	 * @return boolean TRUE if the property value is valid, FALSE if an error occured
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function isPropertyValid($object, $propertyName) {
 		if (!is_object($object)) {
@@ -178,7 +181,7 @@ class GenericObjectValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abs
 	 * @param array $errors Array of \TYPO3\CMS\Extbase\Validation\Error
 	 * @param string $propertyName Name of the property to add errors
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected function addErrorsForProperty($errors, $propertyName) {
 		if (!isset($this->errors[$propertyName])) {

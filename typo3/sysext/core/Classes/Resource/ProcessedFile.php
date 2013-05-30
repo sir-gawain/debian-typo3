@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Benjamin Mack <benni@typo3.org>
+ * (c) 2012-2013 Benjamin Mack <benni@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,8 +26,6 @@ namespace TYPO3\CMS\Core\Resource;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-
-
 
 /**
  * Representation of a specific processed version of a file. These are created by the FileProcessingService,
@@ -77,12 +75,12 @@ class ProcessedFile extends AbstractFile {
 	protected $taskType;
 
 	/**
-	 * @var \TYPO3\CMS\Core\Resource\Processing\TaskInterface
+	 * @var Processing\TaskInterface
 	 */
 	protected $task;
 
 	/**
-	 * @var \TYPO3\CMS\Core\Resource\Processing\TaskTypeRegistry
+	 * @var Processing\TaskTypeRegistry
 	 */
 	protected $taskTypeRegistry;
 
@@ -193,9 +191,13 @@ class ProcessedFile extends AbstractFile {
 			throw new \RuntimeException('Cannot update original file!', 1350582054);
 		}
 		// TODO this should be more generic (in fact it only works for local file paths)
-		$this->storage->addFile($filePath, $this->storage->getProcessingFolder(), $this->name, 'replace');
+		$addedFile = $this->storage->addFile($filePath, $this->storage->getProcessingFolder(), $this->name, 'replace');
+		$addedFile->setIndexable(FALSE);
+
 		// Update some related properties
+		$this->identifier = $addedFile->getIdentifier();
 		$this->originalFileSha1 = $this->originalFile->getSha1();
+		$this->updateProperties($addedFile->getProperties());
 		$this->deleted = FALSE;
 		$this->updated = TRUE;
 	}
@@ -419,11 +421,21 @@ class ProcessedFile extends AbstractFile {
 	 * @return mixed
 	 */
 	public function getProperty($key) {
-		if ($this->isUnchanged()) {
+		// The uid always (!) has to come from this file and never the original file (see getOriginalFile() to get this)
+		if ($this->isUnchanged() && $key !== 'uid') {
 			return $this->originalFile->getProperty($key);
 		} else {
 			return $this->properties[$key];
 		}
+	}
+
+	/**
+	 * Returns the uid of this file
+	 *
+	 * @return int
+	 */
+	public function getUid() {
+		return $this->properties['uid'];
 	}
 
 

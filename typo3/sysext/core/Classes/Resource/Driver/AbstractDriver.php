@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Driver;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011 Ingmar Schlecht <ingmar.schlecht@typo3.org>
+ * (c) 2011-2013 Ingmar Schlecht <ingmar.schlecht@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,9 @@ namespace TYPO3\CMS\Core\Resource\Driver;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\PathUtility;
+
 /**
  * An abstract implementation of a storage driver.
  *
@@ -154,7 +157,7 @@ abstract class AbstractDriver {
 	 * @return string
 	 */
 	protected function getNameFromIdentifier($identifier) {
-		return basename($identifier);
+		return PathUtility::basename($identifier);
 	}
 
 	/**
@@ -524,12 +527,41 @@ abstract class AbstractDriver {
 	/**
 	 * Folder equivalent to copyFileWithinStorage().
 	 *
-	 * @param \TYPO3\CMS\Core\Resource\Folder $folderToMove
+	 * @param \TYPO3\CMS\Core\Resource\Folder $folderToCopy
 	 * @param \TYPO3\CMS\Core\Resource\Folder $targetFolder
 	 * @param string $newFileName
 	 * @return boolean
 	 */
-	abstract public function copyFolderWithinStorage(\TYPO3\CMS\Core\Resource\Folder $folderToMove, \TYPO3\CMS\Core\Resource\Folder $targetFolder, $newFileName);
+	abstract public function copyFolderWithinStorage(\TYPO3\CMS\Core\Resource\Folder $folderToCopy, \TYPO3\CMS\Core\Resource\Folder $targetFolder, $newFileName);
+
+	/**
+	 * Move a folder from another storage.
+	 *
+	 * @param \TYPO3\CMS\Core\Resource\Folder $folderToMove
+	 * @param \TYPO3\CMS\Core\Resource\Folder $targetParentFolder
+	 * @param string $newFolderName
+	 * @throws \BadMethodCallException
+	 * @return boolean
+	 */
+	public function moveFolderBetweenStorages(\TYPO3\CMS\Core\Resource\Folder $folderToMove, \TYPO3\CMS\Core\Resource\Folder $targetParentFolder, $newFolderName) {
+		// This is not implemented for now as moving files between storages might cause quite some headaches when
+		// something goes wrong. It is also not that common of a use case, so it does not hurt that much to leave it out
+		// for now.
+		throw new \BadMethodCallException('Moving folders between storages is not implemented.');
+	}
+
+	/**
+	 * Copy a folder from another storage.
+	 *
+	 * @param \TYPO3\CMS\Core\Resource\Folder $folderToCopy
+	 * @param \TYPO3\CMS\Core\Resource\Folder $targetParentFolder
+	 * @param string $newFolderName
+	 * @throws \BadMethodCallException
+	 * @return boolean
+	 */
+	public function copyFolderBetweenStorages(\TYPO3\CMS\Core\Resource\Folder $folderToCopy, \TYPO3\CMS\Core\Resource\Folder $targetParentFolder, $newFolderName) {
+		throw new \BadMethodCallException('Not yet implemented!', 1330262731);
+	}
 
 	/**
 	 * Removes a file from this storage. This does not check if the file is

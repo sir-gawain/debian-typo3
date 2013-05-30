@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Module;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,10 +25,11 @@ namespace TYPO3\CMS\Belog\Module;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * This class is a wrapper for WebInfo controller of belog.
- * It is registered in ext_tables.php with t3lib_extMgm::insertModuleFunction() and called by the
- * info extension via SCbase functionality.
+ * It is registered in ext_tables.php with \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::insertModuleFunction()
+ * and called by the info extension via SCbase functionality.
  *
  * Extbase currently provides no way to register a "TBE_MODULES_EXT" module directly,
  * therefore we need to bootstrap extbase on our own here to jump to the WebInfo controller.
@@ -77,6 +78,5 @@ class BackendLogModuleBootstrap {
 	}
 
 }
-
 
 ?>

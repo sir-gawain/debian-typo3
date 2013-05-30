@@ -27,15 +27,15 @@ $EM_CONF[$_EXTKEY] = array(
 	'clearCacheOnLoad' => 0,
 	'lockType' => 'system',
 	'author_company' => 'Web-Empowered Church',
-	'version' => '6.0.0',
+	'version' => '6.1.0',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '6.0.0-0.0.0'
+			'typo3' => '6.1.0-6.1.99',
 		),
 		'conflicts' => array(),
 		'suggests' => array()
 	),
-	'_md5_values_when_last_written' => 'a:3:{s:12:"ext_icon.gif";s:4:"9f86";s:17:"ext_localconf.php";s:4:"0933";s:34:"view/class.tx_feedit_editpanel.php";s:4:"9cdd";}',
+	'_md5_values_when_last_written' => '',
 	'suggests' => array()
 );
 ?>

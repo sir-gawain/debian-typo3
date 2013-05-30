@@ -23,7 +23,6 @@ namespace TYPO3\CMS\Extbase\Tests\Fixture;
 /**
  * A dummy class with setters for testing data mapping
  *
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
 class ClassWithSetters {
 
@@ -47,26 +46,16 @@ class ClassWithSetters {
 	 */
 	public $property4;
 
-	/**
-	 * @param mixed $value
-	 */
 	public function setProperty3($value) {
 		$this->property3 = $value;
 	}
 
-	/**
-	 * @param mixed $value
-	 */
 	protected function setProperty4($value) {
 		$this->property4 = $value;
 	}
 
-	/**
-	 * @return mixed
-	 */
 	public function getProperty2() {
 		return $this->property2;
 	}
 }
-
 ?>

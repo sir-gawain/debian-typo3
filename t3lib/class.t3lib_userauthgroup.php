@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -493,7 +493,6 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 			}
 			break;
 		case 'individual':
-			t3lib_div::loadTCA($table);
 			if (is_array($GLOBALS['TCA'][$table]) && is_array($GLOBALS['TCA'][$table]['columns'][$field])) {
 				$items = $GLOBALS['TCA'][$table]['columns'][$field]['config']['items'];
 				if (is_array($items)) {
@@ -590,7 +589,6 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 	 */
 	public function recordEditAccessInternals($table, $idOrRow, $newRecord = FALSE, $deletedRecord = FALSE, $checkFullLanguageAccess = FALSE) {
 		if (isset($GLOBALS['TCA'][$table])) {
-			t3lib_div::loadTCA($table);
 			// Always return TRUE for Admin users.
 			if ($this->isAdmin()) {
 				return TRUE;
@@ -851,12 +849,12 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 		// Auto-creation of version: In offline workspace, test if versioning is
 		// enabled and look for workspace version of input record.
 		// If there is no versionized record found we will create one and save to that.
-		if ($this->workspace !== 0 && !$this->workspaceRec['disable_autocreate'] && $GLOBALS['TCA'][$table]['ctrl']['versioningWS'] && $recpid >= 0 && !t3lib_BEfunc::getWorkspaceVersionOfRecord($this->workspace, $table, $id, 'uid')) {
+		if ($this->workspace !== 0 && $GLOBALS['TCA'][$table]['ctrl']['versioningWS'] && $recpid >= 0 &&
+			!t3lib_BEfunc::getWorkspaceVersionOfRecord($this->workspace, $table, $id, 'uid')) {
 			// There must be no existing version of this record in workspace.
 			return TRUE;
-		} elseif ($this->workspaceRec['disable_autocreate']) {
-			t3lib_div::deprecationLog('Usage of disable_autocreate feature is deprecated since 4.5.');
 		}
+		return FALSE;
 	}
 
 	/**
@@ -958,51 +956,6 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 		}
 	}
 
-	/**
-	 * Workspace Versioning type access. Check wether the requsted type of versioning (element/page/branch) is allowd in current workspace
-	 * (element/pages/branches type of versioning can/could be set on custom workspaces on filed "vtype")
-	 *
-	 * @todo workspacecleanup: this seems mostly obsolete and should be removed
-	 * @param integer $type Versioning type to evaluation: -1, 0, >1
-	 * @return boolean TRUE if OK
-	 * @deprecated since TYPO3 4.4, will be removed in TYPO3 6.0 as only element versioning is supported now
-	 * @todo Define visibility
-	 */
-	public function workspaceVersioningTypeAccess($type) {
-		t3lib_div::logDeprecatedFunction();
-		$type = t3lib_utility_Math::forceIntegerInRange($type, -1);
-		// only element versioning is allowed now
-		return $type == -1;
-	}
-
-	/**
-	 * Finding "closest" versioning type, used for creation of new records.
-	 *
-	 * @see workspaceVersioningTypeAccess() for hints on $type
-	 * @param integer $type Versioning type to evaluation: -1, 0, >1
-	 * @return integer Returning versioning type
-	 * @deprecated since TYPO3 4.4, will be removed in TYPO3 6.0 as only element versioning is supported now
-	 * @todo Define visibility
-	 */
-	public function workspaceVersioningTypeGetClosest($type) {
-		t3lib_div::logDeprecatedFunction();
-		$type = t3lib_utility_Math::forceIntegerInRange($type, -1);
-		if ($this->workspace > 0) {
-			switch ((int) $type) {
-			case -1:
-				$type = -1;
-				break;
-			case 0:
-				$type = $this->workspaceVersioningTypeAccess($type) ? $type : -1;
-				break;
-			default:
-				$type = $this->workspaceVersioningTypeAccess($type) ? $type : ($this->workspaceVersioningTypeAccess(0) ? 0 : -1);
-				break;
-			}
-		}
-		return $type;
-	}
-
 	/*************************************
 	 *
 	 * Miscellaneous functions
@@ -1063,20 +1016,6 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 	public function getTSConfigProp($objectString) {
 		$TSConf = $this->getTSConfig($objectString);
 		return $TSConf['properties'];
-	}
-
-	/**
-	 * Returns TRUE if $item is in $in_list
-	 *
-	 * @param string $in_list Comma list with items, no spaces between items!
-	 * @param string $item The string to find in the list of items
-	 * @return string Boolean
-	 * @deprecated since TYPO3 4.7, should be removed in TYPO3 6.1, use equivalent function t3lib_div::inList()
-	 * @todo Define visibility
-	 */
-	public function inList($in_list, $item) {
-		t3lib_div::logDeprecatedFunction();
-		return t3lib_div::inList($in_list, $item);
 	}
 
 	/**
@@ -1378,11 +1317,11 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 					$storageObject = $storageRepository->findByUid($userHomeStorageUid);
 					// First try and mount with [uid]_[username]
 					$userHomeFilterIdentifier = $userHomeFilter . $this->user['uid'] . '_' . $this->user['username'] . $GLOBALS['TYPO3_CONF_VARS']['BE']['userUploadDir'];
-					$didMount = $storageObject->injectFileMount($userHomeFilterIdentifier);
+					$didMount = $storageObject->addFileMount($userHomeFilterIdentifier);
 					// If that failed, try and mount with only [uid]
 					if (!$didMount) {
 						$userHomeFilterIdentifier = $userHomeFilter . $this->user['uid'] . '_' . $this->user['username'] . $GLOBALS['TYPO3_CONF_VARS']['BE']['userUploadDir'];
-						$storageObject->injectFileMount($userHomeFilterIdentifier);
+						$storageObject->addFileMount($userHomeFilterIdentifier);
 					}
 					$this->fileStorages[$storageObject->getUid()] = $storageObject;
 				}
@@ -1396,7 +1335,7 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 					$storageObject = $storageRepository->findByUid($groupHomeStorageUid);
 					foreach ($this->userGroups as $groupUid => $groupData) {
 						$groupHomeFilterIdentifier = $groupHomeFilter . $groupData['uid'];
-						$storageObject->injectFileMount($groupHomeFilterIdentifier);
+						$storageObject->addFileMount($groupHomeFilterIdentifier);
 					}
 					$this->fileStorages[$storageObject->getUid()] = $storageObject;
 				}
@@ -1408,7 +1347,7 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'sys_filemounts', 'deleted=0 AND hidden=0 AND pid=0 AND uid IN (' . $this->dataLists['filemount_list'] . ')', '', $orderBy);
 				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					$storageObject = $storageRepository->findByUid($row['base']);
-					$storageObject->injectFileMount($row['path'], $row);
+					$storageObject->addFileMount($row['path'], $row);
 					$this->fileStorages[$storageObject->getUid()] = $storageObject;
 				}
 				$GLOBALS['TYPO3_DB']->sql_free_result($res);
@@ -1417,7 +1356,7 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 		// Injects the users' permissions to each storage
 		foreach ($this->fileStorages as $storageObject) {
 			$storagePermissions = $this->getFilePermissionsForStorage($storageObject);
-			$storageObject->injectUserPermissions($storagePermissions);
+			$storageObject->setUserPermissions($storagePermissions);
 		}
 		// more narrowing down through the workspace
 		$this->initializeFileStoragesForWorkspace();
@@ -1475,7 +1414,7 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 	 * removeFile = 1
 	 *
 	 * addFolder = 1
-	 * browseFolder = 1
+	 * readFolder = 1
 	 * moveFolder = 1
 	 * writeFolder = 1
 	 * renameFolder = 1
@@ -1513,7 +1452,7 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 				'unzipFile' => TRUE,
 				'removeFile' => TRUE,
 				'addFolder' => TRUE,
-				'browseFolder' => TRUE,
+				'readFolder' => TRUE,
 				// new option,, generic check of the user rights
 				'moveFolder' => TRUE,
 				'renameFolder' => TRUE,
@@ -1802,7 +1741,7 @@ abstract class t3lib_userAuthGroup extends t3lib_userAuth {
 					// TODO: check if the filter is narrowing down the existing user
 					$storageObject = $storageRepository->findByUid($row['base']);
 					if (isset($existingFileStoragesOfUser[$storageObject->getUid()])) {
-						$storageObject->injectFileMount($row['path']);
+						$storageObject->addFileMount($row['path']);
 						$this->fileStorages[$storageObject->getUid()] = $storageObject;
 					}
 				}

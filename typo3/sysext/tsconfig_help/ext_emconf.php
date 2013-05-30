@@ -26,15 +26,15 @@ $EM_CONF[$_EXTKEY] = array(
 	'modify_tables' => '',
 	'clearCacheOnLoad' => 0,
 	'author_company' => '',
-	'version' => '6.0.0',
+	'version' => '6.1.0',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '6.0.0-0.0.0',
+			'typo3' => '6.1.0-6.1.99',
 		),
 		'conflicts' => array(),
 		'suggests' => array()
 	),
-	'_md5_values_when_last_written' => 'a:10:{s:12:"ext_icon.gif";s:4:"2ad2";s:14:"ext_tables.php";s:4:"1018";s:14:"ext_tables.sql";s:4:"492c";s:25:"ext_tables_static+adt.sql";s:4:"e557";s:12:"doc/TODO.txt";s:4:"cfc6";s:13:"mod1/conf.php";s:4:"89c9";s:14:"mod1/index.php";s:4:"b2b0";s:18:"mod1/locallang.xlf";s:4:"54fc";s:22:"mod1/locallang_mod.xlf";s:4:"f15b";s:19:"mod1/moduleicon.gif";s:4:"b78a";}',
+	'_md5_values_when_last_written' => '',
 	'suggests' => array()
 );
 ?>

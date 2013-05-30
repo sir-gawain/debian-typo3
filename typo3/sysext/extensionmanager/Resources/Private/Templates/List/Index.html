@@ -1,17 +1,25 @@
 {namespace em=TYPO3\CMS\Extensionmanager\ViewHelpers}
 
 <f:layout name="main" />
-<f:section name="docHeaderRow1">
+
+<f:section name="docheader-buttons">
 	<f:be.buttons.icon uri="{f:uri.action(action:'form',controller:'UploadExtensionFile')}" icon="actions-edit-upload" title="{f:translate(key:'extensionList.uploadExtension')}"/>
 </f:section>
-<f:section name="docHeaderRow2">
+
+<f:section name="module-headline">
+	<h2><f:translate key="manageExtensions">Manage extensions</f:translate></h2>
 </f:section>
+
 <f:section name="Content">
-	<div class="headerRow">
+	<div class="uploadForm" style="display: none;">
+		<span class="spinner"></span>
+		<f:translate key="extensionList.loading"/>
+	</div>
+
+	<div class="headerRow ui-helper-clearfix">
 		<div class="typo3-extensionmanager-headerRowLeft">
 		</div>
 		<div class="typo3-extensionmanager-headerRowRight">
-			<div class="uploadForm" style="display:none;"><f:translate key="extensionList.loading"/><span class="spinner"></span></div>
 		</div>
 	</div>
 	<table id="typo3-extension-list" class="typo3-extension-list">
@@ -30,10 +38,10 @@
 			<f:for each="{extensions}" as="extension" key="extensionKey">
 				<f:if condition="{extension.terObject}">
 					<f:then>
-						<tr id="{extensionKey}" class="{f:if(condition:'{extension.terObject.reviewState} >= 0', then:'', else:'insecure')}">
+						<tr id="{extensionKey}" class="{f:if(condition:'{extension.terObject.reviewState} >= 0', then:'', else:'insecure')} {f:if(condition:'{extension.installed}', then: '', else: 'inactive')}">
 					</f:then>
 					<f:else>
-						<tr id="{extensionKey}">
+						<tr id="{extensionKey}" class="{f:if(condition:'{extension.installed}', then: '', else: 'inactive')}">
 					</f:else>
 				</f:if>
 				<td>
@@ -41,7 +49,7 @@
 						<f:be.buttons.icon
 							uri="{f:uri.action(action:'updateCommentForUpdatableVersions',controller:'Download',arguments:{extension:extension.key, integerVersion: extension.terObject.integerVersion},format:'json')}"
 							icon="actions-system-extension-update"
-							title="{f:translate(key:'extensionList.update')}"
+							title="{f:translate(key:'extensionList.updateToVersion', arguments:{0:extension.updateToVersion.version})}"
 						/>
 					</f:if>
 				</td>
@@ -65,13 +73,14 @@
 				<td>
 					{extension.version}
 				</td>
-				<td>
+				<td class="icons">
 					<em:configureExtension extension="{extension}" />
+					<em:updateScript extensionKey="{extension.key}" />
 					<em:removeExtension extension="{extension}" />
 					<f:be.buttons.icon uri="{f:uri.action(action:'downloadExtensionZip',controller:'Action',arguments:'{extension:extension.key}')}" icon="actions-system-extension-download" title="{f:translate(key:'extensionList.downloadzip')}"/>
 					<em:downloadExtensionData extension="{extension}" />
 				</td>
-				<td class="{extension.state}">
+				<td class="state {extension.state}">
 					{extension.state}
 				</td>
 				</tr>

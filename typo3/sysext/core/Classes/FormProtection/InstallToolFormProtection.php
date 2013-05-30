@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\FormProtection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Oliver Klee <typo3-coding@oliverklee.de>
+ * (c) 2010-2013 Oliver Klee <typo3-coding@oliverklee.de>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,9 +23,8 @@ namespace TYPO3\CMS\Core\FormProtection;
  *
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Class t3lib_formprotection_InstallToolFormProtection.
- *
  * This class provides protection against cross-site request forgery (XSRF/CSRF)
  * in the install tool.
  *

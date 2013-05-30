@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Charset;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2003-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2003-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the Typo3 project. The Typo3 project is
@@ -937,8 +937,16 @@ class CharsetConverter {
 	 * @todo Define visibility
 	 */
 	public function entities_to_utf8($str, $alsoStdHtmlEnt = FALSE) {
+		// Workaround for #39287: 3rd parameter for get_html_translation_table() was only added in PHP 5.3.4 and later
+		// see http://php.net/manual/en/function.get-html-translation-table.php
+		$applyPhpCompatibilityFix = version_compare(phpversion(), '5.3.4', '<');
+
 		if ($alsoStdHtmlEnt) {
-			$trans_tbl = array_flip(get_html_translation_table(HTML_ENTITIES, ENT_COMPAT, 'UTF-8'));
+			if ($applyPhpCompatibilityFix === TRUE) {
+				$trans_tbl = array_flip(get_html_translation_table(HTML_ENTITIES, ENT_COMPAT));
+			} else {
+				$trans_tbl = array_flip(get_html_translation_table(HTML_ENTITIES, ENT_COMPAT, 'UTF-8'));
+			}
 		}
 		$token = md5(microtime());
 		$parts = explode($token, preg_replace('/(&([#[:alnum:]]*);)/', $token . '${2}' . $token, $str));
@@ -959,7 +967,11 @@ class CharsetConverter {
 				$parts[$k] = $this->UnumberToChar($v);
 			} elseif ($alsoStdHtmlEnt && isset($trans_tbl['&' . $v . ';'])) {
 				// Other entities:
-				$parts[$k] = $trans_tbl['&' . $v . ';'];
+				$v = $trans_tbl['&' . $v . ';'];
+				if ($applyPhpCompatibilityFix === TRUE) {
+					$v = $this->utf8_encode($v, 'iso-8859-1');
+				}
+				$parts[$k] = $v;
 			} else {
 				// No conversion:
 				$parts[$k] = '&' . $v . ';';
@@ -1774,7 +1786,7 @@ class CharsetConverter {
 	 * @param string $string
 	 * @param string $case
 	 * @return string
-	 * @see t3lib_cs::conv_case()
+	 * @see \TYPO3\CMS\Core\Charset\CharsetConverter::conv_case()
 	 */
 	public function convCaseFirst($charset, $string, $case) {
 		$firstChar = $this->substr($charset, $string, 0, 1);

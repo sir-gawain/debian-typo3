@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\ContentObject;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Oliver Hader <oliver@typo3.org>
+ *  (c) 2009-2013 Oliver Hader <oliver@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -34,26 +34,24 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface|\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
-	private $cObj;
+	protected $cObj = NULL;
 
 	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController
+	 * @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface
 	 */
-	private $tsfe;
+	protected $tsfe = NULL;
 
 	/**
 	 * @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\TypoScript\TemplateService
 	 */
-	private $template;
+	protected $template = NULL;
 
 	/**
-	 * @var array
+	 * Set up
 	 */
-	private $typoScriptImage = array('file' => 'typo3/clear.gif');
-
 	public function setUp() {
 		$this->template = $this->getMock('TYPO3\\CMS\\Core\\TypoScript\\TemplateService', array('getFileName', 'linkData'));
-		$this->tsfe = $this->getMock('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', array(), array(), '', FALSE);
+		$this->tsfe = $this->getAccessibleMock('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', array('dummy'), array(), '', FALSE);
 		$this->tsfe->tmpl = $this->template;
 		$this->tsfe->config = array();
 		$this->tsfe->page = array();
@@ -96,7 +94,7 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$getImgResourceHookMock->expects($this->once())->method('getImgResourcePostProcess')->will($this->returnCallback(array($this, 'isGetImgResourceHookCalledCallback')));
 		$getImgResourceHookObjects = array($getImgResourceHookMock);
 		$this->cObj->_setRef('getImgResourceHookObjects', $getImgResourceHookObjects);
-		$this->cObj->IMAGE($this->typoScriptImage);
+		$this->cObj->IMAGE(array('file' => 'typo3/clear.gif'));
 	}
 
 	/**
@@ -112,6 +110,75 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->assertTrue(is_array($fileArray));
 		$this->assertTrue($parent instanceof \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer);
 		return $imageResource;
+	}
+
+
+	/*************************
+	 * Tests concerning getContentObject
+	 ************************/
+	public function getContentObjectValidContentObjectsDataProvider() {
+		return array(
+			array('TEXT', 'Text'),
+			array('CASE', 'Case'),
+			array('CLEARGIF', 'ClearGif'),
+			array('COBJ_ARRAY', 'ContentObjectArray'),
+			array('COA', 'ContentObjectArray'),
+			array('COA_INT', 'ContentObjectArrayInternal'),
+			array('USER', 'User'),
+			array('USER_INT', 'UserInternal'),
+			array('FILE', 'File'),
+			array('FILES', 'Files'),
+			array('IMAGE', 'Image'),
+			array('IMG_RESOURCE', 'ImageResource'),
+			array('IMGTEXT', 'ImageText'),
+			array('CONTENT', 'Content'),
+			array('RECORDS', 'Records'),
+			array('HMENU', 'HierarchicalMenu'),
+			array('CTABLE', 'ContentTable'),
+			array('OTABLE', 'OffsetTable'),
+			array('COLUMNS', 'Columns'),
+			array('HRULER', 'HorizontalRuler'),
+			array('CASEFUNC', 'Case'),
+			array('LOAD_REGISTER', 'LoadRegister'),
+			array('RESTORE_REGISTER', 'RestoreRegister'),
+			array('FORM', 'Form'),
+			array('SEARCHRESULT', 'SearchResult'),
+			array('TEMPLATE', 'Template'),
+			array('FLUIDTEMPLATE', 'FluidTemplate'),
+			array('MULTIMEDIA', 'Multimedia'),
+			array('MEDIA', 'Media'),
+			array('SWFOBJECT', 'ShockwaveFlashObject'),
+			array('FLOWPLAYER', 'FlowPlayer'),
+			array('QTOBJECT', 'QuicktimeObject'),
+			array('SVG', 'ScalableVectorGraphics'),
+			array('EDITPANEL', 'EditPanel'),
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider getContentObjectValidContentObjectsDataProvider
+	 * @param string $name TypoScript name of content object
+	 * @param string $className Expected class name
+	 */
+	public function getContentObjectUsesExistingInstanceOfRequestedObjectType($name, $className) {
+		$fullClassName = 'TYPO3\\CMS\\Frontend\\ContentObject\\' . $className . 'ContentObject';
+		$contentObjectInstance = $this->getMock($fullClassName, array(), array(), '', FALSE);
+		$this->cObj->_set('contentObjects', array($className => $contentObjectInstance));
+		$this->assertSame($contentObjectInstance, $this->cObj->getContentObject($name));
+	}
+
+	/**
+	 * @test
+	 * @dataProvider getContentObjectValidContentObjectsDataProvider
+	 * @param string $name TypoScript name of content object
+	 * @param string $className Expected class name
+	 */
+	public function getContentObjectCallsMakeInstanceForNewContentObjectInstance($name, $className) {
+		$fullClassName = 'TYPO3\\CMS\\Frontend\\ContentObject\\' . $className . 'ContentObject';
+		$contentObjectInstance = $this->getMock($fullClassName, array(), array(), '', FALSE);
+		\TYPO3\CMS\Core\Utility\GeneralUtility::addInstance($fullClassName, $contentObjectInstance);
+		$this->assertSame($contentObjectInstance, $this->cObj->getContentObject($name));
 	}
 
 	//////////////////////////
@@ -717,6 +784,18 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	/**
+	 * Checks if stdWrap.cropHTML handles linebreaks correctly (by ignoring them)
+	 *
+	 * @test
+	 */
+	public function cropHtmlWorksWithLinebreaks() {
+		$subject = "Lorem ipsum dolor sit amet,\nconsetetur sadipscing elitr,\nsed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam";
+		$expected = "Lorem ipsum dolor sit amet,\nconsetetur sadipscing elitr,\nsed diam nonumy eirmod tempor invidunt ut labore et dolore magna";
+		$result = $this->cObj->cropHTML($subject, '121');
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
 	 * Test for the stdWrap function "round"
 	 *
 	 * @param float $float
@@ -731,6 +810,66 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 			'round.' => $conf
 		);
 		$result = $this->cObj->stdWrap_round($float, $conf);
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function stdWrap_strPadDataProvider() {
+		return array(
+			'pad string with default settings and length 10' => array(
+				'Alien',
+				array(
+					'length' => '10',
+				),
+				'Alien     ',
+			),
+			'pad string with padWith -= and type left and length 10' => array(
+				'Alien',
+				array(
+					'length' => '10',
+					'padWith' => '-=',
+					'type' => 'left',
+				),
+				'-=-=-Alien',
+			),
+			'pad string with padWith _ and type both and length 10' => array(
+				'Alien',
+				array(
+					'length' => '10',
+					'padWith' => '_',
+					'type' => 'both',
+				),
+				'__Alien___',
+			),
+			'pad string with padWith _ and type both and length 6' => array(
+				'Alien',
+				array(
+					'length' => '6',
+					'padWith' => '___',
+					'type' => 'both',
+				),
+				'Alien_',
+			),
+		);
+	}
+
+	/**
+	 * Test for the stdWrap function "strPad"
+	 *
+	 * @param string $content
+	 * @param array $conf
+	 * @param string $expected
+	 *
+	 * @dataProvider stdWrap_strPadDataProvider
+	 * @test
+	 */
+	public function stdWrap_strPad($content, $conf, $expected) {
+		$conf = array(
+			'strPad.' => $conf
+		);
+		$result = $this->cObj->stdWrap_strPad($content, $conf);
 		$this->assertEquals($expected, $result);
 	}
 
@@ -1048,9 +1187,9 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @dataProvider stdWrap_strftimeReturnsFormattedStringDataProvider
 	 */
 	public function stdWrap_strftimeReturnsFormattedString($content, $conf) {
-			// Set exec_time to a hard timestamp (backed up by $this->backupGlobals = TRUE)
+			// Set exec_time to a hard timestamp
 		$GLOBALS['EXEC_TIME'] = 1346500800;
-			// Save current timezone and set to UTC to make the system unter test behave
+			// Save current timezone and set to UTC to make the system under test behave
 			// the same in all server timezone settings
 		$timezoneBackup = date_default_timezone_get();
 		date_default_timezone_set('UTC');
@@ -1076,6 +1215,8 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	}
 
 	/**
+	 * Data provider for stdWrap_ifNullDeterminesNullValues test
+	 *
 	 * @return array
 	 */
 	public function stdWrap_ifNullDeterminesNullValuesDataProvider() {
@@ -1093,6 +1234,113 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 					'ifNull' => '1',
 				),
 				'0',
+			),
+		);
+	}
+
+	/**
+	 * @param $content
+	 * @param array $configuration
+	 * @param $expected
+	 * @dataProvider stdWrap_noTrimWrapAcceptsSplitCharDataProvider
+	 * @test
+	 */
+	public function stdWrap_noTrimWrapAcceptsSplitChar($content, array $configuration, $expected) {
+		$result = $this->cObj->stdWrap_noTrimWrap($content, $configuration);
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Data provider for stdWrap_noTrimWrapAcceptsSplitChar test
+	 *
+	 * @return array
+	 */
+	public function stdWrap_noTrimWrapAcceptsSplitCharDataProvider() {
+		return array(
+			'No char given' => array(
+				'middle',
+				array(
+					'noTrimWrap' => '| left | right |',
+				),
+				' left middle right '
+			),
+			'Zero char given' => array(
+				'middle',
+				array(
+					'noTrimWrap' => '0 left 0 right 0',
+					'noTrimWrap.' => array('splitChar' => '0'),
+
+				),
+				' left middle right '
+			),
+			'Default char given' => array(
+				'middle',
+				array(
+					'noTrimWrap' => '| left | right |',
+					'noTrimWrap.' => array('splitChar' => '|'),
+				),
+				' left middle right '
+			),
+			'Split char is a' => array(
+				'middle',
+				array(
+					'noTrimWrap' => 'a left a right a',
+					'noTrimWrap.' => array('splitChar' => 'a'),
+				),
+				' left middle right '
+			),
+			'Split char is multi-char (ab)' => array(
+				'middle',
+				array(
+					'noTrimWrap' => 'ab left ab right ab',
+					'noTrimWrap.' => array('splitChar' => 'ab'),
+				),
+				' left middle right '
+			),
+			'Split char accepts stdWrap' => array(
+				'middle',
+				array(
+					'noTrimWrap' => 'abc left abc right abc',
+					'noTrimWrap.' => array(
+						'splitChar' => 'b',
+						'splitChar.' => array('wrap' => 'a|c'),
+					),
+				),
+				' left middle right '
+			),
+		);
+	}
+
+	/**
+	 * @param array $expectedTags
+	 * @param array $configuration
+	 * @test
+	 * @dataProvider stdWrap_addPageCacheTagsAddsPageTagsDataProvider
+	 */
+	public function stdWrap_addPageCacheTagsAddsPageTags(array $expectedTags, array $configuration) {
+		$this->cObj->stdWrap_addPageCacheTags('', $configuration);
+		$this->assertEquals($expectedTags, $this->tsfe->_get('pageCacheTags'));
+	}
+
+	/**
+	 * @return array
+	 */
+	public function stdWrap_addPageCacheTagsAddsPageTagsDataProvider() {
+		return array(
+			'No Tag' => array(
+				array(),
+				array('addPageCacheTags' => ''),
+			),
+			'Two expectedTags' => array(
+				array('tag1', 'tag2'),
+				array('addPageCacheTags' => 'tag1,tag2'),
+			),
+			'Two expectedTags plus one with stdWrap' => array(
+				array('tag1', 'tag2', 'tag3'),
+				array(
+					'addPageCacheTags' => 'tag1,tag2',
+					'addPageCacheTags.' => array('wrap' => '|,tag3')
+				),
 			),
 		);
 	}

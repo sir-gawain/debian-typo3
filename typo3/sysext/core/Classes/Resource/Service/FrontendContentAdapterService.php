@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Service;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Ingmar Schlecht <ingmar@typo3.org>
+ *  (c) 2011-2013 Ingmar Schlecht <ingmar@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -44,10 +44,18 @@ class FrontendContentAdapterService {
 				'captions' => 'imagecaption',
 				'links' => 'image_link',
 				'alternativeTexts' => 'altText',
+				'__typeMatch' => array(
+					'typeField' => 'CType',
+					'types' => array('image', 'textpic'),
+				)
 			),
 			'media' => array(
 				'paths' => 'media',
-				'captions' => 'imagecaption'
+				'captions' => 'imagecaption',
+				'__typeMatch' => array(
+					'typeField' => 'CType',
+					'types' => array('uploads'),
+				)
 			)
 		),
 		'pages' => array(
@@ -75,7 +83,7 @@ class FrontendContentAdapterService {
 		}
 		if (array_key_exists($table, static::$migrateFields)) {
 			foreach (static::$migrateFields[$table] as $migrateFieldName => $oldFieldNames) {
-				if ($row !== NULL && isset($row[$migrateFieldName])) {
+				if ($row !== NULL && isset($row[$migrateFieldName]) && self::fieldIsInType($migrateFieldName, $table, $row)) {
 					/** @var $fileRepository \TYPO3\CMS\Core\Resource\FileRepository */
 					$fileRepository = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\FileRepository');
 					if ($table === 'pages' && isset($row['_LOCALIZED_UID']) && intval($row['sys_language_uid']) > 0) {
@@ -94,14 +102,18 @@ class FrontendContentAdapterService {
 
 					foreach ($files as $file) {
 						/** @var $file \TYPO3\CMS\Core\Resource\FileReference */
+						$fileProperties = $file->getProperties();
 						$fileFieldContents['paths'][] = '../../' . $file->getPublicUrl();
-						$fileFieldContents['titleTexts'][] = $file->getProperty('title');
-						$fileFieldContents['captions'][] = $file->getProperty('description');
-						$fileFieldContents['links'][] = $file->getProperty('link');
-						$fileFieldContents['alternativeTexts'][] = $file->getProperty('alternative');
+						$fileFieldContents['titleTexts'][] = $fileProperties['title'];
+						$fileFieldContents['captions'][] = $fileProperties['description'];
+						$fileFieldContents['links'][] = $fileProperties['link'];
+						$fileFieldContents['alternativeTexts'][] = $fileProperties['alternative'];
 						$fileFieldContents[$migrateFieldName .  '_fileUids'][] = $file->getOriginalFile()->getUid();
 					}
 					foreach ($oldFieldNames as $oldFieldType => $oldFieldName) {
+						if ($oldFieldType === '__typeMatch') {
+							continue;
+						}
 						// For paths, make comma separated list
 						if ($oldFieldType === 'paths' || substr($oldFieldType, -9) == '_fileUids') {
 							$fieldContents = implode(',', $fileFieldContents[$oldFieldType]);
@@ -109,9 +121,7 @@ class FrontendContentAdapterService {
 							// For all other fields, separate by newline
 							$fieldContents = implode(chr(10), $fileFieldContents[$oldFieldType]);
 						}
-						if ($fieldContents) {
-							$row[$oldFieldName] = $fieldContents;
-						}
+						$row[$oldFieldName] = $fieldContents;
 					}
 				}
 			}
@@ -119,6 +129,22 @@ class FrontendContentAdapterService {
 		$row['_MIGRATED'] = TRUE;
 	}
 
+	/**
+	 * Check if fieldis in type
+	 *
+	 * @param string $fieldName
+	 * @param string $table
+	 * @param array $row
+	 * @return boolean
+	 */
+	static protected function fieldIsInType($fieldName, $table, array $row) {
+		$fieldConfiguration = static::$migrateFields[$table][$fieldName];
+		if (empty($fieldConfiguration['__typeMatch'])) {
+			return TRUE;
+		} else {
+			return in_array($row[$fieldConfiguration['__typeMatch']['typeField']], $fieldConfiguration['__typeMatch']['types']);
+		}
+	}
 }
 
 

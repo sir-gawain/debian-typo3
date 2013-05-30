@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Ingo Renner <ingo@typo3.org>
+ *  (c) 2011-2013 Ingo Renner <ingo@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,15 +31,23 @@ namespace TYPO3\CMS\Core\Resource;
  *
  * @author Andreas Wolf <andreas.wolf@ikt-werk.de>
  */
-class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
+class File extends AbstractFile {
 
 	/**
 	 * File indexing status. True, if the file is indexed in the database;
 	 * NULL is the default value, this means that the index status is unknown
 	 *
-	 * @var boolean
+	 * @var boolean|NULL
 	 */
 	protected $indexed = NULL;
+
+	/**
+	 * Tells whether to index a file or not.
+	 * If yes, the file will be persisted into sys_file.
+	 *
+	 * @var boolean
+	 */
+	protected $indexable = TRUE;
 
 	/**
 	 * Set to TRUE while this file is being indexed - used to prevent some endless loops
@@ -66,7 +74,7 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 	 * the corresponding factory methods instead.
 	 *
 	 * @param array $fileData
-	 * @param \TYPO3\CMS\Core\Resource\ResourceStorage $storage
+	 * @param ResourceStorage $storage
 	 */
 	public function __construct(array $fileData, $storage = NULL) {
 		if (isset($fileData['uid']) && intval($fileData['uid']) > 0) {
@@ -126,7 +134,7 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 	 * Replace the current file contents with the given string
 	 *
 	 * @param string $contents The contents to write to the file.
-	 * @return \TYPO3\CMS\Core\Resource\File The file object (allows chaining).
+	 * @return File The file object (allows chaining).
 	 */
 	public function setContents($contents) {
 		$this->getStorage()->setFileContents($this, $contents);
@@ -139,7 +147,7 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 	/**
 	 * Returns TRUE if this file is indexed
 	 *
-	 * @return boolean
+	 * @return boolean|NULL
 	 */
 	public function isIndexed() {
 		if ($this->indexed === NULL && !$this->indexingInProgress) {
@@ -150,13 +158,15 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 
 	/**
 	 * @param bool $indexIfNotIndexed
+	 *
+	 * @throws \RuntimeException
 	 * @return void
 	 */
 	protected function loadIndexRecord($indexIfNotIndexed = TRUE) {
-		if ($this->indexed !== NULL) {
+		if ($this->indexed !== NULL || !$this->indexable) {
 			return;
 		}
-		/** @var $repo \TYPO3\CMS\Core\Resource\FileRepository */
+		/** @var $repo FileRepository */
 		$repo = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\FileRepository');
 		$indexRecord = $repo->getFileIndexRecord($this);
 		if ($indexRecord === FALSE && $indexIfNotIndexed) {
@@ -177,13 +187,15 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 	 * Merges the contents of this file's index record into the file properties.
 	 *
 	 * @param array $recordData The index record as fetched from the database
+	 *
+	 * @throws \InvalidArgumentException
 	 * @return void
 	 */
 	protected function mergeIndexRecord(array $recordData) {
 		if ($this->properties['uid'] != 0) {
 			throw new \InvalidArgumentException('uid property is already set. Cannot merge index record.', 1321023156);
 		}
-		$this->properties = array_merge($this->properties, $recordData);
+		$this->properties = array_merge($recordData, $this->properties);
 	}
 
 	/**
@@ -263,8 +275,7 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 	 * the files' mimetype and the systems' encryption key.
 	 * used to generate a thumbnail, and this hash is checked if valid
 	 *
-	 * @todo maybe t3lib_div::hmac() could be used?
-	 * @param \TYPO3\CMS\Core\Resource\File $file the file to create the checksum from
+	 * @todo maybe \TYPO3\CMS\Core\Utility\GeneralUtility::hmac() could be used?
 	 * @return string the MD5 hash
 	 */
 	public function calculateChecksum() {
@@ -276,7 +287,7 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 	 *
 	 * @param string $taskType The task type of this processing
 	 * @param array $configuration the processing configuration, see manual for that
-	 * @return \TYPO3\CMS\Core\Resource\ProcessedFile The processed file
+	 * @return ProcessedFile The processed file
 	 */
 	public function process($taskType, array $configuration) {
 		return $this->getStorage()->processFile($this, $taskType, $configuration);
@@ -314,6 +325,20 @@ class File extends \TYPO3\CMS\Core\Resource\AbstractFile {
 			$array[$key] = $value;
 		}
 		return $array;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function isIndexable() {
+		return $this->indexable;
+	}
+
+	/**
+	 * @param boolean $indexable
+	 */
+	public function setIndexable($indexable) {
+		$this->indexable = $indexable;
 	}
 
 }

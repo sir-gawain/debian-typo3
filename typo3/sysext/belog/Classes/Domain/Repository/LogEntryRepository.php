@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Belog\Domain\Repository;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Sys log entry repository
  *
@@ -33,7 +34,7 @@ namespace TYPO3\CMS\Belog\Domain\Repository;
 class LogEntryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 
 	/**
-	 * backend users, with UID as key
+	 * Backend users, with UID as key
 	 *
 	 * @var array
 	 */
@@ -47,7 +48,7 @@ class LogEntryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	public function initializeObject() {
 		$this->beUserList = \TYPO3\CMS\Backend\Utility\BackendUtility::getUserNames();
 		/** @var $defaultQuerySettings \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface */
-		$defaultQuerySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+		$defaultQuerySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
 		$defaultQuerySettings->setRespectStoragePage(FALSE);
 		$this->setDefaultQuerySettings($defaultQuerySettings);
 	}
@@ -88,7 +89,7 @@ class LogEntryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 		if ($constraint->getAction() > 0) {
 			$queryConstraints[] = $query->equals('type', $constraint->getAction());
 		} elseif ($constraint->getAction() == -1) {
-			$queryConstraints[] = $query->equals('error', 0);
+			$queryConstraints[] = $query->in('error', array(-1,1,2,3));
 		}
 		// Start / endtime handling: The timestamp calculation was already done
 		// in the controller, since we need those calculated values in the view as well.
@@ -113,7 +114,7 @@ class LogEntryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 			return;
 		}
 		$pageIds = array();
-		// check if we should get a whole tree of pages and not only a single page
+		// Check if we should get a whole tree of pages and not only a single page
 		if ($constraint->getDepth() > 0) {
 			/** @var $pageTree \TYPO3\CMS\Backend\Tree\View\PageTreeView */
 			$pageTree = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Tree\\View\\PageTreeView');
@@ -163,6 +164,5 @@ class LogEntryRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	}
 
 }
-
 
 ?>

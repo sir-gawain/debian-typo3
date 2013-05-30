@@ -1,6 +1,29 @@
 <?php
 namespace TYPO3\CMS\Install\Report;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Provides an installation status report
  *
@@ -13,8 +36,7 @@ class InstallStatusReport implements \TYPO3\CMS\Reports\StatusProviderInterface 
 	/**
 	 * Compiles a collection of system status checks as a status report.
 	 *
-	 * @return 	array	List of statuses
-	 * @see typo3/sysext/reports/interfaces/tx_reports_StatusProvider::getStatus()
+	 * @return array<\TYPO3\CMS\Reports\Status>
 	 */
 	public function getStatus() {
 		$reports = array();
@@ -28,7 +50,7 @@ class InstallStatusReport implements \TYPO3\CMS\Reports\StatusProviderInterface 
 	/**
 	 * Checks for several directories being writable.
 	 *
-	 * @return tx_reports_reports_status_Status	An tx_reports_reports_status_Status object indicating the status of the file system
+	 * @return \TYPO3\CMS\Reports\Status Indicates status of the file system
 	 */
 	protected function getFileSystemStatus() {
 		$value = $GLOBALS['LANG']->sL('LLL:EXT:install/report/locallang.xml:status_writable');
@@ -104,7 +126,7 @@ class InstallStatusReport implements \TYPO3\CMS\Reports\StatusProviderInterface 
 	/**
 	 * Checks if there are still updates to perform
 	 *
-	 * @return 	tx_reports_reports_status_Status	An tx_reports_reports_status_Status object representing whether the installation is not completely updated yet
+	 * @return \TYPO3\CMS\Reports\Status Represents whether the installation is completely updated yet
 	 */
 	protected function getRemainingUpdatesStatus() {
 		$value = $GLOBALS['LANG']->getLL('status_updateComplete');
@@ -114,7 +136,7 @@ class InstallStatusReport implements \TYPO3\CMS\Reports\StatusProviderInterface 
 			$value = $GLOBALS['LANG']->getLL('status_updateIncomplete');
 			$severity = \TYPO3\CMS\Reports\Status::WARNING;
 			$url = 'install/index.php?redirect_url=index.php' . urlencode('?TYPO3_INSTALL[type]=update');
-			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:warning.install_update'), '<a href="' . $url . '">', '</a>');
+			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:warning.install_update'), '<a href="' . $url . '">', '</a>');
 		}
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Reports\\Status', $GLOBALS['LANG']->sL('LLL:EXT:install/report/locallang.xml:status_remainingUpdates'), $value, $message, $severity);
 	}

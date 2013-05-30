@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Confirmation;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2011-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\View\Confirmation;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Main view layer for Forms.
  *
@@ -62,7 +63,8 @@ class ConfirmationView extends \TYPO3\CMS\Form\View\Confirmation\Element\Contain
 	/**
 	 * Constructor
 	 *
-	 * @return void
+	 * @param \TYPO3\CMS\Form\Domain\Model\Form $model
+	 * @param array $typoscript
 	 */
 	public function __construct(\TYPO3\CMS\Form\Domain\Model\Form $model, array $typoscript) {
 		$this->localCobj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
@@ -91,9 +93,13 @@ class ConfirmationView extends \TYPO3\CMS\Form\View\Confirmation\Element\Contain
 	public function get() {
 		$message = $this->getMessage();
 		$node = $this->render('element', FALSE);
-		$formInput = chr(10) . html_entity_decode($node->saveXML($node->firstChild), ENT_QUOTES, 'UTF-8') . chr(10);
+		if ($node !== NULL) {
+			$formInput = LF . html_entity_decode($node->saveXML($node->firstChild), ENT_QUOTES, 'UTF-8') . LF;
+		} else {
+			$formInput = '';
+		}
 		$confirmationButtons = $this->getConfirmationButtons();
-		$content = $message . chr(10) . $formInput . chr(10) . $confirmationButtons;
+		$content = $message . LF . $formInput . LF . $confirmationButtons;
 		return $content;
 	}
 
@@ -124,6 +130,11 @@ class ConfirmationView extends \TYPO3\CMS\Form\View\Confirmation\Element\Contain
 		return $this->localCobj->cObjGetSingle($type, $value);
 	}
 
+	/**
+	 * Get confirmation buttons
+	 *
+	 * @return string
+	 */
 	protected function getConfirmationButtons() {
 		$requestHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Form\\Request');
 		$prefix = $requestHandler->getPrefix();
@@ -146,6 +157,5 @@ class ConfirmationView extends \TYPO3\CMS\Form\View\Confirmation\Element\Contain
 	}
 
 }
-
 
 ?>

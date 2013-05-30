@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Locking;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008-2011 Michael Stucki (michael@typo3.org)
+ *  (c) 2008-2013 Michael Stucki (michael@typo3.org)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,11 +26,7 @@ namespace TYPO3\CMS\Core\Locking;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Class for providing locking features in TYPO3
- *
- * @author Michael Stucki <michael@typo3.org>
- */
+
 /**
  * TYPO3 locking class
  * This class provides an abstract layer to various locking features for TYPO3
@@ -39,7 +35,6 @@ namespace TYPO3\CMS\Core\Locking;
  * This is especially useful if two clients are requesting the same website short after each other. While the request of client 1 triggers building and caching of the website, client 2 will be waiting at this lock.
  *
  * @author Michael Stucki <michael@typo3.org>
- * @see 	class.t3lib_tstemplate.php, class.tslib_fe.php
  */
 class Locker {
 
@@ -310,7 +305,7 @@ class Locker {
 	}
 
 	/**
-	 * Adds a common log entry for this locking API using t3lib_div::sysLog().
+	 * Adds a common log entry for this locking API using \TYPO3\CMS\Core\Utility\GeneralUtility::sysLog().
 	 * Example: 25-02-08 17:58 - cms: Locking [simple::0aeafd2a67a6bb8b9543fb9ea25ecbe2]: Acquired
 	 *
 	 * @param string $message The message to be logged

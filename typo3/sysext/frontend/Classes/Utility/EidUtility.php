@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2006-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2006-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,7 @@ namespace TYPO3\CMS\Frontend\Utility;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Tools for scripts using the eID feature of index.php
  * Included from index_ts.php
@@ -34,11 +35,6 @@ namespace TYPO3\CMS\Frontend\Utility;
  * this class seeks to provide functions that can
  * initialize parts of the FE environment as needed,
  * eg. Frontend User session, Database connection etc.
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
- * Tools for scripts using the eID feature of index.php
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author Dmitry Dulepov <dmitry@typo3.org>
@@ -52,9 +48,6 @@ class EidUtility {
 	 * @return object Frontend User object (usually known as TSFE->fe_user)
 	 */
 	static public function initFeUser() {
-		// Initialize the database. Do not use TSFE method as it may redirect to
-		// Install tool and call hooks, which do not expect to be called from eID
-		self::connectDB();
 		// Get TSFE instance. It knows how to initialize the user. We also
 		// need TCA because services may need extra tables!
 		self::initTCA();
@@ -70,14 +63,10 @@ class EidUtility {
 	 * can be retrieved using $GLOBALS['TYPO3_DB']->sql_error().
 	 *
 	 * @return boolean TRUE if connection was successful
+	 * @deprecated since 6.1, database will connect itself if needed. Will be removed two versions later
 	 */
 	static public function connectDB() {
-		if (!$GLOBALS['TYPO3_DB']->isConnected()) {
-			// Attempt to connect to the database
-			$GLOBALS['TYPO3_DB']->connectDB();
-		}
-		// connectDB() throws exceptions if something went wrong,
-		// so we are sure that connect was successful here.
+		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
 		return TRUE;
 	}
 
@@ -105,15 +94,13 @@ class EidUtility {
 		// but in fact it is not loaded. The check below ensure that
 		// TCA is still loaded if such bad extensions are installed
 		if (!is_array($GLOBALS['TCA']) || !isset($GLOBALS['TCA']['pages'])) {
-			// Load TCA using TSFE
-			self::getTSFE()->includeTCA(FALSE);
+			\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadCachedTca();
 		}
 	}
 
 	/**
 	 * Makes TCA for the extension available inside eID. Use this function if
-	 * you need not to include the whole $GLOBALS['TCA']. However, you still need to call
-	 * t3lib_div::loadTCA() if you want to access column array!
+	 * you need not to include the whole $GLOBALS['TCA'].
 	 *
 	 * @param string $extensionKey Extension key
 	 * @return void

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Controller;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Stefan Galinski <stefan.galinski@gmail.com>
+ * (c) 2010-2013 Stefan Galinski <stefan.galinski@gmail.com>
  *
  * All rights reserved
  *
@@ -46,7 +46,6 @@ class ExtDirectEidController {
 	 */
 	public function routeAction() {
 		\TYPO3\CMS\Frontend\Utility\EidUtility::initLanguage();
-		\TYPO3\CMS\Frontend\Utility\EidUtility::connectDB();
 		$ajaxID = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('action');
 		$ajaxScript = $GLOBALS['TYPO3_CONF_VARS']['BE']['AJAX']['ExtDirect::' . $ajaxID];
 		$this->ajaxObject = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Http\\AjaxRequestHandler', 'ExtDirect::' . $ajaxID);

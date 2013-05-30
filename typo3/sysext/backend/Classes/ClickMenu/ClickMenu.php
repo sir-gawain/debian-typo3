@@ -1,6 +1,33 @@
 <?php
 namespace TYPO3\CMS\Backend\ClickMenu;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -400,7 +427,7 @@ class ClickMenu {
 	 * @param string $type Type: "into" or "after
 	 * @param array $elInfo Contains instructions about whether to copy or cut an element.
 	 * @return array Item array, element in $menuItems
-	 * @see t3lib_clipboard::pasteUrl()
+	 * @see \TYPO3\CMS\Backend\Clipboard\Clipboard::pasteUrl()
 	 * @internal
 	 * @todo Define visibility
 	 */
@@ -408,7 +435,7 @@ class ClickMenu {
 		$editOnClick = '';
 		$loc = 'top.content.list_frame';
 		if ($GLOBALS['BE_USER']->jsConfirmation(2)) {
-			$conf = $loc . ' && confirm(' . $GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_core.php:mess.' . ($elInfo[2] == 'copy' ? 'copy' : 'move') . '_' . $type)), $elInfo[0], $elInfo[1])) . ')';
+			$conf = $loc . ' && confirm(' . $GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_core.xlf:mess.' . ($elInfo[2] == 'copy' ? 'copy' : 'move') . '_' . $type)), $elInfo[0], $elInfo[1])) . ')';
 		} else {
 			$conf = $loc;
 		}
@@ -595,7 +622,7 @@ class ClickMenu {
 	 *
 	 * @param string $table Table name
 	 * @param integer $uid UID for the current record.
-	 * @param array $elInfo Label for including in the confirmation message, EXT:lang/locallang_core.php:mess.delete
+	 * @param array $elInfo Label for including in the confirmation message, EXT:lang/locallang_core.xlf:mess.delete
 	 * @return array Item array, element in $menuItems
 	 * @internal
 	 * @todo Define visibility
@@ -604,7 +631,7 @@ class ClickMenu {
 		$editOnClick = '';
 		$loc = 'top.content.list_frame';
 		if ($GLOBALS['BE_USER']->jsConfirmation(4)) {
-			$conf = 'confirm(' . $GLOBALS['LANG']->JScharCode((sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.delete'), $elInfo[0]) . \TYPO3\CMS\Backend\Utility\BackendUtility::referenceCount($table, $uid, ' (There are %s reference(s) to this record!)') . \TYPO3\CMS\Backend\Utility\BackendUtility::translationCount($table, $uid, (' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.translationsOfRecord'))))) . ')';
+			$conf = 'confirm(' . $GLOBALS['LANG']->JScharCode((sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:mess.delete'), $elInfo[0]) . \TYPO3\CMS\Backend\Utility\BackendUtility::referenceCount($table, $uid, ' (There are %s reference(s) to this record!)') . \TYPO3\CMS\Backend\Utility\BackendUtility::translationCount($table, $uid, (' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.translationsOfRecord'))))) . ')';
 		} else {
 			$conf = '1==1';
 		}
@@ -708,6 +735,10 @@ class ClickMenu {
 				->retrieveFileOrFolderObject($combinedIdentifier);
 		if ($fileObject) {
 			$folder = FALSE;
+			$isStorageRoot = FALSE;
+			$isOnline = TRUE;
+			$userMayViewStorage = FALSE;
+			$userMayEditStorage = FALSE;
 			$identifier = $fileObject->getCombinedIdentifier();
 			if ($fileObject instanceof \TYPO3\CMS\Core\Resource\Folder) {
 				$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForFile('folder', array(
@@ -715,39 +746,70 @@ class ClickMenu {
 					'title' => htmlspecialchars($fileObject->getName())
 				));
 				$folder = TRUE;
+				if ($fileObject->getIdentifier() === $fileObject->getStorage()->getRootLevelFolder()->getIdentifier()) {
+					$isStorageRoot = TRUE;
+					if ($GLOBALS['BE_USER']->check('tables_select', 'sys_file_storage')) {
+						$userMayViewStorage = TRUE;
+					}
+					if ($GLOBALS['BE_USER']->check('tables_modify', 'sys_file_storage')) {
+						$userMayEditStorage = TRUE;
+					}
+				}
+				if (!$fileObject->getStorage()->isOnline()) {
+					$isOnline = FALSE;
+				}
 			} else {
 				$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForFile($fileObject->getExtension(), array(
 					'class' => 'absmiddle',
 					'title' => htmlspecialchars($fileObject->getName() . ' (' . GeneralUtility::formatSize($fileObject->getSize()) . ')')
 				));
 			}
+			// Hide
+			if (!in_array('hide', $this->disabledItems) && $isStorageRoot && $userMayEditStorage) {
+				$record = BackendUtility::getRecord('sys_file_storage', $fileObject->getStorage()->getUid());
+				$menuItems['hide'] = $this->DB_changeFlag(
+					'sys_file_storage',
+					$record,
+					'is_online',
+					$this->label($record['is_online'] ? 'offline' : 'online'),
+					'hide'
+				);
+			}
 			// Edit
-			if (!in_array('edit', $this->disabledItems) && !$folder && GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], $fileObject->getExtension())) {
-				$menuItems['edit'] = $this->FILE_launch($identifier, 'file_edit.php', 'edit', 'edit_file.gif');
+			if (!in_array('edit', $this->disabledItems)) {
+				if (!$folder && GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], $fileObject->getExtension())) {
+					$menuItems['edit'] = $this->FILE_launch($identifier, 'file_edit.php', 'edit', 'edit_file.gif');
+				} elseif ($isStorageRoot && $userMayEditStorage) {
+					$menuItems['edit'] = $this->DB_edit('sys_file_storage', $fileObject->getStorage()->getUid());
+				}
 			}
 			// Rename
-			if (!in_array('rename', $this->disabledItems)) {
+			if (!in_array('rename', $this->disabledItems) && !$isStorageRoot) {
 				$menuItems['rename'] = $this->FILE_launch($identifier, 'file_rename.php', 'rename', 'rename.gif');
 			}
 			// Upload
-			if (!in_array('upload', $this->disabledItems) && $folder) {
+			if (!in_array('upload', $this->disabledItems) && $folder && $isOnline) {
 				$menuItems['upload'] = $this->FILE_upload($identifier);
 			}
 			// New
-			if (!in_array('new', $this->disabledItems) && $folder) {
+			if (!in_array('new', $this->disabledItems) && $folder && $isOnline) {
 				$menuItems['new'] = $this->FILE_launch($identifier, 'file_newfolder.php', 'new', 'new_file.gif');
 			}
 			// Info
 			if (!in_array('info', $this->disabledItems)) {
-				$menuItems['info'] = $this->fileInfo($identifier);
+				if ($isStorageRoot && $userMayViewStorage) {
+					$menuItems['info'] = $this->DB_info('sys_file_storage', $fileObject->getStorage()->getUid());
+				} elseif (!$folder) {
+					$menuItems['info'] = $this->fileInfo($identifier);
+				}
 			}
 			$menuItems[] = 'spacer';
 			// Copy:
-			if (!in_array('copy', $this->disabledItems)) {
+			if (!in_array('copy', $this->disabledItems) && !$isStorageRoot) {
 				$menuItems['copy'] = $this->FILE_copycut($identifier, 'copy');
 			}
 			// Cut:
-			if (!in_array('cut', $this->disabledItems)) {
+			if (!in_array('cut', $this->disabledItems) && !$isStorageRoot) {
 				$menuItems['cut'] = $this->FILE_copycut($identifier, 'cut');
 			}
 			// Paste:
@@ -765,7 +827,12 @@ class ClickMenu {
 			$menuItems[] = 'spacer';
 			// Delete:
 			if (!in_array('delete', $this->disabledItems)) {
-				$menuItems['delete'] = $this->FILE_delete($identifier);
+				if ($isStorageRoot && $userMayEditStorage) {
+					$elInfo = array(GeneralUtility::fixed_lgd_cs($fileObject->getStorage()->getName(), $GLOBALS['BE_USER']->uc['titleLen']));
+					$menuItems['delete'] = $this->DB_delete('sys_file_storage', $fileObject->getStorage()->getUid(), $elInfo);
+				} elseif (!$isStorageRoot) {
+					$menuItems['delete'] = $this->FILE_delete($identifier);
+				}
 			}
 		}
 		// Adding external elements to the menuItems array
@@ -817,13 +884,7 @@ class ClickMenu {
 		$script = 'file_upload.php';
 		$type = 'upload';
 		$image = 'upload.gif';
-		if ($GLOBALS['BE_USER']->uc['enableFlashUploader']) {
-			$loc = 'top.content.list_frame';
-			$editOnClick = 'if (top.TYPO3.FileUploadWindow.isFlashAvailable()) { initFlashUploader("' . rawurlencode($path) . '"); } else if(' . $loc . '){' . $loc . '.location.href=top.TS.PATH_typo3+\'' . $script . '?target=' . rawurlencode($path) . '\';}';
-			return $this->linkItem($this->label($type), $this->excludeIcon('<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->PH_backPath, ('gfx/' . $image), 'width="12" height="12"') . ' alt="" />'), $editOnClick . 'return hideCM();');
-		} else {
-			return $this->FILE_launch($path, $script, $type, $image, TRUE);
-		}
+		return $this->FILE_launch($path, $script, $type, $image, TRUE);
 	}
 
 	/**
@@ -861,7 +922,7 @@ class ClickMenu {
 		$editOnClick = '';
 		$loc = 'top.content.list_frame';
 		if ($GLOBALS['BE_USER']->jsConfirmation(4)) {
-			$conf = 'confirm(' . $GLOBALS['LANG']->JScharCode((sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:mess.delete'), basename($path)) . \TYPO3\CMS\Backend\Utility\BackendUtility::referenceCount('_FILE', $path, ' (There are %s reference(s) to this file!)'))) . ')';
+			$conf = 'confirm(' . $GLOBALS['LANG']->JScharCode((sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:mess.delete'), basename($path)) . \TYPO3\CMS\Backend\Utility\BackendUtility::referenceCount('_FILE', $path, ' (There are %s reference(s) to this file!)'))) . ')';
 		} else {
 			$conf = '1==1';
 		}
@@ -883,7 +944,7 @@ class ClickMenu {
 		$editOnClick = '';
 		$loc = 'top.content.list_frame';
 		if ($GLOBALS['BE_USER']->jsConfirmation(2)) {
-			$conf = $loc . ' && confirm(' . $GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_core.php:mess.' . ($elInfo[2] == 'copy' ? 'copy' : 'move') . '_into')), $elInfo[0], $elInfo[1])) . ')';
+			$conf = $loc . ' && confirm(' . $GLOBALS['LANG']->JScharCode(sprintf($GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_core.xlf:mess.' . ($elInfo[2] == 'copy' ? 'copy' : 'move') . '_into')), $elInfo[0], $elInfo[1])) . ')';
 		} else {
 			$conf = $loc;
 		}
@@ -1323,14 +1384,14 @@ class ClickMenu {
 	}
 
 	/**
-	 * Get label from locallang_core.php:cm.*
+	 * Get label from locallang_core.xlf:cm.*
 	 *
 	 * @param string $label The "cm."-suffix to get.
 	 * @return string
 	 * @todo Define visibility
 	 */
 	public function label($label) {
-		return $GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.' . $label, 1));
+		return $GLOBALS['LANG']->makeEntities($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.' . $label, 1));
 	}
 
 	/**

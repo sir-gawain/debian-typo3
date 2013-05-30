@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\View\Wizard;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010 Patrick Broens <patrick@patrickbroens.nl>
+ *  (c) 2010-2013 Patrick Broens <patrick@patrickbroens.nl>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,7 +26,6 @@ namespace TYPO3\CMS\Form\View\Wizard;
 /**
  * The form wizard save view
  *
- * @category View
  * @author Patrick Broens <patrick@patrickbroens.nl>
  */
 class SaveWizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
@@ -75,6 +74,5 @@ class SaveWizardView extends \TYPO3\CMS\Form\View\Wizard\AbstractWizardView {
 	}
 
 }
-
 
 ?>

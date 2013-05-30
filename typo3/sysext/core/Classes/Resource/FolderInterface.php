@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Andreas Wolf <andreas.wolf@typo3.org>
+ *  (c) 2012-2013 Andreas Wolf <andreas.wolf@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,12 +31,21 @@ namespace TYPO3\CMS\Core\Resource;
  *
  * @author Andreas Wolf <andreas.wolf@typo3.org>
  */
-interface FolderInterface extends \TYPO3\CMS\Core\Resource\ResourceInterface
+interface FolderInterface extends ResourceInterface
 {
+	/**
+	 * Roles for folders
+	 */
+	const ROLE_DEFAULT = 'default';
+	const ROLE_RECYCLER = 'recycler';
+	const ROLE_PROCESSING = 'processing';
+	const ROLE_TEMPORARY = 'temporary';
+	const ROLE_USERUPLOAD = 'userupload';
+
 	/**
 	 * Returns a list of all subfolders
 	 *
-	 * @return \TYPO3\CMS\Core\Resource\Folder[]
+	 * @return Folder[]
 	 */
 	public function getSubfolders();
 
@@ -44,7 +53,7 @@ interface FolderInterface extends \TYPO3\CMS\Core\Resource\ResourceInterface
 	 * Returns the object for a subfolder of the current folder, if it exists.
 	 *
 	 * @param string $name Name of the subfolder
-	 * @return \TYPO3\CMS\Core\Resource\Folder
+	 * @return Folder
 	 */
 	public function getSubfolder($name);
 
@@ -68,7 +77,7 @@ interface FolderInterface extends \TYPO3\CMS\Core\Resource\ResourceInterface
 	 * Renames this folder.
 	 *
 	 * @param string $newName
-	 * @return \TYPO3\CMS\Core\Resource\Folder
+	 * @return Folder
 	 */
 	public function rename($newName);
 

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install\Updates;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Tolleiv Nietsch <info@tolleiv.de>
+ *  (c) 2012-2013 Tolleiv Nietsch <info@tolleiv.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -83,7 +83,9 @@ class InitUpdateWizard extends \TYPO3\CMS\Install\Updates\AbstractUpdate {
 	 */
 	protected function getRequiredUpdates() {
 		$requiredUpdates = array();
-		$fileContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(PATH_t3lib . 'stddb/tables.sql');
+		$fileContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('core'). 'ext_tables.sql'
+		);
 		$FDfile = $this->installerSql->getFieldDefinitions_fileContent($fileContent);
 		$FDdb = $this->installerSql->getFieldDefinitions_database(TYPO3_db);
 		$diff = $this->installerSql->getDatabaseExtra($FDfile, $FDdb);

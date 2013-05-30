@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2007-2011 Stephane Schitter <stephane.schitter@free.fr>
+ *  (c) 2007-2013 Stephane Schitter <stephane.schitter@free.fr>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -21,7 +21,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-$LANG->includeLLFile('EXT:tsconfig_help/mod1/locallang.xml');
+$LANG->includeLLFile('EXT:tsconfig_help/mod1/locallang.xlf');
 // This checks permissions and exits if the users has no permission for entry.
 $BE_USER->modAccess($MCONF, 1);
 /*

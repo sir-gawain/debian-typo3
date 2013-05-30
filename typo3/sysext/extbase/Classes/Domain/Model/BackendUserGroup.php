@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Markus Günther <mail@markus-guenther.de>
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -18,6 +19,7 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
  *  A copy is found in the textfile GPL.txt and important notices to the license
  *  from the author is found in LICENSE.txt distributed with these scripts.
  *
+ *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,7 +30,6 @@ namespace TYPO3\CMS\Extbase\Domain\Model;
 /**
  * This model represents a backend usergroup.
  *
- * @author Markus Günther <mail@markus-guenther.de>
  * @api
  */
 class BackendUserGroup extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
@@ -417,7 +418,7 @@ class BackendUserGroup extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	/**
 	 * Set the the bit for file operations are allowed.
 	 *
-	 * @param boolean
+	 * @param boolean $value
 	 * @return void
 	 */
 	public function setFileOperationAllowed($value) {
@@ -436,7 +437,7 @@ class BackendUserGroup extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	/**
 	 * Set the the bit for unzip files are allowed.
 	 *
-	 * @param boolean
+	 * @param boolean $value
 	 * @return void
 	 */
 	public function setFileUnzipAllowed($value) {
@@ -455,7 +456,7 @@ class BackendUserGroup extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	/**
 	 * Set the the bit for directory operations are allowed.
 	 *
-	 * @param boolean
+	 * @param boolean $value
 	 * @return void
 	 */
 	public function setDirectoryOperationAllowed($value) {
@@ -474,7 +475,7 @@ class BackendUserGroup extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	/**
 	 * Set the the bit for copy directories.
 	 *
-	 * @param boolean
+	 * @param boolean $value
 	 * @return void
 	 */
 	public function setDirectoryCopyAllowed($value) {
@@ -493,7 +494,7 @@ class BackendUserGroup extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	/**
 	 * Set the the bit for remove directories recursively.
 	 *
-	 * @param boolean
+	 * @param boolean $value
 	 * @return void
 	 */
 	public function setDirectoryRemoveRecursivelyAllowed($value) {

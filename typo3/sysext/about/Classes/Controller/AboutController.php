@@ -4,7 +4,7 @@ namespace TYPO3\CMS\About\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -55,32 +55,13 @@ class AboutController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController
 	 */
 	public function indexAction() {
 		$extensions = $this->extensionRepository->findAllLoaded();
-		$this->view->assign('TYPO3Version', TYPO3_version)->assign('TYPO3CopyrightYear', TYPO3_copyright_year)->assign('TYPO3UrlDonate', TYPO3_URL_DONATE)->assign('loadedExtensions', $extensions)->assign('customContents', $this->getCustomContent());
-	}
-
-	/**
-	 * Hook to add custom content
-	 *
-	 * @return array with additional content sections
-	 * @deprecated Since 4.7; will be removed together with the call in indexAction and the fluid partial in 6.1
-	 */
-	protected function getCustomContent() {
-		$sections = array();
-		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['about/index.php']['addSection'])) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::deprecationLog('Hook about/index.php addSection is deprecated and will be removed in TYPO3 6.1, use fluid overrides instead.');
-			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['about/index.php']['addSection'] as $classRef) {
-				/** @var $hookObject \TYPO3\CMS\About\CustomSectionsInterface */
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
-				if (!$hookObject instanceof \TYPO3\CMS\About\CustomSectionsInterface) {
-					throw new \UnexpectedValueException('$hookObject must implement interface TYPO3\\CMS\\About\\CustomSectionsInterface', 1298121573);
-				}
-				$hookObject->addSection($sections);
-			}
-		}
-		return $sections;
+		$this->view
+			->assign('TYPO3Version', TYPO3_version)
+			->assign('TYPO3CopyrightYear', TYPO3_copyright_year)
+			->assign('TYPO3UrlDonate', TYPO3_URL_DONATE)
+			->assign('loadedExtensions', $extensions);
 	}
 
 }
-
 
 ?>

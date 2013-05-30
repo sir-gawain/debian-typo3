@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Service;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Stanislas Rolland <stanislas.rolland@typo3.org>
+ *  (c) 2012-2013 Stanislas Rolland <stanislas.rolland@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,6 +26,9 @@ namespace TYPO3\CMS\Core\Resource\Service;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\PathUtility;
+
 /**
  * Magic image service
  *
@@ -45,13 +48,19 @@ class MagicImageService {
 	 * @return \TYPO3\CMS\Core\Resource\Folder
 	 */
 	protected function getMagicFolder($targetFolderCombinedIdentifier) {
-		$fileFactory = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance();
-		// @todo Proper exception handling is missing here
-		if ($targetFolderCombinedIdentifier) {
-			$magicFolder = $fileFactory->getFolderObjectFromCombinedIdentifier($targetFolderCombinedIdentifier);
-		}
-		if (empty($magicFolder) || !$magicFolder instanceof \TYPO3\CMS\Core\Resource\Folder) {
-			$magicFolder = $fileFactory->getFolderObjectFromCombinedIdentifier($GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir']);
+		// check if the input is already a folder
+		if ($targetFolderCombinedIdentifier instanceof \TYPO3\CMS\Core\Resource\Folder) {
+			$magicFolder = $targetFolderCombinedIdentifier;
+		} else {
+			$fileFactory = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance();
+
+			// @todo Proper exception handling is missing here
+			if ($targetFolderCombinedIdentifier) {
+				$magicFolder = $fileFactory->getFolderObjectFromCombinedIdentifier($targetFolderCombinedIdentifier);
+			}
+			if (empty($magicFolder) || !$magicFolder instanceof \TYPO3\CMS\Core\Resource\Folder) {
+				$magicFolder = $fileFactory->getFolderObjectFromCombinedIdentifier($GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir']);
+			}
 		}
 		return $magicFolder;
 	}
@@ -97,7 +106,7 @@ class MagicImageService {
 		// Create the magic image
 		$magicImageInfo = $this->getImageObject()->imageMagickConvert($imageFilePath, 'WEB', $maxWidth . 'm', $maxHeight . 'm');
 		if ($magicImageInfo[3]) {
-			$targetFileName = 'RTEmagicC_' . pathInfo($imageFileObject->getName(), PATHINFO_FILENAME) . '.' . pathinfo($magicImageInfo[3], PATHINFO_EXTENSION);
+			$targetFileName = 'RTEmagicC_' . PathUtility::pathInfo($imageFileObject->getName(), PATHINFO_FILENAME) . '.' . PathUtility::pathinfo($magicImageInfo[3], PATHINFO_EXTENSION);
 			$magicFolder = $this->getMagicFolder($targetFolderCombinedIdentifier);
 			if ($magicFolder instanceof \TYPO3\CMS\Core\Resource\Folder) {
 				$magicImage = $magicFolder->addFile($magicImageInfo[3], $targetFileName, 'changeName');

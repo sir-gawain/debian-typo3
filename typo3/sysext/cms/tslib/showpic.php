@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -24,6 +24,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Shows a picture from uploads/* in enlarged format in a separate window.
  * Picture file and settings is supplied by GET-parameters: file, width, height, sample, alternativeTempPath, effects, frame, bodyTag, title, wrap, md5
@@ -32,16 +33,20 @@
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 if (!defined('PATH_typo3conf')) {
 	die('The configuration path was not properly defined!');
 }
-require_once PATH_t3lib . 'class.t3lib_stdgraphic.php';
+
+require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('core') . 'Classes/Imaging/GraphicalFunctions.php';
+
 /*
  * @deprecated since 6.0, the classname SC_tslib_showpic and this file is obsolete
  * and will be removed with 6.2. The class was renamed and is now located at:
  * typo3/sysext/frontend/Classes/Controller/ShowImageController.php
  */
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('frontend') . 'Classes/Controller/ShowImageController.php';
+
 // Make instance:
 $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Controller\\ShowImageController');
 $SOBE->init();

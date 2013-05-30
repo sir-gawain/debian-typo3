@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Sv\Report;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Francois Suter <francois@typo3.org>
+ *  (c) 2009-2013 Francois Suter <francois@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -134,12 +134,12 @@ class ServicesListReport implements \TYPO3\CMS\Reports\ReportInterface {
 		$serviceOperatingSystem = empty($serviceInformation['os']) ? $GLOBALS['LANG']->getLL('any') : $serviceInformation['os'];
 		$serviceRequiredExecutables = empty($serviceInformation['exec']) ? '-' : $serviceInformation['exec'];
 		$serviceAvailabilityClass = 'typo3-message message-error';
-		$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
+		$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:no');
 		try {
-			$serviceDetails = \t3lib_extmgm::findServiceByKey($serviceKey);
+			$serviceDetails = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::findServiceByKey($serviceKey);
 			if ($serviceDetails['available']) {
 				$serviceAvailabilityClass = 'typo3-message message-ok';
-				$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
+				$serviceAvailable = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:yes');
 			}
 		} catch (\TYPO3\CMS\Core\Exception $e) {
 
@@ -179,10 +179,10 @@ class ServicesListReport implements \TYPO3\CMS\Reports\ReportInterface {
 				<tbody>';
 			foreach ($searchPaths as $path => $isValid) {
 				$pathAccessibleClass = 'typo3-message message-error';
-				$pathAccessible = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no');
+				$pathAccessible = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:no');
 				if ($isValid) {
 					$pathAccessibleClass = 'typo3-message message-ok';
-					$pathAccessible = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes');
+					$pathAccessible = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:yes');
 				}
 				$content .= '
 					<tr>

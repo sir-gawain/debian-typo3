@@ -10,8 +10,9 @@ namespace TYPO3\CMS\Fluid\ViewHelpers\Format;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
+
 /**
- * Formats a DateTime object.
+ * Formats a \DateTime object.
  *
  * = Examples =
  *
@@ -47,6 +48,14 @@ namespace TYPO3\CMS\Fluid\ViewHelpers\Format;
  * (depending on the current time. Don't forget the "@" in front of the timestamp see http://www.php.net/manual/en/function.strtotime.php)
  * </output>
  *
+ * <code title="Localized dates using strftime date format">
+ * <f:format.date format="%d. %B %Y">{dateObject}</f:format.date>
+ * </code>
+ * <output>
+ * 13. Dezember 1980
+ * (depending on the current date and defined locale. In the example you see the 1980-12-13 in a german locale)
+ * </output>
+ *
  * <code title="Inline notation">
  * {f:format.date(date: dateObject)}
  * </code>
@@ -77,8 +86,8 @@ class DateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 	 *
 	 * @param mixed $date either a DateTime object or a string that is accepted by DateTime constructor
 	 * @param string $format Format String which is taken to format the Date/Time
-	 * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
 	 * @return string Formatted date
+	 * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
 	 * @api
 	 */
 	public function render($date = NULL, $format = 'Y-m-d') {
@@ -90,12 +99,23 @@ class DateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 		}
 		if (!$date instanceof \DateTime) {
 			try {
-				$date = new \DateTime($date);
+				if (is_integer($date)) {
+					$date = new \DateTime('@' . $date);
+				} else {
+					$date = new \DateTime($date);
+				}
+				$date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 			} catch (\Exception $exception) {
-				throw new \TYPO3\CMS\Fluid\Core\ViewHelper\Exception('"' . $date . '" could not be parsed by DateTime constructor.', 1241722579);
+				throw new \TYPO3\CMS\Fluid\Core\ViewHelper\Exception('"' . $date . '" could not be parsed by \DateTime constructor.', 1241722579);
 			}
 		}
-		return $date->format($format);
+
+		if (strpos($format, '%') !== FALSE) {
+			return strftime($format, $date->format('U'));
+		} else {
+			return $date->format($format);
+		}
+
 	}
 }
 

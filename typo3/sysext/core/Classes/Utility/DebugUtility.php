@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Utility;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ * (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -288,7 +288,7 @@ class DebugUtility {
 
 	/**
 	 * Returns HTML-code, which is a visual representation of a multidimensional array
-	 * use t3lib_div::print_array() in order to print an array
+	 * use \TYPO3\CMS\Core\Utility\GeneralUtility::print_array() in order to print an array
 	 * Returns FALSE if $array_in is not an array
 	 *
 	 * @param mixed $array_in Array to view

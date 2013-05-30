@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tree\Pagetree;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
+ *  (c) 2010-2013 TYPO3 Tree Team <http://forge.typo3.org/projects/typo3v4-extjstrees>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -170,7 +170,7 @@ class Commands {
 
 		$data['pages'][$placeholder]['pid'] = $pid;
 		$data['pages'][$placeholder]['doktype'] = $pageType;
-		$data['pages'][$placeholder]['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:tree.defaultPageTitle', TRUE);
+		$data['pages'][$placeholder]['title'] = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:tree.defaultPageTitle', TRUE);
 		$newPageId = self::processTceCmdAndDataMap(array(), $data);
 		$node = self::getNode($newPageId[$placeholder]);
 		if ($pid !== $targetId) {
@@ -208,6 +208,8 @@ class Commands {
 		} elseif (count($data)) {
 			$tce->process_datamap();
 			$returnValues = $tce->substNEWwithIDs;
+		} else {
+			$returnValues = array();
 		}
 		// check errors
 		if (count($tce->errorLog)) {
@@ -253,9 +255,9 @@ class Commands {
 			if (self::$useNavTitle && trim($record['nav_title']) !== '') {
 				$text = $record['nav_title'];
 			}
-			$path[] = $text;
+			$path[] = htmlspecialchars($text);
 		}
-		return htmlspecialchars('/' . implode('/', $path));
+		return '/' . implode('/', $path);
 	}
 
 	/**
@@ -277,13 +279,13 @@ class Commands {
 	 * @return string
 	 */
 	static public function getDomainName($uid) {
-		$whereClause = $GLOBALS['TYPO3_DB']->quoteStr('pid=' . intval($uid) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('sys_domain') . \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields('sys_domain'), 'sys_domain');
+		$whereClause = 'pid=' . intval($uid) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('sys_domain') . \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields('sys_domain');
 		$domain = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('domainName', 'sys_domain', $whereClause, '', 'sorting');
-		return htmlspecialchars($domain['domainName']);
+		return is_array($domain) ? htmlspecialchars($domain['domainName']) : '';
 	}
 
 	/**
-	 * Creates a node with the given record information's
+	 * Creates a node with the given record information
 	 *
 	 * @param array $record
 	 * @param integer $mountPoint
@@ -313,7 +315,7 @@ class Commands {
 			$text = $record['nav_title'];
 		}
 		if (trim($text) === '') {
-			$visibleText = '[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.no_title', TRUE) . ']';
+			$visibleText = '[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', TRUE) . ']';
 		} else {
 			$visibleText = $text;
 		}
@@ -336,8 +338,9 @@ class Commands {
 		$stat = '';
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'])) {
 			$_params = array('pages', $record['uid']);
+			$fakeThis = NULL;
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'] as $_funcRef) {
-				$stat .= \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($_funcRef, $_params, $this);
+				$stat .= \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($_funcRef, $_params, $fakeThis);
 			}
 		}
 		$prefix .= htmlspecialchars(self::$addIdAsPrefix ? '[' . $record['uid'] . '] ' : '');

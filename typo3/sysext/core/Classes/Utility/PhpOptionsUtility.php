@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Utility;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ * (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,8 +37,10 @@ class PhpOptionsUtility {
 	 * Check if php safe_mode is enabled
 	 *
 	 * @return boolean TRUE if safe_mode is enabled, FALSE if disabled
+	 * @deprecated since 6.1, will be removed two versions later
 	 */
 	static public function isSafeModeEnabled() {
+		GeneralUtility::logDeprecatedFunction();
 		if (version_compare(phpversion(), '5.4', '<')) {
 			return self::getIniValueBoolean('safe_mode');
 		}
@@ -49,8 +51,10 @@ class PhpOptionsUtility {
 	 * Check if php magic_quotes_gpc is enabled
 	 *
 	 * @return boolean TRUE if magic_quotes_gpc is enabled, FALSE if disabled
+	 * @deprecated since 6.1, will be removed two versions later
 	 */
 	static public function isMagicQuotesGpcEnabled() {
+		GeneralUtility::logDeprecatedFunction();
 		if (version_compare(phpversion(), '5.4', '<')) {
 			return self::getIniValueBoolean('magic_quotes_gpc');
 		}

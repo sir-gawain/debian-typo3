@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -182,8 +182,6 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	 * @todo Define visibility
 	 */
 	public function getTable($table, $id) {
-		// Load full table definition:
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		if (isset($this->externalTables[$table])) {
 			return $this->getExternalTables($id, $table);
 		} else {
@@ -419,6 +417,9 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 				$cList = explode(',', $this->tt_contentConfig['cols']);
 				$content = array();
 				$head = array();
+
+				// Select content records per column
+				$contentRecordsPerColumn = $this->getContentRecordsPerColumn('table', $id, array_values($cList), $showHidden . $showLanguage);
 				// For each column, render the content into a variable:
 				foreach ($cList as $key) {
 					if (!$lP) {
@@ -436,13 +437,9 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						</div>
 					</div>
 					';
-					// Select content elements from this column/language:
-					$queryParts = $this->makeQueryArray('tt_content', $id, 'AND colPos=' . intval($key) . $showHidden . $showLanguage);
-					$result = $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($queryParts);
-					// Traverse any selected elements and render their display code:
-					$rowArr = $this->getResult($result);
 					$editUidList = '';
-					foreach ($rowArr as $rKey => $row) {
+					$rowArr = $contentRecordsPerColumn[$key];
+					foreach ((array) $rowArr as $rKey => $row) {
 						if ($this->tt_contentConfig['languageMode']) {
 							$languageColumn[$key][$lP] = $head[$key] . $content[$key];
 							if (!$this->defLangBinding) {
@@ -529,7 +526,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 					// GRID VIEW:
 					// Initialize TS parser to parse config to array
 					$parser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
-					$parser->parse($backendLayoutRecord['config']);
+					$parser->parse($parser->checkIncludeLines($backendLayoutRecord['config']));
 					$grid .= '<div class="t3-gridContainer"><table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
 					// Add colgroups
 					$colCount = intval($parser->setup['backend_layout.']['colCount']);
@@ -673,16 +670,17 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						<td><img src="clear.gif" width="10" height="1" alt="" /></td>
 						<td valign="top"><img src="clear.gif" width="300" height="1" alt="" /></td>
 					</tr>';
+
+				// Select content records per column
+				$contentRecordsPerColumn = $this->getContentRecordsPerColumn('tt_content', $id, array_values($cList), $showHidden . $showLanguage);
 				// Traverse columns to display top-on-top
 				foreach ($cList as $counter => $key) {
-					// Select content elements:
-					$queryParts = $this->makeQueryArray('tt_content', $id, 'AND colPos=' . intval($key) . $showHidden . $showLanguage);
-					$result = $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($queryParts);
 					$c = 0;
-					$rowArr = $this->getResult($result);
+					$rowArr = $contentRecordsPerColumn[$key];
+					$numberOfContentElementsInColumn = count($rowArr);
 					$rowOut = '';
 					// If it turns out that there are not content elements in the column, then display a big button which links directly to the wizard script:
-					if ($this->doEdit && $this->option_showBigButtons && !intval($key) && !$GLOBALS['TYPO3_DB']->sql_num_rows($result)) {
+					if ($this->doEdit && $this->option_showBigButtons && !intval($key) && $numberOfContentElementsInColumn == 0) {
 						$onClick = 'window.location.href=\'db_new_content_el.php?id=' . $id . '&colPos=' . intval($key) . '&sys_language_uid=' . $lP . '&uid_pid=' . $id . '&returnUrl=' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')) . '\';';
 						$theNewButton = $GLOBALS['SOBE']->doc->t3Button($onClick, $GLOBALS['LANG']->getLL('newPageContent'));
 						$theNewButton = '<img src="clear.gif" width="1" height="5" alt="" /><br />' . $theNewButton;
@@ -704,7 +702,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 									<td' . ($row['_ORIG_uid'] ? ' class="ver-element"' : '') . ' valign="top">' . $this->tt_content_drawItem($row, $isRTE) . '</td>
 								</tr>';
 							// If the element was not the last element, add a divider line:
-							if ($c != $GLOBALS['TYPO3_DB']->sql_num_rows($result)) {
+							if ($c != $numberOfContentElementsInColumn) {
 								$rowOut .= '
 								<tr>
 									<td></td>
@@ -893,7 +891,6 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	public function dataFields($fieldArr, $table, $row, $out = array()) {
 		// Check table validity:
 		if ($GLOBALS['TCA'][$table]) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 			$thumbsCol = $GLOBALS['TCA'][$table]['ctrl']['thumbnail'];
 			// Traverse fields:
 			foreach ($fieldArr as $fieldName) {
@@ -940,12 +937,36 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	 * @todo Define visibility
 	 */
 	public function headerFields($fieldArr, $table, $out = array()) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($table);
 		foreach ($fieldArr as $fieldName) {
 			$ll = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$fieldName]['label'], 1);
 			$out[$fieldName] = $ll ? $ll : '&nbsp;';
 		}
 		return $out;
+	}
+
+	/**
+	 * Gets content records per column. This is required for correct workspace overlays.
+	 *
+	 * @param string $table Table to be queried
+	 * @param integer $id Page Id to be used (not used at all, but part of the API, see $this->pidSelect)
+	 * @param array $columns colPos values to be considered to be shown
+	 * @return array Associative array for each column (colPos)
+	 */
+	protected function getContentRecordsPerColumn($table, $id, array $columns, $additionalWhereClause = '') {
+		$columns = array_map('intval', $columns);
+		$contentRecordsPerColumn = array_fill_keys($columns, array());
+
+		$queryParts = $this->makeQueryArray('tt_content', $id, 'AND colPos IN (' . implode(',', $columns) . ')' . $additionalWhereClause);
+		$result = $GLOBALS['TYPO3_DB']->exec_SELECT_queryArray($queryParts);
+		// Traverse any selected elements and render their display code:
+		$rowArr = $this->getResult($result);
+
+		foreach ($rowArr as $record) {
+			$columnValue = $record['colPos'];
+			$contentRecordsPerColumn[$columnValue][] = $record;
+		}
+
+		return $contentRecordsPerColumn;
 	}
 
 	/**********************************
@@ -1115,8 +1136,6 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	 */
 	public function tt_content_drawHeader($row, $space = 0, $disableMoveAndNewButtons = FALSE, $langMode = FALSE, $dragDropEnabled = FALSE) {
 		$out = '';
-		// Load full table description:
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA('tt_content');
 		// If show info is set...;
 		if ($this->tt_contentConfig['showInfo'] && $GLOBALS['BE_USER']->recordEditAccessInternals('tt_content', $row)) {
 			// Render control panel for the element:
@@ -1137,7 +1156,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 				}
 				// Delete
 				$params = '&cmd[tt_content][' . $row['uid'] . '][delete]=1';
-				$confirm = $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning') . \TYPO3\CMS\Backend\Utility\BackendUtility::translationCount('tt_content', $row['uid'], (' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.translationsOfRecord'))));
+				$confirm = $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning') . \TYPO3\CMS\Backend\Utility\BackendUtility::translationCount('tt_content', $row['uid'], (' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.translationsOfRecord'))));
 				$out .= '<a href="' . htmlspecialchars($GLOBALS['SOBE']->doc->issueCommand($params)) . '" onclick="' . htmlspecialchars(('return confirm(' . $confirm . ');')) . '" title="' . $GLOBALS['LANG']->getLL('deleteItem', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-delete') . '</a>';
 				if (!$disableMoveAndNewButtons) {
 					$moveButtonContent = '';
@@ -1211,7 +1230,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 			$this->getProcessedValue('tt_content', 'header_position,header_layout,header_link', $row, $infoArr);
 			// If header layout is set to 'hidden', display an accordant note:
 			if ($row['header_layout'] == 100) {
-				$hiddenHeaderNote = ' <em>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.hidden', TRUE) . ']</em>';
+				$hiddenHeaderNote = ' <em>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.hidden', TRUE) . ']</em>';
 			}
 			$outHeader = ($row['date'] ? htmlspecialchars(($this->itemLabels['date'] . ' ' . \TYPO3\CMS\Backend\Utility\BackendUtility::date($row['date']))) . '<br />' : '') . '<strong>' . $this->linkEditContent($this->renderText($row['header']), $row) . $hiddenHeaderNote . '</strong><br />';
 		}
@@ -1320,7 +1339,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 					if (!empty($label)) {
 						$out .=  '<strong>' . $GLOBALS['LANG']->sL($label, TRUE) . '</strong><br />';
 					} else {
-						$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.noMatchingValue'), $row['list_type']);
+						$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.noMatchingValue'), $row['list_type']);
 						$out .= \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', htmlspecialchars($message), '', \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING)->render();
 					}
 				} elseif (!empty($row['select_key'])) {
@@ -1344,7 +1363,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						$out .= $this->linkEditContent($this->renderText($row['bodytext']), $row) . '<br />';
 					}
 				} else {
-					$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.noMatchingValue'), $row['CType']);
+					$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.noMatchingValue'), $row['CType']);
 					$out .= \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', htmlspecialchars($message), '', \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING)->render();
 				}
 				break;
@@ -1537,7 +1556,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	/**
 	 * Traverse the result pointer given, adding each record to array and setting some internal values at the same time.
 	 *
-	 * @param resource $result SQL result pointer for select query.
+	 * @param boolean|\mysqli_result|object $result MySQLi result object / DBAL object
 	 * @param string $table Table name defaulting to tt_content
 	 * @return array The selected rows returned in this array.
 	 * @todo Define visibility
@@ -1609,7 +1628,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	public function renderText($input) {
 		$input = strip_tags($input);
 		$input = \TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($input, 1500);
-		return nl2br(htmlspecialchars(trim($this->wordWrapper($input))));
+		return nl2br(htmlspecialchars(trim($this->wordWrapper($input)), ENT_QUOTES, 'UTF-8', FALSE));
 	}
 
 	/**

@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Backend\Controller\Wizard;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Script Class for rendering the Table Wizard
  *
@@ -12,7 +38,7 @@ class TableController {
 	/**
 	 * document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\MediumDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -167,11 +193,11 @@ class TableController {
 			// CSH Buttons
 			$buttons['csh_buttons'] = \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('xMOD_csh_corebe', 'wizard_table_wiz_buttons', $GLOBALS['BACK_PATH'], '');
 			// Close
-			$buttons['close'] = '<a href="#" onclick="' . htmlspecialchars(('jumpToUrl(unescape(\'' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl($this->P['returnUrl'])) . '\')); return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE))) . '</a>';
+			$buttons['close'] = '<a href="#" onclick="' . htmlspecialchars(('jumpToUrl(unescape(\'' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl($this->P['returnUrl'])) . '\')); return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.closeDoc', TRUE))) . '</a>';
 			// Save
-			$buttons['save'] = '<input type="image" class="c-inputButton" name="savedok"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/savedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />';
+			$buttons['save'] = '<input type="image" class="c-inputButton" name="savedok"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/savedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', 1) . '" />';
 			// Save & Close
-			$buttons['save_close'] = '<input type="image" class="c-inputButton" name="saveandclosedok"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/saveandclosedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', 1) . '" />';
+			$buttons['save_close'] = '<input type="image" class="c-inputButton" name="saveandclosedok"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/saveandclosedok.gif') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', 1) . '" />';
 			// Reload
 			$buttons['reload'] = '<input type="image" class="c-inputButton" name="_refresh"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/refresh_n.gif') . ' title="' . $GLOBALS['LANG']->getLL('forms_refresh', 1) . '" />';
 		}
@@ -278,6 +304,7 @@ class TableController {
 		// Traverse the rows:
 		$tRows = array();
 		$k = 0;
+		$countLines = count($cfgArr);
 		foreach ($cfgArr as $cellArr) {
 			if (is_array($cellArr)) {
 				// Initialize:
@@ -305,8 +332,7 @@ class TableController {
 					$ctrl .= '<input type="image" name="TABLE[row_bottom][' . ($k + 1) * 2 . ']"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/turn_up.gif', '') . $onClick . ' title="' . $GLOBALS['LANG']->getLL('table_bottom', 1) . '" />' . $brTag;
 				}
 				$ctrl .= '<input type="image" name="TABLE[row_remove][' . ($k + 1) * 2 . ']"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/garbage.gif', '') . $onClick . ' title="' . $GLOBALS['LANG']->getLL('table_removeRow', 1) . '" />' . $brTag;
-				// FIXME what is $tLines? See wizard_forms.php for the same.
-				if ($k + 1 != count($tLines)) {
+				if ($k + 1 != $countLines) {
 					$ctrl .= '<input type="image" name="TABLE[row_down][' . ($k + 1) * 2 . ']"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/pil2down.gif', '') . $onClick . ' title="' . $GLOBALS['LANG']->getLL('table_down', 1) . '" />' . $brTag;
 				} else {
 					$ctrl .= '<input type="image" name="TABLE[row_top][' . ($k + 1) * 2 . ']"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->doc->backPath, 'gfx/turn_down.gif', '') . $onClick . ' title="' . $GLOBALS['LANG']->getLL('table_top', 1) . '" />' . $brTag;

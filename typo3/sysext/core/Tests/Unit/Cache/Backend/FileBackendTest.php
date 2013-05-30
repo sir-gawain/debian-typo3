@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009-2011 Ingo Renner <ingo@typo3.org>
+*  (c) 2009-2013 Ingo Renner <ingo@typo3.org>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -35,13 +35,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
 class FileBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
 	 * Sets up this testcase
 	 *
 	 * @return void
@@ -57,7 +50,7 @@ class FileBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 * @expectedException \t3lib_cache_Exception
+	 * @expectedException \TYPO3\CMS\Core\Cache\Exception
 	 */
 	public function setCacheDirectoryThrowsExceptionOnNonWritableDirectory() {
 		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\AbstractFrontend', array(), array(), '', FALSE);
@@ -86,7 +79,7 @@ class FileBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function aDedicatedCacheDirectoryIsUsedForCodeCaches() {
-		$mockCache = $this->getMock('t3lib_cache_frontend_PhpFrontend', array(), array(), '', FALSE);
+		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\PhpFrontend', array(), array(), '', FALSE);
 		$mockCache->expects($this->any())->method('getIdentifier')->will($this->returnValue('SomeCache'));
 
 		$backend = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Backend\\FileBackend', array('dummy'), array(), '', FALSE);
@@ -98,7 +91,7 @@ class FileBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 * @expectedException t3lib_cache_exception_InvalidData
+	 * @expectedException \TYPO3\CMS\Core\Cache\Exception\InvalidDataException
 	 */
 	public function setThrowsExceptionIfDataIsNotAString() {
 		$mockCache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\AbstractFrontend', array(), array(), '', FALSE);

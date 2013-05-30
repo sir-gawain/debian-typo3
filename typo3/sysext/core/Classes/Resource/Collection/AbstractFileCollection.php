@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Resource\Collection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011 Steffen Ritter <steffen.ritter@typo3.org>
+ * (c) 2011-2013 Steffen Ritter <steffen.ritter@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -42,7 +42,7 @@ abstract class AbstractFileCollection extends \TYPO3\CMS\Core\Collection\Abstrac
 
 	/**
 	 * The type of file collection
-	 * (see t3lib_collection_RecordCollectionRepository::TYPE constants)
+	 * (see \TYPO3\CMS\Core\Collection\RecordCollectionRepository::TYPE constants)
 	 *
 	 * @var string
 	 */
@@ -131,7 +131,7 @@ abstract class AbstractFileCollection extends \TYPO3\CMS\Core\Collection\Abstrac
 	}
 
 	/**
-	 * Similar to method in t3lib_collection_AbstractRecordCollection,
+	 * Similar to method in \TYPO3\CMS\Core\Collection\AbstractRecordCollection,
 	 * but without 'table_name' => $this->getItemTableName()
 	 *
 	 * @return array
@@ -165,7 +165,7 @@ abstract class AbstractFileCollection extends \TYPO3\CMS\Core\Collection\Abstrac
 	}
 
 	/**
-	 * Similar to method in t3lib_collection_AbstractRecordCollection,
+	 * Similar to method in \TYPO3\CMS\Core\Collection\AbstractRecordCollection,
 	 * but without $this->itemTableName= $array['table_name'],
 	 * but with $this->storageItemsFieldContent = $array[self::$storageItemsField];
 	 *

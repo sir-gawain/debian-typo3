@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Frontend\ContentObject;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Xavier Perseguers <typo3@perseguers.ch>
- *  (c) 2010-2011 Steffen Kamper <steffen@typo3.org>
+ *  (c) 2010-2013 Xavier Perseguers <typo3@perseguers.ch>
+ *  (c) 2010-2013 Steffen Kamper <steffen@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -101,8 +101,8 @@ class ContentContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractCon
 						// Might be unset in the sys_language_contentOL
 						if (is_array($row)) {
 							// Call hook for possible manipulation of database row for cObj->data
-							if (is_array($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'])) {
-								foreach ($this->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'] as $_classRef) {
+							if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'])) {
+								foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content_content.php']['modifyDBRow'] as $_classRef) {
 									$_procObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($_classRef);
 									$_procObj->modifyDBRow($row, $conf['table']);
 								}

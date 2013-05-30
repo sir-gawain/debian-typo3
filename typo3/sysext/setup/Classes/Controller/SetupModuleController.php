@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Setup\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -59,7 +59,7 @@ class SetupModuleController {
 	/**
 	 * document template object
 	 *
-	 * @var \TYPO3\CMS\Backend\Template\MediumDocumentTemplate
+	 * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 * @todo Define visibility
 	 */
 	public $doc;
@@ -123,7 +123,7 @@ class SetupModuleController {
 	 * Instanciate the form protection before a simulated user is initialized.
 	 */
 	public function __construct() {
-		$this->formProtection = \t3lib_formProtection_Factory::get();
+		$this->formProtection = \TYPO3\CMS\Core\FormProtection\FormProtectionFactory::get();
 	}
 
 	/**
@@ -408,7 +408,7 @@ class SetupModuleController {
 			'shortcut' => ''
 		);
 		$buttons['csh'] = \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('_MOD_user_setup', '', $GLOBALS['BACK_PATH'], '|', TRUE);
-		$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="data[save]" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', 1) . '" />'));
+		$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="data[save]" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', 1) . '" />'));
 		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
 			$buttons['shortcut'] = $this->doc->makeShortcutIcon('', '', $this->MCONF['name']);
 		}

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extensionmanager\Utility;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Susanne Moog <susanne.moog@typo3.org>
+ *  (c) 2012-2013 Susanne Moog <susanne.moog@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -64,11 +64,6 @@ class InstallUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $databaseUtility;
 
 	/**
-	 * @var \TYPO3\CMS\Core\Configuration\ConfigurationManager
-	 */
-	protected $configurationManager;
-
-	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository
 	 */
 	public $extensionRepository;
@@ -103,16 +98,6 @@ class InstallUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function injectDatabaseUtility(\TYPO3\CMS\Extensionmanager\Utility\DatabaseUtility $databaseUtility) {
 		$this->databaseUtility = $databaseUtility;
-	}
-
-	/**
-	 * Inject configuration manager
-	 *
-	 * @param \TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager
-	 * @return void
-	 */
-	public function injectConfigurationManager(\TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager) {
-		$this->configurationManager = $configurationManager;
 	}
 
 	/**
@@ -154,6 +139,7 @@ class InstallUtility implements \TYPO3\CMS\Core\SingletonInterface {
 			$this->loadExtension($extensionKey);
 		}
 		$this->reloadCaches();
+		$this->processCachingFrameworkUpdates();
 		$this->saveDefaultConfiguration($extension['key']);
 	}
 
@@ -250,17 +236,34 @@ class InstallUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function processDatabaseUpdates(array $extension) {
 		$extTablesSqlFile = PATH_site . $extension['siteRelPath'] . '/ext_tables.sql';
+		$extTablesSqlContent = '';
 		if (file_exists($extTablesSqlFile)) {
-			$extTablesSqlContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($extTablesSqlFile);
-				// @TODO: This should probably moved to TYPO3\CMS\Core\Cache\Cache->getDatabaseTableDefinitions ?!
-			$GLOBALS['typo3CacheManager']->setCacheConfigurations($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']);
-			$extTablesSqlContent .= \TYPO3\CMS\Core\Cache\Cache::getDatabaseTableDefinitions();
+			$extTablesSqlContent .= \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($extTablesSqlFile);
+		}
+		if ($extTablesSqlContent !== '') {
 			$this->updateDbWithExtTablesSql($extTablesSqlContent);
 		}
 		$extTablesStaticSqlFile = PATH_site . $extension['siteRelPath'] . '/ext_tables_static+adt.sql';
 		if (file_exists($extTablesStaticSqlFile)) {
 			$extTablesStaticSqlContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($extTablesStaticSqlFile);
 			$this->importStaticSql($extTablesStaticSqlContent);
+		}
+	}
+
+	/**
+	 * Gets all registered caches and creates required caching framework tables.
+	 *
+	 * @return void
+	 */
+	protected function processCachingFrameworkUpdates() {
+		$extTablesSqlContent = '';
+
+		// @TODO: This should probably moved to TYPO3\CMS\Core\Cache\Cache->getDatabaseTableDefinitions ?!
+		$GLOBALS['typo3CacheManager']->setCacheConfigurations($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']);
+		$extTablesSqlContent .= \TYPO3\CMS\Core\Cache\Cache::getDatabaseTableDefinitions();
+
+		if ($extTablesSqlContent !== '') {
+			$this->updateDbWithExtTablesSql($extTablesSqlContent);
 		}
 	}
 
@@ -272,10 +275,12 @@ class InstallUtility implements \TYPO3\CMS\Core\SingletonInterface {
 	public function reloadCaches() {
 		\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::removeCacheFiles();
 		// Set new extlist / extlistArray for extension load changes at runtime
-		$localConfiguration = $this->configurationManager->getLocalConfiguration();
+		/** @var $configurationManager \TYPO3\CMS\Core\Configuration\ConfigurationManager */
+		$configurationManager = $this->objectManager->get('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+		$localConfiguration = $configurationManager->getLocalConfiguration();
 		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extListArray'] = $localConfiguration['EXT']['extListArray'];
 		$GLOBALS['TYPO3_CONF_VARS']['EXT']['extList'] = implode(',', $GLOBALS['TYPO3_CONF_VARS']['EXT']['extListArray']);
-		\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadTypo3LoadedExtAndExtLocalconf(FALSE);
+		\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->reloadTypo3LoadedExtAndClassLoaderAndExtLocalconf();
 	}
 
 	/**
@@ -334,19 +339,6 @@ class InstallUtility implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Writes the TSstyleconf values to "localconf.php"
-	 * Removes the temp_CACHED* files before return.
-	 *
-	 * @param string $extensionKey Extension key
-	 * @param array $newConfiguration Configuration array to write back
-	 * @return void
-	 */
-	public function writeExtensionTypoScriptStyleConfigurationToLocalconf($extensionKey, $newConfiguration) {
-		$this->configurationManager->setLocalConfigurationValueByPath('EXT/extConf/' . $extensionKey, serialize($newConfiguration));
-		\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::removeCacheFiles();
 	}
 
 	/**

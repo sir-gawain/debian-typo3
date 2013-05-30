@@ -4,7 +4,7 @@ namespace TYPO3\CMS\About\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Felix Kopp <felix@phorax.com>
+ *  (c) 2012-2013 Felix Kopp <felix@phorax.com>
  *
  *  All rights reserved
  *
@@ -54,13 +54,15 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 		foreach ($loadedExtensionsArray as $extensionKey => $extension) {
 			if (is_array($extension) && $extension['type'] != 'S') {
 				$emconfPath = PATH_site . $extension['siteRelPath'] . 'ext_emconf.php';
-				include $emconfPath;
-				$extension = $this->objectManager->create('TYPO3\\CMS\\About\\Domain\\Model\\Extension');
-				$extension->setKey($extensionKey);
-				$extension->setTitle($EM_CONF['']['title']);
-				$extension->setAuthor($EM_CONF['']['author']);
-				$extension->setAuthorEmail($EM_CONF['']['author_email']);
-				$loadedExtensions->attach($extension);
+				if (file_exists($emconfPath)) {
+					include $emconfPath;
+					$extension = $this->objectManager->get('TYPO3\\CMS\\About\\Domain\\Model\\Extension');
+					$extension->setKey($extensionKey);
+					$extension->setTitle($EM_CONF['']['title']);
+					$extension->setAuthor($EM_CONF['']['author']);
+					$extension->setAuthorEmail($EM_CONF['']['author_email']);
+					$loadedExtensions->attach($extension);
+				}
 			}
 		}
 		return $loadedExtensions;

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tests\Unit\Sprite;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Fabien Udriot <fabien.udriot@ecodev.ch>
+ *  (c) 2010-2013 Fabien Udriot <fabien.udriot@ecodev.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,13 +29,6 @@ namespace TYPO3\CMS\Backend\Tests\Unit\Sprite;
  * @author Fabien Udriot <fabien.udriot@ecodev.ch>
  */
 class SpriteManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	//////////////////////////////////////////
 	// Tests concerning addTcaTypeIcon

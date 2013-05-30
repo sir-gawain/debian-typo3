@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Category\Collection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2012 Fabien Udriot <fabien.udriot@typo3.org>
+ * (c) 2012-2013 Fabien Udriot <fabien.udriot@typo3.org>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -85,7 +85,6 @@ class CategoryCollection extends \TYPO3\CMS\Core\Collection\AbstractRecordCollec
 	 * @return \TYPO3\CMS\Core\Collection\CollectionInterface
 	 */
 	static public function load($id, $fillItems = FALSE, $tableName = '') {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA(static::$storageTableName);
 		$collectionRecord = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', static::$storageTableName, 'uid=' . intval($id) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause(static::$storageTableName));
 		$collectionRecord['table_name'] = $tableName;
 		return self::create($collectionRecord, $fillItems);

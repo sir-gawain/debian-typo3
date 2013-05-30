@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -150,7 +150,7 @@ class Arguments extends \ArrayObject {
 	 */
 	public function addNewArgument($name, $dataType = 'Text', $isRequired = FALSE, $defaultValue = NULL) {
 		/** @var $argument \TYPO3\CMS\Extbase\Mvc\Controller\Argument */
-		$argument = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\Argument', $name, $dataType);
+		$argument = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\Argument', $name, $dataType);
 		$argument->setRequired($isRequired);
 		$argument->setDefaultValue($defaultValue);
 		$this->addArgument($argument);
@@ -249,7 +249,7 @@ class Arguments extends \ArrayObject {
 	 * If an argument with the specified name or short name does not exist, an empty
 	 * string is returned.
 	 *
-	 * @param string argument name
+	 * @param string $argumentName argument name
 	 * @return string long argument name or empty string
 	 */
 	protected function translateToLongArgumentName($argumentName) {

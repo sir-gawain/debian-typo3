@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Form\Validation;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008 Patrick Broens (patrick@patrickbroens.nl)
+ *  (c) 2008-2013 Patrick Broens (patrick@patrickbroens.nl)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Form\Validation;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Email rule
  *
@@ -34,12 +35,12 @@ class EmailValidator extends \TYPO3\CMS\Form\Validation\AbstractValidator {
 	 * Returns TRUE if submitted value validates according to rule
 	 *
 	 * @return boolean
-	 * @see tx_form_System_Validate_Interface::isValid()
+	 * @see \TYPO3\CMS\Form\Validation\ValidatorInterface::isValid()
 	 */
 	public function isValid() {
 		if ($this->requestHandler->has($this->fieldName)) {
 			$value = $this->requestHandler->getByMethod($this->fieldName);
-			if (!preg_match('/^(?:(?#local-part)(?#quoted)"[^\\"]*"|(?#non-quoted)[a-z0-9&+_-](?:\\.?[a-z0-9&+_-]+)*)@(?:(?#domain)(?#domain-name)[a-z0-9](?:[a-z0-9-]*[a-z0-9])*(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])*)*|(?#ip)(\\[)?(?:[01]?\\d?\\d|2[0-4]\\d|25[0-5])(?:\\.(?:[01]?\\d?\\d|2[0-4]\\d|25[0-5])){3}(?(1)\\]|))$/', $value)) {
+			if (!\TYPO3\CMS\Core\Utility\GeneralUtility::validEmail($value)) {
 				return FALSE;
 			}
 		}
@@ -47,6 +48,5 @@ class EmailValidator extends \TYPO3\CMS\Form\Validation\AbstractValidator {
 	}
 
 }
-
 
 ?>

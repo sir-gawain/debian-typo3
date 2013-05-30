@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,6 +33,11 @@ namespace TYPO3\CMS\Extbase\Mvc\Controller;
  * @api
  */
 abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\ControllerInterface {
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\SignalSlot\Dispatcher
+	 */
+	protected $signalSlotDispatcher;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
@@ -75,7 +80,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Property\Mapper
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected $deprecatedPropertyMapper;
 
@@ -94,7 +99,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 *
 	 * @var \TYPO3\CMS\Extbase\Property\MappingResults
 	 * @api
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	protected $argumentsMappingResults;
 
@@ -114,8 +119,14 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	protected $controllerContext;
 
 	/**
-	 * The flash messages. Use $this->flashMessageContainer->add(...) to add a new Flash message.
-	 *
+	 * @return ControllerContext
+	 * @api
+	 */
+	public function getControllerContext() {
+		return $this->controllerContext;
+	}
+
+	/**
 	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer
 	 * @api
 	 */
@@ -158,7 +169,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 *
 	 * @param \TYPO3\CMS\Extbase\Property\Mapper $deprecatedPropertyMapper The property mapper
 	 * @return void
-	 * @deprecated since Extbase 1.4.0, will be removed in Extbase 6.1
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
 	 */
 	public function injectDeprecatedPropertyMapper(\TYPO3\CMS\Extbase\Property\Mapper $deprecatedPropertyMapper) {
 		$this->deprecatedPropertyMapper = $deprecatedPropertyMapper;
@@ -172,7 +183,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 */
 	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
-		$this->arguments = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\Arguments');
+		$this->arguments = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\Arguments');
 	}
 
 	/**
@@ -193,6 +204,15 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 */
 	public function injectFlashMessageContainer(\TYPO3\CMS\Extbase\Mvc\Controller\FlashMessageContainer $flashMessageContainer) {
 		$this->flashMessageContainer = $flashMessageContainer;
+	}
+
+	/**
+	 * Injects the signal slot dispatcher
+	 *
+	 * @param \TYPO3\CMS\Extbase\SignalSlot\Dispatcher $signalSlotDispatcher
+	 */
+	public function injectSignalSlotDispatcher(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher $signalSlotDispatcher) {
+		$this->signalSlotDispatcher = $signalSlotDispatcher;
 	}
 
 	/**
@@ -232,7 +252,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 		$this->request = $request;
 		$this->request->setDispatched(TRUE);
 		$this->response = $response;
-		$this->uriBuilder = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
+		$this->uriBuilder = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
 		$this->uriBuilder->setRequest($request);
 		$this->initializeControllerArgumentsBaseValidators();
 		$this->mapRequestArgumentsToControllerArguments();
@@ -246,7 +266,8 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 	 * @api
 	 */
 	protected function buildControllerContext() {
-		$controllerContext = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ControllerContext');
+		/** @var $controllerContext \TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext */
+		$controllerContext = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ControllerContext');
 		$controllerContext->setRequest($this->request);
 		$controllerContext->setResponse($this->response);
 		if ($this->arguments !== NULL) {
@@ -256,6 +277,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 			$controllerContext->setArgumentsMappingResults($this->argumentsMappingResults);
 		}
 		$controllerContext->setUriBuilder($this->uriBuilder);
+
 		$controllerContext->setFlashMessageContainer($this->flashMessageContainer);
 		return $controllerContext;
 	}
@@ -318,7 +340,11 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 		if ($controllerName === NULL) {
 			$controllerName = $this->request->getControllerName();
 		}
-		$uri = $this->uriBuilder->reset()->setTargetPageUid($pageUid)->setCreateAbsoluteUri(TRUE)->uriFor($actionName, $arguments, $controllerName, $extensionName);
+		$this->uriBuilder->reset()->setTargetPageUid($pageUid)->setCreateAbsoluteUri(TRUE);
+		if (\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SSL')) {
+			$this->uriBuilder->setAbsoluteUriScheme('https');
+		}
+		$uri = $this->uriBuilder->uriFor($actionName, $arguments, $controllerName, $extensionName);
 		$this->redirectToUri($uri, $delay, $statusCode);
 	}
 
@@ -338,6 +364,9 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 		if (!$this->request instanceof \TYPO3\CMS\Extbase\Mvc\Web\Request) {
 			throw new \TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException('redirect() only supports web requests.', 1220539734);
 		}
+
+		$this->objectManager->get('TYPO3\CMS\Extbase\Service\CacheService')->clearCachesOfRegisteredPageIds();
+
 		$uri = $this->addBaseUriIfNecessary($uri);
 		$escapedUri = htmlentities($uri, ENT_QUOTES, 'utf-8');
 		$this->response->setContent('<html><head><meta http-equiv="refresh" content="' . intval($delay) . ';url=' . $escapedUri . '"/></head></html>');
@@ -412,7 +441,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 				}
 			}
 		} else {
-			// @deprecated since Extbase 1.4, will be removed in Extbase 6.1
+			// @deprecated since Extbase 1.4, will be removed two versions after Extbase 6.1
 			$optionalPropertyNames = array();
 			$allPropertyNames = $this->arguments->getArgumentNames();
 			foreach ($allPropertyNames as $propertyName) {
@@ -421,7 +450,7 @@ abstract class AbstractController implements \TYPO3\CMS\Extbase\Mvc\Controller\C
 				}
 			}
 			/** @var $validator ArgumentsValidator */
-			$validator = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ArgumentsValidator');
+			$validator = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\ArgumentsValidator');
 			$this->deprecatedPropertyMapper->mapAndValidate($allPropertyNames, $this->request->getArguments(), $this->arguments, $optionalPropertyNames, $validator);
 			$this->argumentsMappingResults = $this->deprecatedPropertyMapper->getMappingResults();
 		}

@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -72,7 +73,7 @@ class ColumnMap {
 	/**
 	 * The type of relation
 	 *
-	 * @var int
+	 * @var string
 	 */
 	protected $typeOfRelation;
 
@@ -161,6 +162,15 @@ class ColumnMap {
 	protected $childKeyFieldName;
 
 	/**
+	 * Alternative format for storing DataTime formats
+	 * (instead of using unix-time stamps). Allowed values
+	 * are 'date' and 'datetime'
+	 *
+	 * @var string
+	 */
+	protected $dateTimeStorageFormat;
+
+	/**
 	 * Constructs a Column Map
 	 *
 	 * @param string $columnName The column name
@@ -174,21 +184,21 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $typeOfRelation
+	 * @param string $typeOfRelation
 	 */
 	public function setTypeOfRelation($typeOfRelation) {
 		$this->typeOfRelation = $typeOfRelation;
 	}
 
 	/**
-	 * @return int
+	 * @return string
 	 */
 	public function getTypeOfRelation() {
 		return $this->typeOfRelation;
 	}
 
 	/**
-	 * @param $propertyName
+	 * @param string $propertyName
 	 */
 	public function setPropertyName($propertyName) {
 		$this->propertyName = $propertyName;
@@ -202,7 +212,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $columnName
+	 * @param string $columnName
 	 */
 	public function setColumnName($columnName) {
 		$this->columnName = $columnName;
@@ -216,7 +226,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $childTableName
+	 * @param string $childTableName
 	 */
 	public function setChildTableName($childTableName) {
 		$this->childTableName = $childTableName;
@@ -230,7 +240,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $childTableWhereStatement
+	 * @param string $childTableWhereStatement
 	 */
 	public function setChildTableWhereStatement($childTableWhereStatement) {
 		$this->childTableWhereStatement = $childTableWhereStatement;
@@ -244,7 +254,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $childSortByFieldName
+	 * @param string $childSortByFieldName
 	 */
 	public function setChildSortByFieldName($childSortByFieldName) {
 		$this->childSortByFieldName = $childSortByFieldName;
@@ -258,7 +268,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $relationTableName
+	 * @param string $relationTableName
 	 */
 	public function setRelationTableName($relationTableName) {
 		$this->relationTableName = $relationTableName;
@@ -272,7 +282,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $relationTablePageIdColumnName
+	 * @param string $relationTablePageIdColumnName
 	 */
 	public function setRelationTablePageIdColumnName($relationTablePageIdColumnName) {
 		$this->relationTablePageIdColumnName = $relationTablePageIdColumnName;
@@ -314,7 +324,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $relationTableWhereStatement
+	 * @param string $relationTableWhereStatement
 	 */
 	public function setRelationTableWhereStatement($relationTableWhereStatement) {
 		$this->relationTableWhereStatement = $relationTableWhereStatement;
@@ -328,7 +338,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $parentKeyFieldName
+	 * @param string $parentKeyFieldName
 	 */
 	public function setParentKeyFieldName($parentKeyFieldName) {
 		$this->parentKeyFieldName = $parentKeyFieldName;
@@ -342,7 +352,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $parentTableFieldName
+	 * @param string $parentTableFieldName
 	 */
 	public function setParentTableFieldName($parentTableFieldName) {
 		$this->parentTableFieldName = $parentTableFieldName;
@@ -356,7 +366,7 @@ class ColumnMap {
 	}
 
 	/**
-	 * @param $childKeyFieldName
+	 * @param string $childKeyFieldName
 	 */
 	public function setChildKeyFieldName($childKeyFieldName) {
 		$this->childKeyFieldName = $childKeyFieldName;
@@ -367,6 +377,20 @@ class ColumnMap {
 	 */
 	public function getChildKeyFieldName() {
 		return $this->childKeyFieldName;
+	}
+
+	/**
+	 * @param string $dateTimeStorageFormat
+	 */
+	public function setDateTimeStorageFormat($dateTimeStorageFormat) {
+		$this->dateTimeStorageFormat = $dateTimeStorageFormat;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getDateTimeStorageFormat() {
+		return $this->dateTimeStorageFormat;
 	}
 }
 

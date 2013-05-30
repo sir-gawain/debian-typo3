@@ -22,8 +22,18 @@
 			"bInfo":false,
 			"bPaginate":false,
 			"bFilter":false,
-			"bSort": false,
-			"fnDrawCallback":bindDownload
+			"fnDrawCallback":bindDownload,
+			"aaSorting": [
+				[2, 'asc']
+			],
+			'aoColumns': [
+				{ 'bSortable': false },
+				null,
+				{ 'sType': 'version' },
+				null,
+				null,
+				null
+			]
 		});
 
 		$('#terSearchTable').dataTable({
@@ -39,7 +49,9 @@
 			"bSort": false,
 			"fnDrawCallback": bindDownload
 		});
+
 		bindDownload();
+		bindSearchFieldResetter();
 	});
 
 	function bindDownload() {
@@ -106,5 +118,21 @@
 		} else {
 			$('.typo3-extension-manager').unmask();
 		}
+	}
+
+	function bindSearchFieldResetter() {
+
+		var $searchFields = $('.typo3-extensionmanager-searchTerForm input[type="text"]');
+		var searchResultShown = '' !== $searchFields.first().val();
+
+		$searchFields.clearable(
+			{
+				onClear: function() {
+					if (searchResultShown) {
+						$(this).parents('form').first().submit();
+					}
+				}
+			}
+		);
 	}
 }(jQuery));

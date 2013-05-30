@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Lowlevel;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -76,7 +76,8 @@ Reports problems with RTE images';
 
 	/**
 	 * Analyse situation with RTE magic images. (still to define what the most useful output is).
-	 * Fix methods: API in t3lib_refindex that allows to change the value of a reference (we could copy the files) or remove reference
+	 * Fix methods: API in \TYPO3\CMS\Core\Database\ReferenceIndex that allows to
+	 * change the value of a reference (we could copy the files) or remove reference
 	 *
 	 * @return array
 	 * @todo Define visibility

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Lowlevel;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -99,7 +99,6 @@ Cleaning XML for FlexForm fields.
 	 * @todo Define visibility
 	 */
 	public function main_parseTreeCallBack($tableName, $uid, $echoLevel, $versionSwapmode, $rootIsVersion) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($tableName);
 		foreach ($GLOBALS['TCA'][$tableName]['columns'] as $colName => $config) {
 			if ($config['config']['type'] == 'flex') {
 				if ($echoLevel > 2) {

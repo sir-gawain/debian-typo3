@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\ViewHelpers;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Belog\ViewHelpers;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Get history entry from for log entry
  *
@@ -34,18 +35,9 @@ class HistoryEntryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 
 	/**
 	 * @var \TYPO3\CMS\Belog\Domain\Repository\HistoryEntryRepository
+	 * @inject
 	 */
 	protected $historyEntryRepository;
-
-	/**
-	 * Inject the system history entry repository.
-	 *
-	 * @param \TYPO3\CMS\Belog\Domain\Repository\HistoryEntryRepository $historyEntryRepository
-	 * @return void
-	 */
-	public function injectHistoryEntryRepository(\TYPO3\CMS\Belog\Domain\Repository\HistoryEntryRepository $historyEntryRepository) {
-		$this->historyEntryRepository = $historyEntryRepository;
-	}
 
 	/**
 	 * Get system history record
@@ -59,7 +51,11 @@ class HistoryEntryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 		if (!$historyEntry instanceof \TYPO3\CMS\Belog\Domain\Model\HistoryEntry) {
 			return '';
 		}
-		$historyLabel = \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('changesInFields', $this->controllerContext->getRequest()->getControllerExtensionName(), array($historyEntry->getFieldlist()));
+		$historyLabel = \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+			'changesInFields',
+			$this->controllerContext->getRequest()->getControllerExtensionName(),
+			array($historyEntry->getFieldlist())
+		);
 		$historyIcon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-history-open', array(
 			'title' => \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('showHistory', $this->controllerContext->getRequest()->getControllerExtensionName())
 		));
@@ -69,6 +65,5 @@ class HistoryEntryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 	}
 
 }
-
 
 ?>

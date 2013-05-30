@@ -5,11 +5,22 @@
 		manageExtensionListing();
 		$("#typo3-extension-configuration-forms ul").tabs("div.category");
 
-		$('#resetSearch').live('click', function (e) {
-			datatable.fnFilter('');
+		$('.onClickMaskExtensionManager').click(function() {
+			$('.typo3-extension-manager').mask();
 		});
 
-		resetSearchField();
+		// IE 8 needs extra 'change' event on form
+		if ($.browser.msie) {
+			$('form.onClickMaskExtensionManager').bind("change", function () {
+				$('.typo3-extension-manager').mask();
+			});
+		}
+
+		$('.dataTables_wrapper .dataTables_filter input').clearable({
+			onClear: function() {
+				datatable.fnFilter('');
+			}
+		});
 	});
 
 	function getUrlVars() {
@@ -30,7 +41,16 @@
 			"bLengthChange":false,
 			'iDisplayLength':15,
 			"bStateSave":true,
-			"fnDrawCallback": bindActions
+			"fnDrawCallback": bindActions,
+			'aoColumns': [
+				null,
+				null,
+				null,
+				null,
+				{ 'sType': 'version' },
+				{ 'bSortable': false },
+				null
+			]
 		});
 
 		var getVars = getUrlVars();
@@ -39,6 +59,52 @@
 		if(datatable.length && getVars['search']) {
 			datatable.fnFilter(getVars['search']);
 		}
+	}
+
+	$.fn.dataTableExt.oSort['version-asc'] = function(a, b) {
+		var result = compare(a,b);
+		result = result * -1;
+		return result;
+	};
+
+	$.fn.dataTableExt.oSort['version-desc'] = function(a, b) {
+		var result = compare(a,b);
+		return result;
+	};
+
+	function compare(a, b) {
+		if (a === b) {
+			return 0;
+		}
+
+		var a_components = a.split(".");
+		var b_components = b.split(".");
+
+		var len = Math.min(a_components.length, b_components.length);
+
+		// loop while the components are equal
+		for (var i = 0; i < len; i++) {
+			// A bigger than B
+			if (parseInt(a_components[i]) > parseInt(b_components[i])) {
+				return 1;
+			}
+
+			// B bigger than A
+			if (parseInt(a_components[i]) < parseInt(b_components[i])) {
+				return -1;
+			}
+		}
+
+		// If one's a prefix of the other, the longer one is greater.
+		if (a_components.length > b_components.length) {
+			return 1;
+		}
+
+		if (a_components.length < b_components.length) {
+			return -1;
+		}
+		// Otherwise they are the same.
+		return 0;
 	}
 
 	function bindActions() {
@@ -111,7 +177,6 @@
 		});
 	}
 
-
 	function confirmDeletionAndDelete(url) {
 		TYPO3.Dialog.QuestionDialog({
 			title: TYPO3.l10n.localize('extensionList.removalConfirmation.title'),
@@ -137,22 +202,5 @@
 		} else {
 			TYPO3.Flashmessage.display(TYPO3.Severity.error, TYPO3.l10n.localize('extensionList.removalConfirmation.title'), data.message, 15);
 		}
-	}
-
-	function resetSearchField() {
-		var dataTablesFilter = find(".dataTables_filter");
-		$('.dataTables_wrapper').find('.dataTables_filter').append($('<span />', {
-			'class':'t3-icon t3-icon-actions t3-icon-actions-input t3-icon-input-clear t3-tceforms-input-clearer',
-			'id':'resetSearch',
-			'style':'display:none'
-		}));
-		$('#typo3-extension-list_filter').mouseout(function() {
-			$(this).find('#resetSearch').css('display', 'none');
-		});
-		$('#typo3-extension-list_filter').mouseover(function() {
-			if ($(this).find('input').val()) {
-				$(this).find('#resetSearch').css('display', 'inline-block');
-			}
-		});
 	}
 }(jQuery));

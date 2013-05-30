@@ -4,7 +4,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2012 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -49,7 +50,6 @@ class QueryFactory implements \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactor
 	/**
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
 	 * @return void
-	 * @author Sebastian Kurfürst <sebastian@typo3.org>
 	 */
 	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
@@ -78,8 +78,8 @@ class QueryFactory implements \TYPO3\CMS\Extbase\Persistence\Generic\QueryFactor
 	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Exception
 	 */
 	public function create($className) {
-		$query = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\QueryInterface', $className);
-		$querySettings = $this->objectManager->create('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
+		$query = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\QueryInterface', $className);
+		$querySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface');
 
 		$dataMap = $this->dataMapper->getDataMap($className);
 		if ($dataMap->getIsStatic() || $dataMap->getRootLevel()) {

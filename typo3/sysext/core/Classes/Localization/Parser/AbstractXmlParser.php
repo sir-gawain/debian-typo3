@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Localization\Parser;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Dominique Feyer <dfeyer@reelpeek.net>
+ *  (c) 2011-2013 Dominique Feyer <dfeyer@reelpeek.net>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -61,7 +61,7 @@ abstract class AbstractXmlParser implements \TYPO3\CMS\Core\Localization\Parser\
 		$this->sourcePath = $sourcePath;
 		$this->languageKey = $languageKey;
 		$this->charset = $this->getCharset($languageKey, $charset);
-		if ($this->languageKey !== 'default' && $this->languageKey !== 'en') {
+		if ($this->languageKey !== 'default') {
 			$this->sourcePath = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName(\TYPO3\CMS\Core\Utility\GeneralUtility::llXmlAutoFileName($this->sourcePath, $this->languageKey));
 			if (!@is_file($this->sourcePath)) {
 				// Global localization is not available, try split localization file

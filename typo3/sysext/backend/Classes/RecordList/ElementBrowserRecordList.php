@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\RecordList;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -109,7 +109,7 @@ class ElementBrowserRecordList extends \TYPO3\CMS\Recordlist\RecordList\Database
 	 */
 	public function linkWrapItems($table, $uid, $code, $row) {
 		if (!$code) {
-			$code = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.no_title', 1) . ']</i>';
+			$code = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', 1) . ']</i>';
 		} else {
 			$code = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitlePrep($code, $this->fixedL);
 		}
@@ -162,7 +162,6 @@ class ElementBrowserRecordList extends \TYPO3\CMS\Recordlist\RecordList\Database
 		// Check validity of the input data and load TCA
 		if (isset($TCA[$tableName])) {
 			$this->relatingTable = $tableName;
-			\TYPO3\CMS\Core\Utility\GeneralUtility::loadTCA($tableName);
 			if ($fieldName && isset($TCA[$tableName]['columns'][$fieldName])) {
 				$this->relatingField = $fieldName;
 			}

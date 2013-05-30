@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\FormProtection;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Oliver Klee (typo3-coding@oliverklee.de)
+ * (c) 2010-2013 Oliver Klee (typo3-coding@oliverklee.de)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -27,7 +27,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\FormProtection;
 require_once 'Fixtures/FormProtectionTesting.php';
 
 /**
- * Testcase for the t3lib_formprotection_Abstract class.
+ * Testcase
  *
  * @author Oliver Klee <typo3-coding@oliverklee.de>
  */
@@ -54,7 +54,7 @@ class AbstractFormProtectionTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function constructionRetrievesToken() {
-		$className = uniqid('t3lib_formProtection');
+		$className = uniqid('FormProtection');
 		eval('class ' . $className . ' extends \TYPO3\CMS\Core\Tests\Unit\FormProtection\Fixtures\FormProtectionTesting {' . 'public $tokenHasBeenRetrieved = FALSE; ' . 'protected function retrieveSessionToken() {' . '$this->tokenHasBeenRetrieved = TRUE;' . '}' . '}');
 		$fixture = new $className();
 		$this->assertTrue($fixture->tokenHasBeenRetrieved);

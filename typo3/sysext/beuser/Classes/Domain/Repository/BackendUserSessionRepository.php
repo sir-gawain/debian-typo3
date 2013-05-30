@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Beuser\Domain\Repository;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Felix Kopp <felix-source@phorax.com>
+ *  (c) 2012-2013 Felix Kopp <felix-source@phorax.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,6 +25,7 @@ namespace TYPO3\CMS\Beuser\Domain\Repository;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Repository for Tx_Beuser_Domain_Model_BackendUser
  *
@@ -34,7 +35,7 @@ class BackendUserSessionRepository extends \TYPO3\CMS\Extbase\Persistence\Reposi
 
 	/**
 	 * Find Sessions for specific BackendUser
-	 * Delivers Array, not ObjectStorage!
+	 * Delivers an Array, not an ObjectStorage!
 	 *
 	 * @param \TYPO3\CMS\Beuser\Domain\Model\BackendUser $backendUser
 	 * @return array
@@ -55,6 +56,7 @@ class BackendUserSessionRepository extends \TYPO3\CMS\Extbase\Persistence\Reposi
 				'timestamp' => new \DateTime('@' . $row['timestamp'])
 			);
 		}
+		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		return $sessions;
 	}
 

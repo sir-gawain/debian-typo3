@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Tree\View;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -29,17 +29,8 @@ namespace TYPO3\CMS\Backend\Tree\View;
 /**
  * Generate a page-tree, non-browsable.
  *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @coauthor René Fritz <r.fritz@colorcube.de>
- */
-/**
- * Class for generating a page tree.
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @coauthor René Fritz <r.fritz@colorcube.de>
- * @see t3lib_treeView, t3lib_browseTree
  */
 class PageTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 
@@ -113,7 +104,7 @@ class PageTreeView extends \TYPO3\CMS\Backend\Tree\View\AbstractTreeView {
 	 * @param boolean $exp The element was expanded to render subelements if this flag is set.
 	 * @return string Image tag with the plus/minus icon.
 	 * @access private
-	 * @see t3lib_treeView::PMicon()
+	 * @see AbstarctTreeView::PMicon()
 	 * @todo Define visibility
 	 */
 	public function PMicon($row, $a, $c, $nextCount, $exp) {

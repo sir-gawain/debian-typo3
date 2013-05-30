@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -52,7 +52,7 @@ class StringLengthValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abst
 		if (is_object($value) && !method_exists($value, '__toString')) {
 			throw new \TYPO3\CMS\Extbase\Validation\Exception\InvalidSubjectException('The given object could not be converted to a string.', 1238110957);
 		}
-		// TODO Use t3lib_cs::strlen() instead; How do we get the charset?
+		// TODO Use \TYPO3\CMS\Core\Charset\CharsetConverter::strlen() instead; How do we get the charset?
 		$stringLength = strlen($value);
 		$isValid = TRUE;
 		if (isset($this->options['minimum']) && $stringLength < $this->options['minimum']) {
@@ -63,11 +63,33 @@ class StringLengthValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abst
 		}
 		if ($isValid === FALSE) {
 			if (isset($this->options['minimum']) && isset($this->options['maximum'])) {
-				$this->addError('The length of the given string was not between %1$d and %2$d characters.', 1238108067, array($this->options['minimum'], $this->options['maximum']));
+				$this->addError(
+					\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+						'validator.stringlength.between',
+						'extbase',
+						array (
+							$this->options['minimum'],
+							$this->options['maximum']
+						)
+					), 1238108067, array($this->options['minimum'], $this->options['maximum']));
 			} elseif (isset($this->options['minimum'])) {
-				$this->addError('The length of the given string less than %1$d characters.', 1238108068, array($this->options['minimum']));
+				$this->addError(
+					\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+						'validator.stringlength.less',
+						'extbase',
+						array(
+							$this->options['minimum']
+						)
+					), 1238108068, array($this->options['minimum']));
 			} else {
-				$this->addError('The length of the given string exceeded %1$d characters.', 1238108069, array($this->options['maximum']));
+				$this->addError(
+					\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
+						'validator.stringlength.exceed',
+						'extbase',
+						array(
+							$this->options['maximum']
+						)
+					), 1238108069, array($this->options['maximum']));
 			}
 		}
 		return $isValid;

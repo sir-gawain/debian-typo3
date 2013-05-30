@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 1999-2012 Kasper Skårhøj (kasperYYYY@typo3.com)
+*  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -34,7 +34,9 @@
  */
 
 require 'typo3/sysext/core/Classes/Core/Bootstrap.php';
-\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->baseSetup('');
+\TYPO3\CMS\Core\Core\Bootstrap::getInstance()
+	->baseSetup('')
+	->redirectToInstallToolIfLocalConfigurationFileDoesNotExist();
 
 require(PATH_tslib . 'index_ts.php');
 ?>

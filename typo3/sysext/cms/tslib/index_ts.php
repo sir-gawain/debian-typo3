@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -43,19 +43,16 @@ define('TYPO3_MODE', 'FE');
 	->loadTypo3LoadedExtAndExtLocalconf(TRUE)
 	->applyAdditionalConfigurationSettings();
 
-if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('cms')) {
-	die('<strong>Error:</strong> The main frontend extension "cms" was not loaded. Enable it in the extension manager in the backend.');
-}
 // Timetracking started
 if ($_COOKIE[\TYPO3\CMS\Core\Authentication\BackendUserAuthentication::getCookieName()]) {
-	require_once PATH_t3lib . 'class.t3lib_timetrack.php';
 	$TT = new \TYPO3\CMS\Core\TimeTracker\TimeTracker();
 } else {
-	require_once PATH_t3lib . 'class.t3lib_timetracknull.php';
-	$TT = new t3lib_timeTrackNull();
+	$TT = new \TYPO3\CMS\Core\TimeTracker\NullTimeTracker();
 }
+
 $TT->start();
-\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->initializeTypo3DbGlobal(FALSE);
+
+\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->initializeTypo3DbGlobal();
 // Hook to preprocess the current request:
 if (is_array($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preprocessRequest'])) {
 	foreach ($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/index_ts.php']['preprocessRequest'] as $hookFunction) {
@@ -74,17 +71,31 @@ if ($temp_extId = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('eID')) {
 	}
 	die;
 }
-// Create $TSFE object (TSFE = TypoScript Front End)
-// Connecting to database
-/**
- * @var $TSFE \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController
- */
-$TSFE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', $TYPO3_CONF_VARS, \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('id'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('type'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('no_cache'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('cHash'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('jumpurl'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('MP'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('RDCT'));
-if ($TYPO3_CONF_VARS['FE']['pageUnavailable_force'] && !\TYPO3\CMS\Core\Utility\GeneralUtility::cmpIP(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REMOTE_ADDR'), $TYPO3_CONF_VARS['SYS']['devIPmask'])) {
+
+/** @var $TSFE \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController */
+$TSFE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+	'TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController',
+	$TYPO3_CONF_VARS,
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('id'),
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('type'),
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('no_cache'),
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('cHash'),
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('jumpurl'),
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('MP'),
+	\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('RDCT')
+);
+
+if ($TYPO3_CONF_VARS['FE']['pageUnavailable_force']
+	&& !\TYPO3\CMS\Core\Utility\GeneralUtility::cmpIP(
+		\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REMOTE_ADDR'),
+		$TYPO3_CONF_VARS['SYS']['devIPmask'])
+) {
 	$TSFE->pageUnavailableAndExit('This page is temporarily unavailable.');
 }
+
 $TSFE->connectToDB();
 $TSFE->sendRedirect();
+
 // Output compression
 // Remove any output produced until now
 ob_clean();
@@ -95,31 +106,34 @@ if ($TYPO3_CONF_VARS['FE']['compressionLevel'] && extension_loaded('zlib')) {
 	}
 	ob_start(array(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Utility\\CompressionUtility'), 'compressionOutputHandler'));
 }
+
 // FE_USER
 $TT->push('Front End user initialized', '');
-/**
- * @var $TSFE \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController
- */
+/** @var $TSFE \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController */
 $TSFE->initFEuser();
 $TT->pull();
+
 // BE_USER
-/**
- * @var $BE_USER \TYPO3\CMS\Backend\FrontendBackendUserAuthentication
- */
+/** @var $BE_USER \TYPO3\CMS\Backend\FrontendBackendUserAuthentication */
 $BE_USER = $TSFE->initializeBackendUser();
+
 // Process the ID, type and other parameters
 // After this point we have an array, $page in TSFE, which is the page-record of the current page, $id
 $TT->push('Process ID', '');
 // Initialize admin panel since simulation settings are required here:
 if ($TSFE->isBackendUserLoggedIn()) {
 	$BE_USER->initializeAdminPanel();
+	\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadExtensionTables(TRUE);
+} else {
+	\TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadCachedTca();
 }
 $TSFE->checkAlternativeIdMethods();
 $TSFE->clear_preview();
 $TSFE->determineId();
 // Now, if there is a backend user logged in and he has NO access to this page, then re-evaluate the id shown!
 if ($TSFE->isBackendUserLoggedIn() && (!$BE_USER->extPageReadAccess($TSFE->page) || \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('ADMCMD_noBeUser'))) {
-	// t3lib_div::_GP('ADMCMD_noBeUser') is placed here because workspacePreviewInit() might need to know if a backend user is logged in!
+	// \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('ADMCMD_noBeUser') is placed here because
+	// Tx_Version_PreviewHook might need to know if a backend user is logged in!
 	// Remove user
 	unset($BE_USER);
 	$TSFE->beUserLogin = 0;
@@ -130,6 +144,7 @@ if ($TSFE->isBackendUserLoggedIn() && (!$BE_USER->extPageReadAccess($TSFE->page)
 }
 $TSFE->makeCacheHash();
 $TT->pull();
+
 // Admin Panel & Frontend editing
 if ($TSFE->isBackendUserLoggedIn()) {
 	$BE_USER->initializeFrontendEdit();
@@ -140,9 +155,7 @@ if ($TSFE->isBackendUserLoggedIn()) {
 		$BE_USER->frontendEdit->initConfigOptions();
 	}
 }
-// Get compressed $TCA-Array();
-// After this, we should now have a valid $TCA, though minimized
-$TSFE->getCompressedTCarray();
+
 // Starts the template
 $TT->push('Start Template', '');
 $TSFE->initTemplate();
@@ -164,13 +177,9 @@ $TT->pull();
 // Check JumpUrl
 $TSFE->setExternalJumpUrl();
 $TSFE->checkJumpUrlReferer();
-// Check Submission of data.
-// This is done at this point, because we need the config values
-switch ($TSFE->checkDataSubmission()) {
-case 'email':
-	$TSFE->sendFormmail();
-	break;
-}
+
+$TSFE->handleDataSubmission();
+
 // Check for shortcut page and redirect
 $TSFE->checkPageForShortcutRedirect();
 // Generate page

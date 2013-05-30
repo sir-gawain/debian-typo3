@@ -2,7 +2,7 @@
 namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers;
 
 /*                                                                        *
- * This script is backported from the FLOW3 package "TYPO3.Fluid".        *
+ * This script is backported from the TYPO3 Flow package "TYPO3.Fluid".   *
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU General Public License, either version 3 of the   *
@@ -10,6 +10,10 @@ namespace TYPO3\CMS\Fluid\Tests\Unit\ViewHelpers;
  *                                                                        *
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
+
+/**
+ * Base test class for testing view helpers
+ */
 abstract class ViewHelperBaseTestcase extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
@@ -53,6 +57,11 @@ abstract class ViewHelperBaseTestcase extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 	protected $renderingContext;
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService
+	 */
+	protected $mvcPropertyMapperConfigurationService;
+
+	/**
 	 * @return void
 	 */
 	public function setUp() {
@@ -81,6 +90,7 @@ abstract class ViewHelperBaseTestcase extends \TYPO3\CMS\Extbase\Tests\Unit\Base
 		$this->renderingContext->injectTemplateVariableContainer($this->templateVariableContainer);
 		$this->renderingContext->injectViewHelperVariableContainer($this->viewHelperVariableContainer);
 		$this->renderingContext->setControllerContext($this->controllerContext);
+		$this->mvcPropertyMapperConfigurationService = new \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService;
 	}
 
 	/**

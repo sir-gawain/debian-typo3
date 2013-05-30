@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009-2011 Bastian Waidelich <bastian@typo3.org>
+ *  (c) 2009-2013 Bastian Waidelich <bastian@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -37,25 +37,12 @@ class RegistryTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	protected $registry;
 
 	/**
-	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
-	 */
-	protected $typo3DbBackup;
-
-	/**
 	 * Sets up this testcase
 	 */
 	public function setUp() {
-		$this->typo3DbBackup = $GLOBALS['TYPO3_DB'];
 		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection', array());
 		$GLOBALS['TYPO3_DB']->expects($this->any())->method('fullQuoteStr')->will($this->onConsecutiveCalls('\'tx_phpunit\'', '\'someKey\'', '\'tx_phpunit\'', '\'someKey\''));
 		$this->registry = new \TYPO3\CMS\Core\Registry();
-	}
-
-	/**
-	 * Tears down this testcase
-	 */
-	public function tearDown() {
-		$GLOBALS['TYPO3_DB'] = $this->typo3DbBackup;
 	}
 
 	/**

@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Backend\Sprite;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Ritter <info@steffen-ritter.net>
+ *  (c) 2010-2013 Steffen Ritter <info@steffen-ritter.net>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -26,12 +26,14 @@ namespace TYPO3\CMS\Backend\Sprite;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * A class with an concrete implementation of t3lib_spritemanager_SpriteIconGenerator.
+ * A class with an concrete implementation of AbspractSpriteHandler.
  * It is the standard / fallback handler of the sprite manager.
  * This implementation won't generate sprites at all. It will just render css-definitions
- * for all registered icons so that they may be used through t3lib_iconWorks::getSpriteIcon*
- * Without the css classes generated here, icons of for example tca records would be empty.
+ * for all registered icons so that they may be used through
+ * \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon* Without the css classes
+ * generated here, icons of for example tca records would be empty.
  *
  * @author Steffen Ritter <info@steffen-ritter.net>
  */
@@ -63,8 +65,10 @@ class SimpleSpriteHandler extends \TYPO3\CMS\Backend\Sprite\AbstractSpriteHandle
 
 	/**
 	 * This function builds an css class for every single icon registered via
-	 * t3lib_SpriteManager::addSingleIcons to use them via t3lib_iconWorks::getSpriteIcon
-	 * and TCA-Icons for "classic" record Icons to be uses via t3lib_iconWorks::getSpriteIconForRecord
+	 * \TYPO3\CMS\Backend\Utility\IconUtility::addSingleIcons to use them via
+	 * \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon and TCA-Icons for
+	 * "classic" record Icons to be uses via
+	 * \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord
 	 * In the simpleHandler the icon just will be added as css-background-image.
 	 *
 	 * @return void

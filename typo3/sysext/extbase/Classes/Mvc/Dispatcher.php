@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Extbase\Mvc;
 /***************************************************************
  *  Copyright notice
  *
- *  This class is a backport of the corresponding class of TYPO3 Flow.
- *  All credits go to the TYPO3 Flow team.
+ *  (c) 2010-2013 Extbase Team (http://forge.typo3.org/projects/typo3v4-mvc)
+ *  Extbase is a backport of TYPO3 Flow. All credits go to the TYPO3 Flow team.
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -111,8 +111,6 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param \TYPO3\CMS\Extbase\Mvc\RequestInterface $request The request to dispatch
 	 * @throws Exception\InvalidControllerException
 	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\ControllerInterface
-	 * @author Bastian Waidelich <bastian@typo3.org>
-	 * @author Robert Lemke <robert@typo3.org>
 	 */
 	protected function resolveController(\TYPO3\CMS\Extbase\Mvc\RequestInterface $request) {
 		$controllerObjectName = $request->getControllerObjectName();

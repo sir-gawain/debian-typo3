@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Database;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ * (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -50,7 +50,7 @@ class PdoHelper {
 	static public function importSql(\PDO $databaseHandle, $pdoDriver, $pathAndFilename) {
 		$sql = file($pathAndFilename, FILE_IGNORE_NEW_LINES & FILE_SKIP_EMPTY_LINES);
 		// Remove MySQL style key length delimiters (yuck!) if we are not setting up a MySQL db
-		if ($pdoDriver !== 'mysql') {
+		if (substr($pdoDriver, 0, 5) !== 'mysql') {
 			$sql = preg_replace('/"\\([0-9]+\\)/', '"', $sql);
 		}
 		$statement = '';

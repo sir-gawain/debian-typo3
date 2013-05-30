@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Version\Hook;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 TYPO3 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
+ *  (c) 2011-2013 TYPO3 Workspaces Team (http://forge.typo3.org/projects/show/typo3v4-workspaces)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -108,7 +108,6 @@ class PreviewHook implements \TYPO3\CMS\Core\SingletonInterface {
 			}
 			$params['BE_USER'] = $BE_USER;
 		}
-		// @previouslyknownas $TSFE->workspacePreviewInit()
 		// if there is a valid BE user, and the full workspace should be
 		// previewed, the workspacePreview option shouldbe set
 		$workspaceUid = $this->previewConfiguration['fullWorkspace'];
@@ -130,8 +129,6 @@ class PreviewHook implements \TYPO3\CMS\Core\SingletonInterface {
 	 * This can also be used to generate previews of hidden pages, start/endtimes, usergroups and those other settings from the Admin Panel - just not implemented yet.
 	 *
 	 * @return 	array		Preview configuration array from sys_preview record.
-	 * @see t3lib_BEfunc::compilePreviewKeyword()
-	 * @previouslyknownas TSFE->ADMCMD_preview
 	 */
 	public function getPreviewConfiguration() {
 		$inputCode = $this->getPreviewInputCode();
@@ -218,7 +215,7 @@ class PreviewHook implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * Set preview keyword, eg:
-	 * $previewUrl = t3lib_div::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.$this->compilePreviewKeyword('id='.$pageId.'&L='.$language.'&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS='.$this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
+	 * $previewUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.$this->compilePreviewKeyword('id='.$pageId.'&L='.$language.'&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS='.$this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
 	 *
 	 * todo for sys_preview:
 	 * - Add a comment which can be shown to previewer in frontend in some way (plus maybe ability to write back, take other action?)
@@ -229,7 +226,6 @@ class PreviewHook implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param 	integer		Time-To-Live for keyword
 	 * @param 	integer		Which workspace to preview. Workspace UID, -1 or >0. If set, the getVars is ignored in the frontend, so that string can be empty
 	 * @return 	string		Returns keyword to use in URL for ADMCMD_prev=
-	 * @formallyknownas t3lib_BEfunc::compilePreviewKeyword
 	 */
 	public function compilePreviewKeyword($getVarsStr, $backendUserUid, $ttl = 172800, $fullWorkspace = NULL) {
 		$fieldData = array(

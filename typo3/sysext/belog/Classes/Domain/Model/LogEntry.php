@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Belog\Domain\Model;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2012-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,17 +25,18 @@ namespace TYPO3\CMS\Belog\Domain\Model;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * A sys log entry
  * This model is 'complete': All current database properties are in there.
  *
- * @TODO : This should be stuffed to some more central place
+ * @todo : This should be stuffed to some more central place
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 
 	/**
-	 * storage page ID of the log entry
+	 * Storage page ID of the log entry
 	 *
 	 * @var integer
 	 */
@@ -53,7 +54,7 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $backendUserUid = 0;
 
 	/**
-	 * action ID of the action that happened, for example 3 was a file action
+	 * Action ID of the action that happened, for example 3 was a file action
 	 *
 	 * @var integer
 	 */
@@ -67,7 +68,7 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $recordUid = 0;
 
 	/**
-	 * table name
+	 * Table name
 	 *
 	 * @var string
 	 */
@@ -81,7 +82,7 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $recordPid = 0;
 
 	/**
-	 * error code
+	 * Error code
 	 *
 	 * @var integer
 	 */
@@ -95,21 +96,21 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $details = '';
 
 	/**
-	 * timestamp when the log entry was written
+	 * Timestamp when the log entry was written
 	 *
 	 * @var integer
 	 */
 	protected $tstamp = 0;
 
 	/**
-	 * type code
+	 * Type code
 	 *
 	 * @var integer
 	 */
 	protected $type = 0;
 
 	/**
-	 * details number
+	 * Details number
 	 *
 	 * @var integer
 	 */
@@ -130,7 +131,7 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $logData = '';
 
 	/**
-	 * event PID
+	 * Event PID
 	 *
 	 * @var integer
 	 */
@@ -144,7 +145,7 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $workspaceUid = 0;
 
 	/**
-	 * new ID
+	 * New ID
 	 *
 	 * @var string
 	 */
@@ -462,6 +463,5 @@ class LogEntry extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 }
-
 
 ?>

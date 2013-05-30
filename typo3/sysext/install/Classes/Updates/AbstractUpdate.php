@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Install\Updates;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Benjamin Mack <benni@typo3.org>
+ *  (c) 2010-2013 Benjamin Mack <benni@typo3.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -53,7 +53,7 @@ abstract class AbstractUpdate {
 
 	/**
 	 * current TYPO3 version number, set from outside
-	 * version number coming from t3lib_utility_VersionNumber::convertVersionNumberToInteger()
+	 * version number coming from \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionNumberToInteger()
 	 */
 	public $versionNumber;
 

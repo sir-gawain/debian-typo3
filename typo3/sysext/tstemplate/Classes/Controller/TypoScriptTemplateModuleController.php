@@ -1,6 +1,32 @@
 <?php
 namespace TYPO3\CMS\Tstemplate\Controller;
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 /**
  * Module: TypoScript Tools
  *
@@ -63,9 +89,6 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 		$this->sObj = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('sObj');
 		$this->edit = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('edit');
 		$this->perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
-		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('clear_all_cache')) {
-			$this->include_once[] = PATH_t3lib . 'class.t3lib_tcemain.php';
-		}
 	}
 
 	/**
@@ -138,7 +161,6 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 				TABLE#typo3-objectBrowser A { text-decoration: none; }
 				TABLE#typo3-objectBrowser .comment { color: maroon; font-weight: bold; }
 				TABLE#ts-analyzer { width: 100% }
-				TABLE#ts-analyzer tr.t3-row-header { background-color: #A2AAB8; }
 				TABLE#ts-analyzer tr td {padding: 0 4px;}
 				TABLE#ts-analyzer tr.t3-row-header td { padding: 2px 4px; font-weight:bold; color: #fff; }
 				.ts-typoscript { width: 100%; }
@@ -173,6 +195,7 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 			while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				$this->setInPageArray($pArray, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($row['uid'], 'AND 1=1'), $row);
 			}
+			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			$lines = array();
 			$lines[] = '<tr class="t3-row-header">
 				<td nowrap>' . $GLOBALS['LANG']->getLL('pageName') . '</td>
@@ -225,29 +248,29 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 		);
 		if ($this->id && $this->access) {
 			// View page
-			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->pageinfo['uid'], $GLOBALS['BACK_PATH'], \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
+			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->pageinfo['uid'], $GLOBALS['BACK_PATH'], \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
 			if ($this->extClassConf['name'] == 'tx_tstemplateinfo') {
 				// NEW button
-				$buttons['new'] = '<input type="image" class="c-inputButton" name="createExtension" value="New"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/new_el.gif', '') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:db_new.php.pagetitle', TRUE) . '" />';
+				$buttons['new'] = '<input type="image" class="c-inputButton" name="createExtension" value="New"' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/new_el.gif', '') . ' title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.pagetitle', TRUE) . '" />';
 				if (!empty($this->e) && !\TYPO3\CMS\Core\Utility\GeneralUtility::_POST('abort') && !\TYPO3\CMS\Core\Utility\GeneralUtility::_POST('saveclose')) {
 					// no NEW-button while edit
 					$buttons['new'] = '';
 					// SAVE button
 					$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array(
-						'html' => '<input type="image" class="c-inputButton" name="submit" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" ' . '/>'
+						'html' => '<input type="image" class="c-inputButton" name="submit" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', TRUE) . '" ' . '/>'
 					));
 					// SAVE AND CLOSE button
 					$buttons['save_close'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save-close', array(
-						'html' => '<input type="image" class="c-inputButton" name="saveclose" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveCloseDoc', TRUE) . '" ' . '/>'
+						'html' => '<input type="image" class="c-inputButton" name="saveclose" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', TRUE) . '" ' . '/>'
 					));
 					// CLOSE button
 					$buttons['close'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-close', array(
-						'html' => '<input type="image" class="c-inputButton" name="abort" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.closeDoc', TRUE) . '" ' . '/>'
+						'html' => '<input type="image" class="c-inputButton" name="abort" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.closeDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.closeDoc', TRUE) . '" ' . '/>'
 					));
 				}
 			} elseif ($this->extClassConf['name'] == 'tx_tstemplateceditor' && count($this->MOD_MENU['constant_editor_cat'])) {
 				// SAVE button
-				$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" class="c-inputButton" name="submit" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:rm.saveDoc', TRUE) . '" ' . '/>'));
+				$buttons['save'] = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" class="c-inputButton" name="submit" src="clear.gif" ' . 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', TRUE) . '" ' . 'value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', TRUE) . '" ' . '/>'));
 			} elseif ($this->extClassConf['name'] == 'tx_tstemplateobjbrowser') {
 				if (!empty($this->sObj)) {
 					// BACK
@@ -255,7 +278,7 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 						'id' => $this->id
 					);
 					$aHref = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('web_ts', $urlParameters);
-					$buttons['back'] = '<a href="' . htmlspecialchars($aHref) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.goBack', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
+					$buttons['back'] = '<a href="' . htmlspecialchars($aHref) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.goBack', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
 				}
 			}
 			// Shortcut
@@ -312,17 +335,23 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 		$theOutput .= $flashMessage->render();
 		// New standard?
 		if ($newStandardTemplate) {
-			// check wether statictemplates are supported
-			if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('statictemplates')) {
-				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('title,uid', 'static_template', '', '', 'title');
-				$opt = '';
-				while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-					if (substr(trim($row['title']), 0, 8) == 'template') {
-						$opt .= '<option value="' . $row['uid'] . '">' . htmlspecialchars($row['title']) . '</option>';
-					}
-				}
-				$selector = '<select name="createStandard"><option></option>' . $opt . '</select><br />';
-				$staticsText = ', optionally based on one of the standard templates';
+			// Hook to change output, implemented for statictemplates
+			if (isset(
+				$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['TYPO3\\CMS\\Tstemplate\\Controller\\TypoScriptTemplateModuleController']['newStandardTemplateView']
+			)) {
+				$selector = '';
+				$staticsText = '';
+				$reference = array(
+					'selectorHtml' => &$selector,
+					'staticsText' => &$staticsText
+				);
+				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction(
+					$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['TYPO3\\CMS\\Tstemplate\\Controller\\TypoScriptTemplateModuleController']['newStandardTemplateView'],
+					$reference,
+					$this
+				);
+				$selector = $reference['selectorHtml'];
+				$staticsText = $reference['staticsText'];
 			} else {
 				$selector = '<input type="hidden" name="createStandard" value="" />';
 				$staticsText = '';
@@ -395,16 +424,20 @@ class TypoScriptTemplateModuleController extends \TYPO3\CMS\Backend\Module\BaseS
 			/** @var $tce \TYPO3\CMS\Core\DataHandling\DataHandler */
 			$tce->stripslashes_values = 0;
 			$recData = array();
-			if (intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('createStandard'))) {
-				$staticT = intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('createStandard'));
-				$recData['sys_template']['NEW'] = array(
-					'pid' => $id,
-					'title' => $GLOBALS['LANG']->getLL('titleNewSiteStandard'),
-					'sorting' => 0,
-					'root' => 1,
-					'clear' => 3,
-					'include_static' => $staticT . ',57'
+			// Hook to handle row data, implemented for statictemplates
+			if (isset(
+				$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['TYPO3\\CMS\\Tstemplate\\Controller\\TypoScriptTemplateModuleController']['newStandardTemplateHandler']
+			)) {
+				$reference = array(
+					'recData' => &$recData,
+					'id' => $id,
 				);
+				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction(
+					$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['TYPO3\\CMS\\Tstemplate\\Controller\\TypoScriptTemplateModuleController']['newStandardTemplateHandler'],
+					$reference,
+					$this
+				);
+				$recData = $reference['recData'];
 			} else {
 				$recData['sys_template']['NEW'] = array(
 					'pid' => $id,
@@ -493,6 +526,5 @@ page.10.value = HELLO WORLD!
 	}
 
 }
-
 
 ?>

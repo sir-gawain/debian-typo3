@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 1999-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,8 +30,6 @@
  * @author 	Kasper Skårhøj <kasperYYYY@typo3.com>
  * @author 	Ingmar Schlecht <ingmar@typo3.org>
  */
-// include requirements definition:
-require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'requirements.php';
 // include session handling
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'mod/class.tx_install_session.php';
 // include update classes
@@ -42,7 +40,6 @@ require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('instal
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/MergeAdvancedUpdate.php';
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/InstallSysExtsUpdate.php';
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/ImagecolsUpdate.php';
-require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/StaticTemplatesUpdate.php';
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/T3skinUpdate.php';
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/CompressionLevelUpdate.php';
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('install') . 'Classes/CoreUpdates/MigrateWorkspacesUpdate.php';

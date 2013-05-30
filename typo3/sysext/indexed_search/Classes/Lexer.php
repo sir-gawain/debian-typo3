@@ -4,7 +4,7 @@ namespace TYPO3\CMS\IndexedSearch;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2001-2011 Kasper Skårhøj (kasperYYYY@typo3.com)
+ *  (c) 2001-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -71,7 +71,7 @@ class Lexer {
 	);
 
 	/**
-	 * Constructor: Initializes the charset class, t3lib_cs
+	 * Constructor: Initializes the charset class
 	 *
 	 * @return 	void
 	 * @todo Define visibility

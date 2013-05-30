@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Page;
 /***************************************************************
  * Copyright notice
  *
- * (c) 1999-2012 Kasper Skårhøj (kasperYYYY@typo3.com)
+ * (c) 1999-2013 Kasper Skårhøj (kasperYYYY@typo3.com)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -75,7 +75,6 @@ class FramesetRenderer {
 	 * @return string String with attributes for the frame-tag. With a prefixed space character.
 	 * @access private
 	 * @link http://typo3.org/documentation/document-library/references/doc_core_tsref/current/view/7/9/
-	 * @see make(), t3lib_TStemplate::linkData()
 	 * @todo Define visibility
 	 */
 	public function frameParams($setup, $typeNum) {

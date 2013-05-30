@@ -2,9 +2,11 @@
 if (!defined('TYPO3_MODE')) {
 	die('Access denied.');
 }
+
 // Add Default TS to Include static (from extensions)
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addStaticFile($_EXTKEY, 'Configuration/TypoScript/', 'Default TS');
-$TCA['tt_content']['columns']['bodytext']['config']['wizards']['forms'] = array(
+
+$GLOBALS['TCA']['tt_content']['columns']['bodytext']['config']['wizards']['forms'] = array(
 	'notNewRecords' => 1,
 	'enableByTypeConfig' => 1,
 	'type' => 'script',
@@ -15,14 +17,14 @@ $TCA['tt_content']['columns']['bodytext']['config']['wizards']['forms'] = array(
 		'xmlOutput' => 0
 	)
 );
-$TCA['tt_content']['types']['mailform']['showitem'] = '
+$GLOBALS['TCA']['tt_content']['types']['mailform']['showitem'] = '
 	CType;;4;;1-1-1,
 	hidden,
 	header;;3;;2-2-2,
 	linkToTop;;;;3-3-3,
 	--div--;LLL:EXT:cms/locallang_ttc.xml:CType.I.8,
 	bodytext;LLL:EXT:cms/locallang_ttc.php:bodytext.ALT.mailform;;nowrap:wizards[forms];3-3-3,
-	--div--;LLL:EXT:cms/locallang_tca.xml:pages.tabs.access,
+	--div--;LLL:EXT:cms/locallang_tca.xlf:pages.tabs.access,
 	starttime,
 	endtime,
 	fe_group

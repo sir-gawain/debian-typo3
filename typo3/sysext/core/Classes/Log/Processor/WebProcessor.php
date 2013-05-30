@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\Log\Processor;
 /***************************************************************
  * Copyright notice
  *
- * (c) 2011-2012 Ingo Renner (ingo@typo3.org)
- * (c) 2012 Steffen Müller (typo3@t3node.com)
+ * (c) 2011-2013 Ingo Renner (ingo@typo3.org)
+ * (c) 2012-2013 Steffen Müller (typo3@t3node.com)
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -39,7 +39,7 @@ class WebProcessor extends \TYPO3\CMS\Core\Log\Processor\AbstractProcessor {
 	 *
 	 * @param \TYPO3\CMS\Core\Log\LogRecord $logRecord The log record to process
 	 * @return \TYPO3\CMS\Core\Log\LogRecord The processed log record with additional data
-	 * @see t3lib_div::getIndpEnv()
+	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv()
 	 */
 	public function processLogRecord(\TYPO3\CMS\Core\Log\LogRecord $logRecord) {
 		$logRecord->addData(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('_ARRAY'));

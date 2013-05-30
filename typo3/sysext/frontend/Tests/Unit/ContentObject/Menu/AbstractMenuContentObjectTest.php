@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\ContentObject\Menu;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Stefan Galinski <stefan.galinski@gmail.com>
+ *  (c) 2012-2013 Stefan Galinski <stefan.galinski@gmail.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -31,13 +31,6 @@ namespace TYPO3\CMS\Frontend\Tests\Unit\ContentObject\Menu;
 class AbstractMenuContentObjectTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
-
-	/**
 	 * A backup of the global database
 	 *
 	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
@@ -56,9 +49,10 @@ class AbstractMenuContentObjectTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTe
 		$proxy = $this->buildAccessibleProxy('TYPO3\\CMS\\Frontend\\ContentObject\\Menu\\AbstractMenuContentObject');
 		$this->fixture = new $proxy();
 		$this->databaseBackup = $GLOBALS['TYPO3_DB'];
-		$GLOBALS['TYPO3_DB'] = $this->getMock('t3lib_db');
+		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection');
 		$GLOBALS['TSFE'] = $this->getMock('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', array(), array($GLOBALS['TYPO3_CONF_VARS'], 1, 1));
 		$GLOBALS['TSFE']->cObj = new \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer();
+		$GLOBALS['TSFE']->page = array();
 	}
 
 	/**
@@ -232,6 +226,67 @@ class AbstractMenuContentObjectTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTe
 		$this->fixture->_call('sectionIndex', 'field', 12);
 	}
 
+	////////////////////////////////////
+	// Tests concerning menu item states
+	////////////////////////////////////
+	/**
+	 * @return array
+	 */
+	public function ifsubHasToCheckExcludeUidListDataProvider() {
+		return array(
+			'none excluded' => array (
+				array(12, 34, 56),
+				'1, 23, 456',
+				TRUE
+			),
+			'one excluded' => array (
+				array(1, 234, 567),
+				'1, 23, 456',
+				TRUE
+			),
+			'three excluded' => array (
+				array(1, 23, 456),
+				'1, 23, 456',
+				FALSE
+			),
+			'empty excludeList' => array (
+				array(1, 123, 45),
+				'',
+				TRUE
+			),
+			'empty menu' => array (
+				array(),
+				'1, 23, 456',
+				FALSE
+			),
+		);
+
+	}
+
+	/**
+	 * @test
+	 * @dataProvider ifsubHasToCheckExcludeUidListDataProvider
+	 * @param array $menuItems
+	 * @param string $excludeUidList
+	 * @param boolean $expectedResult
+	 */
+	public function ifsubHasToCheckExcludeUidList($menuItems, $excludeUidList, $expectedResult) {
+		$menu = array();
+		foreach ($menuItems as $page) {
+			$menu[] = array('uid' => $page);
+		}
+
+		$this->prepareSectionIndexTest();
+		$this->fixture->parent_cObj = $this->getMock('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer', array());
+
+		$this->fixture->sys_page->expects($this->once())->method('getMenu')->will($this->returnValue($menu));
+		$this->fixture->menuArr = array(
+			0 => array('uid' => 1)
+		);
+		$this->fixture->conf['excludeUidList'] = $excludeUidList;
+
+		$this->assertEquals($expectedResult, $this->fixture->isItemState('IFSUB', 0));
+	}
 }
 
 

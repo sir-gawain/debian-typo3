@@ -4,8 +4,8 @@ namespace TYPO3\CMS\Core\FrontendEditing;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2008-2011 Jeff Segars <jeff@webempoweredchurch.org>
- *  (c) 2008-2011 David Slayback <dave@webempoweredchurch.org>
+ *  (c) 2008-2013 Jeff Segars <jeff@webempoweredchurch.org>
+ *  (c) 2008-2013 David Slayback <dave@webempoweredchurch.org>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -44,9 +44,7 @@ class FrontendEditingController {
 	public $TSFE_EDIT;
 
 	/**
-	 * TCEmain object.
-	 *
-	 * @var t3lib_tcemain
+	 * @var \TYPO3\CMS\Core\DataHandling\DataHandler
 	 */
 	protected $tce;
 
@@ -59,7 +57,6 @@ class FrontendEditingController {
 		$this->TSFE_EDIT = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('TSFE_EDIT');
 		// Include classes for editing IF editing module in Admin Panel is open
 		if ($GLOBALS['BE_USER']->isFrontendEditingActive()) {
-			$GLOBALS['TSFE']->includeTCA(0);
 			if ($this->isEditAction()) {
 				$this->editAction();
 			}
@@ -569,7 +566,7 @@ class FrontendEditingController {
 	}
 
 	/**
-	 * Initializes t3lib_TCEmain since it is used on modification actions.
+	 * Initializes \TYPO3\CMS\Core\DataHandling\DataHandler since it is used on modification actions.
 	 *
 	 * @return void
 	 */

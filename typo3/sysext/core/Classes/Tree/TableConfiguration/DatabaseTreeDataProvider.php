@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tree\TableConfiguration;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Steffen Ritter <info@steffen-ritter.net>
+ *  (c) 2010-2013 Steffen Ritter <info@steffen-ritter.net>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -58,7 +58,7 @@ class DatabaseTreeDataProvider extends \TYPO3\CMS\Core\Tree\TableConfiguration\A
 	/**
 	 * @var integer
 	 */
-	protected $lookupMode = \t3lib_tree_tca_DatabaseTreeDataProvider::MODE_CHILDREN;
+	protected $lookupMode = self::MODE_CHILDREN;
 
 	/**
 	 * @var string

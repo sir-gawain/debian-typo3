@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2010-2011 Christian Kuhn <lolli@schwarzbu.ch>
+ *  (c) 2010-2013 Christian Kuhn <lolli@schwarzbu.ch>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,13 +30,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Cache\Backend;
  * @author Christian Kuhn <lolli@schwarzbu.ch>
  */
 class PdoBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
-
-	/**
-	 * Enable backup of global and system variables
-	 *
-	 * @var boolean
-	 */
-	protected $backupGlobals = TRUE;
 
 	/**
 	 * Sets up this testcase
@@ -132,6 +125,20 @@ class PdoBackendTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$backend->set($entryIdentifier, $data, array('UnitTestTag%tag3'));
 		$retrieved = $backend->findIdentifiersByTag('UnitTestTag%tag2');
 		$this->assertEquals(array(), $retrieved);
+	}
+
+	/**
+	 * @test
+	 */
+	public function setOverwritesExistingEntryThatExceededItsLifetimeWithNewData() {
+		$backend = $this->setUpBackend();
+		$data1 = 'data1';
+		$entryIdentifier = uniqid('test');
+		$backend->set($entryIdentifier, $data1, array(), 1);
+		$data2 = 'data2';
+		$GLOBALS['EXEC_TIME'] += 2;
+		$backend->set($entryIdentifier, $data2, array(), 10);
+		$this->assertEquals($data2, $backend->get($entryIdentifier));
 	}
 
 	/**
