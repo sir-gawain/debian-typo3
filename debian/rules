@@ -77,10 +77,10 @@ install: build
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
-	rm $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
+	rm $(SOURCEINSTALLDIR)/typo3/sysext/core/Resources/Private/Font/vera.ttf
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 # fix other stuff
-	rm $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
+	find $(SOURCEINSTALLDIR) -name .gitignore -type f -delete
 
 binary-indep: build install
 	dh_testdir
