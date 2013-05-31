@@ -43,7 +43,7 @@ install: build
 	dh_installdirs
 	dh_install
 	cp -r index.php t3lib typo3 $(SOURCEINSTALLDIR)
-	cp typo3conf/LocalConfiguration.php $(ETCDIR)/LocalConfiguration.php_template
+	cp typo3conf/AdditionalFactoryConfiguration.php $(ETCDIR)/AdditionalFactoryConfiguration.php_template
 	cp typo3conf/AdditionalConfiguration.php $(ETCDIR)/AdditionalConfiguration.php
 #set correct permissions for cron script
 	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh \
@@ -96,11 +96,11 @@ binary-indep: build install
 	dh_compress -Ntypo3
 	dh_fixperms
 	chown -hR www-data:root $(DOCROOTDIR)
-	chown     www-data:root $(ETCDIR)/LocalConfiguration.php_template
+	chown     www-data:root $(ETCDIR)/AdditionalFactoryConfiguration.php_template
 	chown     www-data:root $(ETCDIR)/AdditionalConfiguration.php
 	find $(DOCROOTDIR) -type d -print0 | xargs -0 chmod 0750
 	find $(DOCROOTDIR) -type f -print0 | xargs -0 chmod 0640
-	chmod 600 $(ETCDIR)/LocalConfiguration.php_template
+	chmod 600 $(ETCDIR)/AdditionalFactoryConfiguration.php_template
 	chmod 600 $(ETCDIR)/AdditionalConfiguration.php
 	dh_installdeb
 	dh_shlibdeps

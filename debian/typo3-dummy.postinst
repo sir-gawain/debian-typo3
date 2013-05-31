@@ -21,14 +21,14 @@ if [ "$1" = "configure" ] ; then
 	done
 fi
 
-if [ ! -e /etc/typo3-dummy/LocalConfiguration.php ]; then
-    cp /etc/typo3-dummy/LocalConfiguration.php_template /etc/typo3-dummy/LocalConfiguration.php
+if [ ! -e /etc/typo3-dummy/AdditionalFactoryConfiguration.php ]; then
+    cp /etc/typo3-dummy/AdditionalFactoryConfiguration.php_template /etc/typo3-dummy/AdditionalFactoryConfiguration.php
 
-    # genarate a random encryption key and set in into LocalConfiguration.php
+    # genarate a random encryption key and set in into AdditionalFactoryConfiguration.php
     KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
-    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/LocalConfiguration.php
-    chown www-data:www-data /etc/typo3-dummy/LocalConfiguration.php
-    chmod 0600 /etc/typo3-dummy/LocalConfiguration.php
+    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/AdditionalFactoryConfiguration.php
+    chown www-data:www-data /etc/typo3-dummy/AdditionalFactoryConfiguration.php
+    chmod 0600 /etc/typo3-dummy/AdditionalFactoryConfiguration.php
 fi
 
 # do database handling
