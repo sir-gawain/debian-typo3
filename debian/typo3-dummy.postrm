@@ -28,11 +28,13 @@ if [ "$1" = "purge" ]; then
 fi
 
 case "$1" in "remove"|"purge" )
+	COMMON_STATE=$(dpkg-query -f '${Status}' -W 'apache2.2-common' 2>/dev/null | awk '{print $3}' || true)
+
 	for confdir in sites-available conf-available; do
 		if [ -f /etc/apache2/$confdir/typo3-dummy-directory -o -L /etc/apache2/$confdir/typo3-dummy-directory ]; then
 			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
 			    . /usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf typo3-dummy-directory
-			elif  dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+			elif [ "$COMMON_STATE" = "installed" ] || [ "$COMMON_STATE" = "unpacked" ] ; then
 			    a2dissite typo3-dummy-directory
 			fi
 			rm -f /etc/apache2/$confdir/typo3-dummy-directory
@@ -40,7 +42,7 @@ case "$1" in "remove"|"purge" )
 		if [ -f /etc/apache2/$confdir/typo3-dummy-vhost -o -L /etc/apache2/$confdir/typo3-dummy-vhost ]; then
 			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
 			    . /usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf typo3-dummy-vhost
-			elif  dpkg-query -f '${Version}'  -W 'apache2.2-common' > /dev/null 2>&1 ; then
+			elif [ "$COMMON_STATE" = "installed" ] || [ "$COMMON_STATE" = "unpacked" ] ; then
 			    a2dissite typo3-dummy-vhost
 			fi
 			rm -f /etc/apache2/$confdir/typo3-dummy-vhost
