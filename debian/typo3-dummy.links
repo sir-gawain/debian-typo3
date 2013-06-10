@@ -1,6 +1,6 @@
 var/lib/typo3-dummy/typo3_src/t3lib  var/lib/typo3-dummy/t3lib
 var/lib/typo3-dummy/typo3_src/typo3  var/lib/typo3-dummy/typo3
-usr/share/typo3/typo3-6.1            var/lib/typo3-dummy/typo3_src
+usr/share/typo3/typo3-6.2            var/lib/typo3-dummy/typo3_src
 /usr/bin/convert                     var/lib/typo3-dummy/execdir/convert
 /usr/bin/composite                   var/lib/typo3-dummy/execdir/composite
 /usr/bin/identify                    var/lib/typo3-dummy/execdir/identify

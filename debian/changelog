@@ -1,9 +1,9 @@
-typo3-6.1 (6.1.1+ds1-1) UNRELEASED; urgency=low
+typo3-6 (6.2.0+ds1~alpha1-1) UNRELEASED; urgency=low
 
-  * Renamed source and binary packages to typo3-6.1
+  * Renamed source package to typo3-6 and binary packages accordingly.
   * Add database user for scheduler to database on installation.
-  * Adopted im-fix patch to 6.1
-  * Adopted defaults patch to 6.1.
+  * Adopted im-fix patch to 6.2
+  * Adopted defaults patch to 6.2.
 
  -- Christian Welzel <gawain@camlann.de>  Sun, 29 Apr 2012 18:53:06 +0200
 
