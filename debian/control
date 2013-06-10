@@ -2,9 +2,8 @@ Source: typo3-6.1
 Section: web
 Priority: optional
 Maintainer: Christian Welzel <gawain@camlann.de>
-DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7), po-debconf, swftools, yui-compressor
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 Homepage: http://www.typo3.org
 Vcs-Git: git://github.com/sir-gawain/debian-typo3.git
 Vcs-Browser: https://github.com/sir-gawain/debian-typo3
