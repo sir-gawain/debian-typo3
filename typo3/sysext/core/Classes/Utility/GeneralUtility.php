@@ -723,6 +723,18 @@ class GeneralUtility {
 	}
 
 	/**
+	 * Returns an integer from a three part version number, eg '4.12.3' -> 4012003
+	 *
+	 * @param string $verNumberStr Version number on format x.x.x
+	 * @return integer Integer version of version number (where each part can count to 999)
+	 * @deprecated Use VersionNumberUtility::convertVersionNumberToInteger instead, will be removed after 6.2
+	 */
+	static public function int_from_ver($verNumberStr) {
+		self::logDeprecatedFunction();
+		return VersionNumberUtility::convertVersionNumberToInteger($verNumberStr);
+	}
+
+	/**
 	 * Returns TRUE if the current TYPO3 version (or compatibility version) is compatible to the input version
 	 * Notice that this function compares branches, not versions (4.0.1 would be > 4.0.0 although they use the same compat_version)
 	 *
@@ -951,7 +963,7 @@ class GeneralUtility {
 	 * @param string $string Input string, eg "123 + 456 / 789 - 4
 	 * @param string $operators Operators to split by, typically "/+-*
 	 * @return array Array with operators and operands separated.
-	 * @see tslib_cObj::calc(), \TYPO3\CMS\Frontend\Imaging\GifBuilder::calcOffset()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::calc(), \TYPO3\CMS\Frontend\Imaging\GifBuilder::calcOffset()
 	 */
 	static public function splitCalc($string, $operators) {
 		$res = array();
@@ -2676,7 +2688,7 @@ Connection: close
 		$path = preg_replace('|/$|', '', $path);
 		if (file_exists($path)) {
 			$OK = TRUE;
-			if (is_dir($path)) {
+			if (!is_link($path) && is_dir($path)) {
 				if ($removeNonEmpty == TRUE && ($handle = opendir($path))) {
 					while ($OK && FALSE !== ($file = readdir($handle))) {
 						if ($file == '.' || $file == '..') {
@@ -2687,12 +2699,15 @@ Connection: close
 					closedir($handle);
 				}
 				if ($OK) {
-					$OK = rmdir($path);
+					$OK = @rmdir($path);
 				}
 			} else {
-				// If $dirname is a file, simply remove it
+				// If $path is a file, simply remove it
 				$OK = unlink($path);
 			}
+			clearstatcache();
+		} elseif (is_link($path)) {
+			$OK = unlink($path);
 			clearstatcache();
 		}
 		return $OK;

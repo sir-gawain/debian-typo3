@@ -1,6 +1,5 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 TYPO3 styles for basic elements
-
 - - - - - - - - - - - - - - - - - - - - - */
 
 html {
@@ -20,7 +19,8 @@ div {
 
 /* Occasionally used, eg. in About Modules: */
 h1 {
-	margin: 6px 0 16px 0;
+	margin: 6px 0 24px 0;
+	line-height: 1.1em;
 }
 
 h2 {
@@ -36,6 +36,14 @@ h3 {
 /* Discrete section headers (no background) */
 h4 {
 	margin: 6px 0;
+}
+
+p,
+ul,
+ol,
+dl,
+blockquote {
+	margin-bottom: 1.25em;
 }
 
 /* Preformatted text - not used so much in TYPO3 */
@@ -75,8 +83,10 @@ a span {
 
 /* Reformatting of the submit buttons */
 form {
-	margin: 0px;
+	margin: 0;
 }
+
+#typo3-docbody form { margin-bottom: 1.25em; }
 
 input[type="submit"],
 input[type="reset"],

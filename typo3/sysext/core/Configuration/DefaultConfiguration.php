@@ -177,7 +177,7 @@ return array(
 				)
 			)
 		),
-		'defaultCategorizedTables' => '', // List of comma separated tables that are categorizable by default.
+		'defaultCategorizedTables' => 'pages,tt_content', // List of comma separated tables that are categorizable by default.
 		'displayErrors' => -1,		// <p>Integer (-1, 0, 1, 2). Configures whether PHP errors should be displayed.</p><dl><dt>0</dt><dd>Do not display any PHP error messages. Overrides the value of "exceptionalErrors" and sets it to 0 (= no errors are turned into exceptions), the configured "productionExceptionHandler" is used as exception handler</dd><dt>1</dt><dd>Display error messages with the registered errorhandler. The configured "debugExceptionHandler" is used as exception handler</dd><dt>2</dt><dd>Display errors only if client matches <a href="#SYS-devIPmask">[SYS][devIPmask]</a>. If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used</dd><dt>-1</dt><dd>Default setting. With this option, you can override the PHP setting "display_errors". If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used.</dd></dl>
 		'productionExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler". This exception handler displays a nice error message when something went wrong. The error message is logged to the configured logs. Note: The configured "productionExceptionHandler" is used if displayErrors is set to "0" or to "-1" and devIPmask doesn't match the users IP.
 		'debugExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler". This exception handler displays the complete stack trace of any encountered exception. The error message and the stack trace  is logged to the configured logs. Note: The configured "debugExceptionHandler" is used if displayErrors is set to "1" and if displayErrors is "-1"  or "2" and the devIPmask matches the users IP.
@@ -222,7 +222,6 @@ return array(
 		'extListArray' => array(
 			'filelist',
 			'version',
-			'tsconfig_help',
 			'context_help',
 			'extra_page_cm_options',
 			'impexp',
@@ -561,7 +560,7 @@ return array(
 		'versionNumberInFilename' => FALSE,					// <p>Boolean: If TRUE, included CSS and JS files will have the timestamp embedded in the filename, ie. filename.1269312081.js. This will make browsers and proxies reload the files if they change (thus avoiding caching issues). IMPORTANT: this feature requires extra .htaccess rules to work (please refer to _.htaccess or the _.htaccess file from the dummy package)</p><p>If FALSE the filemtime will be appended as a query-string.</p>
 		'spriteIconGenerator_handler' => 'TYPO3\\CMS\\Backend\\Sprite\\SimpleSpriteHandler',		// String: Used to register own/other spriteGenerating Handler, they have to implement the interface \TYPO3\CMS\Backend\Sprite\SpriteIconGeneratorInterface. If set to "\TYPO3\CMS\Backend\Sprite\SpriteBuildingHandler" icons from extensions will automatically merged into sprites.
 		'debug' => FALSE,									// Boolean: If set, the loginrefresh is disabled and pageRenderer is set to debug mode. Use this to debug the backend only!
-		'AJAX' => array(									// array of key-value pairs for a unified use of AJAX calls in the TYPO3 backend. Keys are the unique ajaxIDs where the value will be resolved to call a method in an object. See ajax.php and the classes/class.typo3ajax.php for more information.
+		'AJAX' => array(									// array of key-value pairs for a unified use of AJAX calls in the TYPO3 backend. Keys are the unique ajaxIDs where the value will be resolved to call a method in an object. See ajax.php for more information.
 			'SC_alt_db_navframe::expandCollapse' => 'TYPO3\\CMS\\Backend\\Controller\\PageTreeNavigationController->ajaxExpandCollapse',
 			'SC_alt_file_navframe::expandCollapse' => 'TYPO3\\CMS\\Backend\\Controller\\FileSystemNavigationFrameController->ajaxExpandCollapse',
 			'TYPO3_tcefile::process' => 'TYPO3\\CMS\\Backend\\Controller\\File\\FileController->processAjaxRequest',
@@ -630,7 +629,7 @@ return array(
 			// array('IPmaskList_1','fe_group uid'), array('IPmaskList_2','fe_group uid')
 		),
 		'get_url_id_token' => '#get_URL_ID_TOK#',		// This is the token, which is substituted in the output code in order to keep a GET-based session going. Normally the GET-session-id is 5 chars ('&amp;ftu=') + hash_length (norm. 10)
-		'content_doktypes' => '1,2,5,7',		// List of pages.doktype values which can contain content (so shortcut pages and external url pages are excluded, but all pages below doktype 199 should be included. doktype=6 is not either (backend users only...). For doktypes going into menus see class.tslib_menu.php, line 494 (search for 'doktype'))
+		'content_doktypes' => '1,2,5,7',		// List of pages.doktype values which can contain content (so shortcut pages and external url pages are excluded, but all pages below doktype 199 should be included. doktype=6 is not either (backend users only...).
 		'enable_mount_pids' => TRUE,		// Boolean: If set to "1", the mount_pid feature allowing 'symlinks' in the page tree (for frontend operation) is allowed.
 		'pageOverlayFields' => 'uid,title,subtitle,nav_title,media,keywords,description,abstract,author,author_email,url,urltype,shortcut,shortcut_mode',		// List of fields from the table "pages_language_overlay" which should be overlaid on page records. See t3lib_page::getPageOverlay()
 		'hidePagesIfNotTranslatedByDefault' => FALSE,		// Boolean: If TRUE, pages that has no translation will be hidden by default. Basically this will inverse the effect of the page localization setting "Hide page if no translation for current language exists" to "Show page even if no translation exists"

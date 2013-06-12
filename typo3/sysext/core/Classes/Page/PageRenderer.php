@@ -508,7 +508,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return void
 	 */
 	protected function reset() {
-		$this->templateFile = TYPO3_mainDir . 'templates/template_page_backend.html';
+		$this->templateFile = 'EXT:core/Resources/Private/Templates/PageRenderer.html';
 		$this->jsFiles = array();
 		$this->jsFooterFiles = array();
 		$this->jsInline = array();
@@ -2183,7 +2183,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			unset($this->extOnReadyCode);
 			// Include TYPO3.l10n object
 			if (TYPO3_MODE === 'BE') {
-				$out .= '<script src="' . $this->processJsFile(($this->backPath . 'sysext/lang/res/js/be/typo3lang.js')) . '" type="text/javascript" charset="utf-8"></script>' . LF;
+				$out .= '<script src="' . $this->processJsFile(($this->backPath . 'sysext/lang/Resources/Public/JavaScript/Typo3Lang.js')) . '" type="text/javascript" charset="utf-8"></script>' . LF;
 			}
 			if ($this->extJStheme) {
 				if (isset($GLOBALS['TBE_STYLES']['extJS']['theme'])) {

@@ -274,6 +274,7 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 			}
 			$validationResult = $this->arguments->getValidationResults();
 			if (!$validationResult->hasErrors()) {
+				$this->signalSlotDispatcher->dispatch(__CLASS__, 'beforeCallActionMethod', array('controllerName' => get_class($this), 'actionMethodName' => $this->actionMethodName, 'preparedArguments' => $preparedArguments));
 				$actionResult = call_user_func_array(array($this, $this->actionMethodName), $preparedArguments);
 			} else {
 				$methodTagsValues = $this->reflectionService->getMethodTagsValues(get_class($this), $this->actionMethodName);
@@ -547,6 +548,28 @@ class ActionController extends \TYPO3\CMS\Extbase\Mvc\Controller\AbstractControl
 				$this->cacheService->clearPageCache(array($pageUid));
 			}
 		}
+	}
+
+	/**
+	 * Returns a map of action method names and their parameters.
+	 *
+	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
+	 * @return array Array of method parameters by action name
+	 */
+	static public function getActionMethodParameters($objectManager) {
+		$reflectionService = $objectManager->get('TYPO3\CMS\Extbase\Reflection\ReflectionService');
+
+		$result = array();
+
+		$className = get_called_class();
+		$methodNames = get_class_methods($className);
+		foreach ($methodNames as $methodName) {
+			if (strlen($methodName) > 6 && strpos($methodName, 'Action', strlen($methodName) - 6) !== FALSE) {
+				$result[$methodName] = $reflectionService->getMethodParameters($className, $methodName);
+			}
+		}
+
+		return $result;
 	}
 }
 

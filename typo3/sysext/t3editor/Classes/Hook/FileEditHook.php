@@ -42,7 +42,7 @@ class FileEditHook {
 	/**
 	 * @var string
 	 */
-	protected $ajaxSaveType = 'tx_tstemplateinfo';
+	protected $ajaxSaveType = 'TypoScriptTemplateInformationModuleFunctionController';
 
 	/**
 	 * @return \TYPO3\CMS\T3Editor\T3Editor
@@ -72,10 +72,11 @@ class FileEditHook {
 
 	/**
 	 * Hook-function: inject t3editor JavaScript code before the page is compiled
-	 * called in typo3/template.php:startPage
+	 * called in \TYPO3\CMS\Backend\Template\DocumentTemplate:startPage
 	 *
 	 * @param array $parameters
 	 * @param \TYPO3\CMS\Backend\Template\DocumentTemplate $pObj
+	 * @see \TYPO3\CMS\Backend\Template\DocumentTemplate::startPage
 	 */
 	public function preStartPageHook($parameters, $pObj) {
 		if (preg_match('/typo3\\/file_edit\\.php/', $_SERVER['SCRIPT_NAME'])) {

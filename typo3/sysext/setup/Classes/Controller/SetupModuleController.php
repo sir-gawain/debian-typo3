@@ -137,8 +137,10 @@ class SetupModuleController {
 
 	/**
 	 * If settings are submitted to _POST[DATA], store them
-	 * NOTICE: This method is called before the template.php is included. See
-	 * bottom of document.
+	 * NOTICE: This method is called before the \TYPO3\CMS\Backend\Template\DocumentTemplate
+	 * is included. See bottom of document.
+	 *
+	 * @see \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 */
 	public function storeIncomingData() {
 		// First check if something is submitted in the data-array from POST vars
@@ -278,7 +280,7 @@ class SetupModuleController {
 		// Create instance of object for output of data
 		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
-		$this->doc->setModuleTemplate('templates/setup.html');
+		$this->doc->setModuleTemplate('EXT:setup/Resources/Private/Templates/setup.html');
 		$this->doc->form = '<form action="' . \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('user_setup') . '" method="post" name="usersetup" enctype="application/x-www-form-urlencoded">';
 		$this->doc->tableLayout = array(
 			'defRow' => array(
@@ -445,7 +447,7 @@ class SetupModuleController {
 					if ($this->dividers2tabs) {
 						$result[] = array(
 							'label' => $tabLabel,
-							'content' => count($code) ? $this->doc->spacer(20) . $this->doc->table($code) : ''
+							'content' => count($code) ? $this->doc->table($code) : ''
 						);
 						$tabLabel = $this->getLabel(substr($fieldName, 8), '', FALSE);
 						$i = 0;
@@ -548,7 +550,7 @@ class SetupModuleController {
 		}
 		$result[] = array(
 			'label' => $tabLabel,
-			'content' => count($code) ? $this->doc->spacer(20) . $this->doc->table($code) : ''
+			'content' => count($code) ? $this->doc->table($code) : ''
 		);
 		return $result;
 	}

@@ -205,7 +205,7 @@ class FileListController {
 		// Initialize the template object
 		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
-		$this->doc->setModuleTemplate('templates/file_list.html');
+		$this->doc->setModuleTemplate('EXT:filelist/Resources/Private/Templates/file_list.html');
 		$this->doc->getPageRenderer()->loadPrototype();
 		// There there was access to this file path, continue, make the list
 		if ($this->folderObject) {
@@ -299,12 +299,16 @@ class FileListController {
 			// add the folder info to the marker array
 			$otherMarkers['FOLDER_INFO'] = $this->filelist->getFolderInfo();
 			$docHeaderButtons = array_merge($this->getButtons(), $buttons);
+
 			// Build the <body> for the module
+			$moduleHeadline = $this->getModuleHeadline();
 			// Create output
-			$pageContent = '';
+			$pageContent = $moduleHeadline !== '' ? '<h1>' . $moduleHeadline . '</h1>' : '';
+
 			$pageContent .= '<form action="' . htmlspecialchars($this->filelist->listURL()) . '" method="post" name="dblistForm">';
 			$pageContent .= $this->filelist->HTMLcode;
 			$pageContent .= '<input type="hidden" name="cmd" /></form>';
+
 			// Making listing options:
 			if ($this->filelist->HTMLcode) {
 				$pageContent .= '
@@ -352,6 +356,28 @@ class FileListController {
 			// Create output - no access (no warning though)
 			$this->content = $this->doc->render($GLOBALS['LANG']->getLL('files'), $content);
 		}
+	}
+
+	/**
+	 * Get main headline based on active folder or storage for backend module
+	 *
+	 * Folder names are resolved to their special names like done in the tree view.
+	 *
+	 * @return string
+	 */
+	protected function getModuleHeadline() {
+		$name = $this->folderObject->getName();
+		if ($name === '') {
+			// Show storage name on storage root
+			if ($this->folderObject->getIdentifier() === '/') {
+				$name = $this->folderObject->getStorage()->getName();
+			}
+		} else {
+			$name = key(\TYPO3\CMS\Core\Resource\Utility\ListUtility::resolveSpecialFolderNames(
+				array($name => $this->folderObject)
+			));
+		}
+		return $name;
 	}
 
 	/**
