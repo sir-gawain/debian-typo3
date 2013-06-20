@@ -1,3 +1,9 @@
+typo3-src (4.5.27+dfsg1-3) unstable; urgency=low
+
+  * Added italian translation (Closes: #712400)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 20 Jun 2013 11:26:36 +0200
+
 typo3-src (4.5.27+dfsg1-2) unstable; urgency=low
 
   * Fix detection of apache 2.2 (Closes: #710512).
