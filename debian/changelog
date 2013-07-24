@@ -1,3 +1,11 @@
+typo3-src (4.5.28+dfsg1-1~1.gbp3be6a0) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @3be6a07159c55b63f471d30db5fe6ab4f62b7b77 **
+
+  * UNRELEASED
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 24 Jul 2013 22:08:14 +0200
+
 typo3-src (4.5.27+dfsg1-3) unstable; urgency=low
 
   * Added italian translation (Closes: #712400)
