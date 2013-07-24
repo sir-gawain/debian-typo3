@@ -1862,7 +1862,7 @@ class t3lib_TCEmain {
 			$newRecordPidValue = $status == 'new' ? $realPid : 0;
 
 				// Get current value array:
-			$dataStructArray = t3lib_BEfunc::getFlexFormDS($tcaFieldConf, $this->checkValue_currentRecord, $table, '', TRUE, $newRecordPidValue);
+			$dataStructArray = t3lib_BEfunc::getFlexFormDS($tcaFieldConf, $this->checkValue_currentRecord, $table, $field, TRUE, $newRecordPidValue);
 
 			$currentValueArray = t3lib_div::xml2array($curValue);
 			if (!is_array($currentValueArray)) {
@@ -4159,7 +4159,8 @@ class t3lib_TCEmain {
 		global $TCA;
 
 			// Checking if there is anything else disallowing deleting the record by checking if editing is allowed
-		$mayEditAccess = $this->BE_USER->recordEditAccessInternals($table, $uid, FALSE, $undeleteRecord, TRUE);
+		$deletedRecord = ($forceHardDelete || $undeleteRecord);
+		$mayEditAccess = $this->BE_USER->recordEditAccessInternals($table, $uid, FALSE, $deletedRecord, TRUE);
 
 		$uid = intval($uid);
 		if ($TCA[$table] && $uid) {
