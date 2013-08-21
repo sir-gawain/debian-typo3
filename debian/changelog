@@ -1,8 +1,10 @@
-typo3-src (4.5.28+dfsg1-1) unstable; urgency=low
+typo3-src (4.5.29+dfsg1-1) unstable; urgency=medium
 
-  * New upstream release.
+  * New upstream release:
+    - fixes: "TYPO3-CORE-SA-2013-002: Cross-Site Scripting and Remote
+      Code Execution Vulnerability in TYPO3 Core" (Closes: 720194)
 
- -- Christian Welzel <gawain@camlann.de>  Wed, 24 Jul 2013 22:08:14 +0200
+ -- Christian Welzel <gawain@camlann.de>  Wed, 21 Aug 2013 22:08:14 +0200
 
 typo3-src (4.5.27+dfsg1-3) unstable; urgency=low
 
