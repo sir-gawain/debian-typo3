@@ -3,6 +3,9 @@ typo3-src (4.5.29+dfsg1-1) unstable; urgency=medium
   * New upstream release:
     - fixes: "TYPO3-CORE-SA-2013-002: Cross-Site Scripting and Remote
       Code Execution Vulnerability in TYPO3 Core" (Closes: 720194)
+  * Import of sources of 2.0.4.6 of 1pixelout audio player from 
+    http://subversion.assembla.com/svn/1pixelout/audio-player/tags/2.0.4.6.
+  * Changed audio player license (GPL-2 -> MIT).
 
  -- Christian Welzel <gawain@camlann.de>  Wed, 21 Aug 2013 22:08:14 +0200
 
