@@ -10,8 +10,8 @@ Copyright: 2003, Michael Stucki <mundaun@gmx.ch>
 License: GPL-2
 
 Files: debian/contrib/player/*
-Copyright: 2005-2006  Martin Laine <martin@1pixelout.net>
-License: GPL-2
+Copyright: 2010 Martin Laine <martin@1pixelout.net>
+License: MIT
 
 Files: debian/contrib/flvplayer/*
 Copyright: 2003-2010 Kasper Skaarhoj (kasperYYYY@typo3.com)
@@ -394,8 +394,8 @@ License:
  and disclaimer.
 
 Files: typo3/contrib/flashmedia/player.swf
-Copyright: 2005-2006  Martin Laine <martin@1pixelout.net>
-License: GPL-2
+Copyright: 2010 Martin Laine <martin@1pixelout.net>
+License: MIT
 
 Files: typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/*
 Copyright:

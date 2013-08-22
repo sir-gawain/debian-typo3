@@ -70,7 +70,7 @@ install: build
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
-	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
+	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.license.txt
 	rm -f $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
 	rm -f $(SOURCEINSTALLDIR)/t3lib/fonts/vera.ttf
