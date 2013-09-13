@@ -1,3 +1,14 @@
+typo3-src (4.5.19+dfsg1-5+wheezy1) wheezy-security; urgency=medium
+
+  * Added patch for TYPO3-CORE-SA-2013-002. (Closes: #720194)
+    - change flash audio player to new version 2.0.4.6
+    - Import of sources of 2.0.4.6 of 1pixelout audio player from
+      http://subversion.assembla.com/svn/1pixelout/audio-player/tags/2.0.4.6
+    - Changed audio player license (GPL-2 -> MIT)
+  * Set patch level version to -pl.4.5.29.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 12 Sep 2013 22:02:05 +0200
+
 typo3-src (4.5.19+dfsg1-5) unstable; urgency=low
 
   * Added patch for TYPO3-SA-2013-001. (Closes: #702574)

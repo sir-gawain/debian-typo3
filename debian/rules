@@ -77,6 +77,8 @@ install: build
 	rm -rf $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 # fix other stuff
 	rm -f $(SOURCEINSTALLDIR)/typo3/sysext/linkvalidator/.gitignore
+# apply security patch
+	cp debian/patches/player.swf $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/
 
 binary-indep: build install
 	dh_testdir

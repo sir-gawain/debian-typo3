@@ -2,3 +2,4 @@ debian/nimbus.sfd.gz
 debian/changelog-old-typo3-dummy.gz
 debian/contrib/player/player.fla
 debian/contrib/flvplayer/flvplayer.fla
+debian/patches/player.swf
