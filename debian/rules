@@ -128,7 +128,6 @@ get-orig-source:
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/extjs/resources/expressinstall.swf
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/websvg
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/flowplayer/*
-	rm -r _unpack/$(DEBIAN_DIR)/t3lib/js/flowplayer
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/sysext/extensionmanager/Resources/Public/JavaScript/jquery-ui-1.8.17.custom.min.js
 # repack
 	tar -cf - -C _unpack $(DEBIAN_DIR) | gzip -9 - > $(DEBIAN_TAR).gz

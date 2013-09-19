@@ -1,4 +1,4 @@
-typo3-6 (6.2.0+ds1~alpha1-1) UNRELEASED; urgency=low
+typo3-6 (6.2.0+ds1~alpha2-1) UNRELEASED; urgency=low
 
   * Renamed source package to typo3-6 and binary packages accordingly.
   * Add database user for scheduler to database on installation.
