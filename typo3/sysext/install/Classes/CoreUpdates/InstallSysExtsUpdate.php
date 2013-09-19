@@ -165,10 +165,10 @@ class InstallSysExtsUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate {
 	 */
 	public function performUpdate(array &$dbQueries, &$customMessages) {
 			// Get extension keys that were submitted by the user to be installed and that are valid for this update wizard
-		if (is_array($this->pObj->INSTALL['update']['installSystemExtensions']['sysext'])) {
+		if (is_array($this->userInput['sysext'])) {
 			$extArray = array_intersect(
 				$this->systemExtensions,
-				array_keys($this->pObj->INSTALL['update']['installSystemExtensions']['sysext'])
+				array_keys($this->userInput['sysext'])
 			);
 			$this->installExtensions($extArray, $customMessages);
 		}
@@ -338,7 +338,7 @@ class InstallSysExtsUpdate extends \TYPO3\CMS\Install\Updates\AbstractUpdate {
 		$wizardClassName = get_class($this);
 		if (!empty($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone'][$wizardClassName])) {
 			$seenExtensions = json_decode($GLOBALS['TYPO3_CONF_VARS']['INSTALL']['wizardDone'][$wizardClassName], TRUE);
-			return (bool) array_diff($this->systemExtensions, $seenExtensions);
+			return count(array_diff($this->systemExtensions, $seenExtensions)) === 0;
 		}
 		return FALSE;
 	}

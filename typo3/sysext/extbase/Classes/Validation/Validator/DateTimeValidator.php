@@ -27,10 +27,13 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Validator for DateTime objects
+ * Validator for DateTime objects.
+ *
+ * @api
  */
-class DateTimeValidator extends \TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator {
+class DateTimeValidator extends AbstractValidator {
 
 	/**
 	 * Checks if the given value is a valid DateTime object.
@@ -43,7 +46,7 @@ class DateTimeValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abstract
 	public function isValid($value) {
 		$this->errors = array();
 		if ($value instanceof \DateTime) {
-			return TRUE;
+			return;
 		}
 		$this->addError(
 			\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
@@ -53,7 +56,6 @@ class DateTimeValidator extends \TYPO3\CMS\Extbase\Validation\Validator\Abstract
 					gettype($value)
 				)
 			), 1238087674, array(gettype($value)));
-		return FALSE;
 	}
 }
 

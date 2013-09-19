@@ -647,6 +647,30 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		$this->assertEquals(0, strlen($fileData));
 	}
 
+	/**
+	 * @test
+	 */
+	public function createFileFixesPermissionsOnCreatedFile() {
+		if (TYPO3_OS == 'WIN') {
+			$this->markTestSkipped('createdFilesHaveCorrectRights() tests not available on Windows');
+		}
+
+		// No one will use this as his default file create mask so we hopefully don't get any false positives
+		$testpattern = '0646';
+		$GLOBALS['TYPO3_CONF_VARS']['BE']['fileCreateMask'] = $testpattern;
+
+		$this->addToMount(
+			array(
+				'someDir' => array()
+			)
+		);
+		/** @var $fixture \TYPO3\CMS\Core\Resource\Driver\LocalDriver */
+		list($basedir, $fixture) = $this->prepareRealTestEnvironment();
+		mkdir($basedir . '/someDir');
+		$fixture->createFile('testfile.txt', $fixture->getFolder('/someDir'));
+		$this->assertEquals($testpattern, decoct(fileperms($basedir . '/someDir/testfile.txt') & 0777));
+	}
+
 	/**********************************
 	 * File and directory listing
 	 **********************************/
@@ -712,6 +736,31 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		);
 		$fileList = $fixture->getFileList('/');
 		$this->assertEquals(array('file1', 'file2'), array_keys($fileList));
+	}
+
+	/**
+	 * @test
+	 */
+	public function getFileListReturnsAllFilesInSubdirectoryIfRecursiveParameterIsSet() {
+		$dirStructure = array(
+			'aDir' => array(
+				'file3' => 'asdfgh',
+				'subdir' => array(
+					'file4' => 'asklfjklasjkl'
+				)
+			),
+			'file1' => 'asdfg',
+			'file2' => 'fdsa'
+		);
+		$this->addToMount($dirStructure);
+		$fixture = $this->createDriverFixture(
+			array('basePath' => $this->getMountRootUrl()),
+			NULL,
+				// Mocked because finfo() can not deal with vfs streams and throws warnings
+			array('getMimeTypeOfFile')
+		);
+		$fileList = $fixture->getFileList('/', 0, 0, array(), array(), TRUE);
+		$this->assertEquals(array('aDir/subdir/file4', 'aDir/file3', 'file1', 'file2'), array_keys($fileList));
 	}
 
 	/**
@@ -819,7 +868,9 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		$fixture = $this->createDriverFixture(array(
 			'basePath' => $this->getMountRootUrl()
 		));
+
 		$fileList = $fixture->getFolderList('/');
+
 		$this->assertEquals(array('.someHiddenDir', 'aDir'), array_keys($fileList));
 	}
 
@@ -835,10 +886,10 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		$fixture = $this->createDriverFixture(array(
 			'basePath' => $this->getMountRootUrl()
 		));
-		$FolderList = $fixture->getFolderList('/');
-		$this->assertEquals('/dir1/', $FolderList['dir1']['identifier']);
-		$FolderList = $fixture->getFolderList('/dir1/');
-		$this->assertEquals('/dir1/subdir1/', $FolderList['subdir1']['identifier']);
+		$folderList = $fixture->getFolderList('/');
+		$this->assertEquals('/dir1/', $folderList['dir1']['identifier']);
+		$folderList = $fixture->getFolderList('/dir1/');
+		$this->assertEquals('/dir1/subdir1/', $folderList['subdir1']['identifier']);
 	}
 
 	/**

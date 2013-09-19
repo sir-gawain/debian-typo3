@@ -26,21 +26,16 @@ namespace TYPO3\CMS\Frontend\Page;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Contains a class with "Page functions" mainly for the frontend
- *
- * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
- * XHTML-trans compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
+
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Page functions, a lot of sql/pages-related functions
  * Mainly used in the frontend but also in some cases in the backend.
  * It's important to set the right $where_hid_del in the object so that the functions operate properly
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- * @see tslib_fe::fetch_the_id()
+ * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::fetch_the_id()
  */
 class PageRepository {
 
@@ -132,7 +127,7 @@ class PageRepository {
 	 *
 	 * @param boolean $show_hidden If $show_hidden is TRUE, the hidden-field is ignored!! Normally this should be FALSE. Is used for previewing.
 	 * @return void
-	 * @see tslib_fe::fetch_the_id(), tx_tstemplateanalyzer::initialize_editor()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::fetch_the_id(), \TYPO3\CMS\TstemplateAnalyzer\Controller\TemplateAnalyzerModuleFunctionController::initialize_editor()
 	 * @todo Define visibility
 	 */
 	public function init($show_hidden) {
@@ -174,7 +169,7 @@ class PageRepository {
 		// Hook to manipulate the page uid for special overlay handling
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'] as $classRef) {
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$hookObject = GeneralUtility::getUserObj($classRef);
 				if (!$hookObject instanceof \TYPO3\CMS\Frontend\Page\PageRepositoryGetPageHookInterface) {
 					throw new \UnexpectedValueException('$hookObject must implement interface TYPO3\\CMS\\Frontend\\Page\\PageRepositoryGetPageHookInterface', 1251476766);
 				}
@@ -231,7 +226,7 @@ class PageRepository {
 	 *
 	 * @param integer $uid The page id for which to fetch first subpages (PID)
 	 * @return mixed If found: The page record (with overlayed localized fields, if any). If NOT found: blank value (not array!)
-	 * @see tslib_fe::fetch_the_id()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::fetch_the_id()
 	 * @todo Define visibility
 	 */
 	public function getFirstWebPage($uid) {
@@ -253,7 +248,7 @@ class PageRepository {
 	 *
 	 * @param string $alias The alias to look up the page uid for.
 	 * @return integer Returns page uid (integer) if found, otherwise 0 (zero)
-	 * @see tslib_fe::checkAndSetAlias(), tslib_cObj::typoLink()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::checkAndSetAlias(), ContentObjectRenderer::typoLink()
 	 * @todo Define visibility
 	 */
 	public function getPageIdFromAlias($alias) {
@@ -289,7 +284,7 @@ class PageRepository {
 		$row = NULL;
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPageOverlay'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPageOverlay'] as $classRef) {
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$hookObject = GeneralUtility::getUserObj($classRef);
 				if (!$hookObject instanceof \TYPO3\CMS\Frontend\Page\PageRepositoryGetPageOverlayHookInterface) {
 					throw new \UnexpectedValueException('$hookObject must implement interface TYPO3\\CMS\\Frontend\\Page\\PageRepositoryGetPageOverlayHookInterface', 1269878881);
 				}
@@ -298,7 +293,7 @@ class PageRepository {
 		}
 		// If language UID is different from zero, do overlay:
 		if ($lUid) {
-			$fieldArr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['pageOverlayFields']);
+			$fieldArr = GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['pageOverlayFields']);
 			if (is_array($pageInput)) {
 				// Was the whole record
 				$page_id = $pageInput['uid'];
@@ -351,7 +346,7 @@ class PageRepository {
 	public function getRecordOverlay($table, $row, $sys_language_content, $OLmode = '') {
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getRecordOverlay'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getRecordOverlay'] as $classRef) {
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$hookObject = GeneralUtility::getUserObj($classRef);
 				if (!$hookObject instanceof \TYPO3\CMS\Frontend\Page\PageRepositoryGetRecordOverlayHookInterface) {
 					throw new \UnexpectedValueException('$hookObject must implement interface TYPO3\\CMS\\Frontend\\Page\\PageRepositoryGetRecordOverlayHookInterface', 1269881658);
 				}
@@ -413,7 +408,7 @@ class PageRepository {
 		}
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getRecordOverlay'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getRecordOverlay'] as $classRef) {
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$hookObject = GeneralUtility::getUserObj($classRef);
 				if (!$hookObject instanceof \TYPO3\CMS\Frontend\Page\PageRepositoryGetRecordOverlayHookInterface) {
 					throw new \UnexpectedValueException('$hookObject must implement interface TYPO3\\CMS\\Frontend\\Page\\PageRepositoryGetRecordOverlayHookInterface', 1269881659);
 				}
@@ -439,7 +434,8 @@ class PageRepository {
 	 * @param string $addWhere Optional additional where clauses. Like "AND title like '%blabla%'" for instance.
 	 * @param boolean $checkShortcuts Check if shortcuts exist, checks by default
 	 * @return array Array with key/value pairs; keys are page-uid numbers. values are the corresponding page records (with overlayed localized fields, if any)
-	 * @see tslib_fe::getPageShortcut(), tslib_menu::makeMenu(), tx_wizardcrpages_webfunc_2, tx_wizardsortpages_webfunc_2
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::getPageShortcut(), \TYPO3\CMS\Frontend\ContentObject\Menu\AbstractMenuContentObject::makeMenu()
+	 * @see \TYPO3\CMS\WizardCrpages\Controller\CreatePagesWizardModuleFunctionController, \TYPO3\CMS\WizardSortpages\View\SortPagesWizardModuleFunction
 	 * @todo Define visibility
 	 */
 	public function getMenu($uid, $fields = '*', $sortField = 'sorting', $addWhere = '', $checkShortcuts = TRUE) {
@@ -505,7 +501,7 @@ class PageRepository {
 	 * @param string $path Path for the current script in domain. Eg. "/somedir/subdir". Typ. supplied by \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('SCRIPT_NAME')
 	 * @param string $request_uri Request URI: Used to get parameters from if they should be appended. Typ. supplied by \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')
 	 * @return mixed If found, returns integer with page UID where found. Otherwise blank. Might exit if location-header is sent, see description.
-	 * @see tslib_fe::findDomainRecord()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::findDomainRecord()
 	 * @todo Define visibility
 	 */
 	public function getDomainStartPage($domain, $path = '', $request_uri = '') {
@@ -552,11 +548,11 @@ class PageRepository {
 	 * @param string $MP Commalist of MountPoint parameters, eg. "1-2,3-4" etc. Normally this value comes from the GET var, MP
 	 * @param boolean $ignoreMPerrors If set, some errors related to Mount Points in root line are ignored.
 	 * @return array Array with page records from the root line as values. The array is ordered with the outer records first and root record in the bottom. The keys are numeric but in reverse order. So if you traverse/sort the array by the numeric keys order you will get the order from root and out. If an error is found (like eternal looping or invalid mountpoint) it will return an empty array.
-	 * @see tslib_fe::getPageAndRootline()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::getPageAndRootline()
 	 * @todo Define visibility
 	 */
 	public function getRootLine($uid, $MP = '', $ignoreMPerrors = FALSE) {
-		$rootline = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\RootlineUtility', $uid, $MP, $this);
+		$rootline = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\RootlineUtility', $uid, $MP, $this);
 		try {
 			return $rootline->get();
 		} catch (\RuntimeException $ex) {
@@ -581,7 +577,7 @@ class PageRepository {
 	 * @param array $rl A rootline array!
 	 * @param integer $len The max length of each title from the rootline.
 	 * @return string The path in the form "/page title/This is another pageti.../Another page
-	 * @see tslib_fe::getConfigArray()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::getConfigArray()
 	 * @todo Define visibility
 	 */
 	public function getPathFromRootline($rl, $len = 20) {
@@ -590,7 +586,7 @@ class PageRepository {
 			$path = '';
 			for ($a = 0; $a < $c; $a++) {
 				if ($rl[$a]['uid']) {
-					$path .= '/' . \TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs(strip_tags($rl[$a]['title']), $len);
+					$path .= '/' . GeneralUtility::fixed_lgd_cs(strip_tags($rl[$a]['title']), $len);
 				}
 			}
 			return $path;
@@ -603,7 +599,7 @@ class PageRepository {
 	 * @param array $pagerow The page row to return URL type for
 	 * @param boolean $disable A flag to simply disable any output from here.
 	 * @return string The URL type from $this->urltypes array. False if not found or disabled.
-	 * @see tslib_fe::setExternalJumpUrl()
+	 * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::setExternalJumpUrl()
 	 * @todo Define visibility
 	 */
 	public function getExtURL($pagerow, $disable = 0) {
@@ -613,7 +609,7 @@ class PageRepository {
 			$uI = parse_url($redirectTo);
 			// Relative path assumed now.
 			if (!$uI['scheme'] && substr($redirectTo, 0, 1) != '/') {
-				$redirectTo = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL') . $redirectTo;
+				$redirectTo = GeneralUtility::getIndpEnv('TYPO3_SITE_URL') . $redirectTo;
 			}
 			return $redirectTo;
 		}
@@ -628,7 +624,7 @@ class PageRepository {
 	 * @param array $prevMountPids Array accumulating formerly tested page ids for mount points. Used for recursivity brake.
 	 * @param integer $firstPageUid The first page id.
 	 * @return mixed Returns FALSE if no mount point was found, "-1" if there should have been one, but no connection to it, otherwise an array with information about mount pid and modes.
-	 * @see tslib_menu
+	 * @see \TYPO3\CMS\Frontend\ContentObject\Menu\AbstractMenuContentObject
 	 * @todo Define visibility
 	 */
 	public function getMountPointInfo($pageId, $pageRec = FALSE, $prevMountPids = array(), $firstPageUid = 0) {
@@ -847,11 +843,11 @@ class PageRepository {
 	 * Is using the $GLOBALS['TCA'] arrays "ctrl" part where the key "enablefields" determines for each table which of these features applies to that table.
 	 *
 	 * @param string $table Table name found in the $GLOBALS['TCA'] array
-	 * @param integer $show_hidden If $show_hidden is set (0/1), any hidden-fields in records are ignored. NOTICE: If you call this function, consider what to do with the show_hidden parameter. Maybe it should be set? See tslib_cObj->enableFields where it's implemented correctly.
+	 * @param integer $show_hidden If $show_hidden is set (0/1), any hidden-fields in records are ignored. NOTICE: If you call this function, consider what to do with the show_hidden parameter. Maybe it should be set? See ContentObjectRenderer->enableFields where it's implemented correctly.
 	 * @param array $ignore_array Array you can pass where keys can be "disabled", "starttime", "endtime", "fe_group" (keys from "enablefields" in TCA) and if set they will make sure that part of the clause is not added. Thus disables the specific part of the clause. For previewing etc.
 	 * @param boolean $noVersionPreview If set, enableFields will be applied regardless of any versioning preview settings which might otherwise disable enableFields
 	 * @return string The clause starting like " AND ...=... AND ...=...
-	 * @see tslib_cObj::enableFields(), deleteClause()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::enableFields(), deleteClause()
 	 * @todo Define visibility
 	 */
 	public function enableFields($table, $show_hidden = -1, $ignore_array = array(), $noVersionPreview = FALSE) {
@@ -905,7 +901,7 @@ class PageRepository {
 							'ctrl' => $ctrl
 						);
 						foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['addEnableColumns'] as $_funcRef) {
-							$query .= \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($_funcRef, $_params, $this);
+							$query .= GeneralUtility::callUserFunction($_funcRef, $_params, $this);
 						}
 					}
 				}
@@ -926,7 +922,7 @@ class PageRepository {
 	 * @todo Define visibility
 	 */
 	public function getMultipleGroupsWhereClause($field, $table) {
-		$memberGroups = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $GLOBALS['TSFE']->gr_list);
+		$memberGroups = GeneralUtility::intExplode(',', $GLOBALS['TSFE']->gr_list);
 		$orChecks = array();
 		// If the field is empty, then OK
 		$orChecks[] = $field . '=\'\'';

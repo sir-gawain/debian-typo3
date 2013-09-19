@@ -78,9 +78,9 @@ class UriBuilderTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$this->uriBuilder = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder', array('build'));
 		$this->uriBuilder->setRequest($this->mockRequest);
 		$this->uriBuilder->_set('contentObject', $this->mockContentObject);
-		$this->uriBuilder->injectConfigurationManager($this->mockConfigurationManager);
-		$this->uriBuilder->injectExtensionService($this->mockExtensionService);
-		$this->uriBuilder->injectEnvironmentService($this->objectManager->get('TYPO3\\CMS\\Extbase\\Service\\EnvironmentService'));
+		$this->uriBuilder->_set('configurationManager', $this->mockConfigurationManager);
+		$this->uriBuilder->_set('extensionService', $this->mockExtensionService);
+		$this->uriBuilder->_set('environmentService', $this->objectManager->get('TYPO3\\CMS\\Extbase\\Service\\EnvironmentService'));
 	}
 
 	public function tearDown() {
@@ -475,13 +475,67 @@ class UriBuilderTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	/**
 	 * @test
 	 */
-	public function buildTypolinkConfigurationConsidersPageType() {
+	public function buildTypolinkConfigurationResolvesPageTypeFromFormat() {
 		$this->uriBuilder->setTargetPageUid(123);
-		$this->uriBuilder->setTargetPageType(2);
+		$this->uriBuilder->setFormat('txt');
+
+		$mockConfigurationManager = $this->getMock('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManager');
+		$mockConfigurationManager->expects($this->any())->method('getConfiguration')
+			->will($this->returnValue(array('view' => array('formatToPageTypeMapping' => array('txt' => 2)))));
+		$this->uriBuilder->_set('configurationManager', $mockConfigurationManager);
+
+		$this->mockExtensionService->expects($this->any())->method('getTargetPageTypeByFormat')
+			->with(NULL, 'txt')
+			->will($this->returnValue(2));
+
 		$expectedConfiguration = array('parameter' => '123,2', 'useCacheHash' => 1);
 		$actualConfiguration = $this->uriBuilder->_call('buildTypolinkConfiguration');
 		$this->assertEquals($expectedConfiguration, $actualConfiguration);
 	}
+
+	/**
+	 * @test
+	 */
+	public function buildTypolinkConfigurationResolvesDefaultPageTypeFromFormatIfNoMappingIsConfigured() {
+		$this->uriBuilder->setTargetPageUid(123);
+		$this->uriBuilder->setFormat('txt');
+
+		$mockConfigurationManager = $this->getMock('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManager');
+		$mockConfigurationManager->expects($this->any())->method('getConfiguration')->will($this->returnValue(array()));
+		$this->uriBuilder->_set('configurationManager', $mockConfigurationManager);
+
+		$this->mockExtensionService->expects($this->any())->method('getTargetPageTypeByFormat')
+			->with(NULL, 'txt')
+			->will($this->returnValue(0));
+
+		$expectedConfiguration = array('parameter' => '123,0', 'useCacheHash' => 1);
+		$actualConfiguration = $this->uriBuilder->_call('buildTypolinkConfiguration');
+
+		$this->assertEquals($expectedConfiguration, $actualConfiguration);
+	}
+
+	/**
+	 * @test
+	 */
+	public function buildTypolinkConfigurationResolvesDefaultPageTypeFromFormatIfFormatIsNotMapped() {
+		$this->uriBuilder->setTargetPageUid(123);
+		$this->uriBuilder->setFormat('txt');
+
+		$mockConfigurationManager = $this->getMock('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManager');
+		$mockConfigurationManager->expects($this->any())->method('getConfiguration')
+			->will($this->returnValue(array(array('view' => array('formatToPageTypeMapping' => array('pdf' => 2))))));
+		$this->uriBuilder->_set('configurationManager', $mockConfigurationManager);
+
+		$this->mockExtensionService->expects($this->any())->method('getTargetPageTypeByFormat')
+			->with(NULL, 'txt')
+			->will($this->returnValue(0));
+
+		$expectedConfiguration = array('parameter' => '123,0', 'useCacheHash' => 1);
+		$actualConfiguration = $this->uriBuilder->_call('buildTypolinkConfiguration');
+
+		$this->assertEquals($expectedConfiguration, $actualConfiguration);
+	}
+
 
 	/**
 	 * @test

@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Frontend\Imaging;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * GIFBUILDER
  *
@@ -40,7 +42,7 @@ namespace TYPO3\CMS\Frontend\Imaging;
  *
  * Here is an example of how to use this class (from tslib_content.php, function getImgResource):
  *
- * $gifCreator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Imaging\\GifBuilder');
+ * $gifCreator = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Imaging\\GifBuilder');
  * $gifCreator->init();
  * $theImage='';
  * if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib']) {
@@ -126,19 +128,19 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	 * Initialization of the GIFBUILDER objects, in particular TEXT and IMAGE. This includes finding the bounding box, setting dimensions and offset values before the actual rendering is started.
 	 * Modifies the ->setup, ->objBB internal arrays
 	 * Should be called after the ->init() function which initializes the parent class functions/variables in general.
-	 * The class tslib_gmenu also uses gifbuilder and here there is an interesting use since the function findLargestDims() from that class calls the init() and start() functions to find the total dimensions before starting the rendering of the images.
+	 * The class \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuContentObject also uses gifbuilder and here there is an interesting use since the function findLargestDims() from that class calls the init() and start() functions to find the total dimensions before starting the rendering of the images.
 	 *
 	 * @param array $conf TypoScript properties for the GIFBUILDER session. Stored internally in the variable ->setup
-	 * @param array $data The current data record from tslib_cObj. Stored internally in the variable ->data
+	 * @param array $data The current data record from \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer. Stored internally in the variable ->data
 	 * @return void
-	 * @see tslib_cObj::getImgResource(), tslib_gmenu::makeGifs(), tslib_gmenu::findLargestDims()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getImgResource(), \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuContentObject::makeGifs(), \TYPO3\CMS\Frontend\ContentObject\Menu\GraphicalMenuContentObject::findLargestDims()
 	 * @todo Define visibility
 	 */
 	public function start($conf, $data) {
 		if (is_array($conf)) {
 			$this->setup = $conf;
 			$this->data = $data;
-			$this->cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+			$this->cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 			$this->cObj->start($this->data);
 			// Hook preprocess gifbuilder conf
 			// Added by Julle for 3.8.0
@@ -149,7 +151,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 			if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_gifbuilder.php']['gifbuilder-ConfPreProcess'])) {
 				foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_gifbuilder.php']['gifbuilder-ConfPreProcess'] as $_funcRef) {
 					$_params = $this->setup;
-					$this->setup = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($_funcRef, $_params, $this);
+					$this->setup = GeneralUtility::callUserFunction($_funcRef, $_params, $this);
 				}
 			}
 			// Initializing global Char Range Map
@@ -199,43 +201,43 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 				if (intval($theKey) && ($conf = $this->setup[$theKey . '.'])) {
 					// Swipes through TEXT and IMAGE-objects
 					switch ($theValue) {
-					case 'TEXT':
-						if ($this->setup[$theKey . '.'] = $this->checkTextObj($conf)) {
-							// Adjust font width if max size is set:
-							$maxWidth = isset($this->setup[$theKey . '.']['maxWidth.']) ? $this->cObj->stdWrap($this->setup[$theKey . '.']['maxWidth'], $this->setup[$theKey . '.']['maxWidth.']) : $this->setup[$theKey . '.']['maxWidth'];
-							if ($maxWidth) {
-								$this->setup[$theKey . '.']['fontSize'] = $this->fontResize($this->setup[$theKey . '.']);
-							}
-							// Calculate bounding box:
-							$txtInfo = $this->calcBBox($this->setup[$theKey . '.']);
-							$this->setup[$theKey . '.']['BBOX'] = $txtInfo;
-							$this->objBB[$theKey] = $txtInfo;
-							$this->setup[$theKey . '.']['imgMap'] = 0;
-						}
-						break;
-					case 'IMAGE':
-						$fileInfo = $this->getResource($conf['file'], $conf['file.']);
-						if ($fileInfo) {
-							$this->combinedFileNames[] = preg_replace('/\\.[[:alnum:]]+$/', '', basename($fileInfo[3]));
-							$this->setup[$theKey . '.']['file'] = $fileInfo[3];
-							$this->setup[$theKey . '.']['BBOX'] = $fileInfo;
-							$this->objBB[$theKey] = $fileInfo;
-							if ($conf['mask']) {
-								$maskInfo = $this->getResource($conf['mask'], $conf['mask.']);
-								if ($maskInfo) {
-									$this->setup[$theKey . '.']['mask'] = $maskInfo[3];
-								} else {
-									$this->setup[$theKey . '.']['mask'] = '';
+						case 'TEXT':
+							if ($this->setup[$theKey . '.'] = $this->checkTextObj($conf)) {
+								// Adjust font width if max size is set:
+								$maxWidth = isset($this->setup[$theKey . '.']['maxWidth.']) ? $this->cObj->stdWrap($this->setup[$theKey . '.']['maxWidth'], $this->setup[$theKey . '.']['maxWidth.']) : $this->setup[$theKey . '.']['maxWidth'];
+								if ($maxWidth) {
+									$this->setup[$theKey . '.']['fontSize'] = $this->fontResize($this->setup[$theKey . '.']);
 								}
+								// Calculate bounding box:
+								$txtInfo = $this->calcBBox($this->setup[$theKey . '.']);
+								$this->setup[$theKey . '.']['BBOX'] = $txtInfo;
+								$this->objBB[$theKey] = $txtInfo;
+								$this->setup[$theKey . '.']['imgMap'] = 0;
 							}
-						} else {
-							unset($this->setup[$theKey . '.']);
-						}
-						break;
+							break;
+						case 'IMAGE':
+							$fileInfo = $this->getResource($conf['file'], $conf['file.']);
+							if ($fileInfo) {
+								$this->combinedFileNames[] = preg_replace('/\\.[[:alnum:]]+$/', '', basename($fileInfo[3]));
+								$this->setup[$theKey . '.']['file'] = $fileInfo[3];
+								$this->setup[$theKey . '.']['BBOX'] = $fileInfo;
+								$this->objBB[$theKey] = $fileInfo;
+								if ($conf['mask']) {
+									$maskInfo = $this->getResource($conf['mask'], $conf['mask.']);
+									if ($maskInfo) {
+										$this->setup[$theKey . '.']['mask'] = $maskInfo[3];
+									} else {
+										$this->setup[$theKey . '.']['mask'] = '';
+									}
+								}
+							} else {
+								unset($this->setup[$theKey . '.']);
+							}
+							break;
 					}
 					// Checks if disabled is set... (this is also done in menu.php / imgmenu!!)
 					if ($conf['if.']) {
-						$cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+						$cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 						$cObj->start($this->data);
 						if (!$cObj->checkIf($conf['if.'])) {
 							unset($this->setup[$theKey]);
@@ -258,61 +260,61 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 				$theValue = $this->setup[$theKey];
 				if (intval($theKey) && ($conf = $this->setup[$theKey . '.'])) {
 					switch ($theValue) {
-					case 'TEXT':
+						case 'TEXT':
 
-					case 'IMAGE':
-						if (isset($this->setup[$theKey . '.']['offset.'])) {
-							$this->setup[$theKey . '.']['offset'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['offset'], $this->setup[$theKey . '.']['offset.']);
-						}
-						if ($this->setup[$theKey . '.']['offset']) {
-							$this->setup[$theKey . '.']['offset'] = $this->calcOffset($this->setup[$theKey . '.']['offset']);
-						}
-						break;
-					case 'BOX':
+						case 'IMAGE':
+							if (isset($this->setup[$theKey . '.']['offset.'])) {
+								$this->setup[$theKey . '.']['offset'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['offset'], $this->setup[$theKey . '.']['offset.']);
+							}
+							if ($this->setup[$theKey . '.']['offset']) {
+								$this->setup[$theKey . '.']['offset'] = $this->calcOffset($this->setup[$theKey . '.']['offset']);
+							}
+							break;
+						case 'BOX':
 
-					case 'ELLIPSE':
-						if (isset($this->setup[$theKey . '.']['dimensions.'])) {
-							$this->setup[$theKey . '.']['dimensions'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['dimensions'], $this->setup[$theKey . '.']['dimensions.']);
-						}
-						if ($this->setup[$theKey . '.']['dimensions']) {
-							$this->setup[$theKey . '.']['dimensions'] = $this->calcOffset($this->setup[$theKey . '.']['dimensions']);
-						}
-						break;
-					case 'WORKAREA':
-						if (isset($this->setup[$theKey . '.']['set.'])) {
-							$this->setup[$theKey . '.']['set'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['set'], $this->setup[$theKey . '.']['set.']);
-						}
-						if ($this->setup[$theKey . '.']['set']) {
-							$this->setup[$theKey . '.']['set'] = $this->calcOffset($this->setup[$theKey . '.']['set']);
-						}
-						break;
-					case 'CROP':
-						if (isset($this->setup[$theKey . '.']['crop.'])) {
-							$this->setup[$theKey . '.']['crop'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['crop'], $this->setup[$theKey . '.']['crop.']);
-						}
-						if ($this->setup[$theKey . '.']['crop']) {
-							$this->setup[$theKey . '.']['crop'] = $this->calcOffset($this->setup[$theKey . '.']['crop']);
-						}
-						break;
-					case 'SCALE':
-						if (isset($this->setup[$theKey . '.']['width.'])) {
-							$this->setup[$theKey . '.']['width'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['width'], $this->setup[$theKey . '.']['width.']);
-						}
-						if ($this->setup[$theKey . '.']['width']) {
-							$this->setup[$theKey . '.']['width'] = $this->calcOffset($this->setup[$theKey . '.']['width']);
-						}
-						if (isset($this->setup[$theKey . '.']['height.'])) {
-							$this->setup[$theKey . '.']['height'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['height'], $this->setup[$theKey . '.']['height.']);
-						}
-						if ($this->setup[$theKey . '.']['height']) {
-							$this->setup[$theKey . '.']['height'] = $this->calcOffset($this->setup[$theKey . '.']['height']);
-						}
-						break;
+						case 'ELLIPSE':
+							if (isset($this->setup[$theKey . '.']['dimensions.'])) {
+								$this->setup[$theKey . '.']['dimensions'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['dimensions'], $this->setup[$theKey . '.']['dimensions.']);
+							}
+							if ($this->setup[$theKey . '.']['dimensions']) {
+								$this->setup[$theKey . '.']['dimensions'] = $this->calcOffset($this->setup[$theKey . '.']['dimensions']);
+							}
+							break;
+						case 'WORKAREA':
+							if (isset($this->setup[$theKey . '.']['set.'])) {
+								$this->setup[$theKey . '.']['set'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['set'], $this->setup[$theKey . '.']['set.']);
+							}
+							if ($this->setup[$theKey . '.']['set']) {
+								$this->setup[$theKey . '.']['set'] = $this->calcOffset($this->setup[$theKey . '.']['set']);
+							}
+							break;
+						case 'CROP':
+							if (isset($this->setup[$theKey . '.']['crop.'])) {
+								$this->setup[$theKey . '.']['crop'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['crop'], $this->setup[$theKey . '.']['crop.']);
+							}
+							if ($this->setup[$theKey . '.']['crop']) {
+								$this->setup[$theKey . '.']['crop'] = $this->calcOffset($this->setup[$theKey . '.']['crop']);
+							}
+							break;
+						case 'SCALE':
+							if (isset($this->setup[$theKey . '.']['width.'])) {
+								$this->setup[$theKey . '.']['width'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['width'], $this->setup[$theKey . '.']['width.']);
+							}
+							if ($this->setup[$theKey . '.']['width']) {
+								$this->setup[$theKey . '.']['width'] = $this->calcOffset($this->setup[$theKey . '.']['width']);
+							}
+							if (isset($this->setup[$theKey . '.']['height.'])) {
+								$this->setup[$theKey . '.']['height'] = $this->cObj->stdWrap($this->setup[$theKey . '.']['height'], $this->setup[$theKey . '.']['height.']);
+							}
+							if ($this->setup[$theKey . '.']['height']) {
+								$this->setup[$theKey . '.']['height'] = $this->calcOffset($this->setup[$theKey . '.']['height']);
+							}
+							break;
 					}
 				}
 			}
 			// Get trivial data
-			$XY = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $this->setup['XY']);
+			$XY = GeneralUtility::intExplode(',', $this->setup['XY']);
 			$maxWidth = isset($this->setup['maxWidth.']) ? intval($this->cObj->stdWrap($this->setup['maxWidth'], $this->setup['maxWidth.'])) : intval($this->setup['maxWidth']);
 			$maxHeight = isset($this->setup['maxHeight.']) ? intval($this->cObj->stdWrap($this->setup['maxHeight'], $this->setup['maxHeight.'])) : intval($this->setup['maxHeight']);
 			$XY[0] = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($XY[0], 1, $maxWidth ? $maxWidth : 2000);
@@ -320,7 +322,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 			$this->XY = $XY;
 			$this->w = $XY[0];
 			$this->h = $XY[1];
-			$this->OFFSET = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $this->setup['offset']);
+			$this->OFFSET = GeneralUtility::intExplode(',', $this->setup['offset']);
 			// this sets the workArea
 			$this->setWorkArea($this->setup['workArea']);
 			// this sets the default to the current;
@@ -412,95 +414,95 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 					}
 
 					switch ($theValue) {
-					case 'IMAGE':
-						if ($conf['mask']) {
-							$this->maskImageOntoImage($this->im, $conf, $this->workArea);
-						} else {
-							$this->copyImageOntoImage($this->im, $conf, $this->workArea);
-						}
-						break;
-					case 'TEXT':
-						if (!$conf['hide']) {
-							if (is_array($conf['shadow.'])) {
-								$isStdWrapped = array();
-								foreach ($conf['shadow.'] as $key => $value) {
-									$parameter = rtrim($key, '.');
-									if (!$isStdWrapped[$parameter] && isset($conf[$parameter . '.'])) {
-										$conf['shadow.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
-										$isStdWrapped[$parameter] = 1;
-									}
-								}
-								$this->makeShadow($this->im, $conf['shadow.'], $this->workArea, $conf);
+						case 'IMAGE':
+							if ($conf['mask']) {
+								$this->maskImageOntoImage($this->im, $conf, $this->workArea);
+							} else {
+								$this->copyImageOntoImage($this->im, $conf, $this->workArea);
 							}
-							if (is_array($conf['emboss.'])) {
-								$isStdWrapped = array();
-								foreach ($conf['emboss.'] as $key => $value) {
-									$parameter = rtrim($key, '.');
-									if (!$isStdWrapped[$parameter] && isset($conf[$parameter . '.'])) {
-										$conf['emboss.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
-										$isStdWrapped[$parameter] = 1;
+							break;
+						case 'TEXT':
+							if (!$conf['hide']) {
+								if (is_array($conf['shadow.'])) {
+									$isStdWrapped = array();
+									foreach ($conf['shadow.'] as $key => $value) {
+										$parameter = rtrim($key, '.');
+										if (!$isStdWrapped[$parameter] && isset($conf[$parameter . '.'])) {
+											$conf['shadow.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
+											$isStdWrapped[$parameter] = 1;
+										}
 									}
+									$this->makeShadow($this->im, $conf['shadow.'], $this->workArea, $conf);
 								}
-								$this->makeEmboss($this->im, $conf['emboss.'], $this->workArea, $conf);
-							}
-							if (is_array($conf['outline.'])) {
-								$isStdWrapped = array();
-								foreach ($conf['outline.'] as $key => $value) {
-									$parameter = rtrim($key, '.');
-									if (!$isStdWrapped[$parameter] && isset($conf[$parameter . '.'])) {
-										$conf['outline.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
-										$isStdWrapped[$parameter] = 1;
+								if (is_array($conf['emboss.'])) {
+									$isStdWrapped = array();
+									foreach ($conf['emboss.'] as $key => $value) {
+										$parameter = rtrim($key, '.');
+										if (!$isStdWrapped[$parameter] && isset($conf[$parameter . '.'])) {
+											$conf['emboss.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
+											$isStdWrapped[$parameter] = 1;
+										}
 									}
+									$this->makeEmboss($this->im, $conf['emboss.'], $this->workArea, $conf);
 								}
-								$this->makeOutline($this->im, $conf['outline.'], $this->workArea, $conf);
+								if (is_array($conf['outline.'])) {
+									$isStdWrapped = array();
+									foreach ($conf['outline.'] as $key => $value) {
+										$parameter = rtrim($key, '.');
+										if (!$isStdWrapped[$parameter] && isset($conf[$parameter . '.'])) {
+											$conf['outline.'][$parameter] = $this->cObj->stdWrap($conf[$parameter], $conf[$parameter . '.']);
+											$isStdWrapped[$parameter] = 1;
+										}
+									}
+									$this->makeOutline($this->im, $conf['outline.'], $this->workArea, $conf);
+								}
+								$conf['imgMap'] = 1;
+								$this->makeText($this->im, $conf, $this->workArea);
 							}
-							$conf['imgMap'] = 1;
-							$this->makeText($this->im, $conf, $this->workArea);
-						}
-						break;
-					case 'OUTLINE':
-						if ($this->setup[$conf['textObjNum']] == 'TEXT' && ($txtConf = $this->checkTextObj($this->setup[$conf['textObjNum'] . '.']))) {
-							$this->makeOutline($this->im, $conf, $this->workArea, $txtConf);
-						}
-						break;
-					case 'EMBOSS':
-						if ($this->setup[$conf['textObjNum']] == 'TEXT' && ($txtConf = $this->checkTextObj($this->setup[$conf['textObjNum'] . '.']))) {
-							$this->makeEmboss($this->im, $conf, $this->workArea, $txtConf);
-						}
-						break;
-					case 'SHADOW':
-						if ($this->setup[$conf['textObjNum']] == 'TEXT' && ($txtConf = $this->checkTextObj($this->setup[$conf['textObjNum'] . '.']))) {
-							$this->makeShadow($this->im, $conf, $this->workArea, $txtConf);
-						}
-						break;
-					case 'BOX':
-						$this->makeBox($this->im, $conf, $this->workArea);
-						break;
-					case 'EFFECT':
-						$this->makeEffect($this->im, $conf);
-						break;
-					case 'ADJUST':
-						$this->adjust($this->im, $conf);
-						break;
-					case 'CROP':
-						$this->crop($this->im, $conf);
-						break;
-					case 'SCALE':
-						$this->scale($this->im, $conf);
-						break;
-					case 'WORKAREA':
-						if ($conf['set']) {
-							// this sets the workArea
-							$this->setWorkArea($conf['set']);
-						}
-						if (isset($conf['clear'])) {
-							// This sets the current to the default;
-							$this->workArea = $this->defaultWorkArea;
-						}
-						break;
-					case 'ELLIPSE':
-						$this->makeEllipse($this->im, $conf, $this->workArea);
-						break;
+							break;
+						case 'OUTLINE':
+							if ($this->setup[$conf['textObjNum']] == 'TEXT' && ($txtConf = $this->checkTextObj($this->setup[$conf['textObjNum'] . '.']))) {
+								$this->makeOutline($this->im, $conf, $this->workArea, $txtConf);
+							}
+							break;
+						case 'EMBOSS':
+							if ($this->setup[$conf['textObjNum']] == 'TEXT' && ($txtConf = $this->checkTextObj($this->setup[$conf['textObjNum'] . '.']))) {
+								$this->makeEmboss($this->im, $conf, $this->workArea, $txtConf);
+							}
+							break;
+						case 'SHADOW':
+							if ($this->setup[$conf['textObjNum']] == 'TEXT' && ($txtConf = $this->checkTextObj($this->setup[$conf['textObjNum'] . '.']))) {
+								$this->makeShadow($this->im, $conf, $this->workArea, $txtConf);
+							}
+							break;
+						case 'BOX':
+							$this->makeBox($this->im, $conf, $this->workArea);
+							break;
+						case 'EFFECT':
+							$this->makeEffect($this->im, $conf);
+							break;
+						case 'ADJUST':
+							$this->adjust($this->im, $conf);
+							break;
+						case 'CROP':
+							$this->crop($this->im, $conf);
+							break;
+						case 'SCALE':
+							$this->scale($this->im, $conf);
+							break;
+						case 'WORKAREA':
+							if ($conf['set']) {
+								// this sets the workArea
+								$this->setWorkArea($conf['set']);
+							}
+							if (isset($conf['clear'])) {
+								// This sets the current to the default;
+								$this->workArea = $this->defaultWorkArea;
+							}
+							break;
+						case 'ELLIPSE':
+							$this->makeEllipse($this->im, $conf, $this->workArea);
+							break;
 					}
 				}
 			}
@@ -541,7 +543,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	 * @todo Define visibility
 	 */
 	public function checkTextObj($conf) {
-		$cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		$cObj->start($this->data);
 		$isStdWrapped = array();
 		foreach ($conf as $key => $value) {
@@ -639,7 +641,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	 */
 	public function calcOffset($string) {
 		$value = array();
-		$numbers = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->calculateFunctions($string));
+		$numbers = GeneralUtility::trimExplode(',', $this->calculateFunctions($string));
 		foreach ($numbers as $key => $val) {
 			if ((string) $val == (string) intval($val)) {
 				$value[$key] = intval($val);
@@ -652,20 +654,20 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	}
 
 	/**
-	 * Returns an "imgResource" creating an instance of the tslib_cObj class and calling tslib_cObj::getImgResource
+	 * Returns an "imgResource" creating an instance of the ContentObjectRenderer class and calling ContentObjectRenderer::getImgResource
 	 *
 	 * @param string $file Filename value OR the string "GIFBUILDER", see documentation in TSref for the "datatype" called "imgResource
 	 * @param array $fileArray TypoScript properties passed to the function. Either GIFBUILDER properties or imgResource properties, depending on the value of $file (whether that is "GIFBUILDER" or a file reference)
 	 * @return array Returns an array with file information if an image was returned. Otherwise FALSE.
 	 * @access private
-	 * @see tslib_cObj::getImgResource()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getImgResource()
 	 * @todo Define visibility
 	 */
 	public function getResource($file, $fileArray) {
-		if (!\TYPO3\CMS\Core\Utility\GeneralUtility::inList($this->imageFileExt, $fileArray['ext'])) {
+		if (!GeneralUtility::inList($this->imageFileExt, $fileArray['ext'])) {
 			$fileArray['ext'] = $this->gifExtension;
 		}
-		$cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		$cObj->start($this->data);
 		return $cObj->getImgResource($file, $fileArray);
 	}
@@ -695,13 +697,13 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 		$meaningfulPrefix = '';
 		if ($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']) {
 			/** @var $basicFileFunctions \TYPO3\CMS\Core\Utility\File\BasicFileUtility */
-			$basicFileFunctions = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\File\\BasicFileUtility');
+			$basicFileFunctions = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\File\\BasicFileUtility');
 			$meaningfulPrefix = implode('_', array_merge($this->combinedTextStrings, $this->combinedFileNames));
 			$meaningfulPrefix = $basicFileFunctions->cleanFileName($meaningfulPrefix);
 			$meaningfulPrefixLength = intval($GLOBALS['TSFE']->config['config']['meaningfulTempFilePrefix']);
 			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['UTF8filesystem']) {
 				/** @var $t3libCsInstance \TYPO3\CMS\Core\Charset\CharsetConverter */
-				$t3libCsInstance = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter');
+				$t3libCsInstance = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter');
 				$meaningfulPrefix = $t3libCsInstance->substr('utf-8', $meaningfulPrefix, 0, $meaningfulPrefixLength);
 			} else {
 				$meaningfulPrefix = substr($meaningfulPrefix, 0, $meaningfulPrefixLength);
@@ -712,7 +714,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 		// Not only the wrong glyphs are printed but also some memory stack overflow resulted in strange additional
 		// chars - and finally the reason for this investigation: The Bounding box data was changing all the time
 		// resulting in new images being generated all the time. With PHP4 it works fine.
-		return $this->tempPath . $pre . $meaningfulPrefix . \TYPO3\CMS\Core\Utility\GeneralUtility::shortMD5(serialize($this->setup)) . '.' . $this->extension();
+		return $this->tempPath . $pre . $meaningfulPrefix . GeneralUtility::shortMD5(serialize($this->setup)) . '.' . $this->extension();
 	}
 
 	/**
@@ -724,20 +726,19 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	 */
 	public function extension() {
 		switch (strtolower($this->setup['format'])) {
-		case 'jpg':
+			case 'jpg':
 
-		case 'jpeg':
-			return 'jpg';
-			break;
-		case 'png':
-			return 'png';
-			break;
-		case 'gif':
-			return 'gif';
-			break;
-		default:
-			return $this->gifExtension;
-			break;
+			case 'jpeg':
+				return 'jpg';
+				break;
+			case 'png':
+				return 'png';
+				break;
+			case 'gif':
+				return 'gif';
+				break;
+			default:
+				return $this->gifExtension;
 		}
 	}
 
@@ -750,7 +751,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	 */
 	protected function calculateValue($string) {
 		$calculatedValue = 0;
-		$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::splitCalc($string, '+-*/%');
+		$parts = GeneralUtility::splitCalc($string, '+-*/%');
 		foreach ($parts as $part) {
 			$theVal = $part[1];
 			$sign = $part[0];
@@ -812,7 +813,7 @@ class GifBuilder extends \TYPO3\CMS\Core\Imaging\GraphicalFunctions {
 	 * @return integer The maxium value of the given comma separated and calculated values
 	 */
 	protected function calculateMaximum($string) {
-		$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->calcOffset($string), TRUE);
+		$parts = GeneralUtility::trimExplode(',', $this->calcOffset($string), TRUE);
 		$maximum = count($parts) ? max($parts) : 0;
 		return $maximum;
 	}

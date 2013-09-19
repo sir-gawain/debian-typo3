@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Backend\View;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * class to render the TYPO3 backend menu for the modules
  *
@@ -51,10 +53,13 @@ class ModuleMenuView {
 	 * Constructor, initializes several variables
 	 */
 	public function __construct() {
+		if (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_AJAX) {
+			$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xlf');
+		}
 		$this->backPath = '';
 		$this->linkModules = TRUE;
 		// Loads the backend modules available for the logged in user.
-		$this->moduleLoader = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Module\\ModuleLoader');
+		$this->moduleLoader = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Module\\ModuleLoader');
 		$this->moduleLoader->observeWorkspaces = TRUE;
 		$this->moduleLoader->load($GLOBALS['TBE_MODULES']);
 		$this->loadedModules = $this->moduleLoader->modules;
@@ -150,12 +155,12 @@ class ModuleMenuView {
 	 * saves the menu's toggle state in the backend user's uc
 	 *
 	 * @param array $params Array of parameters from the AJAX interface, currently unused
-	 * @param \TYPO3\CMS\Core\Http\AjaxRequestHandler $ajaxObj Object of type TYPO3AJAX
+	 * @param \TYPO3\CMS\Core\Http\AjaxRequestHandler $ajaxObj Object of type AjaxRequestHandler
 	 * @return void
 	 */
 	public function saveMenuState($params, $ajaxObj) {
-		$menuItem = \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('menuid');
-		$state = \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('state') === 'true' ? 1 : 0;
+		$menuItem = GeneralUtility::_POST('menuid');
+		$state = GeneralUtility::_POST('state') === 'true' ? 1 : 0;
 		$GLOBALS['BE_USER']->uc['moduleData']['menuState'][$menuItem] = $state;
 		$GLOBALS['BE_USER']->writeUC();
 	}
@@ -176,7 +181,7 @@ class ModuleMenuView {
 			if (!is_array($moduleData['sub'])) {
 				$moduleLink = $moduleData['script'];
 			}
-			$moduleLink = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($moduleLink);
+			$moduleLink = GeneralUtility::resolveBackPath($moduleLink);
 			$moduleKey = 'modmenu_' . $moduleName;
 			$moduleIcon = $this->getModuleIcon($moduleKey);
 			$modules[$moduleKey] = array(
@@ -203,7 +208,7 @@ class ModuleMenuView {
 				);
 			} elseif (is_array($moduleData['sub'])) {
 				foreach ($moduleData['sub'] as $submoduleName => $submoduleData) {
-					$submoduleLink = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($submoduleData['script']);
+					$submoduleLink = GeneralUtility::resolveBackPath($submoduleData['script']);
 					$submoduleKey = $moduleName . '_' . $submoduleName . '_tab';
 					$submoduleIcon = $this->getModuleIcon($submoduleKey);
 					$submoduleDescription = $GLOBALS['LANG']->moduleLabels['labels'][$submoduleKey . 'label'];
@@ -220,7 +225,9 @@ class ModuleMenuView {
 						'navigationFrameScriptParam' => $submoduleData['navFrameScriptParam'],
 						'navigationComponentId' => $submoduleData['navigationComponentId']
 					);
-					if ($moduleData['navFrameScript']) {
+					// if the main module has a navframe script, inherit to the submodule,
+					// but only if it is not disabled explicitly (option is set to FALSE)
+					if ($moduleData['navFrameScript'] && $submoduleData['inheritNavigationComponentFromMainModule'] !== FALSE) {
 						$modules[$moduleKey]['subitems'][$submoduleKey]['parentNavigationFrameScript'] = $moduleData['navFrameScript'];
 					}
 				}
@@ -265,7 +272,7 @@ class ModuleMenuView {
 	 * @see getModuleIconRelative()
 	 */
 	protected function getModuleIconAbsolute($iconFilename) {
-		if (!\TYPO3\CMS\Core\Utility\GeneralUtility::isAbsPath($iconFilename)) {
+		if (!GeneralUtility::isAbsPath($iconFilename)) {
 			$iconFilename = $this->backPath . $iconFilename;
 		}
 		return $iconFilename;
@@ -279,7 +286,7 @@ class ModuleMenuView {
 	 * @see getModuleIconAbsolute()
 	 */
 	protected function getModuleIconRelative($iconFilename) {
-		if (\TYPO3\CMS\Core\Utility\GeneralUtility::isAbsPath($iconFilename)) {
+		if (GeneralUtility::isAbsPath($iconFilename)) {
 			$iconFilename = '../' . substr($iconFilename, strlen(PATH_site));
 		}
 		return $this->backPath . $iconFilename;

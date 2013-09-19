@@ -34,7 +34,6 @@ class SystemStatus implements \TYPO3\CMS\Reports\StatusProviderInterface {
 	 * Determines the Install Tool's status, mainly concerning its protection.
 	 *
 	 * @return array List of statuses
-	 * @see typo3/sysext/reports/interfaces/tx_reports_StatusProvider::getStatus()
 	 */
 	public function getStatus() {
 		$this->executeAdminCommand();
@@ -53,11 +52,13 @@ class SystemStatus implements \TYPO3\CMS\Reports\StatusProviderInterface {
 	protected function executeAdminCommand() {
 		$command = \TYPO3\CMS\Core\Utility\GeneralUtility::_GET('adminCmd');
 		switch ($command) {
-		case 'clear_peak_memory_usage_flag':
-			/** @var $registry \TYPO3\CMS\Core\Registry */
-			$registry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Registry');
-			$registry->remove('core', 'reports-peakMemoryUsage');
-			break;
+			case 'clear_peak_memory_usage_flag':
+				/** @var $registry \TYPO3\CMS\Core\Registry */
+				$registry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Registry');
+				$registry->remove('core', 'reports-peakMemoryUsage');
+				break;
+			default:
+				// Do nothing
 		}
 	}
 

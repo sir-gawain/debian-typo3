@@ -12,7 +12,7 @@
 	</f:comment>
 
 	<f:if condition="{compareUserList}">
-		<bu:Section title="Compare" collapsible="TRUE">
+		<bu:Section title="{f:translate(key: 'section.compare', default: 'Compare')}" collapsible="TRUE">
 			<ul id="compareUsers">
 				<f:for each="{compareUserList}" as="compareUser">
 					<li>
@@ -21,7 +21,7 @@
 							arguments="{uid: compareUser.uid}"
 						><bu:SpriteManagerIcon iconName="actions-selection-delete" /></f:link.action>
 
-						<a href="#" onClick="showClickmenu('be_users', '{compareUser.uid}', '1', '', '', ''); return false;" title="id={compareUser.uid}">
+						<a href="#" onClick="Clickmenu.show('be_users', '{compareUser.uid}', '1', '', '', ''); return false;" title="id={compareUser.uid}">
 							<bu:spriteIconForRecord table="be_users" object="{compareUser}" />
 						</a>
 
@@ -31,7 +31,7 @@
 			</ul>
 
 			<f:form action="compare">
-				<f:form.submit value="Compare user list" />
+				<f:form.submit value="{f:translate(key: 'compareUserList', default: 'Compare user list')}" />
 			</f:form>
 
 		</bu:Section>
@@ -47,7 +47,7 @@
 		Listing of all users
 	</f:comment>
 
-	<h3><f:translate key="backendUserListing">Backend User Listing</f:translate></h3>
+	<h2><f:translate key="backendUserListing">Backend User Listing</f:translate></h2>
 
 	<f:if condition="<f:count subject='{backendUsers}' /> > 50">
 		<f:then>
@@ -69,7 +69,7 @@
 					</f:comment>
 					<tr>
 						<td colspan="6">
-							<f:count subject="{backendUsers}" /> Users
+							<f:count subject="{backendUsers}" /> <f:translate key="users">Users</f:translate>
 						</td>
 					</tr>
 				</table>
@@ -93,7 +93,7 @@
 				</f:comment>
 				<tr>
 					<td colspan="6">
-						<f:count subject="{backendUsers}" /> Users
+						<f:count subject="{backendUsers}" /> <f:translate key="users">Users</f:translate>
 					</td>
 				</tr>
 			</table>

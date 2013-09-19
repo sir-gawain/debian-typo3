@@ -436,6 +436,36 @@ Do you want to continue WITHOUT saving?</source>
 			<trans-unit id="file_upload.php.files" xml:space="preserve">
 				<source>files</source>
 			</trans-unit>
+			<trans-unit id="file_upload.draginformation.message" xml:space="preserve">
+				<source>You simply can drag your files into the filelist. Click again for classic mode.</source>
+			</trans-unit>
+			<trans-unit id="file_upload.draginformation.title" xml:space="preserve">
+				<source>Drag &amp; Drop available</source>
+			</trans-unit>
+			<trans-unit id="file_upload.dropzonehint" xml:space="preserve">
+				<source>Drop your files here!</source>
+			</trans-unit>
+			<trans-unit id="file_upload.maxFilesizeExceeded" xml:space="preserve">
+				<source>File &quot;{0}&quot; exceeds maximum filesize of {1} bytes!</source>
+			</trans-unit>
+			<trans-unit id="file_upload.fileNotAllowwed" xml:space="preserve">
+				<source>Filename &quot;{0}&quot; is not allowed!</source>
+			</trans-unit>
+			<trans-unit id="file_upload.uploadFailed" xml:space="preserve">
+				<source>Upload of file &quot;{0}&quot; failed!</source>
+			</trans-unit>
+			<trans-unit id="file_upload.upload-in-progress" xml:space="preserve">
+				<source>File upload in progress...</source>
+			</trans-unit>
+			<trans-unit id="file_upload.upload-progress-info" xml:space="preserve">
+				<source>Uploading file {0} out of {1} files.</source>
+			</trans-unit>
+			<trans-unit id="file_upload.upload-finished" xml:space="preserve">
+				<source>Upload complete! Filelist reloading...</source>
+			</trans-unit>
+			<trans-unit id="file_upload.overwriteExistingFiles" xml:space="preserve">
+				<source>Shall existing files be overwritten?</source>
+			</trans-unit>
 			<trans-unit id="file_upload.php.number_of_files" xml:space="preserve">
 				<source>Number of files:</source>
 			</trans-unit>
@@ -820,6 +850,9 @@ Would you like to save now in order to refresh the display?</source>
 			<trans-unit id="warning.install_password" xml:space="preserve">
 				<source>The Install Tool is still using the default password "joh316". Update this within the %sAbout section%s of the Install Tool.</source>
 			</trans-unit>
+			<trans-unit id="warning.installtool_default_password" xml:space="preserve">
+				<source>The Install Tool is still using the default password "joh316". Update this within the %sImportant actions section%s of the Install Tool.</source>
+			</trans-unit>
 			<trans-unit id="warning.backend_admin" xml:space="preserve">
 				<source>The default backend user "admin" with password "password" is still present. %sEdit this account%s, either deleting it completely or changing the username and password.</source>
 			</trans-unit>
@@ -842,7 +875,7 @@ Would you like to save now in order to refresh the display?</source>
 				<source>The encryption key is not set. Set it in the %sBasic Configuration section%s of the Install Tool.</source>
 			</trans-unit>
 			<trans-unit id="warning.install_update" xml:space="preserve">
-				<source>This installation is not configured for the TYPO3 version it is running. If you did so intentionally, this message can be safely ignored. If you are unsure, visit the %sUpdate Wizard%s section of the Install Tool to see how TYPO3 would change.</source>
+				<source>This installation is not configured for the TYPO3 version it is running. If you did so intentionally, this message can be safely ignored. If you are unsure, visit the Update Wizard section of the %sInstall Tool%s to see how TYPO3 would change.</source>
 			</trans-unit>
 			<trans-unit id="warning.header" xml:space="preserve">
 				<source>Important Notice!</source>

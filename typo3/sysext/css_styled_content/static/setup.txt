@@ -223,17 +223,6 @@ lib.stdheader {
 		prefixComment = 2 | Header date:
 	}
 
-	# HTML5 <hgroup> open
-	7 = TEXT
-	7 {
-		value = <hgroup>
-		fieldRequired = subheader
-		if {
-			value = html5
-			equals.data = TSFE:config|config|doctype
-		}
-	}
-
 	# This CASE cObject renders the header content:
 	# currentValue is set to the header data, possibly wrapped in link-tags.
 	10 = CASE
@@ -297,12 +286,6 @@ lib.stdheader {
 			value = html5
 			equals.data = TSFE:config|config|doctype
 		}
-	}
-
-	# HTML5 <hgroup> close
-	30 < lib.stdheader.7
-	30 {
-		value = </hgroup>
 	}
 
 	# HTML5 Date
@@ -539,7 +522,7 @@ tt_content.stdWrap {
 					userFunc = tx_cssstyledcontent_pi1->renderSpace
 					space = before
 					constant = {$content.spaceBefore}
-					stdWrap {
+					classStdWrap {
 						wrap = csc-space-before-|
 					}
 				}
@@ -560,7 +543,7 @@ tt_content.stdWrap {
 				10 {
 					space = after
 					constant = {$content.spaceAfter}
-					stdWrap {
+					classStdWrap {
 						wrap = csc-space-after-|
 					}
 				}
@@ -800,7 +783,6 @@ tt_content.image.20 {
 				required = 1
 				parseFunc =< lib.parseFunc
 				br = 1
-				trim = 1
 				split.token.char = 10
 				split.token.if.isPositive = {$styles.content.imgtext.imageTextSplit} + {$styles.content.imgtext.captionSplit}
 				split.returnKey.data = register : IMAGE_NUM_CURRENT
@@ -951,7 +933,16 @@ tt_content.image.20 {
 				}
 			}
 			allStdWrap {
-				wrap = <div class="csc-textpic-imagewrap"> | </div>
+				dataWrap = <div class="csc-textpic-imagewrap"> | </div>
+				dataWrap {
+					override = <div class="csc-textpic-imagewrap" data-csc-images="{register:imageCount}" data-csc-cols="{field:imagecols}"> | </div>
+					override {
+						if {
+							value = html5
+							equals.data = TSFE:config|config|doctype
+						}
+					}
+				}
 				innerWrap.cObject = CASE
 				innerWrap.cObject {
 					key.field = imageorient
@@ -985,7 +976,18 @@ tt_content.image.20 {
 		noCaption {
 			# Multiple images and no caption at all
 			fallbackRendering < tt_content.image.20.rendering.singleNoCaption.fallbackRendering.10
-			allStdWrap.wrap = <div class="csc-textpic-imagewrap"> | </div>
+			allStdWrap {
+				dataWrap = <div class="csc-textpic-imagewrap"> | </div>
+				dataWrap {
+					override = <div class="csc-textpic-imagewrap" data-csc-images="{register:imageCount}" data-csc-cols="{field:imagecols}"> | </div>
+					override {
+						if {
+							value = html5
+							equals.data = TSFE:config|config|doctype
+						}
+					}
+				}
+			}
 			singleStdWrap {
 				wrap = <div class="csc-textpic-image###CLASSES###"> | </div>
 				wrap {
@@ -1062,9 +1064,9 @@ tt_content.image.20 {
 			# Just one image without a caption
 			fallbackRendering < tt_content.image.20.rendering.singleNoCaption.fallbackRendering.10
 			allStdWrap {
-				wrap = <div class="csc-textpic-imagewrap"><table>###CAPTION###<tbody> | </tbody></table></div>
-				wrap {
-					override = <figure class="csc-textpic-imagewrap"> | ###CAPTION###</figure>
+				dataWrap = <div class="csc-textpic-imagewrap"><table>###CAPTION###<tbody> | </tbody></table></div>
+				dataWrap {
+					override = <figure class="csc-textpic-imagewrap" data-csc-images="{register:imageCount}" data-csc-cols="{field:imagecols}"> | ###CAPTION###</figure>
 					override {
 						if {
 							value = html5
@@ -1296,7 +1298,7 @@ tt_content.uploads {
 				10 = LOAD_REGISTER
 				10 {
 					oddEvenClass = li-odd li-first |*| li-even || li-odd
-					elementClass = csc-uploads-element csc-uploads-element-{register:fileExtension}
+					elementClass = csc-uploads-element csc-uploads-element-{file:current:extension}
 					elementClass.insertData = 1
 				}
 

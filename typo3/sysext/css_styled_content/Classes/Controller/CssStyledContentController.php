@@ -97,10 +97,6 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 			$out = '
 				<ul class="csc-bulletlist csc-bulletlist-' . $type . '">' . implode('', $lines) . '
 				</ul>';
-			// Calling stdWrap:
-			if ($conf['stdWrap.']) {
-				$out = $this->cObj->stdWrap($out, $conf['stdWrap.']);
-			}
 			// Return value
 			return $out;
 		}
@@ -152,20 +148,16 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 			reset($rows);
 			// Find number of columns to render:
 			$cols = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(
-				$this->cObj->data['cols'] ? $this->cObj->data['cols'] : count(explode($delimiter, current($rows))),
+				$this->cObj->data['cols'] ? $this->cObj->data['cols'] : count(str_getcsv(current($rows), $delimiter, $quotedInput)),
 				0,
 				100
 			);
 			// Traverse rows (rendering the table here)
 			$rCount = count($rows);
 			foreach ($rows as $k => $v) {
-				$cells = explode($delimiter, $v);
+				$cells = str_getcsv($v, $delimiter, $quotedInput);
 				$newCells = array();
 				for ($a = 0; $a < $cols; $a++) {
-					// Remove quotes if needed
-					if ($quotedInput && substr($cells[$a], 0, 1) == $quotedInput && substr($cells[$a], -1, 1) == $quotedInput) {
-						$cells[$a] = substr($cells[$a], 1, -1);
-					}
 					if (!strcmp(trim($cells[$a]), '')) {
 						$cells[$a] = '&nbsp;';
 					}
@@ -229,10 +221,6 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 			$out = '
 				<table ' . GeneralUtility::implodeAttributes($tableTagParams) . '>' . $tableContents . '
 				</table>';
-			// Calling stdWrap:
-			if ($conf['stdWrap.']) {
-				$out = $this->cObj->stdWrap($out, $conf['stdWrap.']);
-			}
 			// Return value
 			return $out;
 		}
@@ -374,10 +362,6 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 				// Compile it all into table tags:
 				$out = $this->cObj->wrap(implode('', $outputEntries), $outerWrap);
 			}
-			// Calling stdWrap:
-			if ($conf['stdWrap.']) {
-				$out = $this->cObj->stdWrap($out, $conf['stdWrap.']);
-			}
 			// Return value
 			return $out;
 		}
@@ -490,9 +474,6 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 		$imgList = trim($this->cObj->stdWrap($conf['imgList'], $conf['imgList.']));
 		if (!$imgList) {
 			// No images, that's easy
-			if (is_array($conf['stdWrap.'])) {
-				return $this->cObj->stdWrap($content, $conf['stdWrap.']);
-			}
 			return $content;
 		}
 		$imgs = GeneralUtility::trimExplode(',', $imgList);
@@ -597,7 +578,7 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 				if ($rel) {
 					$imgWidths[$a] = $imgInfo[0] / $rel;
 					// counts the total width of the row with the new height taken into consideration.
-					$relations_cols[floor($a / $colCount)] += $imgWidths[$a];
+					$relations_cols[(int)floor($a / $colCount)] += $imgWidths[$a];
 				}
 			}
 		}
@@ -613,7 +594,7 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 		$rowIdx = 0;
 		for ($a = 0; $a < $imgCount; $a++) {
 			$imgKey = $a + $imgStart;
-			// if the image cannot be interpreted as integer (therefore filename and no FAL id), add the image path
+			// If the image cannot be interpreted as integer (therefore filename and no FAL id), add the image path
 			if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($imgs[$imgKey])) {
 				$totalImagePath = intval($imgs[$imgKey]);
 			} else {
@@ -745,9 +726,9 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 			// Store the original filepath
 			$origImages[$imgKey] = $GLOBALS['TSFE']->lastImageInfo;
 			if ($GLOBALS['TSFE']->lastImageInfo[0] == 0) {
-				$imageRowsFinalWidths[floor($a / $colCount)] += $this->cObj->data['imagewidth'];
+				$imageRowsFinalWidths[(int)floor($a / $colCount)] += $this->cObj->data['imagewidth'];
 			} else {
-				$imageRowsFinalWidths[floor($a / $colCount)] += $GLOBALS['TSFE']->lastImageInfo[0];
+				$imageRowsFinalWidths[(int)floor($a / $colCount)] += $GLOBALS['TSFE']->lastImageInfo[0];
 			}
 		}
 		// How much space will the image-block occupy?
@@ -1049,9 +1030,6 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 		$output = str_replace('###TEXT###', $content, $output);
 		$output = str_replace('###IMAGES###', $images, $output);
 		$output = str_replace('###CLASSES###', $class, $output);
-		if ($conf['stdWrap.']) {
-			$output = $this->cObj->stdWrap($output, $conf['stdWrap.']);
-		}
 		return $output;
 	}
 

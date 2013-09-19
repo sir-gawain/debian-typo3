@@ -31,30 +31,16 @@
  * that manipulates all information in the database!!
  * For syntax and API information, see the document 'TYPO3 Core APIs'
  *
- * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 require 'init.php';
 
-/*
- * @deprecated since 6.0, the classname SC_tce_db and this file is obsolete
- * and will be removed with 6.2. The class was renamed and is now located at:
- * typo3/sysext/backend/Classes/Controller/SimpleDataHandlerController.php
- */
-require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/Controller/SimpleDataHandlerController.php';
+$simpleDataHandlerController = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\SimpleDataHandlerController');
 
-// Make instance:
-$SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\SimpleDataHandlerController');
-$SOBE->init();
-// Include files?
-foreach ($SOBE->include_once as $INC_FILE) {
-	include_once $INC_FILE;
-}
 $formprotection = \TYPO3\CMS\Core\FormProtection\FormProtectionFactory::get();
 if ($formprotection->validateToken(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('formToken'), 'tceAction')) {
-	$SOBE->initClipboard();
-	$SOBE->main();
+	$simpleDataHandlerController->initClipboard();
+	$simpleDataHandlerController->main();
 }
-$SOBE->finish();
+$simpleDataHandlerController->finish();
 ?>

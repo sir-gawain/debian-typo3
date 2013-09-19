@@ -242,33 +242,33 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 						clearstatcache();
 						// Branch out based on command:
 						switch ($action) {
-						case 'delete':
-							$result[$action][] = $this->func_delete($cmdArr);
-							break;
-						case 'copy':
-							$result[$action][] = $this->func_copy($cmdArr);
-							break;
-						case 'move':
-							$result[$action][] = $this->func_move($cmdArr);
-							break;
-						case 'rename':
-							$result[$action][] = $this->func_rename($cmdArr);
-							break;
-						case 'newfolder':
-							$result[$action][] = $this->func_newfolder($cmdArr);
-							break;
-						case 'newfile':
-							$result[$action][] = $this->func_newfile($cmdArr);
-							break;
-						case 'editfile':
-							$result[$action][] = $this->func_edit($cmdArr);
-							break;
-						case 'upload':
-							$result[$action][] = $this->func_upload($cmdArr);
-							break;
-						case 'unzip':
-							$result[$action][] = $this->func_unzip($cmdArr);
-							break;
+							case 'delete':
+								$result[$action][] = $this->func_delete($cmdArr);
+								break;
+							case 'copy':
+								$result[$action][] = $this->func_copy($cmdArr);
+								break;
+							case 'move':
+								$result[$action][] = $this->func_move($cmdArr);
+								break;
+							case 'rename':
+								$result[$action][] = $this->func_rename($cmdArr);
+								break;
+							case 'newfolder':
+								$result[$action][] = $this->func_newfolder($cmdArr);
+								break;
+							case 'newfile':
+								$result[$action][] = $this->func_newfile($cmdArr);
+								break;
+							case 'editfile':
+								$result[$action][] = $this->func_edit($cmdArr);
+								break;
+							case 'upload':
+								$result[$action][] = $this->func_upload($cmdArr);
+								break;
+							case 'unzip':
+								$result[$action][] = $this->func_unzip($cmdArr);
+								break;
 						}
 						// Hook for post-processing the action
 						if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_extfilefunc.php']['processData'])) {
@@ -414,7 +414,7 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 						$row = $this->transformFileReferenceToRecordReference($fileReferenceRow);
 						$shortcutRecord = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($row['tablename'], $row['recuid']);
 						$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($row['tablename'], $shortcutRecord);
-						$onClick = 'showClickmenu("' . $row['tablename'] . '", "' . $row['recuid'] . '", "1", "+info,history,edit", "|", "");return false;';
+						$onClick = 'Clickmenu.show("' . $row['tablename'] . '", "' . $row['recuid'] . '", "1", "+info,history,edit", "|", "");return false;';
 						$shortcutContent[] = '<a href="#" oncontextmenu="' . htmlspecialchars($onClick) . '" onclick="' . htmlspecialchars($onClick) . '">' . $icon . '</a>' . htmlspecialchars((\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($row['tablename'], $shortcutRecord) . '  [' . \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath($shortcutRecord['pid'], '', 80) . ']'));
 					}
 				}

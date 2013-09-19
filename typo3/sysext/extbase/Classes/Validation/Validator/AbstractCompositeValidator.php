@@ -27,12 +27,20 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * An abstract composite validator with consisting of other validators
+ * An abstract composite validator consisting of other validators
  *
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
+ * @api
  */
-abstract class AbstractCompositeValidator implements \TYPO3\CMS\Extbase\Validation\Validator\ValidatorInterface, \Countable {
+abstract class AbstractCompositeValidator implements ObjectValidatorInterface, \Countable {
+
+	/**
+	 * This contains the supported options, their default values and descriptions.
+	 *
+	 * @var array
+	 */
+	protected $supportedOptions = array();
 
 	/**
 	 * @var array
@@ -40,9 +48,14 @@ abstract class AbstractCompositeValidator implements \TYPO3\CMS\Extbase\Validati
 	protected $options = array();
 
 	/**
-	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage
+	 * @var \SplObjectStorage
 	 */
 	protected $validators;
+
+	/**
+	 * @var \SplObjectStorage
+	 */
+	protected $validatedInstancesContainer;
 
 	/**
 	 * @var array
@@ -50,10 +63,39 @@ abstract class AbstractCompositeValidator implements \TYPO3\CMS\Extbase\Validati
 	protected $errors = array();
 
 	/**
-	 * Constructs the validator conjunction
+	 * Constructs the composite validator and sets validation options
+	 *
+	 * @param array $options Options for the validator
+	 * @api
 	 */
-	public function __construct() {
-		$this->validators = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+	public function __construct(array $options = array()) {
+			// check for options given but not supported
+		if (($unsupportedOptions = array_diff_key($options, $this->supportedOptions)) !== array()) {
+			throw new \TYPO3\CMS\Extbase\Validation\Exception\InvalidValidationOptionsException('Unsupported validation option(s) found: ' . implode(', ', array_keys($unsupportedOptions)), 1339079804);
+		}
+
+			// check for required options being set
+		array_walk(
+			$this->supportedOptions,
+			function($supportedOptionData, $supportedOptionName, $options) {
+				if (isset($supportedOptionData[3]) && !array_key_exists($supportedOptionName, $options)) {
+					throw new \TYPO3\CMS\Extbase\Validation\Exception\InvalidValidationOptionsException('Required validation option not set: ' . $supportedOptionName, 1339163922);
+				}
+			},
+			$options
+		);
+
+			// merge with default values
+		$this->options = array_merge(
+			array_map(
+				function ($value) {
+					return $value[0];
+				},
+				$this->supportedOptions
+			),
+			$options
+		);
+		$this->validators = new \SplObjectStorage();
 	}
 
 	/**
@@ -81,8 +123,13 @@ abstract class AbstractCompositeValidator implements \TYPO3\CMS\Extbase\Validati
 	 *
 	 * @param \TYPO3\CMS\Extbase\Validation\Validator\ValidatorInterface $validator The validator that should be added
 	 * @return void
+	 * @api
 	 */
 	public function addValidator(\TYPO3\CMS\Extbase\Validation\Validator\ValidatorInterface $validator) {
+		if ($validator instanceof ObjectValidatorInterface) {
+			// @todo: provide bugfix as soon as it is fixed in TYPO3.Flow (http://forge.typo3.org/issues/48093)
+			$validator->setValidatedInstancesContainer = $this->validatedInstancesContainer;
+		}
 		$this->validators->attach($validator);
 	}
 
@@ -104,9 +151,66 @@ abstract class AbstractCompositeValidator implements \TYPO3\CMS\Extbase\Validati
 	 * Returns the number of validators contained in this conjunction.
 	 *
 	 * @return integer The number of validators
+	 * @api
 	 */
 	public function count() {
 		return count($this->validators);
+	}
+
+	/**
+	 * Returns the child validators of this Composite Validator
+	 *
+	 * @return \SplObjectStorage
+	 */
+	public function getValidators() {
+		return $this->validators;
+	}
+
+	/**
+	 * Returns the options for this validator
+	 *
+	 * @return array
+	 */
+	public function getOptions() {
+		return $this->options;
+	}
+
+	/**
+	 * Allows to set a container to keep track of validated instances.
+	 *
+	 * @param \SplObjectStorage $validatedInstancesContainer A container to keep track of validated instances
+	 * @return void
+	 * @api
+	 */
+	public function setValidatedInstancesContainer(\SplObjectStorage $validatedInstancesContainer) {
+		$this->validatedInstancesContainer = $validatedInstancesContainer;
+	}
+
+	/**
+	 * Checks the given object can be validated by the validator implementation
+	 *
+	 * @param object $object The object to be checked
+	 * @return boolean TRUE if this validator can validate instances of the given object or FALSE if it can't
+	 *
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
+	 */
+	public function canValidate($object) {
+		// deliberately empty
+	}
+
+	/**
+	 * Checks if the specified property of the given object is valid.
+	 *
+	 * If at least one error occurred, the result is FALSE.
+	 *
+	 * @param object $object The object containing the property to validate
+	 * @param string $propertyName Name of the property to validate
+	 * @return boolean TRUE if the property value is valid, FALSE if an error occured
+	 *
+	 * @deprecated since Extbase 1.4.0, will be removed two versions after Extbase 6.1
+	 */
+	public function isPropertyValid($object, $propertyName) {
+		// deliberately empty
 	}
 }
 

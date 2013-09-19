@@ -1,6 +1,5 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Help > About
-
 - - - - - - - - - - - - - - - - - - - - - */
 
 #typo3-mod-help-about-index-php-outer {
@@ -15,13 +14,10 @@ Help > About
 #typo3-mod-help-about-index-php-outer .donation-button {
 	overflow: auto;
 }
+
 #typo3-mod-help-about-index-php-outer .donation-button input {
 	float: right;
-	background-image: url("../../images/icons/status/dialog-ok.png");
-	background-repeat: no-repeat;
-	background-position: 2px;
 }
-
 
 #typo3-mod-help-about-index-php-outer .typo3-mod-help-about-index-php-inner {
 	background: #ffffff;

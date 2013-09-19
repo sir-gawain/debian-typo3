@@ -24,9 +24,9 @@ namespace TYPO3\CMS\Scheduler\Example;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 /**
- * Class "tx_scheduler_TestTask" provides testing procedures
+ * Provides testing procedures
  *
- * @author 		Markus Friedrich <markus.friedrich@dkd.de>
+ * @author Markus Friedrich <markus.friedrich@dkd.de>
  */
 class TestTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 
@@ -94,7 +94,7 @@ class TestTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	 * @return string Information to display
 	 */
 	public function getAdditionalInformation() {
-		return $GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:label.email') . ': ' . $this->email;
+		return $GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xlf:label.email') . ': ' . $this->email;
 	}
 
 }

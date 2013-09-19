@@ -26,6 +26,9 @@ namespace TYPO3\CMS\Backend\Module;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Parent class for 'Extension Objects' in backend modules.
  *
@@ -70,9 +73,9 @@ namespace TYPO3\CMS\Backend\Module;
  *
  * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::insertModuleFunction(
  * 'web_func',
- * 'tx_wizardcrpages_webfunc_2',
- * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($_EXTKEY).'class.tx_wizardcrpages_webfunc_2.php',
- * 'LLL:EXT:wizard_crpages/locallang.php:wiz_crMany',
+ * 'TYPO3\\CMS\\WizardCrpages\\Controller\\CreatePagesWizardModuleFunctionController',
+ * \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($_EXTKEY) . 'Classes/Controller/CreatePagesWizardModuleFunctionController.php',
+ * 'LLL:EXT:wizard_crpages/locallang.xlf:wiz_crMany',
  * 'wiz'
  * );
  *
@@ -82,7 +85,7 @@ namespace TYPO3\CMS\Backend\Module;
  * times inclusion sections in their index.php scripts. For example (from web_func):
  *
  * Make instance:
- * $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance("SC_mod_web_func_index");
+ * $SOBE = GeneralUtility::makeInstance("SC_mod_web_func_index");
  * $SOBE->init();
  *
  * Include files?
@@ -130,9 +133,8 @@ namespace TYPO3\CMS\Backend\Module;
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  * @see \TYPO3\CMS\Backend\Module\BaseScriptClass
- * @see tx_funcwizards_webfunc::init()
- * @see tx_funcwizards_webfunc
- * @see tx_wizardsortpages_webfunc_2
+ * @see \TYPO3\CMS\FuncWizards\Controller\WebFunctionWizardsBaseController
+ * @see \TYPO3\CMS\WizardSortpages\View\SortPagesWizardModuleFunction
  */
 abstract class AbstractFunctionModule {
 
@@ -175,7 +177,7 @@ abstract class AbstractFunctionModule {
 	 * This is a little hard to explain, so see it in action; it used in the extension 'func_wizards' in order to provide yet a layer of interfacing with the backend module.
 	 * The extension 'func_wizards' has this description: 'Adds the 'Wizards' item to the function menu in Web>Func. This is just a framework for wizard extensions.' - so as you can see it is designed to allow further connectivity - 'level 2'
 	 *
-	 * @see handleExternalFunctionValue(), tx_funcwizards_webfunc
+	 * @see handleExternalFunctionValue(), \TYPO3\CMS\FuncWizards\Controller\WebFunctionWizardsBaseController
 	 * @todo Define visibility
 	 */
 	public $function_key = '';
@@ -208,12 +210,12 @@ abstract class AbstractFunctionModule {
 	 * If $this->function_key is set (which means there are two levels of object connectivity) then $this->extClassConf is loaded with the TBE_MODULES_EXT configuration for that sub-sub-module
 	 *
 	 * @return void
-	 * @see $function_key, tx_funcwizards_webfunc::init()
+	 * @see $function_key, \TYPO3\CMS\FuncWizards\Controller\WebFunctionWizardsBaseController::init()
 	 * @todo Define visibility
 	 */
 	public function handleExternalFunctionValue() {
 		// Must clean first to make sure the correct key is set...
-		$this->pObj->MOD_SETTINGS = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleData($this->pObj->MOD_MENU, \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('SET'), $this->pObj->MCONF['name']);
+		$this->pObj->MOD_SETTINGS = BackendUtility::getModuleData($this->pObj->MOD_MENU, GeneralUtility::_GP('SET'), $this->pObj->MCONF['name']);
 		if ($this->function_key) {
 			$this->extClassConf = $this->pObj->getExternalItemConfig($this->pObj->MCONF['name'], $this->function_key, $this->pObj->MOD_SETTINGS[$this->function_key]);
 			if (is_array($this->extClassConf) && $this->extClassConf['path']) {
@@ -232,7 +234,7 @@ abstract class AbstractFunctionModule {
 		if ($this->localLangFile && (@is_file(($this->thisPath . '/' . $this->localLangFile)) || @is_file(($this->thisPath . '/' . substr($this->localLangFile, 0, -4) . '.xml')) || @is_file(($this->thisPath . '/' . substr($this->localLangFile, 0, -4) . '.xlf')))) {
 			$LOCAL_LANG = $GLOBALS['LANG']->includeLLFile($this->thisPath . '/' . $this->localLangFile, FALSE);
 			if (is_array($LOCAL_LANG)) {
-				$GLOBALS['LOCAL_LANG'] = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule((array) $GLOBALS['LOCAL_LANG'], $LOCAL_LANG);
+				$GLOBALS['LOCAL_LANG'] = GeneralUtility::array_merge_recursive_overrule((array) $GLOBALS['LOCAL_LANG'], $LOCAL_LANG);
 			}
 		}
 	}
@@ -246,10 +248,10 @@ abstract class AbstractFunctionModule {
 	 */
 	public function checkExtObj() {
 		if (is_array($this->extClassConf) && $this->extClassConf['name']) {
-			$this->extObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($this->extClassConf['name']);
+			$this->extObj = GeneralUtility::makeInstance($this->extClassConf['name']);
 			$this->extObj->init($this->pObj, $this->extClassConf);
 			// Re-write:
-			$this->pObj->MOD_SETTINGS = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleData($this->pObj->MOD_MENU, \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('SET'), $this->pObj->MCONF['name']);
+			$this->pObj->MOD_SETTINGS = BackendUtility::getModuleData($this->pObj->MOD_MENU, GeneralUtility::_GP('SET'), $this->pObj->MCONF['name']);
 		}
 	}
 

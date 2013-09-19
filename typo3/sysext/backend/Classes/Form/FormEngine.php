@@ -27,6 +27,15 @@ namespace TYPO3\CMS\Backend\Form;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Form\Element\InlineElement;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\Utility\IconUtility;
+use TYPO3\CMS\Core\Html\HtmlParser;
+use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\MathUtility;
+
 /**
  * 'TCEforms' - Class for creating the backend editing forms.
  *
@@ -558,7 +567,7 @@ class FormEngine {
 	 * @todo Define visibility
 	 */
 	public function __construct() {
-		$this->clientInfo = \TYPO3\CMS\Core\Utility\GeneralUtility::clientInfo();
+		$this->clientInfo = GeneralUtility::clientInfo();
 		$this->RTEenabled = $GLOBALS['BE_USER']->isRTE();
 		if (!$this->RTEenabled) {
 			$this->RTEenabled_notReasons = implode(LF, $GLOBALS['BE_USER']->RTE_errors);
@@ -568,9 +577,9 @@ class FormEngine {
 		$this->defColorScheme = array(
 			$GLOBALS['SOBE']->doc->bgColor,
 			// Background for the field AND palette
-			\TYPO3\CMS\Core\Utility\GeneralUtility::modifyHTMLColorAll($GLOBALS['SOBE']->doc->bgColor, -20),
+			GeneralUtility::modifyHTMLColorAll($GLOBALS['SOBE']->doc->bgColor, -20),
 			// Background for the field header
-			\TYPO3\CMS\Core\Utility\GeneralUtility::modifyHTMLColorAll($GLOBALS['SOBE']->doc->bgColor, -10),
+			GeneralUtility::modifyHTMLColorAll($GLOBALS['SOBE']->doc->bgColor, -10),
 			// Background for the palette field header
 			'black',
 			// Field header font color
@@ -591,28 +600,28 @@ class FormEngine {
 			'group' => array('size', 'autoSizeMax', 'max_size', 'show_thumbs', 'maxitems', 'minitems', 'disable_controls', 'readOnly'),
 			'inline' => array('appearance', 'behaviour', 'foreign_label', 'foreign_selector', 'foreign_unique', 'maxitems', 'minitems', 'size', 'autoSizeMax', 'symmetric_label', 'readOnly')
 		);
-		// Create instance of \TYPO3\CMS\Backend\Form\Element\InlineElement only if this a non-IRRE-AJAX call:
+		// Create instance of InlineElement only if this a non-IRRE-AJAX call:
 		if (!isset($GLOBALS['ajaxID']) || strpos($GLOBALS['ajaxID'], 'TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement::') !== 0) {
-			$this->inline = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement');
+			$this->inline = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\InlineElement');
 		}
 		// Create instance of \TYPO3\CMS\Backend\Form\Element\SuggestElement only if this a non-Suggest-AJAX call:
 		if (!isset($GLOBALS['ajaxID']) || strpos($GLOBALS['ajaxID'], 'TYPO3\\CMS\\Backend\\Form\\Element\\SuggestElement::') !== 0) {
-			$this->suggest = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\SuggestElement');
+			$this->suggest = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\SuggestElement');
 		}
 		// Prepare user defined objects (if any) for hooks which extend this function:
 		$this->hookObjectsMainFields = array();
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['getMainFieldsClass'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['getMainFieldsClass'] as $classRef) {
-				$this->hookObjectsMainFields[] = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$this->hookObjectsMainFields[] = GeneralUtility::getUserObj($classRef);
 			}
 		}
 		$this->hookObjectsSingleField = array();
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['getSingleFieldClass'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['getSingleFieldClass'] as $classRef) {
-				$this->hookObjectsSingleField[] = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$this->hookObjectsSingleField[] = GeneralUtility::getUserObj($classRef);
 			}
 		}
-		$this->templateFile = 'templates/tceforms.html';
+		$this->templateFile = 'sysext/backend/Resources/Private/Templates/FormEngine.html';
 	}
 
 	/**
@@ -655,7 +664,7 @@ class FormEngine {
 			if ($GLOBALS['TCA'][$table]['types'][$typeNum]) {
 				$itemList = $GLOBALS['TCA'][$table]['types'][$typeNum]['showitem'];
 				if ($itemList) {
-					$fields = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $itemList, 1);
+					$fields = GeneralUtility::trimExplode(',', $itemList, 1);
 					$excludeElements = ($this->excludeElements = $this->getExcludeElements($table, $row, $typeNum));
 					foreach ($fields as $fieldInfo) {
 						$parts = explode(';', $fieldInfo);
@@ -723,7 +732,7 @@ class FormEngine {
 				// If such a list existed...
 				if ($itemList) {
 					// Explode the field list and possibly rearrange the order of the fields, if configured for
-					$fields = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $itemList, 1);
+					$fields = GeneralUtility::trimExplode(',', $itemList, 1);
 					if ($this->fieldOrder) {
 						$fields = $this->rearrange($fields);
 					}
@@ -747,7 +756,7 @@ class FormEngine {
 						// Exploding subparts of the field configuration:
 						$parts = explode(';', $fieldInfo);
 						// Getting the style information out:
-						$color_style_parts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('-', $parts[4]);
+						$color_style_parts = GeneralUtility::trimExplode('-', $parts[4]);
 						if (strcmp($color_style_parts[0], '')) {
 							$this->setColorScheme($GLOBALS['TBE_STYLES']['colorschemes'][intval($color_style_parts[0])]);
 						}
@@ -830,7 +839,7 @@ class FormEngine {
 		// Resetting styles:
 		$this->resetSchemes();
 		// Rendering Main palettes, if any
-		$mParr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['mainpalette']);
+		$mParr = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['mainpalette']);
 		$i = 0;
 		if (count($mParr)) {
 			foreach ($mParr as $mP) {
@@ -882,9 +891,13 @@ class FormEngine {
 					</td>
 				</tr>';
 		} else {
-			// Only one, so just implode:
+			// Only one tab, so just implode and wrap the background image (= tab container) around:
 			$output = implode('', $out_array[$out_sheet]);
+			if ($this->inline->inlineCount == 0) {
+				$output = '<div class="typo3-dyntabmenu-divs">' . $output . '</div>';
+			}
 		}
+
 		return $output;
 	}
 
@@ -904,14 +917,14 @@ class FormEngine {
 			$GLOBALS['LANG']->loadSingleTableDescription($table);
 		}
 		$out = '';
-		$types_fieldConfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getTCAtypes($table, $row, 1);
-		$editFieldList = array_unique(\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $list, 1));
+		$types_fieldConfig = BackendUtility::getTCAtypes($table, $row, 1);
+		$editFieldList = array_unique(GeneralUtility::trimExplode(',', $list, 1));
 		foreach ($editFieldList as $theFieldC) {
 			list($theField, $palFields) = preg_split('/\\[|\\]/', $theFieldC);
 			$theField = trim($theField);
 			$palFields = trim($palFields);
 			if ($GLOBALS['TCA'][$table]['columns'][$theField]) {
-				$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $types_fieldConfig[$theField]['origString']);
+				$parts = GeneralUtility::trimExplode(';', $types_fieldConfig[$theField]['origString']);
 				// Don't sent palette pointer - there are no options anyways for a field-list.
 				$sField = $this->getSingleField($table, $theField, $row, $parts[1], 0, $parts[3], 0);
 				$out .= $sField;
@@ -919,7 +932,7 @@ class FormEngine {
 				$out .= $this->getDivider();
 			}
 			if ($palFields) {
-				$out .= $this->getPaletteFields($table, $row, '', '', implode(',', \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('|', $palFields, 1)));
+				$out .= $this->getPaletteFields($table, $row, '', '', implode(',', GeneralUtility::trimExplode('|', $palFields, 1)));
 			}
 		}
 		return $out;
@@ -960,7 +973,7 @@ class FormEngine {
 				$isHiddenPalette = !empty($GLOBALS['TCA'][$table]['palettes'][$palette]['isHiddenPalette']);
 				$thePalIcon = '';
 				if ($collapsed && $collapsedHeader !== NULL && !$isHiddenPalette) {
-					list($thePalIcon, ) = $this->wrapOpenPalette(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-options-view', array('title' => htmlspecialchars($this->getLL('l_moreOptions')))), $table, $row, $palette, 1);
+					list($thePalIcon, ) = $this->wrapOpenPalette(IconUtility::getSpriteIcon('actions-system-options-view', array('title' => htmlspecialchars($this->getLL('l_moreOptions')))), $table, $row, $palette, 1);
 					$thePalIcon = '<span style="margin-left: 20px;">' . $thePalIcon . $collapsedHeader . '</span>';
 				}
 				$paletteHtml = $this->wrapPaletteField($this->printPalette($parts), $table, $row, $palette, $collapsed);
@@ -1006,7 +1019,7 @@ class FormEngine {
 		$displayConditionResult = TRUE;
 		if (is_array($PA['fieldConf']) && $PA['fieldConf']['displayCond'] && is_array($row)) {
 			/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
-			$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+			$elementConditionMatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
 			$displayConditionResult = $elementConditionMatcher->match($PA['fieldConf']['displayCond'], $row);
 		}
 
@@ -1038,7 +1051,7 @@ class FormEngine {
 				$PA['itemFormElValue'] = $row[$field];
 				$PA['itemFormElID'] = $this->prependFormFieldNames . '_' . $table . '_' . $row['uid'] . '_' . $field;
 				// Set field to read-only if configured for translated records to show default language content as readonly
-				if ($PA['fieldConf']['l10n_display'] && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($PA['fieldConf']['l10n_display'], 'defaultAsReadonly') && $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] > 0) {
+				if ($PA['fieldConf']['l10n_display'] && GeneralUtility::inList($PA['fieldConf']['l10n_display'], 'defaultAsReadonly') && $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] > 0) {
 					$PA['fieldConf']['config']['readOnly'] = TRUE;
 					$PA['itemFormElValue'] = $this->defaultLanguageData[$table . ':' . $row['uid']][$field];
 				}
@@ -1048,7 +1061,12 @@ class FormEngine {
 					$typeField = substr($GLOBALS['TCA'][$table]['ctrl']['type'], 0, strpos($GLOBALS['TCA'][$table]['ctrl']['type'], ':'));
 				}
 				// Create a JavaScript code line which will ask the user to save/update the form due to changing the element. This is used for eg. "type" fields and others configured with "requestUpdate"
-				if ($GLOBALS['TCA'][$table]['ctrl']['type'] && !strcmp($field, $typeField) || $GLOBALS['TCA'][$table]['ctrl']['requestUpdate'] && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($GLOBALS['TCA'][$table]['ctrl']['requestUpdate'], $field)) {
+				if (
+					$GLOBALS['TCA'][$table]['ctrl']['type']
+					&& !strcmp($field, $typeField)
+					|| $GLOBALS['TCA'][$table]['ctrl']['requestUpdate']
+					&& GeneralUtility::inList(str_replace(' ', '', $GLOBALS['TCA'][$table]['ctrl']['requestUpdate']), $field)
+				) {
 					if ($GLOBALS['BE_USER']->jsConfirmation(1)) {
 						$alertMsgOnChange = 'if (confirm(TBE_EDITOR.labels.onChangeAlert) && TBE_EDITOR.checkSubmit(-1)){ TBE_EDITOR.submitForm() };';
 					} else {
@@ -1066,7 +1084,7 @@ class FormEngine {
 					if (!$PA['palette']) {
 						$paletteFields = $this->loadPaletteElements($table, $row, $PA['pal']);
 						if ($PA['pal'] && $this->isPalettesCollapsed($table, $PA['pal']) && count($paletteFields)) {
-							list($thePalIcon, $palJSfunc) = $this->wrapOpenPalette(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-system-options-view', array('title' => htmlspecialchars($this->getLL('l_moreOptions')))), $table, $row, $PA['pal'], 1);
+							list($thePalIcon, $palJSfunc) = $this->wrapOpenPalette(IconUtility::getSpriteIcon('actions-system-options-view', array('title' => htmlspecialchars($this->getLL('l_moreOptions')))), $table, $row, $PA['pal'], 1);
 						} else {
 							$thePalIcon = '';
 							$palJSfunc = '';
@@ -1086,7 +1104,7 @@ class FormEngine {
 					$PA['fieldChangeFunc']['alert'] = $alertMsgOnChange;
 					// If this is the child of an inline type and it is the field creating the label
 					if ($this->inline->isInlineChildAndLabelField($table, $field)) {
-						$inlineObjectId = implode(\TYPO3\CMS\Backend\Form\Element\InlineElement::Structure_Separator, array(
+						$inlineObjectId = implode(InlineElement::Structure_Separator, array(
 							$this->inline->inlineNames['object'],
 							$table,
 							$row['uid']
@@ -1096,7 +1114,7 @@ class FormEngine {
 					// Based on the type of the item, call a render function:
 					$item = $this->getSingleField_SW($table, $field, $row, $PA);
 					// Add language + diff
-					if ($PA['fieldConf']['l10n_display'] && (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($PA['fieldConf']['l10n_display'], 'hideDiff') || \TYPO3\CMS\Core\Utility\GeneralUtility::inList($PA['fieldConf']['l10n_display'], 'defaultAsReadonly'))) {
+					if ($PA['fieldConf']['l10n_display'] && (GeneralUtility::inList($PA['fieldConf']['l10n_display'], 'hideDiff') || GeneralUtility::inList($PA['fieldConf']['l10n_display'], 'defaultAsReadonly'))) {
 						$renderLanguageDiff = FALSE;
 					} else {
 						$renderLanguageDiff = TRUE;
@@ -1106,13 +1124,13 @@ class FormEngine {
 						$item = $this->renderDefaultLanguageDiff($table, $field, $row, $item);
 					}
 					// If the record has been saved and the "linkTitleToSelf" is set, we make the field name into a link, which will load ONLY this field in alt_doc.php
-					$label = \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities(htmlspecialchars($PA['label']));
-					if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($row['uid']) && $PA['fieldTSConfig']['linkTitleToSelf'] && !\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('columnsOnly')) {
+					$label = GeneralUtility::deHSCentities(htmlspecialchars($PA['label']));
+					if (MathUtility::canBeInterpretedAsInteger($row['uid']) && $PA['fieldTSConfig']['linkTitleToSelf'] && !GeneralUtility::_GP('columnsOnly')) {
 						$lTTS_url = $this->backPath . 'alt_doc.php?edit[' . $table . '][' . $row['uid'] . ']=edit&columnsOnly=' . $field . '&returnUrl=' . rawurlencode($this->thisReturnUrl());
 						$label = '<a href="' . htmlspecialchars($lTTS_url) . '">' . $label . '</a>';
 					}
 					// Wrap the label with help text
-					$PA['label'] = ($label = \TYPO3\CMS\Backend\Utility\BackendUtility::wrapInHelp($table, $field, $label));
+					$PA['label'] = ($label = BackendUtility::wrapInHelp($table, $field, $label));
 					// Create output value:
 					if ($PA['fieldConf']['config']['form_type'] == 'user' && $PA['fieldConf']['config']['noTableWrapping']) {
 						$out = $item;
@@ -1181,39 +1199,38 @@ class FormEngine {
 			}
 		}
 		switch ($PA['fieldConf']['config']['form_type']) {
-		case 'input':
-			$item = $this->getSingleField_typeInput($table, $field, $row, $PA);
-			break;
-		case 'text':
-			$item = $this->getSingleField_typeText($table, $field, $row, $PA);
-			break;
-		case 'check':
-			$item = $this->getSingleField_typeCheck($table, $field, $row, $PA);
-			break;
-		case 'radio':
-			$item = $this->getSingleField_typeRadio($table, $field, $row, $PA);
-			break;
-		case 'select':
-			$item = $this->getSingleField_typeSelect($table, $field, $row, $PA);
-			break;
-		case 'group':
-			$item = $this->getSingleField_typeGroup($table, $field, $row, $PA);
-			break;
-		case 'inline':
-			$item = $this->inline->getSingleField_typeInline($table, $field, $row, $PA);
-			break;
-		case 'none':
-			$item = $this->getSingleField_typeNone($table, $field, $row, $PA);
-			break;
-		case 'user':
-			$item = $this->getSingleField_typeUser($table, $field, $row, $PA);
-			break;
-		case 'flex':
-			$item = $this->getSingleField_typeFlex($table, $field, $row, $PA);
-			break;
-		default:
-			$item = $this->getSingleField_typeUnknown($table, $field, $row, $PA);
-			break;
+			case 'input':
+				$item = $this->getSingleField_typeInput($table, $field, $row, $PA);
+				break;
+			case 'text':
+				$item = $this->getSingleField_typeText($table, $field, $row, $PA);
+				break;
+			case 'check':
+				$item = $this->getSingleField_typeCheck($table, $field, $row, $PA);
+				break;
+			case 'radio':
+				$item = $this->getSingleField_typeRadio($table, $field, $row, $PA);
+				break;
+			case 'select':
+				$item = $this->getSingleField_typeSelect($table, $field, $row, $PA);
+				break;
+			case 'group':
+				$item = $this->getSingleField_typeGroup($table, $field, $row, $PA);
+				break;
+			case 'inline':
+				$item = $this->inline->getSingleField_typeInline($table, $field, $row, $PA);
+				break;
+			case 'none':
+				$item = $this->getSingleField_typeNone($table, $field, $row, $PA);
+				break;
+			case 'user':
+				$item = $this->getSingleField_typeUser($table, $field, $row, $PA);
+				break;
+			case 'flex':
+				$item = $this->getSingleField_typeFlex($table, $field, $row, $PA);
+				break;
+			default:
+				$item = $this->getSingleField_typeUnknown($table, $field, $row, $PA);
 		}
 		return $item;
 	}
@@ -1237,8 +1254,8 @@ class FormEngine {
 	public function getSingleField_typeInput($table, $field, $row, &$PA) {
 		$config = $PA['fieldConf']['config'];
 		$specConf = $this->getSpecConfFromString($PA['extra'], $PA['fieldConf']['defaultExtras']);
-		$size = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['size'] ? $config['size'] : 30, 5, $this->maxInputWidth);
-		$evalList = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $config['eval'], 1);
+		$size = MathUtility::forceIntegerInRange($config['size'] ? $config['size'] : 30, 5, $this->maxInputWidth);
+		$evalList = GeneralUtility::trimExplode(',', $config['eval'], 1);
 		$classAndStyleAttributes = $this->formWidthAsArray($size);
 		$fieldAppendix = '';
 		$item = '';
@@ -1265,7 +1282,7 @@ class FormEngine {
 			}
 			$inputId = uniqid('tceforms-' . $class . 'field-');
 			$cssClasses[] = 'tceforms-textfield tceforms-' . $class . 'field' . $dateRange;
-			$fieldAppendix = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-pick-date', array(
+			$fieldAppendix = IconUtility::getSpriteIcon('actions-edit-pick-date', array(
 				'style' => 'cursor:pointer;',
 				'id' => 'picker-' . $inputId
 			));
@@ -1314,23 +1331,22 @@ class FormEngine {
 		}
 		foreach ($evalList as $func) {
 			switch ($func) {
-			case 'required':
-				$this->registerRequiredProperty('field', $table . '_' . $row['uid'] . '_' . $field, $PA['itemFormElName']);
-				// Mark this field for date/time disposal:
-				if (array_intersect($evalList, array('date', 'datetime', 'time'))) {
-					$this->requiredAdditional[$PA['itemFormElName']]['isPositiveNumber'] = TRUE;
-				}
-				break;
-			default:
-				// Pair hook to the one in \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_input_Eval()
-				$evalObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$func] . ':&' . $func);
-				if (is_object($evalObj) && method_exists($evalObj, 'deevaluateFieldValue')) {
-					$_params = array(
-						'value' => $PA['itemFormElValue']
-					);
-					$PA['itemFormElValue'] = $evalObj->deevaluateFieldValue($_params);
-				}
-				break;
+				case 'required':
+					$this->registerRequiredProperty('field', $table . '_' . $row['uid'] . '_' . $field, $PA['itemFormElName']);
+					// Mark this field for date/time disposal:
+					if (array_intersect($evalList, array('date', 'datetime', 'time'))) {
+						$this->requiredAdditional[$PA['itemFormElName']]['isPositiveNumber'] = TRUE;
+					}
+					break;
+				default:
+					// Pair hook to the one in \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_input_Eval()
+					$evalObj = GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$func] . ':&' . $func);
+					if (is_object($evalObj) && method_exists($evalObj, 'deevaluateFieldValue')) {
+						$_params = array(
+							'value' => $PA['itemFormElValue']
+						);
+						$PA['itemFormElValue'] = $evalObj->deevaluateFieldValue($_params);
+					}
 			}
 		}
 		$paramsList = '\'' . $PA['itemFormElName'] . '\',\'' . implode(',', $evalList) . '\',\'' . trim($config['is_in']) . '\',' . (isset($config['checkbox']) ? 1 : 0) . ',\'' . $config['checkbox'] . '\'';
@@ -1346,7 +1362,7 @@ class FormEngine {
 		$PA['fieldChangeFunc'] = array_merge(array('typo3form.fieldGet' => 'typo3form.fieldGet(' . $paramsList . ');'), $PA['fieldChangeFunc']);
 		// Old function "checkbox" now the option to set the date / remove the date
 		if (isset($config['checkbox'])) {
-			$item .= \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-input-clear', array('tag' => 'a', 'class' => 't3-tceforms-input-clearer', 'onclick' => 'document.getElementById(\'' . $inputId . '\').value=\'\';document.getElementById(\'' . $inputId . '\').focus();' . implode('', $PA['fieldChangeFunc'])));
+			$item .= IconUtility::getSpriteIcon('actions-input-clear', array('tag' => 'a', 'class' => 't3-tceforms-input-clearer', 'onclick' => 'document.getElementById(\'' . $inputId . '\').value=\'\';document.getElementById(\'' . $inputId . '\').focus();' . implode('', $PA['fieldChangeFunc'])));
 		}
 		$mLgd = $config['max'] ? $config['max'] : 256;
 		$iOnChange = implode('', $PA['fieldChangeFunc']);
@@ -1359,7 +1375,7 @@ class FormEngine {
 		$this->extJSCODE .= 'typo3form.fieldSet(' . $paramsList . ');';
 		// Going through all custom evaluations configured for this field
 		foreach ($evalList as $evalData) {
-			$evalObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$evalData] . ':&' . $evalData);
+			$evalObj = GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$evalData] . ':&' . $evalData);
 			if (is_object($evalObj) && method_exists($evalObj, 'returnFieldJS')) {
 				$this->extJSCODE .= '
 
@@ -1391,7 +1407,7 @@ function ' . $evalData . '(value) {
 		$widget = '';
 
 		$config = $PA['fieldConf']['config'];
-		if (!empty($config['eval']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['eval'], 'null')) {
+		if (!empty($config['eval']) && GeneralUtility::inList($config['eval'], 'null')) {
 			$isNull = ($PA['itemFormElValue'] === NULL);
 
 			$checked = ($isNull ? '' : ' checked="checked"');
@@ -1422,7 +1438,7 @@ function ' . $evalData . '(value) {
 		$result = FALSE;
 
 		$config = $PA['fieldConf']['config'];
-		if ($PA['itemFormElValue'] === NULL && !empty($config['eval']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['eval'], 'null')) {
+		if ($PA['itemFormElValue'] === NULL && !empty($config['eval']) && GeneralUtility::inList($config['eval'], 'null')) {
 			$result = TRUE;
 		}
 
@@ -1443,17 +1459,17 @@ function ' . $evalData . '(value) {
 	public function getSingleField_typeText($table, $field, $row, &$PA) {
 		// Init config:
 		$config = $PA['fieldConf']['config'];
-		$evalList = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $config['eval'], 1);
+		$evalList = GeneralUtility::trimExplode(',', $config['eval'], 1);
 		if ($this->renderReadonly || $config['readOnly']) {
 			return $this->getSingleField_typeNone_render($config, $PA['itemFormElValue']);
 		}
 		// Setting columns number:
-		$cols = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['cols'] ? $config['cols'] : 30, 5, $this->maxTextareaWidth);
+		$cols = MathUtility::forceIntegerInRange($config['cols'] ? $config['cols'] : 30, 5, $this->maxTextareaWidth);
 		// Setting number of rows:
-		$origRows = ($rows = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['rows'] ? $config['rows'] : 5, 1, 20));
+		$origRows = ($rows = MathUtility::forceIntegerInRange($config['rows'] ? $config['rows'] : 5, 1, 20));
 		if (strlen($PA['itemFormElValue']) > $this->charsPerRow * 2) {
 			$cols = $this->maxTextareaWidth;
-			$rows = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(round(strlen($PA['itemFormElValue']) / $this->charsPerRow), count(explode(LF, $PA['itemFormElValue'])), 20);
+			$rows = MathUtility::forceIntegerInRange(round(strlen($PA['itemFormElValue']) / $this->charsPerRow), count(explode(LF, $PA['itemFormElValue'])), 20);
 			if ($rows < $origRows) {
 				$rows = $origRows;
 			}
@@ -1472,16 +1488,16 @@ function ' . $evalData . '(value) {
 		$altItem = '<input type="hidden" name="' . htmlspecialchars($PA['itemFormElName']) . '" value="' . htmlspecialchars($PA['itemFormElValue']) . '" />';
 		// If RTE is generally enabled (TYPO3_CONF_VARS and user settings)
 		if ($this->RTEenabled) {
-			$p = \TYPO3\CMS\Backend\Utility\BackendUtility::getSpecConfParametersFromArray($specConf['rte_transform']['parameters']);
+			$p = BackendUtility::getSpecConfParametersFromArray($specConf['rte_transform']['parameters']);
 			// If the field is configured for RTE and if any flag-field is not set to disable it.
 			if (isset($specConf['richtext']) && (!$p['flag'] || !$row[$p['flag']])) {
-				\TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid($table, $row);
+				BackendUtility::fixVersioningPid($table, $row);
 				list($tscPID, $thePidValue) = $this->getTSCpid($table, $row['uid'], $row['pid']);
 				// If the pid-value is not negative (that is, a pid could NOT be fetched)
 				if ($thePidValue >= 0) {
-					$RTEsetup = $GLOBALS['BE_USER']->getTSConfig('RTE', \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig($tscPID));
-					$RTEtypeVal = \TYPO3\CMS\Backend\Utility\BackendUtility::getTCAtypeValue($table, $row);
-					$thisConfig = \TYPO3\CMS\Backend\Utility\BackendUtility::RTEsetup($RTEsetup['properties'], $table, $field, $RTEtypeVal);
+					$RTEsetup = $GLOBALS['BE_USER']->getTSConfig('RTE', BackendUtility::getPagesTSconfig($tscPID));
+					$RTEtypeVal = BackendUtility::getTCAtypeValue($table, $row);
+					$thisConfig = BackendUtility::RTEsetup($RTEsetup['properties'], $table, $field, $RTEtypeVal);
 					if (!$thisConfig['disabled']) {
 						if (!$this->disableRTE) {
 							$this->RTEcounter++;
@@ -1489,7 +1505,7 @@ function ' . $evalData . '(value) {
 							$eFile = \TYPO3\CMS\Core\Html\RteHtmlParser::evalWriteFile($specConf['static_write'], $row);
 							$RTErelPath = is_array($eFile) ? dirname($eFile['relEditFile']) : '';
 							// Get RTE object, draw form and set flag:
-							$RTEobj = \TYPO3\CMS\Backend\Utility\BackendUtility::RTEgetObj();
+							$RTEobj = BackendUtility::RTEgetObj();
 							$item = $RTEobj->drawRTE($this, $table, $field, $row, $PA, $specConf, $thisConfig, $RTEtypeVal, $RTErelPath, $thePidValue);
 							// Wizard:
 							$item = $this->renderWizards(array($item, $altItem), $config['wizards'], $table, $row, $field, $PA, $PA['itemFormElName'], $specConf, 1);
@@ -1543,27 +1559,26 @@ function ' . $evalData . '(value) {
 				} else {
 					$class = 'tceforms-textarea';
 				}
-				$evalList = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $config['eval'], 1);
+				$evalList = GeneralUtility::trimExplode(',', $config['eval'], 1);
 				foreach ($evalList as $func) {
 					switch ($func) {
-					case 'required':
-						$this->registerRequiredProperty('field', $table . '_' . $row['uid'] . '_' . $field, $PA['itemFormElName']);
-						break;
-					default:
-						// Pair hook to the one in \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_input_Eval() and \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_text_Eval()
-						$evalObj = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$func] . ':&' . $func);
-						if (is_object($evalObj) && method_exists($evalObj, 'deevaluateFieldValue')) {
-							$_params = array(
-								'value' => $PA['itemFormElValue']
-							);
-							$PA['itemFormElValue'] = $evalObj->deevaluateFieldValue($_params);
-						}
-						break;
+						case 'required':
+							$this->registerRequiredProperty('field', $table . '_' . $row['uid'] . '_' . $field, $PA['itemFormElName']);
+							break;
+						default:
+							// Pair hook to the one in \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_input_Eval() and \TYPO3\CMS\Core\DataHandling\DataHandler::checkValue_text_Eval()
+							$evalObj = GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tce']['formevals'][$func] . ':&' . $func);
+							if (is_object($evalObj) && method_exists($evalObj, 'deevaluateFieldValue')) {
+								$_params = array(
+									'value' => $PA['itemFormElValue']
+								);
+								$PA['itemFormElValue'] = $evalObj->deevaluateFieldValue($_params);
+							}
 					}
 				}
 				$iOnChange = implode('', $PA['fieldChangeFunc']);
 				$item .= '
-							<textarea ' . 'id="' . uniqid('tceforms-textarea-') . '" ' . 'name="' . $PA['itemFormElName'] . '"' . $formWidthText . $class . ' ' . 'rows="' . $rows . '" ' . 'wrap="' . $wrap . '" ' . 'onchange="' . htmlspecialchars($iOnChange) . '"' . $this->getPlaceholderAttribute($table, $field, $config, $row) . $PA['onFocus'] . '>' . \TYPO3\CMS\Core\Utility\GeneralUtility::formatForTextarea($PA['itemFormElValue']) . '</textarea>';
+							<textarea ' . 'id="' . uniqid('tceforms-textarea-') . '" ' . 'name="' . $PA['itemFormElName'] . '"' . $formWidthText . $class . ' ' . 'rows="' . $rows . '" ' . 'wrap="' . $wrap . '" ' . 'onchange="' . htmlspecialchars($iOnChange) . '"' . $this->getPlaceholderAttribute($table, $field, $config, $row) . $PA['onFocus'] . '>' . GeneralUtility::formatForTextarea($PA['itemFormElValue']) . '</textarea>';
 				$item = $this->renderWizards(array($item, $altItem), $config['wizards'], $table, $row, $field, $PA, $PA['itemFormElName'], $specConf, $RTEwouldHaveBeenLoaded);
 			}
 		}
@@ -1701,7 +1716,7 @@ function ' . $evalData . '(value) {
 		$selItems = $this->addSelectOptionsToItemArray($this->initItemArray($PA['fieldConf']), $PA['fieldConf'], $this->setTSconfig($table, $row), $field);
 		// Possibly filter some items:
 		$keepItemsFunc = create_function('$value', 'return $value[1];');
-		$selItems = \TYPO3\CMS\Core\Utility\GeneralUtility::keepItemsInArray($selItems, $PA['fieldTSConfig']['keepItems'], $keepItemsFunc);
+		$selItems = GeneralUtility::keepItemsInArray($selItems, $PA['fieldTSConfig']['keepItems'], $keepItemsFunc);
 		// Possibly add some items:
 		$selItems = $this->addItems($selItems, $PA['fieldTSConfig']['addItems.']);
 		// Process items by a user function:
@@ -1709,7 +1724,7 @@ function ' . $evalData . '(value) {
 			$selItems = $this->procItems($selItems, $PA['fieldTSConfig']['itemsProcFunc.'], $config, $table, $row, $field);
 		}
 		// Possibly remove some items:
-		$removeItems = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $PA['fieldTSConfig']['removeItems'], 1);
+		$removeItems = GeneralUtility::trimExplode(',', $PA['fieldTSConfig']['removeItems'], 1);
 		foreach ($selItems as $tk => $p) {
 			// Checking languages and authMode:
 			$languageDeny = $GLOBALS['TCA'][$table]['ctrl']['languageField'] && !strcmp($GLOBALS['TCA'][$table]['ctrl']['languageField'], $field) && !$GLOBALS['BE_USER']->checkLanguageAccess($p[1]);
@@ -1721,7 +1736,7 @@ function ' . $evalData . '(value) {
 			}
 			// Removing doktypes with no access:
 			if (($table === 'pages' || $table === 'pages_language_overlay') && $field === 'doktype') {
-				if (!($GLOBALS['BE_USER']->isAdmin() || \TYPO3\CMS\Core\Utility\GeneralUtility::inList($GLOBALS['BE_USER']->groupData['pagetypes_select'], $p[1]))) {
+				if (!($GLOBALS['BE_USER']->isAdmin() || GeneralUtility::inList($GLOBALS['BE_USER']->groupData['pagetypes_select'], $p[1]))) {
 					unset($selItems[$tk]);
 				}
 			}
@@ -1741,10 +1756,10 @@ function ' . $evalData . '(value) {
 			$item = $this->getSingleField_typeSelect_singlebox($table, $field, $row, $PA, $config, $selItems, $nMV_label);
 		} elseif (!strcmp($config['renderMode'], 'tree')) {
 			// Tree renderMode
-			$treeClass = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\TreeElement', $this);
+			$treeClass = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\TreeElement', $this);
 			$item = $treeClass->renderField($table, $field, $row, $PA, $config, $selItems, $nMV_label);
 			// Register the required number of elements
-			$minitems = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['minitems'], 0);
+			$minitems = MathUtility::forceIntegerInRange($config['minitems'], 0);
 			$this->registerRequiredProperty('range', $PA['itemFormElName'], array($minitems, $maxitems, 'imgName' => $table . '_' . $row['uid'] . '_' . $field));
 		} else {
 			// Traditional multiple selector box:
@@ -1778,8 +1793,8 @@ function ' . $evalData . '(value) {
 		$inlineParent = $this->inline->getStructureLevel(-1);
 		if (is_array($inlineParent) && $inlineParent['uid']) {
 			if ($inlineParent['config']['foreign_table'] == $table && $inlineParent['config']['foreign_unique'] == $field) {
-				$uniqueIds = $this->inline->inlineData['unique'][$this->inline->inlineNames['object'] . \TYPO3\CMS\Backend\Form\Element\InlineElement::Structure_Separator . $table]['used'];
-				$PA['fieldChangeFunc']['inlineUnique'] = 'inline.updateUnique(this,\'' . $this->inline->inlineNames['object'] . \TYPO3\CMS\Backend\Form\Element\InlineElement::Structure_Separator . $table . '\',\'' . $this->inline->inlineNames['form'] . '\',\'' . $row['uid'] . '\');';
+				$uniqueIds = $this->inline->inlineData['unique'][$this->inline->inlineNames['object'] . InlineElement::Structure_Separator . $table]['used'];
+				$PA['fieldChangeFunc']['inlineUnique'] = 'inline.updateUnique(this,\'' . $this->inline->inlineNames['object'] . InlineElement::Structure_Separator . $table . '\',\'' . $this->inline->inlineNames['form'] . '\',\'' . $row['uid'] . '\');';
 			}
 			// hide uid of parent record for symmetric relations
 			if ($inlineParent['config']['foreign_table'] == $table && ($inlineParent['config']['foreign_field'] == $field || $inlineParent['config']['symmetric_field'] == $field)) {
@@ -1851,12 +1866,12 @@ function ' . $evalData . '(value) {
 						if ($optGroupOpen) {
 							$opt[] = '</optgroup>' . LF;
 						}
-						$opt[] = '<optgroup label="' . \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities(htmlspecialchars($optGroupStart[0])) . '"' . ($optGroupStart[1] ? ' style="' . htmlspecialchars($optGroupStart[1]) . '"' : '') . ' class="c-divider">' . LF;
+						$opt[] = '<optgroup label="' . GeneralUtility::deHSCentities(htmlspecialchars($optGroupStart[0])) . '"' . ($optGroupStart[1] ? ' style="' . htmlspecialchars($optGroupStart[1]) . '"' : '') . ' class="c-divider">' . LF;
 						$optGroupOpen = TRUE;
 						$c--;
 						$optGroupStart = array();
 					}
-					$opt[] = '<option value="' . htmlspecialchars($p[1]) . '"' . $sM . ($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) . '"' : '') . '>' . \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities($p[0]) . '</option>' . LF;
+					$opt[] = '<option value="' . htmlspecialchars($p[1]) . '"' . $sM . ($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) . '"' : '') . '>' . GeneralUtility::deHSCentities($p[0]) . '</option>' . LF;
 				}
 			}
 			// If there is an icon for the selector box (rendered in selicon-table below)...:
@@ -1979,7 +1994,7 @@ function ' . $evalData . '(value) {
 					if ($p[2]) {
 						$selIcon = $p[2];
 					} else {
-						$selIcon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('empty-empty');
+						$selIcon = IconUtility::getSpriteIcon('empty-empty');
 					}
 					// Compile row:
 					$rowId = uniqid('select_checkbox_row_');
@@ -2007,9 +2022,9 @@ function ' . $evalData . '(value) {
 							$helpArray['description'] = $p[3];
 						}
 					}
-					$label = \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities(htmlspecialchars($p[0]));
+					$label = GeneralUtility::deHSCentities(htmlspecialchars($p[0]));
 					if ($hasHelp) {
-						$help = \TYPO3\CMS\Backend\Utility\BackendUtility::wrapInHelp('', '', '', $helpArray);
+						$help = BackendUtility::wrapInHelp('', '', '', $helpArray);
 					}
 					$tRows[] = '
 						<tr id="' . $rowId . '" class="' . ($sM ? 'c-selectedItem' : 'c-unselectedItem') . '" onclick="' . htmlspecialchars($onClick) . '" style="cursor: pointer;">
@@ -2028,7 +2043,7 @@ function ' . $evalData . '(value) {
 				array_unshift($tRows, '
 						<tr class="c-invalidItem">
 							<td class="c-checkbox"><input type="checkbox"' . $this->insertDefStyle('check') . ' name="' . htmlspecialchars(($PA['itemFormElName'] . '[' . $c . ']')) . '" value="' . htmlspecialchars($theNoMatchValue) . '" checked="checked" onclick="' . htmlspecialchars($sOnChange) . '"' . $PA['onFocus'] . $disabled . ' /></td>
-							<td class="c-labelCell">' . \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities(htmlspecialchars(@sprintf($nMV_label, $theNoMatchValue))) . '</td><td>&nbsp;</td>
+							<td class="c-labelCell">' . GeneralUtility::deHSCentities(htmlspecialchars(@sprintf($nMV_label, $theNoMatchValue))) . '</td><td>&nbsp;</td>
 						</tr>');
 				$c++;
 			}
@@ -2053,7 +2068,7 @@ function ' . $evalData . '(value) {
 			';
 		// Add revert icon
 		if (is_array($restoreCmd)) {
-			$item .= '<a href="#" onclick="' . implode('', $restoreCmd) . ' return false;' . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-undo', array('title' => htmlspecialchars($this->getLL('l_revertSelection')))) . '</a>';
+			$item .= '<a href="#" onclick="' . implode('', $restoreCmd) . ' return false;' . '">' . IconUtility::getSpriteIcon('actions-edit-undo', array('title' => htmlspecialchars($this->getLL('l_revertSelection')))) . '</a>';
 		}
 		return $item;
 	}
@@ -2104,14 +2119,14 @@ function ' . $evalData . '(value) {
 				$styleAttrValue = $this->optionTagStyle($p[2]);
 			}
 			// Compile <option> tag:
-			$opt[] = '<option value="' . htmlspecialchars($p[1]) . '"' . $sM . $nonSel . ($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) . '"' : '') . '>' . \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities(htmlspecialchars($p[0])) . '</option>';
+			$opt[] = '<option value="' . htmlspecialchars($p[1]) . '"' . $sM . $nonSel . ($styleAttrValue ? ' style="' . htmlspecialchars($styleAttrValue) . '"' : '') . '>' . GeneralUtility::deHSCentities(htmlspecialchars($p[0])) . '</option>';
 			$c++;
 		}
 		// Remaining values:
 		if (count($itemArray) && !$PA['fieldTSConfig']['disableNoMatchingValueElement'] && !$config['disableNoMatchingValueElement']) {
 			foreach ($itemArray as $theNoMatchValue => $temp) {
 				// Compile <option> tag:
-				array_unshift($opt, '<option value="' . htmlspecialchars($theNoMatchValue) . '" selected="selected">' . \TYPO3\CMS\Core\Utility\GeneralUtility::deHSCentities(htmlspecialchars(@sprintf($nMV_label, $theNoMatchValue))) . '</option>');
+				array_unshift($opt, '<option value="' . htmlspecialchars($theNoMatchValue) . '" selected="selected">' . GeneralUtility::deHSCentities(htmlspecialchars(@sprintf($nMV_label, $theNoMatchValue))) . '</option>');
 			}
 		}
 		// Compile selector box:
@@ -2119,7 +2134,7 @@ function ' . $evalData . '(value) {
 		$selector_itemListStyle = isset($config['itemListStyle']) ? ' style="' . htmlspecialchars($config['itemListStyle']) . '"' : ' style="' . $this->defaultMultipleSelectorStyle . '"';
 		$size = intval($config['size']);
 		$cssPrefix = $size === 1 ? 'tceforms-select' : 'tceforms-multiselect';
-		$size = $config['autoSizeMax'] ? \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(count($selItems) + 1, \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($size, 1), $config['autoSizeMax']) : $size;
+		$size = $config['autoSizeMax'] ? MathUtility::forceIntegerInRange(count($selItems) + 1, MathUtility::forceIntegerInRange($size, 1), $config['autoSizeMax']) : $size;
 		$selectBox = '<select id="' . uniqid($cssPrefix) . '" name="' . $PA['itemFormElName'] . '[]"' . $this->insertDefStyle('select', $cssPrefix) . ($size ? ' size="' . $size . '"' : '') . ' multiple="multiple" onchange="' . htmlspecialchars($sOnChange) . '"' . $PA['onFocus'] . $selector_itemListStyle . $disabled . '>
 						' . implode('
 						', $opt) . '
@@ -2138,7 +2153,7 @@ function ' . $evalData . '(value) {
 					<em>' . htmlspecialchars($this->getLL('l_holdDownCTRL')) . '</em>
 					</td>
 					<td valign="top">
-						<a href="#" onclick="' . htmlspecialchars(($this->elName(($PA['itemFormElName'] . '[]')) . '.selectedIndex=-1;' . implode('', $restoreCmd) . ' return false;')) . '" title="' . htmlspecialchars($this->getLL('l_revertSelection')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-undo') . '</a>
+						<a href="#" onclick="' . htmlspecialchars(($this->elName(($PA['itemFormElName'] . '[]')) . '.selectedIndex=-1;' . implode('', $restoreCmd) . ' return false;')) . '" title="' . htmlspecialchars($this->getLL('l_revertSelection')) . '">' . IconUtility::getSpriteIcon('actions-edit-undo') . '</a>
 					</td>
 				</tr>
 			</table>
@@ -2172,20 +2187,20 @@ function ' . $evalData . '(value) {
 			$item .= '<input type="hidden" name="' . $PA['itemFormElName'] . '_mul" value="' . ($config['multiple'] ? 1 : 0) . '" />';
 		}
 		// Set max and min items:
-		$maxitems = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['maxitems'], 0);
+		$maxitems = MathUtility::forceIntegerInRange($config['maxitems'], 0);
 		if (!$maxitems) {
 			$maxitems = 100000;
 		}
-		$minitems = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['minitems'], 0);
+		$minitems = MathUtility::forceIntegerInRange($config['minitems'], 0);
 		// Register the required number of elements:
 		$this->registerRequiredProperty('range', $PA['itemFormElName'], array($minitems, $maxitems, 'imgName' => $table . '_' . $row['uid'] . '_' . $field));
 		// Get "removeItems":
-		$removeItems = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $PA['fieldTSConfig']['removeItems'], 1);
+		$removeItems = GeneralUtility::trimExplode(',', $PA['fieldTSConfig']['removeItems'], 1);
 		// Get the array with selected items:
-		$itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $PA['itemFormElValue'], 1);
+		$itemArray = GeneralUtility::trimExplode(',', $PA['itemFormElValue'], 1);
 		// Possibly filter some items:
 		$keepItemsFunc = create_function('$value', '$parts=explode(\'|\',$value,2); return rawurldecode($parts[0]);');
-		$itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::keepItemsInArray($itemArray, $PA['fieldTSConfig']['keepItems'], $keepItemsFunc);
+		$itemArray = GeneralUtility::keepItemsInArray($itemArray, $PA['fieldTSConfig']['keepItems'], $keepItemsFunc);
 		// Perform modification of the selected items array:
 		foreach ($itemArray as $tk => $tv) {
 			$tvP = explode('|', $tv, 2);
@@ -2221,7 +2236,7 @@ function ' . $evalData . '(value) {
 			// Put together the selector box:
 			$selector_itemListStyle = isset($config['itemListStyle']) ? ' style="' . htmlspecialchars($config['itemListStyle']) . '"' : ' style="' . $this->defaultMultipleSelectorStyle . '"';
 			$size = intval($config['size']);
-			$size = $config['autoSizeMax'] ? \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(count($itemArray) + 1, \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($size, 1), $config['autoSizeMax']) : $size;
+			$size = $config['autoSizeMax'] ? MathUtility::forceIntegerInRange(count($itemArray) + 1, MathUtility::forceIntegerInRange($size, 1), $config['autoSizeMax']) : $size;
 			if ($config['exclusiveKeys']) {
 				$sOnChange = 'setFormValueFromBrowseWin(\'' . $PA['itemFormElName'] . '\',this.options[this.selectedIndex].value, this.options[this.selectedIndex].text, this.options[this.selectedIndex].title,\'' . $config['exclusiveKeys'] . '\'); ';
 			} else {
@@ -2237,7 +2252,7 @@ function ' . $evalData . '(value) {
 		// Pass to "dbFileIcons" function:
 		$params = array(
 			'size' => $size,
-			'autoSizeMax' => \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
+			'autoSizeMax' => MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
 			'style' => isset($config['selectedListStyle']) ? ' style="' . htmlspecialchars($config['selectedListStyle']) . '"' : ' style="' . $this->defaultMultipleSelectorStyle . '"',
 			'dontShowMoveIcons' => $maxitems <= 1,
 			'maxitems' => $maxitems,
@@ -2271,11 +2286,11 @@ function ' . $evalData . '(value) {
 		$internal_type = $config['internal_type'];
 		$show_thumbs = $config['show_thumbs'];
 		$size = intval($config['size']);
-		$maxitems = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['maxitems'], 0);
+		$maxitems = MathUtility::forceIntegerInRange($config['maxitems'], 0);
 		if (!$maxitems) {
 			$maxitems = 100000;
 		}
-		$minitems = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['minitems'], 0);
+		$minitems = MathUtility::forceIntegerInRange($config['minitems'], 0);
 		$allowed = trim($config['allowed']);
 		$disallowed = trim($config['disallowed']);
 		$item = '';
@@ -2290,8 +2305,8 @@ function ' . $evalData . '(value) {
 		$specConf = $this->getSpecConfFromString($PA['extra'], $PA['fieldConf']['defaultExtras']);
 		$PA['itemFormElID_file'] = $PA['itemFormElID'] . '_files';
 		// whether the list and delete controls should be disabled
-		$noList = isset($config['disable_controls']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['disable_controls'], 'list');
-		$noDelete = isset($config['disable_controls']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['disable_controls'], 'delete');
+		$noList = isset($config['disable_controls']) && GeneralUtility::inList($config['disable_controls'], 'list');
+		$noDelete = isset($config['disable_controls']) && GeneralUtility::inList($config['disable_controls'], 'delete');
 		// if maxitems==1 then automatically replace the current item (in list and file selector)
 		if ($maxitems === 1) {
 			$this->additionalJS_post[] = 'TBE_EDITOR.clearBeforeSettingFormValueFromBrowseWin[\'' . $PA['itemFormElName'] . '\'] = {
@@ -2306,9 +2321,10 @@ function ' . $evalData . '(value) {
 		switch ((string) $config['internal_type']) {
 		case 'file_reference':
 			$config['uploadfolder'] = '';
+			// Fall through
 		case 'file':
 			// Creating string showing allowed types:
-			$tempFT = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $allowed, TRUE);
+			$tempFT = GeneralUtility::trimExplode(',', $allowed, TRUE);
 			if (!count($tempFT)) {
 				$info .= '*';
 			}
@@ -2318,7 +2334,7 @@ function ' . $evalData . '(value) {
 				}
 			}
 			// Creating string, showing disallowed types:
-			$tempFT_dis = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $disallowed, TRUE);
+			$tempFT_dis = GeneralUtility::trimExplode(',', $disallowed, TRUE);
 			if (count($tempFT_dis)) {
 				$info .= '<br />';
 			}
@@ -2328,12 +2344,12 @@ function ' . $evalData . '(value) {
 				}
 			}
 			// Making the array of file items:
-			$itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $PA['itemFormElValue'], TRUE);
+			$itemArray = GeneralUtility::trimExplode(',', $PA['itemFormElValue'], TRUE);
 			$fileFactory = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance();
 			// Correct the filename for the FAL items
 			foreach ($itemArray as &$fileItem) {
 				list($fileUid, $fileLabel) = explode('|', $fileItem);
-				if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($fileUid)) {
+				if (MathUtility::canBeInterpretedAsInteger($fileUid)) {
 					$fileObject = $fileFactory->getFileObject($fileUid);
 					$fileLabel = $fileObject->getName();
 				}
@@ -2347,21 +2363,45 @@ function ' . $evalData . '(value) {
 					$imgP = explode('|', $imgRead);
 					$imgPath = rawurldecode($imgP[0]);
 					// FAL icon production
-					if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($imgP[0])) {
+					if (MathUtility::canBeInterpretedAsInteger($imgP[0])) {
 						$fileObject = $fileFactory->getFileObject($imgP[0]);
-						if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileObject->getExtension())) {
+						if (GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileObject->getExtension())) {
 							$imageUrl = $fileObject->process(\TYPO3\CMS\Core\Resource\ProcessedFile::CONTEXT_IMAGEPREVIEW, array())->getPublicUrl(TRUE);
 							$imgTag = '<img src="' . $imageUrl . '" alt="' . htmlspecialchars($fileObject->getName()) . '" />';
 						} else {
 							// Icon
-							$imgTag = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForFile(strtolower($fileObject->getExtension()), array('title' => $fileObject->getName()));
+							$imgTag = IconUtility::getSpriteIconForFile(strtolower($fileObject->getExtension()), array('title' => $fileObject->getName()));
 						}
 						$imgs[] = '<span class="nobr">' . $imgTag . htmlspecialchars($fileObject->getName()) . '</span>';
 					} else {
 						$rowCopy = array();
 						$rowCopy[$field] = $imgPath;
-						$thumbnailCode = \TYPO3\CMS\Backend\Utility\BackendUtility::thumbCode($rowCopy, $table, $field, $this->backPath, 'thumbs.php', $config['uploadfolder'], 0, ' align="middle"');
-						$imgs[] = '<span class="nobr">' . $thumbnailCode . $imgPath . '</span>';
+						$thumbnailCode = '';
+						try {
+							$thumbnailCode = BackendUtility::thumbCode(
+								$rowCopy, $table, $field, $this->backPath, 'thumbs.php',
+								$config['uploadfolder'], 0, ' align="middle"'
+							);
+							$thumbnailCode = '<span class="nobr">' . $thumbnailCode . $imgPath . '</span>';
+
+						} catch (\Exception $exception) {
+							/** @var $flashMessage FlashMessage */
+							$message = $exception->getMessage();
+							$flashMessage = GeneralUtility::makeInstance(
+								'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+								htmlspecialchars($message), '', FlashMessage::ERROR, TRUE
+							);
+							$class = 'TYPO3\\CMS\\Core\\Messaging\\FlashMessageService';
+							/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
+							$flashMessageService = GeneralUtility::makeInstance($class);
+							$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
+							$defaultFlashMessageQueue->enqueue($flashMessage);
+
+							$logMessage = $message . ' (' . $table . ':' . $row['uid'] . ')';
+							GeneralUtility::sysLog($logMessage, 'core', GeneralUtility::SYSLOG_SEVERITY_WARNING);
+						}
+
+						$imgs[] = $thumbnailCode;
 					}
 				}
 				$thumbsnail = implode('<br />', $imgs);
@@ -2370,18 +2410,18 @@ function ' . $evalData . '(value) {
 			$params = array(
 				'size' => $size,
 				'dontShowMoveIcons' => $maxitems <= 1,
-				'autoSizeMax' => \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
+				'autoSizeMax' => MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
 				'maxitems' => $maxitems,
 				'style' => isset($config['selectedListStyle']) ? ' style="' . htmlspecialchars($config['selectedListStyle']) . '"' : ' style="' . $this->defaultMultipleSelectorStyle . '"',
 				'info' => $info,
 				'thumbnails' => $thumbsnail,
 				'readOnly' => $disabled,
-				'noBrowser' => $noList || isset($config['disable_controls']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['disable_controls'], 'browser'),
+				'noBrowser' => $noList || isset($config['disable_controls']) && GeneralUtility::inList($config['disable_controls'], 'browser'),
 				'noList' => $noList,
 				'noDelete' => $noDelete
 			);
 			$item .= $this->dbFileIcons($PA['itemFormElName'], 'file', implode(',', $tempFT), $itemArray, '', $params, $PA['onFocus'], '', '', '', $config);
-			if (!$disabled && !(isset($config['disable_controls']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['disable_controls'], 'upload'))) {
+			if (!$disabled && !(isset($config['disable_controls']) && GeneralUtility::inList($config['disable_controls'], 'upload'))) {
 				// Adding the upload field:
 				if ($this->edit_docModuleUpload && $config['uploadfolder']) {
 					// Insert the multiple attribute to enable HTML5 multiple file upload
@@ -2398,17 +2438,17 @@ function ' . $evalData . '(value) {
 		case 'folder':
 			// If the element is of the internal type "folder":
 			// Array of folder items:
-			$itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $PA['itemFormElValue'], 1);
+			$itemArray = GeneralUtility::trimExplode(',', $PA['itemFormElValue'], 1);
 			// Creating the element:
 			$params = array(
 				'size' => $size,
 				'dontShowMoveIcons' => $maxitems <= 1,
-				'autoSizeMax' => \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
+				'autoSizeMax' => MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
 				'maxitems' => $maxitems,
 				'style' => isset($config['selectedListStyle']) ? ' style="' . htmlspecialchars($config['selectedListStyle']) . '"' : ' style="' . $this->defaultMultipleSelectorStyle . '"',
 				'info' => $info,
 				'readOnly' => $disabled,
-				'noBrowser' => $noList || isset($config['disable_controls']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['disable_controls'], 'browser'),
+				'noBrowser' => $noList || isset($config['disable_controls']) && GeneralUtility::inList($config['disable_controls'], 'browser'),
 				'noList' => $noList
 			);
 			$item .= $this->dbFileIcons($PA['itemFormElName'], 'folder', '', $itemArray, '', $params, $PA['onFocus']);
@@ -2416,7 +2456,7 @@ function ' . $evalData . '(value) {
 		case 'db':
 			// If the element is of the internal type "db":
 			// Creating string showing allowed types:
-			$tempFT = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $allowed, TRUE);
+			$tempFT = GeneralUtility::trimExplode(',', $allowed, TRUE);
 			if (!strcmp(trim($tempFT[0]), '*')) {
 				$onlySingleTableAllowed = FALSE;
 				$info .= '<span class="nobr">' . htmlspecialchars($this->getLL('l_allTables')) . '</span><br />';
@@ -2425,28 +2465,28 @@ function ' . $evalData . '(value) {
 				foreach ($tempFT as $theT) {
 					$aOnClick = 'setFormValueOpenBrowser(\'db\', \'' . ($PA['itemFormElName'] . '|||' . $theT) . '\'); return false;';
 					$info .= '<span class="nobr">
-									<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($theT, array()) . htmlspecialchars($this->sL($GLOBALS['TCA'][$theT]['ctrl']['title'])) . '</a></span><br />';
+									<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . IconUtility::getSpriteIconForRecord($theT, array()) . htmlspecialchars($this->sL($GLOBALS['TCA'][$theT]['ctrl']['title'])) . '</a></span><br />';
 				}
 			}
 			$perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
 			$itemArray = array();
 			$imgs = array();
 			// Thumbnails:
-			$temp_itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $PA['itemFormElValue'], 1);
+			$temp_itemArray = GeneralUtility::trimExplode(',', $PA['itemFormElValue'], 1);
 			foreach ($temp_itemArray as $dbRead) {
 				$recordParts = explode('|', $dbRead);
-				list($this_table, $this_uid) = \TYPO3\CMS\Backend\Utility\BackendUtility::splitTable_Uid($recordParts[0]);
+				list($this_table, $this_uid) = BackendUtility::splitTable_Uid($recordParts[0]);
 				// For the case that no table was found and only a single table is defined to be allowed, use that one:
 				if (!$this_table && $onlySingleTableAllowed) {
 					$this_table = $allowed;
 				}
 				$itemArray[] = array('table' => $this_table, 'id' => $this_uid);
 				if (!$disabled && $show_thumbs) {
-					$rr = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL($this_table, $this_uid);
-					$imgs[] = '<span class="nobr">' . $this->getClickMenu(\TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($this_table, $rr, array(
+					$rr = BackendUtility::getRecordWSOL($this_table, $this_uid);
+					$imgs[] = '<span class="nobr">' . $this->getClickMenu(IconUtility::getSpriteIconForRecord($this_table, $rr, array(
 						'style' => 'vertical-align:top',
-						'title' => htmlspecialchars((\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath($rr['pid'], $perms_clause, 15) . ' [UID: ' . $rr['uid'] . ']'))
-					)), $this_table, $this_uid) . '&nbsp;' . \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($this_table, $rr, TRUE) . ' <span class="typo3-dimmed"><em>[' . $rr['uid'] . ']</em></span>' . '</span>';
+						'title' => htmlspecialchars((BackendUtility::getRecordPath($rr['pid'], $perms_clause, 15) . ' [UID: ' . $rr['uid'] . ']'))
+					)), $this_table, $this_uid) . '&nbsp;' . BackendUtility::getRecordTitle($this_table, $rr, TRUE) . ' <span class="typo3-dimmed"><em>[' . $rr['uid'] . ']</em></span>' . '</span>';
 				}
 			}
 			$thumbsnail = '';
@@ -2457,13 +2497,13 @@ function ' . $evalData . '(value) {
 			$params = array(
 				'size' => $size,
 				'dontShowMoveIcons' => $maxitems <= 1,
-				'autoSizeMax' => \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
+				'autoSizeMax' => MathUtility::forceIntegerInRange($config['autoSizeMax'], 0),
 				'maxitems' => $maxitems,
 				'style' => isset($config['selectedListStyle']) ? ' style="' . htmlspecialchars($config['selectedListStyle']) . '"' : ' style="' . $this->defaultMultipleSelectorStyle . '"',
 				'info' => $info,
 				'thumbnails' => $thumbsnail,
 				'readOnly' => $disabled,
-				'noBrowser' => $noList || isset($config['disable_controls']) && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($config['disable_controls'], 'browser'),
+				'noBrowser' => $noList || isset($config['disable_controls']) && GeneralUtility::inList($config['disable_controls'], 'browser'),
 				'noList' => $noList
 			);
 			$item .= $this->dbFileIcons($PA['itemFormElName'], 'db', implode(',', $tempFT), $itemArray, '', $params, $PA['onFocus'], $table, $field, $row['uid'], $config);
@@ -2514,12 +2554,12 @@ function ' . $evalData . '(value) {
 				$itemValue = nl2br(htmlspecialchars($itemValue));
 			}
 			// Like textarea
-			$cols = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['cols'] ? $config['cols'] : 30, 5, $this->maxTextareaWidth);
+			$cols = MathUtility::forceIntegerInRange($config['cols'] ? $config['cols'] : 30, 5, $this->maxTextareaWidth);
 			if (!$config['fixedRows']) {
-				$origRows = ($rows = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($rows, 1, 20));
+				$origRows = ($rows = MathUtility::forceIntegerInRange($rows, 1, 20));
 				if (strlen($itemValue) > $this->charsPerRow * 2) {
 					$cols = $this->maxTextareaWidth;
-					$rows = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(round(strlen($itemValue) / $this->charsPerRow), count(explode(LF, $itemValue)), 20);
+					$rows = MathUtility::forceIntegerInRange(round(strlen($itemValue) / $this->charsPerRow), count(explode(LF, $itemValue)), 20);
 					if ($rows < $origRows) {
 						$rows = $origRows;
 					}
@@ -2532,7 +2572,7 @@ function ' . $evalData . '(value) {
 			// Hardcoded: 12 is the height of the font
 			$height = $rows * 12;
 			$item = '
-				<div style="overflow:auto; height:' . $height . 'px; width:' . $width . 'px;" class="t3-tceforms-fieldReadOnly">' . $itemValue . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('status-status-readonly') . '</div>';
+				<div style="overflow:auto; height:' . $height . 'px; width:' . $width . 'px;" class="t3-tceforms-fieldReadOnly">' . $itemValue . IconUtility::getSpriteIcon('status-status-readonly') . '</div>';
 		} else {
 			if (!$config['pass_content']) {
 				$itemValue = htmlspecialchars($itemValue);
@@ -2544,7 +2584,7 @@ function ' . $evalData . '(value) {
 			$width = ceil($cols * $this->form_rowsToStylewidth);
 			// Overflow:auto crashes mozilla here. Title tag is useful when text is longer than the div box (overflow:hidden).
 			$item = '
-				<div style="overflow:hidden; width:' . $width . 'px;" class="t3-tceforms-fieldReadOnly" title="' . $itemValue . '">' . '<span class="nobr">' . (strcmp($itemValue, '') ? $itemValue : '&nbsp;') . '</span>' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('status-status-readonly') . '</div>';
+				<div style="overflow:hidden; width:' . $width . 'px;" class="t3-tceforms-fieldReadOnly" title="' . $itemValue . '">' . '<span class="nobr">' . (strcmp($itemValue, '') ? $itemValue : '&nbsp;') . '</span>' . IconUtility::getSpriteIcon('status-status-readonly') . '</div>';
 		}
 		return $item;
 	}
@@ -2561,11 +2601,11 @@ function ' . $evalData . '(value) {
 	 */
 	public function getSingleField_typeFlex($table, $field, $row, &$PA) {
 		// Data Structure:
-		$dataStructArray = \TYPO3\CMS\Backend\Utility\BackendUtility::getFlexFormDS($PA['fieldConf']['config'], $row, $table);
+		$dataStructArray = BackendUtility::getFlexFormDS($PA['fieldConf']['config'], $row, $table, $field);
 		$item = '';
 		// Manipulate Flexform DS via TSConfig and group access lists
 		if (is_array($dataStructArray)) {
-			$flexFormHelper = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\FlexFormsHelper');
+			$flexFormHelper = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\FlexFormsHelper');
 			$dataStructArray = $flexFormHelper->modifyFlexFormDS($dataStructArray, $table, $field, $row, $PA['fieldConf']);
 			unset($flexFormHelper);
 		}
@@ -2573,13 +2613,13 @@ function ' . $evalData . '(value) {
 		if (is_array($dataStructArray)) {
 			// Get data:
 			$xmlData = $PA['itemFormElValue'];
-			$xmlHeaderAttributes = \TYPO3\CMS\Core\Utility\GeneralUtility::xmlGetHeaderAttribs($xmlData);
+			$xmlHeaderAttributes = GeneralUtility::xmlGetHeaderAttribs($xmlData);
 			$storeInCharset = strtolower($xmlHeaderAttributes['encoding']);
 			if ($storeInCharset) {
 				$currentCharset = $GLOBALS['LANG']->charSet;
 				$xmlData = $GLOBALS['LANG']->csConvObj->conv($xmlData, $storeInCharset, $currentCharset, 1);
 			}
-			$editData = \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array($xmlData);
+			$editData = GeneralUtility::xml2array($xmlData);
 			// Must be XML parsing error...
 			if (!is_array($editData)) {
 				$editData = array();
@@ -2596,7 +2636,7 @@ function ' . $evalData . '(value) {
 			// Look up page overlays:
 			$checkPageLanguageOverlay = $GLOBALS['BE_USER']->getTSConfigVal('options.checkPageLanguageOverlay') ? TRUE : FALSE;
 			if ($checkPageLanguageOverlay) {
-				$pageOverlays = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'pages_language_overlay', 'pid=' . intval($row['pid']) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('pages_language_overlay') . \TYPO3\CMS\Backend\Utility\BackendUtility::versioningPlaceholderClause('pages_language_overlay'), '', '', '', 'sys_language_uid');
+				$pageOverlays = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'pages_language_overlay', 'pid=' . intval($row['pid']) . BackendUtility::deleteClause('pages_language_overlay') . BackendUtility::versioningPlaceholderClause('pages_language_overlay'), '', '', '', 'sys_language_uid');
 			}
 			$languages = $this->getAvailableLanguages();
 			foreach ($languages as $lInfo) {
@@ -2626,7 +2666,7 @@ function ' . $evalData . '(value) {
 			}
 
 			/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
-			$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+			$elementConditionMatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
 
 			foreach ($rotateLang as $lKey) {
 				if (!$langChildren && !$langDisabled) {
@@ -2636,34 +2676,33 @@ function ' . $evalData . '(value) {
 				$lang = 'l' . $lKey;
 				$tabParts = array();
 				foreach ($tabsToTraverse as $sheet) {
-					list($dataStruct, $sheet) = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveSheetDefInDS($dataStructArray, $sheet);
+					list($dataStruct, $sheet) = GeneralUtility::resolveSheetDefInDS($dataStructArray, $sheet);
 					// If sheet has displayCond
 					if ($dataStruct['ROOT']['TCEforms']['displayCond']) {
-						$splittedCondition = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(':', $dataStruct['ROOT']['TCEforms']['displayCond']);
+						$splittedCondition = GeneralUtility::trimExplode(':', $dataStruct['ROOT']['TCEforms']['displayCond']);
 						$skipCondition = FALSE;
 						$fakeRow = array();
 						switch ($splittedCondition[0]) {
-						case 'FIELD':
-							list($sheetName, $fieldName) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $splittedCondition[1]);
-							$fieldValue = $editData['data'][$sheetName][$lang][$fieldName];
-							$splittedCondition[1] = $fieldName;
-							$dataStruct['ROOT']['TCEforms']['displayCond'] = join(':', $splittedCondition);
-							$fakeRow = array($fieldName => $fieldValue);
-							break;
-						case 'HIDE_FOR_NON_ADMINS':
+							case 'FIELD':
+								list($sheetName, $fieldName) = GeneralUtility::trimExplode('.', $splittedCondition[1]);
+								$fieldValue = $editData['data'][$sheetName][$lang][$fieldName];
+								$splittedCondition[1] = $fieldName;
+								$dataStruct['ROOT']['TCEforms']['displayCond'] = join(':', $splittedCondition);
+								$fakeRow = array($fieldName => $fieldValue);
+								break;
+							case 'HIDE_FOR_NON_ADMINS':
 
-						case 'VERSION':
+							case 'VERSION':
 
-						case 'HIDE_L10N_SIBLINGS':
+							case 'HIDE_L10N_SIBLINGS':
 
-						case 'EXT':
-							break;
-						case 'REC':
-							$fakeRow = array('uid' => $row['uid']);
-							break;
-						default:
-							$skipCondition = TRUE;
-							break;
+							case 'EXT':
+								break;
+							case 'REC':
+								$fakeRow = array('uid' => $row['uid']);
+								break;
+							default:
+								$skipCondition = TRUE;
 						}
 						$displayConditionResult = TRUE;
 						if ($dataStruct['ROOT']['TCEforms']['displayCond']) {
@@ -2681,7 +2720,7 @@ function ' . $evalData . '(value) {
 						$PA['_valLang'] = $langChildren && !$langDisabled ? $editData['meta']['currentLangId'] : 'DEF';
 						$PA['_lang'] = $lang;
 						// Assemble key for loading the correct CSH file
-						$dsPointerFields = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['columns'][$field]['config']['ds_pointerField'], TRUE);
+						$dsPointerFields = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['columns'][$field]['config']['ds_pointerField'], TRUE);
 						$PA['_cshKey'] = $table . '.' . $field;
 						foreach ($dsPointerFields as $key) {
 							$PA['_cshKey'] .= '.' . $row[$key];
@@ -2803,14 +2842,14 @@ function ' . $evalData . '(value) {
 
 					// If there is a title, check for LLL label
 					if (strlen($theTitle) > 0) {
-						$theTitle = htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->sL($theTitle), 30));
+						$theTitle = htmlspecialchars(GeneralUtility::fixed_lgd_cs($this->sL($theTitle), 30));
 					}
 					// If it's a "section" or "container":
 					if ($value['type'] == 'array') {
 						// Creating IDs for form fields:
 						// It's important that the IDs "cascade" - otherwise we can't dynamically expand the flex form because this relies on simple string substitution of the first parts of the id values.
 						// This is a suffix used for forms on this level
-						$thisId = \TYPO3\CMS\Core\Utility\GeneralUtility::shortMd5(uniqid('id', TRUE));
+						$thisId = GeneralUtility::shortMd5(uniqid('id', TRUE));
 						// $idPrefix is the prefix for elements on lower levels in the hierarchy and we combine this with the thisId value to form a new ID on this level.
 						$idTagPrefix = $idPrefix . '-' . $thisId;
 						// If it's a "section" containing other elements:
@@ -2862,7 +2901,7 @@ function ' . $evalData . '(value) {
 								$this->additionalJS_post = $additionalJS_post_saved;
 								$this->additionalJS_submit = $additionalJS_submit_saved;
 								$new = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.new', 1);
-								$newElementsLinks[] = '<a href="#" onclick="' . htmlspecialchars($onClickInsert) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-new') . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($this->sL($nCfg['tx_templavoila']['title']), 30)) . '</a>';
+								$newElementsLinks[] = '<a href="#" onclick="' . htmlspecialchars($onClickInsert) . '">' . IconUtility::getSpriteIcon('actions-document-new') . htmlspecialchars(GeneralUtility::fixed_lgd_cs($this->sL($nCfg['tx_templavoila']['title']), 30)) . '</a>';
 							}
 							// Reverting internal variables we don't want to change:
 							$this->requiredElements = $TEMP_requiredElements;
@@ -2870,7 +2909,7 @@ function ' . $evalData . '(value) {
 							$toggleAll = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.toggleall', 1);
 							$output .= '
 							<div class="t3-form-field-toggle-flexsection">
-								<a href="#" onclick="' . htmlspecialchars(('flexFormToggleSubs("' . $idTagPrefix . '"); return false;')) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-right', array('title' => $toggleAll)) . $toggleAll . '
+								<a href="#" onclick="' . htmlspecialchars(('flexFormToggleSubs("' . $idTagPrefix . '"); return false;')) . '">' . IconUtility::getSpriteIcon('actions-move-right', array('title' => $toggleAll)) . $toggleAll . '
 								</a>
 							</div>
 
@@ -2878,8 +2917,8 @@ function ' . $evalData . '(value) {
 							$output .= $mayRestructureFlexforms ? '<div class="t3-form-field-add-flexsection"><strong>' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.addnew', 1) . ':</strong> ' . implode(' | ', $newElementsLinks) . '</div>' : '';
 						} else {
 							// It is a container
-							$toggleIcon_open = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-down');
-							$toggleIcon_close = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-right');
+							$toggleIcon_open = IconUtility::getSpriteIcon('actions-move-down');
+							$toggleIcon_close = IconUtility::getSpriteIcon('actions-move-right');
 							// Create on-click actions.
 							$onClickRemove = 'if (confirm("Are you sure?")){/*###REMOVE###*/;$("' . $idTagPrefix . '").hide();setActionStatus("' . $idPrefix . '");} return false;';
 							$onClickToggle = 'flexFormToggle("' . $idTagPrefix . '"); return false;';
@@ -2897,10 +2936,10 @@ function ' . $evalData . '(value) {
 										</a>
 										<strong>' . $theTitle . '</strong> <em><span id="' . $idTagPrefix . '-preview"></span></em>
 									</td>
-									<td align="right">' . ($mayRestructureFlexforms ? \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-move', array('title' => 'Drag to Move')) : '') . ($mayRestructureFlexforms ? '<a href="#" onclick="' . htmlspecialchars($onClickRemove) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-delete', array('title' => 'Delete')) : '') . '</td>
+									<td align="right">' . ($mayRestructureFlexforms ? IconUtility::getSpriteIcon('actions-move-move', array('title' => 'Drag to Move')) : '') . ($mayRestructureFlexforms ? '<a href="#" onclick="' . htmlspecialchars($onClickRemove) . '">' . IconUtility::getSpriteIcon('actions-edit-delete', array('title' => 'Delete')) : '') . '</td>
 									</tr>
 								</table>';
-							$s = \TYPO3\CMS\Core\Utility\GeneralUtility::revExplode('[]', $formPrefix, 2);
+							$s = GeneralUtility::revExplode('[]', $formPrefix, 2);
 							$actionFieldName = '_ACTION_FLEX_FORM' . $PA['itemFormElName'] . $s[0] . '][_ACTION][' . $s[1];
 							// Push the container to DynNestedStack as it may be toggled
 							$this->pushToDynNestedStack('flex', $idTagPrefix);
@@ -2915,7 +2954,7 @@ function ' . $evalData . '(value) {
 									</div>
 									<input id="' . $idTagPrefix . '-toggleClosed" type="hidden" name="' . htmlspecialchars(('data[' . $table . '][' . $row['uid'] . '][' . $field . ']' . $formPrefix . '[_TOGGLE]')) . '" value="' . ($toggleClosed ? 1 : 0) . '" />
 								</div>';
-							$output = str_replace('/*###REMOVE###*/', \TYPO3\CMS\Core\Utility\GeneralUtility::slashJS(htmlspecialchars(implode('', $this->additionalJS_delete))), $output);
+							$output = str_replace('/*###REMOVE###*/', GeneralUtility::slashJS(htmlspecialchars(implode('', $this->additionalJS_delete))), $output);
 							// NOTICE: We are saving the toggle-state directly in the flexForm XML and "unauthorized" according to the data structure. It means that flexform XML will report unclean and a cleaning operation will remove the recorded togglestates. This is not a fatal problem. Ideally we should save the toggle states in meta-data but it is much harder to do that. And this implementation was easy to make and with no really harmful impact.
 							// Pop the container from DynNestedStack
 							$this->popFromDynNestedStack('flex', $idTagPrefix);
@@ -2928,12 +2967,12 @@ function ' . $evalData . '(value) {
 							$rotateLang = array($PA['_valLang']);
 						}
 						$conditionData = is_array($editData) ? $editData : array();
-						// Add current $row to data processed by isDisplayCondition()
+						// Add current $row to data processed by \TYPO3\CMS\Backend\Form\ElementConditionMatcher
 						$conditionData['parentRec'] = $row;
 						$tRows = array();
 
 						/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
-						$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+						$elementConditionMatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
 
 						foreach ($rotateLang as $vDEFkey) {
 							$vDEFkey = 'v' . $vDEFkey;
@@ -2955,7 +2994,7 @@ function ' . $evalData . '(value) {
 										'rows' => 2
 									);
 								}
-								if ($fakePA['fieldConf']['onChange'] == 'reload' || $GLOBALS['TCA'][$table]['ctrl']['type'] && !strcmp($key, $GLOBALS['TCA'][$table]['ctrl']['type']) || $GLOBALS['TCA'][$table]['ctrl']['requestUpdate'] && \TYPO3\CMS\Core\Utility\GeneralUtility::inList($GLOBALS['TCA'][$table]['ctrl']['requestUpdate'], $key)) {
+								if ($fakePA['fieldConf']['onChange'] == 'reload' || $GLOBALS['TCA'][$table]['ctrl']['type'] && !strcmp($key, $GLOBALS['TCA'][$table]['ctrl']['type']) || $GLOBALS['TCA'][$table]['ctrl']['requestUpdate'] && GeneralUtility::inList($GLOBALS['TCA'][$table]['ctrl']['requestUpdate'], $key)) {
 									if ($GLOBALS['BE_USER']->jsConfirmation(1)) {
 										$alertMsgOnChange = 'if (confirm(TBE_EDITOR.labels.onChangeAlert) && TBE_EDITOR.checkSubmit(-1)){ TBE_EDITOR.submitForm() };';
 									} else {
@@ -2998,7 +3037,7 @@ function ' . $evalData . '(value) {
 								// Put row together
 								// possible linebreaks in the label through xml: \n => <br/>, usage of nl2br() not possible, so it's done through str_replace
 								$processedTitle = str_replace('\\n', '<br />', $theTitle);
-								$tRows[] = '<div class="t3-form-field-container t3-form-field-container-flex">' . '<div class="t3-form-field-label t3-form-field-label-flex">' . $languageIcon . \TYPO3\CMS\Backend\Utility\BackendUtility::wrapInHelp($PA['_cshKey'], $key, $processedTitle) . '</div>
+								$tRows[] = '<div class="t3-form-field-container t3-form-field-container-flex">' . '<div class="t3-form-field-label t3-form-field-label-flex">' . $languageIcon . BackendUtility::wrapInHelp($PA['_cshKey'], $key, $processedTitle) . '</div>
 									<div class="t3-form-field t3-form-field-flex">' . $theFormEl . $defInfo . $this->renderVDEFDiff($editData[$key], $vDEFkey) . '</div>
 								</div>';
 							}
@@ -3044,7 +3083,7 @@ function ' . $evalData . '(value) {
 		$PA['row'] = $row;
 		$PA['parameters'] = isset($PA['fieldConf']['config']['parameters']) ? $PA['fieldConf']['config']['parameters'] : array();
 		$PA['pObj'] = &$this;
-		return \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($PA['fieldConf']['config']['userFunc'], $PA, $this);
+		return GeneralUtility::callUserFunction($PA['fieldConf']['config']['userFunc'], $PA, $this);
 	}
 
 	/************************************************************
@@ -3064,80 +3103,80 @@ function ' . $evalData . '(value) {
 	public function formatValue($config, $itemValue) {
 		$format = trim($config['format']);
 		switch ($format) {
-		case 'date':
-			if ($itemValue) {
-				$option = trim($config['format.']['option']);
-				if ($option) {
-					if ($config['format.']['strftime']) {
-						$value = strftime($option, $itemValue);
+			case 'date':
+				if ($itemValue) {
+					$option = trim($config['format.']['option']);
+					if ($option) {
+						if ($config['format.']['strftime']) {
+							$value = strftime($option, $itemValue);
+						} else {
+							$value = date($option, $itemValue);
+						}
 					} else {
-						$value = date($option, $itemValue);
+						$value = date('d-m-Y', $itemValue);
 					}
 				} else {
-					$value = date('d-m-Y', $itemValue);
+					$value = '';
 				}
-			} else {
-				$value = '';
-			}
-			if ($config['format.']['appendAge']) {
-				$value .= ' (' . \TYPO3\CMS\Backend\Utility\BackendUtility::calcAge(($GLOBALS['EXEC_TIME'] - $itemValue), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')) . ')';
-			}
-			$itemValue = $value;
-			break;
-		case 'datetime':
-			// compatibility with "eval" (type "input")
-			$itemValue = date('H:i d-m-Y', $itemValue);
-			break;
-		case 'time':
-			// compatibility with "eval" (type "input")
-			$itemValue = date('H:i', $itemValue);
-			break;
-		case 'timesec':
-			// compatibility with "eval" (type "input")
-			$itemValue = date('H:i:s', $itemValue);
-			break;
-		case 'year':
-			// compatibility with "eval" (type "input")
-			$itemValue = date('Y', $itemValue);
-			break;
-		case 'int':
-			$baseArr = array('dec' => 'd', 'hex' => 'x', 'HEX' => 'X', 'oct' => 'o', 'bin' => 'b');
-			$base = trim($config['format.']['base']);
-			$format = $baseArr[$base] ? $baseArr[$base] : 'd';
-			$itemValue = sprintf('%' . $format, $itemValue);
-			break;
-		case 'float':
-			$precision = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($config['format.']['precision'], 1, 10, 2);
-			$itemValue = sprintf('%.' . $precision . 'f', $itemValue);
-			break;
-		case 'number':
-			$format = trim($config['format.']['option']);
-			$itemValue = sprintf('%' . $format, $itemValue);
-			break;
-		case 'md5':
-			$itemValue = md5($itemValue);
-			break;
-		case 'filesize':
-			$value = \TYPO3\CMS\Core\Utility\GeneralUtility::formatSize(intval($itemValue));
-			if ($config['format.']['appendByteSize']) {
-				$value .= ' (' . $itemValue . ')';
-			}
-			$itemValue = $value;
-			break;
-		case 'user':
-			$func = trim($config['format.']['userFunc']);
-			if ($func) {
-				$params = array(
-					'value' => $itemValue,
-					'args' => $config['format.']['userFunc'],
-					'config' => $config,
-					'pObj' => &$this
-				);
-				$itemValue = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($func, $params, $this);
-			}
-			break;
-		default:
-			break;
+				if ($config['format.']['appendAge']) {
+					$value .= ' (' . BackendUtility::calcAge(($GLOBALS['EXEC_TIME'] - $itemValue), $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.minutesHoursDaysYears')) . ')';
+				}
+				$itemValue = $value;
+				break;
+			case 'datetime':
+				// compatibility with "eval" (type "input")
+				$itemValue = date('H:i d-m-Y', $itemValue);
+				break;
+			case 'time':
+				// compatibility with "eval" (type "input")
+				$itemValue = date('H:i', $itemValue);
+				break;
+			case 'timesec':
+				// compatibility with "eval" (type "input")
+				$itemValue = date('H:i:s', $itemValue);
+				break;
+			case 'year':
+				// compatibility with "eval" (type "input")
+				$itemValue = date('Y', $itemValue);
+				break;
+			case 'int':
+				$baseArr = array('dec' => 'd', 'hex' => 'x', 'HEX' => 'X', 'oct' => 'o', 'bin' => 'b');
+				$base = trim($config['format.']['base']);
+				$format = $baseArr[$base] ? $baseArr[$base] : 'd';
+				$itemValue = sprintf('%' . $format, $itemValue);
+				break;
+			case 'float':
+				$precision = MathUtility::forceIntegerInRange($config['format.']['precision'], 1, 10, 2);
+				$itemValue = sprintf('%.' . $precision . 'f', $itemValue);
+				break;
+			case 'number':
+				$format = trim($config['format.']['option']);
+				$itemValue = sprintf('%' . $format, $itemValue);
+				break;
+			case 'md5':
+				$itemValue = md5($itemValue);
+				break;
+			case 'filesize':
+				$value = GeneralUtility::formatSize(intval($itemValue));
+				if ($config['format.']['appendByteSize']) {
+					$value .= ' (' . $itemValue . ')';
+				}
+				$itemValue = $value;
+				break;
+			case 'user':
+				$func = trim($config['format.']['userFunc']);
+				if ($func) {
+					$params = array(
+						'value' => $itemValue,
+						'args' => $config['format.']['userFunc'],
+						'config' => $config,
+						'pObj' => &$this
+					);
+					$itemValue = GeneralUtility::callUserFunction($func, $params, $this);
+				}
+				break;
+			default:
+				// Do nothing
 		}
 		return $itemValue;
 	}
@@ -3168,7 +3207,7 @@ function ' . $evalData . '(value) {
 					$foreignTable = $fieldConfig['foreign_table'];
 				} elseif ($relationType === 'group') {
 					$values = $this->extractValuesOnlyFromValueLabelList($row[$pointerField]);
-					list(, $foreignUid) = \TYPO3\CMS\Core\Utility\GeneralUtility::revExplode('_', $values[0], 2);
+					list(, $foreignUid) = GeneralUtility::revExplode('_', $values[0], 2);
 					$allowedTables = explode(',', $fieldConfig['allowed']);
 					// Always take the first configured table.
 					$foreignTable = $allowedTables[0];
@@ -3176,7 +3215,7 @@ function ' . $evalData . '(value) {
 					throw new \RuntimeException('TCA Foreign field pointer fields are only allowed to be used with group or select field types.', 1325861239);
 				}
 				if ($foreignUid) {
-					$foreignRow = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($foreignTable, $foreignUid, $foreignTypeField);
+					$foreignRow = BackendUtility::getRecord($foreignTable, $foreignUid, $foreignTypeField);
 					$this->registerDefaultLanguageData($foreignTable, $foreignRow);
 					if ($foreignRow[$foreignTypeField]) {
 						$foreignTypeFieldConfig = $GLOBALS['TCA'][$table]['columns'][$field];
@@ -3210,17 +3249,17 @@ function ' . $evalData . '(value) {
 	 * @todo Define visibility
 	 */
 	public function rearrange($fields) {
-		$fO = array_flip(\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->fieldOrder, 1));
+		$fO = array_flip(GeneralUtility::trimExplode(',', $this->fieldOrder, 1));
 		$newFields = array();
 		foreach ($fields as $cc => $content) {
-			$cP = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $content);
+			$cP = GeneralUtility::trimExplode(';', $content);
 			if (isset($fO[$cP[0]])) {
 				$newFields[$fO[$cP[0]]] = $content;
 				unset($fields[$cc]);
 			}
 		}
 		ksort($newFields);
-		// Candidate for \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge() if integer-keys will some day make trouble...
+		// Candidate for GeneralUtility::array_merge() if integer-keys will some day make trouble...
 		$fields = array_merge($newFields, $fields);
 		return $fields;
 	}
@@ -3243,20 +3282,20 @@ function ' . $evalData . '(value) {
 		if ($GLOBALS['TCA'][$table]['types'][$typeNum]['subtype_value_field']) {
 			$sTfield = $GLOBALS['TCA'][$table]['types'][$typeNum]['subtype_value_field'];
 			if (trim($GLOBALS['TCA'][$table]['types'][$typeNum]['subtypes_excludelist'][$row[$sTfield]])) {
-				$excludeElements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['types'][$typeNum]['subtypes_excludelist'][$row[$sTfield]], 1);
+				$excludeElements = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['types'][$typeNum]['subtypes_excludelist'][$row[$sTfield]], 1);
 			}
 		}
 		// If a bitmask-value field has been configured, then find possible fields to exclude based on that:
 		if ($GLOBALS['TCA'][$table]['types'][$typeNum]['bitmask_value_field']) {
 			$sTfield = $GLOBALS['TCA'][$table]['types'][$typeNum]['bitmask_value_field'];
-			$sTValue = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($row[$sTfield], 0);
+			$sTValue = MathUtility::forceIntegerInRange($row[$sTfield], 0);
 			if (is_array($GLOBALS['TCA'][$table]['types'][$typeNum]['bitmask_excludelist_bits'])) {
 				foreach ($GLOBALS['TCA'][$table]['types'][$typeNum]['bitmask_excludelist_bits'] as $bitKey => $eList) {
 					$bit = substr($bitKey, 1);
-					if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($bit)) {
-						$bit = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($bit, 0, 30);
+					if (MathUtility::canBeInterpretedAsInteger($bit)) {
+						$bit = MathUtility::forceIntegerInRange($bit, 0, 30);
 						if (substr($bitKey, 0, 1) == '-' && !($sTValue & pow(2, $bit)) || substr($bitKey, 0, 1) == '+' && $sTValue & pow(2, $bit)) {
-							$excludeElements = array_merge($excludeElements, \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $eList, 1));
+							$excludeElements = array_merge($excludeElements, GeneralUtility::trimExplode(',', $eList, 1));
 						}
 					}
 				}
@@ -3283,7 +3322,7 @@ function ' . $evalData . '(value) {
 		if ($GLOBALS['TCA'][$table]['types'][$typeNum]['subtype_value_field']) {
 			$sTfield = $GLOBALS['TCA'][$table]['types'][$typeNum]['subtype_value_field'];
 			if (trim($GLOBALS['TCA'][$table]['types'][$typeNum]['subtypes_addlist'][$row[$sTfield]])) {
-				$addElements = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['types'][$typeNum]['subtypes_addlist'][$row[$sTfield]], 1);
+				$addElements = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['types'][$typeNum]['subtypes_addlist'][$row[$sTfield]], 1);
 			}
 		}
 		// Return the return
@@ -3322,13 +3361,13 @@ function ' . $evalData . '(value) {
 	 * @param array $row The table row (Should at least contain the "uid" value, even if "NEW..." string. The "pid" field is important as well, and negative values will be intepreted as pointing to a record from the same table.)
 	 * @param string $field Optionally you can specify the field name as well. In that case the TSconfig for the field is returned.
 	 * @return mixed The TSconfig values (probably in an array)
-	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getTCEFORM_TSconfig()
+	 * @see BackendUtility::getTCEFORM_TSconfig()
 	 * @todo Define visibility
 	 */
 	public function setTSconfig($table, $row, $field = '') {
 		$mainKey = $table . ':' . $row['uid'];
 		if (!isset($this->cachedTSconfig[$mainKey])) {
-			$this->cachedTSconfig[$mainKey] = \TYPO3\CMS\Backend\Utility\BackendUtility::getTCEFORM_TSconfig($table, $row);
+			$this->cachedTSconfig[$mainKey] = BackendUtility::getTCEFORM_TSconfig($table, $row);
 		}
 		if ($field) {
 			return $this->cachedTSconfig[$mainKey][$field];
@@ -3350,7 +3389,7 @@ function ' . $evalData . '(value) {
 	 */
 	public function overrideFieldConf($fieldConfig, $TSconfig) {
 		if (is_array($TSconfig)) {
-			$TSconfig = \TYPO3\CMS\Core\Utility\GeneralUtility::removeDotsFromTS($TSconfig);
+			$TSconfig = GeneralUtility::removeDotsFromTS($TSconfig);
 			$type = $fieldConfig['type'];
 			if (is_array($TSconfig['config']) && is_array($this->allowOverrideMatrix[$type])) {
 				// Check if the keys in TSconfig['config'] are allowed to override TCA field config:
@@ -3361,7 +3400,7 @@ function ' . $evalData . '(value) {
 				}
 				// Override $GLOBALS['TCA'] field config by remaining TSconfig['config']:
 				if (count($TSconfig['config'])) {
-					$fieldConfig = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($fieldConfig, $TSconfig['config']);
+					$fieldConfig = GeneralUtility::array_merge_recursive_overrule($fieldConfig, $TSconfig['config']);
 				}
 			}
 		}
@@ -3376,12 +3415,12 @@ function ' . $evalData . '(value) {
 	 * @param array $row The table row (Should at least contain the "uid" value, even if "NEW..." string. The "pid" field is important as well, and negative values will be intepreted as pointing to a record from the same table.)
 	 * @param string $field Specify the field name.
 	 * @return array
-	 * @see getSpecConfFromString(), \TYPO3\CMS\Backend\Utility\BackendUtility::getTCAtypes()
+	 * @see getSpecConfFromString(), BackendUtility::getTCAtypes()
 	 * @todo Define visibility
 	 */
 	public function getSpecConfForField($table, $row, $field) {
 		// Finds the current "types" configuration for the table/row:
-		$types_fieldConfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getTCAtypes($table, $row);
+		$types_fieldConfig = BackendUtility::getTCAtypes($table, $row);
 		// If this is an array, then traverse it:
 		if (is_array($types_fieldConfig)) {
 			foreach ($types_fieldConfig as $vconf) {
@@ -3399,11 +3438,11 @@ function ' . $evalData . '(value) {
 	 * @param string $extraString The "Part 4" of the fields configuration in "types" "showitem" lists.
 	 * @param string $defaultExtras The ['defaultExtras'] value from field configuration
 	 * @return array An array with the special options in.
-	 * @see getSpecConfForField(), \TYPO3\CMS\Backend\Utility\BackendUtility::getSpecConfParts()
+	 * @see getSpecConfForField(), BackendUtility::getSpecConfParts()
 	 * @todo Define visibility
 	 */
 	public function getSpecConfFromString($extraString, $defaultExtras) {
-		return \TYPO3\CMS\Backend\Utility\BackendUtility::getSpecConfParts($extraString, $defaultExtras);
+		return BackendUtility::getSpecConfParts($extraString, $defaultExtras);
 	}
 
 	/**
@@ -3425,9 +3464,9 @@ function ' . $evalData . '(value) {
 		if ($GLOBALS['TCA'][$table] && (is_array($GLOBALS['TCA'][$table]['palettes'][$palette]) || $itemList)) {
 			$itemList = $itemList ? $itemList : $GLOBALS['TCA'][$table]['palettes'][$palette]['showitem'];
 			if ($itemList) {
-				$fields = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $itemList, 1);
+				$fields = GeneralUtility::trimExplode(',', $itemList, 1);
 				foreach ($fields as $info) {
-					$fieldParts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $info);
+					$fieldParts = GeneralUtility::trimExplode(';', $info);
 					$theField = $fieldParts[0];
 					if ($theField === '--linebreak--') {
 						$parts[]['NAME'] = '--linebreak--';
@@ -3464,7 +3503,7 @@ function ' . $evalData . '(value) {
 		if ($GLOBALS['TCA'][$table]['ctrl']['languageField'] && $rec[$GLOBALS['TCA'][$table]['ctrl']['languageField']] > 0 && $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'] && intval($rec[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']]) > 0) {
 			$lookUpTable = $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerTable'] ? $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerTable'] : $table;
 			// Get data formatted:
-			$this->defaultLanguageData[$table . ':' . $rec['uid']] = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL($lookUpTable, intval($rec[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']]));
+			$this->defaultLanguageData[$table . ':' . $rec['uid']] = BackendUtility::getRecordWSOL($lookUpTable, intval($rec[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']]));
 			// Get data for diff:
 			if ($GLOBALS['TCA'][$table]['ctrl']['transOrigDiffSourceField']) {
 				$this->defaultLanguageData_diff[$table . ':' . $rec['uid']] = unserialize($rec[$GLOBALS['TCA'][$table]['ctrl']['transOrigDiffSourceField']]);
@@ -3473,10 +3512,10 @@ function ' . $evalData . '(value) {
 			$prLang = $this->getAdditionalPreviewLanguages();
 			foreach ($prLang as $prL) {
 				/** @var $t8Tools \TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider */
-				$t8Tools = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TranslationConfigurationProvider');
+				$t8Tools = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TranslationConfigurationProvider');
 				$tInfo = $t8Tools->translationInfo($lookUpTable, intval($rec[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']]), $prL['uid']);
 				if (is_array($tInfo['translations']) && is_array($tInfo['translations'][$prL['uid']])) {
-					$this->additionalPreviewLanguageData[$table . ':' . $rec['uid']][$prL['uid']] = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL($table, intval($tInfo['translations'][$prL['uid']]['uid']));
+					$this->additionalPreviewLanguageData[$table . ':' . $rec['uid']][$prL['uid']] = BackendUtility::getRecordWSOL($table, intval($tInfo['translations'][$prL['uid']]['uid']));
 				}
 			}
 		}
@@ -3518,7 +3557,7 @@ function ' . $evalData . '(value) {
 	 */
 	public function renderDefaultLanguageContent($table, $field, $row, $item) {
 		if (is_array($this->defaultLanguageData[$table . ':' . $row['uid']])) {
-			$defaultLanguageValue = \TYPO3\CMS\Backend\Utility\BackendUtility::getProcessedValue($table, $field, $this->defaultLanguageData[$table . ':' . $row['uid']][$field], 0, 1);
+			$defaultLanguageValue = BackendUtility::getProcessedValue($table, $field, $this->defaultLanguageData[$table . ':' . $row['uid']][$field], 0, 1);
 			$fieldConfig = $GLOBALS['TCA'][$table]['columns'][$field];
 			// Don't show content if it's for IRRE child records:
 			if ($fieldConfig['config']['type'] != 'inline') {
@@ -3527,7 +3566,7 @@ function ' . $evalData . '(value) {
 				}
 				$previewLanguages = $this->getAdditionalPreviewLanguages();
 				foreach ($previewLanguages as $previewLanguage) {
-					$defaultLanguageValue = \TYPO3\CMS\Backend\Utility\BackendUtility::getProcessedValue($table, $field, $this->additionalPreviewLanguageData[$table . ':' . $row['uid']][$previewLanguage['uid']][$field], 0, 1);
+					$defaultLanguageValue = BackendUtility::getProcessedValue($table, $field, $this->additionalPreviewLanguageData[$table . ':' . $row['uid']][$previewLanguage['uid']][$field], 0, 1);
 					if ($defaultLanguageValue !== '') {
 						$item .= '<div class="typo3-TCEforms-originalLanguageValue">' . $this->getLanguageIcon($table, $row, ('v' . $previewLanguage['ISOcode'])) . $this->getMergeBehaviourIcon($fieldConfig['l10n_mode']) . $this->previewFieldValue($defaultLanguageValue, $fieldConfig, $field) . '&nbsp;</div>';
 					}
@@ -3560,8 +3599,8 @@ function ' . $evalData . '(value) {
 			if (isset($dLVal['old'][$field])) {
 				if (strcmp($dLVal['old'][$field], $dLVal['new'][$field])) {
 					// Create diff-result:
-					$t3lib_diff_Obj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\DiffUtility');
-					$diffres = $t3lib_diff_Obj->makeDiffDisplay(\TYPO3\CMS\Backend\Utility\BackendUtility::getProcessedValue($table, $field, $dLVal['old'][$field], 0, 1), \TYPO3\CMS\Backend\Utility\BackendUtility::getProcessedValue($table, $field, $dLVal['new'][$field], 0, 1));
+					$t3lib_diff_Obj = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\DiffUtility');
+					$diffres = $t3lib_diff_Obj->makeDiffDisplay(BackendUtility::getProcessedValue($table, $field, $dLVal['old'][$field], 0, 1), BackendUtility::getProcessedValue($table, $field, $dLVal['new'][$field], 0, 1));
 					$item .= '<div class="typo3-TCEforms-diffBox">' . '<div class="typo3-TCEforms-diffBox-header">' . htmlspecialchars($this->getLL('l_changeInOrig')) . ':</div>' . $diffres . '</div>';
 				}
 			}
@@ -3582,7 +3621,7 @@ function ' . $evalData . '(value) {
 		$item = NULL;
 		if ($GLOBALS['TYPO3_CONF_VARS']['BE']['flexFormXMLincludeDiffBase'] && isset($vArray[$vDEFkey . '.vDEFbase']) && strcmp($vArray[$vDEFkey . '.vDEFbase'], $vArray['vDEF'])) {
 			// Create diff-result:
-			$t3lib_diff_Obj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\DiffUtility');
+			$t3lib_diff_Obj = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\DiffUtility');
 			$diffres = $t3lib_diff_Obj->makeDiffDisplay($vArray[$vDEFkey . '.vDEFbase'], $vArray['vDEF']);
 			$item = '<div class="typo3-TCEforms-diffBox">' . '<div class="typo3-TCEforms-diffBox-header">' . htmlspecialchars($this->getLL('l_changeInOrig')) . ':</div>' . $diffres . '</div>';
 		}
@@ -3627,49 +3666,48 @@ function ' . $evalData . '(value) {
 		if (is_array($itemArray)) {
 			$itemArrayC = count($itemArray);
 			switch ($mode) {
-			case 'db':
-				foreach ($itemArray as $pp) {
-					$pRec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL($pp['table'], $pp['id']);
-					if (is_array($pRec)) {
-						$pTitle = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($pp['table'], $pRec, FALSE, TRUE);
-						$pUid = $pp['table'] . '_' . $pp['id'];
-						$uidList[] = $pUid;
-						$title = htmlspecialchars($pTitle);
-						$opt[] = '<option value="' . htmlspecialchars($pUid) . '" title="' . $title . '">' . $title . '</option>';
+				case 'db':
+					foreach ($itemArray as $pp) {
+						$pRec = BackendUtility::getRecordWSOL($pp['table'], $pp['id']);
+						if (is_array($pRec)) {
+							$pTitle = BackendUtility::getRecordTitle($pp['table'], $pRec, FALSE, TRUE);
+							$pUid = $pp['table'] . '_' . $pp['id'];
+							$uidList[] = $pUid;
+							$title = htmlspecialchars($pTitle);
+							$opt[] = '<option value="' . htmlspecialchars($pUid) . '" title="' . $title . '">' . $title . '</option>';
+						}
 					}
-				}
-				break;
-			case 'file_reference':
+					break;
+				case 'file_reference':
 
-			case 'file':
-				foreach ($itemArray as $item) {
-					$itemParts = explode('|', $item);
-					$uidList[] = ($pUid = ($pTitle = $itemParts[0]));
-					$title = htmlspecialchars(basename(rawurldecode($itemParts[1])));
-					$opt[] = '<option value="' . htmlspecialchars(rawurldecode($itemParts[0])) . '" title="' . $title . '">' . $title . '</option>';
-				}
-				break;
-			case 'folder':
-				foreach ($itemArray as $pp) {
-					$pParts = explode('|', $pp);
-					$uidList[] = ($pUid = ($pTitle = $pParts[0]));
-					$title = htmlspecialchars(rawurldecode($pParts[0]));
-					$opt[] = '<option value="' . htmlspecialchars(rawurldecode($pParts[0])) . '" title="' . $title . '">' . $title . '</option>';
-				}
-				break;
-			default:
-				foreach ($itemArray as $pp) {
-					$pParts = explode('|', $pp, 2);
-					$uidList[] = ($pUid = $pParts[0]);
-					$pTitle = $pParts[1];
-					$title = htmlspecialchars(rawurldecode($pTitle));
-					$opt[] = '<option value="' . htmlspecialchars(rawurldecode($pUid)) . '" title="' . $title . '">' . $title . '</option>';
-				}
-				break;
+				case 'file':
+					foreach ($itemArray as $item) {
+						$itemParts = explode('|', $item);
+						$uidList[] = ($pUid = ($pTitle = $itemParts[0]));
+						$title = htmlspecialchars(basename(rawurldecode($itemParts[1])));
+						$opt[] = '<option value="' . htmlspecialchars(rawurldecode($itemParts[0])) . '" title="' . $title . '">' . $title . '</option>';
+					}
+					break;
+				case 'folder':
+					foreach ($itemArray as $pp) {
+						$pParts = explode('|', $pp);
+						$uidList[] = ($pUid = ($pTitle = $pParts[0]));
+						$title = htmlspecialchars(rawurldecode($pParts[0]));
+						$opt[] = '<option value="' . htmlspecialchars(rawurldecode($pParts[0])) . '" title="' . $title . '">' . $title . '</option>';
+					}
+					break;
+				default:
+					foreach ($itemArray as $pp) {
+						$pParts = explode('|', $pp, 2);
+						$uidList[] = ($pUid = $pParts[0]);
+						$pTitle = $pParts[1];
+						$title = htmlspecialchars(rawurldecode($pTitle));
+						$opt[] = '<option value="' . htmlspecialchars(rawurldecode($pUid)) . '" title="' . $title . '">' . $title . '</option>';
+					}
 			}
 		}
 		// Create selector box of the options
-		$sSize = $params['autoSizeMax'] ? \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($itemArrayC + 1, \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($params['size'], 1), $params['autoSizeMax']) : $params['size'];
+		$sSize = $params['autoSizeMax'] ? MathUtility::forceIntegerInRange($itemArrayC + 1, MathUtility::forceIntegerInRange($params['size'], 1), $params['autoSizeMax']) : $params['size'];
 		if (!$selector) {
 			$isMultiple = $params['maxitems'] != 1 && $params['size'] != 1;
 			$selector = '<select id="' . uniqid('tceforms-multiselect-') . '" ' . ($params['noList'] ? 'style="display: none"' : 'size="' . $sSize . '"' . $this->insertDefStyle('group', 'tceforms-multiselect')) . ($isMultiple ? ' multiple="multiple"' : '') . ' name="' . $fName . '_list" ' . $onFocus . $params['style'] . $disabled . '>' . implode('', $opt) . '</select>';
@@ -3684,7 +3722,7 @@ function ' . $evalData . '(value) {
 				$inlineParent = $this->inline->getStructureLevel(-1);
 				if (is_array($inlineParent) && $inlineParent['uid']) {
 					if ($inlineParent['config']['foreign_table'] == $table && $inlineParent['config']['foreign_unique'] == $field) {
-						$objectPrefix = $this->inline->inlineNames['object'] . \TYPO3\CMS\Backend\Form\Element\InlineElement::Structure_Separator . $table;
+						$objectPrefix = $this->inline->inlineNames['object'] . InlineElement::Structure_Separator . $table;
 						$aOnClickInline = $objectPrefix . '|inline.checkUniqueElement|inline.setUniqueElement';
 						$rOnClickInline = 'inline.revertUnique(\'' . $objectPrefix . '\',null,\'' . $uid . '\');';
 					}
@@ -3700,16 +3738,16 @@ function ' . $evalData . '(value) {
 					$elementBrowserAllowed = $allowed;
 				}
 				$aOnClick = 'setFormValueOpenBrowser(\'' . $elementBrowserType . '\',\'' . ($fName . '|||' . $elementBrowserAllowed . '|' . $aOnClickInline) . '\'); return false;';
-				$icons['R'][] = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-insert-record', array('title' => htmlspecialchars($this->getLL(('l_browse_' . ($mode == 'db' ? 'db' : 'file')))))) . '</a>';
+				$icons['R'][] = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . IconUtility::getSpriteIcon('actions-insert-record', array('title' => htmlspecialchars($this->getLL(('l_browse_' . ($mode == 'db' ? 'db' : 'file')))))) . '</a>';
 			}
 			if (!$params['dontShowMoveIcons']) {
 				if ($sSize >= 5) {
-					$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Top\'); return false;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-to-top', array('title' => htmlspecialchars($this->getLL('l_move_to_top')))) . '</a>';
+					$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Top\'); return false;">' . IconUtility::getSpriteIcon('actions-move-to-top', array('title' => htmlspecialchars($this->getLL('l_move_to_top')))) . '</a>';
 				}
-				$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Up\'); return false;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-up', array('title' => htmlspecialchars($this->getLL('l_move_up')))) . '</a>';
-				$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Down\'); return false;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-down', array('title' => htmlspecialchars($this->getLL('l_move_down')))) . '</a>';
+				$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Up\'); return false;">' . IconUtility::getSpriteIcon('actions-move-up', array('title' => htmlspecialchars($this->getLL('l_move_up')))) . '</a>';
+				$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Down\'); return false;">' . IconUtility::getSpriteIcon('actions-move-down', array('title' => htmlspecialchars($this->getLL('l_move_down')))) . '</a>';
 				if ($sSize >= 5) {
-					$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Bottom\'); return false;">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-to-bottom', array('title' => htmlspecialchars($this->getLL('l_move_to_bottom')))) . '</a>';
+					$icons['L'][] = '<a href="#" onclick="setFormValueManipulate(\'' . $fName . '\',\'Bottom\'); return false;">' . IconUtility::getSpriteIcon('actions-move-to-bottom', array('title' => htmlspecialchars($this->getLL('l_move_to_bottom')))) . '</a>';
 				}
 			}
 			$clipElements = $this->getClipboardElements($allowed, $mode);
@@ -3718,7 +3756,7 @@ function ' . $evalData . '(value) {
 				foreach ($clipElements as $elValue) {
 					if ($mode == 'db') {
 						list($itemTable, $itemUid) = explode('|', $elValue);
-						$itemTitle = $GLOBALS['LANG']->JScharCode(\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($itemTable, \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL($itemTable, $itemUid)));
+						$itemTitle = $GLOBALS['LANG']->JScharCode(BackendUtility::getRecordTitle($itemTable, BackendUtility::getRecordWSOL($itemTable, $itemUid)));
 						$elValue = $itemTable . '_' . $itemUid;
 					} else {
 						// 'file', 'file_reference' and 'folder' mode
@@ -3727,22 +3765,22 @@ function ' . $evalData . '(value) {
 					$aOnClick .= 'setFormValueFromBrowseWin(\'' . $fName . '\',unescape(\'' . rawurlencode(str_replace('%20', ' ', $elValue)) . '\'),' . $itemTitle . ',' . $itemTitle . ');';
 				}
 				$aOnClick .= 'return false;';
-				$icons['R'][] = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-paste-into', array('title' => htmlspecialchars(sprintf($this->getLL(('l_clipInsert_' . ($mode == 'db' ? 'db' : 'file'))), count($clipElements))))) . '</a>';
+				$icons['R'][] = '<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">' . IconUtility::getSpriteIcon('actions-document-paste-into', array('title' => htmlspecialchars(sprintf($this->getLL(('l_clipInsert_' . ($mode == 'db' ? 'db' : 'file'))), count($clipElements))))) . '</a>';
 			}
 		}
 		if (!$params['readOnly'] && !$params['noDelete']) {
 			$rOnClick = $rOnClickInline . 'setFormValueManipulate(\'' . $fName . '\',\'Remove\'); return false';
-			$icons['L'][] = '<a href="#" onclick="' . htmlspecialchars($rOnClick) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-selection-delete', array('title' => htmlspecialchars($this->getLL('l_remove_selected')))) . '</a>';
+			$icons['L'][] = '<a href="#" onclick="' . htmlspecialchars($rOnClick) . '">' . IconUtility::getSpriteIcon('actions-selection-delete', array('title' => htmlspecialchars($this->getLL('l_remove_selected')))) . '</a>';
 		}
 		$imagesOnly = FALSE;
 		if ($params['thumbnails'] && $params['info']) {
 			// In case we have thumbnails, check if only images are allowed.
 			// In this case, render them below the field, instead of to the right
-			$allowedExtensionList = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(' ', strtolower($params['info']), TRUE);
-			$imageExtensionList = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', strtolower($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']), TRUE);
+			$allowedExtensionList = GeneralUtility::trimExplode(' ', strtolower($params['info']), TRUE);
+			$imageExtensionList = GeneralUtility::trimExplode(',', strtolower($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']), TRUE);
 			$imagesOnly = TRUE;
 			foreach ($allowedExtensionList as $allowedExtension) {
-				if (!\TYPO3\CMS\Core\Utility\GeneralUtility::inArray($imageExtensionList, $allowedExtension)) {
+				if (!GeneralUtility::inArray($imageExtensionList, $allowedExtension)) {
 					$imagesOnly = FALSE;
 					break;
 				}
@@ -3758,7 +3796,7 @@ function ' . $evalData . '(value) {
 		// Hook: dbFileIcons_postProcess (requested by FAL-team for use with the "fal" extension)
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['dbFileIcons'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['dbFileIcons'] as $classRef) {
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$hookObject = GeneralUtility::getUserObj($classRef);
 				if (!$hookObject instanceof \TYPO3\CMS\Backend\Form\DatabaseFileIconsHookInterface) {
 					throw new \UnexpectedValueException('$hookObject must implement interface TYPO3\\CMS\\Backend\\Form\\DatabaseFileIconsHookInterface', 1290167704);
 				}
@@ -3807,39 +3845,39 @@ function ' . $evalData . '(value) {
 		$output = array();
 		if (is_object($this->clipObj)) {
 			switch ($mode) {
-			case 'file_reference':
+				case 'file_reference':
 
-			case 'file':
-				$elFromTable = $this->clipObj->elFromTable('_FILE');
-				$allowedExts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $allowed, 1);
-				// If there are a set of allowed extensions, filter the content:
-				if ($allowedExts) {
-					foreach ($elFromTable as $elValue) {
-						$pI = pathinfo($elValue);
-						$ext = strtolower($pI['extension']);
-						if (in_array($ext, $allowedExts)) {
-							$output[] = $elValue;
+				case 'file':
+					$elFromTable = $this->clipObj->elFromTable('_FILE');
+					$allowedExts = GeneralUtility::trimExplode(',', $allowed, 1);
+					// If there are a set of allowed extensions, filter the content:
+					if ($allowedExts) {
+						foreach ($elFromTable as $elValue) {
+							$pI = pathinfo($elValue);
+							$ext = strtolower($pI['extension']);
+							if (in_array($ext, $allowedExts)) {
+								$output[] = $elValue;
+							}
+						}
+					} else {
+						// If all is allowed, insert all: (This does NOT respect any disallowed extensions, but those will be filtered away by the backend TCEmain)
+						$output = $elFromTable;
+					}
+					break;
+				case 'db':
+					$allowedTables = GeneralUtility::trimExplode(',', $allowed, 1);
+					// All tables allowed for relation:
+					if (!strcmp(trim($allowedTables[0]), '*')) {
+						$output = $this->clipObj->elFromTable('');
+					} else {
+						// Only some tables, filter them:
+						foreach ($allowedTables as $tablename) {
+							$elFromTable = $this->clipObj->elFromTable($tablename);
+							$output = array_merge($output, $elFromTable);
 						}
 					}
-				} else {
-					// If all is allowed, insert all: (This does NOT respect any disallowed extensions, but those will be filtered away by the backend TCEmain)
-					$output = $elFromTable;
-				}
-				break;
-			case 'db':
-				$allowedTables = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $allowed, 1);
-				// All tables allowed for relation:
-				if (!strcmp(trim($allowedTables[0]), '*')) {
-					$output = $this->clipObj->elFromTable('');
-				} else {
-					// Only some tables, filter them:
-					foreach ($allowedTables as $tablename) {
-						$elFromTable = $this->clipObj->elFromTable($tablename);
-						$output = array_merge($output, $elFromTable);
-					}
-				}
-				$output = array_keys($output);
-				break;
+					$output = array_keys($output);
+					break;
 			}
 		}
 		return $output;
@@ -3884,11 +3922,11 @@ function ' . $evalData . '(value) {
 		$outArr = array();
 		$colorBoxLinks = array();
 		$fName = '[' . $table . '][' . $row['uid'] . '][' . $field . ']';
-		$md5ID = 'ID' . \TYPO3\CMS\Core\Utility\GeneralUtility::shortmd5($itemName);
+		$md5ID = 'ID' . GeneralUtility::shortmd5($itemName);
 		$listFlag = '_list';
 		$fieldConfig = $PA['fieldConf']['config'];
 		$prefixOfFormElName = 'data[' . $table . '][' . $row['uid'] . '][' . $field . ']';
-		if (\TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($PA['itemFormElName'], $prefixOfFormElName)) {
+		if (GeneralUtility::isFirstPartOfStr($PA['itemFormElName'], $prefixOfFormElName)) {
 			$flexFormPath = str_replace('][', '/', substr($PA['itemFormElName'], strlen($prefixOfFormElName) + 1, -1));
 		}
 		// Manipulate the field name (to be the TRUE form field name) and remove a suffix-value if the item is a selector box with renderMode "singlebox":
@@ -3914,139 +3952,139 @@ function ' . $evalData . '(value) {
 						$icon = $iTitle;
 					}
 					switch ((string) $wConf['type']) {
-					case 'userFunc':
+						case 'userFunc':
 
-					case 'script':
+						case 'script':
 
-					case 'popup':
+						case 'popup':
 
-					case 'colorbox':
+						case 'colorbox':
 
-					case 'slider':
-						if (!$wConf['notNewRecords'] || \TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($row['uid'])) {
-							// Setting &P array contents:
-							$params = array();
-							$params['fieldConfig'] = $fieldConfig;
-							$params['params'] = $wConf['params'];
-							$params['exampleImg'] = $wConf['exampleImg'];
-							$params['table'] = $table;
-							$params['uid'] = $row['uid'];
-							$params['pid'] = $row['pid'];
-							$params['field'] = $field;
-							$params['flexFormPath'] = $flexFormPath;
-							$params['md5ID'] = $md5ID;
-							$params['returnUrl'] = $this->thisReturnUrl();
-							// Resolving script filename and setting URL.
-							if (!strcmp(substr($wConf['script'], 0, 4), 'EXT:')) {
-								$wScript = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($wConf['script']);
-								if ($wScript) {
-									$wScript = '../' . substr($wScript, strlen(PATH_site));
+						case 'slider':
+							if (!$wConf['notNewRecords'] || MathUtility::canBeInterpretedAsInteger($row['uid'])) {
+								// Setting &P array contents:
+								$params = array();
+								$params['fieldConfig'] = $fieldConfig;
+								$params['params'] = $wConf['params'];
+								$params['exampleImg'] = $wConf['exampleImg'];
+								$params['table'] = $table;
+								$params['uid'] = $row['uid'];
+								$params['pid'] = $row['pid'];
+								$params['field'] = $field;
+								$params['flexFormPath'] = $flexFormPath;
+								$params['md5ID'] = $md5ID;
+								$params['returnUrl'] = $this->thisReturnUrl();
+								// Resolving script filename and setting URL.
+								if (!strcmp(substr($wConf['script'], 0, 4), 'EXT:')) {
+									$wScript = GeneralUtility::getFileAbsFileName($wConf['script']);
+									if ($wScript) {
+										$wScript = '../' . substr($wScript, strlen(PATH_site));
+									} else {
+										break;
+									}
 								} else {
+									$wScript = $wConf['script'];
+								}
+								$url = $this->backPath . $wScript . (strstr($wScript, '?') ? '' : '?');
+								// If there is no script and the type is "colorbox", break right away:
+								if ((string) $wConf['type'] == 'colorbox' && !$wConf['script']) {
 									break;
 								}
-							} else {
-								$wScript = $wConf['script'];
+								// If "script" type, create the links around the icon:
+								if ((string) $wConf['type'] == 'script') {
+									$aUrl = $url . GeneralUtility::implodeArrayForUrl('', array('P' => $params));
+									$outArr[] = '<a href="' . htmlspecialchars($aUrl) . '" onclick="' . $this->blur() . 'return !TBE_EDITOR.isFormChanged();">' . $icon . '</a>';
+								} else {
+									// ... else types "popup", "colorbox" and "userFunc" will need additional parameters:
+									$params['formName'] = $this->formName;
+									$params['itemName'] = $itemName;
+									$params['fieldChangeFunc'] = $fieldChangeFunc;
+									$params['fieldChangeFuncHash'] = GeneralUtility::hmac(serialize($fieldChangeFunc));
+									switch ((string) $wConf['type']) {
+									case 'popup':
+
+									case 'colorbox':
+										// Current form value is passed as P[currentValue]!
+										$addJS = $wConf['popup_onlyOpenIfSelected'] ? 'if (!TBE_EDITOR.curSelected(\'' . $itemName . $listFlag . '\')){alert(' . $GLOBALS['LANG']->JScharCode($this->getLL('m_noSelItemForEdit')) . '); return false;}' : '';
+										$curSelectedValues = '+\'&P[currentSelectedValues]=\'+TBE_EDITOR.curSelected(\'' . $itemName . $listFlag . '\')';
+										$aOnClick = $this->blur() . $addJS . 'vHWin=window.open(\'' . $url . GeneralUtility::implodeArrayForUrl('', array('P' => $params)) . '\'+\'&P[currentValue]=\'+TBE_EDITOR.rawurlencode(' . $this->elName($itemName) . '.value,200)' . $curSelectedValues . ',\'popUp' . $md5ID . '\',\'' . $wConf['JSopenParams'] . '\');' . 'vHWin.focus();return false;';
+										// Setting "colorBoxLinks" - user LATER to wrap around the color box as well:
+										$colorBoxLinks = array('<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">', '</a>');
+										if ((string) $wConf['type'] == 'popup') {
+											$outArr[] = $colorBoxLinks[0] . $icon . $colorBoxLinks[1];
+										}
+										break;
+									case 'userFunc':
+										// Reference set!
+										$params['item'] = &$item;
+										$params['icon'] = $icon;
+										$params['iTitle'] = $iTitle;
+										$params['wConf'] = $wConf;
+										$params['row'] = $row;
+										$outArr[] = GeneralUtility::callUserFunction($wConf['userFunc'], $params, $this);
+										break;
+									case 'slider':
+										// Reference set!
+										$params['item'] = &$item;
+										$params['icon'] = $icon;
+										$params['iTitle'] = $iTitle;
+										$params['wConf'] = $wConf;
+										$params['row'] = $row;
+										$wizard = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\ValueSlider');
+										$outArr[] = call_user_func_array(array(&$wizard, 'renderWizard'), array(&$params, &$this));
+									}
+								}
+								// Hide the real form element?
+								if (is_array($wConf['hideParent']) || $wConf['hideParent']) {
+									// Setting the item to a hidden-field.
+									$item = $itemKinds[1];
+									if (is_array($wConf['hideParent'])) {
+										$item .= $this->getSingleField_typeNone_render($wConf['hideParent'], $PA['itemFormElValue']);
+									}
+								}
 							}
-							$url = $this->backPath . $wScript . (strstr($wScript, '?') ? '' : '?');
-							// If there is no script and the type is "colorbox", break right away:
-							if ((string) $wConf['type'] == 'colorbox' && !$wConf['script']) {
+							break;
+						case 'select':
+							$fieldValue = array('config' => $wConf);
+							$TSconfig = $this->setTSconfig($table, $row);
+							$TSconfig[$field] = $TSconfig[$field]['wizards.'][$wid . '.'];
+							$selItems = $this->addSelectOptionsToItemArray($this->initItemArray($fieldValue), $fieldValue, $TSconfig, $field);
+							// Process items by a user function:
+							if (!empty($wConf['itemsProcFunc'])) {
+								$funcConfig = !empty($wConf['itemsProcFunc.']) ? $wConf['itemsProcFunc.'] : array();
+								$selItems = $this->procItems($selItems, $funcConfig, $wConf, $table, $row, $field);
+							}
+							$opt = array();
+							$opt[] = '<option>' . $iTitle . '</option>';
+							foreach ($selItems as $p) {
+								$opt[] = '<option value="' . htmlspecialchars($p[1]) . '">' . htmlspecialchars($p[0]) . '</option>';
+							}
+							if ($wConf['mode'] == 'append') {
+								$assignValue = $this->elName($itemName) . '.value=\'\'+this.options[this.selectedIndex].value+' . $this->elName($itemName) . '.value';
+							} elseif ($wConf['mode'] == 'prepend') {
+								$assignValue = $this->elName($itemName) . '.value+=\'\'+this.options[this.selectedIndex].value';
+							} else {
+								$assignValue = $this->elName($itemName) . '.value=this.options[this.selectedIndex].value';
+							}
+							$sOnChange = $assignValue . ';this.blur();this.selectedIndex=0;' . implode('', $fieldChangeFunc);
+							$outArr[] = '<select id="' . uniqid('tceforms-select-') . '" class="tceforms-select tceforms-wizardselect" name="_WIZARD' . $fName . '" onchange="' . htmlspecialchars($sOnChange) . '">' . implode('', $opt) . '</select>';
+							break;
+						case 'suggest':
+							if (isset($PA['fieldTSConfig']['suggest.']['default.']['hide']) && (bool) $PA['fieldTSConfig']['suggest.']['default.']['hide'] == TRUE) {
 								break;
 							}
-							// If "script" type, create the links around the icon:
-							if ((string) $wConf['type'] == 'script') {
-								$aUrl = $url . \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', array('P' => $params));
-								$outArr[] = '<a href="' . htmlspecialchars($aUrl) . '" onclick="' . $this->blur() . 'return !TBE_EDITOR.isFormChanged();">' . $icon . '</a>';
-							} else {
-								// ... else types "popup", "colorbox" and "userFunc" will need additional parameters:
-								$params['formName'] = $this->formName;
-								$params['itemName'] = $itemName;
-								$params['fieldChangeFunc'] = $fieldChangeFunc;
-								$params['fieldChangeFuncHash'] = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac(serialize($fieldChangeFunc));
-								switch ((string) $wConf['type']) {
-								case 'popup':
-
-								case 'colorbox':
-									// Current form value is passed as P[currentValue]!
-									$addJS = $wConf['popup_onlyOpenIfSelected'] ? 'if (!TBE_EDITOR.curSelected(\'' . $itemName . $listFlag . '\')){alert(' . $GLOBALS['LANG']->JScharCode($this->getLL('m_noSelItemForEdit')) . '); return false;}' : '';
-									$curSelectedValues = '+\'&P[currentSelectedValues]=\'+TBE_EDITOR.curSelected(\'' . $itemName . $listFlag . '\')';
-									$aOnClick = $this->blur() . $addJS . 'vHWin=window.open(\'' . $url . \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', array('P' => $params)) . '\'+\'&P[currentValue]=\'+TBE_EDITOR.rawurlencode(' . $this->elName($itemName) . '.value,200)' . $curSelectedValues . ',\'popUp' . $md5ID . '\',\'' . $wConf['JSopenParams'] . '\');' . 'vHWin.focus();return false;';
-									// Setting "colorBoxLinks" - user LATER to wrap around the color box as well:
-									$colorBoxLinks = array('<a href="#" onclick="' . htmlspecialchars($aOnClick) . '">', '</a>');
-									if ((string) $wConf['type'] == 'popup') {
-										$outArr[] = $colorBoxLinks[0] . $icon . $colorBoxLinks[1];
-									}
-									break;
-								case 'userFunc':
-									// Reference set!
-									$params['item'] = &$item;
-									$params['icon'] = $icon;
-									$params['iTitle'] = $iTitle;
-									$params['wConf'] = $wConf;
-									$params['row'] = $row;
-									$outArr[] = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($wConf['userFunc'], $params, $this);
-									break;
-								case 'slider':
-									// Reference set!
-									$params['item'] = &$item;
-									$params['icon'] = $icon;
-									$params['iTitle'] = $iTitle;
-									$params['wConf'] = $wConf;
-									$params['row'] = $row;
-									$wizard = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\Element\\ValueSlider');
-									$outArr[] = call_user_func_array(array(&$wizard, 'renderWizard'), array(&$params, &$this));
-								}
-							}
-							// Hide the real form element?
-							if (is_array($wConf['hideParent']) || $wConf['hideParent']) {
-								// Setting the item to a hidden-field.
-								$item = $itemKinds[1];
-								if (is_array($wConf['hideParent'])) {
-									$item .= $this->getSingleField_typeNone_render($wConf['hideParent'], $PA['itemFormElValue']);
-								}
-							}
-						}
-						break;
-					case 'select':
-						$fieldValue = array('config' => $wConf);
-						$TSconfig = $this->setTSconfig($table, $row);
-						$TSconfig[$field] = $TSconfig[$field]['wizards.'][$wid . '.'];
-						$selItems = $this->addSelectOptionsToItemArray($this->initItemArray($fieldValue), $fieldValue, $TSconfig, $field);
-						// Process items by a user function:
-						if (!empty($wConf['itemsProcFunc'])) {
-							$funcConfig = !empty($wConf['itemsProcFunc.']) ? $wConf['itemsProcFunc.'] : array();
-							$selItems = $this->procItems($selItems, $funcConfig, $wConf, $table, $row, $field);
-						}
-						$opt = array();
-						$opt[] = '<option>' . $iTitle . '</option>';
-						foreach ($selItems as $p) {
-							$opt[] = '<option value="' . htmlspecialchars($p[1]) . '">' . htmlspecialchars($p[0]) . '</option>';
-						}
-						if ($wConf['mode'] == 'append') {
-							$assignValue = $this->elName($itemName) . '.value=\'\'+this.options[this.selectedIndex].value+' . $this->elName($itemName) . '.value';
-						} elseif ($wConf['mode'] == 'prepend') {
-							$assignValue = $this->elName($itemName) . '.value+=\'\'+this.options[this.selectedIndex].value';
-						} else {
-							$assignValue = $this->elName($itemName) . '.value=this.options[this.selectedIndex].value';
-						}
-						$sOnChange = $assignValue . ';this.blur();this.selectedIndex=0;' . implode('', $fieldChangeFunc);
-						$outArr[] = '<select id="' . uniqid('tceforms-select-') . '" class="tceforms-select tceforms-wizardselect" name="_WIZARD' . $fName . '" onchange="' . htmlspecialchars($sOnChange) . '">' . implode('', $opt) . '</select>';
-						break;
-					case 'suggest':
-						if (isset($PA['fieldTSConfig']['suggest.']['default.']['hide']) && (bool) $PA['fieldTSConfig']['suggest.']['default.']['hide'] == TRUE) {
+							$outArr[] = $this->suggest->renderSuggestSelector($PA['itemFormElName'], $table, $field, $row, $PA);
 							break;
-						}
-						$outArr[] = $this->suggest->renderSuggestSelector($PA['itemFormElName'], $table, $field, $row, $PA);
-						break;
 					}
 					// Color wizard colorbox:
 					if ((string) $wConf['type'] == 'colorbox') {
-						$dim = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode('x', $wConf['dim']);
-						$dX = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($dim[0], 1, 200, 20);
-						$dY = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($dim[1], 1, 200, 20);
+						$dim = GeneralUtility::intExplode('x', $wConf['dim']);
+						$dX = MathUtility::forceIntegerInRange($dim[0], 1, 200, 20);
+						$dY = MathUtility::forceIntegerInRange($dim[1], 1, 200, 20);
 						$color = $PA['itemFormElValue'] ? ' bgcolor="' . htmlspecialchars($PA['itemFormElValue']) . '"' : '';
 						$outArr[] = '<table border="0" cellpadding="0" cellspacing="0" id="' . $md5ID . '"' . $color . ' style="' . htmlspecialchars($wConf['tableStyle']) . '">
 									<tr>
-										<td>' . $colorBoxLinks[0] . '<img ' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, (strlen(trim($color)) == 0 || strcmp(trim($color), '0') == 0 ? 'gfx/colorpicker_empty.png' : 'gfx/colorpicker.png'), ('width="' . $dX . '" height="' . $dY . '"' . \TYPO3\CMS\Backend\Utility\BackendUtility::titleAltAttrib(trim(($iTitle . ' ' . $PA['itemFormElValue']))) . ' border="0"')) . '>' . $colorBoxLinks[1] . '</td>
+										<td>' . $colorBoxLinks[0] . '<img ' . IconUtility::skinImg($this->backPath, (strlen(trim($color)) == 0 || strcmp(trim($color), '0') == 0 ? 'gfx/colorpicker_empty.png' : 'gfx/colorpicker.png'), ('width="' . $dX . '" height="' . $dY . '"' . BackendUtility::titleAltAttrib(trim(($iTitle . ' ' . $PA['itemFormElValue']))) . ' border="0"')) . '>' . $colorBoxLinks[1] . '</td>
 									</tr>
 								</table>';
 					}
@@ -4096,20 +4134,20 @@ function ' . $evalData . '(value) {
 	 */
 	public function getIcon($icon) {
 		if (substr($icon, 0, 4) == 'EXT:') {
-			$file = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($icon);
+			$file = GeneralUtility::getFileAbsFileName($icon);
 			if ($file) {
 				$file = substr($file, strlen(PATH_site));
 				$selIconFile = $this->backPath . '../' . $file;
 				$selIconInfo = @getimagesize((PATH_site . $file));
 			}
 		} elseif (substr($icon, 0, 3) == '../') {
-			$selIconFile = $this->backPath . \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($icon);
-			$selIconInfo = @getimagesize((PATH_site . \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath(substr($icon, 3))));
+			$selIconFile = $this->backPath . GeneralUtility::resolveBackPath($icon);
+			$selIconInfo = @getimagesize((PATH_site . GeneralUtility::resolveBackPath(substr($icon, 3))));
 		} elseif (substr($icon, 0, 4) == 'ext/' || substr($icon, 0, 7) == 'sysext/') {
 			$selIconFile = $this->backPath . $icon;
 			$selIconInfo = @getimagesize((PATH_typo3 . $icon));
 		} else {
-			$selIconFile = \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/' . $icon, '', 1);
+			$selIconFile = IconUtility::skinImg($this->backPath, 'gfx/' . $icon, '', 1);
 			$iconPath = substr($selIconFile, strlen($this->backPath));
 			$selIconInfo = @getimagesize((PATH_typo3 . $iconPath));
 		}
@@ -4130,10 +4168,10 @@ function ' . $evalData . '(value) {
 	 */
 	protected function getIconHtml($icon, $alt = '', $title = '') {
 		$iconArray = $this->getIcon($icon);
-		if (is_file(\TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath(PATH_typo3 . PATH_typo3_mod . $iconArray[0]))) {
+		if (is_file(GeneralUtility::resolveBackPath(PATH_typo3 . PATH_typo3_mod . $iconArray[0]))) {
 			return '<img src="' . $iconArray[0] . '" alt="' . $alt . '" ' . ($title ? 'title="' . $title . '"' : '') . ' />';
 		} else {
-			return \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon($icon, array('alt' => $alt, 'title' => $title));
+			return IconUtility::getSpriteIcon($icon, array('alt' => $alt, 'title' => $title));
 		}
 	}
 
@@ -4156,8 +4194,8 @@ function ' . $evalData . '(value) {
 				// In order to get the same padding for all option tags even if icon sizes differ a little, set it to 22 if it was between 18 and 24 pixels
 				$padLeft = 22;
 			}
-			$padTop = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(($selIconInfo[1] - 12) / 2, 0);
-			$styleAttr = 'background: #fff url(' . $selIconFile . ') 0% 50% no-repeat; height: ' . \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(($selIconInfo[1] + 2 - $padTop), 0) . 'px; padding-top: ' . $padTop . 'px; padding-left: ' . $padLeft . 'px;';
+			$padTop = MathUtility::forceIntegerInRange(($selIconInfo[1] - 12) / 2, 0);
+			$styleAttr = 'background: #fff url(' . $selIconFile . ') 0% 50% no-repeat; height: ' . MathUtility::forceIntegerInRange(($selIconInfo[1] + 2 - $padTop), 0) . 'px; padding-top: ' . $padTop . 'px; padding-left: ' . $padLeft . 'px;';
 			return $styleAttr;
 		}
 	}
@@ -4182,7 +4220,7 @@ function ' . $evalData . '(value) {
 				// set it to 22, if it was between 18 and 24 pixels.
 				$padLeft = 22;
 			}
-			$padTop = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange(($selIconInfo[1] - 12) / 2, 0);
+			$padTop = MathUtility::forceIntegerInRange(($selIconInfo[1] - 12) / 2, 0);
 			return 'background: #ffffff url(' . $selIconFile . ') 0 0 no-repeat; padding-top: ' . $padTop . 'px; padding-left: ' . $padLeft . 'px;';
 		}
 	}
@@ -4196,7 +4234,7 @@ function ' . $evalData . '(value) {
 	 */
 	public function extractValuesOnlyFromValueLabelList($itemFormElValue) {
 		// Get values of selected items:
-		$itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $itemFormElValue, 1);
+		$itemArray = GeneralUtility::trimExplode(',', $itemFormElValue, 1);
 		foreach ($itemArray as $tk => $tv) {
 			$tvP = explode('|', $tv, 2);
 			$tvP[0] = rawurldecode($tvP[0]);
@@ -4279,13 +4317,13 @@ function ' . $evalData . '(value) {
 	}
 
 	/**
-	 * Returns the "returnUrl" of the form. Can be set externally or will be taken from "\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript()"
+	 * Returns the "returnUrl" of the form. Can be set externally or will be taken from "GeneralUtility::linkThisScript()"
 	 *
 	 * @return string Return URL of current script
 	 * @todo Define visibility
 	 */
 	public function thisReturnUrl() {
-		return $this->returnUrl ? $this->returnUrl : \TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript();
+		return $this->returnUrl ? $this->returnUrl : GeneralUtility::linkThisScript();
 	}
 
 	/**
@@ -4532,7 +4570,7 @@ function ' . $evalData . '(value) {
 		$params['table'] = $table;
 		$params['row'] = $row;
 		$params['field'] = $field;
-		\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($config['itemsProcFunc'], $params, $this);
+		GeneralUtility::callUserFunction($config['itemsProcFunc'], $params, $this);
 		return $items;
 	}
 
@@ -4556,18 +4594,18 @@ function ' . $evalData . '(value) {
 		}
 		// Values from a file folder:
 		if ($fieldValue['config']['fileFolder']) {
-			$fileFolder = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($fieldValue['config']['fileFolder']);
+			$fileFolder = GeneralUtility::getFileAbsFileName($fieldValue['config']['fileFolder']);
 			if (@is_dir($fileFolder)) {
 				// Configurations:
 				$extList = $fieldValue['config']['fileFolder_extList'];
-				$recursivityLevels = isset($fieldValue['config']['fileFolder_recursions']) ? \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($fieldValue['config']['fileFolder_recursions'], 0, 99) : 99;
+				$recursivityLevels = isset($fieldValue['config']['fileFolder_recursions']) ? MathUtility::forceIntegerInRange($fieldValue['config']['fileFolder_recursions'], 0, 99) : 99;
 				// Get files:
 				$fileFolder = rtrim($fileFolder, '/') . '/';
-				$fileArr = \TYPO3\CMS\Core\Utility\GeneralUtility::getAllFilesAndFoldersInPath(array(), $fileFolder, $extList, 0, $recursivityLevels);
-				$fileArr = \TYPO3\CMS\Core\Utility\GeneralUtility::removePrefixPathFromList($fileArr, $fileFolder);
+				$fileArr = GeneralUtility::getAllFilesAndFoldersInPath(array(), $fileFolder, $extList, 0, $recursivityLevels);
+				$fileArr = GeneralUtility::removePrefixPathFromList($fileArr, $fileFolder);
 				foreach ($fileArr as $fileRef) {
 					$fI = pathinfo($fileRef);
-					$icon = \TYPO3\CMS\Core\Utility\GeneralUtility::inList('gif,png,jpeg,jpg', strtolower($fI['extension'])) ? '../' . substr($fileFolder, strlen(PATH_site)) . $fileRef : '';
+					$icon = GeneralUtility::inList('gif,png,jpeg,jpg', strtolower($fI['extension'])) ? '../' . substr($fileFolder, strlen(PATH_site)) . $fileRef : '';
 					$items[] = array(
 						$fileRef,
 						$fileRef,
@@ -4579,171 +4617,171 @@ function ' . $evalData . '(value) {
 		// If 'special' is configured:
 		if ($fieldValue['config']['special']) {
 			switch ($fieldValue['config']['special']) {
-			case 'tables':
-				$temp_tc = array_keys($GLOBALS['TCA']);
-				foreach ($temp_tc as $theTableNames) {
-					if (!$GLOBALS['TCA'][$theTableNames]['ctrl']['adminOnly']) {
+				case 'tables':
+					$temp_tc = array_keys($GLOBALS['TCA']);
+					foreach ($temp_tc as $theTableNames) {
+						if (!$GLOBALS['TCA'][$theTableNames]['ctrl']['adminOnly']) {
+							// Icon:
+							$icon = IconUtility::mapRecordTypeToSpriteIconName($theTableNames, array());
+							// Add help text
+							$helpText = array();
+							$GLOBALS['LANG']->loadSingleTableDescription($theTableNames);
+							$helpTextArray = $GLOBALS['TCA_DESCR'][$theTableNames]['columns'][''];
+							if (!empty($helpTextArray['description'])) {
+								$helpText['description'] = $helpTextArray['description'];
+							}
+							// Item configuration:
+							$items[] = array(
+								$this->sL($GLOBALS['TCA'][$theTableNames]['ctrl']['title']),
+								$theTableNames,
+								$icon,
+								$helpText
+							);
+						}
+					}
+					break;
+				case 'pagetypes':
+					$theTypes = $GLOBALS['TCA']['pages']['columns']['doktype']['config']['items'];
+					foreach ($theTypes as $theTypeArrays) {
 						// Icon:
-						$icon = \TYPO3\CMS\Backend\Utility\IconUtility::mapRecordTypeToSpriteIconName($theTableNames, array());
+						$icon = 'empty-emtpy';
+						if ($theTypeArrays[1] != '--div--') {
+							$icon = IconUtility::mapRecordTypeToSpriteIconName('pages', array('doktype' => $theTypeArrays[1]));
+						}
+						// Item configuration:
+						$items[] = array(
+							$this->sL($theTypeArrays[0]),
+							$theTypeArrays[1],
+							$icon
+						);
+					}
+					break;
+				case 'exclude':
+					$theTypes = BackendUtility::getExcludeFields();
+					foreach ($theTypes as $theTypeArrays) {
+						list($theTable, $theFullField) = explode(':', $theTypeArrays[1]);
+						// If the field comes from a FlexForm, the syntax is more complex
+						$theFieldParts = explode(';', $theFullField);
+						$theField = array_pop($theFieldParts);
+						// Add header if not yet set for table:
+						if (!array_key_exists($theTable, $items)) {
+							$icon = IconUtility::mapRecordTypeToSpriteIconName($theTable, array());
+							$items[$theTable] = array(
+								$this->sL($GLOBALS['TCA'][$theTable]['ctrl']['title']),
+								'--div--',
+								$icon
+							);
+						}
 						// Add help text
 						$helpText = array();
-						$GLOBALS['LANG']->loadSingleTableDescription($theTableNames);
-						$helpTextArray = $GLOBALS['TCA_DESCR'][$theTableNames]['columns'][''];
+						$GLOBALS['LANG']->loadSingleTableDescription($theTable);
+						$helpTextArray = $GLOBALS['TCA_DESCR'][$theTable]['columns'][$theFullField];
 						if (!empty($helpTextArray['description'])) {
 							$helpText['description'] = $helpTextArray['description'];
 						}
 						// Item configuration:
 						$items[] = array(
-							$this->sL($GLOBALS['TCA'][$theTableNames]['ctrl']['title']),
-							$theTableNames,
-							$icon,
+							rtrim($GLOBALS['LANG']->sl($GLOBALS['TCA'][$theTable]['columns'][$theField]['label']), ':') . ' (' . $theField . ')',
+							$theTypeArrays[1],
+							'empty-empty',
 							$helpText
 						);
 					}
-				}
-				break;
-			case 'pagetypes':
-				$theTypes = $GLOBALS['TCA']['pages']['columns']['doktype']['config']['items'];
-				foreach ($theTypes as $theTypeArrays) {
-					// Icon:
-					$icon = 'empty-emtpy';
-					if ($theTypeArrays[1] != '--div--') {
-						$icon = \TYPO3\CMS\Backend\Utility\IconUtility::mapRecordTypeToSpriteIconName('pages', array('doktype' => $theTypeArrays[1]));
-					}
-					// Item configuration:
-					$items[] = array(
-						$this->sL($theTypeArrays[0]),
-						$theTypeArrays[1],
-						$icon
+					break;
+				case 'explicitValues':
+					$theTypes = BackendUtility::getExplicitAuthFieldValues();
+					// Icons:
+					$icons = array(
+						'ALLOW' => 'status-status-permission-granted',
+						'DENY' => 'status-status-permission-denied'
 					);
-				}
-				break;
-			case 'exclude':
-				$theTypes = \TYPO3\CMS\Backend\Utility\BackendUtility::getExcludeFields();
-				foreach ($theTypes as $theTypeArrays) {
-					list($theTable, $theFullField) = explode(':', $theTypeArrays[1]);
-					// If the field comes from a FlexForm, the syntax is more complex
-					$theFieldParts = explode(';', $theFullField);
-					$theField = array_pop($theFieldParts);
-					// Add header if not yet set for table:
-					if (!array_key_exists($theTable, $items)) {
-						$icon = \TYPO3\CMS\Backend\Utility\IconUtility::mapRecordTypeToSpriteIconName($theTable, array());
-						$items[$theTable] = array(
-							$this->sL($GLOBALS['TCA'][$theTable]['ctrl']['title']),
-							'--div--',
-							$icon
-						);
-					}
-					// Add help text
-					$helpText = array();
-					$GLOBALS['LANG']->loadSingleTableDescription($theTable);
-					$helpTextArray = $GLOBALS['TCA_DESCR'][$theTable]['columns'][$theFullField];
-					if (!empty($helpTextArray['description'])) {
-						$helpText['description'] = $helpTextArray['description'];
-					}
-					// Item configuration:
-					$items[] = array(
-						rtrim($GLOBALS['LANG']->sl($GLOBALS['TCA'][$theTable]['columns'][$theField]['label']), ':') . ' (' . $theField . ')',
-						$theTypeArrays[1],
-						'empty-empty',
-						$helpText
-					);
-				}
-				break;
-			case 'explicitValues':
-				$theTypes = \TYPO3\CMS\Backend\Utility\BackendUtility::getExplicitAuthFieldValues();
-				// Icons:
-				$icons = array(
-					'ALLOW' => 'status-status-permission-granted',
-					'DENY' => 'status-status-permission-denied'
-				);
-				// Traverse types:
-				foreach ($theTypes as $tableFieldKey => $theTypeArrays) {
-					if (is_array($theTypeArrays['items'])) {
-						// Add header:
-						$items[] = array(
-							$theTypeArrays['tableFieldLabel'],
-							'--div--'
-						);
-						// Traverse options for this field:
-						foreach ($theTypeArrays['items'] as $itemValue => $itemContent) {
-							// Add item to be selected:
-							$items[] = array(
-								'[' . $itemContent[2] . '] ' . $itemContent[1],
-								$tableFieldKey . ':' . preg_replace('/[:|,]/', '', $itemValue) . ':' . $itemContent[0],
-								$icons[$itemContent[0]]
-							);
-						}
-					}
-				}
-				break;
-			case 'languages':
-				$items = array_merge($items, \TYPO3\CMS\Backend\Utility\BackendUtility::getSystemLanguages());
-				break;
-			case 'custom':
-				// Initialize:
-				$customOptions = $GLOBALS['TYPO3_CONF_VARS']['BE']['customPermOptions'];
-				if (is_array($customOptions)) {
-					foreach ($customOptions as $coKey => $coValue) {
-						if (is_array($coValue['items'])) {
+					// Traverse types:
+					foreach ($theTypes as $tableFieldKey => $theTypeArrays) {
+						if (is_array($theTypeArrays['items'])) {
 							// Add header:
 							$items[] = array(
-								$GLOBALS['LANG']->sl($coValue['header']),
+								$theTypeArrays['tableFieldLabel'],
 								'--div--'
 							);
-							// Traverse items:
-							foreach ($coValue['items'] as $itemKey => $itemCfg) {
-								// Icon:
-								if ($itemCfg[1]) {
-									list($icon) = $this->getIcon($itemCfg[1]);
-								} else {
-									$icon = 'empty-empty';
-								}
-								// Add help text
-								$helpText = array();
-								if (!empty($itemCfg[2])) {
-									$helpText['description'] = $GLOBALS['LANG']->sl($itemCfg[2]);
-								}
+							// Traverse options for this field:
+							foreach ($theTypeArrays['items'] as $itemValue => $itemContent) {
 								// Add item to be selected:
 								$items[] = array(
-									$GLOBALS['LANG']->sl($itemCfg[0]),
-									$coKey . ':' . preg_replace('/[:|,]/', '', $itemKey),
-									$icon,
-									$helpText
+									'[' . $itemContent[2] . '] ' . $itemContent[1],
+									$tableFieldKey . ':' . preg_replace('/[:|,]/', '', $itemValue) . ':' . $itemContent[0],
+									$icons[$itemContent[0]]
 								);
 							}
 						}
 					}
-				}
-				break;
-			case 'modListGroup':
-
-			case 'modListUser':
-				$loadModules = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Module\\ModuleLoader');
-				$loadModules->load($GLOBALS['TBE_MODULES']);
-				$modList = $fieldValue['config']['special'] == 'modListUser' ? $loadModules->modListUser : $loadModules->modListGroup;
-				if (is_array($modList)) {
-					foreach ($modList as $theMod) {
-						// Icon:
-						$icon = $GLOBALS['LANG']->moduleLabels['tabs_images'][$theMod . '_tab'];
-						if ($icon) {
-							$icon = '../' . substr($icon, strlen(PATH_site));
+					break;
+				case 'languages':
+					$items = array_merge($items, BackendUtility::getSystemLanguages());
+					break;
+				case 'custom':
+					// Initialize:
+					$customOptions = $GLOBALS['TYPO3_CONF_VARS']['BE']['customPermOptions'];
+					if (is_array($customOptions)) {
+						foreach ($customOptions as $coKey => $coValue) {
+							if (is_array($coValue['items'])) {
+								// Add header:
+								$items[] = array(
+									$GLOBALS['LANG']->sl($coValue['header']),
+									'--div--'
+								);
+								// Traverse items:
+								foreach ($coValue['items'] as $itemKey => $itemCfg) {
+									// Icon:
+									if ($itemCfg[1]) {
+										list($icon) = $this->getIcon($itemCfg[1]);
+									} else {
+										$icon = 'empty-empty';
+									}
+									// Add help text
+									$helpText = array();
+									if (!empty($itemCfg[2])) {
+										$helpText['description'] = $GLOBALS['LANG']->sl($itemCfg[2]);
+									}
+									// Add item to be selected:
+									$items[] = array(
+										$GLOBALS['LANG']->sl($itemCfg[0]),
+										$coKey . ':' . preg_replace('/[:|,]/', '', $itemKey),
+										$icon,
+										$helpText
+									);
+								}
+							}
 						}
-						// Add help text
-						$helpText = array(
-							'title' => $GLOBALS['LANG']->moduleLabels['labels'][$theMod . '_tablabel'],
-							'description' => $GLOBALS['LANG']->moduleLabels['labels'][$theMod . '_tabdescr']
-						);
-						// Item configuration:
-						$items[] = array(
-							$this->addSelectOptionsToItemArray_makeModuleData($theMod),
-							$theMod,
-							$icon,
-							$helpText
-						);
 					}
-				}
-				break;
+					break;
+				case 'modListGroup':
+
+				case 'modListUser':
+					$loadModules = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Module\\ModuleLoader');
+					$loadModules->load($GLOBALS['TBE_MODULES']);
+					$modList = $fieldValue['config']['special'] == 'modListUser' ? $loadModules->modListUser : $loadModules->modListGroup;
+					if (is_array($modList)) {
+						foreach ($modList as $theMod) {
+							// Icon:
+							$icon = $GLOBALS['LANG']->moduleLabels['tabs_images'][$theMod . '_tab'];
+							if ($icon) {
+								$icon = '../' . substr($icon, strlen(PATH_site));
+							}
+							// Add help text
+							$helpText = array(
+								'title' => $GLOBALS['LANG']->moduleLabels['labels'][$theMod . '_tablabel'],
+								'description' => $GLOBALS['LANG']->moduleLabels['labels'][$theMod . '_tabdescr']
+							);
+							// Item configuration:
+							$items[] = array(
+								$this->addSelectOptionsToItemArray_makeModuleData($theMod),
+								$theMod,
+								$icon,
+								$helpText
+							);
+						}
+					}
+					break;
 			}
 		}
 		// Return the items:
@@ -4780,7 +4818,7 @@ function ' . $evalData . '(value) {
 	 * @param string $field The fieldname
 	 * @param boolean $pFFlag If set, then we are fetching the 'neg_' foreign tables.
 	 * @return array The $items array modified.
-	 * @see addSelectOptionsToItemArray(), \TYPO3\CMS\Backend\Utility\BackendUtility::exec_foreign_table_where_query()
+	 * @see addSelectOptionsToItemArray(), BackendUtility::exec_foreign_table_where_query()
 	 * @todo Define visibility
 	 */
 	public function foreignTable($items, $fieldValue, $TSconfig, $field, $pFFlag = 0) {
@@ -4789,18 +4827,18 @@ function ' . $evalData . '(value) {
 		$f_table = $fieldValue['config'][$pF . 'foreign_table'];
 		$uidPre = $pFFlag ? '-' : '';
 		// Exec query:
-		$res = \TYPO3\CMS\Backend\Utility\BackendUtility::exec_foreign_table_where_query($fieldValue, $field, $TSconfig, $pF);
+		$res = BackendUtility::exec_foreign_table_where_query($fieldValue, $field, $TSconfig, $pF);
 		// Perform error test
 		if ($GLOBALS['TYPO3_DB']->sql_error()) {
 			$msg = htmlspecialchars($GLOBALS['TYPO3_DB']->sql_error());
 			$msg .= '<br />' . LF;
 			$msg .= $this->sL('LLL:EXT:lang/locallang_core.xlf:error.database_schema_mismatch');
 			$msgTitle = $this->sL('LLL:EXT:lang/locallang_core.xlf:error.database_schema_mismatch_title');
-			/** @var $flashMessage \TYPO3\CMS\Core\Messaging\FlashMessage */
-			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $msg, $msgTitle, \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR, TRUE);
-			/** @var $flashMessageService \TYPO3\CMS\Core\Messaging\FlashMessageService */
-			$flashMessageService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
-			/** @var $defaultFlashMessageQueue \TYPO3\CMS\Core\Messaging\FlashMessageQueue */
+			/** @var $flashMessage FlashMessage */
+			$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $msg, $msgTitle, FlashMessage::ERROR, TRUE);
+			/** @var $flashMessageService FlashMessageService */
+			$flashMessageService = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessageService');
+			/** @var $defaultFlashMessageQueue FlashMessageQueue */
 			$defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
 			$defaultFlashMessageQueue->enqueue($flashMessage);
 			return array();
@@ -4812,20 +4850,20 @@ function ' . $evalData . '(value) {
 		$iPath = trim($GLOBALS['TCA'][$f_table]['ctrl']['selicon_field_path']);
 		// Traverse the selected rows to add them:
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-			\TYPO3\CMS\Backend\Utility\BackendUtility::workspaceOL($f_table, $row);
+			BackendUtility::workspaceOL($f_table, $row);
 			if (is_array($row)) {
 				// Prepare the icon if available:
 				if ($iField && $iPath && $row[$iField]) {
-					$iParts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $row[$iField], 1);
+					$iParts = GeneralUtility::trimExplode(',', $row[$iField], 1);
 					$icon = '../' . $iPath . '/' . trim($iParts[0]);
-				} elseif (\TYPO3\CMS\Core\Utility\GeneralUtility::inList('singlebox,checkbox', $fieldValue['config']['renderMode'])) {
-					$icon = \TYPO3\CMS\Backend\Utility\IconUtility::mapRecordTypeToSpriteIconName($f_table, $row);
+				} elseif (GeneralUtility::inList('singlebox,checkbox', $fieldValue['config']['renderMode'])) {
+					$icon = IconUtility::mapRecordTypeToSpriteIconName($f_table, $row);
 				} else {
 					$icon = '';
 				}
 				// Add the item:
 				$items[] = array(
-					$lPrefix . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($f_table, $row)),
+					$lPrefix . htmlspecialchars(BackendUtility::getRecordTitle($f_table, $row)),
 					$uidPre . $row['uid'],
 					$icon
 				);
@@ -4848,15 +4886,15 @@ function ' . $evalData . '(value) {
 	 * @todo Define visibility
 	 */
 	public function setNewBEDesign() {
-		$template = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(PATH_typo3 . $this->templateFile);
+		$template = GeneralUtility::getUrl(PATH_typo3 . $this->templateFile);
 		// Wrapping all table rows for a particular record being edited:
-		$this->totalWrap = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###TOTALWRAP###');
+		$this->totalWrap = HtmlParser::getSubpart($template, '###TOTALWRAP###');
 		// Wrapping a single field:
-		$this->fieldTemplate = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###FIELDTEMPLATE###');
-		$this->paletteFieldTemplate = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###PALETTEFIELDTEMPLATE###');
-		$this->palFieldTemplate = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###PALETTE_FIELDTEMPLATE###');
-		$this->palFieldTemplateHeader = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###PALETTE_FIELDTEMPLATE_HEADER###');
-		$this->sectionWrap = \TYPO3\CMS\Core\Html\HtmlParser::getSubpart($template, '###SECTION_WRAP###');
+		$this->fieldTemplate = HtmlParser::getSubpart($template, '###FIELDTEMPLATE###');
+		$this->paletteFieldTemplate = HtmlParser::getSubpart($template, '###PALETTEFIELDTEMPLATE###');
+		$this->palFieldTemplate = HtmlParser::getSubpart($template, '###PALETTE_FIELDTEMPLATE###');
+		$this->palFieldTemplateHeader = HtmlParser::getSubpart($template, '###PALETTE_FIELDTEMPLATE_HEADER###');
+		$this->sectionWrap = HtmlParser::getSubpart($template, '###SECTION_WRAP###');
 	}
 
 	/**
@@ -4947,10 +4985,10 @@ function ' . $evalData . '(value) {
 		// Make "new"-label
 		if (strstr($rec['uid'], 'NEW')) {
 			$newLabel = ' <span class="typo3-TCEforms-newToken">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.new', 1) . '</span>';
-			// \TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid Should not be used here because NEW records are not offline workspace versions...
-			$truePid = \TYPO3\CMS\Backend\Utility\BackendUtility::getTSconfig_pidValue($table, $rec['uid'], $rec['pid']);
-			$prec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL('pages', $truePid, 'title');
-			$pageTitle = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle('pages', $prec, TRUE, FALSE);
+			// BackendUtility::fixVersioningPid Should not be used here because NEW records are not offline workspace versions...
+			$truePid = BackendUtility::getTSconfig_pidValue($table, $rec['uid'], $rec['pid']);
+			$prec = BackendUtility::getRecordWSOL('pages', $truePid, 'title');
+			$pageTitle = BackendUtility::getRecordTitle('pages', $prec, TRUE, FALSE);
 			$rLabel = '<em>[PID: ' . $truePid . '] ' . $pageTitle . '</em>';
 			// Fetch translated title of the table
 			$tableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title']);
@@ -4966,8 +5004,8 @@ function ' . $evalData . '(value) {
 			}
 		} else {
 			$newLabel = ' <span class="typo3-TCEforms-recUid">[' . $rec['uid'] . ']</span>';
-			$rLabel = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($table, $rec, TRUE, FALSE);
-			$prec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordWSOL('pages', $rec['pid'], 'uid,title');
+			$rLabel = BackendUtility::getRecordTitle($table, $rec, TRUE, FALSE);
+			$prec = BackendUtility::getRecordWSOL('pages', $rec['pid'], 'uid,title');
 			// Fetch translated title of the table
 			$tableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title']);
 			if ($table === 'pages') {
@@ -4976,14 +5014,14 @@ function ' . $evalData . '(value) {
 				$pageTitle = sprintf($label, $tableTitle, $rLabel);
 			} else {
 				$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editRecord', TRUE);
-				$pageTitle = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle('pages', $prec, TRUE, FALSE);
-				if ($rLabel === \TYPO3\CMS\Backend\Utility\BackendUtility::getNoRecordTitle(TRUE)) {
+				$pageTitle = BackendUtility::getRecordTitle('pages', $prec, TRUE, FALSE);
+				if ($rLabel === BackendUtility::getNoRecordTitle(TRUE)) {
 					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editRecordNoTitle', TRUE);
 				}
 				if ($rec['pid'] == 0) {
 					$label = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.editRecordRootLevel', TRUE);
 				}
-				if ($rLabel !== \TYPO3\CMS\Backend\Utility\BackendUtility::getNoRecordTitle(TRUE)) {
+				if ($rLabel !== BackendUtility::getNoRecordTitle(TRUE)) {
 					// Just take the record title and prepend an edit label.
 					$pageTitle = sprintf($label, $tableTitle, $rLabel, $pageTitle);
 				} else {
@@ -4998,7 +5036,7 @@ function ' . $evalData . '(value) {
 			$arr[$k] = str_replace('###ID_NEW_INDICATOR###', $newLabel, $arr[$k]);
 			$arr[$k] = str_replace('###RECORD_LABEL###', $rLabel, $arr[$k]);
 			$arr[$k] = str_replace('###TABLE_TITLE###', htmlspecialchars($this->sL($GLOBALS['TCA'][$table]['ctrl']['title'])), $arr[$k]);
-			$arr[$k] = str_replace('###RECORD_ICON###', \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($table, $rec, array('title' => $this->getRecordPath($table, $rec))), $arr[$k]);
+			$arr[$k] = str_replace('###RECORD_ICON###', IconUtility::getSpriteIconForRecord($table, $rec, array('title' => $this->getRecordPath($table, $rec))), $arr[$k]);
 		}
 		return $arr;
 	}
@@ -5103,7 +5141,7 @@ function ' . $evalData . '(value) {
 					'###ATTRIBUTES_LABEL###' => $labelAttributes,
 					'###ATTRIBUTES_FIELD###' => $fieldAttributes,
 				);
-				$iRow[$row][] = \TYPO3\CMS\Core\Html\HtmlParser::substituteMarkerArray(
+				$iRow[$row][] = HtmlParser::substituteMarkerArray(
 					$this->paletteFieldTemplate,
 					$paletteMarkers,
 					FALSE,
@@ -5133,10 +5171,10 @@ function ' . $evalData . '(value) {
 	public function setColorScheme($scheme) {
 		$this->colorScheme = $this->defColorScheme;
 		$this->classScheme = $this->defClassScheme;
-		$parts = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $scheme);
+		$parts = GeneralUtility::trimExplode(',', $scheme);
 		foreach ($parts as $key => $col) {
 			// Split for color|class:
-			list($color, $class) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('|', $col);
+			list($color, $class) = GeneralUtility::trimExplode('|', $col);
 			// Handle color values:
 			if ($color) {
 				$this->colorScheme[$key] = $color;
@@ -5281,7 +5319,7 @@ function ' . $evalData . '(value) {
 		$this->TBE_EDITOR_fieldChanged_func = 'TBE_EDITOR.fieldChanged_fName(fName,formObj[fName+"_list"]);';
 		if (!$update) {
 			if ($this->loadMD5_JS) {
-				$this->loadJavascriptLib('md5.js');
+				$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/md5.js');
 			}
 			/** @var $pageRenderer \TYPO3\CMS\Core\Page\PageRenderer */
 			$pageRenderer = $GLOBALS['SOBE']->doc->getPageRenderer();
@@ -5290,8 +5328,8 @@ function ' . $evalData . '(value) {
 			$pageRenderer->loadExtJS();
 			// Make textareas resizable and flexible
 			if (!($GLOBALS['BE_USER']->uc['resizeTextareas'] == '0' && $GLOBALS['BE_USER']->uc['resizeTextareas_Flexible'] == '0')) {
-				$pageRenderer->addCssFile($this->backPath . '../t3lib/js/extjs/ux/resize.css');
-				$this->loadJavascriptLib('../t3lib/js/extjs/ux/ext.resizable.js');
+				$pageRenderer->addCssFile($this->backPath . 'js/extjs/ux/resize.css');
+				$this->loadJavascriptLib('js/extjs/ux/ext.resizable.js');
 			}
 			$resizableSettings = array(
 				'textareaMaxHeight' => $GLOBALS['BE_USER']->uc['resizeTextareas_MaxHeight'] > 0 ? $GLOBALS['BE_USER']->uc['resizeTextareas_MaxHeight'] : '600',
@@ -5299,9 +5337,9 @@ function ' . $evalData . '(value) {
 				'textareaResize' => !$GLOBALS['BE_USER']->uc['resizeTextareas'] == '0'
 			);
 			$pageRenderer->addInlineSettingArray('', $resizableSettings);
-			$this->loadJavascriptLib('../t3lib/jsfunc.evalfield.js');
-			$this->loadJavascriptLib('jsfunc.tbe_editor.js');
-			$this->loadJavascriptLib('jsfunc.placeholder.js');
+			$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/jsfunc.evalfield.js');
+			$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/jsfunc.tbe_editor.js');
+			$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/jsfunc.placeholder.js');
 			// Needed for tceform manipulation (date picker)
 			$typo3Settings = array(
 				'datePickerUSmode' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['USdateFormat'] ? 1 : 0,
@@ -5309,28 +5347,28 @@ function ' . $evalData . '(value) {
 				'dateFormatUS' => array('n-j-Y', 'G:i n-j-Y')
 			);
 			$pageRenderer->addInlineSettingArray('', $typo3Settings);
-			$this->loadJavascriptLib('../t3lib/js/extjs/ux/Ext.ux.DateTimePicker.js');
-			$this->loadJavascriptLib('../t3lib/js/extjs/tceforms.js');
+			$this->loadJavascriptLib('js/extjs/ux/Ext.ux.DateTimePicker.js');
+			$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/tceforms.js');
 			// If IRRE fields were processed, add the JavaScript functions:
 			if ($this->inline->inlineCount) {
 				$GLOBALS['SOBE']->doc->getPageRenderer()->loadScriptaculous();
-				$this->loadJavascriptLib('../t3lib/jsfunc.inline.js');
+				$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/jsfunc.inline.js');
 				$out .= '
 				inline.setPrependFormFieldNames("' . $this->inline->prependNaming . '");
-				inline.setNoTitleString("' . addslashes(\TYPO3\CMS\Backend\Utility\BackendUtility::getNoRecordTitle(TRUE)) . '");
+				inline.setNoTitleString("' . addslashes(BackendUtility::getNoRecordTitle(TRUE)) . '");
 				';
 				// Always include JS functions for Suggest fields as we don't know what will come
-				$this->loadJavascriptLib('../t3lib/js/jsfunc.tceforms_suggest.js');
+				$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/jsfunc.tceforms_suggest.js');
 			} else {
 				// If Suggest fields were processed, add the JS functions
 				if ($this->suggest->suggestCount > 0) {
 					$pageRenderer->loadScriptaculous();
-					$this->loadJavascriptLib('../t3lib/js/jsfunc.tceforms_suggest.js');
+					$this->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/jsfunc.tceforms_suggest.js');
 				}
 			}
 			// Toggle icons:
-			$toggleIcon_open = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-down', array('title' => 'Open'));
-			$toggleIcon_close = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-right', array('title' => 'Close'));
+			$toggleIcon_open = IconUtility::getSpriteIcon('actions-move-down', array('title' => 'Open'));
+			$toggleIcon_close = IconUtility::getSpriteIcon('actions-move-right', array('title' => 'Close'));
 			$out .= '
 			function getOuterHTML(idTagPrefix) {	// Function getting the outerHTML of an element with id
 				var str=($(idTagPrefix).inspect()+$(idTagPrefix).innerHTML+"</"+$(idTagPrefix).tagName.toLowerCase()+">");
@@ -5396,9 +5434,9 @@ function ' . $evalData . '(value) {
 				}
 			}
 
-			TBE_EDITOR.images.req.src = "' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/required_h.gif', '', 1) . '";
-			TBE_EDITOR.images.cm.src = "' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/content_client.gif', '', 1) . '";
-			TBE_EDITOR.images.sel.src = "' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/content_selected.gif', '', 1) . '";
+			TBE_EDITOR.images.req.src = "' . IconUtility::skinImg($this->backPath, 'gfx/required_h.gif', '', 1) . '";
+			TBE_EDITOR.images.cm.src = "' . IconUtility::skinImg($this->backPath, 'gfx/content_client.gif', '', 1) . '";
+			TBE_EDITOR.images.sel.src = "' . IconUtility::skinImg($this->backPath, 'gfx/content_selected.gif', '', 1) . '";
 			TBE_EDITOR.images.clear.src = "' . $this->backPath . 'clear.gif";
 
 			TBE_EDITOR.auth_timeout_field = ' . intval($GLOBALS['BE_USER']->auth_timeout_field) . ';
@@ -5453,7 +5491,7 @@ function ' . $evalData . '(value) {
 		// Regular direct output:
 		if (!$update) {
 			$spacer = LF . TAB;
-			$out = $spacer . implode($spacer, $jsFile) . \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($out);
+			$out = $spacer . implode($spacer, $jsFile) . GeneralUtility::wrapJS($out);
 		}
 		return $out;
 	}
@@ -5829,7 +5867,7 @@ function ' . $evalData . '(value) {
 			$row = array();
 			if ($pid < 0 && $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues']) {
 				// Fetches the previous record:
-				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $table, 'uid=' . abs($pid) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause($table));
+				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $table, 'uid=' . abs($pid) . BackendUtility::deleteClause($table));
 				if ($drow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					// Gets the list of fields to copy from the previous record.
 					$fArr = explode(',', $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues']);
@@ -5851,19 +5889,19 @@ function ' . $evalData . '(value) {
 	}
 
 	/**
-	 * Return record path (visually formatted, using \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath() )
+	 * Return record path (visually formatted, using BackendUtility::getRecordPath() )
 	 *
 	 * @param string $table Table name
 	 * @param array $rec Record array
 	 * @return string The record path.
-	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath()
+	 * @see BackendUtility::getRecordPath()
 	 * @todo Define visibility
 	 */
 	public function getRecordPath($table, $rec) {
-		\TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid($table, $rec);
+		BackendUtility::fixVersioningPid($table, $rec);
 		list($tscPID, $thePidValue) = $this->getTSCpid($table, $rec['uid'], $rec['pid']);
 		if ($thePidValue >= 0) {
-			return \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath($tscPID, $this->readPerms(), 15);
+			return BackendUtility::getRecordPath($tscPID, $this->readPerms(), 15);
 		}
 	}
 
@@ -5906,12 +5944,12 @@ function ' . $evalData . '(value) {
 	public function getLL($str) {
 		$content = '';
 		switch (substr($str, 0, 2)) {
-		case 'l_':
-			$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.' . substr($str, 2));
-			break;
-		case 'm_':
-			$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:mess.' . substr($str, 2));
-			break;
+			case 'l_':
+				$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.' . substr($str, 2));
+				break;
+			case 'm_':
+				$content = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:mess.' . substr($str, 2));
+				break;
 		}
 		return $content;
 	}
@@ -5948,29 +5986,27 @@ function ' . $evalData . '(value) {
 	 * @deprecated since TYPO3 6.1, will be removed 2 versions later - Use \TYPO3\CMS\Backend\Form\ElementConditionMatcher instead
 	 */
 	public function isDisplayCondition($displayCond, $row, $ffValueKey = '') {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
+		GeneralUtility::logDeprecatedFunction();
 		/** @var $elementConditionMatcher \TYPO3\CMS\Backend\Form\ElementConditionMatcher */
-		$elementConditionMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
-		$elementConditionMatcher->setRecord($row);
-		$elementConditionMatcher->setFlexformValueKey($ffValueKey);
-		return $elementConditionMatcher->match($displayCond);
+		$elementConditionMatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Form\\ElementConditionMatcher');
+		return $elementConditionMatcher->match($displayCond, $row, $ffValueKey);
 	}
 
 	/**
 	 * Return TSCpid (cached)
-	 * Using \TYPO3\CMS\Backend\Utility\BackendUtility::getTSCpid()
+	 * Using BackendUtility::getTSCpid()
 	 *
 	 * @param string $table Tablename
 	 * @param string $uid UID value
 	 * @param string $pid PID value
 	 * @return integer Returns the REAL pid of the record, if possible. If both $uid and $pid is strings, then pid=-1 is returned as an error indication.
-	 * @see \TYPO3\CMS\Backend\Utility\BackendUtility::getTSCpid()
+	 * @see BackendUtility::getTSCpid()
 	 * @todo Define visibility
 	 */
 	public function getTSCpid($table, $uid, $pid) {
 		$key = $table . ':' . $uid . ':' . $pid;
 		if (!isset($this->cache_getTSCpid[$key])) {
-			$this->cache_getTSCpid[$key] = \TYPO3\CMS\Backend\Utility\BackendUtility::getTSCpid($table, $uid, $pid);
+			$this->cache_getTSCpid[$key] = BackendUtility::getTSCpid($table, $uid, $pid);
 		}
 		return $this->cache_getTSCpid[$key];
 	}
@@ -5995,9 +6031,9 @@ function ' . $evalData . '(value) {
 	 * @todo Define visibility
 	 */
 	public function getAvailableLanguages($onlyIsoCoded = 1, $setDefault = 1) {
-		$isL = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables');
+		$isL = ExtensionManagementUtility::isLoaded('static_info_tables');
 		// Find all language records in the system:
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('static_lang_isocode,title,uid', 'sys_language', 'pid=0 AND hidden=0' . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('sys_language'), '', 'title');
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('static_lang_isocode,title,uid', 'sys_language', 'pid=0 AND hidden=0' . BackendUtility::deleteClause('sys_language'), '', 'title');
 		// Traverse them:
 		$output = array();
 		if ($setDefault) {
@@ -6010,7 +6046,7 @@ function ' . $evalData . '(value) {
 		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$output[$row['uid']] = $row;
 			if ($isL && $row['static_lang_isocode']) {
-				$rr = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('static_languages', $row['static_lang_isocode'], 'lg_iso_2');
+				$rr = BackendUtility::getRecord('static_languages', $row['static_lang_isocode'], 'lg_iso_2');
 				if ($rr['lg_iso_2']) {
 					$output[$row['uid']]['ISOcode'] = $rr['lg_iso_2'];
 				}
@@ -6035,14 +6071,14 @@ function ' . $evalData . '(value) {
 	public function getLanguageIcon($table, $row, $sys_language_uid) {
 		$mainKey = $table . ':' . $row['uid'];
 		if (!isset($this->cachedLanguageFlag[$mainKey])) {
-			\TYPO3\CMS\Backend\Utility\BackendUtility::fixVersioningPid($table, $row);
+			BackendUtility::fixVersioningPid($table, $row);
 			list($tscPID, $thePidValue) = $this->getTSCpid($table, $row['uid'], $row['pid']);
 			/** @var $t8Tools \TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider */
-			$t8Tools = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TranslationConfigurationProvider');
+			$t8Tools = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TranslationConfigurationProvider');
 			$this->cachedLanguageFlag[$mainKey] = $t8Tools->getSystemLanguages($tscPID, $this->backPath);
 		}
 		// Convert sys_language_uid to sys_language_uid if input was in fact a string (ISO code expected then)
-		if (!\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($sys_language_uid)) {
+		if (!MathUtility::canBeInterpretedAsInteger($sys_language_uid)) {
 			foreach ($this->cachedLanguageFlag[$mainKey] as $rUid => $cD) {
 				if ('v' . $cD['ISOcode'] === $sys_language_uid) {
 					$sys_language_uid = $rUid;
@@ -6051,7 +6087,7 @@ function ' . $evalData . '(value) {
 		}
 		$out = '';
 		if ($this->cachedLanguageFlag[$mainKey][$sys_language_uid]['flagIcon']) {
-			$out .= \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon($this->cachedLanguageFlag[$mainKey][$sys_language_uid]['flagIcon']);
+			$out .= IconUtility::getSpriteIcon($this->cachedLanguageFlag[$mainKey][$sys_language_uid]['flagIcon']);
 			$out .= '&nbsp;';
 		} elseif ($this->cachedLanguageFlag[$mainKey][$sys_language_uid]['title']) {
 			$out .= '[' . $this->cachedLanguageFlag[$mainKey][$sys_language_uid]['title'] . ']';
@@ -6072,7 +6108,7 @@ function ' . $evalData . '(value) {
 	protected function getMergeBehaviourIcon($l10nMode) {
 		$icon = '';
 		if ($l10nMode === 'mergeIfNotBlank') {
-			$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-edit-merge-localization', array('title' => $this->sL('LLL:EXT:lang/locallang_misc.xlf:localizeMergeIfNotBlank')));
+			$icon = IconUtility::getSpriteIcon('actions-edit-merge-localization', array('title' => $this->sL('LLL:EXT:lang/locallang_misc.xlf:localizeMergeIfNotBlank')));
 		}
 		return $icon;
 	}
@@ -6095,7 +6131,7 @@ function ' . $evalData . '(value) {
 			$show_thumbs = TRUE;
 			$table = 'tt_content';
 			// Making the array of file items:
-			$itemArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $value, 1);
+			$itemArray = GeneralUtility::trimExplode(',', $value, 1);
 			// Showing thumbnails:
 			$thumbsnail = '';
 			if ($show_thumbs) {
@@ -6106,10 +6142,10 @@ function ' . $evalData . '(value) {
 					$rowCopy = array();
 					$rowCopy[$field] = $imgPath;
 					// Icon + clickmenu:
-					$absFilePath = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($config['config']['uploadfolder'] ? $config['config']['uploadfolder'] . '/' . $imgPath : $imgPath);
+					$absFilePath = GeneralUtility::getFileAbsFileName($config['config']['uploadfolder'] ? $config['config']['uploadfolder'] . '/' . $imgPath : $imgPath);
 					$fileInformation = pathinfo($imgPath);
-					$fileIcon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForFile($imgPath, array('title' => htmlspecialchars($fileInformation['basename'] . ($absFilePath && @is_file($absFilePath) ? ' (' . \TYPO3\CMS\Core\Utility\GeneralUtility::formatSize(filesize($absFilePath)) . 'bytes)' : ' - FILE NOT FOUND!'))));
-					$imgs[] = '<span class="nobr">' . \TYPO3\CMS\Backend\Utility\BackendUtility::thumbCode($rowCopy, $table, $field, $this->backPath, 'thumbs.php', $config['config']['uploadfolder'], 0, ' align="middle"') . ($absFilePath ? $this->getClickMenu($fileIcon, $absFilePath) : $fileIcon) . $imgPath . '</span>';
+					$fileIcon = IconUtility::getSpriteIconForFile($imgPath, array('title' => htmlspecialchars($fileInformation['basename'] . ($absFilePath && @is_file($absFilePath) ? ' (' . GeneralUtility::formatSize(filesize($absFilePath)) . 'bytes)' : ' - FILE NOT FOUND!'))));
+					$imgs[] = '<span class="nobr">' . BackendUtility::thumbCode($rowCopy, $table, $field, $this->backPath, 'thumbs.php', $config['config']['uploadfolder'], 0, ' align="middle"') . ($absFilePath ? $this->getClickMenu($fileIcon, $absFilePath) : $fileIcon) . $imgPath . '</span>';
 				}
 				$thumbsnail = implode('<br />', $imgs);
 			}
@@ -6128,12 +6164,12 @@ function ' . $evalData . '(value) {
 	public function getAdditionalPreviewLanguages() {
 		if (!isset($this->cachedAdditionalPreviewLanguages)) {
 			if ($GLOBALS['BE_USER']->getTSConfigVal('options.additionalPreviewLanguages')) {
-				$uids = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $GLOBALS['BE_USER']->getTSConfigVal('options.additionalPreviewLanguages'));
+				$uids = GeneralUtility::intExplode(',', $GLOBALS['BE_USER']->getTSConfigVal('options.additionalPreviewLanguages'));
 				foreach ($uids as $uid) {
-					if ($sys_language_rec = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('sys_language', $uid)) {
+					if ($sys_language_rec = BackendUtility::getRecord('sys_language', $uid)) {
 						$this->cachedAdditionalPreviewLanguages[$uid] = array('uid' => $uid);
-						if ($sys_language_rec['static_lang_isocode'] && \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables')) {
-							$staticLangRow = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('static_languages', $sys_language_rec['static_lang_isocode'], 'lg_iso_2');
+						if ($sys_language_rec['static_lang_isocode'] && ExtensionManagementUtility::isLoaded('static_info_tables')) {
+							$staticLangRow = BackendUtility::getRecord('static_languages', $sys_language_rec['static_lang_isocode'], 'lg_iso_2');
 							if ($staticLangRow['lg_iso_2']) {
 								$this->cachedAdditionalPreviewLanguages[$uid]['uid'] = $uid;
 								$this->cachedAdditionalPreviewLanguages[$uid]['ISOcode'] = $staticLangRow['lg_iso_2'];
@@ -6258,20 +6294,20 @@ function ' . $evalData . '(value) {
 		}
 		// Check if we have a reference to another field value from the current record
 		if (substr($value, 0, 6) === '__row|') {
-			$keySegments = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('|', substr($value, 6));
+			$keySegments = GeneralUtility::trimExplode('|', substr($value, 6));
 			if (isset($row[$keySegments[0]])) {
 				// First segment (fieldname) exists in the current row
 				$value = $row[$keySegments[0]];
 				$fieldConf = $GLOBALS['TCA'][$table]['columns'][$keySegments[0]];
 				if ($fieldConf['config']['type'] === 'group' && $fieldConf['config']['internal_type'] === 'db') {
 					// The field is a relation to another record
-					list($foreignIdentifier, $foreignTitle) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('|', $value);
+					list($foreignIdentifier, $foreignTitle) = GeneralUtility::trimExplode('|', $value);
 					// Use the foreign title
 					$value = $foreignTitle;
 					if (!empty($keySegments[1])) {
 						// Use any field in the foreign record
-						list($foreignTable, $foreignUid) = \TYPO3\CMS\Backend\Utility\BackendUtility::splitTable_Uid($foreignIdentifier);
-						$foreignRecord = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($foreignTable, $foreignUid);
+						list($foreignTable, $foreignUid) = BackendUtility::splitTable_Uid($foreignIdentifier);
+						$foreignRecord = BackendUtility::getRecord($foreignTable, $foreignUid);
 						if (isset($foreignRecord[$keySegments[1]])) {
 							$value = $foreignRecord[$keySegments[1]];
 						}
@@ -6300,6 +6336,5 @@ function ' . $evalData . '(value) {
 	}
 
 }
-
 
 ?>

@@ -177,7 +177,7 @@ return array(
 				)
 			)
 		),
-		'defaultCategorizedTables' => '', // List of comma separated tables that are categorizable by default.
+		'defaultCategorizedTables' => 'pages,tt_content', // List of comma separated tables that are categorizable by default.
 		'displayErrors' => -1,		// <p>Integer (-1, 0, 1, 2). Configures whether PHP errors should be displayed.</p><dl><dt>0</dt><dd>Do not display any PHP error messages. Overrides the value of "exceptionalErrors" and sets it to 0 (= no errors are turned into exceptions), the configured "productionExceptionHandler" is used as exception handler</dd><dt>1</dt><dd>Display error messages with the registered errorhandler. The configured "debugExceptionHandler" is used as exception handler</dd><dt>2</dt><dd>Display errors only if client matches <a href="#SYS-devIPmask">[SYS][devIPmask]</a>. If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used</dd><dt>-1</dt><dd>Default setting. With this option, you can override the PHP setting "display_errors". If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used.</dd></dl>
 		'productionExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler". This exception handler displays a nice error message when something went wrong. The error message is logged to the configured logs. Note: The configured "productionExceptionHandler" is used if displayErrors is set to "0" or to "-1" and devIPmask doesn't match the users IP.
 		'debugExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler". This exception handler displays the complete stack trace of any encountered exception. The error message and the stack trace  is logged to the configured logs. Note: The configured "debugExceptionHandler" is used if displayErrors is set to "1" and if displayErrors is "-1"  or "2" and the devIPmask matches the users IP.
@@ -210,7 +210,8 @@ return array(
 				'Image.Preview' => 'TYPO3\\CMS\\Core\\Resource\\Processing\\ImagePreviewTask',
 				'Image.CropScaleMask' => 'TYPO3\\CMS\\Core\\Resource\\Processing\\ImageCropScaleMaskTask'
 			)
-		)
+		),
+		'isInitialInstallationInProgress' => FALSE,		// Boolean: If TRUE, the installation is 'in progress'. This value is handled within the install tool step installer internally.
 	),
 	'EXT' => array( // Options related to the Extension Management
 		'allowGlobalInstall' => FALSE,		// Boolean: If set, global extensions in typo3/ext/ are allowed to be installed, updated and deleted etc.
@@ -218,11 +219,9 @@ return array(
 		'allowSystemInstall' => FALSE,		// Boolean: If set, you can install extensions in the sysext/ dir. Use this to upgrade the 'cms' and 'lang' extensions.
 		'requiredExt' => array(),		// String. List of additional extensions which are REQUIRED and cannot be unloaded by the Extension Manager!
 		'excludeForPackaging' => '(CVS|\\..*|.*~|.*\\.bak)',		// String: List of directories and files which will not be packaged into extensions nor taken into account otherwise by the Extension Manager. Perl regular expression syntax!
-		'extCache' => -1,		// <p>Integer (0, 1)</p><dl><dt>0</dt><dd>ext-scripts (ext_localconf.php and ext_tables.php) are NOT cached, but included every time</dd><dt>1</dt><dd>scripts cached to typo3conf/temp_CACHED_[sitePathHash]* (saves some milliseconds even with PHP accelerators)</dd></dl>
 		'extListArray' => array(
 			'filelist',
 			'version',
-			'tsconfig_help',
 			'context_help',
 			'extra_page_cm_options',
 			'impexp',
@@ -256,8 +255,8 @@ return array(
 		'userHomePath' => '',							// Path to the directory where TYPO3 backend-users have their home-dirs.  Eg. '/home/typo3/users/'. A home for backend user 2 would be: '/home/typo3/users/2/'. Ending slash required!
 		'groupHomePath' => '',							// Path to the directory where TYPO3 backend-groups have their home-dirs. Remember that the first part of this path must be 'lockRootPath'. Eg. '/home/typo3/groups/'. A home for backend group 1 would be: '/home/typo3/groups/1/'. Ending slash required!
 		'userUploadDir' => '',							// Suffix to the user home dir which is what gets mounted in TYPO3. Eg. if the user dir is "../123_user/" and this value is "/upload" then "../123_user/upload" gets mounted.
-		'fileCreateMask' => '0644',						// File mode mask for Unix file systems (when files are uploaded/created).
-		'folderCreateMask' => '0755',					// As above, but for folders.
+		'fileCreateMask' => '0660',						// File mode mask for Unix file systems (when files are uploaded/created).
+		'folderCreateMask' => '2770',					// As above, but for folders.
 		'createGroup' => '',							// Group for newly created files and folders (Unix only). Group ownership can be changed on Unix file systems (see above). Set this if you want to change the group ownership of created files/folders to a specific group. This makes sense in all cases where the webserver is running with a different user/group as you do. Create a new group on your system and add you and the webserver user to the group. Now you can safely set the last bit in fileCreateMask/folderCreateMask to 0 (e.g. 770). Important: The user who is running your webserver needs to be a member of the group you specify here! Otherwise you might get some error messages.
 		'warning_email_addr' => '',						// Email address that will receive notification whenever an attempt to login to the Install Tool is made and that will also receive warnings whenever more than 3 failed backend login attempts (regardless of user) are detected within an hour.
 		'warning_mode' => '',							// Bit 1: If set, warning_email_addr will be notified every time a backend user logs in. Bit 2: If set, warning_email_addr will be notified every time an ADMIN backend user logs in. Other bits are reserved for future options.
@@ -561,7 +560,7 @@ return array(
 		'versionNumberInFilename' => FALSE,					// <p>Boolean: If TRUE, included CSS and JS files will have the timestamp embedded in the filename, ie. filename.1269312081.js. This will make browsers and proxies reload the files if they change (thus avoiding caching issues). IMPORTANT: this feature requires extra .htaccess rules to work (please refer to _.htaccess or the _.htaccess file from the dummy package)</p><p>If FALSE the filemtime will be appended as a query-string.</p>
 		'spriteIconGenerator_handler' => 'TYPO3\\CMS\\Backend\\Sprite\\SimpleSpriteHandler',		// String: Used to register own/other spriteGenerating Handler, they have to implement the interface \TYPO3\CMS\Backend\Sprite\SpriteIconGeneratorInterface. If set to "\TYPO3\CMS\Backend\Sprite\SpriteBuildingHandler" icons from extensions will automatically merged into sprites.
 		'debug' => FALSE,									// Boolean: If set, the loginrefresh is disabled and pageRenderer is set to debug mode. Use this to debug the backend only!
-		'AJAX' => array(									// array of key-value pairs for a unified use of AJAX calls in the TYPO3 backend. Keys are the unique ajaxIDs where the value will be resolved to call a method in an object. See ajax.php and the classes/class.typo3ajax.php for more information.
+		'AJAX' => array(									// array of key-value pairs for a unified use of AJAX calls in the TYPO3 backend. Keys are the unique ajaxIDs where the value will be resolved to call a method in an object. See ajax.php for more information.
 			'SC_alt_db_navframe::expandCollapse' => 'TYPO3\\CMS\\Backend\\Controller\\PageTreeNavigationController->ajaxExpandCollapse',
 			'SC_alt_file_navframe::expandCollapse' => 'TYPO3\\CMS\\Backend\\Controller\\FileSystemNavigationFrameController->ajaxExpandCollapse',
 			'TYPO3_tcefile::process' => 'TYPO3\\CMS\\Backend\\Controller\\File\\FileController->processAjaxRequest',
@@ -630,7 +629,7 @@ return array(
 			// array('IPmaskList_1','fe_group uid'), array('IPmaskList_2','fe_group uid')
 		),
 		'get_url_id_token' => '#get_URL_ID_TOK#',		// This is the token, which is substituted in the output code in order to keep a GET-based session going. Normally the GET-session-id is 5 chars ('&amp;ftu=') + hash_length (norm. 10)
-		'content_doktypes' => '1,2,5,7',		// List of pages.doktype values which can contain content (so shortcut pages and external url pages are excluded, but all pages below doktype 199 should be included. doktype=6 is not either (backend users only...). For doktypes going into menus see class.tslib_menu.php, line 494 (search for 'doktype'))
+		'content_doktypes' => '1,2,5,7',		// List of pages.doktype values which can contain content (so shortcut pages and external url pages are excluded, but all pages below doktype 199 should be included. doktype=6 is not either (backend users only...).
 		'enable_mount_pids' => TRUE,		// Boolean: If set to "1", the mount_pid feature allowing 'symlinks' in the page tree (for frontend operation) is allowed.
 		'pageOverlayFields' => 'uid,title,subtitle,nav_title,media,keywords,description,abstract,author,author_email,url,urltype,shortcut,shortcut_mode',		// List of fields from the table "pages_language_overlay" which should be overlaid on page records. See t3lib_page::getPageOverlay()
 		'hidePagesIfNotTranslatedByDefault' => FALSE,		// Boolean: If TRUE, pages that has no translation will be hidden by default. Basically this will inverse the effect of the page localization setting "Hide page if no translation for current language exists" to "Show page even if no translation exists"

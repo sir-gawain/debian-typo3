@@ -37,23 +37,27 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\IdentityMap
 	 * @deprecated since 6.1 will be removed two versions later, use the persistence session instead
+	 * @inject
 	 */
 	protected $identityMap;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @deprecated since 6.1, will be removed two versions later, use the persistence manager instead
+	 * @inject
 	 */
 	protected $backend;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Session
 	 * @deprecated since 6.1 will be removed two versions later, use the persistence manager instead
+	 * @inject
 	 */
 	protected $session;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface
+	 * @inject
 	 */
 	protected $persistenceManager;
 
@@ -93,52 +97,13 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 			\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
 
 			$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
-			$this->injectIdentityMap($this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\IdentityMap'));
-			$this->injectPersistenceManager($this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\PersistenceManager'));
-			$this->injectBackend($this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\BackendInterface'));
-			$this->injectSession($this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Session'));
+			$this->identityMap = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\IdentityMap');
+			$this->persistenceManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\PersistenceManager');
+			$this->backend = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\BackendInterface');
+			$this->session = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Session');
 		} else {
 			$this->objectManager = $objectManager;
 		}
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\IdentityMap $identityMap
-	 * @return void
-	 * @deprecated since 6.1, will be removed two versions later
-	 */
-	public function injectIdentityMap(\TYPO3\CMS\Extbase\Persistence\Generic\IdentityMap $identityMap) {
-		$this->identityMap = $identityMap;
-	}
-
-	/**
-	 * Injects the Persistence Backend
-	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface $backend The persistence backend
-	 * @return void
-	 * @deprecated since 6.1, will be removed two versions later
-	 */
-	public function injectBackend(\TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface $backend) {
-		$this->backend = $backend;
-	}
-
-	/**
-	 * Injects the Persistence Session
-	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Session $session The persistence session
-	 * @return void
-	 * @deprecated since 6.1, will be removed two versions later
-	 */
-	public function injectSession(\TYPO3\CMS\Extbase\Persistence\Generic\Session $session) {
-		$this->session = $session;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface $persistenceManager
-	 * @return void
-	 */
-	public function injectPersistenceManager(\TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface $persistenceManager) {
-		$this->persistenceManager = $persistenceManager;
 	}
 
 	/**
@@ -239,7 +204,7 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * @api
 	 */
 	public function findByUid($uid) {
-		return $this->persistenceManager->getObjectByIdentifier($uid, $this->objectType);
+		return $this->findByIdentifier($uid);
 	}
 
 	/**
@@ -250,7 +215,30 @@ class Repository implements \TYPO3\CMS\Extbase\Persistence\RepositoryInterface, 
 	 * @api
 	 */
 	public function findByIdentifier($identifier) {
-		return $this->persistenceManager->getObjectByIdentifier($identifier, $this->objectType);
+		/**
+		 * @todo: This method must be changed again in 6.2 + 1
+		 * This is marked @deprecated to be found in cleanup sessions.
+		 *
+		 * The repository should directly talk to the backend which
+		 * does not respect query settings of the repository as
+		 * findByIdentifier is strictly defined by finding an
+		 * undeleted object by its identifier regardless if it
+		 * is hidden/visible or a versioning/translation overlay.
+		 *
+		 * As a consequence users will be forced to overwrite this method
+		 * and mimic this behaviour to be able to find objects by identifier
+		 * respecting their query settings from 6.1 + 1 on.
+		 */
+		if ($this->session->hasIdentifier($identifier, $this->objectType)) {
+			$object = $this->session->getObjectByIdentifier($identifier, $this->objectType);
+		} else {
+			$query = $this->createQuery();
+			$query->getQuerySettings()->setRespectStoragePage(FALSE);
+			$query->getQuerySettings()->setRespectSysLanguage(FALSE);
+			$object = $query->matching($query->equals('uid', $identifier))->execute()->getFirst();
+		}
+
+		return $object;
 	}
 
 	/**

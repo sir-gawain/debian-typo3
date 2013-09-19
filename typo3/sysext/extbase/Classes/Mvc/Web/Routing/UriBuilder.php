@@ -22,11 +22,13 @@ class UriBuilder {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
+	 * @inject
 	 */
 	protected $configurationManager;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
+	 * @inject
 	 */
 	protected $extensionService;
 
@@ -116,32 +118,9 @@ class UriBuilder {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Service\EnvironmentService
+	 * @inject
 	 */
 	protected $environmentService;
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
-	 * @return void
-	 */
-	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
-		$this->configurationManager = $configurationManager;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
-	 * @return void
-	 */
-	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
-		$this->extensionService = $extensionService;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService
-	 * @return void
-	 */
-	public function injectEnvironmentService(\TYPO3\CMS\Extbase\Service\EnvironmentService $environmentService) {
-		$this->environmentService = $environmentService;
-	}
 
 	/**
 	 * Life-cycle method that is called by the DI container as soon as this object is completely built
@@ -388,7 +367,6 @@ class UriBuilder {
 
 	/**
 	 * @return integer
-	 * @api
 	 */
 	public function getTargetPageType() {
 		return $this->targetPageType;
@@ -623,6 +601,9 @@ class UriBuilder {
 		$typolinkConfiguration['parameter'] = $this->targetPageUid !== NULL ? $this->targetPageUid : $GLOBALS['TSFE']->id;
 		if ($this->targetPageType !== 0) {
 			$typolinkConfiguration['parameter'] .= ',' . $this->targetPageType;
+		} elseif ($this->format !== '') {
+			$targetPageType = $this->extensionService->getTargetPageTypeByFormat($this->request->getControllerExtensionKey(), $this->format);
+			$typolinkConfiguration['parameter'] .= ',' . $targetPageType;
 		}
 		if (count($this->arguments) > 0) {
 			$arguments = $this->convertDomainObjectsToIdentityArrays($this->arguments);
@@ -707,6 +688,7 @@ class UriBuilder {
 		}
 		return $result;
 	}
+
 }
 
 ?>

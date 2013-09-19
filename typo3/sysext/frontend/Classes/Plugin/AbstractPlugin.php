@@ -26,14 +26,9 @@ namespace TYPO3\CMS\Frontend\Plugin;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * This script contains the parent class, 'pibase', providing an API with the most basic methods for frontend plugins
- *
- * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
+
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Base class for frontend plugins
  * Most modern frontend plugins are extension classes of this one.
@@ -227,7 +222,7 @@ class AbstractPlugin {
 	public function __construct() {
 		// Setting piVars:
 		if ($this->prefixId) {
-			$this->piVars = \TYPO3\CMS\Core\Utility\GeneralUtility::_GPmerged($this->prefixId);
+			$this->piVars = GeneralUtility::_GPmerged($this->prefixId);
 			// cHash mode check
 			// IMPORTANT FOR CACHED PLUGINS (USER cObject): As soon as you generate cached plugin output which depends on parameters (eg. seeing the details of a news item) you MUST check if a cHash value is set.
 			// Background: The function call will check if a cHash parameter was sent with the URL because only if it was the page may be cached. If no cHash was found the function will simply disable caching to avoid unpredictable caching behaviour. In any case your plugin can generate the expected output and the only risk is that the content may not be cached. A missing cHash value is considered a mistake in the URL resulting from either URL manipulation, "realurl" "grayzones" etc. The problem is rare (more frequent with "realurl") but when it occurs it is very puzzling!
@@ -239,7 +234,7 @@ class AbstractPlugin {
 			$this->LLkey = $GLOBALS['TSFE']->config['config']['language'];
 			if (empty($GLOBALS['TSFE']->config['config']['language_alt'])) {
 				/** @var $locales \TYPO3\CMS\Core\Localization\Locales */
-				$locales = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\Locales');
+				$locales = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\Locales');
 				if (in_array($this->LLkey, $locales->getLocales())) {
 					$this->altLLkey = '';
 					foreach ($locales->getLocaleDependencies($this->LLkey) as $language) {
@@ -254,14 +249,49 @@ class AbstractPlugin {
 	}
 
 	/**
+	 * Recursively looks for stdWrap and executes it
+	 *
+	 * @param array $conf Current section of configuration to work on
+	 * @param integer $level Current level being processed (currently just for tracking; no limit enforced)
+	 * @return array Current section of configuration after stdWrap applied
+	 */
+	protected function applyStdWrapRecursive(array $conf, $level = 0) {
+		foreach ($conf as $key => $confNextLevel) {
+			if (strpos($key, '.') !== FALSE) {
+				$key = substr($key, 0, -1);
+
+				// descend into all non-stdWrap-subelements first
+				foreach ($confNextLevel as $subKey => $subConfNextLevel) {
+					if (is_array($subConfNextLevel) && strpos($subKey, '.') !== FALSE && $subKey !== 'stdWrap.') {
+						$subKey = substr($subKey, 0, -1);
+						$conf[$key . '.'] = $this->applyStdWrapRecursive($confNextLevel, $level + 1);
+					}
+				}
+
+				// now for stdWrap
+				foreach ($confNextLevel as $subKey => $subConfNextLevel) {
+					if (is_array($subConfNextLevel) && $subKey === 'stdWrap.') {
+						$conf[$key] = $this->cObj->stdWrap($conf[$key], $conf[$key . '.']['stdWrap.']);
+						unset($conf[$key . '.']['stdWrap.']);
+						if (!count($conf[$key . '.'])) {
+							unset($conf[$key . '.']);
+						}
+					}
+				}
+			}
+		}
+		return $conf;
+	}
+
+	/**
 	 * If internal TypoScript property "_DEFAULT_PI_VARS." is set then it will merge the current $this->piVars array onto these default values.
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function pi_setPiVarDefaults() {
-		if (is_array($this->conf['_DEFAULT_PI_VARS.'])) {
-			$this->piVars = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($this->conf['_DEFAULT_PI_VARS.'], is_array($this->piVars) ? $this->piVars : array());
+		if (isset($this->conf['_DEFAULT_PI_VARS.']) && is_array($this->conf['_DEFAULT_PI_VARS.'])) {
+			$this->conf['_DEFAULT_PI_VARS.'] = $this->applyStdWrapRecursive($this->conf['_DEFAULT_PI_VARS.']);
+			$this->piVars = GeneralUtility::array_merge_recursive_overrule($this->conf['_DEFAULT_PI_VARS.'], is_array($this->piVars) ? $this->piVars : array());
 		}
 	}
 
@@ -279,9 +309,10 @@ class AbstractPlugin {
 	 *
 	 * @param integer $id Page id
 	 * @param string $target Target value to use. Affects the &type-value of the URL, defaults to current.
-	 * @param array $urlParameters Additional URL parameters to set (key/value pairs)
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
 	 * @return string The resulting URL
 	 * @see pi_linkToPage()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer->getTypoLink()
 	 * @todo Define visibility
 	 */
 	public function pi_getPageLink($id, $target = '', $urlParameters = array()) {
@@ -296,9 +327,9 @@ class AbstractPlugin {
 	 * @param string $str The content string to wrap in <a> tags
 	 * @param integer $id Page id
 	 * @param string $target Target value to use. Affects the &type-value of the URL, defaults to current.
-	 * @param array $urlParameters Additional URL parameters to set (key/value pairs)
+	 * @param array|string $urlParameters As an array key/value pairs represent URL parameters to set. Values NOT URL-encoded yet, keys should be URL-encoded if needed. As a string the parameter is expected to be URL-encoded already.
 	 * @return string The input string wrapped in <a> tags with the URL and target set.
-	 * @see pi_getPageLink(), tslib_cObj::getTypoLink()
+	 * @see pi_getPageLink(), \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::getTypoLink()
 	 * @todo Define visibility
 	 */
 	public function pi_linkToPage($str, $id, $target = '', $urlParameters = array()) {
@@ -314,7 +345,7 @@ class AbstractPlugin {
 	 * @param boolean $cache If $cache is set (0/1), the page is asked to be cached by a &cHash value (unless the current plugin using this class is a USER_INT). Otherwise the no_cache-parameter will be a part of the link.
 	 * @param integer $altPageId Alternative page ID for the link. (By default this function links to the SAME page!)
 	 * @return string The input string wrapped in <a> tags
-	 * @see pi_linkTP_keepPIvars(), tslib_cObj::typoLink()
+	 * @see pi_linkTP_keepPIvars(), \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::typoLink()
 	 * @todo Define visibility
 	 */
 	public function pi_linkTP($str, $urlParameters = array(), $cache = 0, $altPageId = 0) {
@@ -322,7 +353,7 @@ class AbstractPlugin {
 		$conf['useCacheHash'] = $this->pi_USER_INT_obj ? 0 : $cache;
 		$conf['no_cache'] = $this->pi_USER_INT_obj ? 0 : !$cache;
 		$conf['parameter'] = $altPageId ? $altPageId : ($this->pi_tmpPageId ? $this->pi_tmpPageId : $GLOBALS['TSFE']->id);
-		$conf['additionalParams'] = $this->conf['parent.']['addParams'] . \TYPO3\CMS\Core\Utility\GeneralUtility::implodeArrayForUrl('', $urlParameters, '', TRUE) . $this->pi_moreParams;
+		$conf['additionalParams'] = $this->conf['parent.']['addParams'] . GeneralUtility::implodeArrayForUrl('', $urlParameters, '', TRUE) . $this->pi_moreParams;
 		return $this->cObj->typoLink($str, $conf);
 	}
 
@@ -344,7 +375,7 @@ class AbstractPlugin {
 		if (is_array($this->piVars) && is_array($overrulePIvars) && !$clearAnyway) {
 			$piVars = $this->piVars;
 			unset($piVars['DATA']);
-			$overrulePIvars = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($piVars, $overrulePIvars);
+			$overrulePIvars = GeneralUtility::array_merge_recursive_overrule($piVars, $overrulePIvars);
 			if ($this->pi_autoCacheEn) {
 				$cache = $this->pi_autoCache($overrulePIvars);
 			}
@@ -414,7 +445,7 @@ class AbstractPlugin {
 	 */
 	public function pi_openAtagHrefInJSwindow($str, $winName = '', $winParams = 'width=670,height=500,status=0,menubar=0,scrollbars=1,resizable=1') {
 		if (preg_match('/(.*)(<a[^>]*>)(.*)/i', $str, $match)) {
-			$aTagContent = \TYPO3\CMS\Core\Utility\GeneralUtility::get_tag_attributes($match[2]);
+			$aTagContent = GeneralUtility::get_tag_attributes($match[2]);
 			$match[2] = '<a href="#" onclick="' . htmlspecialchars(('vHWin=window.open(\'' . $GLOBALS['TSFE']->baseUrlWrap($aTagContent['href']) . '\',\'' . ($winName ? $winName : md5($aTagContent['href'])) . '\',\'' . $winParams . '\');vHWin.focus();return false;')) . '">';
 			$str = $match[1] . $match[2] . $match[3];
 		}
@@ -614,7 +645,7 @@ class AbstractPlugin {
 			List search box:
 		-->
 		<div' . $this->pi_classParam('searchbox') . '>
-			<form action="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')) . '" method="post" style="margin: 0 0 0 0;">
+			<form action="' . htmlspecialchars(GeneralUtility::getIndpEnv('REQUEST_URI')) . '" method="post" style="margin: 0 0 0 0;">
 			<' . trim(('table ' . $tableParams)) . '>
 				<tr>
 					<td><input type="text" name="' . $this->prefixId . '[sword]" value="' . htmlspecialchars($this->piVars['sword']) . '"' . $this->pi_classParam('searchbox-sword') . ' /></td>
@@ -746,10 +777,10 @@ class AbstractPlugin {
 	 */
 	public function pi_classParam($class, $addClasses = '') {
 		$output = '';
-		foreach (\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $class) as $v) {
+		foreach (GeneralUtility::trimExplode(',', $class) as $v) {
 			$output .= ' ' . $this->pi_getClassName($v);
 		}
-		foreach (\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $addClasses) as $v) {
+		foreach (GeneralUtility::trimExplode(',', $addClasses) as $v) {
 			$output .= ' ' . $v;
 		}
 		return ' class="' . trim($output) . '"';
@@ -798,7 +829,7 @@ class AbstractPlugin {
 	 * @param string $label A label to show with the panel.
 	 * @param array $conf TypoScript parameters to pass along to the EDITPANEL content Object that gets rendered. The property "allow" WILL get overridden/set though.
 	 * @return string Returns FALSE/blank if no BE User login and of course if the panel is not shown for other reasons. Otherwise the HTML for the panel (a table).
-	 * @see tslib_cObj::EDITPANEL()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::EDITPANEL()
 	 * @todo Define visibility
 	 */
 	public function pi_getEditPanel($row = '', $tablename = '', $label = '', $conf = array()) {
@@ -810,7 +841,7 @@ class AbstractPlugin {
 		if ($GLOBALS['TSFE']->beUserLogin) {
 			// Create local cObj if not set:
 			if (!is_object($this->pi_EPtemp_cObj)) {
-				$this->pi_EPtemp_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+				$this->pi_EPtemp_cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 				$this->pi_EPtemp_cObj->setParent($this->cObj->data, $this->cObj->currentRecord);
 			}
 			// Initialize the cObj object with current row
@@ -832,7 +863,7 @@ class AbstractPlugin {
 
 	/**
 	 * Adds edit-icons to the input content.
-	 * tslib_cObj::editIcons used for rendering
+	 * ContentObjectRenderer::editIcons used for rendering
 	 *
 	 * @param string $content HTML content to add icons to. The icons will be put right after the last content part in the string (that means before the ending series of HTML tags)
 	 * @param string $fields The list of fields to edit when the icon is clicked.
@@ -841,7 +872,7 @@ class AbstractPlugin {
 	 * @param string $tablename Table name
 	 * @param array $oConf Conf array
 	 * @return string The processed content
-	 * @see tslib_cObj::editIcons()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::editIcons()
 	 * @todo Define visibility
 	 */
 	public function pi_getEditIcon($content, $fields, $title = '', $row = '', $tablename = '', $oConf = array()) {
@@ -854,7 +885,7 @@ class AbstractPlugin {
 				'beforeLastTag' => 1,
 				'iconTitle' => $title
 			), $oConf);
-			$content = $this->cObj->editIcons($content, $tablename . ':' . $fields, $conf, $tablename . ':' . $row['uid'], $row, '&viewUrl=' . rawurlencode(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('REQUEST_URI')));
+			$content = $this->cObj->editIcons($content, $tablename . ':' . $fields, $conf, $tablename . ':' . $row['uid'], $row, '&viewUrl=' . rawurlencode(GeneralUtility::getIndpEnv('REQUEST_URI')));
 		}
 		return $content;
 	}
@@ -885,7 +916,7 @@ class AbstractPlugin {
 				$word = $this->LOCAL_LANG[$this->LLkey][$key][0]['target'];
 			}
 		} elseif ($this->altLLkey) {
-			$alternativeLanguageKeys = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->altLLkey, TRUE);
+			$alternativeLanguageKeys = GeneralUtility::trimExplode(',', $this->altLLkey, TRUE);
 			$alternativeLanguageKeys = array_reverse($alternativeLanguageKeys);
 			foreach ($alternativeLanguageKeys as $languageKey) {
 				if (!empty($this->LOCAL_LANG[$languageKey][$key][0]['target'])
@@ -935,10 +966,10 @@ class AbstractPlugin {
 		if (!$this->LOCAL_LANG_loaded && $this->scriptRelPath) {
 			$basePath = 'EXT:' . $this->extKey . '/' . dirname($this->scriptRelPath) . '/locallang.xml';
 			// Read the strings in the required charset (since TYPO3 4.2)
-			$this->LOCAL_LANG = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile($basePath, $this->LLkey, $GLOBALS['TSFE']->renderCharset);
-			$alternativeLanguageKeys = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->altLLkey, TRUE);
+			$this->LOCAL_LANG = GeneralUtility::readLLfile($basePath, $this->LLkey, $GLOBALS['TSFE']->renderCharset);
+			$alternativeLanguageKeys = GeneralUtility::trimExplode(',', $this->altLLkey, TRUE);
 			foreach ($alternativeLanguageKeys as $languageKey) {
-				$tempLL = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile($basePath, $languageKey);
+				$tempLL = GeneralUtility::readLLfile($basePath, $languageKey);
 				if ($this->LLkey !== 'default' && isset($tempLL[$languageKey])) {
 					$this->LOCAL_LANG[$languageKey] = $tempLL[$languageKey];
 				}
@@ -1029,7 +1060,7 @@ class AbstractPlugin {
 		} else {
 			// Order by data:
 			if (!$orderBy && $this->internal['orderBy']) {
-				if (\TYPO3\CMS\Core\Utility\GeneralUtility::inList($this->internal['orderByList'], $this->internal['orderBy'])) {
+				if (GeneralUtility::inList($this->internal['orderByList'], $this->internal['orderBy'])) {
 					$orderBy = 'ORDER BY ' . $table . '.' . $this->internal['orderBy'] . ($this->internal['descFlag'] ? ' DESC' : '');
 				}
 			}
@@ -1078,7 +1109,7 @@ class AbstractPlugin {
 			$pid_list = $GLOBALS['TSFE']->id;
 		}
 		$recursive = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($recursive, 0);
-		$pid_list_arr = array_unique(\TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $pid_list, 1));
+		$pid_list_arr = array_unique(GeneralUtility::trimExplode(',', $pid_list, 1));
 		$pid_list = array();
 		foreach ($pid_list_arr as $val) {
 			$val = \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange($val, 0);
@@ -1101,7 +1132,7 @@ class AbstractPlugin {
 	 * @todo Define visibility
 	 */
 	public function pi_prependFieldsWithTable($table, $fieldList) {
-		$list = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $fieldList, 1);
+		$list = GeneralUtility::trimExplode(',', $fieldList, 1);
 		$return = array();
 		foreach ($list as $listItem) {
 			$return[] = $table . '.' . $listItem;
@@ -1147,7 +1178,7 @@ class AbstractPlugin {
 	 */
 	public function pi_isOnlyFields($fList, $lowerThan = -1) {
 		$lowerThan = $lowerThan == -1 ? $this->pi_lowerThan : $lowerThan;
-		$fList = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $fList, 1);
+		$fList = GeneralUtility::trimExplode(',', $fList, 1);
 		$tempPiVars = $this->piVars;
 		foreach ($fList as $k) {
 			if (!\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($tempPiVars[$k]) || $tempPiVars[$k] < $lowerThan) {
@@ -1190,13 +1221,13 @@ class AbstractPlugin {
 	}
 
 	/**
-	 * Will process the input string with the parseFunc function from tslib_cObj based on configuration set in "lib.parseFunc_RTE" in the current TypoScript template.
+	 * Will process the input string with the parseFunc function from ContentObjectRenderer based on configuration set in "lib.parseFunc_RTE" in the current TypoScript template.
 	 * This is useful for rendering of content in RTE fields where the transformation mode is set to "ts_css" or so.
 	 * Notice that this requires the use of "css_styled_content" to work right.
 	 *
 	 * @param string $str The input text string to process
 	 * @return string The processed string
-	 * @see tslib_cObj::parseFunc()
+	 * @see \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::parseFunc()
 	 * @todo Define visibility
 	 */
 	public function pi_RTEcssText($str) {
@@ -1222,7 +1253,7 @@ class AbstractPlugin {
 	public function pi_initPIflexForm($field = 'pi_flexform') {
 		// Converting flexform data into array:
 		if (!is_array($this->cObj->data[$field]) && $this->cObj->data[$field]) {
-			$this->cObj->data[$field] = \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array($this->cObj->data[$field]);
+			$this->cObj->data[$field] = GeneralUtility::xml2array($this->cObj->data[$field]);
 			if (!is_array($this->cObj->data[$field])) {
 				$this->cObj->data[$field] = array();
 			}

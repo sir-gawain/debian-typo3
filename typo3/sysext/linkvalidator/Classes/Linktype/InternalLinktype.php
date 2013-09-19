@@ -79,7 +79,7 @@ class InternalLinktype extends \TYPO3\CMS\Linkvalidator\Linktype\AbstractLinktyp
 	 *
 	 * @param string $url Url to check as page-id or page-id#anchor (if anchor is present)
 	 * @param array $softRefEntry: The soft reference entry which builds the context of that url
-	 * @param \TYPO3\CMS\Linkvalidator\LinkAnalyzer $reference Parent instance of tx_linkvalidator_Processor
+	 * @param \TYPO3\CMS\Linkvalidator\LinkAnalyzer $reference Parent instance
 	 * @return boolean TRUE on success or FALSE on error
 	 */
 	public function checkLink($url, $softRefEntry, $reference) {
@@ -87,6 +87,11 @@ class InternalLinktype extends \TYPO3\CMS\Linkvalidator\Linktype\AbstractLinktyp
 		$this->responseContent = TRUE;
 		// Might already contain values - empty it
 		unset($this->errorParams);
+		// Ignore FAL file references
+		if (substr($url, 0, 5) === 'file:') {
+			// TODO: validate this resource file
+			return TRUE;
+		}
 		// Defines the linked page and anchor (if any).
 		if (strpos($url, '#c') !== FALSE) {
 			$parts = explode('#c', $url);

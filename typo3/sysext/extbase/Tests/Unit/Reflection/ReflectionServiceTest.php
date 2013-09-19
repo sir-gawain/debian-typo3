@@ -38,9 +38,18 @@ class ReflectionServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	/**
 	 * @test
 	 */
+	public function hasMethod() {
+		$service = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
+		$this->assertTrue($service->hasMethod(get_class($this), 'fixtureMethodForMethodTagsValues'));
+		$this->assertFalse($service->hasMethod(get_class($this), 'notExistentMethod'));
+	}
+
+	/**
+	 * @test
+	 */
 	public function getMethodTagsValues() {
 		$service = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
-		$tagsValues = $service->getMethodTagsValues('TYPO3\\CMS\\Extbase\\Tests\\Unit\\Reflection\\ReflectionServiceTest', 'fixtureMethodForMethodTagsValues');
+		$tagsValues = $service->getMethodTagsValues(get_class($this), 'fixtureMethodForMethodTagsValues');
 		$this->assertEquals(array(
 			'param' => array('array $foo The foo parameter'),
 			'return' => array('void')
@@ -52,7 +61,7 @@ class ReflectionServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 */
 	public function getMethodParameters() {
 		$service = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
-		$parameters = $service->getMethodParameters('TYPO3\\CMS\\Extbase\\Tests\\Unit\\Reflection\\ReflectionServiceTest', 'fixtureMethodForMethodTagsValues');
+		$parameters = $service->getMethodParameters(get_class($this), 'fixtureMethodForMethodTagsValues');
 		$this->assertEquals(array(
 			'foo' => array(
 				'position' => 0,
@@ -80,8 +89,8 @@ class ReflectionServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			class ' . $className . 'Repository {}
 		');
 
-		$service = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
-		$service->injectObjectManager($this->objectManager);
+		$service = $this->getAccessibleMock('TYPO3\CMS\Extbase\Reflection\ReflectionService', array('dummy'));
+		$service->_set('objectManager', $this->objectManager);
 		$classSchema = $service->getClassSchema('Foo\\Bar\\Domain\\Model\\' . $className);
 		$this->assertTrue($classSchema->isAggregateRoot());
 	}
@@ -98,8 +107,8 @@ class ReflectionServiceTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			class Foo_Bar_Domain_Repository_' . $className . 'Repository {}
 		');
 
-		$service = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
-		$service->injectObjectManager($this->objectManager);
+		$service = $this->getAccessibleMock('TYPO3\CMS\Extbase\Reflection\ReflectionService', array('dummy'));
+		$service->_set('objectManager', $this->objectManager);
 		$classSchema = $service->getClassSchema('Foo_Bar_Domain_Model_' . $className);
 		$this->assertTrue($classSchema->isAggregateRoot());
 	}

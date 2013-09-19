@@ -26,6 +26,9 @@ namespace TYPO3\CMS\Setup\Controller;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Module: User configuration
  *
@@ -137,17 +140,19 @@ class SetupModuleController {
 
 	/**
 	 * If settings are submitted to _POST[DATA], store them
-	 * NOTICE: This method is called before the template.php is included. See
-	 * bottom of document.
+	 * NOTICE: This method is called before the \TYPO3\CMS\Backend\Template\DocumentTemplate
+	 * is included. See bottom of document.
+	 *
+	 * @see \TYPO3\CMS\Backend\Template\DocumentTemplate
 	 */
 	public function storeIncomingData() {
 		// First check if something is submitted in the data-array from POST vars
-		$d = \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('data');
+		$d = GeneralUtility::_POST('data');
 		$columns = $GLOBALS['TYPO3_USER_SETTINGS']['columns'];
 		$beUserId = $GLOBALS['BE_USER']->user['uid'];
 		$storeRec = array();
 		$fieldList = $this->getFieldsFromShowItem();
-		if (is_array($d) && $this->formProtection->validateToken((string) \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('formToken'), 'BE user setup', 'edit')) {
+		if (is_array($d) && $this->formProtection->validateToken((string) GeneralUtility::_POST('formToken'), 'BE user setup', 'edit')) {
 			// UC hashed before applying changes
 			$save_before = md5(serialize($GLOBALS['BE_USER']->uc));
 			// PUT SETTINGS into the ->uc array:
@@ -179,8 +184,13 @@ class SetupModuleController {
 					if ($config['table']) {
 						if ($config['table'] == 'be_users' && !in_array($field, array('password', 'password2', 'email', 'realName', 'admin'))) {
 							if (!isset($config['access']) || $this->checkAccess($config) && $GLOBALS['BE_USER']->user[$field] !== $d['be_users'][$field]) {
-								$storeRec['be_users'][$beUserId][$field] = $d['be_users'][$field];
-								$GLOBALS['BE_USER']->user[$field] = $d['be_users'][$field];
+								if ($config['type'] === 'check') {
+									$fieldValue = isset($d['be_users'][$field]) ? 1 : 0;
+								} else {
+									$fieldValue = $d['be_users'][$field];
+								}
+								$storeRec['be_users'][$beUserId][$field] = $fieldValue;
+								$GLOBALS['BE_USER']->user[$field] = $fieldValue;
 							}
 						}
 					}
@@ -197,7 +207,7 @@ class SetupModuleController {
 				if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['modifyUserDataBeforeSave'])) {
 					foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['modifyUserDataBeforeSave'] as $function) {
 						$params = array('be_user_data' => &$be_user_data);
-						\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($function, $params, $this);
+						GeneralUtility::callUserFunction($function, $params, $this);
 					}
 				}
 				$this->passwordIsSubmitted = strlen($be_user_data['password']) > 0;
@@ -233,7 +243,7 @@ class SetupModuleController {
 			// Persist data if something has changed:
 			if (count($storeRec) && $this->saveData) {
 				// Make instance of TCE for storing the changes.
-				$tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
+				$tce = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\DataHandling\\DataHandler');
 				$tce->stripslashes_values = 0;
 				$tce->start($storeRec, array(), $GLOBALS['BE_USER']);
 				// This is so the user can actually update his user record.
@@ -261,6 +271,7 @@ class SetupModuleController {
 	 * @todo Define visibility
 	 */
 	public function init() {
+		$GLOBALS['LANG']->includeLLFile('EXT:setup/mod/locallang.xlf');
 		$this->MCONF = $GLOBALS['MCONF'];
 		// Returns the script user - that is the REAL logged in user! ($GLOBALS[BE_USER] might be another user due to simulation!)
 		$scriptUser = $this->getRealScriptUserObj();
@@ -276,9 +287,9 @@ class SetupModuleController {
 			$this->tsFieldConf['password2.']['disabled'] = 1;
 		}
 		// Create instance of object for output of data
-		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
+		$this->doc = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
-		$this->doc->setModuleTemplate('templates/setup.html');
+		$this->doc->setModuleTemplate('EXT:setup/Resources/Private/Templates/setup.html');
 		$this->doc->form = '<form action="' . \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('user_setup') . '" method="post" name="usersetup" enctype="application/x-www-form-urlencoded">';
 		$this->doc->tableLayout = array(
 			'defRow' => array(
@@ -301,7 +312,7 @@ class SetupModuleController {
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['setupScriptHook'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/setup/mod/index.php']['setupScriptHook'] as $function) {
 				$params = array();
-				$javaScript .= \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($function, $params, $this);
+				$javaScript .= GeneralUtility::callUserFunction($function, $params, $this);
 			}
 		}
 		return $javaScript;
@@ -328,40 +339,40 @@ class SetupModuleController {
 			\TYPO3\CMS\Backend\Utility\BackendUtility::setUpdateSignal('updatePageTree');
 		}
 		// Start page:
-		$this->doc->loadJavascriptLib('md5.js');
+		$this->doc->loadJavascriptLib('sysext/backend/Resources/Public/JavaScript/md5.js');
 		// Use a wrapper div
 		$this->content .= '<div id="user-setup-wrapper">';
 		// Load available backend modules
-		$this->loadModules = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Module\\ModuleLoader');
+		$this->loadModules = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Module\\ModuleLoader');
 		$this->loadModules->observeWorkspaces = TRUE;
 		$this->loadModules->load($GLOBALS['TBE_MODULES']);
 		$this->content .= $this->doc->header($LANG->getLL('UserSettings'));
 		// Show if setup was saved
 		if ($this->setupIsUpdated && !$this->tempDataIsCleared && !$this->settingsAreResetToDefault) {
-			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('setupWasUpdated'), $LANG->getLL('UserSettings'));
+			$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('setupWasUpdated'), $LANG->getLL('UserSettings'));
 			$this->content .= $flashMessage->render();
 		}
 		// Show if temporary data was cleared
 		if ($this->tempDataIsCleared) {
-			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('tempDataClearedFlashMessage'), $LANG->getLL('tempDataCleared'));
+			$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('tempDataClearedFlashMessage'), $LANG->getLL('tempDataCleared'));
 			$this->content .= $flashMessage->render();
 		}
 		// Show if temporary data was cleared
 		if ($this->settingsAreResetToDefault) {
-			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('settingsAreReset'), $LANG->getLL('resetConfiguration'));
+			$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('settingsAreReset'), $LANG->getLL('resetConfiguration'));
 			$this->content .= $flashMessage->render();
 		}
 		// Notice
 		if ($this->setupIsUpdated || $this->settingsAreResetToDefault) {
-			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('activateChanges'), '', \TYPO3\CMS\Core\Messaging\FlashMessage::INFO);
+			$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('activateChanges'), '', \TYPO3\CMS\Core\Messaging\FlashMessage::INFO);
 			$this->content .= $flashMessage->render();
 		}
 		// If password is updated, output whether it failed or was OK.
 		if ($this->passwordIsSubmitted) {
 			if ($this->passwordIsUpdated) {
-				$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('newPassword_ok'), $LANG->getLL('newPassword'));
+				$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('newPassword_ok'), $LANG->getLL('newPassword'));
 			} else {
-				$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('newPassword_failed'), $LANG->getLL('newPassword'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
+				$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('newPassword_failed'), $LANG->getLL('newPassword'), \TYPO3\CMS\Core\Messaging\FlashMessage::ERROR);
 			}
 			$this->content .= $flashMessage->render();
 		}
@@ -445,7 +456,7 @@ class SetupModuleController {
 					if ($this->dividers2tabs) {
 						$result[] = array(
 							'label' => $tabLabel,
-							'content' => count($code) ? $this->doc->spacer(20) . $this->doc->table($code) : ''
+							'content' => count($code) ? $this->doc->table($code) : ''
 						);
 						$tabLabel = $this->getLabel(substr($fieldName, 8), '', FALSE);
 						$i = 0;
@@ -481,14 +492,14 @@ class SetupModuleController {
 			if (!$value && isset($config['default'])) {
 				$value = $config['default'];
 			}
+			$dataAdd = '';
+			if ($config['table'] == 'be_users') {
+				$dataAdd = '[be_users]';
+			}
 			switch ($type) {
 			case 'text':
 
 			case 'password':
-				$dataAdd = '';
-				if ($config['table'] == 'be_users') {
-					$dataAdd = '[be_users]';
-				}
 				if ($eval == 'md5') {
 					$more .= ' onchange="this.value=this.value?MD5(this.value):\'\';"';
 				}
@@ -506,16 +517,16 @@ class SetupModuleController {
 				}
 				$html = '<input id="field_' . $fieldName . '"
 									type="checkbox"
-									name="data[' . $fieldName . ']"' . ($value ? ' checked="checked"' : '') . $more . ' />';
+									name="data' . $dataAdd . '[' . $fieldName . ']"' . ($value ? ' checked="checked"' : '') . $more . ' />';
 				break;
 			case 'select':
 				if (!$class) {
 					$more .= ' class="select"';
 				}
 				if ($config['itemsProcFunc']) {
-					$html = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($config['itemsProcFunc'], $config, $this, '');
+					$html = GeneralUtility::callUserFunction($config['itemsProcFunc'], $config, $this, '');
 				} else {
-					$html = '<select ' . $GLOBALS['TBE_TEMPLATE']->formWidth(20) . ' id="field_' . $fieldName . '" name="data[' . $fieldName . ']"' . $more . '>' . LF;
+					$html = '<select ' . $GLOBALS['TBE_TEMPLATE']->formWidth(20) . ' id="field_' . $fieldName . '" name="data' . $dataAdd . '[' . $fieldName . ']"' . $more . '>' . LF;
 					foreach ($config['items'] as $key => $optionLabel) {
 						$html .= '<option value="' . $key . '"' . ($value == $key ? ' selected="selected"' : '') . '>' . $this->getLabel($optionLabel, '', FALSE) . '</option>' . LF;
 					}
@@ -523,7 +534,7 @@ class SetupModuleController {
 				}
 				break;
 			case 'user':
-				$html = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($config['userFunc'], $config, $this, '');
+				$html = GeneralUtility::callUserFunction($config['userFunc'], $config, $this, '');
 				break;
 			case 'button':
 				if ($config['onClick']) {
@@ -548,7 +559,7 @@ class SetupModuleController {
 		}
 		$result[] = array(
 			'label' => $tabLabel,
-			'content' => count($code) ? $this->doc->spacer(20) . $this->doc->table($code) : ''
+			'content' => count($code) ? $this->doc->table($code) : ''
 		);
 		return $result;
 	}
@@ -580,7 +591,7 @@ class SetupModuleController {
 		$languageOptions[$langDefault] = '<option value=""' . ($GLOBALS['BE_USER']->uc['lang'] === '' ? ' selected="selected"' : '') . '>' . $langDefault . '</option>';
 		// Traverse the number of languages
 		/** @var $locales \TYPO3\CMS\Core\Localization\Locales */
-		$locales = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\Locales');
+		$locales = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\Locales');
 		$languages = $locales->getLanguages();
 		foreach ($languages as $locale => $name) {
 			if ($locale !== 'default') {
@@ -602,7 +613,7 @@ class SetupModuleController {
 				</select>';
 		if ($GLOBALS['BE_USER']->uc['lang'] && !@is_dir((PATH_typo3conf . 'l10n/' . $GLOBALS['BE_USER']->uc['lang']))) {
 			$languageUnavailableWarning = 'The selected language "' . $GLOBALS['LANG']->getLL(('lang_' . $GLOBALS['BE_USER']->uc['lang']), 1) . '" is not available before the language pack is installed.<br />' . ($GLOBALS['BE_USER']->isAdmin() ? 'You can use the Extension Manager to easily download and install new language packs.' : 'Please ask your system administrator to do this.');
-			$languageUnavailableMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $languageUnavailableWarning, '', \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING);
+			$languageUnavailableMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $languageUnavailableWarning, '', \TYPO3\CMS\Core\Messaging\FlashMessage::WARNING);
 			$languageCode = $languageUnavailableMessage->render() . $languageCode;
 		}
 		return $languageCode;
@@ -644,7 +655,7 @@ class SetupModuleController {
 		$this->simulateSelector = '';
 		unset($this->OLD_BE_USER);
 		if ($GLOBALS['BE_USER']->isAdmin()) {
-			$this->simUser = intval(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('simUser'));
+			$this->simUser = intval(GeneralUtility::_GP('simUser'));
 			// Make user-selector:
 			$users = \TYPO3\CMS\Backend\Utility\BackendUtility::getUserNames('username,usergroup,usergroup_cached_list,uid,realName', \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields('be_users'));
 			$opt = array();
@@ -664,7 +675,7 @@ class SetupModuleController {
 			unset($GLOBALS['BE_USER']);
 			// Unset current
 			// New backend user object
-			$BE_USER = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Authentication\\BackendUserAuthentication');
+			$BE_USER = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Authentication\\BackendUserAuthentication');
 			$BE_USER->OS = TYPO3_OS;
 			$BE_USER->setBeUserByUid($this->simUser);
 			$BE_USER->fetchGroupData();
@@ -692,7 +703,7 @@ class SetupModuleController {
 	protected function checkAccess(array $config) {
 		$access = $config['access'];
 		// Check for hook
-		$accessObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['setup']['accessLevelCheck'][$access] . ':&' . $access);
+		$accessObject = GeneralUtility::getUserObj($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['setup']['accessLevelCheck'][$access] . ':&' . $access);
 		if (is_object($accessObject) && method_exists($accessObject, 'accessLevelCheck')) {
 			// Initialize vars. If method fails, $set will be set to FALSE
 			return $accessObject->accessLevelCheck($config);
@@ -740,7 +751,7 @@ class SetupModuleController {
 			// Setting comes from another extension
 			$context = $strParts[0];
 			$field = $strParts[1];
-		} elseif (!\TYPO3\CMS\Core\Utility\GeneralUtility::inList('language,simuser,reset', $str)) {
+		} elseif (!GeneralUtility::inList('language,simuser,reset', $str)) {
 			$field = 'option_' . $str;
 		}
 		return \TYPO3\CMS\Backend\Utility\BackendUtility::wrapInHelp($context, $field, $label);
@@ -755,9 +766,9 @@ class SetupModuleController {
 		$fieldList = $GLOBALS['TYPO3_USER_SETTINGS']['showitem'];
 		// Disable fields depended on settings
 		if (!$GLOBALS['TYPO3_CONF_VARS']['BE']['RTEenabled']) {
-			$fieldList = \TYPO3\CMS\Core\Utility\GeneralUtility::rmFromList('edit_RTE', $fieldList);
+			$fieldList = GeneralUtility::rmFromList('edit_RTE', $fieldList);
 		}
-		$fieldArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $fieldList, TRUE);
+		$fieldArray = GeneralUtility::trimExplode(',', $fieldList, TRUE);
 		return $fieldArray;
 	}
 

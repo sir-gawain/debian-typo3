@@ -123,21 +123,18 @@ class Bootstrap {
 	}
 
 	/**
-	 * Redirect to install tool if LocalConfiguration.php is missing
+	 * Redirect to install tool if LocalConfiguration.php is missing.
 	 *
 	 * @param string $pathUpToDocumentRoot Can contain eg. '../' if called from a sub directory
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 * @internal This is not a public API method, do not use in own extensions
 	 */
-	public function redirectToInstallToolIfLocalConfigurationFileDoesNotExist($pathUpToDocumentRoot = '') {
+	public function redirectToInstallerIfLocalConfigurationFileDoesNotExist($pathUpToDocumentRoot = '') {
 		/** @var $configurationManager \TYPO3\CMS\Core\Configuration\ConfigurationManager */
 		$configurationManager = Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
-		if (
-			!file_exists($configurationManager->getLocalConfigurationFileLocation())
-			&& !file_exists($configurationManager->getLocalconfFileLocation())
-		) {
+		if (!file_exists($configurationManager->getLocalConfigurationFileLocation())) {
 			require_once __DIR__ . '/../Utility/HttpUtility.php';
-			Utility\HttpUtility::redirect($pathUpToDocumentRoot . 'typo3/install/index.php?mode=123&step=1&password=joh316');
+			Utility\HttpUtility::redirect($pathUpToDocumentRoot . 'typo3/sysext/install/Start/Install.php');
 		}
 		return $this;
 	}
@@ -146,12 +143,21 @@ class Bootstrap {
 	 * Includes LocalConfiguration.php and sets several
 	 * global settings depending on configuration.
 	 *
+	 * @param boolean $allowCaching Whether to allow caching - affects cache_core (autoloader)
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 * @internal This is not a public API method, do not use in own extensions
 	 */
-	public function loadConfigurationAndInitialize() {
-		$this->getInstance()
-			->populateLocalConfiguration()
+	public function loadConfigurationAndInitialize($allowCaching = TRUE) {
+		$bootstrap = $this->getInstance();
+
+		$bootstrap->populateLocalConfiguration();
+
+		if (!$allowCaching) {
+			$bootstrap->setCoreCacheToNullBackend();
+		}
+
+		$bootstrap->defineDatabaseConstants()
+			->defineUserAgentConstant()
 			->registerExtDirectComponents()
 			->initializeCachingFramework()
 			->registerAutoloader()
@@ -190,7 +196,6 @@ class Bootstrap {
 	/**
 	 * Load TYPO3_LOADED_EXT, recreate class loader registry and load ext_localconf
 	 *
-	 * @param boolean $allowCaching
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 * @internal This is not a public API method, do not use in own extensions
 	 */
@@ -210,7 +215,6 @@ class Bootstrap {
 	 */
 	public function applyAdditionalConfigurationSettings() {
 		$this->getInstance()
-			->deprecationLogForOldExtCacheSetting()
 			->initializeExceptionHandling()
 			->setFinalCachingFrameworkCacheConfiguration()
 			->defineLoggingAndExceptionConstants()
@@ -239,14 +243,33 @@ class Bootstrap {
 	 * execute typo3conf/AdditionalConfiguration.php, define database related constants.
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
 	 */
-	protected function populateLocalConfiguration() {
-		try {
-			Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager')
-				->exportConfiguration();
-		} catch (\Exception $e) {
-			die($e->getMessage());
-		}
+	public function populateLocalConfiguration() {
+		/** @var $configurationManager \TYPO3\CMS\Core\Configuration\ConfigurationManager */
+		$configurationManager = Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+		$configurationManager->exportConfiguration();
+		return $this;
+	}
+
+	/**
+	 * Set cache_core to null backend, effectively disabling eg. the autoloader cache
+	 *
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 * @internal This is not a public API method, do not use in own extensions
+	 */
+	public function setCoreCacheToNullBackend() {
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_core']['backend']
+			= 'TYPO3\\CMS\\Core\\Cache\\Backend\\NullBackend';
+		return $this;
+	}
+
+	/**
+	 * Define database constants
+	 *
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 */
+	protected function defineDatabaseConstants() {
 		define('TYPO3_db', $GLOBALS['TYPO3_CONF_VARS']['DB']['database']);
 		define('TYPO3_db_username', $GLOBALS['TYPO3_CONF_VARS']['DB']['username']);
 		define('TYPO3_db_password', $GLOBALS['TYPO3_CONF_VARS']['DB']['password']);
@@ -255,6 +278,15 @@ class Bootstrap {
 			isset($GLOBALS['TYPO3_CONF_VARS']['DB']['extTablesDefinitionScript'])
 			? $GLOBALS['TYPO3_CONF_VARS']['DB']['extTablesDefinitionScript']
 			: 'extTables.php');
+		return $this;
+	}
+
+	/**
+	 * Define user agent constant
+	 *
+	 * @return \TYPO3\CMS\Core\Core\Bootstrap
+	 */
+	protected function defineUserAgentConstant() {
 		define('TYPO3_user_agent', 'User-Agent: ' . $GLOBALS['TYPO3_CONF_VARS']['HTTP']['userAgent']);
 		return $this;
 	}
@@ -310,30 +342,12 @@ class Bootstrap {
 	 *
 	 * Since TYPO3 4.5, everything other than UTF-8 is deprecated.
 	 *
-	 * [BE][forceCharset] is set to the charset that TYPO3 is using
 	 * [SYS][setDBinit] is used to set the DB connection
 	 * and both settings need to be adjusted for UTF-8 in order to work properly
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
 	protected function checkUtf8DatabaseSettingsOrDie() {
-		// Check if [BE][forceCharset] has been set in localconf.php
-		if (isset($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'])) {
-			// die() unless we're already on UTF-8
-			if ($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] != 'utf-8' &&
-				$GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset'] &&
-				TYPO3_enterInstallScript !== '1') {
-
-				die('This installation was just upgraded to a new TYPO3 version. Since TYPO3 4.7, utf-8 is always enforced.<br />' .
-					'The configuration option $GLOBALS[\'TYPO3_CONF_VARS\'][BE][forceCharset] was marked as deprecated in TYPO3 4.5 and is now ignored.<br />' .
-					'You have configured the value to something different, which is not supported anymore.<br />' .
-					'Please proceed to the Update Wizard in the TYPO3 Install Tool to update your configuration.'
-				);
-			} else {
-				unset($GLOBALS['TYPO3_CONF_VARS']['BE']['forceCharset']);
-			}
-		}
-
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['setDBinit']) &&
 			$GLOBALS['TYPO3_CONF_VARS']['SYS']['setDBinit'] !== '-1' &&
 			preg_match('/SET NAMES [\'"]?utf8[\'"]?/i', $GLOBALS['TYPO3_CONF_VARS']['SYS']['setDBinit']) === FALSE &&
@@ -595,19 +609,6 @@ class Bootstrap {
 	}
 
 	/**
-	 * Write deprecation log if deprecated extCache setting was set in the instance.
-	 *
-	 * @return \TYPO3\CMS\Core\Core\Bootstrap
-	 * @deprecated since 6.0, the check will be removed two version later.
-	 */
-	protected function deprecationLogForOldExtCacheSetting() {
-		if (isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['extCache']) && $GLOBALS['TYPO3_CONF_VARS']['SYS']['extCache'] !== -1) {
-			Utility\GeneralUtility::deprecationLog('Setting $GLOBALS[\'TYPO3_CONF_VARS\'][\'SYS\'][\'extCache\'] is unused and can be removed from localconf.php');
-		}
-		return $this;
-	}
-
-	/**
 	 * Initialize exception handling
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
@@ -677,7 +678,6 @@ class Bootstrap {
 	/**
 	 * Initialize database connection in $GLOBALS and connect if requested
 	 *
-	 * @param boolean $connect Whether db should be connected
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 * @internal This is not a public API method, do not use in own extensions
 	 */
@@ -695,6 +695,9 @@ class Bootstrap {
 			// @TODO: Find a way to handle this case in the install tool and drop this
 			list($databaseHost, $databasePort) = explode(':', $databaseHost);
 			$databaseConnection->setDatabasePort($databasePort);
+		}
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['DB']['socket'])) {
+			$databaseConnection->setDatabaseSocket($GLOBALS['TYPO3_CONF_VARS']['DB']['socket']);
 		}
 		$databaseConnection->setDatabaseHost($databaseHost);
 

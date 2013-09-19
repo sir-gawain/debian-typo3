@@ -41,18 +41,18 @@ class LoginFormHook {
 	public function getLoginFormTag(array $params, \TYPO3\CMS\Backend\Controller\LoginController &$pObj) {
 		// Get the code according to the login level
 		switch ($pObj->loginSecurityLevel) {
-		case 'challenged':
+			case 'challenged':
 
-		case 'superchallenged':
-			$_SESSION['login_challenge'] = $this->getChallenge();
-			$content = '<form action="index.php" method="post" name="loginform" ' . 'onsubmit="doChallengeResponse(' . ($pObj->loginSecurityLevel == 'challenged' ? 0 : 1) . ');">' . '<input type="hidden" name="challenge" value="' . htmlspecialchars($_SESSION['login_challenge']) . '" />';
-			break;
-		case 'normal':
-			$content = '<form action="index.php" method="post" name="loginform" onsubmit="document.loginform.userident.value=document.loginform.p_field.value;document.loginform.p_field.value=\'\';return true;">';
-			break;
-		default:
-			// No code for unknown level!
-			$content = '';
+			case 'superchallenged':
+				$_SESSION['login_challenge'] = $this->getChallenge();
+				$content = '<form action="index.php" method="post" name="loginform" ' . 'onsubmit="doChallengeResponse(' . ($pObj->loginSecurityLevel == 'challenged' ? 0 : 1) . ');">' . '<input type="hidden" name="challenge" value="' . htmlspecialchars($_SESSION['login_challenge']) . '" />';
+				break;
+			case 'normal':
+				$content = '<form action="index.php" method="post" name="loginform" onsubmit="document.loginform.userident.value=document.loginform.p_field.value;document.loginform.p_field.value=\'\';return true;">';
+				break;
+			default:
+				// No code for unknown level!
+				$content = '';
 		}
 		return $content;
 	}
@@ -68,7 +68,7 @@ class LoginFormHook {
 		$content = '';
 		if ($pObj->loginSecurityLevel == 'superchallenged' || $pObj->loginSecurityLevel == 'challenged') {
 			$content = '
-				<script type="text/javascript" src="md5.js"></script>
+				<script type="text/javascript" src="sysext/backend/Resources/Public/JavaScript/md5.js"></script>
 				' . $GLOBALS['TBE_TEMPLATE']->wrapScriptTags('
 					function doChallengeResponse(superchallenged) {	//
 						password = document.loginform.p_field.value;

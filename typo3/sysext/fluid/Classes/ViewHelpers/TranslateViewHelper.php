@@ -34,7 +34,7 @@ namespace TYPO3\CMS\Fluid\ViewHelpers;
  * </output>
  *
  * <code title="Translate key from custom locallang file">
- * <f:translate key="LLL:EXT:myext/Resources/Private/Language/locallang.xml:key1" />
+ * <f:translate key="LLL:EXT:myext/Resources/Private/Language/locallang.xlf:key1" />
  * </code>
  * <output>
  * value of key "key1" in the current website language
@@ -72,7 +72,6 @@ class TranslateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
 	 * @return void
 	 */
 	public function initializeArguments() {
-		/** @deprecated since 6.0 and will be removed in 6.2 */
 		$this->registerArgument('key', 'string', 'Translation Key');
 		$this->registerArgument('id', 'string', 'Translation Key compatible to TYPO3 Flow');
 		$this->registerArgument('default', 'string', 'if the given locallang key could not be found, this value is used. If this argument is not set, child nodes will be used to render the default');

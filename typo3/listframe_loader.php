@@ -24,22 +24,14 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Redirects to real module if shortcut pressed
- *
- * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
- * XHTML-trans compliant
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 require 'init.php';
-/*
- * @deprecated since 6.0, the classname SC_listframe_loader and this file is obsolete
- * and will be removed with 6.2. The class was renamed and is now located at:
- * typo3/sysext/backend/Classes/Controller/ListFrameLoaderController.php
- */
-require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/Controller/ListFrameLoaderController.php';
-// Make instance:
-$SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\ListFrameLoaderController');
-$SOBE->main();
+
+$listFrameLoaderController = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\ListFrameLoaderController');
+$listFrameLoaderController->main();
 ?>

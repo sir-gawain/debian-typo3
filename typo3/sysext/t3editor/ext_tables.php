@@ -19,10 +19,10 @@ if (TYPO3_MODE === 'BE') {
 		'script' => 'wizard_table.php',
 		'params' => array(
 			'format' => 'html',
-			'style' => 'width:98%; height: 200px;'
+			'style' => 'width:98%; height: 60%;'
 		)
 	);
 	// Activate the t3editor only for type html
-	$TCA['tt_content']['types']['html']['showitem'] = str_replace('bodytext,', 'bodytext;LLL:EXT:cms/locallang_ttc.xml:bodytext.ALT.html_formlabel;;nowrap:wizards[t3editor],', $TCA['tt_content']['types']['html']['showitem']);
+	$TCA['tt_content']['types']['html']['showitem'] = str_replace('bodytext,', 'bodytext;LLL:EXT:cms/locallang_ttc.xlf:bodytext.ALT.html_formlabel;;nowrap:wizards[t3editor],', $TCA['tt_content']['types']['html']['showitem']);
 }
 ?>

@@ -1,13 +1,9 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Module menu
-
 - - - - - - - - - - - - - - - - - - - - - */
 
 #typo3-module-menu {
 	background: #dddddd;
-	background-image: -moz-linear-gradient(top, #bdbdbd, 100px #dddddd);
-	background-image: -webkit-gradient(linear, 0 0, 0 25%, color-stop(0, #bdbdbd), color-stop(1, #dddddd));
-	background-image: linear-gradient(top, #bdbdbd, 100px #dddddd);
 }
 
 /**
@@ -15,7 +11,7 @@ Module menu
  */
 #typo3-module-menu,
 #typo3-menu li.menuSection li a:hover {
-	background-image: url("data:image/png;base64,R0lGODlhAgABAIAAAMjIyLOzsyH5BAAAAAAALAAAAAACAAEAAAICRAoAOw==");
+	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA9JREFUeNpi3LFjB0CAAQAEWAIqGE4BVwAAAABJRU5ErkJggg==");
 	/* star-hack targets IE7 */
 	*background-image: url("../../images/backgrounds/module-menu-right.png");
 	background-position: right;
@@ -77,20 +73,9 @@ Module menu
 #typo3-menu li div.modgroup {
 	color: #252524;
 	cursor: pointer;
+	font-size: 10px;
 	font-weight: bold;
 	text-transform: uppercase;
-}
-
-#typo3-menu li div.collapsed {
-	background-image: url('../../images/arrows/module-menu-right.png');
-	background-position: 5px 5px;
-	background-repeat: no-repeat;
-}
-
-#typo3-menu li div.expanded {
-	background-image: url('../../images/arrows/module-menu-down.png');
-	background-position: 4px 7px;
-	background-repeat: no-repeat;
 }
 
 #typo3-menu li ul li {

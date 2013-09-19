@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Backend\Controller\Wizard;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Script Class for colorpicker wizard
  *
@@ -114,26 +116,35 @@ class ColorpickerController {
 	public $content;
 
 	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_wizards.xlf');
+		$GLOBALS['SOBE'] = $this;
+
+		$this->init();
+	}
+
+	/**
 	 * Initialises the Class
 	 *
 	 * @return 	void
-	 * @todo Define visibility
 	 */
-	public function init() {
+	protected function init() {
 		// Setting GET vars (used in frameset script):
-		$this->P = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('P', 1);
+		$this->P = GeneralUtility::_GP('P', 1);
 		// Setting GET vars (used in colorpicker script):
-		$this->colorValue = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('colorValue');
-		$this->fieldChangeFunc = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('fieldChangeFunc');
-		$this->fieldChangeFuncHash = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('fieldChangeFuncHash');
-		$this->fieldName = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('fieldName');
-		$this->formName = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('formName');
-		$this->md5ID = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('md5ID');
-		$this->exampleImg = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('exampleImg');
+		$this->colorValue = GeneralUtility::_GP('colorValue');
+		$this->fieldChangeFunc = GeneralUtility::_GP('fieldChangeFunc');
+		$this->fieldChangeFuncHash = GeneralUtility::_GP('fieldChangeFuncHash');
+		$this->fieldName = GeneralUtility::_GP('fieldName');
+		$this->formName = GeneralUtility::_GP('formName');
+		$this->md5ID = GeneralUtility::_GP('md5ID');
+		$this->exampleImg = GeneralUtility::_GP('exampleImg');
 		// Resolving image (checking existence etc.)
 		$this->imageError = '';
 		if ($this->exampleImg) {
-			$this->pickerImage = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($this->exampleImg, 1, 1);
+			$this->pickerImage = GeneralUtility::getFileAbsFileName($this->exampleImg, 1, 1);
 			if (!$this->pickerImage || !@is_file($this->pickerImage)) {
 				$this->imageError = 'ERROR: The image, "' . $this->exampleImg . '", could not be found!';
 			}
@@ -149,7 +160,7 @@ class ColorpickerController {
 			}
 		}
 		// Initialize document object:
-		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
+		$this->doc = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->JScode = $this->doc->wrapScriptTags('
 			function checkReference() {	//
@@ -189,11 +200,10 @@ class ColorpickerController {
 	 * Main Method, rendering either colorpicker or frameset depending on ->showPicker
 	 *
 	 * @return 	void
-	 * @todo Define visibility
 	 */
 	public function main() {
 		// Show frameset by default:
-		if (!\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('showPicker')) {
+		if (!GeneralUtility::_GP('showPicker')) {
 			$this->frameSet();
 		} else {
 			// Putting together the items into a form:
@@ -223,7 +233,7 @@ class ColorpickerController {
 					<input type="hidden" name="exampleImg" value="' . htmlspecialchars($this->exampleImg) . '" />
 				</form>';
 			// If the save/close button is clicked, then close:
-			if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('save_close')) {
+			if (GeneralUtility::_GP('save_close')) {
 				$content .= $this->doc->wrapScriptTags('
 					setValue(\'' . $this->colorValue . '\');
 					parent.close();
@@ -356,8 +366,8 @@ class ColorpickerController {
 		// Handling color-picker image if any:
 		if (!$this->imageError) {
 			if ($this->pickerImage) {
-				if (\TYPO3\CMS\Core\Utility\GeneralUtility::_POST('coords_x')) {
-					$this->colorValue = '#' . $this->getIndex(\TYPO3\CMS\Core\Imaging\GraphicalFunctions::imageCreateFromFile($this->pickerImage), \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('coords_x'), \TYPO3\CMS\Core\Utility\GeneralUtility::_POST('coords_y'));
+				if (GeneralUtility::_POST('coords_x')) {
+					$this->colorValue = '#' . $this->getIndex(\TYPO3\CMS\Core\Imaging\GraphicalFunctions::imageCreateFromFile($this->pickerImage), GeneralUtility::_POST('coords_x'), GeneralUtility::_POST('coords_y'));
 				}
 				$pickerFormImage = '
 				<p class="c-head">' . $GLOBALS['LANG']->getLL('colorpicker_fromImage', 1) . '</p>
@@ -407,10 +417,9 @@ class ColorpickerController {
 	 * @return boolean Whether the submitted field change functions are valid
 	 */
 	protected function areFieldChangeFunctionsValid() {
-		return $this->fieldChangeFunc && $this->fieldChangeFuncHash && $this->fieldChangeFuncHash === \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($this->fieldChangeFunc);
+		return $this->fieldChangeFunc && $this->fieldChangeFuncHash && $this->fieldChangeFuncHash === GeneralUtility::hmac($this->fieldChangeFunc);
 	}
 
 }
-
 
 ?>

@@ -5,20 +5,20 @@ if (!defined('TYPO3_MODE')) {
 if (TYPO3_MODE === 'BE') {
 	\TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerModule(
 		'TYPO3.CMS.' . $_EXTKEY,
-		'tools',
+		'system',
 		'txreportsM1',
 		'',
 		array(
 			'Report' => 'index,detail'
 		), array(
 			'access' => 'admin',
-			'icon' => 'EXT:' . $_EXTKEY . '/Resources/Public/moduleicon.gif',
+			'icon' => 'EXT:' . $_EXTKEY . '/Resources/Public/Icons/Backend-Module.gif',
 			'labels' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/locallang.xlf'
 		)
 	);
 	$statusReport = array(
-		'title' => 'LLL:EXT:reports/reports/locallang.xml:status_report_title',
-		'description' => 'LLL:EXT:reports/reports/locallang.xml:status_report_description',
+		'title' => 'LLL:EXT:reports/reports/locallang.xlf:status_report_title',
+		'description' => 'LLL:EXT:reports/reports/locallang.xlf:status_report_description',
 		'report' => 'TYPO3\\CMS\\Reports\\Report\\Status\\Status'
 	);
 	if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['reports']['tx_reports']['status'])) {

@@ -27,30 +27,35 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Validator for text
+ * Validator for "plain" text.
+ *
+ * @api
  */
-class TextValidator extends \TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator {
+class TextValidator extends AbstractValidator {
 
 	/**
-	 * Returns TRUE, if the given property ($propertyValue) is a valid text (contains no XML tags).
+	 * Checks if the given value is a valid text (contains no XML tags).
 	 *
-	 * If at least one error occurred, the result is FALSE.
+	 * Be aware that the value of this check entirely depends on the output context.
+	 * The validated text is not expected to be secure in every circumstance, if you
+	 * want to be sure of that, use a customized regular expression or filter on output.
+	 *
+	 * See http://php.net/filter_var for details.
 	 *
 	 * @param mixed $value The value that should be validated
-	 * @return boolean TRUE if the value is valid, FALSE if an error occured
+	 * @return void
+	 * @api
 	 */
 	public function isValid($value) {
-		$this->errors = array();
 		if ($value !== filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES)) {
 			$this->addError(
 				\TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate(
 					'validator.text.notvalid',
 					'extbase'
 				), 1221565786);
-			return FALSE;
 		}
-		return TRUE;
 	}
 }
 
