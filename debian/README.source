@@ -1,4 +1,4 @@
-typo3-6 (6.2.0+ds1~alpha1-1)
+typo3-6.2 (6.2.0+ds1~alpha2-1)
 
   * Changed +dfsg to +ds because all non dfsg files have been removed by
     upstream. Nevertheless we have to remove some embedded stuff, thats

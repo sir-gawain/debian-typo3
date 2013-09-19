@@ -3,7 +3,7 @@
 set -e
 
 DOCDIR=/usr/share/doc/typo3
-DOCLINK=typo3-src-4.5
+DOCLINK=typo3-src-6.2
 
 if [ -d $DOCDIR ] && [ ! -L $DOCDIR ] ; then
 	if rmdir $DOCDIR 2>/dev/null; then
