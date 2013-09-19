@@ -4,8 +4,33 @@ typo3-6.2 (6.2.0+ds1~alpha2-1) UNRELEASED; urgency=low
   * Add database user for scheduler to database on installation.
   * Adopted im-fix patch to 6.2
   * Adopted defaults patch to 6.2.
+  * Reworked typo3-dummy.postinst and typo3-dummy.postrm.
+  * Added mysql-client to dependency list of typo3-dummy.
 
- -- Christian Welzel <gawain@camlann.de>  Sun, 29 Apr 2012 18:53:06 +0200
+ -- Christian Welzel <gawain@camlann.de>  Thu, 21 Sep 2013 23:08:14 +0200
+
+typo3-src (4.5.30+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 21 Sep 2013 22:08:14 +0200
+
+typo3-src (4.5.29+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release:
+    - fixes: "TYPO3-CORE-SA-2013-002: Cross-Site Scripting and Remote
+      Code Execution Vulnerability in TYPO3 Core" (Closes: 720194)
+  * Import of sources of 2.0.4.6 of 1pixelout audio player from 
+    http://subversion.assembla.com/svn/1pixelout/audio-player/tags/2.0.4.6.
+  * Changed audio player license (GPL-2 -> MIT).
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 21 Aug 2013 22:08:14 +0200
+
+typo3-src (4.5.27+dfsg1-3) unstable; urgency=low
+
+  * Added italian translation (Closes: #712400)
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 20 Jun 2013 11:26:36 +0200
 
 typo3-src (4.5.27+dfsg1-2) unstable; urgency=low
 

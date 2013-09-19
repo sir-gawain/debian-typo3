@@ -6,6 +6,21 @@ set -e
 PACKAGE=typo3-dummy
 T3CONFDIR=/var/lib/$PACKAGE/typo3conf
 
+APACHE_22=
+APACHE_24=
+CONF=
+
+COMMON_STATE=$(dpkg-query -f '${Status}' -W 'apache2.2-common' 2>/dev/null | awk '{print $3}' || true)
+
+if [ "$COMMON_STATE" = "installed" ] || [ "$COMMON_STATE" = "unpacked" ] ; then
+    APACHE_22=1
+fi
+if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+    APACHE_24=1
+    CONF=".conf"
+    . /usr/share/apache2/apache2-maintscript-helper
+fi
+
 if [ -f /usr/share/debconf/confmodule ]; then
     . /usr/share/debconf/confmodule
 fi
@@ -29,25 +44,25 @@ if [ "$1" = "purge" ]; then
 fi
 
 case "$1" in "remove"|"purge" )
-	COMMON_STATE=$(dpkg-query -f '${Status}' -W 'apache2.2-common' 2>/dev/null | awk '{print $3}' || true)
 
 	for confdir in sites-available conf-available; do
-		if [ -f /etc/apache2/$confdir/typo3-dummy-directory -o -L /etc/apache2/$confdir/typo3-dummy-directory ]; then
-			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
-			    . /usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf typo3-dummy-directory
-			elif [ "$COMMON_STATE" = "installed" ] || [ "$COMMON_STATE" = "unpacked" ] ; then
+		if [ -f /etc/apache2/$confdir/typo3-dummy-directory$CONF -o -L /etc/apache2/$confdir/typo3-dummy-directory$CONF ]; then
+			if [ -n "$APACHE_24" ] ; then
+			    apache2_invoke dissite typo3-dummy-directory
+			elif [ -n "$APACHE_22" ] ; then
 			    a2dissite typo3-dummy-directory
 			fi
-			rm -f /etc/apache2/$confdir/typo3-dummy-directory
 		fi
-		if [ -f /etc/apache2/$confdir/typo3-dummy-vhost -o -L /etc/apache2/$confdir/typo3-dummy-vhost ]; then
-			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
-			    . /usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf typo3-dummy-vhost
-			elif [ "$COMMON_STATE" = "installed" ] || [ "$COMMON_STATE" = "unpacked" ] ; then
+		rm -f /etc/apache2/$confdir/typo3-dummy-directory$CONF
+
+		if [ -f /etc/apache2/$confdir/typo3-dummy-vhost$CONF -o -L /etc/apache2/$confdir/typo3-dummy-vhost$CONF ]; then
+			if [ -n "$APACHE_24" ] ; then
+			    apache2_invoke dissite typo3-dummy-vhost
+			elif [ -n "$APACHE_22" ] ; then
 			    a2dissite typo3-dummy-vhost
 			fi
-			rm -f /etc/apache2/$confdir/typo3-dummy-vhost
 		fi
+		rm -f /etc/apache2/$confdir/typo3-dummy-vhost$CONF
 	done
 	;;
 esac
