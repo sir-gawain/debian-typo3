@@ -1,3 +1,10 @@
+typo3-src (4.5.30+dfsg1-2) unstable; urgency=low
+
+  * Reworked typo3-dummy.postinst and typo3-dummy.postrm.
+  * Added mysql-client to dependency list of typo3-dummy.
+
+ -- Christian Welzel <gawain@camlann.de>  Thu, 19 Sep 2013 22:08:14 +0200
+
 typo3-src (4.5.30+dfsg1-1) unstable; urgency=low
 
   * New upstream release.
