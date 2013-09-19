@@ -42,7 +42,7 @@ install: build
 	dh_prep
 	dh_installdirs
 	dh_install
-	cp -r index.php t3lib typo3 $(SOURCEINSTALLDIR)
+	cp -r index.php typo3 $(SOURCEINSTALLDIR)
 	cp typo3conf/AdditionalFactoryConfiguration.php $(ETCDIR)/AdditionalFactoryConfiguration.php_template
 	cp typo3conf/AdditionalConfiguration.php $(ETCDIR)/AdditionalConfiguration.php
 #set correct permissions for cron script
