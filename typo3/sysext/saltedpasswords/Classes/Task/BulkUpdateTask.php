@@ -95,7 +95,7 @@ class BulkUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 				$this->deactivateSelf();
 			}
 		}
-		// Use save() of parent class tx_scheduler_Task to persist changed task variables
+		// Use save() of parent class \TYPO3\CMS\Scheduler\Task\AbstractTask to persist changed task variables
 		$this->save();
 		return TRUE;
 	}
@@ -106,7 +106,7 @@ class BulkUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	 * @return string Additional information
 	 */
 	public function getAdditionalInformation() {
-		$information = $GLOBALS['LANG']->sL('LLL:EXT:saltedpasswords/locallang.xml:ext.saltedpasswords.tasks.bulkupdate.label.additionalinformation.deactivateself') . $this->getCanDeactivateSelf() . '; ' . $GLOBALS['LANG']->sL('LLL:EXT:saltedpasswords/locallang.xml:ext.saltedpasswords.tasks.bulkupdate.label.additionalinformation.numberofrecords') . $this->getNumberOfRecords();
+		$information = $GLOBALS['LANG']->sL('LLL:EXT:saltedpasswords/locallang.xlf:ext.saltedpasswords.tasks.bulkupdate.label.additionalinformation.deactivateself') . $this->getCanDeactivateSelf() . '; ' . $GLOBALS['LANG']->sL('LLL:EXT:saltedpasswords/locallang.xlf:ext.saltedpasswords.tasks.bulkupdate.label.additionalinformation.numberofrecords') . $this->getNumberOfRecords();
 		return $information;
 	}
 
@@ -215,7 +215,7 @@ class BulkUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 
 	/**
 	 * Deactivates this task instance.
-	 * Uses setDisabled() method of parent class tx_scheduler_Task.
+	 * Uses setDisabled() method of parent \TYPO3\CMS\Scheduler\Task\AbstractTask
 	 *
 	 * @return void
 	 */

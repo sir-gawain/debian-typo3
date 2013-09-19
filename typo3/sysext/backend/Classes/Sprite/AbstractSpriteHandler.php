@@ -26,6 +26,10 @@ namespace TYPO3\CMS\Backend\Sprite;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Backend\Sprite\SpriteManager;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * An abstract class implementing SpriteIconGeneratorInterface.
  * Provides base functionality for all handlers.
@@ -62,7 +66,7 @@ abstract class AbstractSpriteHandler implements \TYPO3\CMS\Backend\Sprite\Sprite
 	 */
 	public function __construct() {
 		// The file name is prefixed with "z" since the concatenator orders files per name
-		$this->cssTcaFile = PATH_site . \TYPO3\CMS\Backend\Sprite\SpriteManager::$tempPath . 'zextensions.css';
+		$this->cssTcaFile = PATH_site . SpriteManager::$tempPath . 'zextensions.css';
 		$this->styleSheetData = '/* Auto-Generated via ' . get_class($this) . ' */' . LF;
 	}
 
@@ -71,7 +75,8 @@ abstract class AbstractSpriteHandler implements \TYPO3\CMS\Backend\Sprite\Sprite
 	 * \TYPO3\CMS\Backend\Sprite\SpriteManager::addIconSprite
 	 *
 	 * In fact the stylesheet-files are copied to \TYPO3\CMS\Backend\Sprite\SpriteManager::tempPath
-	 * where they automatically will be included from via template.php and
+	 * where they automatically will be included from via
+	 * \TYPO3\CMS\Backend\Template\DocumentTemplate and
 	 * \TYPO3\CMS\Core\Resource\ResourceCompressor
 	 *
 	 * @return void
@@ -86,17 +91,17 @@ abstract class AbstractSpriteHandler implements \TYPO3\CMS\Backend\Sprite\Sprite
 			$allowedCssFilesinTempDir[] = $fileName;
 			// get-Cache Filename
 			$unique = md5($fileName . filemtime((PATH_site . $file)) . filesize((PATH_site . $file)));
-			$cacheFile = PATH_site . \TYPO3\CMS\Backend\Sprite\SpriteManager::$tempPath . $fileName . $unique . '.css';
+			$cacheFile = PATH_site . SpriteManager::$tempPath . $fileName . $unique . '.css';
 			if (!file_exists($cacheFile)) {
 				copy(PATH_site . $file, $cacheFile);
 			}
 		}
 		// Get all .css files in dir
-		$cssFilesPresentInTempDir = \TYPO3\CMS\Core\Utility\GeneralUtility::getFilesInDir(PATH_site . \TYPO3\CMS\Backend\Sprite\SpriteManager::$tempPath, '.css', 0);
+		$cssFilesPresentInTempDir = GeneralUtility::getFilesInDir(PATH_site . SpriteManager::$tempPath, '.css', 0);
 		// and delete old ones which are not needed anymore
 		$filesToDelete = array_diff($cssFilesPresentInTempDir, $allowedCssFilesinTempDir);
 		foreach ($filesToDelete as $file) {
-			unlink(PATH_site . \TYPO3\CMS\Backend\Sprite\SpriteManager::$tempPath . $file);
+			unlink(PATH_site . SpriteManager::$tempPath . $file);
 		}
 	}
 
@@ -110,7 +115,7 @@ abstract class AbstractSpriteHandler implements \TYPO3\CMS\Backend\Sprite\Sprite
 		// Include registered Sprites
 		$this->loadRegisteredSprites();
 		// Cache results in the CSS file
-		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFile($this->cssTcaFile, $this->styleSheetData);
+		GeneralUtility::writeFile($this->cssTcaFile, $this->styleSheetData);
 	}
 
 	/**
@@ -154,7 +159,7 @@ abstract class AbstractSpriteHandler implements \TYPO3\CMS\Backend\Sprite\Sprite
 					} else {
 						$icon = $skinPath . 'gfx/i/' . $tcaCtrl['iconfile'];
 					}
-					$icon = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($icon);
+					$icon = GeneralUtility::resolveBackPath($icon);
 					$resultArray['tcarecords-' . $tableName . '-default'] = $icon;
 				}
 				// If records types are available, register them
@@ -165,7 +170,7 @@ abstract class AbstractSpriteHandler implements \TYPO3\CMS\Backend\Sprite\Sprite
 						if (strpos($icon, '/') === FALSE) {
 							$icon = $skinPath . 'gfx/i/' . $icon;
 						}
-						$icon = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($icon);
+						$icon = GeneralUtility::resolveBackPath($icon);
 						$resultArray['tcarecords-' . $tableName . '-' . $type] = $icon;
 					}
 				}

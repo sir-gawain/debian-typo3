@@ -40,6 +40,7 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
+	 * @inject
 	 */
 	protected $objectManager;
 
@@ -141,6 +142,7 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
+	 * @inject
 	 */
 	protected $configurationManager;
 
@@ -152,23 +154,7 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * @var array
 	 */
-	protected $methodReflections;
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
-	 * @return void
-	 */
-	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
-		$this->objectManager = $objectManager;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
-	 * @return void
-	 */
-	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
-		$this->configurationManager = $configurationManager;
-	}
+	protected $methodReflections = array();
 
 	/**
 	 * Sets the data cache.
@@ -245,6 +231,27 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 		} else {
 			return $this->buildClassSchema($className);
 		}
+	}
+
+	/**
+	 * Wrapper for method_exists() which tells if the given method exists.
+	 *
+	 * @param string $className Name of the class containing the method
+	 * @param string $methodName Name of the method
+	 * @return boolean
+	 * @api
+	 */
+	public function hasMethod($className, $methodName) {
+		try {
+			if (!array_key_exists($className, $this->methodReflections) || !array_key_exists($methodName, $this->methodReflections[$className])) {
+				$this->methodReflections[$className][$methodName] = new \TYPO3\CMS\Extbase\Reflection\MethodReflection($className, $methodName);
+				$this->dataCacheNeedsUpdate = TRUE;
+			}
+		} catch (\ReflectionException $e) {
+			// Method does not exist. Store this information in cache.
+			$this->methodReflections[$className][$methodName] = NULL;
+		}
+		return isset($this->methodReflections[$className][$methodName]);
 	}
 
 	/**

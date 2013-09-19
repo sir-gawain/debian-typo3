@@ -70,12 +70,26 @@ class LevelTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @test
 	 * @dataProvider isValidLevelThrowsExceptionOnInvalidLevelIfAskedToDoSoDataProvider
-	 * @expectedException \RangeException
+	 * @expectedException \Psr\Log\InvalidArgumentException
 	 */
 	public function isValidLevelThrowsExceptionOnInvalidLevelIfAskedToDoSo($inputValue) {
 		\TYPO3\CMS\Core\Log\LogLevel::validateLevel($inputValue);
 	}
 
+	/**
+	 * @test
+	 */
+	public function normalizeLevelConvertsValidLevelFromStringToInteger() {
+		$this->assertEquals(7, \TYPO3\CMS\Core\Log\LogLevel::normalizeLevel('debug'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function normalizeLevelDoesNotConvertInvalidLevel() {
+		$levelString = 'invalid';
+		$this->assertEquals($levelString, \TYPO3\CMS\Core\Log\LogLevel::normalizeLevel($levelString));
+	}
 }
 
 ?>

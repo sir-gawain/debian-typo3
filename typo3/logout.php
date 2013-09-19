@@ -24,6 +24,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Logout script for the backend
  * This script saves the interface positions and calls the closeTypo3Windows in the frameset
@@ -31,13 +32,7 @@
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 require 'init.php';
-/*
- * @deprecated since 6.0, the classname SC_logout and this file is obsolete
- * and will be removed with 6.2. The class was renamed and is now located at:
- * typo3/sysext/backend/Classes/Controller/LogoutController.php
- */
-require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('backend') . 'Classes/Controller/LogoutController.php';
-// Make instance:
-$SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\LogoutController');
-$SOBE->logout();
+
+$logoutController = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Controller\\LogoutController');
+$logoutController->logout();
 ?>

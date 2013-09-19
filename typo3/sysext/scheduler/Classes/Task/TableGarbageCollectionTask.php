@@ -23,6 +23,7 @@ namespace TYPO3\CMS\Scheduler\Task;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Remove old entries from tables.
  *
@@ -116,9 +117,9 @@ class TableGarbageCollectionTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask 
 	 */
 	public function getAdditionalInformation() {
 		if ($this->allTables) {
-			$message = $GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:label.tableGarbageCollection.additionalInformationAllTables');
+			$message = $GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xlf:label.tableGarbageCollection.additionalInformationAllTables');
 		} else {
-			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xml:label.tableGarbageCollection.additionalInformationTable'), $this->table);
+			$message = sprintf($GLOBALS['LANG']->sL('LLL:EXT:scheduler/mod1/locallang.xlf:label.tableGarbageCollection.additionalInformationTable'), $this->table);
 		}
 		return $message;
 	}

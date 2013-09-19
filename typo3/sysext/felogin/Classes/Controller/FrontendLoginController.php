@@ -356,7 +356,7 @@ class FrontendLoginController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlugin 
 						$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery(
 							'fe_users',
 							'uid=' . $user['uid'],
-							array('password' => $newPass, 'felogin_forgotHash' => '')
+							array('password' => $newPass, 'felogin_forgotHash' => '', 'tstamp' => $GLOBALS['EXEC_TIME'])
 						);
 						$markerArray['###STATUS_MESSAGE###'] = $this->getDisplayText(
 							'change_password_done_message',
@@ -904,7 +904,7 @@ class FrontendLoginController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlugin 
 	}
 
 	/**
-	 * Returns the header / message value from flexform if present, else from locallang.xml
+	 * Returns the header / message value from flexform if present, else from locallang.xlf
 	 *
 	 * @param string $label label name
 	 * @param string $stdWrapArray TS stdWrap array

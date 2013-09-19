@@ -106,6 +106,11 @@ class DatabaseConnection {
 	protected $databasePort = 3306;
 
 	/**
+	 * @var string|NULL Database socket to connect to
+	 */
+	protected $databaseSocket = NULL;
+
+	/**
 	 * @var string Database name to connect to
 	 */
 	protected $databaseName = '';
@@ -691,7 +696,6 @@ class DatabaseConnection {
 				break;
 			default:
 				$constraint = 'AND';
-				break;
 		}
 
 		$queryParts = array();
@@ -1183,8 +1187,8 @@ class DatabaseConnection {
 			$this->databaseUsername,
 			$this->databaseUserPassword,
 			NULL,
-			$this->databasePort,
-			NULL,
+			(int)$this->databasePort,
+			$this->databaseSocket,
 			$this->connectionCompression ? MYSQLI_CLIENT_COMPRESS : 0
 		);
 
@@ -1313,7 +1317,7 @@ class DatabaseConnection {
 			$this->connectDB();
 		}
 		$whichTables = array();
-		$tables_result = $this->link->query('SHOW TABLE STATUS FROM `' . TYPO3_db . '`');
+		$tables_result = $this->link->query('SHOW TABLE STATUS FROM `' . $this->databaseName . '`');
 		if ($tables_result !== FALSE) {
 			while ($theTable = $tables_result->fetch_assoc()) {
 				$whichTables[$theTable['Name']] = $theTable;
@@ -1435,6 +1439,16 @@ class DatabaseConnection {
 	public function setDatabasePort($port = 3306) {
 		$this->disconnectIfConnected();
 		$this->databasePort = (int)$port;
+	}
+
+	/**
+	 * Set database socket
+	 *
+	 * @param string|NULL $socket
+	 */
+	public function setDatabaseSocket($socket = NULL) {
+		$this->disconnectIfConnected();
+		$this->databaseSocket = $socket;
 	}
 
 	/**
@@ -1814,6 +1828,7 @@ class DatabaseConnection {
 			'explainOutput',
 			'databaseHost',
 			'databasePort',
+			'databaseSocket',
 			'databaseName',
 			'databaseUsername',
 			'databaseUserPassword',

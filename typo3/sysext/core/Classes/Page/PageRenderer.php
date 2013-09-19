@@ -27,6 +27,9 @@ namespace TYPO3\CMS\Core\Page;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * TYPO3 pageRender class (new in TYPO3 4.3.0)
  * This class render the HTML of a webpage, usable for BE and FE
@@ -486,8 +489,8 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function __construct($templateFile = '', $backPath = NULL) {
 		$this->reset();
-		$this->csConvObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter');
-		$this->locales = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\Locales');
+		$this->csConvObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter');
+		$this->locales = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Localization\\Locales');
 		if (strlen($templateFile)) {
 			$this->templateFile = $templateFile;
 		}
@@ -508,7 +511,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return void
 	 */
 	protected function reset() {
-		$this->templateFile = TYPO3_mainDir . 'templates/template_page_backend.html';
+		$this->templateFile = 'EXT:core/Resources/Private/Templates/PageRenderer.html';
 		$this->jsFiles = array();
 		$this->jsFooterFiles = array();
 		$this->jsInline = array();
@@ -1374,7 +1377,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			$filterNamespaces = array('TYPO3');
 		}
 		// For ExtDirect we need flash message support
-		$this->addJsFile(\TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($this->backPath . '../t3lib/js/extjs/ux/flashmessages.js'));
+		$this->addJsFile(GeneralUtility::resolveBackPath($this->backPath . 'sysext/backend/Resources/Public/JavaScript/flashmessages.js'));
 		// Add language labels for ExtDirect
 		if (TYPO3_MODE === 'FE') {
 			$this->addInlineLanguageLabelArray(array(
@@ -1393,7 +1396,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			$token = $formprotection->generateToken('extDirect');
 		}
 		/** @var $extDirect \TYPO3\CMS\Core\ExtDirect\ExtDirectApi */
-		$extDirect = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\ExtDirect\\ExtDirectApi');
+		$extDirect = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\ExtDirect\\ExtDirectApi');
 		$api = $extDirect->getApiPhp($filterNamespaces);
 		if ($api) {
 			$this->addJsInlineCode('TYPO3ExtDirectAPI', $api, FALSE);
@@ -1581,11 +1584,11 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			$loadedExtensions = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getLoadedExtensionListArray();
 			foreach ($loadedExtensions as $packageName) {
 				$fullJsPath = 'EXT:' . $packageName . '/Resources/Public/JavaScript/';
-				$fullJsPath = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($fullJsPath);
+				$fullJsPath = GeneralUtility::getFileAbsFileName($fullJsPath);
 				$fullJsPath = \TYPO3\CMS\Core\Utility\PathUtility::getRelativePath(PATH_typo3, $fullJsPath);
 				$fullJsPath = rtrim($fullJsPath, '/');
 				if ($fullJsPath) {
-					$this->requireJsConfig['paths']['TYPO3/CMS/' . \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToUpperCamelCase($packageName)] = $this->backPath . $fullJsPath;
+					$this->requireJsConfig['paths']['TYPO3/CMS/' . GeneralUtility::underscoredToUpperCamelCase($packageName)] = $this->backPath . $fullJsPath;
 				}
 			}
 
@@ -1647,7 +1650,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 					$this->addScriptaculousModules[$key] = TRUE;
 				}
 			} else {
-				$mods = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $modules);
+				$mods = GeneralUtility::trimExplode(',', $modules);
 				foreach ($mods as $mod) {
 					if (isset($this->addScriptaculousModules[strtolower($mod)])) {
 						$this->addScriptaculousModules[strtolower($mod)] = TRUE;
@@ -1668,16 +1671,16 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	public function loadExtJS($css = TRUE, $theme = TRUE, $adapter = '') {
 		if ($adapter) {
 			// Empty $adapter will always load the ext adapter
-			switch (\TYPO3\CMS\Core\Utility\GeneralUtility::strtolower(trim($adapter))) {
-			case self::EXTJS_ADAPTER_YUI:
-				$this->extJSadapter = 'yui/ext-yui-adapter.js';
-				break;
-			case self::EXTJS_ADAPTER_PROTOTYPE:
-				$this->extJSadapter = 'prototype/ext-prototype-adapter.js';
-				break;
-			case self::EXTJS_ADAPTER_JQUERY:
-				$this->extJSadapter = 'jquery/ext-jquery-adapter.js';
-				break;
+			switch (GeneralUtility::strtolower(trim($adapter))) {
+				case self::EXTJS_ADAPTER_YUI:
+					$this->extJSadapter = 'yui/ext-yui-adapter.js';
+					break;
+				case self::EXTJS_ADAPTER_PROTOTYPE:
+					$this->extJSadapter = 'prototype/ext-prototype-adapter.js';
+					break;
+				case self::EXTJS_ADAPTER_JQUERY:
+					$this->extJSadapter = 'jquery/ext-jquery-adapter.js';
+					break;
 			}
 		}
 		$this->addExtJS = TRUE;
@@ -1778,7 +1781,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * Gets labels to be used in JavaScript fetched from a locallang file.
 	 *
-	 * @param string $fileRef Input is a file-reference (see \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName). That file is expected to be a 'locallang.xml' file containing a valid XML TYPO3 language structure.
+	 * @param string $fileRef Input is a file-reference (see GeneralUtility::getFileAbsFileName). That file is expected to be a 'locallang.xml' file containing a valid XML TYPO3 language structure.
 	 * @param string $selectionPrefix Prefix to select the correct labels (default: '')
 	 * @param string $stripFromSelectionName Sub-prefix to be removed from label names in the result (default: '')
 	 * @param integer $errorMode Error mode (when file could not be found): 0 - syslog entry, 1 - do nothing, 2 - throw an exception
@@ -2060,8 +2063,8 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return string
 	 */
 	protected function getTemplateForPart($part) {
-		$templateFile = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($this->templateFile, TRUE);
-		$template = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($templateFile);
+		$templateFile = GeneralUtility::getFileAbsFileName($this->templateFile, TRUE);
+		$template = GeneralUtility::getUrl($templateFile);
 		if ($this->removeLineBreaksFromTemplate) {
 			$template = strtr($template, array(LF => '', CR => ''));
 		}
@@ -2084,7 +2087,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		// Include RequireJS
 		if ($this->addRequireJs) {
 				// load the paths of the requireJS configuration
-			$out .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('var require = ' . json_encode($this->requireJsConfig)) . LF;
+			$out .= GeneralUtility::wrapJS('var require = ' . json_encode($this->requireJsConfig)) . LF;
 				// directly after that, include the require.js file
 			$out .= '<script src="' . $this->processJsFile(($this->backPath . $this->requireJsPath . 'require.js')) . '" type="text/javascript"></script>' . LF;
 		}
@@ -2179,11 +2182,11 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			}
 			$out .= $this->inlineJavascriptWrap[0] . '
 				Ext.ns("TYPO3");
-				Ext.BLANK_IMAGE_URL = "' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::locationHeaderUrl(($this->backPath . 'gfx/clear.gif'))) . '";' . LF . $inlineSettings . 'Ext.onReady(function() {' . ($this->enableExtJSQuickTips ? 'Ext.QuickTips.init();' . LF : '') . $code . ' });' . $this->inlineJavascriptWrap[1];
+				Ext.BLANK_IMAGE_URL = "' . htmlspecialchars(GeneralUtility::locationHeaderUrl(($this->backPath . 'gfx/clear.gif'))) . '";' . LF . $inlineSettings . 'Ext.onReady(function() {' . ($this->enableExtJSQuickTips ? 'Ext.QuickTips.init();' . LF : '') . $code . ' });' . $this->inlineJavascriptWrap[1];
 			unset($this->extOnReadyCode);
 			// Include TYPO3.l10n object
 			if (TYPO3_MODE === 'BE') {
-				$out .= '<script src="' . $this->processJsFile(($this->backPath . 'sysext/lang/res/js/be/typo3lang.js')) . '" type="text/javascript" charset="utf-8"></script>' . LF;
+				$out .= '<script src="' . $this->processJsFile(($this->backPath . 'sysext/lang/Resources/Public/JavaScript/Typo3Lang.js')) . '" type="text/javascript" charset="utf-8"></script>' . LF;
 			}
 			if ($this->extJStheme) {
 				if (isset($GLOBALS['TBE_STYLES']['extJS']['theme'])) {
@@ -2220,39 +2223,38 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function renderJqueryScriptTag($version, $source, $namespace) {
 		switch (TRUE) {
-		case isset($this->jQueryCdnUrls[$source]):
-			if ($this->enableJqueryDebug) {
-				$minifyPart = '';
-			} else {
-				$minifyPart = '.min';
-			}
-			$jQueryFileName = sprintf($this->jQueryCdnUrls[$source], $version, $minifyPart);
-			break;
-		case $source === 'local':
-			$jQueryFileName = $this->backPath . $this->jQueryPath . 'jquery-' . rawurlencode($version);
-			if ($this->enableJqueryDebug) {
-				$jQueryFileName .= '.js';
-			} else {
-				$jQueryFileName .= '.min.js';
-			}
-			break;
-		default:
-			$jQueryFileName = $source;
+			case isset($this->jQueryCdnUrls[$source]):
+				if ($this->enableJqueryDebug) {
+					$minifyPart = '';
+				} else {
+					$minifyPart = '.min';
+				}
+				$jQueryFileName = sprintf($this->jQueryCdnUrls[$source], $version, $minifyPart);
+				break;
+			case $source === 'local':
+				$jQueryFileName = $this->backPath . $this->jQueryPath . 'jquery-' . rawurlencode($version);
+				if ($this->enableJqueryDebug) {
+					$jQueryFileName .= '.js';
+				} else {
+					$jQueryFileName .= '.min.js';
+				}
+				break;
+			default:
+				$jQueryFileName = $source;
 		}
 		// Include the jQuery Core
 		$scriptTag = '<script src="' . htmlspecialchars($jQueryFileName) . '" type="text/javascript"></script>' . LF;
 		// Set the noConflict mode to be available via "TYPO3.jQuery" in all installations
 		switch ($namespace) {
-		case self::JQUERY_NAMESPACE_DEFAULT_NOCONFLICT:
-			$scriptTag .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('jQuery.noConflict();') . LF;
-			break;
-		case self::JQUERY_NAMESPACE_NONE:
-			break;
-		case self::JQUERY_NAMESPACE_DEFAULT:
+			case self::JQUERY_NAMESPACE_DEFAULT_NOCONFLICT:
+				$scriptTag .= GeneralUtility::wrapJS('jQuery.noConflict();') . LF;
+				break;
+			case self::JQUERY_NAMESPACE_NONE:
+				break;
+			case self::JQUERY_NAMESPACE_DEFAULT:
 
-		default:
-			$scriptTag .= \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS('var TYPO3 = TYPO3 || {}; TYPO3.' . $namespace . ' = jQuery.noConflict(true);') . LF;
-			break;
+			default:
+				$scriptTag .= GeneralUtility::wrapJS('var TYPO3 = TYPO3 || {}; TYPO3.' . $namespace . ' = jQuery.noConflict(true);') . LF;
 		}
 		return $scriptTag;
 	}
@@ -2266,8 +2268,8 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		$cssFiles = '';
 		if (count($this->cssFiles)) {
 			foreach ($this->cssFiles as $file => $properties) {
-				$file = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($file);
-				$file = \TYPO3\CMS\Core\Utility\GeneralUtility::createVersionNumberedFilename($file);
+				$file = GeneralUtility::resolveBackPath($file);
+				$file = GeneralUtility::createVersionNumberedFilename($file);
 				$tag = '<link rel="' . htmlspecialchars($properties['rel']) . '" type="text/css" href="' . htmlspecialchars($file) . '" media="' . htmlspecialchars($properties['media']) . '"' . ($properties['title'] ? ' title="' . htmlspecialchars($properties['title']) . '"' : '') . $this->endingSlash . '>';
 				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
 					$tag = str_replace('|', $tag, $properties['allWrap']);
@@ -2312,8 +2314,8 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		$jsFooterLibs = '';
 		if (count($this->jsLibs)) {
 			foreach ($this->jsLibs as $properties) {
-				$properties['file'] = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($properties['file']);
-				$properties['file'] = \TYPO3\CMS\Core\Utility\GeneralUtility::createVersionNumberedFilename($properties['file']);
+				$properties['file'] = GeneralUtility::resolveBackPath($properties['file']);
+				$properties['file'] = GeneralUtility::createVersionNumberedFilename($properties['file']);
 				$tag = '<script src="' . htmlspecialchars($properties['file']) . '" type="' . htmlspecialchars($properties['type']) . '"></script>';
 				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
 					$tag = str_replace('|', $tag, $properties['allWrap']);
@@ -2350,8 +2352,8 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 		$jsFooterFiles = '';
 		if (count($this->jsFiles)) {
 			foreach ($this->jsFiles as $file => $properties) {
-				$file = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($file);
-				$file = \TYPO3\CMS\Core\Utility\GeneralUtility::createVersionNumberedFilename($file);
+				$file = GeneralUtility::resolveBackPath($file);
+				$file = GeneralUtility::createVersionNumberedFilename($file);
 				$tag = '<script src="' . htmlspecialchars($file) . '" type="' . htmlspecialchars($properties['type']) . '"></script>';
 				if ($properties['allWrap'] && strpos($properties['allWrap'], '|') !== FALSE) {
 					$tag = str_replace('|', $tag, $properties['allWrap']);
@@ -2474,7 +2476,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 
 		$localLanguage = array();
 		foreach ($languages as $language) {
-			$tempLL = \TYPO3\CMS\Core\Utility\GeneralUtility::readLLfile($fileRef, $language, $this->charSet, $errorMode);
+			$tempLL = GeneralUtility::readLLfile($fileRef, $language, $this->charSet, $errorMode);
 			$localLanguage['default'] = $tempLL['default'];
 			if (!isset($localLanguage[$this->lang])) {
 				$localLanguage[$this->lang] = $localLanguage['default'];
@@ -2482,7 +2484,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			if ($this->lang !== 'default' && isset($tempLL[$language])) {
 				// Merge current language labels onto labels from previous language
 				// This way we have a labels with fall back applied
-				$localLanguage[$this->lang] = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($localLanguage[$this->lang], $tempLL[$language], FALSE, FALSE);
+				$localLanguage[$this->lang] = GeneralUtility::array_merge_recursive_overrule($localLanguage[$this->lang], $tempLL[$language], FALSE, FALSE);
 			}
 		}
 
@@ -2522,7 +2524,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 					'headerData' => &$this->headerData,
 					'footerData' => &$this->footerData
 				);
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsConcatenateHandler'], $params, $this);
+				GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsConcatenateHandler'], $params, $this);
 			} else {
 				$this->jsLibs = $this->getCompressor()->concatenateJsFiles($this->jsLibs);
 				$this->jsFiles = $this->getCompressor()->concatenateJsFiles($this->jsFiles);
@@ -2545,7 +2547,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 					'headerData' => &$this->headerData,
 					'footerData' => &$this->footerData
 				);
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssConcatenateHandler'], $params, $this);
+				GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssConcatenateHandler'], $params, $this);
 			} else {
 				$cssOptions = array();
 				if (TYPO3_MODE === 'BE') {
@@ -2582,7 +2584,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 			);
 			if (!empty($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler'])) {
 				// use external concatenation routine
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler'], $params, $this);
+				GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['cssCompressHandler'], $params, $this);
 			} else {
 				$this->cssFiles = $this->getCompressor()->compressCssFiles($this->cssFiles);
 			}
@@ -2607,14 +2609,14 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 					'headerData' => &$this->headerData,
 					'footerData' => &$this->footerData
 				);
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'], $params, $this);
+				GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'], $params, $this);
 			} else {
 				// Traverse the arrays, compress files
 				if (count($this->jsInline)) {
 					foreach ($this->jsInline as $name => $properties) {
 						if ($properties['compress']) {
 							$error = '';
-							$this->jsInline[$name]['code'] = \TYPO3\CMS\Core\Utility\GeneralUtility::minifyJavaScript($properties['code'], $error);
+							$this->jsInline[$name]['code'] = GeneralUtility::minifyJavaScript($properties['code'], $error);
 							if ($error) {
 								$this->compressError .= 'Error with minify JS Inline Block "' . $name . '": ' . $error . LF;
 							}
@@ -2635,7 +2637,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function getCompressor() {
 		if ($this->compressor === NULL) {
-			$this->compressor = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceCompressor');
+			$this->compressor = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\ResourceCompressor');
 		}
 		return $this->compressor;
 	}
@@ -2650,18 +2652,18 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function processJsFile($filename) {
 		switch (TYPO3_MODE) {
-		case 'FE':
-			if ($this->compressJavascript) {
-				$filename = $this->getCompressor()->compressJsFile($filename);
-			} else {
-				$filename = \TYPO3\CMS\Core\Utility\GeneralUtility::createVersionNumberedFilename($filename);
-			}
-			break;
-		case 'BE':
-			if ($this->compressJavascript) {
-				$filename = $this->getCompressor()->compressJsFile($filename);
-			}
-			break;
+			case 'FE':
+				if ($this->compressJavascript) {
+					$filename = $this->getCompressor()->compressJsFile($filename);
+				} else {
+					$filename = GeneralUtility::createVersionNumberedFilename($filename);
+				}
+				break;
+			case 'BE':
+				if ($this->compressJavascript) {
+					$filename = $this->getCompressor()->compressJsFile($filename);
+				}
+				break;
 		}
 		return $filename;
 	}
@@ -2691,7 +2693,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 				'cssInline' => &$this->cssInline
 			);
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'] as $hook) {
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($hook, $params, $this);
+				GeneralUtility::callUserFunction($hook, $params, $this);
 			}
 		}
 	}
@@ -2716,7 +2718,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 				'cssInline' => &$this->cssInline
 			);
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postTransform'] as $hook) {
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($hook, $params, $this);
+				GeneralUtility::callUserFunction($hook, $params, $this);
 			}
 		}
 	}
@@ -2764,7 +2766,7 @@ class PageRenderer implements \TYPO3\CMS\Core\SingletonInterface {
 				'bodyContent' => &$this->bodyContent
 			);
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess'] as $hook) {
-				\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($hook, $params, $this);
+				GeneralUtility::callUserFunction($hook, $params, $this);
 			}
 		}
 	}

@@ -800,7 +800,6 @@ tt_content.image.20 {
 				required = 1
 				parseFunc =< lib.parseFunc
 				br = 1
-				trim = 1
 				split.token.char = 10
 				split.token.if.isPositive = {$styles.content.imgtext.imageTextSplit} + {$styles.content.imgtext.captionSplit}
 				split.returnKey.data = register : IMAGE_NUM_CURRENT
@@ -1295,7 +1294,7 @@ tt_content.uploads {
 				10 = LOAD_REGISTER
 				10 {
 					oddEvenClass = li-odd li-first |*| li-even || li-odd
-					elementClass = csc-uploads-element csc-uploads-element-{register:fileExtension}
+					elementClass = csc-uploads-element csc-uploads-element-{file:current:extension}
 					elementClass.insertData = 1
 				}
 

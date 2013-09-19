@@ -27,18 +27,19 @@ namespace TYPO3\CMS\Extbase\Validation\Validator;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
- * Validator for string length
+ * Validator for strings.
+ *
+ * @api
  */
-class StringValidator extends \TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator {
+class StringValidator extends AbstractValidator {
 
 	/**
-	 * Returns TRUE, if the given property ($value) is a valid string.
-	 *
-	 * Otherwise, it is FALSE.
+	 * Checks if the given value is a string.
 	 *
 	 * @param mixed $value The value that should be validated
-	 * @return boolean TRUE if the value is valid, FALSE if an error occured
+	 * @return void
 	 * @api
 	 */
 	public function isValid($value) {
@@ -48,9 +49,7 @@ class StringValidator extends \TYPO3\CMS\Extbase\Validation\Validator\AbstractVa
 					'validator.string.notvalid',
 					'extbase'
 				), 1238108067);
-			return FALSE;
 		}
-		return TRUE;
 	}
 }
 

@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Backend\Utility;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Contains class for icon generation in the backend
  * This library has functions that returns - and if necessary creates - the icon for an element in TYPO3
@@ -126,7 +128,7 @@ class IconUtility {
 	 * @deprecated since TYPO3 6.1 will be removed in 7.0, should not be used anymore as only sprite icons are used since TYPO3 4.4
 	 */
 	static public function getIconImage($table, $row = array(), $backPath, $params = '', $shaded = FALSE) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::logDeprecatedFunction();
+		GeneralUtility::logDeprecatedFunction();
 
 		$str = '<img' . self::skinImg($backPath, self::getIcon($table, $row, $shaded), 'width="18" height="16"') . (trim($params) ? ' ' . trim($params) : '');
 		if (!stristr($str, 'alt="')) {
@@ -154,18 +156,18 @@ class IconUtility {
 		// Shadow
 		if ($GLOBALS['TCA'][$table]['ctrl']['versioningWS']) {
 			switch ((int) $row['t3ver_state']) {
-			case 1:
-				return 'gfx/i/shadow_hide.png';
-				break;
-			case 2:
-				return 'gfx/i/shadow_delete.png';
-				break;
-			case 3:
-				return 'gfx/i/shadow_moveto_plh.png';
-				break;
-			case 4:
-				return 'gfx/i/shadow_moveto_pointer.png';
-				break;
+				case 1:
+					return 'gfx/i/shadow_hide.png';
+					break;
+				case 2:
+					return 'gfx/i/shadow_delete.png';
+					break;
+				case 3:
+					return 'gfx/i/shadow_moveto_plh.png';
+					break;
+				case 4:
+					return 'gfx/i/shadow_moveto_pointer.png';
+					break;
 			}
 		}
 		// First, find the icon file name. This can depend on configuration in TCA, field values and more:
@@ -347,15 +349,15 @@ class IconUtility {
 		// Return icon source/wHattributes:
 		$output = '';
 		switch ($outputMode) {
-		case 0:
-			$output = ' src="' . $backPath . $src . '" ' . $wHattribs;
-			break;
-		case 1:
-			$output = $backPath . $src;
-			break;
-		case 2:
-			$output = $wHattribs;
-			break;
+			case 0:
+				$output = ' src="' . $backPath . $src . '" ' . $wHattribs;
+				break;
+			case 1:
+				$output = $backPath . $src;
+				break;
+			case 2:
+				$output = $wHattribs;
+				break;
 		}
 		$cachedSkinImages[$imageId] = $output;
 		return $output;
@@ -379,7 +381,7 @@ class IconUtility {
 	 * @access private
 	 */
 	static public function makeIcon($iconfile, $mode, $user, $protectSection, $absFile, $iconFileName_stateTagged) {
-		$iconFileName = 'icon_' . \TYPO3\CMS\Core\Utility\GeneralUtility::shortMD5(($iconfile . '|' . $mode . '|-' . $user . '|' . $protectSection)) . '_' . $iconFileName_stateTagged . '.' . ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png'] ? 'png' : 'gif');
+		$iconFileName = 'icon_' . GeneralUtility::shortMD5(($iconfile . '|' . $mode . '|-' . $user . '|' . $protectSection)) . '_' . $iconFileName_stateTagged . '.' . ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png'] ? 'png' : 'gif');
 		$mainpath = '../typo3temp/' . $iconFileName;
 		$path = PATH_site . 'typo3temp/' . $iconFileName;
 		if (file_exists(PATH_typo3 . 'icons/' . $iconFileName)) {
@@ -427,30 +429,29 @@ class IconUtility {
 					if ($mode) {
 						unset($ol_im);
 						switch ($mode) {
-						case 'deleted':
-							$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_deleted.gif');
-							break;
-						case 'futuretiming':
-							$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_timing.gif');
-							break;
-						case 'timing':
-							$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_timing.gif');
-							break;
-						case 'hiddentiming':
-							$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_hidden_timing.gif');
-							break;
-						case 'no_icon_found':
-							$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_no_icon_found.gif');
-							break;
-						case 'disabled':
-							// is already greyed - nothing more
-							$ol_im = 0;
-							break;
-						case 'hidden':
+							case 'deleted':
+								$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_deleted.gif');
+								break;
+							case 'futuretiming':
+								$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_timing.gif');
+								break;
+							case 'timing':
+								$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_timing.gif');
+								break;
+							case 'hiddentiming':
+								$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_hidden_timing.gif');
+								break;
+							case 'no_icon_found':
+								$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_no_icon_found.gif');
+								break;
+							case 'disabled':
+								// is already greyed - nothing more
+								$ol_im = 0;
+								break;
+							case 'hidden':
 
-						default:
-							$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_hidden.gif');
-							break;
+							default:
+								$ol_im = self::imagecreatefrom($GLOBALS['BACK_PATH'] . 'gfx/overlay_hidden.gif');
 						}
 						if ($ol_im < 0) {
 							return $iconfile;
@@ -469,7 +470,7 @@ class IconUtility {
 					}
 					// Create the image as file, destroy GD image and return:
 					@self::imagemake($im, $path);
-					\TYPO3\CMS\Core\Utility\GeneralUtility::gif_compress($path, 'IM');
+					GeneralUtility::gif_compress($path, 'IM');
 					ImageDestroy($im);
 					return $mainpath;
 				} else {
@@ -519,7 +520,7 @@ class IconUtility {
 	 * @see \TYPO3\CMS\Core\Utility\GeneralUtility::read_png_gif
 	 */
 	static public function imagecreatefrom($file) {
-		$file = \TYPO3\CMS\Core\Utility\GeneralUtility::read_png_gif($file, $GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png']);
+		$file = GeneralUtility::read_png_gif($file, $GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png']);
 		if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib_png']) {
 			return $file ? imagecreatefrompng($file) : -1;
 		} else {
@@ -542,7 +543,7 @@ class IconUtility {
 			@ImageGif($im, $path);
 		}
 		if (@is_file($path)) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($path);
+			GeneralUtility::fixPermissions($path);
 		}
 	}
 
@@ -646,8 +647,8 @@ class IconUtility {
 		// then it is checked whether it is a valid directory
 		if (strpos($fileExtension, '.') !== FALSE || strpos($fileExtension, '/') !== FALSE) {
 			// Check if it is a directory
-			$filePath = dirname(\TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('SCRIPT_FILENAME')) . '/' . $GLOBALS['BACK_PATH'] . $fileExtension;
-			$path = \TYPO3\CMS\Core\Utility\GeneralUtility::resolveBackPath($filePath);
+			$filePath = dirname(GeneralUtility::getIndpEnv('SCRIPT_FILENAME')) . '/' . $GLOBALS['BACK_PATH'] . $fileExtension;
+			$path = GeneralUtility::resolveBackPath($filePath);
 			if (is_dir($path) || substr($fileExtension, -1) === '/' || substr($fileExtension, -1) === '\\') {
 				$fileExtension = 'folder';
 			} else {
@@ -777,7 +778,7 @@ class IconUtility {
 				}
 				if (isset($GLOBALS['TCA'][$table]['ctrl']['typeicon_classes']['userFunc'])) {
 					$parameters = array('row' => $row);
-					$recordType[6] = \TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($GLOBALS['TCA'][$table]['ctrl']['typeicon_classes']['userFunc'], $parameters, $ref);
+					$recordType[6] = GeneralUtility::callUserFunction($GLOBALS['TCA'][$table]['ctrl']['typeicon_classes']['userFunc'], $parameters, $ref);
 				}
 			} else {
 				foreach ($recordType as &$type) {
@@ -879,7 +880,7 @@ class IconUtility {
 		// The status array should be passed as a reference and in order to be modified within the hook
 		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_iconworks.php']['overrideIconOverlay'])) {
 			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_iconworks.php']['overrideIconOverlay'] as $classRef) {
-				$hookObject = \TYPO3\CMS\Core\Utility\GeneralUtility::getUserObj($classRef);
+				$hookObject = GeneralUtility::getUserObj($classRef);
 				if (method_exists($hookObject, 'overrideIconOverlay')) {
 					$hookObject->overrideIconOverlay($table, $row, $status);
 				}

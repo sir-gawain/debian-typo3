@@ -1,6 +1,5 @@
 /* - - - - - - - - - - - - - - - - - - - - -
 Pagetree
-
 - - - - - - - - - - - - - - - - - - - - - */
 
 #typo3-pagetree,
@@ -53,7 +52,7 @@ Pagetree
 }
 
 #typo3-pagetree ul.x-tree-root-ct {
-	padding-top: 15px;
+	padding-top: 24px;
 	margin-bottom: 50px;
 }
 

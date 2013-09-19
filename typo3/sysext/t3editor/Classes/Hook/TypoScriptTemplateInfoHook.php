@@ -42,7 +42,7 @@ class TypoScriptTemplateInfoHook {
 	/**
 	 * @var string
 	 */
-	protected $ajaxSaveType = 'tx_tstemplateinfo';
+	protected $ajaxSaveType = 'TypoScriptTemplateInformationModuleFunctionController';
 
 	/**
 	 * @return \TYPO3\CMS\T3Editor\T3Editor
@@ -56,11 +56,12 @@ class TypoScriptTemplateInfoHook {
 
 	/**
 	 * Hook-function: inject t3editor JavaScript code before the page is compiled
-	 * called in typo3/template.php:startPage
+	 * called in \TYPO3\CMS\Backend\Template\DocumentTemplate:startPage
 	 *
 	 * @param array $parameters
 	 * @param \TYPO3\CMS\Backend\Template\DocumentTemplate $pObj
 	 * @return void
+	 * @see \TYPO3\CMS\Backend\Template\DocumentTemplate::startPage
 	 */
 	public function preStartPageHook($parameters, $pObj) {
 		// Enable editor in Template-Modul
@@ -73,7 +74,7 @@ class TypoScriptTemplateInfoHook {
 
 	/**
 	 * Hook-function:
-	 * called in typo3/sysext/tstemplate_info/class.tx_tstemplateinfo.php
+	 * called in typo3/sysext/tstemplate_info/Classes/Controller/TypoScriptTemplateInformationModuleFunctionController.php
 	 *
 	 * @param array $parameters
 	 * @param \TYPO3\CMS\TstemplateInfo\Controller\TypoScriptTemplateInformationModuleFunctionController $pObj
@@ -130,25 +131,24 @@ class TypoScriptTemplateInfoHook {
 					if (is_array($POST['data'])) {
 						foreach ($POST['data'] as $field => $val) {
 							switch ($field) {
-							case 'constants':
+								case 'constants':
 
-							case 'config':
+								case 'config':
 
-							case 'title':
+								case 'title':
 
-							case 'sitetitle':
+								case 'sitetitle':
 
-							case 'description':
-								$recData['sys_template'][$saveId][$field] = $val;
-								break;
+								case 'description':
+									$recData['sys_template'][$saveId][$field] = $val;
+									break;
 							}
 						}
 					}
 					if (count($recData)) {
 						// process template row before saving
-						require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('tstemplate_info') . 'class.tx_tstemplateinfo.php';
-						$tstemplateinfo = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_tstemplateinfo');
-						/* @var $tstemplateinfo tx_tstemplateinfo */
+						$tstemplateinfo = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\TstemplateInfo\\Controller\\TypoScriptTemplateInformationModuleFunctionController');
+						/* @var $tstemplateinfo \TYPO3\CMS\TstemplateInfo\Controller\TypoScriptTemplateInformationModuleFunctionController */
 						// load the MOD_SETTINGS in order to check if the includeTypoScriptFileContent is set
 						$tstemplateinfo->pObj->MOD_SETTINGS = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleData(array('includeTypoScriptFileContent' => TRUE), array(), 'web_ts');
 						$recData['sys_template'][$saveId] = $tstemplateinfo->processTemplateRowBeforeSaving($recData['sys_template'][$saveId]);
@@ -171,6 +171,5 @@ class TypoScriptTemplateInfoHook {
 	}
 
 }
-
 
 ?>

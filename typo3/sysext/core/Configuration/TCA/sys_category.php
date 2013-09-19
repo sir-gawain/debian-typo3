@@ -10,6 +10,7 @@ return array(
 		'default_sortby' => 'ORDER BY title ASC',
 		'dividers2tabs' => TRUE,
 		'versioningWS' => 2,
+		'rootLevel' => -1,
 		'versioning_followPages' => TRUE,
 		'origUid' => 't3_origuid',
 		'languageField' => 'sys_language_uid',
@@ -143,7 +144,7 @@ return array(
 				'type' => 'select',
 				'renderMode' => 'tree',
 				'foreign_table' => 'sys_category',
-				'foreign_table_where' => ' ORDER BY sys_category.title ASC',
+				'foreign_table_where' => ' AND sys_category.sys_language_uid IN (-1,0) ORDER BY sys_category.title ASC',
 				'treeConfig' => array(
 					'parentField' => 'parent'
 				)

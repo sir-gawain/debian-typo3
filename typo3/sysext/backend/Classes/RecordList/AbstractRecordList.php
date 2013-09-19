@@ -26,6 +26,10 @@ namespace TYPO3\CMS\Backend\RecordList;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\Utility\IconUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Library with a single function addElement that returns table
  * rows based on some input.
@@ -150,8 +154,8 @@ abstract class AbstractRecordList {
 	 */
 	public $languageIconTitles = array();
 
-	// TranslateTools object
 	/**
+	 * @var \TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider
 	 * @todo Define visibility
 	 */
 	public $translateTools;
@@ -266,18 +270,10 @@ abstract class AbstractRecordList {
 	 *
 	 * @return void
 	 * @todo Define visibility
+	 * @deprecated since 6.2, will be removed 2 versions later - Function not needed anymore
 	 */
 	public function writeBottom() {
-		$this->HTMLcode .= '
-
-		<!--
-			End of list table:
-		-->
-		<table border="0" cellpadding="0" cellspacing="0">';
-		$theIcon = '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($this->backPath, 'gfx/ol/stopper.gif', 'width="18" height="16"') . ' alt="" />';
-		$this->HTMLcode .= $this->addElement(1, '', array(), '', $this->leftMargin, $theIcon);
-		$this->HTMLcode .= '
-		</table>';
+		GeneralUtility::logDeprecatedFunction();
 	}
 
 	/**
@@ -324,14 +320,14 @@ abstract class AbstractRecordList {
 		$content = '';
 		$tParam = $table ? '&table=' . rawurlencode($table) : '';
 		switch ($type) {
-		case 'fwd':
-			$href = $this->listURL() . '&pointer=' . ($pointer - $this->iLimit) . $tParam;
-			$content = '<a href="' . htmlspecialchars($href) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-up') . '</a> <i>[1 - ' . $pointer . ']</i>';
-			break;
-		case 'rwd':
-			$href = $this->listURL() . '&pointer=' . $pointer . $tParam;
-			$content = '<a href="' . htmlspecialchars($href) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-move-down') . '</a> <i>[' . ($pointer + 1) . ' - ' . $this->totalItems . ']</i>';
-			break;
+			case 'fwd':
+				$href = $this->listURL() . '&pointer=' . ($pointer - $this->iLimit) . $tParam;
+				$content = '<a href="' . htmlspecialchars($href) . '">' . IconUtility::getSpriteIcon('actions-move-up') . '</a> <i>[1 - ' . $pointer . ']</i>';
+				break;
+			case 'rwd':
+				$href = $this->listURL() . '&pointer=' . $pointer . $tParam;
+				$content = '<a href="' . htmlspecialchars($href) . '">' . IconUtility::getSpriteIcon('actions-move-down') . '</a> <i>[' . ($pointer + 1) . ' - ' . $this->totalItems . ']</i>';
+				break;
 		}
 		return $content;
 	}
@@ -394,7 +390,7 @@ abstract class AbstractRecordList {
 	 */
 	public function initializeLanguages() {
 		// Look up page overlays:
-		$this->pageOverlays = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'pages_language_overlay', 'pid=' . intval($this->id) . \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('pages_language_overlay') . \TYPO3\CMS\Backend\Utility\BackendUtility::versioningPlaceholderClause('pages_language_overlay'), '', '', '', 'sys_language_uid');
+		$this->pageOverlays = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'pages_language_overlay', 'pid=' . intval($this->id) . BackendUtility::deleteClause('pages_language_overlay') . BackendUtility::versioningPlaceholderClause('pages_language_overlay'), '', '', '', 'sys_language_uid');
 		$this->languageIconTitles = $this->getTranslateTools()->getSystemLanguages($this->id, $this->backPath);
 	}
 
@@ -410,7 +406,7 @@ abstract class AbstractRecordList {
 		$out = '';
 		$title = htmlspecialchars($this->languageIconTitles[$sys_language_uid]['title']);
 		if ($this->languageIconTitles[$sys_language_uid]['flagIcon']) {
-			$out .= \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon($this->languageIconTitles[$sys_language_uid]['flagIcon'], array('title' => $title));
+			$out .= IconUtility::getSpriteIcon($this->languageIconTitles[$sys_language_uid]['flagIcon'], array('title' => $title));
 			if (!$addAsAdditionalText) {
 				return $out;
 			}
@@ -427,7 +423,7 @@ abstract class AbstractRecordList {
 	 */
 	protected function getTranslateTools() {
 		if (!isset($this->translateTools)) {
-			$this->translateTools = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TranslationConfigurationProvider');
+			$this->translateTools = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TranslationConfigurationProvider');
 		}
 		return $this->translateTools;
 	}
@@ -455,7 +451,7 @@ abstract class AbstractRecordList {
 			if ($launchViewParameter !== '') {
 				$htmlCode .= ' onclick="' . htmlspecialchars(('top.launchView(' . $launchViewParameter . '); return false;')) . '"';
 			}
-			$htmlCode .= ' title="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs(implode(' / ', $result), 100)) . '">';
+			$htmlCode .= ' title="' . htmlspecialchars(GeneralUtility::fixed_lgd_cs(implode(' / ', $result), 100)) . '">';
 			$htmlCode .= count($references);
 			$htmlCode .= '</a>';
 		}

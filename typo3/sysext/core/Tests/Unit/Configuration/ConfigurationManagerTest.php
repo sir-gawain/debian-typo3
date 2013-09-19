@@ -294,6 +294,66 @@ class ConfigurationManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @test
 	 */
+	public function removeLocalConfigurationKeysByPathRemovesGivenPathsFromConfigurationAndReturnsTrue() {
+		$currentLocalConfiguration = array(
+			'toRemove1' => 'foo',
+			'notChanged' => 23,
+			'toRemove2' => 'bar',
+		);
+		$expectedConfiguration = array(
+			'notChanged' => 23,
+		);
+
+		$this->createFixtureWithMockedMethods(
+			array(
+				'getLocalConfiguration',
+				'writeLocalConfiguration',
+			)
+		);
+		$this->fixture->expects($this->once())
+			->method('getLocalConfiguration')
+			->will($this->returnValue($currentLocalConfiguration));
+		$this->fixture->expects($this->once())
+			->method('writeLocalConfiguration')
+			->with($expectedConfiguration);
+
+		$removePaths = array(
+			'toRemove1',
+			'toRemove2',
+		);
+		$this->assertTrue($this->fixture->removeLocalConfigurationKeysByPath($removePaths));
+	}
+
+	/**
+	 * @test
+	 */
+	public function removeLocalConfigurationKeysByPathReturnsFalseIfNothingIsRemoved() {
+		$currentLocalConfiguration = array(
+			'notChanged' => 23,
+		);
+		$expectedConfiguration = array(
+			'notChanged' => 23,
+		);
+		$this->createFixtureWithMockedMethods(
+			array(
+				'getLocalConfiguration',
+				'writeLocalConfiguration',
+			)
+		);
+		$this->fixture->expects($this->once())
+			->method('getLocalConfiguration')
+			->will($this->returnValue($currentLocalConfiguration));
+		$this->fixture->expects($this->once())
+			->method('writeLocalConfiguration')
+			->with($expectedConfiguration);
+
+		$removePaths = array();
+		$this->assertFalse($this->fixture->removeLocalConfigurationKeysByPath($removePaths));
+	}
+
+	/**
+	 * @test
+	 */
 	public function canWriteConfigurationReturnsFalseIfDirectoryIsNotWritable() {
 		if (function_exists('posix_getegid') && posix_getegid() === 0) {
 			$this->markTestSkipped('Test skipped if run on linux as root');
@@ -339,34 +399,6 @@ class ConfigurationManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		clearstatcache();
 
 		$fixture->_set('localConfigurationFile', $file);
-
-		$result = $fixture->canWriteConfiguration();
-
-		chmod($absoluteFile, 0644);
-
-		$this->assertFalse($result);
-	}
-
-	/**
-	 * @test
-	 */
-	public function canWriteConfigurationReturnsFalseIfLocalconfFileIsNotWritable() {
-		if (function_exists('posix_getegid') && posix_getegid() === 0) {
-			$this->markTestSkipped('Test skipped if run on linux as root');
-		} elseif (TYPO3_OS == 'WIN') {
-			$this->markTestSkipped('Not available on Windows');
-		}
-		/** @var $fixture \TYPO3\CMS\Core\Configuration\ConfigurationManager|\PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface */
-		$fixture = $this->getAccessibleMock('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager', array('dummy'));
-
-		$file = 'typo3temp/' . uniqid('test_');
-		$absoluteFile = PATH_site . $file;
-		touch($absoluteFile);
-		$this->testFilesToDelete[] = $absoluteFile;
-		chmod($absoluteFile, 0444);
-		clearstatcache();
-
-		$fixture->_set('localconfFile', $file);
 
 		$result = $fixture->canWriteConfiguration();
 

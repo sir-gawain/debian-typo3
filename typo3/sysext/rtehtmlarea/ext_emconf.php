@@ -30,11 +30,11 @@ $EM_CONF[$_EXTKEY] = array(
 	'author_company' => 'SJBR',
 	'CGLcompliance' => '',
 	'CGLcompliance_note' => '',
-	'version' => '6.1.0',
+	'version' => '6.2.0',
 	'_md5_values_when_last_written' => '',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '6.1.0-6.1.99',
+			'typo3' => '6.2.0-6.2.99',
 		),
 		'conflicts' => array(
 			'rte_conf' => '',

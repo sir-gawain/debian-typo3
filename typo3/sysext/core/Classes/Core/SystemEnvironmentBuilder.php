@@ -76,15 +76,15 @@ class SystemEnvironmentBuilder {
 	 */
 	static protected function defineBaseConstants() {
 		// This version, branch and copyright
-		define('TYPO3_version', '6.1.1');
-		define('TYPO3_branch', '6.1');
+		define('TYPO3_version', '6.2.0alpha2');
+		define('TYPO3_branch', '6.2');
 		define('TYPO3_copyright_year', '1998-2013');
 
 		// TYPO3 external links
 		define('TYPO3_URL_GENERAL', 'http://typo3.org/');
 		define('TYPO3_URL_ORG', 'http://typo3.org/');
 		define('TYPO3_URL_LICENSE', 'http://typo3.org/licenses');
-		define('TYPO3_URL_EXCEPTION', 'http://typo3.org/go/exception/v4/');
+		define('TYPO3_URL_EXCEPTION', 'http://typo3.org/go/exception/CMS/');
 		define('TYPO3_URL_MAILINGLISTS', 'http://lists.typo3.org/cgi-bin/mailman/listinfo');
 		define('TYPO3_URL_DOCUMENTATION', 'http://typo3.org/documentation/');
 		define('TYPO3_URL_DOCUMENTATION_TSREF', 'http://docs.typo3.org/typo3cms/TyposcriptReference/');
@@ -161,9 +161,6 @@ class SystemEnvironmentBuilder {
 		// Example "install/" for the install tool entry script
 		// Example "../typo3conf/ext/templavoila/mod2/ for an extension installed in typo3conf/ext/
 		define('PATH_typo3_mod', defined('TYPO3_MOD_PATH') ? TYPO3_MOD_PATH : '');
-		// Absolute path to the t3lib directory with trailing slash
-		// Example "/var/www/instance-name/htdocs/t3lib/"
-		define('PATH_t3lib', PATH_site . 't3lib/');
 		// Absolute path to the typo3conf directory with trailing slash
 		// Example "/var/www/instance-name/htdocs/typo3conf/"
 		define('PATH_typo3conf', PATH_site . 'typo3conf/');
@@ -181,14 +178,8 @@ class SystemEnvironmentBuilder {
 		if (!is_file(PATH_thisScript)) {
 			die('Unable to determine path to entry script.');
 		}
-		if (!is_dir(PATH_t3lib)) {
-			die('Calculated absolute path to t3lib directory does not exist.');
-		}
 		if (!is_dir(PATH_tslib)) {
 			die('Calculated absolute path to tslib directory does not exist.');
-		}
-		if (!is_dir(PATH_typo3conf)) {
-			die('Calculated absolute path to typo3conf directory does not exist');
 		}
 	}
 

@@ -27,6 +27,9 @@ namespace TYPO3\CMS\Backend\Controller\File;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Script Class for the rename-file form.
  *
@@ -84,8 +87,8 @@ class RenameFileController {
 	 */
 	public function init() {
 		// Initialize GPvars:
-		$this->target = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('target');
-		$this->returnUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::sanitizeLocalUrl(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('returnUrl'));
+		$this->target = GeneralUtility::_GP('target');
+		$this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
 		// Cleaning and checking target
 		if ($this->target) {
 			$this->fileOrFolderObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($this->target);
@@ -101,7 +104,7 @@ class RenameFileController {
 		// rename the folder
 		if ($this->fileOrFolderObject instanceof \TYPO3\CMS\Core\Resource\Folder) {
 			$parsedUrl = parse_url($this->returnUrl);
-			$queryParts = \TYPO3\CMS\Core\Utility\GeneralUtility::explodeUrl2Array(urldecode($parsedUrl['query']));
+			$queryParts = GeneralUtility::explodeUrl2Array(urldecode($parsedUrl['query']));
 			if ($queryParts['id'] === $this->fileOrFolderObject->getCombinedIdentifier()) {
 				$this->returnUrl = str_replace(urlencode($queryParts['id']), urlencode($this->fileOrFolderObject->getStorage()->getRootLevelFolder()->getCombinedIdentifier()), $this->returnUrl);
 			}
@@ -110,8 +113,8 @@ class RenameFileController {
 		$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('apps-filetree-root');
 		$this->title = $icon . htmlspecialchars($this->fileOrFolderObject->getStorage()->getName()) . ': ' . htmlspecialchars($this->fileOrFolderObject->getIdentifier());
 		// Setting template object
-		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
-		$this->doc->setModuleTemplate('templates/file_rename.html');
+		$this->doc = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
+		$this->doc->setModuleTemplate('EXT:backend/Resources/Private/Templates/file_rename.html');
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->JScode = $this->doc->wrapScriptTags('
 			function backToList() {	//
@@ -127,7 +130,6 @@ class RenameFileController {
 	 * @todo Define visibility
 	 */
 	public function main() {
-		//TODO: change locallang*.php to locallang*.xml
 		// Make page header:
 		$this->content = $this->doc->startPage($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.pagetitle'));
 		$pageContent = $this->doc->header($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.pagetitle'));
@@ -158,20 +160,18 @@ class RenameFileController {
 		$code .= '</form>';
 		// Add the HTML as a section:
 		$pageContent .= $code;
-
 		$docHeaderButtons = array(
 			'back' => ''
 		);
-		$docHeaderButtons['csh'] = \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('xMOD_csh_corebe', 'file_rename', $GLOBALS['BACK_PATH']);
+		$docHeaderButtons['csh'] = BackendUtility::cshItem('xMOD_csh_corebe', 'file_rename', $GLOBALS['BACK_PATH']);
 		// Back
 		if ($this->returnUrl) {
 			$docHeaderButtons['back'] = '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisUrl($this->returnUrl)) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.goBack', TRUE) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
 		}
-
 		// Add the HTML as a section:
 		$markerArray = array(
 			'CSH' => $docHeaderButtons['csh'],
-			'FUNC_MENU' => \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']),
+			'FUNC_MENU' => BackendUtility::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']),
 			'CONTENT' => $pageContent,
 			'PATH' => $this->title
 		);
@@ -191,6 +191,5 @@ class RenameFileController {
 	}
 
 }
-
 
 ?>

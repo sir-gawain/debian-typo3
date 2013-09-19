@@ -37,11 +37,13 @@ class ExtensionService implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
+	 * @inject
 	 */
 	protected $objectManager;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
+	 * @inject
 	 */
 	protected $configurationManager;
 
@@ -50,22 +52,6 @@ class ExtensionService implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @var array
 	 */
 	protected $targetPidPluginCache = array();
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
-	 * @return void
-	 */
-	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
-		$this->objectManager = $objectManager;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
-	 * @return void
-	 */
-	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
-		$this->configurationManager = $configurationManager;
-	}
 
 	/**
 	 * Determines the plugin namespace of the specified plugin (defaults to "tx_[extensionname]_[pluginname]")
@@ -209,6 +195,24 @@ class ExtensionService implements \TYPO3\CMS\Core\SingletonInterface {
 		$actions = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions'][$extensionName]['plugins'][$pluginName]['controllers'][$controllerName]['actions'];
 		return current($actions);
 	}
+
+	/**
+	 * Resolve the page type number to use for building a link for a specific format
+	 *
+	 * @param string $extensionName name of the extension that has defined the target page type
+	 * @param string $format The format for which to look up the page type
+	 * @return integer Page type number for target page
+	 */
+	public function getTargetPageTypeByFormat($extensionName, $format) {
+		$targetPageType = 0;
+		$settings = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS, $extensionName);
+		$formatToPageTypeMapping = isset($settings['view']['formatToPageTypeMapping']) ? $settings['view']['formatToPageTypeMapping'] : array();
+		if (is_array($formatToPageTypeMapping) && array_key_exists($format, $formatToPageTypeMapping)) {
+			$targetPageType = (integer) $formatToPageTypeMapping[$format];
+		}
+		return $targetPageType;
+	}
+
 }
 
 ?>

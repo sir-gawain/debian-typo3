@@ -370,15 +370,15 @@ if (TYPO3_MODE == 'BE' || TYPO3_MODE == 'FE' && isset($GLOBALS['BE_USER'])) {
 		'MOD:user_doc/document.gif' => array($temp_eP . 'icons/module_doc.gif', 'width="22" height="22"'),
 		'MOD:user_ws/sys_workspace.gif' => array($temp_eP . 'icons/module_user_ws.gif', 'width="22" height="22"'),
 		'MOD:tools/tool.gif' => array($temp_eP . 'icons/module_tools.gif', 'width="25" height="24"'),
-		'MOD:tools_beuser/beuser.gif' => array($temp_eP . 'icons/module_tools_user.gif', 'width="24" height="24"'),
 		'MOD:tools_em/em.gif' => array($temp_eP . 'icons/module_tools_em.png', 'width="24" height="24"'),
 		'MOD:tools_em/install.gif' => array($temp_eP . 'icons/module_tools_em.gif', 'width="24" height="24"'),
-		'MOD:tools_dbint/db.gif' => array($temp_eP . 'icons/module_tools_dbint.gif', 'width="25" height="24"'),
-		'MOD:tools_config/config.gif' => array($temp_eP . 'icons/module_tools_config.gif', 'width="24" height="24"'),
-		'MOD:tools_install/install.gif' => array($temp_eP . 'icons/module_tools_install.gif', 'width="24" height="24"'),
-		'MOD:tools_log/log.gif' => array($temp_eP . 'icons/module_tools_log.gif', 'width="24" height="24"'),
 		'MOD:tools_txphpmyadmin/thirdparty_db.gif' => array($temp_eP . 'icons/module_tools_phpmyadmin.gif', 'width="24" height="24"'),
 		'MOD:tools_isearch/isearch.gif' => array($temp_eP . 'icons/module_tools_isearch.gif', 'width="24" height="24"'),
+		'MOD:system_dbint/db.gif' => array($temp_eP . 'icons/module_system_dbint.gif', 'width="25" height="24"'),
+		'MOD:system_beuser/beuser.gif' => array($temp_eP . 'icons/module_system_user.gif', 'width="24" height="24"'),
+		'MOD:system_install/install.gif' => array($temp_eP . 'icons/module_system_install.gif', 'width="24" height="24"'),
+		'MOD:system_config/config.gif' => array($temp_eP . 'icons/module_system_config.gif', 'width="24" height="24"'),
+		'MOD:system_log/log.gif' => array($temp_eP . 'icons/module_system_log.gif', 'width="24" height="24"'),
 		'MOD:help/help.gif' => array($temp_eP . 'icons/module_help.gif', 'width="23" height="24"'),
 		'MOD:help_about/info.gif' => array($temp_eP . 'icons/module_help_about.gif', 'width="25" height="24"'),
 		'MOD:help_aboutmodules/aboutmodules.gif' => array($temp_eP . 'icons/module_help_aboutmodules.gif', 'width="24" height="24"'),
@@ -390,7 +390,7 @@ if (TYPO3_MODE == 'BE' || TYPO3_MODE == 'FE' && isset($GLOBALS['BE_USER'])) {
 	// extJS theme
 	$TBE_STYLES['extJS']['theme'] = $temp_eP . 'extjs/xtheme-t3skin.css';
 	// Adding HTML template for login screen
-	$TBE_STYLES['htmlTemplates']['templates/login.html'] = 'sysext/t3skin/templates/login.html';
+	$TBE_STYLES['htmlTemplates']['EXT:backend/Resources/Private/Templates/login.html'] = 'sysext/t3skin/Resources/Private/Templates/login.html';
 	$GLOBALS['TBE_STYLES']['stylesheets']['admPanel'] = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('t3skin') . 'stylesheets/standalone/admin_panel.css';
 	foreach ($flagNames as $flagName) {
 		\TYPO3\CMS\Backend\Sprite\SpriteManager::addIconSprite(array(

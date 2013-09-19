@@ -108,19 +108,18 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 			throw new \TYPO3\CMS\Core\Error\Exception($message, 1);
 		} else {
 			switch ($errorLevel) {
-			case E_USER_ERROR:
+				case E_USER_ERROR:
 
-			case E_RECOVERABLE_ERROR:
-				$severity = 2;
-				break;
-			case E_USER_WARNING:
+				case E_RECOVERABLE_ERROR:
+					$severity = 2;
+					break;
+				case E_USER_WARNING:
 
-			case E_WARNING:
-				$severity = 1;
-				break;
-			default:
-				$severity = 0;
-				break;
+				case E_WARNING:
+					$severity = 1;
+					break;
+				default:
+					$severity = 0;
 			}
 			$logTitle = 'Core: Error handler (' . TYPO3_MODE . ')';
 			// Write error message to the configured syslogs,
@@ -168,7 +167,7 @@ class ErrorHandler implements \TYPO3\CMS\Core\Error\ErrorHandlerInterface {
 	 * @return void
 	 */
 	protected function writeLog($logMessage, $severity) {
-		if (is_object($GLOBALS['TYPO3_DB']) && !empty($GLOBALS['TYPO3_DB']->link)) {
+		if (is_object($GLOBALS['TYPO3_DB']) && $GLOBALS['TYPO3_DB']->isConnected()) {
 			$userId = 0;
 			$workspace = 0;
 			if (is_object($GLOBALS['BE_USER'])) {
