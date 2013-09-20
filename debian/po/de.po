@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: typo3-dummy 4.3.0-4\n"
-"Report-Msgid-Bugs-To: typo3-dummy@packages.debian.org\n"
-"POT-Creation-Date: 2010-06-20 22:03+0200\n"
+"Report-Msgid-Bugs-To: typo3-6.2@packages.debian.org\n"
+"POT-Creation-Date: 2013-09-20 17:58+0200\n"
 "PO-Revision-Date: 2010-06-23 12:47+0200\n"
 "Last-Translator: Chris Leick <c.leick@vollbio.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
@@ -18,31 +18,31 @@ msgstr ""
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy.templates:2001
+#: ../typo3-dummy-6.2.templates:2001
 msgid "vhost"
 msgstr "Vhost"
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy.templates:2001
+#: ../typo3-dummy-6.2.templates:2001
 msgid "directory"
 msgstr "Verzeichnis"
 
 #. Type: select
 #. Choices
-#: ../typo3-dummy.templates:2001
+#: ../typo3-dummy-6.2.templates:2001
 msgid "none"
 msgstr "keine"
 
 #. Type: select
 #. Description
-#: ../typo3-dummy.templates:2002
+#: ../typo3-dummy-6.2.templates:2002
 msgid "Apache integration mode:"
 msgstr "Apache-Integrationsmodus:"
 
 #. Type: select
 #. Description
-#: ../typo3-dummy.templates:2002
+#: ../typo3-dummy-6.2.templates:2002
 msgid ""
 "Please choose the method that should be used for integrating the TYPO3 "
 "installation with the apache2 web server:"
@@ -52,7 +52,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../typo3-dummy.templates:2002
+#: ../typo3-dummy-6.2.templates:2002
 msgid ""
 " vhost:     generates URLs with TYPO3 as part of the domain name, such\n"
 "            as http://typo3.example.com/;\n"
@@ -73,13 +73,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../typo3-dummy.templates:3001
+#: ../typo3-dummy-6.2.templates:3001
 msgid "Should apache2 be restarted after installation?"
 msgstr "Soll Apache2 nach der Installation neu gestartet werden?"
 
 #. Type: boolean
 #. Description
-#: ../typo3-dummy.templates:3001
+#: ../typo3-dummy-6.2.templates:3001
 msgid ""
 "Apache's configuration has been changed to include TYPO3 and activate the "
 "rewrite module. For these changes to take effect, apache2 must be reloaded."
@@ -90,13 +90,13 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../typo3-dummy.templates:4001
+#: ../typo3-dummy-6.2.templates:4001
 msgid "Old symlink in /etc/apache2/conf.d/"
 msgstr "Alter symbolischer Verweis in /etc/apache2/conf.d/"
 
 #. Type: note
 #. Description
-#: ../typo3-dummy.templates:4001
+#: ../typo3-dummy-6.2.templates:4001
 msgid ""
 "Older versions (before 4.3.0-3) of typo3-dummy installed the apache2 "
 "configuration symlink as /etc/apache2/conf.d/typo3-dummy.conf."
@@ -106,7 +106,7 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../typo3-dummy.templates:4001
+#: ../typo3-dummy-6.2.templates:4001
 msgid ""
 "This has been changed and newer versions place two new symlinks into /etc/"
 "apache2/sites-available/. To prevent failures due to overlapping "
