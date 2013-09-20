@@ -12,8 +12,8 @@ T3SRCDIR:=usr/share/typo3/$(PACKAGENAME)
 
 SOURCEINSTALLDIR:=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 
-DOCROOTDIR=debian/typo3-dummy-6.2/var/lib/typo3-dummy-6.2
-ETCDIR=debian/typo3-dummy-6.2/etc/typo3-dummy-6.2
+DOCROOTDIR=debian/typo3-dummy-$(SOURCEVERSION)/var/lib/typo3-dummy-$(SOURCEVERSION)
+ETCDIR=debian/typo3-dummy-$(SOURCEVERSION)/etc/typo3-dummy-$(SOURCEVERSION)
 
 DEBIAN_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
 UPSTREAM_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+ds[0-9]),,p')
@@ -25,30 +25,16 @@ DEBIAN_DIR:=$(SOURCEPACKAGE)_$(DEBIAN_VERSION)
 UPSTREAM_TAR:=$(PACKAGENAME)_$(UPSTREAM_VERSION).orig.tar
 DEBIAN_TAR:=$(PACKAGENAME)_$(DEBIAN_VERSION).orig.tar
 
-clean:
-	dh_testdir
-	dh_testroot
-	dh_clean
+%:
+	dh $@
+
+override_dh_auto_clean:
+	dh_auto_clean
 	debconf-updatepo
-	rm -rf build
 
-build:
-	dh_testdir
-	mkdir -p build
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
+override_dh_install:
 	dh_install
-	cp -r index.php typo3 $(SOURCEINSTALLDIR)
-#set correct permissions for cron script
-	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh \
-		  $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh \
-		  $(SOURCEINSTALLDIR)/typo3/cli_dispatch.phpsh
 #remove additional license files
-	rm $(SOURCEINSTALLDIR)/typo3/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/HTMLAREA_LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/mozilla_public_license.txt
 	rm $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb/license.txt
@@ -66,32 +52,19 @@ install: build
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/idna/LICENCE
-	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/LICENSE.txt
-	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.audio/LICENSE.txt
-	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.captions/LICENSE.txt
-	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/flowplayer.content/LICENSE.txt
-	rm $(SOURCEINSTALLDIR)/typo3/contrib/flowplayer/lib/corelib/license.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/LICENSE.txt
 # remove files linked to by later steps in build (dependencies)
-	rm $(SOURCEINSTALLDIR)/typo3/sysext/core/Resources/Private/Font/vera.ttf
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
-# fix other stuff
-	find $(SOURCEINSTALLDIR) -name .gitignore -type f -delete
 
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_lintian
-	dh_installdebconf
-	dh_installchangelogs -Ntypo3 -A ChangeLog
-	dh_installcron
-	dh_installdocs -Ntypo3 -A RELEASE_NOTES.txt README.txt NEWS.txt
-	dh_installexamples
-	dh_installinit
-	dh_link
-	dh_compress -Ntypo3
+override_dh_installchangelogs:
+	dh_installchangelogs -Ntypo3-6 -A ChangeLog
+
+override_dh_installdocs:
+	dh_installdocs -Ntypo3-6 -A RELEASE_NOTES.txt README.txt NEWS.txt
+
+override_dh_fixperms:
 	dh_fixperms
 	chown -hR www-data:root $(DOCROOTDIR)
 	chown     www-data:root $(ETCDIR)/AdditionalFactoryConfiguration.php_template
@@ -100,14 +73,10 @@ binary-indep: build install
 	find $(DOCROOTDIR) -type f -print0 | xargs -0 chmod 0640
 	chmod 600 $(ETCDIR)/AdditionalFactoryConfiguration.php_template
 	chmod 600 $(ETCDIR)/AdditionalConfiguration.php
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-build-arch: build
-build-indep: build
+#set correct permissions for cron script
+	chmod a+x $(SOURCEINSTALLDIR)/typo3/cleaner_check.sh \
+		  $(SOURCEINSTALLDIR)/typo3/cleaner_fix.sh \
+		  $(SOURCEINSTALLDIR)/typo3/cli_dispatch.phpsh
 
 get-orig-source:
 # get source
@@ -127,18 +96,8 @@ get-orig-source:
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/websvg
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/contrib/flowplayer/*
 	rm -r _unpack/$(DEBIAN_DIR)/typo3/sysext/extensionmanager/Resources/Public/JavaScript/jquery-ui-1.8.17.custom.min.js
+# fix other stuff
+	find  _unpack/$(DEBIAN_DIR) -name .gitignore -type f -delete
 # repack
 	tar -cf - -C _unpack $(DEBIAN_DIR) | gzip -9 - > $(DEBIAN_TAR).gz
 	rm -rf _unpack
-
-prepare-source:
-	dh_testdir
-	mv $(UPSTREAM_TAR).gz ../
-	mv $(DEBIAN_TAR).gz ../
-	tar --strip-components 1 -C . -xzf ../$(DEBIAN_TAR).gz
-
-# Build architecture-dependent files here.
-binary-arch: build install
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
