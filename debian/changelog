@@ -1,6 +1,7 @@
 typo3-6.2 (6.2.0+ds1~alpha2-1) UNRELEASED; urgency=low
 
   * Renamed source package to typo3-6.2 and binary packages accordingly.
+  * Reintegrated typo3-database into typo3-dummy.
   * Add database user for scheduler to database on installation.
   * Adopted im-fix patch to 6.2
   * Adopted defaults patch to 6.2.
@@ -20,7 +21,7 @@ typo3-src (4.5.29+dfsg1-1) unstable; urgency=medium
   * New upstream release:
     - fixes: "TYPO3-CORE-SA-2013-002: Cross-Site Scripting and Remote
       Code Execution Vulnerability in TYPO3 Core" (Closes: 720194)
-  * Import of sources of 2.0.4.6 of 1pixelout audio player from 
+  * Import of sources of 2.0.4.6 of 1pixelout audio player from
     http://subversion.assembla.com/svn/1pixelout/audio-player/tags/2.0.4.6.
   * Changed audio player license (GPL-2 -> MIT).
 
@@ -486,7 +487,7 @@ typo3-src (4.3.0~alpha3-1) experimental; urgency=low
   * Raised compat version to 5.
   * Added dephelper depends.
   * Moved homepage to header field.
-  * Added lintian override for embedded-php-library in open-id (the 
+  * Added lintian override for embedded-php-library in open-id (the
     version shipped is a stripped down and patched version for TYPO3).
   * Added README file for typo3-database.
 
@@ -655,7 +656,7 @@ typo3-src (4.0.5+debian-1) unstable; urgency=low
   * New upstream release.
     - Fixes "TYPO3 Security Bulletin TYPO3-20070221-1: Email header injection"
   * Removed t3lib_div-PHP52.dpatch (now integrated by upstream)
-  * Fixed typo and added note to typo3.README.Debian (Closes: 405577) 
+  * Fixed typo and added note to typo3.README.Debian (Closes: 405577)
 
  -- Christian Welzel <gawain@camlann.de>  Thu, 22 Feb 2007 21:00:00 +0100
 
@@ -746,7 +747,7 @@ typo3-src (3.7.0-7) unstable; urgency=low
 
 typo3-src (3.7.0-6) unstable; urgency=low
 
-  * debian/typo3-src-3.7.prerm: can not remove the symlink maintained by this 
+  * debian/typo3-src-3.7.prerm: can not remove the symlink maintained by this
     package
   * debian/typo3-src-3.7.postinst: reworked
   * debian/typo3-src-3.7.README.Debian: updated to version 3.7
@@ -758,7 +759,7 @@ typo3-src (3.7.0-5) unstable; urgency=low
   * debian/control: added dependency to libapache2-mod-php4 | libapache-mod-php4
     (thanks to Thomas Barth)
   * typo3.README.Debian: clarified some points
-  
+
  -- Christian Leutloff <leutloff@debian.org>  Wed,  4 May 2005 16:25:52 +0200
 
 typo3-src (3.7.0-4) unstable; urgency=low
@@ -873,7 +874,7 @@ typo3-src (3.5.0-3) experimental; urgency=low
   * README.Debian was updated
   * Documentation has been updated / optimized
   * Code cleanup / optimisations contributed by Edelhard Becker (thank you!)
-      
+
  -- Michael Stucki <mundaun@gmx.ch>  Thu,  5 Jun 2003 02:07:28 +0100
 
 typo3-src (3.5.0-2) experimental; urgency=low

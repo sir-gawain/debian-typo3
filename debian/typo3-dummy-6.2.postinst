@@ -65,11 +65,11 @@ fi
 
 # do database handling
 . /usr/share/debconf/confmodule
-. /usr/share/dbconfig-common/dpkg/frontend.postinst.mysql
-dbc_first_version=4.3.0
+. /usr/share/dbconfig-common/dpkg/postinst.mysql
+dbc_first_version=6.2.0
 dbc_generate_include_owner=www-data:www-data
-dbc_generate_include=php:/etc/typo3-dummy/debian-db.php
-dbc_go typo3-dummy $@
+dbc_generate_include=php:/etc/typo3-dummy-6.2/debian-db.php
+dbc_go typo3-dummy-6.2 $@
 
 
 db_get typo3-dummy/apache_mode

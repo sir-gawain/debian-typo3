@@ -1,2 +1,3 @@
 var/lib/typo3-dummy
 etc/typo3-dummy
+usr/share/dbconfig-common/data/typo3-dummy/install

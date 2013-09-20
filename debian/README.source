@@ -5,6 +5,8 @@ typo3-6.2 (6.2.0+ds1~alpha2-1)
     why we use +ds now.
   * remove all occurances of svgweb (websvg) from the package as the swf
     is not buildable by tools in main as long as flex-sdk is not available.
+  * Merged typo3-database into typo3-dummy-6.2 to avoid many installation
+    errors when mysql-server is not running before configuration of package.
 
  -- Christian Welzel <gawain@camlann.de>  Fre, 31 Aug 2012 22:30:00 +0200
 

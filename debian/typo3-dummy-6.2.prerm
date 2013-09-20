@@ -4,7 +4,7 @@ set -e
 #set -x
 
 . /usr/share/debconf/confmodule
-. /usr/share/dbconfig-common/dpkg/frontend.prerm.mysql 
+. /usr/share/dbconfig-common/dpkg/prerm.mysql
 dbc_go typo3-dummy $@
 
 #DEBHELPER#
