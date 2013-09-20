@@ -1,12 +1,12 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          typo3-dummy
+# Provides:          typo3-dummy-6.2
 # Required-Start:    $remote_fs
 # Required-Stop:     $remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Creates /var/run/typo3-dummy
-# Description:       Creates /var/run/typo3-dummy which is used as temporary
+# Short-Description: Creates /var/run/typo3-dummy-6.2
+# Description:       Creates /var/run/typo3-dummy-6.2 which is used as temporary
 #                    file upload folder for PHP and TYPO3
 ### END INIT INFO
 
@@ -15,10 +15,10 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/bin:/usr/bin
 DESC="Typo3 upload directory creation"
-NAME=typo3-dummy
+NAME=typo3-dummy-6.2
 SCRIPTNAME=/etc/init.d/$NAME
 
-TMPDIR=/var/run/typo3-dummy
+TMPDIR=/var/run/typo3-dummy-6.2
 
 # Load the VERBOSE setting and other rcS variables
 test -f /etc/default/rcS && . /etc/default/rcS

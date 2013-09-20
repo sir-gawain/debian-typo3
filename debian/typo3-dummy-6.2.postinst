@@ -3,7 +3,7 @@
 set -e
 #set -x
 
-PACKAGE=typo3-dummy
+PACKAGE=typo3-dummy-6.2
 T3CONFDIR=/var/lib/$PACKAGE/typo3conf
 
 APACHE_22=
@@ -23,18 +23,18 @@ fi
 
 if [ "$1" = "configure" ] ; then
     # Cleanup old links
-    if [ -L /etc/apache2/sites-available/typo3-dummy-directory -a ! -e /etc/apache2/sites-available/typo3-dummy-directory$CONF ]; then
-        mv /etc/apache2/sites-available/typo3-dummy-directory /etc/apache2/sites-available/typo3-dummy-directory$CONF
+    if [ -L /etc/apache2/sites-available/typo3-dummy-6.2-directory -a ! -e /etc/apache2/sites-available/typo3-dummy-6.2-directory$CONF ]; then
+        mv /etc/apache2/sites-available/typo3-dummy-6.2-directory /etc/apache2/sites-available/typo3-dummy-6.2-directory$CONF
     fi
-    if [ -L /etc/apache2/conf-available/typo3-dummy-directory -a -L /etc/apache2/sites-available/typo3-dummy-directory$CONF ]; then
-        rm /etc/apache2/conf-available/typo3-dummy-directory
+    if [ -L /etc/apache2/conf-available/typo3-dummy-6.2-directory -a -L /etc/apache2/sites-available/typo3-dummy-6.2-directory$CONF ]; then
+        rm /etc/apache2/conf-available/typo3-dummy-6.2-directory
     fi
 
-    if [ -L /etc/apache2/sites-available/typo3-dummy-vhost -a ! -e /etc/apache2/sites-available/typo3-dummy-vhost$CONF ]; then
-        mv /etc/apache2/sites-available/typo3-dummy-vhost /etc/apache2/sites-available/typo3-dummy-vhost$CONF
+    if [ -L /etc/apache2/sites-available/typo3-dummy-6.2-vhost -a ! -e /etc/apache2/sites-available/typo3-dummy-6.2-vhost$CONF ]; then
+        mv /etc/apache2/sites-available/typo3-dummy-6.2-vhost /etc/apache2/sites-available/typo3-dummy-6.2-vhost$CONF
     fi
-    if [ -L /etc/apache2/conf-available/typo3-dummy-vhost -a -L /etc/apache2/sites-available/typo3-dummy-vhost$CONF ]; then
-        rm /etc/apache2/conf-available/typo3-dummy-vhost
+    if [ -L /etc/apache2/conf-available/typo3-dummy-6.2-vhost -a -L /etc/apache2/sites-available/typo3-dummy-6.2-vhost$CONF ]; then
+        rm /etc/apache2/conf-available/typo3-dummy-6.2-vhost
     fi
 fi
 
@@ -44,23 +44,23 @@ if [ "$1" = "configure" ] ; then
 	fi
 
 	for confdir in sites-available; do
-		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-directory$CONF -a ! -L /etc/apache2/$confdir/typo3-dummy-directory$CONF ]; then
-			ln -s /etc/typo3-dummy/apache-directory.conf /etc/apache2/$confdir/typo3-dummy-directory$CONF
+		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-6.2-directory$CONF -a ! -L /etc/apache2/$confdir/typo3-dummy-6.2-directory$CONF ]; then
+			ln -s /etc/typo3-dummy-6.2/apache-directory.conf /etc/apache2/$confdir/typo3-dummy-6.2-directory$CONF
 		fi
-		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-vhost$CONF -a ! -L /etc/apache2/$confdir/typo3-dummy-vhost$CONF ]; then
-			ln -s /etc/typo3-dummy/apache-vhost.conf     /etc/apache2/$confdir/typo3-dummy-vhost$CONF
+		if [ -d /etc/apache2/$confdir -a ! -f /etc/apache2/$confdir/typo3-dummy-6.2-vhost$CONF -a ! -L /etc/apache2/$confdir/typo3-dummy-6.2-vhost$CONF ]; then
+			ln -s /etc/typo3-dummy-6.2/apache-vhost.conf     /etc/apache2/$confdir/typo3-dummy-6.2-vhost$CONF
 		fi
 	done
 fi
 
-if [ ! -e /etc/typo3-dummy/AdditionalFactoryConfiguration.php ]; then
-    cp /etc/typo3-dummy/AdditionalFactoryConfiguration.php_template /etc/typo3-dummy/AdditionalFactoryConfiguration.php
+if [ ! -e /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php ]; then
+    cp /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php_template /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php
 
     # genarate a random encryption key and set in into AdditionalFactoryConfiguration.php
     KEY=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w 96 | head -n 1)
-    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy/AdditionalFactoryConfiguration.php
-    chown www-data:www-data /etc/typo3-dummy/AdditionalFactoryConfiguration.php
-    chmod 0600 /etc/typo3-dummy/AdditionalFactoryConfiguration.php
+    sed -i 's/###ENCKEY###/'$KEY'/g' /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php
+    chown www-data:www-data /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php
+    chmod 0600 /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php
 fi
 
 # do database handling
@@ -75,16 +75,16 @@ dbc_go typo3-dummy-6.2 $@
 db_get typo3-dummy/apache_mode
 if [ "$RET" = "vhost" ]; then
     if [ -n "$APACHE_24" ] ; then
-        apache2_invoke ensite typo3-dummy-vhost
+        apache2_invoke ensite typo3-dummy-6.2-vhost
     elif [ -n "$APACHE_22" ] ; then
-        a2ensite typo3-dummy-vhost
+        a2ensite typo3-dummy-6.2-vhost
     fi
 fi
 if [ "$RET" = "directory" ]; then
     if [ -n "$APACHE_24" ] ; then
-        apache2_invoke ensite typo3-dummy-directory
+        apache2_invoke ensite typo3-dummy-6.2-directory
     elif [ -n "$APACHE_22" ] ; then
-        a2ensite typo3-dummy-directory
+        a2ensite typo3-dummy-6.2-directory
     fi
 fi
 

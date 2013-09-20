@@ -3,7 +3,7 @@
 set -e
 #set -x
 
-PACKAGE=typo3-dummy
+PACKAGE=typo3-dummy-6.2
 T3CONFDIR=/var/lib/$PACKAGE/typo3conf
 
 APACHE_22=
@@ -26,17 +26,17 @@ if [ -f /usr/share/debconf/confmodule ]; then
 fi
 if [ -f /usr/share/dbconfig-common/dpkg/postrm.mysql ]; then
     . /usr/share/dbconfig-common/dpkg/postrm.mysql
-    dbc_go typo3-dummy $@
+    dbc_go typo3-dummy-6.2 $@
 fi
 
 
 if [ "$1" = "purge" ]; then
-	rm -f /etc/typo3-dummy/debian-db.php
+	rm -f /etc/typo3-dummy-6.2/debian-db.php
 	if which ucf >/dev/null 2>&1; then
-		ucf --purge /etc/typo3-dummy/debian-db.php
+		ucf --purge /etc/typo3-dummy-6.2/debian-db.php
 	fi
-	rm -f /etc/typo3-dummy/LocalConfiguration.php
-	rm -f /etc/typo3-dummy/AdditionalFactoryConfiguration.php
+	rm -f /etc/typo3-dummy-6.2/LocalConfiguration.php
+	rm -f /etc/typo3-dummy-6.2/AdditionalFactoryConfiguration.php
 
 	if [ -d $T3CONFDIR ] ; then
 		rm -f $T3CONFDIR/temp_CACHED*
@@ -46,23 +46,23 @@ fi
 case "$1" in "remove"|"purge" )
 
 	for confdir in sites-available conf-available; do
-		if [ -f /etc/apache2/$confdir/typo3-dummy-directory$CONF -o -L /etc/apache2/$confdir/typo3-dummy-directory$CONF ]; then
+		if [ -f /etc/apache2/$confdir/typo3-dummy-6.2-directory$CONF -o -L /etc/apache2/$confdir/typo3-dummy-6.2-directory$CONF ]; then
 			if [ -n "$APACHE_24" ] ; then
-			    apache2_invoke dissite typo3-dummy-directory
+			    apache2_invoke dissite typo3-dummy-6.2-directory
 			elif [ -n "$APACHE_22" ] ; then
-			    a2dissite typo3-dummy-directory
+			    a2dissite typo3-dummy-6.2-directory
 			fi
 		fi
-		rm -f /etc/apache2/$confdir/typo3-dummy-directory$CONF
+		rm -f /etc/apache2/$confdir/typo3-dummy-6.2-directory$CONF
 
-		if [ -f /etc/apache2/$confdir/typo3-dummy-vhost$CONF -o -L /etc/apache2/$confdir/typo3-dummy-vhost$CONF ]; then
+		if [ -f /etc/apache2/$confdir/typo3-dummy-6.2-vhost$CONF -o -L /etc/apache2/$confdir/typo3-dummy-6.2-vhost$CONF ]; then
 			if [ -n "$APACHE_24" ] ; then
-			    apache2_invoke dissite typo3-dummy-vhost
+			    apache2_invoke dissite typo3-dummy-6.2-vhost
 			elif [ -n "$APACHE_22" ] ; then
-			    a2dissite typo3-dummy-vhost
+			    a2dissite typo3-dummy-6.2-vhost
 			fi
 		fi
-		rm -f /etc/apache2/$confdir/typo3-dummy-vhost$CONF
+		rm -f /etc/apache2/$confdir/typo3-dummy-6.2-vhost$CONF
 	done
 	;;
 esac

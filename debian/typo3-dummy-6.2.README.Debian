@@ -1,4 +1,4 @@
-typo3-dummy for Debian
+typo3-dummy-6.2 for Debian
 ----------------------
 
 The required steps to install the database with TYPO3 are described in
@@ -22,14 +22,14 @@ If you encounter situations during work where TYPO3/PHP complains about a
 skript timeout or insufficient memory, you can tune the following parameters
 to fix the problems:
 
-* In /etc/typo3-dummy/LocalConfiguration.php look for the line
+* In /etc/typo3-dummy-6.2/LocalConfiguration.php look for the line
   'setMemoryLimit' => '128',
   and adjust the memory limit to a higher value.
-* In /etc/typo3-dummy/apache-*.conf look for the line
+* In /etc/typo3-dummy-6.2/apache-*.conf look for the line
   php_admin_value memory_limit 48M
   and adjust the memory limit to a higher value.
 
-* In /etc/typo3-dummy/apache-*.conf look for the line
+* In /etc/typo3-dummy-6.2/apache-*.conf look for the line
   # php_admin_value max_execution_time 90
   and remove the '#' and adjust the time limit to a higher value.
 
@@ -40,7 +40,7 @@ TYPO3-Scheduler
 ---------------
 
 The new TYPO3 scheduler extension is based on a cron task.
-You can find the task in /etc/cron.d/typo3-dummy.
+You can find the task in /etc/cron.d/typo3-dummy-6.2.
 Adjust the interval of the task to your own needs. The default is 5 minutes.
 See the scheduler extension manual for futher information.
 
@@ -49,7 +49,7 @@ Enable the usage of cache framework
 -----------------------------------
 
 To make use of the new cache framework change the following line in
-/etc/typo3-dummy/LocalConfiguration.php:
+/etc/typo3-dummy-6.2/LocalConfiguration.php:
 'useCachingFramework' => '0',
 to
 'useCachingFramework' => '1',

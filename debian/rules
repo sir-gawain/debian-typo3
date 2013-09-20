@@ -12,8 +12,8 @@ T3SRCDIR:=usr/share/typo3/$(PACKAGENAME)
 
 SOURCEINSTALLDIR:=debian/$(SOURCEPACKAGE)/$(T3SRCDIR)
 
-DOCROOTDIR=debian/typo3-dummy/var/lib/typo3-dummy
-ETCDIR=debian/typo3-dummy/etc/typo3-dummy
+DOCROOTDIR=debian/typo3-dummy-6.2/var/lib/typo3-dummy-6.2
+ETCDIR=debian/typo3-dummy-6.2/etc/typo3-dummy-6.2
 
 DEBIAN_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
 UPSTREAM_VERSION:=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p' | sed -rne 's,(\+ds[0-9]),,p')
