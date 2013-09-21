@@ -7,3 +7,4 @@
 /usr/share/javascript/swfobject/expressInstall.swf      usr/share/typo3/typo3-6.2/typo3/contrib/extjs/resources/expressinstall.swf
 /usr/share/javascript/jquery-ui/jquery-ui.min.js        usr/share/typo3/typo3-6.2/typo3/sysext/extensionmanager/Resources/Public/JavaScript/jquery-ui-1.8.17.custom.min.js
 /usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf   usr/share/typo3/typo3-6.2/typo3/sysext/install/Resources/Private/Font/vera.ttf
+/usr/share/javascript/modernizr/modernizr.min.js        usr/share/typo3/typo3-6.2/typo3/contrib/modernizr/modernizr.min.js
