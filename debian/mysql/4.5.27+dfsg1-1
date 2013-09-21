@@ -1,1 +1,0 @@
-ALTER TABLE be_users CHANGE userMods userMods text; 
