@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/sir-gawain/debian-typo3
 
 Package: typo3-src-6.2
 Architecture: all
-Depends: libjs-jquery, libjs-jquery-ui, libjs-modernizr, libjs-swfobject, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libjs-swfupload, libphp-adodb (>=5.07), libphp-swiftmailer (>=4.0.6), ttf-bitstream-vera, ${misc:Depends}
+Depends: libjs-jquery, libjs-jquery-ui, libjs-modernizr, libjs-swfobject, libjs-prototype (>=1.6.0), libjs-scriptaculous (>=1.8.1), libphp-adodb (>=5.07), libphp-swiftmailer (>=4.0.6), ttf-bitstream-vera, ${misc:Depends}
 Recommends: exim4 | mail-transport-agent, graphicsmagick, php5, php5-cli, php5-gd, php5-mysql, php5-xcache | php-apc, typo3-dummy-6.2
 Suggests: catdoc, ghostscript, php5-curl, ppthtml, unrtf, xlhtml, xpdf-utils
 Description: web content management system (core)
