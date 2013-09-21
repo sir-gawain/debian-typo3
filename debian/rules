@@ -66,6 +66,9 @@ override_dh_installchangelogs:
 override_dh_installdocs:
 	dh_installdocs -Ntypo3-6 -A RELEASE_NOTES.txt README.txt NEWS.txt
 
+override_dh_installcron:
+	dh_installcron --name=typo3-dummy-6-2
+
 override_dh_fixperms:
 	dh_fixperms
 	chown -hR www-data:root $(DOCROOTDIR)
