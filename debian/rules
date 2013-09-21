@@ -60,6 +60,11 @@ override_dh_install:
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/install/Resources/Private/Font/*
 	rm -r $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/*
+	rm -r $(SOURCEINSTALLDIR)/typo3/contrib/pear/HTTP
+	rm -r $(SOURCEINSTALLDIR)/typo3/contrib/pear/Net
+	rm -r $(SOURCEINSTALLDIR)/typo3/contrib/pear/PEAR
+	rm -r $(SOURCEINSTALLDIR)/typo3/contrib/pear/data
+	find  $(SOURCEINSTALLDIR)/typo3/contrib/ -type d -empty -delete
 
 override_dh_installchangelogs:
 	dh_installchangelogs -Ntypo3-6 -A ChangeLog
