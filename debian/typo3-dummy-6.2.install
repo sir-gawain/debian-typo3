@@ -1,4 +1,6 @@
-index.php clear.gif fileadmin/ typo3temp/ uploads/ typo3conf/ var/lib/typo3-dummy-6.2
-debian/apache-directory.conf debian/apache-vhost.conf etc/typo3-dummy-6.2
-debian/mysql/mysql                usr/share/dbconfig-common/data/typo3-dummy-6.2/install
-#debian/mysql/6.2.0~alpha3-1       usr/share/dbconfig-common/data/typo3-dummy-6.2/upgrade/mysql
+index.php clear.gif fileadmin/ typo3temp/ uploads/ typo3conf/	var/lib/typo3-dummy-6.2
+debian/conf-files/AdditionalConfiguration.php					etc/typo3-dummy-6.2
+debian/conf-files/AdditionalFactoryConfiguration.php			etc/typo3-dummy-6.2
+debian/apache-directory.conf debian/apache-vhost.conf			etc/typo3-dummy-6.2
+debian/mysql/mysql												usr/share/dbconfig-common/data/typo3-dummy-6.2/install
+#debian/mysql/6.2.0~alpha3-1									usr/share/dbconfig-common/data/typo3-dummy-6.2/upgrade/mysql
