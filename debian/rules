@@ -55,6 +55,7 @@ override_dh_install:
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/sysext/extensionmanager/Resources/Public/Contrib/Farbtastic/LICENSE.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/Psr/Log/LICENSE
 # remove files linked to by later steps in build (dependencies)
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/adodb/adodb
 	rm -r $(SOURCEINSTALLDIR)/typo3/sysext/install/Resources/Private/Font/*

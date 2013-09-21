@@ -393,6 +393,10 @@ Files: typo3/sysext/rtehtmlarea/htmlarea/plugins/InsertSmiley/smileys/*
 Copyright:
 License: MPL
 
+Files: typo3/contrib/Psr/*
+Copyright: 2012, PHP Framework Interoperability Group
+License: MIT
+
 Files: typo3/contrib/modernizr/*
 Copyright: 2009-2010, Faruk Ateş
 License: MIT or BSD
