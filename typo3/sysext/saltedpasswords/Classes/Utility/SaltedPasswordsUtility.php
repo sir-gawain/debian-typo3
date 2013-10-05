@@ -47,7 +47,13 @@ class SaltedPasswordsUtility {
 	 * @return integer
 	 */
 	static public function getNumberOfBackendUsersWithInsecurePassword() {
-		$userCount = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows('*', 'be_users', 'password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('$%', 'be_users') . ' AND password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('M$%', 'be_users'));
+		$userCount = $GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+			'*',
+			'be_users',
+			'password != ""'
+				. ' AND password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('$%', 'be_users')
+				. ' AND password NOT LIKE ' . $GLOBALS['TYPO3_DB']->fullQuoteStr('M$%', 'be_users')
+		);
 		return $userCount;
 	}
 
@@ -111,7 +117,7 @@ class SaltedPasswordsUtility {
 	static public function getDefaultSaltingHashingMethod($mode = TYPO3_MODE) {
 		$extConf = self::returnExtConf($mode);
 		$classNameToUse = 'TYPO3\\CMS\\Saltedpasswords\\Salt\\Md5Salt';
-		if (in_array($extConf['saltedPWHashingMethod'], array_keys($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/saltedpasswords']['saltMethods']))) {
+		if (in_array($extConf['saltedPWHashingMethod'], array_keys(\TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getRegisteredSaltedHashingMethods()))) {
 			$classNameToUse = $extConf['saltedPWHashingMethod'];
 		}
 		return $classNameToUse;
@@ -128,8 +134,8 @@ class SaltedPasswordsUtility {
 		// Login Security Level Recognition
 		$extConf = self::returnExtConf($mode);
 		$securityLevel = $GLOBALS['TYPO3_CONF_VARS'][$mode]['loginSecurityLevel'];
-		if ($mode == 'BE' && $extConf['enabled']) {
-			return $securityLevel == 'normal' && $GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL'] > 0 || $securityLevel == 'rsa';
+		if ($mode == 'BE') {
+			return TRUE;
 		} elseif ($mode == 'FE' && $extConf['enabled']) {
 			return \TYPO3\CMS\Core\Utility\GeneralUtility::inList('normal,rsa', $securityLevel);
 		}
@@ -137,6 +143,3 @@ class SaltedPasswordsUtility {
 	}
 
 }
-
-
-?>

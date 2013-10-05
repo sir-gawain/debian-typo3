@@ -38,7 +38,7 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 	 * @return string content
 	 */
 	public function handle() {
-		$this->initialize();
+		$this->initializeHandle();
 
 		if (isset($this->postValues['set']['changeEncryptionKey'])) {
 			$this->setNewEncryptionKeyAndLogOut();
@@ -53,6 +53,9 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 		}
 		if (isset($this->postValues['set']['createAdministrator'])) {
 			$actionMessages[] = $this->createAdministrator();
+		}
+		if (isset($this->postValues['set']['clearAllCache'])) {
+			$actionMessages[] = $this->clearAllCache();
 		}
 
 		// Database analyzer handling
@@ -83,7 +86,8 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 			->assign('databaseHost', $GLOBALS['TYPO3_CONF_VARS']['DB']['host'])
 			->assign('databasePort', $GLOBALS['TYPO3_CONF_VARS']['DB']['port'])
 			->assign('databaseSocket', $GLOBALS['TYPO3_CONF_VARS']['DB']['socket'])
-			->assign('databaseNumberOfTables', count($this->getDatabase()->admin_get_tables()));
+			->assign('databaseNumberOfTables', count($this->getDatabase()->admin_get_tables()))
+			->assign('extensionCompatibilityTesterProtocolFile', GeneralUtility::getIndpEnv('TYPO3_SITE_URL') . 'typo3temp/ExtensionCompatibilityTester.txt');
 
 		return $this->view->render();
 	}
@@ -108,7 +112,10 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 		} else {
 			/** @var \TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager */
 			$configurationManager = $this->objectManager->get('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
-			$configurationManager->setLocalConfigurationValueByPath('BE/installToolPassword', md5($values['newInstallToolPassword']));
+			$configurationManager->setLocalConfigurationValueByPath(
+				'BE/installToolPassword',
+				$this->getHashedPassword($values['newInstallToolPassword'])
+			);
 			/** @var $message \TYPO3\CMS\Install\Status\StatusInterface */
 			$message = $this->objectManager->get('TYPO3\\CMS\\Install\\Status\\OkStatus');
 			$message->setTitle('Install tool password changed');
@@ -137,6 +144,20 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 			$message->setTitle('Site name not changed');
 			$message->setMessage('Site name must be at least one character long.');
 		}
+		return $message;
+	}
+
+	/**
+	 * Clear all caches
+	 *
+	 * @return \TYPO3\CMS\Install\Status\StatusInterface
+	 */
+	protected function clearAllCache() {
+		/** @var \TYPO3\CMS\Install\Service\ClearCacheService $clearCacheService */
+		$clearCacheService = $this->objectManager->get('TYPO3\\CMS\\Install\\Service\\ClearCacheService');
+		$clearCacheService->clearAll();
+		$message = $this->objectManager->get('TYPO3\\CMS\\Install\\Status\\OkStatus');
+		$message->setTitle('Successfully cleared all caches');
 		return $message;
 	}
 
@@ -200,10 +221,10 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 				$message->setTitle('Administrator user not created');
 				$message->setMessage('A user with username ' . $username . ' exists already.');
 			} else {
-				// @TODO: Handle saltedpasswords in installer and store password salted in the first place
+				$hashedPassword = $this->getHashedPassword($password);
 				$adminUserFields = array(
 					'username' => $username,
-					'password' => md5($password),
+					'password' => $hashedPassword,
 					'admin' => 1,
 					'tstamp' => $GLOBALS['EXEC_TIME'],
 					'crdate' => $GLOBALS['EXEC_TIME']
@@ -388,4 +409,3 @@ class ImportantActions extends Action\AbstractAction implements Action\ActionInt
 		return $message;
 	}
 }
-?>

@@ -28,13 +28,10 @@
  * New content elements wizard
  * (Part of the 'cms' extension)
  *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
- * XHTML compatible.
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 unset($MCONF);
-require 'conf.php';
+require __DIR__ . '/conf.php';
 require $BACK_PATH . 'init.php';
 // Unset MCONF/MLANG since all we wanted was back path etc. for this particular script.
 unset($MCONF);
@@ -104,4 +101,3 @@ foreach ($SOBE->include_once as $INC_FILE) {
 }
 $SOBE->main();
 $SOBE->printContent();
-?>

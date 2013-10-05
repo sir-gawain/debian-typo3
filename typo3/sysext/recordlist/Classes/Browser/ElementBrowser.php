@@ -516,7 +516,7 @@ class ElementBrowser {
 			function jumpToUrl(URL,anchor) {	//
 				var add_act = URL.indexOf("act=")==-1 ? "&act=' . $this->act . '" : "";
 				var add_mode = URL.indexOf("mode=")==-1 ? "&mode=' . $this->mode . '" : "";
-				var theLocation = URL + add_act + add_mode + add_href + add_target + add_class + add_title + add_params' . ($addPassOnParams ? '+"' . $addPassOnParams . '"' : '') . '+(anchor?anchor:"");
+				var theLocation = URL + add_act + add_mode + add_href + add_target + add_class + add_title + add_params' . ($addPassOnParams ? '+"' . $addPassOnParams . '"' : '') . '+(typeof(anchor)=="string"?anchor:"");
 				window.location.href = theLocation;
 				return false;
 			}
@@ -708,7 +708,7 @@ class ElementBrowser {
 		// Starting content:
 		$content = $this->doc->startPage('RTE link');
 		// Initializing the action value, possibly removing blinded values etc:
-		$allowedItems = array_diff(explode(',', 'page,file,folder,url,mail,spec'), GeneralUtility::trimExplode(',', $this->thisConfig['blindLinkOptions'], 1));
+		$allowedItems = array_diff(explode(',', 'page,file,folder,url,mail,spec'), GeneralUtility::trimExplode(',', $this->thisConfig['blindLinkOptions'], TRUE));
 		$allowedItems = array_diff($allowedItems, GeneralUtility::trimExplode(',', $this->P['params']['blindLinkOptions']));
 		// Call hook for extra options
 		foreach ($this->hookObjects as $hookObject) {
@@ -724,43 +724,43 @@ class ElementBrowser {
 		$menuDef = array();
 		if (!$wiz) {
 			$menuDef['removeLink']['isActive'] = $this->act == 'removeLink';
-			$menuDef['removeLink']['label'] = $GLOBALS['LANG']->getLL('removeLink', 1);
+			$menuDef['removeLink']['label'] = $GLOBALS['LANG']->getLL('removeLink', TRUE);
 			$menuDef['removeLink']['url'] = '#';
 			$menuDef['removeLink']['addParams'] = 'onclick="self.parent.parent.renderPopup_unLink();return false;"';
 		}
 		if (in_array('page', $allowedItems)) {
 			$menuDef['page']['isActive'] = $this->act == 'page';
-			$menuDef['page']['label'] = $GLOBALS['LANG']->getLL('page', 1);
+			$menuDef['page']['label'] = $GLOBALS['LANG']->getLL('page', TRUE);
 			$menuDef['page']['url'] = '#';
 			$menuDef['page']['addParams'] = 'onclick="jumpToUrl(\'?act=page\');return false;"';
 		}
 		if (in_array('file', $allowedItems)) {
 			$menuDef['file']['isActive'] = $this->act == 'file';
-			$menuDef['file']['label'] = $GLOBALS['LANG']->getLL('file', 1);
+			$menuDef['file']['label'] = $GLOBALS['LANG']->getLL('file', TRUE);
 			$menuDef['file']['url'] = '#';
 			$menuDef['file']['addParams'] = 'onclick="jumpToUrl(\'?act=file\');return false;"';
 		}
 		if (in_array('folder', $allowedItems)) {
 			$menuDef['folder']['isActive'] = $this->act == 'folder';
-			$menuDef['folder']['label'] = $GLOBALS['LANG']->getLL('folder', 1);
+			$menuDef['folder']['label'] = $GLOBALS['LANG']->getLL('folder', TRUE);
 			$menuDef['folder']['url'] = '#';
 			$menuDef['folder']['addParams'] = 'onclick="jumpToUrl(\'?act=folder\');return false;"';
 		}
 		if (in_array('url', $allowedItems)) {
 			$menuDef['url']['isActive'] = $this->act == 'url';
-			$menuDef['url']['label'] = $GLOBALS['LANG']->getLL('extUrl', 1);
+			$menuDef['url']['label'] = $GLOBALS['LANG']->getLL('extUrl', TRUE);
 			$menuDef['url']['url'] = '#';
 			$menuDef['url']['addParams'] = 'onclick="jumpToUrl(\'?act=url\');return false;"';
 		}
 		if (in_array('mail', $allowedItems)) {
 			$menuDef['mail']['isActive'] = $this->act == 'mail';
-			$menuDef['mail']['label'] = $GLOBALS['LANG']->getLL('email', 1);
+			$menuDef['mail']['label'] = $GLOBALS['LANG']->getLL('email', TRUE);
 			$menuDef['mail']['url'] = '#';
 			$menuDef['mail']['addParams'] = 'onclick="jumpToUrl(\'?act=mail\');return false;"';
 		}
 		if (is_array($this->thisConfig['userLinks.']) && in_array('spec', $allowedItems)) {
 			$menuDef['spec']['isActive'] = $this->act == 'spec';
-			$menuDef['spec']['label'] = $GLOBALS['LANG']->getLL('special', 1);
+			$menuDef['spec']['label'] = $GLOBALS['LANG']->getLL('special', TRUE);
 			$menuDef['spec']['url'] = '#';
 			$menuDef['spec']['addParams'] = 'onclick="jumpToUrl(\'?act=spec\');return false;"';
 		}
@@ -782,8 +782,8 @@ class ElementBrowser {
 						<form action="" name="lurlform" id="lurlform">
 							<table border="0" cellpadding="2" cellspacing="1" id="typo3-linkMail">
 								<tr>
-									<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('emailAddress', 1) . ':</td>
-									<td><input type="text" name="lemail"' . $this->doc->formWidth(20) . ' value="' . htmlspecialchars(($this->curUrlInfo['act'] == 'mail' ? $this->curUrlInfo['info'] : '')) . '" /> ' . '<input type="submit" value="' . $GLOBALS['LANG']->getLL('setLink', 1) . '" onclick="browse_links_setTarget(\'\');browse_links_setValue(\'mailto:\'+document.lurlform.lemail.value); return link_current();" /></td>
+									<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('emailAddress', TRUE) . ':</td>
+									<td><input type="text" name="lemail"' . $this->doc->formWidth(20) . ' value="' . htmlspecialchars(($this->curUrlInfo['act'] == 'mail' ? $this->curUrlInfo['info'] : '')) . '" /> ' . '<input type="submit" value="' . $GLOBALS['LANG']->getLL('setLink', TRUE) . '" onclick="browse_links_setTarget(\'\');browse_links_setValue(\'mailto:\'+document.lurlform.lemail.value); return link_current();" /></td>
 								</tr>
 							</table>
 						</form>';
@@ -799,7 +799,7 @@ class ElementBrowser {
 							<table border="0" cellpadding="2" cellspacing="1" id="typo3-linkURL">
 								<tr>
 									<td style="width: 96px;">URL:</td>
-									<td><input type="text" name="lurl"' . $this->doc->formWidth(30) . ' value="' . htmlspecialchars(($this->curUrlInfo['act'] == 'url' ? $this->curUrlInfo['info'] : 'http://')) . '" /> ' . '<input type="submit" value="' . $GLOBALS['LANG']->getLL('setLink', 1) . '" onclick="browse_links_setValue(document.lurlform.lurl.value); return link_current();" /></td>
+									<td><input type="text" name="lurl"' . $this->doc->formWidth(30) . ' value="' . htmlspecialchars(($this->curUrlInfo['act'] == 'url' ? $this->curUrlInfo['info'] : 'http://')) . '" /> ' . '<input type="submit" value="' . $GLOBALS['LANG']->getLL('setLink', TRUE) . '" onclick="browse_links_setValue(document.lurlform.lurl.value); return link_current();" /></td>
 								</tr>
 							</table>
 						</form>';
@@ -893,7 +893,7 @@ class ElementBrowser {
 								$title = $GLOBALS['LANG']->sL($title);
 							}
 							// Description:
-							$description = $v[$k2i . '.']['description'] ? $GLOBALS['LANG']->sL($v[($k2i . '.')]['description'], 1) . '<br />' : '';
+							$description = $v[$k2i . '.']['description'] ? $GLOBALS['LANG']->sL($v[($k2i . '.')]['description'], TRUE) . '<br />' : '';
 							// URL + onclick event:
 							$onClickEvent = '';
 							if (isset($v[$k2i . '.']['target'])) {
@@ -924,7 +924,7 @@ class ElementBrowser {
 				-->
 							<table border="0" cellpadding="1" cellspacing="1" id="typo3-linkSpecial">
 								<tr>
-									<td class="bgColor5" class="c-wCell" valign="top"><strong>' . $GLOBALS['LANG']->getLL('special', 1) . '</strong></td>
+									<td class="bgColor5" class="c-wCell" valign="top"><strong>' . $GLOBALS['LANG']->getLL('special', TRUE) . '</strong></td>
 								</tr>
 								' . implode('', $subcats) . '
 							</table>
@@ -941,7 +941,7 @@ class ElementBrowser {
 				$cElements = $this->expandPage();
 				// Outputting Temporary DB mount notice:
 				if (intval($GLOBALS['BE_USER']->getSessionData('pageTree_temporaryMountPoint'))) {
-					$link = '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('setTempDBmount' => 0))) . '">' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xlf:labels.temporaryDBmount', 1) . '</a>';
+					$link = '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('setTempDBmount' => 0))) . '">' . $GLOBALS['LANG']->sl('LLL:EXT:lang/locallang_core.xlf:labels.temporaryDBmount', TRUE) . '</a>';
 					$flashMessage = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $link, '', \TYPO3\CMS\Core\Messaging\FlashMessage::INFO);
 					$dbmount = $flashMessage->render();
 				}
@@ -972,7 +972,7 @@ class ElementBrowser {
 				<form action="" name="lparamsform" id="lparamsform">
 					<table border="0" cellpadding="2" cellspacing="1" id="typo3-linkParams">
 						<tr>
-							<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('params', 1) . '</td>
+							<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('params', TRUE) . '</td>
 							<td><input type="text" name="lparams" class="typo3-link-input" onchange="browse_links_setParams(this.value);" value="' . htmlspecialchars($this->setParams) . '" /></td>
 						</tr>
 					</table>
@@ -987,7 +987,7 @@ class ElementBrowser {
 				<form action="" name="lclassform" id="lclassform">
 					<table border="0" cellpadding="2" cellspacing="1" id="typo3-linkClass">
 						<tr>
-							<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('class', 1) . '</td>
+							<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('class', TRUE) . '</td>
 							<td><input type="text" name="lclass" class="typo3-link-input" onchange="browse_links_setClass(this.value);" value="' . htmlspecialchars($this->setClass) . '" /></td>
 						</tr>
 					</table>
@@ -1002,7 +1002,7 @@ class ElementBrowser {
 				<form action="" name="ltitleform" id="ltitleform">
 					<table border="0" cellpadding="2" cellspacing="1" id="typo3-linkTitle">
 						<tr>
-							<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('title', 1) . '</td>
+							<td style="width: 96px;">' . $GLOBALS['LANG']->getLL('title', TRUE) . '</td>
 							<td><input type="text" name="ltitle" class="typo3-link-input" onchange="browse_links_setTitle(this.value);" value="' . htmlspecialchars($this->setTitle) . '" /></td>
 						</tr>
 					</table>
@@ -1029,19 +1029,19 @@ class ElementBrowser {
 				<form action="" name="ltargetform" id="ltargetform">
 					<table border="0" cellpadding="2" cellspacing="1" id="typo3-linkTarget">
 						<tr>
-							<td>' . $GLOBALS['LANG']->getLL('target', 1) . ':</td>
+							<td>' . $GLOBALS['LANG']->getLL('target', TRUE) . ':</td>
 							<td><input type="text" name="ltarget" onchange="browse_links_setTarget(this.value);" value="' . htmlspecialchars($this->setTarget) . '"' . $this->doc->formWidth(10) . ' /></td>
 							<td>
 								<select name="ltarget_type" onchange="browse_links_setTarget(this.options[this.selectedIndex].value);document.ltargetform.ltarget.value=this.options[this.selectedIndex].value;this.selectedIndex=0;">
 									<option></option>
-									<option value="_top">' . $GLOBALS['LANG']->getLL('top', 1) . '</option>
-									<option value="_blank">' . $GLOBALS['LANG']->getLL('newWindow', 1) . '</option>
+									<option value="_top">' . $GLOBALS['LANG']->getLL('top', TRUE) . '</option>
+									<option value="_blank">' . $GLOBALS['LANG']->getLL('newWindow', TRUE) . '</option>
 								</select>
 							</td>
 							<td>';
 			if (($this->curUrlInfo['act'] == 'page' || $this->curUrlInfo['act'] == 'file' || $this->curUrlInfo['act'] == 'folder') && $this->curUrlArray['href'] && $this->curUrlInfo['act'] == $this->act) {
 				$ltarget .= '
-							<input type="submit" value="' . $GLOBALS['LANG']->getLL('update', 1) . '" onclick="return link_current();" />';
+							<input type="submit" value="' . $GLOBALS['LANG']->getLL('update', TRUE) . '" onclick="return link_current();" />';
 			}
 			$selectJS = '
 				if (document.ltargetform.popup_width.options[document.ltargetform.popup_width.selectedIndex].value>0 && document.ltargetform.popup_height.options[document.ltargetform.popup_height.selectedIndex].value>0) {
@@ -1057,10 +1057,10 @@ class ElementBrowser {
 			$ltarget .= '		</td>
 						</tr>
 						<tr>
-							<td>' . $GLOBALS['LANG']->getLL('target_popUpWindow', 1) . ':</td>
+							<td>' . $GLOBALS['LANG']->getLL('target_popUpWindow', TRUE) . ':</td>
 							<td colspan="3">
 								<select name="popup_width" onchange="' . htmlspecialchars($selectJS) . '">
-									<option value="0">' . $GLOBALS['LANG']->getLL('target_popUpWindow_width', 1) . '</option>
+									<option value="0">' . $GLOBALS['LANG']->getLL('target_popUpWindow_width', TRUE) . '</option>
 									<option value="300">300</option>
 									<option value="400">400</option>
 									<option value="500">500</option>
@@ -1070,7 +1070,7 @@ class ElementBrowser {
 								</select>
 								x
 								<select name="popup_height" onchange="' . htmlspecialchars($selectJS) . '">
-									<option value="0">' . $GLOBALS['LANG']->getLL('target_popUpWindow_height', 1) . '</option>
+									<option value="0">' . $GLOBALS['LANG']->getLL('target_popUpWindow_height', TRUE) . '</option>
 									<option value="200">200</option>
 									<option value="300">300</option>
 									<option value="400">400</option>
@@ -1411,7 +1411,7 @@ class ElementBrowser {
 			if (!strcmp(trim($tables), '*')) {
 				$tablesArr = array_keys($GLOBALS['TCA']);
 			} else {
-				$tablesArr = GeneralUtility::trimExplode(',', $tables, 1);
+				$tablesArr = GeneralUtility::trimExplode(',', $tables, TRUE);
 			}
 			reset($tablesArr);
 			// Headline for selecting records:
@@ -1672,8 +1672,8 @@ class ElementBrowser {
 					$lines[] = '
 						<tr class="file_list_normal">
 							<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
-							<td>' . $ATag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', 1) . '" alt="" />' . $ATag_e . '</td>
-							<td nowrap="nowrap">' . ($ATag2 . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
+							<td>' . $ATag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', TRUE) . '" alt="" />' . $ATag_e . '</td>
+							<td nowrap="nowrap">' . ($ATag2 . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', TRUE) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', TRUE) . $ATag2_e) . '</td>
 							<td nowrap="nowrap">&nbsp;' . $pDim . '</td>
 						</tr>';
 					$lines[] = '
@@ -1684,8 +1684,8 @@ class ElementBrowser {
 					$lines[] = '
 						<tr class="file_list_normal">
 							<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
-							<td>' . $ATag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', 1) . '" alt="" />' . $ATag_e . '</td>
-							<td nowrap="nowrap">' . ($ATag2 . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
+							<td>' . $ATag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', TRUE) . '" alt="" />' . $ATag_e . '</td>
+							<td nowrap="nowrap">' . ($ATag2 . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', TRUE) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', TRUE) . $ATag2_e) . '</td>
 							<td>&nbsp;</td>
 						</tr>';
 				}
@@ -1773,7 +1773,7 @@ class ElementBrowser {
 						$lines[] = '
 							<tr class="bgColor4">
 								<td nowrap="nowrap">' . $foldernameAndIcon . '&nbsp;</td>
-								<td>' . $aTag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', 1) . '" alt="" />' . $aTag_e . ' </td>
+								<td>' . $aTag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', TRUE) . '" alt="" />' . $aTag_e . ' </td>
 								<td>&nbsp;</td>
 							</tr>';
 					}
@@ -1859,7 +1859,7 @@ class ElementBrowser {
 							$lines[] = '
 								<tr class="bgColor4">
 									<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
-									<td nowrap="nowrap">' . ($imgInfo[0] != $IW ? '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('noLimit' => '1'))) . '">' . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/icon_warning2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('clickToRedrawFullSize', 1) . '" alt="" />' . '</a>' : '') . $pDim . '&nbsp;</td>
+									<td nowrap="nowrap">' . ($imgInfo[0] != $IW ? '<a href="' . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::linkThisScript(array('noLimit' => '1'))) . '">' . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/icon_warning2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('clickToRedrawFullSize', TRUE) . '" alt="" />' . '</a>' : '') . $pDim . '&nbsp;</td>
 								</tr>';
 							$lines[] = '
 								<tr>
@@ -1992,7 +1992,7 @@ class ElementBrowser {
 				<!-- Print current URL -->
 				<table border="0" cellpadding="0" cellspacing="0" id="typo3-curUrl">
 					<tr>
-						<td>' . $GLOBALS['LANG']->getLL('currentLink', 1) . ': ' . htmlspecialchars(rawurldecode($str)) . '</td>
+						<td>' . $GLOBALS['LANG']->getLL('currentLink', TRUE) . ': ' . htmlspecialchars(rawurldecode($str)) . '</td>
 					</tr>
 				</table>';
 		} else {
@@ -2060,7 +2060,7 @@ class ElementBrowser {
 						}
 						$pageRow = BackendUtility::getRecordWSOL('pages', $id);
 						$titleLen = intval($GLOBALS['BE_USER']->uc['titleLen']);
-						$info['value'] = ((((($GLOBALS['LANG']->getLL('page', 1) . ' \'') . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($pageRow['title'], $titleLen))) . '\' (ID:') . $id) . ($uP['fragment'] ? ', #' . $uP['fragment'] : '')) . ')';
+						$info['value'] = ((((($GLOBALS['LANG']->getLL('page', TRUE) . ' \'') . htmlspecialchars(\TYPO3\CMS\Core\Utility\GeneralUtility::fixed_lgd_cs($pageRow['title'], $titleLen))) . '\' (ID:') . $id) . ($uP['fragment'] ? ', #' . $uP['fragment'] : '')) . ')';
 						$info['pageid'] = $id;
 						$info['cElement'] = $uP['fragment'];
 						$info['act'] = 'page';
@@ -2133,10 +2133,10 @@ class ElementBrowser {
 			<form action="' . $GLOBALS['BACK_PATH'] . 'tce_file.php" method="post" name="editform" id="typo3-uplFilesForm" enctype="' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['form_enctype'] . '">
 				<table border="0" cellpadding="0" cellspacing="0" id="typo3-uplFiles">
 					<tr>
-						<td>' . $this->barheader(($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_upload.php.pagetitle', 1) . ':')) . '</td>
+						<td>' . $this->barheader(($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_upload.php.pagetitle', TRUE) . ':')) . '</td>
 					</tr>
 					<tr>
-						<td class="c-wCell c-hCell"><strong>' . $GLOBALS['LANG']->getLL('path', 1) . ':</strong> ' . htmlspecialchars($header) . '</td>
+						<td class="c-wCell c-hCell"><strong>' . $GLOBALS['LANG']->getLL('path', TRUE) . ':</strong> ' . htmlspecialchars($header) . '</td>
 					</tr>
 					<tr>
 						<td class="c-wCell c-hCell">';
@@ -2151,9 +2151,9 @@ class ElementBrowser {
 		$code .= '<input type="hidden" name="redirect" value="' . htmlspecialchars($redirectValue) . '" />';
 		$code .= '
 			<div id="c-override">
-				<label><input type="checkbox" name="overwriteExistingFiles" id="overwriteExistingFiles" value="1" /> ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:overwriteExistingFiles', 1) . '</label>
+				<label><input type="checkbox" name="overwriteExistingFiles" id="overwriteExistingFiles" value="1" /> ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:overwriteExistingFiles', TRUE) . '</label>
 			</div>
-			<input type="submit" name="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_upload.php.submit', 1) . '" />
+			<input type="submit" name="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_upload.php.submit', TRUE) . '" />
 		';
 		$code .= '</td>
 					</tr>
@@ -2191,7 +2191,7 @@ class ElementBrowser {
 						<td>' . $this->barheader(($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_newfolder.php.pagetitle') . ':')) . '</td>
 					</tr>
 					<tr>
-						<td class="c-wCell c-hCell"><strong>' . $GLOBALS['LANG']->getLL('path', 1) . ':</strong> ' . htmlspecialchars($header) . '</td>
+						<td class="c-wCell c-hCell"><strong>' . $GLOBALS['LANG']->getLL('path', TRUE) . ':</strong> ' . htmlspecialchars($header) . '</td>
 					</tr>
 					<tr>
 						<td class="c-wCell c-hCell">';
@@ -2200,7 +2200,7 @@ class ElementBrowser {
 		$code .= '<input' . $this->doc->formWidth(20) . ' type="text" name="file[newfolder][' . $a . '][data]" />' . '<input type="hidden" name="file[newfolder][' . $a . '][target]" value="' . htmlspecialchars($folderObject->getCombinedIdentifier()) . '" />';
 		// Make footer of upload form, including the submit button:
 		$redirectValue = $this->thisScript . '?act=' . $this->act . '&mode=' . $this->mode . '&expandFolder=' . rawurlencode($folderObject->getCombinedIdentifier()) . '&bparams=' . rawurlencode($this->bparams);
-		$code .= '<input type="hidden" name="redirect" value="' . htmlspecialchars($redirectValue) . '" />' . '<input type="submit" name="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_newfolder.php.submit', 1) . '" />';
+		$code .= '<input type="hidden" name="redirect" value="' . htmlspecialchars($redirectValue) . '" />' . '<input type="submit" name="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_newfolder.php.submit', TRUE) . '" />';
 		$code .= '</td>
 					</tr>
 				</table>
@@ -2217,8 +2217,8 @@ class ElementBrowser {
 	 */
 	public function getBulkSelector($filesCount) {
 		if ($filesCount) {
-			$labelToggleSelection = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_browse_links.xlf:toggleSelection', 1);
-			$labelImportSelection = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_browse_links.xlf:importSelection', 1);
+			$labelToggleSelection = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_browse_links.xlf:toggleSelection', TRUE);
+			$labelImportSelection = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_browse_links.xlf:importSelection', TRUE);
 			// Getting flag for showing/not showing thumbnails:
 			$noThumbsInEB = $GLOBALS['BE_USER']->getTSConfigVal('options.noThumbsInEB');
 			$out = $this->doc->spacer(10) . '<div>' . '<a href="#" onclick="BrowseLinks.Selector.handle()">' . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/import.gif', 'width="12" height="12"') . ' title="' . $labelImportSelection . '" alt="" /> ' . $labelImportSelection . '</a>&nbsp;&nbsp;&nbsp;' . '<a href="#" onclick="BrowseLinks.Selector.toggle()">' . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/clip_select.gif', 'width="12" height="12"') . ' title="' . $labelToggleSelection . '" alt="" /> ' . $labelToggleSelection . '</a>' . '</div>';
@@ -2229,7 +2229,7 @@ class ElementBrowser {
 				$_MCONF['name'] = 'file_list';
 				$_MOD_SETTINGS = BackendUtility::getModuleData($_MOD_MENU, GeneralUtility::_GP('SET'), $_MCONF['name']);
 				$addParams = '&act=' . $this->act . '&mode=' . $this->mode . '&expandFolder=' . rawurlencode($this->selectedFolder->getCombinedIdentifier()) . '&bparams=' . rawurlencode($this->bparams);
-				$thumbNailCheck = BackendUtility::getFuncCheck('', 'SET[displayThumbs]', $_MOD_SETTINGS['displayThumbs'], $this->thisScript, $addParams, 'id="checkDisplayThumbs"') . ' <label for="checkDisplayThumbs">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:displayThumbs', 1) . '</label>';
+				$thumbNailCheck = BackendUtility::getFuncCheck('', 'SET[displayThumbs]', $_MOD_SETTINGS['displayThumbs'], $this->thisScript, $addParams, 'id="checkDisplayThumbs"') . ' <label for="checkDisplayThumbs">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:displayThumbs', TRUE) . '</label>';
 				$out .= $this->doc->spacer(5) . $thumbNailCheck . $this->doc->spacer(15);
 			} else {
 				$out .= $this->doc->spacer(15);
@@ -2267,6 +2267,3 @@ class ElementBrowser {
 	}
 
 }
-
-
-?>

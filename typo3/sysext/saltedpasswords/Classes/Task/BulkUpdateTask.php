@@ -79,6 +79,7 @@ class BulkUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 				$numberOfRows = count($usersToUpdate);
 				if ($numberOfRows > 0) {
 					$processedAllRecords = FALSE;
+					$this->activateSelf();
 					$this->incrementUserRecordPointer($mode, $numberOfRows);
 					$this->convertPasswords($mode, $usersToUpdate);
 				}
@@ -214,6 +215,16 @@ class BulkUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	}
 
 	/**
+	 * Activates this task instance.
+	 * Uses setDisabled() method of parent \TYPO3\CMS\Scheduler\Task\AbstractTask
+	 *
+	 * @return void
+	 */
+	protected function activateSelf() {
+		$this->setDisabled(FALSE);
+	}
+
+	/**
 	 * Deactivates this task instance.
 	 * Uses setDisabled() method of parent \TYPO3\CMS\Scheduler\Task\AbstractTask
 	 *
@@ -262,6 +273,3 @@ class BulkUpdateTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	}
 
 }
-
-
-?>

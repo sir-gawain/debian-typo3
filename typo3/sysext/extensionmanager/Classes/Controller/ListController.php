@@ -35,44 +35,21 @@ class ListController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCont
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository
+	 * @inject
 	 */
 	protected $extensionRepository;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\ListUtility
+	 * @inject
 	 */
 	protected $listUtility;
 
 	/**
-	 * Dependency injection of the Extension Repository
-	 *
-	 * @param \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository
-	 * @return void
-	 */
-	public function injectExtensionRepository(\TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository) {
-		$this->extensionRepository = $extensionRepository;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\ListUtility $listUtility
-	 * @return void
-	 */
-	public function injectListUtility(\TYPO3\CMS\Extensionmanager\Utility\ListUtility $listUtility) {
-		$this->listUtility = $listUtility;
-	}
-
-	/**
 	 * @var \TYPO3\CMS\Core\Page\PageRenderer
+	 * @inject
 	 */
 	protected $pageRenderer;
-
-	/**
-	 * @param \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer
-	 * @return void
-	 */
-	public function injectPageRenderer(\TYPO3\CMS\Core\Page\PageRenderer $pageRenderer) {
-		$this->pageRenderer = $pageRenderer;
-	}
 
 	/**
 	 * Add the needed JavaScript files for all actions
@@ -100,6 +77,7 @@ class ListController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCont
 	 * Either all extensions or depending on a search param
 	 *
 	 * @param string $search
+	 * @return void
 	 */
 	public function terAction($search = '') {
 		if (!empty($search)) {
@@ -114,9 +92,20 @@ class ListController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCont
 	}
 
 	/**
+	 * Action for listing all possible distributions
+	 *
+	 * @return void
+	 */
+	public function distributionsAction() {
+		$distributions = $this->extensionRepository->findAllDistributions();
+		$this->view->assign('distributions', $distributions);
+	}
+
+	/**
 	 * Shows all versions of a specific extension
 	 *
 	 * @param string $extensionKey
+	 * @return void
 	 */
 	public function showAllVersionsAction($extensionKey) {
 		$currentVersion = $this->extensionRepository->findOneByCurrentVersionByExtensionKey($extensionKey);
@@ -131,4 +120,3 @@ class ListController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCont
 		);
 	}
 }
-?>

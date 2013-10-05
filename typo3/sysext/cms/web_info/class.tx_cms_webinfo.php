@@ -27,8 +27,6 @@
 /**
  * Contains a class with functions for page related statistics added to the backend Info module
  *
- * Revised for TYPO3 3.6 5/2003 by Kasper Skårhøj
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('cms') . 'layout/class.tx_cms_layout.php';
@@ -38,4 +36,3 @@ require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('cms') 
  * typo3/sysext/frontend/Classes/Controller/PageInformationController.php
  */
 require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('frontend') . 'Classes/Controller/PageInformationController.php';
-?>

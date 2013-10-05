@@ -37,8 +37,7 @@ class InstallToolPasswordNotSetAction extends Action\AbstractAction implements A
 	 * @return string content
 	 */
 	public function handle() {
-		$this->initialize();
+		$this->initializeHandle();
 		return $this->view->render();
 	}
 }
-?>

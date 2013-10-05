@@ -76,7 +76,7 @@ class SystemEnvironmentBuilder {
 	 */
 	static protected function defineBaseConstants() {
 		// This version, branch and copyright
-		define('TYPO3_version', '6.2.0alpha2');
+		define('TYPO3_version', '6.2.0alpha3');
 		define('TYPO3_branch', '6.2');
 		define('TYPO3_copyright_year', '1998-2013');
 
@@ -108,7 +108,7 @@ class SystemEnvironmentBuilder {
 		define('PHP_EXTENSIONS_DEFAULT', 'php,php3,php4,php5,php6,phpsh,inc,phtml');
 
 		// List of extensions required to run the core
-		define('REQUIRED_EXTENSIONS', 'core,backend,frontend,cms,lang,sv,extensionmanager,recordlist,extbase,fluid,cshmanual,install');
+		define('REQUIRED_EXTENSIONS', 'core,backend,frontend,cms,lang,sv,extensionmanager,recordlist,extbase,fluid,cshmanual,install,saltedpasswords');
 
 		// Operating system identifier
 		// Either "WIN" or empty string
@@ -213,9 +213,6 @@ class SystemEnvironmentBuilder {
 		require_once __DIR__ . '/../Log/LogLevel.php';
 		require_once __DIR__ . '/../Utility/MathUtility.php';
 		require_once __DIR__ . '/ClassLoader.php';
-		if (PHP_VERSION_ID < 50307) {
-			require_once __DIR__ . '/../Compatibility/CompatbilityClassLoaderPhpBelow50307.php';
-		}
 	}
 
 	/**
@@ -510,6 +507,3 @@ class SystemEnvironmentBuilder {
 	}
 
 }
-
-
-?>

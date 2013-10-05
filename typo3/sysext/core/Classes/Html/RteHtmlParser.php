@@ -27,6 +27,7 @@ namespace TYPO3\CMS\Core\Html;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -210,7 +211,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 			$this->blockElementList = $this->procOptions['blockElementList'];
 		}
 		// Get parameters for rte_transformation:
-		$p = ($this->rte_p = \TYPO3\CMS\Backend\Utility\BackendUtility::getSpecConfParametersFromArray($specConf['rte_transform']['parameters']));
+		$p = ($this->rte_p = BackendUtility::getSpecConfParametersFromArray($specConf['rte_transform']['parameters']));
 		// Setting modes:
 		if (strcmp($this->procOptions['overruleMode'], '')) {
 			$modes = array_unique(GeneralUtility::trimExplode(',', $this->procOptions['overruleMode']));
@@ -227,7 +228,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 			$modes[$revmodes['ts_css']] = 'css_transform,ts_images,ts_links';
 		}
 		// Make list unique
-		$modes = array_unique(GeneralUtility::trimExplode(',', implode(',', $modes), 1));
+		$modes = array_unique(GeneralUtility::trimExplode(',', implode(',', $modes), TRUE));
 		// Reverse order if direction is "rte"
 		if ($direction == 'rte') {
 			$modes = array_reverse($modes);
@@ -271,7 +272,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 						case 'ts_transform':
 
 						case 'css_transform':
-							$this->allowedClasses = GeneralUtility::trimExplode(',', $this->procOptions['allowedClasses'], 1);
+							$this->allowedClasses = GeneralUtility::trimExplode(',', $this->procOptions['allowedClasses'], TRUE);
 							// CR has a very disturbing effect, so just remove all CR and rely on LF
 							$value = str_replace(CR, '', $value);
 							// Transform empty paragraphs into spacing paragraphs
@@ -679,7 +680,11 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 					$attribArray['title'] = preg_match('/ /', $attribArray['title']) ? '"' . $attribArray['title'] . '"' : $attribArray['title'];
 					// Creating the TYPO3 pseudo-tag "<LINK>" for the link (includes href/url, target and class attributes):
 					// If data-htmlarea-external attribute is set, keep the href unchanged
-					$href = ($attribArray['data-htmlarea-external'] ? $attribArray['href'] : $info['url']) . ($info['query'] ? ',0,' . $info['query'] : '');
+					if ($attribArray['data-htmlarea-external']) {
+						$href = $attribArray['href'];
+					} else {
+						$href = $info['url'] . ($info['query'] ? ',0,' . $info['query'] : '');
+					}
 					$bTag = '<link ' . $href . ($attribArray['target'] ? ' ' . $attribArray['target'] : ($attribArray['class'] || $attribArray['title'] ? ' -' : '')) . ($attribArray['class'] ? ' ' . $attribArray['class'] : ($attribArray['title'] ? ' -' : '')) . ($attribArray['title'] ? ' ' . $attribArray['title'] : '') . '>';
 					$eTag = '</link>';
 					// Modify parameters
@@ -804,10 +809,10 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 							// If no id or alias is given, set it to class record pid
 							// Checking if the id-parameter is an alias.
 							if (!\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($idPart)) {
-								list($idPartR) = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordsByField('pages', 'alias', $idPart);
+								list($idPartR) = BackendUtility::getRecordsByField('pages', 'alias', $idPart);
 								$idPart = intval($idPartR['uid']);
 							}
-							$page = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('pages', $idPart);
+							$page = BackendUtility::getRecord('pages', $idPart);
 							if (is_array($page)) {
 								// Page must exist...
 								$href = $siteUrl . '?id=' . $idPart . ($pairParts[2] ? $pairParts[2] : '') . ($sectionMark ? '#' . $sectionMark : '');
@@ -1227,14 +1232,14 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 			// Setting up allowed tags:
 			// If the $tagList input var is set, this will take precedence
 			if (strcmp($tagList, '')) {
-				$keepTags = array_flip(GeneralUtility::trimExplode(',', $tagList, 1));
+				$keepTags = array_flip(GeneralUtility::trimExplode(',', $tagList, TRUE));
 			} else {
 				// Default is to get allowed/denied tags from internal array of processing options:
 				// Construct default list of tags to keep:
 				$typoScript_list = 'b,i,u,a,img,br,div,center,pre,font,hr,sub,sup,p,strong,em,li,ul,ol,blockquote,strike,span';
-				$keepTags = array_flip(GeneralUtility::trimExplode(',', $typoScript_list . ',' . strtolower($this->procOptions['allowTags']), 1));
+				$keepTags = array_flip(GeneralUtility::trimExplode(',', $typoScript_list . ',' . strtolower($this->procOptions['allowTags']), TRUE));
 				// For tags to deny, remove them from $keepTags array:
-				$denyTags = GeneralUtility::trimExplode(',', $this->procOptions['denyTags'], 1);
+				$denyTags = GeneralUtility::trimExplode(',', $this->procOptions['denyTags'], TRUE);
 				foreach ($denyTags as $dKe) {
 					unset($keepTags[$dKe]);
 				}
@@ -1283,7 +1288,7 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 					}
 					// Setting up font tags if they are allowed:
 					if (isset($keepTags['font'])) {
-						$colors = array_merge(array(''), GeneralUtility::trimExplode(',', $this->procOptions['allowedFontColors'], 1));
+						$colors = array_merge(array(''), GeneralUtility::trimExplode(',', $this->procOptions['allowedFontColors'], TRUE));
 						$keepTags['font'] = array(
 							'allowedAttribs' => 'face,color,size',
 							'fixAttrib' => array(
@@ -1346,12 +1351,12 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 			$value = $this->internalizeFontTags($value);
 		}
 		// Setting configuration for processing:
-		$allowTagsOutside = GeneralUtility::trimExplode(',', strtolower($this->procOptions['allowTagsOutside'] ? 'hr,' . $this->procOptions['allowTagsOutside'] : 'hr,img'), 1);
+		$allowTagsOutside = GeneralUtility::trimExplode(',', strtolower($this->procOptions['allowTagsOutside'] ? 'hr,' . $this->procOptions['allowTagsOutside'] : 'hr,img'), TRUE);
 		$remapParagraphTag = strtoupper($this->procOptions['remapParagraphTag']);
 		$divSplit = $this->splitIntoBlock('div,p', $value, 1);
 		// Setting the third param to 1 will eliminate false end-tags. Maybe this is a good thing to do...?
 		if ($this->procOptions['keepPDIVattribs']) {
-			$keepAttribListArr = GeneralUtility::trimExplode(',', strtolower($this->procOptions['keepPDIVattribs']), 1);
+			$keepAttribListArr = GeneralUtility::trimExplode(',', strtolower($this->procOptions['keepPDIVattribs']), TRUE);
 		} else {
 			$keepAttribListArr = array();
 		}
@@ -1760,6 +1765,3 @@ class RteHtmlParser extends \TYPO3\CMS\Core\Html\HtmlParser {
 	}
 
 }
-
-
-?>

@@ -34,6 +34,11 @@ namespace TYPO3\CMS\Extensionmanager\Domain\Model;
 class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 
 	/**
+	 * Category index for distributions
+	 */
+	const DISTRIBUTION_CATEGORY = 10;
+
+	/**
 	 * Contains default categories.
 	 *
 	 * @var array
@@ -47,7 +52,8 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 		5 => 'services',
 		6 => 'templates',
 		8 => 'doc',
-		9 => 'example'
+		9 => 'example',
+		Extension::DISTRIBUTION_CATEGORY => 'distribution'
 	);
 
 	/**
@@ -68,6 +74,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
+	 * @inject
 	 */
 	protected $objectManager;
 
@@ -163,14 +170,6 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	protected $position = 0;
 
 	/**
-	 * @param \TYPO3\CMS\Extbase\Object\ObjectManager $objectManager
-	 * @return void
-	 */
-	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManager $objectManager) {
-		$this->objectManager = $objectManager;
-	}
-
-	/**
 	 * @param string $authorEmail
 	 * @return void
 	 */
@@ -239,7 +238,7 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 		$categoryIndex = 4;
 		if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($category)) {
 			$categoryIndex = (integer)$category;
-			if ($categoryIndex < 0 || $categoryIndex > 9) {
+			if ($categoryIndex < 0 || $categoryIndex > 10) {
 				$categoryIndex = 4;
 			}
 		} elseif (is_string($category)) {
@@ -507,9 +506,9 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 */
 	public function getDependencies() {
 		if (!is_object($this->dependencies)) {
-			/** @var $dependencyUtility \TYPO3\CMS\Extensionmanager\Utility\DependencyUtility */
-			$dependencyUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\DependencyUtility');
-			$this->setDependencies($dependencyUtility->convertDependenciesToObjects($this->getSerializedDependencies()));
+			/** @var $extensionModelUtility \TYPO3\CMS\Extensionmanager\Utility\ExtensionModelUtility */
+			$extensionModelUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\ExtensionModelUtility');
+			$this->setDependencies($extensionModelUtility->convertDependenciesToObjects($this->getSerializedDependencies()));
 		}
 		return $this->dependencies;
 	}
@@ -582,5 +581,3 @@ class Extension extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	}
 
 }
-
-?>

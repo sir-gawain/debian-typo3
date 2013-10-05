@@ -105,7 +105,7 @@ define('TYPO3_MODE', 'BE');
 define('TYPO3_enterInstallScript', '1');
 
 // Bootstrap bare minimum: class loader, LocalConfiguration, but no extensions and such
-require '../../core/Classes/Core/Bootstrap.php';
+require __DIR__ . '/../../core/Classes/Core/Bootstrap.php';
 \TYPO3\CMS\Core\Core\Bootstrap::getInstance()
 	->baseSetup('typo3/sysext/install/Start/')
 	->startOutputBuffering()
@@ -117,10 +117,13 @@ if (isset($getPost['controller']) && $getPost['controller'] === 'tool') {
 	$controller = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
 		'TYPO3\\CMS\\Install\\Controller\\ToolController'
 	);
+} elseif ($getPost['controller'] === 'ajax') {
+	$controller = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+		'TYPO3\CMS\install\Controller\AjaxController'
+	);
 } else {
 	$controller = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
 		'TYPO3\CMS\install\Controller\StepController'
 	);
 }
 $controller->execute();
-?>

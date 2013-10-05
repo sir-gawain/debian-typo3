@@ -263,7 +263,7 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 			}
 			$path = trim($path);
 			// Explode into an array:
-			$fileArray = GeneralUtility::trimExplode(',', $fileList, 1);
+			$fileArray = GeneralUtility::trimExplode(',', $fileList, TRUE);
 			// If there were files to list...:
 			if (count($fileArray)) {
 				// Get the descriptions for the files (if any):
@@ -314,6 +314,8 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 						$filesData[$key]['filesize'] = filesize($absPath);
 						$filesData[$key]['fileextension'] = strtolower($fI['extension']);
 						$filesData[$key]['description'] = trim($descriptions[$key]);
+						$filesData[$key]['titletext'] = trim($titles[$key]);
+						$filesData[$key]['alttext'] = trim($altTexts[$key]);
 						$conf['linkProc.']['title'] = trim($titles[$key]);
 						if (isset($altTexts[$key]) && !empty($altTexts[$key])) {
 							$altText = trim($altTexts[$key]);
@@ -328,6 +330,9 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 						$GLOBALS['TSFE']->register['fileSize'] = $filesData[$key]['filesize'];
 						$GLOBALS['TSFE']->register['fileExtension'] = $filesData[$key]['fileextension'];
 						$GLOBALS['TSFE']->register['description'] = $filesData[$key]['description'];
+						$GLOBALS['TSFE']->register['titleText'] = $filesData[$key]['titletext'];
+						$GLOBALS['TSFE']->register['altText'] = $filesData[$key]['alttext'];
+
 						$filesData[$key]['linkedFilenameParts'] = $this->beautifyFileLink(
 							explode('//**//', $this->cObj->filelink($fileName, $conf['linkProc.'])),
 							$fileName,
@@ -348,6 +353,8 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 					$GLOBALS['TSFE']->register['description'] = $fileData['description'];
 					$GLOBALS['TSFE']->register['fileSize'] = $fileData['filesize'];
 					$GLOBALS['TSFE']->register['fileExtension'] = $fileData['fileextension'];
+					$GLOBALS['TSFE']->register['titleText'] = $fileData['titletext'];
+					$GLOBALS['TSFE']->register['altText'] = $fileData['alttext'];
 					$outputEntries[] = $this->cObj->cObjGetSingle($splitConf[$key]['itemRendering'], $splitConf[$key]['itemRendering.']);
 				}
 				if (isset($conf['outerWrap'])) {
@@ -658,7 +665,7 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 				$titleText = trim($this->cObj->stdWrap($imgConf['titleText'], $imgConf['titleText.']));
 				if ($titleText) {
 					// This will be used by the IMAGE call later:
-					$GLOBALS['TSFE']->ATagParams .= ' title="' . $titleText . '"';
+					$GLOBALS['TSFE']->ATagParams .= ' title="' . htmlspecialchars($titleText) . '"';
 				}
 			}
 
@@ -1056,10 +1063,10 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 			$constant = (int) $configuration['constant'];
 			if ($configuration['space'] === 'before') {
 				$value = $constant + $this->cObj->data['spaceBefore'];
-				$declaration = 'margin-top: ' . $value . 'px;';
+				$declaration = 'margin-top: ' . $value . 'px !important;';
 			} else {
 				$value = $constant + $this->cObj->data['spaceAfter'];
-				$declaration = 'margin-bottom: ' . $value . 'px;';
+				$declaration = 'margin-bottom: ' . $value . 'px !important;';
 			}
 			if (!empty($value)) {
 				if ($configuration['classStdWrap.']) {
@@ -1205,4 +1212,3 @@ class CssStyledContentController extends \TYPO3\CMS\Frontend\Plugin\AbstractPlug
 	}
 
 }
-?>

@@ -119,7 +119,7 @@ class RootlineUtility {
 	protected $databaseConnection;
 
 	/**
-	 * @param int $uid
+	 * @param integer $uid
 	 * @param string $mountPointParameter
 	 * @param \TYPO3\CMS\Frontend\Page\PageRepository $context
 	 * @throws \RuntimeException
@@ -393,6 +393,3 @@ class RootlineUtility {
 	}
 
 }
-
-
-?>

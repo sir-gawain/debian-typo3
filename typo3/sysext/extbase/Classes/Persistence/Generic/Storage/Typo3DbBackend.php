@@ -27,6 +27,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Storage;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * A Storage backend
  */
@@ -113,7 +116,7 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 	 * @param string $tableName The database table name
 	 * @param array $row The row to be inserted
 	 * @param boolean $isRelation TRUE if we are currently inserting into a relation table, FALSE by default
-	 * @return int The uid of the inserted row
+	 * @return integer The uid of the inserted row
 	 */
 	public function addRow($tableName, array $row, $isRelation = FALSE) {
 		$fields = array();
@@ -146,7 +149,7 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 	 * @param array $row The row to be updated
 	 * @param boolean $isRelation TRUE if we are currently inserting into a relation table, FALSE by default
 	 * @throws \InvalidArgumentException
-	 * @return bool
+	 * @return boolean
 	 */
 	public function updateRow($tableName, array $row, $isRelation = FALSE) {
 		if (!isset($row['uid'])) {
@@ -214,7 +217,7 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 	 * @param string $tableName The database table name
 	 * @param array $identifier An array of identifier array('fieldname' => value). This array will be transformed to a WHERE clause
 	 * @param boolean $isRelation TRUE if we are currently manipulating a relation table, FALSE by default
-	 * @return bool
+	 * @return boolean
 	 */
 	public function removeRow($tableName, array $identifier, $isRelation = FALSE) {
 		$statement = 'DELETE FROM ' . $tableName . ' WHERE ' . $this->parseIdentifier($identifier);
@@ -890,8 +893,8 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 				$statement = $this->getPageRepository()->enableFields($tableName);
 			} else {
 				// TYPO3_MODE === 'BE'
-				$statement = \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause($tableName);
-				$statement .= \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields($tableName);
+				$statement = BackendUtility::deleteClause($tableName);
+				$statement .= BackendUtility::BEenableFields($tableName);
 			}
 			if (!empty($statement)) {
 				$statement = substr($statement, 5);
@@ -965,10 +968,10 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 	protected function getBackendConstraintStatement($tableName, $ignoreEnableFields, $includeDeleted) {
 		$statement = '';
 		if (!$ignoreEnableFields) {
-			$statement .= \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields($tableName);
+			$statement .= BackendUtility::BEenableFields($tableName);
 		}
 		if (!$includeDeleted) {
-			$statement .= \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause($tableName);
+			$statement .= BackendUtility::deleteClause($tableName);
 		}
 		return $statement;
 	}
@@ -985,11 +988,11 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 		if (is_array($GLOBALS['TCA'][$tableName]['ctrl'])) {
 			if (!empty($GLOBALS['TCA'][$tableName]['ctrl']['languageField'])) {
 				// Select all entries for the current language
-				$additionalWhereClause = $tableName . '.' . $GLOBALS['TCA'][$tableName]['ctrl']['languageField'] . ' IN (' . intval($querySettings->getSysLanguageUid()) . ',-1)';
+				$additionalWhereClause = $tableName . '.' . $GLOBALS['TCA'][$tableName]['ctrl']['languageField'] . ' IN (' . intval($querySettings->getLanguageUid()) . ',-1)';
 				// If any language is set -> get those entries which are not translated yet
 				// They will be removed by t3lib_page::getRecordOverlay if not matching overlay mode
 				if (isset($GLOBALS['TCA'][$tableName]['ctrl']['transOrigPointerField'])
-					&& $querySettings->getSysLanguageUid() > 0
+					&& $querySettings->getLanguageUid() > 0
 				) {
 					$additionalWhereClause .= ' OR (' . $tableName . '.' . $GLOBALS['TCA'][$tableName]['ctrl']['languageField'] . '=0' .
 						' AND ' . $tableName . '.uid NOT IN (SELECT ' . $tableName . '.' . $GLOBALS['TCA'][$tableName]['ctrl']['transOrigPointerField'] .
@@ -1134,12 +1137,10 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 		if (isset($tableName)) {
 			$pageRepository = $this->getPageRepository();
 			if (is_object($GLOBALS['TSFE'])) {
-				$languageMode = $GLOBALS['TSFE']->sys_language_mode;
 				if ($workspaceUid !== NULL) {
 					$pageRepository->versioningWorkspaceId = $workspaceUid;
 				}
 			} else {
-				$languageMode = '';
 				if ($workspaceUid === NULL) {
 					$workspaceUid = $GLOBALS['BE_USER']->workspace;
 				}
@@ -1169,13 +1170,13 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 					$row['uid'] = $row['_ORIG_uid'];
 				}
 				if ($tableName == 'pages') {
-					$row = $pageRepository->getPageOverlay($row, $querySettings->getSysLanguageUid());
+					$row = $pageRepository->getPageOverlay($row, $querySettings->getLanguageUid());
 				} elseif (isset($GLOBALS['TCA'][$tableName]['ctrl']['languageField'])
 					&& $GLOBALS['TCA'][$tableName]['ctrl']['languageField'] !== ''
 				) {
 					if (in_array($row[$GLOBALS['TCA'][$tableName]['ctrl']['languageField']], array(-1, 0))) {
 						$overlayMode = $languageMode === 'strict' ? 'hideNonTranslated' : '';
-						$row = $pageRepository->getRecordOverlay($tableName, $row, $querySettings->getSysLanguageUid(), $overlayMode);
+						$row = $pageRepository->getRecordOverlay($tableName, $row, $querySettings->getLanguageUid(), $overlayMode);
 					}
 				}
 				if ($row !== NULL && is_array($row)) {
@@ -1254,10 +1255,10 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 			return;
 		}
 		if (!isset($this->pageTSConfigCache[$storagePage])) {
-			$this->pageTSConfigCache[$storagePage] = \TYPO3\CMS\Backend\Utility\BackendUtility::getPagesTSconfig($storagePage);
+			$this->pageTSConfigCache[$storagePage] = BackendUtility::getPagesTSconfig($storagePage);
 		}
 		if (isset($this->pageTSConfigCache[$storagePage]['TCEMAIN.']['clearCacheCmd'])) {
-			$clearCacheCommands = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', strtolower($this->pageTSConfigCache[$storagePage]['TCEMAIN.']['clearCacheCmd']), 1);
+			$clearCacheCommands = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', strtolower($this->pageTSConfigCache[$storagePage]['TCEMAIN.']['clearCacheCmd']), TRUE);
 			$clearCacheCommands = array_unique($clearCacheCommands);
 			foreach ($clearCacheCommands as $clearCacheCommand) {
 				if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($clearCacheCommand)) {
@@ -1271,5 +1272,3 @@ class Typo3DbBackend implements \TYPO3\CMS\Extbase\Persistence\Generic\Storage\B
 		}
 	}
 }
-
-?>

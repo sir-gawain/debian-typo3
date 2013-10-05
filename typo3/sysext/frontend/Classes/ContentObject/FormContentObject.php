@@ -96,7 +96,7 @@ class FormContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConten
 									$temp_valueArray = array();
 									$valueArrayLabel = isset($singleKey_valueArray['label.']) ? $this->cObj->stdWrap($singleKey_valueArray['label'], $singleKey_valueArray['label.']) : $singleKey_valueArray['label'];
 									list($temp_valueArray[0]) = explode('=', $valueArrayLabel);
-									$selected = isset($singleKeyArray['selected.']) ? $this->cObj->stdWrap($singleKeyArray['selected'], $singleKeyArray['selected.']) : $singleKeyArray['selected'];
+									$selected = isset($singleKey_valueArray['selected.']) ? $this->cObj->stdWrap($singleKey_valueArray['selected'], $singleKey_valueArray['selected.']) : $singleKey_valueArray['selected'];
 									if ($selected) {
 										$temp_valueArray[0] = '*' . $temp_valueArray[0];
 									}
@@ -124,12 +124,9 @@ class FormContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConten
 		$xhtmlStrict = GeneralUtility::inList('xhtml_strict,xhtml_11,xhtml_2', $GLOBALS['TSFE']->xhtmlDoctype);
 		// Formname
 		$formName = isset($conf['formName.']) ? $this->cObj->stdWrap($conf['formName'], $conf['formName.']) : $conf['formName'];
-		if ($formName) {
-			$formName = $this->cObj->cleanFormName($formName);
-		} else {
-			// form name has to start with a letter to reach XHTML compliance
-			$formName = 'a' . $GLOBALS['TSFE']->uniqueHash();
-		}
+		$formName = $this->cObj->cleanFormName($formName);
+		$formName = $GLOBALS['TSFE']->getUniqueId($formName);
+
 		$fieldPrefix = isset($conf['fieldPrefix.']) ? $this->cObj->stdWrap($conf['fieldPrefix'], $conf['fieldPrefix.']) : $conf['fieldPrefix'];
 		if (isset($conf['fieldPrefix']) || isset($conf['fieldPrefix.'])) {
 			if ($fieldPrefix) {
@@ -635,6 +632,3 @@ class FormContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConten
 	}
 
 }
-
-
-?>

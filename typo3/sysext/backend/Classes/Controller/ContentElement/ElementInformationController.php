@@ -251,30 +251,41 @@ class ElementInformationController {
 		if (!$this->fileObject) {
 			return;
 		}
+		$imageTag = '';
+		$downloadLink = '';
 
-		$fileExtension = $this->fileObject->getExtension();
-		if (GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileExtension)) {
-			$thumbUrl = $this->fileObject->process(
-				ProcessedFile::CONTEXT_IMAGEPREVIEW,
-				array(
-					'width' => '400m',
-					'height' => '400m'
-				)
-			)->getPublicUrl(TRUE);
-		}
+		// check if file is marked as missing
+		if ($this->fileObject->isMissing()) {
+			$flashMessage = \TYPO3\CMS\Core\Resource\Utility\BackendUtility::getFlashMessageForMissingFile($this->fileObject);
+			$imageTag .= $flashMessage->render();
 
-		// Create thumbnail image?
-		if ($thumbUrl) {
-			$imageTag = '<img src="' . $thumbUrl . '" ' .
-					'alt="' . htmlspecialchars(trim($this->fileObject->getName())) . '" ' .
-					'title="' . htmlspecialchars(trim($this->fileObject->getName())) . '" />';
-		}
+		} else {
 
-		// Display download link?
-		if ($this->fileObject->getPublicUrl()) {
-			$downloadLink = '<a href="../' . $this->fileObject->getPublicUrl() . '" target="_blank">' .
-					$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:download', 1) .
-					'</a>';
+			$fileExtension = $this->fileObject->getExtension();
+			$thumbUrl = '';
+			if (GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'], $fileExtension)) {
+				$thumbUrl = $this->fileObject->process(
+					ProcessedFile::CONTEXT_IMAGEPREVIEW,
+					array(
+						'width' => '400m',
+						'height' => '400m'
+					)
+				)->getPublicUrl(TRUE);
+			}
+
+			// Create thumbnail image?
+			if ($thumbUrl) {
+				$imageTag .= '<img src="' . $thumbUrl . '" ' .
+						'alt="' . htmlspecialchars(trim($this->fileObject->getName())) . '" ' .
+						'title="' . htmlspecialchars(trim($this->fileObject->getName())) . '" />';
+			}
+
+			// Display download link?
+			if ($this->fileObject->getPublicUrl()) {
+				$downloadLink .= '<a href="../' . $this->fileObject->getPublicUrl() . '" target="_blank">' .
+						$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xlf:download', TRUE) .
+						'</a>';
+			}
 		}
 
 		return ($imageTag ? '<p>' . $imageTag . '</p>' : '') .
@@ -291,9 +302,9 @@ class ElementInformationController {
 
 		if ($this->type !== 'folder') {
 			$extraFields = array(
-				'crdate' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.creationDate', 1),
-				'cruser_id' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.creationUserId', 1),
-				'tstamp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.timestamp', 1)
+				'crdate' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.creationDate', TRUE),
+				'cruser_id' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.creationUserId', TRUE),
+				'tstamp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.timestamp', TRUE)
 			);
 		}
 
@@ -331,7 +342,7 @@ class ElementInformationController {
 			}
 
 			$itemValue = BackendUtility::getProcessedValue($this->table, $name, $this->row[$name], 0, 0, FALSE, $uid);
-			$itemLabel = $GLOBALS['LANG']->sL(BackendUtility::getItemLabel($this->table, $name), 1);
+			$itemLabel = $GLOBALS['LANG']->sL(BackendUtility::getItemLabel($this->table, $name), TRUE);
 			$tableRows[] = '
 				<tr>
 					<td class="t3-col-header">' . $itemLabel . '</td>
@@ -400,7 +411,7 @@ class ElementInformationController {
 			}
 			$uid = $this->row['uid'];
 			$itemValue = BackendUtility::getProcessedValue($this->table, $name, $this->row[$name], 0, 0, FALSE, $uid);
-			$itemLabel = $GLOBALS['LANG']->sL(BackendUtility::getItemLabel($this->table, $name), 1);
+			$itemLabel = $GLOBALS['LANG']->sL(BackendUtility::getItemLabel($this->table, $name), TRUE);
 			$tableRows[] = '
 				<tr>
 					<td class="t3-col-header">' . $itemLabel . '</td>
@@ -606,5 +617,3 @@ class ElementInformationController {
 	}
 
 }
-
-?>

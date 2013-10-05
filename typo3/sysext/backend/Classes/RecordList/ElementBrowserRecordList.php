@@ -36,9 +36,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Used from TCEFORMS an other elements
  * In other words: This is the ELEMENT BROWSER!
  *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
- * XHTML compliant
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 class ElementBrowserRecordList extends \TYPO3\CMS\Recordlist\RecordList\DatabaseRecordList {
@@ -109,7 +106,7 @@ class ElementBrowserRecordList extends \TYPO3\CMS\Recordlist\RecordList\Database
 	 */
 	public function linkWrapItems($table, $uid, $code, $row) {
 		if (!$code) {
-			$code = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', 1) . ']</i>';
+			$code = '<i>[' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.no_title', TRUE) . ']</i>';
 		} else {
 			$code = BackendUtility::getRecordTitlePrep($code, $this->fixedL);
 		}
@@ -119,7 +116,7 @@ class ElementBrowserRecordList extends \TYPO3\CMS\Recordlist\RecordList\Database
 		$ATag = '<a href="#" onclick="' . $aOnClick . '">';
 		$ATag_alt = substr($ATag, 0, -4) . ',\'\',1);">';
 		$ATag_e = '</a>';
-		return $ATag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', 1) . '" alt="" />' . $ATag_e . $ATag_alt . $code . $ATag_e;
+		return $ATag . '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/plusbullet2.gif', 'width="18" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('addToList', TRUE) . '" alt="" />' . $ATag_e . $ATag_alt . $code . $ATag_e;
 	}
 
 	/**
@@ -181,6 +178,3 @@ class ElementBrowserRecordList extends \TYPO3\CMS\Recordlist\RecordList\Database
 	}
 
 }
-
-
-?>

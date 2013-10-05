@@ -26,14 +26,7 @@ namespace TYPO3\CMS\Core\Utility;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Contains class which has functions that generates a difference output of a content string
- *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
- * XHTML Compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
+
 /**
  * This class has functions which generates a difference output of a content string
  *
@@ -196,12 +189,12 @@ class DiffUtility {
 		$strArr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(LF, $str);
 		$outArray = array();
 		foreach ($strArr as $lineOfWords) {
-			$allWords = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(' ', $lineOfWords, 1);
-			$outArray = array_merge($outArray, $allWords);
-			$outArray[] = '';
-			$outArray[] = '';
+			$allWords = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(' ', $lineOfWords, TRUE);
+			$outArray[] = $allWords;
+			$outArray[] = array('');
+			$outArray[] = array('');
 		}
-		return $outArray;
+		return call_user_func_array('array_merge', $outArray);
 	}
 
 	/**
@@ -222,6 +215,3 @@ class DiffUtility {
 	}
 
 }
-
-
-?>

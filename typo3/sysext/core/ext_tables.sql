@@ -83,7 +83,7 @@ CREATE TABLE be_users (
   TSconfig text,
   lastlogin int(10) unsigned DEFAULT '0' NOT NULL,
   createdByAction int(11) DEFAULT '0' NOT NULL,
-  usergroup_cached_list varchar(255) DEFAULT '' NOT NULL,
+  usergroup_cached_list text,
   workspace_id int(11) DEFAULT '0' NOT NULL,
   workspace_preview tinyint(3) DEFAULT '1' NOT NULL,
   PRIMARY KEY (uid),
@@ -284,7 +284,7 @@ CREATE TABLE sys_file (
 	tstamp int(11) DEFAULT '0' NOT NULL,
 	crdate int(11) DEFAULT '0' NOT NULL,
 	cruser_id int(11) DEFAULT '0' NOT NULL,
-	deleted tinyint(4) DEFAULT '0' NOT NULL,
+	missing tinyint(4) DEFAULT '0' NOT NULL,
 
 	# Versioning fields
 	t3ver_oid int(11) DEFAULT '0' NOT NULL,
@@ -300,7 +300,7 @@ CREATE TABLE sys_file (
 
 	type varchar(10) DEFAULT '' NOT NULL,
 	storage int(11) DEFAULT '0' NOT NULL,
-	identifier varchar(200) DEFAULT '' NOT NULL,
+	identifier varchar(512) DEFAULT '' NOT NULL,
 	extension varchar(255) DEFAULT '' NOT NULL,
 	mime_type varchar(255) DEFAULT '' NOT NULL,
 	name tinytext,
@@ -316,7 +316,7 @@ CREATE TABLE sys_file (
 	alternative text,
 
 	PRIMARY KEY (uid),
-	KEY parent (pid,deleted),
+	KEY parent (pid),
 	KEY t3ver_oid (t3ver_oid,t3ver_wsid),
 	KEY sel01 (storage,identifier(20)),
 	KEY sha1 (sha1(40))
@@ -335,7 +335,7 @@ CREATE TABLE sys_file_processedfile (
 
 	storage int(11) DEFAULT '0' NOT NULL,
 	original int(11) DEFAULT '0' NOT NULL,
-	identifier varchar(200) DEFAULT '' NOT NULL,
+	identifier varchar(512) DEFAULT '' NOT NULL,
 	name tinytext,
 	configuration text,
 	originalfilesha1 varchar(40) DEFAULT '' NOT NULL,
@@ -630,6 +630,7 @@ CREATE TABLE sys_category (
 	t3ver_tstamp int(11) DEFAULT '0' NOT NULL,
 	t3ver_move_id int(11) DEFAULT '0' NOT NULL,
 	t3_origuid int(11) DEFAULT '0' NOT NULL,
+	sorting int(11) unsigned DEFAULT '0' NOT NULL,
 
 	sys_language_uid int(11) DEFAULT '0' NOT NULL,
 	l10n_parent int(11) DEFAULT '0' NOT NULL,
@@ -652,6 +653,7 @@ CREATE TABLE sys_category_record_mm (
 	uid_local int(11) DEFAULT '0' NOT NULL,
 	uid_foreign int(11) DEFAULT '0' NOT NULL,
 	tablenames varchar(255) DEFAULT '' NOT NULL,
+	fieldname varchar(255) DEFAULT '' NOT NULL,
 	sorting int(11) DEFAULT '0' NOT NULL,
 	sorting_foreign int(11) DEFAULT '0' NOT NULL,
 

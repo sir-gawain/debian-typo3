@@ -37,7 +37,7 @@ class Bootstrap {
 	 * @var array
 	 */
 	protected $extbaseConfiguration = array(
-		'vendorName' => 'TYPO3\CMS',
+		'vendorName' => 'TYPO3\\CMS',
 		'extensionName' => 'SysNote',
 		'pluginName' => 'Note',
 	);
@@ -93,4 +93,3 @@ class Bootstrap {
 	}
 
 }
-?>

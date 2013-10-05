@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Cshmanual\Controller;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * Script Class for rendering the Context Sensitive Help documents, either the single display in the small pop-up window or the full-table view in the larger window.
  *
@@ -148,7 +150,7 @@ class HelpModuleController {
 			$this->field = $flexFormField;
 		}
 		// limitAccess is checked if the $this->table really IS a table (and if the user is NOT a translator who should see all!)
-		$showAllToUser = \TYPO3\CMS\Backend\Utility\BackendUtility::isModuleSetInTBE_MODULES('txllxmltranslateM1') && $GLOBALS['BE_USER']->check('modules', 'txllxmltranslateM1');
+		$showAllToUser = BackendUtility::isModuleSetInTBE_MODULES('txllxmltranslateM1') && $GLOBALS['BE_USER']->check('modules', 'txllxmltranslateM1');
 		$this->limitAccess = isset($GLOBALS['TCA'][$this->table]) ? !$showAllToUser : FALSE;
 		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_view_help.xlf', 1);
 	}
@@ -257,33 +259,28 @@ class HelpModuleController {
 				$this->render_TOC_el($cshKey, 'other', $outputSections, $tocArray, $CSHkeys);
 			}
 		}
+
 		// COMPILE output:
 		$output = '';
-		$output .= '
+		$output .= '<h1>' . $GLOBALS['LANG']->getLL('manual_title', TRUE) . '</h1>';
+		$output .= '<p class="lead">' . $GLOBALS['LANG']->getLL('description', TRUE) . '</p>';
 
-			<h1>' . $GLOBALS['LANG']->getLL('manual_title', 1) . '</h1>';
-		$output .= '
-
-			<h2>' . $GLOBALS['LANG']->getLL('introduction', 1) . '</h2>
-			<p>' . $GLOBALS['LANG']->getLL('description', 1) . '</p>';
-		$output .= '
-
-			<h2>' . $GLOBALS['LANG']->getLL('TOC', 1) . '</h2>' . $this->render_TOC_makeTocList($tocArray);
+		$output .= '<h2>' . $GLOBALS['LANG']->getLL('TOC', TRUE) . '</h2>' . $this->render_TOC_makeTocList($tocArray);
 		if (!$this->renderALL) {
 			$output .= '
 				<br/>
-				<p class="c-nav"><a href="mod.php?M=help_cshmanual&renderALL=1">' . $GLOBALS['LANG']->getLL('full_manual', 1) . '</a></p>';
+				<p class="c-nav"><a href="mod.php?M=help_cshmanual&renderALL=1">' . $GLOBALS['LANG']->getLL('full_manual', TRUE) . '</a></p>';
 		}
 		if ($this->renderALL) {
 			$output .= '
 
-				<h2>' . $GLOBALS['LANG']->getLL('full_manual_chapters', 1) . '</h2>' . implode('
+				<h2>' . $GLOBALS['LANG']->getLL('full_manual_chapters', TRUE) . '</h2>' . implode('
 
 
 				<!-- NEW SECTION: -->
 				', $outputSections);
 		}
-		$output .= '<hr /><p class="manual-title">' . \TYPO3\CMS\Backend\Utility\BackendUtility::TYPO3_copyRightNotice() . '</p>';
+		$output .= '<hr /><p class="manual-title">' . BackendUtility::TYPO3_copyRightNotice() . '</p>';
 		return $output;
 	}
 
@@ -306,7 +303,7 @@ class HelpModuleController {
 				$outputSections[$table] = '
 
 		<!-- New CSHkey/Table: ' . $table . ' -->
-		<p class="c-nav"><a name="ANCHOR_' . $table . '" href="#">' . $GLOBALS['LANG']->getLL('to_top', 1) . '</a></p>
+		<p class="c-nav"><a name="ANCHOR_' . $table . '" href="#">' . $GLOBALS['LANG']->getLL('to_top', TRUE) . '</a></p>
 		<h2>' . $this->getTableFieldLabel($table) . '</h2>
 
 		' . $outputSections[$table];
@@ -337,7 +334,7 @@ class HelpModuleController {
 		foreach ($keys as $tocKey) {
 			if (is_array($tocArray[$tocKey])) {
 				$output .= '
-					<li>' . $GLOBALS['LANG']->getLL(('TOC_' . $tocKey), 1) . '
+					<li>' . $GLOBALS['LANG']->getLL(('TOC_' . $tocKey), TRUE) . '
 						<ul>
 							<li>' . implode('</li>
 							<li>', $tocArray[$tocKey]) . '</li>
@@ -400,7 +397,7 @@ class HelpModuleController {
 		$output = $this->substituteGlossaryWords($output);
 		// TOC link:
 		if (!$this->renderALL) {
-			$tocLink = '<p class="c-nav"><a href="mod.php?M=help_cshmanual">' . $GLOBALS['LANG']->getLL('goToToc', 1) . '</a></p>';
+			$tocLink = '<p class="c-nav"><a href="mod.php?M=help_cshmanual">' . $GLOBALS['LANG']->getLL('goToToc', TRUE) . '</a></p>';
 			$output = $tocLink . '
 				<br/>' . $output . '
 				<br />' . $tocLink;
@@ -427,8 +424,8 @@ class HelpModuleController {
 		// Link to Full table description and TOC:
 		$getLLKey = $this->limitAccess ? 'fullDescription' : 'fullDescription_module';
 		$output .= '<br />
-			<p class="c-nav"><a href="mod.php?M=help_cshmanual&tfID=' . rawurlencode(($key . '.*')) . '">' . $GLOBALS['LANG']->getLL($getLLKey, 1) . '</a></p>
-			<p class="c-nav"><a href="mod.php?M=help_cshmanual">' . $GLOBALS['LANG']->getLL('goToToc', 1) . '</a></p>';
+			<p class="c-nav"><a href="mod.php?M=help_cshmanual&tfID=' . rawurlencode(($key . '.*')) . '">' . $GLOBALS['LANG']->getLL($getLLKey, TRUE) . '</a></p>
+			<p class="c-nav"><a href="mod.php?M=help_cshmanual">' . $GLOBALS['LANG']->getLL('goToToc', TRUE) . '</a></p>';
 		return $output;
 	}
 
@@ -490,7 +487,7 @@ class HelpModuleController {
 	public function printImage($images, $descr) {
 		$code = '';
 		// Splitting:
-		$imgArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $images, 1);
+		$imgArray = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $images, TRUE);
 		if (count($imgArray)) {
 			$descrArray = explode(LF, $descr, count($imgArray));
 			foreach ($imgArray as $k => $image) {
@@ -639,7 +636,7 @@ class HelpModuleController {
 	public function createGlossaryIndex() {
 		// Create hash string and try to retrieve glossary array:
 		$hash = md5('typo3/mod.php?M=help_cshmanual:glossary');
-		list($this->glossaryWords, $this->substWords) = unserialize(\TYPO3\CMS\Backend\Utility\BackendUtility::getHash($hash));
+		list($this->glossaryWords, $this->substWords) = unserialize(BackendUtility::getHash($hash));
 		// Generate glossary words if not found:
 		if (!is_array($this->glossaryWords)) {
 			// Initialize:
@@ -673,7 +670,7 @@ class HelpModuleController {
 				}
 			}
 			krsort($this->substWords);
-			\TYPO3\CMS\Backend\Utility\BackendUtility::storeHash($hash, serialize(array($this->glossaryWords, $this->substWords)), 'Glossary');
+			BackendUtility::storeHash($hash, serialize(array($this->glossaryWords, $this->substWords)), 'Glossary');
 		}
 	}
 
@@ -720,5 +717,3 @@ class HelpModuleController {
 	}
 
 }
-
-?>

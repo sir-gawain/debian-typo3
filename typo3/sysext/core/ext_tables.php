@@ -334,6 +334,7 @@ $GLOBALS['TBE_STYLES']['spriteIconApi']['coreSpriteImageNames'] = array(
 	'actions-input-clear',
 	'actions-insert-record',
 	'actions-insert-reference',
+	'actions-markstate',
 	'actions-message-error-close',
 	'actions-message-information-close',
 	'actions-message-notice-close',
@@ -365,6 +366,7 @@ $GLOBALS['TBE_STYLES']['spriteIconApi']['coreSpriteImageNames'] = array(
 	'actions-system-extension-sqldump',
 	'actions-system-extension-uninstall',
 	'actions-system-extension-update',
+	'actions-system-extension-update-disabled',
 	'actions-system-help-open',
 	'actions-system-list-open',
 	'actions-system-options-view',
@@ -375,6 +377,7 @@ $GLOBALS['TBE_STYLES']['spriteIconApi']['coreSpriteImageNames'] = array(
 	'actions-system-typoscript-documentation',
 	'actions-system-typoscript-documentation-open',
 	'actions-template-new',
+	'actions-unmarkstate',
 	'actions-version-document-remove',
 	'actions-version-page-open',
 	'actions-version-swap-version',
@@ -628,4 +631,3 @@ $GLOBALS['TBE_STYLES']['spriteIconApi']['spriteIconRecordOverlayNames'] = array(
 	'translated' => 'status-overlay-translated',
 	'protectedSection' => 'status-overlay-includes-subpages'
 );
-?>

@@ -1,4 +1,5 @@
-<phpunit backupGlobals="false"
+<phpunit
+	backupGlobals="true"
 	backupStaticAttributes="false"
 	colors="true"
 	convertErrorsToExceptions="true"
@@ -10,8 +11,8 @@
 	stopOnIncomplete="false"
 	stopOnSkipped="false"
 	strict="false"
-	verbose="false">
-
+	verbose="false"
+>
 	<testsuites>
 		<testsuite name="EXT:core tests">
 			<directory>../../../../typo3/sysext/core/Tests/Unit/</directory>
@@ -30,6 +31,9 @@
 		</testsuite>
 		<testsuite name="EXT:beuser tests">
 			<directory>../../../../typo3/sysext/beuser/Tests/Unit/</directory>
+		</testsuite>
+		<testsuite name="EXT:documentation tests">
+			<directory>../../../../typo3/sysext/documentation/Tests/Unit/</directory>
 		</testsuite>
 		<testsuite name="EXT:extbase tests">
 			<directory>../../../../typo3/sysext/extbase/Tests/Unit/</directory>
@@ -74,5 +78,4 @@
 			<directory>../../../../typo3/sysext/core/Tests/Integrity/</directory>
 		</testsuite>
 	</testsuites>
-
 </phpunit>

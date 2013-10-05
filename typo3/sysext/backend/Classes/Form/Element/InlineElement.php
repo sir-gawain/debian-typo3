@@ -513,15 +513,35 @@ class InlineElement {
 		$isOnSymmetricSide = RelationHandler::isOnSymmetricSide($parentUid, $config, $rec);
 		$hasForeignLabel = !$isOnSymmetricSide && $config['foreign_label'] ? TRUE : FALSE;
 		$hasSymmetricLabel = $isOnSymmetricSide && $config['symmetric_label'] ? TRUE : FALSE;
+
 		// Get the record title/label for a record:
-		// render using a self-defined user function
-		if ($GLOBALS['TCA'][$foreign_table]['ctrl']['label_userFunc']) {
+		// Try using a self-defined user function only for formatted labels
+		if (isset($GLOBALS['TCA'][$foreign_table]['ctrl']['formattedLabel_userFunc'])) {
 			$params = array(
 				'table' => $foreign_table,
 				'row' => $rec,
 				'title' => '',
 				'isOnSymmetricSide' => $isOnSymmetricSide,
-				'options' => isset($GLOBALS['TCA'][$foreign_table]['ctrl']['label_userFunc_options']) ? $GLOBALS['TCA'][$foreign_table]['ctrl']['label_userFunc_options'] : array(),
+				'options' => isset($GLOBALS['TCA'][$foreign_table]['ctrl']['formattedLabel_userFunc_options'])
+					? $GLOBALS['TCA'][$foreign_table]['ctrl']['formattedLabel_userFunc_options']
+					: array(),
+				'parent' => array(
+					'uid' => $parentUid,
+					'config' => $config
+				)
+			);
+			// callUserFunction requires a third parameter, but we don't want to give $this as reference!
+			$null = NULL;
+			GeneralUtility::callUserFunction($GLOBALS['TCA'][$foreign_table]['ctrl']['formattedLabel_userFunc'], $params, $null);
+			$recTitle = $params['title'];
+
+		// Try using a normal self-defined user function
+		} elseif (isset($GLOBALS['TCA'][$foreign_table]['ctrl']['label_userFunc'])) {
+			$params = array(
+				'table' => $foreign_table,
+				'row' => $rec,
+				'title' => '',
+				'isOnSymmetricSide' => $isOnSymmetricSide,
 				'parent' => array(
 					'uid' => $parentUid,
 					'config' => $config
@@ -551,29 +571,33 @@ class InlineElement {
 		} else {
 			$recTitle = BackendUtility::getRecordTitle($foreign_table, $rec, TRUE);
 		}
+
+		$altText = BackendUtility::getRecordIconAltText($rec, $foreign_table);
+		$iconImg = IconUtility::getSpriteIconForRecord($foreign_table, $rec, array('title' => htmlspecialchars($altText), 'id' => $objectId . '_icon'));
+		$label = '<span id="' . $objectId . '_label">' . $recTitle . '</span>';
+		$ctrl = $this->renderForeignRecordHeaderControl($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
+		$thumbnail = FALSE;
+
 		// Renders a thumbnail for the header
 		if (!empty($config['appearance']['headerThumbnail']['field'])) {
 			$fieldValue = $rec[$config['appearance']['headerThumbnail']['field']];
 			$firstElement = array_shift(GeneralUtility::trimExplode(',', $fieldValue));
 			$fileUid = array_pop(BackendUtility::splitTable_Uid($firstElement));
+
 			if (!empty($fileUid)) {
 				$fileObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->getFileObject($fileUid);
-				if ($fileObject) {
+				if ($fileObject && $fileObject->isMissing()) {
+					$flashMessage = \TYPO3\CMS\Core\Resource\Utility\BackendUtility::getFlashMessageForMissingFile($fileObject);
+					$thumbnail = $flashMessage->render();
+				} elseif($fileObject) {
 					$imageSetup = $config['appearance']['headerThumbnail'];
 					unset($imageSetup['field']);
 					$imageSetup = array_merge(array('width' => 64, 'height' => 64), $imageSetup);
 					$imageUrl = $fileObject->process(\TYPO3\CMS\Core\Resource\ProcessedFile::CONTEXT_IMAGEPREVIEW, $imageSetup)->getPublicUrl(TRUE);
 					$thumbnail = '<img src="' . $imageUrl . '" alt="' . htmlspecialchars($recTitle) . '">';
-				} else {
-					$thumbnail = FALSE;
 				}
 			}
-
 		}
-		$altText = BackendUtility::getRecordIconAltText($rec, $foreign_table);
-		$iconImg = IconUtility::getSpriteIconForRecord($foreign_table, $rec, array('title' => htmlspecialchars($altText), 'id' => $objectId . '_icon'));
-		$label = '<span id="' . $objectId . '_label">' . $recTitle . '</span>';
-		$ctrl = $this->renderForeignRecordHeaderControl($parentUid, $foreign_table, $rec, $config, $isVirtualRecord);
 		$header = '<table>' . '<tr>' . (!empty($config['appearance']['headerThumbnail']['field']) && $thumbnail ?
 				'<td class="t3-form-field-header-inline-thumbnail" id="' . $objectId . '_thumbnailcontainer">' . $thumbnail . '</td>' :
 				'<td class="t3-form-field-header-inline-icon" id="' . $objectId . '_iconcontainer">' . $iconImg . '</td>') . '<td class="t3-form-field-header-inline-summary">' . $label . '</td>' . '<td clasS="t3-form-field-header-inline-ctrl">' . $ctrl . '</td>' . '</tr>' . '</table>';
@@ -622,7 +646,7 @@ class InlineElement {
 		if (isset($rec['__create'])) {
 			$cells['localize.isLocalizable'] = IconUtility::getSpriteIcon('actions-edit-localize-status-low', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:localize.isLocalizable', TRUE)));
 		} elseif (isset($rec['__remove'])) {
-			$cells['localize.wasRemovedInOriginal'] = IconUtility::getSpriteIcon('actions-edit-localize-status-high', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:localize.wasRemovedInOriginal', 1)));
+			$cells['localize.wasRemovedInOriginal'] = IconUtility::getSpriteIcon('actions-edit-localize-status-high', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:localize.wasRemovedInOriginal', TRUE)));
 		}
 		// "Info": (All records)
 		if ($enabledControls['info'] && !$isNewItem) {
@@ -639,7 +663,7 @@ class InlineElement {
 						$style = ' style="' . $config['inline']['inlineNewButtonStyle'] . '"';
 					}
 					$cells['new'] = '<a href="#" onclick="' . htmlspecialchars($onClick) . '"' . $class . $style . '>' . IconUtility::getSpriteIcon(('actions-' . ($isPagesTable ? 'page' : 'document') . '-new'), array(
-						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xlf:new' . ($isPagesTable ? 'Page' : 'Record')), 1)
+						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xlf:new' . ($isPagesTable ? 'Page' : 'Record')), TRUE)
 					)) . '</a>';
 				}
 			}
@@ -666,12 +690,12 @@ class InlineElement {
 				$onClick = 'return inline.enableDisableRecord(\'' . $nameObjectFtId . '\')';
 				if ($rec[$hiddenField]) {
 					$cells['hide.unhide'] = '<a href="#" class="hiddenHandle" onclick="' . htmlspecialchars($onClick) . '">' . IconUtility::getSpriteIcon('actions-edit-unhide', array(
-						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xlf:unHide' . ($isPagesTable ? 'Page' : '')), 1),
+						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xlf:unHide' . ($isPagesTable ? 'Page' : '')), TRUE),
 						'id' => ($nameObjectFtId . '_disabled')
 					)) . '</a>';
 				} else {
 					$cells['hide.hide'] = '<a href="#" class="hiddenHandle" onclick="' . htmlspecialchars($onClick) . '">' . IconUtility::getSpriteIcon('actions-edit-hide', array(
-						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xlf:hide' . ($isPagesTable ? 'Page' : '')), 1),
+						'title' => $GLOBALS['LANG']->sL(('LLL:EXT:lang/locallang_mod_web_list.xlf:hide' . ($isPagesTable ? 'Page' : '')), TRUE),
 						'id' => ($nameObjectFtId . '_disabled')
 					)) . '</a>';
 				}
@@ -813,7 +837,7 @@ class InlineElement {
 			if (!empty($conf['appearance']['createNewRelationLinkTitle'])) {
 				$createNewRelationText = $GLOBALS['LANG']->sL($conf['appearance']['createNewRelationLinkTitle'], TRUE);
 			} else {
-				$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.createNewRelation', 1);
+				$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.createNewRelation', TRUE);
 			}
 			$item .= '<a href="#" onclick="' . htmlspecialchars($onChange) . '" align="abstop">' . IconUtility::getSpriteIcon('actions-document-new', array('title' => $createNewRelationText)) . $createNewRelationText . '</a>';
 			// Wrap the selector and add a spacer to the bottom
@@ -840,7 +864,7 @@ class InlineElement {
 		if (!empty($conf['appearance']['createNewRelationLinkTitle'])) {
 			$createNewRelationText = $GLOBALS['LANG']->sL($conf['appearance']['createNewRelationLinkTitle'], TRUE);
 		} else {
-			$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.createNewRelation', 1);
+			$createNewRelationText = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.createNewRelation', TRUE);
 		}
 		if (is_array($config['appearance'])) {
 			if (isset($config['appearance']['elementBrowserType'])) {
@@ -870,7 +894,7 @@ class InlineElement {
 		$attributes = array();
 		switch ($type) {
 			case 'newRecord':
-				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.createnew', 1);
+				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.createnew', TRUE);
 				$icon = 'actions-document-new';
 				$className = 'typo3-newRecordLink';
 				$attributes['class'] = 'inlineNewButton ' . $this->inlineData['config'][$nameObject]['md5'];
@@ -879,7 +903,7 @@ class InlineElement {
 					$attributes['style'] = $conf['inline']['inlineNewButtonStyle'];
 				}
 				if (isset($conf['appearance']['newRecordLinkAddTitle']) && $conf['appearance']['newRecordLinkAddTitle']) {
-					$titleAddon = ' ' . $GLOBALS['LANG']->sL($GLOBALS['TCA'][$conf['foreign_table']]['ctrl']['title'], 1);
+					$titleAddon = ' ' . $GLOBALS['LANG']->sL($GLOBALS['TCA'][$conf['foreign_table']]['ctrl']['title'], TRUE);
 				}
 				break;
 			case 'localize':
@@ -889,7 +913,7 @@ class InlineElement {
 				$attributes['onclick'] = 'return inline.synchronizeLocalizeRecords(\'' . $objectPrefix . '\', \'localize\')';
 				break;
 			case 'synchronize':
-				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:synchronizeWithOriginalLanguage', 1);
+				$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_misc.xlf:synchronizeWithOriginalLanguage', TRUE);
 				$icon = 'actions-document-synchronize';
 				$className = 'typo3-synchronizationLink';
 				$attributes['class'] = 'inlineNewButton ' . $this->inlineData['config'][$nameObject]['md5'];
@@ -1431,7 +1455,7 @@ class InlineElement {
 	 * @return array An array with uids
 	 */
 	protected function getRelatedRecordsUidArray($itemList) {
-		$itemArray = GeneralUtility::trimExplode(',', $itemList, 1);
+		$itemArray = GeneralUtility::trimExplode(',', $itemList, TRUE);
 		// Perform modification of the selected items array:
 		foreach ($itemArray as $key => &$value) {
 			$parts = explode('|', $value, 2);
@@ -1503,16 +1527,23 @@ class InlineElement {
 		if ($foreignConfig['type'] == 'select') {
 			// Getting the selector box items from the system
 			$selItems = $this->fObj->addSelectOptionsToItemArray($this->fObj->initItemArray($PA['fieldConf']), $PA['fieldConf'], $this->fObj->setTSconfig($table, $row), $field);
+
 			// Possibly filter some items:
-			$keepItemsFunc = create_function('$value', 'return $value[1];');
-			$selItems = GeneralUtility::keepItemsInArray($selItems, $PA['fieldTSConfig']['keepItems'], $keepItemsFunc);
+			$selItems = GeneralUtility::keepItemsInArray(
+				$selItems,
+				$PA['fieldTSConfig']['keepItems'],
+				function ($value) {
+					return $value[1];
+				}
+			);
+
 			// Possibly add some items:
 			$selItems = $this->fObj->addItems($selItems, $PA['fieldTSConfig']['addItems.']);
 			if (isset($config['itemsProcFunc']) && $config['itemsProcFunc']) {
 				$selItems = $this->fObj->procItems($selItems, $PA['fieldTSConfig']['itemsProcFunc.'], $config, $table, $row, $field);
 			}
 			// Possibly remove some items:
-			$removeItems = GeneralUtility::trimExplode(',', $PA['fieldTSConfig']['removeItems'], 1);
+			$removeItems = GeneralUtility::trimExplode(',', $PA['fieldTSConfig']['removeItems'], TRUE);
 			foreach ($selItems as $tk => $p) {
 				// Checking languages and authMode:
 				$languageDeny = $tcaTableCtrl['languageField'] && !strcmp($tcaTableCtrl['languageField'], $field) && !$GLOBALS['BE_USER']->checkLanguageAccess($p[1]);
@@ -2477,6 +2508,3 @@ class InlineElement {
 	}
 
 }
-
-
-?>

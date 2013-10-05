@@ -3,8 +3,8 @@ return array(
 	'ctrl' => array(
 		'title' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference',
 		'label' => 'uid',
-		'label_userFunc' => 'EXT:core/Classes/Resource/Service/UserFileInlineLabelService.php:TYPO3\\CMS\\Core\\Resource\\Service\\UserFileInlineLabelService->getInlineLabel',
-		'label_userFunc_options' => array(
+		'formattedLabel_userFunc' => 'EXT:core/Classes/Resource/Service/UserFileInlineLabelService.php:TYPO3\\CMS\\Core\\Resource\\Service\\UserFileInlineLabelService->getInlineLabel',
+		'formattedLabel_userFunc_options' => array(
 			'sys_file' => array(
 				'title',
 				'name'
@@ -159,9 +159,10 @@ return array(
 			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.title',
 			'config' => array(
 				'type' => 'input',
-				'eval' => 'null',
 				'size' => '20',
+				'eval' => 'null',
 				'placeholder' => '__row|uid_local|title',
+				'mode' => 'useOrOverridePlaceholder',
 			)
 		),
 		'link' => array(
@@ -190,10 +191,11 @@ return array(
 			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.description',
 			'config' => array(
 				'type' => 'text',
-				'eval' => 'null',
 				'cols' => '20',
 				'rows' => '5',
+				'eval' => 'null',
 				'placeholder' => '__row|uid_local|description',
+				'mode' => 'useOrOverridePlaceholder',
 			)
 		),
 		'alternative' => array(
@@ -202,9 +204,10 @@ return array(
 			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.alternative',
 			'config' => array(
 				'type' => 'input',
-				'eval' => 'null',
 				'size' => '20',
+				'eval' => 'null',
 				'placeholder' => '__row|uid_local|alternative',
+				'mode' => 'useOrOverridePlaceholder',
 			),
 		),
 	),
@@ -263,4 +266,3 @@ return array(
 		)
 	)
 );
-?>

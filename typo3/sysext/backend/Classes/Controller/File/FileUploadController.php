@@ -80,12 +80,22 @@ class FileUploadController {
 	protected $folderObject;
 
 	/**
-	 * Constructor for initializing the class
+	 * Constructor
+	 */
+	public function __construct() {
+		$GLOBALS['SOBE'] = $this;
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xlf');
+		$GLOBALS['BACK_PATH'] = '';
+
+		$this->init();
+	}
+
+	/**
+	 * Initialize
 	 *
 	 * @return 	void
-	 * @todo Define visibility
 	 */
-	public function init() {
+	protected function init() {
 		// Initialize GPvars:
 		$this->target = GeneralUtility::_GP('target');
 		$this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
@@ -96,6 +106,10 @@ class FileUploadController {
 		if ($this->target) {
 			$this->folderObject = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance()->retrieveFileOrFolderObject($this->target);
 		}
+		if ($this->folderObject->getStorage()->getUid() === 0) {
+			throw new \TYPO3\CMS\Core\Resource\Exception\InsufficientFolderAccessPermissionsException('You are not allowed to access folders outside your storages', 1375889834);
+		}
+
 		// Cleaning and checking target directory
 		if (!$this->folderObject) {
 			$title = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:paramError', TRUE);
@@ -116,7 +130,6 @@ class FileUploadController {
 	 * Main function, rendering the upload file form fields
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function main() {
 		// Make page header:
@@ -175,7 +188,7 @@ class FileUploadController {
 		$content .= '
 			<div id="c-submit">
 				<input type="hidden" name="redirect" value="' . $this->returnUrl . '" /><br />
-				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_upload.php.submit', 1) . '" />
+				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_upload.php.submit', TRUE) . '" />
 			</div>
 		';
 		return $content;
@@ -185,12 +198,9 @@ class FileUploadController {
 	 * Outputting the accumulated content to screen
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function printContent() {
 		echo $this->content;
 	}
 
 }
-
-?>

@@ -69,7 +69,7 @@ interface FileInterface extends ResourceInterface {
 	 * Returns the basename (the name without extension) of this file.
 	 *
 	 * @return string
-	 *
+	 */
 	public function getNameWithoutExtension();
 
 	/**
@@ -178,5 +178,3 @@ interface FileInterface extends ResourceInterface {
 	public function toArray();
 
 }
-
-?>

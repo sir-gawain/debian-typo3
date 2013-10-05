@@ -528,7 +528,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 		// Admins can see any page, no need to check there
 		if (!empty($appliedDbMounts) && !$GLOBALS['BE_USER']->isAdmin()) {
 			$cleanDbMountList = array();
-			$dbMounts = GeneralUtility::trimExplode(',', $appliedDbMounts, 1);
+			$dbMounts = GeneralUtility::trimExplode(',', $appliedDbMounts, TRUE);
 			// Walk through every wanted DB-Mount and check if it allowed for the current user
 			foreach ($dbMounts as $dbMount) {
 				$uid = intval(substr($dbMount, strrpos($dbMount, '_') + 1));
@@ -616,7 +616,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 			return $content;
 		}
 		$content .= '<option value=""></option>';
-		$grList = GeneralUtility::trimExplode(',', $record['t1_allowed_groups'], 1);
+		$grList = GeneralUtility::trimExplode(',', $record['t1_allowed_groups'], TRUE);
 		foreach ($grList as $group) {
 			$checkGroup = BackendUtility::getRecord('be_groups', $group);
 			if (is_array($checkGroup)) {
@@ -657,7 +657,7 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 			$path = BackendUtility::getRecordPath($el['id'], $this->taskObject->perms_clause, $GLOBALS['BE_USER']->uc['titleLen']);
 			$record = BackendUtility::getRecord($el['table'], $dbAnalysis->results[$el['table']][$el['id']]);
 			$title = BackendUtility::getRecordTitle($el['table'], $dbAnalysis->results[$el['table']][$el['id']]);
-			$description = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$el['table']]['ctrl']['title'], 1);
+			$description = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$el['table']]['ctrl']['title'], TRUE);
 			// @todo: which information could be needfull
 			if (isset($record['crdate'])) {
 				$description .= ' - ' . BackendUtility::dateTimeAge($record['crdate']);
@@ -863,6 +863,3 @@ class ActionTask implements \TYPO3\CMS\Taskcenter\TaskInterface {
 	}
 
 }
-
-
-?>

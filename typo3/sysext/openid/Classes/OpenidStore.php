@@ -71,7 +71,7 @@ class OpenidStore extends \Auth_OpenID_OpenIDStore {
 	/**
 	 * Removes all expired associations.
 	 *
-	 * @return int A number of removed associations
+	 * @return integer A number of removed associations
 	 */
 	public function cleanupAssociations() {
 		$where = sprintf('expires<=%d', time());
@@ -233,6 +233,3 @@ class OpenidStore extends \Auth_OpenID_OpenIDStore {
 	}
 
 }
-
-
-?>

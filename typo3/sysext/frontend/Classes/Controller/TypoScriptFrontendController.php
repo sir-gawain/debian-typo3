@@ -39,9 +39,6 @@ use TYPO3\CMS\Core\Utility\HttpUtility;
  * The class is instantiated as $GLOBALS['TSFE'] in index_ts.php.
  * The use of this class should be inspired by the order of function calls as found in index_ts.php.
  *
- * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
- * XHTML compliant
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 class TypoScriptFrontendController {
@@ -625,6 +622,11 @@ class TypoScriptFrontendController {
 	public $anchorPrefix = '';
 
 	/**
+	 * IDs we already rendered for this page (to make sure they are unique)
+	 */
+	private $usedUniqueIds = array();
+
+	/**
 	 * Page content render object
 	 *
 	 * @var \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
@@ -909,7 +911,8 @@ class TypoScriptFrontendController {
 		$this->fe_user->checkPid = $this->TYPO3_CONF_VARS['FE']['checkFeUserPid'];
 		$this->fe_user->lifetime = intval($this->TYPO3_CONF_VARS['FE']['lifetime']);
 		// List of pid's acceptable
-		$this->fe_user->checkPid_value = $GLOBALS['TYPO3_DB']->cleanIntList(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('pid'));
+		$pid = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('pid');
+		$this->fe_user->checkPid_value = $pid ? $GLOBALS['TYPO3_DB']->cleanIntList($pid) : 0;
 		// Check if a session is transferred:
 		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('FE_SESSION_KEY')) {
 			$fe_sParts = explode('-', GeneralUtility::_GP('FE_SESSION_KEY'));
@@ -2399,7 +2402,7 @@ class TypoScriptFrontendController {
 					if ($this->pSetup['pageHeaderFooterTemplateFile']) {
 						$file = $this->tmpl->getFileName($this->pSetup['pageHeaderFooterTemplateFile']);
 						if ($file) {
-							$this->setTemplateFile($file);
+							$this->getPageRenderer()->setTemplateFile($file);
 						}
 					}
 				}
@@ -2555,20 +2558,22 @@ class TypoScriptFrontendController {
 		// Finding the ISO code:
 		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_tables') && $this->sys_language_content) {
 			// using sys_language_content because the ISO code only (currently) affect content selection from FlexForms - which should follow "sys_language_content"
-			$sys_language_row = $this->sys_page->getRawRecord('sys_language', $this->sys_language_content, 'static_lang_isocode');
+			// Set the fourth parameter to TRUE in the next two getRawRecord() calls to
+			// avoid versioning overlay to be applied as it generates an SQL error
+			$sys_language_row = $this->sys_page->getRawRecord('sys_language', $this->sys_language_content, 'static_lang_isocode', TRUE);
 			if (is_array($sys_language_row) && $sys_language_row['static_lang_isocode']) {
-				$stLrow = $this->sys_page->getRawRecord('static_languages', $sys_language_row['static_lang_isocode'], 'lg_iso_2');
+				$stLrow = $this->sys_page->getRawRecord('static_languages', $sys_language_row['static_lang_isocode'], 'lg_iso_2', TRUE);
 				$this->sys_language_isocode = $stLrow['lg_iso_2'];
 			}
 		}
 		// Setting softMergeIfNotBlank:
-		$table_fields = GeneralUtility::trimExplode(',', $this->config['config']['sys_language_softMergeIfNotBlank'], 1);
+		$table_fields = GeneralUtility::trimExplode(',', $this->config['config']['sys_language_softMergeIfNotBlank'], TRUE);
 		foreach ($table_fields as $TF) {
 			list($tN, $fN) = explode(':', $TF);
 			$GLOBALS['TCA'][$tN]['columns'][$fN]['l10n_mode'] = 'mergeIfNotBlank';
 		}
 		// Setting softExclude:
-		$table_fields = GeneralUtility::trimExplode(',', $this->config['config']['sys_language_softExclude'], 1);
+		$table_fields = GeneralUtility::trimExplode(',', $this->config['config']['sys_language_softExclude'], TRUE);
 		foreach ($table_fields as $TF) {
 			list($tN, $fN) = explode(':', $TF);
 			$GLOBALS['TCA'][$tN]['columns'][$fN]['l10n_mode'] = 'exclude';
@@ -3405,6 +3410,25 @@ class TypoScriptFrontendController {
 		if (!empty($this->config['INTincScript_ext']['pageRenderer'])) {
 			$this->setPageRenderer(unserialize($this->config['INTincScript_ext']['pageRenderer']));
 		}
+		$this->recursivelyReplaceIntPlaceholdersInContent();
+		$GLOBALS['TT']->push('Substitute header section');
+		$this->INTincScript_loadJSCode();
+		$this->content = $this->getPageRenderer()->renderJavaScriptAndCssForProcessingOfUncachedContentObjects($this->content, $this->config['INTincScript_ext']['divKey']);
+		$this->content = str_replace('<!--HD_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset(implode(LF, $this->additionalHeaderData), 'HD'), $this->content);
+		$this->content = str_replace('<!--FD_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset(implode(LF, $this->additionalFooterData), 'FD'), $this->content);
+		$this->content = str_replace('<!--TDS_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset($this->divSection, 'TDS'), $this->content);
+		// Replace again, because header and footer data and page renderer replacements may introduce additional placeholders (see #44825)
+		$this->recursivelyReplaceIntPlaceholdersInContent();
+		$this->setAbsRefPrefix();
+		$GLOBALS['TT']->pull();
+	}
+
+	/**
+	 * Replaces INT placeholders (COA_INT and USER_INT) in $this->content
+	 * In case the replacement adds additional placeholders, it loops
+	 * until no new placeholders are found any more.
+	 */
+	protected function recursivelyReplaceIntPlaceholdersInContent() {
 		do {
 			$INTiS_config = $this->config['INTincScript'];
 			$this->INTincScript_includeLibs($INTiS_config);
@@ -3413,14 +3437,6 @@ class TypoScriptFrontendController {
 			$INTiS_config = array_diff_assoc($this->config['INTincScript'], $INTiS_config);
 			$reprocess = count($INTiS_config) ? TRUE : FALSE;
 		} while ($reprocess);
-		$GLOBALS['TT']->push('Substitute header section');
-		$this->INTincScript_loadJSCode();
-		$this->content = $this->getPageRenderer()->renderJavaScriptAndCssForProcessingOfUncachedContentObjects($this->content, $this->config['INTincScript_ext']['divKey']);
-		$this->content = str_replace('<!--HD_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset(implode(LF, $this->additionalHeaderData), 'HD'), $this->content);
-		$this->content = str_replace('<!--FD_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset(implode(LF, $this->additionalFooterData), 'FD'), $this->content);
-		$this->content = str_replace('<!--TDS_' . $this->config['INTincScript_ext']['divKey'] . '-->', $this->convOutputCharset($this->divSection, 'TDS'), $this->content);
-		$this->setAbsRefPrefix();
-		$GLOBALS['TT']->pull();
 	}
 
 	/**
@@ -4545,6 +4561,26 @@ if (version == "n3") {
 		\TYPO3\CMS\Core\Utility\GeneralUtility::plainMailEncoded($email, $subject, $message, $headers, $encoding, $charset);
 	}
 
+	/**
+	 * Returns a unique id to be used as a XML ID (in HTML / XHTML mode)
+	 *
+	 * @param string $desired The desired id. If already used it is suffixed with a number
+	 * @return string The unique id
+	 */
+	public function getUniqueId($desired = '') {
+		if ($desired === '') {
+			// id has to start with a letter to reach XHTML compliance
+			$uniqueId = 'a' . $this->uniqueHash();
+		} else {
+			$uniqueId = $desired;
+			for ($i = 1; isset($this->usedUniqueIds[$uniqueId]); $i++) {
+				$uniqueId = $desired . '_' . $i;
+			}
+		}
+		$this->usedUniqueIds[$uniqueId] = TRUE;
+		return $uniqueId;
+	}
+
 	/*********************************************
 	 *
 	 * Localization and character set conversion
@@ -4879,5 +4915,3 @@ if (version == "n3") {
 		return $domainData ? $domainData['domainName'] : NULL;
 	}
 }
-
-?>

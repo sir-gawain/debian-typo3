@@ -18,7 +18,6 @@ namespace TYPO3\CMS\Install\Controller;
  *  A copy is found in the textfile GPL.txt and important notices to the license
  *  from the author is found in LICENSE.txt distributed with these scripts.
  *
- *
  *  This script is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -119,6 +118,18 @@ class AbstractController {
 			$tokenOk = TRUE;
 		}
 
+		$this->handleSessionTokenCheck($tokenOk);
+	}
+
+	/**
+	 * If session token was not ok, the session is reset and either
+	 * a redirect is initialized (will load the same step step controller again) or
+	 * if in install tool, the login form is displayed.
+	 *
+	 * @param boolean $tokenOk
+	 * @return void
+	 */
+	protected function handleSessionTokenCheck($tokenOk) {
 		if (!$tokenOk) {
 			$this->session->resetSession();
 			$this->session->startSession();
@@ -148,17 +159,27 @@ class AbstractController {
 			$this->session->resetSession();
 			$this->session->startSession();
 
-			if ($this->isInitialInstallationInProgress()) {
-				$this->redirect();
-			} else {
-				/** @var $message \TYPO3\CMS\Install\Status\ErrorStatus */
-				$message = $this->objectManager->get('TYPO3\\CMS\\Install\\Status\\ErrorStatus');
-				$message->setTitle('Session expired');
-				$message->setMessage(
-					'Your Install Tool session has expired. You have been logged out, please login and try again.'
-				);
-				$this->output($this->loginForm($message));
-			}
+			$this->handleSessionLifeTimeExpired();
+		}
+	}
+
+	/**
+	 * If session expired, the current step of step controller is reloaded
+	 * (if first installation is running) - or the login form is displayed.
+	 *
+	 * @return void
+	 */
+	protected function handleSessionLifeTimeExpired() {
+		if ($this->isInitialInstallationInProgress()) {
+			$this->redirect();
+		} else {
+			/** @var $message \TYPO3\CMS\Install\Status\ErrorStatus */
+			$message = $this->objectManager->get('TYPO3\\CMS\\Install\\Status\\ErrorStatus');
+			$message->setTitle('Session expired');
+			$message->setMessage(
+				'Your Install Tool session has expired. You have been logged out, please login and try again.'
+			);
+			$this->output($this->loginForm($message));
 		}
 	}
 
@@ -191,17 +212,37 @@ class AbstractController {
 		$action = $this->getAction();
 		$postValues = $this->getPostValues();
 		if ($action === 'login') {
-			if (isset($postValues['values']['password'])
-				&& md5($postValues['values']['password']) === $GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword']
-			) {
+			$password = '';
+			$validPassword = FALSE;
+			if (isset($postValues['values']['password'])) {
+				$password = $postValues['values']['password'];
+				$installToolPassword = $GLOBALS['TYPO3_CONF_VARS']['BE']['installToolPassword'];
+				$saltFactory = \TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getSaltingInstance($installToolPassword);
+				if (is_object($saltFactory)) {
+					$validPassword = $saltFactory->checkPassword($password, $installToolPassword);
+				} elseif (md5($password) === $installToolPassword) {
+					// Update install tool password
+					$saltFactory = \TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getSaltingInstance(NULL, 'BE');
+					$configurationManager = $this->objectManager->get('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
+					$configurationManager->setLocalConfigurationValueByPath(
+						'BE/installToolPassword',
+						$saltFactory->getHashedPassword($password)
+					);
+					$validPassword = TRUE;
+				}
+			}
+			if ($validPassword) {
 				$this->session->setAuthorized();
 				$this->sendLoginSuccessfulMail();
 				$this->redirect();
 			} else {
+				$saltFactory = \TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getSaltingInstance(NULL, 'BE');
+				$hashedPassword = $saltFactory->getHashedPassword($password);
 				/** @var $message \TYPO3\CMS\Install\Status\ErrorStatus */
 				$message = $this->objectManager->get('TYPO3\\CMS\\Install\\Status\\ErrorStatus');
 				$message->setTitle('Login failed');
-				$message->setMessage('Given password does not match the install tool login password.');
+				$message->setMessage('Given password does not match the install tool login password. ' .
+					'Calculated hash: ' . $hashedPassword);
 				$this->sendLoginFailedMail();
 				$this->output($this->loginForm($message));
 			}
@@ -491,7 +532,7 @@ class AbstractController {
 			$parameters[] = 'install[action]=' . $action;
 		}
 
-		$redirectLocation= 'Install.php?' . implode('&', $parameters);
+		$redirectLocation = 'Install.php?' . implode('&', $parameters);
 
 		\TYPO3\CMS\Core\Utility\HttpUtility::redirect(
 			$redirectLocation,
@@ -513,4 +554,3 @@ class AbstractController {
 		die;
 	}
 }
-?>

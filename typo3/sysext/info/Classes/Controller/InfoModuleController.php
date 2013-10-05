@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Info\Controller;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * Script Class for the Web > Info module
  * This class creates the framework to which other extensions can connect their sub-modules
@@ -35,7 +37,6 @@ namespace TYPO3\CMS\Info\Controller;
  */
 class InfoModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
-	// Internal, dynamic:
 	/**
 	 * @todo Define visibility
 	 */
@@ -60,16 +61,23 @@ class InfoModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	public $doc;
 
 	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_info.xlf');
+		$GLOBALS['BE_USER']->modAccess($GLOBALS['MCONF'], TRUE);
+	}
+
+	/**
 	 * Initialize module header etc and call extObjContent function
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function main() {
 		// Access check...
 		// The page will show only if there is a valid page and if this page may be viewed by the user
-		$this->pageinfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess($this->id, $this->perms_clause);
-		$access = is_array($this->pageinfo) ? 1 : 0;
+		$this->pageinfo = BackendUtility::readPageAccess($this->id, $this->perms_clause);
+		$access = is_array($this->pageinfo);
 		if ($this->id && $access || $GLOBALS['BE_USER']->user['admin'] && !$this->id) {
 			$this->CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($this->pageinfo);
 			if ($GLOBALS['BE_USER']->user['admin'] && !$this->id) {
@@ -111,7 +119,12 @@ class InfoModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			$docHeaderButtons = $this->getButtons();
 			$markers = array(
 				'CSH' => $docHeaderButtons['csh'],
-				'FUNC_MENU' => \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']),
+				'FUNC_MENU' => BackendUtility::getFuncMenu(
+					$this->id,
+					'SET[function]',
+					$this->MOD_SETTINGS['function'],
+					$this->MOD_MENU['function']
+				),
 				'CONTENT' => $this->content
 			);
 			// Build the <body> for the module
@@ -132,7 +145,6 @@ class InfoModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	 * Print module content (from $this->content)
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function printContent() {
 		$this->content = $this->doc->insertStylesAndJS($this->content);
@@ -151,9 +163,15 @@ class InfoModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			'shortcut' => ''
 		);
 		// CSH
-		$buttons['csh'] = \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('_MOD_web_info', '', $GLOBALS['BACK_PATH'], '', TRUE);
+		$buttons['csh'] = BackendUtility::cshItem('_MOD_web_info', '', $GLOBALS['BACK_PATH'], '', TRUE);
 		// View page
-		$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->pageinfo['uid'], $GLOBALS['BACK_PATH'], \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', 1) . '">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
+		$buttons['view'] = '<a href="#" '
+			. 'onclick="' . htmlspecialchars(
+				BackendUtility::viewOnClick($this->pageinfo['uid'], $GLOBALS['BACK_PATH'], BackendUtility::BEgetRootLine($this->pageinfo['uid']))
+			) . '" '
+			. 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', TRUE) . '">'
+			. \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view')
+			. '</a>';
 		// Shortcut
 		if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
 			$buttons['shortcut'] = $this->doc->makeShortcutIcon('id, edit_record, pointer, new_unique_uid, search_field, search_levels, showLimit', implode(',', array_keys($this->MOD_MENU)), $this->MCONF['name']);
@@ -162,6 +180,3 @@ class InfoModuleController extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	}
 
 }
-
-
-?>

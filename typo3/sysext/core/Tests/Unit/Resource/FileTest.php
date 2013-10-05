@@ -24,8 +24,6 @@ namespace TYPO3\CMS\Core\Tests\Unit\Resource;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-require_once 'vfsStream/vfsStream.php';
-
 /**
  * Testcase for the file class of the TYPO3 FAL
  *
@@ -317,7 +315,7 @@ class FileTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function readFailsIfFileIsClosed() {
 		$this->markTestSkipped();
-		$this->setExpectedException('\RuntimeException', '', 1299863431);
+		$this->setExpectedException('\\RuntimeException', '', 1299863431);
 		$fixture = $this->prepareFixture();
 		$mockFileHandle = $this->getMock('TYPO3\\CMS\\Core\\Resource\\FileHandle', array(), array(), '', FALSE);
 		$mockDriver = $this->getMockForAbstractClass('t3lib_file_driver_Abstract');
@@ -349,7 +347,7 @@ class FileTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function writeFailsIfFileIsClosed() {
 		$this->markTestSkipped();
-		$this->setExpectedException('\RuntimeException', '', 1299863432);
+		$this->setExpectedException('\\RuntimeException', '', 1299863432);
 		$fixture = $this->prepareFixture();
 		$mockFileHandle = $this->getMock('TYPO3\\CMS\\Core\\Resource\\FileHandle', array(), array(), '', FALSE);
 		$mockDriver = $this->getMockForAbstractClass('t3lib_file_driver_Abstract');
@@ -426,5 +424,3 @@ class FileTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->assertNull($fixture->isIndexed());
 	}
 }
-
-?>

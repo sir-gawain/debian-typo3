@@ -138,7 +138,12 @@ abstract class AbstractFile implements FileInterface {
 	 * @return mixed Property value
 	 */
 	public function getProperty($key) {
-		return $this->properties[$key];
+
+		if ($this->hasProperty($key)) {
+			return $this->properties[$key];
+		} else {
+			return NULL;
+		}
 	}
 
 	/**
@@ -433,7 +438,7 @@ abstract class AbstractFile implements FileInterface {
 	/**
 	 * Deletes this file from its storage. This also means that this object becomes useless.
 	 *
-	 * @return bool TRUE if deletion succeeded
+	 * @return boolean TRUE if deletion succeeded
 	 */
 	public function delete() {
 		// The storage will mark this file as deleted
@@ -448,7 +453,6 @@ abstract class AbstractFile implements FileInterface {
 	 */
 	public function setDeleted() {
 		$this->deleted = TRUE;
-		$this->updateProperties(array('deleted' => TRUE));
 	}
 
 	/**
@@ -520,14 +524,14 @@ abstract class AbstractFile implements FileInterface {
 	 *
 	 * @param bool  $relativeToCurrentScript   Determines whether the URL returned should be relative to the current script, in case it is relative at all (only for the LocalDriver)
 	 *
-	 * @throws \RuntimeException
-	 * @return string
+	 * @return null|string
 	 */
 	public function getPublicUrl($relativeToCurrentScript = FALSE) {
 		if ($this->deleted) {
-			throw new \RuntimeException('File has been deleted.', 1329821485);
+			return NULL;
+		} else {
+			return $this->getStorage()->getPublicUrl($this, $relativeToCurrentScript);
 		}
-		return $this->getStorage()->getPublicUrl($this, $relativeToCurrentScript);
 	}
 
 	/**
@@ -560,6 +564,3 @@ abstract class AbstractFile implements FileInterface {
 	abstract public function updateProperties(array $properties);
 
 }
-
-
-?>

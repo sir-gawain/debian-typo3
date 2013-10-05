@@ -12,7 +12,6 @@ return array(
 		'versioningWS' => TRUE,
 		'origUid' => 't3_origuid',
 		'default_sortby' => 'ORDER BY crdate DESC',
-		'delete' => 'deleted',
 		'dividers2tabs' => TRUE,
 		'typeicon_column' => 'type',
 		'typeicon_classes' => array(
@@ -29,7 +28,7 @@ return array(
 		),
 	),
 	'interface' => array(
-		'showRecordFieldList' => 'storage, name, description, alternative, type, mime_type, size, sha1'
+		'showRecordFieldList' => 'storage, name, description, alternative, type, mime_type, size, sha1, missing'
 	),
 	'columns' => array(
 		't3ver_label' => array(
@@ -154,6 +153,15 @@ return array(
 				'eval' => 'int',
 				'default' => 0
 			)
+		),
+		'missing' => array(
+			'exclude' => 0,
+			'label' => 'LLL:EXT:lang/locallang_tca.xlf:sys_file.missing',
+			'config' => array(
+				'readOnly' => 1,
+				'type' => 'check',
+				'default' => '0'
+			)
 		)
 	),
 	'types' => array(
@@ -161,4 +169,3 @@ return array(
 	),
 	'palettes' => array()
 );
-?>

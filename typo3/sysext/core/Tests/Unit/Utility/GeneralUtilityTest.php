@@ -1,6 +1,5 @@
 <?php
 namespace TYPO3\CMS\Core\Tests\Unit\Utility;
-use TYPO3\CMS\Core\Utility;
 
 /***************************************************************
  *  Copyright notice
@@ -24,6 +23,10 @@ use TYPO3\CMS\Core\Utility;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Core\Utility;
+use \org\bovigo\vfs\vfsStreamDirectory;
+use \org\bovigo\vfs\vfsStreamWrapper;
 
 /**
  * Testcase for class \TYPO3\CMS\Core\Utility\GeneralUtility
@@ -52,6 +55,22 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		foreach ($this->testFilesToDelete as $absoluteFileName) {
 			Utility\GeneralUtility::rmdir($absoluteFileName, TRUE);
 		}
+	}
+
+	/**
+	 * Helper method to test for an existing internet connection.
+	 * Some tests are skipped if there is no working uplink.
+	 *
+	 * @return boolean $isConnected
+	 */
+	public function isConnected() {
+		$isConnected = FALSE;
+		$connected = @fsockopen('typo3.org', 80);
+		if ($connected) {
+			$isConnected = TRUE;
+			fclose($connected);
+		}
+		return $isConnected;
 	}
 
 	///////////////////////////
@@ -1159,6 +1178,30 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$keepItems = 'third';
 		$getValueFunc = create_function('$value', 'return $value[0];');
 		$match = Utility\GeneralUtility::keepItemsInArray($array, $keepItems, $getValueFunc);
+		$this->assertEquals($expected, $match);
+	}
+
+	/**
+	 * Similar to keepItemsInArrayCanUseCallbackOnSearchArray(),
+	 * but uses a closure instead of create_function()
+	 *
+	 * @test
+	 */
+	public function keepItemsInArrayCanUseClosure() {
+		$array = array(
+			'aa' => array('first', 'second'),
+			'bb' => array('third', 'fourth'),
+			'cc' => array('fifth', 'sixth')
+		);
+		$expected = array('bb' => array('third', 'fourth'));
+		$keepItems = 'third';
+		$match = Utility\GeneralUtility::keepItemsInArray(
+			$array,
+			$keepItems,
+			function ($value) {
+				return $value[0];
+			}
+		);
 		$this->assertEquals($expected, $match);
 	}
 
@@ -2533,10 +2576,9 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function minifyJavaScriptWritesExceptionMessageToDevLog() {
-		$namespace = 'TYPO3\\CMS\\Core\\Utility';
 		$t3libDivMock = uniqid('GeneralUtility');
-		eval('namespace ' . $namespace . '; class ' . $t3libDivMock . ' extends \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility {' . '  public static function devLog($errorMessage) {' . '    if (!($errorMessage === \'Error minifying java script: foo\')) {' . '      throw new \\UnexpectedValue(\'broken\');' . '    }' . '    throw new \\RuntimeException();' . '  }' . '}');
-		$t3libDivMock = $namespace . '\\' . $t3libDivMock;
+		eval('namespace ' . __NAMESPACE__ . '; class ' . $t3libDivMock . ' extends \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility {' . '  public static function devLog($errorMessage) {' . '    if (!($errorMessage === \'Error minifying java script: foo\')) {' . '      throw new \\UnexpectedValue(\'broken\');' . '    }' . '    throw new \\RuntimeException();' . '  }' . '}');
+		$t3libDivMock = __NAMESPACE__ . '\\' . $t3libDivMock;
 		$hookClassName = uniqid('tx_coretest');
 		$minifyHookMock = $this->getMock('stdClass', array('minify'), array(), $hookClassName);
 		$functionName = '&' . $hookClassName . '->minify';
@@ -2563,10 +2605,14 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	///////////////////////////
 	// Tests concerning getUrl
 	///////////////////////////
+
 	/**
 	 * @test
 	 */
 	public function getUrlWithAdditionalRequestHeadersProvidesHttpHeaderOnError() {
+		if (!$this->isConnected()) {
+			$this->markTestSkipped('No internet connection detected');
+		}
 		$url = 'http://typo3.org/i-do-not-exist-' . time();
 		$report = array();
 		Utility\GeneralUtility::getUrl($url, 0, array(), $report);
@@ -2577,6 +2623,9 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function getUrlProvidesWithoutAdditionalRequestHeadersHttpHeaderOnError() {
+		if (!$this->isConnected()) {
+			$this->markTestSkipped('No internet connection detected');
+		}
 		$url = 'http://typo3.org/i-do-not-exist-' . time();
 		$report = array();
 		Utility\GeneralUtility::getUrl($url, 0, FALSE, $report);
@@ -3078,12 +3127,12 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function mkdirDeepCreatesDirectoryInVfsStream() {
-		if (!class_exists('\\vfsStreamWrapper')) {
+		if (!class_exists('org\\bovigo\\vfs\\vfsStreamWrapper')) {
 			$this->markTestSkipped('mkdirDeepCreatesDirectoryInVfsStream() test not available with this phpunit version.');
 		}
-		\vfsStreamWrapper::register();
+		vfsStreamWrapper::register();
 		$baseDirectory = uniqid('test_');
-		\vfsStreamWrapper::setRoot(new \vfsStreamDirectory($baseDirectory));
+		vfsStreamWrapper::setRoot(new vfsStreamDirectory($baseDirectory));
 		Utility\GeneralUtility::mkdir_deep('vfs://' . $baseDirectory . '/', 'sub');
 		$this->assertTrue(is_dir('vfs://' . $baseDirectory . '/sub'));
 	}
@@ -3830,6 +3879,59 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->assertFalse(Utility\GeneralUtility::verifyFilenameAgainstDenyPattern('image .gif'));
 	}
 
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Tests concerning copyDirectory
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * @test
+	 */
+	public function copyDirectoryCopiesFilesAndDirectoriesWithRelativePaths() {
+		$sourceDirectory = 'typo3temp/' . uniqid('test_') . '/';
+		$absoluteSourceDirectory = PATH_site . $sourceDirectory;
+		$this->testFilesToDelete[] = $absoluteSourceDirectory;
+		Utility\GeneralUtility::mkdir($absoluteSourceDirectory);
+
+		$targetDirectory = 'typo3temp/' . uniqid('test_') . '/';
+		$absoluteTargetDirectory = PATH_site . $targetDirectory;
+		$this->testFilesToDelete[] = $absoluteTargetDirectory;
+		Utility\GeneralUtility::mkdir($absoluteTargetDirectory);
+
+		Utility\GeneralUtility::writeFileToTypo3tempDir($absoluteSourceDirectory . 'file', '42');
+		Utility\GeneralUtility::mkdir($absoluteSourceDirectory . 'foo');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($absoluteSourceDirectory . 'foo/file', '42');
+
+		Utility\GeneralUtility::copyDirectory($sourceDirectory, $targetDirectory);
+
+		$this->assertFileExists($absoluteTargetDirectory . 'file');
+		$this->assertFileExists($absoluteTargetDirectory . 'foo/file');
+	}
+
+	/**
+	 * @test
+	 */
+	public function copyDirectoryCopiesFilesAndDirectoriesWithAbsolutePaths() {
+		$sourceDirectory = 'typo3temp/' . uniqid('test_') . '/';
+		$absoluteSourceDirectory = PATH_site . $sourceDirectory;
+		$this->testFilesToDelete[] = $absoluteSourceDirectory;
+		Utility\GeneralUtility::mkdir($absoluteSourceDirectory);
+
+		$targetDirectory = 'typo3temp/' . uniqid('test_') . '/';
+		$absoluteTargetDirectory = PATH_site . $targetDirectory;
+		$this->testFilesToDelete[] = $absoluteTargetDirectory;
+		Utility\GeneralUtility::mkdir($absoluteTargetDirectory);
+
+		Utility\GeneralUtility::writeFileToTypo3tempDir($absoluteSourceDirectory . 'file', '42');
+		Utility\GeneralUtility::mkdir($absoluteSourceDirectory . 'foo');
+		Utility\GeneralUtility::writeFileToTypo3tempDir($absoluteSourceDirectory . 'foo/file', '42');
+
+		Utility\GeneralUtility::copyDirectory($absoluteSourceDirectory, $absoluteTargetDirectory);
+
+		$this->assertFileExists($absoluteTargetDirectory . 'file');
+		$this->assertFileExists($absoluteTargetDirectory . 'foo/file');
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tests concerning sysLog
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -4019,7 +4121,7 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @test
 	 * @dataProvider generateRandomBytesReturnsExpectedAmountOfBytesDataProvider
-	 * @param int $numberOfBytes Number of Bytes to generate
+	 * @param integer $numberOfBytes Number of Bytes to generate
 	 */
 	public function generateRandomBytesReturnsExpectedAmountOfBytes($numberOfBytes) {
 		$this->assertEquals(strlen(Utility\GeneralUtility::generateRandomBytes($numberOfBytes)), $numberOfBytes);
@@ -4048,7 +4150,7 @@ class GeneralUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	/**
 	 * @test
 	 * @dataProvider generateRandomBytesReturnsDifferentBytesDuringDifferentCallsDataProvider
-	 * @param int $numberOfBytes  Number of Bytes to generate
+	 * @param integer $numberOfBytes  Number of Bytes to generate
 	 */
 	public function generateRandomBytesReturnsDifferentBytesDuringDifferentCalls($numberOfBytes) {
 		$results = array();
@@ -4140,5 +4242,3 @@ text with a ' . $urlMatch . '$|s'),
 	}
 
 }
-
-?>

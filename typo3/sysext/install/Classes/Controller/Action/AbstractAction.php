@@ -69,11 +69,25 @@ abstract class AbstractAction {
 	protected $messages = array();
 
 	/**
-	 * Initialize this action
+	 * Initialize the handle action, sets up fluid stuff and assigns default variables.
 	 *
 	 * @return string content
 	 */
-	protected function initialize() {
+	protected function initializeHandle() {
+		$statusUtility = $this->objectManager->get('TYPO3\\CMS\\Install\\Status\\StatusUtility');
+
+		// Count of failed environment checks are displayed in the left navigation menu
+		$environmentStatus = $this->objectManager->get('TYPO3\\CMS\\Install\\SystemEnvironment\\Check')->getStatus();
+		$environmentErrors = $statusUtility->filterBySeverity($environmentStatus, 'error');
+
+		// Count of folder structure errors are displayed in left navigation menu
+		/** @var $folderStructureFacade \TYPO3\CMS\Install\FolderStructure\StructureFacade */
+		$folderStructureFacade = $this->objectManager->get('TYPO3\\CMS\\Install\\FolderStructure\\DefaultFactory')->getStructure();
+		$folderStructureErrors = $statusUtility->filterBySeverity($folderStructureFacade->getStatus(), 'error');
+
+		// Context service distinguishes between standalone and backend context
+		$contextService = $this->objectManager->get('TYPO3\\CMS\\Install\\Service\\ContextService');
+
 		$viewRootPath = GeneralUtility::getFileAbsFileName('EXT:install/Resources/Private/');
 		$controllerActionDirectoryName = ucfirst($this->controller);
 		$mainTemplate = ucfirst($this->action);
@@ -86,10 +100,13 @@ abstract class AbstractAction {
 			->assign('action', $this->action)
 			->assign('controller', $this->controller)
 			->assign('token', $this->token)
-			->assign('context', $this->getContext())
+			->assign('context', $contextService->getContextString())
+			->assign('contextService', $contextService)
 			->assign('messages', $this->messages)
 			->assign('typo3Version', TYPO3_version)
-			->assign('siteName', $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
+			->assign('siteName', $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'])
+			->assign('environmentErrors', $environmentErrors)
+			->assign('folderStructureErrors', $folderStructureErrors);
 	}
 
 	/**
@@ -208,5 +225,15 @@ abstract class AbstractAction {
 			->initializeTypo3DbGlobal()
 			->loadExtensionTables(FALSE);
 	}
+
+	/**
+	 * This function returns a salted hashed key.
+	 *
+	 * @param string $password
+	 * @return string
+	 */
+	protected function getHashedPassword($password) {
+		$saltFactory = \TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getSaltingInstance(NULL, 'BE');
+		return $saltFactory->getHashedPassword($password);
+	}
 }
-?>

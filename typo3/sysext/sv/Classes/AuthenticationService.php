@@ -26,11 +26,7 @@ namespace TYPO3\CMS\Sv;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-/**
- * Service 'User authentication' for the 'sv' extension.
- *
- * @author René Fritz <r.fritz@colorcube.de>
- */
+
 /**
  * Authentication services class
  *
@@ -44,7 +40,7 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AbstractAuthenticationService 
 	 *
 	 * @param array $loginData Credentials that are submitted and potentially modified by other services
 	 * @param string $passwordTransmissionStrategy Keyword of how the password has been hashed or encrypted before submission
-	 * @return bool
+	 * @return boolean
 	 */
 	public function processLoginData(array &$loginData, $passwordTransmissionStrategy) {
 		$isProcessed = TRUE;
@@ -258,6 +254,3 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AbstractAuthenticationService 
 	}
 
 }
-
-
-?>

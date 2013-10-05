@@ -27,9 +27,10 @@ namespace TYPO3\CMS\Filelist;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\Utility\IconUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Resource\FolderInterface;
-use TYPO3\CMS\Backend\Utility\IconUtility;
 
 /**
  * Class for rendering of File>Filelist
@@ -174,7 +175,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 	 * @todo Define visibility
 	 */
 	public function start(\TYPO3\CMS\Core\Resource\Folder $folderObject, $pointer, $sort, $sortRev, $clipBoard = FALSE, $bigControlPanel = FALSE) {
-		$this->script = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('file_list');
+		$this->script = BackendUtility::getModuleUrl('file_list');
 		$this->folderObject = $folderObject;
 		$this->counter = 0;
 		$this->totalbytes = 0;
@@ -229,7 +230,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 			if ($folderObject->getStorage()->isWithinFileMountBoundaries($folderObject)) {
 				// The icon with link
 				$otherMarkers['PAGE_ICON'] = IconUtility::getSpriteIcon($icon, array('title' => $title));
-				$buttons['level_up'] = $this->linkWrapDir(IconUtility::getSpriteIcon('actions-view-go-up', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.upOneLevel', 1))), $folderObject);
+				$buttons['level_up'] = $this->linkWrapDir(IconUtility::getSpriteIcon('actions-view-go-up', array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.upOneLevel', TRUE))), $folderObject);
 				// No HTML specialchars here - HTML like <strong> </strong> is allowed
 				$otherMarkers['TITLE'] .= GeneralUtility::removeXSS(GeneralUtility::fixed_lgd_cs($title, -($this->fixedL + 20)));
 			} else {
@@ -249,7 +250,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 			}
 
 		}
-		$buttons['refresh'] = '<a href="' . htmlspecialchars($this->listURL()) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.reload', 1) . '">' . IconUtility::getSpriteIcon('actions-system-refresh') . '</a>';
+		$buttons['refresh'] = '<a href="' . htmlspecialchars($this->listURL()) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.reload', TRUE) . '">' . IconUtility::getSpriteIcon('actions-system-refresh') . '</a>';
 		return array($buttons, $otherMarkers);
 	}
 
@@ -364,7 +365,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 						$cells[] = '<a href="' . htmlspecialchars($this->clipObj->pasteUrl('_FILE', $this->folderObject->getCombinedIdentifier())) . '" onclick="return ' . htmlspecialchars($this->clipObj->confirmMsg('_FILE', $this->path, 'into', $elFromTable)) . '" title="' . $GLOBALS['LANG']->getLL('clip_paste', 1) . '">' . IconUtility::getSpriteIcon('actions-document-paste-after') . '</a>';
 					}
 					if ($this->clipObj->current != 'normal' && $iOut) {
-						$cells[] = $this->linkClipboardHeaderIcon(IconUtility::getSpriteIcon('actions-edit-copy', array('title' => $GLOBALS['LANG']->getLL('clip_selectMarked', 1))), $table, 'setCB');
+						$cells[] = $this->linkClipboardHeaderIcon(IconUtility::getSpriteIcon('actions-edit-copy', array('title' => $GLOBALS['LANG']->getLL('clip_selectMarked', TRUE))), $table, 'setCB');
 						$cells[] = $this->linkClipboardHeaderIcon(IconUtility::getSpriteIcon('actions-edit-delete', array('title' => $GLOBALS['LANG']->getLL('clip_deleteMarked'))), $table, 'delete', $GLOBALS['LANG']->getLL('clip_deleteMarkedWarning'));
 						$onClick = 'checkOffCB(\'' . implode(',', $this->CBnames) . '\', this); return false;';
 						$cells[] = '<a class="cbcCheckAll" rel="" href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->getLL('clip_markRecords', TRUE) . '">' . IconUtility::getSpriteIcon('actions-document-select') . '</a>';
@@ -372,7 +373,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 					$theData[$v] = implode('', $cells);
 				} else {
 					// Normal row:
-					$theT = $this->linkWrapSort($GLOBALS['LANG']->getLL('c_' . $v, 1), $this->folderObject->getCombinedIdentifier(), $v);
+					$theT = $this->linkWrapSort($GLOBALS['LANG']->getLL('c_' . $v, TRUE), $this->folderObject->getCombinedIdentifier(), $v);
 					$theData[$v] = $theT;
 				}
 			}
@@ -603,7 +604,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 							$theData[$field] = strtoupper($ext);
 							break;
 						case 'tstamp':
-							$theData[$field] = \TYPO3\CMS\Backend\Utility\BackendUtility::date($fileInfo['mtime']);
+							$theData[$field] = BackendUtility::date($fileInfo['mtime']);
 							break;
 						case '_CLIPBOARD_':
 							$temp = '';
@@ -618,8 +619,12 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 							break;
 						case 'file':
 							$theData[$field] = $this->linkWrapFile(htmlspecialchars($fileName), $fileObject);
+
+							if ($fileObject->isMissing()) {
+								$flashMessage = \TYPO3\CMS\Core\Resource\Utility\BackendUtility::getFlashMessageForMissingFile($fileObject);
+								$theData[$field] .= $flashMessage->render();
 							// Thumbnails?
-							if ($this->thumbs && $this->isImage($ext)) {
+							} elseif ($this->thumbs && $this->isImage($ext)) {
 								$processedFile = $fileObject->process(\TYPO3\CMS\Core\Resource\ProcessedFile::CONTEXT_IMAGEPREVIEW, array());
 								if ($processedFile) {
 									$thumbUrl = $processedFile->getPublicUrl(TRUE);
@@ -686,8 +691,8 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 		// For normal clipboard, add copy/cut buttons:
 		if ($this->clipObj->current == 'normal') {
 			$isSel = $this->clipObj->isSelected('_FILE', $md5);
-			$cells[] = '<a href="' . htmlspecialchars($this->clipObj->selUrlFile($fullIdentifier, 1, ($isSel == 'copy'))) . '">' . IconUtility::getSpriteIcon(('actions-edit-copy' . ($isSel == 'copy' ? '-release' : '')), array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.copy', 1))) . '</a>';
-			$cells[] = '<a href="' . htmlspecialchars($this->clipObj->selUrlFile($fullIdentifier, 0, ($isSel == 'cut'))) . '">' . IconUtility::getSpriteIcon(('actions-edit-cut' . ($isSel == 'cut' ? '-release' : '')), array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.cut', 1))) . '</a>';
+			$cells[] = '<a href="' . htmlspecialchars($this->clipObj->selUrlFile($fullIdentifier, 1, ($isSel == 'copy'))) . '">' . IconUtility::getSpriteIcon(('actions-edit-copy' . ($isSel == 'copy' ? '-release' : '')), array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.copy', TRUE))) . '</a>';
+			$cells[] = '<a href="' . htmlspecialchars($this->clipObj->selUrlFile($fullIdentifier, 0, ($isSel == 'cut'))) . '">' . IconUtility::getSpriteIcon(('actions-edit-cut' . ($isSel == 'cut' ? '-release' : '')), array('title' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.cut', TRUE))) . '</a>';
 		} else {
 			// For numeric pads, add select checkboxes:
 			$n = '_FILE|' . $md5;
@@ -720,11 +725,11 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 		$fullIdentifier = $fileOrFolderObject->getCombinedIdentifier();
 		// Edit metadata of file
 		try {
-			if (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\File') && $fileOrFolderObject->isIndexed() && $fileOrFolderObject->checkActionPermission('edit')) {
+			if (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\File') && $fileOrFolderObject->isIndexed() && $fileOrFolderObject->checkActionPermission('write')) {
 				$data = array(
 					'sys_file' => array($fileOrFolderObject->getUid() => 'edit')
 				);
-				$editOnClick = \TYPO3\CMS\Backend\Utility\BackendUtility::editOnClick(GeneralUtility::implodeArrayForUrl('edit', $data), $GLOBALS['BACK_PATH'], $this->listUrl());
+				$editOnClick = BackendUtility::editOnClick(GeneralUtility::implodeArrayForUrl('edit', $data), $GLOBALS['BACK_PATH'], $this->listUrl());
 				$cells['editmetadata'] = '<a href="#" onclick="' . $editOnClick . '" title="Edit Metadata of this file">' . IconUtility::getSpriteIcon('actions-document-open') . '</a>';
 			} else {
 				$cells['editmetadata'] = IconUtility::getSpriteIcon('empty-empty');
@@ -733,7 +738,7 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 			$cells['editmetadata'] = IconUtility::getSpriteIcon('empty-empty');
 		}
 		// Edit file content (if editable)
-		if (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\File') && $fileOrFolderObject->checkActionPermission('edit') && GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], $fileOrFolderObject->getExtension())) {
+		if (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\File') && $fileOrFolderObject->checkActionPermission('write') && GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], $fileOrFolderObject->getExtension())) {
 			$editOnClick = 'top.content.list_frame.location.href=top.TS.PATH_typo3+\'file_edit.php?target=' . rawurlencode($fullIdentifier) . '&returnUrl=\'+top.rawurlencode(top.content.list_frame.document.location.pathname+top.content.list_frame.document.location.search);return false;';
 			$cells['edit'] = '<a href="#" onclick="' . $editOnClick . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.edit') . '">' . IconUtility::getSpriteIcon('actions-page-open') . '</a>';
 		} else {
@@ -746,20 +751,24 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 		} else {
 			$cells['rename'] = IconUtility::getSpriteIcon('empty-empty');
 		}
-		if (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\Folder')) {
-			$infoOnClick = 'top.launchView( \'_FOLDER\', \'' . $fullIdentifier . '\');return false;';
-		} elseif (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\File')) {
-			$infoOnClick = 'top.launchView( \'_FILE\', \'' . $fullIdentifier . '\');return false;';
+		if ($fileOrFolderObject->checkActionPermission('read')) {
+			if (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\Folder')) {
+				$infoOnClick = 'top.launchView( \'_FOLDER\', \'' . $fullIdentifier . '\');return false;';
+			} elseif (is_a($fileOrFolderObject, 'TYPO3\\CMS\\Core\\Resource\\File')) {
+				$infoOnClick = 'top.launchView( \'_FILE\', \'' . $fullIdentifier . '\');return false;';
+			}
+			$cells['info'] = '<a href="#" onclick="' . $infoOnClick . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.info') . '">' . IconUtility::getSpriteIcon('status-dialog-information') . '</a>';
+		} else {
+			$cells['info'] = IconUtility::getSpriteIcon('empty-empty');
 		}
-		$cells['info'] = '<a href="#" onclick="' . $infoOnClick . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:cm.info') . '">' . IconUtility::getSpriteIcon('status-dialog-information') . '</a>';
 
 		// delete the file
-		if ($fileOrFolderObject->checkActionPermission('remove')) {
+		if ($fileOrFolderObject->checkActionPermission('delete')) {
 			$identifier = $fileOrFolderObject->getIdentifier();
-			if ($fileOrFolderObject instanceof TYPO3\CMS\Core\Resource\Folder) {
-				$referenceCountText = \TYPO3\CMS\Backend\Utility\BackendUtility::referenceCount('_FILE', $identifier, ' (There are %s reference(s) to this folder!)');
+			if ($fileOrFolderObject instanceof \TYPO3\CMS\Core\Resource\Folder) {
+				$referenceCountText = BackendUtility::referenceCount('_FILE', $identifier, ' (There are %s reference(s) to this folder!)');
 			} else {
-				$referenceCountText = \TYPO3\CMS\Backend\Utility\BackendUtility::referenceCount('sys_file', $identifier, ' (There are %s reference(s) to this file!)');
+				$referenceCountText = BackendUtility::referenceCount('sys_file', $identifier, ' (There are %s reference(s) to this file!)');
 			}
 
 			if ($GLOBALS['BE_USER']->jsConfirmation(4)) {
@@ -813,5 +822,3 @@ class FileList extends \TYPO3\CMS\Backend\RecordList\AbstractRecordList {
 	}
 
 }
-
-?>

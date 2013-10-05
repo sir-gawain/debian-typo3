@@ -37,18 +37,9 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper
+	 * @inject
 	 */
 	protected $dataMapper;
-
-	/**
-	 * Injects the DataMapper to map records to objects
-	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper
-	 * @return void
-	 */
-	public function injectDataMapper(\TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper) {
-		$this->dataMapper = $dataMapper;
-	}
 
 	/**
 	 * Do not include pid in queries
@@ -186,11 +177,11 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 		$query = $this->createQuery();
 		$constraint = NULL;
 		if ($lowestVersion !== 0 && $highestVersion !== 0) {
-			$constraint = $query->logicalAnd($query->lessThan('integerVersion', $highestVersion), $query->greaterThan('integerVersion', $lowestVersion), $query->equals('extensionKey', $extensionKey));
+			$constraint = $query->logicalAnd($query->lessThanOrEqual('integerVersion', $highestVersion), $query->greaterThanOrEqual('integerVersion', $lowestVersion), $query->equals('extensionKey', $extensionKey));
 		} elseif ($lowestVersion === 0 && $highestVersion !== 0) {
-			$constraint = $query->logicalAnd($query->lessThan('integerVersion', $highestVersion), $query->equals('extensionKey', $extensionKey));
+			$constraint = $query->logicalAnd($query->lessThanOrEqual('integerVersion', $highestVersion), $query->equals('extensionKey', $extensionKey));
 		} elseif ($lowestVersion !== 0 && $highestVersion === 0) {
-			$constraint = $query->logicalAnd($query->greaterThan('integerVersion', $lowestVersion), $query->equals('extensionKey', $extensionKey));
+			$constraint = $query->logicalAnd($query->greaterThanOrEqual('integerVersion', $lowestVersion), $query->equals('extensionKey', $extensionKey));
 		} elseif ($lowestVersion === 0 && $highestVersion === 0) {
 			$constraint = $query->equals('extensionKey', $extensionKey);
 		}
@@ -200,6 +191,22 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 		$query->setOrderings(array(
 			'integerVersion' => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_DESCENDING
 		));
+		return $query->execute();
+	}
+
+	/**
+	 * Finds all extensions with category "distribution"
+	 *
+	 * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface
+	 */
+	public function findAllDistributions() {
+		$query = $this->createQuery();
+		$query->matching(
+			$query->logicalAnd(
+				$query->equals('category', \TYPO3\CMS\Extensionmanager\Domain\Model\Extension::DISTRIBUTION_CATEGORY),
+				$query->equals('currentVersion', 1)
+			)
+		);
 		return $query->execute();
 	}
 
@@ -293,6 +300,3 @@ class ExtensionRepository extends \TYPO3\CMS\Extbase\Persistence\Repository {
 	}
 
 }
-
-
-?>

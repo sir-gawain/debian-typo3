@@ -33,15 +33,6 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Include file extending \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRecordList
- * for use with the web_layout module
- *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
  * Child class for the Web > Page module
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
@@ -321,10 +312,10 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						if (substr($field, 0, 6) == 'table_') {
 							$f2 = substr($field, 6);
 							if ($GLOBALS['TCA'][$f2]) {
-								$theData[$field] = '&nbsp;' . IconUtility::getSpriteIconForRecord($f2, array(), array('title' => $GLOBALS['LANG']->sL($GLOBALS['TCA'][$f2]['ctrl']['title'], 1)));
+								$theData[$field] = '&nbsp;' . IconUtility::getSpriteIconForRecord($f2, array(), array('title' => $GLOBALS['LANG']->sL($GLOBALS['TCA'][$f2]['ctrl']['title'], TRUE)));
 							}
 						} else {
-							$theData[$field] = '&nbsp;&nbsp;<strong>' . $GLOBALS['LANG']->sL($GLOBALS['TCA']['pages']['columns'][$field]['label'], 1) . '</strong>' . $eI;
+							$theData[$field] = '&nbsp;&nbsp;<strong>' . $GLOBALS['LANG']->sL($GLOBALS['TCA']['pages']['columns'][$field]['label'], TRUE) . '</strong>' . $eI;
 						}
 				}
 			}
@@ -435,7 +426,11 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						$defLanguageCount[$key] = array();
 					}
 					// Start wrapping div
-					$content[$key] .= '<div class="t3-page-ce-wrapper">';
+					$content[$key] .= '<div class="t3-page-ce-wrapper';
+					if (count($contentRecordsPerColumn[$key]) === 0) {
+						$content[$key] .= ' t3-page-ce-empty';
+					}
+					$content[$key] .= '">';
 					// Add new content at the top most position
 					$content[$key] .= '
 					<div class="t3-page-ce" id="' . uniqid() . '">
@@ -457,9 +452,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 						}
 						if (is_array($row) && (int) $row['t3ver_state'] != 2) {
 							$singleElementHTML = '';
-							if (($this->defLangBinding && !$lP) ||
-								(!$this->defLangBinding && $lP && $row['sys_language_uid'] != -1)
-							) {
+							if (!$lP && ($this->defLangBinding || $row['sys_language_uid'] != -1)) {
 								$defLanguageCount[$key][] = $row['uid'];
 							}
 							$editUidList .= $row['uid'] . ',';
@@ -490,7 +483,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 								}
 								$singleElementHTML .= '
 									<div class="t3-page-ce-wrapper-new-ce">
-										<a href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->getLL('newRecordHere', 1) . '">' . IconUtility::getSpriteIcon('actions-document-new') . '</a>
+										<a href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->getLL('newRecordHere', TRUE) . '">' . IconUtility::getSpriteIcon('actions-document-new') . '</a>
 									</div>
 								';
 							}
@@ -536,8 +529,11 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 					$backendLayoutRecord = $this->getBackendLayoutConfiguration();
 					// GRID VIEW:
 					// Initialize TS parser to parse config to array
+					/** @var \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser $parser */
 					$parser = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
-					$parser->parse($parser->checkIncludeLines($backendLayoutRecord['config']));
+					/** @var \TYPO3\CMS\Backend\Configuration\TypoScript\ConditionMatching\ConditionMatcher $conditionMatcher */
+					$conditionMatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TypoScript\\ConditionMatching\\ConditionMatcher');
+					$parser->parse($parser->checkIncludeLines($backendLayoutRecord['config']), $conditionMatcher);
 					$grid .= '<div class="t3-gridContainer"><table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
 					// Add colgroups
 					$colCount = intval($parser->setup['backend_layout.']['colCount']);
@@ -843,7 +839,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 		$theData = array();
 		$theData = $this->headerFields($this->fieldArray, $table, $theData);
 		// Title row
-		$localizedTableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title'], 1);
+		$localizedTableTitle = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['ctrl']['title'], TRUE);
 		$out .= '<tr class="t3-row-header">' . '<td nowrap="nowrap" class="col-icon"></td>' . '<td nowrap="nowrap" colspan="' . (count($theData) - 2) . '"><span class="c-table">' . $localizedTableTitle . '</span> (' . $dbCount . ')</td>' . '<td nowrap="nowrap" class="col-icon"></td>' . '</tr>';
 		// Column's titles
 		if ($this->doEdit) {
@@ -920,7 +916,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 					// Traverse fields, separated by ";" (displayed in a single cell).
 					foreach ($theFields as $fName2) {
 						if ($GLOBALS['TCA'][$table]['columns'][$fName2]) {
-							$out[$fieldName] .= '<strong>' . $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$fName2]['label'], 1) . '</strong>' . '&nbsp;&nbsp;' . htmlspecialchars(GeneralUtility::fixed_lgd_cs(BackendUtility::getProcessedValue($table, $fName2, $row[$fName2], 0, 0, 0, $row['uid']), 25)) . '<br />';
+							$out[$fieldName] .= '<strong>' . $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$fName2]['label'], TRUE) . '</strong>' . '&nbsp;&nbsp;' . htmlspecialchars(GeneralUtility::fixed_lgd_cs(BackendUtility::getProcessedValue($table, $fName2, $row[$fName2], 0, 0, 0, $row['uid']), 25)) . '<br />';
 						}
 					}
 				}
@@ -949,7 +945,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	 */
 	public function headerFields($fieldArr, $table, $out = array()) {
 		foreach ($fieldArr as $fieldName) {
-			$ll = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$fieldName]['label'], 1);
+			$ll = $GLOBALS['LANG']->sL($GLOBALS['TCA'][$table]['columns'][$fieldName]['label'], TRUE);
 			$out[$fieldName] = $ll ? $ll : '&nbsp;';
 		}
 		return $out;
@@ -1353,14 +1349,14 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 							$out .= GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', htmlspecialchars($message), '', FlashMessage::WARNING)->render();
 						}
 					} elseif (!empty($row['select_key'])) {
-						$out .= $GLOBALS['LANG']->sL(BackendUtility::getItemLabel('tt_content', 'select_key'), 1) . ' ' . $row['select_key'] . '<br />';
+						$out .= $GLOBALS['LANG']->sL(BackendUtility::getItemLabel('tt_content', 'select_key'), TRUE) . ' ' . $row['select_key'] . '<br />';
 					} else {
 						$out .= '<strong>' . $GLOBALS['LANG']->getLL('noPluginSelected') . '</strong>';
 					}
-					$out .= $GLOBALS['LANG']->sL(BackendUtility::getLabelFromItemlist('tt_content', 'pages', $row['pages']), 1) . '<br />';
+					$out .= $GLOBALS['LANG']->sL(BackendUtility::getLabelFromItemlist('tt_content', 'pages', $row['pages']), TRUE) . '<br />';
 					break;
 				case 'script':
-					$out .= $GLOBALS['LANG']->sL(BackendUtility::getItemLabel('tt_content', 'select_key'), 1) . ' ' . $row['select_key'] . '<br />';
+					$out .= $GLOBALS['LANG']->sL(BackendUtility::getItemLabel('tt_content', 'select_key'), TRUE) . ' ' . $row['select_key'] . '<br />';
 					$out .= '<br />' . $this->linkEditContent($this->renderText($row['bodytext']), $row) . '<br />';
 					$out .= '<br />' . $this->linkEditContent($this->renderText($row['imagecaption']), $row) . '<br />';
 					break;
@@ -1481,7 +1477,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 			$onClick = BackendUtility::editOnClick('&edit[tt_content][' . $row['uid'] . ']=edit', $this->backPath);
 		}
 		// Return link
-		return $onClick ? '<a href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->getLL('edit', 1) . '">' . $str . '</a>' . $addButton : $str;
+		return $onClick ? '<a href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $GLOBALS['LANG']->getLL('edit', TRUE) . '">' . $str . '</a>' . $addButton : $str;
 	}
 
 	/**
@@ -1544,7 +1540,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 			}
 			// Remove disabled languages
 			$modSharedTSconfig = BackendUtility::getModTSconfig($id, 'mod.SHARED');
-			$disableLanguages = isset($modSharedTSconfig['properties']['disableLanguages']) ? GeneralUtility::trimExplode(',', $modSharedTSconfig['properties']['disableLanguages'], 1) : array();
+			$disableLanguages = isset($modSharedTSconfig['properties']['disableLanguages']) ? GeneralUtility::trimExplode(',', $modSharedTSconfig['properties']['disableLanguages'], TRUE) : array();
 			if (count($langSelItems) && count($disableLanguages)) {
 				foreach ($disableLanguages as $language) {
 					if ($language != 0 && isset($langSelItems[$language])) {
@@ -1555,7 +1551,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 			// If any languages are left, make selector:
 			if (count($langSelItems) > 1) {
 				$onChangeContent = 'window.location.href=\'' . $this->backPath . 'alt_doc.php?&edit[pages_language_overlay][' . $id . ']=new&overrideVals[pages_language_overlay][doktype]=' . (int) $this->pageRecord['doktype'] . '&overrideVals[pages_language_overlay][sys_language_uid]=\'+this.options[this.selectedIndex].value+\'&returnUrl=' . rawurlencode(GeneralUtility::getIndpEnv('REQUEST_URI')) . '\'';
-				return $GLOBALS['LANG']->getLL('new_language', 1) . ': <select name="createNewLanguage" onchange="' . htmlspecialchars($onChangeContent) . '">
+				return $GLOBALS['LANG']->getLL('new_language', TRUE) . ': <select name="createNewLanguage" onchange="' . htmlspecialchars($onChangeContent) . '">
 						' . implode('', $langSelItems) . '
 					</select><br /><br />';
 			}
@@ -1637,7 +1633,7 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	public function renderText($input) {
 		$input = strip_tags($input);
 		$input = GeneralUtility::fixed_lgd_cs($input, 1500);
-		return nl2br(htmlspecialchars(trim($this->wordWrapper($input)), ENT_QUOTES, 'UTF-8', FALSE));
+		return nl2br(htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8', FALSE));
 	}
 
 	/**
@@ -1704,9 +1700,10 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	 * @param integer $max Max number of chars in a word before it will be wrapped.
 	 * @param string $char Character to insert when wrapping.
 	 * @return string Processed output.
-	 * @todo Define visibility
+	 * @deprecated since 6.2, CSS is used (word-break: break-all;)
 	 */
 	public function wordWrapper($content, $max = 50, $char = ' -') {
+		GeneralUtility::logDeprecatedFunction();
 		$array = preg_split('/[ ' . LF . ']/', $content);
 		foreach ($array as $val) {
 			if (strlen($val) > $max) {
@@ -1931,9 +1928,9 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 				if ($c || GeneralUtility::inList('tt_content', $tName)) {
 					// Add row to menu:
 					$out .= '
-					<td><a href="#' . $tName . '"></a>' . IconUtility::getSpriteIconForRecord($tName, array(), array('title' => $GLOBALS['LANG']->sL($GLOBALS['TCA'][$tName]['ctrl']['title'], 1))) . '</td>';
+					<td><a href="#' . $tName . '"></a>' . IconUtility::getSpriteIconForRecord($tName, array(), array('title' => $GLOBALS['LANG']->sL($GLOBALS['TCA'][$tName]['ctrl']['title'], TRUE))) . '</td>';
 					// ... and to the internal array, activeTables we also add table icon and title (for use elsewhere)
-					$this->activeTables[$tName] = IconUtility::getSpriteIconForRecord($tName, array(), array('title' => ($GLOBALS['LANG']->sL($GLOBALS['TCA'][$tName]['ctrl']['title'], 1) . ': ' . $c . ' ' . $GLOBALS['LANG']->getLL('records', 1)))) . '&nbsp;' . $GLOBALS['LANG']->sL($GLOBALS['TCA'][$tName]['ctrl']['title'], 1);
+					$this->activeTables[$tName] = IconUtility::getSpriteIconForRecord($tName, array(), array('title' => ($GLOBALS['LANG']->sL($GLOBALS['TCA'][$tName]['ctrl']['title'], TRUE) . ': ' . $c . ' ' . $GLOBALS['LANG']->getLL('records', TRUE)))) . '&nbsp;' . $GLOBALS['LANG']->sL($GLOBALS['TCA'][$tName]['ctrl']['title'], TRUE);
 				}
 			}
 		}
@@ -1970,5 +1967,3 @@ class PageLayoutView extends \TYPO3\CMS\Recordlist\RecordList\AbstractDatabaseRe
 	}
 
 }
-
-?>

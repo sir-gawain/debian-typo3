@@ -41,11 +41,6 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 class GraphicalFunctions {
 
 	// Internal configuration, set in init()
-	// The ImageMagick filename used for combining two images. This name changed during the versions.
-	/**
-	 * @todo Define visibility
-	 */
-	public $combineScript = 'combine';
 
 	// If set, there is no frame pointer prepended to the filenames.
 	/**
@@ -86,7 +81,7 @@ class GraphicalFunctions {
 	protected $allowedColorSpaceNames = array(
 		'CMY',
 		'CMYK',
-		'Grey',
+		'Gray',
 		'HCL',
 		'HSB',
 		'HSL',
@@ -135,12 +130,6 @@ class GraphicalFunctions {
 	 * @todo Define visibility
 	 */
 	public $webImageExt = 'gif,jpg,jpeg,png';
-
-	// Will be ' -negate' if ImageMagick ver 5.2+. See init();
-	/**
-	 * @todo Define visibility
-	 */
-	public $maskNegate = '';
 
 	/**
 	 * @todo Define visibility
@@ -342,9 +331,6 @@ class GraphicalFunctions {
 		// Setting default JPG parameters:
 		$this->jpegQuality = MathUtility::forceIntegerInRange($gfxConf['jpg_quality'], 10, 100, 75);
 		$this->cmds['jpg'] = ($this->cmds['jpeg'] = '-colorspace ' . $this->colorspace . ' -sharpen 50 -quality ' . $this->jpegQuality);
-		if ($gfxConf['im_combine_filename']) {
-			$this->combineScript = $gfxConf['im_combine_filename'];
-		}
 		if ($gfxConf['im_noFramePrepended']) {
 			$this->noFramePrepended = 1;
 		}
@@ -355,22 +341,14 @@ class GraphicalFunctions {
 			$this->enable_typo3temp_db_tracking = $gfxConf['enable_typo3temp_db_tracking'];
 		}
 		$this->imageFileExt = $gfxConf['imagefile_ext'];
-		// This should be set if ImageMagick ver. 5+ is used.
-		if ($gfxConf['im_negate_mask']) {
-			// Boolean. Indicates if the mask images should be inverted first.
-			// This depends of the ImageMagick version. Below ver. 5.1 this should be FALSE.
-			// Above ImageMagick version 5.2+ it should be TRUE.
-			// Just set the flag if the masks works opposite the intension!
-			$this->maskNegate = ' -negate';
-		}
-		if ($gfxConf['im_no_effects']) {
-			// Boolean. This is necessary if using ImageMagick 5+.
-			// Effects in Imagemagick 5+ tends to render very slowly!!
-			// - therefore must be disabled in order not to perform sharpen, blurring and such.
-			$this->NO_IM_EFFECTS = 1;
-			$this->cmds['jpg'] = ($this->cmds['jpeg'] = '-colorspace ' . $this->colorspace . ' -quality ' . $this->jpegQuality);
-		}
-		// ... but if 'im_v5effects' is set, don't care about 'im_no_effects'
+
+		// Boolean. This is necessary if using ImageMagick 5+.
+		// Effects in Imagemagick 5+ tends to render very slowly!!
+		// - therefore must be disabled in order not to perform sharpen, blurring and such.
+		$this->NO_IM_EFFECTS = 1;
+		$this->cmds['jpg'] = ($this->cmds['jpeg'] = '-colorspace ' . $this->colorspace . ' -quality ' . $this->jpegQuality);
+
+		// ... but if 'im_v5effects' is set, enable effects
 		if ($gfxConf['im_v5effects']) {
 			$this->NO_IM_EFFECTS = 0;
 			$this->V5_EFFECTS = 1;
@@ -685,18 +663,9 @@ class GraphicalFunctions {
 				ImageDestroy($maskImg);
 				// Downscales the mask
 				if ($this->NO_IM_EFFECTS) {
-					if ($this->maskNegate) {
-						// Negate 2 times makes no negate...
-						$command = trim($this->scalecmd . ' ' . $w . 'x' . $h . '!');
-					} else {
-						$command = trim($this->scalecmd . ' ' . $w . 'x' . $h . '! -negate');
-					}
+					$command = trim($this->scalecmd . ' ' . $w . 'x' . $h . '! -negate');
 				} else {
-					if ($this->maskNegate) {
-						$command = trim($conf['niceText.']['before'] . ' ' . $this->scalecmd . ' ' . $w . 'x' . $h . '! ' . $conf['niceText.']['after']);
-					} else {
-						$command = trim($conf['niceText.']['before'] . ' ' . $this->scalecmd . ' ' . $w . 'x' . $h . '! ' . $conf['niceText.']['after'] . ' -negate');
-					}
+					$command = trim($conf['niceText.']['before'] . ' ' . $this->scalecmd . ' ' . $w . 'x' . $h . '! ' . $conf['niceText.']['after'] . ' -negate');
 					if ($conf['niceText.']['sharpen']) {
 						if ($this->V5_EFFECTS) {
 							$command .= $this->v5_sharpen($conf['niceText.']['sharpen']);
@@ -1151,7 +1120,7 @@ class GraphicalFunctions {
 					case 'charRange':
 						if (strlen($cfg['value'])) {
 							// Initialize range:
-							$ranges = GeneralUtility::trimExplode(',', $cfg['value'], 1);
+							$ranges = GeneralUtility::trimExplode(',', $cfg['value'], TRUE);
 							foreach ($ranges as $i => $rangeDef) {
 								$ranges[$i] = GeneralUtility::intExplode('-', $ranges[$i]);
 								if (!isset($ranges[$i][1])) {
@@ -1502,7 +1471,6 @@ class GraphicalFunctions {
 			// Destroy
 			ImageDestroy($blurTextImg);
 			$command = '';
-			$command .= $this->maskNegate;
 			if ($this->V5_EFFECTS) {
 				$command .= $this->v5_blur($blurRate + 1);
 			} else {
@@ -1533,12 +1501,12 @@ class GraphicalFunctions {
 					$intensity = MathUtility::forceIntegerInRange($conf['intensity'], 0, 100);
 				}
 				$intensity = ceil(255 - $intensity / 100 * 255);
-				$this->inputLevels($blurTextImg, 0, $intensity, $this->maskNegate);
+				$this->inputLevels($blurTextImg, 0, $intensity);
 				$opacity = MathUtility::forceIntegerInRange(intval($conf['opacity']), 0, 100);
 				if ($opacity && $opacity < 100) {
 					$high = ceil(255 * $opacity / 100);
 					// Reducing levels as the opacity demands
-					$this->outputLevels($blurTextImg, 0, $high, $this->maskNegate);
+					$this->outputLevels($blurTextImg, 0, $high);
 				}
 				// Dump the mask again
 				$this->ImageWrite($blurTextImg, $fileMask);
@@ -1935,7 +1903,7 @@ class GraphicalFunctions {
 	 * @param integer $im GDlib Image Pointer
 	 * @param integer $low The "low" value (close to 0)
 	 * @param integer $high The "high" value (close to 255)
-	 * @param boolean $swap If swap, then low and high are swapped. (Useful for negated masks...)
+	 * @param boolean $swap @deprecated since 6.2, unused and obsolete parameter, was used for older image magick versions
 	 * @return void
 	 * @todo Define visibility
 	 */
@@ -1943,11 +1911,6 @@ class GraphicalFunctions {
 		if ($low < $high) {
 			$low = MathUtility::forceIntegerInRange($low, 0, 255);
 			$high = MathUtility::forceIntegerInRange($high, 0, 255);
-			if ($swap) {
-				$temp = $low;
-				$low = 255 - $high;
-				$high = 255 - $temp;
-			}
 			$delta = $high - $low;
 			$totalCols = ImageColorsTotal($im);
 			for ($c = 0; $c < $totalCols; $c++) {
@@ -2292,7 +2255,7 @@ class GraphicalFunctions {
 					}
 					$offsetX = intval(($data[0] - $data['origW']) * ($data['cropH'] + 100) / 200);
 					$offsetY = intval(($data[1] - $data['origH']) * ($data['cropV'] + 100) / 200);
-					$params .= ' -crop ' . $data['origW'] . 'x' . $data['origH'] . '+' . $offsetX . '+' . $offsetY . ' ';
+					$params .= ' -crop ' . $data['origW'] . 'x' . $data['origH'] . '+' . $offsetX . '+' . $offsetY . '! ';
 				}
 				$command = $this->scalecmd . ' ' . $info[0] . 'x' . $info[1] . '! ' . $params . ' ';
 				$cropscale = $data['crs'] ? 'crs-V' . $data['cropV'] . 'H' . $data['cropH'] : '';
@@ -2674,11 +2637,6 @@ class GraphicalFunctions {
 	public function combineExec($input, $overlay, $mask, $output, $handleNegation = FALSE) {
 		if (!$this->NO_IMAGE_MAGICK) {
 			$params = '-colorspace GRAY +matte';
-			if ($handleNegation) {
-				if ($this->maskNegate) {
-					$params .= ' ' . $this->maskNegate;
-				}
-			}
 			$theMask = $this->randomName() . '.' . $this->gifExtension;
 			$this->imageMagickExec($mask, $theMask, $params);
 			$cmd = GeneralUtility::imageMagickCommand('combine', '-compose over +matte ' . $this->wrapFileName($input) . ' ' . $this->wrapFileName($overlay) . ' ' . $this->wrapFileName($theMask) . ' ' . $this->wrapFileName($output));
@@ -3031,5 +2989,3 @@ class GraphicalFunctions {
 	}
 
 }
-
-?>

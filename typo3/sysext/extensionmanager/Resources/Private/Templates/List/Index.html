@@ -11,10 +11,9 @@
 </f:section>
 
 <f:section name="Content">
-	<div class="uploadForm" style="display: none;">
-		<span class="spinner"></span>
-		<f:translate key="extensionList.loading"/>
-	</div>
+	<f:flashMessages renderMode="div" />
+
+	<f:render partial="List/UploadForm" />
 
 	<div class="headerRow ui-helper-clearfix">
 		<div class="typo3-extensionmanager-headerRowLeft">
@@ -46,11 +45,21 @@
 				</f:if>
 				<td>
 					<f:if condition="{extension.updateAvailable}">
-						<f:be.buttons.icon
-							uri="{f:uri.action(action:'updateCommentForUpdatableVersions',controller:'Download',arguments:{extension:extension.key, integerVersion: extension.terObject.integerVersion},format:'json')}"
-							icon="actions-system-extension-update"
-							title="{f:translate(key:'extensionList.updateToVersion', arguments:{0:extension.updateToVersion.version})}"
-						/>
+						<f:if condition="{extension.state} == 'excludeFromUpdates'">
+							<f:then>
+								<f:be.buttons.icon
+									icon="actions-system-extension-update-disabled"
+									title="{f:translate(key:'extensionList.updateDisabled')}"
+								/>
+							</f:then>
+							<f:else>
+								<f:be.buttons.icon
+									uri="{f:uri.action(action:'updateCommentForUpdatableVersions',controller:'Download',arguments:{extension:extension.key, integerVersion: extension.terObject.integerVersion},format:'json')}"
+									icon="actions-system-extension-update"
+									title="{f:translate(key:'extensionList.updateToVersion', arguments:{0:extension.updateToVersion.version})}"
+								/>
+							</f:else>
+						</f:if>
 					</f:if>
 				</td>
 				<td>
@@ -65,7 +74,7 @@
 					</f:else>
 				</f:if>
 
-					<em:image src="../{extension.siteRelPath}/{extension.ext_icon}" alt="{extension.title}" height="16" />{extension.title}
+					<em:image src="../{extension.siteRelPath}/{extension.ext_icon}" alt="{extension.title}" height="16" /><em:configureExtension extension="{extension}" forceConfiguration="0">{extension.title}</em:configureExtension>
 				</td>
 				<td>
 					{extensionKey}
@@ -74,7 +83,7 @@
 					{extension.version}
 				</td>
 				<td class="icons">
-					<em:configureExtension extension="{extension}" />
+					<em:configureExtension extension="{extension}"><f:be.buttons.icon icon="actions-system-extension-configure" title="{f:translate(key:'extensionList.configure')}" /></em:configureExtension>
 					<em:updateScript extensionKey="{extension.key}" />
 					<em:removeExtension extension="{extension}" />
 					<f:be.buttons.icon uri="{f:uri.action(action:'downloadExtensionZip',controller:'Action',arguments:'{extension:extension.key}')}" icon="actions-system-extension-download" title="{f:translate(key:'extensionList.downloadzip')}"/>

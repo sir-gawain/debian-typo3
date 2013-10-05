@@ -35,70 +35,33 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository
+	 * @inject
 	 */
 	protected $extensionRepository;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility
+	 * @inject
 	 */
 	protected $fileHandlingUtility;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService
+	 * @inject
 	 */
 	protected $managementService;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\InstallUtility
+	 * @inject
 	 */
 	protected $installUtility;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\DownloadUtility
+	 * @inject
 	 */
 	protected $downloadUtility;
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
-	 * @return void
-	 */
-	public function injectInstallUtility(\TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility) {
-		$this->installUtility = $installUtility;
-	}
-
-	/**
-	 * Dependency injection of the Extension Repository
-	 *
-	 * @param \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository
-	 * @return void
-	 */
-	public function injectExtensionRepository(\TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository) {
-		$this->extensionRepository = $extensionRepository;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility
-	 * @return void
-	 */
-	public function injectFileHandlingUtility(\TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility) {
-		$this->fileHandlingUtility = $fileHandlingUtility;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $managementService
-	 * @return void
-	 */
-	public function injectManagementService(\TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $managementService) {
-		$this->managementService = $managementService;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\DownloadUtility $downloadUtility
-	 * @return void
-	 */
-	public function injectDownloadUtility(\TYPO3\CMS\Extensionmanager\Utility\DownloadUtility $downloadUtility) {
-		$this->downloadUtility = $downloadUtility;
-	}
 
 	/**
 	 * Check extension dependencies
@@ -144,23 +107,43 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 	}
 
 	/**
-	 * Install an extension from TER
+	 * Install an extension from TER action
 	 *
 	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension
 	 * @param string $downloadPath
-	 * @throws \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException
 	 */
 	public function installFromTerAction(\TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension, $downloadPath) {
-		$result = FALSE;
-		$errorMessage = '';
-		try {
-			$this->downloadUtility->setDownloadPath($downloadPath);
-			$this->prepareExtensionForImport($extension);
-			$result = $this->managementService->resolveDependenciesAndInstall($extension);
-		} catch (\TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException $e) {
-			$errorMessage = $e->getMessage();
+		list($result, $errorMessage) = $this->installFromTer($extension, $downloadPath);
+		$this->view
+			->assign('result', $result)
+			->assign('extension', $extension)
+			->assign('errorMessage', $errorMessage);
+	}
+
+	/**
+	 * Action for installing a distribution -
+	 * redirects directly to configuration after installing
+	 *
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension
+	 * @return void
+	 */
+	public function installDistributionAction(\TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension) {
+		list($result, $errorMessage) = $this->installFromTer($extension);
+		if ($errorMessage) {
+			// @TODO: write Template
+			$this->view
+				->assign('result', $result)
+				->assign('errorMessage', $errorMessage);
+		} else {
+			$this->redirect(
+				'showConfigurationForm',
+				'Configuration',
+				NULL,
+				array(
+					'extension' => $this->installUtility->enrichExtensionWithDetails($extension->getExtensionKey())
+				)
+			);
 		}
-		$this->view->assign('result', $result)->assign('extension', $extension)->assign('errorMessage', $errorMessage);
 	}
 
 	/**
@@ -213,7 +196,25 @@ class DownloadController extends \TYPO3\CMS\Extensionmanager\Controller\Abstract
 		}
 		$this->view->assign('updateComments', $updateComments)->assign('extensionKey', $extensionKey);
 	}
+
+	/**
+	 * Install an action from TER
+	 * Downloads the extension, resolves dependencies and installs it
+	 *
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension
+	 * @param string $downloadPath
+	 * @return array
+	 */
+	protected function installFromTer(\TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension, $downloadPath = 'Local') {
+		$result = FALSE;
+		$errorMessage = '';
+		try {
+			$this->downloadUtility->setDownloadPath($downloadPath);
+			$this->prepareExtensionForImport($extension);
+			$result = $this->managementService->resolveDependenciesAndInstall($extension);
+		} catch (\TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException $e) {
+			$errorMessage = $e->getMessage();
+		}
+		return array($result, $errorMessage);
+	}
 }
-
-
-?>

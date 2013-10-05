@@ -42,11 +42,13 @@ class ToolController extends AbstractController {
 		'welcome',
 		'importantActions',
 		'systemEnvironment',
+		'configuration',
 		'folderStructure',
 		'testSetup',
 		'updateWizard',
 		'allConfiguration',
 		'cleanUp',
+		'loadExtensions',
 	);
 
 	/**
@@ -68,6 +70,7 @@ class ToolController extends AbstractController {
 		$this->logoutIfRequested();
 		$this->loginIfRequested();
 		$this->outputLoginFormIfNotAuthorized();
+		$this->registerExtensionConfigurationErrorHandler();
 		$this->dispatchAuthenticationActions();
 	}
 
@@ -96,6 +99,56 @@ class ToolController extends AbstractController {
 	}
 
 	/**
+	 * This function registers a shutdown function, which is called even if a fatal error occurs.
+	 * The request either gets redirected to an action where all extension configurations are checked for compatibility or
+	 * an information with a link to that action.
+	 *
+	 * @return void
+	 */
+	protected function registerExtensionConfigurationErrorHandler() {
+		register_shutdown_function(function() {
+			$error = error_get_last();
+			if ($error !== NULL) {
+				$errorType = $error["type"];
+
+				if ($errorType & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)) {
+					$getPostValues = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('install');
+
+					$parameters = array();
+
+					// Add context parameter in case this script was called within backend scope
+					$context = 'install[context]=standalone';
+					if (isset($getPostValues['context']) && $getPostValues['context'] === 'backend') {
+						$context = 'install[context]=backend';
+					}
+					$parameters[] = $context;
+
+					// Add controller parameter
+					$parameters[] = 'install[controller]=tool';
+
+					// Add action if specified
+					$parameters[] = 'install[action]=loadExtensions';
+
+					$redirectLocation = 'Install.php?' . implode('&', $parameters);
+
+					if (!headers_sent()) {
+						\TYPO3\CMS\Core\Utility\HttpUtility::redirect(
+							$redirectLocation,
+							\TYPO3\CMS\Core\Utility\HttpUtility::HTTP_STATUS_303
+						);
+					} else {
+						echo '
+<p><strong>
+	The system detected a fatal error during script execution.
+	Please use the <a href="' . $redirectLocation . '">extension check tool</a> to find incompatible extensions.
+</strong></p>';
+					}
+				}
+			}
+		});
+	}
+
+	/**
 	 * Call an action that needs authentication
 	 *
 	 * @throws Exception
@@ -112,7 +165,7 @@ class ToolController extends AbstractController {
 		$toolAction = $this->objectManager->get('TYPO3\\CMS\\Install\\Controller\\Action\\Tool\\' . $actionClass);
 		if (!($toolAction instanceof \TYPO3\CMS\Install\Controller\Action\ActionInterface)) {
 			throw new Exception(
-				$action . ' does non implement ActionInterface',
+				$action . ' does not implement ActionInterface',
 				1369474308
 			);
 		}
@@ -123,5 +176,3 @@ class ToolController extends AbstractController {
 		$this->output($toolAction->handle());
 	}
 }
-
-?>

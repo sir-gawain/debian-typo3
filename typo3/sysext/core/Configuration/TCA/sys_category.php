@@ -7,7 +7,7 @@ return array(
 		'crdate' => 'crdate',
 		'cruser_id' => 'cruser_id',
 		'delete' => 'deleted',
-		'default_sortby' => 'ORDER BY title ASC',
+		'sortby' => 'sorting',
 		'dividers2tabs' => TRUE,
 		'versioningWS' => 2,
 		'rootLevel' => -1,
@@ -75,14 +75,6 @@ return array(
 				'type' => 'passthrough'
 			)
 		),
-		't3ver_label' => array(
-			'displayCond' => 'FIELD:t3ver_label:REQ:true',
-			'label' => 'LLL:EXT:lang/locallang_general.xlf:LGL.versionLabel',
-			'config' => array(
-				'type' => 'none',
-				'cols' => 27
-			)
-		),
 		'hidden' => array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:lang/locallang_general.xlf:LGL.hidden',
@@ -144,7 +136,7 @@ return array(
 				'type' => 'select',
 				'renderMode' => 'tree',
 				'foreign_table' => 'sys_category',
-				'foreign_table_where' => ' AND sys_category.sys_language_uid IN (-1,0) ORDER BY sys_category.title ASC',
+				'foreign_table_where' => ' AND sys_category.sys_language_uid IN (-1,0) ORDER BY sys_category.sorting ASC',
 				'treeConfig' => array(
 					'parentField' => 'parent'
 				)
@@ -163,4 +155,3 @@ return array(
 		)
 	)
 );
-?>

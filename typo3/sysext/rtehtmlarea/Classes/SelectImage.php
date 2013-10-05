@@ -316,11 +316,11 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 		$removedProperties = array();
 		if (is_array($this->buttonConfig['properties.'])) {
 			if ($this->buttonConfig['properties.']['removeItems']) {
-				$removedProperties = GeneralUtility::trimExplode(',', $this->buttonConfig['properties.']['removeItems'], 1);
+				$removedProperties = GeneralUtility::trimExplode(',', $this->buttonConfig['properties.']['removeItems'], TRUE);
 			}
 		}
 		if ($this->buttonConfig['properties.']['class.']['allowedClasses']) {
-			$classesImageArray = GeneralUtility::trimExplode(',', $this->buttonConfig['properties.']['class.']['allowedClasses'], 1);
+			$classesImageArray = GeneralUtility::trimExplode(',', $this->buttonConfig['properties.']['class.']['allowedClasses'], TRUE);
 			$classesImageJSOptions = '<option value=""></option>';
 			foreach ($classesImageArray as $class) {
 				$classesImageJSOptions .= '<option value="' . $class . '">' . $class . '</option>';
@@ -357,7 +357,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 				var cur_width = selectedImageRef ? "&cWidth="+selectedImageRef.style.width : "";
 				var cur_height = selectedImageRef ? "&cHeight="+selectedImageRef.style.height : "";
 
-				var theLocation = URL+add_act+add_editorNo+add_sys_language_content+RTEtsConfigParams+cur_width+cur_height+(anchor?anchor:"");
+				var theLocation = URL+add_act+add_editorNo+add_sys_language_content+RTEtsConfigParams+cur_width+cur_height+(typeof(anchor)=="string"?anchor:"");
 				window.location.href = theLocation;
 				return false;
 			}
@@ -413,7 +413,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 				if (plugin.getButton("Language")) {
 					sz+=\'<tr><td\'+bgColor+\'><label for="iLang">\' + plugin.editor.getPlugin("Language").localize(\'Language-Tooltip\') + \': </label></td><td>\' + languageSelector + \'</td></tr>\';
 				}') . (in_array('clickenlarge', $removedProperties) || in_array('data-htmlarea-clickenlarge', $removedProperties) ? '' : '
-				sz+=\'<tr><td\'+bgColor+\'><label for="iClickEnlarge">' . $GLOBALS['LANG']->sL('LLL:EXT:cms/locallang_ttc.xlf:image_zoom', 1) . ' </label></td><td><input type="checkbox" name="iClickEnlarge" id="iClickEnlarge" value="0" /></td></tr>\';') . '
+				sz+=\'<tr><td\'+bgColor+\'><label for="iClickEnlarge">' . $GLOBALS['LANG']->sL('LLL:EXT:cms/locallang_ttc.xlf:image_zoom', TRUE) . ' </label></td><td><input type="checkbox" name="iClickEnlarge" id="iClickEnlarge" value="0" /></td></tr>\';') . '
 				sz+=\'<tr><td><input type="submit" value="' . $GLOBALS['LANG']->getLL('update') . '" onClick="return setImageProperties();"></td></tr>\';
 				sz+=\'</form></table>\';
 				return sz;
@@ -658,30 +658,30 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 	 */
 	public function main_rte() {
 		// Starting content:
-		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('Insert Image', 1));
+		$this->content = $this->doc->startPage($GLOBALS['LANG']->getLL('Insert Image', TRUE));
 		// Making menu in top:
 		$menuDef = array();
 		if (in_array('image', $this->allowedItems) && ($this->act === 'image' || GeneralUtility::_GP('cWidth'))) {
 			$menuDef['image']['isActive'] = FALSE;
-			$menuDef['image']['label'] = $GLOBALS['LANG']->getLL('currentImage', 1);
+			$menuDef['image']['label'] = $GLOBALS['LANG']->getLL('currentImage', TRUE);
 			$menuDef['image']['url'] = '#';
 			$menuDef['image']['addParams'] = 'onClick="jumpToUrl(\'?act=image&bparams=' . $this->bparams . '\');return false;"';
 		}
 		if (in_array('magic', $this->allowedItems)) {
 			$menuDef['magic']['isActive'] = FALSE;
-			$menuDef['magic']['label'] = $GLOBALS['LANG']->getLL('magicImage', 1);
+			$menuDef['magic']['label'] = $GLOBALS['LANG']->getLL('magicImage', TRUE);
 			$menuDef['magic']['url'] = '#';
 			$menuDef['magic']['addParams'] = 'onClick="jumpToUrl(\'?act=magic&bparams=' . $this->bparams . '\');return false;"';
 		}
 		if (in_array('plain', $this->allowedItems)) {
 			$menuDef['plain']['isActive'] = FALSE;
-			$menuDef['plain']['label'] = $GLOBALS['LANG']->getLL('plainImage', 1);
+			$menuDef['plain']['label'] = $GLOBALS['LANG']->getLL('plainImage', TRUE);
 			$menuDef['plain']['url'] = '#';
 			$menuDef['plain']['addParams'] = 'onClick="jumpToUrl(\'?act=plain&bparams=' . $this->bparams . '\');return false;"';
 		}
 		if (in_array('dragdrop', $this->allowedItems)) {
 			$menuDef['dragdrop']['isActive'] = FALSE;
-			$menuDef['dragdrop']['label'] = $GLOBALS['LANG']->getLL('dragDropImage', 1);
+			$menuDef['dragdrop']['label'] = $GLOBALS['LANG']->getLL('dragDropImage', TRUE);
 			$menuDef['dragdrop']['url'] = '#';
 			$menuDef['dragdrop']['addParams'] = 'onClick="jumpToUrl(\'?act=dragdrop&bparams=' . $this->bparams . '\');return false;"';
 		}
@@ -896,7 +896,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 		}
 		// Remove options according to RTE configuration
 		if (is_array($this->buttonConfig['options.']) && $this->buttonConfig['options.']['removeItems']) {
-			$allowedItems = array_diff($allowedItems, GeneralUtility::trimExplode(',', $this->buttonConfig['options.']['removeItems'], 1));
+			$allowedItems = array_diff($allowedItems, GeneralUtility::trimExplode(',', $this->buttonConfig['options.']['removeItems'], TRUE));
 		}
 		return $allowedItems;
 	}
@@ -1090,7 +1090,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 					$lines[] = '
 						<tr class="file_list_normal">
 							<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
-							<td nowrap="nowrap">' . ($ATag2 . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
+							<td nowrap="nowrap">' . ($ATag2 . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', TRUE) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', TRUE) . $ATag2_e) . '</td>
 							<td nowrap="nowrap">&nbsp;' . $pDim . '</td>
 						</tr>';
 					$lines[] = '
@@ -1101,7 +1101,7 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 					$lines[] = '
 						<tr class="file_list_normal">
 							<td nowrap="nowrap">' . $filenameAndIcon . '&nbsp;</td>
-							<td nowrap="nowrap">' . ($ATag2 . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', 1) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', 1) . $ATag2_e) . '</td>
+							<td nowrap="nowrap">' . ($ATag2 . '<img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/zoom2.gif', 'width="12" height="12"') . ' title="' . $GLOBALS['LANG']->getLL('info', TRUE) . '" alt="" /> ' . $GLOBALS['LANG']->getLL('info', TRUE) . $ATag2_e) . '</td>
 							<td>&nbsp;</td>
 						</tr>';
 				}
@@ -1124,6 +1124,3 @@ class SelectImage extends \TYPO3\CMS\Recordlist\Browser\ElementBrowser {
 	}
 
 }
-
-
-?>

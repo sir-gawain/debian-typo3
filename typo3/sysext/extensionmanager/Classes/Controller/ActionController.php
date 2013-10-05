@@ -36,39 +36,27 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\InstallUtility
+	 * @inject
 	 */
 	protected $installUtility;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility
+	 * @inject
 	 */
 	protected $fileHandlingUtility;
 
 	/**
+	 * @var \TYPO3\CMS\Extensionmanager\Utility\ExtensionModelUtility
+	 * @inject
+	 */
+	protected $extensionModelUtility;
+
+	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService
+	 * @inject
 	 */
 	protected $managementService;
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
-	 */
-	public function injectInstallUtility(\TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility) {
-		$this->installUtility = $installUtility;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility
-	 */
-	public function injectFileHandlingUtility(\TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility) {
-		$this->fileHandlingUtility = $fileHandlingUtility;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $managementService
-	 */
-	public function injectManagementService(\TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $managementService) {
-		$this->managementService = $managementService;
-	}
 
 	/**
 	 * Toggle extension installation state action
@@ -77,14 +65,27 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 	 */
 	protected function toggleExtensionInstallationStateAction($extension) {
 		$installedExtensions = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getLoadedExtensionListArray();
-		if (in_array($extension, $installedExtensions)) {
-			// uninstall
-			$this->installUtility->uninstall($extension);
-		} else {
-			// install
-			$this->managementService->resolveDependenciesAndInstall(
-				$this->installUtility->enrichExtensionWithDetails($extension)
+		try {
+			if (in_array($extension, $installedExtensions)) {
+				// uninstall
+				$this->installUtility->uninstall($extension);
+			} else {
+				// install
+				$this->managementService->resolveDependenciesAndInstall(
+					$this->extensionModelUtility->mapExtensionArrayToModel(
+						$this->installUtility->enrichExtensionWithDetails($extension)
+					)
+				);
+			}
+		} catch (\TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException $e) {
+			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+				'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+				htmlspecialchars($e->getMessage()),
+				'',
+				\TYPO3\CMS\Core\Messaging\FlashMessage::ERROR,
+				TRUE
 			);
+			$this->getControllerContext()->getFlashMessageQueue()->enqueue($flashMessage);
 		}
 		$this->redirect('index', 'List', NULL, array(self::TRIGGER_RefreshModuleMenu => TRUE));
 	}
@@ -138,4 +139,3 @@ class ActionController extends \TYPO3\CMS\Extensionmanager\Controller\AbstractCo
 		$this->fileHandlingUtility->sendSqlDumpFileToBrowserAndDelete($filePath, $fileName);
 	}
 }
-?>

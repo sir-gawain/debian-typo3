@@ -157,12 +157,22 @@ class NewRecordController {
 	public $tRows;
 
 	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$GLOBALS['SOBE'] = $this;
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_misc.xlf');
+		$GLOBALS['BACK_PATH'] = '';
+
+		$this->init();
+	}
+
+	/**
 	 * Constructor function for the class
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
-	public function init() {
+	protected function init() {
 		// Page-selection permission clause (reading)
 		$this->perms_clause = $GLOBALS['BE_USER']->getPagePermsClause(1);
 		// This will hide records from display - it has nothing to do with user rights!!
@@ -221,19 +231,18 @@ class NewRecordController {
 	 * Main processing, creating the list of new record tables to select from
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function main() {
 		// If there was a page - or if the user is admin (admins has access to the root) we proceed:
 		if ($this->pageinfo['uid'] || $GLOBALS['BE_USER']->isAdmin()) {
 			// Acquiring TSconfig for this module/current page:
 			$this->web_list_modTSconfig = BackendUtility::getModTSconfig($this->pageinfo['uid'], 'mod.web_list');
-			$this->allowedNewTables = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig['properties']['allowedNewTables'], 1);
-			$this->deniedNewTables = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig['properties']['deniedNewTables'], 1);
+			$this->allowedNewTables = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig['properties']['allowedNewTables'], TRUE);
+			$this->deniedNewTables = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig['properties']['deniedNewTables'], TRUE);
 			// Acquiring TSconfig for this module/parent page:
 			$this->web_list_modTSconfig_pid = BackendUtility::getModTSconfig($this->pageinfo['pid'], 'mod.web_list');
-			$this->allowedNewTables_pid = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig_pid['properties']['allowedNewTables'], 1);
-			$this->deniedNewTables_pid = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig_pid['properties']['deniedNewTables'], 1);
+			$this->allowedNewTables_pid = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig_pid['properties']['allowedNewTables'], TRUE);
+			$this->deniedNewTables_pid = GeneralUtility::trimExplode(',', $this->web_list_modTSconfig_pid['properties']['deniedNewTables'], TRUE);
 			// More init:
 			if (!$this->showNewRecLink('pages')) {
 				$this->newPagesInto = 0;
@@ -289,7 +298,7 @@ class NewRecordController {
 		if (!$this->pagesOnly) {
 			// New page
 			if ($this->showNewRecLink('pages')) {
-				$buttons['new_page'] = '<a href="' . htmlspecialchars(GeneralUtility::linkThisScript(array('pagesOnly' => '1'))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:cms/layout/locallang.xlf:newPage', 1) . '">' . IconUtility::getSpriteIcon('actions-page-new') . '</a>';
+				$buttons['new_page'] = '<a href="' . htmlspecialchars(GeneralUtility::linkThisScript(array('pagesOnly' => '1'))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:cms/layout/locallang.xlf:newPage', TRUE) . '">' . IconUtility::getSpriteIcon('actions-page-new') . '</a>';
 			}
 			// CSH
 			$buttons['csh'] = BackendUtility::cshItem('xMOD_csh_corebe', 'new_regular', $GLOBALS['BACK_PATH'], '', TRUE);
@@ -300,11 +309,11 @@ class NewRecordController {
 		}
 		// Back
 		if ($this->R_URI) {
-			$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.goBack', 1) . '">' . IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
+			$buttons['back'] = '<a href="' . htmlspecialchars($this->R_URI) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.goBack', TRUE) . '">' . IconUtility::getSpriteIcon('actions-view-go-back') . '</a>';
 		}
 		if (is_array($this->pageinfo) && $this->pageinfo['uid']) {
 			// View
-			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(BackendUtility::viewOnClick($this->pageinfo['uid'], $this->backPath, BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', 1) . '">' . IconUtility::getSpriteIcon('actions-document-view') . '</a>';
+			$buttons['view'] = '<a href="#" onclick="' . htmlspecialchars(BackendUtility::viewOnClick($this->pageinfo['uid'], $this->backPath, BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', TRUE) . '">' . IconUtility::getSpriteIcon('actions-document-view') . '</a>';
 		}
 		return $buttons;
 	}
@@ -373,11 +382,11 @@ class NewRecordController {
 		$newPageLinks = array();
 		if ($this->newPagesInto && $this->isTableAllowedForThisPage($this->pageinfo, 'pages') && $GLOBALS['BE_USER']->check('tables_modify', 'pages') && $GLOBALS['BE_USER']->workspaceCreateNewRecord(($this->pageinfo['_ORIG_uid'] ? $this->pageinfo['_ORIG_uid'] : $this->id), 'pages')) {
 			// Create link to new page inside:
-			$newPageLinks[] = $this->linkWrap(IconUtility::getSpriteIconForRecord($table, array()) . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.inside', 1) . ')', $table, $this->id);
+			$newPageLinks[] = $this->linkWrap(IconUtility::getSpriteIconForRecord($table, array()) . $GLOBALS['LANG']->sL($v['ctrl']['title'], TRUE) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.inside', TRUE) . ')', $table, $this->id);
 		}
 		// New pages AFTER this pages
 		if ($this->newPagesAfter && $this->isTableAllowedForThisPage($this->pidInfo, 'pages') && $GLOBALS['BE_USER']->check('tables_modify', 'pages') && $GLOBALS['BE_USER']->workspaceCreateNewRecord($this->pidInfo['uid'], 'pages')) {
-			$newPageLinks[] = $this->linkWrap($pageIcon . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.after', 1) . ')', 'pages', -$this->id);
+			$newPageLinks[] = $this->linkWrap($pageIcon . $GLOBALS['LANG']->sL($v['ctrl']['title'], TRUE) . ' (' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:db_new.php.after', TRUE) . ')', 'pages', -$this->id);
 		}
 		// New pages at selection position
 		if ($this->newPagesSelectPosition) {
@@ -423,7 +432,7 @@ class NewRecordController {
 						$newRecordIcon = IconUtility::getSpriteIconForRecord($table, array());
 						$rowContent = '';
 						// Create new link for record:
-						$newLink = $this->linkWrap($newRecordIcon . $GLOBALS['LANG']->sL($v['ctrl']['title'], 1), $table, $this->id);
+						$newLink = $this->linkWrap($newRecordIcon . $GLOBALS['LANG']->sL($v['ctrl']['title'], TRUE), $table, $this->id);
 						// If the table is 'tt_content' (from "cms" extension), create link to wizard
 						if ($table == 'tt_content') {
 							$groupName = $GLOBALS['LANG']->getLL('createNewContent');
@@ -568,7 +577,6 @@ class NewRecordController {
 	 * Ending page output and echo'ing content to browser.
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function printContent() {
 		echo $this->content;
@@ -654,5 +662,3 @@ class NewRecordController {
 	}
 
 }
-
-?>

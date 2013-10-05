@@ -26,6 +26,8 @@ namespace TYPO3\CMS\Extensionmanager\Controller;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+use TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException;
+
 /**
  * Controller for configuration related actions.
  *
@@ -35,16 +37,15 @@ class ConfigurationController extends \TYPO3\CMS\Extensionmanager\Controller\Abs
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ConfigurationItemRepository
+	 * @inject
 	 */
 	protected $configurationItemRepository;
 
 	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Domain\Repository\ConfigurationItemRepository $configurationItemRepository
-	 * @return void
+	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository
+	 * @inject
 	 */
-	public function injectConfigurationItemRepository(\TYPO3\CMS\Extensionmanager\Domain\Repository\ConfigurationItemRepository $configurationItemRepository) {
-		$this->configurationItemRepository = $configurationItemRepository;
-	}
+	protected $extensionRepository;
 
 	/**
 	 * Show the extension configuration form. The whole form field handling is done
@@ -56,14 +57,25 @@ class ConfigurationController extends \TYPO3\CMS\Extensionmanager\Controller\Abs
 	 */
 	public function showConfigurationFormAction(array $extension) {
 		if (!array_key_exists('key', $extension)) {
-			throw new \TYPO3\CMS\Extensionmanager\Exception\ExtensionManagerException(
+			throw new ExtensionManagerException(
 				'Extension key not found.',
 				1359206803
 			);
 		}
-		$this->view
-			->assign('configuration', $this->configurationItemRepository->findByExtensionKey($extension['key']))
-			->assign('extension', $extension);
+		$configuration = $this->configurationItemRepository->findByExtensionKey($extension['key']);
+		if ($configuration) {
+			$this->view
+				->assign('configuration', $configuration)
+				->assign('extension', $extension);
+		} else {
+			/** @var \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension */
+			$extension = $this->extensionRepository->findOneByCurrentVersionByExtensionKey($extension['key']);
+			// Extension has no configuration and is a distribution
+			if ($extension->getCategory() === \TYPO3\CMS\Extensionmanager\Domain\Model\Extension::DISTRIBUTION_CATEGORY) {
+				$this->redirect('welcome', 'Distribution', NULL, array('extension' => $extension->getUid()));
+			}
+			throw new ExtensionManagerException('The extension ' . htmlspecialchars($extension['key']) . ' has no configuration.');
+		}
 	}
 
 	/**
@@ -79,11 +91,21 @@ class ConfigurationController extends \TYPO3\CMS\Extensionmanager\Controller\Abs
 		$configurationUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\ConfigurationUtility');
 		$currentFullConfiguration = $configurationUtility->getCurrentConfiguration($extensionKey);
 		$newConfiguration = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($currentFullConfiguration, $config);
-		$configurationUtility->writeConfiguration($configurationUtility->convertValuedToNestedConfiguration($newConfiguration), $extensionKey);
-		$this->redirect('showConfigurationForm', NULL, NULL, array('extension' => array('key' => $extensionKey)));
+		$configurationUtility->writeConfiguration(
+			$configurationUtility->convertValuedToNestedConfiguration($newConfiguration),
+			$extensionKey
+		);
+		$this->signalSlotDispatcher->dispatch(__CLASS__, 'afterExtensionConfigurationWrite', array($newConfiguration, $this));
+		/** @var \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension */
+		$extension = $this->extensionRepository->findOneByCurrentVersionByExtensionKey($extensionKey);
+		// Different handling for distribution installation
+		if ($extension instanceof \TYPO3\CMS\Extensionmanager\Domain\Model\Extension &&
+			$extension->getCategory() === \TYPO3\CMS\Extensionmanager\Domain\Model\Extension::DISTRIBUTION_CATEGORY
+		) {
+			$this->redirect('welcome', 'Distribution', NULL, array('extension' => $extension->getUid()));
+		} else {
+			$this->redirect('showConfigurationForm', NULL, NULL, array('extension' => array('key' => $extensionKey)));
+		}
 	}
 
 }
-
-
-?>

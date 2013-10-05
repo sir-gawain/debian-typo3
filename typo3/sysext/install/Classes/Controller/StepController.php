@@ -43,51 +43,6 @@ class StepController extends AbstractController {
 	);
 
 	/**
-	 * @var array List of obsolete configuration options in LocalConfiguration to be removed
-	 */
-	protected $obsoleteLocalConfigurationSettings = array(
-		// #34092
-		'BE/forceCharset',
-		// #26519
-		'BE/loginLabels',
-		// #44506
-		'BE/loginNews',
-		// #30613
-		'BE/useOnContextMenuHandler',
-		// #48179
-		'EXT/em_mirrorListURL',
-		'EXT/em_wsdlURL',
-		// #43094
-		'EXT/extList',
-		// #35877
-		'EXT/extList_FE',
-		// #41813
-		'EXT/noEdit',
-		// #26090
-		'FE/defaultTypoScript_editorcfg',
-		'FE/defaultTypoScript_editorcfg.',
-		// #25099
-		'FE/simulateStaticDocuments',
-		// #22687
-		'GFX/gdlib_2',
-		// #18431
-		'GFX/noIconProc',
-		// #17606
-		'GFX/TTFLocaleConv',
-		// #39164
-		'SYS/additionalAllowedClassPrefixes',
-		// #27689
-		'SYS/caching/cacheBackends',
-		'SYS/caching/cacheFrontends',
-		// #38414
-		'SYS/extCache',
-		// #35923
-		'SYS/multiplyDBfieldSize',
-		// #46993
-		'SYS/T3instID',
-	);
-
-	/**
 	 * Index action acts a a dispatcher to different steps
 	 *
 	 * @throws Exception
@@ -103,8 +58,7 @@ class StepController extends AbstractController {
 		$this->migrateLocalconfToLocalConfigurationIfNeeded();
 		$this->outputInstallToolPasswordNotSetMessageIfNeeded();
 		$this->executeOrOutputFirstInstallStepIfNeeded();
-		$this->removeObsoleteLocalConfigurationSettings();
-		$this->generateEncryptionKeyIfNeeded();
+		$this->executeSilentConfigurationUpgradesIfNeeded();
 		$this->initializeSession();
 		$this->checkSessionToken();
 		$this->checkSessionLifetime();
@@ -157,7 +111,15 @@ class StepController extends AbstractController {
 		$stepAction->setToken($this->generateTokenForAction($action));
 		$stepAction->setPostValues($this->getPostValues());
 
-		if ($stepAction->needsExecution()) {
+		try {
+			// needsExecution() may throw a RedirectException to communicate that it changed
+			// configuration parameters and need an application reload.
+			$needsExecution = $stepAction->needsExecution();
+		} catch (Exception\RedirectException $e) {
+			$this->redirect();
+		}
+
+		if ($needsExecution) {
 			$stepAction->setMessages($this->session->getMessagesAndFlush());
 			$this->output($stepAction->handle());
 		} else {
@@ -269,7 +231,9 @@ class StepController extends AbstractController {
 
 			// Build new TYPO3_CONF_VARS array
 			$TYPO3_CONF_VARS = NULL;
-			eval(implode(LF, $typo3ConfigurationVariables));
+			// Issue #39434: Combining next two lines into one triggers a weird issue in some PHP versions
+			$evalData = implode(LF, $typo3ConfigurationVariables);
+			eval($evalData);
 
 			// Add db settings to array
 			$TYPO3_CONF_VARS['DB'] = $typo3DatabaseVariables;
@@ -289,24 +253,6 @@ class StepController extends AbstractController {
 			rename($localConfFileLocation, PATH_site . 'typo3conf/localconf.obsolete.php');
 
 			// Perform a reload to self, so bootstrap now uses new LocalConfiguration.php
-			$this->redirect();
-		}
-	}
-
-	/**
-	 * Some settings in LocalConfiguration vanished in DefaultConfiguration
-	 * and have no impact on the core anymore.
-	 * To keep the configuration clean, those old settings are just silently
-	 * removed from LocalConfiguration if set.
-	 *
-	 * @return void
-	 */
-	protected function removeObsoleteLocalConfigurationSettings() {
-		/** @var \TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager */
-		$configurationManager = $this->objectManager->get('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
-		$removed = $configurationManager->removeLocalConfigurationKeysByPath($this->obsoleteLocalConfigurationSettings);
-		// If something was changed: Trigger a reload to have new values in next request
-		if ($removed) {
 			$this->redirect();
 		}
 	}
@@ -341,10 +287,16 @@ class StepController extends AbstractController {
 
 		/** @var \TYPO3\CMS\Install\Controller\Action\Step\StepInterface $action */
 		$action = $this->objectManager->get('TYPO3\\CMS\\Install\\Controller\\Action\\Step\\EnvironmentAndFolders');
-		$needsExecution = $action->needsExecution();
 
-		if (!is_dir(PATH_typo3conf)
-			|| count($errorMessagesFromExecute) > 0
+		try {
+			// needsExecution() may throw a RedirectException to communicate that it changed
+			// configuration parameters and need an application reload.
+			$needsExecution = $action->needsExecution();
+		} catch (Exception\RedirectException $e) {
+			$this->redirect();
+		}
+
+		if (!@is_dir(PATH_typo3conf)
 			|| $needsExecution
 		) {
 			/** @var \TYPO3\CMS\Install\Controller\Action\Step\StepInterface $action */
@@ -363,21 +315,19 @@ class StepController extends AbstractController {
 	}
 
 	/**
-	 * "Silent" upgrade: The encryption key is crucial for securing form tokens
-	 * and the whole TYPO3 link rendering later on. A random key is set here in
-	 * LocalConfiguration if it does not exist yet. This might possible happen
-	 * during upgrading and will happen during first install.
+	 * Call silent upgrade class, redirect to self if configuration was changed.
 	 *
 	 * @return void
 	 */
-	protected function generateEncryptionKeyIfNeeded() {
-		if (empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'])) {
-			$randomKey = GeneralUtility::getRandomHexString(96);
-			/** @var \TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager */
-			$configurationManager = $this->objectManager->get('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
-			$configurationManager->setLocalConfigurationValueByPath('SYS/encryptionKey', $randomKey);
+	protected function executeSilentConfigurationUpgradesIfNeeded() {
+		/** @var \TYPO3\CMS\Install\Service\SilentConfigurationUpgradeService $upgradeService */
+		$upgradeService = $this->objectManager->get(
+			'TYPO3\\CMS\\Install\\Service\\SilentConfigurationUpgradeService'
+		);
+		try {
+			$upgradeService->execute();
+		} catch (Exception\RedirectException $e) {
 			$this->redirect();
 		}
 	}
 }
-?>

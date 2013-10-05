@@ -30,7 +30,7 @@
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 unset($MCONF);
-require 'init.php';
+require __DIR__ . '/init.php';
 // Find module path:
 $temp_M = (string) \TYPO3\CMS\Core\Utility\GeneralUtility::_GET('M');
 $isDispatched = FALSE;
@@ -55,4 +55,3 @@ if ($isDispatched === FALSE) {
 	throw new UnexpectedValueException('No module "' . htmlspecialchars($temp_M) . '" could be found.', 1294585070);
 }
 \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->shutdown();
-?>

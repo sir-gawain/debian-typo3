@@ -144,7 +144,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		);
 		$sql = array();
 		$querySettings = new \TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings();
-		$querySettings->setSysLanguageUid(0);
+		$querySettings->setLanguageUid(0);
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('dummy'), array(), '', FALSE);
 		$mockTypo3DbBackend->_callRef('addSysLanguageStatement', $table, $sql, $querySettings);
 		$expectedSql = array('additionalWhereClause' => array('(' . $table . '.sys_language_uid IN (0,-1))'));
@@ -161,7 +161,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		);
 		$sql = array();
 		$querySettings = new \TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings();
-		$querySettings->setSysLanguageUid(2);
+		$querySettings->setLanguageUid(2);
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('dummy'), array(), '', FALSE);
 		$mockTypo3DbBackend->_callRef('addSysLanguageStatement', $table, $sql, $querySettings);
 		$expectedSql = array('additionalWhereClause' => array('(' . $table . '.sys_language_uid IN (2,-1))'));
@@ -179,7 +179,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		);
 		$sql = array();
 		$querySettings = new \TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings();
-		$querySettings->setSysLanguageUid(2);
+		$querySettings->setLanguageUid(2);
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('dummy'), array(), '', FALSE);
 		$mockTypo3DbBackend->_callRef('addSysLanguageStatement', $table, $sql, $querySettings);
 		$expectedSql = array('additionalWhereClause' => array('(' . $table . '.sys_language_uid IN (2,-1) OR (' . $table . '.sys_language_uid=0 AND ' . $table . '.uid NOT IN (SELECT ' . $table . '.l10n_parent FROM ' . $table . ' WHERE ' . $table . '.l10n_parent>0 AND ' . $table . '.sys_language_uid>0)))'));
@@ -198,7 +198,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		);
 		$sql = array();
 		$querySettings = new \TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings();
-		$querySettings->setSysLanguageUid(2);
+		$querySettings->setLanguageUid(2);
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('dummy'), array(), '', FALSE);
 		$mockTypo3DbBackend->_callRef('addSysLanguageStatement', $table, $sql, $querySettings);
 		$expectedSql = array('additionalWhereClause' => array(
@@ -225,7 +225,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		);
 		$sql = array();
 		$querySettings = new \TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings();
-		$querySettings->setSysLanguageUid(2);
+		$querySettings->setLanguageUid(2);
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('dummy'), array(), '', FALSE);
 		$mockTypo3DbBackend->_callRef('addSysLanguageStatement', $table, $sql, $querySettings);
 		$expectedSql = array('additionalWhereClause' => array(
@@ -416,8 +416,8 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @test
 	 */
 	public function uidOfAlreadyPersistedValueObjectIsDeterminedCorrectly() {
-		$mockValueObject = $this->getMockForAbstractClass('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject', array('_getProperties'), '', FALSE);
-		$mockValueObject->expects($this->any())->method('_getProperties')->will($this->returnValue(array('propertyName' => 'propertyValue')));
+		$mockValueObject = $this->getMock('TYPO3\\CMS\\Extbase\\DomainObject\\AbstractValueObject', array('_getProperties'), array(), '', FALSE);
+		$mockValueObject->expects($this->once())->method('_getProperties')->will($this->returnValue(array('propertyName' => 'propertyValue')));
 		$mockColumnMap = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMap', array('isPersistableProperty', 'getColumnName'), array(), '', FALSE);
 		$mockColumnMap->expects($this->any())->method('getColumnName')->will($this->returnValue('column_name'));
 		$tableName = 'tx_foo_table';
@@ -426,7 +426,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockDataMap->expects($this->any())->method('getColumnMap')->will($this->returnValue($mockColumnMap));
 		$mockDataMap->expects($this->any())->method('getTableName')->will($this->returnValue($tableName));
 		$mockDataMapper = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper', array('getDataMap'), array(), '', FALSE);
-		$mockDataMapper->expects($this->any())->method('getDataMap')->will($this->returnValue($mockDataMap));
+		$mockDataMapper->expects($this->once())->method('getDataMap')->will($this->returnValue($mockDataMap));
 		$expectedStatement = 'SELECT * FROM tx_foo_table WHERE column_name=?';
 		$expectedParameters = array('plainPropertyValue');
 		$expectedUid = 52;
@@ -436,7 +436,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('getPlainValue', 'checkSqlErrors', 'replacePlaceholders', 'addVisibilityConstraintStatement'), array(), '', FALSE);
 		$mockTypo3DbBackend->expects($this->once())->method('getPlainValue')->will($this->returnValue('plainPropertyValue'));
 		$mockTypo3DbBackend->expects($this->once())->method('addVisibilityConstraintStatement')->with($this->isInstanceOf('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\QuerySettingsInterface'), $tableName, $this->isType('array'));
-		$mockTypo3DbBackend->expects($this->once())->method('replacePlaceholders')->with($expectedStatement, $expectedParameters)->will($this->returnValue('plainPropertyValue'));
+		$mockTypo3DbBackend->expects($this->once())->method('replacePlaceholders')->with($expectedStatement, $expectedParameters);
 		$mockTypo3DbBackend->_set('dataMapper', $mockDataMapper);
 		$mockTypo3DbBackend->_set('databaseHandle', $mockDataBaseHandle);
 		$result = $mockTypo3DbBackend->_callRef('getUidOfAlreadyPersistedValueObject', $mockValueObject);
@@ -461,7 +461,9 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 			'uid' => '43',
 			'pid' => '-1'
 		);
-		$languageUid = 2;
+		$querySettings = new \TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings();
+		$querySettings->initializeObject();
+
 		$workspaceUid = 2;
 		$sourceMock = new \TYPO3\CMS\Extbase\Persistence\Generic\Qom\Selector('tx_foo', 'Tx_Foo');
 		/** @var $pageRepositoryMock \TYPO3\CMS\Frontend\Page\PageRepository|\PHPUnit_Framework_MockObject_MockObject */
@@ -470,7 +472,7 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$pageRepositoryMock->expects($this->once())->method('getWorkspaceVersionOfRecord')->with($workspaceUid, 'tx_foo', '42')->will($this->returnValue($workspaceVersion));
 		$mockTypo3DbBackend = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\Typo3DbBackend', array('dummy'), array(), '', FALSE);
 		$mockTypo3DbBackend->_set('pageRepository', $pageRepositoryMock);
-		$this->assertSame(array($comparisonRow), $mockTypo3DbBackend->_call('doLanguageAndWorkspaceOverlay', $sourceMock, array($row), $languageUid, $workspaceUid));
+		$this->assertSame(array($comparisonRow), $mockTypo3DbBackend->_call('doLanguageAndWorkspaceOverlay', $sourceMock, array($row), $querySettings, $workspaceUid));
 	}
 
 	/**
@@ -643,5 +645,3 @@ class Typo3DbBackendTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	}
 
 }
-
-?>

@@ -1,6 +1,5 @@
 <?php
 namespace TYPO3\CMS\Backend\Tests\Unit\Utility;
-use TYPO3\CMS\Backend\Utility;
 
 /***************************************************************
  * Copyright notice
@@ -25,6 +24,8 @@ use TYPO3\CMS\Backend\Utility;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * Testcase for \TYPO3\CMS\Core\Utility\BackendUtility
  *
@@ -38,7 +39,7 @@ class BackendUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	private $fixture;
 
 	public function setUp() {
-		$this->fixture = new Utility\BackendUtility();
+		$this->fixture = new BackendUtility();
 	}
 
 	public function tearDown() {
@@ -156,7 +157,7 @@ class BackendUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function getProcessedValueForGroupWithOneAllowedTable() {
-		/** @var \PHPUnit_Framework_MockObject_MockObject|Utility\BackendUtility $fixture */
+		/** @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Backend\Utility\BackendUtility $fixture */
 		$fixture = $this->getMock('TYPO3\\CMS\\Backend\\Utility\\BackendUtility', array('getRecordWSOL'));
 		$fixture->staticExpects($this->at(0))->method('getRecordWSOL')->will($this->returnValue(array('title' => 'Page 1')));
 		$fixture->staticExpects($this->at(1))->method('getRecordWSOL')->will($this->returnValue(array('title' => 'Page 2')));
@@ -167,7 +168,7 @@ class BackendUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function getProcessedValueForGroupWithMultipleAllowedTables() {
-		/** @var \PHPUnit_Framework_MockObject_MockObject|Utility\BackendUtility $fixture */
+		/** @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Backend\Utility\BackendUtility $fixture */
 		$fixture = $this->getMock('TYPO3\\CMS\\Backend\\Utility\\BackendUtility', array('getRecordWSOL'));
 		$fixture->staticExpects($this->at(0))->method('getRecordWSOL')->will($this->returnValue(array('title' => 'Page 1')));
 		$fixture->staticExpects($this->at(1))->method('getRecordWSOL')->will($this->returnValue(array('header' => 'Content 2')));
@@ -453,7 +454,7 @@ class BackendUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function getFuncCheckReturnsInputTagWithValueAttribute() {
-		$this->assertStringMatchesFormat('<input %Svalue="1"%S/>', Utility\BackendUtility::getFuncCheck('params', 'test', TRUE));
+		$this->assertStringMatchesFormat('<input %Svalue="1"%S/>', BackendUtility::getFuncCheck('params', 'test', TRUE));
 	}
 
 	/**
@@ -669,8 +670,243 @@ class BackendUtilityTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 */
 	public function getExcludeFieldsReturnsCorrectFieldList($tca, $expected) {
 		$GLOBALS['TCA'] = $tca;
-		$this->assertSame($expected, \TYPO3\CMS\Backend\Utility\BackendUtility::getExcludeFields());
+		$this->assertSame($expected, BackendUtility::getExcludeFields());
 	}
-}
 
-?>
+	/**
+	 * Tests concerning viewOnClick
+	 */
+
+	/**
+	 * @test
+	 */
+	public function viewOnClickReturnsOnClickCodeWithAlternativeUrl() {
+		$alternativeUrl = 'https://typo3.org/about/typo3-the-cms/the-history-of-typo3/#section';
+		$onclickCode = 'var previewWin = window.open(\'' . $alternativeUrl . '\',\'newTYPO3frontendWindow\');';
+		$this->assertStringMatchesFormat($onclickCode, BackendUtility::viewOnClick(NULL, NULL, NULL, NULL, $alternativeUrl, NULL, FALSE));
+	}
+
+	/**
+	 * Tests concerning replaceMarkersInWhereClause
+	 */
+
+	/**
+	 * @return array
+	 */
+	public function replaceMarkersInWhereClauseDataProvider() {
+		return array(
+			'replaceMarkersInWhereClause replaces record field marker with quoted string' => array(
+				' AND dummytable.title=\'###REC_FIELD_dummyfield###\'',
+				array(
+					'_THIS_ROW' => array(
+						'dummyfield' => 'Hello World'
+					)
+				),
+				' AND dummytable.title=\'Hello World\''
+			),
+			'replaceMarkersInWhereClause replaces record field marker with fullquoted string' => array(
+				' AND dummytable.title=###REC_FIELD_dummyfield###',
+				array(
+					'_THIS_ROW' => array(
+						'dummyfield' => 'Hello World'
+					)
+				),
+				' AND dummytable.title=\'Hello World\''
+			),
+			'replaceMarkersInWhereClause replaces multiple record field markers' => array(
+				' AND dummytable.title=\'###REC_FIELD_dummyfield###\' AND dummytable.pid=###REC_FIELD_pid###',
+				array(
+					'_THIS_ROW' => array(
+						'dummyfield' => 'Hello World',
+						'pid' => 42
+					)
+				),
+				' AND dummytable.title=\'Hello World\' AND dummytable.pid=\'42\''
+			),
+			'replaceMarkersInWhereClause replaces current pid with integer' => array(
+				' AND dummytable.uid=###CURRENT_PID###',
+				array(
+					'_CURRENT_PID' => 42
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces current pid with string' => array(
+				' AND dummytable.uid=###CURRENT_PID###',
+				array(
+					'_CURRENT_PID' => '42string'
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces current record uid with integer' => array(
+				' AND dummytable.uid=###THIS_UID###',
+				array(
+					'_THIS_UID' => 42
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces current record uid with string' => array(
+				' AND dummytable.uid=###THIS_UID###',
+				array(
+					'_THIS_UID' => '42string'
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces current record cid with integer' => array(
+				' AND dummytable.uid=###THIS_CID###',
+				array(
+					'_THIS_CID' => 42
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces current record cid with string' => array(
+				' AND dummytable.uid=###THIS_CID###',
+				array(
+					'_THIS_CID' => '42string'
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces storage pid with integer' => array(
+				' AND dummytable.uid=###STORAGE_PID###',
+				array(
+					'_STORAGE_PID' => 42
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces storage pid with string' => array(
+				' AND dummytable.uid=###STORAGE_PID###',
+				array(
+					'_STORAGE_PID' => '42string'
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces siteroot uid with integer' => array(
+				' AND dummytable.uid=###SITEROOT###',
+				array(
+					'_SITEROOT' => 42
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces siteroot uid with string' => array(
+				' AND dummytable.uid=###SITEROOT###',
+				array(
+					'_SITEROOT' => '42string'
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces page tsconfig id with integer' => array(
+				' AND dummytable.uid=###PAGE_TSCONFIG_ID###',
+				array(
+					'dummyfield' => array(
+						'PAGE_TSCONFIG_ID' => 42
+					)
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces page tsconfig id with string' => array(
+				' AND dummytable.uid=###PAGE_TSCONFIG_ID###',
+				array(
+					'dummyfield' => array(
+						'PAGE_TSCONFIG_ID' => '42string'
+					)
+				),
+				' AND dummytable.uid=42'
+			),
+			'replaceMarkersInWhereClause replaces page tsconfig id list' => array(
+				' AND dummytable.uid IN (###PAGE_TSCONFIG_IDLIST###)',
+				array(
+					'dummyfield' => array(
+						'PAGE_TSCONFIG_IDLIST' => '1,a,2,b,3,c'
+					)
+				),
+				' AND dummytable.uid IN (1,0,2,0,3,0)'
+			),
+			'replaceMarkersInWhereClause replaces page tsconfig id list with empty string' => array(
+				' AND dummytable.uid IN (###PAGE_TSCONFIG_IDLIST###)',
+				array(
+					'dummyfield' => array(
+						'PAGE_TSCONFIG_IDLIST' => ''
+					)
+				),
+				' AND dummytable.uid IN (0)'
+			),
+			'replaceMarkersInWhereClause replaces page tsconfig string' => array(
+				' AND dummytable.title=\'###PAGE_TSCONFIG_STR###\'',
+				array(
+					'dummyfield' => array(
+						'PAGE_TSCONFIG_STR' => '42'
+					)
+				),
+				' AND dummytable.title=\'42\''
+			),
+			'replaceMarkersInWhereClause replaces all markers' => array(
+				' AND dummytable.title=\'###REC_FIELD_dummyfield###\'' .
+				' AND dummytable.uid=###REC_FIELD_uid###' .
+				' AND dummytable.pid=###CURRENT_PID###' .
+				' AND dummytable.l18n_parent=###THIS_UID###' .
+				' AND dummytable.cid=###THIS_CID###' .
+				' AND dummytable.storage_pid=###STORAGE_PID###' .
+				' AND dummytable.siteroot=###SITEROOT###' .
+				' AND dummytable.config_uid=###PAGE_TSCONFIG_ID###' .
+				' AND dummytable.idlist IN (###PAGE_TSCONFIG_IDLIST###)' .
+				' AND dummytable.string=\'###PAGE_TSCONFIG_STR###\'',
+				array(
+					'_THIS_ROW' => array(
+						'dummyfield' => 'Hello World',
+						'uid' => 42
+					),
+					'_CURRENT_PID' => '1',
+					'_THIS_UID' => 2,
+					'_THIS_CID' => 3,
+					'_STORAGE_PID' => 4,
+					'_SITEROOT' => 5,
+					'dummyfield' => array(
+						'PAGE_TSCONFIG_ID' => 6,
+						'PAGE_TSCONFIG_IDLIST' => '1,2,3',
+						'PAGE_TSCONFIG_STR' => 'string'
+					)
+				),
+				' AND dummytable.title=\'Hello World\' AND dummytable.uid=\'42\' AND dummytable.pid=1' .
+				' AND dummytable.l18n_parent=2 AND dummytable.cid=3 AND dummytable.storage_pid=4' .
+				' AND dummytable.siteroot=5 AND dummytable.config_uid=6 AND dummytable.idlist IN (1,2,3)' .
+				' AND dummytable.string=\'string\'',
+			),
+		);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider replaceMarkersInWhereClauseDataProvider
+	 */
+	public function replaceMarkersInWhereClauseReturnsValidWhereClause($whereClause, $tsConfig, $expected) {
+		$this->assertSame($expected, BackendUtility::replaceMarkersInWhereClause($whereClause, 'dummytable', 'dummyfield', $tsConfig));
+	}
+
+	/**
+	 * @test
+	 */
+	public function getModTSconfigIgnoresValuesFromUserTsConfigIfNoSet() {
+		$completeConfiguration = array(
+			'value' => 'bar',
+			'properties' => array(
+				'permissions.' => array(
+					'file.' => array(
+						'default.' => array('readAction' => '1'),
+						'1.' => array('writeAction' => '1'),
+						'0.' => array('readAction' => '0'),
+					),
+				)
+			)
+		);
+
+		/** @var \PHPUnit_Framework_MockObject_MockObject|\TYPO3\CMS\Backend\Utility\BackendUtility $fixture */
+		$fixture = $this->getMock('TYPO3\\CMS\\Backend\\Utility\\BackendUtility', array('getPagesTSconfig'));
+
+		$GLOBALS['BE_USER'] = $this->getMock('TYPO3\\CMS\\Core\\Authentication\\BackendUserAuthentication');
+		$GLOBALS['BE_USER']->expects($this->at(0))->method('getTSConfig')->will($this->returnValue($completeConfiguration));
+		$GLOBALS['BE_USER']->expects($this->at(1))->method('getTSConfig')->will($this->returnValue(array('value' => NULL, 'properties' => NULL)));
+
+		$this->assertSame($completeConfiguration, $fixture->getModTSconfig(42, 'notrelevant'));
+	}
+
+
+}

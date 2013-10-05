@@ -37,8 +37,7 @@ class InstallToolDisabledAction extends Action\AbstractAction implements Action\
 	 * @return string content
 	 */
 	public function handle() {
-		$this->initialize();
+		$this->initializeHandle();
 		return $this->view->render();
 	}
 }
-?>

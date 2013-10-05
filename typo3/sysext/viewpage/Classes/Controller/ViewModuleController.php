@@ -25,6 +25,9 @@ namespace TYPO3\CMS\Viewpage\Controller;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * Controller for viewing the frontend
  *
@@ -33,13 +36,29 @@ namespace TYPO3\CMS\Viewpage\Controller;
  */
 class ViewModuleController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController {
 
+	public function __construct() {
+		parent::__construct();
+
+		$GLOBALS['LANG']->includeLLFile('EXT:viewpage/Resources/Private/Language/locallang.xlf');
+		$this->pageRenderer = $GLOBALS['TBE_TEMPLATE']->getPageRenderer();
+		$this->pageRenderer->addInlineSettingArray('web_view', array(
+			'States' => $GLOBALS['BE_USER']->uc['moduleData']['web_view']['States'],
+		));
+		$this->pageRenderer->addInlineLanguageLabelFile('EXT:viewpage/Resources/Private/Language/locallang.xlf');
+	}
+
 	/**
 	 * Show selected page from pagetree in iframe
 	 *
 	 * @return void
 	 */
 	public function showAction() {
-		$this->view->assign('url', $this->getTargetUrl());
+		$this->view->assignMultiple(
+			array(
+				'widths' => $this->getPreviewFrameWidths(),
+				'url' => $this->getTargetUrl()
+			)
+		);
 	}
 
 	/**
@@ -85,10 +104,10 @@ class ViewModuleController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionContr
 	 */
 	protected function getAdminCommand($pageId) {
 		// The page will show only if there is a valid page and if this page may be viewed by the user
-		$pageinfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess($pageId, $GLOBALS['BE_USER']->getPagePermsClause(1));
+		$pageinfo = BackendUtility::readPageAccess($pageId, $GLOBALS['BE_USER']->getPagePermsClause(1));
 		$addCommand = '';
 		if (is_array($pageinfo)) {
-			$addCommand = '&ADMCMD_view=1&ADMCMD_editIcons=1' . \TYPO3\CMS\Backend\Utility\BackendUtility::ADMCMD_previewCmds($pageinfo);
+			$addCommand = '&ADMCMD_view=1&ADMCMD_editIcons=1' . BackendUtility::ADMCMD_previewCmds($pageinfo);
 		}
 		return $addCommand;
 	}
@@ -103,7 +122,7 @@ class ViewModuleController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionContr
 	 */
 	protected function getTypeParameterIfSet($pageId) {
 		$typeParameter = '';
-		$modTSconfig = \TYPO3\CMS\Backend\Utility\BackendUtility::getModTSconfig($pageId, 'mod.web_view');
+		$modTSconfig = BackendUtility::getModTSconfig($pageId, 'mod.web_view');
 		$typeId = intval($modTSconfig['properties']['type']);
 		if ($typeId > 0) {
 			$typeParameter = '&type=' . $typeId;
@@ -118,11 +137,33 @@ class ViewModuleController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionContr
 	 * @return boolean|string Domain name if there is one, FALSE if not
 	 */
 	protected function getDomainName($pageId) {
-		$domain = \TYPO3\CMS\Backend\Utility\BackendUtility::firstDomainRecord(\TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($pageId));
+		$domain = BackendUtility::firstDomainRecord(BackendUtility::BEgetRootLine($pageId));
 		return $domain;
 	}
 
+	/**
+	 * Get available widths for preview frame
+	 *
+	 * @return array
+	 */
+	protected function getPreviewFrameWidths() {
+		$autoSize = json_encode(array(
+			'width' => '100%',
+			'height' => "100%"
+		));
+		return array(
+			$autoSize => $GLOBALS['LANG']->getLL('autoSize'),
+			json_encode(array('width' => '1280')) => '1280px ' . $GLOBALS['LANG']->getLL('computer'),
+			json_encode(array('width' => '1024')) => '1024px ' . $GLOBALS['LANG']->getLL('tablet'),
+			json_encode(array('width' => '960')) => '960px ' . $GLOBALS['LANG']->getLL('mobile'),
+			json_encode(array('width' => '800')) => '800px ' . $GLOBALS['LANG']->getLL('computer'),
+			json_encode(array('width' => '768')) => '768px ' . $GLOBALS['LANG']->getLL('tablet'),
+			json_encode(array('width' => '600')) => '600px ' . $GLOBALS['LANG']->getLL('tablet'),
+			json_encode(array('width' => '640')) => '640px ' . $GLOBALS['LANG']->getLL('mobile'),
+			json_encode(array('width' => '480')) => '480px ' . $GLOBALS['LANG']->getLL('mobile'),
+			json_encode(array('width' => '400')) => '400px ' . $GLOBALS['LANG']->getLL('mobile'),
+			json_encode(array('width' => '360')) => '360px ' . $GLOBALS['LANG']->getLL('mobile'),
+			json_encode(array('width' => '300')) => '300px ' . $GLOBALS['LANG']->getLL('mobile')
+		);
+	}
 }
-
-
-?>

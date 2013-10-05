@@ -27,6 +27,7 @@ namespace TYPO3\CMS\Core\Utility\File;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -141,7 +142,7 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 
 
 	/**
-	 * @var FileRepository
+	 * @var \TYPO3\CMS\Core\Resource\FileRepository
 	 */
 	protected $fileRepository;
 
@@ -412,10 +413,10 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 				foreach ($refIndexRecords as $fileReferenceRow) {
 					if ($fileReferenceRow['tablename'] === 'sys_file_reference') {
 						$row = $this->transformFileReferenceToRecordReference($fileReferenceRow);
-						$shortcutRecord = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($row['tablename'], $row['recuid']);
+						$shortcutRecord = BackendUtility::getRecord($row['tablename'], $row['recuid']);
 						$icon = \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIconForRecord($row['tablename'], $shortcutRecord);
 						$onClick = 'Clickmenu.show("' . $row['tablename'] . '", "' . $row['recuid'] . '", "1", "+info,history,edit", "|", "");return false;';
-						$shortcutContent[] = '<a href="#" oncontextmenu="' . htmlspecialchars($onClick) . '" onclick="' . htmlspecialchars($onClick) . '">' . $icon . '</a>' . htmlspecialchars((\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle($row['tablename'], $shortcutRecord) . '  [' . \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordPath($shortcutRecord['pid'], '', 80) . ']'));
+						$shortcutContent[] = '<a href="#" oncontextmenu="' . htmlspecialchars($onClick) . '" onclick="' . htmlspecialchars($onClick) . '">' . $icon . '</a>' . htmlspecialchars((BackendUtility::getRecordTitle($row['tablename'], $shortcutRecord) . '  [' . BackendUtility::getRecordPath($shortcutRecord['pid'], '', 80) . ']'));
 					}
 				}
 
@@ -441,7 +442,8 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 						TRUE
 					);
 					$this->addFlashMessage($flashMessage);
-
+					// Log success
+					$this->writelog(4, 0, 1, 'File "%s" deleted', array($fileObject->getIdentifier()));
 				} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException $e) {
 					$this->writelog(4, 1, 112, 'You are not allowed to access the file', array($fileObject->getIdentifier()));
 				} catch (\TYPO3\CMS\Core\Resource\Exception\NotInMountPointException $e) {
@@ -449,8 +451,6 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 				} catch (\RuntimeException $e) {
 					$this->writelog(4, 1, 110, 'Could not delete file "%s". Write-permission problem?', array($fileObject->getIdentifier()));
 				}
-				// Log success
-				$this->writelog(4, 0, 1, 'File "%s" deleted', array($fileObject->getIdentifier()));
 			}
 		} else {
 			try {
@@ -477,8 +477,9 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 						TRUE
 					);
 					$this->addFlashMessage($flashMessage);
+					// Log success
+					$this->writelog(4, 0, 3, 'Directory "%s" deleted', array($fileObject->getIdentifier()));
 				}
-
 
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException $e) {
 				$this->writelog(4, 1, 123, 'You are not allowed to access the directory', array($fileObject->getIdentifier()));
@@ -487,8 +488,6 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			} catch (\RuntimeException $e) {
 				$this->writelog(4, 1, 120, 'Could not delete directory! Write-permission problem? Is directory "%s" empty? (You are not allowed to delete directories recursively).', array($fileObject->getIdentifier()));
 			}
-			// Log success
-			$this->writelog(4, 0, 3, 'Directory "%s" deleted', array($fileObject->getIdentifier()));
 		}
 		return $result;
 	}
@@ -527,6 +526,9 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 		$object = $this->fileFactory->retrieveFileOrFolderObject($identifier);
 		if (!is_object($object)) {
 			throw new \TYPO3\CMS\Core\Resource\Exception\InvalidFileException('The item ' . $identifier . ' was not a file or directory!!', 1320122453);
+		}
+		if ($object->getStorage()->getUid() === 0) {
+			throw new \TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException('You are not allowed to access files outside your storages', 1375889830);
 		}
 		return $object;
 	}
@@ -644,6 +646,7 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 					// Don't allow overwriting existing files
 					$resultObject = $sourceFileObject->moveTo($targetFolderObject, NULL, 'cancel');
 				}
+				$this->writelog(3, 0, 1, 'File "%s" moved to "%s"', array($sourceFileObject->getIdentifier(), $resultObject->getIdentifier()));
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientUserPermissionsException $e) {
 				$this->writelog(3, 1, 114, 'You are not allowed to move files', '');
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException $e) {
@@ -657,7 +660,6 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			} catch (\RuntimeException $e) {
 				$this->writelog(3, 2, 109, 'File "%s" WAS NOT copied to "%s"! Write-permission problem?', array($sourceFileObject->getIdentifier(), $targetFolderObject->getIdentifier()));
 			}
-			$this->writelog(3, 0, 1, 'File "%s" moved to "%s"', array($sourceFileObject->getIdentifier(), $resultObject->getIdentifier()));
 		} else {
 			// Else means this is a Folder
 			$sourceFolderObject = $sourceFileObject;
@@ -669,6 +671,7 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 					// Don't allow overwriting existing files
 					$resultObject = $sourceFolderObject->moveTo($targetFolderObject, NULL, 'renameNewFile');
 				}
+				$this->writelog(3, 0, 2, 'Directory "%s" moved to "%s"', array($sourceFolderObject->getIdentifier(), $targetFolderObject->getIdentifier()));
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientUserPermissionsException $e) {
 				$this->writelog(3, 1, 125, 'You are not allowed to move directories', '');
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException $e) {
@@ -684,7 +687,6 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			} catch (\RuntimeException $e) {
 				$this->writelog(3, 2, 119, 'Directory "%s" WAS NOT moved to "%s"! Write-permission problem?', array($sourceFolderObject->getIdentifier(), $targetFolderObject->getIdentifier()));
 			}
-			$this->writelog(3, 0, 2, 'Directory "%s" moved to "%s"', array($sourceFolderObject->getIdentifier(), $targetFolderObject->getIdentifier()));
 		}
 		return $resultObject;
 	}
@@ -712,10 +714,11 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			try {
 				// Try to rename the File
 				$resultObject = $sourceFileObject->rename($targetFile);
+				$this->writelog(5, 0, 1, 'File renamed from "%s" to "%s"', array($sourceFileObject->getName(), $targetFile));
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientUserPermissionsException $e) {
 				$this->writelog(5, 1, 102, 'You are not allowed to rename files!', '');
 			} catch (\TYPO3\CMS\Core\Resource\Exception\IllegalFileExtensionException $e) {
-				$this->writelog(5, 1, 101, 'Extension of file name "%s" was not allowed!', array($targetFile));
+				$this->writelog(5, 1, 101, 'Extension of file name "%s" or "%s" was not allowed!', array($sourceFileObject->getName(), $targetFile));
 			} catch (\TYPO3\CMS\Core\Resource\Exception\ExistingTargetFileNameException $e) {
 				$this->writelog(5, 1, 120, 'Destination "%s" existed already!', array($targetFile));
 			} catch (\TYPO3\CMS\Core\Resource\Exception\NotInMountPointException $e) {
@@ -723,12 +726,12 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			} catch (\RuntimeException $e) {
 				$this->writelog(5, 1, 100, 'File "%s" was not renamed! Write-permission problem in "%s"?', array($sourceFileObject->getName(), $targetFile));
 			}
-			$this->writelog(5, 0, 1, 'File renamed from "%s" to "%s"', array($sourceFileObject->getName(), $targetFile));
 		} else {
 			// Else means this is a Folder
 			try {
 				// Try to rename the Folder
 				$resultObject = $sourceFileObject->rename($targetFile);
+				$this->writelog(5, 0, 2, 'Directory renamed from "%s" to "%s"', array($sourceFileObject->getName(), $targetFile));
 			} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientUserPermissionsException $e) {
 				$this->writelog(5, 1, 111, 'You are not allowed to rename directories!', '');
 			} catch (\TYPO3\CMS\Core\Resource\Exception\ExistingTargetFileNameException $e) {
@@ -738,7 +741,6 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			} catch (\RuntimeException $e) {
 				$this->writelog(5, 1, 110, 'Directory "%s" was not renamed! Write-permission problem in "%s"?', array($sourceFileObject->getName(), $targetFile));
 			}
-			$this->writelog(5, 0, 2, 'Directory renamed from "%s" to "%s"', array($sourceFileObject->getName(), $targetFile));
 		}
 		return $resultObject;
 	}
@@ -804,6 +806,8 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			$fileName = $cmds['data'];
 			$resultObject = $targetFolderObject->createFile($fileName);
 			$this->writelog(8, 0, 1, 'File created: "%s"', array($fileName));
+		} catch (\TYPO3\CMS\Core\Resource\Exception\IllegalFileExtensionException $e) {
+			$this->writeLog(8, 1, 106, 'Extension of file "%s" was not allowed!', array($fileName));
 		} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientFolderWritePermissionsException $e) {
 			$this->writelog(8, 1, 103, 'You are not allowed to create files!', '');
 		} catch (\TYPO3\CMS\Core\Resource\Exception\NotInMountPointException $e) {
@@ -854,6 +858,9 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 			return FALSE;
 		} catch (\TYPO3\CMS\Core\Resource\Exception\InsufficientFileWritePermissionsException $e) {
 			$this->writelog(9, 1, 100, 'File "%s" was not saved! Write-permission problem?', array($fileObject->getIdentifier()));
+			return FALSE;
+		} catch (\TYPO3\CMS\Core\Resource\Exception\IllegalFileExtensionException $e) {
+			$this->writelog(9, 1, 100, 'File "%s" was not saved! File extension rejected!', array($fileObject->getIdentifier()));
 			return FALSE;
 		}
 	}
@@ -1036,5 +1043,3 @@ class ExtendedFileUtility extends \TYPO3\CMS\Core\Utility\File\BasicFileUtility 
 		return $GLOBALS['BE_USER'];
 	}
 }
-
-?>

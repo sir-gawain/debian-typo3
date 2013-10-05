@@ -82,7 +82,7 @@ class DirectoryNode extends AbstractNode implements NodeInterface {
 			$status->setTitle($this->getRelativePathBelowSiteRoot() . ' does not exist');
 			$result[] = $status;
 		} else {
-			$result[] = $this->getSelfStatus();
+			$result = $this->getSelfStatus();
 		}
 		$result = array_merge($result, $this->getChildrenStatus());
 		return $result;
@@ -130,10 +130,18 @@ class DirectoryNode extends AbstractNode implements NodeInterface {
 		if (!$this->isDirectory()) {
 			$status = new Status\ErrorStatus();
 			$status->setTitle('Path ' . $this->getRelativePathBelowSiteRoot() . ' is not a directory');
-			$status->setMessage(
-				'The target ' . $this->getRelativePathBelowSiteRoot() . ' should be a directory,' .
-				' but is of type ' . filetype($this->getAbsolutePath()) . '. I can not fix this. Please investigate.'
-			);
+			$fileType = @filetype($this->getAbsolutePath());
+			if ($fileType) {
+				$status->setMessage(
+					'The target ' . $this->getRelativePathBelowSiteRoot() . ' should be a directory,' .
+					' but is of type ' . $fileType . '. I can not fix this. Please investigate.'
+				);
+			} else {
+				$status->setMessage(
+					'The target ' . $this->getRelativePathBelowSiteRoot() . ' should be a directory,' .
+					' but is of unknown type, probably because some upper level directory does not exist. Please investigate.'
+				);
+			}
 			$result[] = $status;
 		} elseif (!$this->isPermissionCorrect()) {
 			$result[] = $this->fixPermission();
@@ -172,10 +180,10 @@ class DirectoryNode extends AbstractNode implements NodeInterface {
 	/**
 	 * Get status of directory - used in root and directory node
 	 *
-	 * @return \TYPO3\CMS\Install\Status\StatusInterface
+	 * @return array<\TYPO3\CMS\Install\Status\StatusInterface>
 	 */
 	protected function getSelfStatus() {
-		$result = NULL;
+		$result = array();
 		if (!$this->isDirectory()) {
 			$status = new Status\ErrorStatus();
 			$status->setTitle($this->getRelativePathBelowSiteRoot() . ' is not a directory');
@@ -183,27 +191,37 @@ class DirectoryNode extends AbstractNode implements NodeInterface {
 				'Path ' . $this->getAbsolutePath() . ' should be a directory,' .
 				' but is of type ' . filetype($this->getAbsolutePath())
 			);
-			$result = $status;
+			$result[] = $status;
 		} elseif (!$this->isWritable()) {
-			$status = new Status\WarningStatus();
+			$status = new Status\ErrorStatus();
 			$status->setTitle($this->getRelativePathBelowSiteRoot() . ' is not writable');
 			$status->setMessage(
 				'Path ' . $this->getAbsolutePath() . ' exists, but no file below' .
 				' can be created.'
 			);
-			$result = $status;
+			$result[] = $status;
 		} elseif (!$this->isPermissionCorrect()) {
-			$status = new Status\WarningStatus();
-			$status->setTitle($this->getRelativePathBelowSiteRoot() . ' has wrong permission');
-			$status->setMessage(
-				'Target permission are ' . $this->targetPermission .
-				' but current permission are ' . $this->getCurrentPermission()
-			);
-			$result = $status;
+			if ($this->getTargetPermissionRelaxed() === TRUE) {
+				$status = new Status\NoticeStatus();
+				$status->setTitle($this->getRelativePathBelowSiteRoot() . ' has wrong permission');
+				$status->setMessage(
+					'Target permission are ' . $this->targetPermission .
+					' but current permission are ' . $this->getCurrentPermission()
+				);
+				$result[] = $status;
+			} else {
+				$status = new Status\WarningStatus();
+				$status->setTitle($this->getRelativePathBelowSiteRoot() . ' has wrong permission');
+				$status->setMessage(
+					'Target permission are ' . $this->targetPermission .
+					' but current permission are ' . $this->getCurrentPermission()
+				);
+				$result[] = $status;
+			}
 		} else {
 			$status = new Status\OkStatus();
 			$status->setTitle($this->getRelativePathBelowSiteRoot());
-			$result = $status;
+			$result[] = $status;
 		}
 		return $result;
 	}
@@ -280,4 +298,3 @@ class DirectoryNode extends AbstractNode implements NodeInterface {
 		}
 	}
 }
-?>

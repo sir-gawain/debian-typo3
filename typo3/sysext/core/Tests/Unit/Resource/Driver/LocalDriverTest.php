@@ -1,6 +1,5 @@
 <?php
 namespace TYPO3\CMS\Core\Tests\Unit\Resource\Driver;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /***************************************************************
  *  Copyright notice
@@ -28,7 +27,10 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-require_once 'vfsStream/vfsStream.php';
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use \org\bovigo\vfs\vfsStream;
+use \org\bovigo\vfs\vfsStreamWrapper;
+
 require_once dirname(dirname(__FILE__)) . '/BaseTestCase.php';
 require_once dirname(__FILE__) . '/Fixtures/LocalDriverFilenameFilter.php';
 
@@ -51,9 +53,9 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 
 	public function setUp() {
 		parent::setUp();
+		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
 		// use a mocked file repository to avoid updating the index when doing property update tests
 		$mockedRepository = $this->getMock('TYPO3\\CMS\\Core\\Resource\\FileRepository');
-		$this->singletonInstances = \TYPO3\CMS\Core\Utility\GeneralUtility::getSingletonInstances();
 		\TYPO3\CMS\Core\Utility\GeneralUtility::purgeInstances();
 		\TYPO3\CMS\Core\Utility\GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Core\\Resource\\FileRepository', $mockedRepository);
 	}
@@ -114,11 +116,14 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		if ($storageObject == NULL) {
 			$storageObject = $this->getMock('TYPO3\\CMS\\Core\\Resource\\ResourceStorage', array(), array(), '', FALSE);
 		}
-		if (count($mockedDriverMethods) == 0) {
-			$driver = new \TYPO3\CMS\Core\Resource\Driver\LocalDriver($driverConfiguration);
-		} else {
-			$driver = $this->getMock('TYPO3\\CMS\\Core\\Resource\\Driver\\LocalDriver', $mockedDriverMethods, array($driverConfiguration));
-		}
+		$mockedDriverMethods[] = 'isPathValid';
+		$driver = $this->getMock('TYPO3\\CMS\\Core\\Resource\\Driver\\LocalDriver', $mockedDriverMethods, array($driverConfiguration));
+		$driver->expects($this->any())
+			->method('isPathValid')
+			->will(
+				$this->returnValue(TRUE)
+			);
+
 		$storageObject->setDriver($driver);
 		$driver->setStorage($storageObject);
 		$driver->processConfiguration();
@@ -238,7 +243,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 	public function driverConfigVerificationFailsIfConfiguredBasePathDoesNotExist() {
 		$this->setExpectedException('TYPO3\\CMS\\Core\\Resource\\Exception\\InvalidConfigurationException', '', 1299233097);
 		$driverConfiguration = array(
-			'basePath' => \vfsStream::url($this->basedir . 'doesntexist/')
+			'basePath' => vfsStream::url($this->basedir . 'doesntexist/')
 		);
 		$this->assertFalse(file_exists($driverConfiguration['basePath']));
 		\TYPO3\CMS\Core\Resource\Driver\LocalDriver::verifyConfiguration($driverConfiguration);
@@ -621,7 +626,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 	/**
 	 * @test
 	 * @depends existenceChecksWorkForFilesAndFolders
-	 * @return array The driver fixture, the mocked file
+	 * @return \TYPO3\CMS\Core\Resource\Driver\LocalDriver The driver fixture
 	 */
 	public function newFilesCanBeCreated() {
 		$this->addToMount(array(
@@ -631,18 +636,17 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		list($basedir, $fixture) = $this->prepareRealTestEnvironment();
 		mkdir($basedir . '/someDir');
 		$fixture->createFile('testfile.txt', $fixture->getFolder('someDir'));
-		$mockedFile = $this->getSimpleFileMock('/someDir/testfile.txt');
 		$this->assertTrue($fixture->fileExists('/someDir/testfile.txt'));
-		return array($fixture, $mockedFile);
+		return $fixture;
 	}
 
 	/**
 	 * @test
 	 * @depends newFilesCanBeCreated
 	 */
-	public function createdFilesAreEmpty(array $arguments) {
-		/** @var $fixture \TYPO3\CMS\Core\Resource\Driver\LocalDriver */
-		list($fixture, $mockedFile) = $arguments;
+	public function createdFilesAreEmpty(\TYPO3\CMS\Core\Resource\Driver\LocalDriver $fixture) {
+		$fixture->expects($this->any())->method('isPathValid')->will($this->returnValue(TRUE));
+		$mockedFile = $this->getSimpleFileMock('/someDir/testfile.txt');
 		$fileData = $fixture->getFileContents($mockedFile);
 		$this->assertEquals(0, strlen($fileData));
 	}
@@ -941,7 +945,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		$fixture = $this->createDriverFixture(array(
 			'basePath' => $this->getMountRootUrl()
 		));
-		\vfsStream::create(array($this->basedir => array('somefile' => '')));
+		vfsStream::create(array($this->basedir => array('somefile' => '')));
 		$fixture->getFolderList('somedir/');
 	}
 
@@ -1119,17 +1123,17 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		}
 		$data = array_merge_recursive($data, array(
 			'arbitrary group, readable/writable' => array(
-				\vfsStream::GROUP_USER_1,
+				vfsStream::GROUP_USER_1,
 				6,
 				array('r' => TRUE, 'w' => TRUE)
 			),
 			'arbitrary group, readable/not writable' => array(
-				\vfsStream::GROUP_USER_1,
+				vfsStream::GROUP_USER_1,
 				436,
 				array('r' => TRUE, 'w' => FALSE)
 			),
 			'arbitrary group, not readable/not writable' => array(
-				\vfsStream::GROUP_USER_1,
+				vfsStream::GROUP_USER_1,
 				432,
 				array('r' => FALSE, 'w' => FALSE)
 			)
@@ -1152,9 +1156,9 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 			'basePath' => $this->getMountRootUrl()
 		));
 		/** @var $fileObject vfsStreamContent */
-		$fileObject = \vfsStreamWrapper::getRoot()->getChild($this->mountDir)->getChild('testfile');
+		$fileObject = vfsStreamWrapper::getRoot()->getChild($this->mountDir)->getChild('testfile');
 		// just use an "arbitrary" user here - it is only important that
-		$fileObject->chown(\vfsStream::OWNER_USER_1);
+		$fileObject->chown(vfsStream::OWNER_USER_1);
 		$fileObject->chgrp($group);
 		$fileObject->chmod($permissions);
 		$this->assertEquals($expectedResult, $fixture->getFilePermissions($this->getSimpleFileMock('/testfile')));
@@ -1446,7 +1450,7 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 	 * @test
 	 */
 	public function renameFolderRevertsRenamingIfFilenameMapCannotBeCreated() {
-		$this->setExpectedException('\RuntimeException', '', 1334160746);
+		$this->setExpectedException('\\RuntimeException', '', 1334160746);
 		$this->addToMount(array(
 			'sourceFolder' => array(
 				'file' => 'asdfg'
@@ -1557,50 +1561,90 @@ class LocalDriverTest extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		$this->assertTrue(file_exists($this->getUrlInMount('/targetFolder/newFolder/')));
 	}
 
-	protected function _setupFolderForCopyTest() {
-		$fileContents1 = uniqid();
-		$fileContents2 = uniqid();
-		$this->addToMount(array(
-			'targetFolder' => array(),
+	/**
+	 * @test
+	 */
+	public function copyFolderWithinStorageCopiesSingleFileToNewFolderName() {
+		$vfsBasedir = uniqid('base-');
+		$vfsStructure = array(
 			'sourceFolder' => array(
-				'subFolder' => array('file' => $fileContents1),
-				'file' => $fileContents2
-			)
-		));
-		$fixture = $this->createDriverFixture(array(
-			'basePath' => $this->getMountRootUrl()
-		));
-		return $fixture;
+				'file' => uniqid(),
+			),
+			'targetFolder' => array(),
+		);
+		vfsStream::setup($vfsBasedir);
+		vfsStream::create($vfsStructure);
+		/** @var \TYPO3\CMS\Core\Resource\Driver\LocalDriver|\PHPUnit_Framework_MockObject_MockObject $fixture */
+		$fixture = $this->getMock('TYPO3\\CMS\\Core\\Resource\\Driver\\LocalDriver', array('getAbsolutePath', 'getAbsoluteBasePath'), array(), '', FALSE);
+		$fixture->expects($this->any())
+			->method('getAbsolutePath')
+			->will($this->returnValue('vfs://' . $vfsBasedir . '/sourceFolder/'));
+		$fixture->expects($this->any())
+			->method('getAbsoluteBasePath')
+			->will($this->returnValue('vfs://' . $vfsBasedir . '/'));
+		$sourceFolderMock = $this->getMock('TYPO3\CMS\Core\Resource\Folder', array(), array(), '', FALSE);
+		$targetFolderMock = $this->getMock('TYPO3\CMS\Core\Resource\Folder', array(), array(), '', FALSE);
+		$targetFolderMock->expects($this->any())->method('getIdentifier')->will($this->returnValue('targetFolder'));
+		$fixture->copyFolderWithinStorage($sourceFolderMock, $targetFolderMock, 'newFolderName');
+		$this->assertTrue(is_file('vfs://' . $vfsBasedir . '/targetFolder/newFolderName/file'));
 	}
 
 	/**
 	 * @test
-	 * @see _setupFolderForCopyTest
 	 */
-	public function foldersCanBeCopiedWithinSameStorage() {
-		$fixture = $this->_setupFolderForCopyTest();
-		$sourceFolder = $this->getSimpleFolderMock('/sourceFolder/');
-		$targetFolder = $this->getSimpleFolderMock('/targetFolder/');
-		$fixture->copyFolderWithinStorage($sourceFolder, $targetFolder, 'sourceFolder');
-		$this->assertTrue($fixture->folderExists('/targetFolder/sourceFolder/'));
-		$this->assertTrue($fixture->fileExists('/targetFolder/sourceFolder/file'));
-		$this->assertTrue($fixture->folderExists('/targetFolder/sourceFolder/subFolder/'));
-		$this->assertTrue($fixture->fileExists('/targetFolder/sourceFolder/subFolder/file'));
+	public function copyFolderWithinStorageCopiesSingleSubFolderToNewFolderName() {
+		$vfsBasedir = uniqid('base-');
+		$vfsStructure = array(
+			'sourceFolder' => array(
+				'subFolder' => array(),
+			),
+			'targetFolder' => array(),
+		);
+		vfsStream::setup($vfsBasedir);
+		vfsStream::create($vfsStructure);
+		/** @var \TYPO3\CMS\Core\Resource\Driver\LocalDriver|\PHPUnit_Framework_MockObject_MockObject $fixture */
+		$fixture = $this->getMock('TYPO3\\CMS\\Core\\Resource\\Driver\\LocalDriver', array('getAbsolutePath', 'getAbsoluteBasePath'), array(), '', FALSE);
+		$fixture->expects($this->any())
+			->method('getAbsolutePath')
+			->will($this->returnValue('vfs://' . $vfsBasedir . '/sourceFolder/'));
+		$fixture->expects($this->any())
+			->method('getAbsoluteBasePath')
+			->will($this->returnValue('vfs://' . $vfsBasedir . '/'));
+		$sourceFolderMock = $this->getMock('TYPO3\CMS\Core\Resource\Folder', array(), array(), '', FALSE);
+		$targetFolderMock = $this->getMock('TYPO3\CMS\Core\Resource\Folder', array(), array(), '', FALSE);
+		$targetFolderMock->expects($this->any())->method('getIdentifier')->will($this->returnValue('targetFolder'));
+		$fixture->copyFolderWithinStorage($sourceFolderMock, $targetFolderMock, 'newFolderName');
+		$this->assertTrue(is_dir('vfs://' . $vfsBasedir . '/targetFolder/newFolderName/subFolder'));
 	}
 
 	/**
 	 * @test
-	 * @see _setupFolderForCopyTest
 	 */
-	public function folderNameCanBeChangedWhileCopying() {
-		$fixture = $this->_setupFolderForCopyTest();
-		$sourceFolder = $this->getSimpleFolderMock('/sourceFolder/');
-		$targetFolder = $this->getSimpleFolderMock('/targetFolder/');
-		$fixture->copyFolderWithinStorage($sourceFolder, $targetFolder, 'newFolder');
-		$this->assertTrue($fixture->folderExists('/targetFolder/newFolder/'));
-		$this->assertTrue($fixture->fileExists('/targetFolder/newFolder/file'));
-		$this->assertFalse($fixture->folderExists('/targetFolder/sourceFolder/'));
+	public function copyFolderWithinStorageCopiesFileInSingleSubFolderToNewFolderName() {
+		$vfsBasedir = uniqid('base-');
+		$vfsStructure = array(
+			'sourceFolder' => array(
+				'subFolder' => array(
+					'file' => uniqid(),
+				),
+			),
+			'targetFolder' => array(),
+		);
+		vfsStream::setup($vfsBasedir);
+		vfsStream::create($vfsStructure);
+		/** @var \TYPO3\CMS\Core\Resource\Driver\LocalDriver|\PHPUnit_Framework_MockObject_MockObject $fixture */
+		$fixture = $this->getMock('TYPO3\\CMS\\Core\\Resource\\Driver\\LocalDriver', array('getAbsolutePath', 'getAbsoluteBasePath'), array(), '', FALSE);
+		$fixture->expects($this->any())
+			->method('getAbsolutePath')
+			->will($this->returnValue('vfs://' . $vfsBasedir . '/sourceFolder/'));
+		$fixture->expects($this->any())
+			->method('getAbsoluteBasePath')
+			->will($this->returnValue('vfs://' . $vfsBasedir . '/'));
+		$sourceFolderMock = $this->getMock('TYPO3\CMS\Core\Resource\Folder', array(), array(), '', FALSE);
+		$targetFolderMock = $this->getMock('TYPO3\CMS\Core\Resource\Folder', array(), array(), '', FALSE);
+		$targetFolderMock->expects($this->any())->method('getIdentifier')->will($this->returnValue('targetFolder'));
+		$fixture->copyFolderWithinStorage($sourceFolderMock, $targetFolderMock, 'newFolderName');
+		$this->assertTrue(is_file('vfs://' . $vfsBasedir . '/targetFolder/newFolderName/subFolder/file'));
 	}
 
 }
-?>

@@ -24,18 +24,16 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Module: Web>Page
  *
  * This module lets you view a page in a more Content Management like style than the ordinary record-list
  *
- * Revised for TYPO3 3.6 November/2003 by Kasper Skårhøj
- * XHTML compliant
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 unset($MCONF);
-require 'conf.php';
+require __DIR__ . '/conf.php';
 require $BACK_PATH . 'init.php';
 $LANG->includeLLFile('EXT:cms/layout/locallang.xlf');
 
@@ -142,4 +140,3 @@ foreach ($SOBE->include_once as $INC_FILE) {
 $SOBE->clearCache();
 $SOBE->main();
 $SOBE->printContent();
-?>

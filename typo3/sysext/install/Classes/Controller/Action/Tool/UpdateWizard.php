@@ -38,7 +38,7 @@ class UpdateWizard extends Action\AbstractAction implements Action\ActionInterfa
 	 * @return string content
 	 */
 	public function handle() {
-		$this->initialize();
+		$this->initializeHandle();
 
 		// ext_localconf, db and ext_tables must be loaded for the upgrade wizards
 		$this->loadExtLocalconfDatabaseAndExtTables();
@@ -207,7 +207,7 @@ class UpdateWizard extends Action\AbstractAction implements Action\ActionInterfa
 	}
 
 	/**
-	 * Creates instance of an upgrade object, setting the pObj, versionNumber and pObj
+	 * Creates instance of an upgrade object, setting the pObj, versionNumber and userInput
 	 *
 	 * @param string $className The class name
 	 * @param string $identifier The identifier of upgrade object - needed to fetch user input
@@ -288,5 +288,3 @@ class UpdateWizard extends Action\AbstractAction implements Action\ActionInterfa
 		return $GLOBALS['TYPO3_DB'];
 	}
 }
-
-?>

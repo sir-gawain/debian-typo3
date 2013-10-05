@@ -63,6 +63,13 @@ class GeneralUtility {
 	 */
 	static protected $nonSingletonInstances = array();
 
+	/**
+	 * The application context
+	 *
+	 * @var \TYPO3\CMS\Core\Core\ApplicationContext
+	 */
+	static protected $context = NULL;
+
 	/*************************
 	 *
 	 * GET/POST Variables
@@ -367,7 +374,7 @@ class GeneralUtility {
 	static public function cmpIPv4($baseIP, $list) {
 		$IPpartsReq = explode('.', $baseIP);
 		if (count($IPpartsReq) == 4) {
-			$values = self::trimExplode(',', $list, 1);
+			$values = self::trimExplode(',', $list, TRUE);
 			foreach ($values as $test) {
 				$testList = explode('/', $test);
 				if (count($testList) == 2) {
@@ -414,7 +421,7 @@ class GeneralUtility {
 		// Policy default: Deny connection
 		$success = FALSE;
 		$baseIP = self::normalizeIPv6($baseIP);
-		$values = self::trimExplode(',', $list, 1);
+		$values = self::trimExplode(',', $list, TRUE);
 		foreach ($values as $test) {
 			$testList = explode('/', $test);
 			if (count($testList) == 2) {
@@ -613,7 +620,7 @@ class GeneralUtility {
 			$baseHostName = $baseHost;
 		}
 		$baseHostNameParts = explode('.', $baseHostName);
-		$values = self::trimExplode(',', $list, 1);
+		$values = self::trimExplode(',', $list, TRUE);
 		foreach ($values as $test) {
 			$hostNameParts = explode('.', $test);
 			// To match hostNameParts can only be shorter (in case of wildcards) or equal
@@ -818,7 +825,7 @@ class GeneralUtility {
 		if (isset($secondParameter)) {
 			throw new \InvalidArgumentException('TYPO3 Fatal Error: TYPO3\\CMS\\Core\\Utility\\GeneralUtility::uniqueList() does NOT support more than a single argument value anymore. You have specified more than one!', 1270853886);
 		}
-		return implode(',', array_unique(self::trimExplode(',', $in_list, 1)));
+		return implode(',', array_unique(self::trimExplode(',', $in_list, TRUE)));
 	}
 
 	/**
@@ -1047,9 +1054,8 @@ class GeneralUtility {
 	 * @return boolean Returns TRUE if the $email address (input string) is valid
 	 */
 	static public function validEmail($email) {
-		// Enforce maximum length to prevent libpcre recursion crash bug #52929 in PHP
-		// fixed in PHP 5.3.4; length restriction per SMTP RFC 2821
-		if (!is_string($email) || strlen($email) > 320) {
+		// Early return in case input is not a string
+		if (!is_string($email)) {
 			return FALSE;
 		}
 		require_once PATH_typo3 . 'contrib/idna/idna_convert.class.php';
@@ -1439,7 +1445,7 @@ class GeneralUtility {
 	 *
 	 * @param array $array The initial array to be filtered/reduced
 	 * @param mixed $keepItems The items which are allowed/kept in the array - accepts array or csv string
-	 * @param string $getValueFunc (optional) Unique function name set by create_function() used to get the value to keep
+	 * @param string $getValueFunc (optional) Callback function used to get the value to keep
 	 * @return array The filtered/reduced array with the kept items
 	 */
 	static public function keepItemsInArray(array $array, $keepItems, $getValueFunc = NULL) {
@@ -1448,15 +1454,15 @@ class GeneralUtility {
 			if (is_string($keepItems)) {
 				$keepItems = self::trimExplode(',', $keepItems);
 			}
-			// create_function() returns a string:
-			if (!is_string($getValueFunc)) {
+			// Check if valueFunc can be executed:
+			if (!is_callable($getValueFunc)) {
 				$getValueFunc = NULL;
 			}
 			// Do the filtering:
 			if (is_array($keepItems) && count($keepItems)) {
 				foreach ($array as $key => $value) {
 					// Get the value to compare by using the callback function:
-					$keepValue = isset($getValueFunc) ? $getValueFunc($value) : $value;
+					$keepValue = isset($getValueFunc) ? call_user_func($getValueFunc, $value) : $value;
 					if (!in_array($keepValue, $keepItems)) {
 						unset($array[$key]);
 					}
@@ -1525,7 +1531,7 @@ class GeneralUtility {
 	 * @return array Output array with selected variables.
 	 */
 	static public function compileSelectedGetVarsFromArray($varList, array $getArray, $GPvarAlt = TRUE) {
-		$keys = self::trimExplode(',', $varList, 1);
+		$keys = self::trimExplode(',', $varList, TRUE);
 		$outArr = array();
 		foreach ($keys as $v) {
 			if (isset($getArray[$v])) {
@@ -3352,7 +3358,7 @@ Connection: close
 						REMOTE_ADDR,
 						REMOTE_HOST,
 						HTTP_USER_AGENT,
-						HTTP_ACCEPT_LANGUAGE', 1);
+						HTTP_ACCEPT_LANGUAGE', TRUE);
 				foreach ($envTestVars as $v) {
 					$out[$v] = self::getIndpEnv($v);
 				}
@@ -3588,6 +3594,35 @@ Connection: close
 		return TRUE;
 	}
 
+
+	/**
+	 * Low level utility function to copy directories and content recursive
+	 *
+	 * @param string $source Path to source directory, relative to document root or absolute
+	 * @param string $destination Path to destination directory, relative to document root or absolute
+	 */
+	public static function copyDirectory($source, $destination) {
+		if (strpos($source, PATH_site) === FALSE) {
+			$source = PATH_site . $source;
+		}
+		if (strpos($destination, PATH_site) === FALSE) {
+			$destination = PATH_site . $destination;
+		}
+		if (static::isAllowedAbsPath($source) && static::isAllowedAbsPath($destination)) {
+			$iterator = new \RecursiveIteratorIterator(
+				new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS),
+				\RecursiveIteratorIterator::SELF_FIRST
+			);
+			foreach ($iterator as $item) {
+				if ($item->isDir()) {
+					@mkdir($destination . '/' . $iterator->getSubPathName());
+				} else {
+					@copy($item, $destination . '/' . $iterator->getSubPathName());
+				}
+			}
+		}
+	}
+
 	/**
 	 * Checks if a given string is a valid frame URL to be loaded in the
 	 * backend.
@@ -3710,7 +3745,7 @@ Connection: close
 		if (is_array($uid_or_record)) {
 			$recCopy_temp = array();
 			if ($fields) {
-				$fieldArr = self::trimExplode(',', $fields, 1);
+				$fieldArr = self::trimExplode(',', $fields, TRUE);
 				foreach ($fieldArr as $k => $v) {
 					$recCopy_temp[$k] = $uid_or_record[$v];
 				}
@@ -4053,7 +4088,7 @@ Connection: close
 	 *
 	 * @param string $classRef The class or function to check
 	 * @param array $additionalPrefixes Additional allowed prefixes, mostly this will be user_
-	 * @return bool TRUE if name is allowed
+	 * @return boolean TRUE if name is allowed
 	 * @deprecated since 6.0, will be removed two versions later
 	 */
 	static public function hasValidClassPrefix($classRef, array $additionalPrefixes = array()) {
@@ -4298,7 +4333,7 @@ Connection: close
 	static public function makeInstanceService($serviceType, $serviceSubType = '', $excludeServiceKeys = array()) {
 		$error = FALSE;
 		if (!is_array($excludeServiceKeys)) {
-			$excludeServiceKeys = self::trimExplode(',', $excludeServiceKeys, 1);
+			$excludeServiceKeys = self::trimExplode(',', $excludeServiceKeys, TRUE);
 		}
 		$requestInfo = array(
 			'requestedServiceType' => $serviceType,
@@ -4588,7 +4623,13 @@ Connection: close
 			// No processing
 			$messageSubstituted = $message;
 		} else {
-			$messageSubstituted = preg_replace('/(http|https):\\/\\/.+(?=[\\]\\.\\?]*([\\! \'"()<>]+|$))/eiU', 'self::makeRedirectUrl("\\0",' . $lengthLimit . ',"' . $index_script_url . '")', $message);
+			$messageSubstituted = preg_replace_callback(
+				'/(http|https):\\/\\/.+(?=[\\]\\.\\?]*([\\! \'"()<>]+|$))/iU',
+				function (array $matches) use ($lengthLimit, $index_script_url) {
+					return GeneralUtility::makeRedirectUrl($matches[0], $lengthLimit, $index_script_url);
+				},
+				$message
+			);
 		}
 		return $messageSubstituted;
 	}
@@ -4779,13 +4820,15 @@ Connection: close
 		if (!$GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog']) {
 			return;
 		}
-		$log = $GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog'];
-		$date = date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'] . ': ');
 		// Legacy values (no strict comparison, $log can be boolean, string or int)
+		$log = $GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog'];
 		if ($log === TRUE || $log == '1') {
-			$log = 'file';
+			$log = array('file');
+		} else {
+			$log = self::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['SYS']['enableDeprecationLog'], TRUE);
 		}
-		if (stripos($log, 'file') !== FALSE) {
+		$date = date($GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] . ' ' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'] . ': ');
+		if (in_array('file', $log) !== FALSE) {
 			// In case lock is acquired before autoloader was defined:
 			if (class_exists('TYPO3\\CMS\\Core\\Locking\\Locker') === FALSE) {
 				require_once ExtensionManagementUtility::extPath('core') . 'Classes/Locking/Locker.php';
@@ -4804,12 +4847,12 @@ Connection: close
 			}
 			$lockObject->release();
 		}
-		if (stripos($log, 'devlog') !== FALSE) {
+		if (in_array('devlog', $log) !== FALSE) {
 			// Copy message also to the developer log
 			self::devLog($msg, 'Core', self::SYSLOG_SEVERITY_WARNING);
 		}
 		// Do not use console in login screen
-		if (stripos($log, 'console') !== FALSE && isset($GLOBALS['BE_USER']->user['uid'])) {
+		if (in_array('console', $log) !== FALSE && isset($GLOBALS['BE_USER']->user['uid'])) {
 			\TYPO3\CMS\Core\Utility\DebugUtility::debug($msg, $date, 'Deprecation Log');
 		}
 	}
@@ -4869,7 +4912,7 @@ Connection: close
 	static public function arrayToLogString(array $arr, $valueList = array(), $valueLength = 20) {
 		$str = '';
 		if (!is_array($valueList)) {
-			$valueList = self::trimExplode(',', $valueList, 1);
+			$valueList = self::trimExplode(',', $valueList, TRUE);
 		}
 		$valListCnt = count($valueList);
 		foreach ($arr as $key => $value) {
@@ -4976,5 +5019,31 @@ Connection: close
 		}
 		echo $obContent;
 	}
+
+	/**
+	 * Set the ApplicationContext
+	 *
+	 * This function is used by the Bootstrap to hand over the context. It must not be used anywhere else,
+	 * because the context shall never be changed on runtime!
+	 *
+	 * @param \TYPO3\CMS\Core\Core\ApplicationContext $context
+	 * @throws \RuntimeException if context is overriden
+	 * @internal This is not a public API method, do not use in own extensions
+	 */
+	static public function presetContext(\TYPO3\CMS\Core\Core\ApplicationContext $context) {
+		if (is_null(static::$context)) {
+			static::$context = $context;
+		} else {
+			throw new \RuntimeException('Trying to override context which has already been defined!', 1376084316);
+		}
+	}
+
+	/**
+	 * Get the ApplicationContext
+	 *
+	 * @return \TYPO3\CMS\Core\Core\ApplicationContext
+	 */
+	static public function getContext() {
+		return static::$context;
+	}
 }
-?>

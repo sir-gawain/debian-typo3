@@ -66,8 +66,7 @@ class SpriteManager {
 			if ($codeCache->has($cacheIdentifier)) {
 				$codeCache->requireOnce($cacheIdentifier);
 			} else {
-				static::createSpriteCache();
-				$codeCache->requireOnce($cacheIdentifier);
+				static::buildSpriteDataAndCreateCacheEntry();
 			}
 			self::$isInitialized = TRUE;
 		}
@@ -76,22 +75,22 @@ class SpriteManager {
 	/**
 	 * Whether the sprite manager is initialized.
 	 *
-	 * @return bool TRUE if sprite manager is initialized
+	 * @return boolean TRUE if sprite manager is initialized
 	 */
 	static public function isInitialized() {
 		return self::$isInitialized;
 	}
 
 	/**
-	 * Compile sprite icon cache by calling the registered generator.
+	 * Set up sprite icon data and create cache entry calling the registered generator.
 	 *
 	 * Stuff the compiled $GLOBALS['TBE_STYLES']['spriteIconApi']['iconsAvailable']
-	 * global into php code cache
+	 * global into php code cache.
 	 *
 	 * @throws \RuntimeException
 	 * @return void
 	 */
-	static protected function createSpriteCache() {
+	static protected function buildSpriteDataAndCreateCacheEntry() {
 		$handlerClass = $GLOBALS['TYPO3_CONF_VARS']['BE']['spriteIconGenerator_handler'];
 		/** @var $handler \TYPO3\CMS\Backend\Sprite\SpriteIconGeneratorInterface */
 		$handler = GeneralUtility::makeInstance($handlerClass);
@@ -113,8 +112,10 @@ class SpriteManager {
 		// Merge icon names provided by the skin, with
 		// registered "complete sprites" and the handler class
 		$iconNames = array_merge($availableSkinIcons, (array) $GLOBALS['TBE_STYLES']['spritemanager']['spriteIconsAvailable'], $handler->getAvailableIconNames());
-		$cacheString = addslashes(serialize($iconNames));
-		$cacheFileContent = '$GLOBALS[\'TBE_STYLES\'][\'spriteIconApi\'][\'iconsAvailable\'] = unserialize(stripslashes(\'' . $cacheString . '\'));';
+		$GLOBALS['TBE_STYLES']['spriteIconApi']['iconsAvailable'] = $iconNames;
+
+		$cacheFileContent = '$GLOBALS[\'TBE_STYLES\'][\'spriteIconApi\'][\'iconsAvailable\'] = ';
+		$cacheFileContent .= var_export($iconNames, TRUE) . ';';
 		/** @var $codeCache \TYPO3\CMS\Core\Cache\Frontend\PhpFrontend */
 		$GLOBALS['typo3CacheManager']->getCache('cache_core')->set(static::getCacheIdentifier(), $cacheFileContent);
 	}
@@ -181,6 +182,3 @@ class SpriteManager {
 	}
 
 }
-
-
-?>

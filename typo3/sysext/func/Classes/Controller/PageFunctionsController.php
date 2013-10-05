@@ -27,6 +27,8 @@ namespace TYPO3\CMS\Func\Controller;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * Script Class for the Web > Functions module
  * This class creates the framework to which other extensions can connect their sub-modules
@@ -55,17 +57,23 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 	public $doc;
 
 	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$GLOBALS['LANG']->includeLLFile('EXT:lang/locallang_mod_web_func.xlf');
+		$GLOBALS['BE_USER']->modAccess($GLOBALS['MCONF'], TRUE);
+	}
+
+	/**
 	 * Initialize module header etc and call extObjContent function
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function main() {
-		global $LANG, $BACK_PATH;
 		// Access check...
 		// The page will show only if there is a valid page and if this page may be viewed by the user
-		$this->pageinfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess($this->id, $this->perms_clause);
-		$access = is_array($this->pageinfo) ? 1 : 0;
+		$this->pageinfo = BackendUtility::readPageAccess($this->id, $this->perms_clause);
+		$access = is_array($this->pageinfo);
 		// Template markers
 		$markers = array(
 			'CSH' => '',
@@ -73,14 +81,14 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 			'CONTENT' => ''
 		);
 		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
-		$this->doc->backPath = $BACK_PATH;
+		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->setModuleTemplate('EXT:func/Resources/Private/Templates/func.html');
 		// Main
 		if ($this->id && $access) {
 			// JavaScript
 			$this->doc->JScode = $this->doc->wrapScriptTags('
 				script_ended = 0;
-				function jumpToUrl(URL) {	//
+				function jumpToUrl(URL) {
 					window.location.href = URL;
 				}
 			');
@@ -91,7 +99,7 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 			// Setting up the context sensitive menu:
 			$this->doc->getContextMenuCode();
 			$this->doc->form = '<form action="index.php" method="post"><input type="hidden" name="id" value="' . $this->id . '" />';
-			$vContent = $this->doc->getVersionSelector($this->id, 1);
+			$vContent = $this->doc->getVersionSelector($this->id, TRUE);
 			if ($vContent) {
 				$this->content .= $this->doc->section('', $vContent);
 			}
@@ -99,11 +107,21 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 			// Setting up the buttons and markers for docheader
 			$docHeaderButtons = $this->getButtons();
 			$markers['CSH'] = $docHeaderButtons['csh'];
-			$markers['FUNC_MENU'] = \TYPO3\CMS\Backend\Utility\BackendUtility::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function']);
+			$markers['FUNC_MENU'] = BackendUtility::getFuncMenu(
+				$this->id,
+				'SET[function]',
+				$this->MOD_SETTINGS['function'],
+				$this->MOD_MENU['function']
+			);
 			$markers['CONTENT'] = $this->content;
 		} else {
 			// If no access or if ID == zero
-			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Messaging\\FlashMessage', $LANG->getLL('clickAPage_content'), $LANG->getLL('title'), \TYPO3\CMS\Core\Messaging\FlashMessage::INFO);
+			$flashMessage = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+				'TYPO3\\CMS\\Core\\Messaging\\FlashMessage',
+				$GLOBALS['LANG']->getLL('clickAPage_content'),
+				$GLOBALS['LANG']->getLL('title'),
+				\TYPO3\CMS\Core\Messaging\FlashMessage::INFO
+			);
 			$this->content = $flashMessage->render();
 			// Setting up the buttons and markers for docheader
 			$docHeaderButtons = $this->getButtons();
@@ -113,14 +131,13 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 		// Build the <body> for the module
 		$this->content = $this->doc->moduleBody($this->pageinfo, $docHeaderButtons, $markers);
 		// Renders the module page
-		$this->content = $this->doc->render($LANG->getLL('title'), $this->content);
+		$this->content = $this->doc->render($GLOBALS['LANG']->getLL('title'), $this->content);
 	}
 
 	/**
 	 * Print module content (from $this->content)
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function printContent() {
 		echo $this->content;
@@ -132,20 +149,19 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 	 * @return array All available buttons as an assoc. array
 	 */
 	protected function getButtons() {
-		global $BACK_PATH;
 		$buttons = array(
 			'csh' => '',
 			'view' => '',
 			'shortcut' => ''
 		);
 		// CSH
-		$buttons['csh'] = \TYPO3\CMS\Backend\Utility\BackendUtility::cshItem('_MOD_web_func', '', $GLOBALS['BACK_PATH'], '', TRUE);
+		$buttons['csh'] = BackendUtility::cshItem('_MOD_web_func', '', $GLOBALS['BACK_PATH'], '', TRUE);
 		if ($this->id && is_array($this->pageinfo)) {
 			// View page
-			$buttons['view'] = '<a href="#"
-					onclick="' . htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::viewOnClick($this->pageinfo['uid'], $BACK_PATH, \TYPO3\CMS\Backend\Utility\BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '"
-					title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', 1) . '
-				">' . \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
+			$buttons['view'] = '<a href="#" '
+				. 'onclick="' . htmlspecialchars(BackendUtility::viewOnClick($this->pageinfo['uid'], $GLOBALS['BACK_PATH'], BackendUtility::BEgetRootLine($this->pageinfo['uid']))) . '" '
+				. 'title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPage', TRUE) . '">'
+				. \TYPO3\CMS\Backend\Utility\IconUtility::getSpriteIcon('actions-document-view') . '</a>';
 			// Shortcut
 			if ($GLOBALS['BE_USER']->mayMakeShortcut()) {
 				$buttons['shortcut'] = $this->doc->makeShortcutIcon('id, edit_record, pointer, new_unique_uid, search_field, search_levels, showLimit', implode(',', array_keys($this->MOD_MENU)), $this->MCONF['name']);
@@ -155,5 +171,3 @@ class PageFunctionsController extends \TYPO3\CMS\Backend\Module\BaseScriptClass 
 	}
 
 }
-
-?>
