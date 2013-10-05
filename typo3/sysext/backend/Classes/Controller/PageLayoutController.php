@@ -523,7 +523,7 @@ class PageLayoutController {
 			$this->doc->form = '<form action="' . htmlspecialchars(('db_layout.php?id=' . $this->id . '&imagemode=' . $this->imagemode)) . '" method="post">';
 			// Creating the top function menu:
 			$this->topFuncMenu = BackendUtility::getFuncMenu($this->id, 'SET[function]', $this->MOD_SETTINGS['function'], $this->MOD_MENU['function'], 'db_layout.php', '');
-			$this->languageMenu = count($this->MOD_MENU['language']) > 1 ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.language', 1) . BackendUtility::getFuncMenu($this->id, 'SET[language]', $this->current_sys_language, $this->MOD_MENU['language'], 'db_layout.php', '') : '';
+			$this->languageMenu = count($this->MOD_MENU['language']) > 1 ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_general.xlf:LGL.language', TRUE) . BackendUtility::getFuncMenu($this->id, 'SET[language]', $this->current_sys_language, $this->MOD_MENU['language'], 'db_layout.php', '') : '';
 			// Find backend layout / coumns
 			$backendLayout = GeneralUtility::callUserFunction('TYPO3\\CMS\\Backend\\View\\BackendLayoutView->getSelectedBackendLayout', $this->id, $this);
 			if (count($backendLayout['__colPosList'])) {
@@ -639,11 +639,11 @@ class PageLayoutController {
 		if (is_array($languageOverlayRecord)) {
 			$inValue = 'pages_language_overlay:' . $languageOverlayRecord['uid'];
 			$is_selected += intval($edit_record == $inValue);
-			$opt[] = '<option value="' . $inValue . '"' . ($edit_record == $inValue ? ' selected="selected"' : '') . '>[ ' . $GLOBALS['LANG']->getLL('editLanguageHeader', 1) . ' ]</option>';
+			$opt[] = '<option value="' . $inValue . '"' . ($edit_record == $inValue ? ' selected="selected"' : '') . '>[ ' . $GLOBALS['LANG']->getLL('editLanguageHeader', TRUE) . ' ]</option>';
 		} else {
 			$inValue = 'pages:' . $this->id;
 			$is_selected += intval($edit_record == $inValue);
-			$opt[] = '<option value="' . $inValue . '"' . ($edit_record == $inValue ? ' selected="selected"' : '') . '>[ ' . $GLOBALS['LANG']->getLL('editPageProperties', 1) . ' ]</option>';
+			$opt[] = '<option value="' . $inValue . '"' . ($edit_record == $inValue ? ' selected="selected"' : '') . '>[ ' . $GLOBALS['LANG']->getLL('editPageProperties', TRUE) . ' ]</option>';
 		}
 		// Selecting all content elements from this language and allowed colPos:
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'tt_content', 'pid=' . intval($this->id) . ' AND sys_language_uid=' . intval($this->current_sys_language) . ' AND colPos IN (' . $this->colPosList . ')' . ($this->MOD_SETTINGS['tt_content_showHidden'] ? '' : BackendUtility::BEenableFields('tt_content')) . BackendUtility::deleteClause('tt_content') . BackendUtility::versioningPlaceholderClause('tt_content'), '', 'colPos,sorting');
@@ -663,7 +663,7 @@ class PageLayoutController {
 				if (strcmp($cRow['colPos'], $colPos)) {
 					$colPos = $cRow['colPos'];
 					$opt[] = '<option value=""></option>';
-					$opt[] = '<option value="_EDIT_COL:' . $colPos . '">__' . $GLOBALS['LANG']->sL(BackendUtility::getLabelFromItemlist('tt_content', 'colPos', $colPos), 1) . ':__</option>';
+					$opt[] = '<option value="_EDIT_COL:' . $colPos . '">__' . $GLOBALS['LANG']->sL(BackendUtility::getLabelFromItemlist('tt_content', 'colPos', $colPos), TRUE) . ':__</option>';
 				}
 				$inValue = 'tt_content:' . $cRow['uid'];
 				$is_selected += intval($edit_record == $inValue);
@@ -681,7 +681,7 @@ class PageLayoutController {
 		// If none is yet selected...
 		if (!$is_selected) {
 			$opt[] = '<option value=""></option>';
-			$opt[] = '<option value="' . $edit_record . '"  selected="selected">[ ' . $GLOBALS['LANG']->getLL('newLabel', 1) . ' ]</option>';
+			$opt[] = '<option value="' . $edit_record . '"  selected="selected">[ ' . $GLOBALS['LANG']->getLL('newLabel', TRUE) . ' ]</option>';
 		}
 		// Splitting the edit-record cmd value into table/uid:
 		$this->eRParts = explode(':', $edit_record);
@@ -800,13 +800,13 @@ class PageLayoutController {
 		}
 		// Bottom controls (function menus):
 		$q_count = $this->getNumberOfHiddenElements();
-		$h_func_b = BackendUtility::getFuncCheck($this->id, 'SET[tt_content_showHidden]', $this->MOD_SETTINGS['tt_content_showHidden'], 'db_layout.php', '', 'id="checkTt_content_showHidden"') . '<label for="checkTt_content_showHidden">' . (!$q_count ? $GLOBALS['TBE_TEMPLATE']->dfw($GLOBALS['LANG']->getLL('hiddenCE', 1)) : $GLOBALS['LANG']->getLL('hiddenCE', 1) . ' (' . $q_count . ')') . '</label>';
-		$h_func_b .= '<br />' . BackendUtility::getFuncCheck($this->id, 'SET[showPalettes]', $this->MOD_SETTINGS['showPalettes'], 'db_layout.php', '', 'id="checkShowPalettes"') . '<label for="checkShowPalettes">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPalettes', 1) . '</label>';
+		$h_func_b = BackendUtility::getFuncCheck($this->id, 'SET[tt_content_showHidden]', $this->MOD_SETTINGS['tt_content_showHidden'], 'db_layout.php', '', 'id="checkTt_content_showHidden"') . '<label for="checkTt_content_showHidden">' . (!$q_count ? $GLOBALS['TBE_TEMPLATE']->dfw($GLOBALS['LANG']->getLL('hiddenCE', TRUE)) : $GLOBALS['LANG']->getLL('hiddenCE', TRUE) . ' (' . $q_count . ')') . '</label>';
+		$h_func_b .= '<br />' . BackendUtility::getFuncCheck($this->id, 'SET[showPalettes]', $this->MOD_SETTINGS['showPalettes'], 'db_layout.php', '', 'id="checkShowPalettes"') . '<label for="checkShowPalettes">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showPalettes', TRUE) . '</label>';
 		if (ExtensionManagementUtility::isLoaded('context_help')) {
-			$h_func_b .= '<br />' . BackendUtility::getFuncCheck($this->id, 'SET[showDescriptions]', $this->MOD_SETTINGS['showDescriptions'], 'db_layout.php', '', 'id="checkShowDescriptions"') . '<label for="checkShowDescriptions">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showDescriptions', 1) . '</label>';
+			$h_func_b .= '<br />' . BackendUtility::getFuncCheck($this->id, 'SET[showDescriptions]', $this->MOD_SETTINGS['showDescriptions'], 'db_layout.php', '', 'id="checkShowDescriptions"') . '<label for="checkShowDescriptions">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.showDescriptions', TRUE) . '</label>';
 		}
 		if ($GLOBALS['BE_USER']->isRTE()) {
-			$h_func_b .= '<br />' . BackendUtility::getFuncCheck($this->id, 'SET[disableRTE]', $this->MOD_SETTINGS['disableRTE'], 'db_layout.php', '', 'id="checkDisableRTE"') . '<label for="checkDisableRTE">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.disableRTE', 1) . '</label>';
+			$h_func_b .= '<br />' . BackendUtility::getFuncCheck($this->id, 'SET[disableRTE]', $this->MOD_SETTINGS['disableRTE'], 'db_layout.php', '', 'id="checkDisableRTE"') . '<label for="checkDisableRTE">' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.disableRTE', TRUE) . '</label>';
 		}
 		// Add the function menus to bottom:
 		$content .= $this->doc->section('', $h_func_b, 0, 0);
@@ -1030,7 +1030,7 @@ class PageLayoutController {
 		if (!$this->modTSconfig['properties']['disableIconToolbar']) {
 			// Move record
 			if (MathUtility::canBeInterpretedAsInteger($this->eRParts[1])) {
-				$buttons['move_record'] = '<a href="' . htmlspecialchars(($GLOBALS['BACK_PATH'] . 'move_el.php?table=' . $this->eRParts[0] . '&uid=' . $this->eRParts[1] . '&returnUrl=' . rawurlencode(GeneralUtility::getIndpEnv('REQUEST_URI')))) . '">' . IconUtility::getSpriteIcon(('actions-' . ($this->eRParts[0] == 'tt_content' ? 'document' : 'page') . '-move'), array('class' => 'c-inputButton', 'title' => $GLOBALS['LANG']->getLL(('move_' . ($this->eRParts[0] == 'tt_content' ? 'record' : 'page')), 1))) . '</a>';
+				$buttons['move_record'] = '<a href="' . htmlspecialchars(($GLOBALS['BACK_PATH'] . 'move_el.php?table=' . $this->eRParts[0] . '&uid=' . $this->eRParts[1] . '&returnUrl=' . rawurlencode(GeneralUtility::getIndpEnv('REQUEST_URI')))) . '">' . IconUtility::getSpriteIcon(('actions-' . ($this->eRParts[0] == 'tt_content' ? 'document' : 'page') . '-move'), array('class' => 'c-inputButton', 'title' => $GLOBALS['LANG']->getLL(('move_' . ($this->eRParts[0] == 'tt_content' ? 'record' : 'page')), TRUE))) . '</a>';
 			}
 
 			// Edit page properties and page language overlay icons
@@ -1043,15 +1043,16 @@ class PageLayoutController {
 						'pages_language_overlay',
 						'pid = ' . intval($this->id) . ' ' .
 						'AND sys_language_uid = ' . intval($this->current_sys_language) .
-						\TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause('pages_language_overlay') .
-						\TYPO3\CMS\Backend\Utility\BackendUtility::versioningPlaceholderClause('pages_language_overlay'),
+						BackendUtility::deleteClause('pages_language_overlay') .
+						BackendUtility::versioningPlaceholderClause('pages_language_overlay'),
 						'',
 						'',
 						'',
 						'sys_language_uid'
 					);
 
-					$editLanguageOnClick = htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::editOnClick(
+					$editLanguageOnClick = htmlspecialchars(
+						BackendUtility::editOnClick(
 						'&edit[pages_language_overlay][' . $overlayRecord['uid'] . ']=edit',
 						$GLOBALS['BACK_PATH'])
 					);
@@ -1064,7 +1065,9 @@ class PageLayoutController {
 
 
 				// Edit page properties
-				$editPageOnClick = htmlspecialchars(\TYPO3\CMS\Backend\Utility\BackendUtility::editOnClick('&edit[pages][' . $this->id . ']=edit', $GLOBALS['BACK_PATH']));
+				$editPageOnClick = htmlspecialchars(
+					BackendUtility::editOnClick('&edit[pages][' . $this->id . ']=edit', $GLOBALS['BACK_PATH'])
+				);
 				$buttons['edit_page'] = '<a href="#" ' .
 					'onclick="' . $editPageOnClick . '"' .
 					'title="' . $GLOBALS['LANG']->getLL('editPageProperties', TRUE) . '">' .
@@ -1082,7 +1085,7 @@ class PageLayoutController {
 				// Save record
 				$buttons['savedok'] = IconUtility::getSpriteIcon('actions-document-save', array('html' => '<input type="image" name="_savedok" class="c-inputButton" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDoc', TRUE) . '" />'));
 				// Save and close
-				$buttons['save_close'] = IconUtility::getSpriteIcon('actions-document-save-close', array('html' => '<input type="image" class="c-inputButton" name="_saveandclosedok" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', 1) . '" />'));
+				$buttons['save_close'] = IconUtility::getSpriteIcon('actions-document-save-close', array('html' => '<input type="image" class="c-inputButton" name="_saveandclosedok" src="clear.gif" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveCloseDoc', TRUE) . '" />'));
 				// Save record and show page
 				$buttons['savedokshow'] = '<a href="#" onclick="' . htmlspecialchars('document.editform.redirect.value+=\'&popView=1\'; TBE_EDITOR.checkAndDoSubmit(1); return false;') . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:rm.saveDocShow', TRUE) . '">' . IconUtility::getSpriteIcon('actions-document-save-view') . '</a>';
 				// Close record
@@ -1169,5 +1172,3 @@ class PageLayoutController {
 	}
 
 }
-
-?>

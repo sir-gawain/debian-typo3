@@ -1,4 +1,6 @@
 <?php
+namespace TYPO3\CMS\Form\Tests\Unit\Validation;
+
 /***************************************************************
 *  Copyright notice
 *
@@ -96,4 +98,3 @@ class GreaterThanValidatorTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCas
 		);
 	}
 }
-?>

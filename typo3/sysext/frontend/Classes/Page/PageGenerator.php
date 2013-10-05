@@ -30,15 +30,6 @@ namespace TYPO3\CMS\Frontend\Page;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Libraries for pagegen.php
- * The script "pagegen.php" is included by "index_ts.php" when a page is not cached but needs to be rendered.
- *
- * Revised for TYPO3 3.6 June/2003 by Kasper Skårhøj
- * XHTML compliant
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
  * Class for starting TypoScript page generation
  *
  * The class is not instantiated as an objects but called directly with the "::" operator.
@@ -65,7 +56,7 @@ class PageGenerator {
 			unset($temp_copy_TSFE);
 		}
 		if ($GLOBALS['TSFE']->config['config']['MP_defaults']) {
-			$temp_parts = GeneralUtility::trimExplode('|', $GLOBALS['TSFE']->config['config']['MP_defaults'], 1);
+			$temp_parts = GeneralUtility::trimExplode('|', $GLOBALS['TSFE']->config['config']['MP_defaults'], TRUE);
 			foreach ($temp_parts as $temp_p) {
 				list($temp_idP, $temp_MPp) = explode(':', $temp_p, 2);
 				$temp_ids = GeneralUtility::intExplode(',', $temp_idP);
@@ -124,7 +115,11 @@ class PageGenerator {
 		// dtdAllowsFrames indicates whether to use the target attribute in links
 		$GLOBALS['TSFE']->dtdAllowsFrames = FALSE;
 		if ($GLOBALS['TSFE']->config['config']['doctype']) {
-			if (in_array((string) $GLOBALS['TSFE']->config['config']['doctype'], array('xhtml_frames', 'html5'))) {
+			if (in_array(
+				(string) $GLOBALS['TSFE']->config['config']['doctype'],
+				array('xhtml_trans', 'xhtml_frames', 'xhtml_basic', 'xhtml_2', 'html5'),
+				TRUE)
+			) {
 				$GLOBALS['TSFE']->dtdAllowsFrames = TRUE;
 			}
 		} else {
@@ -472,7 +467,19 @@ class PageGenerator {
 							}
 							$pageRenderer->addCssInlineBlock('import_' . $key, '@import url("' . htmlspecialchars($ss) . '") ' . htmlspecialchars($GLOBALS['TSFE']->pSetup['includeCSS.'][($key . '.')]['media']) . ';', empty($GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['disableCompression']), $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['forceOnTop'] ? TRUE : FALSE, '');
 						} else {
-							$pageRenderer->addCssFile($ss, $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['alternate'] ? 'alternate stylesheet' : 'stylesheet', $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['media'] ? $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['media'] : 'all', $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['title'] ? $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['title'] : '', empty($GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['disableCompression']), $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['forceOnTop'] ? TRUE : FALSE, $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['allWrap'], $GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.']['excludeFromConcatenation'] ? TRUE : FALSE);
+							$cssFileConfig = &$GLOBALS['TSFE']->pSetup['includeCSS.'][$key . '.'];
+							$pageRenderer->addCssFile(
+								$ss,
+								$cssFileConfig['alternate'] ? 'alternate stylesheet' : 'stylesheet',
+								$cssFileConfig['media'] ? $cssFileConfig['media'] : 'all',
+								$cssFileConfig['title'] ? $cssFileConfig['title'] : '',
+								empty($cssFileConfig['disableCompression']),
+								$cssFileConfig['forceOnTop'] ? TRUE : FALSE,
+								$cssFileConfig['allWrap'],
+								$cssFileConfig['excludeFromConcatenation'] ? TRUE : FALSE,
+								$cssFileConfig['allWrap.']['splitChar']
+							);
+							unset($cssFileConfig);
 						}
 					}
 				}
@@ -492,7 +499,7 @@ class PageGenerator {
 				}
 			}
 			if ($GLOBALS['TSFE']->pSetup['insertClassesFromRTE.']['add_mainStyleOverrideDefs'] && is_array($pageTSConfig['RTE.']['default.']['mainStyleOverride_add.'])) {
-				$mSOa_tList = GeneralUtility::trimExplode(',', strtoupper($GLOBALS['TSFE']->pSetup['insertClassesFromRTE.']['add_mainStyleOverrideDefs']), 1);
+				$mSOa_tList = GeneralUtility::trimExplode(',', strtoupper($GLOBALS['TSFE']->pSetup['insertClassesFromRTE.']['add_mainStyleOverrideDefs']), TRUE);
 				foreach ($pageTSConfig['RTE.']['default.']['mainStyleOverride_add.'] as $mSOa_key => $mSOa_value) {
 					if (!is_array($mSOa_value) && (in_array('*', $mSOa_tList) || in_array($mSOa_key, $mSOa_tList))) {
 						$style .= '
@@ -596,11 +603,23 @@ class PageGenerator {
 					}
 					$ss = $GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.']['external'] ? $JSfile : $GLOBALS['TSFE']->tmpl->getFileName($JSfile);
 					if ($ss) {
-						$type = $GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.']['type'];
+						$jsFileConfig = &$GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.'];
+						$type = $jsFileConfig['type'];
 						if (!$type) {
 							$type = 'text/javascript';
 						}
-						$pageRenderer->addJsLibrary($key, $ss, $type, empty($GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.']['disableCompression']), $GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.']['forceOnTop'] ? TRUE : FALSE, $GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.']['allWrap'], $GLOBALS['TSFE']->pSetup['includeJSlibs.'][$key . '.']['excludeFromConcatenation'] ? TRUE : FALSE);
+
+						$pageRenderer->addJsLibrary(
+							$key,
+							$ss,
+							$type,
+							empty($jsFileConfig['disableCompression']),
+							$jsFileConfig['forceOnTop'] ? TRUE : FALSE,
+							$jsFileConfig['allWrap'],
+							$jsFileConfig['excludeFromConcatenation'] ? TRUE : FALSE,
+							$jsFileConfig['allWrap.']['splitChar']
+						);
+						unset($jsFileConfig);
 					}
 				}
 			}
@@ -613,11 +632,22 @@ class PageGenerator {
 					}
 					$ss = $GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.']['external'] ? $JSfile : $GLOBALS['TSFE']->tmpl->getFileName($JSfile);
 					if ($ss) {
-						$type = $GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.']['type'];
+						$jsFileConfig = &$GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.'];
+						$type = $jsFileConfig['type'];
 						if (!$type) {
 							$type = 'text/javascript';
 						}
-						$pageRenderer->addJsFooterLibrary($key, $ss, $type, empty($GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.']['disableCompression']), $GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.']['forceOnTop'] ? TRUE : FALSE, $GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.']['allWrap'], $GLOBALS['TSFE']->pSetup['includeJSFooterlibs.'][$key . '.']['excludeFromConcatenation'] ? TRUE : FALSE);
+						$pageRenderer->addJsFooterLibrary(
+							$key,
+							$ss,
+							$type,
+							empty($jsFileConfig['disableCompression']),
+							$jsFileConfig['forceOnTop'] ? TRUE : FALSE,
+							$jsFileConfig['allWrap'],
+							$jsFileConfig['excludeFromConcatenation'] ? TRUE : FALSE,
+							$jsFileConfig['allWrap.']['splitChar']
+						);
+						unset($jsFileConfig);
 					}
 				}
 			}
@@ -631,11 +661,21 @@ class PageGenerator {
 					}
 					$ss = $GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.']['external'] ? $JSfile : $GLOBALS['TSFE']->tmpl->getFileName($JSfile);
 					if ($ss) {
-						$type = $GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.']['type'];
+						$jsConfig = &$GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.'];
+						$type = $jsConfig['type'];
 						if (!$type) {
 							$type = 'text/javascript';
 						}
-						$pageRenderer->addJsFile($ss, $type, empty($GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.']['disableCompression']), $GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.']['forceOnTop'] ? TRUE : FALSE, $GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.']['allWrap'], $GLOBALS['TSFE']->pSetup['includeJS.'][$key . '.']['excludeFromConcatenation'] ? TRUE : FALSE);
+						$pageRenderer->addJsFile(
+							$ss,
+							$type,
+							empty($jsConfig['disableCompression']),
+							$jsConfig['forceOnTop'] ? TRUE : FALSE,
+							$jsConfig['allWrap'],
+							$jsConfig['excludeFromConcatenation'] ? TRUE : FALSE,
+							$jsConfig['allWrap.']['splitChar']
+						);
+						unset($jsConfig);
 					}
 				}
 			}
@@ -648,11 +688,21 @@ class PageGenerator {
 					}
 					$ss = $GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.']['external'] ? $JSfile : $GLOBALS['TSFE']->tmpl->getFileName($JSfile);
 					if ($ss) {
-						$type = $GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.']['type'];
+						$jsConfig = &$GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.'];
+						$type = $jsConfig['type'];
 						if (!$type) {
 							$type = 'text/javascript';
 						}
-						$pageRenderer->addJsFooterFile($ss, $type, empty($GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.']['disableCompression']), $GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.']['forceOnTop'] ? TRUE : FALSE, $GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.']['allWrap'], $GLOBALS['TSFE']->pSetup['includeJSFooter.'][$key . '.']['excludeFromConcatenation'] ? TRUE : FALSE);
+						$pageRenderer->addJsFooterFile(
+							$ss,
+							$type,
+							empty($jsConfig['disableCompression']),
+							$jsConfig['forceOnTop'] ? TRUE : FALSE,
+							$jsConfig['allWrap'],
+							$jsConfig['excludeFromConcatenation'] ? TRUE : FALSE,
+							$jsConfig['allWrap.']['splitChar']
+						);
+						unset($jsConfig);
 					}
 				}
 			}
@@ -1023,6 +1073,3 @@ class PageGenerator {
 	}
 
 }
-
-
-?>

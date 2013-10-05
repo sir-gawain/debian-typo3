@@ -33,12 +33,26 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class AllConfiguration extends Action\AbstractAction implements Action\ActionInterface {
 
 	/**
+	 * Error handlers are a bit mask in PHP. This register hints the View to
+	 * add a fluid view helper resolving the bit mask to its representation
+	 * as constants again for the specified items in ['SYS'].
+	 *
+	 * @var array
+	 */
+	protected $phpErrorCodesSettings = array(
+		'errorHandlerErrors',
+		'exceptionalErrors',
+		'syslogErrorReporting',
+		'belogErrorReporting',
+	);
+
+	/**
 	 * Handle this action
 	 *
 	 * @return string content
 	 */
 	public function handle() {
-		$this->initialize();
+		$this->initializeHandle();
 
 		if (isset($this->postValues['set']['write'])) {
 			$this->view->assign('configurationValuesSaved', TRUE);
@@ -57,10 +71,12 @@ class AllConfiguration extends Action\AbstractAction implements Action\ActionInt
 	 */
 	protected function setUpConfigurationData() {
 		$data = array();
-		foreach ($GLOBALS['TYPO3_CONF_VARS'] as $sectionName => $sectionData) {
+		$typo3ConfVars = array_keys($GLOBALS['TYPO3_CONF_VARS']);
+		sort($typo3ConfVars);
+		foreach ($typo3ConfVars as $sectionName) {
 			$data[$sectionName] = array();
 
-			foreach ($sectionData as $key => $value) {
+			foreach ($GLOBALS['TYPO3_CONF_VARS'][$sectionName] as $key => $value) {
 				if (isset($GLOBALS['TYPO3_CONF_VARS_extensionAdded'][$sectionName][$key])) {
 					// Don't allow editing stuff which is added by extensions
 					// Make sure we fix potentially duplicated entries from older setups
@@ -91,6 +107,12 @@ class AllConfiguration extends Action\AbstractAction implements Action\ActionInt
 						$itemData['type'] = 'input';
 						$itemData['value'] = $value;
 					}
+
+					// Check if the setting is a PHP error code, will trigger a view helper in fluid
+					if ($sectionName === 'SYS' && in_array($key, $this->phpErrorCodesSettings)) {
+						$itemData['phpErrorCode'] = TRUE;
+					}
+
 					$data[$sectionName][] = $itemData;
 				}
 			}
@@ -190,4 +212,3 @@ class AllConfiguration extends Action\AbstractAction implements Action\ActionInt
 		return $commentArray;
 	}
 }
-?>

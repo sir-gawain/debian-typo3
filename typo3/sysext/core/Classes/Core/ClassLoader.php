@@ -230,7 +230,7 @@ class ClassLoader {
 			try {
 				$extensionClassAliasMap = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionKey, 'Migrations/Code/ClassAliasMap.php');
 				if (@file_exists($extensionClassAliasMap)) {
-					$aliasToClassNameMapping = array_merge($aliasToClassNameMapping, require $extensionClassAliasMap);
+					$aliasToClassNameMapping = array_merge($aliasToClassNameMapping, (array) require $extensionClassAliasMap);
 				}
 			} catch (\BadFunctionCallException $e) {
 			}
@@ -316,7 +316,7 @@ class ClassLoader {
 			try {
 				$extensionAutoloadFile = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionKey, 'ext_autoload.php');
 				if (@file_exists($extensionAutoloadFile)) {
-					$classRegistry = array_merge($classRegistry, require $extensionAutoloadFile);
+					$classRegistry = array_merge($classRegistry, (array) require $extensionAutoloadFile);
 				}
 			} catch (\BadFunctionCallException $e) {
 
@@ -344,6 +344,13 @@ class ClassLoader {
 			$delimiter = '\\';
 		}
 		$classNameParts = explode($delimiter, $tempClassName, 4);
+
+		// we only handle classes that follow the convention Vendor\Product\Classname or is longer
+		// so we won't deal with class names that only have one or two parts
+		if (count($classNameParts) <= 2) {
+			return;
+		}
+
 		if (isset($classNameParts[0]) && $classNameParts[0] === 'TYPO3' && (isset($classNameParts[1]) && $classNameParts[1] === 'CMS')) {
 			$extensionKey = GeneralUtility::camelCaseToLowerCaseUnderscored($classNameParts[2]);
 			$classNameWithoutVendorAndProduct = $classNameParts[3];
@@ -432,6 +439,3 @@ class ClassLoader {
 	}
 
 }
-
-
-?>

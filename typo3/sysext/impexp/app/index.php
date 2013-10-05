@@ -61,7 +61,7 @@
  * external_ref[tables][]=table/_ALL
  */
 unset($MCONF);
-require 'conf.php';
+require __DIR__ . '/conf.php';
 require_once $BACK_PATH . 'init.php';
 $LANG->includeLLFile('EXT:impexp/app/locallang.xlf');
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('impexp', 1);
@@ -76,4 +76,3 @@ $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Impexp
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
-?>

@@ -103,7 +103,7 @@ $EM_CONF[$_EXTKEY] = ' . $emConf . ';
 				}
 			}
 			if (!isset($emConf['constraints']) || !isset($emConf['constraints']['conflicts'])) {
-				$emConf['constraints']['conflicts'] = $this->dependencyToString($emConf['conflicts']);
+				$emConf['constraints']['conflicts'] = $this->stringToDependency($emConf['conflicts']);
 			}
 			if (!isset($emConf['constraints']) || !isset($emConf['constraints']['suggests'])) {
 				$emConf['constraints']['suggests'] = array();
@@ -132,17 +132,14 @@ $EM_CONF[$_EXTKEY] = ' . $emConf . ';
 	 * @return string A simple dependency list for display
 	 */
 	static public function dependencyToString($dependency, $type = 'depends') {
-		if (is_array($dependency)) {
-			if (isset($dependency[$type]['php'])) {
-				unset($dependency[$type]['php']);
-			}
-			if (isset($dependency[$type]['typo3'])) {
-				unset($dependency[$type]['typo3']);
-			}
-			$dependencyString = count($dependency[$type]) ? implode(',', array_keys($dependency[$type])) : '';
-			return $dependencyString;
+		if (!is_array($dependency) || !is_array($dependency[$type])) {
+			return '';
 		}
-		return '';
+
+		unset($dependency[$type]['php']);
+		unset($dependency[$type]['typo3']);
+
+		return implode(',', array_keys($dependency[$type]));
 	}
 
 	/**
@@ -168,6 +165,3 @@ $EM_CONF[$_EXTKEY] = ' . $emConf . ';
 	}
 
 }
-
-
-?>

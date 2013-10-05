@@ -1,5 +1,5 @@
 <?php
-namespace TYPO3\CMS\Core\Tests\Tree\TableConfiguration;
+namespace TYPO3\CMS\Core\Tests\Unit\Tree\TableConfiguration;
 
 /***************************************************************
  *  Copyright notice
@@ -125,5 +125,3 @@ class TreeDataProviderFactoryTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->assertInstanceOf($dataProviderMockClassName, $dataProvider);
 	}
 }
-
-?>

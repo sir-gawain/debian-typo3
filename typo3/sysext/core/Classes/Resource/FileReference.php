@@ -290,6 +290,15 @@ class FileReference implements FileInterface {
 	}
 
 	/**
+	 * Returns the basename (the name without extension) of this file.
+	 *
+	 * @return string
+	 */
+	public function getNameWithoutExtension() {
+		return $this->originalFile->getNameWithoutExtension();
+	}
+
+	/**
 	 * Get the MIME type of this file
 	 *
 	 * @return array file information
@@ -323,6 +332,15 @@ class FileReference implements FileInterface {
 	 */
 	public function getType() {
 		return (int) $this->originalFile->getType();
+	}
+
+	/**
+	 * Check if file is marked as missing by indexer
+	 *
+	 * @return boolean
+	 */
+	public function isMissing() {
+		return (bool) $this->originalFile->getProperty('missing');
 	}
 
 	/******************
@@ -467,6 +485,3 @@ class FileReference implements FileInterface {
 	}
 
 }
-
-
-?>

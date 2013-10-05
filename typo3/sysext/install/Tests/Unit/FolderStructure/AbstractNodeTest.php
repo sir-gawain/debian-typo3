@@ -67,7 +67,26 @@ class AbstractNodeTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$node = $this->getAccessibleMock('TYPO3\\CMS\\Install\\FolderStructure\\AbstractNode', array('dummy'), array(), '', FALSE);
 		$permission = '1234';
 		$node->_set('targetPermission', $permission);
-		$this->assertSame($permission, $node->getTargetPermission());
+		$this->assertSame($permission, $node->_call('getTargetPermission'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function getTargetPermissionRelaxedReturnsFalseByDefault() {
+		/** @var $node \TYPO3\CMS\Install\FolderStructure\AbstractNode|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$node = $this->getAccessibleMock('TYPO3\\CMS\\Install\\FolderStructure\\AbstractNode', array('dummy'), array(), '', FALSE);
+		$this->assertFalse($node->_call('getTargetPermissionRelaxed'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function getTargetPermissionRelaxedReturnsTrueIfPermissionCheckIsRelaxed() {
+		/** @var $node \TYPO3\CMS\Install\FolderStructure\AbstractNode|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$node = $this->getAccessibleMock('TYPO3\\CMS\\Install\\FolderStructure\\AbstractNode', array('dummy'), array(), '', FALSE);
+		$node->_set('targetPermissionRelaxed', TRUE);
+		$this->assertTrue($node->_call('getTargetPermissionRelaxed'));
 	}
 
 	/**
@@ -78,7 +97,7 @@ class AbstractNodeTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$node = $this->getAccessibleMock('TYPO3\\CMS\\Install\\FolderStructure\\AbstractNode', array('dummy'), array(), '', FALSE);
 		$children = array('1234');
 		$node->_set('children', $children);
-		$this->assertSame($children, $node->getChildren());
+		$this->assertSame($children, $node->_call('getChildren'));
 	}
 
 	/**
@@ -89,7 +108,7 @@ class AbstractNodeTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$node = $this->getAccessibleMock('TYPO3\\CMS\\Install\\FolderStructure\\AbstractNode', array('dummy'), array(), '', FALSE);
 		$parent = $this->getMock('TYPO3\CMS\Install\FolderStructure\RootNodeInterface', array(), array(), '', FALSE);
 		$node->_set('parent', $parent);
-		$this->assertSame($parent, $node->getParent());
+		$this->assertSame($parent, $node->_call('getParent'));
 	}
 
 	/**
@@ -219,6 +238,39 @@ class AbstractNodeTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$node->expects($this->any())->method('getAbsolutePath')->will($this->returnValue($subPath));
 		$node->_set('targetPermission', '2770');
 		$this->assertInstanceOf('TYPO3\\CMS\\Install\\Status\\ErrorStatus', $node->_call('fixPermission'));
+		chmod($path, octdec(2770));
+	}
+
+	/**
+	 * @test
+	 */
+	public function fixPermissionReturnsNoticeStatusIfPermissionsCanNotBeChangedAndRelaxedPermissionCheckIsEnabled() {
+		if (TYPO3_OS === 'WIN') {
+			$this->markTestSkipped('Test not available on Windows OS.');
+		}
+		if (function_exists('posix_getegid') && posix_getegid() === 0) {
+			$this->markTestSkipped('Test skipped if run on linux as root');
+		}
+		/** @var $node \TYPO3\CMS\Install\FolderStructure\AbstractNode|\TYPO3\CMS\Core\Tests\AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$node = $this->getAccessibleMock(
+			'TYPO3\\CMS\\Install\\FolderStructure\\AbstractNode',
+			array('isPermissionCorrect', 'getRelativePathBelowSiteRoot', 'getAbsolutePath'),
+			array(),
+			'',
+			FALSE
+		);
+		$node->expects($this->any())->method('getRelativePathBelowSiteRoot')->will($this->returnValue(''));
+		$node->expects($this->once())->method('isPermissionCorrect')->will($this->returnValue(FALSE));
+		$path = PATH_site . 'typo3temp/' . uniqid('root_');
+		mkdir($path);
+		$subPath = $path . '/' . uniqid('dir_');
+		mkdir($subPath);
+		chmod($path, octdec(2000));
+		$this->testNodesToDelete[] = $path;
+		$node->expects($this->any())->method('getAbsolutePath')->will($this->returnValue($subPath));
+		$node->_set('targetPermission', '2770');
+		$node->_set('targetPermissionRelaxed', TRUE);
+		$this->assertInstanceOf('TYPO3\\CMS\\Install\\Status\\NoticeStatus', $node->_call('fixPermission'));
 		chmod($path, octdec(2770));
 	}
 

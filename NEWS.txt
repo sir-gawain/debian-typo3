@@ -18,6 +18,8 @@ Compatibility
 System environment
 -------------------------------------------------------------------------------
 
+* Raised minimum PHP version requirement to 5.3.7
+
 -------------------------------------------------------------------------------
 Deprecated and removed components
 -------------------------------------------------------------------------------
@@ -34,12 +36,38 @@ General
 Logging
 -------------------------------------------------------------------------------
 
-* The logger of the Logging API now complies with the PSR-3 standard of the
-  PHP Framework Interop Group: http://www.php-fig.org/psr/3/
+* Logging API PSR-3 compliance
+
+The logger of the Logging API now complies with the PSR-3 standard of the
+PHP Framework Interop Group: http://www.php-fig.org/psr/3/
 
 -------------------------------------------------------------------------------
 Backend
 -------------------------------------------------------------------------------
+
+* Categorization API improvements
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::makeCategorizable() can now
+be used multiple times on the same table to add more than one category field.
+The options array (the fourth parameter) now can contain a 'label' to set a
+custom label for each category field.
+
+-------------------------------------------------------------------------------
+Frontend
+-------------------------------------------------------------------------------
+
+* Minor API change in \TYPO3\CMS\Frontend\ContentObjectRenderer->getTreeList()
+
+getTreeList() got some cleanup and slightly changed its return result. Former
+versions sometimes returned a trailing comma which is not the case anymore.
+
+Before:
+getTreeList(42, 4) // get pids for pageId 42, 4 levels deep
+result: '0, 22, 11, 4,'
+
+After:
+getTreeList(42, 4)
+result: '0, 22, 11, 4'
 
 -------------------------------------------------------------------------------
 Administration / Customization

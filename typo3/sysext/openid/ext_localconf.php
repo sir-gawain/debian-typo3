@@ -10,7 +10,7 @@ if (!defined('TYPO3_MODE')) {
 	'subtype' => 'getUserFE,authUserFE,getUserBE,authUserBE',
 	'available' => TRUE,
 	'priority' => 75,
-	// Must be higher than for tx_sv_auth (50) or tx_sv_auth will deny request unconditionally
+	// Must be higher than for \TYPO3\CMS\Sv\AuthenticationService (50) or \TYPO3\CMS\Sv\AuthenticationService will deny request unconditionally
 	'quality' => 50,
 	'os' => '',
 	'exec' => '',
@@ -22,4 +22,3 @@ $GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['tx_openid'] = 'EXT:openid/clas
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['setup']['accessLevelCheck']['TYPO3\\CMS\\Openid\\OpenidModuleSetup'] = '';
 // Use popup window to refresh login instead of the AJAX relogin:
 $TYPO3_CONF_VARS['BE']['showRefreshLoginPopup'] = 1;
-?>

@@ -84,12 +84,21 @@ class EditFileController {
 	protected $fileObject;
 
 	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$GLOBALS['SOBE'] = $this;
+		$GLOBALS['BACK_PATH'] = '';
+
+		$this->init();
+	}
+
+	/**
 	 * Initialize script class
 	 *
 	 * @return 	void
-	 * @todo Define visibility
 	 */
-	public function init() {
+	protected function init() {
 		// Setting target, which must be a file reference to a file within the mounts.
 		$this->target = ($this->origTarget = ($fileIdentifier = GeneralUtility::_GP('target')));
 		$this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
@@ -103,6 +112,10 @@ class EditFileController {
 			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:targetNoDir', TRUE);
 			throw new \RuntimeException($title . ': ' . $message, 1294586841);
 		}
+		if ($this->fileObject->getStorage()->getUid() === 0) {
+			throw new \TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException('You are not allowed to access files outside your storages', 1375889832);
+		}
+
 		// Setting the title and the icon
 		$icon = IconUtility::getSpriteIcon('apps-filetree-root');
 		$this->title = $icon . htmlspecialchars($this->fileObject->getStorage()->getName()) . ': ' . htmlspecialchars($this->fileObject->getIdentifier());
@@ -123,7 +136,6 @@ class EditFileController {
 	 * Main function, redering the actual content of the editing page
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function main() {
 		$docHeaderButtons = $this->getButtons();
@@ -145,7 +157,10 @@ class EditFileController {
 		$pageContent .= $this->doc->spacer(2);
 		$code = '';
 		$extList = $GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'];
-		if ($extList && GeneralUtility::inList($extList, $this->fileObject->getExtension())) {
+		try {
+			if (!$extList || !GeneralUtility::inList($extList, $this->fileObject->getExtension())) {
+				throw new \Exception('Files with that extension are not editable.');
+			}
 			// Read file content to edit:
 			$fileContent = $this->fileObject->getContents();
 			// Making the formfields
@@ -165,7 +180,7 @@ class EditFileController {
 			} else {
 				$docHeaderButtons['shortcut'] = '';
 			}
-		} else {
+		} catch (\Exception $e) {
 			$code .= sprintf($GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_edit.php.coundNot'), $extList);
 		}
 		// Ending of section and outputting editing form:
@@ -201,7 +216,6 @@ class EditFileController {
 	 * Outputting the accumulated content to screen
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function printContent() {
 		echo $this->content;
@@ -230,5 +244,3 @@ class EditFileController {
 	}
 
 }
-
-?>

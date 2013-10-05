@@ -24,6 +24,7 @@ namespace TYPO3\CMS\Linkvalidator\Task;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -261,7 +262,7 @@ class ValidatorTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 		$html = array();
 		$pageSections = '';
 		$this->isDifferentToLastRun = FALSE;
-		$pageList = GeneralUtility::trimExplode(',', $this->page, 1);
+		$pageList = GeneralUtility::trimExplode(',', $this->page, TRUE);
 		$modTs = $this->loadModTsConfig($this->page);
 		if (is_array($pageList)) {
 			foreach ($pageList as $page) {
@@ -330,7 +331,7 @@ class ValidatorTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	 * @throws \Exception
 	 */
 	protected function loadModTsConfig($page) {
-		$modTs = \TYPO3\CMS\Backend\Utility\BackendUtility::getModTSconfig($page, 'mod.linkvalidator');
+		$modTs = BackendUtility::getModTSconfig($page, 'mod.linkvalidator');
 		$parseObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
 		$parseObj->parse($this->configuration);
 		if (count($parseObj->errors) > 0) {
@@ -374,7 +375,7 @@ class ValidatorTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 	 */
 	protected function getLinkTypes(array $modTS) {
 		$linkTypes = array();
-		$typesTmp = GeneralUtility::trimExplode(',', $modTS['linktypes'], 1);
+		$typesTmp = GeneralUtility::trimExplode(',', $modTS['linktypes'], TRUE);
 		if (is_array($typesTmp)) {
 			if (!empty($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['linkvalidator']['checkLinks']) && is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['linkvalidator']['checkLinks'])) {
 				foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['linkvalidator']['checkLinks'] as $type => $value) {
@@ -502,9 +503,9 @@ class ValidatorTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 				$markerArray[$markerKey . '_old'] = $oldBrokenLink[$markerKey];
 			}
 		}
-		$markerArray['title'] = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle(
+		$markerArray['title'] = BackendUtility::getRecordTitle(
 			'pages',
-			\TYPO3\CMS\Backend\Utility\BackendUtility::getRecord('pages', $curPage)
+			BackendUtility::getRecord('pages', $curPage)
 		);
 		$content = '';
 		if ($markerArray['brokenlinkCount'] > 0) {
@@ -533,4 +534,3 @@ class ValidatorTask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 		);
 	}
 }
-?>

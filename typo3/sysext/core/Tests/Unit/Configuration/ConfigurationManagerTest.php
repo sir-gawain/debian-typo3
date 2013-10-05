@@ -331,7 +331,27 @@ class ConfigurationManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$currentLocalConfiguration = array(
 			'notChanged' => 23,
 		);
-		$expectedConfiguration = array(
+		$this->createFixtureWithMockedMethods(
+			array(
+				'getLocalConfiguration',
+				'writeLocalConfiguration',
+			)
+		);
+		$this->fixture->expects($this->once())
+			->method('getLocalConfiguration')
+			->will($this->returnValue($currentLocalConfiguration));
+		$this->fixture->expects($this->never())
+			->method('writeLocalConfiguration');
+
+		$removeNothing = array();
+		$this->assertFalse($this->fixture->removeLocalConfigurationKeysByPath($removeNothing));
+	}
+
+	/**
+	 * @test
+	 */
+	public function removeLocalConfigurationKeysByPathReturnsFalseIfSomethingInexistentIsRemoved() {
+		$currentLocalConfiguration = array(
 			'notChanged' => 23,
 		);
 		$this->createFixtureWithMockedMethods(
@@ -343,12 +363,11 @@ class ConfigurationManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->fixture->expects($this->once())
 			->method('getLocalConfiguration')
 			->will($this->returnValue($currentLocalConfiguration));
-		$this->fixture->expects($this->once())
-			->method('writeLocalConfiguration')
-			->with($expectedConfiguration);
+		$this->fixture->expects($this->never())
+			->method('writeLocalConfiguration');
 
-		$removePaths = array();
-		$this->assertFalse($this->fixture->removeLocalConfigurationKeysByPath($removePaths));
+		$removeNonExisting = array('notPresent');
+		$this->assertFalse($this->fixture->removeLocalConfigurationKeysByPath($removeNonExisting));
 	}
 
 	/**
@@ -417,19 +436,19 @@ class ConfigurationManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$directory = 'typo3temp/' . uniqid('test_');
 		$absoluteDirectory = PATH_site . $directory;
 		mkdir($absoluteDirectory);
-		$fixture->_set('pathTypo3Conf', $directory);
+		$fixture->_set('pathTypo3Conf', $absoluteDirectory);
 
 		$file1 = 'typo3temp/' . uniqid('test_');
 		$absoluteFile1 = PATH_site . $file1;
 		touch($absoluteFile1);
 		$this->testFilesToDelete[] = $absoluteFile1;
-		$fixture->_set('localConfigurationFile', $file1);
+		$fixture->_set('localConfigurationFile', $absoluteFile1);
 
 		$file2 = 'typo3temp/' . uniqid('test_');
 		$absoluteFile2 = PATH_site . $file2;
 		touch($absoluteFile2);
 		$this->testFilesToDelete[] = $absoluteFile2;
-		$fixture->_set('localconfFile', $file2);
+		$fixture->_set('localconfFile', $absoluteFile2);
 
 		clearstatcache();
 
@@ -589,4 +608,3 @@ class ConfigurationManagerTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->assertFalse($fixture->_call('isValidLocalConfigurationPath', 'bar/baz'));
 	}
 }
-?>

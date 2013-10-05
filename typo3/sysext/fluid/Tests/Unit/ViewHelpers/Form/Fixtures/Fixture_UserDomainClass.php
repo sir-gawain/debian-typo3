@@ -38,7 +38,7 @@ class UserDomainClass {
 	/**
 	 * Return the ID
 	 *
-	 * @return int ID
+	 * @return integer ID
 	 */
 	public function getId() {
 		return $this->id;
@@ -62,5 +62,3 @@ class UserDomainClass {
 		return $this->lastName;
 	}
 }
-
-?>

@@ -125,7 +125,7 @@ class Check {
 	/**
 	 * Checks if current directory (.) is in PHP include path
 	 *
-	 * @return Status\WarningStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkCurrentDirectoryIsInIncludePath() {
 		$includePath = ini_get('include_path');
@@ -133,17 +133,17 @@ class Check {
 		$pathArray = $this->trimExplode($delimiter, $includePath);
 		if (!in_array('.', $pathArray)) {
 			$status = new Status\WarningStatus();
-			$status->setTitle('Current directory (./) is not in include path');
+			$status->setTitle('Current directory (./) is not within PHP include path');
 			$status->setMessage(
-				'include_path = ' . implode(' ', $pathArray) .
-				' Normally the current path, \'.\', is included in the' .
+				'include_path = ' . implode(' ', $pathArray) . LF .
+				'Normally the current path \'.\' is included in the' .
 				' include_path of PHP. Although TYPO3 does not rely on this,' .
 				' it is an unusual setting that may introduce problems for' .
 				' some extensions.'
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('Current directory (./) is in include path.');
+			$status->setTitle('Current directory (./) is within PHP include path.');
 		}
 		return $status;
 	}
@@ -151,25 +151,25 @@ class Check {
 	/**
 	 * Check if file uploads are enabled in PHP
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkFileUploadEnabled() {
 		if (!ini_get('file_uploads')) {
 			$status = new Status\ErrorStatus();
-			$status->setTitle('File uploads not allowed');
+			$status->setTitle('File uploads not allowed in PHP');
 			$status->setMessage(
-				'file_uploads=' . ini_get('file_uploads') .
-				' TYPO3 uses the ability to upload files from the browser in various cases.' .
-				' As long as this flag is disabled, you\'ll not be able to upload files.' .
+				'file_uploads=' . ini_get('file_uploads') . LF .
+				'TYPO3 uses the ability to upload files from the browser in various cases.' .
+				' As long as this flag is disabled in PHP, you\'ll not be able to upload files.' .
 				' But it doesn\'t end here, because not only are files not accepted by' .
 				' the server - ALL content in the forms are discarded and therefore' .
 				' nothing at all will be editable if you don\'t set this flag!' .
-				' However if you cannot enable fileupload for some reason alternatively' .
-				' you change the default form encoding value with \\$TYPO3_CONF_VARS[SYS][form_enctype].'
+				' However if you cannot enable fileupload for some reason in PHP, alternatively' .
+				' change the default form encoding value with \\$TYPO3_CONF_VARS[SYS][form_enctype].'
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('File uploads allowed');
+			$status->setTitle('File uploads allowed in PHP');
 		}
 		return $status;
 	}
@@ -177,24 +177,26 @@ class Check {
 	/**
 	 * Check maximum file upload size against default value of 10MB
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkMaximumFileUploadSize() {
 		$maximumUploadFilesize = $this->getBytesFromSizeMeasurement(ini_get('upload_max_filesize'));
 		if ($maximumUploadFilesize < 1024 * 1024 * 10) {
 			$status = new Status\ErrorStatus();
-			$status->setTitle('Maximum upload filesize too small');
+			$status->setTitle('PHP Maximum upload filesize too small');
 			$status->setMessage(
-				'upload_max_filesize=' . ini_get('upload_max_filesize') .
-				'. By default TYPO3 supports uploading, copying and moving' .
+				'upload_max_filesize=' . ini_get('upload_max_filesize') . LF .
+				'By default TYPO3 supports uploading, copying and moving' .
 				' files of sizes up to 10MB (you can alter the TYPO3 defaults' .
 				' by the config option TYPO3_CONF_VARS[BE][maxFileSize]).' .
-				' Your current value is below this, so at this point, PHP sets' .
-				' the limits for uploaded filesizes and not TYPO3.'
+				' Your current PHP value is below this, so at this point, PHP determines' .
+				' the limits for uploaded filesizes and not TYPO3.' .
+				' It is recommended that the value of upload_max_filesize at least equals to the value' .
+				' of TYPO3_CONF_VARS[BE][maxFileSize]'
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('Maximum file upload size is higher or equal to 10MB');
+			$status->setTitle('PHP Maximum file upload size is higher or equal to 10MB');
 		}
 		return $status;
 	}
@@ -202,24 +204,24 @@ class Check {
 	/**
 	 * Check maximum post upload size correlates with maximum file upload
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkPostUploadSizeIsHigherOrEqualMaximumFileUploadSize() {
 		$maximumUploadFilesize = $this->getBytesFromSizeMeasurement(ini_get('upload_max_filesize'));
 		$maximumPostSize = $this->getBytesFromSizeMeasurement(ini_get('post_max_size'));
 		if ($maximumPostSize < $maximumUploadFilesize) {
 			$status = new Status\ErrorStatus();
-			$status->setTitle('Maximum size for POST requests is smaller than max. upload filesize');
+			$status->setTitle('Maximum size for POST requests is smaller than maximum upload filesize in PHP');
 			$status->setMessage(
-				'upload_max_filesize=' . ini_get('upload_max_filesize') .
-				', post_max_size=' . ini_get('post_max_size') .
-				' You have defined a maximum size for file uploads which' .
+				'upload_max_filesize=' . ini_get('upload_max_filesize') . LF .
+				'post_max_size=' . ini_get('post_max_size') . LF .
+				'You have defined a maximum size for file uploads in PHP which' .
 				' exceeds the allowed size for POST requests. Therefore the' .
 				' file uploads can not be larger than ' . ini_get('post_max_size') . '.'
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('Maximum post upload size correlates with maximum upload file size');
+			$status->setTitle('Maximum post upload size correlates with maximum upload file size in PHP');
 		}
 		return $status;
 	}
@@ -227,41 +229,46 @@ class Check {
 	/**
 	 * Check memory settings
 	 *
-	 * @return Status\ErrorStatus|Status\WarningStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkMemorySettings() {
+		$minimumMemoryLimit = 32;
+		$recommendedMemoryLimit = 64;
 		$memoryLimit = $this->getBytesFromSizeMeasurement(ini_get('memory_limit'));
 		if ($memoryLimit <= 0) {
 			$status = new Status\WarningStatus();
-			$status->setTitle('Unlimited memory limit!');
+			$status->setTitle('Unlimited memory limit for PHP');
 			$status->setMessage(
-				'Your webserver is configured to not limit PHP memory usage at all. This is a risk' .
-				' and should be avoided in production setup. In general it\'s best practice to limit this' .
-				' in the configuration of your webserver. To be safe, ask the system administrator of the' .
-				' webserver to raise the limit to something over 64MB'
+				'PHP is configured to not limit memory usage at all. This is a risk' .
+				' and should be avoided in production setup. In general it\'s best practice to limit this.' .
+				' To be safe, set a limit in PHP, but with a minimum of ' . $recommendedMemoryLimit . 'MB:' . LF .
+				'memory_limit=' . $recommendedMemoryLimit . 'M'
 			);
-		} elseif ($memoryLimit < 1024 * 1024 * 32) {
+		} elseif ($memoryLimit < 1024 * 1024 * $minimumMemoryLimit) {
 			$status = new Status\ErrorStatus();
-			$status->setTitle('Memory limit below 32MB');
+			$status->setTitle('PHP Memory limit below ' . $minimumMemoryLimit . 'MB');
 			$status->setMessage(
-				'memory_limit=' . ini_get('memory_limit') .
-				' Your system is configured to enforce a memory limit of PHP scripts lower than 32MB.' .
-				' There is nothing else to do than raise the limit. To be safe, ask the system' .
-				' administrator of the webserver to raise the limit to 64MB.'
+				'memory_limit=' . ini_get('memory_limit') . LF .
+				'Your system is configured to enforce a memory limit of PHP scripts lower than ' .
+				$minimumMemoryLimit . 'MB. It is required to raise the limit.' .
+				' We recommend a minimum PHP memory limit of ' . $recommendedMemoryLimit . 'MB:' . LF .
+				'memory_limit=' . $recommendedMemoryLimit . 'M'
 			);
-		} elseif ($memoryLimit < 1024 * 1024 * 64) {
+		} elseif ($memoryLimit < 1024 * 1024 * $recommendedMemoryLimit) {
 			$status = new Status\WarningStatus();
-			$status->setTitle('Memory limit below 64MB');
+			$status->setTitle('PHP Memory limit below ' . $recommendedMemoryLimit . 'MB');
 			$status->setMessage(
-				'memory_limit=' . ini_get('memory_limit') .
-				' Your system is configured to enforce a memory limit of PHP scripts lower than 64MB.' .
-				' A slim TYPO3 instance without many extensions will probably work, but you should ' .
-				' monitor your system for exhausted messages, especially if using the backend. ' .
-				' To be on the safe side, it would be better to raise the PHP memory limit to 64MB or more.'
+				'memory_limit=' . ini_get('memory_limit') . LF .
+				'Your system is configured to enforce a memory limit of PHP scripts lower than ' .
+				$recommendedMemoryLimit . 'MB.' .
+				' A slim TYPO3 instance without many extensions will probably work, but you should monitor your' .
+				' system for exhausted messages, especially if using the backend. To be on the safe side,' .
+				' we recommend a minimum PHP memory limit of ' . $recommendedMemoryLimit . 'MB:' . LF .
+				'memory_limit=' . $recommendedMemoryLimit . 'M'
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('Memory limit equal 64MB or more');
+			$status->setTitle('PHP Memory limit equals to ' . $recommendedMemoryLimit . 'MB or more');
 		}
 		return $status;
 	}
@@ -269,28 +276,17 @@ class Check {
 	/**
 	 * Check minimum PHP version
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkPhpVersion() {
-		$minimumPhpVersion = '5.3.0';
-		$recommendedPhpVersion = '5.3.7';
+		$minimumPhpVersion = '5.3.7';
 		$currentPhpVersion = phpversion();
 		if (version_compare($currentPhpVersion, $minimumPhpVersion) < 0) {
 			$status = new Status\ErrorStatus();
 			$status->setTitle('PHP version too low');
 			$status->setMessage(
 				'Your PHP version ' . $currentPhpVersion . ' is too old. TYPO3 CMS does not run' .
-				' with this version. Update to at least PHP ' . $recommendedPhpVersion
-			);
-		} elseif (version_compare($currentPhpVersion, $recommendedPhpVersion) < 0) {
-			$status = new Status\WarningStatus();
-			$status->setTitle('PHP version below recommended version');
-			$status->setMessage(
-				'Your PHP version ' . $currentPhpVersion . ' is below the recommended version' .
-				' ' . $recommendedPhpVersion . '. TYPO3 CMS will mostly run with your PHP' .
-				' version, but it is not officially supported. Expect some problems,' .
-				' and a performance penalty, monitor your system for errors and watch' .
-				' out for an upgrade, soon.'
+				' with this version. Update to at least PHP ' . $minimumPhpVersion
 			);
 		} else {
 			$status = new Status\OkStatus();
@@ -302,7 +298,7 @@ class Check {
 	/**
 	 * Check maximum execution time
 	 *
-	 * @return Status\ErrorStatus|Status\WarningStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkMaxExecutionTime() {
 		$minimumMaximumExecutionTime = 30;
@@ -320,29 +316,33 @@ class Check {
 				$status = new Status\WarningStatus();
 				$status->setTitle('Infinite PHP script execution time');
 				$status->setMessage(
-					'Your max_execution_time is set to 0 (infinite). While TYPO3 is fine' .
-					' with this, you risk a denial-of-service of your system if for whatever' .
+					'max_execution_time=' . $currentMaximumExecutionTime . LF .
+					'While TYPO3 is fine with this, you risk a denial-of-service of your system if for whatever' .
 					' reason some script hangs in an infinite loop. You are usually on safe side ' .
-					' if max_execution_time is reduced to ' . $recommendedMaximumExecutionTime
+					' if it is reduced to ' . $recommendedMaximumExecutionTime . ' seconds:' . LF .
+					'max_execution_time=' . $recommendedMaximumExecutionTime
 				);
 			}
 		} elseif ($currentMaximumExecutionTime < $minimumMaximumExecutionTime) {
 			$status = new Status\ErrorStatus();
 			$status->setTitle('Low PHP script execution time');
 			$status->setMessage(
-				'Your max_execution_time is set to ' . $currentMaximumExecutionTime .
-				'. Some expensive operation in TYPO3 can take longer than that. It is advised' .
-				' to raise max_execution_time to ' . $recommendedMaximumExecutionTime
+				'max_execution_time=' . $currentMaximumExecutionTime . LF .
+				'Your max_execution_time is too low. Some expensive operation in TYPO3 can take longer than that.' .
+				' It is recommended to raise the limit to ' . $recommendedMaximumExecutionTime . ' seconds:' . LF .
+				'max_execution_time=' . $recommendedMaximumExecutionTime
 			);
 		} elseif ($currentMaximumExecutionTime < $recommendedMaximumExecutionTime) {
 			$status = new Status\WarningStatus();
 			$status->setTitle('Low PHP script execution time');
 			$status->setMessage(
-				'Your max_execution_time is set to ' . $currentMaximumExecutionTime .
-				'. While TYPO3 often runs without problems with ' . $minimumMaximumExecutionTime .
+				'max_execution_time=' . $currentMaximumExecutionTime . LF .
+				'Your max_execution_time is low. While TYPO3 often runs without problems' .
+				' with ' . $minimumMaximumExecutionTime . ' seconds,' .
 				' it still may happen that script execution is stopped before finishing' .
 				' calculations. You should monitor the system for messages in this area' .
-				' and maybe raise the limit to ' . $recommendedMaximumExecutionTime . '.'
+				' and maybe raise the limit to ' . $recommendedMaximumExecutionTime . ' seconds:' . LF .
+				'max_execution_time=' . $recommendedMaximumExecutionTime
 			);
 		} else {
 			$status = new Status\OkStatus();
@@ -354,7 +354,7 @@ class Check {
 	/**
 	 * Check for disabled functions
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkDisableFunctions() {
 		$disabledFunctions = trim(ini_get('disable_functions'));
@@ -379,9 +379,10 @@ class Check {
 			$status = new Status\ErrorStatus();
 			$status->setTitle('Some PHP functions disabled');
 			$status->setMessage(
-				'disable_functions=' . implode(' ', explode(',', $disabledFunctions)) . '. These function(s)' .
-				' are disabled. TYPO3 uses some of those, so there might be trouble. TYPO3 is designed to use the' .
-				' default set of PHP functions plus some common extensions. Possibly these functions are disabled' .
+				'disable_functions=' . implode(' ', explode(',', $disabledFunctions)) . LF .
+				'These function(s) are disabled. TYPO3 uses some of those, so there might be trouble.' .
+				' TYPO3 is designed to use the default set of PHP functions plus some common extensions.' .
+				' Possibly these functions are disabled' .
 				' due to security considerations and most likely the list would include a function like' .
 				' exec() which is used by TYPO3 at various places. Depending on which exact functions' .
 				' are disabled, some parts of the system may just break without further notice.'
@@ -390,8 +391,8 @@ class Check {
 			$status = new Status\NoticeStatus();
 			$status->setTitle('Some PHP functions currently disabled but OK');
 			$status->setMessage(
-				'disable_functions=' . implode(' ', explode(',', $disabledFunctions)) . '. These function(s)' .
-				' are disabled. TYPO3 uses currently none of those, so you are good to go.'
+				'disable_functions=' . implode(' ', explode(',', $disabledFunctions)) . LF .
+				'These function(s) are disabled. TYPO3 uses currently none of those, so you are good to go.'
 			);
 		} else {
 			$status  = new Status\OkStatus();
@@ -403,7 +404,7 @@ class Check {
 	/**
 	 * Check if safe mode is enabled
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSafeMode() {
 		$safeModeEnabled = FALSE;
@@ -418,7 +419,8 @@ class Check {
 			$status = new Status\ErrorStatus();
 			$status->setTitle('PHP safe mode on');
 			$status->setMessage(
-				'safe_mode enabled. This is unsupported by TYPO3 CMS, it must be turned off.'
+				'PHP safe_mode enabled. This is unsupported by TYPO3 CMS, it must be turned off:' . LF .
+				'safe_mode=Off'
 			);
 		} else {
 			$status = new Status\OkStatus();
@@ -430,7 +432,7 @@ class Check {
 	/**
 	 * Check for doc_root ini setting
 	 *
-	 * @return Status\NoticeStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkDocRoot() {
 		$docRootSetting = trim(ini_get('doc_root'));
@@ -438,7 +440,8 @@ class Check {
 			$status = new Status\NoticeStatus();
 			$status->setTitle('doc_root is set');
 			$status->setMessage(
-				'doc_root=' . $docRootSetting . ' PHP cannot execute scripts' .
+				'doc_root=' . $docRootSetting . LF .
+				'PHP cannot execute scripts' .
 				' outside this directory. This setting is used seldom and must correlate' .
 				' with your actual document root. You might be in trouble if your' .
 				' TYPO3 CMS core code is linked to some different location.' .
@@ -454,16 +457,16 @@ class Check {
 	/**
 	 * Check open_basedir
 	 *
-	 * @return Status\NoticeStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkOpenBaseDir() {
 		$openBaseDirSetting = trim(ini_get('open_basedir'));
 		if (strlen($openBaseDirSetting) > 0) {
 			$status = new Status\NoticeStatus();
-			$status->setTitle('open_basedir set');
+			$status->setTitle('PHP open_basedir is set');
 			$status->setMessage(
-				'open_basedir = ' . ini_get('open_basedir') .
-				' This restricts TYPO3 to open and include files only in this' .
+				'open_basedir = ' . ini_get('open_basedir') . LF .
+				'This restricts TYPO3 to open and include files only in this' .
 				' path. Please make sure that this does not prevent TYPO3 from running,' .
 				' if for example your TYPO3 CMS core is linked to a different directory' .
 				' not included in this path.'
@@ -478,7 +481,7 @@ class Check {
 	/**
 	 * If xdebug is loaded, the default max_nesting_level of 100 must be raised
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkXdebugMaxNestingLevel() {
 		if (extension_loaded('xdebug')) {
@@ -486,14 +489,15 @@ class Check {
 			$currentMaxNestingLevel = ini_get('xdebug.max_nesting_level');
 			if ($currentMaxNestingLevel < $recommendedMaxNestingLevel) {
 				$status = new Status\ErrorStatus();
-				$status->setTitle('PHP xdebug.max_nesting_level not high enough');
+				$status->setTitle('PHP xdebug.max_nesting_level too low');
 				$status->setMessage(
-					'xdebug.max_nesting_level=' . $currentMaxNestingLevel . '. This setting' .
-					' controls the maximum number of nested function calls to protect against' .
+					'xdebug.max_nesting_level=' . $currentMaxNestingLevel . LF .
+					'This setting controls the maximum number of nested function calls to protect against' .
 					' infinite recursion. The current value is too low for TYPO3 CMS and must' .
 					' be either raised or xdebug unloaded. A value of ' . $recommendedMaxNestingLevel .
 					' is recommended. Warning: Expect fatal PHP errors in central parts of the CMS' .
-					' if the default value of 100 is not raised significantly.'
+					' if the default value of 100 is not raised significantly to:' . LF .
+					'xdebug.max_nesting_level=' . $recommendedMaxNestingLevel
 				);
 			} else {
 				$status = new Status\OkStatus();
@@ -509,7 +513,7 @@ class Check {
 	/**
 	 * Check accessibility and functionality of OpenSSL
 	 *
-	 * @return Status\NoticeStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkOpenSslInstalled() {
 		if (extension_loaded('openssl')) {
@@ -517,21 +521,21 @@ class Check {
 			if (is_resource($testKey)) {
 				openssl_free_key($testKey);
 				$status = new Status\OkStatus();
-				$status->setTitle('OpenSSL installed properly');
+				$status->setTitle('PHP OpenSSL extension installed properly');
 			} else {
 				$status = new Status\ErrorStatus();
-				$status->setTitle('OpenSSL extension not working');
+				$status->setTitle('PHP OpenSSL extension not working');
 				$status->setMessage(
-					'Something went wrong while trying to create a new private key. ' .
-					'Please check your OpenSSL integration to verify the extension is installed correctly.'
+					'Something went wrong while trying to create a new private key for testing.' .
+					' Please check the integration of the PHP OpenSSL extension and if it is installed correctly.'
 				);
 			}
 		} else {
 			$status = new Status\ErrorStatus();
-			$status->setTitle('OpenSSL extension not loaded');
+			$status->setTitle('PHP OpenSSL extension not loaded');
 			$status->setMessage(
-				'OpenSSL is an extension to encrypt/decrypt data between requests. ' .
-				'TYPO3 CMS needs it to be able to store passwords encrypted to improve the security on database layer.'
+				'OpenSSL is a PHP extension to encrypt/decrypt data between requests.' .
+				' TYPO3 CMS requires it to be able to store passwords encrypted to improve the security on database layer.'
 			);
 		}
 
@@ -541,7 +545,7 @@ class Check {
 	/**
 	 * Check enabled suhosin
 	 *
-	 * @return Status\NoticeStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSuhosinLoaded() {
 		if ($this->isSuhosinLoaded()) {
@@ -563,7 +567,7 @@ class Check {
 	/**
 	 * Check suhosin.request.max_vars
 	 *
-	 * @return Status\ErrorStatus|Status\InfoStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSuhosinRequestMaxVars() {
 		$recommendedRequestMaxVars = 400;
@@ -571,12 +575,13 @@ class Check {
 			$currentRequestMaxVars = ini_get('suhosin.request.max_vars');
 			if ($currentRequestMaxVars < $recommendedRequestMaxVars) {
 				$status = new Status\ErrorStatus();
-				$status->setTitle('PHP suhosin.request.max_vars not high enough');
+				$status->setTitle('PHP suhosin.request.max_vars too low');
 				$status->setMessage(
-					'suhosin.request.max_vars=' . $currentRequestMaxVars . '. This setting' .
-					' can lead to lost information if submitting big forms in TYPO3 CMS like' .
+					'suhosin.request.max_vars=' . $currentRequestMaxVars . LF .
+					'This setting can lead to lost information if submitting big forms in TYPO3 CMS like' .
 					' it is done in the install tool. It is heavily recommended to raise this' .
-					' to at least ' . $recommendedRequestMaxVars
+					' to at least ' . $recommendedRequestMaxVars . ':' . LF .
+					'suhosin.request.max_vars=' . $recommendedRequestMaxVars
 				);
 			} else {
 				$status = new Status\OkStatus();
@@ -587,7 +592,8 @@ class Check {
 			$status->setTitle('Suhosin not loaded');
 			$status->setMessage(
 				'If enabling suhosin, suhosin.request.max_vars' .
-				' should be set to at least ' . $recommendedRequestMaxVars . '.'
+				' should be set to at least ' . $recommendedRequestMaxVars . ':' . LF .
+				'suhosin.request.max_vars=' . $recommendedRequestMaxVars
 			);
 		}
 		return $status;
@@ -596,7 +602,7 @@ class Check {
 	/**
 	 * Check suhosin.post.max_vars
 	 *
-	 * @return Status\ErrorStatus|Status\InfoStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSuhosinPostMaxVars() {
 		$recommendedPostMaxVars = 400;
@@ -604,12 +610,13 @@ class Check {
 			$currentPostMaxVars = ini_get('suhosin.post.max_vars');
 			if ($currentPostMaxVars < $recommendedPostMaxVars) {
 				$status = new Status\ErrorStatus();
-				$status->setTitle('PHP suhosin.post.max_vars not high enough');
+				$status->setTitle('PHP suhosin.post.max_vars too low');
 				$status->setMessage(
-					'suhosin.post.max_vars=' . $currentPostMaxVars . '. This setting' .
-					' can lead to lost information if submitting big forms in TYPO3 CMS like' .
+					'suhosin.post.max_vars=' . $currentPostMaxVars . LF .
+					'This setting can lead to lost information if submitting big forms in TYPO3 CMS like' .
 					' it is done in the install tool. It is heavily recommended to raise this' .
-					' to at least ' . $recommendedPostMaxVars . '.'
+					' to at least ' . $recommendedPostMaxVars . ':' . LF .
+					'suhosin.post.max_vars=' . $recommendedPostMaxVars
 				);
 			} else {
 				$status = new Status\OkStatus();
@@ -620,7 +627,8 @@ class Check {
 			$status->setTitle('Suhosin not loaded');
 			$status->setMessage(
 				'If enabling suhosin, suhosin.post.max_vars' .
-				' should be set to at least ' . $recommendedPostMaxVars . '.'
+				' should be set to at least ' . $recommendedPostMaxVars . ':' . LF .
+				'suhosin.post.max_vars=' . $recommendedPostMaxVars
 			);
 		}
 		return $status;
@@ -629,7 +637,7 @@ class Check {
 	/**
 	 * Check suhosin.get.max_value_length
 	 *
-	 * @return Status\ErrorStatus|Status\InfoStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSuhosinGetMaxValueLength() {
 		$recommendedGetMaxValueLength = 2000;
@@ -637,12 +645,13 @@ class Check {
 			$currentGetMaxValueLength = ini_get('suhosin.get.max_value_length');
 			if ($currentGetMaxValueLength < $recommendedGetMaxValueLength) {
 				$status = new Status\ErrorStatus();
-				$status->setTitle('PHP suhosin.get.max_value_length not high enough');
+				$status->setTitle('PHP suhosin.get.max_value_length too low');
 				$status->setMessage(
-					'suhosin.get.max_value_length=' . $currentGetMaxValueLength . '. This setting' .
-					' can lead to lost information if submitting big forms in TYPO3 CMS like' .
+					'suhosin.get.max_value_length=' . $currentGetMaxValueLength . LF .
+					'This setting can lead to lost information if submitting big forms in TYPO3 CMS like' .
 					' it is done in the install tool. It is heavily recommended to raise this' .
-					' to at least ' . $recommendedGetMaxValueLength . '.'
+					' to at least ' . $recommendedGetMaxValueLength . ':' . LF .
+					'suhosin.get.max_value_length=' . $recommendedGetMaxValueLength
 				);
 			} else {
 				$status = new Status\OkStatus();
@@ -653,7 +662,8 @@ class Check {
 			$status->setTitle('Suhosin not loaded');
 			$status->setMessage(
 				'If enabling suhosin, suhosin.get.max_value_length' .
-				' should be set to at least ' . $recommendedGetMaxValueLength
+				' should be set to at least ' . $recommendedGetMaxValueLength . ':' . LF .
+				'suhosin.get.max_value_length=' . $recommendedGetMaxValueLength
 			);
 		}
 		return $status;
@@ -662,7 +672,7 @@ class Check {
 	/**
 	 * Check suhosin.executor.include.whitelist contains phar
 	 *
-	 * @return Status\NoticeStatus|Status\InfoStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSuhosinExecutorIncludeWhiteListContainsPhar() {
 		if ($this->isSuhosinLoaded()) {
@@ -671,9 +681,10 @@ class Check {
 				$status = new Status\NoticeStatus();
 				$status->setTitle('PHP suhosin.executor.include.whitelist does not contain phar');
 				$status->setMessage(
-					'suhosin.executor.include.whitelist= ' . implode(' ', $currentWhiteListArray) . '. phar' .
-					' is currently not a hard requirement of TYPO3 CMS but is nice to have and a possible requirement' .
-					' in future versions. A useful setting is "suhosin.executor.include.whitelist = phar vfs".'
+					'suhosin.executor.include.whitelist= ' . implode(' ', $currentWhiteListArray) . LF .
+					'"phar" is currently not a hard requirement of TYPO3 CMS but is nice to have and a possible' .
+					' requirement in future versions. A useful setting is:' . LF .
+					'suhosin.executor.include.whitelist=phar vfs'
 				);
 			} else {
 				$status = new Status\OkStatus();
@@ -683,7 +694,8 @@ class Check {
 			$status = new Status\InfoStatus();
 			$status->setTitle('Suhosin not loaded');
 			$status->setMessage(
-				'If enabling suhosin, a useful setting is "suhosin.executor.include.whitelist = phar vfs".'
+				'If enabling suhosin, a useful setting is:' . LF .
+				'suhosin.executor.include.whitelist=phar vfs'
 			);
 		}
 		return $status;
@@ -692,7 +704,7 @@ class Check {
 	/**
 	 * Check suhosin.executor.include.whitelist contains vfs
 	 *
-	 * @return Status\NoticeStatus|Status\InfoStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSuhosinExecutorIncludeWhiteListContainsVfs() {
 		if ($this->isSuhosinLoaded()) {
@@ -701,10 +713,11 @@ class Check {
 				$status = new Status\WarningStatus();
 				$status->setTitle('PHP suhosin.executor.include.whitelist does not contain vfs');
 				$status->setMessage(
-					'suhosin.executor.include.whitelist= ' . implode(' ', $currentWhiteListArray) . '. vfs' .
-					' is currently not a hard requirement of TYPO3 CMS but tons of unit tests rely on it.' .
+					'suhosin.executor.include.whitelist= ' . implode(' ', $currentWhiteListArray) . LF .
+					'"vfs" is currently not a hard requirement of TYPO3 CMS but tons of unit tests rely on it.' .
 					' Furthermore, vfs is likely a base for an additional compatibility layer in the future.' .
-					' A useful setting is "suhosin.executor.include.whitelist = phar vfs".'
+					' A useful setting is:' . LF .
+					'suhosin.executor.include.whitelist=phar vfs'
 				);
 			} else {
 				$status = new Status\OkStatus();
@@ -714,7 +727,8 @@ class Check {
 			$status = new Status\InfoStatus();
 			$status->setTitle('Suhosin not loaded');
 			$status->setMessage(
-				'If enabling suhosin, a useful setting is "suhosin.executor.include.whitelist = phar vfs".'
+				'If enabling suhosin, a useful setting is:' . LF .
+				'suhosin.executor.include.whitelist=phar vfs'
 			);
 		}
 		return $status;
@@ -723,7 +737,7 @@ class Check {
 	/**
 	 * Check if some opcode cache is loaded
 	 *
-	 * @return Status\WarningStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkSomePhpOpcodeCacheIsLoaded() {
 		if (
@@ -756,13 +770,13 @@ class Check {
 	/**
 	 * Check doc comments can be fetched by reflection
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkReflectionDocComment() {
 		$testReflection = new \ReflectionMethod(get_class($this), __FUNCTION__);
 		if (strlen($testReflection->getDocComment()) === 0) {
 			$status = new Status\ErrorStatus();
-			$status->setTitle('Doc comment reflection broken');
+			$status->setTitle('PHP Doc comment reflection broken');
 			$status->setMessage(
 				'TYPO3 CMS core extensions like extbase and fluid heavily rely on method' .
 				' comment parsing to fetch annotations and add magic according to them.' .
@@ -773,7 +787,7 @@ class Check {
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('Document comment reflection works');
+			$status->setTitle('PHP Doc comment reflection works');
 		}
 		return $status;
 	}
@@ -781,7 +795,7 @@ class Check {
 	/**
 	 * Checks thread stack size if on windows with apache
 	 *
-	 * @return Status\WarningStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkWindowsApacheThreadStackSize() {
 		if (
@@ -795,12 +809,15 @@ class Check {
 				' is already taken care of: Fluid uses complex regular expressions which require a lot' .
 				' of stack space during the first processing.' .
 				' On Windows the default stack size for Apache is a lot smaller than on UNIX.' .
-				' You can increase the size to 8MB (default on UNIX) by adding to the httpd.conf:' .
-				' <IfModule mpm_winnt_module>ThreadStackSize 8388608</IfModule>. Restart Apache after this change.'
+				' You can increase the size to 8MB (default on UNIX) by adding the following configuration' .
+				' to httpd.conf and restart Apache afterwards:' . LF .
+				'<IfModule mpm_winnt_module>' . LF .
+				'ThreadStackSize 8388608' . LF .
+				'</IfModule>'
 			);
 		} else {
 			$status = new Status\OkStatus();
-			$status->setTitle('ThreadStackSize is not an issue on UNIX systems');
+			$status->setTitle('Apache ThreadStackSize is not an issue on UNIX systems');
 		}
 		return $status;
 	}
@@ -809,7 +826,7 @@ class Check {
 	 * Check if a specific required PHP extension is loaded
 	 *
 	 * @param string $extension
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkRequiredPhpExtension($extension) {
 		if (!extension_loaded($extension)) {
@@ -829,7 +846,7 @@ class Check {
 	/**
 	 * Check imagecreatetruecolor to verify gdlib works as expected
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkGdLibTrueColorSupport() {
 		if (function_exists('imagecreatetruecolor')) {
@@ -842,7 +859,7 @@ class Check {
 				$status = new Status\ErrorStatus();
 				$status->setTitle('PHP GD library true color support broken');
 				$status->setMessage(
-					'GD is loaded, but calling a imagecreatetruecolor returned an error.' .
+					'GD is loaded, but calling imagecreatetruecolor() fails.' .
 					' This must be fixed, TYPO3 CMS won\'t work well otherwise.'
 				);
 			}
@@ -859,7 +876,7 @@ class Check {
 	/**
 	 * Check gif support of GD library
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkGdLibGifSupport() {
 		if (
@@ -876,7 +893,7 @@ class Check {
 				$status = new Status\ErrorStatus();
 				$status->setTitle('PHP GD library gif support broken');
 				$status->setMessage(
-					'GD is loaded, but calling a gif related message gives errors.' .
+					'GD is loaded, but calling imagecreatefromgif() fails.' .
 					' This must be fixed, TYPO3 CMS won\'t work well otherwise.'
 				);
 			}
@@ -894,7 +911,7 @@ class Check {
 	/**
 	 * Check jgp support of GD library
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkGdLibJpgSupport() {
 		if (
@@ -918,7 +935,7 @@ class Check {
 	/**
 	 * Check png support of GD library
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkGdLibPngSupport() {
 		if (
@@ -935,7 +952,7 @@ class Check {
 				$status = new Status\ErrorStatus();
 				$status->setTitle('PHP GD library png support broken');
 				$status->setMessage(
-					'GD is compiled with png support, but a test call fails.' .
+					'GD is compiled with png support, but calling imagecreatefrompng() fails.' .
 					' Check your environment and fix it, png in GD lib is important' .
 					' for TYPO3 CMS to work properly.'
 				);
@@ -954,7 +971,7 @@ class Check {
 	/**
 	 * Check gdlib supports freetype
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkGdLibFreeTypeSupport() {
 		if (function_exists('imagettftext')) {
@@ -980,7 +997,7 @@ class Check {
 	/**
 	 * Create true type font test image
 	 *
-	 * @return Status\OkStatus|Status\NoticeStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function isTrueTypeFontDpiStandard() {
 		if (function_exists('imageftbbox')) {
@@ -1023,15 +1040,18 @@ class Check {
 	/**
 	 * Check php magic quotes
 	 *
-	 * @return Status\OkStatus|Status\WarningStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkPhpMagicQuotes() {
-		if (get_magic_quotes_gpc()) {
+		$magicQuotesGpc = get_magic_quotes_gpc();
+		if ($magicQuotesGpc) {
 			$status = new Status\WarningStatus();
 			$status->setTitle('PHP magic quotes on');
 			$status->setMessage(
-				'PHP ini setting magic_quotes_gpc in on. The setting is deprecated since PHP 5.3.' .
-				' You are advised to set it to "Off" until it gets completely removed.'
+				'magic_quotes_gpc=' . $magicQuotesGpc . LF .
+				'Setting magic_quotes_gpc is deprecated since PHP 5.3.' .
+				' You are advised to disable it until it gets completely removed:' . LF .
+				'magic_quotes_gpc=Off'
 			);
 		} else {
 			$status = new Status\OkStatus();
@@ -1043,7 +1063,7 @@ class Check {
 	/**
 	 * Check register globals
 	 *
-	 * @return Status\ErrorStatus|Status\OkStatus
+	 * @return Status\StatusInterface
 	 */
 	protected function checkRegisterGlobals() {
 		$registerGlobalsEnabled = filter_var(
@@ -1055,9 +1075,11 @@ class Check {
 			$status = new Status\ErrorStatus();
 			$status->setTitle('PHP register globals on');
 			$status->setMessage(
+				'register_globals=' . ini_get('register_globals') . LF .
 				'TYPO3 requires PHP setting "register_globals" set to off.' .
 				' This ancient PHP setting is a big security problem and should' .
-				' never be enabled.'
+				' never be enabled:' . LF .
+				'register_globals=Off'
 			);
 		} else {
 			$status = new Status\OkStatus();
@@ -1143,7 +1165,4 @@ class Check {
 		}
 		return $bytes;
 	}
-
-
 }
-?>

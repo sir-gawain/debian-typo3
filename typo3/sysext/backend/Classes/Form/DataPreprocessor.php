@@ -29,14 +29,8 @@ namespace TYPO3\CMS\Backend\Form;
 
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
 
-/**
- * Contains class for getting and transforming data for display in backend forms (TCEforms)
- *
- * Revised for TYPO3 3.6 September/2003 by Kasper Skårhøj
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
 /**
  * Class for getting and transforming data for display in backend forms (TCEforms)
  *
@@ -117,7 +111,7 @@ class DataPreprocessor {
 		}
 		if ($GLOBALS['TCA'][$table]) {
 			// For each ID value (integer) we
-			$ids = GeneralUtility::trimExplode(',', $idList, 1);
+			$ids = GeneralUtility::trimExplode(',', $idList, TRUE);
 			foreach ($ids as $id) {
 				// If ID is not blank:
 				if (strcmp($id, '')) {
@@ -167,7 +161,7 @@ class DataPreprocessor {
 							$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $table, 'uid=' . abs($id) . BackendUtility::deleteClause($table));
 							if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 								// Gets the list of fields to copy from the previous record.
-								$fArr = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues'], 1);
+								$fArr = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues'], TRUE);
 								foreach ($fArr as $theF) {
 									if (isset($GLOBALS['TCA'][$table]['columns'][$theF]) && !isset($newRow[$theF])) {
 										$newRow[$theF] = $row[$theF];
@@ -336,6 +330,7 @@ class DataPreprocessor {
 	 */
 	public function renderRecord_groupProc($data, $fieldConfig, $TSconfig, $table, $row, $field) {
 		switch ($fieldConfig['config']['internal_type']) {
+			case 'file_reference':
 			case 'file':
 				// Init array used to accumulate the files:
 				$dataAcc = array();
@@ -346,14 +341,14 @@ class DataPreprocessor {
 					// Setting dummy startup
 					foreach ($loadDB->itemArray as $value) {
 						if ($value['id']) {
-							$dataAcc[] = rawurlencode($value['id']) . '|' . rawurlencode($value['id']);
+							$dataAcc[] = rawurlencode($value['id']) . '|' . rawurlencode(PathUtility::basename($value['id']));
 						}
 					}
 				} else {
-					$fileList = GeneralUtility::trimExplode(',', $data, 1);
+					$fileList = GeneralUtility::trimExplode(',', $data, TRUE);
 					foreach ($fileList as $value) {
 						if ($value) {
-							$dataAcc[] = rawurlencode($value) . '|' . rawurlencode($value);
+							$dataAcc[] = rawurlencode($value) . '|' . rawurlencode(PathUtility::basename($value));
 						}
 					}
 				}
@@ -388,7 +383,7 @@ class DataPreprocessor {
 	public function renderRecord_selectProc($data, $fieldConfig, $TSconfig, $table, $row, $field) {
 		// Initialize:
 		// Current data set.
-		$elements = GeneralUtility::trimExplode(',', $data, 1);
+		$elements = GeneralUtility::trimExplode(',', $data, TRUE);
 		// New data set, ready for interface (list of values, rawurlencoded)
 		$dataAcc = array();
 		// For list selectors (multi-value):
@@ -931,6 +926,3 @@ class DataPreprocessor {
 	}
 
 }
-
-
-?>

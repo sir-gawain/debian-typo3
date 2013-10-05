@@ -84,6 +84,9 @@
 			<trans-unit id="extensionList.updateToVersion" xml:space="preserve">
 				<source>Update to version %s</source>
 			</trans-unit>
+			<trans-unit id="extensionList.updateDisabled" xml:space="preserve">
+				<source>An update is available but this operation is currently disabled</source>
+			</trans-unit>
 			<trans-unit id="extensionList.deactivate" xml:space="preserve">
 				<source>Deactivate</source>
 			</trans-unit>
@@ -277,7 +280,15 @@
 			<trans-unit id="extensionList.showAllVersions.readOnline" xml:space="preserve">
 				<source>Read online</source>
 			</trans-unit>
-
+			<trans-unit id="extensionList.distribution.key" xml:space="preserve">
+				<source>Distribution-Key:</source>
+			</trans-unit>
+			<trans-unit id="distributions" xml:space="preserve">
+				<source>Get preconfigured distribution</source>
+			</trans-unit>
+			<trans-unit id="extensionList.installDistribution" xml:space="preserve">
+				<source>Install distribution</source>
+			</trans-unit>
 			<trans-unit id="extensionList.updateFromTer.label" xml:space="preserve">
 				<source>Retrieving Extension-List from TYPO3 Extension Repository (TER)</source>
 			</trans-unit>
@@ -305,7 +316,24 @@
 			<trans-unit id="extensionList.updateFromTer.never" xml:space="preserve">
 				<source>Never</source>
 			</trans-unit>
-
+			<trans-unit id="extensionList.uninstall.dependencyError" xml:space="preserve">
+				<source>Cannot deactivate extension '%s' - The extension(s) '%s' depend on it.</source>
+			</trans-unit>
+			<trans-unit id="distribution.welcome.headline" xml:space="preserve">
+				<source>Congratulations...</source>
+			</trans-unit>
+			<trans-unit id="distribution.welcome.message" xml:space="preserve">
+				<source>You successfully installed the distribution:</source>
+			</trans-unit>
+			<trans-unit id="distribution.welcome.nextSteps" xml:space="preserve">
+				<source>Now you can:</source>
+			</trans-unit>
+			<trans-unit id="distribution.welcome.openViewModule" xml:space="preserve">
+				<source>View your website</source>
+			</trans-unit>
+			<trans-unit id="distribution.welcome.openPageModule" xml:space="preserve">
+				<source>Start editing your website</source>
+			</trans-unit>
 			<trans-unit id="task.updateExtensionListTask.name" xml:space="preserve">
 				<source>Update extension list</source>
 			</trans-unit>

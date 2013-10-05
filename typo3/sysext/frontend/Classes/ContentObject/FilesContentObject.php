@@ -140,6 +140,7 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 		$content = '';
 		// optionSplit applied to conf to allow differnt settings per file
 		$splitConf = $GLOBALS['TSFE']->tmpl->splitConfArray($conf, count($fileObjects));
+
 		// Enable sorting for multiple fileObjects
 		$sortingProperty = '';
 		if ($conf['sorting'] || $conf['sorting.']) {
@@ -154,9 +155,14 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 				}
 			});
 		}
+
+		$GLOBALS['TSFE']->register['FILES_COUNT'] = count($fileObjects);
+		$fileObjectCounter = 0;
 		foreach ($fileObjects as $key => $fileObject) {
+			$GLOBALS['TSFE']->register['FILE_NUM_CURRENT'] = $fileObjectCounter;
 			$this->cObj->setCurrentFile($fileObject);
 			$content .= $this->cObj->cObjGetSingle($splitConf[$key]['renderObj'], $splitConf[$key]['renderObj.']);
+			$fileObjectCounter++;
 		}
 		$content = $this->cObj->stdWrap($content, $conf['stdWrap.']);
 		return $content;
@@ -185,10 +191,8 @@ class FilesContentObject extends \TYPO3\CMS\Frontend\ContentObject\AbstractConte
 	 * @return string Value of the config variable
 	 */
 	protected function stdWrapValue($key, array $config, $defaultValue = '') {
-		return $this->cObj->stdWrap($config[$key], $config[$key . '.']) ? $this->cObj->stdWrap($config[$key], $config[$key . '.']) : $defaultValue;
+		$stdWrapped = $this->cObj->stdWrap($config[$key], $config[$key . '.']);
+		return $stdWrapped ? $stdWrapped : $defaultValue;
 	}
 
 }
-
-
-?>

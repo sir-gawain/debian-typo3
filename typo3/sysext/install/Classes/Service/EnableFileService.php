@@ -44,7 +44,12 @@ class EnableFileService {
 	 */
 	static public function createInstallToolEnableFile() {
 		$installEnableFilePath = self::getInstallToolEnableFilePath();
-		$result = touch($installEnableFilePath);
+		if (!is_file($installEnableFilePath)) {
+			$result = touch($installEnableFilePath);
+		} else {
+			$result = TRUE;
+			self::extendInstallToolEnableFileLifetime();
+		}
 		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($installEnableFilePath);
 		return $result;
 	}
@@ -91,7 +96,11 @@ class EnableFileService {
 		$enableFile = self::getInstallToolEnableFilePath();
 		// Extend the age of the ENABLE_INSTALL_TOOL file by one hour
 		if (is_file($enableFile)) {
-			touch($enableFile);
+			$couldTouch = @touch($enableFile);
+			if (!$couldTouch) {
+				self::removeInstallToolEnableFile();
+				self::createInstallToolEnableFile();
+			}
 		}
 	}
 
@@ -104,5 +113,3 @@ class EnableFileService {
 		return PATH_site . self::INSTALL_TOOL_ENABLE_FILE_PATH;
 	}
 }
-
-?>

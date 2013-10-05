@@ -1,5 +1,5 @@
 <?php
-namespace TYPO3\CMS\Extbase\Tests\Persistence\Fixture\Model;
+namespace TYPO3\CMS\Extbase\Tests\Unit\Persistence\Fixture\Model;
 
 /*                                                                        *
  * This script belongs to the TYPO3 Flow framework.                       *
@@ -30,4 +30,3 @@ class Entity3 extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	public $someInteger;
 
 }
-?>

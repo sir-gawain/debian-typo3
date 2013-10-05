@@ -29,7 +29,7 @@ namespace TYPO3\CMS\Core\Core;
 
 use \TYPO3\CMS\Core\Utility;
 
-require 'SystemEnvironmentBuilder.php';
+require __DIR__ . '/SystemEnvironmentBuilder.php';
 
 /**
  * This class encapsulates bootstrap related methods.
@@ -59,10 +59,21 @@ class Bootstrap {
 	protected $requestId;
 
 	/**
-	 * Disable direct creation of this object.
+	 * The application context
+	 *
+	 * @var \TYPO3\CMS\Core\Core\ApplicationContext
 	 */
-	protected function __construct() {
+	protected $context;
+
+	/**
+	 * Disable direct creation of this object.
+	 * Set unique requestId and the application context
+	 *
+	 * @var string Application context
+	 */
+	protected function __construct($context) {
 		$this->requestId = uniqid();
+		$this->context = new ApplicationContext($context);
 	}
 
 	/**
@@ -80,7 +91,9 @@ class Bootstrap {
 	 */
 	static public function getInstance() {
 		if (is_null(self::$instance)) {
-			self::$instance = new \TYPO3\CMS\Core\Core\Bootstrap();
+			require_once(__DIR__ . '/ApplicationContext.php');
+			$context = trim(getenv('TYPO3_CONTEXT'), '"\' ') ? : 'Production';
+			self::$instance = new \TYPO3\CMS\Core\Core\Bootstrap($context);
 		}
 		return self::$instance;
 	}
@@ -93,6 +106,16 @@ class Bootstrap {
 	 */
 	public function getRequestId() {
 		return $this->requestId;
+	}
+
+	/**
+	 * Returns the context this bootstrap was started in.
+	 *
+	 * @return \TYPO3\CMS\Core\Core\ApplicationContext The context encapsulated in an object
+	 * @internal This is not a public API method, do not use in own extensions. Use \TYPO3\CMS\Core\Utility\GeneralUtility::getContext() instead
+	 */
+	public function getContext() {
+		return $this->context;
 	}
 
 	/**
@@ -119,6 +142,7 @@ class Bootstrap {
 	 */
 	public function baseSetup($relativePathPart = '') {
 		\TYPO3\CMS\Core\Core\SystemEnvironmentBuilder::run($relativePathPart);
+		Utility\GeneralUtility::presetContext($this->context);
 		return $this;
 	}
 
@@ -164,10 +188,8 @@ class Bootstrap {
 			->checkUtf8DatabaseSettingsOrDie()
 			->transferDeprecatedCurlSettings()
 			->setCacheHashOptions()
-			->enforceCorrectProxyAuthScheme()
 			->setDefaultTimezone()
 			->initializeL10nLocales()
-			->configureImageProcessingOptions()
 			->convertPageNotFoundHandlingToBoolean()
 			->registerGlobalDebugFunctions()
 			// SwiftMailerAdapter is
@@ -303,7 +325,9 @@ class Bootstrap {
 			Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.Components.PageTree.ContextMenuDataProvider', 'TYPO3\\CMS\\Backend\\ContextMenu\\Pagetree\\Extdirect\\ContextMenuConfiguration', 'web', 'user,group');
 			Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.LiveSearchActions.ExtDirect', 'TYPO3\\CMS\\Backend\\Search\\LiveSearch\\ExtDirect\\LiveSearchDataProvider', 'web_list', 'user,group');
 			Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.BackendUserSettings.ExtDirect', 'TYPO3\\CMS\\Backend\\User\\ExtDirect\\BackendUserSettingsDataProvider');
-			Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.CSH.ExtDirect', 'TYPO3\\CMS\\ContextHelp\\ExtDirect\\ContextHelpDataProvider');
+			if (Utility\ExtensionManagementUtility::isLoaded('context_help')) {
+				Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.CSH.ExtDirect', 'TYPO3\\CMS\\ContextHelp\\ExtDirect\\ContextHelpDataProvider');
+			}
 			Utility\ExtensionManagementUtility::registerExtDirectComponent('TYPO3.ExtDirectStateProvider.ExtDirect', 'TYPO3\\CMS\\Backend\\InterfaceState\\ExtDirect\\DataProvider');
 			Utility\ExtensionManagementUtility::registerExtDirectComponent(
 				'TYPO3.Components.DragAndDrop.CommandController',
@@ -329,11 +353,7 @@ class Bootstrap {
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
 	 */
 	protected function registerAutoloader() {
-		if (PHP_VERSION_ID < 50307) {
-			\TYPO3\CMS\Core\Compatibility\CompatbilityClassLoaderPhpBelow50307::registerAutoloader();
-		} else {
-			\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
-		}
+		\TYPO3\CMS\Core\Core\ClassLoader::registerAutoloader();
 		return $this;
 	}
 
@@ -374,7 +394,7 @@ class Bootstrap {
 	 */
 	protected function transferDeprecatedCurlSettings() {
 		if (!empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer'])) {
-			$proxyParts = explode(':', $GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer'], 2);
+			$proxyParts = Utility\GeneralUtility::revExplode(':', $GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer'], 2);
 			$GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_host'] = $proxyParts[0];
 			$GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_port'] = $proxyParts[1];
 		}
@@ -406,17 +426,6 @@ class Bootstrap {
 	}
 
 	/**
-	 * $GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_auth_scheme'] must be either
-	 * 'digest' or 'basic' with fallback to 'basic'
-	 *
-	 * @return \TYPO3\CMS\Core\Core\Bootstrap
-	 */
-	protected function enforceCorrectProxyAuthScheme() {
-		$GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_auth_scheme'] === 'digest' ?: ($GLOBALS['TYPO3_CONF_VARS']['HTTP']['proxy_auth_scheme'] = 'basic');
-		return $this;
-	}
-
-	/**
 	 * Set default timezone
 	 *
 	 * @return \TYPO3\CMS\Core\Core\Bootstrap
@@ -444,40 +453,6 @@ class Bootstrap {
 	 */
 	protected function initializeL10nLocales() {
 		\TYPO3\CMS\Core\Localization\Locales::initialize();
-		return $this;
-	}
-
-	/**
-	 * Based on the configuration of the image processing some options are forced
-	 * to simplify configuration settings and combinations
-	 *
-	 * @return \TYPO3\CMS\Core\Core\Bootstrap
-	 */
-	protected function configureImageProcessingOptions() {
-		if (!$GLOBALS['TYPO3_CONF_VARS']['GFX']['image_processing']) {
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im'] = 0;
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['gdlib'] = 0;
-		}
-		if (!$GLOBALS['TYPO3_CONF_VARS']['GFX']['im']) {
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_path'] = '';
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_path_lzw'] = '';
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] = 'gif,jpg,jpeg,png';
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['thumbnails'] = 0;
-		}
-		if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5']) {
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_negate_mask'] = 1;
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_no_effects'] = 1;
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_mask_temp_ext_gif'] = 1;
-			if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_version_5'] === 'gm') {
-				$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_negate_mask'] = 0;
-				$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_imvMaskState'] = 0;
-				$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_no_effects'] = 1;
-				$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_v5effects'] = -1;
-			}
-		}
-		if ($GLOBALS['TYPO3_CONF_VARS']['GFX']['im_imvMaskState']) {
-			$GLOBALS['TYPO3_CONF_VARS']['GFX']['im_negate_mask'] = $GLOBALS['TYPO3_CONF_VARS']['GFX']['im_negate_mask'] ? 0 : 1;
-		}
 		return $this;
 	}
 
@@ -843,9 +818,7 @@ class Bootstrap {
 			$codeCache->requireOnce($cacheIdentifier);
 		} else {
 			$this->loadExtensionTables(TRUE);
-			$phpCodeToCache = '$GLOBALS[\'TCA\'] = ';
-			$phpCodeToCache .= Utility\ArrayUtility::arrayExport($GLOBALS['TCA']);
-			$phpCodeToCache .= ';';
+			$phpCodeToCache = '$GLOBALS[\'TCA\'] = ' . var_export($GLOBALS['TCA'], TRUE) . ';';
 			$codeCache->set($cacheIdentifier, $phpCodeToCache);
 		}
 		return $this;
@@ -1033,11 +1006,7 @@ class Bootstrap {
 	 * @internal This is not a public API method, do not use in own extensions
 	 */
 	public function shutdown() {
-		if (PHP_VERSION_ID < 50307) {
-			\TYPO3\CMS\Core\Compatibility\CompatbilityClassLoaderPhpBelow50307::unregisterAutoloader();
-		} else {
-			\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
-		}
+		\TYPO3\CMS\Core\Core\ClassLoader::unregisterAutoloader();
 		return $this;
 	}
 
@@ -1052,8 +1021,4 @@ class Bootstrap {
 		$GLOBALS['TBE_TEMPLATE'] = Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Template\\DocumentTemplate');
 		return $this;
 	}
-
 }
-
-
-?>

@@ -30,13 +30,6 @@ namespace TYPO3\CMS\Core\TypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Class with template object that is responsible for generating the template
- *
- * Revised for TYPO3 3.6 July/2003 by Kasper Skårhøj
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-/**
  * Template object that is responsible for generating the TypoScript template based on template records.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
@@ -317,6 +310,15 @@ class TemplateService {
 	protected $processExtensionStatics = FALSE;
 
 	/**
+	 * Set to TRUE after the default TypoScript was added during parsing.
+	 * This prevents double inclusion of the same TypoScript code.
+	 *
+	 * @see addDefaultTypoScript()
+	 * @var boolean
+	 */
+	protected $isDefaultTypoScriptAdded = FALSE;
+
+	/**
 	 * @return boolean
 	 */
 	public function getProcessExtensionStatics() {
@@ -478,7 +480,14 @@ class TemplateService {
 			if ($setupData && !$this->forceTemplateParsing) {
 				// If TypoScript setup structure was cached we unserialize it here:
 				$this->setup = unserialize($setupData);
+				if ($this->tt_track) {
+					$GLOBALS['TT']->setTSLogMessage('Using cached TS template data');
+				}
 			} else {
+				if ($this->tt_track) {
+					$GLOBALS['TT']->setTSLogMessage('Not using any cached TS data');
+				}
+
 				// Make configuration
 				$this->generateConfig();
 				// This stores the template hash thing
@@ -543,8 +552,9 @@ class TemplateService {
 		$this->config = array();
 		$this->rowSum = array();
 		$this->hierarchyInfoToRoot = array();
-		// Is the TOTAL rootline
 		$this->absoluteRootLine = $theRootLine;
+		$this->isDefaultTyposcriptAdded = FALSE;
+
 		reset($this->absoluteRootLine);
 		$c = count($this->absoluteRootLine);
 		for ($a = 0; $a < $c; $a++) {
@@ -577,10 +587,15 @@ class TemplateService {
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			$this->rootLine[] = $this->absoluteRootLine[$a];
 		}
+
 		// Process extension static files if not done yet, but explicitly requested
 		if (!$this->extensionStaticsProcessed && $this->processExtensionStatics) {
 			$this->addExtensionStatics('sys_0', 'sys_0', 0, array());
 		}
+
+		// Add the global default TypoScript from the TYPO3_CONF_VARS
+		$this->addDefaultTypoScript();
+
 		$this->processIncludes();
 	}
 
@@ -889,11 +904,9 @@ class TemplateService {
 	 * @todo Define visibility
 	 */
 	public function generateConfig() {
-		// Add default TS for all three code types:
-		array_unshift($this->constants, '' . $GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_constants']);
-		// Adding default TS/constants
-		array_unshift($this->config, '' . $GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup']);
-		// Adding default TS/setup
+		// Add default TS for all code types
+		$this->addDefaultTypoScript();
+
 		// Parse the TypoScript code text for include-instructions!
 		$this->processIncludes();
 		// These vars are also set lateron...
@@ -1517,7 +1530,7 @@ class TemplateService {
 		// Create map if not found already:
 		if (!is_array($this->MPmap)) {
 			$this->MPmap = array();
-			$rootPoints = GeneralUtility::trimExplode(',', strtolower($GLOBALS['TSFE']->config['config']['MP_mapRootPoints']), 1);
+			$rootPoints = GeneralUtility::trimExplode(',', strtolower($GLOBALS['TSFE']->config['config']['MP_mapRootPoints']), TRUE);
 			// Traverse rootpoints:
 			foreach ($rootPoints as $p) {
 				if ($p == 'root') {
@@ -1605,7 +1618,25 @@ class TemplateService {
 		}
 	}
 
+	/**
+	 * Adds the TypoScript from the global array.
+	 * The class property isDefaultTypoScriptAdded ensures
+	 * that the adding only happens once.
+	 *
+	 * @return void
+	 * @see isDefaultTypoScriptAdded
+	 */
+	protected function addDefaultTypoScript() {
+			// Add default TS for all code types, if not done already
+		if (!$this->isDefaultTypoScriptAdded) {
+			if (!empty($GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_constants'])) {
+				array_unshift($this->constants, (string)$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_constants']);
+			}
+			if (!empty($GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup'])) {
+				array_unshift($this->config, (string)$GLOBALS['TYPO3_CONF_VARS']['FE']['defaultTypoScript_setup']);
+			}
+			$this->isDefaultTypoScriptAdded = TRUE;
+		}
+	}
+
 }
-
-
-?>

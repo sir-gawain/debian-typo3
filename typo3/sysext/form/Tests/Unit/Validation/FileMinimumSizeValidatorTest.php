@@ -1,4 +1,6 @@
 <?php
+namespace TYPO3\CMS\Form\Tests\Unit\Validation;
+
 /***************************************************************
 *  Copyright notice
 *
@@ -95,4 +97,3 @@ class FileMinimumSizeValidatorTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTes
 		);
 	}
 }
-?>

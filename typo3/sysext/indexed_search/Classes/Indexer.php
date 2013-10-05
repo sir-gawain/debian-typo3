@@ -803,7 +803,7 @@ class Indexer {
 								'conf' => $this->conf
 							);
 							unset($params['conf']['content']);
-							$crawler->addQueueEntry_callBack(0, $params, '&TYPO3\\CMS\\IndexedSearch\\Controller\\SearchFormController_files', $this->conf['id']);
+							$crawler->addQueueEntry_callBack(0, $params, '&TYPO3\\CMS\\IndexedSearch\\Hook\\CrawlerFilesHook', $this->conf['id']);
 							$this->log_setTSlogMessage('media "' . $params['document'] . '" added to "crawler" queue.', 1);
 						} else {
 							$this->indexRegularDocument($linkInfo['href'], FALSE, $linkSource, $ext);
@@ -815,7 +815,7 @@ class Indexer {
 								'conf' => $this->conf
 							);
 							unset($params['conf']['content']);
-							$crawler->addQueueEntry_callBack(0, $params, '&TYPO3\\CMS\\IndexedSearch\\Controller\\SearchFormController_files', $this->conf['id']);
+							$crawler->addQueueEntry_callBack(0, $params, '&TYPO3\\CMS\\IndexedSearch\\Hook\\CrawlerFilesHook', $this->conf['id']);
 							$this->log_setTSlogMessage('media "' . $params['document'] . '" added to "crawler" queue.', 1);
 						} else {
 							$this->indexRegularDocument($linkSource);
@@ -930,7 +930,7 @@ class Indexer {
 		$content = GeneralUtility::getUrl($url, 2);
 		if (strlen($content)) {
 			// Compile headers:
-			$headers = GeneralUtility::trimExplode(LF, $content, 1);
+			$headers = GeneralUtility::trimExplode(LF, $content, TRUE);
 			$retVal = array();
 			foreach ($headers as $line) {
 				if (!strlen(trim($line))) {
@@ -1619,7 +1619,8 @@ class Indexer {
 			'externalUrl' => $fileParts['scheme'] ? 1 : 0,
 			'recordUid' => intval($this->conf['recordUid']),
 			'freeIndexUid' => intval($this->conf['freeIndexUid']),
-			'freeIndexSetId' => intval($this->conf['freeIndexSetId'])
+			'freeIndexSetId' => intval($this->conf['freeIndexSetId']),
+			'sys_language_uid' => intval($this->conf['sys_language_uid'])
 		);
 		if (\TYPO3\CMS\IndexedSearch\Utility\IndexedSearchUtility::isTableUsed('index_phash')) {
 			$GLOBALS['TYPO3_DB']->exec_INSERTquery('index_phash', $fields);
@@ -2155,6 +2156,3 @@ class Indexer {
 	}
 
 }
-
-
-?>

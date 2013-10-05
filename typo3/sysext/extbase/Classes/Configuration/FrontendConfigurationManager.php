@@ -120,7 +120,7 @@ class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abst
 			if ($this->contentObject->data['recursive'] > 0) {
 				$explodedPages = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $pages);
 				foreach ($explodedPages as $pid) {
-					$list[] = trim($this->contentObject->getTreeList($pid, $this->contentObject->data['recursive']), ',');
+					$list[] = $this->contentObject->getTreeList($pid, $this->contentObject->data['recursive']);
 				}
 			}
 			if (count($list) > 0) {
@@ -162,8 +162,15 @@ class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abst
 	 * @return array the framework configuration with overridden data from flexForm
 	 */
 	protected function overrideConfigurationFromFlexForm(array $frameworkConfiguration) {
-		if (strlen($this->contentObject->data['pi_flexform']) > 0) {
-			$flexFormConfiguration = $this->flexFormService->convertFlexFormContentToArray($this->contentObject->data['pi_flexform']);
+		$flexFormConfiguration = $this->contentObject->data['pi_flexform'];
+		if (is_string($flexFormConfiguration)) {
+			if (strlen($flexFormConfiguration) > 0) {
+				$flexFormConfiguration = $this->flexFormService->convertFlexFormContentToArray($flexFormConfiguration);
+			} else {
+				$flexFormConfiguration = array();
+			}
+		}
+		if (is_array($flexFormConfiguration) && count($flexFormConfiguration)) {
 			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexFormConfiguration, 'settings');
 			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexFormConfiguration, 'persistence');
 			$frameworkConfiguration = $this->mergeConfigurationIntoFrameworkConfiguration($frameworkConfiguration, $flexFormConfiguration, 'view');
@@ -239,5 +246,3 @@ class FrontendConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Abst
 		return rtrim($recursiveStoragePids, ',');
 	}
 }
-
-?>

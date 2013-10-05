@@ -23,6 +23,12 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 body {
 	line-height: 1;
 }
+body.standalone {
+	overflow-y: scroll;
+}
+body.backend #typo3-docbody {
+	overflow-y: scroll;
+}
 ol, ul {
 	list-style: none;
 }
@@ -221,13 +227,24 @@ button {
 	font-size: 1.1em;
 	padding: 0.3em 0.6em;
 	border: 1px solid #7c7c7c;
-	background: #f6f6f6 url('../../../Images/Background/Button.jpg') repeat-x left bottom;
+	background-color: #f6f6f6;
+	background: -moz-linear-gradient(top,  #f6f6f6 0%, #dadada 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f6f6f6), color-stop(100%,#dadada));
+	background: -webkit-linear-gradient(top,  #f6f6f6 0%,#dadada 100%);
+	background: -o-linear-gradient(top,  #f6f6f6 0%,#dadada 100%);
+	background: -ms-linear-gradient(top,  #f6f6f6 0%,#dadada 100%);
+	background: linear-gradient(to bottom,  #f6f6f6 0%,#dadada 100%);
 	cursor: pointer;
 }
 
 button:hover {
 	background-color: #ededed;
-	background-image: url('../../../Images/Background/ButtonHover.jpg');
+	background: -moz-linear-gradient(top,  #f6f6f6 0%, #aaa 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f6f6f6), color-stop(100%,#aaa));
+	background: -webkit-linear-gradient(top,  #f6f6f6 0%,#aaa 100%);
+	background: -o-linear-gradient(top,  #f6f6f6 0%,#aaa 100%);
+	background: -ms-linear-gradient(top,  #f6f6f6 0%,#aaa 100%);
+	background: linear-gradient(to bottom,  #f6f6f6 0%,#aaa 100%);
 }
 
 button span {
@@ -243,10 +260,6 @@ button span.t3-install-form-button-icon-negative {
 	background-image: url('../../../Images/Icon/Error.png');
 }
 
-button span.t3-install-form-button-icon-positive {
-	background-image: url('../../../Images/Icon/Ok.png');
-}
-
 .t3-install-hidden {
 	display: none;
 }
@@ -256,18 +269,42 @@ button span.t3-install-form-button-icon-positive {
 }
 
 #t3-install-outer {
-	width: 76em;
+	width: 78em;
 	margin: 1em auto;
 }
 
-#t3-install-left {
+#t3-install-head {
+	position: fixed;
+}
+
+#t3-install-logo {
+	width: 21em;
 	float: left;
-	width: 19em;
+	height: 100px;
+}
+
+#t3-install-headline {
+	width: 57em;
+	float: left;
+}
+
+#t3-install-center {
+	position: absolute;
 	clear: both;
 }
 
+.standalone #t3-install-center {
+	top: 100px;
+}
+
+#t3-install-left {
+	width: 21em;
+	position: fixed;
+}
+
 #t3-install-right {
-	padding-left: 19em;
+	padding-left: 21em;
+	margin-bottom: 1em;
 	width: 57em;
 }
 
@@ -275,7 +312,7 @@ button span.t3-install-form-button-icon-positive {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	width: 16em;
+	width: 18em;
 	font-size: 110%;
 	line-height: 2em;
 }
@@ -286,7 +323,6 @@ button span.t3-install-form-button-icon-positive {
 
 #t3-install-menu li.act {
 	background-color: #585858;
-	line-height: 1.5em;
 }
 
 #t3-install-menu a {
@@ -316,6 +352,10 @@ button span.t3-install-form-button-icon-positive {
 	background-image: url('../../../Images/Menu/SystemEnvironment.png');
 }
 
+#t3-install-menu #t3-install-menu-configuration {
+	background-image: url('../../../Images/Menu/Configuration.png');
+}
+
 #t3-install-menu #t3-install-menu-folderStructure {
 	background-image: url('../../../Images/Menu/FolderStructure.png');
 }
@@ -342,6 +382,17 @@ button span.t3-install-form-button-icon-positive {
 
 #t3-install-menu #t3-install-menu-logout {
 	background-image: url('../../../Images/Menu/Logout.gif');
+}
+
+#t3-install-menu .t3-install-menu-errorCount {
+	background-color: #dc4c42;
+	color: #ffffff;
+	font-weight: normal;
+	margin: 3px 0.4em 0 0;
+	float: right;
+	padding: 0px 5px;
+	border-radius: 6px;
+	line-height: 1.5em;
 }
 
 #t3-install-links {
@@ -390,7 +441,83 @@ button span.t3-install-form-button-icon-positive {
 	color: #111 !important;
 }
 
+#t3-install-box-body .toggleButton {
+	background-image: url('../../../Images/Icon/arrowright-white.png');
+	background-repeat: no-repeat;
+	background-position-y: 8px;
+	background-position-x: 3px;
+	padding-left: 20px;
+	cursor: pointer;
+}
 
+#t3-install-box-body .toggleButton h4 {
+	border: 1px solid transparent;
+}
+
+#t3-install-box-body .expanded .toggleButton h4 {
+	border: none;
+}
+
+#t3-install-box-body .expanded .toggleButton {
+	background-image: url('../../../Images/Icon/arrowdown-white.png');
+	border-bottom: 1px solid #666;
+}
+
+.toggleGroup {
+	margin: 1em 0;
+}
+
+#t3-install-box-body .toggleButton:hover {
+	background-color: #666;
+	color: #fff;
+}
+.toggleGroup .toggleButton {
+	background-color: #cacaca;
+	padding: 0.5em 0;
+}
+
+.toggleGroup.expanded .toggleButton {
+	background-color: #666;
+	color: white;
+	padding: 0.5em 0;
+}
+
+.toggleGroup.expanded {
+	border: 1px solid #a2aab8;
+}
+
+.toggleGroup .toggleDataContent {
+	padding: 0 1em;
+}
+
+.item {
+	padding: 1em 1em;
+}
+.item:nth-child(odd) {
+	background-color: #f7f7f7;
+}
+.item:hover {
+	background-color: #dedede;
+}
+h4.item-header {
+	font-weight: normal;
+}
+.item-description {
+	line-height: 1.4em;
+	margin: 0.5em 0;
+}
+
+#t3-install-box-body .fieldNote {
+	font-style: italic;
+	margin-top: 0.5em;
+}
+
+.t3-install-tool-configuration-radio {
+	float: none;
+}
+.t3-install-tool-configuration-radio-label {
+	float: none;
+}
 
 .typo3-message {
 	padding: 0.6em 0.6em 0.6em 2.6em;
@@ -434,6 +561,11 @@ button span.t3-install-form-button-icon-positive {
 	border-color: #dc4c42;
 }
 
+.message-loading {
+	background-image: url("../../../Images/Icon/SpinnerSmall.gif");
+	border-color: #606060;
+}
+
 #t3-install-copyright {
 	color: #797878;
 	border-top: 1px #5f5f5f solid;
@@ -449,7 +581,7 @@ body {
 	background-color: #f2f2f2;
 }
 
-h1,
+#t3-install-head,
 #t3-install-menu-border-top,
 #t3-install-menu-bottom,
 #t3-install-links,
@@ -544,7 +676,7 @@ body.standalone #t3-install-outer {
 	margin: 0 auto;
 }
 
-body.standalone h1,
+body.standalone #t3-install-head,
 body.standalone #t3-install-menu-border-top,
 body.standalone #t3-install-menu-bottom,
 body.standalone #t3-install-links,
@@ -567,15 +699,15 @@ body.standalone #t3-install-form-login .t3-install-form-submit {
 body.standalone h1 {
 	background: url('../../../Images/Background/Logo.gif') no-repeat scroll 0 0 transparent;
 	text-indent:-999em;
-	margin: 2em 0 3.7em 0;
+	margin: 2.5em 0 3.7em 0;
 	height: 34px;
-	width: 19em;
+	width: 21em;
 	float: left;
 }
 
 body.standalone h2 {
-	padding: 3.3em 0 3.7em 17.5em;
-	margin: 0;
+	margin: 3.3em 0 0 1.8em;
+	padding: 0;
 	height: auto;
 	color: #ffffff;
 }
@@ -619,4 +751,54 @@ body.standalone .t3-install-login h2 {
 	clear: both;
 	margin: 0;
 	padding: 0.5em 0 0.5em 3.35em;
+}
+
+button.btn-save {
+	background-image: url('../../../Images/Icon/Save.png');
+	background-repeat: no-repeat;
+	background-position: 5px 4px, 0 0;
+	background-image: url('../../../Images/Icon/Save.png'), -moz-linear-gradient(top,  #f6f6f6 0%, #dadada 100%);
+	background-image: url('../../../Images/Icon/Save.png'), -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f6f6f6), color-stop(100%,#dadada));
+	background-image: url('../../../Images/Icon/Save.png'), -webkit-linear-gradient(top,  #f6f6f6 0%,#dadada 100%);
+	background-image: url('../../../Images/Icon/Save.png'), -o-linear-gradient(top,  #f6f6f6 0%,#dadada 100%);
+	background-image: url('../../../Images/Icon/Save.png'), -ms-linear-gradient(top,  #f6f6f6 0%,#dadada 100%);
+	background-image: url('../../../Images/Icon/Save.png'), linear-gradient(to bottom,  #f6f6f6 0%,#dadada 100%);
+	padding-left: 25px;
+}
+
+button.btn-save:hover {
+	background-color: #ededed;
+	background-image: url('../../../Images/Icon/Save.png'), -moz-linear-gradient(top,  #f6f6f6 0%, #aaa 100%);
+	background-image: url('../../../Images/Icon/Save.png'), -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f6f6f6), color-stop(100%,#aaa));
+	background-image: url('../../../Images/Icon/Save.png'), -webkit-linear-gradient(top,  #f6f6f6 0%,#aaa 100%);
+	background-image: url('../../../Images/Icon/Save.png'), -o-linear-gradient(top,  #f6f6f6 0%,#aaa 100%);
+	background-image: url('../../../Images/Icon/Save.png'), -ms-linear-gradient(top,  #f6f6f6 0%,#aaa 100%);
+	background-image: url('../../../Images/Icon/Save.png'), linear-gradient(to bottom,  #f6f6f6 0%,#aaa 100%);
+}
+
+#fixed-footer-fieldset fieldset li {
+	margin: 0 0;
+}
+#fixed-footer-fieldset fieldset {
+	margin: 0em -1.8em;
+	color: #fff;
+	text-align: center;
+	padding: 0.5em 0;
+}
+
+#fixed-footer-fieldset fieldset.fixed {
+	width: 51.7em;
+	bottom: 0;
+	position: fixed;
+	background-color: #666;
+}
+
+.standalone #fixed-footer-fieldset fieldset.fixed {
+	background-color: #dadada;
+	border-right: 1px solid #dadada;
+}
+
+#fixed-footer-fieldset {
+	height: 41px;
+	margin-top: 2em;
 }

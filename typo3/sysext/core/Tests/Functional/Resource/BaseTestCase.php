@@ -27,14 +27,12 @@ namespace TYPO3\CMS\Core\Tests\Functional\Resource;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-require_once 'vfsStream/vfsStream.php';
-
 /**
  * Basic functional test class for the File Abstraction Layer (FAL).
  *
  * @author Andreas Wolf <andreas.wolf@typo3.org>
  */
-class BaseTestCase extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
+class BaseTestCase extends \TYPO3\CMS\Core\Tests\FunctionalTestCase {
 	public function getStorageObject() {
 		$this->initializeVfs();
 		$resourceFactory = new \TYPO3\CMS\Core\Resource\ResourceFactory();
@@ -43,5 +41,3 @@ class BaseTestCase extends \TYPO3\CMS\Core\Tests\Unit\Resource\BaseTestCase {
 		), array('basePath' => $this->getMountRootUrl()));
 	}
 }
-
-?>

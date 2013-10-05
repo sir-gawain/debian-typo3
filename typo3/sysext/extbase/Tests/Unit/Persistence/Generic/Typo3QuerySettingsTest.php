@@ -131,8 +131,8 @@ class Typo3QuerySettingsTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase 
 	/**
 	 * @test
 	 */
-	public function setSysLanguageUidAllowsChaining() {
-		$this->assertTrue($this->typo3QuerySettings->setSysLanguageUid(42) instanceof \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface);
+	public function setLanguageUidAllowsChaining() {
+		$this->assertTrue($this->typo3QuerySettings->setLanguageUid(42) instanceof \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface);
 	}
 
 	/**
@@ -225,5 +225,3 @@ class Typo3QuerySettingsTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase 
 		$this->assertTrue($this->typo3QuerySettings->setReturnRawQueryResult(TRUE) instanceof \TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface);
 	}
 }
-
-?>

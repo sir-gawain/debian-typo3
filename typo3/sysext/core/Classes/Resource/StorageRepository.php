@@ -50,6 +50,11 @@ class StorageRepository extends AbstractRepository {
 	protected $typeField = 'driver';
 
 	/**
+	 * @var string
+	 */
+	protected $driverField = 'driver';
+
+	/**
 	 * @var \TYPO3\CMS\Core\Log\Logger
 	 */
 	protected $logger;
@@ -63,7 +68,7 @@ class StorageRepository extends AbstractRepository {
 	}
 
 	/**
-	 * Finds storages by type.
+	 * Finds storages by type, i.e. the driver used
 	 *
 	 * @param string $storageType
 	 * @return ResourceStorage[]
@@ -194,25 +199,4 @@ class StorageRepository extends AbstractRepository {
 		return $this->factory->getStorageObject($databaseRow['uid'], $databaseRow);
 	}
 
-	/**
-	 * get the WHERE clause for the enabled fields of this TCA table
-	 * depending on the context
-	 *
-	 * @return string the additional where clause, something like " AND deleted=0 AND hidden=0"
-	 */
-	protected function getWhereClauseForEnabledFields() {
-		if (is_object($GLOBALS['TSFE'])) {
-			// frontend context
-			$whereClause = $GLOBALS['TSFE']->sys_page->enableFields($this->table);
-			$whereClause .= $GLOBALS['TSFE']->sys_page->deleteClause($this->table);
-		} else {
-			// backend context
-			$whereClause = \TYPO3\CMS\Backend\Utility\BackendUtility::BEenableFields($this->table);
-			$whereClause .= \TYPO3\CMS\Backend\Utility\BackendUtility::deleteClause($this->table);
-		}
-		return $whereClause;
-	}
 }
-
-
-?>

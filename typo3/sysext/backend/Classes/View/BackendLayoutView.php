@@ -87,7 +87,7 @@ class BackendLayoutView {
 		if (isset($tcaConfig['itemsProcFunc']) && $tcaConfig['itemsProcFunc']) {
 			$tcaItems = $this->addColPosListLayoutItems($id, $tcaItems);
 		}
-		foreach (GeneralUtility::trimExplode(',', $tsConfig['properties']['removeItems'], 1) as $removeId) {
+		foreach (GeneralUtility::trimExplode(',', $tsConfig['properties']['removeItems'], TRUE) as $removeId) {
 			foreach ($tcaItems as $key => $item) {
 				if ($item[1] == $removeId) {
 					unset($tcaItems[$key]);
@@ -135,7 +135,9 @@ class BackendLayoutView {
 		if ($backendLayout) {
 			/** @var $parser \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser */
 			$parser = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\TypoScript\\Parser\\TypoScriptParser');
-			$parser->parse($parser->checkIncludeLines($backendLayout['config']));
+			/** @var \TYPO3\CMS\Backend\Configuration\TypoScript\ConditionMatching\ConditionMatcher $conditionMatcher */
+			$conditionMatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Configuration\\TypoScript\\ConditionMatching\\ConditionMatcher');
+			$parser->parse($parser->checkIncludeLines($backendLayout['config']), $conditionMatcher);
 			$backendLayout['__config'] = $parser->setup;
 			$backendLayout['__items'] = array();
 			$backendLayout['__colPosList'] = array();
@@ -196,6 +198,3 @@ class BackendLayoutView {
 	}
 
 }
-
-
-?>

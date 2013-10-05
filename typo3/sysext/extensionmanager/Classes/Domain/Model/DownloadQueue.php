@@ -48,17 +48,17 @@ class DownloadQueue implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $extensionInstallStorage = array();
 
 	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\ListUtility
+	 * Storage for extensions to be copied
+	 *
+	 * @var array
 	 */
-	protected $listUtility;
+	protected $extensionCopyStorage = array();
 
 	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\ListUtility $listUtility
-	 * @return void
+	 * @var \TYPO3\CMS\Extensionmanager\Utility\ListUtility
+	 * @inject
 	 */
-	public function injectListUtility(\TYPO3\CMS\Extensionmanager\Utility\ListUtility $listUtility) {
-		$this->listUtility = $listUtility;
-	}
+	protected $listUtility;
 
 	/**
 	 * Adds an extension to the download queue.
@@ -131,6 +131,29 @@ class DownloadQueue implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
+	 * Adds an extension to the copy queue for later copying
+	 *
+	 * @param string $extensionKey
+	 * @param string $sourceFolder
+	 * @return void
+	 */
+	public function addExtensionToCopyQueue($extensionKey, $sourceFolder) {
+		$this->extensionCopyStorage[$extensionKey] = $sourceFolder;
+	}
+
+	/**
+	 * Remove an extension from extension copy storage
+	 *
+	 * @param $extensionKey
+	 * @return void
+	 */
+	public function removeExtensionFromCopyQueue($extensionKey) {
+		if (array_key_exists($extensionKey, $this->extensionCopyStorage)) {
+			unset($this->extensionCopyStorage[$extensionKey]);
+		}
+	}
+
+	/**
 	 * Gets the extension installation queue
 	 *
 	 * @return array
@@ -139,7 +162,13 @@ class DownloadQueue implements \TYPO3\CMS\Core\SingletonInterface {
 		return $this->extensionInstallStorage;
 	}
 
+	/**
+	 * Gets the extension copy queue
+	 *
+	 * @return array
+	 */
+	public function getExtensionCopyStorage() {
+		return $this->extensionCopyStorage;
+	}
+
 }
-
-
-?>

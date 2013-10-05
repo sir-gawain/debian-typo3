@@ -114,15 +114,31 @@ class MediaWizardProvider implements \TYPO3\CMS\Frontend\MediaWizard\MediaWizard
 	 */
 	protected function process_youtube($url) {
 		$videoId = '';
-		if (strpos($url, '/user/') !== FALSE) {
-			// it's a channel
-			$parts = explode('/', $url);
-			$videoId = $parts[count($parts) - 1];
-		} elseif (preg_match('/(v=|v\\/|.be\\/)([^(\\&|$)]*)/', $url, $matches)) {
-			$videoId = $matches[2];
+
+		$pattern = '%
+		^(?:https?://)?									# Optional URL scheme Either http or https
+		(?:www\.)?										# Optional www subdomain
+		(?:												# Group host alternatives:
+			youtu\.be/									#  Either youtu.be/,
+			|youtube(?:									#  or youtube.com/
+				-nocookie								#   optional nocookie domain
+			)?\.com/(?:
+				[^/]+/.+/								#   Either /something/other_params/ for channels,
+				|(?:v|e(?:								#   or v/ or e/,
+					mbed								#    optional mbed for embed/
+				)?)/
+				|.*[?&]v=								#   or ?v= or ?other_param&v=
+			)
+		)												# End host alternatives.
+		([^"&?/ ]{11})									# 11 characters (Length of Youtube video ids).
+		(?:.+)?$										# Optional other ending URL parameters.
+		%xs';
+		if (preg_match($pattern, $url, $matches)) {
+			$videoId = $matches[1];
 		}
+
 		if ($videoId) {
-			$url = 'http://www.youtube.com/v/' . $videoId . '?fs=1';
+			$url = $this->getUrlSchema() . 'www.youtube.com/embed/' . $videoId . '?fs=1';
 		}
 		return $url;
 	}
@@ -149,7 +165,7 @@ class MediaWizardProvider implements \TYPO3\CMS\Frontend\MediaWizard\MediaWizard
 		if (strpos($videoId, '/') !== FALSE) {
 			$videoId = substr($videoId, 0, strpos($videoId, '/'));
 		}
-		return 'http://www.dailymotion.com/swf/' . $videoId;
+		return $this->getUrlSchema() . 'www.dailymotion.com/swf/' . $videoId;
 	}
 
 	/**
@@ -181,7 +197,7 @@ class MediaWizardProvider implements \TYPO3\CMS\Frontend\MediaWizard\MediaWizard
 	protected function process_vimeo($url) {
 		if (preg_match('/[\\/#](\\d+)$/', $url, $matches)) {
 			$videoId = $matches[1];
-			$url = 'http://vimeo.com/moogaloop.swf?clip_id=' . $videoId . '&server=vimeo.com&show_title=1&show_byline=1&show_portrait=0&fullscreen=1';
+			$url = $this->getUrlSchema() . 'vimeo.com/moogaloop.swf?clip_id=' . $videoId . '&server=vimeo.com&show_title=1&show_byline=1&show_portrait=0&fullscreen=1';
 		}
 		return $url;
 	}
@@ -210,7 +226,7 @@ class MediaWizardProvider implements \TYPO3\CMS\Frontend\MediaWizard\MediaWizard
 	protected function process_google($url) {
 		if (preg_match('/docid=([^(\\&|$)]*)/', $url, $matches)) {
 			$videoId = $matches[1];
-			$url = 'http://video.google.com/googleplayer.swf?docid=' . $videoId;
+			$url = $this->getUrlSchema() . 'video.google.com/googleplayer.swf?docid=' . $videoId;
 		}
 		return $url;
 	}
@@ -240,7 +256,7 @@ class MediaWizardProvider implements \TYPO3\CMS\Frontend\MediaWizard\MediaWizard
 		preg_match('/watch([^(\\&|$)]*)/', $url, $matches);
 		$parts = explode('/', $matches[1]);
 		$videoId = $parts[1];
-		return 'http://www.myvideo.de/movie/' . $videoId . '/';
+		return $this->getUrlSchema() . 'www.myvideo.de/movie/' . $videoId . '/';
 	}
 
 	/**
@@ -267,7 +283,13 @@ class MediaWizardProvider implements \TYPO3\CMS\Frontend\MediaWizard\MediaWizard
 		return 'http://www.veoh.com/static/swf/webplayer/WebPlayer.swf?version=AFrontend.5.5.2.1001&permalinkId=' . $videoId;
 	}
 
+	/**
+	 * Get the correct url schema
+	 *
+	 * @return string
+	 */
+	protected function getUrlSchema() {
+		return \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SSL') ? 'https://' : 'http://';
+	}
+
 }
-
-
-?>

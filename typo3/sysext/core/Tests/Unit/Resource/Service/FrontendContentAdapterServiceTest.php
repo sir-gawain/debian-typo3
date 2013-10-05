@@ -1,5 +1,5 @@
 <?php
-namespace TYPO3\CMS\Core\Tests\Resource\Service;
+namespace TYPO3\CMS\Core\Tests\Unit\Resource\Service;
 
 /***************************************************************
  *  Copyright notice
@@ -159,6 +159,3 @@ class FrontendContentAdapterServiceTest extends \TYPO3\CMS\Core\Tests\UnitTestCa
 	}
 
 }
-
-
-?>

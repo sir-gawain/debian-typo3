@@ -50,12 +50,13 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * Set up
 	 */
 	public function setUp() {
+		$GLOBALS['TYPO3_DB'] = $this->getMock('TYPO3\\CMS\\Core\\Database\\DatabaseConnection', array());
 		$this->template = $this->getMock('TYPO3\\CMS\\Core\\TypoScript\\TemplateService', array('getFileName', 'linkData'));
 		$this->tsfe = $this->getAccessibleMock('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', array('dummy'), array(), '', FALSE);
 		$this->tsfe->tmpl = $this->template;
 		$this->tsfe->config = array();
 		$this->tsfe->page = array();
-		$sysPageMock = $this->getMock('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
+		$sysPageMock = $this->getMock('TYPO3\\CMS\\Frontend\\Page\\PageRepository', array('getRawRecord'));
 		$this->tsfe->sys_page = $sysPageMock;
 		$GLOBALS['TSFE'] = $this->tsfe;
 		$GLOBALS['TSFE']->csConvObj = new \TYPO3\CMS\Core\Charset\CharsetConverter();
@@ -88,10 +89,19 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	 * @test
 	 */
 	public function getImgResourceHookGetsCalled() {
-		$this->template->expects($this->atLeastOnce())->method('getFileName')->with('typo3/clear.gif')->will($this->returnValue('typo3/clear.gif'));
+		$this->template
+			->expects($this->atLeastOnce())
+			->method('getFileName')
+			->with('typo3/clear.gif')
+			->will($this->returnValue('typo3/clear.gif'));
+		// Reset some global variable to not trigger unrelated method code parts
+		$GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] = '';
 		$className = uniqid('tx_coretest');
 		$getImgResourceHookMock = $this->getMock('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectGetImageResourceHookInterface', array('getImgResourcePostProcess'), array(), $className);
-		$getImgResourceHookMock->expects($this->once())->method('getImgResourcePostProcess')->will($this->returnCallback(array($this, 'isGetImgResourceHookCalledCallback')));
+		$getImgResourceHookMock
+			->expects($this->once())
+			->method('getImgResourcePostProcess')
+			->will($this->returnCallback(array($this, 'isGetImgResourceHookCalledCallback')));
 		$getImgResourceHookObjects = array($getImgResourceHookMock);
 		$this->cObj->_setRef('getImgResourceHookObjects', $getImgResourceHookObjects);
 		$this->cObj->IMAGE(array('file' => 'typo3/clear.gif'));
@@ -986,6 +996,13 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 				),
 				'0.80'
 			),
+			'testing decimals with input as string' => array(
+				'0.8',
+				array(
+					'decimals' => 2
+				),
+				'0.80'
+			),
 			'testing dec_point' => array(
 				0.8,
 				array(
@@ -1060,7 +1077,34 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 					)
 				),
 				'There is an animal, an animal and an animal around the block! Yeah!'
-			)
+			),
+			'replacement with optionSplit, normal pattern' => array(
+				'There_is_a_cat,_a_dog_and_a_tiger_in_da_hood!_Yeah!',
+				array(
+					'replacement.' => array(
+						'10.' => array(
+							'search' => '_',
+							'replace' => '1 || 2 || 3',
+							'useOptionSplitReplace' => '1'
+						),
+					)
+				),
+				'There1is2a3cat,3a3dog3and3a3tiger3in3da3hood!3Yeah!'
+			),
+			'replacement with optionSplit, using regex' => array(
+				'There is a cat, a dog and a tiger in da hood! Yeah!',
+				array(
+					'replacement.' => array(
+						'10.' => array(
+							'search' => '#(a) (Cat|Dog|Tiger)#i',
+							'replace' => '${1} tiny ${2} || ${1} midsized ${2} || ${1} big ${2}',
+							'useOptionSplitReplace' => '1',
+							'useRegExp' => '1'
+						)
+					)
+				),
+				'There is a tiny cat, a midsized dog and a big tiger in da hood! Yeah!'
+			),
 		);
 		return $data;
 	}
@@ -1188,6 +1232,42 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		foreach ($expected as $field => $value) {
 			$this->assertEquals($value, $result[$field]);
 		}
+	}
+
+	/**
+	 * @test
+	 */
+	public function getQueryCallsGetTreeListWithNegativeValuesIfRecursiveIsSet() {
+		$this->cObj = $this->getAccessibleMock('\\TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer', array('getTreeList'));
+		$this->cObj->start(array(), 'tt_content');
+		$conf = array(
+			'recursive' => '15',
+			'pidInList' => '16, -35'
+		);
+		$this->cObj->expects($this->at(0))
+			->method('getTreeList')
+			->with(-16, 15);
+		$this->cObj->expects($this->at(1))
+			->method('getTreeList')
+			->with(-35, 15);
+		$this->cObj->getQuery('tt_content', $conf, TRUE);
+	}
+
+	/**
+	 * @test
+	 */
+	public function getQueryCallsGetTreeListWithCurrentPageIfThisIsSet() {
+		$this->cObj = $this->getAccessibleMock('\\TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer', array('getTreeList'));
+		$GLOBALS['TSFE']->id = 27;
+		$this->cObj->start(array(), 'tt_content');
+		$conf = array(
+			'pidInList' => 'this',
+			'recursive' => '4'
+		);
+		$this->cObj->expects($this->once())
+			->method('getTreeList')
+			->with(-27);
+		$this->cObj->getQuery('tt_content', $conf, TRUE);
 	}
 
 	/**
@@ -1382,6 +1462,550 @@ class ContentObjectRendererTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 			),
 		);
 	}
-}
 
-?>
+
+	/////////////////////////////
+	// Tests concerning getData()
+	/////////////////////////////
+
+	/**
+	 * @return array
+	 */
+	public function getDataWithTypeGpDataProvider() {
+		return array(
+			'Value in get-data' => array('onlyInGet', 'GetValue'),
+			'Value in post-data' => array('onlyInPost', 'PostValue'),
+			'Value in post-data overriding get-data' => array('inGetAndPost', 'ValueInPost'),
+		);
+	}
+
+	/**
+	 * Checks if getData() works with type "gp"
+	 *
+	 * @test
+	 * @dataProvider getDataWithTypeGpDataProvider
+	 */
+	public function getDataWithTypeGp($key, $expectedValue) {
+		$_GET = array(
+			'onlyInGet' => 'GetValue',
+			'inGetAndPost' => 'ValueInGet',
+		);
+		$_POST = array(
+			'onlyInPost' => 'PostValue',
+			'inGetAndPost' => 'ValueInPost',
+		);
+		$this->assertEquals($expectedValue, $this->cObj->getData('gp:' . $key));
+	}
+
+	/**
+	 * Checks if getData() works with type "tsfe"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeTsfe() {
+		$this->assertEquals($GLOBALS['TSFE']->renderCharset, $this->cObj->getData('tsfe:renderCharset'));
+	}
+
+	/**
+	 * Checks if getData() works with type "getenv"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeGetenv() {
+		$envName = uniqid('frontendtest');
+		$value = uniqid('someValue');
+		putenv($envName . '=' . $value);
+		$this->assertEquals($value, $this->cObj->getData('getenv:' . $envName));
+	}
+
+	/**
+	 * Checks if getData() works with type "getindpenv"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeGetindpenv() {
+		$this->assertEquals(PATH_thisScript, $this->cObj->getData('getindpenv:SCRIPT_FILENAME'));
+	}
+
+	/**
+	 * Checks if getData() works with type "getindpenv"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeField() {
+		$key = 'someKey';
+		$value = 'someValue';
+		$field = array($key => $value);
+
+		$this->assertEquals($value, $this->cObj->getData('field:' . $key, $field));
+	}
+
+	/**
+	 * Checks if getData() works with type "file"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeFile() {
+		$uid = rand();
+		$properties = array(
+			uniqid() => uniqid(),
+			uniqid() => uniqid(),
+			'uid' => $uid
+		);
+		$file = new \TYPO3\CMS\Core\Resource\File($properties);
+		$this->cObj->setCurrentFile($file);
+
+		$this->assertEquals($uid, $this->cObj->getData('file:current:uid'));
+	}
+
+	/**
+	 * Checks if getData() works with type "parameters"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeParameters() {
+		$key = uniqid('someKey');
+		$value = uniqid('someValue');
+		$this->cObj->parameters[$key] = $value;
+
+		$this->assertEquals($value, $this->cObj->getData('parameters:' . $key));
+	}
+
+	/**
+	 * Checks if getData() works with type "register"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeRegister() {
+		$key = uniqid('someKey');
+		$value = uniqid('someValue');
+		$GLOBALS['TSFE']->register[$key] = $value;
+
+		$this->assertEquals($value, $this->cObj->getData('register:' . $key));
+	}
+
+	/**
+	 * Checks if getData() works with type "level"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeLevel() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1'),
+			1 => array('uid' => 2, 'title' => 'title2'),
+			2 => array('uid' => 3, 'title' => 'title3'),
+		);
+
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline;
+		$this->assertEquals(2, $this->cObj->getData('level'));
+	}
+
+	/**
+	 * Checks if getData() works with type "global"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeGlobal() {
+		$this->assertEquals($GLOBALS['TSFE']->renderCharset, $this->cObj->getData('global:TSFE|renderCharset'));
+	}
+
+	/**
+	 * Checks if getData() works with type "leveltitle"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeLeveltitle() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1'),
+			1 => array('uid' => 2, 'title' => 'title2'),
+			2 => array('uid' => 3, 'title' => ''),
+		);
+
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline;
+		$this->assertEquals('', $this->cObj->getData('leveltitle:-1'));
+		// since "title3" is not set, it will slide to "title2"
+		$this->assertEquals('title2', $this->cObj->getData('leveltitle:-1,slide'));
+	}
+
+	/**
+	 * Checks if getData() works with type "levelmedia"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeLevelmedia() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1', 'media' => 'media1'),
+			1 => array('uid' => 2, 'title' => 'title2', 'media' => 'media2'),
+			2 => array('uid' => 3, 'title' => 'title3', 'media' => ''),
+		);
+
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline;
+		$this->assertEquals('', $this->cObj->getData('levelmedia:-1'));
+		// since "title3" is not set, it will slide to "title2"
+		$this->assertEquals('media2', $this->cObj->getData('levelmedia:-1,slide'));
+	}
+
+	/**
+	 * Checks if getData() works with type "leveluid"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeLeveluid() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1'),
+			1 => array('uid' => 2, 'title' => 'title2'),
+			2 => array('uid' => 3, 'title' => 'title3'),
+		);
+
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline;
+		$this->assertEquals(3, $this->cObj->getData('leveluid:-1'));
+		// every element will have a uid - so adding slide doesn't really make sense, just for completeness
+		$this->assertEquals(3, $this->cObj->getData('leveluid:-1,slide'));
+	}
+
+	/**
+	 * Checks if getData() works with type "levelfield"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeLevelfield() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1', 'testfield' => 'field1'),
+			1 => array('uid' => 2, 'title' => 'title2', 'testfield' => 'field2'),
+			2 => array('uid' => 3, 'title' => 'title3', 'testfield' => ''),
+		);
+
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline;
+		$this->assertEquals('', $this->cObj->getData('levelfield:-1,testfield'));
+		$this->assertEquals('field2', $this->cObj->getData('levelfield:-1,testfield,slide'));
+	}
+
+	/**
+	 * Checks if getData() works with type "fullrootline"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeFullrootline() {
+		$rootline1 = array(
+			0 => array('uid' => 1, 'title' => 'title1', 'testfield' => 'field1'),
+		);
+		$rootline2 = array(
+			0 => array('uid' => 1, 'title' => 'title1', 'testfield' => 'field1'),
+			1 => array('uid' => 2, 'title' => 'title2', 'testfield' => 'field2'),
+			2 => array('uid' => 3, 'title' => 'title3', 'testfield' => 'field3'),
+		);
+
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline1;
+		$GLOBALS['TSFE']->rootLine = $rootline2;
+		$this->assertEquals('field2', $this->cObj->getData('fullrootline:-1,testfield'));
+	}
+
+	/**
+	 * Checks if getData() works with type "date"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDate() {
+		$format = 'Y-M-D';
+		$defaultFormat = 'd/m Y';
+
+		$this->assertEquals(date($format, $GLOBALS['EXEC_TIME']), $this->cObj->getData('date:' . $format));
+		$this->assertEquals(date($defaultFormat, $GLOBALS['EXEC_TIME']), $this->cObj->getData('date'));
+	}
+
+	/**
+	 * Checks if getData() works with type "page"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypePage() {
+		$uid = rand();
+		$GLOBALS['TSFE']->page['uid'] = $uid;
+		$this->assertEquals($uid, $this->cObj->getData('page:uid'));
+	}
+
+	/**
+	 * Checks if getData() works with type "current"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeCurrent() {
+		$key = uniqid('someKey');
+		$value = uniqid('someValue');
+		$this->cObj->data[$key] = $value;
+		$this->cObj->currentValKey = $key;
+		$this->assertEquals($value, $this->cObj->getData('current'));
+	}
+
+	/**
+	 * Checks if getData() works with type "db"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDb() {
+		$dummyRecord = array('uid' => 5, 'title' => 'someTitle');
+
+		$GLOBALS['TSFE']->sys_page->expects($this->atLeastOnce())->method('getRawRecord')->with('tt_content', '106')->will($this->returnValue($dummyRecord));
+		$this->assertEquals($dummyRecord['title'], $this->cObj->getData('db:tt_content:106:title'));
+	}
+
+	/**
+	 * Checks if getData() works with type "lll"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeLll() {
+		$key = uniqid('someKey');
+		$value = uniqid('someValue');
+		$language = uniqid('someLanguage');
+		$GLOBALS['TSFE']->LL_labels_cache[$language]['LLL:' . $key] = $value;
+		$GLOBALS['TSFE']->lang = $language;
+
+		$this->assertEquals($value, $this->cObj->getData('lll:' . $key));
+	}
+
+	/**
+	 * Checks if getData() works with type "path"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypePath() {
+		$filenameIn = uniqid('someValue');
+		$filenameOut = uniqid('someValue');
+		$this->template->expects($this->atLeastOnce())->method('getFileName')->with($filenameIn)->will($this->returnValue($filenameOut));
+		$this->assertEquals($filenameOut, $this->cObj->getData('path:' . $filenameIn));
+	}
+
+	/**
+	 * Checks if getData() works with type "parentRecordNumber"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeParentRecordNumber() {
+		$recordNumber = rand();
+		$this->cObj->parentRecordNumber = $recordNumber;
+		$this->assertEquals($recordNumber, $this->cObj->getData('cobj:parentRecordNumber'));
+	}
+
+	/**
+	 * Checks if getData() works with type "debug:rootLine"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDebugRootline() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1'),
+			1 => array('uid' => 2, 'title' => 'title2'),
+			2 => array('uid' => 3, 'title' => ''),
+		);
+		$expectedResult = '0uid1titletitle11uid2titletitle22uid3title';
+		$GLOBALS['TSFE']->tmpl->rootLine = $rootline;
+
+		$result = $this->cObj->getData('debug:rootLine');
+		$cleanedResult = strip_tags($result);
+		$cleanedResult = str_replace("\r", '', $cleanedResult);
+		$cleanedResult = str_replace("\n", '', $cleanedResult);
+		$cleanedResult = str_replace("\t", '', $cleanedResult);
+		$cleanedResult = str_replace(' ', '', $cleanedResult);
+
+		$this->assertEquals($expectedResult, $cleanedResult);
+	}
+
+	/**
+	 * Checks if getData() works with type "debug:fullRootLine"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDebugFullRootline() {
+		$rootline = array(
+			0 => array('uid' => 1, 'title' => 'title1'),
+			1 => array('uid' => 2, 'title' => 'title2'),
+			2 => array('uid' => 3, 'title' => ''),
+		);
+		$expectedResult = '0uid1titletitle11uid2titletitle22uid3title';
+		$GLOBALS['TSFE']->rootLine = $rootline;
+
+		$result = $this->cObj->getData('debug:fullRootLine');
+		$cleanedResult = strip_tags($result);
+		$cleanedResult = str_replace("\r", '', $cleanedResult);
+		$cleanedResult = str_replace("\n", '', $cleanedResult);
+		$cleanedResult = str_replace("\t", '', $cleanedResult);
+		$cleanedResult = str_replace(' ', '', $cleanedResult);
+
+		$this->assertEquals($expectedResult, $cleanedResult);
+	}
+
+	/**
+	 * Checks if getData() works with type "debug:data"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDebugData() {
+		$key = uniqid('someKey');
+		$value = uniqid('someValue');
+		$this->cObj->data = array($key => $value);
+
+		$expectedResult = $key . $value;
+
+		$result = $this->cObj->getData('debug:data');
+		$cleanedResult = strip_tags($result);
+		$cleanedResult = str_replace("\r", '', $cleanedResult);
+		$cleanedResult = str_replace("\n", '', $cleanedResult);
+		$cleanedResult = str_replace("\t", '', $cleanedResult);
+		$cleanedResult = str_replace(' ', '', $cleanedResult);
+
+		$this->assertEquals($expectedResult, $cleanedResult);
+	}
+
+	/**
+	 * Checks if getData() works with type "debug:register"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDebugRegister() {
+		$key = uniqid('someKey');
+		$value = uniqid('someValue');
+		$GLOBALS['TSFE']->register = array($key => $value);
+
+		$expectedResult = $key . $value;
+
+		$result = $this->cObj->getData('debug:register');
+		$cleanedResult = strip_tags($result);
+		$cleanedResult = str_replace("\r", '', $cleanedResult);
+		$cleanedResult = str_replace("\n", '', $cleanedResult);
+		$cleanedResult = str_replace("\t", '', $cleanedResult);
+		$cleanedResult = str_replace(' ', '', $cleanedResult);
+
+		$this->assertEquals($expectedResult, $cleanedResult);
+	}
+
+	/**
+	 * Checks if getData() works with type "data:page"
+	 *
+	 * @test
+	 */
+	public function getDataWithTypeDebugPage() {
+		$uid = rand();
+		$GLOBALS['TSFE']->page = array('uid' => $uid);
+
+		$expectedResult = 'uid' . $uid;
+
+		$result = $this->cObj->getData('debug:page');
+		$cleanedResult = strip_tags($result);
+		$cleanedResult = str_replace("\r", '', $cleanedResult);
+		$cleanedResult = str_replace("\n", '', $cleanedResult);
+		$cleanedResult = str_replace("\t", '', $cleanedResult);
+		$cleanedResult = str_replace(' ', '', $cleanedResult);
+
+		$this->assertEquals($expectedResult, $cleanedResult);
+	}
+
+	/**
+	 * @test
+	 */
+	public function getTreeListReturnsChildPageUids() {
+		$GLOBALS['TYPO3_DB']->expects($this->any())->method('exec_SELECTgetSingleRow')->with('treelist')->will($this->returnValue(NULL));
+		$GLOBALS['TSFE']->sys_page
+			->expects($this->any())
+			->method('getRawRecord')
+			->will(
+				$this->onConsecutiveCalls(
+					array('uid' => 17),
+					array('uid' => 321),
+					array('uid' => 719),
+					array('uid' => 42)
+				)
+			);
+
+		$GLOBALS['TSFE']->sys_page->expects($this->any())->method('getMountPointInfo')->will($this->returnValue(NULL));
+		$GLOBALS['TYPO3_DB']
+			->expects($this->any())
+			->method('exec_SELECTgetRows')
+			->will(
+				$this->onConsecutiveCalls(
+					array(
+						array('uid' => 321)
+					),
+					array(
+						array('uid' => 719)
+					),
+					array(
+						array('uid' => 42)
+					)
+				)
+			);
+		// 17 = pageId, 5 = recursionLevel, 0 = begin (entry to recursion, internal), TRUE = do not check enable fields
+		// 17 is positive, we expect 17 NOT to be included in result
+		$result = $this->cObj->getTreeList(17, 5, 0, TRUE);
+		$expectedResult = '0,42,719,321';
+		$this->assertEquals($expectedResult, $result);
+	}
+
+	/**
+	 * @test
+	 */
+	public function getTreeListReturnsChildPageUidsAndOriginalPidForNegativeValue() {
+		$GLOBALS['TYPO3_DB']->expects($this->any())->method('exec_SELECTgetSingleRow')->with('treelist')->will($this->returnValue(NULL));
+		$GLOBALS['TSFE']->sys_page
+			->expects($this->any())
+			->method('getRawRecord')
+			->will(
+				$this->onConsecutiveCalls(
+					array('uid' => 17),
+					array('uid' => 321),
+					array('uid' => 719),
+					array('uid' => 42)
+				)
+			);
+
+		$GLOBALS['TSFE']->sys_page->expects($this->any())->method('getMountPointInfo')->will($this->returnValue(NULL));
+		$GLOBALS['TYPO3_DB']
+			->expects($this->any())
+			->method('exec_SELECTgetRows')
+			->will(
+				$this->onConsecutiveCalls(
+					array(
+						array('uid' => 321)
+					),
+					array(
+						array('uid' => 719)
+					),
+					array(
+						array('uid' => 42)
+					)
+				)
+			);
+		// 17 = pageId, 5 = recursionLevel, 0 = begin (entry to recursion, internal), TRUE = do not check enable fields
+		// 17 is negative, we expect 17 to be included in result
+		$result = $this->cObj->getTreeList(-17, 5, 0, TRUE);
+		$expectedResult = '0,42,719,321,17';
+		$this->assertEquals($expectedResult, $result);
+	}
+
+	/**
+	 * @test
+	 */
+	public function aTagParamsHasLeadingSpaceIfNotEmpty() {
+		$aTagParams = $this->cObj->getATagParams(array('ATagParams' => 'data-test="testdata"'));
+		$this->assertEquals(' data-test="testdata"', $aTagParams );
+	}
+
+	/**
+	 * @test
+	 */
+	public function aTagParamsHaveSpaceBetweenLocalAndGlobalParams() {
+		$GLOBALS['TSFE']->ATagParams = 'data-global="dataglobal"';
+		$aTagParams = $this->cObj->getATagParams(array('ATagParams' => 'data-test="testdata"'));
+		$this->assertEquals(' data-global="dataglobal" data-test="testdata"', $aTagParams );
+	}
+
+	/**
+	 * @test
+	 */
+	public function aTagParamsHasNoLeadingSpaceIfEmpty() {
+		// make sure global ATagParams are empty
+		$GLOBALS['TSFE']->ATagParams = '';
+		$aTagParams = $this->cObj->getATagParams(array('ATagParams' => ''));
+		$this->assertEquals('', $aTagParams);
+	}
+}

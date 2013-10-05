@@ -21,6 +21,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * This file contains the default array definition that is
  * later populated as $GLOBALS['TYPO3_CONF_VARS']
@@ -41,14 +42,9 @@ return array(
 		'im_path' => '/usr/bin/',						// Path to the IM tools 'convert', 'combine', 'identify'.
 		'im_path_lzw' => '/usr/bin/',					// Path to the IM tool 'convert' with LZW enabled! See 'gif_compress'. If your version 4.2.9 of ImageMagick is compiled with LZW you may leave this field blank AND disable the flag 'gif_compress'! Tip: You can call LZW 'convert' with a prefix like 'myver_convert' by setting this path with it, eg. '/usr/bin/myver_' instead of just '/usr/bin/'.
 		'im_version_5' => 'im6',						// String: Set this either to "im6" or "gm" (uses GraphicsMagick instead of ImageMagick). Setting this value will automatically configure some settings for use with the specified program version.
-		'im_negate_mask' => FALSE,						// Boolean: Indicates if the mask images should be inverted first. This depends of the ImageMagick version. Below ver. 5.1 this should be FALSE. Above ImageMagick version 5.2+ it should be TRUE. Just set the flag if the masks works opposite the intension!
-		'im_imvMaskState' => FALSE,						// Boolean: If set, the 'im_negate_mask' state is inverted. This is very useful with newer versions of IM5 (at least 5.4.3+) where the 'im_version_5' setting will set 'im_negate_mask' which will eventually be wrong... Halleluja for ImageMagick - have I ever regreted using that package...
-		'im_no_effects' => FALSE,						// Boolean: This is necessary if using ImageMagick 5+. Effects in Imagemagick 5+ tends to render very slowly! Therefore this must be disabled in order not to perform sharpen, blurring and such. (However lately IM5 is allowed for effects again, but syntax has changed!)
-		'im_v5effects' => 0,							// <p>Integer (-1, 0, 1)</p><dl><dt>0</dt><dd>disabled</dd><dt>-1</dt><dd>Do not sharpen images by default</dd><dt>1</dt><dd>All; blur and sharpening is allowed in ImageMagick again and the 'im_no_effects' flag is cancelled.</dd></dl><p>Blurring and sharpening has new syntaxes though. See \TYPO3\CMS\Core\Imaging\GraphicalFunctions for details.</p>
+		'im_v5effects' => 0,							// <p>Integer (-1, 0, 1)</p><dl><dt>0</dt><dd>disabled</dd><dt>-1</dt><dd>Do not sharpen images by default</dd><dt>1</dt><dd>All; blur and sharpening is allowed in ImageMagick.</dd></dl>
 		'im_mask_temp_ext_gif' => FALSE,				// Boolean: This should be set if ImageMagick is version 5+. This is used in class.tslib_content.php for masking images and the extension png is normally used because it's faster than gif for temporary files. But png seems not to work with some IM 5+ versions, so...
-		'im_mask_temp_ext_noloss' => 'miff',			// String: Loss-less ImageMagick extension to use for mask processing in temporary filenames. Normally 'miff' (ImageMagick's OWN format) will do fine. However at least IM 5.4.9 has proved not to be able to write to its own file format which forced me to add this option. You can try and set this to tif/png/jpg if some masking doesn't work the way it should.
 		'im_noScaleUp' => FALSE,						// Boolean: If set, images are not being scaled up if told so (in t3lib/stdgraphics.php)
-		'im_combine_filename' => 'combine',				// String: Latest ImageMagick versions has changed the name of combine to composite. Configure here if needed.
 		'im_noFramePrepended' => FALSE,					// Boolean: If set, the [x] frame indicator is NOT prepended to filenames in stdgraphic. Some IM5+ version didn't work at all with the typical [0]-prefix, which allow multipage pdf's and animated gif's to be scaled only for the first frame/page and that seriously cuts down rendering time. Set this flag only if your ImageMagick version cannot find the files. Notice that changing this flag causes temporary filenames to change, thus the server will begin scaling images again which were previously cached.
 		'im_stripProfileCommand' => '+profile \'*\'',	// String: Specify the command to strip the profile information, which can reduce thumbnail size up to 60KB. Command can differ in IM/GM, IM also know the -strip command. See <a href="http://www.imagemagick.org/Usage/thumbnails/#profiles" target="_blank">imagemagick.org</a> for details
 		'im_useStripProfileByDefault' => TRUE,			// Boolean: If set, the im_stripProfileCommand is used with all IM Image operations by default. See tsRef for setting this parameter explocit for IMAGE generation.
@@ -56,15 +52,11 @@ return array(
 		'enable_typo3temp_db_tracking' => FALSE,		// Boolean: If set, then all files in typo3temp will be logged in a database table. In addition to being a log of the files with original filenames, it also serves to secure that the same image is not rendered simultaneously by two different processes.
 		'TTFdpi' => 96,									// Integer: Enter how many dpi the FreeType module uses. Freetype1 should be set to 72. Freetype2 should be set to 96 (otherwise fonts are rendered way bigger than FreeType1). This works as a global scaling factor for Freetype.
 		'png_truecolor' => TRUE,
-		'colorspace' => 'RGB',							// String: Specifiy the colorspace to use. Some ImageMagick versions (like 6.7.0 and above) use the sRGB colorspace, so all images are darker then the original. <br />Possible Values: CMY, CMYK, Grey, HCL, HSB, HSL, HWB, Lab, LCH, LMS, Log, Luv, OHTA, Rec601Luma, Rec601YCbCr, Rec709Luma, Rec709YCbCr, RGB, sRGB, Transparent, XYZ, YCbCr, YCC, YIQ, YCbCr, YUV
+		'colorspace' => 'RGB',							// String: Specifiy the colorspace to use. Some ImageMagick versions (like 6.7.0 and above) use the sRGB colorspace, so all images are darker then the original. <br />Possible Values: CMY, CMYK, Gray, HCL, HSB, HSL, HWB, Lab, LCH, LMS, Log, Luv, OHTA, Rec601Luma, Rec601YCbCr, Rec709Luma, Rec709YCbCr, RGB, sRGB, Transparent, XYZ, YCbCr, YCC, YIQ, YCbCr, YUV
 	),
 	'SYS' => array(
 		// System related concerning both frontend and backend.
 		'lang' => array(
-			'cache' => array(
-				'lifetime' => 86400,
-				'clear_menu' => FALSE
-			),
 			'format' => array(
 				'priority' => 'xlf,xml,php'
 			),
@@ -109,7 +101,7 @@ return array(
 		 */
 		'curlTimeout' => 0,						// Integer: Timeout value for cURL requests in seconds. 0 means to wait indefinitely. Deprecated since 4.6 - will be removed in 6.2. See below for http options.
 		'form_enctype' => 'multipart/form-data',// String: This is the default form encoding type for most forms in TYPO3. It allows for file uploads to be in the form. However if file-upload is disabled for your PHP version even ordinary data sent with this encryption will not get to the server. So if you have file_upload disabled, you will have to change this to eg. 'application/x-www-form-urlencoded'
-		'textfile_ext' => 'txt,html,htm,css,tmpl,js,sql,xml,csv,' . PHP_EXTENSIONS_DEFAULT,		// Text file extensions. Those that can be edited. Executable PHP files may not be editable in webspace if disallowed!
+		'textfile_ext' => 'txt,html,htm,css,tmpl,js,sql,xml,csv',		// Text file extensions. Those that can be edited. Executable PHP files may not be editable in webspace if disallowed!
 		'contentTable' => '',					// This is the page-content table (Normally 'tt_content')
 		'binPath' => '',						// String: List of absolute paths where external programs should be searched for. Eg. <code>/usr/local/webbin/,/home/xyz/bin/</code>. (ImageMagick path have to be configured separately)
 		'binSetup' => '',						// String (textarea): List of programs (separated by newline or comma). By default programs will be searched in default paths and the special paths defined by 'binPath'. When PHP has openbasedir enabled the programs can not be found and have to be configured here. Example: <code>perl=/usr/bin/perl,unzip=/usr/local/bin/unzip</code>
@@ -122,7 +114,7 @@ return array(
 		'phpTimeZone' => '',					// String: timezone to force for all date() and mktime() functions. A list of supported values can be found at <a href="http://php.net/manual/en/timezones.php" target="_blank">php.net</a>. If this is not set, a valid fallback will be searched for by PHP (php.ini's <a href="http://www.php.net/manual/en/datetime.configuration.php#ini.date.timezone" target="_blank">date.timezone</a> setting, server defaults, etc); and if no fallback is found, the value of "UTC" is used instead.
 		'systemLog' => '',						// <p>String: semi-colon separated list. Defines one or more logging methods. Possible methods:</p><dl><dt>file,&lt;abs-path-to-file&gt;[,&lt;level&gt;]</dt><dd>logs to a file</dd><dt>mail,&lt;to&gt;[/&lt;from&gt;][,&lt;level&gt;]</dt><dd>sends the log entries via mail</dd><dt>syslog,&lt;facility&gt;,[,&lt;level&gt;]</dt><dd>uses the operating system's log. Facility may be one of LOCAL0..LOCAL7, USER (on Windows USER is the only valid type).</dd><dt>error_log[,,&lt;level&gt;]</dt><dd>uses the PHP error log</dd></dl><p>The &lt;level&gt; is the individual logging level (see <a href="#SYS-systemLogLevel">[SYS][systemLogLevel]</a>).</p>
 		'systemLogLevel' => 0,					// <p>Integer (0, 1, 2, 3, 4): Only messages with same or higher severity are logged.</p><ul><li>0: info</li><li>1: notice</li><li>2: warning</li><li>3: error</li><li>4: fatal error</li></ul>
-		'enableDeprecationLog' => 'file',		// Commalist: Enables the logging of deprecated methods and functions. Default is 'file'. The following options are allowed: <dl><dt>file</dt><dd>The log file will be written to typo3conf/deprecation_[hash-value].log</dd><dt>devlog</dt><dd>The log will be written to the development log</dd><dt>console<dt><dd>The log will be displayed in the Backend's Debug Console. The logging options can be combined by comma-separating them.</dd></dl>
+		'enableDeprecationLog' => 'file',		// If set, this configuration enables the logging of deprecated methods and functions. The following options are allowed: <dl><dt>String: &quot;file&quot; (or integer &quot;1&quot;)</dt><dd>The log file will be written to typo3conf/deprecation_[hash-value].log</dd><dt>String: &quot;devlog&quot;</dt><dd>The log will be written to the development log</dd><dt>String: &quot;console&quot;<dt><dd>The log will be displayed in the Backend's Debug Console.</dd></dl>Logging options &quot;file&quot;, &quot;devlog&quot; and &quot;console&quot; can be combined by comma-separating them. Default is &quot;file&quot;.
 		'maxFileNameLength' => 60,				// Integer: This is the maximum file name length. The value will be taken into account by basic file operations like renaming or creation of files and folders.
 		'UTF8filesystem' => FALSE,				// Boolean: If TRUE then TYPO3 uses utf-8 to store file names. This allows for accented Latin letters as well as any other non-latin characters like Cyrillic and Chinese.
 		'systemLocale' => '',					// String: locale used for certain system related functions, e.g. escaping shell commands. If problems with filenames containing special characters occur, the value of this option is probably wrong. See <a href="http://php.net/manual/en/function.setlocale.php" target="_blank">setlocale()</a>.
@@ -174,16 +166,35 @@ return array(
 					'frontend' => 'TYPO3\CMS\Core\Cache\Frontend\VariableFrontend',
 					'backend' => 'TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend',
 					'options' => array()
-				)
-			)
+				),
+				't3lib_l10n' => array(
+					'frontend' => 'TYPO3\CMS\Core\Cache\Frontend\VariableFrontend',
+					'backend' => 'TYPO3\CMS\Core\Cache\Backend\SimpleFileBackend',
+					'options' => array(),
+				),
+				'extbase_object' => array(
+					'frontend' => 'TYPO3\CMS\Core\Cache\Frontend\VariableFrontend',
+					'backend' => 'TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend',
+					'options' => array(
+						'defaultLifetime' => 0,
+					),
+				),
+				'extbase_reflection' => array(
+					'frontend' => 'TYPO3\CMS\Core\Cache\Frontend\VariableFrontend',
+					'backend' => 'TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend',
+					'options' => array(
+						'defaultLifetime' => 0,
+					),
+				),
+			),
 		),
 		'defaultCategorizedTables' => 'pages,tt_content', // List of comma separated tables that are categorizable by default.
 		'displayErrors' => -1,		// <p>Integer (-1, 0, 1, 2). Configures whether PHP errors should be displayed.</p><dl><dt>0</dt><dd>Do not display any PHP error messages. Overrides the value of "exceptionalErrors" and sets it to 0 (= no errors are turned into exceptions), the configured "productionExceptionHandler" is used as exception handler</dd><dt>1</dt><dd>Display error messages with the registered errorhandler. The configured "debugExceptionHandler" is used as exception handler</dd><dt>2</dt><dd>Display errors only if client matches <a href="#SYS-devIPmask">[SYS][devIPmask]</a>. If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used</dd><dt>-1</dt><dd>Default setting. With this option, you can override the PHP setting "display_errors". If devIPmask matches the users IP address  the configured "debugExceptionHandler" is used  for exceptions, if not "productionExceptionHandler" will be used.</dd></dl>
 		'productionExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "TYPO3\\CMS\\Core\\Error\\ProductionExceptionHandler". This exception handler displays a nice error message when something went wrong. The error message is logged to the configured logs. Note: The configured "productionExceptionHandler" is used if displayErrors is set to "0" or to "-1" and devIPmask doesn't match the users IP.
 		'debugExceptionHandler' => 'TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler',		// String: Classname to handle exceptions that might happen in the TYPO3-code. Leave empty to disable exception handling. Default: "TYPO3\\CMS\\Core\\Error\\DebugExceptionHandler". This exception handler displays the complete stack trace of any encountered exception. The error message and the stack trace  is logged to the configured logs. Note: The configured "debugExceptionHandler" is used if displayErrors is set to "1" and if displayErrors is "-1"  or "2" and the devIPmask matches the users IP.
 		'errorHandler' => 'TYPO3\\CMS\\Core\\Error\\ErrorHandler',		// String: Classname to handle PHP errors. E.g.: t3lib_error_ErrorHandler. This class displays and logs all errors that are registered as "errorHandlerErrors" (<a href="#SYS-errorHandlerErrors">[SYS][errorHandlerErrors]</a>). Leave empty to disable error handling. Errors can be logged to syslog (see: <a href="#SYS-systemLog">[SYS][systemLog]</a>) to the installed developer log and to the "syslog" table. If an error is registered in "exceptionalErrors" ([SYS][exceptionalErrors]) it will be turned into an exception to be handled by the configured exceptionHandler.
-		'errorHandlerErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR),		// Integer: The E_* constant that will be handled by the errorhandler. Not all PHP error types can be handled! Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR)</tt>.
-		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),		// Integer: The E_* constant that will be handled as an exception by TYPO3\\CMS\\Core\\Error\\ErrorHandler. Default is <tt>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING)</tt> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
+		'errorHandlerErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR),		// Integer: The E_* constant that will be handled by the errorhandler. Not all PHP error types can be handled! Default is <code>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR)</code>.
+		'exceptionalErrors' => E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING),		// Integer: The E_* constant that will be handled as an exception by TYPO3\\CMS\\Core\\Error\\ErrorHandler. Default is <code>E_ALL & ~(E_STRICT | E_NOTICE | E_COMPILE_WARNING | E_COMPILE_ERROR | E_CORE_WARNING | E_CORE_ERROR | E_PARSE | E_ERROR | E_DEPRECATED | E_WARNING | E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING)</code> (see <a href="http://php.net/manual/en/errorfunc.constants.php" target="_blank">PHP documentation</a>).
 		'enable_errorDLOG' => 0,	// Boolean: If set, errors are written to the developer log (requires an installed *devlog* extension).
 		'enable_exceptionDLOG' => 0,// Boolean: If set, exceptions are written to the developer log (requires an installed *devlog* extension).
 		'syslogErrorReporting' => E_ALL & ~(E_STRICT | E_NOTICE),		// Integer: Configures which PHP errors should be logged to the configured syslogs (see: [SYS][systemLog]). If set to "0" no PHP errors are logged to the syslog. Default is "E_ALL & ~(E_STRICT | E_NOTICE)" (22519).
@@ -227,6 +238,7 @@ return array(
 			'impexp',
 			'belog',
 			'about',
+			'documentation',
 			'cshmanual',
 			'aboutmodules',
 			'setup',
@@ -235,9 +247,26 @@ return array(
 			't3editor',
 			'felogin',
 			'feedit',
-			'recycler'
+			'recycler',
+			'saltedpasswords',
 		),
-		'extConf' => array()
+		'extConf' => array(
+			'saltedpasswords' => serialize(array(
+				'BE.' => array(
+					'saltedPWHashingMethod' => 'TYPO3\\CMS\\Saltedpasswords\\Salt\\PhpassSalt',
+					'forceSalted' => 0,
+					'onlyAuthService' => 0,
+					'updatePasswd' => 1,
+				),
+				'FE.' => array(
+					'enabled' => 0,
+					'saltedPWHashingMethod' => 'TYPO3\\CMS\\Saltedpasswords\\Salt\\PhpassSalt',
+					'forceSalted' => 0,
+					'onlyAuthService' => 0,
+					'updatePasswd' => 1,
+				),
+			)),
+		),
 	),
 	'BE' => array(
 		// Backend Configuration.
@@ -551,7 +580,6 @@ return array(
 		'notificationPrefix' => '[TYPO3 Note]',				// String: Used to prefix the subject of mails sent in the taskcenter
 		'accessListRenderMode' => 'checkbox',				// Can be "singlebox", "checkbox" or blank. Refers to the "renderMode" for the selector boxes in be-groups configuration.
 		'explicitADmode' => 'explicitDeny',					// Sets the general allow/deny mode for selector box values. Value can be either "explicitAllow" or "explicitDeny", nothing else!
-		'TSconfigConditions' => TRUE,						// Boolean: When set it is possible to have TypoScript like conditions in BE Page/User/Group TS-Config
 		'niceFlexFormXMLtags' => TRUE,						// If set, the flexform XML will be stored with meaningful tags which can be validated with DTD schema. If you rely on custom reading of the XML from pre-4.0 versions you should set this to FALSE if you don't like to change your reader code (internally it is insignificant since \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array() doesn't care for the tags if the index-attribute value is set)
 		'flexFormXMLincludeDiffBase' => TRUE,				// If set, an additional tag with index "vXX.vDEFbase" is created for translations in flexforms holding the value of the default language when translation was changed. Used to show diff of value. This setting will change whether the system thinks flexform XML looks clean. For example when FALSE XX.vDEFbase fields will be removed in cleaning while accepted if TRUE (of course)
 		'compactFlexFormXML' => 0,							// If set, the flexform XML will not contain indentation spaces making XML more compact
@@ -738,4 +766,3 @@ return array(
 	),
 	'SVCONF' => array()
 );
-?>

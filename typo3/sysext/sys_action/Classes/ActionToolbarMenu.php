@@ -47,6 +47,7 @@ class ActionToolbarMenu implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookInt
 	 * Constructor
 	 */
 	public function __construct(\TYPO3\CMS\Backend\Controller\BackendController &$backendReference = NULL) {
+		$GLOBALS['LANG']->includeLLFile('EXT:sys_action/locallang.xlf');
 		$this->backendReference = $backendReference;
 	}
 
@@ -131,7 +132,7 @@ class ActionToolbarMenu implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookInt
 	 * @return string List item HTML attibutes
 	 */
 	public function getAdditionalAttributes() {
-		return ' id="tx-sys-action-menu"';
+		return 'id="tx-sys-action-menu" ';
 	}
 
 	/**
@@ -168,5 +169,3 @@ class ActionToolbarMenu implements \TYPO3\CMS\Backend\Toolbar\ToolbarItemHookInt
 	}
 
 }
-
-?>

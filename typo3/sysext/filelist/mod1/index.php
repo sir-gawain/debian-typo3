@@ -27,8 +27,6 @@
 /**
  * Web>File: File listing
  *
- * Revised for TYPO3 3.6 2/2003 by Kasper Skårhøj
- *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 $LANG->includeLLFile('EXT:lang/locallang_mod_file_list.xlf');
@@ -45,4 +43,3 @@ $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Fileli
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
-?>

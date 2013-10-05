@@ -52,7 +52,7 @@
  */
 define('TYPO3_MODE', 'BE');
 
-require 'sysext/core/Classes/Core/Bootstrap.php';
+require __DIR__ . '/sysext/core/Classes/Core/Bootstrap.php';
 
 \TYPO3\CMS\Core\Core\Bootstrap::getInstance()
 	->baseSetup('typo3/')
@@ -75,4 +75,3 @@ require 'sysext/core/Classes/Core/Bootstrap.php';
 	->initializeBackendTemplate()
 	->endOutputBufferingAndCleanPreviousOutput()
 	->initializeOutputCompression();
-?>

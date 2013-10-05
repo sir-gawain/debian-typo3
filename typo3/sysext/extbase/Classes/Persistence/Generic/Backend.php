@@ -182,7 +182,10 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @api
 	 */
 	public function getObjectDataByQuery(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query) {
-		return $this->storageBackend->getObjectDataByQuery($query);
+		$this->signalSlotDispatcher->dispatch(__CLASS__, 'beforeGettingObjectData', array('query' => $query));
+		$result = $this->storageBackend->getObjectDataByQuery($query);
+		$this->signalSlotDispatcher->dispatch(__CLASS__, 'afterGettingObjectData', array('query' => $query, 'result' => &$result));
+		return $result;
 	}
 
 	/**
@@ -384,7 +387,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * Checks, if the property value is lazy loaded and was not initialized
 	 *
 	 * @param mixed $propertyValue The property value
-	 * @return bool
+	 * @return boolean
 	 */
 	protected function propertyValueIsLazyLoaded($propertyValue) {
 		if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
@@ -641,7 +644,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject The parent object
 	 * @param string $propertyName The name of the parent object's property where the related objects are stored in
 	 * @param integer $sortingPosition Defaults to NULL
-	 * @return int The uid of the inserted row
+	 * @return integer The uid of the inserted row
 	 */
 	protected function insertRelationInRelationtable(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object, \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $propertyName, $sortingPosition = NULL) {
 		$dataMap = $this->dataMapper->getDataMap(get_class($parentObject));
@@ -715,7 +718,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 *
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject The parent object
 	 * @param string $parentPropertyName The name of the parent object's property where the related objects are stored in
-	 * @return bool
+	 * @return boolean
 	 */
 	protected function deleteAllRelationsFromRelationtable(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $parentPropertyName) {
 		$dataMap = $this->dataMapper->getDataMap(get_class($parentObject));
@@ -738,7 +741,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $relatedObject The related object
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject The parent object
 	 * @param string $parentPropertyName The name of the parent object's property where the related objects are stored in
-	 * @return bool
+	 * @return boolean
 	 */
 	protected function deleteRelationFromRelationtable(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $relatedObject, \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $parentObject, $parentPropertyName) {
 		$dataMap = $this->dataMapper->getDataMap(get_class($parentObject));
@@ -810,7 +813,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 *
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object The object to be updated
 	 * @param array $row Row to be stored
-	 * @return bool
+	 * @return boolean
 	 */
 	protected function updateObject(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object, array $row) {
 		$dataMap = $this->dataMapper->getDataMap(get_class($object));
@@ -950,7 +953,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * - If there is no such TypoScript configuration, it uses the first value of The "storagePid" taken for reading records.
 	 *
 	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object
-	 * @return int the storage Page ID where the object should be stored
+	 * @return integer the storage Page ID where the object should be stored
 	 */
 	protected function determineStoragePageIdForNewRecord(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object = NULL) {
 		$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
@@ -998,5 +1001,3 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 		}
 	}
 }
-
-?>

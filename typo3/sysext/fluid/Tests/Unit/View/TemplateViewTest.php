@@ -11,13 +11,15 @@ namespace TYPO3\CMS\Fluid\Tests\Unit\View;
  * The TYPO3 project - inspiring people to share!                         *
  *                                                                        */
 
+use \org\bovigo\vfs\vfsStreamDirectory;
+use \org\bovigo\vfs\vfsStreamWrapper;
+
 include_once(__DIR__ . '/Fixtures/TransparentSyntaxTreeNode.php');
 include_once(__DIR__ . '/Fixtures/TemplateViewFixture.php');
 
 /**
  * Testcase for the TemplateView
  */
-@require_once('vfsStream/vfsStream.php'); // include vfs stream wrapper
 class TemplateViewTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 
 	/**
@@ -181,12 +183,12 @@ class TemplateViewTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 */
 	public function pathToPartialIsResolvedCorrectly() {
 		$this->markTestSkipped('Needs to be finished');
-		\vfsStreamWrapper::register();
+		vfsStreamWrapper::register();
 		mkdir('vfs://MyTemplates');
 		\file_put_contents('vfs://MyTemplates/MyCoolAction.html', 'contentsOfMyCoolAction');
-		$mockRootDirectory = \vfsStreamDirectory::create('ExamplePackagePath/Resources/Private/Partials');
+		$mockRootDirectory = vfsStreamDirectory::create('ExamplePackagePath/Resources/Private/Partials');
 		$mockRootDirectory->getChild('Resources/Private/Partials')->addChild('Partials');
-		\vfsStreamWrapper::setRoot($mockRootDirectory);
+		vfsStreamWrapper::setRoot($mockRootDirectory);
 
 		$this->getAccessibleMock('TYPO3\\CMS\\Fluid\\Core\\Parser\\TemplateParser', array(''), array(), '', FALSE);
 	}
@@ -195,7 +197,7 @@ class TemplateViewTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @test
 	 */
 	public function resolveTemplatePathAndFilenameChecksDifferentPathPatternsAndReturnsTheFirstPathWhichExists() {
-		\vfsStreamWrapper::register();
+		vfsStreamWrapper::register();
 		mkdir('vfs://MyTemplates');
 		\file_put_contents('vfs://MyTemplates/MyCoolAction.html', 'contentsOfMyCoolAction');
 
@@ -219,7 +221,7 @@ class TemplateViewTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 	 * @test
 	 */
 	public function resolveTemplatePathAndFilenameReturnsTheExplicitlyConfiguredTemplatePathAndFilename() {
-		\vfsStreamWrapper::register();
+		vfsStreamWrapper::register();
 		mkdir('vfs://MyTemplates');
 		\file_put_contents('vfs://MyTemplates/MyCoolAction.html', 'contentsOfMyCoolAction');
 
@@ -229,5 +231,3 @@ class TemplateViewTest extends \TYPO3\CMS\Extbase\Tests\Unit\BaseTestCase {
 		$this->assertSame('contentsOfMyCoolAction', $templateView->_call('getTemplateSource'));
 	}
 }
-
-?>

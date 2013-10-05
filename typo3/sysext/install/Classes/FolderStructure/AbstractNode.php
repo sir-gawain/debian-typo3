@@ -42,6 +42,11 @@ abstract class AbstractNode {
 	protected $targetPermission = NULL;
 
 	/**
+	 * @var boolean If TRUE, permission check and fix do not throw error level status if wrong
+	 */
+	protected $targetPermissionRelaxed = FALSE;
+
+	/**
 	 * @var NULL|NodeInterface Parent object of this structure node
 	 */
 	protected $parent = NULL;
@@ -65,8 +70,17 @@ abstract class AbstractNode {
 	 *
 	 * @return string Permission, eg. 2770
 	 */
-	public function getTargetPermission() {
+	protected function getTargetPermission() {
 		return $this->targetPermission;
+	}
+
+	/**
+	 * Get target permission relaxed flag
+	 *
+	 * @return boolean TRUE if relaxed permission check should be done
+	 */
+	protected function getTargetPermissionRelaxed() {
+		return $this->targetPermissionRelaxed;
 	}
 
 	/**
@@ -74,7 +88,7 @@ abstract class AbstractNode {
 	 *
 	 * @return array
 	 */
-	public function getChildren() {
+	protected function getChildren() {
 		return $this->children;
 	}
 
@@ -83,7 +97,7 @@ abstract class AbstractNode {
 	 *
 	 * @return NULL|NodeInterface
 	 */
-	public function getParent() {
+	protected function getParent() {
 		return $this->parent;
 	}
 
@@ -93,7 +107,7 @@ abstract class AbstractNode {
 	 * @return string
 	 */
 	public function getAbsolutePath() {
-		return $this->parent->getAbsolutePath() . '/' . $this->name;
+		return $this->getParent()->getAbsolutePath() . '/' . $this->name;
 	}
 
 	/**
@@ -102,7 +116,7 @@ abstract class AbstractNode {
 	 * @return boolean TRUE if parent is writable
 	 */
 	public function isWritable() {
-		return $this->parent->isWritable();
+		return $this->getParent()->isWritable();
 	}
 
 	/**
@@ -133,17 +147,26 @@ abstract class AbstractNode {
 				1366744035
 			);
 		}
-		$result = @chmod($this->getAbsolutePath(), octdec($this->targetPermission));
+		$result = @chmod($this->getAbsolutePath(), octdec($this->getTargetPermission()));
 		if ($result === TRUE) {
 			$status = new Status\OkStatus();
 			$status->setTitle('Fixed permission on ' . $this->getRelativePathBelowSiteRoot() . '.');
 		} else {
-			$status = new Status\ErrorStatus();
-			$status->setTitle('Permission change on ' . $this->getRelativePathBelowSiteRoot() . ' not successful!');
-			$status->setMessage(
-				'Permissions could not be changed to ' . $this->targetPermission . '. There is probably some' .
-					' group or owner permission problem on the parent directory.'
-			);
+			if ($this->getTargetPermissionRelaxed() === TRUE) {
+				$status = new Status\NoticeStatus();
+				$status->setTitle('Permission change on ' . $this->getRelativePathBelowSiteRoot() . ' not successful');
+				$status->setMessage(
+					'Permissions could not be changed to ' . $this->targetPermission . '. This is not a problem as' .
+						' long as files and folders within this node can be written.'
+				);
+			} else {
+				$status = new Status\ErrorStatus();
+				$status->setTitle('Permission change on ' . $this->getRelativePathBelowSiteRoot() . ' not successful!');
+				$status->setMessage(
+					'Permissions could not be changed to ' . $this->targetPermission . '. There is probably some' .
+						' group or owner permission problem on the parent directory.'
+				);
+			}
 		}
 		return $status;
 	}
@@ -157,7 +180,7 @@ abstract class AbstractNode {
 		if ($this->isWindowsOs()) {
 			return TRUE;
 		}
-		if ($this->getCurrentPermission() === $this->targetPermission) {
+		if ($this->getCurrentPermission() === $this->getTargetPermission()) {
 			return TRUE;
 		} else {
 			return FALSE;
@@ -218,4 +241,3 @@ abstract class AbstractNode {
 		return $relativePath;
 	}
 }
-?>

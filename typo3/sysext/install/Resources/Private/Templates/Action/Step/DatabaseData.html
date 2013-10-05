@@ -8,19 +8,29 @@
 
 	<p>
 		Import basic database structure and create a backend administrator user.
-		The password can be used to log in to the install tool and to the TYPO3 CMS backend with username "admin".
+		The password can be used to log in to the install tool and to the TYPO3 CMS backend (default: with username "admin").
 	</p>
 
 	<p>
 		The table import will drop possibly existing tables!
 	</p>
 
-	<form method="post" id="stepInstaller-databaseSelect">
+	<form method="post" id="stepInstaller-databaseData" class="t3-install-form-label-before">
 		<f:render partial="Action/Common/HiddenFormFields" arguments="{_all}" />
 		<input type="hidden" value="execute" name="install[set]" />
 
-		<fieldset class="t3-install-form-label-width-7">
+		<fieldset class="t3-install-form-label-width-10">
 			<ol>
+				<li>
+					<label for="password">Username</label>
+					<input
+						class="t3-install-form-input-text"
+						name="install[values][username]"
+						id="username"
+						placeholder="admin"
+					/>
+				</li>
+
 				<li>
 					<label for="password">Password</label>
 					<input
@@ -43,7 +53,7 @@
 		</fieldset>
 		<hr />
 
-		<fieldset class="t3-install-form-label-width-7">
+		<fieldset class="t3-install-form-label-width-10">
 			<ol>
 				<li>
 					<label for="sitename">Set a site name</label>
@@ -60,7 +70,6 @@
 
 		<button type="submit">
 			Continue
-			<span class="t3-install-form-button-icon-positive">&nbsp;</span>
 		</button>
 	</form>
 </f:section>

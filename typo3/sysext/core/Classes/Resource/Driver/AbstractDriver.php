@@ -201,7 +201,7 @@ abstract class AbstractDriver {
 	/**
 	 * Returns TRUE if this driver has the given capability.
 	 *
-	 * @param int $capability A capability, as defined in a CAPABILITY_* constant
+	 * @param integer $capability A capability, as defined in a CAPABILITY_* constant
 	 * @return boolean
 	 */
 	public function hasCapability($capability) {
@@ -379,6 +379,18 @@ abstract class AbstractDriver {
 	 * @return array
 	 */
 	abstract public function getFileInfoByIdentifier($identifier);
+
+	/**
+	 * Basic implementation of the method that does directly return the
+	 * file name as is.
+	 *
+	 * @param string $fileName Input string, typically the body of a fileName
+	 * @param string $charset Charset of the a fileName (defaults to current charset; depending on context)
+	 * @return string Output string with any characters not matching [.a-zA-Z0-9_-] is substituted by '_' and trailing dots removed
+	 */
+	public function sanitizeFileName($fileName, $charset = '') {
+		return $fileName;
+	}
 
 	/**
 	 * Returns information about a file for a given file object.
@@ -701,6 +713,3 @@ abstract class AbstractDriver {
 	abstract public function isFolderEmpty(\TYPO3\CMS\Core\Resource\Folder $folder);
 
 }
-
-
-?>

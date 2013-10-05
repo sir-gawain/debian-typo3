@@ -80,12 +80,21 @@ class RenameFileController {
 	public $content;
 
 	/**
-	 * Constructor function for class
-	 *
-	 * @return 	void
-	 * @todo Define visibility
+	 * Constructor
 	 */
-	public function init() {
+	public function __construct() {
+		$GLOBALS['SOBE'] = $this;
+		$GLOBALS['BACK_PATH'] = '';
+
+		$this->init();
+	}
+
+	/**
+	 * Initialize
+	 *
+	 * @return void
+	 */
+	protected function init() {
 		// Initialize GPvars:
 		$this->target = GeneralUtility::_GP('target');
 		$this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
@@ -98,6 +107,10 @@ class RenameFileController {
 			$message = $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:targetNoDir', TRUE);
 			throw new \RuntimeException($title . ': ' . $message, 1294586844);
 		}
+		if ($this->fileOrFolderObject->getStorage()->getUid() === 0) {
+			throw new \TYPO3\CMS\Core\Resource\Exception\InsufficientFileAccessPermissionsException('You are not allowed to access files outside your storages', 1375889840);
+		}
+
 		// If a folder should be renamed, AND the returnURL should go to the old directory name, the redirect is forced
 		// so the redirect will NOT end in a error message
 		// this case only happens if you select the folder itself in the foldertree and then use the clickmenu to
@@ -127,7 +140,6 @@ class RenameFileController {
 	 * Main function, rendering the content of the rename form
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function main() {
 		// Make page header:
@@ -152,8 +164,8 @@ class RenameFileController {
 		// Making submit button:
 		$code .= '
 			<div id="c-submit">
-				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.submit', 1) . '" />
-				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.cancel', 1) . '" onclick="backToList(); return false;" />
+				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:file_rename.php.submit', TRUE) . '" />
+				<input type="submit" value="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xlf:labels.cancel', TRUE) . '" onclick="backToList(); return false;" />
 				<input type="hidden" name="redirect" value="' . htmlspecialchars($this->returnUrl) . '" />
 			</div>
 		';
@@ -184,12 +196,9 @@ class RenameFileController {
 	 * Outputting the accumulated content to screen
 	 *
 	 * @return void
-	 * @todo Define visibility
 	 */
 	public function printContent() {
 		echo $this->content;
 	}
 
 }
-
-?>

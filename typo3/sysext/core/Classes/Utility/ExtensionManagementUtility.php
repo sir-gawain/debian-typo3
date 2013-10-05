@@ -806,8 +806,8 @@ class ExtensionManagementUtility {
 		if (isset($GLOBALS['TBE_MODULES'][$main]) && $sub) {
 			// If there is already a main module by this name:
 			// Adding the submodule to the correct position:
-			list($place, $modRef) = GeneralUtility::trimExplode(':', $position, 1);
-			$mods = GeneralUtility::trimExplode(',', $GLOBALS['TBE_MODULES'][$main], 1);
+			list($place, $modRef) = GeneralUtility::trimExplode(':', $position, TRUE);
+			$mods = GeneralUtility::trimExplode(',', $GLOBALS['TBE_MODULES'][$main], TRUE);
 			if (!in_array($sub, $mods)) {
 				switch (strtolower($place)) {
 					case 'after':
@@ -1065,7 +1065,7 @@ class ExtensionManagementUtility {
 		$priority = 0;
 		$quality = 0;
 		if (!is_array($excludeServiceKeys)) {
-			$excludeServiceKeys = GeneralUtility::trimExplode(',', $excludeServiceKeys, 1);
+			$excludeServiceKeys = GeneralUtility::trimExplode(',', $excludeServiceKeys, TRUE);
 		}
 		if (is_array($GLOBALS['T3_SERVICES'][$serviceType])) {
 			foreach ($GLOBALS['T3_SERVICES'][$serviceType] as $key => $info) {
@@ -1137,7 +1137,7 @@ class ExtensionManagementUtility {
 	static public function isServiceAvailable($serviceType, $serviceKey, $serviceDetails) {
 		// If the service depends on external programs - check if they exists
 		if (trim($serviceDetails['exec'])) {
-			$executables = GeneralUtility::trimExplode(',', $serviceDetails['exec'], 1);
+			$executables = GeneralUtility::trimExplode(',', $serviceDetails['exec'], TRUE);
 			foreach ($executables as $executable) {
 				// If at least one executable file is not available, exit early returning FALSE
 				if (!\TYPO3\CMS\Core\Utility\CommandUtility::checkCommand($executable)) {
@@ -1297,7 +1297,7 @@ tt_content.' . $key . $prefix . ' {
 
 	/**
 	 * Call this method to add an entry in the static template list found in sys_templates
-	 * FOR USE IN ext_localconf.php FILES
+	 * FOR USE IN ext_tables.php FILES
 	 *
 	 * @param string $extKey Is of course the extension key
 	 * @param string $path Is the path where the template files (fixed names) include_static.txt (integer list of uids from the table "static_templates"), constants.txt, setup.txt, and include_static_file.txt is found (relative to extPath, eg. 'static/'). The file include_static_file.txt, allows you to include other static templates defined in files, from your static template, and thus corresponds to the field 'include_static_file' in the sys_template table. The syntax for this is a commaseperated list of static templates to include, like:  EXT:css_styled_content/static/,EXT:da_newsletter_subscription/static/,EXT:cc_random_image/pi2/static/
@@ -1675,9 +1675,7 @@ tt_content.' . $key . $prefix . ' {
 	 * @return void
 	 */
 	static protected function createBaseTcaCacheFile() {
-		$phpCodeToCache = '$GLOBALS[\'TCA\'] = ';
-		$phpCodeToCache .= ArrayUtility::arrayExport($GLOBALS['TCA']);
-		$phpCodeToCache .= ';';
+		$phpCodeToCache = '$GLOBALS[\'TCA\'] = ' . var_export($GLOBALS['TCA'], TRUE) . ';';
 		/** @var $codeCache \TYPO3\CMS\Core\Cache\Frontend\PhpFrontend */
 		$codeCache = $GLOBALS['typo3CacheManager']->getCache('cache_core');
 		$codeCache->set(static::getBaseTcaCacheIdentifier(), $phpCodeToCache);
@@ -1990,4 +1988,3 @@ tt_content.' . $key . $prefix . ' {
 	}
 
 }
-?>
