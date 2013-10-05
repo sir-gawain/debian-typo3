@@ -1,4 +1,4 @@
-typo3-6.2 (6.2.0+ds2~alpha2-1) UNRELEASED; urgency=low
+typo3-6.2 (6.2.0+ds2~alpha3-1) UNRELEASED; urgency=low
 
   * Renamed source package to typo3-6.2 and binary packages accordingly.
   * Reintegrated typo3-database into typo3-dummy.
