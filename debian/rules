@@ -50,7 +50,7 @@ override_dh_install:
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/scheme/LICENSE
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/codemirror/contrib/sql/LICENSE
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/extjs/LICENSE.txt
-	rm $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.txt
+	rm $(SOURCEINSTALLDIR)/typo3/contrib/flashmedia/player.license.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/idna/LICENCE
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/videojs/video-js/LICENSE.txt
 	rm $(SOURCEINSTALLDIR)/typo3/contrib/modernizr/LICENSE.txt
