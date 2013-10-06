@@ -4,7 +4,7 @@
 
 --- typo3.orig/typo3/sysext/core/Classes/Utility/CommandUtility.php
 +++ typo3/typo3/sysext/core/Classes/Utility/CommandUtility.php
-@@ -124,12 +124,12 @@
+@@ -123,12 +123,12 @@
  		// Compile the path & command
  		if ($im_version === 'gm') {
  			$switchCompositeParameters = TRUE;
@@ -14,8 +14,8 @@
  			if ($im_version === 'im6') {
  				$switchCompositeParameters = TRUE;
  			}
--			$path = escapeshellarg($path . ($command == 'composite' ? $combineScript : $command) . $isExt);
-+			$path = escapeshellcmd($path . ($command == 'composite' ? $combineScript : $command) . $isExt);
+-			$path = escapeshellarg($path . ($command == 'composite' ? 'composite' : $command) . $isExt);
++			$path = escapeshellcmd($path . ($command == 'composite' ? 'composite' : $command) . $isExt);
  		}
  		// strip profile information for thumbnails and reduce their size
  		if ($parameters && $command != 'identify' && $gfxConf['im_useStripProfileByDefault'] && $gfxConf['im_stripProfileCommand'] != '') {
