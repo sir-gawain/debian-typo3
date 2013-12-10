@@ -138,7 +138,7 @@ class t3lib_formmail extends t3lib_htmlmail {
 			if ($this->auto_respond_msg !== '') {
 					// Check if the value of the auto responder message has been modified with evil intentions
 				$autoRespondChecksum = $V['auto_respond_checksum'];
-				$correctHmacChecksum = t3lib_div::hmac($this->auto_respond_msg);
+				$correctHmacChecksum = t3lib_div::hmac($this->auto_respond_msg, 'content_form');
 				if ($autoRespondChecksum !== $correctHmacChecksum) {
 					t3lib_div::sysLog('Possible misuse of t3lib_formmail auto respond method. Subject: ' . $V['subject'], 'Core', 3);
 					return;
