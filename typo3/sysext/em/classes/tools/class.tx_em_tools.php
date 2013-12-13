@@ -386,17 +386,14 @@ final class tx_em_Tools {
 	 * @return	string		A simple dependency list for display
 	 */
 	public static function depToString($dep, $type = 'depends') {
-		if (is_array($dep)) {
-			if (isset($dep[$type]['php'])) {
-				unset($dep[$type]['php']);
-			}
-			if (isset($dep[$type]['typo3'])) {
-				unset($dep[$type]['typo3']);
-			}
-			$s = (count($dep[$type])) ? implode(',', array_keys($dep[$type])) : '';
-			return $s;
+		if (!is_array($dep) || !is_array($dep[$type])) {
+			return '';
 		}
-		return '';
+
+		unset($dep[$type]['php']);
+		unset($dep[$type]['typo3']);
+
+		return implode(',', array_keys($dep[$type]));
 	}
 
 	/**
@@ -1173,6 +1170,51 @@ final class tx_em_Tools {
 	public static function dfw($string) {
 		return '<span class="typo3-dimmed">' . $string . '</span>';
 	}
-}
 
+	/**
+	 * Createst a sanitized version of $fileName by keeping a small set of
+	 * valid characters and dropping all other characters.
+	 *
+	 * As this function expects only the file name without the path, slashes
+	 * are considered invalid, too.
+	 *
+	 * @param string $fileName
+	 *        the file name to sanitize (without the directory part), may be empty
+	 * @return string the sanitized file name, might be empty
+	 */
+	public static function sanitizeFileName($fileName) {
+		return preg_replace('#[^A-Za-z0-9._-]#', '', $fileName);
+	}
+
+	/**
+	 * Createst a sanitized version of $directoryName by keeping a small set of
+	 * valid characters and dropping all other characters.
+	 *
+	 * @param string $directoryName
+	 *        the directory name/path to sanitize, may be empty
+	 * @return string the sanitized directory name, might be empty
+	 */
+	public static function sanitizeDirectoryName($directoryName) {
+		return preg_replace('#[^/A-Za-z0-9._-]#', '', $directoryName);
+	}
+
+	/**
+	 * Converts an array to a string for outputting in HTML.
+	 *
+	 * The single elements of the array will be separated by line breaks.
+	 *
+	 * Each array element will be htmlspecialchared so that the output is safe.
+	 *
+	 * Note: If an array element contains a LF, the LF will be converted to a
+	 * <br /> as well.
+	 *
+	 * @param array<string> $elements the array to be converted, may be empty
+	 * @return string the array elements converted to HTML, might be empty
+	 */
+	public static function arrayToView(array $elements) {
+		$safeString = htmlspecialchars(implode(LF, $elements));
+
+		return nl2br($safeString);
+	}
+}
 ?>
