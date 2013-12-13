@@ -1,3 +1,11 @@
+typo3-src (4.5.32+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release:
+    - fixes: "TYPO3-CORE-SA-2013-004: Multiple Vulnerabilities in
+      TYPO3 CMS" (Closes: #731999)
+
+ -- Christian Welzel <gawain@camlann.de>  Fri, 13 Dec 2013 20:08:14 +0100
+
 typo3-src (4.5.30+dfsg1-2) unstable; urgency=low
 
   * Reworked typo3-dummy.postinst and typo3-dummy.postrm (Closes: 714888).
