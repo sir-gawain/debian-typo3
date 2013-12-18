@@ -3,6 +3,7 @@ typo3-src (4.3.9+dfsg1-1+squeeze9) squeeze-security; urgency=medium
   * Security patch backported from new upstream release 4.5.32:
     - fixes: "TYPO3 Security Bulletin TYPO3-CORE-SA-2013-004:
       Several Vulnerabilities in TYPO3 Core" (Closes: 731999)
+  * Added gbp.conf.
 
  -- Christian Welzel <gawain@camlann.de>  Wed, 18 Dec 2013 18:40:09 +0100
 
