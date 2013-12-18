@@ -28,11 +28,9 @@ Description: Fixes TYPO3-SA-2013-4 (#731999)
  typo3/wizard_table.php                             |   37 +++-
  14 files changed, 274 insertions(+), 126 deletions(-)
 
-diff --git a/t3lib/class.t3lib_formmail.php b/t3lib/class.t3lib_formmail.php
-index 6825b62..1df168a 100644
---- a/t3lib/class.t3lib_formmail.php
-+++ b/t3lib/class.t3lib_formmail.php
-@@ -138,7 +138,7 @@ class t3lib_formmail extends t3lib_htmlmail {
+--- typo3.orig/t3lib/class.t3lib_formmail.php
++++ typo3/t3lib/class.t3lib_formmail.php
+@@ -138,7 +138,7 @@
  			if ($this->auto_respond_msg !== '') {
  					// Check if the value of the auto responder message has been modified with evil intentions
  				$autoRespondChecksum = $V['auto_respond_checksum'];
@@ -41,18 +39,16 @@ index 6825b62..1df168a 100644
  				if ($autoRespondChecksum !== $correctHmacChecksum) {
  					t3lib_div::sysLog('Possible misuse of t3lib_formmail auto respond method. Subject: ' . $V['subject'], 'Core', 3);
  					return;
-@@ -260,4 +260,4 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class
+@@ -260,4 +260,4 @@
  	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_formmail.php']);
  }
  
 -?>
 \ No newline at end of file
 +?>
-diff --git a/typo3/alt_doc.php b/typo3/alt_doc.php
-index f9b4c68..e5c97d7 100644
---- a/typo3/alt_doc.php
-+++ b/typo3/alt_doc.php
-@@ -1411,8 +1411,8 @@ class SC_alt_doc {
+--- typo3.orig/typo3/alt_doc.php
++++ typo3/typo3/alt_doc.php
+@@ -1411,8 +1411,8 @@
  
  
  			// If ->returnEditConf is set, then add the current content of editconf to the ->retUrl variable: (used by other scripts, like wizard_add, to know which records was created or so...)
@@ -63,18 +59,16 @@ index f9b4c68..e5c97d7 100644
  		}
  
  			// If code is NOT set OR set to 1, then make a header location redirect to $this->retUrl
-@@ -1472,4 +1472,4 @@ $SOBE->init();
+@@ -1472,4 +1472,4 @@
  $SOBE->main();
  $SOBE->printContent();
  
 -?>
 \ No newline at end of file
 +?>
-diff --git a/typo3/mod/tools/em/class.em_index.php b/typo3/mod/tools/em/class.em_index.php
-index 267a265..1227bb9 100644
---- a/typo3/mod/tools/em/class.em_index.php
-+++ b/typo3/mod/tools/em/class.em_index.php
-@@ -2261,7 +2261,7 @@ EXTENSION KEYS:
+--- typo3.orig/typo3/mod/tools/em/class.em_index.php
++++ typo3/typo3/mod/tools/em/class.em_index.php
+@@ -2261,7 +2261,7 @@
  							$messageLabel = 'ext_details_ext_' . $action . '_with_key';
  							$flashMessage = t3lib_div::makeInstance(
  								't3lib_FlashMessage',
@@ -83,7 +77,7 @@ index 267a265..1227bb9 100644
  								'',
  								t3lib_FlashMessage::OK,
  								TRUE
-@@ -2825,7 +2825,7 @@ EXTENSION KEYS:
+@@ -2825,7 +2825,7 @@
  					<td><a href="' . htmlspecialchars('index.php?CMD[showExt]=' . $extKey .
  						'&CMD[downloadFile]=' . rawurlencode($file)) .
  						'" title="' . $GLOBALS['LANG']->getLL('extFileList_download') . '">' .
@@ -92,7 +86,7 @@ index 267a265..1227bb9 100644
  					<td>'.t3lib_div::formatSize(filesize($file)).'</td>
  					<td>' . (!in_array($extKey, $this->requiredExt) &&
  								t3lib_div::inList($this->editTextExtensions,
-@@ -2846,7 +2846,7 @@ EXTENSION KEYS:
+@@ -2846,7 +2846,7 @@
  				</tr>';
  
  			$content = '
@@ -101,7 +95,7 @@ index 267a265..1227bb9 100644
  			<table border="0" cellpadding="1" cellspacing="2">'.implode('',$lines).'</table>';
  		}
  
-@@ -2925,7 +2925,7 @@ EXTENSION KEYS:
+@@ -2925,7 +2925,7 @@
  				' return false;"><strong>' . $updateEMConf . '</strong> ' .
  				sprintf($GLOBALS['LANG']->getLL('extDelete_from_location'),
  					$this->typeLabels[$extInfo['type']],
@@ -110,7 +104,7 @@ index 267a265..1227bb9 100644
  				) . '</a>';
  			$content .= '<br /><br />' . $GLOBALS['LANG']->getLL('extUpdateEMCONF_info_changes') . '<br />
  						' . $GLOBALS['LANG']->getLL('extUpdateEMCONF_info_reset');
-@@ -2945,6 +2945,7 @@ EXTENSION KEYS:
+@@ -2945,6 +2945,7 @@
  		if (is_array($uArr))	{
  			$backUpData = $this->terConnection->makeUploadDataFromArray($uArr);
  			$filename = 'T3X_'.$extKey.'-'.str_replace('.','_',$extInfo['EM_CONF']['version']).'-z-'.date('YmdHi').'.t3x';
@@ -118,7 +112,7 @@ index 267a265..1227bb9 100644
  			if (intval($this->CMD['doBackup'])==1)	{
  				header('Content-Type: application/octet-stream');
  				header('Content-Disposition: attachment; filename='.$filename);
-@@ -2973,7 +2974,7 @@ EXTENSION KEYS:
+@@ -2973,7 +2974,7 @@
  					$GLOBALS['LANG']->getLL('extBackup_files') . '</strong></td><td>' .
  					'<a href="' . htmlspecialchars('index.php?CMD[doBackup]=1&CMD[showExt]=' . $extKey) .
  					'">' . sprintf($GLOBALS['LANG']->getLL('extBackup_download'),
@@ -127,7 +121,7 @@ index 267a265..1227bb9 100644
  					) . '</a><br />
  					(' . $filename . ', <br />' .
  					 t3lib_div::formatSize(strlen($backUpData)) . ', <br />' .
-@@ -3046,11 +3047,11 @@ EXTENSION KEYS:
+@@ -3046,11 +3047,11 @@
  	 * @return	string		HTML content.
  	 */
  	function extInformationArray($extKey,$extInfo,$remote=0)	{
@@ -141,7 +135,7 @@ index 267a265..1227bb9 100644
  				$this->helpCol('title') . '</tr>';
  		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_description') . '</td>
  				<td>' . nl2br(htmlspecialchars($extInfo['EM_CONF']['description'])) . '</td>' .
-@@ -3061,12 +3062,12 @@ EXTENSION KEYS:
+@@ -3061,12 +3062,12 @@
  						' <' . $extInfo['EM_CONF']['author_email'] . '>' : ''),
  					$extInfo['EM_CONF']['author_email']) .
  					($extInfo['EM_CONF']['author_company'] ?
@@ -156,7 +150,7 @@ index 267a265..1227bb9 100644
  				$this->helpCol('version') . '</tr>';
  		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_category') . '</td>
  				<td>' . $this->categories[$extInfo['EM_CONF']['category']] . '</td>' .
-@@ -3087,17 +3088,17 @@ EXTENSION KEYS:
+@@ -3087,17 +3088,17 @@
  
  
  		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_depends_on') . '</td>
@@ -178,7 +172,7 @@ index 267a265..1227bb9 100644
  					$this->helpCol('priority') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_clear_cache') . '</td>
  					<td>' . ($extInfo['EM_CONF']['clearCacheOnLoad'] ?
-@@ -3105,11 +3106,11 @@ EXTENSION KEYS:
+@@ -3105,11 +3106,11 @@
  						: $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no')) . '</td>' .
  					$this->helpCol('clearCacheOnLoad') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_incl_modules') . '</td>
@@ -192,7 +186,7 @@ index 267a265..1227bb9 100644
  					$this->helpCol('lockType') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_load_in_frontend') . '</td>
  					<td>' . ($extInfo['EM_CONF']['doNotLoadInFE'] ?
-@@ -3117,7 +3118,7 @@ EXTENSION KEYS:
+@@ -3117,7 +3118,7 @@
  						: $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes')) . '</td>' .
  					$this->helpCol('doNotLoadInFE') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_modifies_tables') . '</td>
@@ -201,7 +195,7 @@ index 267a265..1227bb9 100644
  					$this->helpCol('modify_tables') . '</tr>';
  
  
-@@ -3135,7 +3136,7 @@ EXTENSION KEYS:
+@@ -3135,7 +3136,7 @@
  			if (is_array($extInfo['files']))	{
  				sort($extInfo['files']);
  				$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_root_files') . '</td>
@@ -210,7 +204,7 @@ index 267a265..1227bb9 100644
  						$this->helpCol('rootfiles') . '</tr>';
  			}
  
-@@ -3161,7 +3162,7 @@ EXTENSION KEYS:
+@@ -3161,7 +3162,7 @@
  					$this->helpCol('dbStatus') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_flags') . '</td>
  					<td>' . (is_array($techInfo['flags']) ?
@@ -219,7 +213,7 @@ index 267a265..1227bb9 100644
  					$this->helpCol('flags') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_config_template') . '</td>
  					<td>' . ($techInfo['conf'] ?
-@@ -3169,32 +3170,32 @@ EXTENSION KEYS:
+@@ -3169,32 +3170,32 @@
  					$this->helpCol('conf') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_typoscript_files') . '</td>
  					<td>' . (is_array($techInfo['TSfiles']) ?
@@ -259,7 +253,7 @@ index 267a265..1227bb9 100644
  					$this->helpCol('errors') . '</tr>';
  			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_annoyances') . '<br />' .
  						$GLOBALS['LANG']->getLL('extInfoArray_dev_relevant') . '</td>
-@@ -3418,7 +3419,7 @@ EXTENSION KEYS:
+@@ -3418,7 +3419,7 @@
  			// Icon:
  		$imgInfo = @getImageSize($this->getExtPath($extKey,$extInfo['type']).'/ext_icon.gif');
  		if (is_array($imgInfo))	{
@@ -268,7 +262,7 @@ index 267a265..1227bb9 100644
  		} elseif ($extInfo['_ICON']) {
  			$cells[] = '<td>'.$extInfo['_ICON'].'</td>';
  		} else {
-@@ -3433,9 +3434,9 @@ EXTENSION KEYS:
+@@ -3433,9 +3434,9 @@
  			$cells[] = '<td>'.htmlspecialchars(t3lib_div::fixed_lgd_cs($extInfo['EM_CONF']['description'],400)).'<br /><img src="clear.gif" width="300" height="1" alt="" /></td>';
  			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['author_email'] ? '<a href="mailto:'.htmlspecialchars($extInfo['EM_CONF']['author_email']).'">' : '').htmlspecialchars($extInfo['EM_CONF']['author']).(htmlspecialchars($extInfo['EM_CONF']['author_email']) ? '</a>' : '').($extInfo['EM_CONF']['author_company'] ? '<br />'.htmlspecialchars($extInfo['EM_CONF']['author_company']) : '').'</td>';
  		} elseif ($this->MOD_SETTINGS['display_details']==2)	{
@@ -281,7 +275,7 @@ index 267a265..1227bb9 100644
  			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['clearCacheOnLoad'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
  			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['internal'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
  			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['shy'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
-@@ -3446,7 +3447,7 @@ EXTENSION KEYS:
+@@ -3446,7 +3447,7 @@
  			'</td>';
  			$cells[] = '<td nowrap="nowrap">'.(is_array($techInfo['TSfiles']) ? implode('<br />',$techInfo['TSfiles']) : '').'</td>';
  			$cells[] = '<td nowrap="nowrap">'.(is_array($techInfo['flags']) ? implode('<br />',$techInfo['flags']) : '').'</td>';
@@ -290,7 +284,7 @@ index 267a265..1227bb9 100644
  			$cells[] = '<td nowrap="nowrap">'.($techInfo['conf'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
  			$cells[] = '<td>'.
  			$GLOBALS['TBE_TEMPLATE']->rfw((t3lib_extMgm::isLoaded($extKey) && $techInfo['tables_error'] ?
-@@ -3484,8 +3485,8 @@ EXTENSION KEYS:
+@@ -3484,8 +3485,8 @@
  				// Default view:
  			$verDiff = $inst_list[$extKey] && $this->versionDifference($extInfo['EM_CONF']['version'],$inst_list[$extKey]['EM_CONF']['version'],$this->versionDiffFactor);
  
@@ -301,7 +295,7 @@ index 267a265..1227bb9 100644
  			if (!$import) {		// Listing extension on LOCAL server:
  					// Extension Download:
  				$cells[] = '<td nowrap="nowrap"><a href="' . htmlspecialchars('index.php?CMD[doBackup]=1&SET[singleDetails]=backup&CMD[showExt]=' . $extKey) . '">
-@@ -3624,7 +3625,7 @@ EXTENSION KEYS:
+@@ -3624,7 +3625,7 @@
  		$imgInfo = @getImageSize($this->getExtPath($extKey,$extInfo['type']).'/ext_icon.gif');
  		$out = '';
  		if (is_array($imgInfo))	{
@@ -310,7 +304,7 @@ index 267a265..1227bb9 100644
  		}
  		$out.= $extInfo['EM_CONF']['title'] ? htmlspecialchars(t3lib_div::fixed_lgd_cs($extInfo['EM_CONF']['title'],40)) : '<em>' . htmlspecialchars($extKey) . '</em>';
  		return $out;
-@@ -4067,10 +4068,10 @@ EXTENSION KEYS:
+@@ -4067,10 +4068,10 @@
  						} else $infoArray['NSok']['modname'][] = $mName;
  					} else $infoArray['errors'][] = $GLOBALS['LANG']->getLL('detailedExtAnalysis_mconf_missing');
  				} else  $infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_be_module_conf_missing'),
@@ -323,7 +317,7 @@ index 267a265..1227bb9 100644
  			);
  		}
  		$dirs = t3lib_div::get_dirs($absPath);
-@@ -4133,7 +4134,7 @@ EXTENSION KEYS:
+@@ -4133,7 +4134,7 @@
  			$infoArray['uploadfolder'] = $this->ulFolder($extKey);
  			if (!@is_dir(PATH_site.$infoArray['uploadfolder']))	{
  				$infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_upload_folder'),
@@ -332,7 +326,7 @@ index 267a265..1227bb9 100644
  				);
  				$infoArray['uploadfolder'] = '';
  			}
-@@ -4145,7 +4146,7 @@ EXTENSION KEYS:
+@@ -4145,7 +4146,7 @@
  			foreach($infoArray['createDirs'] as $crDir)	{
  				if (!@is_dir(PATH_site.$crDir))	{
  					$infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_upload_folder'),
@@ -341,7 +335,7 @@ index 267a265..1227bb9 100644
  					);
  				}
  			}
-@@ -4703,13 +4704,13 @@ EXTENSION KEYS:
+@@ -4703,13 +4704,13 @@
  						substr($emConfFileName, strlen($absPath)));
  				} else {
  					return '<strong>' . sprintf($GLOBALS['LANG']->getLL('updateLocalEM_CONF_not_writable'),
@@ -358,7 +352,7 @@ index 267a265..1227bb9 100644
  		}
  	}
  
-@@ -4939,8 +4940,8 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -4939,8 +4940,8 @@
  			foreach($conf['constraints']['depends'] as $depK => $depV)	{
  				if($depsolver['ignore'][$depK]) {
  					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ignored'),
@@ -369,7 +363,7 @@ index 267a265..1227bb9 100644
  					$depIgnore = true;
  					continue;
  				}
-@@ -4951,15 +4952,15 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -4951,15 +4952,15 @@
  					if ($versionRange[0]!='0.0.0' && version_compare($phpv,$versionRange[0],'<'))	{
  						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_php_too_low'),
  							$phpv, $versionRange[0]);
@@ -389,7 +383,7 @@ index 267a265..1227bb9 100644
  						$depError = true;
  						continue;
  					}
-@@ -4982,51 +4983,51 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -4982,51 +4983,51 @@
  					if ($versionRange[0]!='0.0.0' && version_compare($t3version, $versionRange[0], '<')) {
  						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_typo3_too_low'),
  							$t3version, $versionRange[0]);
@@ -459,7 +453,7 @@ index 267a265..1227bb9 100644
  						$depError = true;
  						continue;
  					}
-@@ -5049,8 +5050,8 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -5049,8 +5050,8 @@
  			foreach((array)$conf['constraints']['conflicts'] as $conflictK => $conflictV)	{
  				if($depsolver['ignore'][$conflictK]) {
  					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_conflict_ignored'),
@@ -470,7 +464,7 @@ index 267a265..1227bb9 100644
  					$conflictIgnore = true;
  					continue;
  				}
-@@ -5063,12 +5064,12 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -5063,12 +5064,12 @@
  						continue;
  					}
  					$msg[] = sprintf($GLOBALS['LANG']->getLL('checkDependencies_conflict_remove'),
@@ -486,7 +480,7 @@ index 267a265..1227bb9 100644
  					$conflictError = true;
  				}
  			}
-@@ -5087,35 +5088,35 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -5087,35 +5088,35 @@
  			foreach($conf['constraints']['suggests'] as $suggestK => $suggestV)	{
  				if($depsolver['ignore'][$suggestK]) {
  					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggestion_ignored'),
@@ -532,7 +526,7 @@ index 267a265..1227bb9 100644
  					implode('<br />', $msg), 0, 1, 1
  				);
  			}
-@@ -5311,6 +5312,7 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -5311,6 +5312,7 @@
  			$createDirs = array_unique(t3lib_div::trimExplode(',',$extInfo['EM_CONF']['createDirs'],1));
  
  			foreach($createDirs as $crDir)	{
@@ -540,7 +534,7 @@ index 267a265..1227bb9 100644
  				if (!@is_dir(PATH_site.$crDir))	{
  					if (t3lib_div::_POST('_createDir_'.md5($crDir)))	{	// CREATE dir:
  
-@@ -6170,8 +6172,8 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+@@ -6170,8 +6172,8 @@
  
  				$imgInfo = @getImageSize($this->getExtPath($name, $data['type']) . '/ext_icon.gif');
  				if (is_array($imgInfo)) {
@@ -551,7 +545,7 @@ index 267a265..1227bb9 100644
  					$icon = $data['_ICON'];
  				} else {
  					$icon = '<img src="clear.gif" width="1" height="1" alt="" />';
-@@ -6218,8 +6220,53 @@ $warn.
+@@ -6218,8 +6220,53 @@
  
  		return $content . '</table><br />';
  	}
@@ -606,11 +600,9 @@ index 267a265..1227bb9 100644
  
  if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/tools/em/index.php'])	{
  	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/tools/em/index.php']);
-diff --git a/typo3/sysext/cms/tslib/class.tslib_content.php b/typo3/sysext/cms/tslib/class.tslib_content.php
-index 783edf0..d4f19f8 100644
---- a/typo3/sysext/cms/tslib/class.tslib_content.php
-+++ b/typo3/sysext/cms/tslib/class.tslib_content.php
-@@ -2019,7 +2019,7 @@ class tslib_cObj {
+--- typo3.orig/typo3/sysext/cms/tslib/class.tslib_content.php
++++ typo3/typo3/sysext/cms/tslib/class.tslib_content.php
+@@ -2019,7 +2019,7 @@
  							// If this form includes an auto responder message, include a HMAC checksum field
  							// in order to verify potential abuse of this feature.
  						if (strlen($value) && t3lib_div::inList($confData['fieldname'], 'auto_respond_msg')) {
@@ -619,11 +611,12 @@ index 783edf0..d4f19f8 100644
  							$hiddenfields .= sprintf('<input type="hidden" name="auto_respond_checksum" id="%sauto_respond_checksum" value="%s" />',
  												$prefix, $hmacChecksum);
  						}
-@@ -6231,8 +6231,13 @@ class tslib_cObj {
+@@ -6233,9 +6233,13 @@
  					$target = '';
  				}
  
--				$onClick="vHWin=window.open('".$GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url'])."','FEopenLink','".$JSwindowParams."');vHWin.focus();return false;";
+-				$onClick="vHWin=window.open(" . t3lib_div::quoteJSvalue($GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url'])) .
+-					",'FEopenLink','" . $JSwindowParams . "');vHWin.focus();return false;";
 -				$res = '<a href="'.htmlspecialchars($finalTagParts['url']).'"'. $target .' onclick="'.htmlspecialchars($onClick).'"'.($title?' title="'.$title.'"':'').($linkClass?' class="'.$linkClass.'"':'').$finalTagParts['aTagParams'].'>';
 +				$onClick = "vHWin=window.open(" . t3lib_div::quoteJSvalue($GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url']), TRUE) .
 +					",'FEopenLink'," . t3lib_div::quoteJSvalue($JSwindowParams) . ");vHWin.focus();return false;";
@@ -635,11 +628,9 @@ index 783edf0..d4f19f8 100644
  			} else {
  				if ($GLOBALS['TSFE']->spamProtectEmailAddresses === 'ascii' && $finalTagParts['TYPE'] === 'mailto') {
  					$res = '<a href="'.$finalTagParts['url'].'"'.($title?' title="'.$title.'"':'').$finalTagParts['targetParams'].($linkClass?' class="'.$linkClass.'"':'').$finalTagParts['aTagParams'].'>';
-diff --git a/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc b/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
-index b8f3263..7df2375 100644
---- a/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
-+++ b/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
-@@ -1100,14 +1100,20 @@ class user_feAdmin	{
+--- typo3.orig/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
++++ typo3/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
+@@ -1100,14 +1100,20 @@
  			$fD = t3lib_div::_GP('fD');
  			$sFK = t3lib_div::_GP('sFK');
  
@@ -667,7 +658,7 @@ index b8f3263..7df2375 100644
  				}
  				$theCode = $this->setfixedHash($origArr,$origArr['_FIELDLIST']);
  				if (!strcmp($this->authCode,$theCode))	{
-@@ -1115,7 +1121,8 @@ class user_feAdmin	{
+@@ -1115,7 +1121,8 @@
  						$this->cObj->DBgetDelete($this->theTable, $theUid, TRUE);
  					} else {
  						$newFieldList = implode(',',array_intersect(t3lib_div::trimExplode(',',$this->fieldList),t3lib_div::trimExplode(',',implode($fieldArr,','),1)));
@@ -677,7 +668,7 @@ index b8f3263..7df2375 100644
  						$this->currentArr = $GLOBALS['TSFE']->sys_page->getRawRecord($this->theTable,$theUid);
  						$this->userProcess_alt($this->conf['setfixed.']['userFunc_afterSave'],$this->conf['setfixed.']['userFunc_afterSave.'],array('rec'=>$this->currentArr, 'origRec'=>$origArr));
  					}
-@@ -1639,6 +1646,13 @@ class user_feAdmin	{
+@@ -1639,6 +1646,13 @@
  					$markerArray['###SYS_SETFIXED_DELETE###'] = $string;
  					$markerArray['###SYS_SETFIXED_HSC_DELETE###'] = htmlspecialchars($string);
  				} elseif (strstr($theKey,'.'))	{
@@ -691,11 +682,9 @@ index b8f3263..7df2375 100644
  					$theKey = substr($theKey,0,-1);
  					if (is_array($data))	{
  						reset($data);
-diff --git a/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php b/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
-index e253248..e5273fa 100644
---- a/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
-+++ b/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
-@@ -358,12 +358,6 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
+--- typo3.orig/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
++++ typo3/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
+@@ -358,12 +358,6 @@
  		}
  
  		$message = 'An error occurred while trying to call ' . get_class($this) . '->' . $this->actionMethodName . '().' . PHP_EOL;
@@ -708,11 +697,9 @@ index e253248..e5273fa 100644
  		return $message;
  	}
  
-diff --git a/typo3/sysext/openid/class.tx_openid_eid.php b/typo3/sysext/openid/class.tx_openid_eid.php
-index b2b0eb3..27bac1a 100644
---- a/typo3/sysext/openid/class.tx_openid_eid.php
-+++ b/typo3/sysext/openid/class.tx_openid_eid.php
-@@ -61,7 +61,19 @@ class tx_openid_eID {
+--- typo3.orig/typo3/sysext/openid/class.tx_openid_eid.php
++++ typo3/typo3/sysext/openid/class.tx_openid_eid.php
+@@ -61,7 +61,19 @@
  
  		// Redirect to the original location in any case (authenticated or not)
  		@ob_end_clean();
@@ -733,11 +720,9 @@ index b2b0eb3..27bac1a 100644
  	}
  }
  
-diff --git a/typo3/sysext/openid/sv1/class.tx_openid_sv1.php b/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
-index 929ca95..f1a067e 100644
---- a/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
-+++ b/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
-@@ -437,24 +437,21 @@ class tx_openid_sv1 extends t3lib_svbase {
+--- typo3.orig/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
++++ typo3/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
+@@ -437,24 +437,21 @@
  			$claimedIdentifier = $this->loginData['uname'];
  		}
  		$returnURL .= 'tx_openid_location=' . rawurlencode($requestURL) . '&' .
@@ -771,11 +756,9 @@ index 929ca95..f1a067e 100644
  	}
  
  	/**
-diff --git a/typo3/wizard_add.php b/typo3/wizard_add.php
-index ff73b43..63977ad 100644
---- a/typo3/wizard_add.php
-+++ b/typo3/wizard_add.php
-@@ -127,7 +127,7 @@ class SC_wizard_add {
+--- typo3.orig/typo3/wizard_add.php
++++ typo3/typo3/wizard_add.php
+@@ -127,7 +127,7 @@
  
  			// Else proceed:
  		if ($this->returnEditConf)	{	// If a new id has returned from a newly created record...
@@ -784,18 +767,16 @@ index ff73b43..63977ad 100644
  			if (is_array($eC[$this->table]) && t3lib_div::testInt($this->P['uid']))	{
  
  					// Getting id and cmd from returning editConf array.
-@@ -244,4 +244,4 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+@@ -244,4 +244,4 @@
  
  $SOBE->main();
  
 -?>
 \ No newline at end of file
 +?>
-diff --git a/typo3/wizard_colorpicker.php b/typo3/wizard_colorpicker.php
-index 484e028..e59f408 100644
---- a/typo3/wizard_colorpicker.php
-+++ b/typo3/wizard_colorpicker.php
-@@ -222,7 +222,7 @@ class SC_wizard_colorpicker {
+--- typo3.orig/typo3/wizard_colorpicker.php
++++ typo3/typo3/wizard_colorpicker.php
+@@ -222,7 +222,7 @@
  				// If the save/close button is clicked, then close:
  			if(t3lib_div::_GP('save_close')) {
  				$content.=$this->doc->wrapScriptTags('
@@ -804,18 +785,16 @@ index 484e028..e59f408 100644
  					parent.close();
  				');
  			}
-@@ -466,4 +466,4 @@ $SOBE->init();
+@@ -466,4 +466,4 @@
  $SOBE->main();
  $SOBE->printContent();
  
 -?>
 \ No newline at end of file
 +?>
-diff --git a/typo3/wizard_forms.php b/typo3/wizard_forms.php
-index 91f8645..86fefbb 100644
---- a/typo3/wizard_forms.php
-+++ b/typo3/wizard_forms.php
-@@ -313,7 +313,9 @@ class SC_wizard_forms {
+--- typo3.orig/typo3/wizard_forms.php
++++ typo3/typo3/wizard_forms.php
+@@ -313,7 +313,9 @@
  	 * @return	string		HTML content for the form.
  	 */
  	function formsWizard()	{
@@ -826,7 +805,7 @@ index 91f8645..86fefbb 100644
  			// First, check the references by selecting the record:
  		$row = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
  		if (!is_array($row))	{
-@@ -331,6 +333,37 @@ class SC_wizard_forms {
+@@ -331,6 +333,37 @@
  		return $content;
  	}
  
@@ -864,18 +843,16 @@ index 91f8645..86fefbb 100644
  
  
  
-@@ -985,4 +1018,4 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+@@ -985,4 +1018,4 @@
  $SOBE->main();
  $SOBE->printContent();
  
 -?>
 \ No newline at end of file
 +?>
-diff --git a/typo3/wizard_rte.php b/typo3/wizard_rte.php
-index cdba120..98d39c1 100644
---- a/typo3/wizard_rte.php
-+++ b/typo3/wizard_rte.php
-@@ -300,7 +300,10 @@ class SC_wizard_rte {
+--- typo3.orig/typo3/wizard_rte.php
++++ typo3/typo3/wizard_rte.php
+@@ -300,7 +300,10 @@
  	 *
  	 * @param	string		Table name
  	 * @param	integer		Record uid
@@ -887,18 +864,16 @@ index cdba120..98d39c1 100644
  	 */
  	function checkEditAccess($table,$uid)	{
  		global $BE_USER;
-@@ -339,4 +342,4 @@ $SOBE->init();
+@@ -339,4 +342,4 @@
  $SOBE->main();
  $SOBE->printContent();
  
 -?>
 \ No newline at end of file
 +?>
-diff --git a/typo3/wizard_table.php b/typo3/wizard_table.php
-index 7a1ab9b..aa845b5 100644
---- a/typo3/wizard_table.php
-+++ b/typo3/wizard_table.php
-@@ -233,6 +233,9 @@ class SC_wizard_table {
+--- typo3.orig/typo3/wizard_table.php
++++ typo3/typo3/wizard_table.php
+@@ -233,6 +233,9 @@
  	 */
  	function tableWizard()	{
  
@@ -908,7 +883,7 @@ index 7a1ab9b..aa845b5 100644
  			// First, check the references by selecting the record:
  		$row = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
  		if (!is_array($row))	{
-@@ -250,6 +253,38 @@ class SC_wizard_table {
+@@ -250,6 +253,38 @@
  		return $content;
  	}
  
@@ -947,13 +922,10 @@ index 7a1ab9b..aa845b5 100644
  
  
  
-@@ -680,4 +715,4 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+@@ -680,4 +715,4 @@
  $SOBE->main();
  $SOBE->printContent();
  
 -?>
 \ No newline at end of file
 +?>
--- 
-1.7.10.4
-
