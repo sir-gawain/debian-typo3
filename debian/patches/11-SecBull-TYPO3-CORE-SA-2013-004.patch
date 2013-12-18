@@ -1,0 +1,959 @@
+From: Christian Welzel <gawain@camlann.de>
+Date: Wed, 18 Dec 2013 18:00:00 +0100
+Subject: Fix security Vulnerabilities from TYPO3-SA-2013-4 (#731999)
+Description: Fixes TYPO3-SA-2013-4 (#731999)
+ Includes these patches:
+ [SECURITY] Unsafe unserialize of GET parameter in Add-Wizard
+ [SECURITY] Remove possible XSS from ActionController Error output
+ [SECURITY] Fix open redirection in openid extension
+ [SECURITY] Information Disclosure in Wizards
+ [SECURITY] XSS in colorpicker wizard
+ [SECURITY] XSS in header link of all content elements
+ [SECURITY] Prevent editor controlled hmac content
+ [SECURITY] feuser_adminLib.inc allows to set arbitrary fields
+ [SECURITY] XSS vulnerability in extension manager
+---
+ t3lib/class.t3lib_formmail.php                     |    4 +-
+ typo3/alt_doc.php                                  |    6 +-
+ typo3/mod/tools/em/class.em_index.php              |  211 ++++++++++++--------
+ typo3/sysext/cms/tslib/class.tslib_content.php     |   11 +-
+ .../sysext/cms/tslib/media/scripts/fe_adminLib.inc |   30 ++-
+ .../Classes/MVC/Controller/ActionController.php    |    6 -
+ typo3/sysext/openid/class.tx_openid_eid.php        |   14 +-
+ typo3/sysext/openid/sv1/class.tx_openid_sv1.php    |   21 +-
+ typo3/wizard_add.php                               |    4 +-
+ typo3/wizard_colorpicker.php                       |    4 +-
+ typo3/wizard_forms.php                             |   37 +++-
+ typo3/wizard_rte.php                               |    7 +-
+ typo3/wizard_table.php                             |   37 +++-
+ 14 files changed, 274 insertions(+), 126 deletions(-)
+
+diff --git a/t3lib/class.t3lib_formmail.php b/t3lib/class.t3lib_formmail.php
+index 6825b62..1df168a 100644
+--- a/t3lib/class.t3lib_formmail.php
++++ b/t3lib/class.t3lib_formmail.php
+@@ -138,7 +138,7 @@ class t3lib_formmail extends t3lib_htmlmail {
+ 			if ($this->auto_respond_msg !== '') {
+ 					// Check if the value of the auto responder message has been modified with evil intentions
+ 				$autoRespondChecksum = $V['auto_respond_checksum'];
+-				$correctHmacChecksum = t3lib_div::hmac($this->auto_respond_msg);
++				$correctHmacChecksum = t3lib_div::hmac($this->auto_respond_msg, 'content_form');
+ 				if ($autoRespondChecksum !== $correctHmacChecksum) {
+ 					t3lib_div::sysLog('Possible misuse of t3lib_formmail auto respond method. Subject: ' . $V['subject'], 'Core', 3);
+ 					return;
+@@ -260,4 +260,4 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class
+ 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['t3lib/class.t3lib_formmail.php']);
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/alt_doc.php b/typo3/alt_doc.php
+index f9b4c68..e5c97d7 100644
+--- a/typo3/alt_doc.php
++++ b/typo3/alt_doc.php
+@@ -1411,8 +1411,8 @@ class SC_alt_doc {
+ 
+ 
+ 			// If ->returnEditConf is set, then add the current content of editconf to the ->retUrl variable: (used by other scripts, like wizard_add, to know which records was created or so...)
+-		if ($this->returnEditConf && $this->retUrl!='dummy.php')	{
+-			$this->retUrl.='&returnEditConf='.rawurlencode(serialize($this->editconf));
++		if ($this->returnEditConf && $this->retUrl!='dummy.php') {
++			$this->retUrl .= '&returnEditConf=' . rawurlencode(json_encode($this->editconf));
+ 		}
+ 
+ 			// If code is NOT set OR set to 1, then make a header location redirect to $this->retUrl
+@@ -1472,4 +1472,4 @@ $SOBE->init();
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/mod/tools/em/class.em_index.php b/typo3/mod/tools/em/class.em_index.php
+index 267a265..1227bb9 100644
+--- a/typo3/mod/tools/em/class.em_index.php
++++ b/typo3/mod/tools/em/class.em_index.php
+@@ -2261,7 +2261,7 @@ EXTENSION KEYS:
+ 							$messageLabel = 'ext_details_ext_' . $action . '_with_key';
+ 							$flashMessage = t3lib_div::makeInstance(
+ 								't3lib_FlashMessage',
+-								sprintf($GLOBALS['LANG']->getLL($messageLabel), $extKey),
++								sprintf($GLOBALS['LANG']->getLL($messageLabel), htmlspecialchars($extKey)),
+ 								'',
+ 								t3lib_FlashMessage::OK,
+ 								TRUE
+@@ -2825,7 +2825,7 @@ EXTENSION KEYS:
+ 					<td><a href="' . htmlspecialchars('index.php?CMD[showExt]=' . $extKey .
+ 						'&CMD[downloadFile]=' . rawurlencode($file)) .
+ 						'" title="' . $GLOBALS['LANG']->getLL('extFileList_download') . '">' .
+-						substr($file, strlen($extPath)) . '</a></td>
++						htmlspecialchars(substr($file, strlen($extPath))) . '</a></td>
+ 					<td>'.t3lib_div::formatSize(filesize($file)).'</td>
+ 					<td>' . (!in_array($extKey, $this->requiredExt) &&
+ 								t3lib_div::inList($this->editTextExtensions,
+@@ -2846,7 +2846,7 @@ EXTENSION KEYS:
+ 				</tr>';
+ 
+ 			$content = '
+-			Path: '.$extPath.'<br /><br />
++			Path: '.htmlspecialchars($extPath).'<br /><br />
+ 			<table border="0" cellpadding="1" cellspacing="2">'.implode('',$lines).'</table>';
+ 		}
+ 
+@@ -2925,7 +2925,7 @@ EXTENSION KEYS:
+ 				' return false;"><strong>' . $updateEMConf . '</strong> ' .
+ 				sprintf($GLOBALS['LANG']->getLL('extDelete_from_location'),
+ 					$this->typeLabels[$extInfo['type']],
+-					substr($absPath, strlen(PATH_site))
++                                        htmlspecialchars(substr($absPath, strlen(PATH_site)))
+ 				) . '</a>';
+ 			$content .= '<br /><br />' . $GLOBALS['LANG']->getLL('extUpdateEMCONF_info_changes') . '<br />
+ 						' . $GLOBALS['LANG']->getLL('extUpdateEMCONF_info_reset');
+@@ -2945,6 +2945,7 @@ EXTENSION KEYS:
+ 		if (is_array($uArr))	{
+ 			$backUpData = $this->terConnection->makeUploadDataFromArray($uArr);
+ 			$filename = 'T3X_'.$extKey.'-'.str_replace('.','_',$extInfo['EM_CONF']['version']).'-z-'.date('YmdHi').'.t3x';
++                        $filename = $this->sanitizeFileName($filename);
+ 			if (intval($this->CMD['doBackup'])==1)	{
+ 				header('Content-Type: application/octet-stream');
+ 				header('Content-Disposition: attachment; filename='.$filename);
+@@ -2973,7 +2974,7 @@ EXTENSION KEYS:
+ 					$GLOBALS['LANG']->getLL('extBackup_files') . '</strong></td><td>' .
+ 					'<a href="' . htmlspecialchars('index.php?CMD[doBackup]=1&CMD[showExt]=' . $extKey) .
+ 					'">' . sprintf($GLOBALS['LANG']->getLL('extBackup_download'),
+-						$extKey
++                                                htmlspecialchars($extKey)
+ 					) . '</a><br />
+ 					(' . $filename . ', <br />' .
+ 					 t3lib_div::formatSize(strlen($backUpData)) . ', <br />' .
+@@ -3046,11 +3047,11 @@ EXTENSION KEYS:
+ 	 * @return	string		HTML content.
+ 	 */
+ 	function extInformationArray($extKey,$extInfo,$remote=0)	{
+-		$lines=array();
++                $lines=array();
+ 		$lines[] = '<tr class="bgColor5"><td colspan="2"><strong>' . $GLOBALS['LANG']->getLL('extInfoArray_general_info') . '</strong></td>' .
+ 				$this->helpCol('') . '</tr>';
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_title') . '</td>
+-				<td>' . $extInfo['EM_CONF']['_icon'] . $extInfo['EM_CONF']['title'] . '</td>' .
++				<td>' . $extInfo['EM_CONF']['_icon'] . htmlspecialchars($extInfo['EM_CONF']['title']) . '</td>' .
+ 				$this->helpCol('title') . '</tr>';
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_description') . '</td>
+ 				<td>' . nl2br(htmlspecialchars($extInfo['EM_CONF']['description'])) . '</td>' .
+@@ -3061,12 +3062,12 @@ EXTENSION KEYS:
+ 						' <' . $extInfo['EM_CONF']['author_email'] . '>' : ''),
+ 					$extInfo['EM_CONF']['author_email']) .
+ 					($extInfo['EM_CONF']['author_company'] ?
+-						', ' . $extInfo['EM_CONF']['author_company'] : '') . '</td>' .
++						', ' . htmlspecialchars($extInfo['EM_CONF']['author_company']) : '') . '</td>' .
+ 				$this->helpCol('author') . '</tr>';
+ 
+ 
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_version') . '</td>
+-				<td>' . $extInfo['EM_CONF']['version'] . '</td>' .
++				<td>' . htmlspecialchars($extInfo['EM_CONF']['version']) . '</td>' .
+ 				$this->helpCol('version') . '</tr>';
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_category') . '</td>
+ 				<td>' . $this->categories[$extInfo['EM_CONF']['category']] . '</td>' .
+@@ -3087,17 +3088,17 @@ EXTENSION KEYS:
+ 
+ 
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_depends_on') . '</td>
+-				<td>' . $this->depToString($extInfo['EM_CONF']['constraints']) . '</td>' .
++				<td>' . htmlspecialchars($this->depToString($extInfo['EM_CONF']['constraints'])) . '</td>' .
+ 				$this->helpCol('dependencies') . '</tr>';
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_conflicts_with') . '</td>
+-				<td>' . $this->depToString($extInfo['EM_CONF']['constraints'], 'conflicts') . '</td>' .
++				<td>' . htmlspecialchars($this->depToString($extInfo['EM_CONF']['constraints'], 'conflicts')) . '</td>' .
+ 				$this->helpCol('conflicts') . '</tr>';
+ 		$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_suggests') . '</td>
+-				<td>' . $this->depToString($extInfo['EM_CONF']['constraints'], 'suggests') . '</td>' .
++				<td>' . htmlspecialchars($this->depToString($extInfo['EM_CONF']['constraints'], 'suggests')) . '</td>' .
+ 				$this->helpCol('suggests') . '</tr>';
+ 		if (!$remote)	{
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_priority') . '</td>
+-					<td>' . $extInfo['EM_CONF']['priority'] . '</td>' .
++					<td>' . htmlspecialchars($extInfo['EM_CONF']['priority']) . '</td>' .
+ 					$this->helpCol('priority') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_clear_cache') . '</td>
+ 					<td>' . ($extInfo['EM_CONF']['clearCacheOnLoad'] ?
+@@ -3105,11 +3106,11 @@ EXTENSION KEYS:
+ 						: $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:no')) . '</td>' .
+ 					$this->helpCol('clearCacheOnLoad') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_incl_modules') . '</td>
+-					<td>' . $extInfo['EM_CONF']['module'] . '</td>' .
++					<td>' . htmlspecialchars($extInfo['EM_CONF']['module']) . '</td>' .
+ 					$this->helpCol('module') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_lock_type') . '</td>
+ 					<td>' . ($extInfo['EM_CONF']['lockType'] ?
+-						$extInfo['EM_CONF']['lockType'] : '') . '</td>' .
++						htmlspecialchars($extInfo['EM_CONF']['lockType']) : '') . '</td>' .
+ 					$this->helpCol('lockType') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_load_in_frontend') . '</td>
+ 					<td>' . ($extInfo['EM_CONF']['doNotLoadInFE'] ?
+@@ -3117,7 +3118,7 @@ EXTENSION KEYS:
+ 						: $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes')) . '</td>' .
+ 					$this->helpCol('doNotLoadInFE') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_modifies_tables') . '</td>
+-					<td>' . $extInfo['EM_CONF']['modify_tables'] . '</td>' .
++					<td>' . htmlspecialchars($extInfo['EM_CONF']['modify_tables']) . '</td>' .
+ 					$this->helpCol('modify_tables') . '</tr>';
+ 
+ 
+@@ -3135,7 +3136,7 @@ EXTENSION KEYS:
+ 			if (is_array($extInfo['files']))	{
+ 				sort($extInfo['files']);
+ 				$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_root_files') . '</td>
+-						<td>' . implode('<br />', $extInfo['files']) . '</td>' .
++						<td>' . $this->arrayToView($extInfo['files']) . '</td>' .
+ 						$this->helpCol('rootfiles') . '</tr>';
+ 			}
+ 
+@@ -3161,7 +3162,7 @@ EXTENSION KEYS:
+ 					$this->helpCol('dbStatus') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_flags') . '</td>
+ 					<td>' . (is_array($techInfo['flags']) ?
+-						implode('<br />', $techInfo['flags']) : '') . '</td>' .
++						$this->arrayToView($techInfo['flags']) : '') . '</td>' .
+ 					$this->helpCol('flags') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_config_template') . '</td>
+ 					<td>' . ($techInfo['conf'] ?
+@@ -3169,32 +3170,32 @@ EXTENSION KEYS:
+ 					$this->helpCol('conf') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_typoscript_files') . '</td>
+ 					<td>' . (is_array($techInfo['TSfiles']) ?
+-						implode('<br />', $techInfo['TSfiles']) : '') . '</td>' .
++						$this->arrayToView($techInfo['TSfiles']) : '') . '</td>' .
+ 					$this->helpCol('TSfiles') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_language_files') . '</td>
+ 					<td>' . (is_array($techInfo['locallang']) ?
+-						implode('<br />', $techInfo['locallang']) : '') . '</td>' .
++						$this->arrayToView($techInfo['locallang']) : '') . '</td>' .
+ 					$this->helpCol('locallang') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_upload_folder') . '</td>
+ 					<td>' . ($techInfo['uploadfolder'] ?
+-						$techInfo['uploadfolder'] : '') . '</td>' .
++                                                htmlspecialchars($techInfo['uploadfolder']) : '') . '</td>' .
+ 					$this->helpCol('uploadfolder') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_create_directories') . '</td>
+ 					<td>' . (is_array($techInfo['createDirs']) ?
+-						implode('<br />', $techInfo['createDirs']) : '') . '</td>' .
++						$this->arrayToView($techInfo['createDirs']) : '') . '</td>' .
+ 					$this->helpCol('createDirs') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_module_names') . '</td>
+ 					<td>' . (is_array($techInfo['moduleNames']) ?
+-						implode('<br />', $techInfo['moduleNames']) : '') . '</td>' .
++						$this->arrayToView($techInfo['moduleNames']) : '') . '</td>' .
+ 					$this->helpCol('moduleNames') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_class_names') . '</td>
+ 					<td>' . (is_array($techInfo['classes']) ?
+-						implode('<br />', $techInfo['classes']) : '') . '</td>' .
++						$this->arrayToView($techInfo['classes']) : '') . '</td>' .
+ 					$this->helpCol('classNames') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_code_warnings') . '<br />' .
+ 						$GLOBALS['LANG']->getLL('extInfoArray_dev_relevant') . '</td>
+ 					<td>' . (is_array($techInfo['errors']) ?
+-						$GLOBALS['TBE_TEMPLATE']->rfw(implode('<br />', $techInfo['errors'])) : '') . '</td>' .
++						$GLOBALS['TBE_TEMPLATE']->rfw($this->arrayToView($techInfo['errors'])) : '') . '</td>' .
+ 					$this->helpCol('errors') . '</tr>';
+ 			$lines[] = '<tr class="bgColor4"><td>' . $GLOBALS['LANG']->getLL('extInfoArray_annoyances') . '<br />' .
+ 						$GLOBALS['LANG']->getLL('extInfoArray_dev_relevant') . '</td>
+@@ -3418,7 +3419,7 @@ EXTENSION KEYS:
+ 			// Icon:
+ 		$imgInfo = @getImageSize($this->getExtPath($extKey,$extInfo['type']).'/ext_icon.gif');
+ 		if (is_array($imgInfo))	{
+-			$cells[] = '<td><img src="'.$GLOBALS['BACK_PATH'].$this->typeRelPaths[$extInfo['type']].$extKey.'/ext_icon.gif'.'" '.$imgInfo[3].' alt="" /></td>';
++			$cells[] = '<td><img src="'.$GLOBALS['BACK_PATH'].$this->typeRelPaths[$extInfo['type']].rawurlencode($extKey).'/ext_icon.gif'.'" '.$imgInfo[3].' alt="" /></td>';
+ 		} elseif ($extInfo['_ICON']) {
+ 			$cells[] = '<td>'.$extInfo['_ICON'].'</td>';
+ 		} else {
+@@ -3433,9 +3434,9 @@ EXTENSION KEYS:
+ 			$cells[] = '<td>'.htmlspecialchars(t3lib_div::fixed_lgd_cs($extInfo['EM_CONF']['description'],400)).'<br /><img src="clear.gif" width="300" height="1" alt="" /></td>';
+ 			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['author_email'] ? '<a href="mailto:'.htmlspecialchars($extInfo['EM_CONF']['author_email']).'">' : '').htmlspecialchars($extInfo['EM_CONF']['author']).(htmlspecialchars($extInfo['EM_CONF']['author_email']) ? '</a>' : '').($extInfo['EM_CONF']['author_company'] ? '<br />'.htmlspecialchars($extInfo['EM_CONF']['author_company']) : '').'</td>';
+ 		} elseif ($this->MOD_SETTINGS['display_details']==2)	{
+-			$cells[] = '<td nowrap="nowrap">'.$extInfo['EM_CONF']['priority'].'</td>';
+-			$cells[] = '<td nowrap="nowrap">'.implode('<br />',t3lib_div::trimExplode(',',$extInfo['EM_CONF']['modify_tables'],1)).'</td>';
+-			$cells[] = '<td nowrap="nowrap">'.$extInfo['EM_CONF']['module'].'</td>';
++			$cells[] = '<td nowrap="nowrap">'.htmlspecialchars($extInfo['EM_CONF']['priority']).'</td>';
++			$cells[] = '<td nowrap="nowrap">'.$this->arrayToView(t3lib_div::trimExplode(',',$extInfo['EM_CONF']['modify_tables'],1)).'</td>';
++			$cells[] = '<td nowrap="nowrap">'.htmlspecialchars($extInfo['EM_CONF']['module']).'</td>';
+ 			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['clearCacheOnLoad'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
+ 			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['internal'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
+ 			$cells[] = '<td nowrap="nowrap">'.($extInfo['EM_CONF']['shy'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
+@@ -3446,7 +3447,7 @@ EXTENSION KEYS:
+ 			'</td>';
+ 			$cells[] = '<td nowrap="nowrap">'.(is_array($techInfo['TSfiles']) ? implode('<br />',$techInfo['TSfiles']) : '').'</td>';
+ 			$cells[] = '<td nowrap="nowrap">'.(is_array($techInfo['flags']) ? implode('<br />',$techInfo['flags']) : '').'</td>';
+-			$cells[] = '<td nowrap="nowrap">'.(is_array($techInfo['moduleNames']) ? implode('<br />',$techInfo['moduleNames']) : '').'</td>';
++			$cells[] = '<td nowrap="nowrap">'.(is_array($techInfo['moduleNames']) ? $this->arrayToView($techInfo['moduleNames']) : '').'</td>';
+ 			$cells[] = '<td nowrap="nowrap">'.($techInfo['conf'] ? $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_common.xml:yes') : '').'</td>';
+ 			$cells[] = '<td>'.
+ 			$GLOBALS['TBE_TEMPLATE']->rfw((t3lib_extMgm::isLoaded($extKey) && $techInfo['tables_error'] ?
+@@ -3484,8 +3485,8 @@ EXTENSION KEYS:
+ 				// Default view:
+ 			$verDiff = $inst_list[$extKey] && $this->versionDifference($extInfo['EM_CONF']['version'],$inst_list[$extKey]['EM_CONF']['version'],$this->versionDiffFactor);
+ 
+-			$cells[] = '<td nowrap="nowrap"><em>'.$extKey.'</em></td>';
+-			$cells[] = '<td nowrap="nowrap">'.($verDiff ? '<strong>'.$GLOBALS['TBE_TEMPLATE']->rfw(htmlspecialchars($extInfo['EM_CONF']['version'])).'</strong>' : $extInfo['EM_CONF']['version']).'</td>';
++			$cells[] = '<td nowrap="nowrap"><em>'.htmlspecialchars($extKey).'</em></td>';
++			$cells[] = '<td nowrap="nowrap">'.($verDiff ? '<strong>'.$GLOBALS['TBE_TEMPLATE']->rfw(htmlspecialchars($extInfo['EM_CONF']['version'])).'</strong>' : htmlspecialchars($extInfo['EM_CONF']['version'])).'</td>';
+ 			if (!$import) {		// Listing extension on LOCAL server:
+ 					// Extension Download:
+ 				$cells[] = '<td nowrap="nowrap"><a href="' . htmlspecialchars('index.php?CMD[doBackup]=1&SET[singleDetails]=backup&CMD[showExt]=' . $extKey) . '">
+@@ -3624,7 +3625,7 @@ EXTENSION KEYS:
+ 		$imgInfo = @getImageSize($this->getExtPath($extKey,$extInfo['type']).'/ext_icon.gif');
+ 		$out = '';
+ 		if (is_array($imgInfo))	{
+-			$out.= '<img src="'.$GLOBALS['BACK_PATH'].$this->typeRelPaths[$extInfo['type']].$extKey.'/ext_icon.gif" '.$imgInfo[3].' align="'.$align.'" alt="" />';
++			$out.= '<img src="'.$GLOBALS['BACK_PATH'].$this->typeRelPaths[$extInfo['type']].rawurlencode($extKey).'/ext_icon.gif" '.$imgInfo[3].' align="'.$align.'" alt="" />';
+ 		}
+ 		$out.= $extInfo['EM_CONF']['title'] ? htmlspecialchars(t3lib_div::fixed_lgd_cs($extInfo['EM_CONF']['title'],40)) : '<em>' . htmlspecialchars($extKey) . '</em>';
+ 		return $out;
+@@ -4067,10 +4068,10 @@ EXTENSION KEYS:
+ 						} else $infoArray['NSok']['modname'][] = $mName;
+ 					} else $infoArray['errors'][] = $GLOBALS['LANG']->getLL('detailedExtAnalysis_mconf_missing');
+ 				} else  $infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_be_module_conf_missing'),
+-					$mod . '/conf.php'
++					htmlspecialchars($mod) . '/conf.php'
+ 				);
+ 			} else $infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_module_folder_missing'),
+-				$mod . '/'
++				htmlspecialchars($mod) . '/'
+ 			);
+ 		}
+ 		$dirs = t3lib_div::get_dirs($absPath);
+@@ -4133,7 +4134,7 @@ EXTENSION KEYS:
+ 			$infoArray['uploadfolder'] = $this->ulFolder($extKey);
+ 			if (!@is_dir(PATH_site.$infoArray['uploadfolder']))	{
+ 				$infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_upload_folder'),
+-					$infoArray['uploadfolder']
++					htmlspecialchars($infoArray['uploadfolder'])
+ 				);
+ 				$infoArray['uploadfolder'] = '';
+ 			}
+@@ -4145,7 +4146,7 @@ EXTENSION KEYS:
+ 			foreach($infoArray['createDirs'] as $crDir)	{
+ 				if (!@is_dir(PATH_site.$crDir))	{
+ 					$infoArray['errors'][] = sprintf($GLOBALS['LANG']->getLL('detailedExtAnalysis_no_upload_folder'),
+-						$crDir
++						htmlspecialchars($crDir)
+ 					);
+ 				}
+ 			}
+@@ -4703,13 +4704,13 @@ EXTENSION KEYS:
+ 						substr($emConfFileName, strlen($absPath)));
+ 				} else {
+ 					return '<strong>' . sprintf($GLOBALS['LANG']->getLL('updateLocalEM_CONF_not_writable'),
+-						$emConfFileName) . '</strong>';
++						htmlspecialchars($emConfFileName)) . '</strong>';
+ 				}
+ 			} else return('<strong>' . sprintf($GLOBALS['LANG']->getLL('updateLocalEM_CONF_not_found'),
+-				$emConfFileName) . '</strong>');
++				htmlspecialchars($emConfFileName)) . '</strong>');
+ 		} else {
+ 			return sprintf($GLOBALS['LANG']->getLL('updateLocalEM_CONF_no_content'),
+-				substr($emConfFileName, strlen($absPath)));
++				htmlspecialchars(substr($emConfFileName, strlen($absPath))));
+ 		}
+ 	}
+ 
+@@ -4939,8 +4940,8 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 			foreach($conf['constraints']['depends'] as $depK => $depV)	{
+ 				if($depsolver['ignore'][$depK]) {
+ 					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ignored'),
+-						 $depK) . '
+-						<input type="hidden" value="1" name="depsolver[ignore]['.$depK.']" />';
++                                                htmlspecialchars($depK)) . '
++						<input type="hidden" value="1" name="depsolver[ignore]['.htmlspecialchars($depK).']" />';
+ 					$depIgnore = true;
+ 					continue;
+ 				}
+@@ -4951,15 +4952,15 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 					if ($versionRange[0]!='0.0.0' && version_compare($phpv,$versionRange[0],'<'))	{
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_php_too_low'),
+ 							$phpv, $versionRange[0]);
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
+ 						$depError = true;
+ 						continue;
+ 					} elseif ($versionRange[1]!='0.0.0' && version_compare($phpv,$versionRange[1],'>'))	{
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_php_too_high'),
+ 							$phpv, $versionRange[1]);
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
+ 						$depError = true;
+ 						continue;
+ 					}
+@@ -4982,51 +4983,51 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 					if ($versionRange[0]!='0.0.0' && version_compare($t3version, $versionRange[0], '<')) {
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_typo3_too_low'),
+ 							$t3version, $versionRange[0]);
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
+ 						$depError = true;
+ 						continue;
+ 					} elseif ($versionRange[1]!='0.0.0' && version_compare($t3version, $versionRange[1], '>')) {
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_typo3_too_high'),
+ 							$t3version, $versionRange[1]);
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
+ 						$depError = true;
+ 						continue;
+ 					}
+ 				} elseif (strlen($depK) && !t3lib_extMgm::isLoaded($depK))	{	// strlen check for braindead empty dependencies coming from extensions...
+ 					if(!isset($instExtInfo[$depK]))	{
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_not_available'),
+-							$depK);
++							htmlspecialchars($depK));
+ 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<img src="' . $GLOBALS['BACK_PATH'] .
+ 							'gfx/import.gif" width="12" height="12" title="' . $GLOBALS['LANG']->getLL('checkDependencies_import_ext') . '" alt="" />&nbsp;
+-							<a href="index.php?CMD[importExt]=' . $depK . '&CMD[loc]=L&CMD[standAlone]=1" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_ext_requirement') . '</label>';
++							<a href="index.php?CMD[importExt]=' . rawurlencode($depK) . '&CMD[loc]=L&CMD[standAlone]=1" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_ext_requirement') . '</label>';
+ 					} else {
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_not_installed'),
+-							$depK, $instExtInfo[$depK]['EM_CONF']['title']);
++							htmlspecialchars($depK), htmlspecialchars($instExtInfo[$depK]['EM_CONF']['title']));
+ 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . $this->installButton() . '&nbsp;
+-							<a href="' . htmlspecialchars('index.php?CMD[showExt]=' . $depK . '&CMD[load]=1&CMD[clrCmd]=1&CMD[standAlone]=1&SET[singleDetails]=info') .
++							<a href="' . htmlspecialchars('index.php?CMD[showExt]=' . rawurlencode($depK) . '&CMD[load]=1&CMD[clrCmd]=1&CMD[standAlone]=1&SET[singleDetails]=info') .
+ 							'" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_install_now') . '</a>';
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_ext_requirement') . '</label>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_ext_requirement') . '</label>';
+ 					}
+ 					$depError = true;
+ 				} else {
+ 					$versionRange = $this->splitVersionRange($depV);
+ 					if ($versionRange[0]!='0.0.0' && version_compare($instExtInfo[$depK]['EM_CONF']['version'],$versionRange[0],'<'))	{
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_too_low'),
+-							$depK, $instExtInfo[$depK]['EM_CONF']['version'], $versionRange[0]);
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
++							htmlspecialchars($depK), htmlspecialchars($instExtInfo[$depK]['EM_CONF']['version']), $versionRange[0]);
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
+ 						$depError = true;
+ 						continue;
+ 					} elseif ($versionRange[1]!='0.0.0' && version_compare($instExtInfo[$depK]['EM_CONF']['version'],$versionRange[1],'>'))	{
+ 						$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_ext_too_high'),
+-							$depK, $instExtInfo[$depK]['EM_CONF']['version'], $versionRange[1]);
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $depK . ']" id="checkIgnore_' . $depK . '" />
+-							<label for="checkIgnore_' . $depK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
++							htmlspecialchars($depK), htmlspecialchars($instExtInfo[$depK]['EM_CONF']['version']), $versionRange[1]);
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($depK) . ']" id="checkIgnore_' . htmlspecialchars($depK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($depK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_requirement') . '</label>';
+ 						$depError = true;
+ 						continue;
+ 					}
+@@ -5049,8 +5050,8 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 			foreach((array)$conf['constraints']['conflicts'] as $conflictK => $conflictV)	{
+ 				if($depsolver['ignore'][$conflictK]) {
+ 					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_conflict_ignored'),
+-						$conflictK) . '
+-						<input type="hidden" value="1" name="depsolver[ignore]['.$conflictK.']" />';
++						htmlspecialchars($conflictK)) . '
++						<input type="hidden" value="1" name="depsolver[ignore]['.htmlspecialchars($conflictK).']" />';
+ 					$conflictIgnore = true;
+ 					continue;
+ 				}
+@@ -5063,12 +5064,12 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 						continue;
+ 					}
+ 					$msg[] = sprintf($GLOBALS['LANG']->getLL('checkDependencies_conflict_remove'),
+-						$extKey, $conflictK, $instExtInfo[$conflictK]['EM_CONF']['title'], $conflictK, $extKey);
++						htmlspecialchars($extKey), htmlspecialchars($conflictK), htmlspecialchars($instExtInfo[$conflictK]['EM_CONF']['title']), htmlspecialchars($conflictK), htmlspecialchars($extKey));
+ 					$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . $this->removeButton() . '&nbsp;
+ 						<a href="' . htmlspecialchars('index.php?CMD[showExt]=' . $conflictK . '&CMD[remove]=1&CMD[clrCmd]=1&CMD[standAlone]=1&SET[singleDetails]=info') .
+ 						'" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_remove_now') . '</a>';
+-					$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $conflictK . ']" id="checkIgnore_' . $conflictK . '" />
+-						<label for="checkIgnore_' . $conflictK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_conflict') . '</label>';
++					$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($conflictK) . ']" id="checkIgnore_' . htmlspecialchars($conflictK) . '" />
++						<label for="checkIgnore_' . htmlspecialchars($conflictK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_conflict') . '</label>';
+ 					$conflictError = true;
+ 				}
+ 			}
+@@ -5087,35 +5088,35 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 			foreach($conf['constraints']['suggests'] as $suggestK => $suggestV)	{
+ 				if($depsolver['ignore'][$suggestK]) {
+ 					$msg[] = '<br />' . sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggestion_ignored'),
+-						$suggestK) . '
+-				<input type="hidden" value="1" name="depsolver[ignore]['.$suggestK.']" />';
++						htmlspecialchars($suggestK)) . '
++				<input type="hidden" value="1" name="depsolver[ignore]['.htmlspecialchars($suggestK).']" />';
+ 					$suggestionIgnore = true;
+ 					continue;
+ 				}
+ 				if (!t3lib_extMgm::isLoaded($suggestK))	{
+ 					if (!isset($instExtInfo[$suggestK]))	{
+ 						$msg[] = sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggest_import'),
+-							$suggestK);
++							htmlspecialchars($suggestK));
+ 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<img src="' . $GLOBALS['BACK_PATH'] .
+ 							'gfx/import.gif" width="12" height="12" title="' . $GLOBALS['LANG']->getLL('checkDependencies_import_ext') . '" alt="" />&nbsp;
+-							<a href="index.php?CMD[importExt]=' . $suggestK . '&CMD[loc]=L&CMD[standAlone]=1" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $suggestK . ']" id="checkIgnore_' . $suggestK . '" />
+-							<label for="checkIgnore_' . $suggestK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_suggestion') . '</label>';
++							<a href="index.php?CMD[importExt]=' . rawurlencode($suggestK) . '&CMD[loc]=L&CMD[standAlone]=1" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_import_now') . '</a>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($suggestK) . ']" id="checkIgnore_' . htmlspecialchars($suggestK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($suggestK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_suggestion') . '</label>';
+ 					} else {
+ 						$msg[] = sprintf($GLOBALS['LANG']->getLL('checkDependencies_suggest_installation'),
+-							$suggestK, $instExtInfo[$suggestK]['EM_CONF']['title']);
++							htmlspecialchars($suggestK), htmlspecialchars($instExtInfo[$suggestK]['EM_CONF']['title']));
+ 						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;' . $this->installButton() . '&nbsp;
+ 							<a href="' . htmlspecialchars('index.php?CMD[showExt]=' . $suggestK . '&CMD[load]=1&CMD[clrCmd]=1&CMD[standAlone]=1&SET[singleDetails]=info') .
+ 							'" target="_blank">' . $GLOBALS['LANG']->getLL('checkDependencies_install_now') . '</a>';
+-						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . $suggestK . ']" id="checkIgnore_' . $suggestK . '" />
+-							<label for="checkIgnore_' . $suggestK . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_suggestion') . '</label>';
++						$msg[] = '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" value="1" name="depsolver[ignore][' . htmlspecialchars($suggestK) . ']" id="checkIgnore_' . htmlspecialchars($suggestK) . '" />
++							<label for="checkIgnore_' . htmlspecialchars($suggestK) . '">' . $GLOBALS['LANG']->getLL('checkDependencies_ignore_suggestion') . '</label>';
+ 					}
+ 					$suggestion = true;
+ 				}
+ 			}
+ 			if($suggestion || $suggestionIgnore) {
+ 				$content .= $this->doc->section(
+-					sprintf($GLOBALS['LANG']->getLL('checkDependencies_exts_suggested_by_ext'), $extKey),
++					sprintf($GLOBALS['LANG']->getLL('checkDependencies_exts_suggested_by_ext'), htmlspecialchars($extKey)),
+ 					implode('<br />', $msg), 0, 1, 1
+ 				);
+ 			}
+@@ -5311,6 +5312,7 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 			$createDirs = array_unique(t3lib_div::trimExplode(',',$extInfo['EM_CONF']['createDirs'],1));
+ 
+ 			foreach($createDirs as $crDir)	{
++                                $crDir = $this->sanitizeDirectoryName($crDir);
+ 				if (!@is_dir(PATH_site.$crDir))	{
+ 					if (t3lib_div::_POST('_createDir_'.md5($crDir)))	{	// CREATE dir:
+ 
+@@ -6170,8 +6172,8 @@ $EM_CONF[$_EXTKEY] = '.$this->arrayToCode($EM_CONF, 0).';
+ 
+ 				$imgInfo = @getImageSize($this->getExtPath($name, $data['type']) . '/ext_icon.gif');
+ 				if (is_array($imgInfo)) {
+-					$icon = '<img src="'.$GLOBALS['BACK_PATH'].$this->typeRelPaths[$data['type']].$name.'/ext_icon.gif'.'" '.$imgInfo[3].' alt="" />';
+-				} elseif ($data['_ICON']) { //TODO: see if this can be removed, seems to be wrong in this context
++					$icon = '<img src="'.$GLOBALS['BACK_PATH'].$this->typeRelPaths[$data['type']].rawurlencode($name).'/ext_icon.gif'.'" '.$imgInfo[3].' alt="" />';
++                                } elseif ($data['_ICON']) { //TODO: see if this can be removed, seems to be wrong in this context
+ 					$icon = $data['_ICON'];
+ 				} else {
+ 					$icon = '<img src="clear.gif" width="1" height="1" alt="" />';
+@@ -6218,8 +6220,53 @@ $warn.
+ 
+ 		return $content . '</table><br />';
+ 	}
+-}
+ 
++	/**
++	 * Createst a sanitized version of $fileName by keeping a small set of
++	 * valid characters and dropping all other characters.
++	 *
++	 * As this function expects only the file name without the path, slashes
++	 * are considered invalid, too.
++	 *
++	 * @param string $fileName
++	 *        the file name to sanitize (without the directory part), may be empty
++	 * @return string the sanitized file name, might be empty
++	 */
++	function sanitizeFileName($fileName) {
++		return preg_replace('#[^A-Za-z0-9._-]#', '', $fileName);
++	}
++
++	/**
++	 * Createst a sanitized version of $directoryName by keeping a small set of
++	 * valid characters and dropping all other characters.
++	 *
++	 * @param string $directoryName
++	 *        the directory name/path to sanitize, may be empty
++	 * @return string the sanitized directory name, might be empty
++	 */
++	function sanitizeDirectoryName($directoryName) {
++		return preg_replace('#[^/A-Za-z0-9._-]#', '', $directoryName);
++	}
++
++	/**
++	 * Converts an array to a string for outputting in HTML.
++	 *
++	 * The single elements of the array will be separated by line breaks.
++	 *
++	 * Each array element will be htmlspecialchared so that the output is safe.
++	 *
++	 * Note: If an array element contains a LF, the LF will be converted to a
++	 * <br /> as well.
++	 *
++	 * @param array<string> $elements the array to be converted, may be empty
++	 * @return string the array elements converted to HTML, might be empty
++	 */
++	function arrayToView(array $elements) {
++		$safeString = htmlspecialchars(implode(LF, $elements));
++
++		return nl2br($safeString);
++	}
++}
+ 
+ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/tools/em/index.php'])	{
+ 	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['typo3/mod/tools/em/index.php']);
+diff --git a/typo3/sysext/cms/tslib/class.tslib_content.php b/typo3/sysext/cms/tslib/class.tslib_content.php
+index 783edf0..d4f19f8 100644
+--- a/typo3/sysext/cms/tslib/class.tslib_content.php
++++ b/typo3/sysext/cms/tslib/class.tslib_content.php
+@@ -2019,7 +2019,7 @@ class tslib_cObj {
+ 							// If this form includes an auto responder message, include a HMAC checksum field
+ 							// in order to verify potential abuse of this feature.
+ 						if (strlen($value) && t3lib_div::inList($confData['fieldname'], 'auto_respond_msg')) {
+-							$hmacChecksum = t3lib_div::hmac($value);
++							$hmacChecksum = t3lib_div::hmac($value, 'content_form');
+ 							$hiddenfields .= sprintf('<input type="hidden" name="auto_respond_checksum" id="%sauto_respond_checksum" value="%s" />',
+ 												$prefix, $hmacChecksum);
+ 						}
+@@ -6231,8 +6231,13 @@ class tslib_cObj {
+ 					$target = '';
+ 				}
+ 
+-				$onClick="vHWin=window.open('".$GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url'])."','FEopenLink','".$JSwindowParams."');vHWin.focus();return false;";
+-				$res = '<a href="'.htmlspecialchars($finalTagParts['url']).'"'. $target .' onclick="'.htmlspecialchars($onClick).'"'.($title?' title="'.$title.'"':'').($linkClass?' class="'.$linkClass.'"':'').$finalTagParts['aTagParams'].'>';
++				$onClick = "vHWin=window.open(" . t3lib_div::quoteJSvalue($GLOBALS['TSFE']->baseUrlWrap($finalTagParts['url']), TRUE) .
++					",'FEopenLink'," . t3lib_div::quoteJSvalue($JSwindowParams) . ");vHWin.focus();return false;";
++				$res = '<a href="' . htmlspecialchars($finalTagParts['url']) . '"' .
++					$target . ' onclick="' . htmlspecialchars($onClick) . '"' .
++					($title ? ' title="' . $title . '"' : '') .
++					($linkClass ? ' class="' . $linkClass . '"' : '') .
++					$finalTagParts['aTagParams'] . '>';
+ 			} else {
+ 				if ($GLOBALS['TSFE']->spamProtectEmailAddresses === 'ascii' && $finalTagParts['TYPE'] === 'mailto') {
+ 					$res = '<a href="'.$finalTagParts['url'].'"'.($title?' title="'.$title.'"':'').$finalTagParts['targetParams'].($linkClass?' class="'.$linkClass.'"':'').$finalTagParts['aTagParams'].'>';
+diff --git a/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc b/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
+index b8f3263..7df2375 100644
+--- a/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
++++ b/typo3/sysext/cms/tslib/media/scripts/fe_adminLib.inc
+@@ -1100,14 +1100,20 @@ class user_feAdmin	{
+ 			$fD = t3lib_div::_GP('fD');
+ 			$sFK = t3lib_div::_GP('sFK');
+ 
++			$valuesConfiguredInTypoScript = isset($this->conf['setfixed.'][$sFK . '.']) ? $this->conf['setfixed.'][$sFK . '.'] : array();
++			$fields = $valuesConfiguredInTypoScript;
++			unset($fields['_FIELDLIST']);
++			$fields = array_keys($fields);
++			if (isset($valuesConfiguredInTypoScript['_FIELDLIST'])) {
++				$fields = array_merge($fields, t3lib_div::trimExplode(',', $valuesConfiguredInTypoScript['_FIELDLIST']));
++			}
++			$valuesConfiguredInTypoScript['_FIELDLIST'] = implode(',', array_unique($fields));
++
+ 			$fieldArr=array();
+-			if (is_array($fD) || $sFK=='DELETE')	{
+-				if (is_array($fD))	{
+-					reset($fD);
+-					while(list($field,$value)=each($fD))	{
+-						$origArr[$field]=$value;
+-						$fieldArr[]=$field;
+-					}
++			if (!empty($valuesConfiguredInTypoScript) || $sFK=='DELETE')	{
++				foreach ($valuesConfiguredInTypoScript as $field => $value) {
++					$origArr[$field]=$value;
++					$fieldArr[]=$field;
+ 				}
+ 				$theCode = $this->setfixedHash($origArr,$origArr['_FIELDLIST']);
+ 				if (!strcmp($this->authCode,$theCode))	{
+@@ -1115,7 +1121,8 @@ class user_feAdmin	{
+ 						$this->cObj->DBgetDelete($this->theTable, $theUid, TRUE);
+ 					} else {
+ 						$newFieldList = implode(',',array_intersect(t3lib_div::trimExplode(',',$this->fieldList),t3lib_div::trimExplode(',',implode($fieldArr,','),1)));
+-						$this->cObj->DBgetUpdate($this->theTable, $theUid, $fD, $newFieldList, TRUE);
++						unset($valuesConfiguredInTypoScript['_FIELDLIST']);
++						$this->cObj->DBgetUpdate($this->theTable, $theUid, $valuesConfiguredInTypoScript, $newFieldList, TRUE);
+ 						$this->currentArr = $GLOBALS['TSFE']->sys_page->getRawRecord($this->theTable,$theUid);
+ 						$this->userProcess_alt($this->conf['setfixed.']['userFunc_afterSave'],$this->conf['setfixed.']['userFunc_afterSave.'],array('rec'=>$this->currentArr, 'origRec'=>$origArr));
+ 					}
+@@ -1639,6 +1646,13 @@ class user_feAdmin	{
+ 					$markerArray['###SYS_SETFIXED_DELETE###'] = $string;
+ 					$markerArray['###SYS_SETFIXED_HSC_DELETE###'] = htmlspecialchars($string);
+ 				} elseif (strstr($theKey,'.'))	{
++					$fields = $data;
++					unset($fields['_FIELDLIST']);
++					$fields = array_keys($fields);
++					if (isset($data['_FIELDLIST'])) {
++						$fields = array_merge($fields, t3lib_div::trimExplode(',', $data['_FIELDLIST']));
++					}
++					$data['_FIELDLIST'] = implode(',', array_unique($fields));
+ 					$theKey = substr($theKey,0,-1);
+ 					if (is_array($data))	{
+ 						reset($data);
+diff --git a/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php b/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
+index e253248..e5273fa 100644
+--- a/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
++++ b/typo3/sysext/extbase/Classes/MVC/Controller/ActionController.php
+@@ -358,12 +358,6 @@ class Tx_Extbase_MVC_Controller_ActionController extends Tx_Extbase_MVC_Controll
+ 		}
+ 
+ 		$message = 'An error occurred while trying to call ' . get_class($this) . '->' . $this->actionMethodName . '().' . PHP_EOL;
+-		foreach ($this->argumentsMappingResults->getErrors() as $error) {
+-			$message .= 'Error:   ' . $error->getMessage() . PHP_EOL;
+-		}
+-		foreach ($this->argumentsMappingResults->getWarnings() as $warning) {
+-			$message .= 'Warning: ' . $warning->getMessage() . PHP_EOL;
+-		}
+ 		return $message;
+ 	}
+ 
+diff --git a/typo3/sysext/openid/class.tx_openid_eid.php b/typo3/sysext/openid/class.tx_openid_eid.php
+index b2b0eb3..27bac1a 100644
+--- a/typo3/sysext/openid/class.tx_openid_eid.php
++++ b/typo3/sysext/openid/class.tx_openid_eid.php
+@@ -61,7 +61,19 @@ class tx_openid_eID {
+ 
+ 		// Redirect to the original location in any case (authenticated or not)
+ 		@ob_end_clean();
+-		t3lib_utility_Http::redirect(t3lib_div::_GP('tx_openid_location'), t3lib_utility_Http::HTTP_STATUS_303);
++		if ($this->getSignature(t3lib_div::_GP('tx_openid_location')) === t3lib_div::_GP('tx_openid_location_signature')) {
++			t3lib_utility_Http::redirect(t3lib_div::_GP('tx_openid_location'), t3lib_utility_Http::HTTP_STATUS_303);
++		}
++	}
++
++	/**
++	 * Signs a GET parameter.
++	 *
++	 * @param string $parameter
++	 * @return string
++     */
++	protected function getSignature($parameter) {
++		return t3lib_div::hmac($parameter, 'openid');
+ 	}
+ }
+ 
+diff --git a/typo3/sysext/openid/sv1/class.tx_openid_sv1.php b/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
+index 929ca95..f1a067e 100644
+--- a/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
++++ b/typo3/sysext/openid/sv1/class.tx_openid_sv1.php
+@@ -437,24 +437,21 @@ class tx_openid_sv1 extends t3lib_svbase {
+ 			$claimedIdentifier = $this->loginData['uname'];
+ 		}
+ 		$returnURL .= 'tx_openid_location=' . rawurlencode($requestURL) . '&' .
+-						'tx_openid_mode=finish&' .
+-						'tx_openid_claimed=' . rawurlencode($claimedIdentifier) . '&' .
+-						'tx_openid_signature=' . $this->getSignature($claimedIdentifier);
++			'tx_openid_location_signature=' . $this->getSignature($requestURL) . '&' .
++			'tx_openid_mode=finish&' .
++			'tx_openid_claimed=' . rawurlencode($claimedIdentifier) . '&' .
++			'tx_openid_signature=' . $this->getSignature($claimedIdentifier);
+ 		return t3lib_div::locationHeaderUrl($returnURL);
+ 	}
+ 
+ 	/**
+-	 * Signs claimed id.
++	 * Signs a GET parameter.
+ 	 *
+-	 * @return void
++	 * @param string $parameter
++	 * @return string
+ 	 */
+-	protected function getSignature($claimedIdentifier) {
+-		// You can also increase security by using sha1 (beware of too long URLs!)
+-		return md5(implode('/', array(
+-			$claimedIdentifier,
+-			strval(strlen($claimedIdentifier)),
+-			$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']
+-		)));
++	protected function getSignature($parameter) {
++		return t3lib_div::hmac($parameter, $this->extKey);
+ 	}
+ 
+ 	/**
+diff --git a/typo3/wizard_add.php b/typo3/wizard_add.php
+index ff73b43..63977ad 100644
+--- a/typo3/wizard_add.php
++++ b/typo3/wizard_add.php
+@@ -127,7 +127,7 @@ class SC_wizard_add {
+ 
+ 			// Else proceed:
+ 		if ($this->returnEditConf)	{	// If a new id has returned from a newly created record...
+-			$eC = unserialize($this->returnEditConf);
++			$eC = json_decode($this->returnEditConf, TRUE);
+ 			if (is_array($eC[$this->table]) && t3lib_div::testInt($this->P['uid']))	{
+ 
+ 					// Getting id and cmd from returning editConf array.
+@@ -244,4 +244,4 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+ 
+ $SOBE->main();
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/wizard_colorpicker.php b/typo3/wizard_colorpicker.php
+index 484e028..e59f408 100644
+--- a/typo3/wizard_colorpicker.php
++++ b/typo3/wizard_colorpicker.php
+@@ -222,7 +222,7 @@ class SC_wizard_colorpicker {
+ 				// If the save/close button is clicked, then close:
+ 			if(t3lib_div::_GP('save_close')) {
+ 				$content.=$this->doc->wrapScriptTags('
+-					setValue(\''.$this->colorValue.'\');
++					setValue('.t3lib_div::quoteJSvalue($this->colorValue).');
+ 					parent.close();
+ 				');
+ 			}
+@@ -466,4 +466,4 @@ $SOBE->init();
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/wizard_forms.php b/typo3/wizard_forms.php
+index 91f8645..86fefbb 100644
+--- a/typo3/wizard_forms.php
++++ b/typo3/wizard_forms.php
+@@ -313,7 +313,9 @@ class SC_wizard_forms {
+ 	 * @return	string		HTML content for the form.
+ 	 */
+ 	function formsWizard()	{
+-
++		if (!$this->checkEditAccess($this->P['table'], $this->P['uid'])) {
++		   throw new RuntimeException('Wizard Error: No access', 1385807526);
++		}
+ 			// First, check the references by selecting the record:
+ 		$row = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
+ 		if (!is_array($row))	{
+@@ -331,6 +333,37 @@ class SC_wizard_forms {
+ 		return $content;
+ 	}
+ 
++	/**
++	 * Checks access for element
++	 *
++	 * @param string $table Table name
++	 * @param integer $uid Record uid
++	 * @return boolean
++	 * @todo: Refactor to remove duplicate code (see wizard_table, wizard_rte)
++	 */
++  protected function checkEditAccess($table, $uid) {
++		$calcPRec = t3lib_BEfunc::getRecord($table, $uid);
++		t3lib_BEfunc::fixVersioningPid($table, $calcPRec);
++		if (is_array($calcPRec)) {
++			// If pages:
++			if ($table == 'pages') {
++				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
++				$hasAccess = $CALC_PERMS & 2 ? TRUE : FALSE;
++			} else {
++				// Fetching pid-record first.
++				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages', $calcPRec['pid']));
++				$hasAccess = $CALC_PERMS & 16 ? TRUE : FALSE;
++			}
++			// Check internals regarding access:
++			if ($hasAccess) {
++				$hasAccess = $GLOBALS['BE_USER']->recordEditAccessInternals($table, $calcPRec);
++			}
++		} else {
++			$hasAccess = FALSE;
++		}
++		return $hasAccess;
++	}
++
+ 
+ 
+ 
+@@ -985,4 +1018,4 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/wizard_rte.php b/typo3/wizard_rte.php
+index cdba120..98d39c1 100644
+--- a/typo3/wizard_rte.php
++++ b/typo3/wizard_rte.php
+@@ -300,7 +300,10 @@ class SC_wizard_rte {
+ 	 *
+ 	 * @param	string		Table name
+ 	 * @param	integer		Record uid
+-	 * @return	void
++	 *
++	 *@return	boolean
++	 *
++	 * @todo: Refactor to remove duplicate code (see wizard_form, wizard_table)
+ 	 */
+ 	function checkEditAccess($table,$uid)	{
+ 		global $BE_USER;
+@@ -339,4 +342,4 @@ $SOBE->init();
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/typo3/wizard_table.php b/typo3/wizard_table.php
+index 7a1ab9b..aa845b5 100644
+--- a/typo3/wizard_table.php
++++ b/typo3/wizard_table.php
+@@ -233,6 +233,9 @@ class SC_wizard_table {
+ 	 */
+ 	function tableWizard()	{
+ 
++		if (!$this->checkEditAccess($this->P['table'], $this->P['uid'])) {
++			throw new RuntimeException('Wizard Error: No access', 1349692692);
++		}
+ 			// First, check the references by selecting the record:
+ 		$row = t3lib_BEfunc::getRecord($this->P['table'],$this->P['uid']);
+ 		if (!is_array($row))	{
+@@ -250,6 +253,38 @@ class SC_wizard_table {
+ 		return $content;
+ 	}
+ 
++	/**
++	 * Checks access for element
++	 *
++	 * @param string $table Table name
++	 * @param integer $uid Record uid
++	 *
++	 * @return boolean
++	 * @todo: Refactor to remove duplicate code (see wizard_form, wizard_rte)
++	 */
++	protected function checkEditAccess($table, $uid) {
++		$calcPRec = t3lib_BEfunc::getRecord($table, $uid);
++		t3lib_BEfunc::fixVersioningPid($table, $calcPRec);
++		if (is_array($calcPRec)) {
++			// If pages:
++			if ($table == 'pages') {
++				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms($calcPRec);
++				$hasAccess = $CALC_PERMS & 2 ? TRUE : FALSE;
++			} else {
++				// Fetching pid-record first.
++				$CALC_PERMS = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages', $calcPRec['pid']));
++				$hasAccess = $CALC_PERMS & 16 ? TRUE : FALSE;
++			}
++			// Check internals regarding access:
++			if ($hasAccess) {
++				$hasAccess = $GLOBALS['BE_USER']->recordEditAccessInternals($table, $calcPRec);
++			}
++		} else {
++			$hasAccess = FALSE;
++		}
++		return $hasAccess;
++	}
++
+ 
+ 
+ 
+@@ -680,4 +715,4 @@ foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
+ $SOBE->main();
+ $SOBE->printContent();
+ 
+-?>
+\ No newline at end of file
++?>
+-- 
+1.7.10.4
+
