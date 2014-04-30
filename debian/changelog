@@ -1,3 +1,9 @@
+typo3-src (4.5.33+dfsg1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Welzel <gawain@camlann.de>  Wed, 30 Apr 2014 10:00:00 +0200
+
 typo3-src (4.5.32+dfsg1-1) unstable; urgency=medium
 
   * New upstream release:
