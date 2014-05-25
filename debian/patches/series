@@ -9,3 +9,4 @@ remove-jslint-dfsg.patch
 remove-jsmin-dfsg.patch
 security-sa-2013-001-702574.patch
 security-sa-2013-004-731999.patch
+security-sa-2014-001-749215.patch

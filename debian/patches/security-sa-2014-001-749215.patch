@@ -1,0 +1,376 @@
+From: Christian Welzel <gawain@camlann.de>
+Date: Sun, 25 May 2014 11:00:00 +0200
+Subject: Fix security Vulnerabilities from TYPO3-SA-2014-001 (#749215)
+Description: Fixes TYPO3-SA-2014-001 (#749215)
+ [SECURITY] Fix insecure unserialize in colorpicker
+ [SECURITY] Encode URL for use in JavaScript
+ [SECURITY] XSS in Backend Layout Wizard
+ [SECURITY] XSS in template tools on root page
+ [SECURITY] XSS in new content element wizard
+ [SECURITY] XSS in (old) extension manager information function
+ [SECURITY] Add trusted HTTP_HOST configuration
+ 
+diff --git a/t3lib/class.t3lib_div.php b/t3lib/class.t3lib_div.php
+index d360ab8..1c76f78 100644
+--- a/t3lib/class.t3lib_div.php
++++ b/t3lib/class.t3lib_div.php
+@@ -236,6 +236,17 @@ final class t3lib_div {
+ 	const SYSLOG_SEVERITY_ERROR = 3;
+ 	const SYSLOG_SEVERITY_FATAL = 4;
+ 
++	const ENV_TRUSTED_HOSTS_PATTERN_ALLOW_ALL = '.*';
++	const ENV_TRUSTED_HOSTS_PATTERN_SERVER_NAME = 'SERVER_NAME';
++
++	/**
++	 * State of host header value security check
++	 * in order to avoid unnecessary multiple checks during one request
++	 *
++	 * @var bool
++	 */
++	static protected $allowHostHeaderValue = FALSE;
++
+ 	/**
+ 	 * Singleton instances returned by makeInstance, using the class names as
+ 	 * array keys
+@@ -4071,6 +4082,12 @@ final class t3lib_div {
+ 						$retVal = $host;
+ 					}
+ 				}
++				if (!self::isAllowedHostHeaderValue($retVal)) {
++					throw new UnexpectedValueException(
++						'The current host header value does not match the configured trusted hosts pattern! Check the pattern defined in $GLOBALS[\'TYPO3_CONF_VARS\'][\'SYS\'][\'trustedHostsPattern\'] and adapt it, if you want to allow the current host header \'' . $retVal . '\' for your installation.',
++						1396795884
++					);
++				}
+ 				break;
+ 				// These are let through without modification
+ 			case 'HTTP_REFERER':
+@@ -4191,6 +4208,51 @@ final class t3lib_div {
+ 	}
+ 
+ 	/**
++	 * Checks if the provided host header value matches the trusted hosts pattern.
++	 * If the pattern is not defined (which only can happen early in the bootstrap), deny any value.
++	 *
++	 * @param string $hostHeaderValue HTTP_HOST header value as sent during the request (may include port)
++	 * @return bool
++	 */
++	static public function isAllowedHostHeaderValue($hostHeaderValue) {
++		if (self::$allowHostHeaderValue === TRUE) {
++			return TRUE;
++		}
++
++		// Allow all install tool requests
++		// We accept this risk to have the install tool always available
++		// Also CLI needs to be allowed as unfortunately AbstractUserAuthentication::getAuthInfoArray() accesses HTTP_HOST without reason on CLI
++		if (defined('TYPO3_REQUESTTYPE') && (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_INSTALL) || (TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_CLI)) {
++			return self::$allowHostHeaderValue = TRUE;
++		}
++
++		// Deny the value if trusted host patterns is empty, which means we are early in the bootstrap
++		if (empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'])) {
++			return FALSE;
++		}
++
++		if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] === self::ENV_TRUSTED_HOSTS_PATTERN_ALLOW_ALL) {
++			self::$allowHostHeaderValue = TRUE;
++		} elseif ($GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] === self::ENV_TRUSTED_HOSTS_PATTERN_SERVER_NAME) {
++			// Allow values that equal the server name
++			// Note that this is only secure if name base virtual host are configured correctly in the webserver
++			$defaultPort = self::getIndpEnv('TYPO3_SSL') ? '443' : '80';
++			$parsedHostValue = parse_url('http://' . $hostHeaderValue);
++			if (isset($parsedHostValue['port'])) {
++				self::$allowHostHeaderValue = ($parsedHostValue['host'] === $_SERVER['SERVER_NAME'] && (string)$parsedHostValue['port'] === $_SERVER['SERVER_PORT']);
++			} else {
++				self::$allowHostHeaderValue = ($hostHeaderValue === $_SERVER['SERVER_NAME'] && $defaultPort === $_SERVER['SERVER_PORT']);
++			}
++		} else {
++			// In case name based virtual hosts are not possible, we allow setting a trusted host pattern
++			// See https://typo3.org/teams/security/security-bulletins/typo3-core/typo3-core-sa-2014-001/ for further details
++			self::$allowHostHeaderValue = (bool)preg_match('/^' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] . '$/', $hostHeaderValue);
++		}
++
++		return self::$allowHostHeaderValue;
++	}
++
++	/**
+ 	 * Gets the unixtime as milliseconds.
+ 	 *
+ 	 * @return	integer		The unixtime as milliseconds
+diff --git a/t3lib/class.t3lib_tsstyleconfig.php b/t3lib/class.t3lib_tsstyleconfig.php
+index 46188b0..7ceecc7 100644
+--- a/t3lib/class.t3lib_tsstyleconfig.php
++++ b/t3lib/class.t3lib_tsstyleconfig.php
+@@ -162,7 +162,7 @@ class t3lib_tsStyleConfig extends t3lib_tsparser_ext {
+ 		$content = '';
+ 		$content .= t3lib_div::wrapJS('
+ 			function uFormUrl(aname) {
+-				document.' . $this->ext_CEformName . '.action = "' . t3lib_div::linkThisScript() . '#"+aname;
++				document.' . $this->ext_CEformName . '.action = ' . t3lib_div::quoteJSvalue(t3lib_div::linkThisScript() . '#' ) . '+aname;
+ 			}
+ 		');
+ 
+diff --git a/t3lib/config_default.php b/t3lib/config_default.php
+index cee665c..8a9e34b 100644
+--- a/t3lib/config_default.php
++++ b/t3lib/config_default.php
+@@ -67,6 +67,7 @@ $TYPO3_CONF_VARS = array(
+ 		'cookieHttpOnly' => FALSE,				// Boolean: When enabled the cookie will be made accessible only through the HTTP protocol. This means that the cookie won't be accessible by scripting languages, such as JavaScript. This setting can effectively help to reduce identity theft through XSS attacks (although it is not supported by all browsers).
+ 		'doNotCheckReferer' => FALSE,			// Boolean: If set, it's NOT checked numerous places that the refering host is the same as the current. This is an option you should set if you have problems with proxies not passing the HTTP_REFERER variable.
+ 		'recursiveDomainSearch' => FALSE,		// Boolean: If set, the search for domain records will be done recursively by stripping parts of the host name off until a matching domain record is found.
++		'trustedHostsPattern' => 'SERVER_NAME',	// String: Regular expression pattern that matches all allowed hostnames (including their ports) of this TYPO3 installation, or the string "SERVER_NAME" (default). The default value <code>SERVER_NAME</code> checks if the HTTP Host header equals the SERVER_NAME and SERVER_PORT. This is secure in correctly configured hosting environments and does not need further configuration. If you cannot change your hosting environment, you can enter a regular expression here. Examples: <code>.*\.domain\.com</code> matches all hosts that end with <code>.domain.com</code> with all corresponding subdomains. <code>(.*\.domain|.*\.otherdomain)\.com</code> matches all hostnames with subdomains from <code>.domain.com</code> and <code>.otherdomain.com</code>. Be aware that HTTP Host header may also contain a port. If your installation runs on a specific port, you need to explicitly allow this in your pattern, e.g. <code>www\.domain\.com:88</code> allows only <code>www.domain.com:88</code>, <strong>not</strong> <code>www.domain.com</code>. To disable this check completely (not recommended because it is <strong>insecure</strong>) you can use ".*" as pattern.
+ 		'devIPmask' => '127.0.0.1,::1',			// Defines a list of IP addresses which will allow development-output to display. The debug() function will use this as a filter. See the function t3lib_div::cmpIP() for details on syntax. Setting this to blank value will deny all. Setting to "*" will allow all.
+ 		'sqlDebug' => 0,						// <p>Integer (0, 1, 2). Allows displaying executed SQL queries in the browser (for debugging purposes and development)</p><dl><dt>0</dt><dd>no SQL shown (default)</dd><dt>1</dt><dd>show only failed queries</dd><dt>2</dt><dd>show all queries</dd></dl>
+ 		'enable_DLOG' => FALSE,					// Boolean: Whether the developer log is enabled. See constant "TYPO3_DLOG"
+diff --git a/t3lib/error/class.t3lib_error_abstractexceptionhandler.php b/t3lib/error/class.t3lib_error_abstractexceptionhandler.php
+index a487903..b54dab9 100644
+--- a/t3lib/error/class.t3lib_error_abstractexceptionhandler.php
++++ b/t3lib/error/class.t3lib_error_abstractexceptionhandler.php
+@@ -62,6 +62,10 @@ abstract class t3lib_error_AbstractExceptionHandler implements t3lib_error_Excep
+ 	 * @see t3lib_div::sysLog(), t3lib_div::devLog()
+ 	 */
+ 	protected function writeLogEntries(Exception $exception, $context) {
++			// Do not write any logs for this message to avoid filling up tables or files with illegal requests
++		if ($exception->getCode() === 1396795884) {
++			return;
++		}
+ 		$filePathAndName = $exception->getFile();
+ 		$exceptionCodeNumber = ($exception->getCode() > 0) ? '#' . $exception->getCode() . ': ' : '';
+ 		$logTitle = 'Core: Exception handler (' . $context . ')';
+diff --git a/t3lib/message/class.t3lib_message_errorpagemessage.php b/t3lib/message/class.t3lib_message_errorpagemessage.php
+index 57728d8..f2c78e8 100644
+--- a/t3lib/message/class.t3lib_message_errorpagemessage.php
++++ b/t3lib/message/class.t3lib_message_errorpagemessage.php
+@@ -97,7 +97,10 @@ class t3lib_message_ErrorpageMessage extends t3lib_message_AbstractMessage {
+ 			'###CSS_CLASS###'     => $classes[$this->severity],
+ 			'###TITLE###'         => $this->title,
+ 			'###MESSAGE###'       => $this->message,
+-			'###BASEURL###'       => t3lib_div::getIndpEnv('TYPO3_SITE_URL'),
++			// Avoid calling TYPO3_SITE_URL here to get the base URL as it might be that we output an exception message with
++			// invalid trusted host, which would lead to a nested exception! See: #30377
++			// Instead we calculate the relative path to the document root without involving HTTP request parameters.
++			'###BASEURL###' => substr(PATH_site, strlen(t3lib_div::getIndpEnv('TYPO3_DOCUMENT_ROOT'))),
+ 			'###TYPO3_mainDir###' => TYPO3_mainDir,
+ 			'###TYPO3_copyright_year###' => TYPO3_copyright_year,
+ 		);
+diff --git a/typo3/alt_doc.php b/typo3/alt_doc.php
+index 7069975..2254e12 100644
+--- a/typo3/alt_doc.php
++++ b/typo3/alt_doc.php
+@@ -1020,7 +1020,7 @@ class SC_alt_doc {
+ 		if ($this->returnUrl == 'close.html') {
+ 			return '';
+ 		}
+-		$aOnClick = 'vHWin=window.open(\''.t3lib_div::linkThisScript(array('returnUrl'=>'close.html')).'\',\''.md5($this->R_URI).'\',\'width=670,height=500,status=0,menubar=0,scrollbars=1,resizable=1\');vHWin.focus();return false;';
++		$aOnClick = 'vHWin=window.open('.t3lib_div::quoteJSvalue(t3lib_div::linkThisScript(array('returnUrl'=>'close.html'))).',\''.md5($this->R_URI).'\',\'width=670,height=500,status=0,menubar=0,scrollbars=1,resizable=1\');vHWin.focus();return false;';
+ 		return '<a href="#" onclick="'.htmlspecialchars($aOnClick).'" title="' . $LANG->sL('LLL:EXT:lang/locallang_core.php:labels.openInNewWindow', TRUE) . '">' .
+ 				t3lib_iconWorks::getSpriteIcon('actions-window-open') .
+ 			'</a>';
+diff --git a/typo3/sysext/cms/layout/db_new_content_el.php b/typo3/sysext/cms/layout/db_new_content_el.php
+index 67daad0..75fe910 100644
+--- a/typo3/sysext/cms/layout/db_new_content_el.php
++++ b/typo3/sysext/cms/layout/db_new_content_el.php
+@@ -186,7 +186,7 @@ class SC_db_new_content_el {
+ 		$this->id = intval(t3lib_div::_GP('id'));
+ 		$this->sys_language = intval(t3lib_div::_GP('sys_language_uid'));
+ 		$this->R_URI = t3lib_div::sanitizeLocalUrl(t3lib_div::_GP('returnUrl'));
+-		$this->colPos = t3lib_div::_GP('colPos');
++		$this->colPos = (int)t3lib_div::_GP('colPos');
+ 		$this->uid_pid = intval(t3lib_div::_GP('uid_pid'));
+ 
+ 		$this->MCONF['name'] = 'xMOD_db_new_content_el';
+diff --git a/typo3/sysext/cms/layout/res/grideditor.js b/typo3/sysext/cms/layout/res/grideditor.js
+index 52309e3..1eae15d 100644
+--- a/typo3/sysext/cms/layout/res/grideditor.js
++++ b/typo3/sysext/cms/layout/res/grideditor.js
+@@ -208,7 +208,7 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
+ 				}
+ 				cellHtml += '</div>';
+ 
+-				cellHtml += '<div class="cell_data">' + TYPO3.lang.name + ': ' + (cell.name ? cell.name : TYPO3.lang.notSet)
++				cellHtml += '<div class="cell_data">' + TYPO3.lang.name + ': ' + (cell.name ? Ext.util.Format.htmlEncode(cell.name) : TYPO3.lang.notSet)
+ 						+ '<br />' + TYPO3.lang.column + ': '
+ 						+ (cell.column === undefined ? TYPO3.lang.notSet : parseInt(cell.column, 10)) + '</div>';
+ 
+diff --git a/typo3/sysext/cms/layout/wizard_backend_layout.php b/typo3/sysext/cms/layout/wizard_backend_layout.php
+index 6b792e9..e230da8 100644
+--- a/typo3/sysext/cms/layout/wizard_backend_layout.php
++++ b/typo3/sysext/cms/layout/wizard_backend_layout.php
+@@ -109,7 +109,7 @@ class SC_wizard_backend_layout {
+ 		// select record
+ 		$record = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows($this->P['field'], $this->P['table'], 'uid=' . intval($this->P['uid']));
+ 		if (trim($record[0][$this->P['field']]) == '') {
+-			$t3GridData = "[[{colspan:1,rowspan:1,spanned:false,name:''}]]";
++			$rows = array(array(array('colspan' => 1, 'rowspan' => 1, 'spanned' => FALSE, 'name' => '')));
+ 			$colCount = 1;
+ 			$rowCount = 1;
+ 		} else {
+@@ -118,93 +118,78 @@ class SC_wizard_backend_layout {
+ 			$parser = t3lib_div::makeInstance('t3lib_TSparser');
+ 			$parser->parse($record[0][$this->P['field']]);
+ 			$data = $parser->setup['backend_layout.'];
+-			$t3GridData = '[';
++			$rows = array();
+ 			$colCount = $data['colCount'];
+ 			$rowCount = $data['rowCount'];
+ 			$dataRows = $data['rows.'];
+ 			$spannedMatrix = array();
+ 
+ 			for ($i = 1; $i <= $rowCount; $i++) {
+-				$rowString = '';
++				$cells = array();
++				$row = array_shift($dataRows);
++				$columns = $row['columns.'];
+ 				for ($j = 1; $j <= $colCount; $j++) {
+-					if ($j == 1) {
+-						$row = array_shift($dataRows);
+-						$columns = $row['columns.'];
+-						$rowString = '[';
+-						$cells = array();
+-					}
++					$cellData = array();
+ 					if (!$spannedMatrix[$i][$j]) {
+ 						if (is_array($columns) && count($columns)) {
+ 							$column = array_shift($columns);
+-							$cellString = '{';
+-							$cellData = array();
+ 							if (isset($column['colspan'])) {
+-								$cellData[] = 'colspan:' . intval($column['colspan']);
++								$cellData['colspan'] = (int)$column['colspan'];
++								$columnColSpan = (int)$column['colspan'];
+ 								if (isset($column['rowspan'])) {
+-									for ($spanRow = 0; $spanRow < intval($column['rowspan']); $spanRow++) {
+-										for ($spanColumn = 0; $spanColumn < intval($column['colspan']); $spanColumn++) {
++									$columnRowSpan = (int)$column['rowspan'];
++									for ($spanRow = 0; $spanRow < $columnRowSpan; $spanRow++) {
++										for ($spanColumn = 0; $spanColumn < $columnColSpan; $spanColumn++) {
+ 											$spannedMatrix[$i + $spanRow][$j + $spanColumn] = 1;
+ 										}
+ 									}
+ 								} else {
+-									for ($spanColumn = 0; $spanColumn < intval($column['colspan']); $spanColumn++) {
++									for ($spanColumn = 0; $spanColumn < $columnColSpan; $spanColumn++) {
+ 										$spannedMatrix[$i][$j + $spanColumn] = 1;
+ 									}
+ 								}
+ 							} else {
+-								$cellData[] = 'colspan:1';
++								$cellData['colspan'] = 1;
+ 								if (isset($column['rowspan'])) {
+-									for ($spanRow = 0; $spanRow < intval($column['rowspan']); $spanRow++) {
++									$columnRowSpan = (int)$column['rowspan'];
++									for ($spanRow = 0; $spanRow < $columnRowSpan; $spanRow++) {
+ 										$spannedMatrix[$i + $spanRow][$j] = 1;
+ 									}
+ 								}
+ 							}
+ 							if (isset($column['rowspan'])) {
+-								$cellData[] = 'rowspan:' . intval($column['rowspan']);
++								$cellData['rowspan'] = (int)$column['rowspan'];
+ 							} else {
+-								$cellData[] = 'rowspan:1';
++								$cellData['rowspan'] = 1;
+ 							}
+ 							if (isset($column['name'])) {
+-								$cellData[] = 'name:\'' . $column['name'] . '\'';
++								$cellData['name'] = $column['name'];
+ 							}
+ 							if (isset($column['colPos'])) {
+-								$cellData[] = 'column:' . $column['colPos'];
++								$cellData['column'] = (int)$column['colPos'];
+ 							}
+-
+-							$cellString .= implode(',', $cellData) . '}';
+-							$cells[] = $cellString;
+-
+ 						}
+ 					} else {
+-						$cells[] = '{colspan:1,rowspan:1,spanned:1}';
++						$cellData = array('colspan' => 1, 'rowspan' => 1, 'spanned' => 1);
+ 					}
++					$cells[] = $cellData;
+ 				}
+-				$rowString .= implode(',', $cells);
+-				if ($rowString) {
+-					$rowString .= ']';
++				$rows[] = $cells;
++				if (!empty($spannedMatrix[$i]) && is_array($spannedMatrix[$i])) {
++					ksort($spannedMatrix[$i]);
+ 				}
+-				$rows[] = $rowString;
+-				ksort($spannedMatrix[$i]);
+ 			}
+-
+-			$t3GridData .= implode(',', $rows) . ']';
+-
+-
+ 		}
+-
+ 		$pageRenderer->enableExtJSQuickTips();
+-
+ 		$pageRenderer->addExtOnReadyCode('
+ 			t3Grid = new TYPO3.Backend.t3Grid({
+-				data: ' . $t3GridData . ',
+-				colCount: ' . $colCount . ',
+-				rowCount: ' . $rowCount . ',
++				data: ' . json_encode($rows) . ',
++				colCount: ' . (int)$colCount . ',
++				rowCount: ' . (int)$rowCount . ',
+ 				targetElement: \'editor\'
+ 			});
+ 			t3Grid.drawTable();
+ 			');
+-
+-
+ 		$this->doc->styleSheetFile_post = TYPO3_MOD_PATH . 'res/grideditor.css';
+ 	}
+ 
+diff --git a/typo3/sysext/em/classes/index.php b/typo3/sysext/em/classes/index.php
+index f2cd743..04929be 100644
+--- a/typo3/sysext/em/classes/index.php
++++ b/typo3/sysext/em/classes/index.php
+@@ -587,9 +587,9 @@ class SC_mod_tools_em_index extends t3lib_SCbase {
+ 		}
+ 		// Back
+ 		if (($this->CMD['showExt'] && (!$this->CMD['standAlone'] && !t3lib_div::_GP('standAlone'))) || ($this->CMD['importExt'] || $this->CMD['uploadExt'] && (!$this->CMD['standAlone'])) || $this->CMD['importExtInfo']) {
+-			$buttons['back'] = '<a href="' . t3lib_div::linkThisScript(array(
++			$buttons['back'] = '<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array(
+ 				'CMD' => ''
+-			)) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->getLL('go_back') . '">' .
++			))) . '" class="typo3-goBack" title="' . $GLOBALS['LANG']->getLL('go_back') . '">' .
+ 					t3lib_iconWorks::getSpriteIcon('actions-view-go-back') .
+ 					'</a>';
+ 		}
+diff --git a/typo3/sysext/tstemplate/ts/index.php b/typo3/sysext/tstemplate/ts/index.php
+index 64017bc..3903f9d 100644
+--- a/typo3/sysext/tstemplate/ts/index.php
++++ b/typo3/sysext/tstemplate/ts/index.php
+@@ -530,7 +530,7 @@ page.10.value = HELLO WORLD!
+ 					if (isset($pArray[$k . "_"])) {
+ 						$lines[] = '<tr class="' . ($i++ % 2 == 0 ? 'bgColor4' : 'bgColor6') . '">
+ 							<td nowrap><img src="clear.gif" width="1" height="1" hspace=' . ($c * 10) . ' align="top">' .
+-							'<a href="' . t3lib_div::linkThisScript(array('id' => $k)) . '">' .
++							'<a href="' . htmlspecialchars(t3lib_div::linkThisScript(array('id' => $k))) . '">' .
+ 							t3lib_iconWorks::getSpriteIconForRecord('pages', t3lib_BEfunc::getRecordWSOL('pages', $k), array("title"=>'ID: ' . $k )) .
+ 							t3lib_div::fixed_lgd_cs($pArray[$k], 30) . '</a></td>
+ 							<td align="center">' . $pArray[$k . '_']['count'] . '</td>
+diff --git a/typo3/wizard_colorpicker.php b/typo3/wizard_colorpicker.php
+index 304f023..05037bc 100644
+--- a/typo3/wizard_colorpicker.php
++++ b/typo3/wizard_colorpicker.php
+@@ -131,10 +131,10 @@ class SC_wizard_colorpicker {
+ 			}
+ 		}
+ 
+-			// Setting field-change functions:
+-		$fieldChangeFuncArr = unserialize($this->fieldChangeFunc);
+ 		$update = '';
+ 		if ($this->areFieldChangeFunctionsValid()) {
++				// Setting field-change functions:
++			$fieldChangeFuncArr = unserialize($this->fieldChangeFunc);
+ 			unset($fieldChangeFuncArr['alert']);
+ 			foreach($fieldChangeFuncArr as $v)	{
+ 				$update.= '
+-- 
+1.7.10.4
+
