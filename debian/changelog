@@ -1,3 +1,10 @@
+typo3-src (4.5.19+dfsg1-5+wheezy3) wheezy-security; urgency=medium
+
+  * Added patch for TYPO3-SA-2014-001. (Closes: #749215)
+  * Set patch level version to -pl.4.5.34.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 25 May 2014 11:00:00 +0200
+
 typo3-src (4.5.19+dfsg1-5+wheezy2) wheezy-security; urgency=medium
 
   * Added patch for TYPO3-SA-2013-004. (Closes: #731999)
