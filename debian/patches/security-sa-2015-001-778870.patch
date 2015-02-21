@@ -1,0 +1,59 @@
+From: Nicole Cordes <typo3@cordes.co>
+Date: Thu, 19 Feb 2015 08:46:50 +0000 (+0100)
+Subject: [SECURITY] Prevent login with semi-empty values
+X-Git-Tag: TYPO3_4-5-40~1
+X-Git-Url: https://git.typo3.org
+
+[SECURITY] Prevent login with semi-empty values
+
+Disallow frontend user to login in with a password which can be casted
+to an empty value.
+
+Releases: 4.5
+Resolves: #65113
+Security-Bulletin: TYPO3-CORE-SA-2015-001
+Change-Id: Iceb22eac9572044c05f5c5b27d335deacdf146f1
+Reviewed-on: http://review.typo3.org/37013
+Reviewed-by: Oliver Hader <oliver.hader@typo3.org>
+Tested-by: Oliver Hader <oliver.hader@typo3.org>
+---
+
+diff --git a/typo3/sysext/rsaauth/sv1/class.tx_rsaauth_sv1.php b/typo3/sysext/rsaauth/sv1/class.tx_rsaauth_sv1.php
+index 99c7598..bb1ef18 100644
+--- a/typo3/sysext/rsaauth/sv1/class.tx_rsaauth_sv1.php
++++ b/typo3/sysext/rsaauth/sv1/class.tx_rsaauth_sv1.php
+@@ -104,7 +104,7 @@ class tx_rsaauth_sv1 extends tx_sv_auth  {
+ 					$decryptedPassword = $this->runPasswordEvaluations($decryptedPassword);
+ 					if ($decryptedPassword != null) {
+ 						$this->login['uident'] = $decryptedPassword;
+-						if (parent::authUser($userRecord)) {
++						if (is_bool($checkResult = parent::authUser($userRecord)) && $checkResult) {
+ 							$result = 200;
+ 						}
+ 					}
+diff --git a/typo3/sysext/saltedpasswords/sv1/class.tx_saltedpasswords_sv1.php b/typo3/sysext/saltedpasswords/sv1/class.tx_saltedpasswords_sv1.php
+index 7137664..4e05126 100644
+--- a/typo3/sysext/saltedpasswords/sv1/class.tx_saltedpasswords_sv1.php
++++ b/typo3/sysext/saltedpasswords/sv1/class.tx_saltedpasswords_sv1.php
+@@ -237,7 +237,7 @@ class tx_saltedpasswords_sv1 extends tx_sv_authbase {
+ 		}
+ 
+ 		if ($this->login['uident'] && $this->login['uname']) {
+-			if (!empty($this->login['uident_text'])) {
++			if ((string)$this->login['uident_text'] !== '') {
+ 				$validPasswd = $this->compareUident(
+ 					$user,
+ 					$this->login
+diff --git a/typo3/sysext/sv/class.tx_sv_auth.php b/typo3/sysext/sv/class.tx_sv_auth.php
+index f974cdc..8f026ec 100644
+--- a/typo3/sysext/sv/class.tx_sv_auth.php
++++ b/typo3/sysext/sv/class.tx_sv_auth.php
+@@ -125,7 +125,7 @@ class tx_sv_auth extends tx_sv_authbase 	{
+ 	public function authUser(array $user) {
+ 		$OK = 100;
+ 
+-		if ($this->login['uident'] && $this->login['uname'])	{
++		if ((string)$this->login['uident'] !== '' && $this->login['uname'])	{
+ 
+ 				// Checking password match for user:
+ 			$OK = $this->compareUident($user, $this->login);
