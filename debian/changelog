@@ -1,3 +1,9 @@
+typo3-src (4.5.19+dfsg1-5+wheezy4) wheezy-security; urgency=high
+
+  * Added patch for TYPO3-SA-2015-001. (Closes: #778870)
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 21 Feb 2015 21:00:00 +0100
+
 typo3-src (4.5.19+dfsg1-5+wheezy3) wheezy-security; urgency=medium
 
   * Added patch for TYPO3-SA-2014-001. (Closes: #749215)
