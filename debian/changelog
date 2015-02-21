@@ -1,10 +1,12 @@
-typo3-src (4.5.37+dfsg1-1) unstable; urgency=medium
+typo3-src (4.5.40+dfsg1-1) unstable; urgency=high
 
   * New upstream release:
+    - fixes: "TYPO3-CORE-SA-2015-001: Authentication Bypass"
+      (Closes: #778870)
     - fixes: "TYPO3-CORE-SA-2014-002: Multiple Vulnerabilities in TYPO3 CMS"
       (Closes: #766502)
 
- -- Christian Welzel <gawain@camlann.de>  Thu, 23 Oct 2014 19:00:00 +0100
+ -- Christian Welzel <gawain@camlann.de>  Sat, 21 Feb 2015 20:00:00 +0100
 
 typo3-src (4.5.35+dfsg1-1) unstable; urgency=low
 
