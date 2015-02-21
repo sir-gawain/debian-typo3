@@ -1,3 +1,30 @@
+2015-02-19  1b8a673                  [RELEASE] Release of TYPO3 4.5.40 (TYPO3 Release Team)
+2015-02-19  3fbd91c  #65113          [SECURITY] Prevent login with semi-empty values (Nicole Cordes)
+2015-01-29  6cf78f6  #64597          [TASK] Update TYPO3 copyright in all branches (Benjamin Mack)
+2015-01-29  38e1cb1  #64573          [BUGFIX] Travis tests for PHP 5.5 (Stephan Großberndt)
+2015-01-19  fc33980                  [TASK] Post travis notification to #typo3-cms-coredev channel (Helmut Hummel)
+2015-01-15  c7615b6  #63896          [BUGFIX] Fix regression in prefixLocalAchors feature (Helmut Hummel)
+2014-12-17  583d1bf  #59186          [BUGFIX] Add case insensitive flag to trustedHostsPattern (Dietrich Heise)
+2014-12-10  b2c673b                  [TASK] Set TYPO3 version to 4.5.40-dev (TYPO3 Release Team)
+
+
+2014-12-10  d72f00c                  [RELEASE] Release of TYPO3 4.5.39 (TYPO3 Release Team)
+2014-12-10  63ae7dd  #62723          [!!!][SECURITY] Fix link spoofing in prefixLocalAnchors (Helmut Hummel)
+2014-12-08  5c267d2  #62967          [BUGFIX] Exclude CDATA from t3lib_parsehtml->XHTML_clean (Nicole Cordes)
+2014-11-27  60be4f6                  [TASK] Set TYPO3 version to 4.5.39-dev (TYPO3 Release Team)
+
+
+2014-11-27  7d66912                  [RELEASE] Release of TYPO3 4.5.38 (TYPO3 Release Team)
+2014-11-19  61d8b25  #58053          [BUGFIX] Handle opacity for IE in prototype.js (Jigal van Hemert)
+2014-11-15  42de3e0  #62984          [BUGFIX] PHP warning on saving TypoScript with t3editor (Oliver Hader)
+2014-11-13  152b14b  #62032          [BUGFIX] Fix PHP warning with date function in FormEngine (Oliver Hader)
+2014-11-03  79ba882  #62391          [BUGFIX] Ensure PHP 5.2 compatibility in php-openid (Michael Stucki)
+2014-10-31  f56c52f  #62513          [BUGFIX] Too many tags by identifier in CacheBackends (Michael Stucki)
+2014-10-23  528429b  #57006          [BUGFIX] softrefproc typolink lacks support for separation by line feed (Marc Bastian Heinrichs)
+2014-10-22  a62c19e  #62391          [BUGFIX] Ensure PHP 5.2 compatibility in makeInstance (Helmut Hummel)
+2014-10-22  4534943                  [TASK] Set TYPO3 version to 4.5.38-dev (TYPO3 Release Team)
+
+
 2014-10-22  01fee1f                  [RELEASE] Release of TYPO3 4.5.37 (TYPO3 Release Team)
 2014-10-22  da32b50  #62357          [SECURITY] Fix DoS in openid (Markus Klein)
 2014-10-22  dbdd9f2  #59573          [SECURITY] Fix RCE in swiftmailer (Helmut Hummel)

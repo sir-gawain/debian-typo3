@@ -4013,7 +4013,7 @@ final class t3lib_div {
 					$retVal = '/' . ltrim(self::getIndpEnv('SCRIPT_NAME'), '/') .
 							($_SERVER['QUERY_STRING'] ? '?' . $_SERVER['QUERY_STRING'] : '');
 				} else {
-					$retVal = $_SERVER['REQUEST_URI'];
+					$retVal = '/' . ltrim($_SERVER['REQUEST_URI'], '/');
 				}
 					// add a prefix if TYPO3 is behind a proxy: ext-domain.com => int-server.com/prefix
 				if (self::cmpIP($_SERVER['REMOTE_ADDR'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyIP'])) {
@@ -4241,14 +4241,14 @@ final class t3lib_div {
 			$defaultPort = self::getIndpEnv('TYPO3_SSL') ? '443' : '80';
 			$parsedHostValue = parse_url('http://' . $hostHeaderValue);
 			if (isset($parsedHostValue['port'])) {
-				self::$allowHostHeaderValue = ($parsedHostValue['host'] === $_SERVER['SERVER_NAME'] && (string)$parsedHostValue['port'] === $_SERVER['SERVER_PORT']);
+				self::$allowHostHeaderValue = (strtolower($parsedHostValue['host']) === strtolower($_SERVER['SERVER_NAME']) && (string)$parsedHostValue['port'] === $_SERVER['SERVER_PORT']);
 			} else {
-				self::$allowHostHeaderValue = ($hostHeaderValue === $_SERVER['SERVER_NAME'] && $defaultPort === $_SERVER['SERVER_PORT']);
+				self::$allowHostHeaderValue = (strtolower($hostHeaderValue) === strtolower($_SERVER['SERVER_NAME']) && $defaultPort === $_SERVER['SERVER_PORT']);
 			}
 		} else {
 			// In case name based virtual hosts are not possible, we allow setting a trusted host pattern
 			// See https://typo3.org/teams/security/security-bulletins/typo3-core/typo3-core-sa-2014-001/ for further details
-			self::$allowHostHeaderValue = (bool)preg_match('/^' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] . '$/', $hostHeaderValue);
+			self::$allowHostHeaderValue = (bool)preg_match('/^' . $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] . '$/i', $hostHeaderValue);
 		}
 
 		return self::$allowHostHeaderValue;
@@ -5429,7 +5429,8 @@ final class t3lib_div {
 		}
 
 			// Create new instance and call constructor with parameters
-		$instance = self::instantiateClass($finalClassName, func_get_args());
+		$arguments = func_get_args();
+		$instance = self::instantiateClass($finalClassName, $arguments);
 
 			// Register new singleton instance
 		if ($instance instanceof t3lib_Singleton) {
